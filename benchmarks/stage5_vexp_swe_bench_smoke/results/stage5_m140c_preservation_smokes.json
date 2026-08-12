@@ -1,0 +1,200 @@
+{
+  "schemaVersion": "stage5.m140c.preservation-smokes.v1",
+  "predecessor": "7093e2d (M140-B)",
+  "candidate": "4172a26 (M140-C)",
+  "hazard": {
+    "issue": "these runners write into the tracked benchmarks/.../results tree regardless of any --out flag; three of the four accept no --out at all",
+    "handling": "git status captured before and after every run; each overwritten tracked evidence file was archived to the bench workspace and restored with git checkout",
+    "incident": "the restore step initially also reverted an M140-C artifact written in the same directory (stage5_m140_final_tckdb_acceptance.json); it was recovered from the archive and the restore filter was narrowed",
+    "deferredTo": "M141 (preservation-smoke output-path safety)"
+  },
+  "m136": {
+    "verdict": "PASS",
+    "arc3000": {
+      "resultState": "resolved",
+      "retrievalFound": true,
+      "resolved": true,
+      "getDihedralVisible": true,
+      "withinEnvelope": true,
+      "deliveredItems": 9,
+      "totalTokens": 3982,
+      "ceiling": 4000
+    },
+    "note": "resolved, get_dihedral visible as pivot, within envelope \u2014 M136 budget contract intact"
+  },
+  "m137": {
+    "verdict": "PASS",
+    "gates": {
+      "arcPass": true,
+      "intentPass": true,
+      "hygienePass": true,
+      "projectNamePass": true,
+      "budgetPass": true
+    },
+    "baselineRoot": "impl/m140b (predecessor implementation)",
+    "note": "ARC lead=get_dihedral, 3000-token delivery true, no path-completion item on a capability query"
+  },
+  "m138": {
+    "verdict": "FAIL (pre-existing)",
+    "candidate": {
+      "schemaVersion": "stage5.m138.no-agent-smoke.v1",
+      "noAgents": true,
+      "noDocker": true,
+      "noVexp": true,
+      "noPaidApis": true,
+      "noNetwork": true,
+      "arcMemoryPass": false,
+      "compatibilityPass": true,
+      "exactAnswerPass": true,
+      "flowImpactPass": false,
+      "tckdbPass": true,
+      "verdict": "FAIL"
+    },
+    "predecessor": {
+      "schemaVersion": "stage5.m138.no-agent-smoke.v1",
+      "noAgents": true,
+      "noDocker": true,
+      "noVexp": true,
+      "noPaidApis": true,
+      "noNetwork": true,
+      "arcMemoryPass": false,
+      "compatibilityPass": true,
+      "exactAnswerPass": true,
+      "flowImpactPass": false,
+      "tckdbPass": true,
+      "verdict": "FAIL"
+    },
+    "identicalAcrossCommits": true,
+    "note": "the same runner FAILS identically at 7093e2d and at 4172a26; the only artifact differences are the recorded observing-commit metadata and timing jitter. Classified pre-existing per the milestone's own instruction, not caused by M140-C."
+  },
+  "m132": {
+    "verdict": "MIXED (20/21)",
+    "failingRow": "impact_hydration_batched",
+    "explanation": "the gate asserts a strict query REDUCTION against its baseline. Its baseline here is M140-B, which already contains the M132 batching, so 34 -> 34 for 40 dependents is the correct unchanged result and the gate is structurally unsatisfiable in a B->C comparison.",
+    "evidence": {
+      "schemaVersion": "stage5.m132.impact-hydration.v1",
+      "change": "discoverImpactSymbols collected the frontier's dependent ids and hydrated them with one getSymbolsByIds call, replacing one getSymbolById per dependent.",
+      "before": {
+        "dependents": 40,
+        "queries": 34
+      },
+      "after": {
+        "dependents": 40,
+        "queries": 34
+      },
+      "semanticEquivalence": "identical_dependent_set_size",
+      "queryReduction": 0,
+      "batched": false,
+      "evidence": "34 -> 34 queries for 40 dependents"
+    },
+    "routingRowsPass": true,
+    "note": "every worktree routing / isolation / cleanup row passed; path completion touches no index or worktree at all (it is a pure function over one request's retrieval output).",
+    "rows": [
+      {
+        "id": "nested_worktrees_discovered_via_git",
+        "pass": true,
+        "evidence": "18 nested of 61 registered"
+      },
+      {
+        "id": "nested_worktree_source_excluded",
+        "pass": true,
+        "evidence": "615 -> 324 files (291 excluded)"
+      },
+      {
+        "id": "no_duplicate_symbol_paths",
+        "pass": true,
+        "evidence": "arc/species/vectors.py copies: 2 -> 1"
+      },
+      {
+        "id": "no_excluded_path_in_any_result",
+        "pass": true,
+        "evidence": "0 excluded paths reached retrieval"
+      },
+      {
+        "id": "nested_worktree_symbols_and_edges_absent",
+        "pass": true,
+        "evidence": "symbols 15778 -> 8986, edges 19062 -> 21618"
+      },
+      {
+        "id": "worktree_routing_matrix_complete",
+        "pass": true,
+        "evidence": "15 cases across 5 suites, 0 missing"
+      },
+      {
+        "id": "worktree_refresh_isolated",
+        "pass": true,
+        "evidence": "A fingerprint unchanged by a refresh of B (true)"
+      },
+      {
+        "id": "contaminated_index_cleaned_by_refresh",
+        "pass": true,
+        "evidence": "nested files 1 -> 0, symbols 2 -> 0"
+      },
+      {
+        "id": "project_name_generic_reference_suppressed",
+        "pass": true,
+        "evidence": "project-class files in generic query: 0 -> 0"
+      },
+      {
+        "id": "explicit_symbol_reference_preserved",
+        "pass": true,
+        "evidence": "explicit ARC-class query selects 6 files, lead=arc/species/species.py"
+      },
+      {
+        "id": "project_name_change_is_scoped",
+        "pass": true,
+        "evidence": "one generator (literal anchoring), gated on the repository basename"
+      },
+      {
+        "id": "impact_hydration_batched",
+        "pass": false,
+        "evidence": "34 -> 34 queries for 40 dependents"
+      },
+      {
+        "id": "arc_flow_still_correct",
+        "pass": true,
+        "evidence": "1 edge(s), calls, arc/mapping/engine.py::reorder_p_label_map -> arc/mapping/engine.py::map_two_species"
+      },
+      {
+        "id": "arc_flow_frontier_bounded",
+        "pass": true,
+        "evidence": "13 of 21618 edges fetched"
+      },
+      {
+        "id": "response_within_m130_envelope",
+        "pass": true,
+        "evidence": "1923 est. tokens, 7691 chars (<= 7000 / <= 32000)"
+      },
+      {
+        "id": "frozen_50_semantics",
+        "pass": true,
+        "evidence": "50/50 cases, 0 semantic differences"
+      },
+      {
+        "id": "tckdb_same_checkout_preserved",
+        "pass": true,
+        "evidence": "lead=clients/python/tests/test_computed_reaction_upload_builder.py; m131-code parity=true"
+      },
+      {
+        "id": "guidance_names_only_exposed_tools",
+        "pass": true,
+        "evidence": "6 referenced, 0 missing from tools/list"
+      },
+      {
+        "id": "new_modules_type_checked",
+        "pass": true,
+        "evidence": "no @ts-nocheck in the M132 modules"
+      },
+      {
+        "id": "repositories_unmodified",
+        "pass": true,
+        "evidence": "isolated index in temp dir; read-only source"
+      },
+      {
+        "id": "no_agents_no_docker_no_vexp",
+        "pass": true,
+        "evidence": "static analysis and local indexing only"
+      }
+    ]
+  }
+}

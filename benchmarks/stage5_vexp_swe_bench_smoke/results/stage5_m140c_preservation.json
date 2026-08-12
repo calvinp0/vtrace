@@ -1,0 +1,74 @@
+{
+  "backstop": {
+    "schemaVersion": "stage5.m140c.module-node-backstop.v1",
+    "queriesChecked": 5,
+    "pathCompletionItemsChecked": 1,
+    "structuralLeaks": [],
+    "pass": true
+  },
+  "centrality": {
+    "schemaVersion": "stage5.m140c.centrality-correction.v1",
+    "structuralSymbols": 273,
+    "sampled": 400,
+    "structuralKeysPresent": 0,
+    "pass": true
+  },
+  "schemaVersion": "stage5.m140c.preservation.v1",
+  "m136": {
+    "mode": "standard",
+    "retrievalFound": true,
+    "deliveryFailed": false,
+    "getDihedralVisible": true,
+    "withinEnvelope": true,
+    "pathCompletionItems": 0
+  },
+  "m137": {
+    "contrastKind": "preference_exclusion",
+    "lead": "arc/species/vectors.py::get_dihedral",
+    "primaryPivotIsGetDihedral": true,
+    "calculateDihedralAnglePenalty": 0.28,
+    "orchestrationIntent": {
+      "active": false,
+      "suppressedBy": "capability lookup (capability description)"
+    },
+    "pathCompletionItems": 0
+  },
+  "m139": {
+    "ok": true,
+    "consumers": {
+      "exactCallerCount": 0,
+      "exactReferenceCount": 0,
+      "structuralContainerCount": 1,
+      "outgoingDependencyCount": 2,
+      "reverseReachableSymbolCount": 80,
+      "potentialCallerCount": 0
+    },
+    "exactAndPotentialSeparate": true,
+    "potentialCallers": 0,
+    "callerCoverage": {
+      "status": "unknown",
+      "exactCallerCount": 0,
+      "deliveredExactCallerCount": 0,
+      "potentialCallerCount": 0,
+      "deliveredPotentialCallerCount": 0,
+      "potentialCallersOmitted": 0,
+      "competingDefinitionCount": 0,
+      "candidateFilesScanned": 0,
+      "candidateFilesAvailable": 0,
+      "reasonCodes": [
+        "traversal_limit_reached"
+      ],
+      "notes": [
+        "Unresolved call-site analysis needs a repository root; caller coverage was not assessed."
+      ]
+    }
+  },
+  "m131": {
+    "ok": true,
+    "pathCount": 1,
+    "edgeCount": 1,
+    "observedEdgeTypes": [
+      "calls"
+    ]
+  }
+}

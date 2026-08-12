@@ -1,0 +1,123 @@
+{
+  "schemaVersion": "stage5.m140.final-four-state-quality.v1",
+  "states": {
+    "m139": "340fd9c (retrospective replay, measured during M140-A)",
+    "m140a6": "6a6e922a3c48d9a4e67dae00021592a81a261245",
+    "m140b": "7093e2d6388ef4028b4cd60fb98387ab4524975e",
+    "m140c": "c267816999ce73664ccceba5bcc71892681c05dc"
+  },
+  "stateMeaning": {
+    "m139": "retrospective replay, measured during M140-A",
+    "m140a6": "graph correctness / structural-node correction",
+    "m140b": "bounded upstream rescue DISCOVERY",
+    "m140c": "path-coherent orchestration SELECTION"
+  },
+  "suites": {
+    "django_expanded": {
+      "m139_retrospective": {
+        "top1": 18,
+        "top3": 20,
+        "goldAnywhere": 20,
+        "missingGold": 0
+      },
+      "m140a6": {
+        "top1": 18,
+        "top3": 20,
+        "goldAnywhere": 20,
+        "goldSymbolAnywhere": 14,
+        "missingGold": 0,
+        "meanEstimatedTokens": 1225.05
+      },
+      "m140b": {
+        "top1": 18,
+        "top3": 20,
+        "goldAnywhere": 20,
+        "goldSymbolAnywhere": 14,
+        "missingGold": 0,
+        "meanEstimatedTokens": 1225.05
+      },
+      "changedCases_a6_to_b": 0,
+      "m140c": {
+        "top1": 18,
+        "top3": 20,
+        "goldAnywhere": 20,
+        "goldSymbolAnywhere": 14,
+        "missingGold": 0,
+        "meanEstimatedTokens": 1225.05
+      },
+      "changedCases_b_to_c": 0,
+      "semanticallyEqual_b_to_c": true
+    },
+    "cross_repo_30": {
+      "m139_retrospective": {
+        "top1": 21,
+        "top3": 25,
+        "goldAnywhere": 27,
+        "missingGold": 3
+      },
+      "m140a6": {
+        "top1": 21,
+        "top3": 24,
+        "goldAnywhere": 27,
+        "goldSymbolAnywhere": 17,
+        "missingGold": 3,
+        "meanEstimatedTokens": 2194.033
+      },
+      "m140b": {
+        "top1": 21,
+        "top3": 24,
+        "goldAnywhere": 27,
+        "goldSymbolAnywhere": 17,
+        "missingGold": 3,
+        "meanEstimatedTokens": 2194.033
+      },
+      "changedCases_a6_to_b": 0,
+      "m140c": {
+        "top1": 21,
+        "top3": 24,
+        "goldAnywhere": 27,
+        "goldSymbolAnywhere": 17,
+        "missingGold": 3,
+        "meanEstimatedTokens": 2194.033
+      },
+      "changedCases_b_to_c": 0,
+      "semanticallyEqual_b_to_c": true
+    }
+  },
+  "frozen50": {
+    "m139_retrospective": {
+      "top1": 39,
+      "top3": 45,
+      "goldAnywhere": 47,
+      "goldSymbolAnywhere": 31,
+      "missingGold": 3
+    },
+    "m140a6": {
+      "top1": 39,
+      "top3": 44,
+      "goldAnywhere": 47,
+      "goldSymbolAnywhere": 31,
+      "missingGold": 3,
+      "meanEstimatedTokens": 1806.44
+    },
+    "m140b": {
+      "top1": 39,
+      "top3": 44,
+      "goldAnywhere": 47,
+      "goldSymbolAnywhere": 31,
+      "missingGold": 3,
+      "meanEstimatedTokens": 1806.44
+    },
+    "changedCases_a6_to_b": 0,
+    "m140c": {
+      "top1": 39,
+      "top3": 44,
+      "goldAnywhere": 47,
+      "goldSymbolAnywhere": 31,
+      "missingGold": 3,
+      "meanEstimatedTokens": 1806.44
+    },
+    "changedCases_b_to_c": 0
+  },
+  "separation": "M139 -> A6 carries the graph-correction effect. A6 -> B carries the rescue DISCOVERY effect, which is zero on these suites. B -> C carries the path-completion SELECTION effect, measured here. The three effects are kept separate; the M139 column remains a retrospective replay and is labelled as such."
+}

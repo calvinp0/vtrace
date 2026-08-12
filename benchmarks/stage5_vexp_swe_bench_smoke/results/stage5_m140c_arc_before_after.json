@@ -1,0 +1,297 @@
+{
+  "schemaVersion": "stage5.m140c.arc-acceptance.v1",
+  "query": "How does a species object get its 2D molecular graph when rebuilt from a serialized dictionary, and under what conditions is connectivity re-derived from Cartesian coordinates rather than taken from the stored adjacency list?",
+  "intent": {
+    "contrastKind": "alternative_branches",
+    "contrastTerms": [],
+    "branchClauses": 1,
+    "orchestration": {
+      "active": true,
+      "reason": "conditional-branch question (\"under what conditions\")"
+    }
+  },
+  "visibility": {
+    "entry": {
+      "fqName": "arc/species/species.py::ARCSpecies.from_dict",
+      "indexed": true,
+      "rescuedByLane": true,
+      "rankInUncappedPool": 93,
+      "uncappedPoolSize": 132,
+      "ordinaryScore": 0.9749,
+      "deliveredAtB": false,
+      "delivered": true,
+      "pivot": false,
+      "selectionRole": "orchestration_support"
+    },
+    "middle": {
+      "fqName": "arc/species/species.py::ARCSpecies.mol_from_xyz",
+      "indexed": true,
+      "rescuedByLane": true,
+      "rankInUncappedPool": 6,
+      "uncappedPoolSize": 132,
+      "ordinaryScore": 1.8211,
+      "deliveredAtB": true,
+      "delivered": true,
+      "pivot": false,
+      "selectionRole": "ordinary"
+    },
+    "tail": {
+      "fqName": "arc/species/perceive.py::perceive_molecule_from_xyz",
+      "indexed": true,
+      "rescuedByLane": false,
+      "rankInUncappedPool": 4,
+      "uncappedPoolSize": 132,
+      "ordinaryScore": 1.843,
+      "deliveredAtB": true,
+      "delivered": true,
+      "pivot": false,
+      "selectionRole": "ordinary"
+    },
+    "branch": {
+      "fqName": "arc/species/species.py::are_coords_compliant_with_graph",
+      "indexed": true,
+      "rescuedByLane": false,
+      "rankInUncappedPool": 2,
+      "uncappedPoolSize": 132,
+      "ordinaryScore": 1.9365,
+      "deliveredAtB": true,
+      "delivered": true,
+      "pivot": true,
+      "selectionRole": "ordinary"
+    }
+  },
+  "deliveredAtB": [
+    "arc/species/species.py::ARCSpecies",
+    "arc/species/species.py::are_coords_compliant_with_graph",
+    "arc/species/converter.py::xyz_to_coords_list",
+    "arc/species/perceive.py::perceive_molecule_from_xyz",
+    "arc/species/zmat.py::_add_nth_atom_to_coords",
+    "arc/species/species.py::ARCSpecies.mol_from_xyz"
+  ],
+  "deliveredAtBSource": "stage5_m140b_arc_b_before.json (captured at 7093e2d, before path completion existed)",
+  "delivered": [
+    "arc/species/species.py::ARCSpecies",
+    "arc/species/species.py::are_coords_compliant_with_graph",
+    "arc/species/converter.py::xyz_to_coords_list",
+    "arc/species/perceive.py::perceive_molecule_from_xyz",
+    "arc/species/species.py::ARCSpecies.from_dict",
+    "arc/species/species.py::ARCSpecies.mol_from_xyz"
+  ],
+  "deliveredPivots": [
+    "arc/species/species.py::ARCSpecies",
+    "arc/species/species.py::are_coords_compliant_with_graph"
+  ],
+  "displaced": "arc/species/zmat.py::_add_nth_atom_to_coords",
+  "selectedSetChange": {
+    "added": [
+      "arc/species/species.py::ARCSpecies.from_dict"
+    ],
+    "removed": [
+      "arc/species/zmat.py::_add_nth_atom_to_coords"
+    ],
+    "leadBefore": "arc/species/species.py::ARCSpecies",
+    "leadAfter": "arc/species/species.py::ARCSpecies"
+  },
+  "orchestrationSupport": {
+    "fqName": "arc/species/species.py::ARCSpecies.from_dict",
+    "selectionRole": "orchestration_support",
+    "selectionReason": "selected as orchestration support (orchestration_entry): completes the exact 2-hop call path arc/species/species.py::ARCSpecies.from_dict -> arc/species/species.py::ARCSpecies.mol_from_xyz -> arc/species/perceive.py::perceive_molecule_from_xyz, whose other 2 node(s) are already delivered; ordinary rank 97 (score 0.9749) is unchanged",
+    "ordinaryRank": 97,
+    "contentMode": "signature",
+    "estimatedTokens": 24
+  },
+  "pathCompletion": {
+    "eligible_request": true,
+    "discovered_candidates": 8,
+    "eligible_candidates": 3,
+    "selected_count": 1,
+    "rejected": {
+      "no_intent": 0,
+      "already_selected": 1,
+      "no_coherent_path": 4,
+      "weak_relevance": 0,
+      "structural": 0,
+      "depth": 0,
+      "budget": 0,
+      "slot_taken": 2
+    },
+    "evaluation_ms": 0.143,
+    "selected": {
+      "fq_name": "arc/species/species.py::ARCSpecies.from_dict",
+      "ordinary_rank": 97,
+      "ordinary_score": 0.9749,
+      "depth": 2,
+      "path": [
+        "arc/species/species.py::ARCSpecies.from_dict",
+        "arc/species/species.py::ARCSpecies.mol_from_xyz",
+        "arc/species/perceive.py::perceive_molecule_from_xyz"
+      ],
+      "coverage_role": "orchestration_entry",
+      "selection_reason": "selected as orchestration support (orchestration_entry): completes the exact 2-hop call path arc/species/species.py::ARCSpecies.from_dict -> arc/species/species.py::ARCSpecies.mol_from_xyz -> arc/species/perceive.py::perceive_molecule_from_xyz, whose other 2 node(s) are already delivered; ordinary rank 97 (score 0.9749) is unchanged",
+      "displaced": "arc/species/zmat.py::_add_nth_atom_to_coords",
+      "applied": true
+    },
+    "candidates": [
+      {
+        "fq_name": "arc/species/species.py::ARCSpecies.mol_from_xyz",
+        "ordinary_rank": 6,
+        "ordinary_score": 1.8211,
+        "depth": 1,
+        "path": [
+          "arc/species/species.py::ARCSpecies.mol_from_xyz",
+          "arc/species/perceive.py::perceive_molecule_from_xyz"
+        ],
+        "downstream_selected": 1,
+        "matched_terms": [
+          "connectivity",
+          "coordinates",
+          "get",
+          "graph",
+          "species"
+        ],
+        "eligible": false,
+        "rejected_by": "already selected on ordinary evidence",
+        "selected": false
+      },
+      {
+        "fq_name": "arc/checks/ts.py::_perceive_irc_fragments",
+        "ordinary_rank": 91,
+        "ordinary_score": 0.999,
+        "depth": 1,
+        "path": [
+          "arc/checks/ts.py::_perceive_irc_fragments",
+          "arc/species/perceive.py::perceive_molecule_from_xyz"
+        ],
+        "downstream_selected": 1,
+        "matched_terms": [
+          "cartesian",
+          "coordinates",
+          "list",
+          "molecular"
+        ],
+        "eligible": true,
+        "selected": false
+      },
+      {
+        "fq_name": "arc/species/converter.py::compare_confs_fl",
+        "ordinary_rank": 59,
+        "ordinary_score": 1.2187,
+        "depth": 2,
+        "path": [
+          "arc/species/converter.py::compare_confs_fl",
+          "arc/species/converter.py::xyz_to_dmat",
+          "arc/species/converter.py::xyz_to_coords_list"
+        ],
+        "downstream_selected": 1,
+        "matched_terms": [
+          "cartesian",
+          "coordinates",
+          "its",
+          "species"
+        ],
+        "eligible": false,
+        "rejected_by": "1/2 downstream path nodes selected",
+        "selected": false
+      },
+      {
+        "fq_name": "arc/species/species.py::ARCSpecies.check_xyz_isomorphism",
+        "ordinary_rank": 83,
+        "ordinary_score": 1.0554,
+        "depth": 1,
+        "path": [
+          "arc/species/species.py::ARCSpecies.check_xyz_isomorphism",
+          "arc/species/species.py::are_coords_compliant_with_graph"
+        ],
+        "downstream_selected": 1,
+        "matched_terms": [
+          "coordinates",
+          "object",
+          "species"
+        ],
+        "eligible": false,
+        "rejected_by": "direct caller of 1 delivered alternative(s); a branch controller needs 2",
+        "selected": false
+      },
+      {
+        "fq_name": "arc/species/species.py::ARCSpecies.from_dict",
+        "ordinary_rank": 97,
+        "ordinary_score": 0.9749,
+        "depth": 2,
+        "path": [
+          "arc/species/species.py::ARCSpecies.from_dict",
+          "arc/species/species.py::ARCSpecies.mol_from_xyz",
+          "arc/species/perceive.py::perceive_molecule_from_xyz"
+        ],
+        "downstream_selected": 2,
+        "matched_terms": [
+          "dictionary",
+          "object",
+          "species"
+        ],
+        "eligible": true,
+        "selected": true
+      },
+      {
+        "fq_name": "arc/plotter.py::show_sticks",
+        "ordinary_rank": 129,
+        "ordinary_score": 0.8046,
+        "depth": 1,
+        "path": [
+          "arc/plotter.py::show_sticks",
+          "arc/species/perceive.py::perceive_molecule_from_xyz"
+        ],
+        "downstream_selected": 1,
+        "matched_terms": [
+          "coordinates",
+          "species",
+          "taken"
+        ],
+        "eligible": false,
+        "rejected_by": "direct caller of 1 delivered alternative(s); a branch controller needs 2",
+        "selected": false
+      },
+      {
+        "fq_name": "arc/species/converter.py::xyz_to_coords_and_element_numbers",
+        "ordinary_rank": 26,
+        "ordinary_score": 1.3561,
+        "depth": 1,
+        "path": [
+          "arc/species/converter.py::xyz_to_coords_and_element_numbers",
+          "arc/species/converter.py::xyz_to_coords_list"
+        ],
+        "downstream_selected": 1,
+        "matched_terms": [
+          "coordinates",
+          "list",
+          "species"
+        ],
+        "eligible": false,
+        "rejected_by": "direct caller of 1 delivered alternative(s); a branch controller needs 2",
+        "selected": false
+      },
+      {
+        "fq_name": "arc/species/species.py::ARCSpecies.from_yml_file",
+        "ordinary_rank": 128,
+        "ordinary_score": 0.8383,
+        "depth": 2,
+        "path": [
+          "arc/species/species.py::ARCSpecies.from_yml_file",
+          "arc/species/species.py::ARCSpecies.mol_from_xyz",
+          "arc/species/perceive.py::perceive_molecule_from_xyz"
+        ],
+        "downstream_selected": 2,
+        "matched_terms": [
+          "species",
+          "when"
+        ],
+        "eligible": true,
+        "selected": false
+      }
+    ]
+  },
+  "budget": {
+    "max_tokens": 6000,
+    "estimated_tokens": 829,
+    "used_percent": 13.82
+  }
+}

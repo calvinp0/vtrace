@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "stage5.m140c.performance.v1",
+  "rescue": {
+    "dbQueries": 6,
+    "timingsMs": {
+      "seedSelection": 0.11,
+      "incomingTraversal": 1.9516,
+      "rescueScoring": 3.5297,
+      "total": 5.6208
+    },
+    "incomingEdgesExamined": 97
+  },
+  "rescueDbQueriesWithoutLane": 0,
+  "pathCompletion": {
+    "evaluationMs": 0.0754,
+    "eligibleCandidates": 3,
+    "selectedPathCompletionItems": 1,
+    "discoveredCandidates": 8,
+    "newDbQueries": 0,
+    "newGraphTraversals": 0,
+    "newSourceReads": 0
+  },
+  "parity": {
+    "schemaVersion": "stage5.m140c.product-parity.v1",
+    "authority": "product-retrieval-v2",
+    "rankingVersion": "hybrid-shared-core+routed-rescue-v1",
+    "sharedSeam": "buildAuthoritativeProductRetrieval -> buildCapsuleV2",
+    "entryInCapsuleV2": true,
+    "entryInAuthoritativeResult": true,
+    "entryInProjectedCapsule": true,
+    "orchestrationRolePresent": true,
+    "pass": true
+  }
+}

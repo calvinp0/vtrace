@@ -1,0 +1,110 @@
+{
+  "schemaVersion": "stage5.m140c.negative-controls.v1",
+  "rows": [
+    {
+      "id": "explicit_lookup",
+      "query": "find get_dihedral",
+      "expectation": "no orchestration intent",
+      "orchestrationIntent": false,
+      "pathCompletionConsidered": false,
+      "discovered": 0,
+      "eligible": 0,
+      "selected": 0,
+      "requestRejectedBy": null,
+      "rejectionReasons": [],
+      "pass": true
+    },
+    {
+      "id": "explicit_lookup_where",
+      "query": "where is ARCSpecies.copy?",
+      "expectation": "no orchestration intent",
+      "orchestrationIntent": false,
+      "pathCompletionConsidered": false,
+      "discovered": 0,
+      "eligible": 0,
+      "selected": 0,
+      "requestRejectedBy": null,
+      "rejectionReasons": [],
+      "pass": true
+    },
+    {
+      "id": "capability_lookup",
+      "query": "a function that returns a dihedral angle given three vectors, rather than given ",
+      "expectation": "no orchestration intent",
+      "orchestrationIntent": false,
+      "pathCompletionConsidered": false,
+      "discovered": 0,
+      "eligible": 0,
+      "selected": 0,
+      "requestRejectedBy": null,
+      "rejectionReasons": [],
+      "pass": true
+    },
+    {
+      "id": "caller_enumeration",
+      "query": "who calls perceive_molecule_from_xyz?",
+      "expectation": "impact analysis owns this",
+      "orchestrationIntent": false,
+      "pathCompletionConsidered": false,
+      "discovered": 0,
+      "eligible": 0,
+      "selected": 0,
+      "requestRejectedBy": null,
+      "rejectionReasons": [],
+      "pass": true
+    },
+    {
+      "id": "broad_process",
+      "query": "How does ARC handle linear segments and dummy atoms in Z-matrices?",
+      "expectation": "no chain head or branch controller",
+      "orchestrationIntent": true,
+      "pathCompletionConsidered": true,
+      "discovered": 1,
+      "eligible": 0,
+      "selected": 0,
+      "requestRejectedBy": null,
+      "rejectionReasons": [
+        "direct caller of a delivered symbol, not a chain head or branch controller"
+      ],
+      "pass": true
+    },
+    {
+      "id": "broad_process_2",
+      "query": "How is a species rebuilt and its conformers generated?",
+      "expectation": "no chain head or branch controller",
+      "orchestrationIntent": true,
+      "pathCompletionConsidered": false,
+      "discovered": 0,
+      "eligible": 0,
+      "selected": 0,
+      "requestRejectedBy": null,
+      "rejectionReasons": [],
+      "pass": true
+    },
+    {
+      "id": "bug_report",
+      "query": "Count with a Case expression and distinct=True emits a missing space",
+      "expectation": "no orchestration intent",
+      "orchestrationIntent": false,
+      "pathCompletionConsidered": false,
+      "discovered": 0,
+      "eligible": 0,
+      "selected": 0,
+      "requestRejectedBy": null,
+      "rejectionReasons": [],
+      "pass": true
+    }
+  ],
+  "highFanIn": {
+    "callers": 1000,
+    "rescued": 2,
+    "eligible": 0,
+    "selected": 0,
+    "rejectionReasons": [
+      "direct caller of a delivered symbol, not a chain head or branch controller",
+      "direct caller of a delivered symbol, not a chain head or branch controller"
+    ],
+    "pass": true
+  },
+  "pass": true
+}

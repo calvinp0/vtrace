@@ -1,20 +1,20 @@
 {
-  "schemaVersion": "stage5.m140b.tckdb-acceptance.v1",
+  "schemaVersion": "stage5.m140c.tckdb-acceptance.v1",
   "tckdb": {
     "root": "/home/calvin/code/TCKDB_v2",
     "branch": "main",
-    "head": "b91f69e9f78aa5ddc5f3d5eae7021ebe88741717",
+    "head": "1896a855405c6a3d8c32dcf31ff1a10c291ce8c9",
     "sourceReadOnly": true,
     "indexOpenedReadOnly": true,
     "sameCheckoutBothSides": true
   },
   "predecessor": {
-    "root": "/home/calvin/bench/vtrace-m140/impl/m140a6",
-    "commit": "6a6e922a3c48d9a4e67dae00021592a81a261245"
-  },
-  "candidate": {
     "root": "/home/calvin/bench/vtrace-m140/impl/m140b",
     "commit": "7093e2d6388ef4028b4cd60fb98387ab4524975e"
+  },
+  "candidate": {
+    "root": "/home/calvin/bench/vtrace-m140/impl/m140c",
+    "commit": "4172a26378b41734dc7f3176997f527619a93d60"
   },
   "caseCount": 4,
   "changedCaseCount": 0,
@@ -177,5 +177,19 @@
       "cause": "none"
     }
   ],
-  "pass": true
+  "pass": true,
+  "milestone": "M140-C",
+  "attribution": "only path-completion selection differs between these two commits, so any movement would be attributable to it",
+  "supersedes": {
+    "milestone": "M140-B",
+    "predecessorCommit": "6a6e922a3c48d9a4e67dae00021592a81a261245",
+    "candidateCommit": "7093e2d6388ef4028b4cd60fb98387ab4524975e",
+    "tckdb": {
+      "branch": "main",
+      "head": "b91f69e9f78aa5ddc5f3d5eae7021ebe88741717"
+    },
+    "changedCaseCount": 0,
+    "pass": true,
+    "note": "TCKDB has since advanced from b91f69e to 1896a85; the A6->B result was taken on the earlier checkout and is retained here rather than restated as current."
+  }
 }

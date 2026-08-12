@@ -1,0 +1,21 @@
+{
+  "schemaVersion": "stage5.m140c.changed-case-ledger.v1",
+  "predecessor": {
+    "label": "m140b",
+    "commit": "7093e2d6388ef4028b4cd60fb98387ab4524975e",
+    "tree": "a41efcb5f5183f9e80825a7272051790358f7d07"
+  },
+  "candidate": {
+    "label": "m140c",
+    "commit": "c267816999ce73664ccceba5bcc71892681c05dc",
+    "tree": "6d59f46c9478b629a0cfd21ea47c918ef8ed8543"
+  },
+  "provenanceValid": true,
+  "changedCaseCount": 0,
+  "interpretation": "no case moved: none of the frozen-50 tasks is orchestration-shaped, so the rescue lane never activates and path completion is never offered a candidate",
+  "improvements": 0,
+  "neutral": 0,
+  "regressions": 0,
+  "unexplained": 0,
+  "cases": []
+}
