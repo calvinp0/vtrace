@@ -23,7 +23,8 @@ Local, on `main`, nothing pushed, no co-author trailers.
 8d09848  Unify index readiness evaluation and bound indexing responses
 b5a7a92  Make memory-rule evaluation bounded per request
 86c4cb0  Make benchmark output paths safe and preservation claims provenance-aware
-<evidence> Record M141 validation evidence
+96d64d9  Extend the safe output contract to every tracked-by-default runner
+b3d14a3  Record M141 validation evidence and close M141 as PASS
 ```
 
 Starting point, resolved rather than assumed:
@@ -52,7 +53,7 @@ predecessor 249f61f
   get_code_context    resolved=false  reason=index_schema_changed
   contradiction       TRUE
 
-candidate 86c4cb0
+candidate 96d64d9
   index_status        state=possibly_stale  isStale=true
                       "Rebuild this repo's index (`index_repo` with mode `full`)…"
                       reasons=[index_schema_incompatible]
