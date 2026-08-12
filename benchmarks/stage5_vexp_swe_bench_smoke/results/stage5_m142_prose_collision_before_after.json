@@ -1,0 +1,57 @@
+{
+  "schemaVersion": "stage5.m142.prose-collision.v1",
+  "predecessor": {
+    "label": "m141_before",
+    "vtraceHead": "562cff6a5fcf5634e13d768fbc73e4de19b9b578",
+    "vtraceBranch": "main",
+    "arcRoot": "/home/calvin/code/ARC",
+    "arcHead": "2f3fd462600d23e671afb6e3ea4623c6b51674bf",
+    "arcTrackedClean": true,
+    "indexPath": "/home/calvin/bench/vtrace-m142/arc-m141.sqlite",
+    "indexBuildMs": null,
+    "indexedSymbols": 9009
+  },
+  "candidate": {
+    "label": "m142_after",
+    "vtraceHead": "0e4edc7804a280c2ab924ec05764914066c53a28",
+    "vtraceBranch": "main",
+    "arcRoot": "/home/calvin/code/ARC",
+    "arcHead": "2f3fd462600d23e671afb6e3ea4623c6b51674bf",
+    "arcTrackedClean": true,
+    "indexPath": "/home/calvin/bench/vtrace-m142/arc-m141.sqlite",
+    "indexBuildMs": null,
+    "indexedSymbols": 9009
+  },
+  "falsePositives": [
+    {
+      "case": "arc_gaussian_route_keywords",
+      "fqName": "arc/job/adapters/common.py::which",
+      "predecessor": {
+        "state": "pivot",
+        "rank": 1,
+        "lead": false
+      },
+      "candidate": {
+        "state": "not_generated",
+        "rank": null,
+        "lead": false
+      },
+      "resolved": true
+    },
+    {
+      "case": "arc_gaussian_route_keywords",
+      "fqName": "arc/main.py::ARC",
+      "predecessor": {
+        "state": "not_generated",
+        "rank": null,
+        "lead": false
+      },
+      "candidate": {
+        "state": "not_generated",
+        "rank": null,
+        "lead": false
+      },
+      "resolved": false
+    }
+  ]
+}

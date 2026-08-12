@@ -1,0 +1,2312 @@
+{
+  "schemaVersion": "stage5.m142.behavioral-failures.v1",
+  "label": "m141_before",
+  "generatedFrom": {
+    "vtraceHead": "562cff6a5fcf5634e13d768fbc73e4de19b9b578",
+    "vtraceBranch": "main",
+    "arcRoot": "/home/calvin/code/ARC",
+    "arcHead": "2f3fd462600d23e671afb6e3ea4623c6b51674bf",
+    "arcTrackedClean": true,
+    "indexPath": "/home/calvin/bench/vtrace-m142/arc-m141.sqlite",
+    "indexBuildMs": null,
+    "indexedSymbols": 9009
+  },
+  "cases": [
+    {
+      "id": "arc_normal_mode_displacement",
+      "category": "concept concentrated in one module but weak symbol-name match",
+      "query": "How does ARC verify that a saddle point actually connects the intended reactants and products by looking at how the atoms move in the imaginary vibration?",
+      "queryProvenance": "reconstructed_from_report",
+      "reportedFailure": "the normal-mode displacement check module never surfaced; a differently-named quantity (expected atom count with largest displacement) was returned instead",
+      "elapsedMs": 361.38,
+      "identifierRoles": {
+        "likelySymbols": [],
+        "identifiers": [],
+        "filteredGenericSymbols": [],
+        "shapedQuery": "issue: How does ARC verify that a saddle point actually connects the intended reactants and products by looking at how the atoms move in the imaginary vibration?",
+        "explicitIdentifiers": [],
+        "projectReferences": [
+          "ARC"
+        ],
+        "symbolHypotheses": [],
+        "identifierSignals": [
+          {
+            "term": "ARC",
+            "role": "ordinary_prose",
+            "source": "project_reference",
+            "exactSymbolEligible": false
+          },
+          {
+            "term": "a",
+            "role": "ordinary_prose",
+            "source": "short_literal",
+            "exactSymbolEligible": false
+          },
+          {
+            "term": "by",
+            "role": "ordinary_prose",
+            "source": "short_literal",
+            "exactSymbolEligible": false
+          },
+          {
+            "term": "at",
+            "role": "ordinary_prose",
+            "source": "short_literal",
+            "exactSymbolEligible": false
+          },
+          {
+            "term": "in",
+            "role": "ordinary_prose",
+            "source": "short_literal",
+            "exactSymbolEligible": false
+          }
+        ]
+      },
+      "retrieval": {
+        "mode": "standard",
+        "lead": "arc/job/adapters/ts/linear_utils/addition.py::migrate_verified_atoms",
+        "pivots": [
+          "arc/job/adapters/ts/linear_utils/addition.py::migrate_verified_atoms",
+          "arc/reaction/reaction.py::ARCReaction._get_products_xyz_aligned_to_reactants"
+        ],
+        "support": [
+          "arc/family/family.py::ReactionFamily.generate_products_by_reactant_groups",
+          "arc/mapping/engine.py::pairing_reactants_and_products_for_mapping",
+          "arc/job/adapters/ts/autotst_ts.py::AutoTSTAdapter",
+          "arc/species/species.py::ARCSpecies"
+        ],
+        "selectedFiles": [
+          "arc/job/adapters/ts/linear_utils/addition.py",
+          "arc/reaction/reaction.py",
+          "arc/family/family.py",
+          "arc/mapping/engine.py",
+          "arc/job/adapters/ts/autotst_ts.py",
+          "arc/species/species.py"
+        ],
+        "topCandidates": [
+          {
+            "rank": 1,
+            "fqName": "arc/job/adapters/ts/linear_utils/addition.py::migrate_verified_atoms",
+            "path": "arc/job/adapters/ts/linear_utils/addition.py",
+            "final": 1.7794,
+            "lexical": 0.8767,
+            "symbol": 0,
+            "domain": 1,
+            "centrality": 0.0054,
+            "inDegree": 4,
+            "hubPenalty": 0,
+            "localEvidence": 1.8767,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "rank": 2,
+            "fqName": "arc/reaction/reaction.py::ARCReaction._get_products_xyz_aligned_to_reactants",
+            "path": "arc/reaction/reaction.py",
+            "final": 1.5938,
+            "lexical": 0.6924,
+            "symbol": 0,
+            "domain": 1,
+            "centrality": 0.0027,
+            "inDegree": 2,
+            "hubPenalty": 0,
+            "localEvidence": 1.6924,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "rank": 3,
+            "fqName": "arc/job/adapters/ts/linear_utils/local_geometry_test.py::TestApplyReactiveCenterCleanup.test_orchestrator_repositions_migrating_h",
+            "path": "arc/job/adapters/ts/linear_utils/local_geometry_test.py",
+            "final": 1.5556,
+            "lexical": 0.055,
+            "symbol": 0,
+            "domain": 0.3333,
+            "centrality": 0.0013,
+            "inDegree": 1,
+            "hubPenalty": 0,
+            "localEvidence": 0.3333,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "graph"
+            ]
+          },
+          {
+            "rank": 4,
+            "fqName": "arc/family/family.py::ReactionFamily.generate_products_by_reactant_groups",
+            "path": "arc/family/family.py",
+            "final": 1.5324,
+            "lexical": 0.631,
+            "symbol": 0,
+            "domain": 1,
+            "centrality": 0.0027,
+            "inDegree": 2,
+            "hubPenalty": 0,
+            "localEvidence": 1.631,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "rank": 5,
+            "fqName": "arc/mapping/engine.py::pairing_reactants_and_products_for_mapping",
+            "path": "arc/mapping/engine.py",
+            "final": 1.5318,
+            "lexical": 0.6291,
+            "symbol": 0,
+            "domain": 1,
+            "centrality": 0.0054,
+            "inDegree": 4,
+            "hubPenalty": 0,
+            "localEvidence": 1.6291,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "rank": 6,
+            "fqName": "arc/reaction/reaction.py::ARCReaction.get_products_xyz",
+            "path": "arc/reaction/reaction.py",
+            "final": 1.526,
+            "lexical": 0.6254,
+            "symbol": 0,
+            "domain": 1,
+            "centrality": 0.0013,
+            "inDegree": 1,
+            "hubPenalty": 0,
+            "localEvidence": 1.6254,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "rank": 7,
+            "fqName": "arc/mapping/driver_test.py::TestMappingDriver.test_get_atom_map_2",
+            "path": "arc/mapping/driver_test.py",
+            "final": 1.5088,
+            "lexical": 0.0082,
+            "symbol": 0,
+            "domain": 0.3333,
+            "centrality": 0.0013,
+            "inDegree": 1,
+            "hubPenalty": 0,
+            "localEvidence": 0.3333,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "graph"
+            ]
+          },
+          {
+            "rank": 8,
+            "fqName": "arc/job/adapters/ts/linear_test.py::TestLinearAdapter.test_interpolate_1_2_shift_s",
+            "path": "arc/job/adapters/ts/linear_test.py",
+            "final": 1.5038,
+            "lexical": 0.0032,
+            "symbol": 0,
+            "domain": 0.3333,
+            "centrality": 0.0013,
+            "inDegree": 1,
+            "hubPenalty": 0,
+            "localEvidence": 0.3333,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "graph"
+            ]
+          },
+          {
+            "rank": 9,
+            "fqName": "arc/species/zmat_test.py::TestThirdAtomFrame.test_a_leading_dummy_atom_does_not_land_on_the_molecular_axis",
+            "path": "arc/species/zmat_test.py",
+            "final": 1.4624,
+            "lexical": 0.1255,
+            "symbol": 0,
+            "domain": 0.3333,
+            "centrality": 0.0013,
+            "inDegree": 1,
+            "hubPenalty": 0,
+            "localEvidence": 0.4588,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "graph"
+            ]
+          },
+          {
+            "rank": 10,
+            "fqName": "arc/job/adapters/ts/autotst_ts.py::AutoTSTAdapter",
+            "path": "arc/job/adapters/ts/autotst_ts.py",
+            "final": 1.4621,
+            "lexical": 0.0706,
+            "symbol": 0,
+            "domain": 0.3333,
+            "centrality": 0.0013,
+            "inDegree": 1,
+            "hubPenalty": 0,
+            "localEvidence": 0.3333,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "same_module"
+            ]
+          },
+          {
+            "rank": 11,
+            "fqName": "arc/job/adapters/ts/linear_utils/addition.py::map_and_verify_fragments",
+            "path": "arc/job/adapters/ts/linear_utils/addition.py",
+            "final": 1.4618,
+            "lexical": 0.8598,
+            "symbol": 0,
+            "domain": 0.6667,
+            "centrality": 0.004,
+            "inDegree": 3,
+            "hubPenalty": 0,
+            "localEvidence": 1.5265,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "rank": 12,
+            "fqName": "arc/reaction/reaction.py::ARCReaction",
+            "path": "arc/reaction/reaction.py",
+            "final": 1.4462,
+            "lexical": 0.6458,
+            "symbol": 0,
+            "domain": 0.6667,
+            "centrality": 0.4008,
+            "inDegree": 299,
+            "hubPenalty": 0,
+            "localEvidence": 1.3125,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "rank": 13,
+            "fqName": "arc/checks/nmd.py::find_equivalent_atoms",
+            "path": "arc/checks/nmd.py",
+            "final": 1.4075,
+            "lexical": 0.8061,
+            "symbol": 0,
+            "domain": 0.6667,
+            "centrality": 0.0027,
+            "inDegree": 2,
+            "hubPenalty": 0,
+            "localEvidence": 1.4728,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "rank": 14,
+            "fqName": "arc/species/species.py::ARCSpecies",
+            "path": "arc/species/species.py",
+            "final": 1.3927,
+            "lexical": 0.5927,
+            "symbol": 0,
+            "domain": 0.3333,
+            "centrality": 1,
+            "inDegree": 746,
+            "hubPenalty": 0,
+            "localEvidence": 0.926,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "rank": 15,
+            "fqName": "arc/output_test.py::TestScanCalculations.test_scan_coord_omits_grid_metadata_when_step_size_zero",
+            "path": "arc/output_test.py",
+            "final": 1.3836,
+            "lexical": 0.0467,
+            "symbol": 0,
+            "domain": 0.3333,
+            "centrality": 0.0013,
+            "inDegree": 1,
+            "hubPenalty": 0,
+            "localEvidence": 0.3333,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "graph"
+            ]
+          }
+        ]
+      },
+      "ownerFile": {
+        "path": "arc/checks/nmd.py",
+        "top1": false,
+        "top3": false,
+        "anywhere": false,
+        "bestCandidateRank": 13,
+        "indexedDefinitions": 21
+      },
+      "expectedDefinitions": [
+        {
+          "fqName": "arc/checks/nmd.py::analyze_ts_normal_mode_displacement",
+          "indexed": true,
+          "state": "not_generated",
+          "candidateRank": null,
+          "finalScore": null,
+          "lead": false
+        }
+      ],
+      "falsePositiveLeads": [],
+      "centralityTrace": [
+        {
+          "fqName": "arc/species/species.py::ARCSpecies",
+          "rank": 14,
+          "inDegree": 746,
+          "centrality": 1,
+          "centralityContribution": 0.5,
+          "finalScore": 1.3927,
+          "scoreWithoutCentrality": 0.8927,
+          "localEvidence": 0.926,
+          "hubPenalty": 0,
+          "selected": true,
+          "pivot": false
+        },
+        {
+          "fqName": "arc/reaction/reaction.py::ARCReaction",
+          "rank": 12,
+          "inDegree": 299,
+          "centrality": 0.4008,
+          "centralityContribution": 0.2004,
+          "finalScore": 1.4462,
+          "scoreWithoutCentrality": 1.2458,
+          "localEvidence": 1.3125,
+          "hubPenalty": 0,
+          "selected": false,
+          "pivot": false
+        }
+      ],
+      "response": {
+        "serializedBytes": 62217,
+        "pivotCount": 2,
+        "supportCount": 4
+      }
+    },
+    {
+      "id": "arc_gaussian_route_keywords",
+      "category": "ordinary English word + project name collide with symbol names",
+      "query": "How does ARC decide which Gaussian route keywords to emit?",
+      "queryProvenance": "reconstructed_from_report",
+      "reportedFailure": "arc/job/adapters/common.py::which became a lead pivot from the grammatical word 'which'; arc/main.py::ARC was reported to surface from the project name",
+      "elapsedMs": 167.21,
+      "identifierRoles": {
+        "likelySymbols": [],
+        "identifiers": [],
+        "filteredGenericSymbols": [],
+        "shapedQuery": "issue: How does ARC decide which Gaussian route keywords to emit?",
+        "explicitIdentifiers": [],
+        "projectReferences": [
+          "ARC"
+        ],
+        "symbolHypotheses": [],
+        "identifierSignals": [
+          {
+            "term": "ARC",
+            "role": "ordinary_prose",
+            "source": "project_reference",
+            "exactSymbolEligible": false
+          },
+          {
+            "term": "to",
+            "role": "ordinary_prose",
+            "source": "short_literal",
+            "exactSymbolEligible": false
+          }
+        ]
+      },
+      "retrieval": {
+        "mode": "standard",
+        "lead": "arc/job/adapters/gaussian.py::GaussianAdapter._user_requested_verytight",
+        "pivots": [
+          "arc/job/adapters/gaussian.py::GaussianAdapter._user_requested_verytight",
+          "arc/job/adapters/common.py::which"
+        ],
+        "support": [
+          "arc/job/trsh.py::GAUSSIAN_NON_RETRYABLE_KEYWORDS",
+          "arc/job/adapter.py::JobEnum",
+          "arc/job/adapters/cfour.py::CFourAdapter.execute_incore",
+          "arc/parser/adapters/gaussian.py::GaussianParser.parse_1d_scan_energies"
+        ],
+        "selectedFiles": [
+          "arc/job/adapters/gaussian.py",
+          "arc/job/adapters/common.py",
+          "arc/job/trsh.py",
+          "arc/job/adapter.py",
+          "arc/job/adapters/cfour.py",
+          "arc/parser/adapters/gaussian.py"
+        ],
+        "topCandidates": [
+          {
+            "rank": 1,
+            "fqName": "arc/job/adapters/common.py::which",
+            "path": "arc/job/adapters/common.py",
+            "final": 1.9,
+            "lexical": 1,
+            "symbol": 1,
+            "domain": 0,
+            "centrality": 0,
+            "inDegree": 0,
+            "hubPenalty": 0,
+            "localEvidence": 1,
+            "sources": [
+              "symbol"
+            ]
+          },
+          {
+            "rank": 2,
+            "fqName": "arc/job/adapters/gaussian_test.py::TestGaussianAdapter.test_user_keyword_args_survive_a_level_round_trip",
+            "path": "arc/job/adapters/gaussian_test.py",
+            "final": 1.8113,
+            "lexical": 0.9106,
+            "symbol": 0,
+            "domain": 1,
+            "centrality": 0.0013,
+            "inDegree": 1,
+            "hubPenalty": 0,
+            "localEvidence": 1.9106,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "rank": 3,
+            "fqName": "arc/job/adapters/gaussian_test.py::TestGaussianAdapterOptLadder.test_ts_route_renders_rfo_ladder",
+            "path": "arc/job/adapters/gaussian_test.py",
+            "final": 1.6525,
+            "lexical": 0.7518,
+            "symbol": 0,
+            "domain": 1,
+            "centrality": 0.0013,
+            "inDegree": 1,
+            "hubPenalty": 0,
+            "localEvidence": 1.7518,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "rank": 4,
+            "fqName": "arc/job/trsh.py::GAUSSIAN_NON_RETRYABLE_KEYWORDS",
+            "path": "arc/job/trsh.py",
+            "final": 1.6286,
+            "lexical": 0.7266,
+            "symbol": 0,
+            "domain": 1,
+            "centrality": 0.004,
+            "inDegree": 3,
+            "hubPenalty": 0,
+            "localEvidence": 1.7266,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "rank": 5,
+            "fqName": "arc/job/adapter.py::JobEnum",
+            "path": "arc/job/adapter.py",
+            "final": 1.5396,
+            "lexical": 0.0376,
+            "symbol": 0,
+            "domain": 0.3333,
+            "centrality": 0.004,
+            "inDegree": 3,
+            "hubPenalty": 0,
+            "localEvidence": 0.3333,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "graph"
+            ]
+          },
+          {
+            "rank": 6,
+            "fqName": "arc/job/adapters/gaussian.py::GaussianAdapter._user_requested_verytight",
+            "path": "arc/job/adapters/gaussian.py",
+            "final": 1.534,
+            "lexical": 0.9326,
+            "symbol": 0,
+            "domain": 0.6667,
+            "centrality": 0.0027,
+            "inDegree": 2,
+            "hubPenalty": 0,
+            "localEvidence": 1.5993,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "rank": 7,
+            "fqName": "arc/job/adapters/cfour.py::CFourAdapter.execute_incore",
+            "path": "arc/job/adapters/cfour.py",
+            "final": 1.5009,
+            "lexical": 0.0003,
+            "symbol": 0,
+            "domain": 0.3333,
+            "centrality": 0.0013,
+            "inDegree": 1,
+            "hubPenalty": 0,
+            "localEvidence": 0.3333,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "graph"
+            ]
+          },
+          {
+            "rank": 8,
+            "fqName": "arc/parser/adapters/gaussian.py::GaussianParser.parse_1d_scan_energies",
+            "path": "arc/parser/adapters/gaussian.py",
+            "final": 1.4565,
+            "lexical": 0.0415,
+            "symbol": 0,
+            "domain": 0.6667,
+            "centrality": 0.0013,
+            "inDegree": 1,
+            "hubPenalty": 0,
+            "localEvidence": 0.6667,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "graph"
+            ]
+          },
+          {
+            "rank": 9,
+            "fqName": "arc/species/species.py::ARCSpecies",
+            "path": "arc/species/species.py",
+            "final": 1.4359,
+            "lexical": 0.6359,
+            "symbol": 0,
+            "domain": 0.3333,
+            "centrality": 1,
+            "inDegree": 746,
+            "hubPenalty": 0,
+            "localEvidence": 0.9692,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "rank": 10,
+            "fqName": "arc/job/adapters/gaussian.py::GaussianAdapter",
+            "path": "arc/job/adapters/gaussian.py",
+            "final": 1.3863,
+            "lexical": 0.7762,
+            "symbol": 0,
+            "domain": 0.6667,
+            "centrality": 0.0201,
+            "inDegree": 15,
+            "hubPenalty": 0,
+            "localEvidence": 1.4429,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "rank": 11,
+            "fqName": "arc/job/trsh.py::trsh_keyword_l123",
+            "path": "arc/job/trsh.py",
+            "final": 1.3815,
+            "lexical": 0.7808,
+            "symbol": 0,
+            "domain": 0.6667,
+            "centrality": 0.0013,
+            "inDegree": 1,
+            "hubPenalty": 0,
+            "localEvidence": 1.4475,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "rank": 12,
+            "fqName": "arc/job/trsh_test.py::TestTrsh._run_gaussian_ladder",
+            "path": "arc/job/trsh_test.py",
+            "final": 1.3498,
+            "lexical": 0.7464,
+            "symbol": 0,
+            "domain": 0.6667,
+            "centrality": 0.0067,
+            "inDegree": 5,
+            "hubPenalty": 0,
+            "localEvidence": 1.4131,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "rank": 13,
+            "fqName": "arc/job/adapters/ts/xtb_gsm.py::xTBGSMAdapter.set_inpfileq_keywords",
+            "path": "arc/job/adapters/ts/xtb_gsm.py",
+            "final": 1.3482,
+            "lexical": 0.7468,
+            "symbol": 0,
+            "domain": 0.6667,
+            "centrality": 0.0027,
+            "inDegree": 2,
+            "hubPenalty": 0,
+            "localEvidence": 1.4135,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "rank": 14,
+            "fqName": "arc/job/trsh.py::trsh_keyword_opt_maxcycles",
+            "path": "arc/job/trsh.py",
+            "final": 1.3468,
+            "lexical": 0.7461,
+            "symbol": 0,
+            "domain": 0.6667,
+            "centrality": 0.0013,
+            "inDegree": 1,
+            "hubPenalty": 0,
+            "localEvidence": 1.4128,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "rank": 15,
+            "fqName": "arc/species/zmat_test.py::TestThirdAtomFrame.test_a_leading_dummy_atom_does_not_land_on_the_molecular_axis",
+            "path": "arc/species/zmat_test.py",
+            "final": 1.3288,
+            "lexical": 0.2139,
+            "symbol": 0,
+            "domain": 0.3333,
+            "centrality": 0.0013,
+            "inDegree": 1,
+            "hubPenalty": 0,
+            "localEvidence": 0.5472,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "graph"
+            ]
+          }
+        ]
+      },
+      "ownerFile": {
+        "path": "arc/job/adapters/gaussian.py",
+        "top1": true,
+        "top3": true,
+        "anywhere": true,
+        "bestCandidateRank": 6,
+        "indexedDefinitions": 12
+      },
+      "expectedDefinitions": [],
+      "falsePositiveLeads": [
+        {
+          "fqName": "arc/job/adapters/common.py::which",
+          "indexed": true,
+          "state": "pivot",
+          "candidateRank": 1,
+          "finalScore": 1.9,
+          "lead": false
+        },
+        {
+          "fqName": "arc/main.py::ARC",
+          "indexed": true,
+          "state": "not_generated",
+          "candidateRank": null,
+          "finalScore": null,
+          "lead": false
+        }
+      ],
+      "centralityTrace": [
+        {
+          "fqName": "arc/species/species.py::ARCSpecies",
+          "rank": 9,
+          "inDegree": 746,
+          "centrality": 1,
+          "centralityContribution": 0.5,
+          "finalScore": 1.4359,
+          "scoreWithoutCentrality": 0.9359,
+          "localEvidence": 0.9692,
+          "hubPenalty": 0,
+          "selected": false,
+          "pivot": false
+        }
+      ],
+      "response": {
+        "serializedBytes": 54188,
+        "pivotCount": 2,
+        "supportCount": 4
+      }
+    },
+    {
+      "id": "arc_reactant_atom_index_space",
+      "category": "concept distributed across two helpers",
+      "query": "When a reaction is mapped, how is the atom index space of the reactants established and where does the bond list used for it come from?",
+      "queryProvenance": "reconstructed_from_report",
+      "reportedFailure": "get_reactants_and_products / get_bonds never surfaced",
+      "elapsedMs": 330.73,
+      "identifierRoles": {
+        "likelySymbols": [],
+        "identifiers": [],
+        "filteredGenericSymbols": [],
+        "shapedQuery": "issue: When a reaction is mapped, how is the atom index space of the reactants established and where does the bond list used for it come from?",
+        "explicitIdentifiers": [],
+        "projectReferences": [],
+        "symbolHypotheses": [],
+        "identifierSignals": [
+          {
+            "term": "a",
+            "role": "ordinary_prose",
+            "source": "short_literal",
+            "exactSymbolEligible": false
+          },
+          {
+            "term": "is",
+            "role": "ordinary_prose",
+            "source": "short_literal",
+            "exactSymbolEligible": false
+          },
+          {
+            "term": "of",
+            "role": "ordinary_prose",
+            "source": "short_literal",
+            "exactSymbolEligible": false
+          },
+          {
+            "term": "it",
+            "role": "ordinary_prose",
+            "source": "short_literal",
+            "exactSymbolEligible": false
+          }
+        ]
+      },
+      "retrieval": {
+        "mode": "standard",
+        "lead": "arc/reaction/reaction.py::get_resonance_bond_orders",
+        "pivots": [
+          "arc/reaction/reaction.py::get_resonance_bond_orders",
+          "arc/reaction/reaction.py::ARCReaction"
+        ],
+        "support": [
+          "arc/checks/nmd.py::get_bond_length_in_reaction",
+          "arc/family/family.py::ReactionFamily.generate_products_by_reactant_groups",
+          "cut_species_based_on_atom_indices",
+          "arc/reaction/reaction.py::ARCReaction.get_reactive_bonds_from_family"
+        ],
+        "selectedFiles": [
+          "arc/reaction/reaction.py",
+          "arc/checks/nmd.py",
+          "arc/family/family.py",
+          "arc/mapping/engine.py"
+        ],
+        "topCandidates": [
+          {
+            "rank": 1,
+            "fqName": "arc/reaction/reaction.py::get_resonance_bond_orders",
+            "path": "arc/reaction/reaction.py",
+            "final": 1.9,
+            "lexical": 0.7424,
+            "symbol": 1,
+            "domain": 1,
+            "centrality": 0.004,
+            "inDegree": 3,
+            "hubPenalty": 0,
+            "localEvidence": 1.7424,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "rank": 2,
+            "fqName": "arc/reaction/reaction.py::ARCReaction",
+            "path": "arc/reaction/reaction.py",
+            "final": 1.631,
+            "lexical": 0.8306,
+            "symbol": 0,
+            "domain": 0.6667,
+            "centrality": 0.4008,
+            "inDegree": 299,
+            "hubPenalty": 0,
+            "localEvidence": 1.4973,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "rank": 3,
+            "fqName": "arc/checks/nmd.py::get_bond_length_in_reaction",
+            "path": "arc/checks/nmd.py",
+            "final": 1.5906,
+            "lexical": 0.6886,
+            "symbol": 0,
+            "domain": 1,
+            "centrality": 0.004,
+            "inDegree": 3,
+            "hubPenalty": 0,
+            "localEvidence": 1.6886,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "rank": 4,
+            "fqName": "arc/reaction/reaction.py::ARCReaction.get_reactive_bonds_from_family",
+            "path": "arc/reaction/reaction.py",
+            "final": 1.5739,
+            "lexical": 0.9719,
+            "symbol": 0,
+            "domain": 0.6667,
+            "centrality": 0.004,
+            "inDegree": 3,
+            "hubPenalty": 0,
+            "localEvidence": 1.6386,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "rank": 5,
+            "fqName": "arc/species/zmat_test.py::TestThirdAtomFrame.test_a_leading_dummy_atom_does_not_land_on_the_molecular_axis",
+            "path": "arc/species/zmat_test.py",
+            "final": 1.5701,
+            "lexical": 0.2135,
+            "symbol": 0,
+            "domain": 0.3333,
+            "centrality": 0.0013,
+            "inDegree": 1,
+            "hubPenalty": 0,
+            "localEvidence": 0.5468,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "graph"
+            ]
+          },
+          {
+            "rank": 6,
+            "fqName": "arc/reaction/reaction.py::ARCReaction._resolve_label_index",
+            "path": "arc/reaction/reaction.py",
+            "final": 1.4495,
+            "lexical": 0.5482,
+            "symbol": 0,
+            "domain": 1,
+            "centrality": 0.0027,
+            "inDegree": 2,
+            "hubPenalty": 0,
+            "localEvidence": 1.5482,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "rank": 7,
+            "fqName": "arc/reaction/reaction_test.py::TestARCReaction.test_get_bonds_and_reactive_bonds_without_atom_map",
+            "path": "arc/reaction/reaction_test.py",
+            "final": 1.4308,
+            "lexical": 0.5301,
+            "symbol": 0,
+            "domain": 1,
+            "centrality": 0.0013,
+            "inDegree": 1,
+            "hubPenalty": 0,
+            "localEvidence": 1.5301,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "rank": 8,
+            "fqName": "arc/reaction/reaction.py::ARCReaction.atom_map",
+            "path": "arc/reaction/reaction.py",
+            "final": 1.4306,
+            "lexical": 0.5299,
+            "symbol": 0,
+            "domain": 1,
+            "centrality": 0.0013,
+            "inDegree": 1,
+            "hubPenalty": 0,
+            "localEvidence": 1.5299,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "rank": 9,
+            "fqName": "arc/mapping/driver_test.py::TestMappingDriver.test_get_atom_map_2",
+            "path": "arc/mapping/driver_test.py",
+            "final": 1.4135,
+            "lexical": 0.0569,
+            "symbol": 0,
+            "domain": 0.3333,
+            "centrality": 0.0013,
+            "inDegree": 1,
+            "hubPenalty": 0,
+            "localEvidence": 0.3333,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "graph"
+            ]
+          },
+          {
+            "rank": 10,
+            "fqName": "arc/reaction/reaction.py::ARCReaction.get_bonds",
+            "path": "arc/reaction/reaction.py",
+            "final": 1.396,
+            "lexical": 0.794,
+            "symbol": 0,
+            "domain": 0.6667,
+            "centrality": 0.004,
+            "inDegree": 3,
+            "hubPenalty": 0,
+            "localEvidence": 1.4607,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "rank": 11,
+            "fqName": "arc/mapping/driver.py::map_reaction",
+            "path": "arc/mapping/driver.py",
+            "final": 1.3836,
+            "lexical": 0.7836,
+            "symbol": 0,
+            "domain": 0.6667,
+            "centrality": 0,
+            "inDegree": 0,
+            "hubPenalty": 0,
+            "localEvidence": 1.4503,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "rank": 12,
+            "fqName": "arc/reaction/reaction.py::ARCReaction.get_changed_bonds",
+            "path": "arc/reaction/reaction.py",
+            "final": 1.3597,
+            "lexical": 0.161,
+            "symbol": 0,
+            "domain": 0.6667,
+            "centrality": 0.0013,
+            "inDegree": 1,
+            "hubPenalty": 0,
+            "localEvidence": 0.8277,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "upstream_rescue"
+            ]
+          },
+          {
+            "rank": 13,
+            "fqName": "arc/job/adapters/ts/linear_utils/local_geometry.py::apply_reactive_center_cleanup",
+            "path": "arc/job/adapters/ts/linear_utils/local_geometry.py",
+            "final": 1.2856,
+            "lexical": 0.6735,
+            "symbol": 0,
+            "domain": 0.6667,
+            "centrality": 0.0241,
+            "inDegree": 18,
+            "hubPenalty": 0,
+            "localEvidence": 1.3402,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "rank": 14,
+            "fqName": "arc/species/species.py::ARCSpecies",
+            "path": "arc/species/species.py",
+            "final": 1.2761,
+            "lexical": 0.7761,
+            "symbol": 0,
+            "domain": 0,
+            "centrality": 1,
+            "inDegree": 746,
+            "hubPenalty": 0,
+            "localEvidence": 0.7761,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "rank": 15,
+            "fqName": "arc/reaction/reaction.py::ARCReaction._get_products_xyz_aligned_to_reactants",
+            "path": "arc/reaction/reaction.py",
+            "final": 1.2689,
+            "lexical": 0.6675,
+            "symbol": 0,
+            "domain": 0.6667,
+            "centrality": 0.0027,
+            "inDegree": 2,
+            "hubPenalty": 0,
+            "localEvidence": 1.3342,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "lexical"
+            ]
+          }
+        ]
+      },
+      "ownerFile": {
+        "path": "arc/reaction/reaction.py",
+        "top1": true,
+        "top3": true,
+        "anywhere": true,
+        "bestCandidateRank": 1,
+        "indexedDefinitions": 50
+      },
+      "expectedDefinitions": [
+        {
+          "fqName": "arc/reaction/reaction.py::ARCReaction.get_reactants_and_products",
+          "indexed": true,
+          "state": "not_generated",
+          "candidateRank": null,
+          "finalScore": null,
+          "lead": false
+        },
+        {
+          "fqName": "arc/reaction/reaction.py::ARCReaction.get_bonds",
+          "indexed": true,
+          "state": "generated_not_selected",
+          "candidateRank": 10,
+          "finalScore": 1.396,
+          "lead": false
+        }
+      ],
+      "falsePositiveLeads": [],
+      "centralityTrace": [
+        {
+          "fqName": "arc/species/species.py::ARCSpecies",
+          "rank": 14,
+          "inDegree": 746,
+          "centrality": 1,
+          "centralityContribution": 0.5,
+          "finalScore": 1.2761,
+          "scoreWithoutCentrality": 0.7761,
+          "localEvidence": 0.7761,
+          "hubPenalty": 0,
+          "selected": false,
+          "pivot": false
+        },
+        {
+          "fqName": "arc/reaction/reaction.py::ARCReaction",
+          "rank": 2,
+          "inDegree": 299,
+          "centrality": 0.4008,
+          "centralityContribution": 0.2004,
+          "finalScore": 1.631,
+          "scoreWithoutCentrality": 1.4306,
+          "localEvidence": 1.4973,
+          "hubPenalty": 0,
+          "selected": true,
+          "pivot": true
+        }
+      ],
+      "response": {
+        "serializedBytes": 60857,
+        "pivotCount": 2,
+        "supportCount": 4
+      }
+    },
+    {
+      "id": "arc_ts_guess_atom_order",
+      "category": "behavior described without implementation name",
+      "query": "How is the atom order of a transition state guess brought into line with the numbering used by the mapped product geometry?",
+      "queryProvenance": "reconstructed_from_report",
+      "reportedFailure": "get_single_mapped_product_xyz / order_xyz_by_atom_map never surfaced",
+      "elapsedMs": 301.47,
+      "identifierRoles": {
+        "likelySymbols": [],
+        "identifiers": [],
+        "filteredGenericSymbols": [],
+        "shapedQuery": "issue: How is the atom order of a transition state guess brought into line with the numbering used by the mapped product geometry?",
+        "explicitIdentifiers": [],
+        "projectReferences": [],
+        "symbolHypotheses": [],
+        "identifierSignals": [
+          {
+            "term": "is",
+            "role": "ordinary_prose",
+            "source": "short_literal",
+            "exactSymbolEligible": false
+          },
+          {
+            "term": "of",
+            "role": "ordinary_prose",
+            "source": "short_literal",
+            "exactSymbolEligible": false
+          },
+          {
+            "term": "a",
+            "role": "ordinary_prose",
+            "source": "short_literal",
+            "exactSymbolEligible": false
+          },
+          {
+            "term": "by",
+            "role": "ordinary_prose",
+            "source": "short_literal",
+            "exactSymbolEligible": false
+          }
+        ]
+      },
+      "retrieval": {
+        "mode": "standard",
+        "lead": "arc/tckdb/adapter.py::TCKDBAdapter._compose_transition_state_request",
+        "pivots": [
+          "arc/tckdb/adapter.py::TCKDBAdapter._compose_transition_state_request",
+          "arc/species/converter.py::order_mol_by_atom_map"
+        ],
+        "support": [
+          "arc/mapping/engine.py::get_template_product_order",
+          "arc/species/zmat.py::get_atom_order_from_mol",
+          "arc/species/species.py::ARCSpecies",
+          "<module>"
+        ],
+        "selectedFiles": [
+          "arc/tckdb/adapter.py",
+          "arc/species/converter.py",
+          "arc/mapping/engine.py",
+          "arc/species/zmat.py",
+          "arc/species/species.py",
+          "arc/mapping/driver.py"
+        ],
+        "topCandidates": [
+          {
+            "rank": 1,
+            "fqName": "arc/tckdb/adapter.py::TCKDBAdapter._compose_transition_state_request",
+            "path": "arc/tckdb/adapter.py",
+            "final": 1.8101,
+            "lexical": 0.9087,
+            "symbol": 0,
+            "domain": 1,
+            "centrality": 0.0027,
+            "inDegree": 2,
+            "hubPenalty": 0,
+            "localEvidence": 1.9087,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "rank": 2,
+            "fqName": "arc/species/zmat_test.py::TestThirdAtomFrame.test_a_leading_dummy_atom_does_not_land_on_the_molecular_axis",
+            "path": "arc/species/zmat_test.py",
+            "final": 1.7608,
+            "lexical": 0.1101,
+            "symbol": 0,
+            "domain": 0.5,
+            "centrality": 0.0013,
+            "inDegree": 1,
+            "hubPenalty": 0,
+            "localEvidence": 0.6101,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "graph"
+            ]
+          },
+          {
+            "rank": 3,
+            "fqName": "arc/job/adapters/ts/linear_utils/local_geometry_test.py::TestApplyReactiveCenterCleanup.test_orchestrator_repositions_migrating_h",
+            "path": "arc/job/adapters/ts/linear_utils/local_geometry_test.py",
+            "final": 1.7102,
+            "lexical": 0.0595,
+            "symbol": 0,
+            "domain": 0.5,
+            "centrality": 0.0013,
+            "inDegree": 1,
+            "hubPenalty": 0,
+            "localEvidence": 0.5,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "graph"
+            ]
+          },
+          {
+            "rank": 4,
+            "fqName": "arc/mapping/driver_test.py::TestMappingDriver.test_get_atom_map_2",
+            "path": "arc/mapping/driver_test.py",
+            "final": 1.6743,
+            "lexical": 0.0236,
+            "symbol": 0,
+            "domain": 0.5,
+            "centrality": 0.0013,
+            "inDegree": 1,
+            "hubPenalty": 0,
+            "localEvidence": 0.5,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "graph"
+            ]
+          },
+          {
+            "rank": 5,
+            "fqName": "arc/species/converter.py::order_mol_by_atom_map",
+            "path": "arc/species/converter.py",
+            "final": 1.6535,
+            "lexical": 0.7454,
+            "symbol": 0,
+            "domain": 1,
+            "centrality": 0.0161,
+            "inDegree": 12,
+            "hubPenalty": 0,
+            "localEvidence": 1.7454,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "rank": 6,
+            "fqName": "arc/species/converter.py::order_xyz_by_atom_map",
+            "path": "arc/species/converter.py",
+            "final": 1.5842,
+            "lexical": 0.6802,
+            "symbol": 0,
+            "domain": 1,
+            "centrality": 0.008,
+            "inDegree": 6,
+            "hubPenalty": 0,
+            "localEvidence": 1.6802,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "rank": 7,
+            "fqName": "arc/job/adapters/gaussian_test.py::TestGaussianAdapterGuessMixGating.test_checkfile_guess_read_takes_precedence",
+            "path": "arc/job/adapters/gaussian_test.py",
+            "final": 1.5763,
+            "lexical": 0.0893,
+            "symbol": 0,
+            "domain": 0.5,
+            "centrality": 0.0013,
+            "inDegree": 1,
+            "hubPenalty": 0,
+            "localEvidence": 0.5,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "graph"
+            ]
+          },
+          {
+            "rank": 8,
+            "fqName": "arc/mapping/engine.py::get_template_product_order",
+            "path": "arc/mapping/engine.py",
+            "final": 1.4975,
+            "lexical": 0.5948,
+            "symbol": 0,
+            "domain": 1,
+            "centrality": 0.0054,
+            "inDegree": 4,
+            "hubPenalty": 0,
+            "localEvidence": 1.5948,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "rank": 9,
+            "fqName": "arc/species/zmat.py::get_atom_order_from_mol",
+            "path": "arc/species/zmat.py",
+            "final": 1.4846,
+            "lexical": 0.5832,
+            "symbol": 0,
+            "domain": 1,
+            "centrality": 0.0027,
+            "inDegree": 2,
+            "hubPenalty": 0,
+            "localEvidence": 1.5832,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "rank": 10,
+            "fqName": "arc/species/species.py::ARCSpecies",
+            "path": "arc/species/species.py",
+            "final": 1.3711,
+            "lexical": 0.8711,
+            "symbol": 0,
+            "domain": 0,
+            "centrality": 1,
+            "inDegree": 746,
+            "hubPenalty": 0,
+            "localEvidence": 0.8711,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "rank": 11,
+            "fqName": "arc/job/adapters/ts/linear_utils/local_geometry.py::is_internal_reactive_ch2_misoriented",
+            "path": "arc/job/adapters/ts/linear_utils/local_geometry.py",
+            "final": 1.282,
+            "lexical": 0.8233,
+            "symbol": 0,
+            "domain": 0.5,
+            "centrality": 0.0174,
+            "inDegree": 13,
+            "hubPenalty": 0,
+            "localEvidence": 1.3233,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "rank": 12,
+            "fqName": "arc/tckdb/adapter.py::TCKDBAdapter.submit_computed_ts_from_output",
+            "path": "arc/tckdb/adapter.py",
+            "final": 1.2635,
+            "lexical": 0.3128,
+            "symbol": 0,
+            "domain": 0,
+            "centrality": 0.0013,
+            "inDegree": 1,
+            "hubPenalty": 0,
+            "localEvidence": 0.3128,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "upstream_rescue"
+            ]
+          },
+          {
+            "rank": 13,
+            "fqName": "arc/job/adapters/ts/linear_utils/local_geometry.py::is_terminal_group_asymmetric",
+            "path": "arc/job/adapters/ts/linear_utils/local_geometry.py",
+            "final": 1.2396,
+            "lexical": 0.7829,
+            "symbol": 0,
+            "domain": 0.5,
+            "centrality": 0.0134,
+            "inDegree": 10,
+            "hubPenalty": 0,
+            "localEvidence": 1.2829,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "rank": 14,
+            "fqName": "arc/job/adapters/ts/autotst_ts.py::AutoTSTAdapter",
+            "path": "arc/job/adapters/ts/autotst_ts.py",
+            "final": 1.2311,
+            "lexical": 0.1395,
+            "symbol": 0,
+            "domain": 0,
+            "centrality": 0.0013,
+            "inDegree": 1,
+            "hubPenalty": 0,
+            "localEvidence": 0.1395,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "same_module"
+            ]
+          },
+          {
+            "rank": 15,
+            "fqName": "arc/job/adapter.py::JobEnum",
+            "path": "arc/job/adapter.py",
+            "final": 1.2219,
+            "lexical": 0.1836,
+            "symbol": 0,
+            "domain": 0,
+            "centrality": 0.004,
+            "inDegree": 3,
+            "hubPenalty": 0,
+            "localEvidence": 0.1836,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "graph"
+            ]
+          }
+        ]
+      },
+      "ownerFile": {
+        "path": "arc/reaction/reaction.py",
+        "top1": false,
+        "top3": false,
+        "anywhere": false,
+        "bestCandidateRank": null,
+        "indexedDefinitions": 50
+      },
+      "expectedDefinitions": [
+        {
+          "fqName": "arc/reaction/reaction.py::ARCReaction.get_single_mapped_product_xyz",
+          "indexed": true,
+          "state": "not_generated",
+          "candidateRank": null,
+          "finalScore": null,
+          "lead": false
+        },
+        {
+          "fqName": "arc/species/converter.py::order_xyz_by_atom_map",
+          "indexed": true,
+          "state": "generated_not_selected",
+          "candidateRank": 6,
+          "finalScore": 1.5842,
+          "lead": false
+        }
+      ],
+      "falsePositiveLeads": [],
+      "centralityTrace": [
+        {
+          "fqName": "arc/species/species.py::ARCSpecies",
+          "rank": 10,
+          "inDegree": 746,
+          "centrality": 1,
+          "centralityContribution": 0.5,
+          "finalScore": 1.3711,
+          "scoreWithoutCentrality": 0.8711,
+          "localEvidence": 0.8711,
+          "hubPenalty": 0,
+          "selected": true,
+          "pivot": false
+        }
+      ],
+      "response": {
+        "serializedBytes": 64069,
+        "pivotCount": 2,
+        "supportCount": 4
+      }
+    },
+    {
+      "id": "arc_explicit_which_lookup",
+      "category": "explicit identifier positive control",
+      "query": "Where is which() implemented?",
+      "queryProvenance": "reconstructed_from_report",
+      "reportedFailure": "n/a — positive control",
+      "elapsedMs": 142.01,
+      "identifierRoles": {
+        "likelySymbols": [
+          "which"
+        ],
+        "identifiers": [
+          "which"
+        ],
+        "filteredGenericSymbols": [],
+        "shapedQuery": "symbols: which\nissue: Where is which() implemented?",
+        "explicitIdentifiers": [
+          "which"
+        ],
+        "projectReferences": [],
+        "symbolHypotheses": [
+          {
+            "term": "which",
+            "role": "explicit_identifier",
+            "source": "call_syntax",
+            "exactSymbolEligible": true,
+            "reason": "call syntax"
+          }
+        ],
+        "identifierSignals": [
+          {
+            "term": "which",
+            "role": "explicit_identifier",
+            "source": "call_syntax",
+            "exactSymbolEligible": true
+          },
+          {
+            "term": "is",
+            "role": "ordinary_prose",
+            "source": "short_literal",
+            "exactSymbolEligible": false
+          }
+        ]
+      },
+      "retrieval": {
+        "mode": "standard",
+        "lead": "arc/job/adapters/common.py::which",
+        "pivots": [
+          "arc/job/adapters/common.py::which",
+          "arc/tckdb/sweep.py::_implementable_kinds_from_config"
+        ],
+        "support": [
+          "arc/species/conformers.py::change_dihedrals_and_force_field_it",
+          "arc/species/species.py::ARCSpecies",
+          "arc/plotter.py::augment_arkane_yml_file_with_mol_repr",
+          "arc/job/adapters/cfour.py::CFourAdapter.execute_incore"
+        ],
+        "selectedFiles": [
+          "arc/job/adapters/common.py",
+          "arc/tckdb/sweep.py",
+          "arc/species/conformers.py",
+          "arc/species/species.py",
+          "arc/plotter.py",
+          "arc/job/adapters/cfour.py"
+        ],
+        "topCandidates": [
+          {
+            "rank": 1,
+            "fqName": "arc/job/adapters/common.py::which",
+            "path": "arc/job/adapters/common.py",
+            "final": 2.8277,
+            "lexical": 0.821,
+            "symbol": 1,
+            "domain": 1,
+            "centrality": 0.0134,
+            "inDegree": 10,
+            "hubPenalty": 0,
+            "localEvidence": 2.821,
+            "identifierConfidence": "explicit_identifier",
+            "sources": [
+              "lexical",
+              "symbol"
+            ]
+          },
+          {
+            "rank": 2,
+            "fqName": "arc/tckdb/sweep.py::_implementable_kinds_from_config",
+            "path": "arc/tckdb/sweep.py",
+            "final": 1.7035,
+            "lexical": 0.8028,
+            "symbol": 0,
+            "domain": 1,
+            "centrality": 0.0013,
+            "inDegree": 1,
+            "hubPenalty": 0,
+            "localEvidence": 1.8028,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "rank": 3,
+            "fqName": "arc/job/adapters/ts/linear_utils/local_geometry_test.py::TestApplyReactiveCenterCleanup.test_orchestrator_repositions_migrating_h",
+            "path": "arc/job/adapters/ts/linear_utils/local_geometry_test.py",
+            "final": 1.387,
+            "lexical": 0.35,
+            "symbol": 0,
+            "domain": 0,
+            "centrality": 0.0013,
+            "inDegree": 1,
+            "hubPenalty": 0,
+            "localEvidence": 0.35,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "graph"
+            ]
+          },
+          {
+            "rank": 4,
+            "fqName": "arc/job/adapters/common_test.py::TestJobCommon.test_which",
+            "path": "arc/job/adapters/common_test.py",
+            "final": 1.3738,
+            "lexical": 0.1065,
+            "symbol": 0.3333,
+            "domain": 1,
+            "centrality": 0.0013,
+            "inDegree": 1,
+            "hubPenalty": 0,
+            "localEvidence": 1.4398,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "symbol"
+            ]
+          },
+          {
+            "rank": 5,
+            "fqName": "arc/species/zmat_test.py::TestThirdAtomFrame.test_a_leading_dummy_atom_does_not_land_on_the_molecular_axis",
+            "path": "arc/species/zmat_test.py",
+            "final": 1.2519,
+            "lexical": 0.0513,
+            "symbol": 0,
+            "domain": 0,
+            "centrality": 0.0013,
+            "inDegree": 1,
+            "hubPenalty": 0,
+            "localEvidence": 0,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "graph"
+            ]
+          },
+          {
+            "rank": 6,
+            "fqName": "arc/job/adapters/ts/linear_test.py::TestLinearAdapter.test_interpolate_1_2_shift_s",
+            "path": "arc/job/adapters/ts/linear_test.py",
+            "final": 1.2007,
+            "lexical": 0,
+            "symbol": 0,
+            "domain": 0,
+            "centrality": 0.0013,
+            "inDegree": 1,
+            "hubPenalty": 0,
+            "localEvidence": 0,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "graph"
+            ]
+          },
+          {
+            "rank": 7,
+            "fqName": "arc/job/adapters/ts/linear_test.py::TestLinearAdapter.test_interpolate_xy_addition_multiplebond",
+            "path": "arc/job/adapters/ts/linear_test.py",
+            "final": 1.2007,
+            "lexical": 0,
+            "symbol": 0,
+            "domain": 0,
+            "centrality": 0.0013,
+            "inDegree": 1,
+            "hubPenalty": 0,
+            "localEvidence": 0,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "graph"
+            ]
+          },
+          {
+            "rank": 8,
+            "fqName": "arc/species/species_test.py::TestARCSpecies.test_is_water",
+            "path": "arc/species/species_test.py",
+            "final": 1.1314,
+            "lexical": 0.0944,
+            "symbol": 0,
+            "domain": 0,
+            "centrality": 0.0013,
+            "inDegree": 1,
+            "hubPenalty": 0,
+            "localEvidence": 0,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "graph"
+            ]
+          },
+          {
+            "rank": 9,
+            "fqName": "arc/species/conformers.py::change_dihedrals_and_force_field_it",
+            "path": "arc/species/conformers.py",
+            "final": 1.1217,
+            "lexical": 0.0834,
+            "symbol": 0,
+            "domain": 0,
+            "centrality": 0.004,
+            "inDegree": 3,
+            "hubPenalty": 0,
+            "localEvidence": 0,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "graph"
+            ]
+          },
+          {
+            "rank": 10,
+            "fqName": "arc/job/adapters/gaussian_test.py::TestGaussianAdapterGuessMixGating.test_checkfile_guess_read_takes_precedence",
+            "path": "arc/job/adapters/gaussian_test.py",
+            "final": 1.1011,
+            "lexical": 0.0641,
+            "symbol": 0,
+            "domain": 0,
+            "centrality": 0.0013,
+            "inDegree": 1,
+            "hubPenalty": 0,
+            "localEvidence": 0,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "graph"
+            ]
+          },
+          {
+            "rank": 11,
+            "fqName": "arc/species/species.py::ARCSpecies",
+            "path": "arc/species/species.py",
+            "final": 1.0858,
+            "lexical": 0.5858,
+            "symbol": 0,
+            "domain": 0,
+            "centrality": 1,
+            "inDegree": 746,
+            "hubPenalty": 0,
+            "localEvidence": 0.5858,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "rank": 12,
+            "fqName": "arc/plotter.py::augment_arkane_yml_file_with_mol_repr",
+            "path": "arc/plotter.py",
+            "final": 1.0377,
+            "lexical": 0,
+            "symbol": 0,
+            "domain": 0,
+            "centrality": 0.0027,
+            "inDegree": 2,
+            "hubPenalty": 0,
+            "localEvidence": 0,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "graph"
+            ]
+          },
+          {
+            "rank": 13,
+            "fqName": "arc/job/adapters/cfour.py::CFourAdapter.execute_incore",
+            "path": "arc/job/adapters/cfour.py",
+            "final": 1.037,
+            "lexical": 0,
+            "symbol": 0,
+            "domain": 0,
+            "centrality": 0.0013,
+            "inDegree": 1,
+            "hubPenalty": 0,
+            "localEvidence": 0,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "graph"
+            ]
+          },
+          {
+            "rank": 14,
+            "fqName": "arc/job/adapters/orca_test.py::TestOrcaAdapter.test_dft_grid_freq",
+            "path": "arc/job/adapters/orca_test.py",
+            "final": 1.037,
+            "lexical": 0,
+            "symbol": 0,
+            "domain": 0,
+            "centrality": 0.0013,
+            "inDegree": 1,
+            "hubPenalty": 0,
+            "localEvidence": 0,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "graph"
+            ]
+          },
+          {
+            "rank": 15,
+            "fqName": "arc/job/adapters/ts/gcn_test.py::TestGCNAdapter.test_run_subprocess_locally_success",
+            "path": "arc/job/adapters/ts/gcn_test.py",
+            "final": 1.037,
+            "lexical": 0,
+            "symbol": 0,
+            "domain": 0,
+            "centrality": 0.0013,
+            "inDegree": 1,
+            "hubPenalty": 0,
+            "localEvidence": 0,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "graph"
+            ]
+          }
+        ]
+      },
+      "ownerFile": {
+        "path": "arc/job/adapters/common.py",
+        "top1": true,
+        "top3": true,
+        "anywhere": true,
+        "bestCandidateRank": 1,
+        "indexedDefinitions": 15
+      },
+      "expectedDefinitions": [
+        {
+          "fqName": "arc/job/adapters/common.py::which",
+          "indexed": true,
+          "state": "pivot",
+          "candidateRank": 1,
+          "finalScore": 2.8277,
+          "lead": true
+        }
+      ],
+      "falsePositiveLeads": [],
+      "centralityTrace": [
+        {
+          "fqName": "arc/species/species.py::ARCSpecies",
+          "rank": 11,
+          "inDegree": 746,
+          "centrality": 1,
+          "centralityContribution": 0.5,
+          "finalScore": 1.0858,
+          "scoreWithoutCentrality": 0.5858,
+          "localEvidence": 0.5858,
+          "hubPenalty": 0,
+          "selected": true,
+          "pivot": false
+        }
+      ],
+      "response": {
+        "serializedBytes": 47982,
+        "pivotCount": 2,
+        "supportCount": 4
+      }
+    },
+    {
+      "id": "arc_explicit_arc_class_lookup",
+      "category": "explicit project-named class positive control",
+      "query": "Where is the ARC class defined?",
+      "queryProvenance": "reconstructed_from_report",
+      "reportedFailure": "n/a — positive control",
+      "elapsedMs": 268.2,
+      "identifierRoles": {
+        "likelySymbols": [
+          "ARC"
+        ],
+        "identifiers": [
+          "ARC"
+        ],
+        "filteredGenericSymbols": [],
+        "shapedQuery": "symbols: ARC\nissue: Where is the ARC class defined?",
+        "explicitIdentifiers": [
+          "ARC"
+        ],
+        "projectReferences": [],
+        "symbolHypotheses": [
+          {
+            "term": "ARC",
+            "role": "explicit_identifier",
+            "source": "declaration_phrase",
+            "exactSymbolEligible": true,
+            "reason": "explicit trailing symbol-kind phrase"
+          }
+        ],
+        "identifierSignals": [
+          {
+            "term": "ARC",
+            "role": "explicit_identifier",
+            "source": "declaration_phrase",
+            "exactSymbolEligible": true
+          },
+          {
+            "term": "is",
+            "role": "ordinary_prose",
+            "source": "short_literal",
+            "exactSymbolEligible": false
+          }
+        ]
+      },
+      "retrieval": {
+        "mode": "standard",
+        "lead": "arc/main.py::ARC",
+        "pivots": [
+          "arc/main.py::ARC",
+          "arc/species/species.py::ARCSpecies"
+        ],
+        "support": [
+          "arc/reaction/reaction.py::ARCReaction",
+          "arc/mapping/engine.py::_anchors_define_a_plane",
+          "arc/statmech/arkane.py::_classify_arkane_stderr",
+          "arc/tckdb/adapter.py::_classify_statmech_treatment"
+        ],
+        "selectedFiles": [
+          "arc/main.py",
+          "arc/species/species.py",
+          "arc/reaction/reaction.py",
+          "arc/mapping/engine.py",
+          "arc/statmech/arkane.py",
+          "arc/tckdb/adapter.py"
+        ],
+        "topCandidates": [
+          {
+            "rank": 1,
+            "fqName": "arc/main.py::ARC",
+            "path": "arc/main.py",
+            "final": 2.3544,
+            "lexical": 0.7883,
+            "symbol": 1,
+            "domain": 0.5,
+            "centrality": 0.0322,
+            "inDegree": 24,
+            "hubPenalty": 0,
+            "localEvidence": 2.2883,
+            "identifierConfidence": "explicit_identifier",
+            "sources": [
+              "lexical",
+              "symbol"
+            ]
+          },
+          {
+            "rank": 2,
+            "fqName": "arc/species/species.py::ARCSpecies",
+            "path": "arc/species/species.py",
+            "final": 2.1926,
+            "lexical": 0.5826,
+            "symbol": 0.6,
+            "domain": 0.5,
+            "centrality": 1,
+            "inDegree": 746,
+            "hubPenalty": 0,
+            "localEvidence": 1.6826,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "lexical",
+              "symbol"
+            ]
+          },
+          {
+            "rank": 3,
+            "fqName": "arc/reaction/reaction.py::ARCReaction",
+            "path": "arc/reaction/reaction.py",
+            "final": 1.8575,
+            "lexical": 0.5471,
+            "symbol": 0.6,
+            "domain": 0.5,
+            "centrality": 0.4008,
+            "inDegree": 299,
+            "hubPenalty": 0,
+            "localEvidence": 1.6471,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "lexical",
+              "symbol"
+            ]
+          },
+          {
+            "rank": 4,
+            "fqName": "arc/job/adapters/ts/linear_utils/path_spec.py::classify_path_chemistry",
+            "path": "arc/job/adapters/ts/linear_utils/path_spec.py",
+            "final": 1.7986,
+            "lexical": 0.8885,
+            "symbol": 0,
+            "domain": 1,
+            "centrality": 0.0201,
+            "inDegree": 15,
+            "hubPenalty": 0,
+            "localEvidence": 1.8885,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "rank": 5,
+            "fqName": "arc/job/adapters/ts/linear_utils/local_geometry_test.py::TestApplyReactiveCenterCleanup.test_orchestrator_repositions_migrating_h",
+            "path": "arc/job/adapters/ts/linear_utils/local_geometry_test.py",
+            "final": 1.7305,
+            "lexical": 0.2084,
+            "symbol": 0,
+            "domain": 0.5,
+            "centrality": 0.0013,
+            "inDegree": 1,
+            "hubPenalty": 0,
+            "localEvidence": 0.7084,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "graph"
+            ]
+          },
+          {
+            "rank": 6,
+            "fqName": "arc/utils/scale_test.py::TestScale.test_summarize_results",
+            "path": "arc/utils/scale_test.py",
+            "final": 1.68,
+            "lexical": 0.0293,
+            "symbol": 0,
+            "domain": 0.5,
+            "centrality": 0.0013,
+            "inDegree": 1,
+            "hubPenalty": 0,
+            "localEvidence": 0.5,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "graph"
+            ]
+          },
+          {
+            "rank": 7,
+            "fqName": "arc/mapping/engine.py::_anchors_define_a_plane",
+            "path": "arc/mapping/engine.py",
+            "final": 1.5718,
+            "lexical": 0.6711,
+            "symbol": 0,
+            "domain": 1,
+            "centrality": 0.0013,
+            "inDegree": 1,
+            "hubPenalty": 0,
+            "localEvidence": 1.6711,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "rank": 8,
+            "fqName": "arc/job/adapters/orca_test.py::TestOrcaAdapter.test_dft_grid_freq",
+            "path": "arc/job/adapters/orca_test.py",
+            "final": 1.5224,
+            "lexical": 0.0003,
+            "symbol": 0,
+            "domain": 0.5,
+            "centrality": 0.0013,
+            "inDegree": 1,
+            "hubPenalty": 0,
+            "localEvidence": 0.5,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "graph"
+            ]
+          },
+          {
+            "rank": 9,
+            "fqName": "arc/species/zmat_test.py::TestThirdAtomFrame.test_a_leading_dummy_atom_does_not_land_on_the_molecular_axis",
+            "path": "arc/species/zmat_test.py",
+            "final": 1.4737,
+            "lexical": 0.0802,
+            "symbol": 0,
+            "domain": 0.5,
+            "centrality": 0.0013,
+            "inDegree": 1,
+            "hubPenalty": 0,
+            "localEvidence": 0.5,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "graph"
+            ]
+          },
+          {
+            "rank": 10,
+            "fqName": "arc/statmech/arkane.py::_classify_arkane_stderr",
+            "path": "arc/statmech/arkane.py",
+            "final": 1.4613,
+            "lexical": 0.5606,
+            "symbol": 0,
+            "domain": 1,
+            "centrality": 0.0013,
+            "inDegree": 1,
+            "hubPenalty": 0,
+            "localEvidence": 1.5606,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "rank": 11,
+            "fqName": "arc/tckdb/adapter.py::_classify_statmech_treatment",
+            "path": "arc/tckdb/adapter.py",
+            "final": 1.4587,
+            "lexical": 0.558,
+            "symbol": 0,
+            "domain": 1,
+            "centrality": 0.0013,
+            "inDegree": 1,
+            "hubPenalty": 0,
+            "localEvidence": 1.558,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "rank": 12,
+            "fqName": "arc/molecule/group.py::GroupAtom._lose_pair",
+            "path": "arc/molecule/group.py",
+            "final": 1.4426,
+            "lexical": 0.1769,
+            "symbol": 0,
+            "domain": 0.5,
+            "centrality": 0.0027,
+            "inDegree": 2,
+            "hubPenalty": 0,
+            "localEvidence": 0.6769,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "graph"
+            ]
+          },
+          {
+            "rank": 13,
+            "fqName": "arc/molecule/group.py::Group.classify_benzene_carbons",
+            "path": "arc/molecule/group.py",
+            "final": 1.4414,
+            "lexical": 0.5407,
+            "symbol": 0,
+            "domain": 1,
+            "centrality": 0.0013,
+            "inDegree": 1,
+            "hubPenalty": 0,
+            "localEvidence": 1.5407,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "rank": 14,
+            "fqName": "arc/family/arc_families_test.py::TestEtherHydrolysisReactionFamily.setUpClass",
+            "path": "arc/family/arc_families_test.py",
+            "final": 1.4291,
+            "lexical": 0.5284,
+            "symbol": 0,
+            "domain": 1,
+            "centrality": 0.0013,
+            "inDegree": 1,
+            "hubPenalty": 0,
+            "localEvidence": 1.5284,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "rank": 15,
+            "fqName": "arc/family/arc_families_test.py::TestNitrileHydrolysisReactionFamily.setUpClass",
+            "path": "arc/family/arc_families_test.py",
+            "final": 1.4291,
+            "lexical": 0.5284,
+            "symbol": 0,
+            "domain": 1,
+            "centrality": 0.0013,
+            "inDegree": 1,
+            "hubPenalty": 0,
+            "localEvidence": 1.5284,
+            "identifierConfidence": "strong_literal",
+            "sources": [
+              "lexical"
+            ]
+          }
+        ]
+      },
+      "ownerFile": {
+        "path": "arc/main.py",
+        "top1": true,
+        "top3": true,
+        "anywhere": true,
+        "bestCandidateRank": 1,
+        "indexedDefinitions": 21
+      },
+      "expectedDefinitions": [
+        {
+          "fqName": "arc/main.py::ARC",
+          "indexed": true,
+          "state": "pivot",
+          "candidateRank": 1,
+          "finalScore": 2.3544,
+          "lead": true
+        }
+      ],
+      "falsePositiveLeads": [],
+      "centralityTrace": [
+        {
+          "fqName": "arc/species/species.py::ARCSpecies",
+          "rank": 2,
+          "inDegree": 746,
+          "centrality": 1,
+          "centralityContribution": 0.5,
+          "finalScore": 2.1926,
+          "scoreWithoutCentrality": 1.6926,
+          "localEvidence": 1.6826,
+          "hubPenalty": 0,
+          "selected": true,
+          "pivot": true
+        },
+        {
+          "fqName": "arc/reaction/reaction.py::ARCReaction",
+          "rank": 3,
+          "inDegree": 299,
+          "centrality": 0.4008,
+          "centralityContribution": 0.2004,
+          "finalScore": 1.8575,
+          "scoreWithoutCentrality": 1.6571,
+          "localEvidence": 1.6471,
+          "hubPenalty": 0,
+          "selected": true,
+          "pivot": false
+        },
+        {
+          "fqName": "arc/main.py::ARC",
+          "rank": 1,
+          "inDegree": 24,
+          "centrality": 0.0322,
+          "centralityContribution": 0.0161,
+          "finalScore": 2.3544,
+          "scoreWithoutCentrality": 2.3383,
+          "localEvidence": 2.2883,
+          "hubPenalty": 0,
+          "selected": true,
+          "pivot": true
+        }
+      ],
+      "response": {
+        "serializedBytes": 46348,
+        "pivotCount": 2,
+        "supportCount": 4
+      }
+    },
+    {
+      "id": "arc_broad_vague_control",
+      "category": "broad vague query control",
+      "query": "How does ARC work?",
+      "queryProvenance": "reconstructed_from_report",
+      "reportedFailure": "n/a — negative control: must not expand half the repository",
+      "elapsedMs": 23.59,
+      "identifierRoles": {
+        "likelySymbols": [],
+        "identifiers": [],
+        "filteredGenericSymbols": [],
+        "shapedQuery": "issue: How does ARC work?",
+        "explicitIdentifiers": [],
+        "projectReferences": [
+          "ARC"
+        ],
+        "symbolHypotheses": [],
+        "identifierSignals": [
+          {
+            "term": "ARC",
+            "role": "ordinary_prose",
+            "source": "project_reference",
+            "exactSymbolEligible": false
+          }
+        ]
+      },
+      "retrieval": {
+        "mode": "no_context",
+        "lead": null,
+        "pivots": [],
+        "support": [],
+        "selectedFiles": [],
+        "topCandidates": []
+      },
+      "ownerFile": {
+        "path": "",
+        "top1": false,
+        "top3": false,
+        "anywhere": false,
+        "bestCandidateRank": null,
+        "indexedDefinitions": 0
+      },
+      "expectedDefinitions": [],
+      "falsePositiveLeads": [],
+      "centralityTrace": [],
+      "response": {
+        "serializedBytes": 1497,
+        "pivotCount": 0,
+        "supportCount": 0
+      }
+    }
+  ]
+}
