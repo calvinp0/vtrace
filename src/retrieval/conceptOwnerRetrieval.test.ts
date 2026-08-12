@@ -1,0 +1,267 @@
+// M142 Workstream C — behavioural concept-owner retrieval.
+//
+// The capability: given behaviour described in prose, find the module that owns
+// the concept even when none of its symbol names matches the wording, and admit
+// the answer-bearing definitions inside it.
+//
+// The controls matter as much as the capability. A lane that expands files is
+// one bad gate away from returning half the repository, so the explicit-lookup
+// and vague-query cases are tested here alongside the recovery.
+
+import assert from "node:assert/strict";
+import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { test } from "bun:test";
+import type { Database } from "bun:sqlite";
+
+import { openIndexerDatabase } from "../db/sqlite";
+import { indexProject } from "../indexer/indexProject";
+import { isStructuralSymbolKind } from "../domain/types";
+import { deriveQueryIntent } from "./querySemantics";
+import { hybridRetrieve, HybridCandidateSource } from "./hybridRetrieval";
+import { shapeSweQuery } from "../capsule/sweQueryShaping";
+import {
+  behavioralObjectives,
+  evaluateConceptOwnerIntent,
+  retrieveConceptOwners,
+  CONCEPT_OWNER_DEFAULTS,
+} from "./conceptOwnerRetrieval";
+
+async function indexRepo(files: Record<string, string>): Promise<{ db: Database; repoRoot: string }> {
+  const repoRoot = mkdtempSync(path.join(tmpdir(), "m142-owner-"));
+  for (const [relPath, content] of Object.entries(files)) {
+    const absPath = path.join(repoRoot, relPath);
+    mkdirSync(path.dirname(absPath), { recursive: true });
+    writeFileSync(absPath, content);
+  }
+  const db = openIndexerDatabase();
+  await indexProject({ repoRoot, db });
+  return { db, repoRoot };
+}
+
+/**
+ * §40's hard generic fixture: a module owns the concept through several
+ * medium-strength definitions, while a differently-named symbol elsewhere shares
+ * more of the request's wording but answers a different quantity.
+ */
+const DISPLACEMENT_FILES: Record<string, string> = {
+  "pkg/normal_mode_checks.py":
+    "\"\"\"Checks over normal-mode behaviour.\"\"\"\n\n"
+    + "def evaluate_mode_displacement(vectors, threshold):\n"
+    + "    \"\"\"Evaluate how far each item is displaced along the mode.\"\"\"\n"
+    + "    return [v for v in vectors if v > threshold]\n\n"
+    + "def identify_displaced_atoms(vectors, threshold):\n"
+    + "    \"\"\"Identify which items are displaced beyond the threshold.\"\"\"\n"
+    + "    return [i for i, v in enumerate(vectors) if v > threshold]\n\n"
+    + "def summarize_mode_behaviour(vectors):\n"
+    + "    \"\"\"Summarize the normal-mode behaviour implied by the displacement values.\"\"\"\n"
+    + "    return {'displaced': identify_displaced_atoms(vectors, 0.1)}\n",
+  "pkg/counting.py":
+    "def get_expected_num_items_with_largest_displacement(rms_values):\n"
+    + "    \"\"\"Return the expected number of items associated with the largest displacement.\"\"\"\n"
+    + "    return len(rms_values)\n",
+  "pkg/unrelated.py":
+    "def render_report(rows):\n"
+    + "    \"\"\"Render a table of rows.\"\"\"\n"
+    + "    return rows\n",
+};
+
+const intentFor = (task: string) =>
+  shapeSweQuery({ problemStatement: task }).derivedIntent ?? deriveQueryIntent(task);
+
+// --- gating controls -----------------------------------------------------------
+
+test("M142-C: an explicit symbol lookup does not trigger owner expansion", () => {
+  const gate = evaluateConceptOwnerIntent(intentFor("find function get_bonds"));
+  assert.equal(gate.active, false);
+  assert.equal(gate.reason, "explicit symbol lookup");
+});
+
+test("M142-C: a broad vague question does not trigger owner expansion", () => {
+  const gate = evaluateConceptOwnerIntent(intentFor("How does it work?"));
+  assert.equal(gate.active, false);
+  assert.match(gate.reason ?? "", /behavioural objective/);
+});
+
+test("M142-C: question framing is not mistaken for behavioural objectives", () => {
+  const objectives = behavioralObjectives(intentFor("How does this actually work, and when should it be used?"));
+  for (const framing of ["how", "does", "this", "when", "should", "work", "used"]) {
+    assert.equal(objectives.includes(framing), false, `"${framing}" is question framing, not an objective`);
+  }
+});
+
+test("M142-C: a capability lookup is answered by a definition, not a module", () => {
+  const gate = evaluateConceptOwnerIntent(
+    intentFor("is there already a function that returns a dihedral angle given three vectors?"),
+  );
+  assert.equal(gate.active, false);
+});
+
+// --- capability ----------------------------------------------------------------
+
+test("M142-C: the owning module is found when no symbol name matches the wording", async () => {
+  const repo = await indexRepo(DISPLACEMENT_FILES);
+  try {
+    const task = "How are displacement values analysed to determine normal mode behaviour?";
+    const result = retrieveConceptOwners({
+      db: repo.db,
+      intent: intentFor(task),
+      representedDefinitionsByFile: new Map(),
+      existingSymbolIds: new Set(),
+    });
+    assert.equal(result.diagnostics.active, true);
+    const owners = result.diagnostics.owners.map((owner) => owner.path);
+    assert.ok(
+      owners.includes("pkg/normal_mode_checks.py"),
+      `expected the owning module among owners; got ${owners.join(", ")}`,
+    );
+    assert.ok(
+      result.candidates.some((candidate) => candidate.symbol.filePath === "pkg/normal_mode_checks.py"),
+      "the owner must contribute answer-bearing definitions",
+    );
+  } finally {
+    repo.db.close();
+  }
+});
+
+test("M142-C: owner scoring performs zero source reads", async () => {
+  const repo = await indexRepo(DISPLACEMENT_FILES);
+  try {
+    const result = retrieveConceptOwners({
+      db: repo.db,
+      intent: intentFor("How are displacement values analysed to determine normal mode behaviour?"),
+      representedDefinitionsByFile: new Map(),
+      existingSymbolIds: new Set(),
+    });
+    assert.equal(result.diagnostics.sourceReads, 0);
+  } finally {
+    repo.db.close();
+  }
+});
+
+// --- bounds --------------------------------------------------------------------
+
+test("M142-C: admission is bounded by the configured caps", async () => {
+  const files: Record<string, string> = {};
+  // Many plausible owners; the caps must hold regardless.
+  for (let index = 0; index < 40; index += 1) {
+    files[`pkg/module_${index}.py`] =
+      `def analyse_displacement_${index}(values):\n`
+      + `    """Analyse the displacement values for normal mode behaviour."""\n`
+      + `    return values\n\n`
+      + `def report_displacement_${index}(values):\n`
+      + `    """Report the normal mode displacement behaviour."""\n`
+      + `    return values\n\n`
+      + `def check_displacement_${index}(values):\n`
+      + `    """Check the normal mode displacement behaviour."""\n`
+      + `    return values\n\n`
+      + `def audit_displacement_${index}(values):\n`
+      + `    """Audit the normal mode displacement behaviour."""\n`
+      + `    return values\n`;
+  }
+  const repo = await indexRepo(files);
+  try {
+    const result = retrieveConceptOwners({
+      db: repo.db,
+      intent: intentFor("How are displacement values analysed to determine normal mode behaviour?"),
+      representedDefinitionsByFile: new Map(),
+      existingSymbolIds: new Set(),
+    });
+    assert.ok(
+      result.diagnostics.owners.length <= CONCEPT_OWNER_DEFAULTS.maxConceptOwnerFiles,
+      `owner cap exceeded: ${result.diagnostics.owners.length}`,
+    );
+    assert.ok(
+      result.candidates.length <= CONCEPT_OWNER_DEFAULTS.maxConceptOwnerCandidates,
+      `candidate cap exceeded: ${result.candidates.length}`,
+    );
+    for (const owner of result.diagnostics.owners) {
+      const fromOwner = result.candidates.filter((candidate) => candidate.ownerPath === owner.path);
+      assert.ok(
+        fromOwner.length <= CONCEPT_OWNER_DEFAULTS.maxDefinitionsPerConceptOwner,
+        `per-owner cap exceeded for ${owner.path}: ${fromOwner.length}`,
+      );
+    }
+    assert.equal(result.diagnostics.ownerCapReached, true);
+    assert.equal(result.diagnostics.sourceReads, 0);
+  } finally {
+    repo.db.close();
+  }
+});
+
+test("M142-C: a well-represented owner is not topped up", async () => {
+  const repo = await indexRepo(DISPLACEMENT_FILES);
+  try {
+    const result = retrieveConceptOwners({
+      db: repo.db,
+      intent: intentFor("How are displacement values analysed to determine normal mode behaviour?"),
+      representedDefinitionsByFile: new Map([
+        ["pkg/normal_mode_checks.py", CONCEPT_OWNER_DEFAULTS.maxDefinitionsPerConceptOwner],
+      ]),
+      existingSymbolIds: new Set(),
+    });
+    assert.equal(
+      result.candidates.some((candidate) => candidate.ownerPath === "pkg/normal_mode_checks.py"),
+      false,
+      "an owner the pool already carries in full must not be topped up",
+    );
+    assert.ok(result.diagnostics.ownersAlreadyRepresented >= 1);
+  } finally {
+    repo.db.close();
+  }
+});
+
+// --- structural invariant ------------------------------------------------------
+
+test("M142-C: no structural module node is ever admitted", async () => {
+  const repo = await indexRepo(DISPLACEMENT_FILES);
+  try {
+    const task = "How are displacement values analysed to determine normal mode behaviour?";
+    const shaped = shapeSweQuery({ problemStatement: task });
+    const retrieval = hybridRetrieve(repo.db, {
+      query: shaped.query,
+      shaped,
+      taskText: task,
+      maxResults: 25,
+    });
+    for (const candidate of retrieval.candidates) {
+      assert.equal(
+        isStructuralSymbolKind(candidate.kind),
+        false,
+        `${candidate.fqName} is a structural node and must never be a candidate`,
+      );
+    }
+    const owned = retrieval.candidates.filter((candidate) =>
+      candidate.sources.includes(HybridCandidateSource.ConceptOwner));
+    for (const candidate of owned) {
+      assert.notEqual(candidate.localName, "<module>");
+    }
+  } finally {
+    repo.db.close();
+  }
+});
+
+test("M142-C: the lane can be disabled outright", async () => {
+  const repo = await indexRepo(DISPLACEMENT_FILES);
+  try {
+    const task = "How are displacement values analysed to determine normal mode behaviour?";
+    const shaped = shapeSweQuery({ problemStatement: task });
+    const retrieval = hybridRetrieve(repo.db, {
+      query: shaped.query,
+      shaped,
+      taskText: task,
+      maxResults: 25,
+      enableConceptOwnerRetrieval: false,
+    });
+    assert.equal(retrieval.conceptOwner.active, false);
+    assert.equal(retrieval.conceptOwner.inactiveReason, "disabled by caller");
+    assert.equal(
+      retrieval.candidates.some((candidate) =>
+        candidate.sources.includes(HybridCandidateSource.ConceptOwner)),
+      false,
+    );
+  } finally {
+    repo.db.close();
+  }
+});

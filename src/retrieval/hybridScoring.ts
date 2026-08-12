@@ -119,6 +119,14 @@ export interface HybridScoreComponents {
    */
   upstreamRescueScore?: number;
   /**
+   * Bounded concept-owner evidence: this symbol's FILE aggregates the behaviour
+   * the request describes, and this definition carries part of it. Present only
+   * on candidates the M142-C lane recovered. Kept separate from `lexical` and
+   * `domain` so file-level inference can never be mistaken for a symbol-level
+   * match.
+   */
+  conceptOwnerScore?: number;
+  /**
    * Weighted sum of the components above, minus `hubPenalty` and
    * `actionabilityPenalty`; the ranking key.
    */

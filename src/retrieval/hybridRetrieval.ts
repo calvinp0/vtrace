@@ -64,6 +64,13 @@ import {
   type IdentifierConfidence,
 } from "./querySemantics";
 import {
+  inactiveConceptOwner,
+  retrieveConceptOwners,
+  type ConceptOwnerDiagnostics,
+  type ConceptOwnerOptions,
+  type ConceptOwnerResult,
+} from "./conceptOwnerRetrieval";
+import {
   inactiveUpstreamRescue,
   rescueUpstreamCandidates,
   selectUpstreamRescueSeeds,
@@ -87,6 +94,8 @@ export enum HybridCandidateSource {
   BodyLiteral = "body_literal",
   /** Reached by walking incoming `calls` edges up from a strong seed (M140-B). */
   UpstreamRescue = "upstream_rescue",
+  /** Reached because its FILE aggregates the behaviour the request describes (M142-C). */
+  ConceptOwner = "concept_owner",
 }
 
 export interface HybridCandidate {
@@ -133,6 +142,13 @@ export interface HybridRetrievalInput {
    */
   enableUpstreamRescue?: boolean;
   upstreamRescue?: UpstreamRescueOptions;
+  /**
+   * M142-C behavioural concept-owner rescue. On by default; the lane gates itself
+   * on behavioural-objective density, so an explicit lookup pays only the
+   * (already-derived) intent check. Set false to disable it outright.
+   */
+  enableConceptOwnerRetrieval?: boolean;
+  conceptOwner?: ConceptOwnerOptions;
   /** Optional request-local profiler. Omitted on product paths unless explicitly requested. */
   profile?: HybridRetrievalProfile;
   requestCache?: HybridRetrievalRequestCache;
@@ -203,6 +219,8 @@ export interface HybridRetrievalResult {
   bodyLiteralMatches: BodyLiteralMatch[];
   /** What the upstream orchestration rescue lane did, including "nothing". */
   upstreamRescue: UpstreamRescueDiagnostics;
+  /** What the behavioural concept-owner lane did, including "nothing". */
+  conceptOwner: ConceptOwnerDiagnostics;
   /**
    * Every rescued symbol with its ordinary rank, including the ones the output
    * cap excluded. Empty whenever the lane did not activate.
@@ -229,6 +247,8 @@ interface RawCandidate {
   bodyLiteral: number;
   /** Bounded upstream-orchestration evidence; already capped by the lane. */
   upstreamRescue: number;
+  /** Bounded concept-owner evidence; already capped by the lane. */
+  conceptOwner: number;
   sources: Set<HybridCandidateSource>;
   evidence: Set<string>;
 }
@@ -247,6 +267,7 @@ export function hybridRetrieve(
       candidates: [],
       bodyLiteralMatches: [],
       upstreamRescue: inactiveUpstreamRescue("no results requested"),
+      conceptOwner: inactiveConceptOwner("no results requested"),
       orchestrationPaths: [],
     };
   }
@@ -300,7 +321,20 @@ export function hybridRetrieve(
     assemble(db, raw, input, derivedIntent));
   const upstreamRescue = timed(input.profile, "structural.upstream_rescue", () =>
     upstreamRescueCandidates(db, input, derivedIntent, ranked, raw));
-  if (upstreamRescue.diagnostics.rescuedCandidatesAdmitted > 0) {
+  // Concept-owner rescue needs the RANKING too, for a different reason: "the pool
+  // already covers this file" has to mean the DELIVERABLE pool. The raw map holds
+  // hundreds of graph-expanded symbols, so judged against it almost every good
+  // owner counts as represented — measured on ARC, 31 of them, including the file
+  // the request was actually about.
+  const conceptOwner = timed(input.profile, "lexical.concept_owner", () =>
+    conceptOwnerCandidates(db, input, derivedIntent, ranked.slice(0, maxResults), raw));
+  count(input.profile, "conceptOwnerCandidates", conceptOwner.diagnostics.candidatesAdmitted);
+  count(input.profile, "conceptOwnerFilesExamined", conceptOwner.diagnostics.filesExamined);
+  count(input.profile, "sourceReads", conceptOwner.diagnostics.sourceReads);
+  if (
+    upstreamRescue.diagnostics.rescuedCandidatesAdmitted > 0
+    || conceptOwner.diagnostics.candidatesAdmitted > 0
+  ) {
     ranked = timed(input.profile, "candidate_processing.score_sort_cap", () =>
       assemble(db, raw, input, derivedIntent));
   }
@@ -308,7 +342,7 @@ export function hybridRetrieve(
   count(input.profile, "upstream_rescue_candidates", upstreamRescue.diagnostics.rescuedCandidatesAdmitted);
   count(input.profile, "upstream_rescue_edges_examined", upstreamRescue.diagnostics.incomingEdgesExamined);
 
-  const candidates = ranked.slice(0, maxResults);
+  const candidates = admitConceptOwnersWithinCap(ranked, maxResults, conceptOwner);
   count(input.profile, "candidates.after_cap", candidates.length);
   count(input.profile, "literal_symbol_candidates", candidates.filter((candidate) =>
     candidate.sources.includes(HybridCandidateSource.Symbol)).length);
@@ -351,6 +385,7 @@ export function hybridRetrieve(
     candidates,
     bodyLiteralMatches,
     upstreamRescue: upstreamRescue.diagnostics,
+    conceptOwner: conceptOwner.diagnostics,
     orchestrationPaths,
   };
 }
@@ -653,6 +688,96 @@ function graphExpandedCandidates(
   }
 }
 
+/**
+ * Keep the concept-owner lane's findings inside the returned pool without
+ * inflating their scores (M142-C).
+ *
+ * A definition the request could not name is, by construction, weakly ranked —
+ * that is why nothing found it. Measured on ARC: the recovered `arc/checks/nmd.py`
+ * definitions score around 0.8 against a pool floor of ~1.4, so ranking alone
+ * discards exactly the candidates the lane exists to recover.
+ *
+ * Raising the lane's score contribution until it clears the floor would be tuning
+ * a constant to an outcome. Instead the lane's findings are admitted THROUGH the
+ * cap rather than through the ranking, which is the same separation M140-C
+ * established for orchestration paths: a bounded number of slots, taken from the
+ * weakest ordinary candidates, with every score left truthful so downstream
+ * pivot ordering still places them honestly.
+ */
+function admitConceptOwnersWithinCap(
+  ranked: readonly HybridCandidate[],
+  maxResults: number,
+  conceptOwner: ConceptOwnerResult,
+): HybridCandidate[] {
+  const capped = ranked.slice(0, maxResults);
+  if (conceptOwner.candidates.length === 0 || ranked.length <= maxResults) {
+    return capped;
+  }
+  const present = new Set(capped.map((candidate) => candidate.symbolId));
+  const missing = conceptOwner.candidates
+    .map((admitted) => ranked.find((candidate) => candidate.symbolId === admitted.symbol.id))
+    .filter((candidate): candidate is HybridCandidate =>
+      candidate !== undefined && !present.has(candidate.symbolId));
+  if (missing.length === 0) {
+    return capped;
+  }
+  // Displace from the tail, and never displace another concept-owner recovery.
+  const keep: HybridCandidate[] = [];
+  const displaceable: HybridCandidate[] = [];
+  for (const candidate of capped) {
+    (candidate.sources.includes(HybridCandidateSource.ConceptOwner) ? keep : displaceable)
+      .push(candidate);
+  }
+  const room = Math.min(missing.length, displaceable.length);
+  const survivors = displaceable.slice(0, displaceable.length - room);
+  return [...keep, ...survivors, ...missing.slice(0, room)].sort(
+    (left, right) =>
+      right.scores.final - left.scores.final
+      || left.fqName.localeCompare(right.fqName)
+      || left.symbolId.localeCompare(right.symbolId),
+  );
+}
+
+// Concept-owner rescue (M142-C). Aggregates indexed evidence per FILE, picks the
+// few files that appear to own the requested behaviour, and admits their
+// strongest definitions. Files the pool already represents are skipped by the
+// lane itself, so this can only ever ADD a candidate.
+function conceptOwnerCandidates(
+  db: Database,
+  input: HybridRetrievalInput,
+  intent: DerivedQueryIntent,
+  deliverable: readonly HybridCandidate[],
+  raw: Map<SymbolId, RawCandidate>,
+): ConceptOwnerResult {
+  if (input.enableConceptOwnerRetrieval === false) {
+    return { candidates: [], diagnostics: inactiveConceptOwner("disabled by caller") };
+  }
+  const representedDefinitionsByFile = new Map<string, number>();
+  for (const candidate of deliverable) {
+    representedDefinitionsByFile.set(
+      candidate.filePath,
+      (representedDefinitionsByFile.get(candidate.filePath) ?? 0) + 1,
+    );
+  }
+
+  const result = retrieveConceptOwners({
+    db,
+    intent,
+    representedDefinitionsByFile,
+    existingSymbolIds: new Set(raw.keys()),
+    ...(input.conceptOwner === undefined ? {} : { options: input.conceptOwner }),
+  });
+
+  for (const admitted of result.candidates) {
+    const entry = ensureCandidate(db, raw, admitted.symbol.id, admitted.symbol);
+    if (entry === undefined) continue;
+    entry.sources.add(HybridCandidateSource.ConceptOwner);
+    entry.conceptOwner = Math.max(entry.conceptOwner, admitted.contribution);
+    entry.evidence.add(admitted.reason);
+  }
+  return result;
+}
+
 // Upstream orchestration rescue. Unlike every other generator this one needs the
 // pool already RANKED, because its whole premise is "expand upward from the few
 // candidates we are most confident about". It merges its results into the same
@@ -859,10 +984,11 @@ function assemble(
     // inside `combineFinalScore`) alongside the other bounded, attributable
     // adjustments so the contribution stays separable and inspectable.
     const upstreamRescueScore = round(entry.upstreamRescue);
+    const conceptOwnerScore = round(entry.conceptOwner);
     const finalWithoutCentrality = round(Math.max(
       0,
       rawFinalWithoutCentrality - hub.penalty - action.penalty + positiveObjectiveScore
-      + directAnswerScore + upstreamRescueScore - contrastPenalty,
+      + directAnswerScore + upstreamRescueScore + conceptOwnerScore - contrastPenalty,
     ));
 
     const evidence = [...entry.evidence];
@@ -921,6 +1047,7 @@ function assemble(
       contrastPenalty,
       directAnswerScore,
       ...(upstreamRescueScore > 0 ? { upstreamRescueScore } : {}),
+      ...(conceptOwnerScore > 0 ? { conceptOwnerScore } : {}),
       // Replaced in phase two.
       final: finalWithoutCentrality,
     };
@@ -1018,6 +1145,7 @@ function ensureCandidate(
     testToImpl: 0,
     bodyLiteral: 0,
     upstreamRescue: 0,
+    conceptOwner: 0,
     sources: new Set(),
     evidence: new Set(),
   };

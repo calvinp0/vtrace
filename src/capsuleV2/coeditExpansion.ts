@@ -839,7 +839,14 @@ function statsSorted(stats: ReadonlyMap<string, NeighborFileStats>): NeighborFil
 function pickInjectedSymbol(
   stats: NeighborFileStats,
 ): { id: string; name: string; kind: string; fqName: string } | undefined {
-  const entries = [...stats.otherSymbols.entries()].map(([id, s]) => ({ id, ...s }));
+  // A module scope owns the file's imports (M140), so it accumulates edges and
+  // can out-sort every real definition here on `edges` alone. It has no body to
+  // deliver, and injecting it puts `::<module>` in the capsule — the exact
+  // structural leak the generated-artifact-pair branch above already guards
+  // against. Same rule, both branches.
+  const entries = [...stats.otherSymbols.entries()]
+    .map(([id, s]) => ({ id, ...s }))
+    .filter((entry) => !isStructuralSymbolKind(entry.kind as SymbolKind));
   if (entries.length === 0) return undefined;
   entries.sort((a, b) =>
     Number(b.affinity) - Number(a.affinity)
