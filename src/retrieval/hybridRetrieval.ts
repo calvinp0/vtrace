@@ -56,9 +56,19 @@ import {
   deriveQueryIntent,
   evaluateCandidateContrast,
   evaluateDirectAnswer,
+  evaluateOrchestrationIntent,
   identifierConfidenceForSymbol,
+  type DerivedQueryIntent,
   type IdentifierConfidence,
 } from "./querySemantics";
+import {
+  inactiveUpstreamRescue,
+  rescueUpstreamCandidates,
+  selectUpstreamRescueSeeds,
+  type RescuedUpstreamCandidate,
+  type UpstreamRescueDiagnostics,
+  type UpstreamRescueOptions,
+} from "./upstreamRescue";
 
 export enum HybridCandidateSource {
   Lexical = "lexical",
@@ -73,6 +83,8 @@ export enum HybridCandidateSource {
   SameModule = "same_module",
   /** Reached because a distinctive literal in the task appears in this symbol's body. */
   BodyLiteral = "body_literal",
+  /** Reached by walking incoming `calls` edges up from a strong seed (M140-B). */
+  UpstreamRescue = "upstream_rescue",
 }
 
 export interface HybridCandidate {
@@ -112,6 +124,13 @@ export interface HybridRetrievalInput {
   taskText?: string;
   /** M123 no-candidate fallback: use M121 bounded compound/exact FTS admission. */
   enableCompoundTaskRescue?: boolean;
+  /**
+   * M140-B bounded upstream orchestration rescue. On by default; the lane gates
+   * itself on orchestration-shaped intent, so an ordinary lookup pays only the
+   * (already-derived) intent check. Set false to disable it outright.
+   */
+  enableUpstreamRescue?: boolean;
+  upstreamRescue?: UpstreamRescueOptions;
   /** Optional request-local profiler. Omitted on product paths unless explicitly requested. */
   profile?: HybridRetrievalProfile;
   requestCache?: HybridRetrievalRequestCache;
@@ -146,6 +165,8 @@ export interface HybridRetrievalResult {
   candidates: HybridCandidate[];
   /** Body-literal recoveries this run made, for diagnostics. */
   bodyLiteralMatches: BodyLiteralMatch[];
+  /** What the upstream orchestration rescue lane did, including "nothing". */
+  upstreamRescue: UpstreamRescueDiagnostics;
 }
 
 const DEFAULTS = Object.freeze({
@@ -165,6 +186,8 @@ interface RawCandidate {
   testToImpl: number;
   /** Raw body-literal strength (distinctive task literal found in this body). */
   bodyLiteral: number;
+  /** Bounded upstream-orchestration evidence; already capped by the lane. */
+  upstreamRescue: number;
   sources: Set<HybridCandidateSource>;
   evidence: Set<string>;
 }
@@ -179,7 +202,11 @@ export function hybridRetrieve(
   const totalStarted = input.profile === undefined ? 0 : performance.now();
   const maxResults = normalizeMaxResults(input.maxResults ?? DEFAULTS.maxResults);
   if (maxResults === 0) {
-    return { candidates: [], bodyLiteralMatches: [] };
+    return {
+      candidates: [],
+      bodyLiteralMatches: [],
+      upstreamRescue: inactiveUpstreamRescue("no results requested"),
+    };
   }
   const lexicalPoolSize = input.lexicalPoolSize
     ?? Math.max(DEFAULTS.lexicalPoolMinimum, maxResults * DEFAULTS.lexicalPoolMultiplier);
@@ -213,8 +240,28 @@ export function hybridRetrieve(
   timed(input.profile, "structural.graph_expansion", () =>
     graphExpandedCandidates(db, input, seeds, raw));
   count(input.profile, "symbols.before_scoring", raw.size);
-  const candidates = timed(input.profile, "candidate_processing.score_sort_cap", () =>
-    assemble(db, raw, input, maxResults));
+
+  const derivedIntent = input.shaped.derivedIntent
+    ?? deriveQueryIntent(input.taskText ?? input.query);
+
+  // Upstream orchestration rescue needs RANKED candidates to choose seeds from,
+  // so it runs between two scoring passes. The first pass is only a ranking; the
+  // second is authoritative and scores rescued and ordinary candidates together
+  // under one normalisation, which is what keeps rescued content inside the
+  // normal selection/budget path rather than beside it.
+  let ranked = timed(input.profile, "candidate_processing.score_sort_cap", () =>
+    assemble(db, raw, input, derivedIntent));
+  const upstreamRescue = timed(input.profile, "structural.upstream_rescue", () =>
+    upstreamRescueCandidates(db, input, derivedIntent, ranked, raw));
+  if (upstreamRescue.diagnostics.rescuedCandidatesAdmitted > 0) {
+    ranked = timed(input.profile, "candidate_processing.score_sort_cap", () =>
+      assemble(db, raw, input, derivedIntent));
+  }
+  count(input.profile, "upstream_rescue_seeds", upstreamRescue.diagnostics.seeds.length);
+  count(input.profile, "upstream_rescue_candidates", upstreamRescue.diagnostics.rescuedCandidatesAdmitted);
+  count(input.profile, "upstream_rescue_edges_examined", upstreamRescue.diagnostics.incomingEdgesExamined);
+
+  const candidates = ranked.slice(0, maxResults);
   count(input.profile, "candidates.after_cap", candidates.length);
   count(input.profile, "literal_symbol_candidates", candidates.filter((candidate) =>
     candidate.sources.includes(HybridCandidateSource.Symbol)).length);
@@ -228,7 +275,7 @@ export function hybridRetrieve(
     input.profile.timingsMs.total =
       (input.profile.timingsMs.total ?? 0) + performance.now() - totalStarted;
   }
-  return { candidates, bodyLiteralMatches };
+  return { candidates, bodyLiteralMatches, upstreamRescue: upstreamRescue.diagnostics };
 }
 
 // --- candidate generators -----------------------------------------------------
@@ -524,13 +571,92 @@ function graphExpandedCandidates(
   }
 }
 
+// Upstream orchestration rescue. Unlike every other generator this one needs the
+// pool already RANKED, because its whole premise is "expand upward from the few
+// candidates we are most confident about". It merges its results into the same
+// raw pool, so they are scored, capped and delivered like anything else.
+function upstreamRescueCandidates(
+  db: Database,
+  input: HybridRetrievalInput,
+  intent: DerivedQueryIntent,
+  ranked: readonly HybridCandidate[],
+  raw: Map<SymbolId, RawCandidate>,
+): { candidates: readonly RescuedUpstreamCandidate[]; diagnostics: UpstreamRescueDiagnostics } {
+  if (input.enableUpstreamRescue === false) {
+    return { candidates: [], diagnostics: inactiveUpstreamRescue("disabled by caller") };
+  }
+  // The gate is a read of the already-derived intent, so a request that is not
+  // orchestration-shaped does no extra graph work at all.
+  const orchestration = evaluateOrchestrationIntent(intent);
+  if (!orchestration.active) {
+    return {
+      candidates: [],
+      diagnostics: inactiveUpstreamRescue(orchestration.suppressedBy ?? "not an orchestration question"),
+    };
+  }
+
+  const seedStarted = performance.now();
+  const seeds = selectUpstreamRescueSeeds(
+    ranked.map((candidate) => ({
+      symbolId: candidate.symbolId,
+      fqName: candidate.fqName,
+      localName: candidate.localName,
+      filePath: candidate.filePath,
+      kind: candidate.kind,
+      final: candidate.scores.final,
+    })),
+    input.upstreamRescue ?? {},
+  );
+  const seedSelectionMs = Math.round((performance.now() - seedStarted) * 1e4) / 1e4;
+  if (seeds.length === 0) {
+    return {
+      candidates: [],
+      diagnostics: {
+        ...inactiveUpstreamRescue("no eligible seed in the base ranking"),
+        ...(orchestration.reason === undefined ? {} : { activationReason: orchestration.reason }),
+      },
+    };
+  }
+
+  const result = rescueUpstreamCandidates({
+    db,
+    seeds,
+    intent,
+    existingSymbolIds: new Set(raw.keys()),
+    options: input.upstreamRescue ?? {},
+    ...(orchestration.reason === undefined ? {} : { activationReason: orchestration.reason }),
+  });
+
+  for (const rescued of result.candidates) {
+    const entry = ensureCandidate(db, raw, rescued.symbol.id, rescued.symbol);
+    if (entry === undefined) {
+      continue;
+    }
+    entry.sources.add(HybridCandidateSource.UpstreamRescue);
+    entry.upstreamRescue = Math.max(entry.upstreamRescue, rescued.rescueScore);
+    entry.evidence.add(rescued.reason);
+    entry.evidence.add(`upstream call path: ${rescued.path.join(" -> ")}`);
+  }
+
+  return {
+    candidates: result.candidates,
+    diagnostics: {
+      ...result.diagnostics,
+      timingsMs: { ...result.diagnostics.timingsMs, seedSelection: seedSelectionMs },
+    },
+  };
+}
+
 // ----- assembly: raw signals -> normalised components -> ranked candidates ----
 
+// Returns the FULL ranked pool; the caller applies `maxResults`. Upstream rescue
+// selects its seeds from this ranking, so truncating here would hide candidates
+// from seed selection that the request is otherwise willing to consider.
 function assemble(
   db: Database,
   raw: ReadonlyMap<SymbolId, RawCandidate>,
   input: HybridRetrievalInput,
-  maxResults: number,
+  derivedIntent: DerivedQueryIntent,
 ): HybridCandidate[] {
   const entries = [...raw.values()];
   if (entries.length === 0) {
@@ -549,8 +675,6 @@ function assemble(
   // whose NAME is matched only by a generic word ("multiple") has its blended
   // lexical score scaled down so the word cannot carry it to a pivot.
   const lexicalQueryTokens = classifyLexicalQueryTokens(input.query);
-  const derivedIntent = input.shaped.derivedIntent
-    ?? deriveQueryIntent(input.taskText ?? input.query);
 
   // Compute the remaining raw signals (symbol/path/domain) that apply to EVERY
   // candidate regardless of which source first surfaced it.
@@ -643,9 +767,14 @@ function assemble(
     const positiveObjectiveScore = round(contrast.positiveObjectiveScore);
     const contrastPenalty = round(contrast.contrastPenalty);
     const directAnswerScore = round(directAnswer.score);
+    // Already bounded by the rescue lane's own cap; added here (rather than
+    // inside `combineFinalScore`) alongside the other bounded, attributable
+    // adjustments so the contribution stays separable and inspectable.
+    const upstreamRescueScore = round(entry.upstreamRescue);
     const final = round(Math.max(
       0,
-      rawFinal - hub.penalty - action.penalty + positiveObjectiveScore + directAnswerScore - contrastPenalty,
+      rawFinal - hub.penalty - action.penalty + positiveObjectiveScore + directAnswerScore
+      + upstreamRescueScore - contrastPenalty,
     ));
 
     const evidence = [...entry.evidence];
@@ -703,6 +832,7 @@ function assemble(
       positiveObjectiveScore,
       contrastPenalty,
       directAnswerScore,
+      ...(upstreamRescueScore > 0 ? { upstreamRescueScore } : {}),
       final,
     };
 
@@ -727,7 +857,7 @@ function assemble(
       || left.symbolId.localeCompare(right.symbolId),
   );
 
-  return candidates.slice(0, maxResults);
+  return candidates;
 }
 
 // ----- raw signal helpers -----------------------------------------------------
@@ -761,6 +891,7 @@ function ensureCandidate(
     graph: 0,
     testToImpl: 0,
     bodyLiteral: 0,
+    upstreamRescue: 0,
     sources: new Set(),
     evidence: new Set(),
   };

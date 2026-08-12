@@ -164,6 +164,82 @@ function behavioralFrameFor(task: string, clauseStart: number): string | undefin
   return undefined;
 }
 
+/**
+ * Frames that ask HOW something happens rather than WHERE something is.
+ *
+ * A "how does X get rebuilt?" question is answered by the call path that
+ * performs the rebuild, so the orchestration above the implementation is part of
+ * the answer. "find X" is answered by X alone, and pulling in X's callers would
+ * be noise. This set is the difference between those two readings.
+ *
+ * Deliberately NOT here: "who calls X" / "what calls X". Caller ENUMERATION is
+ * impact analysis (`get_impact_graph`), which is bounded, complete and reports
+ * its own coverage. Retrieval recovers orchestration as context; it must not
+ * quietly reimplement a caller listing.
+ */
+const ORCHESTRATION_FRAME_CUES: readonly RegExp[] = [
+  /\bhow\s+(?:does|do|is|are|was|were|did|can|should|would)\b/iu,
+  /\bwhat\s+(?:happens|triggers|invokes|orchestrates|drives)\b/iu,
+  /\bwhat\s+(?:code\s+)?path\b/iu,
+  /\bwhat\s+leads\s+to\b/iu,
+];
+
+/**
+ * Imperative lookup commands. Anchored to the START of the request so a lookup
+ * verb appearing mid-sentence ("how does the loader find the parser?") stays a
+ * process question rather than being demoted to a name lookup.
+ */
+const EXPLICIT_LOOKUP_FRAMES: readonly RegExp[] = [
+  /^\s*(?:find|locate|show(?:\s+me)?|open|jump\s+to)\b/iu,
+  /^\s*where\s+is\b/iu,
+  /^\s*(?:the\s+)?definition\s+of\b/iu,
+  /^\s*what\s+file\b/iu,
+];
+
+/** Whether a request asks how something happens, and why that was decided. */
+export interface OrchestrationIntent {
+  readonly active: boolean;
+  /** The cue that activated it. Present only when `active`. */
+  readonly reason?: string;
+  /** Why an otherwise-matching request was held back. */
+  readonly suppressedBy?: string;
+}
+
+/**
+ * Whether upstream/orchestration context is part of the answer to this request.
+ *
+ * Derived from the ALREADY-parsed intent so the grammar is evaluated once per
+ * request rather than rediscovered per candidate, and so it stays consistent
+ * with the contrast reading M139 fixed: a conditional-alternative question
+ * ("when does it do A rather than B?") is inherently a question about the code
+ * that chooses, which is the orchestration above both branches.
+ */
+export function evaluateOrchestrationIntent(intent: DerivedQueryIntent): OrchestrationIntent {
+  const task = intent.originalTask;
+
+  // A capability lookup wants the definition that provides the capability. Its
+  // callers are not part of that answer.
+  if (intent.kind === "capability_lookup") {
+    return { active: false, suppressedBy: `capability lookup (${intent.intentReason ?? "definition question"})` };
+  }
+  const lookupFrame = EXPLICIT_LOOKUP_FRAMES.find((pattern) => pattern.test(task));
+  if (lookupFrame !== undefined && intent.symbolHypotheses.length > 0) {
+    return { active: false, suppressedBy: "explicit symbol lookup command" };
+  }
+
+  // A parsed conditional-alternative clause IS a behavioural question; it needs
+  // no separate cue.
+  const branchCue = intent.branchClauses[0]?.branchCue;
+  if (branchCue !== undefined) {
+    return { active: true, reason: `conditional-branch question ("${branchCue}")` };
+  }
+  const frame = ORCHESTRATION_FRAME_CUES.map((cue) => cue.exec(task)).find((match) => match !== null);
+  if (frame !== null && frame !== undefined) {
+    return { active: true, reason: `process question ("${frame[0].toLowerCase().replace(/\s+/gu, " ")}")` };
+  }
+  return { active: false, suppressedBy: "no orchestration/process frame" };
+}
+
 export function deriveQueryIntent(task: string, options: DeriveQueryIntentOptions = {}): DerivedQueryIntent {
   const allClauses = parseContrastClauses(task);
   // Only preference/exclusion clauses may remove text, contribute contrast terms,

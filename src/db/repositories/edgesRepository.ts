@@ -288,6 +288,101 @@ export function listIncomingEdgesForSymbols(
   return listDirectedEdgesForSymbols(db, symbolIds, "dst_symbol_id");
 }
 
+/**
+ * Edges of ONE type entering any of `symbolIds`, with a per-target cap applied
+ * **inside SQLite** rather than after the rows arrive.
+ *
+ * Upstream rescue (M140-B) expands incoming callers of a strong retrieval hit,
+ * and a popular helper can have hundreds of them. Reading them all and slicing
+ * afterwards would make the cost of a bounded question track the fan-in of the
+ * most popular node it touched — the exact anti-pattern M130/M131 removed from
+ * flow search. `ROW_NUMBER() OVER (PARTITION BY dst_symbol_id ...)` keeps the
+ * bound where the data is, so a 1,000-caller helper costs the same as a
+ * 10-caller one.
+ *
+ * Ordering by `id` makes the retained subset deterministic; when the cap bites,
+ * callers must report it (the kept prefix is arbitrary with respect to
+ * relevance, not a "most relevant" selection).
+ */
+export function listIncomingEdgesOfTypeForSymbols(
+  db: Database,
+  symbolIds: readonly string[],
+  edgeType: string,
+  perTargetLimit: number,
+): EdgeRecord[] {
+  const uniqueIds = [...new Set(symbolIds)].sort();
+  const limit = Math.max(0, Math.floor(perTargetLimit));
+
+  if (uniqueIds.length === 0 || limit === 0) {
+    return [];
+  }
+
+  const records: EdgeRecord[] = [];
+
+  for (const chunk of chunked(uniqueIds, EDGE_ADJACENCY_CHUNK_SIZE)) {
+    const placeholders = chunk.map(() => "?").join(", ");
+    const rows = db.query(`
+      WITH ranked AS (
+        SELECT
+          id,
+          src_symbol_id,
+          dst_symbol_id,
+          edge_type,
+          confidence,
+          ROW_NUMBER() OVER (PARTITION BY dst_symbol_id ORDER BY id ASC) AS rn
+        FROM edges
+        WHERE dst_symbol_id IN (${placeholders}) AND edge_type = ?
+      )
+      SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence
+      FROM ranked
+      WHERE rn <= ?
+      ORDER BY id ASC
+    `).all(...chunk, edgeType, limit) as EdgeRow[];
+
+    for (const row of rows) {
+      records.push(edgeRowToRecord(row));
+    }
+  }
+
+  return records;
+}
+
+/**
+ * Incoming edges of one type per target, counted WITHOUT materialising them.
+ * Lets a caller report true fan-in ("62 callers, 3 admitted") even when the
+ * per-target cap kept it from reading them all.
+ */
+export function countIncomingEdgesOfTypeForSymbols(
+  db: Database,
+  symbolIds: readonly string[],
+  edgeType: string,
+): Map<string, number> {
+  const uniqueIds = [...new Set(symbolIds)].sort();
+  const counts = new Map<string, number>();
+  for (const id of uniqueIds) {
+    counts.set(id, 0);
+  }
+  if (uniqueIds.length === 0) {
+    return counts;
+  }
+
+  for (const chunk of chunked(uniqueIds, EDGE_ADJACENCY_CHUNK_SIZE)) {
+    const placeholders = chunk.map(() => "?").join(", ");
+    const rows = db.query(`
+      SELECT dst_symbol_id, COUNT(*) AS n
+      FROM edges
+      WHERE dst_symbol_id IN (${placeholders}) AND edge_type = ?
+      GROUP BY dst_symbol_id
+    `).all(...chunk, edgeType) as Array<{ dst_symbol_id: string; n: number }>;
+
+    for (const row of rows) {
+      counts.set(row.dst_symbol_id, row.n);
+    }
+  }
+
+  return counts;
+}
+
 function listDirectedEdgesForSymbols(
   db: Database,
   symbolIds: readonly string[],

@@ -99,6 +99,14 @@ export interface HybridScoreComponents {
   /** Bounded definition-local match for high-confidence capability lookups. */
   directAnswerScore?: number;
   /**
+   * Bounded orchestration evidence: this symbol is a short static caller of a
+   * strongly query-matching implementation AND independently matches the query.
+   * Present only on candidates the M140-B upstream rescue lane produced. Kept as
+   * its own component rather than folded into `graph` so a rescued candidate can
+   * never be mistaken for a lexical or proximity match.
+   */
+  upstreamRescueScore?: number;
+  /**
    * Weighted sum of the components above, minus `hubPenalty` and
    * `actionabilityPenalty`; the ranking key.
    */
