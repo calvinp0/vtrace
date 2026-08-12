@@ -31,9 +31,31 @@ import { runPipelineOrchestrator } from "../../src/runPipeline/runPipelineOrches
 import { compactProductResponse, serialize } from "../../src/mcp/responseEnvelope";
 import { RunPipelineFlowSkipReason, RunPipelinePresetIntent } from "../../src/runPipeline/types";
 import { loadRetrievalFixture } from "./run_stage5_retrieval_eval";
+import {
+  prepareRunnerOutput,
+  resolveWorkspaceRoot,
+  SHARED_RUNNER_OPTIONS_HELP,
+} from "./lib/runnerPaths";
 
 const ROOT = path.resolve("benchmarks/stage5_vexp_swe_bench_smoke");
-const RESULTS = path.join(ROOT, "results");
+// M141: reports go to an untracked run directory unless --out/--evidence
+// asks otherwise, so validating the evidence can never overwrite it.
+const RUNNER_NAME = "m130_flow_and_response_smoke";
+let RESULTS = "";
+
+function workspaceRoot(): string {
+  return resolveWorkspaceRoot({ argv: process.argv.slice(2) });
+}
+
+async function resolveResults(): Promise<void> {
+  if (process.argv.includes("--help")) {
+    console.log(`run_stage5_m130_flow_and_response_smoke.ts\n\n${SHARED_RUNNER_OPTIONS_HELP}`);
+    process.exit(0);
+  }
+  const target = await prepareRunnerOutput({ argv: process.argv.slice(2), runner: RUNNER_NAME });
+  RESULTS = target.dir;
+}
+
 const WORKSPACE_ROOT = path.resolve(process.env.M130_WORKSPACE_ROOT ?? ".");
 const ARC_ROOT = path.resolve(process.env.M130_ARC_ROOT ?? "/home/calvin/code/ARC");
 const TCKDB_ROOT = path.resolve(process.env.M130_TCKDB_ROOT ?? "/home/calvin/code/TCKDB_v2");
@@ -67,6 +89,7 @@ interface SemanticRow {
 }
 
 async function main(): Promise<void> {
+  await resolveResults();
   const baselinePath = argument("--m129-baseline");
   if (baselinePath === undefined) {
     throw new Error("--m129-baseline must point to an M129 semantic snapshot");
@@ -158,7 +181,7 @@ async function main(): Promise<void> {
  * this read-only: no VTRACE code opens the repository's own state.
  */
 async function arcFlowAcceptance() {
-  const isolated = await mkdtemp(path.join(os.tmpdir(), "vtrace-m130-arc-"));
+  const isolated = await mkdtemp(path.join(workspaceRoot(), "vtrace-m130-arc-"));
   const sourceIndex = path.join(ARC_ROOT, ".vtrace", "index.sqlite");
   try {
     if (!existsSync(sourceIndex)) {
@@ -512,7 +535,7 @@ function readModelVisible(value: unknown): string {
 async function postFixArcSections(): Promise<Record<string, unknown> | undefined> {
   const sourceIndex = path.join(ARC_ROOT, ".vtrace", "index.sqlite");
   if (!existsSync(sourceIndex)) return undefined;
-  const isolated = await mkdtemp(path.join(os.tmpdir(), "vtrace-m130-arc-rw-"));
+  const isolated = await mkdtemp(path.join(workspaceRoot(), "vtrace-m130-arc-rw-"));
   try {
     const isolatedIndex = path.join(isolated, "index.sqlite");
     await copyFile(sourceIndex, isolatedIndex);

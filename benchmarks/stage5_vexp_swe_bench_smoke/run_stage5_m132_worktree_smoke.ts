@@ -45,9 +45,36 @@ import { searchLogicFlow, type LogicFlowOutput } from "../../src/logicFlow/searc
 import { compactProductResponse, serialize } from "../../src/mcp/responseEnvelope";
 import { RunPipelinePresetIntent } from "../../src/runPipeline/types";
 import { loadRetrievalFixture } from "./run_stage5_retrieval_eval";
+import {
+  prepareRunnerOutput,
+  REPO_ROOT,
+  resolveWorkspaceRoot,
+  SHARED_RUNNER_OPTIONS_HELP,
+} from "./lib/runnerPaths";
+import {
+  baselineContainsCommit,
+  evaluatePreservationCheck,
+} from "./lib/preservationRelations";
 
 const ROOT = path.resolve("benchmarks/stage5_vexp_swe_bench_smoke");
-const RESULTS = path.join(ROOT, "results");
+// M141: reports go to an untracked run directory unless --out/--evidence
+// asks otherwise, so validating the evidence can never overwrite it.
+const RUNNER_NAME = "m132_worktree_smoke";
+let RESULTS = "";
+
+function workspaceRoot(): string {
+  return resolveWorkspaceRoot({ argv: process.argv.slice(2) });
+}
+
+async function resolveResults(): Promise<void> {
+  if (process.argv.includes("--help")) {
+    console.log(`run_stage5_m132_worktree_smoke.ts\n\n${SHARED_RUNNER_OPTIONS_HELP}`);
+    process.exit(0);
+  }
+  const target = await prepareRunnerOutput({ argv: process.argv.slice(2), runner: RUNNER_NAME });
+  RESULTS = target.dir;
+}
+
 const WORKSPACE_ROOT = path.resolve(process.env.M132_WORKSPACE_ROOT ?? ".");
 const ARC_ROOT = path.resolve(process.env.M132_ARC_ROOT ?? "/home/calvin/code/ARC");
 const TCKDB_ROOT = path.resolve(process.env.M132_TCKDB_ROOT ?? "/home/calvin/code/TCKDB_v2");
@@ -95,8 +122,9 @@ interface Baseline {
 }
 
 async function main(): Promise<void> {
+  await resolveResults();
   if (argument("--mode") === "baseline") {
-    await writeBaseline(argument("--baseline-out") ?? path.join(os.tmpdir(), "m131-baseline.json"));
+    await writeBaseline(argument("--baseline-out") ?? path.join(workspaceRoot(), "m131-baseline.json"));
     return;
   }
 
@@ -208,7 +236,7 @@ async function main(): Promise<void> {
  * built from ARC's read-only source; ARC's own `.vtrace` is never touched.
  */
 async function arcWorktreeAcceptance() {
-  const isolated = await mkdtemp(path.join(os.tmpdir(), "vtrace-m132-arc-"));
+  const isolated = await mkdtemp(path.join(workspaceRoot(), "vtrace-m132-arc-"));
   const exclusions = await resolveWorktreeExclusions(ARC_ROOT);
   const summary = summarizeWorktreeExclusions(exclusions);
   const disabled = { ...EMPTY_WORKTREE_EXCLUSIONS, root: exclusions.root };
@@ -354,7 +382,7 @@ function worktreeRoutingMatrix() {
 // artifacts carry measured evidence rather than a pointer to a test name.
 
 async function worktreeRefreshIsolation() {
-  const scratch = await mkdtemp(path.join(os.tmpdir(), "vtrace-m132-refresh-"));
+  const scratch = await mkdtemp(path.join(workspaceRoot(), "vtrace-m132-refresh-"));
   try {
     const a = path.join(scratch, "wt-a");
     const b = path.join(scratch, "wt-b");
@@ -403,7 +431,7 @@ async function worktreeRefreshIsolation() {
 }
 
 async function contaminatedIndexCleanup() {
-  const scratch = await mkdtemp(path.join(os.tmpdir(), "vtrace-m132-clean-"));
+  const scratch = await mkdtemp(path.join(workspaceRoot(), "vtrace-m132-clean-"));
   try {
     const root = path.join(scratch, "parent");
     await gitInitRepo(root, "PARENT");
@@ -470,7 +498,7 @@ async function gitInitRepo(root: string, marker: string): Promise<void> {
 // Project-name ranking
 
 async function projectNameRanking(baseline: Baseline) {
-  const isolated = await mkdtemp(path.join(os.tmpdir(), "vtrace-m132-rank-"));
+  const isolated = await mkdtemp(path.join(workspaceRoot(), "vtrace-m132-rank-"));
   try {
     const indexPath = path.join(isolated, "arc.sqlite");
     const db = new Database(indexPath);
@@ -543,20 +571,49 @@ async function projectNameRanking(baseline: Baseline) {
 // ---------------------------------------------------------------------------
 // Impact hydration
 
+/** The commit that introduced the batched hydration this row preserves. */
+const IMPACT_HYDRATION_BATCHING_COMMIT = "9260d378f2aa96ce56d3f10c7cd120ae132d3836" as const;
+
 function impactHydration(baseline: Baseline) {
   const measured = measureImpactQueries();
   const before = baseline.impactQueries;
+
+  // M141: read the baseline's provenance before choosing the relation. Against
+  // a pre-M132 baseline this is still a strict historical reduction; against a
+  // baseline that already carries the batching, an unchanged query count IS the
+  // preserved result, and demanding a further reduction is unsatisfiable.
+  const provenance = baselineContainsCommit({
+    repoRoot: REPO_ROOT,
+    baselineCommit: baseline.commit,
+    changeCommit: IMPACT_HYDRATION_BATCHING_COMMIT,
+    changeDescription: "batched impact dependent hydration",
+  });
+  const verdict = evaluatePreservationCheck({
+    check: "impact_hydration_batched",
+    kind: "historical_improvement",
+    declaredRelation: "less_than",
+    baseline: provenance,
+    baselineValue: before?.queries ?? null,
+    observed: measured.queries,
+    context: `${measured.dependents} dependents`,
+  });
+  // With no baseline at all the only available evidence is that hydration is
+  // sub-linear in the dependent count, which is the property the change made true.
+  const batched = before === null ? measured.queries < measured.dependents : verdict.pass;
+
   return {
-    schemaVersion: "stage5.m132.impact-hydration.v1",
+    schemaVersion: "stage5.m132.impact-hydration.v2",
     change: "discoverImpactSymbols collected the frontier's dependent ids and hydrated them with one getSymbolsByIds call, replacing one getSymbolById per dependent.",
     before,
     after: measured,
     semanticEquivalence: before === null ? "no_baseline" : before.dependents === measured.dependents ? "identical_dependent_set_size" : "dependent_count_differs",
     queryReduction: before === null ? null : before.queries - measured.queries,
-    batched: before === null ? measured.queries < measured.dependents : measured.queries < before.queries,
+    provenance,
+    assertion: verdict,
+    batched,
     evidence: before === null
       ? `${measured.queries} queries for ${measured.dependents} dependents (no baseline)`
-      : `${before.queries} -> ${measured.queries} queries for ${measured.dependents} dependents`,
+      : `${before.queries} -> ${measured.queries} queries for ${measured.dependents} dependents (${verdict.reason})`,
   };
 }
 
@@ -836,7 +893,7 @@ async function writeBaseline(target: string): Promise<void> {
     }
   }
 
-  const isolated = await mkdtemp(path.join(os.tmpdir(), "vtrace-m132-base-"));
+  const isolated = await mkdtemp(path.join(workspaceRoot(), "vtrace-m132-base-"));
   let arcGeometry: unknown = null;
   let arcSymbolQuery: unknown = null;
   try {

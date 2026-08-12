@@ -41,9 +41,31 @@ import { formatRunPipelineOrchestrationOutput } from "../../src/runPipeline/form
 import { runPipelineOrchestrator } from "../../src/runPipeline/runPipelineOrchestrator";
 import { RunPipelinePresetIntent } from "../../src/runPipeline/types";
 import { loadRetrievalFixture } from "./run_stage5_retrieval_eval";
+import {
+  prepareRunnerOutput,
+  resolveWorkspaceRoot,
+  SHARED_RUNNER_OPTIONS_HELP,
+} from "./lib/runnerPaths";
 
 const ROOT = path.resolve("benchmarks/stage5_vexp_swe_bench_smoke");
-const RESULTS = path.join(ROOT, "results");
+// M141: reports go to an untracked run directory unless --out/--evidence
+// asks otherwise, so validating the evidence can never overwrite it.
+const RUNNER_NAME = "m131_flow_scalability_smoke";
+let RESULTS = "";
+
+function workspaceRoot(): string {
+  return resolveWorkspaceRoot({ argv: process.argv.slice(2) });
+}
+
+async function resolveResults(): Promise<void> {
+  if (process.argv.includes("--help")) {
+    console.log(`run_stage5_m131_flow_scalability_smoke.ts\n\n${SHARED_RUNNER_OPTIONS_HELP}`);
+    process.exit(0);
+  }
+  const target = await prepareRunnerOutput({ argv: process.argv.slice(2), runner: RUNNER_NAME });
+  RESULTS = target.dir;
+}
+
 const WORKSPACE_ROOT = path.resolve(process.env.M131_WORKSPACE_ROOT ?? ".");
 const ARC_ROOT = path.resolve(process.env.M131_ARC_ROOT ?? "/home/calvin/code/ARC");
 const TCKDB_ROOT = path.resolve(process.env.M131_TCKDB_ROOT ?? "/home/calvin/code/TCKDB_v2");
@@ -86,8 +108,9 @@ interface SemanticRow {
 }
 
 async function main(): Promise<void> {
+  await resolveResults();
   if (argument("--mode") === "baseline") {
-    await writeBaseline(argument("--baseline-out") ?? path.join(os.tmpdir(), "m130-baseline.json"));
+    await writeBaseline(argument("--baseline-out") ?? path.join(workspaceRoot(), "m130-baseline.json"));
     return;
   }
 
@@ -186,7 +209,7 @@ async function main(): Promise<void> {
  * milestone removed.
  */
 async function arcFlowAcceptance(flowBaseline: { warmWithSourceExcerpts: { warmMedianMs: number } }) {
-  const isolated = await mkdtemp(path.join(os.tmpdir(), "vtrace-m131-arc-"));
+  const isolated = await mkdtemp(path.join(workspaceRoot(), "vtrace-m131-arc-"));
   try {
     const indexPath = path.join(isolated, "index.sqlite");
     const buildStarted = performance.now();
@@ -412,7 +435,7 @@ function adjacencyQueryPlans() {
 // Edge-site provenance
 
 async function edgeSiteEquivalence(arc: Awaited<ReturnType<typeof arcFlowAcceptance>>) {
-  const repoRoot = await mkdtemp(path.join(os.tmpdir(), "vtrace-m131-sites-"));
+  const repoRoot = await mkdtemp(path.join(workspaceRoot(), "vtrace-m131-sites-"));
   try {
     await mkdir(path.join(repoRoot, "pkg"), { recursive: true });
     await writeFile(path.join(repoRoot, "pkg", "mod.py"), [
@@ -578,7 +601,7 @@ async function responseEnvelopeEquivalence(fixturePath: string | undefined) {
 async function postFixArcSections(): Promise<Record<string, unknown> | undefined> {
   const sourceIndex = path.join(ARC_ROOT, ".vtrace", "index.sqlite");
   if (!existsSync(sourceIndex)) return undefined;
-  const isolated = await mkdtemp(path.join(os.tmpdir(), "vtrace-m131-arc-rw-"));
+  const isolated = await mkdtemp(path.join(workspaceRoot(), "vtrace-m131-arc-rw-"));
   try {
     const isolatedIndex = path.join(isolated, "index.sqlite");
     await copyFile(sourceIndex, isolatedIndex);
@@ -891,7 +914,7 @@ function withSyntheticDb<T>(
   spec: Parameters<typeof buildSyntheticGraph>[1],
   body: (db: Database, graph: ReturnType<typeof buildSyntheticGraph>) => T,
 ): T {
-  const directory = `${os.tmpdir()}/vtrace-m131-syn-${spec.totalEdges}-${spec.plantedPosition ?? "middle"}-${spec.startFanOut ?? 0}-${spec.plantedPathLength ?? 1}-${spec.seed ?? 0}`;
+  const directory = `${workspaceRoot()}/vtrace-m131-syn-${spec.totalEdges}-${spec.plantedPosition ?? "middle"}-${spec.startFanOut ?? 0}-${spec.plantedPathLength ?? 1}-${spec.seed ?? 0}`;
   const db = new Database(":memory:");
   try {
     initializeSchema(db);

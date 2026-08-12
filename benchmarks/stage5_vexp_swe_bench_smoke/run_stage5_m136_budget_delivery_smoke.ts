@@ -8,8 +8,30 @@ import { CapsuleIntent } from "../../src/capsuleV2/types";
 import { createMcpServer } from "../../src/mcp/server";
 import { MCP_SERVER_SCHEMA, McpToolId } from "../../src/mcp/types";
 import { assembleProductContext } from "../../src/productContext/assembleProductContext";
+import {
+  prepareRunnerOutput,
+  resolveWorkspaceRoot,
+  SHARED_RUNNER_OPTIONS_HELP,
+} from "./lib/runnerPaths";
 
-const RESULTS = path.resolve("benchmarks/stage5_vexp_swe_bench_smoke/results");
+// M141: reports go to an untracked run directory unless --out/--evidence
+// asks otherwise, so validating the evidence can never overwrite it.
+const RUNNER_NAME = "m136_budget_delivery_smoke";
+let RESULTS = "";
+
+function workspaceRoot(): string {
+  return resolveWorkspaceRoot({ argv: process.argv.slice(2) });
+}
+
+async function resolveResults(): Promise<void> {
+  if (process.argv.includes("--help")) {
+    console.log(`run_stage5_m136_budget_delivery_smoke.ts\n\n${SHARED_RUNNER_OPTIONS_HELP}`);
+    process.exit(0);
+  }
+  const target = await prepareRunnerOutput({ argv: process.argv.slice(2), runner: RUNNER_NAME });
+  RESULTS = target.dir;
+}
+
 const ARC_ROOT = "/home/calvin/code/ARC";
 const ARC_INDEX = "/tmp/vtrace-m135-arc.sqlite";
 const TCKDB_ROOT = "/home/calvin/code/TCKDB_v2";
@@ -21,7 +43,8 @@ const BUDGETS = [50, 100, 200, 500, 1_000, 2_000, 3_000, 6_000, 9_000];
 type Json = Record<string, unknown>;
 
 async function main(): Promise<void> {
-  const scratch = await mkdtemp(path.join(os.tmpdir(), "vtrace-m136-smoke-"));
+  await resolveResults();
+  const scratch = await mkdtemp(path.join(workspaceRoot(), "vtrace-m136-smoke-"));
   try {
     const arcDb = path.join(scratch, "arc.sqlite");
     await copyFile(ARC_INDEX, arcDb);

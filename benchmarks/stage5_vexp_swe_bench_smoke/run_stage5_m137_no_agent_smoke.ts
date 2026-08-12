@@ -17,8 +17,30 @@ import { createMcpServer } from "../../src/mcp/server";
 import { MCP_SERVER_SCHEMA, McpToolId } from "../../src/mcp/types";
 import { deriveQueryIntent, evaluateDirectAnswer } from "../../src/retrieval/querySemantics";
 import { hybridRetrieve } from "../../src/retrieval/hybridRetrieval";
+import {
+  prepareRunnerOutput,
+  resolveWorkspaceRoot,
+  SHARED_RUNNER_OPTIONS_HELP,
+} from "./lib/runnerPaths";
 
-const RESULTS = path.resolve("benchmarks/stage5_vexp_swe_bench_smoke/results");
+// M141: reports go to an untracked run directory unless --out/--evidence
+// asks otherwise, so validating the evidence can never overwrite it.
+const RUNNER_NAME = "m137_no_agent_smoke";
+let RESULTS = "";
+
+function workspaceRoot(): string {
+  return resolveWorkspaceRoot({ argv: process.argv.slice(2) });
+}
+
+async function resolveResults(): Promise<void> {
+  if (process.argv.includes("--help")) {
+    console.log(`run_stage5_m137_no_agent_smoke.ts\n\n${SHARED_RUNNER_OPTIONS_HELP}`);
+    process.exit(0);
+  }
+  const target = await prepareRunnerOutput({ argv: process.argv.slice(2), runner: RUNNER_NAME });
+  RESULTS = target.dir;
+}
+
 const ARC_ROOT = "/home/calvin/code/ARC";
 const ARC_INDEX = "/tmp/vtrace-m135-arc.sqlite";
 const TCKDB_ROOT = "/home/calvin/code/TCKDB_v2";
@@ -36,8 +58,9 @@ interface HistoricalModules {
 }
 
 async function main(): Promise<void> {
+  await resolveResults();
   const baselineRoot = baselineRootArg(process.argv.slice(2));
-  const scratch = await mkdtemp(path.join(os.tmpdir(), "vtrace-m137-smoke-"));
+  const scratch = await mkdtemp(path.join(workspaceRoot(), "vtrace-m137-smoke-"));
   try {
     const arcDb = path.join(scratch, "arc.sqlite");
     await copyFile(ARC_INDEX, arcDb);

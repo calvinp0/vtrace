@@ -28,8 +28,30 @@ import {
   type CurrentObservationContext,
   type Observation,
 } from "../../src/observations/types";
+import {
+  prepareRunnerOutput,
+  resolveWorkspaceRoot,
+  SHARED_RUNNER_OPTIONS_HELP,
+} from "./lib/runnerPaths";
 
-const RESULTS = path.resolve("benchmarks/stage5_vexp_swe_bench_smoke/results");
+// M141: reports go to an untracked run directory unless --out/--evidence
+// asks otherwise, so validating the evidence can never overwrite it.
+const RUNNER_NAME = "m138_memory_provenance_smoke";
+let RESULTS = "";
+
+function workspaceRoot(): string {
+  return resolveWorkspaceRoot({ argv: process.argv.slice(2) });
+}
+
+async function resolveResults(): Promise<void> {
+  if (process.argv.includes("--help")) {
+    console.log(`run_stage5_m138_memory_provenance_smoke.ts\n\n${SHARED_RUNNER_OPTIONS_HELP}`);
+    process.exit(0);
+  }
+  const target = await prepareRunnerOutput({ argv: process.argv.slice(2), runner: RUNNER_NAME });
+  RESULTS = target.dir;
+}
+
 const ARC_ROOT = "/home/calvin/code/ARC";
 const ARC_DB = path.join(ARC_ROOT, ".vtrace/index.sqlite");
 const TCKDB_ROOT = "/home/calvin/code/TCKDB_v2";
@@ -38,7 +60,8 @@ const IMPACT_QUERY = "arc/species/vectors.py::get_dihedral";
 const EXACT_QUERY = "a function that returns a dihedral angle given three vectors, rather than given coordinates and four atom indices";
 
 async function main(): Promise<void> {
-  const scratch = await mkdtemp(path.join(os.tmpdir(), "vtrace-m138-"));
+  await resolveResults();
+  const scratch = await mkdtemp(path.join(workspaceRoot(), "vtrace-m138-"));
   try {
     const arcCopy = path.join(scratch, "arc.sqlite");
     await copyFile(ARC_DB, arcCopy);
