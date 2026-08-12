@@ -1158,6 +1158,12 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
     // intermediate would defeat the purpose). If nothing is displaceable the role
     // simply goes unused: a weak support item is worth less than a strong one, but
     // not less than nothing.
+    // A rescued candidate that DID make the pool can also be sitting in the tail
+    // of the support ordering, past the slot cut. Splicing without removing it
+    // would leave a twin behind, reported as budget-dropped while the symbol it
+    // names is delivered. Drop the twin; the entry below replaces it.
+    orderedSupport = orderedSupport.filter((existing) =>
+      existing.candidate.symbolId !== selection.candidate.symbolId);
     const pathNodes = new Set(selection.path);
     const isProtected = (winner: RefinedRoledCandidate): boolean =>
       pathNodes.has(winner.candidate.fqName)

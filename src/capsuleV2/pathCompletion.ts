@@ -36,7 +36,12 @@ import type { HybridCandidate, OrchestrationPathCandidate } from "../retrieval/h
 import { isStructuralSymbolKind } from "../domain/types";
 
 export interface PathCompletionOptions {
-  /** Items this role may add to one request. Deliberately 1. */
+  /**
+   * Items this role may add to one request. Deliberately 1, and 1 is the only
+   * value above zero the selector implements: 0 disables the role, anything else
+   * selects exactly one. A second guaranteed upstream slot has no evidence behind
+   * it, so widening this is a design decision, not a configuration change.
+   */
   readonly maxPathCompletionItems?: number;
   /** Query relevance a candidate must retain to be worth a guaranteed slot. */
   readonly minRelevance?: number;
