@@ -584,3 +584,57 @@ test("broad natural-language queries never surface or score module scope symbols
     await rm(root, { recursive: true, force: true });
   }
 });
+
+// --- structural scopes are not dependent symbols -------------------------------
+
+// `computeInDegreeCentrality` feeds the pivot-ordering reason surfaced to the
+// model as "N indexed symbol(s) depend on this". Once <module> owned every
+// file's imports, an import-only dependency began inflating that count, so a
+// widely-imported public symbol outranked the internal function a task actually
+// needed. The edges are correct and stay in the graph; they must simply not be
+// counted as dependent SYMBOLS.
+test("import-only dependents from module scopes do not inflate in-degree centrality", async () => {
+  const { computeInDegreeCentrality } = await import("../retrieval/graphExpansion");
+  const root = await mkdtemp(path.join(os.tmpdir(), "m140-centrality-"));
+  const db = openIndexerDatabase();
+
+  try {
+    await writeRepo(root, {
+      ...MODEL,
+      // Three files import Thing and never use it: a file-level dependency only.
+      "a.py": "from model import Thing\n",
+      "b.py": "from model import Thing\n",
+      "c.py": "from model import Thing\n",
+      // One real symbol genuinely depends on Thing by calling it.
+      "caller.py": "from model import Thing\n\n\ndef build():\n    return Thing()\n",
+    });
+    await indexProject({ repoRoot: root, db, refreshMode: "full" });
+
+    const thing = db.query(
+      `SELECT id FROM symbols WHERE fq_name = 'model.py::Thing'`,
+    ).get() as { id: string } | null;
+    assert.ok(thing, "fixture symbol missing");
+
+    // The import edges themselves remain in the graph for other consumers.
+    const importEdges = readImportEdges(db)
+      .filter((edge) => edge.to === "model.py::Thing");
+    assert.equal(importEdges.length, 4, "import edges must be preserved");
+    assert.equal(
+      importEdges.every((edge) => edge.from.endsWith("::<module>")),
+      true,
+      "module scope should own the import edges",
+    );
+
+    // ...but four module scopes are not four dependent symbols. Only `build`,
+    // which calls Thing, is a real dependent.
+    const centrality = computeInDegreeCentrality(db, [thing.id]);
+    assert.equal(
+      centrality.get(thing.id) ?? 0,
+      1,
+      "structural module scopes were counted as dependent symbols",
+    );
+  } finally {
+    db.close();
+    await rm(root, { recursive: true, force: true });
+  }
+});

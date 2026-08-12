@@ -19,7 +19,12 @@ import {
   getSymbolsByIds,
   listSymbolsUnderDirectory,
 } from "../db/repositories/symbolsRepository";
-import { EdgeType, type SymbolId, type SymbolRecord } from "../domain/types";
+import {
+  EdgeType,
+  isStructuralSymbolKind,
+  type SymbolId,
+  type SymbolRecord,
+} from "../domain/types";
 
 export enum ExpansionRelation {
   Imports = "imports",
@@ -250,10 +255,19 @@ function materialize(
 
 // ----- centrality -------------------------------------------------------------
 
-// Global in-degree per symbol: how many edges point AT it across the whole
-// graph. A high in-degree means many things depend on the symbol, so among
+// Global in-degree per symbol: how many DEPENDENT SYMBOLS point AT it across the
+// whole graph. A high in-degree means many things depend on the symbol, so among
 // otherwise-similar candidates it is the more likely shared implementation
 // target. Returned as raw counts; the hybrid scorer normalises against the pool.
+//
+// Structural sources are excluded. A `<module>` scope owns its file's imports so
+// those edges have a stable owner, but it is not a symbol anyone can retrieve,
+// select, or edit — counting it would report a module/file dependency inside a
+// number that is surfaced to the model as "N indexed symbol(s) depend on this"
+// and used to order pivots. The edges themselves stay in the graph and remain
+// available to every other consumer; only this centrality metric filters them.
+// Module-import fan-in, if it later proves useful for ranking, belongs in an
+// explicit separate feature rather than overloaded onto this count.
 export function computeInDegreeCentrality(
   db: Database,
   symbolIds: readonly SymbolId[],
@@ -267,12 +281,38 @@ export function computeInDegreeCentrality(
     return centrality;
   }
   const idSet = new Set(ids);
-  for (const edge of listEdgesForSymbols(db, ids)) {
-    if (idSet.has(edge.dstSymbolId)) {
-      centrality.set(edge.dstSymbolId, (centrality.get(edge.dstSymbolId) ?? 0) + 1);
+  const incoming = listEdgesForSymbols(db, ids)
+    .filter((edge) => idSet.has(edge.dstSymbolId));
+  const structuralSources = structuralSymbolIds(
+    db,
+    incoming.map((edge) => edge.srcSymbolId),
+  );
+  for (const edge of incoming) {
+    if (structuralSources.has(edge.srcSymbolId)) {
+      continue;
     }
+    centrality.set(edge.dstSymbolId, (centrality.get(edge.dstSymbolId) ?? 0) + 1);
   }
   return centrality;
+}
+
+// The subset of `symbolIds` whose symbols are structural scopes. Resolved in one
+// batched lookup rather than per edge, since a hub's adjacency can be large.
+function structuralSymbolIds(
+  db: Database,
+  symbolIds: readonly SymbolId[],
+): Set<SymbolId> {
+  const unique = [...new Set(symbolIds)];
+  if (unique.length === 0) {
+    return new Set();
+  }
+  const structural = new Set<SymbolId>();
+  for (const symbol of getSymbolsByIds(db, unique).values()) {
+    if (isStructuralSymbolKind(symbol.kind)) {
+      structural.add(symbol.id);
+    }
+  }
+  return structural;
 }
 
 // ----- helpers ----------------------------------------------------------------
