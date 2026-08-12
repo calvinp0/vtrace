@@ -1,0 +1,68 @@
+{
+  "schemaVersion": "stage5.m141.index-repo-response.v1",
+  "paths": {
+    "outputDir": "/home/calvin/bench/vtrace-m141/out/m141",
+    "outputSource": "explicit_out",
+    "writesTrackedEvidence": false,
+    "workspaceRoot": "/home/calvin/bench/vtrace-m141/scratch",
+    "tmpdirRespected": false
+  },
+  "repositoryFiles": 290,
+  "before": {
+    "shape": "one entry per file (pre-M141)",
+    "bytes": 26797,
+    "estimatedTokens": 6700,
+    "fileOutcomesDelivered": 290,
+    "fileOutcomesOmitted": 0
+  },
+  "after": {
+    "shape": "summary-first, bounded notable outcomes",
+    "bytes": 3023,
+    "estimatedTokens": 756,
+    "fileOutcomesDelivered": 0,
+    "fileOutcomesOmitted": 0,
+    "detailLimit": 20
+  },
+  "counts": {
+    "filesTotal": 290,
+    "indexed": 290,
+    "skipped": 0,
+    "failed": 0,
+    "warnings": 0,
+    "byStatus": {
+      "indexed": 290,
+      "read_failed": 0,
+      "parse_failed": 0,
+      "unregistered_language": 0,
+      "unsupported_language": 0,
+      "persistence_failed": 0
+    }
+  },
+  "changes": {
+    "added": 0,
+    "modified": 0,
+    "removed": 0,
+    "renamed": 0,
+    "unchanged": 290
+  },
+  "skipReasons": {},
+  "readiness": {
+    "ready": true,
+    "state": "ready",
+    "reason": "fresh",
+    "recommendedAction": "none",
+    "sourceFresh": true,
+    "schemaCompatible": true,
+    "capabilityCompatible": true,
+    "repositoryCompatible": true,
+    "worktreeCompatible": true,
+    "missingCapabilities": []
+  },
+  "semanticsPreserved": true,
+  "indexedData": {
+    "files": 290,
+    "symbols": 580,
+    "edges": 0
+  },
+  "manifestRunId": 2
+}

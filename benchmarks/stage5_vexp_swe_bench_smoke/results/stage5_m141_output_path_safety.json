@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "stage5.m141.output-path-safety.v2",
+  "trackedResultsDir": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results",
+  "trackedFilesHashed": 934,
+  "trackedEvidenceUnchanged": true,
+  "allRunnersUntrackedByDefault": false,
+  "documentedExceptions": {
+    "runners": [
+      "run_stage5_m48_ruleout_sufficiency_validator.ts",
+      "run_stage5_m49_ruleout_sufficiency_checker.ts"
+    ],
+    "reason": "Both read raw run artifacts from results/runs/ as INPUT as well as writing there, so a mechanical retrofit would break their input path. Pre-M100 live-agent audit tooling, outside the M134-M140 preservation band, not exercisable without live agents."
+  },
+  "undocumentedTrackedDefaults": [],
+  "criteria": {
+    "preservationRunnersDoNotMutateTrackedEvidence": true,
+    "workspacesPlaceableOutsideTmp": true,
+    "tmpdirAndWorkspaceControllable": true,
+    "archiveAndRestoreNotRequired": true,
+    "representativeRunnersOnTheContract": true
+  },
+  "verdict": "PASS",
+  "note": "Every runner in the preservation band resolves output through the shared contract; the two documented exceptions are recorded above rather than silently retrofitted."
+}

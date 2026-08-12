@@ -395,6 +395,73 @@ file; live-run outcome history is separate (`stage5_outcome_ledger.md`).
 
 | M140-C | 4172a26 + c267816 | **PASS** (M140 overall now PASS) | Workstream C: path-coherent orchestration DELIVERY (`src/capsuleV2/pathCompletion.ts`). M140-B closed discovery and left one acceptance open — the entry point was rescued and scored (0.9749) but ranked 93/132 and never delivered — and correctly refused to close it by raising the rescue weight. C changes NO score. It separates ranking ("how directly does this match?") from selection ("which bounded set answers this coherently?"): retrieval now surfaces every rescued symbol with its TRUTHFUL ordinary rank alongside the output cap (`orchestrationPaths` on `HybridRetrievalResult`), and a pure deterministic selector may convert ONE support slot for the single candidate that completes an exact short call path whose EVERY other node is already selected. Coherence alone is not the rule: it is satisfied by every caller of every delivered function, so eligibility also requires one of two SHAPES — chain head (reaches the seed THROUGH a delivered intermediate) or branch controller (a parsed conditional-alternative request, and the candidate calls >=2 of the DELIVERED alternatives). Floors: relevance >=0.30, >=2 matched query terms, depth <=2, exact `calls` only, non-structural, >=2 support slots. Ordering: chain length completed, then matched query terms, then ordinary score, then name (never Map/SQLite order). Placement CONVERTS a slot rather than growing the capsule — never a pivot, never the lead, displacing only the weakest winner that is not an author-pointed anchor, a body-literal diagnostic, or a node of the path being completed — and the item carries `selection_role`/`selection_reason`/`ordinary_rank` so both readings stay separable. Zero new DB queries, zero new traversals, zero new source reads: it reads what the M140-B lane already produced. | **`ARCSpecies.from_dict` DELIVERED** as `orchestration_support` at an UNCHANGED ordinary rank 93/132 and score 0.9749; selected set changes by exactly one in / one out (an unrelated zmat coordinate helper leaves), lead unchanged, 6 items, 829/6000 tokens. ARC acceptance **28/28**. Generic fixtures: one-chain `deserialize` selected as `orchestration_entry`; conditional-branch `load_state` as `branch_controller`; the same chain with its intermediate undelivered selects nothing. Negative controls **0 selected** across explicit lookup x2, capability lookup, caller enumeration, two broad process questions, bug report, and 1,000 callers of one helper. Selection rate 1/11 mixed ARC requests; max 1 per request; 0.07 ms worst case. Budget ladder 500/1k/3k/6k/12k monotonic, never empty, always within envelope; micro tiers refuse the role (1 support slot). **B->C paired benchmark: provenanceValid, 0/50 changed, per-suite semantic hashes byte-identical** (Top-1 39, Top-3 44, gold-anywhere 47, missing 3, mean tokens 1806.44 — all flat) because `evaluateOrchestrationIntent` is active on **0 of the 50** frozen tasks, measured directly on the fixture text. TCKDB `main` 1896a85 (advanced from b91f69e) 0/4 changed. Module-node backstop 0 leaks; centrality correction intact; M131/M136/M137/M139 preserved; M132 20/21 (the one failing row asserts an improvement that cannot be re-satisfied against a successor baseline); M138 FAIL is PRE-EXISTING — byte-identical verdict artifact at 7093e2d and c267816. 4,120 pass / 0 fail; both typechecks clean; M140-A suite 130/130. | **M140 overall PASS.** Do not generalise depth-1 completion beyond the branch-controller shape without evidence: the only measurement available showed the general rule spending the slot on an ordinary rank-11 caller. Next: **M141 — index readiness and indexing-path hygiene** (`index_status` source-fresh vs runtime-ready disagreement, shared readiness evaluator, `index_repo` response bloat, `memoryRulesMs` profiling, and the preservation-smoke result-path hazard, which bit twice more here). |
 
+| M141 | 8d09848 + b5a7a92 + 86c4cb0 | **PASS** | Index readiness and indexing-path hygiene: five lifecycle defects, no M140 semantics touched. **(A)** `index_status` and the product tools ran two unrelated freshness models — a target-repo source snapshot vs VTRACE's own indexer/parser/schema/config fingerprints — so editing `src/indexer` produced `fresh / no rebuild needed` immediately before `index_schema_changed / rebuild_index`. `evaluateIndexReadiness` (`src/indexer/indexReadiness.ts`) is now the one evaluation: it decomposes readiness into sourceFresh / schemaCompatible / capabilityCompatible / repositoryCompatible / worktreeCompatible and evaluates EVERY dimension instead of returning at the first failure — which is exactly what makes `sourceFresh=true, schemaCompatible=false` expressible. `inspectWorktreeIndexFreshness` became a projection of it with its contract byte-preserved, and `index_status`, product-shell status, workspace repo status, `run_pipeline`, `get_code_context`, and `index_repo` all route through it (M132's lesson: prove routing, not a helper). No schema bump; the config hash is modelled as a SOURCE input because it governs which files are in scope. **(B)** `index_repo` returned ~290 outcomes saying `indexed`; it is now summary-first with exact counts, planner change counts, aggregate skip reasons, and a bounded notable-outcome list that never lets failures be displaced. **(C)** `memoryRulesMs` was not memory classification: `getObservationStaleness` took its comparison run from a DEFAULT PARAMETER, re-querying the latest run and re-walking the whole index-run chain per observation, materializing every run's file+symbol run-state tables each time. Fixed with one request-local (never global) run-diff memo, link-keyed lookups per step, and an early exit for observations that cannot survive scoring. **(D)** A shared runner output/workspace contract (`lib/runnerPaths.ts`): untracked by default, tracked evidence only via `--out`/`--evidence`, scratch root off `/tmp`. **(E)** Preservation assertions now declare their KIND, and a `historical_improvement` claim reads its baseline's provenance by git ancestry before choosing a relation (`lib/preservationRelations.ts`). | **The contradiction, both sides:** predecessor `249f61f` `index_status` fresh/isStale=false while `get_code_context` refuses with `index_schema_changed`; candidate reports `possibly_stale`, `schema_incompatible`/`schema_changed`/`full_rebuild`, `sourceFresh=true schemaCompatible=false`. **Readiness matrix 10/10 states correct; cross-tool parity 10 states x 6 surfaces, 0 disagreements.** `index_repo` 290 files: **26,797 -> 3,023 bytes** (~6,700 -> ~756 tokens), 290 -> 0 listed outcomes, counts and index data identical; scale 10/300/3k/30k files = 446/451/456/**461 bytes** (15 bytes across three orders of magnitude). **memoryRulesMs on the real ARC index (35 observations): median 6,787 -> 337 ms, 1,309 -> 184 DB queries, verdicts byte-identical**; run-chain discovery grows <4 queries per observation (was ~37); the residual ~295 ms is the one-time chain diff and is reported, not optimized away. **M140-C acceptance 28/28 on BOTH sides**, artifact diff = timing + `vtraceHead` only; `from_dict` delivered as orchestration_support at rank **93/132** score **0.9749**; ARC fixture 324/8,986/21,618/2,281 + 273 `<module>`. M139 `ARCSpecies.copy` impact **byte-identical**; M138 memory verdicts **byte-identical over 274,717 bytes**; TCKDB `1896a855` **0/4 changed both sides**; **M132 20/21 -> 21/21**. **Frozen 50 paired comparison (Django expanded 20 + cross_repo_30) against `249f61f`: provenanceValid, 0/50 changed, every quality metric identical and equal to M140-C's — Top-1 39, Top-3 44, gold-anywhere 47, gold-symbol 31, missing 3, mean tokens 1806.44.** No file under `src/retrieval`, `src/capsuleV2`, `src/capsule`, `src/graph`, `src/parsers`, `src/impact`, `src/logicFlow` or `src/db` was touched. Runner audit 201 runners: tracked-by-default **25 -> 2**. 4,170 pass / 0 fail; both typechecks clean. | **M141 PASS; next is M142 — Workspace and Repository Identity Foundation.** The readiness object is already per-repository and already routed through workspace repo status, so that is the aggregation point. Two carried limitations, both pre-existing and both reproduced on `249f61f`: the standalone **M138 smoke crashes** identically on the predecessor, and the standalone **M137 smoke FAILs** identically (`3000=false`) because it drives `get_code_context` with `auto_refresh: "never"` against a `/home/calvin/code/ARC` checkout that has drifted from its index, so the product-context layer correctly fails closed. Both are harness preconditions, not product behavior — extend the M141 assertion model to declare fixture preconditions so they read as `skipped: precondition_unmet` rather than FAIL. Two legacy runners (`m48`/`m49`) still default to tracked results because they READ `results/runs/` as input; retrofitting them needs an input/output split. |
+
+## M141 standing findings
+
+- **Two freshness models is the defect, not a stale threshold** (M141): the
+  `index_status` / `get_code_context` contradiction was never a tuning problem.
+  `inspectIndexFreshness` compared the TARGET repo's source snapshot;
+  `inspectWorktreeIndexFreshness` also compared VTRACE's OWN indexer, parser,
+  schema, and config fingerprints. Editing `src/indexer` invalidates every
+  stored index without touching any indexed repository, so one model correctly
+  saw nothing changed and the other correctly saw everything changed. Any
+  future "why does status disagree with the tools?" starts here.
+- **A short-circuiting evaluator cannot express a decomposed verdict** (M141):
+  the pre-M141 code returned at the first failing check, so in the one case
+  that mattered — schema incompatible — source freshness was never evaluated
+  and `sourceFresh=true, schemaCompatible=false` was literally unrepresentable.
+  Decomposition is not cosmetic; it is what makes the report truthful.
+- **`memoryRulesMs` is `getObservationStaleness`, and the cost was a default
+  parameter** (M141): `comparisonRunId = getLatestIndexRun(db)?.id` as a default
+  argument re-ran that query per observation and then re-walked the entire
+  index-run chain per observation, materializing each run's complete file and
+  symbol run-state tables every time. 6,787 ms -> 337 ms on ARC with
+  byte-identical verdicts. Project-rule selection was 0.1 ms the whole time —
+  profile before naming a suspect.
+- **The stale penalty is the only negative signal, which licenses an early
+  exit** (M141): every other search signal contributes a non-negative score, so
+  an observation with no positive signal is discarded whether or not it is
+  stale. Resolving staleness first was pure work for a discarded result. The
+  equivalence depends on that sign property — adding any negative non-stale
+  signal would break it.
+- **A readiness report must never grow into the response** (M141): capsule,
+  impact, and flow responses are budget-bounded (M136 asserts delivery at
+  `max_tokens: 3000`), so the readiness block is emitted only on surfaces with
+  no such budget — `index_status`, `index_repo`, workspace/product-shell
+  status, `run_pipeline`'s freshness block, and `get_code_context` diagnostics.
+  The verdict is still shared; only the payload is withheld.
+- **Tools can share one verdict and still apply different policies** (M141):
+  `get_impact_graph` and `search_logic_flow` keep M131's older-index contract
+  and answer with bounded static evidence where the context tools fail closed.
+  That is declared policy, not a second opinion, and the parity matrix asserts
+  both halves. Making them fail closed would have altered frozen M140 behavior
+  for no correctness gain.
+- **The M137 smoke's FAIL is an unstated fixture precondition** (M141): it
+  drives `get_code_context` with `auto_refresh: "never"` against
+  `/home/calvin/code/ARC` while supplying a COPIED index, so once that checkout
+  drifts from its index the product layer correctly fails closed and no budget
+  row can resolve. Identical on `249f61f`. This is the same class as the M132
+  stale-baseline row — a check whose precondition silently expired — and the
+  same remedy applies: declare the precondition.
+- **Two prepare runs on one `--out-root` deadlock on a worktree index lock**
+  (M141): running the cross_repo target preparation in parallel with a
+  sequential loop that would also reach cross_repo left an `index.lock`
+  directory under one target's `.vtrace/`, and the surviving process then slept
+  forever on it — zero CPU, zero I/O, no child indexer, indistinguishable from
+  slow work. `withWorktreeIndexLock` recovers a lock held by a DEAD process, not
+  one abandoned mid-operation by a process that exited between acquire and
+  release. Diagnose with `/proc/<pid>/io`: unchanging `rchar`/`wchar` means hung,
+  not busy. Remove the lock directory and re-run — preparation resumes
+  already-indexed targets instantly. This is the §50 parallel-collision hazard
+  the M141 inventory flags, observed live during M141's own validation.
+- **A benchmark default that writes tracked evidence turns validation into
+  mutation** (M141): 25 of 201 runners defaulted to `results/`. Ordinary runs
+  now go to an untracked directory and reaching tracked evidence needs `--out`
+  or `--evidence`, which retires the archive-and-restore workflow that reverted
+  the M140-C acceptance artifact. Auditing the pattern found 19 runners beyond
+  the 6 observed misbehaving — fix the contract, not the sightings.
+
 ## M140 standing findings
 
 - **Import attribution had no stable owner** (M140): before this, a file's import

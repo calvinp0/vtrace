@@ -1,0 +1,54 @@
+{
+  "schemaVersion": "stage5.m141.index-status-before-after.v1",
+  "scenario": "source unchanged; VTRACE indexer/parser build moved",
+  "predecessor": {
+    "commit": "249f61feabf26ee183d500a8ffb761e2c3ac09e6",
+    "scenario": "source unchanged; VTRACE indexer/parser build moved",
+    "index_status": {
+      "freshnessState": "fresh",
+      "isStale": false,
+      "recommendedAction": "No re-index is recommended right now.",
+      "reasons": [],
+      "indexReadiness": null
+    },
+    "get_code_context": {
+      "resolved": false,
+      "reason": "index_schema_changed",
+      "indexFreshnessReason": "index_schema_changed"
+    },
+    "contradiction": true
+  },
+  "candidate": {
+    "commit": "86c4cb0bd37edc7b26913afa713e2cc3f1aa10e6",
+    "scenario": "source unchanged; VTRACE indexer/parser build moved",
+    "index_status": {
+      "freshnessState": "possibly_stale",
+      "isStale": true,
+      "recommendedAction": "Rebuild this repo's index (`index_repo` with mode `full`) before relying on vtrace.",
+      "reasons": [
+        "index_schema_incompatible"
+      ],
+      "indexReadiness": {
+        "ready": false,
+        "state": "schema_incompatible",
+        "reason": "schema_changed",
+        "recommendedAction": "full_rebuild",
+        "sourceFresh": true,
+        "schemaCompatible": false,
+        "capabilityCompatible": true,
+        "repositoryCompatible": true,
+        "worktreeCompatible": true,
+        "missingCapabilities": []
+      }
+    },
+    "get_code_context": {
+      "resolved": false,
+      "reason": "index_schema_changed",
+      "indexFreshnessReason": "index_schema_changed"
+    },
+    "contradiction": false
+  },
+  "contradictionBefore": true,
+  "contradictionAfter": false,
+  "verdict": "PASS"
+}

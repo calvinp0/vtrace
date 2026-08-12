@@ -1,0 +1,35 @@
+{
+  "repoRoot": "/home/calvin/code/ARC",
+  "observations": 35,
+  "samples": [
+    {
+      "searchMs": 6869.3,
+      "rulesMs": 0.3,
+      "queries": 1309
+    },
+    {
+      "searchMs": 6715.4,
+      "rulesMs": 0.1,
+      "queries": 1309
+    },
+    {
+      "searchMs": 6786.9,
+      "rulesMs": 0.2,
+      "queries": 1309
+    },
+    {
+      "searchMs": 6770.6,
+      "rulesMs": 0.1,
+      "queries": 1309
+    },
+    {
+      "searchMs": 6900.5,
+      "rulesMs": 0.1,
+      "queries": 1309
+    }
+  ],
+  "coldMs": 6869.3,
+  "medianMs": 6786.9,
+  "p90Ms": 6900.5,
+  "queries": 1309
+}

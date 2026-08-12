@@ -1,0 +1,466 @@
+{
+  "schemaVersion": "stage5.m141.cross-tool-readiness.v1",
+  "verdict": "PASS",
+  "disagreements": 0,
+  "policy": {
+    "fail_closed": "index_status, get_code_context, and the shared M119 product-context layer inside get_context_capsule and run_pipeline refuse an index the readiness evaluator rejects.",
+    "serve_with_warning": "get_impact_graph and search_logic_flow keep M131's older-index contract and answer with bounded static evidence. This is declared policy applied to the SAME verdict, not a second opinion about whether the index is ready."
+  },
+  "rows": [
+    {
+      "case": "current_ready",
+      "evaluator": {
+        "ready": true,
+        "state": "ready",
+        "reason": "fresh",
+        "action": "none"
+      },
+      "capabilityDifference": null,
+      "index_status": {
+        "ready": true,
+        "state": "ready",
+        "reason": "fresh",
+        "action": "none",
+        "legacyIsStale": false
+      },
+      "tools": [
+        {
+          "tool": "get_code_context",
+          "policy": "fail_closed",
+          "answered": true,
+          "resolved": true,
+          "reason": "fresh"
+        },
+        {
+          "tool": "get_context_capsule",
+          "policy": "fail_closed",
+          "answered": true,
+          "resolved": true,
+          "reason": "fresh"
+        },
+        {
+          "tool": "run_pipeline",
+          "policy": "fail_closed",
+          "answered": true,
+          "resolved": true,
+          "reason": "fresh"
+        },
+        {
+          "tool": "get_impact_graph",
+          "policy": "serve_with_warning",
+          "answered": true,
+          "resolved": null,
+          "reason": "served_with_warning"
+        },
+        {
+          "tool": "search_logic_flow",
+          "policy": "serve_with_warning",
+          "answered": true,
+          "resolved": null,
+          "reason": "served_with_warning"
+        }
+      ],
+      "disagreements": []
+    },
+    {
+      "case": "source_changed",
+      "evaluator": {
+        "ready": false,
+        "state": "source_stale",
+        "reason": "head_changed",
+        "action": "incremental_refresh"
+      },
+      "capabilityDifference": null,
+      "index_status": {
+        "ready": false,
+        "state": "source_stale",
+        "reason": "head_changed",
+        "action": "incremental_refresh",
+        "legacyIsStale": true
+      },
+      "tools": [
+        {
+          "tool": "get_code_context",
+          "policy": "fail_closed",
+          "answered": true,
+          "resolved": false,
+          "reason": "head_mismatch"
+        },
+        {
+          "tool": "get_context_capsule",
+          "policy": "fail_closed",
+          "answered": true,
+          "resolved": false,
+          "reason": "head_mismatch"
+        },
+        {
+          "tool": "run_pipeline",
+          "policy": "fail_closed",
+          "answered": true,
+          "resolved": false,
+          "reason": "head_mismatch"
+        },
+        {
+          "tool": "get_impact_graph",
+          "policy": "serve_with_warning",
+          "answered": true,
+          "resolved": null,
+          "reason": "served_with_warning"
+        },
+        {
+          "tool": "search_logic_flow",
+          "policy": "serve_with_warning",
+          "answered": true,
+          "resolved": null,
+          "reason": "served_with_warning"
+        }
+      ],
+      "disagreements": []
+    },
+    {
+      "case": "dirty_source_changed",
+      "evaluator": {
+        "ready": false,
+        "state": "source_stale",
+        "reason": "dirty_fingerprint_changed",
+        "action": "incremental_refresh"
+      },
+      "capabilityDifference": null,
+      "index_status": {
+        "ready": false,
+        "state": "source_stale",
+        "reason": "dirty_fingerprint_changed",
+        "action": "incremental_refresh",
+        "legacyIsStale": true
+      },
+      "tools": [
+        {
+          "tool": "get_code_context",
+          "policy": "fail_closed",
+          "answered": true,
+          "resolved": false,
+          "reason": "working_tree_changed"
+        },
+        {
+          "tool": "get_context_capsule",
+          "policy": "fail_closed",
+          "answered": true,
+          "resolved": false,
+          "reason": "working_tree_changed"
+        },
+        {
+          "tool": "run_pipeline",
+          "policy": "fail_closed",
+          "answered": true,
+          "resolved": false,
+          "reason": "working_tree_changed"
+        },
+        {
+          "tool": "get_impact_graph",
+          "policy": "serve_with_warning",
+          "answered": true,
+          "resolved": null,
+          "reason": "served_with_warning"
+        },
+        {
+          "tool": "search_logic_flow",
+          "policy": "serve_with_warning",
+          "answered": true,
+          "resolved": null,
+          "reason": "served_with_warning"
+        }
+      ],
+      "disagreements": []
+    },
+    {
+      "case": "schema_incompatible",
+      "evaluator": {
+        "ready": false,
+        "state": "schema_incompatible",
+        "reason": "schema_changed",
+        "action": "full_rebuild"
+      },
+      "capabilityDifference": null,
+      "index_status": {
+        "ready": false,
+        "state": "schema_incompatible",
+        "reason": "schema_changed",
+        "action": "full_rebuild",
+        "legacyIsStale": true
+      },
+      "tools": [
+        {
+          "tool": "get_code_context",
+          "policy": "fail_closed",
+          "answered": true,
+          "resolved": false,
+          "reason": "index_schema_changed"
+        },
+        {
+          "tool": "get_context_capsule",
+          "policy": "fail_closed",
+          "answered": true,
+          "resolved": false,
+          "reason": "index_schema_changed"
+        },
+        {
+          "tool": "run_pipeline",
+          "policy": "fail_closed",
+          "answered": true,
+          "resolved": false,
+          "reason": "index_schema_changed"
+        },
+        {
+          "tool": "get_impact_graph",
+          "policy": "serve_with_warning",
+          "answered": true,
+          "resolved": null,
+          "reason": "served_with_warning"
+        },
+        {
+          "tool": "search_logic_flow",
+          "policy": "serve_with_warning",
+          "answered": true,
+          "resolved": null,
+          "reason": "served_with_warning"
+        }
+      ],
+      "disagreements": []
+    },
+    {
+      "case": "newer_unsupported_schema",
+      "evaluator": {
+        "ready": false,
+        "state": "schema_incompatible",
+        "reason": "schema_unsupported",
+        "action": "unsupported_runtime_upgrade"
+      },
+      "capabilityDifference": null,
+      "index_status": {
+        "ready": false,
+        "state": "schema_incompatible",
+        "reason": "schema_unsupported",
+        "action": "unsupported_runtime_upgrade",
+        "legacyIsStale": true
+      },
+      "tools": [
+        {
+          "tool": "get_code_context",
+          "policy": "fail_closed",
+          "answered": true,
+          "resolved": false,
+          "reason": "index_schema_changed"
+        },
+        {
+          "tool": "get_context_capsule",
+          "policy": "fail_closed",
+          "answered": true,
+          "resolved": false,
+          "reason": "index_schema_changed"
+        },
+        {
+          "tool": "run_pipeline",
+          "policy": "fail_closed",
+          "answered": true,
+          "resolved": false,
+          "reason": "index_schema_changed"
+        },
+        {
+          "tool": "get_impact_graph",
+          "policy": "serve_with_warning",
+          "answered": true,
+          "resolved": null,
+          "reason": "served_with_warning"
+        },
+        {
+          "tool": "search_logic_flow",
+          "policy": "serve_with_warning",
+          "answered": true,
+          "resolved": null,
+          "reason": "served_with_warning"
+        }
+      ],
+      "disagreements": []
+    },
+    {
+      "case": "capability_missing",
+      "evaluator": {
+        "ready": true,
+        "state": "ready",
+        "reason": "fresh",
+        "action": "none"
+      },
+      "capabilityDifference": {
+        "note": "the state was evaluated with an explicit capability requirement no product tool declares",
+        "withRequiredCapabilities": {
+          "ready": false,
+          "state": "capability_incompatible",
+          "reason": "capability_missing",
+          "missing": [
+            "edge_call_sites"
+          ]
+        },
+        "withoutRequiredCapabilities": {
+          "ready": true,
+          "state": "ready",
+          "reason": "fresh"
+        }
+      },
+      "index_status": {
+        "ready": true,
+        "state": "ready",
+        "reason": "fresh",
+        "action": "none",
+        "legacyIsStale": false
+      },
+      "tools": [
+        {
+          "tool": "get_code_context",
+          "policy": "fail_closed",
+          "answered": true,
+          "resolved": true,
+          "reason": "fresh"
+        },
+        {
+          "tool": "get_context_capsule",
+          "policy": "fail_closed",
+          "answered": true,
+          "resolved": true,
+          "reason": "fresh"
+        },
+        {
+          "tool": "run_pipeline",
+          "policy": "fail_closed",
+          "answered": true,
+          "resolved": true,
+          "reason": "fresh"
+        },
+        {
+          "tool": "get_impact_graph",
+          "policy": "serve_with_warning",
+          "answered": true,
+          "resolved": null,
+          "reason": "served_with_warning"
+        },
+        {
+          "tool": "search_logic_flow",
+          "policy": "serve_with_warning",
+          "answered": true,
+          "resolved": null,
+          "reason": "served_with_warning"
+        }
+      ],
+      "disagreements": []
+    },
+    {
+      "case": "wrong_repo",
+      "evaluator": {
+        "ready": false,
+        "state": "repository_mismatch",
+        "reason": "wrong_repository",
+        "action": "inspect_index"
+      },
+      "capabilityDifference": null,
+      "index_status": {
+        "ready": false,
+        "state": "repository_mismatch",
+        "reason": "wrong_repository",
+        "action": "inspect_index",
+        "legacyIsStale": true
+      },
+      "tools": [
+        {
+          "tool": "get_code_context",
+          "policy": "fail_closed",
+          "answered": true,
+          "resolved": false,
+          "reason": "repository_mismatch"
+        },
+        {
+          "tool": "get_context_capsule",
+          "policy": "fail_closed",
+          "answered": true,
+          "resolved": false,
+          "reason": "repository_mismatch"
+        },
+        {
+          "tool": "run_pipeline",
+          "policy": "fail_closed",
+          "answered": true,
+          "resolved": false,
+          "reason": "repository_mismatch"
+        },
+        {
+          "tool": "get_impact_graph",
+          "policy": "serve_with_warning",
+          "answered": true,
+          "resolved": null,
+          "reason": "served_with_warning"
+        },
+        {
+          "tool": "search_logic_flow",
+          "policy": "serve_with_warning",
+          "answered": true,
+          "resolved": null,
+          "reason": "served_with_warning"
+        }
+      ],
+      "disagreements": []
+    },
+    {
+      "case": "wrong_worktree",
+      "evaluator": {
+        "ready": false,
+        "state": "worktree_mismatch",
+        "reason": "wrong_worktree",
+        "action": "inspect_index"
+      },
+      "capabilityDifference": null,
+      "index_status": {
+        "ready": false,
+        "state": "worktree_mismatch",
+        "reason": "wrong_worktree",
+        "action": "inspect_index",
+        "legacyIsStale": true
+      },
+      "tools": [
+        {
+          "tool": "get_code_context",
+          "policy": "fail_closed",
+          "answered": true,
+          "resolved": false,
+          "reason": "worktree_mismatch"
+        },
+        {
+          "tool": "get_context_capsule",
+          "policy": "fail_closed",
+          "answered": true,
+          "resolved": false,
+          "reason": "worktree_mismatch"
+        },
+        {
+          "tool": "run_pipeline",
+          "policy": "fail_closed",
+          "answered": true,
+          "resolved": false,
+          "reason": "worktree_mismatch"
+        },
+        {
+          "tool": "get_impact_graph",
+          "policy": "serve_with_warning",
+          "answered": true,
+          "resolved": null,
+          "reason": "served_with_warning"
+        },
+        {
+          "tool": "search_logic_flow",
+          "policy": "serve_with_warning",
+          "answered": true,
+          "resolved": null,
+          "reason": "served_with_warning"
+        }
+      ],
+      "disagreements": []
+    }
+  ]
+}

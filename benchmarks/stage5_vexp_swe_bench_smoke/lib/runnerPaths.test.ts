@@ -82,6 +82,19 @@ async function hashTrackedEvidence(): Promise<Map<string, string>> {
   return hashes;
 }
 
+/** Working-tree status of the tracked evidence directory, tracked entries only. */
+async function trackedEvidenceStatus(): Promise<string[]> {
+  const { stdout } = await execFile(
+    "git",
+    ["-C", REPO_ROOT, "status", "--porcelain", "--", path.relative(REPO_ROOT, TRACKED_RESULTS_DIR)],
+    { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 },
+  );
+  return stdout
+    .split("\n")
+    .filter((line) => line.trim().length > 0 && !line.startsWith("??"))
+    .sort();
+}
+
 describe("M141 benchmark output contract", () => {
   test("the default output directory is untracked, never the evidence directory", () => {
     const target = withEnvironment(CLEAN_ENVIRONMENT, () => resolveRunnerOutput({
@@ -178,6 +191,7 @@ describe("M141 benchmark output contract", () => {
 
   test("a representative preservation run leaves tracked evidence byte-identical", async () => {
     const before = await hashTrackedEvidence();
+    const statusBefore = await trackedEvidenceStatus();
     expect(before.size).toBeGreaterThan(0);
 
     const outputRoot = path.join(tmpdir(), `m141-immutability-${process.pid}`);
@@ -197,19 +211,11 @@ describe("M141 benchmark output contract", () => {
     const after = await hashTrackedEvidence();
     expect([...after.entries()].sort()).toEqual([...before.entries()].sort());
 
-    // And the working tree is unchanged by that run.
-    const { stdout } = await execFile(
-      "git",
-      ["-C", REPO_ROOT, "status", "--porcelain", "--", path.relative(REPO_ROOT, TRACKED_RESULTS_DIR)],
-      { encoding: "utf8", maxBuffer: 32 * 1024 * 1024 },
-    );
-    const modifiedTracked = stdout
-      .split("\n")
-      .filter((line) => line.trim().length > 0 && !line.startsWith("??"));
-    // The two outcome-ledger files are pre-existing dirt that predates M141.
-    for (const line of modifiedTracked) {
-      expect(line).toContain("stage5_outcome_ledger");
-    }
+    // And the run added no working-tree change of its own. Compared before to
+    // after rather than against an allowlist: whatever was already dirty is the
+    // caller's business, and encoding today's dirt would make this test lie
+    // tomorrow.
+    expect(await trackedEvidenceStatus()).toEqual(statusBefore);
   }, 60_000);
 
   test("help text documents output, workspace, and evidence behavior", () => {

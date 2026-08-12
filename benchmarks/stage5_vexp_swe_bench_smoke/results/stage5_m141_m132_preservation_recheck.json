@@ -1,0 +1,51 @@
+{
+  "schemaVersion": "stage5.m141.m132-recheck.v1",
+  "before": {
+    "milestone": "M140-C",
+    "rows": "20/21",
+    "failingRow": "impact_hydration_batched",
+    "reason": "strict query reduction demanded against a baseline that already contained the batching"
+  },
+  "after": {
+    "milestone": "M141",
+    "rows": "21/21",
+    "verdict": "PASS"
+  },
+  "impactHydration": {
+    "schemaVersion": "stage5.m132.impact-hydration.v2",
+    "change": "discoverImpactSymbols collected the frontier's dependent ids and hydrated them with one getSymbolsByIds call, replacing one getSymbolById per dependent.",
+    "before": {
+      "dependents": 40,
+      "queries": 34
+    },
+    "after": {
+      "dependents": 40,
+      "queries": 34
+    },
+    "semanticEquivalence": "identical_dependent_set_size",
+    "queryReduction": 0,
+    "provenance": {
+      "implementation": "7093e2d6388ef4028b4cd60fb98387ab4524975e",
+      "containsChangeUnderTest": true,
+      "evidence": "9260d378f2aa96ce56d3f10c7cd120ae132d3836 (batched impact dependent hydration) is an ancestor of the baseline commit"
+    },
+    "assertion": {
+      "check": "impact_hydration_batched",
+      "kind": "historical_improvement",
+      "declaredRelation": "less_than",
+      "effectiveRelation": "less_or_equal",
+      "relationAdjusted": true,
+      "baselineImplementation": "7093e2d6388ef4028b4cd60fb98387ab4524975e",
+      "baselineContainsChangeUnderTest": true,
+      "baselineValue": 34,
+      "observed": 34,
+      "pass": true,
+      "reason": "baseline already contains the change under test, so the historical improvement is not re-demandable; evaluated as non-regression (preserved)",
+      "evidence": "34 -> 34; 40 dependents; relation=less_or_equal; baseline=7093e2d6388ef4028b4cd60fb98387ab4524975e; baselineContainsChange=true"
+    },
+    "batched": true,
+    "evidence": "34 -> 34 queries for 40 dependents (baseline already contains the change under test, so the historical improvement is not re-demandable; evaluated as non-regression (preserved))"
+  },
+  "productCodeChangedToSatisfyIt": false,
+  "verdict": "PASS"
+}
