@@ -240,6 +240,14 @@ function materialize(
     if (symbol === undefined) {
       continue;
     }
+    // Structural scopes are graph nodes, not deliverable content. The walk above
+    // still traverses THROUGH them — that bridging is the reason they exist — but
+    // a <module> must never surface as a candidate the packer can select, quote,
+    // or spend budget on. Filtering here rather than in the walk keeps the bridge
+    // and drops only the delivery.
+    if (isStructuralSymbolKind(symbol.kind)) {
+      continue;
+    }
     candidates.push({
       symbol,
       depth: info.depth,

@@ -638,3 +638,40 @@ test("import-only dependents from module scopes do not inflate in-degree central
     await rm(root, { recursive: true, force: true });
   }
 });
+
+// Graph expansion is a second, independent way a symbol becomes a candidate: it
+// walks edges out of the lexical seeds and materialises the neighbours. Because
+// <module> now sits on every import edge, that walk reaches module scopes — and
+// without a filter they were delivered as selected content with real token cost.
+// The walk must still pass THROUGH them (they are the bridge), so this asserts on
+// what is returned, not on what is traversed.
+test("graph expansion never materializes a module scope as a candidate", async () => {
+  const { expandGraphCandidates } = await import("../retrieval/graphExpansion");
+  const root = await mkdtemp(path.join(os.tmpdir(), "m140-expand-"));
+  const db = openIndexerDatabase();
+
+  try {
+    await writeRepo(root, {
+      ...MODEL,
+      "importer.py": "from model import Thing\n\n\ndef use():\n    return Thing()\n",
+      "sibling.py": "from model import Thing\n\n\ndef other():\n    return 2\n",
+    });
+    await indexProject({ repoRoot: root, db, refreshMode: "full" });
+
+    const thing = db.query(
+      `SELECT id FROM symbols WHERE fq_name = 'model.py::Thing'`,
+    ).get() as { id: string } | null;
+    assert.ok(thing, "fixture symbol missing");
+
+    const expanded = expandGraphCandidates(db, [thing.id]);
+    assert.equal(expanded.length > 0, true, "fixture produced no expansion candidates");
+    assert.equal(
+      expanded.some((candidate) => candidate.symbol.fqName.endsWith("::<module>")),
+      false,
+      "graph expansion materialized a module scope as a deliverable candidate",
+    );
+  } finally {
+    db.close();
+    await rm(root, { recursive: true, force: true });
+  }
+});
