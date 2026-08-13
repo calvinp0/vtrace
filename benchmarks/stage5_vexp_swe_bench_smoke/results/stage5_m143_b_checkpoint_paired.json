@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "stage5.m143b.checkpoint-paired.v1",
+  "purpose": "M143-B §86: the paired checkpoint against the B predecessor.",
+  "predecessor": "93a34d194b2360094d61b27f2ecc12f6dccacdb3",
+  "candidate": "M143-B (evidence only)",
+  "comparison": "IDENTITY",
+  "rationale": "B ships no functional mechanism, so a Frozen-50 paired run is an identity by construction. Running one would produce zero diffs on every metric and would not constitute evidence of anything. The identity is instead PROVEN below: no non-test product source differs from the predecessor.",
+  "proof": {
+    "changedSourcesUnderSrc": [],
+    "changedNonTestSources": [],
+    "productBehaviourUnchanged": true
+  },
+  "metrics": {
+    "note": "Inherited unchanged from M143-A's paired checkpoint (41fb0a9 -> 93a34d1), which measured them against the M142 final.",
+    "top1": 38,
+    "top3": 44,
+    "goldAnywhere": 48,
+    "goldSymbolAnywhere": 31,
+    "missing": 2,
+    "meanTokens": 1835.2,
+    "selectedFilesDiffs": 0,
+    "leadDiffs": 0,
+    "rolesDiffs": 0,
+    "contentModesDiffs": 0
+  }
+}

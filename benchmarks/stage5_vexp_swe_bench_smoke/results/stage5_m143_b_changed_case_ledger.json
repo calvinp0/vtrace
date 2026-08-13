@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "stage5.m143b.changed-case-ledger.v1",
+  "purpose": "M143-B §87: every gold-visibility movement caused by B.",
+  "changedCases": [],
+  "unexplainedCases": [],
+  "reason": "B changed no product code, so no case moved. django-11740 remains a Top-1 defect and is NOT relabelled; it is carried forward as a measured ceiling with its cause identified.",
+  "carriedDefects": [
+    {
+      "case": "django__django-11740",
+      "state": "OPEN",
+      "cause": "the behaviour owner (migrations/autodetector.py) and the task subject (ForeignKey) have no edge in either direction; ForeignKey has 193 incoming edges and none is from autodetector.py"
+    }
+  ]
+}

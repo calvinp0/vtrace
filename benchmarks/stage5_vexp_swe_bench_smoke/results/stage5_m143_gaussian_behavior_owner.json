@@ -1,0 +1,86 @@
+{
+  "schemaVersion": "stage5.m143b.gaussian-behavior-owner.v1",
+  "purpose": "M143-B §83: adapter-vs-parser structural ownership on the exact recorded ARC query.",
+  "gaussian": {
+    "measured": true,
+    "query": "How does ARC decide which Gaussian route keywords to emit?",
+    "queryIsExactRecordedWording": true,
+    "objectives": [
+      "arc",
+      "decide",
+      "gaussian",
+      "route",
+      "keyword",
+      "emit"
+    ],
+    "expectedOwner": "arc/job/adapters/gaussian.py",
+    "adapter": {
+      "className": "arc/job/adapters/gaussian.py::GaussianAdapter",
+      "filePath": "arc/job/adapters/gaussian.py",
+      "bases": [
+        "arc/job/adapter.py::JobAdapter"
+      ],
+      "overrides": [
+        "write_input_file",
+        "set_files",
+        "set_additional_file_paths",
+        "set_input_file_memory",
+        "execute_incore",
+        "execute_queue"
+      ],
+      "ownMembers": [
+        "__init__",
+        "_user_requested_verytight"
+      ],
+      "verdict": {
+        "state": "ambiguous",
+        "matchedObjectives": [],
+        "reason": "override surface (write_input_file/set_files/set_additional_file_paths/set_input_file_memory/execute_incore/execute_queue) shares no term with the request"
+      }
+    },
+    "parser": {
+      "className": "arc/parser/adapters/gaussian.py::GaussianParser",
+      "filePath": "arc/parser/adapters/gaussian.py",
+      "bases": [
+        "arc/parser/adapter.py::ESSAdapter"
+      ],
+      "overrides": [
+        "__init__",
+        "logfile_contains_errors",
+        "parse_geometry",
+        "parse_frequencies",
+        "parse_normal_mode_displacement",
+        "parse_t1",
+        "parse_s_squared",
+        "parse_e_elect",
+        "parse_zpe_correction",
+        "parse_1d_scan_energies",
+        "parse_1d_scan_energies_hartree",
+        "parse_1d_scan_coords",
+        "parse_irc_traj",
+        "parse_scan_conformers",
+        "parse_nd_scan_energies",
+        "parse_dipole_moment",
+        "parse_polarizability",
+        "parse_opt_steps",
+        "parse_ess_version"
+      ],
+      "ownMembers": [
+        "parse_cartesian_hessian_lower_triangle",
+        "_parse_1d_scan_walk",
+        "parse_irc_path",
+        "_load_scan_specs",
+        "load_scan_pivot_atoms"
+      ],
+      "verdict": {
+        "state": "ambiguous",
+        "matchedObjectives": [],
+        "reason": "override surface (__init__/logfile_contains_errors/parse_geometry/parse_frequencies/parse_normal_mode_displacement/parse_t1/parse_s_squared/parse_e_elect/parse_zpe_correction/parse_1d_scan_energies/parse_1d_scan_energies_hartree/parse_1d_scan_coords/parse_irc_traj/parse_scan_conformers/parse_nd_scan_energies/parse_dipole_moment/parse_polarizability/parse_opt_steps/parse_ess_version) shares no term with the request"
+      }
+    },
+    "acceptance": {
+      "adapterPreferredForStructuralReason": false
+    },
+    "elapsedMs": 16.9
+  }
+}

@@ -1,0 +1,207 @@
+{
+  "schemaVersion": "stage5.m143b.behavior-owner-trace.v1",
+  "purpose": "M143-B §84: per-candidate ownership evidence and the decision it supports.",
+  "abstentionRule": "ownership evidence absent or non-discriminating -> abstain. A wrong suppress destroys a correct lead; a wrong abstain leaves a known defect. M143-A measured 4 correct : 1 wrong promotions, so abstention is the cheaper error here.",
+  "cases": [
+    {
+      "candidate": "ForeignKey",
+      "candidatePath": "django/db/models/fields/related.py",
+      "instanceId": "django__django-11740",
+      "titleIdentity": "exact title-name match (symbol = 1); no lexical/fts/tfidf/bm25 claim (M143-A)",
+      "directQueryEvidence": {
+        "objectives": 12,
+        "titleOwnOrganicRank": 14
+      },
+      "graphRelations": {
+        "leadFileToTitle": {
+          "calls": 0,
+          "references": 0,
+          "contains": 0,
+          "imports": 0
+        },
+        "titleToLeadFile": {
+          "calls": 0,
+          "references": 0,
+          "contains": 0,
+          "imports": 0
+        }
+      },
+      "interfaceOverrideEvidence": "none recovered — no case in this population is an interface implementation",
+      "structuralRole": "title symbol lives outside the gold file",
+      "familySupport": {
+        "familySize": 33,
+        "bestRankAtProbePool": null,
+        "bestRankAtDeepPool": 862,
+        "bestScoreAtDeepPool": 0.5038,
+        "bestMemberAtDeepPool": "get_default",
+        "probePoolFloor": 0.6601,
+        "titleOwnRank": 14
+      },
+      "ownershipState": "ambiguous",
+      "decision": "abstain — title behaviour unchanged",
+      "reason": "no direct relation of any type between the organic lead's module and the title family",
+      "rankingEffect": "none",
+      "selectionEffect": "none"
+    },
+    {
+      "candidate": "HttpResponse",
+      "candidatePath": "http/response.py",
+      "instanceId": "django__django-11133",
+      "titleIdentity": "exact title-name match (symbol = 1); no lexical/fts/tfidf/bm25 claim (M143-A)",
+      "directQueryEvidence": {
+        "objectives": 12,
+        "titleOwnOrganicRank": 9
+      },
+      "graphRelations": {
+        "leadFileToTitle": {
+          "calls": 5,
+          "references": 9,
+          "contains": 13,
+          "imports": 0
+        },
+        "titleToLeadFile": {
+          "calls": 4,
+          "references": 3,
+          "contains": 13,
+          "imports": 0
+        }
+      },
+      "interfaceOverrideEvidence": "none recovered — no case in this population is an interface implementation",
+      "structuralRole": "title symbol lives in the gold file",
+      "familySupport": {
+        "familySize": 14,
+        "bestRankAtProbePool": 1,
+        "bestRankAtDeepPool": 1,
+        "bestScoreAtDeepPool": 1.8406,
+        "bestMemberAtDeepPool": "write",
+        "probePoolFloor": 0.381,
+        "titleOwnRank": 9
+      },
+      "ownershipState": "ambiguous",
+      "decision": "abstain — title behaviour unchanged",
+      "reason": "relation exists, but it is present in correct promotions too — it does not discriminate",
+      "rankingEffect": "none",
+      "selectionEffect": "none"
+    },
+    {
+      "candidate": "FileInput",
+      "candidatePath": "forms/widgets.py",
+      "instanceId": "django__django-12276",
+      "titleIdentity": "exact title-name match (symbol = 1); no lexical/fts/tfidf/bm25 claim (M143-A)",
+      "directQueryEvidence": {
+        "objectives": 9,
+        "titleOwnOrganicRank": 32
+      },
+      "graphRelations": {
+        "leadFileToTitle": {
+          "calls": 2,
+          "references": 1,
+          "contains": 6,
+          "imports": 0
+        },
+        "titleToLeadFile": {
+          "calls": 0,
+          "references": 1,
+          "contains": 6,
+          "imports": 0
+        }
+      },
+      "interfaceOverrideEvidence": "none recovered — no case in this population is an interface implementation",
+      "structuralRole": "title symbol lives in the gold file",
+      "familySupport": {
+        "familySize": 7,
+        "bestRankAtProbePool": 14,
+        "bestRankAtDeepPool": 14,
+        "bestScoreAtDeepPool": 1.1691,
+        "bestMemberAtDeepPool": "value_omitted_from_data",
+        "probePoolFloor": 0.3454,
+        "titleOwnRank": 32
+      },
+      "ownershipState": "ambiguous",
+      "decision": "abstain — title behaviour unchanged",
+      "reason": "relation exists, but it is present in correct promotions too — it does not discriminate",
+      "rankingEffect": "none",
+      "selectionEffect": "none"
+    },
+    {
+      "candidate": "ForeignKey",
+      "candidatePath": "db/models/fields/related.py",
+      "instanceId": "django__django-13112",
+      "titleIdentity": "exact title-name match (symbol = 1); no lexical/fts/tfidf/bm25 claim (M143-A)",
+      "directQueryEvidence": {
+        "objectives": 32,
+        "titleOwnOrganicRank": 13
+      },
+      "graphRelations": {
+        "leadFileToTitle": {
+          "calls": 0,
+          "references": 0,
+          "contains": 0,
+          "imports": 0
+        },
+        "titleToLeadFile": {
+          "calls": 0,
+          "references": 0,
+          "contains": 0,
+          "imports": 0
+        }
+      },
+      "interfaceOverrideEvidence": "none recovered — no case in this population is an interface implementation",
+      "structuralRole": "title symbol lives in the gold file",
+      "familySupport": {
+        "familySize": 34,
+        "bestRankAtProbePool": 135,
+        "bestRankAtDeepPool": 135,
+        "bestScoreAtDeepPool": 0.6938,
+        "bestMemberAtDeepPool": "get_attname",
+        "probePoolFloor": 0.2529,
+        "titleOwnRank": 13
+      },
+      "ownershipState": "ambiguous",
+      "decision": "abstain — title behaviour unchanged",
+      "reason": "no direct relation of any type between the organic lead's module and the title family",
+      "rankingEffect": "none",
+      "selectionEffect": "none"
+    },
+    {
+      "candidate": "PythonCodePrinter",
+      "candidatePath": "sympy/printing/pycode.py",
+      "instanceId": "sympy__sympy-16766",
+      "titleIdentity": "exact title-name match (symbol = 1); no lexical/fts/tfidf/bm25 claim (M143-A)",
+      "directQueryEvidence": {
+        "objectives": 11,
+        "titleOwnOrganicRank": 10
+      },
+      "graphRelations": {
+        "leadFileToTitle": {
+          "calls": 0,
+          "references": 0,
+          "contains": 0,
+          "imports": 0
+        },
+        "titleToLeadFile": {
+          "calls": 0,
+          "references": 0,
+          "contains": 0,
+          "imports": 0
+        }
+      },
+      "interfaceOverrideEvidence": "none recovered — no case in this population is an interface implementation",
+      "structuralRole": "title symbol lives in the gold file",
+      "familySupport": {
+        "familySize": 3,
+        "bestRankAtProbePool": 336,
+        "bestRankAtDeepPool": 416,
+        "bestScoreAtDeepPool": 0.6379,
+        "bestMemberAtDeepPool": "_print_Not",
+        "probePoolFloor": 0.352,
+        "titleOwnRank": 10
+      },
+      "ownershipState": "ambiguous",
+      "decision": "abstain — title behaviour unchanged",
+      "reason": "no direct relation of any type between the organic lead's module and the title family",
+      "rankingEffect": "none",
+      "selectionEffect": "none"
+    }
+  ]
+}
