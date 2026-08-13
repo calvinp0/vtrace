@@ -111,6 +111,44 @@ test("M142-A: an ALL-CAPS token keeps exact-symbol eligibility", () => {
   assert.equal(eligibleFor("how is a FITS header parsed?").has("fits"), true);
 });
 
+test("M142-A: a traceback frame names an identifier the runtime chose", () => {
+  // The reporter did not decide to write `unparse`; the interpreter did. A plain
+  // lowercase name earns eligibility here and nowhere else, because the complete
+  // frame around it cannot be a sentence.
+  const eligible = eligibleFor(
+    'File "\\path\\to\\site-packages\\sphinx\\domains\\python.py", line 112, in unparse | IndexError: pop from empty list',
+  );
+  assert.equal(eligible.has("unparse"), true);
+});
+
+test("M142-A: a bare frame tail admits a code-shaped name", () => {
+  assert.equal(eligibleFor("line 45, in render_template").has("render_template"), true);
+  assert.equal(eligibleFor('File "/srv/app/models.py", line 8, in ClassName.method').has("method"), true);
+});
+
+test("M142-A: ordinary prose about a line number names nothing", () => {
+  // The whole risk this rule creates: `in <word>` is overwhelmingly English. A
+  // bare tail therefore requires a code shape, so neither of these can resolve.
+  assert.equal(eligibleFor("see line 42, in particular the retry loop").has("particular"), false);
+  assert.equal(eligibleFor("on line 10, in Django this differs from Flask").has("django"), false);
+  for (const prose of [
+    "the object is stored in cache and never refreshed",
+    "which values are in the output?",
+    "this only happens in production",
+    "where in the pipeline is this handled?",
+  ]) {
+    const eligible = eligibleFor(prose);
+    assert.equal(eligible.size, 0, `${prose} -> ${JSON.stringify([...eligible])}`);
+  }
+});
+
+test("M142-A: a synthetic frame target is not an identifier", () => {
+  // `<module>`, `<listcomp>` and `<genexpr>` are frame labels, not names.
+  for (const frame of ['File "/srv/app/main.py", line 1, in <module>', 'File "/srv/app/main.py", line 9, in <listcomp>']) {
+    assert.equal(eligibleFor(frame).size, 0, frame);
+  }
+});
+
 test("M142-A: grammatical prose does not resolve to a same-named symbol", async () => {
   const repo = await indexNamedRepo("collide", COLLISION_FILES);
   try {

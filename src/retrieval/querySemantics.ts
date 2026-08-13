@@ -60,7 +60,8 @@ export type SymbolHypothesisSource =
   | "explicit_lookup"
   | "path_qualified"
   | "project_reference"
-  | "short_literal";
+  | "short_literal"
+  | "traceback_frame";
 
 export interface DerivedQueryIntent {
   readonly originalTask: string;
@@ -487,6 +488,19 @@ function collectExplicitIdentifierSignals(
     [/\b(?:function|method|class|helper|symbol|def)\s+(?:named\s+|called\s+)?([a-z][a-z0-9]*)\b/gu, "declaration_phrase", "symbol-kind noun naming a plain-word identifier"],
     [/\b([A-Z][A-Za-z0-9_]*\.[A-Za-z_][A-Za-z0-9_]*|[A-Za-z0-9_./-]+::[A-Za-z_][A-Za-z0-9_]*)\b/gu, "path_qualified", "member/path-qualified identifier"],
     [/\b([A-Za-z_][A-Za-z0-9_]*)\s*\(/gu, "call_syntax", "call syntax"],
+    // A traceback frame names the function the interpreter was executing. That is
+    // an identifier the reporter did not choose to write -- the runtime did -- so
+    // it is the strongest kind of code cue a bug report carries, and the frame
+    // syntax around it is what makes it recognizable rather than the word itself.
+    //
+    // A COMPLETE frame is unambiguous: `File "<path>", line <n>, in <name>`
+    // cannot be a sentence, so any identifier shape qualifies -- including a
+    // plain lowercase name like `unparse`, which no other rule here can admit.
+    [new RegExp(String.raw`\bfile\s+["'][^"'\n]*["']\s*,\s*line\s+\d+\s*,\s*in\s+(${IDENTIFIER})`, "giu"), "traceback_frame", "identifier in a traceback frame"],
+    // A BARE frame tail has no `File "..."` to anchor it, and "line 42, in
+    // particular" is ordinary prose, so here the name must also be code-shaped
+    // (qualified or snake_case). `<module>`, `<listcomp>` and friends never match.
+    [/\bline\s+\d+\s*,\s*in\s+([A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)+|[A-Za-z_][A-Za-z0-9_]*_[A-Za-z0-9_]*)/gu, "traceback_frame", "code-shaped identifier in a bare traceback frame tail"],
   ];
   for (const [pattern, source, reason] of patterns) {
     for (const match of task.matchAll(pattern)) {
