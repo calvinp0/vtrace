@@ -1,0 +1,72 @@
+{
+  "schemaVersion": "stage5.m142.response-bloat-reproduction.v1",
+  "purpose": "M142 §50/§51: reproduce the reported product-response bloat against the EXACT producer, and break the response down by field.",
+  "status": "REPRODUCED IN PART, ROOT-CAUSED, NOT FIXED",
+  "method": {
+    "producer": "src/mcp/server.ts handleRequest -> McpToolId.RunPipeline -> compactProductResponse (src/mcp/tools.ts:9194)",
+    "note": "§49 warns not to assume the M130/M133 envelope tests cover the exact producer. They are unit tests over compactProductResponse with synthesized shapes; this measurement drives the real MCP server end to end.",
+    "repos": [
+      { "label": "small", "source": "pallets/flask-5014 checkout", "files": "~250" },
+      { "label": "large", "source": "django/django-11815 checkout", "files": "~2800" }
+    ],
+    "isolation": "Both repos are private copies under the session scratchpad, initialised and indexed locally. No live agent, no Docker, no network."
+  },
+  "measured": [
+    { "repo": "small", "query": "How are blueprints registered and their url prefixes applied?", "detail": "default", "totalBytes": 23815, "productContextBytes": 10800, "diagnosticsBytes": 3478 },
+    { "repo": "small", "query": "How does the application handle requests?", "detail": "default", "totalBytes": 22559, "productContextBytes": 9673, "diagnosticsBytes": 3466 },
+    { "repo": "small", "query": "config", "detail": "default", "totalBytes": 20114, "productContextBytes": 7811, "diagnosticsBytes": 3423 },
+    { "repo": "small", "detail": "compact", "totalBytes": 21947, "diagnosticsBytes": 2612 },
+    { "repo": "small", "detail": "standard", "totalBytes": 23809, "diagnosticsBytes": 3478 },
+    { "repo": "small", "detail": "debug", "totalBytes": 23814, "diagnosticsBytes": 3478 },
+    { "repo": "large", "detail": "default", "totalBytes": 20302, "productContextBytes": 6979, "diagnosticsBytes": 3476 },
+    { "repo": "large", "detail": "compact", "totalBytes": 18351, "diagnosticsBytes": 2614 },
+    { "repo": "large", "detail": "debug", "totalBytes": 20303, "diagnosticsBytes": 3476 },
+    { "repo": "large", "maxTokens": 8000, "totalBytes": 32981, "productContextBytes": 14312, "capsuleResultBytes": 5451, "diagnosticsBytes": 3479 },
+    { "repo": "large", "maxTokens": 24000, "totalBytes": 45956, "productContextBytes": 22575, "capsuleResultBytes": 8739, "diagnosticsBytes": 3481 }
+  ],
+  "findings": {
+    "headlineFigureNotReproducedAtDefaults": {
+      "claimed": "~63 kB response",
+      "observed": "20.1–23.8 kB at default budget on BOTH a small and a large repository",
+      "note": "The response does reach 46 kB at max_tokens=24000, and would pass 63 kB at a larger budget — but there the growth is the ANSWER, not overhead. A 63 kB response is not by itself evidence of bloat, and this should not be reported as reproduced without the originating call's budget and tool."
+    },
+    "envelopeOverheadRatioIsReproduced": {
+      "claimed": "~28 kB serialized envelope for ~3.3k useful content tokens",
+      "observed": "at max_tokens=8000: 32,981 bytes total for 14,312 bytes of productContext — a ratio of 2.3x",
+      "verdict": "the OVERHEAD RATIO is real and reproduces: roughly 1.3 bytes of non-content ship for every byte of content."
+    },
+    "diagnosticsAreAlreadyBounded": {
+      "observed": "3,423–3,481 bytes across every repo size, query breadth and token budget measured",
+      "verdict": "Diagnostics do NOT scale with the hidden candidate pool. §54's sublinearity property holds for this field, and the earlier envelope work is doing its job here."
+    },
+    "detailContractIsInert": {
+      "observed": "detail=debug returns 20,303 bytes where the default returns 20,302 — a one-byte difference. On the small repo, 23,814 vs 23,809.",
+      "verdict": "DEFECT. §52 requires full internals ONLY in explicit debug/detail mode. Measured, debug adds nothing, which means the normal response already carries whatever debug was supposed to add. compact saves only 8–10%, all of it diagnostics and pivotNeighborhood.",
+      "consequence": "Every ordinary caller pays for diagnostics they did not ask for, and a caller who explicitly asks for internals gets no more than one who did not."
+    },
+    "duplicateRepresentations": {
+      "verdict": "DEFECT — §51's 'duplicate Capsule representations', confirmed directly.",
+      "sameSelectionAppearsThreeTimes": [
+        { "field": "productContext.items", "bytes": 6253, "what": "the selected items, structured" },
+        { "field": "productContext.modelVisibleContext", "bytes": 4828, "what": "the SAME selection rendered as model-facing text" },
+        { "field": "capsuleResult.pivots + capsuleResult.support", "bytes": 2630, "what": "the SAME selection again as capsule metadata; the `source` field is empty, so this is pure description" }
+      ],
+      "diagnosticsAppearThreeTimes": [
+        { "field": "diagnostics (top level)", "bytes": 3479 },
+        { "field": "productContext.diagnostics", "bytes": 1007 },
+        { "field": "capsuleResult.diagnostics", "bytes": 283 }
+      ],
+      "measuredAt": "large repo, max_tokens=8000",
+      "note": "capsuleResult scales WITH productContext (5,451 -> 8,739 bytes as productContext goes 14,312 -> 22,575), which is what a duplicate representation looks like: it is not a fixed header, it tracks the payload."
+    }
+  },
+  "notFixed": {
+    "reason": "Time. The reproduction and root cause are complete and the defects are named; the response contract change (§52) and the deduplication are not implemented.",
+    "whatAFixWouldDo": [
+      "Make detail actually gate: keep productContext, a small actionable metadata block and bounded diagnostics in the normal response; move the internals to debug.",
+      "Stop shipping three descriptions of one selection. capsuleResult.pivots/support carries no source and duplicates productContext.items.",
+      "Collapse the three diagnostics blocks, or scope each to its own consumer.",
+      "§53 must hold throughout: the answer-bearing context wins. None of the above may drop productContext."
+    ]
+  }
+}

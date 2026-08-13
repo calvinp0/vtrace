@@ -1,0 +1,201 @@
+{
+  "schemaVersion": "stage5.m142.response-field-breakdown.v1",
+  "purpose": "M142 \u00a751: the real product response broken down field by field, so the overhead is attributable rather than asserted.",
+  "measuredAt": {
+    "repo": "django/django-11815 checkout (local copy)",
+    "tool": "run_pipeline",
+    "detail": "default",
+    "query": "Migrations uses value of enum object instead of its name"
+  },
+  "breakdowns": [
+    {
+      "maxTokens": "default",
+      "totalBytes": 20302,
+      "fields": [
+        [
+          "productContext",
+          6979,
+          34.4
+        ],
+        [
+          "diagnostics",
+          3476,
+          17.1
+        ],
+        [
+          "capsuleResult",
+          1909,
+          9.4
+        ],
+        [
+          "responseBudget",
+          1287,
+          6.3
+        ],
+        [
+          "pivotNeighborhood",
+          1048,
+          5.2
+        ],
+        [
+          "context",
+          856,
+          4.2
+        ],
+        [
+          "deferred",
+          705,
+          3.5
+        ],
+        [
+          "intent",
+          592,
+          2.9
+        ],
+        [
+          "inspectFirst",
+          525,
+          2.6
+        ],
+        [
+          "rules",
+          363,
+          1.8
+        ],
+        [
+          "runtime",
+          362,
+          1.8
+        ],
+        [
+          "memory",
+          332,
+          1.6
+        ],
+        [
+          "flow",
+          325,
+          1.6
+        ],
+        [
+          "request",
+          300,
+          1.5
+        ],
+        [
+          "accounting",
+          298,
+          1.5
+        ],
+        [
+          "impact",
+          220,
+          1.1
+        ],
+        [
+          "taskSummary",
+          184,
+          0.9
+        ],
+        [
+          "capsule",
+          150,
+          0.7
+        ],
+        [
+          "authoritativeCapsuleManifestId",
+          66,
+          0.3
+        ],
+        [
+          "schemaVersion",
+          22,
+          0.1
+        ]
+      ]
+    },
+    {
+      "maxTokens": 8000,
+      "totalBytes": 32981,
+      "fields": [
+        [
+          "productContext",
+          14312,
+          43.4
+        ],
+        [
+          "capsuleResult",
+          5451,
+          16.5
+        ],
+        [
+          "diagnostics",
+          3479,
+          10.5
+        ]
+      ]
+    },
+    {
+      "maxTokens": 24000,
+      "totalBytes": 45956,
+      "fields": [
+        [
+          "productContext",
+          22575,
+          49.1
+        ],
+        [
+          "capsuleResult",
+          8739,
+          19.0
+        ],
+        [
+          "diagnostics",
+          3481,
+          7.6
+        ]
+      ]
+    }
+  ],
+  "fieldNote": "Each row is [field, bytes, percentOfTotal] of the serialized response.",
+  "contentVsMetadata": {
+    "contentFields": [
+      "productContext.items",
+      "productContext.modelVisibleContext"
+    ],
+    "atDefaultBudget": {
+      "contentBytes": 6979,
+      "otherBytes": 13323,
+      "contentSharePercent": 34.4
+    },
+    "at8000Tokens": {
+      "contentBytes": 14312,
+      "otherBytes": 18669,
+      "contentSharePercent": 43.4
+    },
+    "at24000Tokens": {
+      "contentBytes": 22575,
+      "otherBytes": 23381,
+      "contentSharePercent": 49.1
+    },
+    "interpretation": "Content share IMPROVES as the budget grows, because most non-content fields are fixed-size. The overhead is therefore worst exactly where responses are smallest \u2014 a default-budget request spends two thirds of its bytes on something other than the answer."
+  },
+  "growsWithPayload": [
+    "productContext",
+    "capsuleResult"
+  ],
+  "fixedSize": [
+    "diagnostics (~3.48 kB at every size measured)",
+    "responseBudget",
+    "intent",
+    "runtime",
+    "rules",
+    "memory",
+    "flow",
+    "request",
+    "impact",
+    "taskSummary",
+    "schemaVersion"
+  ],
+  "conclusion": "Two fields track the payload and one of them (capsuleResult) is a duplicate description of what the other already carries. Everything else is a fixed header. The actionable overhead is therefore (a) the duplicate representations and (b) a ~3.5 kB diagnostics block shipped to every caller regardless of detail level."
+}
