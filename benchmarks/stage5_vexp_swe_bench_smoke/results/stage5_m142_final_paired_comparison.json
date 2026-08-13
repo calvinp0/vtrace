@@ -1,0 +1,1058 @@
+{
+  "schemaVersion": "stage5.m140.multi-suite-paired-comparison.v1",
+  "predecessor": {
+    "label": "m141-562cff6",
+    "commit": "562cff6a5fcf5634e13d768fbc73e4de19b9b578",
+    "tree": "0f9acb3739fedebde719d1dfd0aeeca58e934a9e"
+  },
+  "candidate": {
+    "label": "m142-final-41fb0a9",
+    "commit": "41fb0a9ba22b0f69e3349aca77b4ae2b15908504",
+    "tree": "49c7dd7ea3521158b6cb25724099bd0e89e556e5"
+  },
+  "provenanceValid": true,
+  "suites": [
+    {
+      "name": "django",
+      "caseCount": 20,
+      "fixtureHash": "fffa734a3a2f64b88cebce8655a7413c70d4467827cf1408724a985b90cb95e5",
+      "sameFixtureHash": true,
+      "sameTargetCorpusHash": true,
+      "isolatedIndexes": true,
+      "provenanceValid": true,
+      "authoritative": true,
+      "semanticallyEqual": false,
+      "predecessorSemanticHash": "95afce8360ff20fcdb5597ecd22b2e856db80f056df4b6f40ab360f4596bb09c",
+      "candidateSemanticHash": "885a69977b3a774c87a738493ed6db52b66e44988f4f7fce3133e503ddb430db",
+      "differences": {
+        "selectedFiles": 10,
+        "lead": 1,
+        "roles": 13,
+        "contentModes": 13,
+        "modelVisibleContext": 14,
+        "tokenAccounting": 14,
+        "qualityMetrics": 2
+      },
+      "changedCases": [
+        {
+          "instanceId": "django__django-10880",
+          "fields": [
+            "selectedFiles",
+            "roles",
+            "contentModes",
+            "modelVisibleContext",
+            "tokenAccounting"
+          ],
+          "predecessorLead": "django/db/models/aggregates.py",
+          "candidateLead": "django/db/models/aggregates.py",
+          "predecessorSelectedFiles": [
+            "django/db/models/aggregates.py",
+            "django/db/models/sql/query.py",
+            "django/db/models/expressions.py",
+            "django/db/models/query.py",
+            "django/core/paginator.py",
+            "django/db/models/sql/subqueries.py"
+          ],
+          "candidateSelectedFiles": [
+            "django/db/models/aggregates.py",
+            "django/db/models/sql/query.py",
+            "django/db/models/expressions.py",
+            "django/db/models/query.py",
+            "django/core/paginator.py",
+            "django/db/models/functions/datetime.py"
+          ],
+          "predecessorGoldVisible": true,
+          "candidateGoldVisible": true
+        },
+        {
+          "instanceId": "django__django-11728",
+          "fields": [
+            "roles",
+            "contentModes",
+            "modelVisibleContext",
+            "tokenAccounting"
+          ],
+          "predecessorLead": "django/contrib/admindocs/utils.py",
+          "candidateLead": "django/contrib/admindocs/utils.py",
+          "predecessorSelectedFiles": [
+            "django/contrib/admindocs/utils.py",
+            "django/utils/regex_helper.py",
+            "django/contrib/admindocs/views.py"
+          ],
+          "candidateSelectedFiles": [
+            "django/contrib/admindocs/utils.py",
+            "django/utils/regex_helper.py",
+            "django/contrib/admindocs/views.py"
+          ],
+          "predecessorGoldVisible": true,
+          "candidateGoldVisible": true
+        },
+        {
+          "instanceId": "django__django-11740",
+          "fields": [
+            "selectedFiles",
+            "lead",
+            "roles",
+            "contentModes",
+            "modelVisibleContext",
+            "tokenAccounting",
+            "qualityMetrics"
+          ],
+          "predecessorLead": "django/db/migrations/autodetector.py",
+          "candidateLead": "django/db/models/fields/related.py",
+          "predecessorSelectedFiles": [
+            "django/db/migrations/autodetector.py",
+            "django/db/models/fields/related_descriptors.py"
+          ],
+          "candidateSelectedFiles": [
+            "django/db/models/fields/related.py",
+            "django/db/migrations/autodetector.py",
+            "django/db/models/fields/related_descriptors.py",
+            "django/db/migrations/operations/fields.py"
+          ],
+          "predecessorGoldVisible": true,
+          "candidateGoldVisible": true
+        },
+        {
+          "instanceId": "django__django-11133",
+          "fields": [
+            "roles",
+            "contentModes",
+            "modelVisibleContext",
+            "tokenAccounting"
+          ],
+          "predecessorLead": "http/response.py",
+          "candidateLead": "http/response.py",
+          "predecessorSelectedFiles": [
+            "http/response.py",
+            "core/checks/database.py"
+          ],
+          "candidateSelectedFiles": [
+            "http/response.py",
+            "core/checks/database.py"
+          ],
+          "predecessorGoldVisible": true,
+          "candidateGoldVisible": true
+        },
+        {
+          "instanceId": "django__django-11206",
+          "fields": [
+            "selectedFiles",
+            "roles",
+            "contentModes",
+            "modelVisibleContext",
+            "tokenAccounting"
+          ],
+          "predecessorLead": "utils/numberformat.py",
+          "candidateLead": "utils/numberformat.py",
+          "predecessorSelectedFiles": [
+            "utils/numberformat.py",
+            "utils/formats.py",
+            "utils/html.py",
+            "utils/dateformat.py"
+          ],
+          "candidateSelectedFiles": [
+            "utils/numberformat.py",
+            "utils/formats.py",
+            "utils/html.py"
+          ],
+          "predecessorGoldVisible": true,
+          "candidateGoldVisible": true
+        },
+        {
+          "instanceId": "django__django-11749",
+          "fields": [
+            "selectedFiles",
+            "roles",
+            "contentModes",
+            "modelVisibleContext",
+            "tokenAccounting"
+          ],
+          "predecessorLead": "core/management/__init__.py",
+          "candidateLead": "core/management/__init__.py",
+          "predecessorSelectedFiles": [
+            "core/management/__init__.py",
+            "contrib/gis/management/commands/ogrinspect.py",
+            "core/management/base.py",
+            "core/management/commands/check.py",
+            "contrib/sites/management.py",
+            "template/backends/django.py"
+          ],
+          "candidateSelectedFiles": [
+            "core/management/__init__.py",
+            "contrib/auth/management/commands/changepassword.py",
+            "contrib/sites/management.py",
+            "template/backends/django.py",
+            "db/models/fields/__init__.py",
+            "contrib/gis/management/commands/ogrinspect.py"
+          ],
+          "predecessorGoldVisible": true,
+          "candidateGoldVisible": true
+        },
+        {
+          "instanceId": "django__django-11815",
+          "fields": [
+            "selectedFiles",
+            "roles",
+            "contentModes",
+            "modelVisibleContext",
+            "tokenAccounting"
+          ],
+          "predecessorLead": "db/migrations/serializer.py",
+          "candidateLead": "db/migrations/serializer.py",
+          "predecessorSelectedFiles": [
+            "db/migrations/serializer.py",
+            "db/models/base.py",
+            "core/checks/security/base.py",
+            "db/migrations/operations/fields.py",
+            "db/migrations/operations/models.py"
+          ],
+          "candidateSelectedFiles": [
+            "db/migrations/serializer.py",
+            "db/models/base.py",
+            "core/checks/security/base.py",
+            "db/migrations/operations/models.py",
+            "db/migrations/operations/fields.py"
+          ],
+          "predecessorGoldVisible": true,
+          "candidateGoldVisible": true
+        },
+        {
+          "instanceId": "django__django-11820",
+          "fields": [
+            "selectedFiles",
+            "roles",
+            "contentModes",
+            "modelVisibleContext",
+            "tokenAccounting"
+          ],
+          "predecessorLead": "db/models/base.py",
+          "candidateLead": "db/models/base.py",
+          "predecessorSelectedFiles": [
+            "db/models/base.py",
+            "db/models/fields/__init__.py",
+            "db/models/fields/related_lookups.py",
+            "db/models/fields/related.py",
+            "utils/regex_helper.py",
+            "db/models/fields/related_descriptors.py"
+          ],
+          "candidateSelectedFiles": [
+            "db/models/base.py",
+            "db/models/fields/__init__.py",
+            "db/models/fields/related_lookups.py",
+            "db/models/fields/related.py",
+            "db/models/fields/related_descriptors.py"
+          ],
+          "predecessorGoldVisible": true,
+          "candidateGoldVisible": true
+        },
+        {
+          "instanceId": "django__django-12050",
+          "fields": [
+            "modelVisibleContext",
+            "tokenAccounting"
+          ],
+          "predecessorLead": "db/models/sql/query.py",
+          "candidateLead": "db/models/sql/query.py",
+          "predecessorSelectedFiles": [
+            "db/models/sql/query.py",
+            "db/models/query.py"
+          ],
+          "candidateSelectedFiles": [
+            "db/models/sql/query.py",
+            "db/models/query.py"
+          ],
+          "predecessorGoldVisible": true,
+          "candidateGoldVisible": true
+        },
+        {
+          "instanceId": "django__django-12325",
+          "fields": [
+            "selectedFiles",
+            "roles",
+            "contentModes",
+            "modelVisibleContext",
+            "tokenAccounting"
+          ],
+          "predecessorLead": "db/models/sql/query.py",
+          "candidateLead": "db/models/sql/query.py",
+          "predecessorSelectedFiles": [
+            "db/models/sql/query.py",
+            "db/models/options.py",
+            "template/backends/django.py",
+            "db/models/sql/compiler.py",
+            "conf/__init__.py",
+            "db/backends/sqlite3/schema.py"
+          ],
+          "candidateSelectedFiles": [
+            "db/models/sql/query.py",
+            "db/models/options.py",
+            "template/backends/django.py",
+            "db/backends/sqlite3/schema.py",
+            "conf/__init__.py",
+            "db/models/sql/compiler.py"
+          ],
+          "predecessorGoldVisible": true,
+          "candidateGoldVisible": true
+        },
+        {
+          "instanceId": "django__django-12774",
+          "fields": [
+            "selectedFiles",
+            "roles",
+            "contentModes",
+            "modelVisibleContext",
+            "tokenAccounting"
+          ],
+          "predecessorLead": "db/models/query.py",
+          "candidateLead": "db/models/query.py",
+          "predecessorSelectedFiles": [
+            "db/models/query.py",
+            "apps/config.py",
+            "db/models/sql/query.py",
+            "template/backends/django.py"
+          ],
+          "candidateSelectedFiles": [
+            "db/models/query.py",
+            "apps/config.py",
+            "db/models/sql/query.py",
+            "template/backends/django.py",
+            "db/models/manager.py"
+          ],
+          "predecessorGoldVisible": true,
+          "candidateGoldVisible": true
+        },
+        {
+          "instanceId": "django__django-12858",
+          "fields": [
+            "roles",
+            "contentModes",
+            "modelVisibleContext",
+            "tokenAccounting"
+          ],
+          "predecessorLead": "db/models/base.py",
+          "candidateLead": "db/models/base.py",
+          "predecessorSelectedFiles": [
+            "db/models/base.py",
+            "db/models/lookups.py",
+            "core/management/commands/check.py"
+          ],
+          "candidateSelectedFiles": [
+            "db/models/base.py",
+            "db/models/lookups.py",
+            "core/management/commands/check.py"
+          ],
+          "predecessorGoldVisible": true,
+          "candidateGoldVisible": true
+        },
+        {
+          "instanceId": "django__django-13012",
+          "fields": [
+            "selectedFiles",
+            "roles",
+            "contentModes",
+            "modelVisibleContext",
+            "tokenAccounting",
+            "qualityMetrics"
+          ],
+          "predecessorLead": "db/models/expressions.py",
+          "candidateLead": "db/models/expressions.py",
+          "predecessorSelectedFiles": [
+            "db/models/expressions.py",
+            "contrib/gis/gdal/libgdal.py",
+            "contrib/postgres/aggregates/mixins.py"
+          ],
+          "candidateSelectedFiles": [
+            "db/models/expressions.py",
+            "contrib/postgres/aggregates/mixins.py",
+            "db/models/query.py"
+          ],
+          "predecessorGoldVisible": true,
+          "candidateGoldVisible": true
+        },
+        {
+          "instanceId": "django__django-13195",
+          "fields": [
+            "selectedFiles",
+            "roles",
+            "contentModes",
+            "modelVisibleContext",
+            "tokenAccounting"
+          ],
+          "predecessorLead": "http/response.py",
+          "candidateLead": "http/response.py",
+          "predecessorSelectedFiles": [
+            "http/response.py",
+            "contrib/sessions/backends/signed_cookies.py",
+            "contrib/messages/storage/cookie.py",
+            "core/mail/message.py",
+            "http/cookie.py"
+          ],
+          "candidateSelectedFiles": [
+            "http/response.py",
+            "contrib/messages/storage/cookie.py",
+            "core/mail/message.py",
+            "contrib/sessions/middleware.py"
+          ],
+          "predecessorGoldVisible": true,
+          "candidateGoldVisible": true
+        }
+      ],
+      "quality": {
+        "predecessor": {
+          "cases": 20,
+          "evaluated": 20,
+          "top1GoldFile": 18,
+          "top3GoldFile": 20,
+          "goldFileAnywhere": 20,
+          "goldSymbolAnywhere": 14,
+          "missingGold": 0,
+          "meanPivotCount": 2.05,
+          "meanSupportCount": 3.95,
+          "meanEstimatedTokens": 1225.05
+        },
+        "candidate": {
+          "cases": 20,
+          "evaluated": 20,
+          "top1GoldFile": 17,
+          "top3GoldFile": 20,
+          "goldFileAnywhere": 20,
+          "goldSymbolAnywhere": 14,
+          "missingGold": 0,
+          "meanPivotCount": 2.05,
+          "meanSupportCount": 3.95,
+          "meanEstimatedTokens": 1341.75
+        }
+      }
+    },
+    {
+      "name": "cross_repo",
+      "caseCount": 30,
+      "fixtureHash": "76be17081196e45eadc903b38bd8cebe6cb8141568178b73a6781ead4fe641c4",
+      "sameFixtureHash": true,
+      "sameTargetCorpusHash": true,
+      "isolatedIndexes": true,
+      "provenanceValid": true,
+      "authoritative": true,
+      "semanticallyEqual": false,
+      "predecessorSemanticHash": "b4b3bb10677f4c81f6e14bf96c2a35cf1a28fc5e8036d411d05ccc4e8763d5e4",
+      "candidateSemanticHash": "ed869742593d93102555ec6c3eb7382060ecc44efb467a7141c022eeb9e17327",
+      "differences": {
+        "selectedFiles": 17,
+        "lead": 0,
+        "roles": 19,
+        "contentModes": 19,
+        "modelVisibleContext": 21,
+        "tokenAccounting": 21,
+        "qualityMetrics": 2
+      },
+      "changedCases": [
+        {
+          "instanceId": "sympy__sympy-12419",
+          "fields": [
+            "selectedFiles",
+            "roles",
+            "contentModes",
+            "modelVisibleContext",
+            "tokenAccounting"
+          ],
+          "predecessorLead": "sympy/matrices/matrices.py",
+          "candidateLead": "sympy/matrices/matrices.py",
+          "predecessorSelectedFiles": [
+            "sympy/matrices/matrices.py",
+            "sympy/physics/quantum/identitysearch.py",
+            "sympy/assumptions/handlers/matrices.py",
+            "sympy/matrices/expressions/matexpr.py",
+            "sympy/physics/quantum/represent.py",
+            "sympy/strategies/branch/core.py"
+          ],
+          "candidateSelectedFiles": [
+            "sympy/matrices/matrices.py",
+            "sympy/physics/quantum/identitysearch.py",
+            "sympy/assumptions/handlers/matrices.py",
+            "sympy/matrices/expressions/matexpr.py",
+            "sympy/physics/quantum/represent.py"
+          ],
+          "predecessorGoldVisible": true,
+          "candidateGoldVisible": true
+        },
+        {
+          "instanceId": "sympy__sympy-12481",
+          "fields": [
+            "selectedFiles",
+            "roles",
+            "contentModes",
+            "modelVisibleContext",
+            "tokenAccounting"
+          ],
+          "predecessorLead": "sympy/combinatorics/permutations.py",
+          "candidateLead": "sympy/combinatorics/permutations.py",
+          "predecessorSelectedFiles": [
+            "sympy/combinatorics/permutations.py",
+            "sympy/combinatorics/perm_groups.py",
+            "sympy/polys/constructor.py",
+            "sympy/strategies/branch/core.py"
+          ],
+          "candidateSelectedFiles": [
+            "sympy/combinatorics/permutations.py",
+            "sympy/combinatorics/perm_groups.py",
+            "sympy/polys/constructor.py",
+            "sympy/core/expr.py"
+          ],
+          "predecessorGoldVisible": true,
+          "candidateGoldVisible": true
+        },
+        {
+          "instanceId": "sympy__sympy-13372",
+          "fields": [
+            "selectedFiles",
+            "roles",
+            "contentModes",
+            "modelVisibleContext",
+            "tokenAccounting"
+          ],
+          "predecessorLead": "sympy/core/evalf.py",
+          "candidateLead": "sympy/core/evalf.py",
+          "predecessorSelectedFiles": [
+            "sympy/core/evalf.py",
+            "sympy/core/compatibility.py",
+            "sympy/core/expr.py"
+          ],
+          "candidateSelectedFiles": [
+            "sympy/core/evalf.py"
+          ],
+          "predecessorGoldVisible": true,
+          "candidateGoldVisible": true
+        },
+        {
+          "instanceId": "scikit-learn__scikit-learn-10844",
+          "fields": [
+            "selectedFiles",
+            "roles",
+            "contentModes",
+            "modelVisibleContext",
+            "tokenAccounting"
+          ],
+          "predecessorLead": "sklearn/metrics/cluster/supervised.py",
+          "candidateLead": "sklearn/metrics/cluster/supervised.py",
+          "predecessorSelectedFiles": [
+            "sklearn/metrics/cluster/supervised.py",
+            "sklearn/exceptions.py",
+            "sklearn/utils/validation.py",
+            "sklearn/cross_validation.py",
+            "sklearn/metrics/scorer.py",
+            "sklearn/model_selection/_validation.py"
+          ],
+          "candidateSelectedFiles": [
+            "sklearn/metrics/cluster/supervised.py",
+            "sklearn/exceptions.py",
+            "sklearn/cross_validation.py",
+            "sklearn/metrics/scorer.py",
+            "sklearn/model_selection/_validation.py",
+            "sklearn/learning_curve.py"
+          ],
+          "predecessorGoldVisible": true,
+          "candidateGoldVisible": true
+        },
+        {
+          "instanceId": "scikit-learn__scikit-learn-11578",
+          "fields": [
+            "selectedFiles",
+            "roles",
+            "contentModes",
+            "modelVisibleContext",
+            "tokenAccounting"
+          ],
+          "predecessorLead": "sklearn/linear_model/logistic.py",
+          "candidateLead": "sklearn/linear_model/logistic.py",
+          "predecessorSelectedFiles": [
+            "sklearn/linear_model/logistic.py",
+            "sklearn/multioutput.py",
+            "sklearn/linear_model/base.py"
+          ],
+          "candidateSelectedFiles": [
+            "sklearn/linear_model/logistic.py",
+            "sklearn/linear_model/stochastic_gradient.py",
+            "sklearn/linear_model/base.py"
+          ],
+          "predecessorGoldVisible": true,
+          "candidateGoldVisible": true
+        },
+        {
+          "instanceId": "matplotlib__matplotlib-24627",
+          "fields": [
+            "roles",
+            "contentModes",
+            "modelVisibleContext",
+            "tokenAccounting"
+          ],
+          "predecessorLead": "lib/matplotlib/axes/_base.py",
+          "candidateLead": "lib/matplotlib/axes/_base.py",
+          "predecessorSelectedFiles": [
+            "lib/matplotlib/axes/_base.py",
+            "lib/matplotlib/figure.py",
+            "lib/matplotlib/artist.py",
+            "lib/mpl_toolkits/axes_grid1/axes_grid.py",
+            "lib/mpl_toolkits/axisartist/axis_artist.py",
+            "lib/matplotlib/pyplot.py"
+          ],
+          "candidateSelectedFiles": [
+            "lib/matplotlib/axes/_base.py",
+            "lib/matplotlib/figure.py",
+            "lib/matplotlib/artist.py",
+            "lib/mpl_toolkits/axes_grid1/axes_grid.py",
+            "lib/mpl_toolkits/axisartist/axis_artist.py",
+            "lib/matplotlib/pyplot.py"
+          ],
+          "predecessorGoldVisible": true,
+          "candidateGoldVisible": true
+        },
+        {
+          "instanceId": "astropy__astropy-14365",
+          "fields": [
+            "selectedFiles",
+            "roles",
+            "contentModes",
+            "modelVisibleContext",
+            "tokenAccounting"
+          ],
+          "predecessorLead": "astropy/io/ascii/qdp.py",
+          "candidateLead": "astropy/io/ascii/qdp.py",
+          "predecessorSelectedFiles": [
+            "astropy/io/ascii/qdp.py"
+          ],
+          "candidateSelectedFiles": [
+            "astropy/io/ascii/qdp.py",
+            "astropy/io/fits/connect.py"
+          ],
+          "predecessorGoldVisible": true,
+          "candidateGoldVisible": true
+        },
+        {
+          "instanceId": "astropy__astropy-14369",
+          "fields": [
+            "modelVisibleContext",
+            "tokenAccounting"
+          ],
+          "predecessorLead": "astropy/io/ascii/cds.py",
+          "candidateLead": "astropy/io/ascii/cds.py",
+          "predecessorSelectedFiles": [
+            "astropy/io/ascii/cds.py",
+            "astropy/units/format/cds.py",
+            "astropy/io/ascii/mrt.py",
+            "astropy/units/format/cds_lextab.py",
+            "astropy/units/format/cds_parsetab.py"
+          ],
+          "candidateSelectedFiles": [
+            "astropy/io/ascii/cds.py",
+            "astropy/units/format/cds.py",
+            "astropy/io/ascii/mrt.py",
+            "astropy/units/format/cds_lextab.py",
+            "astropy/units/format/cds_parsetab.py"
+          ],
+          "predecessorGoldVisible": true,
+          "candidateGoldVisible": true
+        },
+        {
+          "instanceId": "pytest-dev__pytest-10051",
+          "fields": [
+            "modelVisibleContext",
+            "tokenAccounting"
+          ],
+          "predecessorLead": "src/_pytest/logging.py",
+          "candidateLead": "src/_pytest/logging.py",
+          "predecessorSelectedFiles": [
+            "src/_pytest/logging.py",
+            "src/_pytest/recwarn.py",
+            "src/_pytest/pytester.py"
+          ],
+          "candidateSelectedFiles": [
+            "src/_pytest/logging.py",
+            "src/_pytest/recwarn.py",
+            "src/_pytest/pytester.py"
+          ],
+          "predecessorGoldVisible": true,
+          "candidateGoldVisible": true
+        },
+        {
+          "instanceId": "sphinx-doc__sphinx-7462",
+          "fields": [
+            "selectedFiles",
+            "roles",
+            "contentModes",
+            "modelVisibleContext",
+            "tokenAccounting"
+          ],
+          "predecessorLead": "sphinx/domains/python.py",
+          "candidateLead": "sphinx/domains/python.py",
+          "predecessorSelectedFiles": [
+            "sphinx/domains/python.py",
+            "sphinx/domains/__init__.py",
+            "sphinx/pycode/ast.py",
+            "sphinx/domains/c.py",
+            "sphinx/domains/cpp.py",
+            "sphinx/util/cfamily.py"
+          ],
+          "candidateSelectedFiles": [
+            "sphinx/domains/python.py",
+            "sphinx/pycode/ast.py",
+            "sphinx/application.py",
+            "sphinx/domains/cpp.py"
+          ],
+          "predecessorGoldVisible": true,
+          "candidateGoldVisible": true
+        },
+        {
+          "instanceId": "sphinx-doc__sphinx-7748",
+          "fields": [
+            "selectedFiles",
+            "roles",
+            "contentModes",
+            "modelVisibleContext",
+            "tokenAccounting"
+          ],
+          "predecessorLead": "sphinx/ext/autodoc/__init__.py",
+          "candidateLead": "sphinx/ext/autodoc/__init__.py",
+          "predecessorSelectedFiles": [
+            "sphinx/ext/autodoc/__init__.py",
+            "sphinx/ext/napoleon/docstring.py"
+          ],
+          "candidateSelectedFiles": [
+            "sphinx/ext/autodoc/__init__.py",
+            "sphinx/domains/javascript.py"
+          ],
+          "predecessorGoldVisible": true,
+          "candidateGoldVisible": true
+        },
+        {
+          "instanceId": "psf__requests-1142",
+          "fields": [
+            "selectedFiles",
+            "roles",
+            "contentModes",
+            "modelVisibleContext",
+            "tokenAccounting"
+          ],
+          "predecessorLead": "requests/models.py",
+          "candidateLead": "requests/models.py",
+          "predecessorSelectedFiles": [
+            "requests/models.py",
+            "requests/cookies.py",
+            "requests/api.py"
+          ],
+          "candidateSelectedFiles": [
+            "requests/models.py",
+            "requests/cookies.py",
+            "requests/api.py",
+            "requests/utils.py"
+          ],
+          "predecessorGoldVisible": true,
+          "candidateGoldVisible": true
+        },
+        {
+          "instanceId": "psf__requests-1724",
+          "fields": [
+            "selectedFiles",
+            "roles",
+            "contentModes",
+            "modelVisibleContext",
+            "tokenAccounting",
+            "qualityMetrics"
+          ],
+          "predecessorLead": "requests/api.py",
+          "candidateLead": "requests/api.py",
+          "predecessorSelectedFiles": [
+            "requests/api.py",
+            "requests/sessions.py",
+            "requests/cookies.py"
+          ],
+          "candidateSelectedFiles": [
+            "requests/api.py",
+            "requests/sessions.py",
+            "requests/packages/urllib3/connectionpool.py",
+            "requests/cookies.py",
+            "requests/packages/urllib3/util.py"
+          ],
+          "predecessorGoldVisible": true,
+          "candidateGoldVisible": true
+        },
+        {
+          "instanceId": "pallets__flask-5014",
+          "fields": [
+            "roles",
+            "contentModes",
+            "modelVisibleContext",
+            "tokenAccounting"
+          ],
+          "predecessorLead": "src/flask/blueprints.py",
+          "candidateLead": "src/flask/blueprints.py",
+          "predecessorSelectedFiles": [
+            "src/flask/blueprints.py",
+            "src/flask/app.py",
+            "src/flask/scaffold.py",
+            "src/flask/cli.py",
+            "src/flask/wrappers.py"
+          ],
+          "candidateSelectedFiles": [
+            "src/flask/blueprints.py",
+            "src/flask/app.py",
+            "src/flask/scaffold.py",
+            "src/flask/cli.py",
+            "src/flask/wrappers.py"
+          ],
+          "predecessorGoldVisible": true,
+          "candidateGoldVisible": true
+        },
+        {
+          "instanceId": "mwaskom__seaborn-3187",
+          "fields": [
+            "selectedFiles",
+            "roles",
+            "contentModes",
+            "modelVisibleContext",
+            "tokenAccounting"
+          ],
+          "predecessorLead": "seaborn/utils.py",
+          "candidateLead": "seaborn/utils.py",
+          "predecessorSelectedFiles": [
+            "seaborn/utils.py",
+            "seaborn/_core/properties.py",
+            "seaborn/axisgrid.py",
+            "seaborn/_testing.py",
+            "seaborn/_marks/area.py",
+            "seaborn/_core/scales.py"
+          ],
+          "candidateSelectedFiles": [
+            "seaborn/utils.py",
+            "seaborn/_core/properties.py",
+            "seaborn/axisgrid.py",
+            "seaborn/_marks/area.py",
+            "seaborn/_core/plot.py",
+            "seaborn/_core/scales.py"
+          ],
+          "predecessorGoldVisible": true,
+          "candidateGoldVisible": true
+        },
+        {
+          "instanceId": "psf__requests-5414",
+          "fields": [
+            "selectedFiles",
+            "roles",
+            "contentModes",
+            "modelVisibleContext",
+            "tokenAccounting"
+          ],
+          "predecessorLead": "requests/models.py",
+          "candidateLead": "requests/models.py",
+          "predecessorSelectedFiles": [
+            "requests/models.py",
+            "requests/exceptions.py",
+            "requests/adapters.py",
+            "requests/utils.py"
+          ],
+          "candidateSelectedFiles": [
+            "requests/models.py",
+            "requests/exceptions.py",
+            "requests/adapters.py"
+          ],
+          "predecessorGoldVisible": true,
+          "candidateGoldVisible": true
+        },
+        {
+          "instanceId": "pydata__xarray-3677",
+          "fields": [
+            "selectedFiles",
+            "roles",
+            "contentModes",
+            "modelVisibleContext",
+            "tokenAccounting"
+          ],
+          "predecessorLead": "xarray/core/dataset.py",
+          "candidateLead": "xarray/core/dataset.py",
+          "predecessorSelectedFiles": [
+            "xarray/core/dataset.py",
+            "xarray/core/merge.py",
+            "versioneer.py",
+            "xarray/core/coordinates.py",
+            "xarray/core/variable.py"
+          ],
+          "candidateSelectedFiles": [
+            "xarray/core/dataset.py",
+            "xarray/core/merge.py",
+            "versioneer.py",
+            "xarray/core/variable.py",
+            "xarray/core/coordinates.py"
+          ],
+          "predecessorGoldVisible": true,
+          "candidateGoldVisible": true
+        },
+        {
+          "instanceId": "pylint-dev__pylint-8898",
+          "fields": [
+            "selectedFiles",
+            "roles",
+            "contentModes",
+            "modelVisibleContext",
+            "tokenAccounting"
+          ],
+          "predecessorLead": "pylint/config/config_initialization.py",
+          "candidateLead": "pylint/config/config_initialization.py",
+          "predecessorSelectedFiles": [
+            "pylint/config/config_initialization.py",
+            "pylint/__init__.py",
+            "pylint/config/__init__.py",
+            "pylint/pyreverse/__init__.py",
+            "pylint/config/config_file_parser.py"
+          ],
+          "candidateSelectedFiles": [
+            "pylint/config/config_initialization.py",
+            "pylint/__init__.py",
+            "pylint/config/find_default_config_files.py",
+            "pylint/config/__init__.py",
+            "pylint/pyreverse/__init__.py",
+            "pylint/config/config_file_parser.py"
+          ],
+          "predecessorGoldVisible": true,
+          "candidateGoldVisible": true
+        },
+        {
+          "instanceId": "pytest-dev__pytest-7432",
+          "fields": [
+            "selectedFiles",
+            "roles",
+            "contentModes",
+            "modelVisibleContext",
+            "tokenAccounting"
+          ],
+          "predecessorLead": "src/_pytest/skipping.py",
+          "candidateLead": "src/_pytest/skipping.py",
+          "predecessorSelectedFiles": [
+            "src/_pytest/skipping.py",
+            "src/_pytest/outcomes.py",
+            "src/_pytest/reports.py",
+            "src/_pytest/junitxml.py",
+            "pyproject.toml",
+            ".github/labels.toml"
+          ],
+          "candidateSelectedFiles": [
+            "src/_pytest/skipping.py",
+            "src/_pytest/reports.py",
+            "src/_pytest/mark/structures.py",
+            "pyproject.toml",
+            ".github/labels.toml"
+          ],
+          "predecessorGoldVisible": true,
+          "candidateGoldVisible": true
+        },
+        {
+          "instanceId": "sphinx-doc__sphinx-7910",
+          "fields": [
+            "selectedFiles",
+            "roles",
+            "contentModes",
+            "modelVisibleContext",
+            "tokenAccounting",
+            "qualityMetrics"
+          ],
+          "predecessorLead": "sphinx/ext/autodoc/__init__.py",
+          "candidateLead": "sphinx/ext/autodoc/__init__.py",
+          "predecessorSelectedFiles": [
+            "sphinx/ext/autodoc/__init__.py",
+            "sphinx/environment/collectors/__init__.py",
+            "sphinx/builders/__init__.py"
+          ],
+          "candidateSelectedFiles": [
+            "sphinx/ext/autodoc/__init__.py",
+            "sphinx/environment/collectors/__init__.py",
+            "sphinx/builders/__init__.py",
+            "sphinx/pycode/__init__.py"
+          ],
+          "predecessorGoldVisible": false,
+          "candidateGoldVisible": true
+        },
+        {
+          "instanceId": "sympy__sympy-15599",
+          "fields": [
+            "selectedFiles",
+            "roles",
+            "contentModes",
+            "modelVisibleContext",
+            "tokenAccounting"
+          ],
+          "predecessorLead": "sympy/core/mod.py",
+          "candidateLead": "sympy/core/mod.py",
+          "predecessorSelectedFiles": [
+            "sympy/core/mod.py",
+            "sympy/polys/agca/modules.py",
+            "sympy/polys/domains/finitefield.py",
+            "sympy/simplify/hyperexpand.py"
+          ],
+          "candidateSelectedFiles": [
+            "sympy/core/mod.py",
+            "sympy/ntheory/residue_ntheory.py",
+            "sympy/polys/domains/finitefield.py",
+            "sympy/simplify/hyperexpand.py"
+          ],
+          "predecessorGoldVisible": true,
+          "candidateGoldVisible": true
+        }
+      ],
+      "quality": {
+        "predecessor": {
+          "cases": 30,
+          "evaluated": 30,
+          "top1GoldFile": 21,
+          "top3GoldFile": 24,
+          "goldFileAnywhere": 27,
+          "goldSymbolAnywhere": 17,
+          "missingGold": 3,
+          "meanPivotCount": 2.133,
+          "meanSupportCount": 3.833,
+          "meanEstimatedTokens": 2194.033
+        },
+        "candidate": {
+          "cases": 30,
+          "evaluated": 30,
+          "top1GoldFile": 21,
+          "top3GoldFile": 24,
+          "goldFileAnywhere": 28,
+          "goldSymbolAnywhere": 17,
+          "missingGold": 2,
+          "meanPivotCount": 2.133,
+          "meanSupportCount": 3.833,
+          "meanEstimatedTokens": 2165.033
+        }
+      }
+    }
+  ],
+  "frozen50": {
+    "caseCount": 50,
+    "changedCaseCount": 35,
+    "quality": {
+      "predecessor": {
+        "cases": 50,
+        "evaluated": 50,
+        "top1GoldFile": 39,
+        "top3GoldFile": 44,
+        "goldFileAnywhere": 47,
+        "goldSymbolAnywhere": 31,
+        "missingGold": 3,
+        "meanPivotCount": 2.1,
+        "meanSupportCount": 3.88,
+        "meanEstimatedTokens": 1806.44
+      },
+      "candidate": {
+        "cases": 50,
+        "evaluated": 50,
+        "top1GoldFile": 38,
+        "top3GoldFile": 44,
+        "goldFileAnywhere": 48,
+        "goldSymbolAnywhere": 31,
+        "missingGold": 2,
+        "meanPivotCount": 2.1,
+        "meanSupportCount": 3.88,
+        "meanEstimatedTokens": 1835.72
+      }
+    }
+  }
+}
