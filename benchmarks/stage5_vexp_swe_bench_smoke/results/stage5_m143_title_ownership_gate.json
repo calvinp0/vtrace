@@ -1,0 +1,927 @@
+{
+  "schemaVersion": "stage5.m143.ownership-gate-probe.v1",
+  "purpose": "M143 §A: measure the behaviour-ownership promotion gate before shipping it.",
+  "fixtures": [
+    "/home/calvin/bench/vtrace-m142/fixtures/django.cand.json",
+    "/home/calvin/bench/vtrace-m142/fixtures/cross_repo.cand.json"
+  ],
+  "mechanism": {
+    "rule": "suppress iff titleOwnership == 0 AND bestRivalOwnership > 0; otherwise abstain",
+    "objectiveSource": "conceptOwnerRetrieval.behavioralObjectives (M142-C role-typed, hygiene-filtered)",
+    "rivalCap": 10,
+    "probePoolSize": 400
+  },
+  "verdict": {
+    "circular": {
+      "cases": 17,
+      "agreesWithDesired": 15,
+      "wrongSuppress": 0,
+      "wrongAbstain": 2
+    },
+    "deCircularised": {
+      "cases": 17,
+      "agreesWithDesired": 8,
+      "wrongSuppress": 8,
+      "wrongAbstain": 1
+    }
+  },
+  "cases": [
+    {
+      "instanceId": "django__django-11095",
+      "titleSymbol": "ModelAdmin",
+      "titlePath": "django/contrib/admin/options.py",
+      "expectedFiles": [
+        "django/contrib/admin/options.py"
+      ],
+      "titleIsGold": true,
+      "objectives": [
+        "fix",
+        "model",
+        "admin",
+        "inline",
+        "hook",
+        "generic",
+        "fail",
+        "test"
+      ],
+      "circular": {
+        "titleOwn": 0.375,
+        "titleCovered": [
+          "model",
+          "admin",
+          "inline"
+        ],
+        "bestRivalOwn": 0.625,
+        "bestRival": "tests/admin_checks/tests.py::test_valid_generic_inline_model_admin",
+        "bestRivalCovered": [
+          "model",
+          "admin",
+          "inline",
+          "generic",
+          "test"
+        ],
+        "decision": "abstain"
+      },
+      "deCircularised": {
+        "titleOwn": 0.16666666666666666,
+        "titleCovered": [
+          "inline"
+        ],
+        "bestRivalOwn": 0.5,
+        "bestRival": "tests/admin_checks/tests.py::test_valid_generic_inline_model_admin",
+        "bestRivalCovered": [
+          "inline",
+          "generic",
+          "test"
+        ],
+        "decision": "abstain"
+      },
+      "desired": "abstain"
+    },
+    {
+      "instanceId": "django__django-11490",
+      "titleSymbol": "values_list",
+      "titlePath": "django/db/models/query.py",
+      "expectedFiles": [
+        "django/db/models/sql/compiler.py"
+      ],
+      "titleIsGold": false,
+      "objectives": [
+        "fix",
+        "composed",
+        "query",
+        "second",
+        "value",
+        "list",
+        "call",
+        "cannot",
+        "change",
+        "selected",
+        "column",
+        "combined",
+        "sql"
+      ],
+      "circular": {
+        "titleOwn": 0.07692307692307693,
+        "titleCovered": [
+          "list"
+        ],
+        "bestRivalOwn": 0.07692307692307693,
+        "bestRival": "django/db/models/query.py::ValuesListIterable",
+        "bestRivalCovered": [
+          "list"
+        ],
+        "decision": "abstain"
+      },
+      "deCircularised": {
+        "titleOwn": 0,
+        "titleCovered": [],
+        "bestRivalOwn": 0.08333333333333333,
+        "bestRival": "tests/queries/tests.py::test_extra_select_params_values_order_in_extra",
+        "bestRivalCovered": [
+          "selected"
+        ],
+        "decision": "suppress"
+      },
+      "desired": "suppress"
+    },
+    {
+      "instanceId": "django__django-11740",
+      "titleSymbol": "ForeignKey",
+      "titlePath": "django/db/models/fields/related.py",
+      "expectedFiles": [
+        "django/db/migrations/autodetector.py"
+      ],
+      "titleIsGold": false,
+      "objectives": [
+        "fix",
+        "chang",
+        "uuid",
+        "field",
+        "foreign",
+        "key",
+        "creat",
+        "cross",
+        "app",
+        "migration",
+        "dependency",
+        "autodetector"
+      ],
+      "circular": {
+        "titleOwn": 0.25,
+        "titleCovered": [
+          "field",
+          "foreign",
+          "key"
+        ],
+        "bestRivalOwn": 0.25,
+        "bestRival": "tests/migrations/test_autodetector.py::test_rename_field_foreign_key_to_field",
+        "bestRivalCovered": [
+          "field",
+          "foreign",
+          "key"
+        ],
+        "decision": "abstain"
+      },
+      "deCircularised": {
+        "titleOwn": 0.1,
+        "titleCovered": [
+          "field"
+        ],
+        "bestRivalOwn": 0.2,
+        "bestRival": "tests/migrations/test_autodetector.py::test_same_app_circular_fk_dependency_with_unique_together_and_indexes",
+        "bestRivalCovered": [
+          "app",
+          "dependency"
+        ],
+        "decision": "abstain"
+      },
+      "desired": "suppress"
+    },
+    {
+      "instanceId": "django__django-11133",
+      "titleSymbol": "HttpResponse",
+      "titlePath": "http/response.py",
+      "expectedFiles": [
+        "django/http/response.py"
+      ],
+      "titleIsGold": true,
+      "objectives": [
+        "http",
+        "response",
+        "doesn",
+        "handle",
+        "memoryview",
+        "object",
+        "try",
+        "write",
+        "binary",
+        "field",
+        "retrieved",
+        "database"
+      ],
+      "circular": {
+        "titleOwn": 0.25,
+        "titleCovered": [
+          "http",
+          "response",
+          "write"
+        ],
+        "bestRivalOwn": 0.16666666666666666,
+        "bestRival": "http/response.py::HttpResponseBase",
+        "bestRivalCovered": [
+          "http",
+          "response"
+        ],
+        "decision": "abstain"
+      },
+      "deCircularised": {
+        "titleOwn": 0.1,
+        "titleCovered": [
+          "write"
+        ],
+        "bestRivalOwn": 0.1,
+        "bestRival": "http/response.py::write",
+        "bestRivalCovered": [
+          "write"
+        ],
+        "decision": "abstain"
+      },
+      "desired": "abstain"
+    },
+    {
+      "instanceId": "django__django-11749",
+      "titleSymbol": "call_command",
+      "titlePath": "core/management/__init__.py",
+      "expectedFiles": [
+        "django/core/management/__init__.py"
+      ],
+      "titleIsGold": true,
+      "objectives": [
+        "call",
+        "command",
+        "fail",
+        "argument",
+        "required",
+        "mutually",
+        "exclusive",
+        "group",
+        "passed",
+        "kwarg",
+        "django",
+        "core",
+        "management",
+        "base",
+        "error",
+        "one",
+        "shop"
+      ],
+      "circular": {
+        "titleOwn": 0.11764705882352941,
+        "titleCovered": [
+          "call",
+          "command"
+        ],
+        "bestRivalOwn": 0.11764705882352941,
+        "bestRival": "db/models/fields/__init__.py::_check_mutually_exclusive_options",
+        "bestRivalCovered": [
+          "mutually",
+          "exclusive"
+        ],
+        "decision": "abstain"
+      },
+      "deCircularised": {
+        "titleOwn": 0,
+        "titleCovered": [],
+        "bestRivalOwn": 0.13333333333333333,
+        "bestRival": "db/models/fields/__init__.py::_check_mutually_exclusive_options",
+        "bestRivalCovered": [
+          "mutually",
+          "exclusive"
+        ],
+        "decision": "suppress"
+      },
+      "desired": "abstain"
+    },
+    {
+      "instanceId": "django__django-12050",
+      "titleSymbol": "resolve_lookup_value",
+      "titlePath": "db/models/sql/query.py",
+      "expectedFiles": [
+        "django/db/models/sql/query.py"
+      ],
+      "titleIsGold": true,
+      "objectives": [
+        "query",
+        "resolve",
+        "lookup",
+        "value",
+        "coerce",
+        "type",
+        "list",
+        "tuple",
+        "change",
+        "introduced",
+        "30687",
+        "cause",
+        "input",
+        "coerced",
+        "break",
+        "exact"
+      ],
+      "circular": {
+        "titleOwn": 0.1875,
+        "titleCovered": [
+          "resolve",
+          "lookup",
+          "value"
+        ],
+        "bestRivalOwn": 0.125,
+        "bestRival": "db/models/sql/query.py::solve_lookup_type",
+        "bestRivalCovered": [
+          "lookup",
+          "type"
+        ],
+        "decision": "abstain"
+      },
+      "deCircularised": {
+        "titleOwn": 0,
+        "titleCovered": [],
+        "bestRivalOwn": 0.08333333333333333,
+        "bestRival": "db/models/query.py::ValuesListIterable",
+        "bestRivalCovered": [
+          "list"
+        ],
+        "decision": "suppress"
+      },
+      "desired": "abstain"
+    },
+    {
+      "instanceId": "django__django-12276",
+      "titleSymbol": "FileInput",
+      "titlePath": "forms/widgets.py",
+      "expectedFiles": [
+        "django/forms/widgets.py"
+      ],
+      "titleIsGold": true,
+      "objectives": [
+        "file",
+        "input",
+        "shouldn",
+        "display",
+        "required",
+        "attribute",
+        "initial",
+        "data",
+        "exist"
+      ],
+      "circular": {
+        "titleOwn": 0.3333333333333333,
+        "titleCovered": [
+          "file",
+          "input",
+          "data"
+        ],
+        "bestRivalOwn": 0.2222222222222222,
+        "bestRival": "forms/widgets.py::use_required_attribute",
+        "bestRivalCovered": [
+          "required",
+          "attribute"
+        ],
+        "decision": "abstain"
+      },
+      "deCircularised": {
+        "titleOwn": 0.14285714285714285,
+        "titleCovered": [
+          "data"
+        ],
+        "bestRivalOwn": 0.2857142857142857,
+        "bestRival": "forms/widgets.py::use_required_attribute",
+        "bestRivalCovered": [
+          "required",
+          "attribute"
+        ],
+        "decision": "abstain"
+      },
+      "desired": "abstain"
+    },
+    {
+      "instanceId": "django__django-12774",
+      "titleSymbol": "queryset",
+      "titlePath": "contrib/admin/filters.py",
+      "expectedFiles": [
+        "django/db/models/query.py"
+      ],
+      "titleIsGold": false,
+      "objectives": [
+        "allow",
+        "query",
+        "set",
+        "bulk",
+        "field",
+        "total",
+        "unique",
+        "constraint",
+        "runn",
+        "fail",
+        "error",
+        "value",
+        "file",
+        "usr",
+        "local",
+        "lib",
+        "python3",
+        "code",
+        "line",
+        "runcode",
+        "console",
+        "module",
+        "app",
+        "venv",
+        "site",
+        "package",
+        "django",
+        "model",
+        "manager",
+        "method",
+        "680",
+        "name",
+        "slug",
+        "isn"
+      ],
+      "circular": {
+        "titleOwn": 0,
+        "titleCovered": [],
+        "bestRivalOwn": 0.058823529411764705,
+        "bestRival": "db/models/query.py::QuerySet",
+        "bestRivalCovered": [
+          "query",
+          "set"
+        ],
+        "decision": "suppress"
+      },
+      "deCircularised": {
+        "titleOwn": 0,
+        "titleCovered": [],
+        "bestRivalOwn": 0.03125,
+        "bestRival": "db/models/query.py::in_bulk",
+        "bestRivalCovered": [
+          "bulk"
+        ],
+        "decision": "suppress"
+      },
+      "desired": "suppress"
+    },
+    {
+      "instanceId": "django__django-13012",
+      "titleSymbol": "ExpressionWrapper",
+      "titlePath": "db/models/expressions.py",
+      "expectedFiles": [
+        "django/db/models/expressions.py"
+      ],
+      "titleIsGold": true,
+      "objectives": [
+        "constant",
+        "expression",
+        "wrapper",
+        "object",
+        "incorrectly",
+        "placed",
+        "group",
+        "clause",
+        "function",
+        "expect",
+        "arbitrary",
+        "query",
+        "construct",
+        "postgre",
+        "error",
+        "programm"
+      ],
+      "circular": {
+        "titleOwn": 0.125,
+        "titleCovered": [
+          "expression",
+          "wrapper"
+        ],
+        "bestRivalOwn": 0.0625,
+        "bestRival": "contrib/postgres/constraints.py::_get_expression_sql",
+        "bestRivalCovered": [
+          "expression"
+        ],
+        "decision": "abstain"
+      },
+      "deCircularised": {
+        "titleOwn": 0,
+        "titleCovered": [],
+        "bestRivalOwn": 0.07142857142857142,
+        "bestRival": "db/models/expressions.py::get_group_by_cols",
+        "bestRivalCovered": [
+          "group"
+        ],
+        "decision": "suppress"
+      },
+      "desired": "abstain"
+    },
+    {
+      "instanceId": "django__django-13112",
+      "titleSymbol": "ForeignKey",
+      "titlePath": "db/models/fields/related.py",
+      "expectedFiles": [
+        "django/db/models/fields/related.py"
+      ],
+      "titleIsGold": true,
+      "objectives": [
+        "makemigration",
+        "crash",
+        "foreign",
+        "key",
+        "mixed",
+        "case",
+        "app",
+        "name",
+        "run",
+        "python3",
+        "manage",
+        "migrate",
+        "django",
+        "1b1",
+        "show",
+        "error",
+        "please",
+        "note",
+        "code",
+        "well",
+        "value",
+        "field",
+        "reg",
+        "login",
+        "content",
+        "category",
+        "declared",
+        "lazy",
+        "reference",
+        "reglogin",
+        "isn",
+        "installed"
+      ],
+      "circular": {
+        "titleOwn": 0.15625,
+        "titleCovered": [
+          "foreign",
+          "key",
+          "error",
+          "value",
+          "field"
+        ],
+        "bestRivalOwn": 0.09375,
+        "bestRival": "contrib/admin/utils.py::FieldIsAForeignKeyColumnName",
+        "bestRivalCovered": [
+          "key",
+          "name",
+          "field"
+        ],
+        "decision": "abstain"
+      },
+      "deCircularised": {
+        "titleOwn": 0.1,
+        "titleCovered": [
+          "error",
+          "value",
+          "field"
+        ],
+        "bestRivalOwn": 0.06666666666666667,
+        "bestRival": "contrib/admin/utils.py::FieldIsAForeignKeyColumnName",
+        "bestRivalCovered": [
+          "name",
+          "field"
+        ],
+        "decision": "abstain"
+      },
+      "desired": "abstain"
+    },
+    {
+      "instanceId": "django__django-13195",
+      "titleSymbol": "HttpResponse",
+      "titlePath": "http/response.py",
+      "expectedFiles": [
+        "django/contrib/messages/storage/cookie.py",
+        "django/contrib/sessions/middleware.py",
+        "django/http/response.py"
+      ],
+      "titleIsGold": true,
+      "objectives": [
+        "http",
+        "response",
+        "delete",
+        "cookie",
+        "preserve",
+        "samesite",
+        "noticed",
+        "gett",
+        "warn",
+        "message",
+        "firefox"
+      ],
+      "circular": {
+        "titleOwn": 0.18181818181818182,
+        "titleCovered": [
+          "http",
+          "response"
+        ],
+        "bestRivalOwn": 0.18181818181818182,
+        "bestRival": "http/response.py::delete_cookie",
+        "bestRivalCovered": [
+          "delete",
+          "cookie"
+        ],
+        "decision": "abstain"
+      },
+      "deCircularised": {
+        "titleOwn": 0,
+        "titleCovered": [],
+        "bestRivalOwn": 0.2222222222222222,
+        "bestRival": "http/response.py::delete_cookie",
+        "bestRivalCovered": [
+          "delete",
+          "cookie"
+        ],
+        "decision": "suppress"
+      },
+      "desired": "abstain"
+    },
+    {
+      "instanceId": "sympy__sympy-12481",
+      "titleSymbol": "Permutation",
+      "titlePath": "sympy/combinatorics/permutations.py",
+      "expectedFiles": [
+        "sympy/combinatorics/permutations.py"
+      ],
+      "titleIsGold": true,
+      "objectives": [
+        "permutation",
+        "constructor",
+        "fail",
+        "non",
+        "disjoint",
+        "cycle",
+        "call",
+        "raise",
+        "value",
+        "error",
+        "instead",
+        "construct",
+        "identity"
+      ],
+      "circular": {
+        "titleOwn": 0.3076923076923077,
+        "titleCovered": [
+          "permutation",
+          "cycle",
+          "call",
+          "identity"
+        ],
+        "bestRivalOwn": 0.15384615384615385,
+        "bestRival": "sympy/printing/tests/test_str.py::test_Permutation_Cycle",
+        "bestRivalCovered": [
+          "permutation",
+          "cycle"
+        ],
+        "decision": "abstain"
+      },
+      "deCircularised": {
+        "titleOwn": 0.25,
+        "titleCovered": [
+          "cycle",
+          "call",
+          "identity"
+        ],
+        "bestRivalOwn": 0.08333333333333333,
+        "bestRival": "sympy/combinatorics/permutations.py::Cycle",
+        "bestRivalCovered": [
+          "cycle"
+        ],
+        "decision": "abstain"
+      },
+      "desired": "abstain"
+    },
+    {
+      "instanceId": "scikit-learn__scikit-learn-10844",
+      "titleSymbol": "fowlkes_mallows_score",
+      "titlePath": "sklearn/metrics/cluster/supervised.py",
+      "expectedFiles": [
+        "sklearn/metrics/cluster/supervised.py"
+      ],
+      "titleIsGold": true,
+      "objectives": [
+        "fowlke",
+        "mallow",
+        "score",
+        "return",
+        "runtime",
+        "warn",
+        "variable",
+        "too",
+        "big",
+        "issue",
+        "usage",
+        "question",
+        "submit",
+        "instead"
+      ],
+      "circular": {
+        "titleOwn": 0.14285714285714285,
+        "titleCovered": [
+          "mallow",
+          "score"
+        ],
+        "bestRivalOwn": 0.14285714285714285,
+        "bestRival": "sklearn/metrics/cluster/tests/test_supervised.py::test_fowlkes_mallows_score",
+        "bestRivalCovered": [
+          "mallow",
+          "score"
+        ],
+        "decision": "abstain"
+      },
+      "deCircularised": {
+        "titleOwn": 0,
+        "titleCovered": [],
+        "bestRivalOwn": 0.08333333333333333,
+        "bestRival": "sklearn/exceptions.py::FitFailedWarning",
+        "bestRivalCovered": [
+          "warn"
+        ],
+        "decision": "suppress"
+      },
+      "desired": "abstain"
+    },
+    {
+      "instanceId": "pytest-dev__pytest-10051",
+      "titleSymbol": "get_records",
+      "titlePath": "src/_pytest/logging.py",
+      "expectedFiles": [
+        "src/_pytest/logging.py"
+      ],
+      "titleIsGold": true,
+      "objectives": [
+        "caplog",
+        "record",
+        "clear",
+        "conflict",
+        "decoupled",
+        "actual",
+        "called"
+      ],
+      "circular": {
+        "titleOwn": 0.14285714285714285,
+        "titleCovered": [
+          "record"
+        ],
+        "bestRivalOwn": 0.2857142857142857,
+        "bestRival": "src/_pytest/logging.py::caplog_records_key",
+        "bestRivalCovered": [
+          "caplog",
+          "record"
+        ],
+        "decision": "abstain"
+      },
+      "deCircularised": {
+        "titleOwn": 0,
+        "titleCovered": [],
+        "bestRivalOwn": 0.16666666666666666,
+        "bestRival": "src/_pytest/logging.py::clear",
+        "bestRivalCovered": [
+          "clear"
+        ],
+        "decision": "suppress"
+      },
+      "desired": "abstain"
+    },
+    {
+      "instanceId": "pytest-dev__pytest-5262",
+      "titleSymbol": "EncodedFile",
+      "titlePath": "src/_pytest/capture.py",
+      "expectedFiles": [
+        "src/_pytest/capture.py"
+      ],
+      "titleIsGold": true,
+      "objectives": [
+        "pytest",
+        "capture",
+        "encoded",
+        "file",
+        "mode",
+        "include",
+        "binary",
+        "thank",
+        "submitt",
+        "issue",
+        "error",
+        "type",
+        "test",
+        "foo"
+      ],
+      "circular": {
+        "titleOwn": 0.21428571428571427,
+        "titleCovered": [
+          "encoded",
+          "file",
+          "error"
+        ],
+        "bestRivalOwn": 0.14285714285714285,
+        "bestRival": "src/_pytest/capture.py::SysCaptureBinary",
+        "bestRivalCovered": [
+          "capture",
+          "binary"
+        ],
+        "decision": "abstain"
+      },
+      "deCircularised": {
+        "titleOwn": 0.08333333333333333,
+        "titleCovered": [
+          "error"
+        ],
+        "bestRivalOwn": 0.16666666666666666,
+        "bestRival": "src/_pytest/capture.py::SysCaptureBinary",
+        "bestRivalCovered": [
+          "capture",
+          "binary"
+        ],
+        "decision": "abstain"
+      },
+      "desired": "abstain"
+    },
+    {
+      "instanceId": "pydata__xarray-2905",
+      "titleSymbol": "__setitem__",
+      "titlePath": "xarray/core/variable.py",
+      "expectedFiles": [
+        "xarray/core/variable.py"
+      ],
+      "titleIsGold": true,
+      "objectives": [
+        "variable",
+        "setitem",
+        "coerc",
+        "type",
+        "object",
+        "value",
+        "property",
+        "minimal",
+        "example"
+      ],
+      "circular": {
+        "titleOwn": 0.1111111111111111,
+        "titleCovered": [
+          "setitem"
+        ],
+        "bestRivalOwn": 0.2222222222222222,
+        "bestRival": "xarray/tests/test_variable.py::example_1d_objects",
+        "bestRivalCovered": [
+          "object",
+          "example"
+        ],
+        "decision": "abstain"
+      },
+      "deCircularised": {
+        "titleOwn": 0,
+        "titleCovered": [],
+        "bestRivalOwn": 0.2857142857142857,
+        "bestRival": "xarray/tests/test_variable.py::example_1d_objects",
+        "bestRivalCovered": [
+          "object",
+          "example"
+        ],
+        "decision": "suppress"
+      },
+      "desired": "abstain"
+    },
+    {
+      "instanceId": "sympy__sympy-16766",
+      "titleSymbol": "PythonCodePrinter",
+      "titlePath": "sympy/printing/pycode.py",
+      "expectedFiles": [
+        "sympy/printing/pycode.py"
+      ],
+      "titleIsGold": true,
+      "objectives": [
+        "python",
+        "code",
+        "printer",
+        "doesn",
+        "support",
+        "indexed",
+        "lambdify",
+        "generate",
+        "function",
+        "save",
+        "further"
+      ],
+      "circular": {
+        "titleOwn": 0.2727272727272727,
+        "titleCovered": [
+          "python",
+          "code",
+          "printer"
+        ],
+        "bestRivalOwn": 0.09090909090909091,
+        "bestRival": "sympy/utilities/lambdify.py::lambdify",
+        "bestRivalCovered": [
+          "lambdify"
+        ],
+        "decision": "abstain"
+      },
+      "deCircularised": {
+        "titleOwn": 0,
+        "titleCovered": [],
+        "bestRivalOwn": 0.125,
+        "bestRival": "sympy/utilities/lambdify.py::lambdify",
+        "bestRivalCovered": [
+          "lambdify"
+        ],
+        "decision": "suppress"
+      },
+      "desired": "abstain"
+    }
+  ]
+}
