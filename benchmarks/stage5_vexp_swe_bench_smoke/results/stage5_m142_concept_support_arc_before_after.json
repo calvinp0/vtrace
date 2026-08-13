@@ -1,0 +1,90 @@
+{
+  "schemaVersion": "stage5.m142.concept-support-arc.v1",
+  "status": "BEFORE state only — C1 is not implemented. Recorded per §26/§27, which require each required definition to be classified before and after.",
+  "implementation": { "commit": "9f08e33", "note": "includes the django-11815 non-displacement fix" },
+  "index": {
+    "path": "/home/calvin/bench/vtrace-m142/arc-m141.sqlite",
+    "arcRoot": "/home/calvin/code/ARC",
+    "arcHead": "2f3fd462600d23e671afb6e3ea4623c6b51674bf",
+    "indexedSymbols": 9009
+  },
+  "fqNamesReconfirmed": {
+    "get_reactants_and_products": "arc/reaction/reaction.py::ARCReaction.get_reactants_and_products",
+    "get_bonds": "arc/reaction/reaction.py::ARCReaction.get_bonds (7 definitions of this name exist; this is the reaction one)",
+    "get_single_mapped_product_xyz": "arc/reaction/reaction.py::ARCReaction.get_single_mapped_product_xyz",
+    "order_xyz_by_atom_map": "arc/species/converter.py::order_xyz_by_atom_map"
+  },
+  "cases": [
+    {
+      "case": "arc_reactant_atom_index_space",
+      "section": "§26",
+      "query": "When a reaction is mapped, how is the atom index space of the reactants established and where does the bond list used for it come from?",
+      "expectedOwnerFile": "arc/reaction/reaction.py",
+      "lead": "arc/reaction/reaction.py::get_resonance_bond_orders",
+      "leadFileIsOwner": true,
+      "leadDefinitionIsRequired": false,
+      "delivered": [
+        { "role": "pivot", "fqName": "arc/reaction/reaction.py::get_resonance_bond_orders" },
+        { "role": "pivot", "fqName": "arc/reaction/reaction.py::ARCReaction" },
+        { "role": "support", "fqName": "arc/checks/nmd.py::get_bond_length_in_reaction" },
+        { "role": "support", "fqName": "arc/mapping/engine.py::map_pairs" },
+        { "role": "support", "fqName": "arc/family/family.py::ReactionFamily.generate_products_by_reactant_groups" },
+        { "role": "support", "fqName": "arc/reaction/reaction.py::ARCReaction.get_reactive_bonds_from_family" }
+      ],
+      "requiredDefinitions": [
+        {
+          "name": "get_reactants_and_products",
+          "state": "not_generated",
+          "class": "C2 — representation. No lane reaches it at all; the request's wording makes no contact with its indexed evidence."
+        },
+        {
+          "name": "get_bonds",
+          "state": "budget_dropped",
+          "rank": 10,
+          "final": 1.3836,
+          "discardReason": "beyond standard support budget (max 4)",
+          "class": "C1 — selection. Ranked into the pool, lost the slot race."
+        }
+      ],
+      "objectiveCoverageNote": "Honest caveat for the §23 necessity test: the 'where does the bond list come from' objective is ARGUABLY already covered, by the delivered ARCReaction.get_reactive_bonds_from_family. A coverage test must be able to say so, or it will justify a slot this case does not clearly need."
+    },
+    {
+      "case": "arc_ts_guess_atom_order",
+      "section": "§27",
+      "query": "How is the atom order of a transition state guess brought into line with the numbering used by the mapped product geometry?",
+      "expectedOwnerFile": "arc/reaction/reaction.py",
+      "lead": "arc/tckdb/adapter.py::TCKDBAdapter._compose_transition_state_request",
+      "leadFileIsOwner": false,
+      "delivered": [
+        { "role": "pivot", "fqName": "arc/tckdb/adapter.py::TCKDBAdapter._compose_transition_state_request" },
+        { "role": "pivot", "fqName": "arc/species/converter.py::order_mol_by_atom_map" },
+        { "role": "support", "fqName": "arc/mapping/engine.py::get_template_product_order" },
+        { "role": "support", "fqName": "arc/species/zmat.py::get_atom_order_from_mol" },
+        { "role": "support", "fqName": "arc/species/species.py::ARCSpecies" },
+        { "role": "support", "fqName": "arc/scheduler.py::_ts_guess_path_provenance" }
+      ],
+      "requiredDefinitions": [
+        {
+          "name": "get_single_mapped_product_xyz",
+          "state": "not_generated",
+          "class": "C2 — representation."
+        },
+        {
+          "name": "order_xyz_by_atom_map",
+          "state": "budget_dropped",
+          "rank": 6,
+          "final": 1.5973,
+          "discardReason": "beyond standard support budget (max 4)",
+          "class": "C1 — selection, and the clearest instance of it."
+        }
+      ],
+      "objectiveCoverageNote": "This is the textbook §23 case. The delivered set contains order_mol_by_atom_map — the SIBLING of the required definition, in the same file — so it explains reordering a MOLECULE by atom map while the requested behaviour is reordering the XYZ GEOMETRY. The uncovered objective is concrete and nameable, and the candidate that fills it is already ranked 6th.",
+      "scoreNote": "final 1.5973 is ABOVE the ~1.4 pool floor cited for the lane's own recoveries. Nothing here needs a score change; this candidate simply lost a four-slot race. C1 must not be framed as a scoring problem for this case."
+    }
+  ],
+  "summary": {
+    "c1Class": 2,
+    "c2Class": 2,
+    "note": "Exactly the §17 split. Two definitions are ranked but not selected (C1), two are never generated (C2). No case needs an ordinary-score change."
+  }
+}
