@@ -23,44 +23,68 @@ import { gateCentralityOnRelevance } from "./hybridScoring";
 
 // --- unit contract -------------------------------------------------------------
 
-test("M142-B: centrality support is proportional to task relevance", () => {
+test("M142-B: centrality is capped at the candidate's own identifying evidence", () => {
+  // One full-strength identifying signal is enough to keep centrality intact.
   const full = gateCentralityOnRelevance({
     centralityContribution: 0.5,
-    localEvidence: 2,
-    maxLocalEvidence: 2,
+    centrality: 1,
+    identifyingEvidence: 1.8,
   });
   assert.equal(full.relevanceShare, 1);
   assert.equal(full.support, 0.5);
 
+  // Half an identifying signal against maximum centrality keeps half.
   const weak = gateCentralityOnRelevance({
     centralityContribution: 0.5,
-    localEvidence: 0.4,
-    maxLocalEvidence: 2,
+    centrality: 1,
+    identifyingEvidence: 0.5,
   });
-  assert.equal(weak.relevanceShare, 0.2);
-  assert.equal(weak.support, 0.1);
+  assert.equal(weak.relevanceShare, 0.5);
+  assert.equal(weak.support, 0.25);
 });
 
-test("M142-B: centrality supports nothing when the pool has no local evidence", () => {
+test("M142-B: a modestly central candidate is not penalised for modest evidence", () => {
+  // The cap compares like with like: 0.2 of evidence fully covers 0.2 of
+  // centrality. Only candidates claiming MORE centrality than their own
+  // evidence justifies are reduced.
+  const gate = gateCentralityOnRelevance({
+    centralityContribution: 0.1,
+    centrality: 0.2,
+    identifyingEvidence: 0.2,
+  });
+  assert.equal(gate.relevanceShare, 1);
+  assert.equal(gate.support, 0.1);
+});
+
+test("M142-B: centrality supports nothing without identifying evidence", () => {
   const gate = gateCentralityOnRelevance({
     centralityContribution: 0.5,
-    localEvidence: 0,
-    maxLocalEvidence: 0,
+    centrality: 1,
+    identifyingEvidence: 0,
   });
   assert.equal(gate.relevanceShare, 0);
   assert.equal(gate.support, 0);
 });
 
 test("M142-B: the gate can only ever reduce, never amplify", () => {
-  for (const localEvidence of [0, 0.1, 0.9, 1, 4]) {
+  for (const identifyingEvidence of [0, 0.1, 0.9, 1, 4]) {
     const gate = gateCentralityOnRelevance({
       centralityContribution: 0.5,
-      localEvidence,
-      maxLocalEvidence: 1,
+      centrality: 1,
+      identifyingEvidence,
     });
     assert.ok(gate.support <= 0.5, `support ${gate.support} exceeded the ungated contribution`);
     assert.ok(gate.relevanceShare <= 1);
   }
+});
+
+test("M142-B: the gate is independent of the rest of the pool", () => {
+  // Regression guard for the pool-relative first cut of this gate: a candidate's
+  // centrality must not move because some UNRELATED candidate got stronger. That
+  // coupling flipped a near-tie in the Flask blueprint-name case by 0.004.
+  const inputs = { centralityContribution: 0.36, centrality: 0.72, identifyingEvidence: 1.79 };
+  assert.deepEqual(gateCentralityOnRelevance(inputs), gateCentralityOnRelevance(inputs));
+  assert.equal(gateCentralityOnRelevance(inputs).relevanceShare, 1);
 });
 
 // --- §26 generic centrality fixture --------------------------------------------

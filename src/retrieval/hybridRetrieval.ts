@@ -226,6 +226,16 @@ export interface HybridRetrievalResult {
    * cap excluded. Empty whenever the lane did not activate.
    */
   orchestrationPaths: readonly OrchestrationPathCandidate[];
+  /**
+   * Every symbol retrieval SCORED, including those the output cap excluded.
+   *
+   * Downstream anchor lanes inject a synthesized candidate for a symbol they
+   * cannot find in `candidates`. Absence from the capped pool has two very
+   * different causes — never retrieved at all, or retrieved, scored and ranked
+   * out — and treating them alike lets a symbol that lost on its own evidence
+   * re-enter at a synthesized score far above the one it earned.
+   */
+  evaluatedSymbolIds: ReadonlySet<string>;
 }
 
 const DEFAULTS = Object.freeze({
@@ -269,6 +279,7 @@ export function hybridRetrieve(
       upstreamRescue: inactiveUpstreamRescue("no results requested"),
       conceptOwner: inactiveConceptOwner("no results requested"),
       orchestrationPaths: [],
+      evaluatedSymbolIds: new Set(),
     };
   }
   const lexicalPoolSize = input.lexicalPoolSize
@@ -387,6 +398,7 @@ export function hybridRetrieve(
     upstreamRescue: upstreamRescue.diagnostics,
     conceptOwner: conceptOwner.diagnostics,
     orchestrationPaths,
+    evaluatedSymbolIds: new Set(rankBySymbolId.keys()),
   };
 }
 
@@ -909,11 +921,7 @@ function assemble(
   const maxGraph = maxOf(entries, (entry) => entry.graph);
   const maxCentrality = maxMapValue(centrality);
 
-  // Scoring runs in two phases because the centrality gate is POOL-RELATIVE: a
-  // candidate's centrality support is scaled by its share of the best local
-  // evidence in contention, which is not known until every candidate's local
-  // evidence has been computed (M142 §22).
-  const scored = entries.map((entry) => {
+  const candidates = entries.map((entry) => {
     const fts = round(normalizeAgainst(entry.fts, maxFts));
     const tfidf = round(normalizeAgainst(bm25.get(entry.symbol.id) ?? 0, maxTfidf));
     const symbol = round(normalizeAgainst(symbolRaw.get(entry.symbol.id) ?? 0, maxSymbol));
@@ -932,8 +940,8 @@ function assemble(
       : identifierConfidence === "weak_short_literal" ? 0.5 : 1;
     const lexical = round(blendLexical(fts, tfidf) * lexicalMatch.factor * identifierFactor);
     const weights = input.weights ?? HYBRID_SCORE_WEIGHTS;
-    // Centrality is deliberately EXCLUDED here and added back in phase two, once
-    // the pool's best local evidence is known and the gate can scale it.
+    // Centrality is excluded here and added back below through the relevance
+    // gate, which caps it at the candidate's own identifying evidence.
     const rawFinalWithoutCentrality = combineFinalScore(
       { lexical, symbol, path, domain, testToImpl, bodyLiteral, graph, centrality: 0 },
       weights,
@@ -991,7 +999,24 @@ function assemble(
       + directAnswerScore + upstreamRescueScore + conceptOwnerScore - contrastPenalty,
     ));
 
+    // The hub penalty already stripped this candidate's centrality when it had no
+    // local evidence at all; adding it back would undo that rule.
+    const ungatedCentrality = hubPenalty > 0 ? 0 : weights.centrality * centralityScore;
+    const gate = gateCentralityOnRelevance({
+      centralityContribution: ungatedCentrality,
+      centrality: centralityScore,
+      identifyingEvidence: hub.identifyingEvidence,
+    });
+    const final = round(finalWithoutCentrality + gate.support);
+
     const evidence = [...entry.evidence];
+    if (ungatedCentrality > 0 && gate.support < ungatedCentrality) {
+      evidence.push(
+        `centrality support capped at ${(gate.relevanceShare * 100).toFixed(0)}% of full: `
+        + `this candidate's own identifying evidence (${hub.identifyingEvidence.toFixed(2)}) `
+        + `is below its centrality (${centralityScore.toFixed(2)})`,
+      );
+    }
     if (inDegree > 0) {
       evidence.push(`${inDegree} indexed symbol(s) depend on this`);
     }
@@ -1048,58 +1073,22 @@ function assemble(
       directAnswerScore,
       ...(upstreamRescueScore > 0 ? { upstreamRescueScore } : {}),
       ...(conceptOwnerScore > 0 ? { conceptOwnerScore } : {}),
-      // Replaced in phase two.
-      final: finalWithoutCentrality,
+      centralityRelevanceShare: gate.relevanceShare,
+      centralitySupport: gate.support,
+      final,
     };
 
     return {
-      candidate: {
-        symbolId: entry.symbol.id,
-        filePath: entry.symbol.filePath,
-        fqName: entry.symbol.fqName,
-        localName: entry.symbol.localName,
-        kind: entry.symbol.kind,
-        scores,
-        sources: [...entry.sources].sort(),
-        evidence,
-        matches: entry.matches,
-        identifierConfidence,
-      } satisfies HybridCandidate,
-      // The hub penalty already stripped this candidate's centrality when it had
-      // no local evidence at all; adding it back would undo that rule.
-      ungatedCentralityContribution: hubPenalty > 0
-        ? 0
-        : (input.weights ?? HYBRID_SCORE_WEIGHTS).centrality * centralityScore,
-    };
-  });
-
-  // Phase two: gate each candidate's centrality on its share of the pool's best
-  // local evidence, then finalise. Centrality is the only component that needs
-  // this, because it is the only one that measures the REPOSITORY rather than
-  // the request.
-  const maxLocalEvidence = Math.max(0, ...scored.map((entry) => entry.candidate.scores.localEvidence));
-  const candidates = scored.map(({ candidate, ungatedCentralityContribution }) => {
-    const gate = gateCentralityOnRelevance({
-      centralityContribution: ungatedCentralityContribution,
-      localEvidence: candidate.scores.localEvidence,
-      maxLocalEvidence,
-    });
-    const evidence = [...candidate.evidence];
-    if (ungatedCentralityContribution > 0 && gate.support < ungatedCentralityContribution) {
-      evidence.push(
-        `centrality support scaled to ${(gate.relevanceShare * 100).toFixed(0)}% of full: `
-        + `task relevance is ${(gate.relevanceShare * 100).toFixed(0)}% of the strongest in this pool`,
-      );
-    }
-    return {
-      ...candidate,
-      scores: {
-        ...candidate.scores,
-        centralityRelevanceShare: gate.relevanceShare,
-        centralitySupport: gate.support,
-        final: round(candidate.scores.final + gate.support),
-      },
+      symbolId: entry.symbol.id,
+      filePath: entry.symbol.filePath,
+      fqName: entry.symbol.fqName,
+      localName: entry.symbol.localName,
+      kind: entry.symbol.kind,
+      scores,
+      sources: [...entry.sources].sort(),
       evidence: evidence.sort(),
+      matches: entry.matches,
+      identifierConfidence,
     } satisfies HybridCandidate;
   });
 

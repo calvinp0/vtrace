@@ -253,6 +253,8 @@ export interface HubEvaluationInput {
 export interface HubEvaluation {
   isHub: boolean;
   localEvidence: number;
+  /** Local evidence that identifies this candidate, excluding domain affinity. */
+  identifyingEvidence: number;
   penalty: number;
 }
 
@@ -285,7 +287,15 @@ export function evaluateHub(input: HubEvaluationInput): HubEvaluation {
       ? input.graphContribution + input.centralityContribution
       : 0;
 
-  return { isHub, localEvidence, penalty };
+  // The subset of local evidence that identifies THIS candidate rather than its
+  // neighbourhood. Issue-domain affinity is excluded: every symbol in a relevant
+  // package earns it, so it says nothing about which of them the request is
+  // about. This is the same question `lacksLocalEvidence` above asks, expressed
+  // as a magnitude instead of a cliff (M142 §8).
+  const identifyingEvidence =
+    lexicalLocal + input.symbol + input.path + input.testToImpl + input.bodyLiteral;
+
+  return { isHub, localEvidence, identifyingEvidence, penalty };
 }
 
 // ----- centrality relevance gate ----------------------------------------------
@@ -300,48 +310,56 @@ export function evaluateHub(input: HubEvaluationInput): HubEvaluation {
 //
 // So centrality was creating relevance, not strengthening it (M142 §20).
 //
-// The gate is deliberately not a threshold. A cut-off would need a constant
-// nobody can derive, and it would make centrality behave discontinuously either
-// side of it. Instead the contribution is scaled by the candidate's OWN share of
-// the pool's best local evidence:
+// The gate makes that same question continuous rather than adding a second,
+// unrelated rule. Centrality is capped by the candidate's own IDENTIFYING
+// evidence — symbol-name, path, body-literal, failing-test reach and non-trivial
+// lexical — measured in the same normalised units:
 //
-//     centralitySupport = weights.centrality * centrality * relevanceShare
+//     centralitySupport = weights.centrality * min(centrality, identifyingEvidence)
 //
-// A candidate with the pool's strongest local evidence keeps all of it; one with
-// a fifth of it keeps a fifth. Centrality can never create relevance, because it
-// is multiplied BY relevance — and it can still reorder plausible candidates,
-// which is the job it is actually good at. Measured on the same ARC queries:
-// `ARCReaction` on a reaction-mapping question (share 0.86) keeps its support
-// essentially intact, while `ARCSpecies` on the `which()` lookup (share 0.21)
-// loses four fifths of it.
+// No new constant: `HUB_WEAK_LEXICAL_MAX` is the existing bar, and the cap is a
+// comparison between two already-normalised quantities. A candidate carrying one
+// full-strength identifying signal keeps its centrality untouched; a candidate
+// carrying half of one keeps half; a candidate carrying none keeps none, which
+// is exactly what the all-or-nothing hub penalty already said.
+//
+// Issue-domain affinity is deliberately NOT identifying evidence. It is the
+// component every symbol in a topically relevant package earns, so letting it
+// buy centrality is the loophole this gate exists to close. Measured on ARC,
+// `ARCSpecies` (746 dependents) carries `symbol=0, path=0, testToImpl=0,
+// bodyLiteral=0` on every behavioural query and rides lexical 0.59-0.64 plus
+// domain 0-0.33; `Blueprint` on the Flask blueprint-name issue and
+// `MigrationAutodetector` on the Django autodetector issue both carry an exact
+// `symbol=1.00`, so neither loses anything here.
 
 export interface CentralityGateInput {
   /** Weighted centrality this candidate would have received ungated. */
   readonly centralityContribution: number;
-  /** This candidate's combined local evidence (from `evaluateHub`). */
-  readonly localEvidence: number;
-  /** The best local evidence anywhere in the candidate pool. */
-  readonly maxLocalEvidence: number;
+  /** Normalised centrality (0..1) behind that contribution. */
+  readonly centrality: number;
+  /** Candidate-identifying evidence (from `evaluateHub`), excluding domain. */
+  readonly identifyingEvidence: number;
 }
 
 export interface CentralityGate {
+  /** Fraction of the ungated contribution this candidate's own evidence supports. */
   readonly relevanceShare: number;
   readonly support: number;
 }
 
 /**
- * Scale a candidate's centrality contribution by its query relevance.
+ * Cap a candidate's centrality contribution at its own identifying evidence.
  *
- * A pool with no local evidence anywhere (`maxLocalEvidence <= 0`) has nothing
- * to be relevant TO, so centrality supports nothing: the share is 0. That is the
- * honest reading — it is exactly the case where popularity would otherwise be
- * the only thing ranking the pool.
+ * Deliberately pool-independent: a candidate's centrality must not change
+ * because some unrelated candidate elsewhere in the pool got stronger or weaker.
+ * That coupling makes near-ties flip on movements that have nothing to do with
+ * either candidate.
  */
 export function gateCentralityOnRelevance(input: CentralityGateInput): CentralityGate {
-  if (input.maxLocalEvidence <= 0 || input.centralityContribution <= 0) {
+  if (input.centralityContribution <= 0 || input.centrality <= 0) {
     return { relevanceShare: 0, support: 0 };
   }
-  const relevanceShare = Math.min(1, Math.max(0, input.localEvidence / input.maxLocalEvidence));
+  const relevanceShare = Math.min(1, Math.max(0, input.identifyingEvidence / input.centrality));
   return {
     relevanceShare: roundScore(relevanceShare),
     support: roundScore(input.centralityContribution * relevanceShare),
@@ -722,17 +740,13 @@ export function recomputeWithWeakenedLexical(
     },
     weights,
   );
-  // Weakening lexical lowers local evidence, which lowers the relevance share.
-  // The pool maximum the original share was taken against is recoverable from
-  // the scorecard (localEvidence / share), so the gate is re-derived rather than
-  // reused stale. Absent a recorded share this candidate had no gated centrality
-  // to begin with.
-  const originalShare = scores.centralityRelevanceShare ?? 0;
-  const impliedMaxLocalEvidence = originalShare > 0 ? scores.localEvidence / originalShare : 0;
+  // Weakening lexical lowers identifying evidence, which tightens the cap. The
+  // gate is re-derived from the recomputed evidence rather than reused stale, so
+  // a decoy demotion cannot smuggle the ungated contribution back in.
   const gate = gateCentralityOnRelevance({
     centralityContribution: hub.penalty > 0 ? 0 : centralityContribution,
-    localEvidence: hub.localEvidence,
-    maxLocalEvidence: impliedMaxLocalEvidence,
+    centrality: scores.centrality,
+    identifyingEvidence: hub.identifyingEvidence,
   });
   const final = Math.max(
     0,
