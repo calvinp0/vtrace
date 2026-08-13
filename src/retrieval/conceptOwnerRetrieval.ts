@@ -212,26 +212,6 @@ export const CONCEPT_OWNER_DEFAULTS = Object.freeze({
  */
 export const CONCEPT_OWNER_MAX_CONTRIBUTION = 1.0;
 
-/**
- * How many files may share a basename for that basename to count as naming an
- * ENTITY rather than following a convention.
- *
- * "This module is named after the thing you asked about" is strong, already
- * indexed ownership evidence — but only when naming it was a decision. Measured
- * over 24 real requests, nominating every file whose basename equals an
- * objective produced 796 nominations (mean 33 per request; one django request
- * nominated 407 files, because `model` matches `models.py` in every app).
- * Requiring the entity to resolve to at most two files leaves 71 — it drops
- * `model`, `util`, `field`, `base`, `app` and `http` entirely, while keeping
- * `gaussian` (2 files, both genuinely Gaussian) and `reaction` (1).
- *
- * This is ENTITY ownership, not identifier intent: "Gaussian" nominates the
- * module named after it, and is never read as a request for a symbol called
- * `Gaussian`. The repository's own name is excluded upstream as a project
- * reference, so ARC can never become entity ARC.
- */
-const MAX_FILES_PER_ENTITY = 2;
-
 export interface ConceptOwnerFile {
   readonly path: string;
   readonly ownerScore: number;
@@ -264,8 +244,6 @@ export interface ConceptOwnerDiagnostics {
   readonly objectiveProvenance: readonly ObjectiveProvenanceRow[];
   /** Objectives rejected as non-behavioural, for evidence. */
   readonly ineligibleObjectives: readonly string[];
-  /** Owner admitted because it is named after a distinctive query entity. */
-  readonly entityOwnerPath?: string;
   readonly filesExamined: number;
   readonly owners: readonly ConceptOwnerFile[];
   readonly ownerCapReached: boolean;
@@ -447,7 +425,6 @@ export function retrieveConceptOwners(input: ConceptOwnerInput): ConceptOwnerRes
   const symbols = listAllSymbols(input.db);
   const objectiveSet = new Set(objectives);
   const byFile = new Map<string, FileEvidence>();
-  const filesByBasename = new Map<string, Set<string>>();
   for (const symbol of symbols) {
     if (isStructuralSymbolKind(symbol.kind)) continue;
     if (isTestPath(symbol.filePath)) continue;
@@ -455,13 +432,6 @@ export function retrieveConceptOwners(input: ConceptOwnerInput): ConceptOwnerRes
     if (entry === undefined) {
       entry = { covered: new Set(), named: new Set(), basename: new Set(), definitions: new Map(), total: 0 };
       const basename = symbol.filePath.slice(symbol.filePath.lastIndexOf("/") + 1);
-      const stemmedStem = stem(basename.replace(/\.[^.]+$/, "").toLowerCase());
-      let sharing = filesByBasename.get(stemmedStem);
-      if (sharing === undefined) {
-        sharing = new Set();
-        filesByBasename.set(stemmedStem, sharing);
-      }
-      sharing.add(symbol.filePath);
       for (const token of tokenize(basename).map(stem)) {
         if (objectiveSet.has(token)) {
           entry.basename.add(token);
@@ -548,35 +518,7 @@ export function retrieveConceptOwners(input: ConceptOwnerInput): ConceptOwnerRes
   const unrepresented = scored.filter((owner) => roomFor(owner.path) > 0);
   const alreadyRepresented = scored.length - unrepresented.length;
 
-  // A file named after a distinctive entity in the request owns that entity's
-  // behaviour, however few of the other objectives it happens to cover. That
-  // evidence cannot express itself through `idfCoverage`, which is a FRACTION of
-  // the objective set: measured, `arc/job/adapters/gaussian.py` is capped at
-  // 0.377 for "which Gaussian route keywords to emit" because `route` and `emit`
-  // exist only in its comments, so it can never reach the top three on coverage
-  // no matter how plainly it owns the concept.
-  //
-  // One reserved slot, taken from the last of the existing owner budget rather
-  // than added to it, so the lane's bounds are unchanged.
-  const entityPaths = new Set<string>();
-  for (const objective of objectives) {
-    const sharing = filesByBasename.get(objective);
-    if (sharing === undefined || sharing.size > MAX_FILES_PER_ENTITY) continue;
-    for (const path of sharing) entityPaths.add(path);
-  }
   const selectedOwners = unrepresented.slice(0, config.maxConceptOwnerFiles);
-  let entityOwnerPath: string | undefined;
-  if (config.maxConceptOwnerFiles > 0) {
-    const alreadySelected = new Set(selectedOwners.map((owner) => owner.path));
-    const entityOwner = unrepresented.find(
-      (owner) => entityPaths.has(owner.path) && !alreadySelected.has(owner.path));
-    if (entityOwner !== undefined) {
-      entityOwnerPath = entityOwner.path;
-      selectedOwners.splice(config.maxConceptOwnerFiles - 1, 1, entityOwner);
-    } else {
-      entityOwnerPath = selectedOwners.find((owner) => entityPaths.has(owner.path))?.path;
-    }
-  }
 
   const candidates: ConceptOwnerCandidate[] = [];
   const queues: { owner: ConceptOwnerFile; ranked: RankedDefinition[]; budget: number }[] = [];
@@ -658,7 +600,6 @@ export function retrieveConceptOwners(input: ConceptOwnerInput): ConceptOwnerRes
       objectives,
       objectiveProvenance: provenance,
       ineligibleObjectives: provenance.filter((row) => !row.eligible).map((row) => row.objective),
-      entityOwnerPath,
       filesExamined: byFile.size,
       owners: selectedOwners,
       ownerCapReached: unrepresented.length > config.maxConceptOwnerFiles,
