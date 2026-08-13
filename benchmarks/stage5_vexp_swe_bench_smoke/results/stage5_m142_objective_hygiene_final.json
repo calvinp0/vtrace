@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "stage5.m142.objective-hygiene-final.v1",
+  "purpose": "M142 \u00a721/\u00a722/\u00a794: final state of concept-owner objective hygiene. Frozen; the A repair does not touch it.",
+  "verdict": "PASS",
+  "oldObjectiveModel": "Every prose token in the request became a candidate objective. IDF then weighted them, so a rare token gained influence regardless of WHERE it appeared -- including report provenance and section labels.",
+  "newObjectiveModel": "The request is segmented into typed spans (task_behavior, evidence_payload, evidence_section_label, attribution_byline). A token is an objective only if it occurs in a behaviour-bearing role. IDF weights surviving objectives; it can no longer CREATE eligibility.",
+  "principle": "IDF WEIGHTS ELIGIBLE OBJECTIVES; IDF DOES NOT CREATE OBJECTIVE ELIGIBILITY.",
+  "scope": "Evidence labels or provenance-style content occur in 23 of the 50 frozen cases, so this was never a one-case phenomenon.",
+  "django11815": {
+    "before": {
+      "electedOwners": [
+        "template/defaultfilters.py",
+        "core/files/storage.py",
+        "views/debug.py"
+      ],
+      "admissions": 6,
+      "drivenBy": "byline / label / provenance terms such as `last`, `modified`, `error`, `traceback`"
+    },
+    "after": {
+      "electedOwners": [
+        "db/migrations/loader.py",
+        "template/base.py",
+        "db/migrations/migration.py"
+      ],
+      "note": "migrations-related modules, which is what the request is about"
+    }
+  },
+  "frozen50Effect": {
+    "allFiveQualityMetrics": "unchanged",
+    "goldMovements": 0,
+    "tokens": "1848.58 -> 1840.22 (slightly cheaper)"
+  },
+  "notASolution": "This is deliberately NOT a stopword list (\u00a717). No vocabulary is banned; `error` and `traceback` stay eligible whenever the request is actually about them, which is covered by a dedicated control."
+}
