@@ -142,6 +142,21 @@ test("M142-A: ordinary prose about a line number names nothing", () => {
   }
 });
 
+test("M142-A: a deep traceback admits only the frame that raised", () => {
+  // A call chain names a dozen functions, most of them library plumbing -- here
+  // CPython's own `sre_parse`. Admitting every frame lets whichever file owns the
+  // most frames outvote the request text, which is measurably worse; only the
+  // frame where execution stopped is admitted.
+  const eligible = eligibleFor(
+    'File "/venv/bin/pylint", line 8, in <module>\n'
+    + 'File "/venv/lib/python3.10/site-packages/pylint/__init__.py", line 25, in run_pylint\n'
+    + 'File "/venv/lib/python3.10/site-packages/pylint/lint/run.py", line 161, in __init__\n'
+    + 'File "/usr/lib/python3.10/re.py", line 251, in compile\n'
+    + 'File "/usr/lib/python3.10/sre_parse.py", line 444, in _parse_sub',
+  );
+  assert.deepEqual([...eligible], ["_parse_sub"]);
+});
+
 test("M142-A: a synthetic frame target is not an identifier", () => {
   // `<module>`, `<listcomp>` and `<genexpr>` are frame labels, not names.
   for (const frame of ['File "/srv/app/main.py", line 1, in <module>', 'File "/srv/app/main.py", line 9, in <listcomp>']) {

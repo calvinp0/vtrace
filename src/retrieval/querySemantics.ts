@@ -461,6 +461,48 @@ function collectComparisonIdentifiers(task: string): string[] {
   return unique(out);
 }
 
+/**
+ * A traceback frame names the function the interpreter was executing. Nobody
+ * typed it -- the runtime printed it -- which makes it the strongest code cue a
+ * bug report carries, and the frame syntax is what makes it recognizable rather
+ * than the word itself. Two shapes count:
+ *
+ *   - a COMPLETE frame, `File "<path>", line <n>, in <name>`, cannot be a
+ *     sentence, so any identifier qualifies -- including a plain lowercase name
+ *     like `unparse`, which no other rule in this file can admit;
+ *   - a BARE tail, `line <n>, in <name>`, has no `File "..."` to anchor it and
+ *     "line 42, in particular" is ordinary English, so the name must also be
+ *     code-shaped (qualified or snake_case).
+ *
+ * Only ONE frame is admitted, and it is deliberately the last. A traceback is a
+ * CALL CHAIN: a deep one names a dozen functions, most of them library plumbing
+ * the reporter never chose and often not this project's code at all. Admitting
+ * every frame floods the request with exact-name assertions that outvote the
+ * prose -- measured on the frozen 50, it moved the lead onto whichever file
+ * happened to own the most frames and cost two gold cases. The frame where
+ * execution STOPPED is the one the report is about.
+ *
+ * `<module>`, `<listcomp>` and `<genexpr>` are frame labels, not names, and
+ * match neither shape.
+ */
+const TRACEBACK_FRAME_SHAPES: readonly RegExp[] = [
+  new RegExp(String.raw`\bfile\s+["'][^"'\n]*["']\s*,\s*line\s+\d+\s*,\s*in\s+(${IDENTIFIER})`, "giu"),
+  /\bline\s+\d+\s*,\s*in\s+([A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)+|[A-Za-z_][A-Za-z0-9_]*_[A-Za-z0-9_]*)/gu,
+];
+
+function lastTracebackFrameIdentifier(task: string): string | undefined {
+  let last: { end: number; term: string } | undefined;
+  for (const pattern of TRACEBACK_FRAME_SHAPES) {
+    for (const match of task.matchAll(pattern)) {
+      // Both shapes end with the captured name, so the match end orders frames
+      // by where their identifier appears.
+      const end = (match.index ?? 0) + match[0].length;
+      if (last === undefined || end >= last.end) last = { end, term: match[1]! };
+    }
+  }
+  return last?.term;
+}
+
 function collectExplicitIdentifierSignals(
   task: string,
   clauses: readonly ContrastClause[],
@@ -470,6 +512,8 @@ function collectExplicitIdentifierSignals(
   const add = (term: string, source: SymbolHypothesisSource, reason: string): void => {
     out.push({ term, confidence: "explicit_identifier", source, eligibleAsSymbol: true, reason });
   };
+  const frame = lastTracebackFrameIdentifier(task);
+  if (frame !== undefined) add(frame, "traceback_frame", "identifier in the traceback frame where execution stopped");
   for (const term of comparisonIdentifiers) add(term, "comparison", "explicit comparison operand");
   for (const term of clauses.flatMap((clause) => clause.positiveIdentifiers)) {
     add(term, "explicit_lookup", "identifier on preferred contrast side");
@@ -488,19 +532,6 @@ function collectExplicitIdentifierSignals(
     [/\b(?:function|method|class|helper|symbol|def)\s+(?:named\s+|called\s+)?([a-z][a-z0-9]*)\b/gu, "declaration_phrase", "symbol-kind noun naming a plain-word identifier"],
     [/\b([A-Z][A-Za-z0-9_]*\.[A-Za-z_][A-Za-z0-9_]*|[A-Za-z0-9_./-]+::[A-Za-z_][A-Za-z0-9_]*)\b/gu, "path_qualified", "member/path-qualified identifier"],
     [/\b([A-Za-z_][A-Za-z0-9_]*)\s*\(/gu, "call_syntax", "call syntax"],
-    // A traceback frame names the function the interpreter was executing. That is
-    // an identifier the reporter did not choose to write -- the runtime did -- so
-    // it is the strongest kind of code cue a bug report carries, and the frame
-    // syntax around it is what makes it recognizable rather than the word itself.
-    //
-    // A COMPLETE frame is unambiguous: `File "<path>", line <n>, in <name>`
-    // cannot be a sentence, so any identifier shape qualifies -- including a
-    // plain lowercase name like `unparse`, which no other rule here can admit.
-    [new RegExp(String.raw`\bfile\s+["'][^"'\n]*["']\s*,\s*line\s+\d+\s*,\s*in\s+(${IDENTIFIER})`, "giu"), "traceback_frame", "identifier in a traceback frame"],
-    // A BARE frame tail has no `File "..."` to anchor it, and "line 42, in
-    // particular" is ordinary prose, so here the name must also be code-shaped
-    // (qualified or snake_case). `<module>`, `<listcomp>` and friends never match.
-    [/\bline\s+\d+\s*,\s*in\s+([A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)+|[A-Za-z_][A-Za-z0-9_]*_[A-Za-z0-9_]*)/gu, "traceback_frame", "code-shaped identifier in a bare traceback frame tail"],
   ];
   for (const [pattern, source, reason] of patterns) {
     for (const match of task.matchAll(pattern)) {
