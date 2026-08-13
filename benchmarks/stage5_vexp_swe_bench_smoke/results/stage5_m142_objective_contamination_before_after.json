@@ -1,0 +1,44 @@
+{
+  "schemaVersion": "stage5.m142.objective-contamination-before-after.v1",
+  "purpose": "M142 §27/§87: the measured effect of objective role typing and round-robin owner allocation.",
+  "comparison": {
+    "before": { "label": "corrected checkpoint", "commit": "9f08e33", "root": "varBase" },
+    "after": { "label": "objective hygiene + round-robin", "commit": "120853c", "root": "varB" },
+    "method": "M140 paired harness over the SAME prepared corpora (targets/{django,cross_repo}-cand), which isolates the retrieval change.",
+    "provenanceValid": false,
+    "provenanceNote": "Exploratory by construction — both arms are variant roots, not the repository, so provenance binding cannot be claimed. The authoritative measurement is the final M141 -> M142 comparison."
+  },
+  "frozen50Quality": {
+    "top1GoldFile": { "before": 38, "after": 38 },
+    "top3GoldFile": { "before": 44, "after": 44 },
+    "goldFileAnywhere": { "before": 48, "after": 48 },
+    "goldSymbolAnywhere": { "before": 30, "after": 30 },
+    "missingGold": { "before": 2, "after": 2 },
+    "meanEstimatedTokens": { "before": 1848.58, "after": 1840.22, "delta": -8.36 },
+    "goldVisibilityMovements": 0,
+    "rowsDifferingInAnyField": 3,
+    "regressions": 0
+  },
+  "interpretation": "Quality-identical and slightly cheaper. That is the correct shape for a precision fix: the lane's junk admissions were already prevented from evicting ordinary ranking by admitConceptOwnersBesideCap, so removing them could not by itself move a gold metric. What it removes is wasted work and standing interaction risk, and what it adds shows up on the behavioural corpus rather than on SWE-bench gold visibility.",
+  "ownerPrecision": {
+    "django11815ElectedOwnersBefore": ["template/defaultfilters.py", "core/files/storage.py", "views/debug.py"],
+    "django11815ElectedOwnersAfter": ["db/migrations/loader.py", "template/base.py", "db/migrations/migration.py"],
+    "note": "Not one of the three owners before is a migrations or enum module; all three after are about migrations or template parsing. No score, cap or ranking constant changed — only which tokens were allowed to be objectives."
+  },
+  "behavioralGain": {
+    "case": "arc_normal_mode_displacement",
+    "before": "arc/checks/nmd.py elected owner #3, contributed 0 candidates (starved by the six-candidate cap)",
+    "after": "contributes 2 candidates — find_equivalent_atoms and get_displaced_xyzs",
+    "mechanism": "round-robin allocation"
+  },
+  "successCriteria": {
+    "section": "§87",
+    "rareProvenanceTokensNoLongerDominate": { "met": true, "evidence": "stage5_m142_django11815_objectives.json — all three elected owners and all six admissions were byline/label-driven before; none are after." },
+    "idfWeightsOnlyEligibleObjectives": { "met": true, "evidence": "objectiveProvenance decides eligibility by role; IDF is applied only to what survives." },
+    "legitimateTracebackErrorQueriesStillWork": { "met": true, "evidence": "three positive controls on synthetic repos plus three on a real django index; last/modified/traceback all remain eligible and elect the correct owners when the request is about them." },
+    "ownerVolumeBetterTargeted": { "met": true, "evidence": "delivery ratio 7.3% -> 7.9% on the shipped arm; owner election is qualitatively correct on the discriminating case." },
+    "arcOwnerRecallDoesNotRegress": { "met": true, "evidence": "NMD improves from 0 to 2 contributed candidates; the other three ARC cases are unchanged." },
+    "django11815RemainsFixed": { "met": true, "evidence": "top-1 and top-3 unchanged at 38/44 on the frozen 50; the case is not among the movements." },
+    "noNewUnexplainedBenchmarkRegression": { "met": true, "evidence": "zero gold-visibility movements, zero regressions." }
+  }
+}

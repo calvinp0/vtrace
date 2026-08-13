@@ -87,9 +87,13 @@ file whose basename equals a query objective produces **796 nominations across
 24 queries, mean 33.2 per query** — one django query nominates 407 files,
 because `model` matches `models.py` in every app.
 
-## What is implemented instead
+## What was implemented instead
 
-**Entity ownership, gated on distinctiveness.** The signal is only meaningful
+**Round-robin owner allocation.** Shipped. The third owner slot was dead by
+construction; admitting one definition per owner per pass recovers
+`arc/checks/nmd.py` with every bound unchanged.
+
+**Entity ownership, gated on distinctiveness — MEASURED AND REJECTED.** The signal is only meaningful
 when naming a module after the entity was a *decision* rather than a convention.
 Requiring the entity to resolve to at most two files makes that measurable and
 repository-adaptive, the same way the lane's IDF already adapts:
@@ -108,24 +112,37 @@ is preserved — "Gaussian" nominates the module named after the entity, and is
 never treated as a request for a symbol named `Gaussian`. The project name is
 already excluded upstream, so ARC can never become entity ARC.
 
-Bounded honesty about what this buys for Gaussian: it elects the file, and the
-definitions it can then admit are `GaussianAdapter` (the class that owns the
-behaviour) and `_user_requested_verytight`. It does **not** deliver
-`write_input_file`, which carries no objective and is unreachable without
-comment indexing.
+**Why it was rejected.** Measured over the frozen 50 against the corrected
+checkpoint on identical corpora, it moved **no quality metric at all** — top-1
+38, top-3 44, gold file anywhere 48, gold symbol anywhere 30, missing gold 2 —
+and cost **+29 tokens per case**. Its only gains were internal to the lane
+(delivery ratio 7.9% → 10.8%, owner candidates in a gold file 11 → 15).
+
+And it does not reach its own acceptance. `gaussian` resolves to *two* files, so
+the tiebreak is owner score — and the higher scorer is
+`arc/parser/adapters/gaussian.py`, the module that **reads** Gaussian output,
+not the job adapter that **writes** the route line. Discriminating between two
+modules that own the same entity needs exactly the evidence that is not indexed.
+
+§15 is explicit that architecture follows measurement, so the mechanism is not
+shipped. The precision measurement is retained because it is the evidence for
+§36/§38, and because it establishes that the naive form (796 nominations across
+24 requests) is unusable regardless.
 
 ## §43 fork
 
 - **Path A — existing indexed deterministic evidence is sufficient.** Chosen for
-  NMD, reactant_index, ts_order, and for *identifying* the Gaussian owner.
+  NMD (round-robin allocation recovers it), and confirmed for reactant_index and
+  ts_order, which are not evidence-limited at all.
 - **Path B — a new persistent evidence class is required.** Rejected: it would
   serve one of four cases, via comments only, and fails §31.
-- **Path C — an architectural ceiling remains.** Partially true, and recorded
-  rather than hidden: `write_input_file`'s concept is unreachable from any
-  indexed evidence, and six of NMD's twelve objectives appear nowhere in the file
-  at all. Neither can be closed with a larger score bonus (§93), and neither is
-  faked.
+- **Path C — an architectural ceiling remains.** True for Gaussian, and recorded
+  rather than hidden. Three independent gaps stand: `write_input_file`'s concept
+  is unreachable from any indexed evidence; two modules share the `gaussian`
+  entity name and nothing indexed distinguishes them; and six of NMD's twelve
+  objectives appear nowhere in their file at all. None can be closed with a
+  larger score bonus (§93), and none is faked.
 
-C therefore closes without a schema change. Because a real, bounded,
-deterministic ceiling remains, C is not claimed as an unqualified PASS — see the
-final report for the verdict.
+C therefore closes without a schema change. Because §88's Gaussian acceptance is
+**not met** and a real deterministic ceiling remains, the concept-evidence half
+of C is **not** a PASS — see the final report.

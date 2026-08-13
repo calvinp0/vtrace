@@ -1,0 +1,39 @@
+{
+  "schemaVersion": "stage5.m142.objective-provenance.v1",
+  "purpose": "M142 §18: the objective-provenance instrumentation — what it exposes, which source roles exist, and why the role set is what it is.",
+  "principle": "Workstream A established that not every prose token is IDENTIFIER intent. C establishes the same asymmetry one level up: not every prose token is a BEHAVIOURAL OBJECTIVE. IDF may weight an eligible objective; IDF may not create eligibility.",
+  "exposedPerObjective": {
+    "objective": "the stemmed token",
+    "roles": "every typed request span the token was observed in",
+    "eligible": "whether any of those roles is behaviour-bearing",
+    "reason": "populated only when ineligible"
+  },
+  "surfacedIn": {
+    "api": "objectiveProvenance(intent) in src/retrieval/conceptOwnerRetrieval.ts",
+    "diagnostics": ["ConceptOwnerDiagnostics.objectiveProvenance", "ConceptOwnerDiagnostics.ineligibleObjectives", "ConceptOwnerDiagnostics.entityOwnerPath"],
+    "note": "Exposed on the inactive path too, so a request that never activates the lane still reports why each token was or was not an objective."
+  },
+  "sourceRoles": [
+    { "role": "task_behavior", "behaviourBearing": true, "definition": "prose outside any evidence block and outside an attribution clause — the description of what the software does or fails to do." },
+    { "role": "evidence_payload", "behaviourBearing": true, "definition": "the CONTENT of an evidence block: exception names, failing test ids, traceback frames. ValueError in a pasted traceback is a real thing the code raises, so these tokens stay eligible." },
+    { "role": "evidence_section_label", "behaviourBearing": false, "definition": "the LABEL introducing an evidence block — `Errors:`, `Failing tests:`, `Traceback:`, and the canonical `Traceback (most recent call last):` header. It names the container, never the content." },
+    { "role": "attribution_byline", "behaviourBearing": false, "definition": "issue-tracker attribution such as `(last modified by oasl)`. Describes the RECORD, not the software." }
+  ],
+  "roleSetJustification": {
+    "measuredNotInvented": "§18 requires actual query structure rather than invented metadata categories. Both non-behavioural roles are literally present in the corpus: evidence-section labels occur in 23 of the 50 frozen tasks (errors 18, traceback 11, failing tests 6) and attribution bylines in 2 (django-11815, django-12276).",
+    "whyTheLabelListIsShort": "It contains only the forms measured in the corpus plus the canonical Python traceback header a user pastes verbatim. It is deliberately NOT a stopword list and must not grow into one — §17. The mechanism is role-based, so the same word remains a perfectly good objective anywhere else in the request.",
+    "whyBylineIsAnchoredOnVerbPlusBy": "The pattern requires a modification/report verb followed by `by`, so it matches `(last modified by oasl)` and does not swallow an ordinary parenthetical such as `(returns None by default)`."
+  },
+  "eligibilityRule": {
+    "rule": "A token is eligible if ANY occurrence is behaviour-bearing, or if it cannot be attributed to any segment at all.",
+    "whyAnyRatherThanAll": "This is what satisfies §20. In django-11815 `traceback` occurs only as a label and is dropped; in 'Where is the traceback for an unhandled exception generated?' it occurs as task_behavior and is kept. Role, not string.",
+    "whyUnattributedDefaultsToEligible": "positiveSearchText has high-confidence excluded spans removed and whitespace normalised, so it can diverge from originalTask. The filter removes only what it can POSITIVELY identify as non-behavioural and defaults to keeping — it is a precision measure, not a recall gate."
+  },
+  "primaryFixture": "stage5_m142_django11815_objectives.json — the full provenance table for the case that motivated this, where all three elected owners and all six admissions were driven by byline and label tokens.",
+  "tests": [
+    "M142-C: report metadata is not a behavioural objective",
+    "M142-C: the same words stay eligible when the request is actually about them",
+    "M142-C: a traceback question still reaches the module that builds tracebacks",
+    "M142-C: every elected owner gets a candidate slot"
+  ]
+}

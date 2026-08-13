@@ -1,0 +1,134 @@
+{
+  "schemaVersion": "stage5.m142.objective-generic-controls.v1",
+  "purpose": "M142 \u00a724/\u00a725/\u00a738: the generic fixtures and negative/positive controls for objective hygiene and entity ownership. No term is taken from any real case.",
+  "location": "src/retrieval/conceptOwnerRetrieval.test.ts",
+  "contaminationFixture": {
+    "section": "\u00a724",
+    "repository": {
+      "pkg/maintenance_windows.py": "the true implementation \u2014 reschedule_overlapping_window, detect_window_overlap, shift_window_start",
+      "pkg/ticket_audit.py": "definitions named after the REPORT's vocabulary \u2014 record_last_modified, read_last_modified, purge_modified_markers",
+      "pkg/crash_reports.py": "definitions named after the EVIDENCE BLOCK's vocabulary \u2014 render_traceback_block, collect_traceback_frames, summarize_traceback"
+    },
+    "task": "Overlapping maintenance windows are not rescheduled. \u2014 (last modified by qvornex)\nErrors: WindowConflictError\nTraceback: WindowConflictError: window overlaps an existing window",
+    "designNote": "The distractor files are full of RARE terms, so IDF makes them decisive \u2014 reproducing the django-11815 mechanism generically. `qvornex` is a nonsense byline name, guaranteeing it cannot be a domain term.",
+    "assertions": [
+      "last / modified / qvornex have roles exactly [attribution_byline] and are ineligible",
+      "traceback has roles exactly [evidence_section_label] and is ineligible",
+      "window and overlap (from the evidence payload) remain eligible",
+      "the elected owners include pkg/maintenance_windows.py",
+      "the elected owners exclude pkg/ticket_audit.py"
+    ]
+  },
+  "positiveControls": {
+    "section": "\u00a725",
+    "controls": [
+      {
+        "name": "modified-timestamp behaviour remains reachable",
+        "query": "How is the last modified marker for a ticket recorded and read?",
+        "requires": "last and modified have roles [task_behavior] and are ELIGIBLE; pkg/ticket_audit.py is the top owner",
+        "why": "The same two tokens that were rejected in the contamination fixture. If this control failed, the fix would be a stopword list."
+      },
+      {
+        "name": "traceback behaviour remains reachable",
+        "query": "Where is the traceback for a crash report collected and rendered?",
+        "requires": "traceback is an objective; pkg/crash_reports.py is the top owner",
+        "why": "\u00a720's explicit example \u2014 'Where is this traceback generated?' must keep working."
+      }
+    ],
+    "realCorpusControls": {
+      "note": "Also measured against a real django index rather than a synthetic one.",
+      "results": [
+        {
+          "query": "Where is the traceback for an unhandled exception generated and rendered?",
+          "traceback_eligible": true,
+          "electedOwners": [
+            "views/decorators/debug.py",
+            "views/debug.py",
+            "template/base.py"
+          ]
+        },
+        {
+          "query": "How is the last modified timestamp of a stored file recorded?",
+          "last_modified_eligible": true,
+          "electedOwners": [
+            "core/files/storage.py (0.7844)",
+            "contrib/messages/storage/base.py",
+            "contrib/sessions/backends/file.py"
+          ],
+          "note": "core/files/storage.py is the file the django-11815 byline WRONGLY elected. Here the request genuinely asks about it, and it is elected first with a much higher score."
+        },
+        {
+          "query": "Which function converts a backend error into a ValidationError?",
+          "error_eligible": true,
+          "electedOwners": [],
+          "note": "No owner clears the 0.35 floor. Not over-filtering \u2014 the lane simply finds no aggregate owner, which is its correct behaviour."
+        }
+      ]
+    }
+  },
+  "allocationFixture": {
+    "section": "new \u2014 the starvation defect",
+    "repository": "three sibling modules (alpha/beta/gamma_registry.py), each with three admissible definitions",
+    "query": "How is a binding registered, resolved and dropped from the registry?",
+    "assertion": "every elected owner contributes at least one candidate, and the total stays within maxConceptOwnerCandidates",
+    "failsOnOldImplementation": true,
+    "oldFailureMessage": "owner pkg/gamma_registry.py was elected but contributed no candidate; contributions came only from pkg/alpha_registry.py, pkg/beta_registry.py"
+  },
+  "entityOwnershipControls": {
+    "section": "\u00a738",
+    "precisionMeasurement": {
+      "method": "For 24 real requests (4 ARC + 20 django), count the files nominated by basename equality with a query objective, under different distinctiveness caps.",
+      "results": [
+        {
+          "cap": "none",
+          "totalNominations": 796,
+          "meanPerQuery": 33.17,
+          "worstCase": "django-11095 nominates 407 files, because `model` matches models.py in every app"
+        },
+        {
+          "cap": 3,
+          "totalNominations": 95,
+          "meanPerQuery": 3.96
+        },
+        {
+          "cap": 2,
+          "totalNominations": 71,
+          "meanPerQuery": 2.96,
+          "bestPrecisionCap": true
+        },
+        {
+          "cap": 1,
+          "totalNominations": 29,
+          "meanPerQuery": 1.21,
+          "rejected": "would silence the Gaussian case entirely \u2014 `gaussian` resolves to two files"
+        }
+      ],
+      "atShippedCap": {
+        "dropped": [
+          "model",
+          "util",
+          "field",
+          "base",
+          "app",
+          "http",
+          "query",
+          "exception"
+        ],
+        "kept": [
+          "gaussian -> 2 files, both genuinely Gaussian",
+          "reaction -> 1 file",
+          "migration -> 1 file",
+          "enum -> 1 file",
+          "autodetector -> 1 file"
+        ]
+      }
+    },
+    "invariantsPreserved": {
+      "projectNameNeverBecomesAnEntity": "The repository's own name is excluded upstream as a project reference, so ARC can never become entity ARC (\u00a736).",
+      "notIdentifierIntent": "\u00a737 \u2014 `Gaussian` nominates the module named after the entity; it is never read as a request for a symbol called `Gaussian`. Nothing in this path touches exact-symbol generation.",
+      "incidentalMentionsDoNotNominate": "Nomination requires basename EQUALITY. A file that merely mentions the entity in a comment or string literal is not named after it and is not nominated \u2014 which is \u00a738's precision control, obtained structurally rather than by a filter."
+    },
+    "status": "MEASURED AND REJECTED \u2014 not shipped. Retained here because the precision measurement is the evidence for \u00a736/\u00a738 and for why the mechanism was not kept.",
+    "rejectionReason": "Quality-neutral on the frozen 50 (no metric moved) at +29 tokens per case, and it nominated arc/parser/adapters/gaussian.py rather than arc/job/adapters/gaussian.py \u2014 two files share the entity basename and the tiebreak is owner score. \u00a715: architecture follows measurement."
+  }
+}
