@@ -1,0 +1,40 @@
+{
+  "schemaVersion": "stage5.m142.sphinx7462-before-after.v1",
+  "purpose": "M142 \u00a787: sphinx-7462 before and after the traceback-frame repair, from the provenance-valid paired slice.",
+  "case": "sphinx-doc__sphinx-7462",
+  "goldFiles": [
+    "sphinx/domains/python.py",
+    "sphinx/pycode/ast.py"
+  ],
+  "goldSymbols": [
+    "unparse"
+  ],
+  "before": {
+    "commit": "0c5e544",
+    "selectedFiles": [
+      "sphinx/domains/python.py",
+      "sphinx/domains/__init__.py",
+      "sphinx/domains/c.py",
+      "sphinx/domains/cpp.py"
+    ],
+    "lead": "sphinx/domains/python.py",
+    "goldSymbolAnywhere": false,
+    "estimatedTokens": 1757,
+    "note": "sphinx/pycode/ast.py absent from the selection entirely; `unparse` was never generated because no rule could admit a plain lowercase frame name."
+  },
+  "after": {
+    "commit": "e453366",
+    "selectedFiles": [
+      "sphinx/domains/python.py",
+      "sphinx/pycode/ast.py",
+      "sphinx/application.py",
+      "sphinx/domains/cpp.py"
+    ],
+    "lead": "sphinx/domains/python.py",
+    "goldSymbolAnywhere": true,
+    "estimatedTokens": 1500,
+    "note": "sphinx/pycode/ast.py delivered at rank 2; the gold symbol `unparse` is recovered and the capsule is 257 tokens cheaper."
+  },
+  "classification": "IMPROVEMENT \u2014 the regression this repair was reopened for is closed.",
+  "residual": "Both gold files are now delivered. The case is gold-symbol complete; resolution still additionally requires the agent to edit ast.py, which is outside retrieval's scope."
+}
