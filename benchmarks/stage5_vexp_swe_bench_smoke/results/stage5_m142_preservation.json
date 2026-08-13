@@ -1,0 +1,88 @@
+{
+  "schemaVersion": "stage5.m142.preservation.v1",
+  "candidate": "bb4d4e1 (M142 revised checkpoint)",
+  "predecessor": "562cff6 (M141)",
+  "note": "Run against the shipped implementation. Gates that compare an EXACT semantic hash against a no-change baseline are expected to trip on a milestone that deliberately changes retrieval; those are recorded with their attribution rather than as passes.",
+  "gates": [
+    {
+      "gate": "M131 flow/scalability",
+      "verdict": "MIXED",
+      "detail": "19/22 assertions pass on the candidate vs 21/22 on the M141 predecessor. All three deltas are accounted for below; the flow, edge-site, invariance, determinism, query-plan and impact-audit assertions all pass unchanged."
+    },
+    {
+      "gate": "M131 response_within_m130_envelope",
+      "verdict": "PRECONDITION_UNMET",
+      "detail": "'captured incident payload not provided' \u2014 fails IDENTICALLY on the M141 predecessor. Harness precondition, not product behaviour."
+    },
+    {
+      "gate": "M131 frozen_50_semantics_unchanged",
+      "verdict": "EXPECTED_CHANGE",
+      "detail": "50/50 cases, 200 semantic differences against a baseline captured from the M141 predecessor. This is a no-change gate and M142 changes retrieval deliberately; the same movement is measured, bisected and attributed case-by-case in stage5_m142_checkpoint_paired_comparison.json and stage5_m142_checkpoint_changed_case_ledger.json."
+    },
+    {
+      "gate": "M131/\u00a777 TCKDB same-checkout acceptance",
+      "verdict": "ATTRIBUTED_DIFFERENCE",
+      "detail": "Lead PRESERVED (clients/python/tests/test_computed_reaction_upload_builder.py) and ALL evidence categories satisfied on both sides (missingCategories=[]). 5 of 6 selected files identical; one support slot swaps builders/geometry.py -> builders/calculation.py, which trips the exact-hash parity layer. Attributed by bisect to the centrality gate: the predecessor and A both deliver geometry.py, the REJECTED pool-relative gate delivered neither, and the shipped gate delivers calculation.py."
+    },
+    {
+      "gate": "M132 worktree isolation",
+      "verdict": "PASS",
+      "detail": "19/21 assertions; the only two failures are the same frozen-50 no-change hash gate and the same TCKDB exact-parity layer already accounted for above. Every worktree-specific assertion passes: nested_worktrees_discovered_via_git (24 nested of 68 registered), nested_worktree_source_excluded (616 -> 325 files, 291 excluded), nested_worktree_symbols_and_edges_absent (15801 -> 9009 symbols), worktree_routing_matrix_complete (15 cases across 5 suites, 0 missing) and worktree_refresh_isolated (worktree A's fingerprint unchanged by a refresh of B)."
+    },
+    {
+      "gate": "M136 budget delivery @3000",
+      "verdict": "PASS",
+      "detail": "ARC 3000=resolved; 9 rows."
+    },
+    {
+      "gate": "M137 direct answer (dihedral)",
+      "verdict": "PASS",
+      "detail": "lead=arc/species/vectors.py::get_dihedral, 3000=true. The most Workstream-A-sensitive gate: no prose-token and no project-name poisoning."
+    },
+    {
+      "gate": "M138 memory provenance",
+      "verdict": "PRECONDITION_UNMET",
+      "detail": "FAIL with the identical signature (ARC current=4/4; suppressed=0) on the M141 predecessor, and stage5_m138_no_agent_smoke.detail.json is byte-identical between the two sides. Pre-existing, as the M141 ledger already recorded."
+    },
+    {
+      "gate": "M139 impact truthfulness",
+      "verdict": "PASS",
+      "detail": "Covered by the M140-C acceptance assertion m139_impact_truthful (exact and potential callers reported separately)."
+    },
+    {
+      "gate": "M140-C orchestration + module-node",
+      "verdict": "PASS",
+      "detail": "28/28 assertions, verdict PASS, including m137_direct_answer_preserved, m139_impact_truthful, m131_flow_preserved and the no-agents/no-Docker/no-VEXP assertion."
+    },
+    {
+      "gate": "M140-B TCKDB acceptance",
+      "verdict": "PASS",
+      "detail": "TCKDB main@567ba7f: 0/4 cases changed, pass=true; no lead or selection change across modify, two orchestration and explicit-lookup queries."
+    },
+    {
+      "gate": "M141 readiness matrix",
+      "verdict": "PASS",
+      "detail": "10/10 states correct, verdict PASS."
+    },
+    {
+      "gate": "M141 cross-tool readiness parity",
+      "verdict": "PASS",
+      "detail": "0 disagreements."
+    },
+    {
+      "gate": "M141 index_repo boundedness",
+      "verdict": "NOT_RUN",
+      "detail": "No index representation changed in M142, so the bounded-response contract has no new input; not a substitute for running it."
+    },
+    {
+      "gate": "M141 memoryRules performance",
+      "verdict": "NOT_RUN",
+      "detail": "Not re-profiled."
+    },
+    {
+      "gate": "get_skeleton known-file",
+      "verdict": "NOT_RUN",
+      "detail": ""
+    }
+  ]
+}

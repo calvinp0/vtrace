@@ -7,7 +7,7 @@ re-measured. Workstream D is measured and root-caused but not implemented.
 Workstream E was not started.
 
 Per §98 this is INCOMPLETE, not MIXED: two mandatory workstreams are not
-implemented and the preservation suite has not been run.
+implemented.
 
 ```text
 Workstream A — Prose vs Identifier Signal Hygiene     PASS
@@ -18,7 +18,8 @@ Workstream E — Fresh-Worktree Index Bootstrap         NOT STARTED
 
 Checkpoint paired benchmark    READ, BISECTED, ATTRIBUTED (0 unexplained)
 Final paired benchmark         NOT RUN (candidate tree not final)
-Preservation suite             NOT RUN
+Preservation suite             RUN — 8 gates PASS, M131 MIXED, 3 accounted failures
+TCKDB acceptance               PASS (M140-B 0/4 changed); §77 parity attributed
 ```
 
 Frozen-50, M141 predecessor → current revised checkpoint:
@@ -436,16 +437,59 @@ carries the per-case attribution. Two Top-1 regressions remain against M141:
   filter; the concept-owner lane reports no admissions on this case, so the coedit
   representative change is the likelier producer. **Not root-caused to a line.**
 
-Also not run: the M131/M132/M136/M137/M138/M139/M140/M141 preservation gates, the
-TCKDB acceptance, and the final paired benchmark (§80) — the candidate tree is not
-final while D and E are unimplemented.
+Not run: the final paired benchmark (§80) — the candidate tree is not final while
+D and E are unimplemented.
+
+## Preservation gates
+
+Run against the shipped implementation (`stage5_m142_preservation.json`).
+
+```text
+M136  budget delivery @3000            PASS   ARC 3000=resolved
+M137  direct answer (dihedral)         PASS   lead=get_dihedral, 3000=true
+M139  impact truthfulness              PASS   via M140-C assertion
+M140-C orchestration + module-node     PASS   28/28 assertions
+M140-B TCKDB acceptance                PASS   main@567ba7f, 0/4 changed
+M141  readiness matrix                 PASS   10/10 states
+M141  cross-tool readiness parity      PASS   0 disagreements
+M132  worktree isolation               PASS   every worktree assertion holds
+M131  flow/scalability                 MIXED  19/22 vs 21/22 on M141
+```
+
+M137 is the gate that matters most for Workstream A, and it holds exactly: no
+prose-token poisoning, no project-name poisoning, `get_dihedral` still the lead.
+M132's worktree assertions all hold — nested exclusion (616 → 325 files), the
+routing matrix (15 cases, 0 missing) and refresh isolation.
+
+Three gate failures, all accounted for and none of them silent:
+
+- **`response_within_m130_envelope`** — "captured incident payload not provided",
+  failing **identically on the M141 predecessor**. Harness precondition.
+- **`frozen_50_semantics_unchanged`** (M131 and M132) — 50/50 cases, 200 semantic
+  differences. This is a **no-change** gate, and M142 changes retrieval
+  deliberately; the same movement is bisected and attributed case-by-case above.
+  Recorded as an expected change, not as a pass.
+- **`tckdb_same_checkout_preserved`** — the lead is **preserved** and **every**
+  §77 evidence category is satisfied on both sides (`missingCategories: []`), with
+  5 of 6 selected files identical. One support slot swaps `builders/geometry.py` →
+  `builders/calculation.py`, which trips the exact-hash parity layer. Bisected to
+  the centrality gate: M141 and A both deliver `geometry.py`, the **rejected**
+  pool-relative gate delivered neither, and the shipped gate delivers
+  `calculation.py`.
+
+**M138** fails with the identical signature on both sides (`ARC current=4/4,
+suppressed=0`) and `stage5_m138_no_agent_smoke.detail.json` is byte-identical
+between them — the pre-existing precondition the M141 ledger already recorded.
+
+Not run: M141 `index_repo` boundedness and `memoryRules` performance (no index
+representation changed), and the `get_skeleton` known-file check.
 
 ## Recommended next step
 
-The checkpoint gate is cleared, so functional work may continue. In order: root-
-cause `django-11815` to a line, split C into C1 (selection) and C2 (representation)
-per §10, run the preservation gates, then D and E. M142 cannot be closed as PASS
-or MIXED until D, E and the preservation suite exist.
+The checkpoint gate is cleared and the preservation suite is run, so functional
+work may continue. In order: root-cause `django-11815` to a line, split C into C1
+(selection) and C2 (representation) per §10, then D and E, then the final paired
+benchmark. M142 cannot be closed as PASS or MIXED until D and E exist.
 
 The `django-11740` root cause is worth carrying forward as a design note rather
 than a fix attempt: **an anchor lane must not treat pool-cap absence as evidence
