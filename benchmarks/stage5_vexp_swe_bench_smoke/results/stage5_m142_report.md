@@ -278,11 +278,73 @@ Two design decisions were forced by measurement rather than chosen:
   `arc/checks/nmd.py`, via a helper graph expansion reached incidentally, while
   the definitions answering the question were absent. An owner is skipped only
   once the pool carries as many of its definitions as the lane would contribute.
-- Recovered definitions enter through the **cap**, not the ranking. A definition
-  nothing could name scores ~0.8 against a pool floor of ~1.4; raising the lane's
-  contribution until it cleared that floor would be tuning a constant to an
-  outcome. A bounded number of tail slots is displaced and every score stays
-  truthful — the same ranking/selection separation M140-C established.
+- Recovered definitions enter **beside** the ranking, not through it. A
+  definition nothing could name scores ~0.8 against a pool floor of ~1.4; raising
+  the lane's contribution until it cleared that floor would be tuning a constant
+  to an outcome. The first cut took a bounded number of tail slots on the M140-C
+  precedent; the benchmark rejected that, and the corrected rule admits without
+  evicting. See the django-11815 section below.
+
+### The eviction defect, and the fix (§8-§16)
+
+`django-11815` was carried out of the previous checkpoint as the one case that
+could not be root-caused to a line, with a recorded hypothesis pointing at the
+coedit structural filter. That hypothesis was **wrong in both halves**: the lane
+admits six candidates on that case, not zero, and the coedit filter is inert
+there. Feature isolation, reverting each of `0e4edc7`'s two changes in turn
+against one held-constant index:
+
+```text
+state                                     subsystem elected        lead              gold?
+A+B baseline (69826d3)                    db/migrations            EnumSerializer    yes
++ coedit structural filter ONLY           db/migrations            EnumSerializer    yes
++ concept-owner lane ONLY                 contrib/auth/migrations  Migration         no
+full 0e4edc7                              contrib/auth/migrations  Migration         no
+```
+
+The chain, end to end. The lane's objectives are every prose token of the
+request, which for this task includes `last`/`modified`/`oasl` from the Trac
+byline and `error`/`traceback` from the M103 evidence **labels** — all rare, so
+all high-IDF, so all decisive. It elects `defaultfilters.py`, `storage.py` and
+`views/debug.py` as the owners of a migrations bug, and admits four of their
+definitions (finals 0.41-0.49) into a pool already at its cap of 25, **evicting
+four ranked candidates** — two from `db/migrations`, one of them a delivered
+pivot. `resolveLocalSubsystem` tallies anchored candidates per directory, and
+`pathSegmentOverlap` ties at 1 for both contenders, so the count decides:
+
+```text
+                          A+B    0e4edc7
+  db/migrations             8   ->   6
+  contrib/auth/migrations   7   ->   6
+```
+
+At 6-6 the tiebreak at `debugRoles.ts:695` (`dir < best`) elects
+`contrib/auth/migrations`. `EnumSerializer` is then out-of-subsystem with
+`symbol=0, path=0, testToImpl=0`, and the strong-lexical exemption that would
+have saved it is restricted to function/method kinds — it is a class. So
+`isGenericInfrastructure` returns true, `debugRoles.ts:279` demotes it to
+support, and the support budget discards it. **Its own scorecard never moves**
+(rank 5, final 1.6352 on both sides): a selection regression invisible to any
+score-level comparison.
+
+Fixed in `9f08e33` by `admitConceptOwnersBesideCap`. The cap bounds what ordinary
+ranking returns, and a lane that exists because ranking cannot see its findings
+does not compete for ranking's slots — least of all by paying out of the evidence
+base later inferences read. Two generic fixtures guard it; the first fails on the
+old code with the exact eviction message.
+
+Two alternative fixes were measured and **not** shipped: excluding cap-admitted
+rescues from the subsystem election (0 of 50 cases changed), and gating the lane
+off when the request carries direct localization evidence (inert — this task has
+no failing tests, likely files or likely symbols at all).
+
+**What the fix does not fix.** The objective contamination is real and untouched:
+the lane still reads evidence labels and tracker bylines as behavioural concepts.
+It no longer *costs* anything measurable, because its output can no longer evict
+better-evidenced candidates, but it is wasted work and a live precision risk.
+Measured over the frozen 50, the lane puts 235 candidates into the pool, of which
+16 are delivered and 21 sit in a gold file. That is C1/C2 work (§23, §29-§39),
+recorded here so it is not mistaken for something this fix resolved.
 
 ### Honest limits
 

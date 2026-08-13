@@ -58,7 +58,7 @@
       "instanceId": "django__django-11815",
       "suite": "django",
       "primaryCause": "concept_owner_commit_secondary_selection",
-      "classification": "REGRESSION",
+      "classification": "REGRESSION (fixed in 9f08e33)",
       "metricsByStage": {
         "order": [
           "m141",
@@ -84,7 +84,9 @@
       },
       "predecessorLead": "db/migrations/serializer.py",
       "revisedLead": "contrib/auth/migrations/0009_alter_user_last_name_max_length.py",
-      "explanation": "Gold db/migrations/serializer.py::EnumSerializer falls from lead to candidate rank 3 (final 1.64) and loses the single pivot slot to contrib/auth/migrations/0009_*.py::Migration. Bisect places the flip at the C commit (0e4edc7), which carried both the concept-owner lane and the coeditExpansion structural-symbol filter; the concept-owner lane reports no admissions here, so the coedit representative change is the likelier producer. Not root-caused to a single line."
+      "explanation": "Gold db/migrations/serializer.py::EnumSerializer falls from lead to candidate rank 3 (final 1.64) and loses the single pivot slot to contrib/auth/migrations/0009_*.py::Migration. Bisect places the flip at the C commit (0e4edc7), which carried both the concept-owner lane and the coeditExpansion structural-symbol filter; the concept-owner lane reports no admissions here, so the coedit representative change is the likelier producer. Not root-caused to a single line.",
+      "supersededBy": "stage5_m142_django11815_root_cause.md",
+      "correction": "The explanation below was wrong in both halves and is retained only as the record of what this checkpoint believed. Feature isolation shows the concept-owner lane admits SIX candidates on this case (not zero), and the coedit structural filter is inert here. Root cause: the lane's cap-displacement rule evicted four ranked candidates, flipping resolveLocalSubsystem's 8-vs-7 tally to an exact 6-vs-6 tie that debugRoles.ts:695 breaks alphabetically. Fixed in 9f08e33."
     },
     {
       "instanceId": "matplotlib__matplotlib-22719",
