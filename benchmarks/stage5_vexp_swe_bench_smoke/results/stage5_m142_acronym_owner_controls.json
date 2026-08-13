@@ -1,0 +1,56 @@
+{
+  "schemaVersion": "stage5.m142.acronym-owner-controls.v1",
+  "purpose": "M142 §34/§35: does 'normal mode displacement' deterministically correspond to nmd.py, and is an acronym/path owner lane precise enough to implement?",
+  "verdict": "DO NOT IMPLEMENT",
+  "method": "Enumerate every contiguous 2-5 content-word span of each real behavioural query, take the initials, and look the acronym up against the set of file basenames in the real ARC index (325 files, 264 distinct basenames, 42 of them acronym-shaped).",
+  "measuredOnRealQueries": [
+    {
+      "case": "nmd",
+      "query": "How does ARC verify that a saddle point actually connects the intended reactants and products by looking at how the atoms move in the imaginary vibration?",
+      "expectedOwner": "arc/checks/nmd.py",
+      "acronymHits": [{ "acronym": "ci", "fromWords": "connects intended", "resolvesTo": ".github/workflows/ci.yml" }],
+      "truePositives": 0,
+      "falsePositives": 1,
+      "note": "The decisive observation. This query NEVER CONTAINS the phrase 'normal mode displacement'. That phrase is the milestone spec's description of the case, not the user's words — the user says 'saddle point' and 'imaginary vibration'. An acronym can only be generated from words the query actually uses, so the mechanism cannot fire for the one case it was proposed for."
+    },
+    {
+      "case": "gaussian",
+      "query": "How does ARC decide which Gaussian route keywords to emit?",
+      "acronymHits": [],
+      "truePositives": 0,
+      "falsePositives": 0
+    },
+    {
+      "case": "reactant_index",
+      "query": "When a reaction is mapped, how is the atom index space of the reactants established and where does the bond list used for it come from?",
+      "acronymHits": [],
+      "truePositives": 0,
+      "falsePositives": 0
+    },
+    {
+      "case": "ts_order",
+      "query": "How is the atom order of a transition state guess brought into line with the numbering used by the mapped product geometry?",
+      "expectedOwner": "arc/reaction/reaction.py",
+      "acronymHits": [{ "acronym": "ts", "fromWords": "transition state", "resolvesTo": "arc/checks/ts.py" }],
+      "truePositives": 0,
+      "falsePositives": 1,
+      "note": "A real and correct acronym correspondence ('transition state' -> ts) that nominates the WRONG file: the owner for this case is arc/reaction/reaction.py, not arc/checks/ts.py. Being a correct abbreviation is not the same as being the concept owner."
+    }
+  ],
+  "hypotheticalControl": {
+    "query": "How does ARC check the normal mode displacement of a transition state?",
+    "acronymHits": [
+      { "acronym": "nmd", "fromWords": "normal mode displacement", "resolvesTo": "arc/checks/nmd.py" },
+      { "acronym": "ts", "fromWords": "transition state", "resolvesTo": "arc/checks/ts.py" }
+    ],
+    "interpretation": "The mechanism does work when the query happens to spell the expansion. But that is exactly the case that needs no help: a user who writes 'normal mode displacement' has already supplied the file's own vocabulary, and ordinary lexical retrieval reaches nmd.py from the basename without any acronym rule. The lane would fire only for users who do not need it, and stay silent for the users who do. Note it still nominates ts.py as a second, unwanted owner even here."
+  },
+  "totals": { "realQueries": 4, "truePositives": 0, "falsePositives": 2 },
+  "precisionControlsConsidered": {
+    "twoToFiveContentWords": "applied",
+    "basenameExactlyEqualsAcronym": "applied (not substring)",
+    "noConflictingEqualStrengthMatch": "would not have helped — ci.yml and ts.py were each unique matches",
+    "conclusion": "No gate rescues this. The failure is not that the matches are ambiguous; it is that the correct matches do not exist and the incorrect ones are unambiguous."
+  },
+  "conclusion": "Measured 0 true positives and 2 false positives across the four real behavioural cases. This is precisely the accidental exact matcher §35 warns against, and the which() precedent it names. The acronym/path owner lane is NOT implemented."
+}
