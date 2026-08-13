@@ -482,6 +482,21 @@ function collectComparisonIdentifiers(task: string): string[] {
  * happened to own the most frames and cost two gold cases. The frame where
  * execution STOPPED is the one the report is about.
  *
+ * Two conditions decide whether that frame can be identified at all, and both
+ * exist because a bare name that matches by coincidence is the exact failure
+ * Workstream A was built to stop:
+ *
+ *   - the traceback must be COMPLETE, meaning the exception it ended with is
+ *     present after the frame. Without it the deepest listed frame is not the
+ *     site that raised, it is wherever the excerpt was truncated -- pylint-8898
+ *     is cut mid-`sre_parse`, and admitting `_parse` moved its lead onto a
+ *     same-named helper and dropped the gold entirely;
+ *   - the name must not be a language-protocol dunder. Every class may define
+ *     `__getattr__` or `__init__`; the runtime entered one, but it is not what
+ *     the report is about. xarray-3677 raises inside `common.py::__getattr__`
+ *     while the bug is upstream in `dataset.py::merge`, and admitting the hook
+ *     took the lead off the gold file.
+ *
  * `<module>`, `<listcomp>` and `<genexpr>` are frame labels, not names, and
  * match neither shape.
  */
@@ -489,6 +504,11 @@ const TRACEBACK_FRAME_SHAPES: readonly RegExp[] = [
   new RegExp(String.raw`\bfile\s+["'][^"'\n]*["']\s*,\s*line\s+\d+\s*,\s*in\s+(${IDENTIFIER})`, "giu"),
   /\bline\s+\d+\s*,\s*in\s+([A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)+|[A-Za-z_][A-Za-z0-9_]*_[A-Za-z0-9_]*)/gu,
 ];
+
+const LANGUAGE_PROTOCOL_DUNDER = /^__[A-Za-z0-9_]+__$/u;
+// An exception line opens its segment with a (possibly dotted) name and a colon,
+// which the indented source echo above it never does.
+const RAISED_EXCEPTION_AFTER_FRAME = /(?:^|\n|\|)\s*[A-Za-z_][A-Za-z0-9_.]*\s*:\s*\S/u;
 
 function lastTracebackFrameIdentifier(task: string): string | undefined {
   let last: { end: number; term: string } | undefined;
@@ -500,7 +520,10 @@ function lastTracebackFrameIdentifier(task: string): string | undefined {
       if (last === undefined || end >= last.end) last = { end, term: match[1]! };
     }
   }
-  return last?.term;
+  if (last === undefined) return undefined;
+  if (LANGUAGE_PROTOCOL_DUNDER.test(leaf(last.term))) return undefined;
+  if (!RAISED_EXCEPTION_AFTER_FRAME.test(task.slice(last.end))) return undefined;
+  return last.term;
 }
 
 function collectExplicitIdentifierSignals(

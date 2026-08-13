@@ -122,8 +122,24 @@ test("M142-A: a traceback frame names an identifier the runtime chose", () => {
 });
 
 test("M142-A: a bare frame tail admits a code-shaped name", () => {
-  assert.equal(eligibleFor("line 45, in render_template").has("render_template"), true);
-  assert.equal(eligibleFor('File "/srv/app/models.py", line 8, in ClassName.method').has("method"), true);
+  assert.equal(eligibleFor("line 45, in render_template\nTemplateError: missing block").has("render_template"), true);
+  assert.equal(eligibleFor('File "/srv/app/models.py", line 8, in ClassName.method\nValueError: bad').has("method"), true);
+});
+
+test("M142-A: a truncated traceback names no site", () => {
+  // With no exception line the deepest frame is not where execution stopped, it
+  // is where the excerpt was cut -- often mid-stdlib, as in pylint-8898.
+  const cut = 'File "/usr/lib/python3.10/sre_parse.py", line 443, in _parse_sub';
+  assert.equal(eligibleFor(cut).size, 0);
+  assert.equal(eligibleFor(`${cut}\nValueError: bad pattern`).has("_parse_sub"), true);
+});
+
+test("M142-A: a language-protocol hook is not the subject of the report", () => {
+  // Every class may define `__getattr__`; the runtime entered one, but xarray-3677
+  // is about the caller upstream, not the accessor that happened to raise.
+  const raised = 'File "/app/xarray/core/common.py", line 233, in __getattr__\n'
+    + "AttributeError: 'DataArray' object has no attribute 'items'";
+  assert.equal(eligibleFor(raised).size, 0);
 });
 
 test("M142-A: ordinary prose about a line number names nothing", () => {
@@ -152,7 +168,8 @@ test("M142-A: a deep traceback admits only the frame that raised", () => {
     + 'File "/venv/lib/python3.10/site-packages/pylint/__init__.py", line 25, in run_pylint\n'
     + 'File "/venv/lib/python3.10/site-packages/pylint/lint/run.py", line 161, in __init__\n'
     + 'File "/usr/lib/python3.10/re.py", line 251, in compile\n'
-    + 'File "/usr/lib/python3.10/sre_parse.py", line 444, in _parse_sub',
+    + 'File "/usr/lib/python3.10/sre_parse.py", line 444, in _parse_sub\n'
+    + "ValueError: bad escape",
   );
   assert.deepEqual([...eligible], ["_parse_sub"]);
 });
