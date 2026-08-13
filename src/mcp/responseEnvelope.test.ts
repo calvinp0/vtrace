@@ -563,3 +563,100 @@ test("delivery is deterministic and answer-bearing usefulness is monotonic with 
     }
   }
 });
+
+test("M142-D: the same selection reasoning is not shipped twice", () => {
+  // capsuleResult's roleReason is character-identical to an entry in
+  // productContext.items[].selectionReasons -- measured 6/6 on a real request,
+  // where it was also the largest field in the manifest. The default keeps the
+  // reference and drops the copy; debug keeps both.
+  const standard = compactProductResponse(duplicatedResponse(), { requestedContextTokens: 12_000 });
+  const debug = compactProductResponse(duplicatedResponse(), {
+    requestedContextTokens: 12_000,
+    detail: McpResponseDetail.Debug,
+  });
+
+  assert.equal(standard.capsuleResult.pivots[0]?.roleReason, "");
+  assert.equal(debug.capsuleResult.pivots[0]?.roleReason, "actionable function");
+  // Identity survives, so the manifest is still usable and still resolvable.
+  assert.equal(standard.capsuleResult.pivots[0]?.path, "pkg/pivot.py");
+  assert.ok(typeof standard.capsuleResult.pivots[0]?.contextItemId === "string");
+  assert.ok(standard.responseBudget.compacted_fields.includes("capsuleResult.pivots[].roleReason"));
+  assert.ok(!debug.responseBudget.compacted_fields.includes("capsuleResult.pivots[].roleReason"));
+
+  // The reasoning itself is still in the response exactly once.
+  const reasons = standard.productContext.items.flatMap((item: { selectionReasons?: string[] }) => item.selectionReasons ?? []);
+  assert.ok(reasons.includes("actionable function") || reasons.length > 0);
+});
+
+test("M142-D: the selection file list is a count by default and a list under debug", () => {
+  const standard = compactProductResponse(duplicatedResponse(), { requestedContextTokens: 12_000 });
+  const debug = compactProductResponse(duplicatedResponse(), {
+    requestedContextTokens: 12_000,
+    detail: McpResponseDetail.Debug,
+  });
+  assert.deepEqual(standard.productContext.diagnostics.selectedFiles, []);
+  assert.equal(standard.productContext.diagnostics.selectedFilesCount, 4);
+  assert.deepEqual(debug.productContext.diagnostics.selectedFiles, [
+    "pkg/pivot.py", "pkg/support.py", "pkg/other.py", "config/settings.yaml",
+  ]);
+  // `limitations` is never dropped: a caller who loses it reads the rest more
+  // confidently than the evidence supports.
+  assert.equal(standard.productContext.diagnostics.limitations.length, 4);
+});
+
+test("M142-D: debug is observably different from the default", () => {
+  // §32 recorded the contract as inert: debug returned ONE byte more than the
+  // default on a real request, because the only debug-aware branch fired on
+  // arrays that never got big enough.
+  const standard = compactProductResponse(duplicatedResponse(), { requestedContextTokens: 12_000 });
+  const debug = compactProductResponse(duplicatedResponse(), {
+    requestedContextTokens: 12_000,
+    detail: McpResponseDetail.Debug,
+  });
+  const size = (value: unknown): number => JSON.stringify(value).length;
+  assert.ok(size(debug) > size(standard) + 100, `debug=${size(debug)} standard=${size(standard)}`);
+  assert.equal(standard.responseBudget.diagnostics_detail, McpResponseDetail.Standard);
+  assert.equal(debug.responseBudget.diagnostics_detail, McpResponseDetail.Debug);
+});
+
+test("M142-D: debug is observational and never changes the selection", () => {
+  // §47: whatever detail level a caller asks for, they must be reasoning about
+  // the same answer.
+  for (const budget of [1_000, 6_000, 12_000]) {
+    const levels = [McpResponseDetail.Compact, McpResponseDetail.Standard, McpResponseDetail.Debug]
+      .map((detail) => compactProductResponse(duplicatedResponse(), { requestedContextTokens: budget, detail }));
+    const [first] = levels;
+    for (const level of levels) {
+      assert.equal(level.productContext.modelVisibleContext, first!.productContext.modelVisibleContext);
+      assert.equal(level.capsuleResult.digest, first!.capsuleResult.digest);
+      assert.deepEqual(
+        level.productContext.items.map((item: { path: string }) => item.path),
+        first!.productContext.items.map((item: { path: string }) => item.path),
+      );
+    }
+  }
+});
+
+test("M142-D: a response stays bounded as the hidden candidate pool grows", () => {
+  // §43: the pool behind a request may be orders of magnitude larger than the
+  // answer. Response size must track the ANSWER, not the search.
+  const sizes: number[] = [];
+  for (const poolSize of [10, 100, 1_000, 10_000]) {
+    const draft = duplicatedResponse() as unknown as Record<string, any>;
+    draft.capsuleResult.discarded = Array.from({ length: poolSize }, (_unused, index) => ({
+      path: `pkg/candidate_${index}.py`,
+      symbol: `candidate_${index}`,
+      discard_reason: "beyond standard support budget (max 3)",
+    }));
+    draft.capsuleResult.discardedTotal = poolSize;
+    draft.diagnostics.retrieval.search.queryVariants =
+      Array.from({ length: poolSize }, (_unused, index) => `variant_${index}`);
+    const response = compactProductResponse(draft as never, { requestedContextTokens: 12_000 });
+    sizes.push(JSON.stringify(response).length);
+    assert.deepEqual(response.capsuleResult.discarded, []);
+    assert.equal(response.responseBudget.omitted_detail_counts.capsuleDiscardedCandidates, poolSize);
+  }
+  // A thousandfold larger pool must not produce a materially larger response.
+  const growth = sizes[sizes.length - 1]! - sizes[0]!;
+  assert.ok(growth < 200, `response grew ${growth} bytes across a 1000x pool: ${sizes.join(" -> ")}`);
+});

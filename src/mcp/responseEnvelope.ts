@@ -172,6 +172,9 @@ const MAX_SELECTION_REASONS = 3;
 const MAX_PIVOT_NEIGHBORHOOD_ENTRIES = 3;
 const MAX_NEIGHBOR_RELATIONS_PER_PIVOT = 6;
 const MAX_DEBUG_SAMPLE = 12;
+// Field names a caller BRANCHES on, as opposed to reads for explanation. These
+// survive at every detail level; the explanatory payload around them does not.
+const DECISION_FIELD = /(?:reason|state|status|mode|decision|outcome|verdict|policy|tier|kind)$/i;
 const MAX_INLINE_DIAGNOSTIC_ENTRIES = 12;
 const MAX_INLINE_DIAGNOSTIC_CHARS = 400;
 const MAX_DEFERRED_SUMMARY_CHARS = 96;
@@ -235,11 +238,12 @@ export function compactProductResponse<T>(
   });
 
   // 2. Replace compatibility representations with stable references.
-  compactCapsuleResult(draft, { compactedFields, omitted, expansion });
+  compactCapsuleResult(draft, { detail, compactedFields, omitted, expansion });
   compactLegacyContextSection(draft, { compactedFields, omitted, expansion });
+  compactProductContextDiagnostics(draft, { detail, compactedFields, omitted, expansion });
 
   // 3. Reduce verbose diagnostics to summary counts and warning codes.
-  compactDiagnostics(draft, { detail, compactedFields, omitted });
+  compactDiagnostics(draft, { detail, compactedFields, omitted, expansion });
 
   // 5. Bound pivot-neighborhood metadata.
   compactPivotNeighborhood(draft, { detail, compactedFields, omitted });
@@ -704,6 +708,7 @@ function compactProductContextItems(
 function compactCapsuleResult(
   draft: JsonRecord,
   options: {
+    detail: McpResponseDetail;
     compactedFields: string[];
     omitted: Record<string, number>;
     expansion: Record<string, string>;
@@ -717,6 +722,7 @@ function compactCapsuleResult(
   const contextItemIdByIdentity = productContextItemIdIndex(draft);
   let removedBodies = 0;
   let removedCharacters = 0;
+  let removedReasons = 0;
 
   for (const group of ["pivots", "support"] as const) {
     const items = asRecordArray(capsuleResult[group]);
@@ -742,6 +748,15 @@ function compactCapsuleResult(
         options.omitted.capsuleItemEvidenceLines =
           (options.omitted.capsuleItemEvidenceLines ?? 0) + evidence.length;
       }
+      // `roleReason` is the decisive line, and it is character-identical to an
+      // entry in productContext.items[].selectionReasons -- measured 6/6 on a
+      // real request, where it was also the single largest field in the manifest.
+      // A reader who wants the reasoning follows `contextItemId`; a reader who
+      // wants the manifest wants identity and role. Debug keeps both in place.
+      if (options.detail !== McpResponseDetail.Debug && typeof item.roleReason === "string" && item.roleReason.length > 0) {
+        next.roleReason = "";
+        removedReasons += 1;
+      }
       return next;
     });
   }
@@ -759,12 +774,60 @@ function compactCapsuleResult(
     options.omitted.capsuleDiscardedCandidates = discarded.length;
   }
 
+  if (removedReasons > 0) {
+    options.compactedFields.push("capsuleResult.pivots[].roleReason", "capsuleResult.support[].roleReason");
+    options.omitted.capsuleItemRoleReasons = removedReasons;
+    options.expansion["capsuleResult.pivots[].roleReason"] =
+      "Same line as productContext.items[].selectionReasons for the matching contextItemId; kept in full at detail=debug.";
+  }
+
   if (removedBodies > 0) {
     options.compactedFields.push("capsuleResult.pivots[].source", "capsuleResult.support[].source");
     options.omitted.capsuleItemBodies = removedBodies;
     options.omitted.capsuleItemBodyCharacters = removedCharacters;
     options.expansion["capsuleResult.pivots[].source"] =
       "Rendered once in productContext.modelVisibleContext; capsuleResult items reference it via contextItemId.";
+  }
+}
+
+/**
+ * `productContext.diagnostics` lists the selected, support and required files by
+ * path -- a fourth restatement of a selection the response already carries in
+ * `productContext.items`, which is right beside it and authoritative. The counts
+ * are the part a caller acts on, so they stay; the paths become counts plus a
+ * reference, and debug keeps the lists.
+ *
+ * `limitations` is NOT touched. It is the honest statement of what the evidence
+ * cannot support, and a caller who drops it reads the rest more confidently than
+ * they should.
+ */
+function compactProductContextDiagnostics(
+  draft: JsonRecord,
+  options: {
+    detail: McpResponseDetail;
+    compactedFields: string[];
+    omitted: Record<string, number>;
+    expansion: Record<string, string>;
+  },
+): void {
+  if (options.detail === McpResponseDetail.Debug) return;
+  const productContext = asRecord(draft.productContext);
+  const diagnostics = productContext === undefined ? undefined : asRecord(productContext.diagnostics);
+  if (diagnostics === undefined) return;
+
+  let collapsed = 0;
+  for (const key of ["selectedFiles", "supportFiles", "requiredFiles"] as const) {
+    const value = asStringArray(diagnostics[key]);
+    if (value === undefined || value.length === 0) continue;
+    diagnostics[key] = [];
+    diagnostics[`${key}Count`] = value.length;
+    collapsed += value.length;
+    options.compactedFields.push(`productContext.diagnostics.${key}`);
+  }
+  if (collapsed > 0) {
+    options.omitted.productContextDiagnosticFilePaths = collapsed;
+    options.expansion["productContext.diagnostics.selectedFiles"] =
+      "Same paths as productContext.items[].path; kept in full at detail=debug.";
   }
 }
 
@@ -820,6 +883,7 @@ function compactDiagnostics(
     detail: McpResponseDetail;
     compactedFields: string[];
     omitted: Record<string, number>;
+    expansion: Record<string, string>;
   },
 ): void {
   const diagnostics = asRecord(draft.diagnostics);
@@ -877,6 +941,7 @@ function compactDiagnostics(
         options.omitted[key] = value.length - MAX_DEBUG_SAMPLE;
       }
     }
+
   }
 
   // Index freshness is reported three times (productContext.freshness.refreshDiagnostics,
