@@ -382,13 +382,9 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   // never replace a richer existing candidate for the same symbol. Symbols already
   // present keep their candidate and merely gain title precedence below.
   //
-  // "Never reached" means never SCORED, not merely absent from the capped pool.
-  // A symbol retrieval scored and ranked out has already been judged on its own
-  // evidence; re-admitting it at the synthesized title final would overturn that
-  // judgement with a constant, and would make the same symbol worth either its
-  // earned score or TITLE_SYMBOL_FINAL depending only on where the pool cap fell.
   if (titleSymbols.candidates.length > 0) {
-    const fresh = titleSymbols.candidates.filter((c) => !retrieval.evaluatedSymbolIds.has(c.symbolId));
+    const poolIds = new Set(candidates.map((c) => c.symbolId));
+    const fresh = titleSymbols.candidates.filter((c) => !poolIds.has(c.symbolId));
     if (fresh.length > 0) {
       candidates = mergeCandidatesPreferring(fresh, candidates, CANDIDATE_POOL_SIZE);
     }

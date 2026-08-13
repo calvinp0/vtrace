@@ -227,15 +227,16 @@ export interface HybridRetrievalResult {
    */
   orchestrationPaths: readonly OrchestrationPathCandidate[];
   /**
-   * Every symbol retrieval SCORED, including those the output cap excluded.
+   * Every candidate retrieval SCORED, including those the output cap excluded.
    *
    * Downstream anchor lanes inject a synthesized candidate for a symbol they
    * cannot find in `candidates`. Absence from the capped pool has two very
    * different causes — never retrieved at all, or retrieved, scored and ranked
    * out — and treating them alike lets a symbol that lost on its own evidence
-   * re-enter at a synthesized score far above the one it earned.
+   * re-enter at a synthesized score far above the one it earned. Holding the
+   * scored candidates lets a lane re-admit the real scorecard instead.
    */
-  evaluatedSymbolIds: ReadonlySet<string>;
+  evaluatedById: ReadonlyMap<string, HybridCandidate>;
 }
 
 const DEFAULTS = Object.freeze({
@@ -279,7 +280,7 @@ export function hybridRetrieve(
       upstreamRescue: inactiveUpstreamRescue("no results requested"),
       conceptOwner: inactiveConceptOwner("no results requested"),
       orchestrationPaths: [],
-      evaluatedSymbolIds: new Set(),
+      evaluatedById: new Map(),
     };
   }
   const lexicalPoolSize = input.lexicalPoolSize
@@ -398,7 +399,7 @@ export function hybridRetrieve(
     upstreamRescue: upstreamRescue.diagnostics,
     conceptOwner: conceptOwner.diagnostics,
     orchestrationPaths,
-    evaluatedSymbolIds: new Set(rankBySymbolId.keys()),
+    evaluatedById: new Map(ranked.map((candidate) => [candidate.symbolId, candidate])),
   };
 }
 
