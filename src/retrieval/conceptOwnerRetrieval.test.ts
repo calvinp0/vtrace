@@ -24,8 +24,10 @@ import { shapeSweQuery } from "../capsule/sweQueryShaping";
 import {
   behavioralObjectives,
   evaluateConceptOwnerIntent,
+  objectiveProvenance,
   retrieveConceptOwners,
   CONCEPT_OWNER_DEFAULTS,
+  type ObjectiveProvenanceRow,
 } from "./conceptOwnerRetrieval";
 
 async function indexRepo(files: Record<string, string>): Promise<{ db: Database; repoRoot: string }> {
@@ -360,4 +362,193 @@ test("M142-C: the lane does not change what ordinary ranking already leads with"
   } finally {
     repo.db.close();
   }
+});
+
+/**
+ * §24's generic objective-hygiene fixture. One module genuinely implements the
+ * requested behaviour. Two others are full of definitions named after the
+ * REPORT's vocabulary — who touched the ticket, what the evidence block is
+ * called — which is rare text and therefore high-IDF text.
+ *
+ * No term here comes from any real case.
+ */
+const PROVENANCE_FILES: Record<string, string> = {
+  "pkg/maintenance_windows.py":
+    "\"\"\"Scheduling of maintenance windows.\"\"\"\n\n"
+    + "def reschedule_overlapping_window(windows, candidate):\n"
+    + "    \"\"\"Reschedule a maintenance window that overlaps an existing one.\"\"\"\n"
+    + "    return [w for w in windows if w != candidate]\n\n"
+    + "def detect_window_overlap(windows):\n"
+    + "    \"\"\"Detect whether any maintenance window overlaps another.\"\"\"\n"
+    + "    return any(a.end > b.start for a, b in zip(windows, windows[1:]))\n\n"
+    + "def shift_window_start(window, delta):\n"
+    + "    \"\"\"Shift the start of an overlapping window by the given delta.\"\"\"\n"
+    + "    return window.start + delta\n",
+  "pkg/ticket_audit.py":
+    "\"\"\"Audit trail for tickets.\"\"\"\n\n"
+    + "def record_last_modified(ticket, actor):\n"
+    + "    \"\"\"Record who last modified the ticket.\"\"\"\n"
+    + "    return {'ticket': ticket, 'modified_by': actor}\n\n"
+    + "def read_last_modified(ticket):\n"
+    + "    \"\"\"Read the last modified marker for a ticket.\"\"\"\n"
+    + "    return ticket.get('modified_by')\n\n"
+    + "def purge_modified_markers(tickets):\n"
+    + "    \"\"\"Purge every last modified marker.\"\"\"\n"
+    + "    return [t for t in tickets if 'modified_by' not in t]\n",
+  "pkg/crash_reports.py":
+    "\"\"\"Crash report rendering.\"\"\"\n\n"
+    + "def render_traceback_block(frames):\n"
+    + "    \"\"\"Render a traceback block for a crash report.\"\"\"\n"
+    + "    return '\\n'.join(frames)\n\n"
+    + "def collect_traceback_frames(exc):\n"
+    + "    \"\"\"Collect traceback frames from an exception.\"\"\"\n"
+    + "    return getattr(exc, 'frames', [])\n\n"
+    + "def summarize_traceback(frames):\n"
+    + "    \"\"\"Summarize a traceback for display.\"\"\"\n"
+    + "    return frames[:3]\n",
+};
+
+/** Behaviour + an issue byline + labelled evidence, exactly as a tracker emits it. */
+const PROVENANCE_TASK =
+  "Overlapping maintenance windows are not rescheduled. — (last modified by qvornex)\n"
+  + "Errors: WindowConflictError\n"
+  + "Traceback: WindowConflictError: window overlaps an existing window";
+
+test("M142-C: report metadata is not a behavioural objective", async () => {
+  const { db, repoRoot } = await indexRepo(PROVENANCE_FILES);
+  const intent = deriveQueryIntent(PROVENANCE_TASK);
+  const provenance = objectiveProvenance(intent);
+  const roleOf = (term: string): ObjectiveProvenanceRow | undefined =>
+    provenance.find((row) => row.objective === term);
+
+  // The byline names a person and a moment in the ticket's life, not behaviour.
+  for (const term of ["last", "modified", "qvornex"]) {
+    const row = roleOf(term);
+    assert.ok(row !== undefined, `expected ${term} to be a candidate objective`);
+    assert.deepEqual(row.roles, ["attribution_byline"]);
+    assert.equal(row.eligible, false);
+  }
+
+  // "Traceback:" announces evidence. It is a container, never its content.
+  const traceback = roleOf("traceback");
+  assert.ok(traceback !== undefined);
+  assert.deepEqual(traceback.roles, ["evidence_section_label"]);
+  assert.equal(traceback.eligible, false);
+
+  // The evidence PAYLOAD is behaviour-bearing and survives.
+  assert.equal(roleOf("window")?.eligible, true);
+  assert.equal(roleOf("overlap")?.eligible, true);
+
+  const objectives = behavioralObjectives(intent);
+  for (const term of ["last", "modified", "qvornex", "traceback"]) {
+    assert.ok(!objectives.includes(term), `${term} should not be an objective`);
+  }
+
+  const result = retrieveConceptOwners({
+    db,
+    intent,
+    representedDefinitionsByFile: new Map(),
+    existingSymbolIds: new Set(),
+  });
+  const ownerPaths = result.diagnostics.owners.map((owner) => owner.path);
+  assert.ok(
+    ownerPaths.includes("pkg/maintenance_windows.py"),
+    `expected the implementing module to be elected, got ${ownerPaths.join(", ")}`,
+  );
+  assert.ok(
+    !ownerPaths.includes("pkg/ticket_audit.py"),
+    "a module named after the ticket's audit trail must not own a scheduling bug",
+  );
+  db.close();
+  assert.ok(repoRoot.length > 0);
+});
+
+test("M142-C: the same words stay eligible when the request is actually about them", async () => {
+  const { db } = await indexRepo(PROVENANCE_FILES);
+  // §25. Nothing about the TOKENS was banned — only their role in that request.
+  const intent = deriveQueryIntent("How is the last modified marker for a ticket recorded and read?");
+  const provenance = objectiveProvenance(intent);
+  for (const term of ["last", "modified"]) {
+    const row = provenance.find((r) => r.objective === term);
+    assert.ok(row !== undefined, `expected ${term} to be a candidate objective`);
+    assert.deepEqual(row.roles, ["task_behavior"]);
+    assert.equal(row.eligible, true, `${term} must remain eligible when the request asks about it`);
+  }
+  const result = retrieveConceptOwners({
+    db,
+    intent,
+    representedDefinitionsByFile: new Map(),
+    existingSymbolIds: new Set(),
+  });
+  assert.equal(result.diagnostics.owners[0]?.path, "pkg/ticket_audit.py");
+  db.close();
+});
+
+test("M142-C: a traceback question still reaches the module that builds tracebacks", async () => {
+  const { db } = await indexRepo(PROVENANCE_FILES);
+  const intent = deriveQueryIntent("Where is the traceback for a crash report collected and rendered?");
+  const objectives = behavioralObjectives(intent);
+  assert.ok(objectives.includes("traceback"), "traceback is the subject of this request, not a label");
+  const result = retrieveConceptOwners({
+    db,
+    intent,
+    representedDefinitionsByFile: new Map(),
+    existingSymbolIds: new Set(),
+  });
+  assert.equal(result.diagnostics.owners[0]?.path, "pkg/crash_reports.py");
+  db.close();
+});
+
+/**
+ * Three owner files, three admissible definitions each, an overall cap of six.
+ * Draining owners in order spent the whole budget on the first two and left the
+ * third with nothing, every time — the third slot was dead by construction.
+ */
+const THREE_OWNER_FILES: Record<string, string> = {
+  "pkg/alpha_registry.py":
+    "def register_alpha_binding(name, value):\n"
+    + "    \"\"\"Register a binding for the alpha registry.\"\"\"\n    return (name, value)\n\n"
+    + "def resolve_alpha_binding(name):\n"
+    + "    \"\"\"Resolve a binding from the alpha registry.\"\"\"\n    return name\n\n"
+    + "def drop_alpha_binding(name):\n"
+    + "    \"\"\"Drop a binding from the alpha registry.\"\"\"\n    return name\n",
+  "pkg/beta_registry.py":
+    "def register_beta_binding(name, value):\n"
+    + "    \"\"\"Register a binding for the beta registry.\"\"\"\n    return (name, value)\n\n"
+    + "def resolve_beta_binding(name):\n"
+    + "    \"\"\"Resolve a binding from the beta registry.\"\"\"\n    return name\n\n"
+    + "def drop_beta_binding(name):\n"
+    + "    \"\"\"Drop a binding from the beta registry.\"\"\"\n    return name\n",
+  "pkg/gamma_registry.py":
+    "def register_gamma_binding(name, value):\n"
+    + "    \"\"\"Register a binding for the gamma registry.\"\"\"\n    return (name, value)\n\n"
+    + "def resolve_gamma_binding(name):\n"
+    + "    \"\"\"Resolve a binding from the gamma registry.\"\"\"\n    return name\n\n"
+    + "def drop_gamma_binding(name):\n"
+    + "    \"\"\"Drop a binding from the gamma registry.\"\"\"\n    return name\n",
+};
+
+test("M142-C: every elected owner gets a candidate slot", async () => {
+  const { db } = await indexRepo(THREE_OWNER_FILES);
+  const intent = deriveQueryIntent(
+    "How is a binding registered, resolved and dropped from the registry?");
+  const result = retrieveConceptOwners({
+    db,
+    intent,
+    representedDefinitionsByFile: new Map(),
+    existingSymbolIds: new Set(),
+  });
+  const owners = result.diagnostics.owners.map((owner) => owner.path);
+  assert.equal(owners.length, 3, `expected three elected owners, got ${owners.join(", ")}`);
+  assert.ok(result.candidates.length <= CONCEPT_OWNER_DEFAULTS.maxConceptOwnerCandidates);
+
+  const contributingFiles = new Set(result.candidates.map((c) => c.ownerPath));
+  for (const owner of owners) {
+    assert.ok(
+      contributingFiles.has(owner),
+      `owner ${owner} was elected but contributed no candidate; `
+      + `contributions came only from ${[...contributingFiles].join(", ")}`,
+    );
+  }
+  db.close();
 });

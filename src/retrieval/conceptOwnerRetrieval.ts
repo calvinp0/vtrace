@@ -66,6 +66,120 @@ const QUESTION_FRAME_WORDS: ReadonlySet<string> = new Set([
   "come", "comes", "like", "such", "some", "each", "very", "much", "more", "most",
 ]);
 
+/**
+ * Where in the request a token came from.
+ *
+ * Workstream A established that not every prose token is IDENTIFIER intent.
+ * The same distinction is needed one level up: not every prose token is a
+ * BEHAVIOURAL OBJECTIVE. A request carries structure — a description of the
+ * behaviour, evidence attached to it, the labels announcing that evidence, and
+ * metadata about the report itself — and only some of it describes what the
+ * software does.
+ *
+ * Measured on django-11815: fourteen objectives, of which `last`, `modified`
+ * and `oasl` came from the issue byline "(last modified by oasl)" and
+ * `traceback` from the `Traceback:` label. Those tokens are rare across files,
+ * so IDF made them the most decisive objectives in the set, and the lane
+ * elected `template/defaultfilters.py` as the owner of a migrations bug.
+ */
+export type ObjectiveSourceRole =
+  | "task_behavior"
+  | "evidence_payload"
+  | "evidence_section_label"
+  | "attribution_byline";
+
+/**
+ * Roles that describe the software rather than the report.
+ *
+ * Evidence PAYLOAD is behaviour-bearing: `ValueError` in a pasted traceback is
+ * a real thing the code raises. Evidence LABELS are not — `Traceback:` names
+ * the container, never its content, exactly as a structural module node is
+ * never answer-bearing (M140). Attribution describes who filed the issue.
+ */
+const BEHAVIOUR_BEARING_ROLES: ReadonlySet<ObjectiveSourceRole> = new Set([
+  "task_behavior",
+  "evidence_payload",
+]);
+
+/**
+ * Labels that introduce a block of evidence.
+ *
+ * Deliberately short, and confined to forms actually measured in the corpus
+ * (present in 23 of the 50 frozen tasks) plus the canonical Python traceback
+ * header a user pastes verbatim. This is not a stopword list and must not grow
+ * into one: a token is ineligible only where it occurs AS a label, and the same
+ * word remains a perfectly good objective anywhere else in the request.
+ */
+const EVIDENCE_SECTION_LABEL = /^[\s>*\-]*(errors?|failing tests?|traceback|stack trace)\s*:/i;
+
+/** The header line of a pasted Python traceback. Announces evidence; is not evidence. */
+const PYTHON_TRACEBACK_HEADER = /^\s*traceback \(most recent call last\)\s*:?/i;
+
+/**
+ * Issue-tracker attribution. Describes the RECORD, not the software.
+ *
+ * Anchored on the verb-plus-`by` shape so it cannot swallow an ordinary
+ * parenthetical: "(last modified by oasl)" matches, "(returns None by default)"
+ * does not.
+ */
+const ATTRIBUTION_BYLINE =
+  /\(\s*(?:last\s+)?(?:modified|reported|created|submitted|updated|opened|filed)\s+by\b[^)]*\)/gi;
+
+export interface ObjectiveProvenanceRow {
+  readonly objective: string;
+  /** Every role this token was observed in, deduplicated. */
+  readonly roles: readonly ObjectiveSourceRole[];
+  readonly eligible: boolean;
+  readonly reason?: string;
+}
+
+interface TaskSegment {
+  readonly role: ObjectiveSourceRole;
+  readonly text: string;
+}
+
+/**
+ * Split a request into typed segments.
+ *
+ * Line-oriented, because that is the structure the text actually has: a
+ * behavioural description followed by labelled evidence blocks. Nothing is
+ * inferred that the request does not literally carry.
+ */
+function segmentTask(task: string): TaskSegment[] {
+  const segments: TaskSegment[] = [];
+  for (const line of task.split("\n")) {
+    const header = PYTHON_TRACEBACK_HEADER.exec(line);
+    if (header !== null && header[0].trim().length > 0) {
+      segments.push({ role: "evidence_section_label", text: header[0] });
+      segments.push({ role: "evidence_payload", text: line.slice(header[0].length) });
+      continue;
+    }
+    const label = EVIDENCE_SECTION_LABEL.exec(line);
+    if (label !== null) {
+      segments.push({ role: "evidence_section_label", text: label[1] ?? "" });
+      segments.push({ role: "evidence_payload", text: line.slice(label[0].length) });
+      continue;
+    }
+    let behaviour = line;
+    for (const byline of line.matchAll(ATTRIBUTION_BYLINE)) {
+      segments.push({ role: "attribution_byline", text: byline[0] });
+    }
+    behaviour = behaviour.replace(ATTRIBUTION_BYLINE, " ");
+    segments.push({ role: "task_behavior", text: behaviour });
+  }
+  return segments;
+}
+
+/** Stemmed content tokens of a span, using the same folding as objectives. */
+function segmentTerms(text: string): Set<string> {
+  const terms = new Set<string>();
+  for (const raw of tokenize(text)) {
+    const term = stem(raw);
+    if (term.length >= 3) terms.add(term);
+  }
+  return terms;
+}
+
 export interface ConceptOwnerOptions {
   /** How many owner FILES may contribute candidates. */
   readonly maxConceptOwnerFiles?: number;
@@ -98,6 +212,26 @@ export const CONCEPT_OWNER_DEFAULTS = Object.freeze({
  */
 export const CONCEPT_OWNER_MAX_CONTRIBUTION = 1.0;
 
+/**
+ * How many files may share a basename for that basename to count as naming an
+ * ENTITY rather than following a convention.
+ *
+ * "This module is named after the thing you asked about" is strong, already
+ * indexed ownership evidence — but only when naming it was a decision. Measured
+ * over 24 real requests, nominating every file whose basename equals an
+ * objective produced 796 nominations (mean 33 per request; one django request
+ * nominated 407 files, because `model` matches `models.py` in every app).
+ * Requiring the entity to resolve to at most two files leaves 71 — it drops
+ * `model`, `util`, `field`, `base`, `app` and `http` entirely, while keeping
+ * `gaussian` (2 files, both genuinely Gaussian) and `reaction` (1).
+ *
+ * This is ENTITY ownership, not identifier intent: "Gaussian" nominates the
+ * module named after it, and is never read as a request for a symbol called
+ * `Gaussian`. The repository's own name is excluded upstream as a project
+ * reference, so ARC can never become entity ARC.
+ */
+const MAX_FILES_PER_ENTITY = 2;
+
 export interface ConceptOwnerFile {
   readonly path: string;
   readonly ownerScore: number;
@@ -126,6 +260,12 @@ export interface ConceptOwnerDiagnostics {
   readonly active: boolean;
   readonly inactiveReason?: string;
   readonly objectives: readonly string[];
+  /** Why each candidate objective was or was not eligible (§18). */
+  readonly objectiveProvenance: readonly ObjectiveProvenanceRow[];
+  /** Objectives rejected as non-behavioural, for evidence. */
+  readonly ineligibleObjectives: readonly string[];
+  /** Owner admitted because it is named after a distinctive query entity. */
+  readonly entityOwnerPath?: string;
   readonly filesExamined: number;
   readonly owners: readonly ConceptOwnerFile[];
   readonly ownerCapReached: boolean;
@@ -146,6 +286,8 @@ export function inactiveConceptOwner(reason: string): ConceptOwnerDiagnostics {
     active: false,
     inactiveReason: reason,
     objectives: [],
+    objectiveProvenance: [],
+    ineligibleObjectives: [],
     filesExamined: 0,
     owners: [],
     ownerCapReached: false,
@@ -214,18 +356,64 @@ export function evaluateConceptOwnerIntent(
  * makes every file under `arc/` a partial owner (measured: it did).
  */
 export function behavioralObjectives(intent: DerivedQueryIntent): string[] {
+  return objectiveProvenance(intent).filter((row) => row.eligible).map((row) => row.objective);
+}
+
+/**
+ * Every candidate objective with the request roles it was observed in, and
+ * whether that makes it eligible.
+ *
+ * ELIGIBILITY IS DECIDED BY ROLE; IDF ONLY WEIGHTS WHAT SURVIVES. A rare token
+ * is a strong objective, but rarity can never make a token an objective in the
+ * first place — the same asymmetry Workstream B established for centrality.
+ *
+ * A token stays eligible if ANY of its occurrences is behaviour-bearing, which
+ * is what keeps "where is this traceback generated?" working: there `traceback`
+ * is the request, not a label above someone else's evidence. A token that
+ * cannot be attributed to any segment stays eligible too — this filter removes
+ * what it can positively identify as non-behavioural, and defaults to keeping.
+ */
+export function objectiveProvenance(intent: DerivedQueryIntent): ObjectiveProvenanceRow[] {
   const projectReferences = new Set(intent.projectReferences.map((term) => stem(term.toLowerCase())));
   const frame = new Set([...QUESTION_FRAME_WORDS].map(stem));
+  const segments = segmentTask(intent.originalTask);
+  const rolesByTerm = new Map<string, Set<ObjectiveSourceRole>>();
+  for (const segment of segments) {
+    for (const term of segmentTerms(segment.text)) {
+      let roles = rolesByTerm.get(term);
+      if (roles === undefined) {
+        roles = new Set();
+        rolesByTerm.set(term, roles);
+      }
+      roles.add(segment.role);
+    }
+  }
+
   const seen = new Set<string>();
-  const objectives: string[] = [];
+  const rows: ObjectiveProvenanceRow[] = [];
   for (const raw of tokenize(intent.positiveSearchText)) {
     const term = stem(raw);
     if (term.length < 3 || seen.has(term)) continue;
     if (QUESTION_FRAME_WORDS.has(term) || frame.has(term) || projectReferences.has(term)) continue;
     seen.add(term);
-    objectives.push(term);
+    const roles = [...(rolesByTerm.get(term) ?? new Set<ObjectiveSourceRole>())];
+    const behavioural = roles.some((role) => BEHAVIOUR_BEARING_ROLES.has(role));
+    const eligible = roles.length === 0 || behavioural;
+    rows.push({
+      objective: term,
+      roles,
+      eligible,
+      reason: eligible
+        ? undefined
+        : `occurs only as ${roles.join(" / ")}; describes the report, not the behaviour`,
+    });
   }
-  return objectives;
+  return rows;
+}
+
+interface RankedDefinition {
+  readonly definition: { symbol: SymbolRecord; objectives: Set<string> };
+  readonly weight: number;
 }
 
 interface FileEvidence {
@@ -243,14 +431,23 @@ interface FileEvidence {
 export function retrieveConceptOwners(input: ConceptOwnerInput): ConceptOwnerResult {
   const config = { ...CONCEPT_OWNER_DEFAULTS, ...stripUndefined(input.options ?? {}) };
   const gate = evaluateConceptOwnerIntent(input.intent, config);
+  const provenance = objectiveProvenance(input.intent);
   if (!gate.active) {
-    return { candidates: [], diagnostics: inactiveConceptOwner(gate.reason ?? "not a behavioural request") };
+    return {
+      candidates: [],
+      diagnostics: {
+        ...inactiveConceptOwner(gate.reason ?? "not a behavioural request"),
+        objectiveProvenance: provenance,
+        ineligibleObjectives: provenance.filter((row) => !row.eligible).map((row) => row.objective),
+      },
+    };
   }
   const objectives = gate.objectives;
 
   const symbols = listAllSymbols(input.db);
   const objectiveSet = new Set(objectives);
   const byFile = new Map<string, FileEvidence>();
+  const filesByBasename = new Map<string, Set<string>>();
   for (const symbol of symbols) {
     if (isStructuralSymbolKind(symbol.kind)) continue;
     if (isTestPath(symbol.filePath)) continue;
@@ -258,6 +455,13 @@ export function retrieveConceptOwners(input: ConceptOwnerInput): ConceptOwnerRes
     if (entry === undefined) {
       entry = { covered: new Set(), named: new Set(), basename: new Set(), definitions: new Map(), total: 0 };
       const basename = symbol.filePath.slice(symbol.filePath.lastIndexOf("/") + 1);
+      const stemmedStem = stem(basename.replace(/\.[^.]+$/, "").toLowerCase());
+      let sharing = filesByBasename.get(stemmedStem);
+      if (sharing === undefined) {
+        sharing = new Set();
+        filesByBasename.set(stemmedStem, sharing);
+      }
+      sharing.add(symbol.filePath);
       for (const token of tokenize(basename).map(stem)) {
         if (objectiveSet.has(token)) {
           entry.basename.add(token);
@@ -343,9 +547,39 @@ export function retrieveConceptOwners(input: ConceptOwnerInput): ConceptOwnerRes
     config.maxDefinitionsPerConceptOwner - (input.representedDefinitionsByFile.get(path) ?? 0);
   const unrepresented = scored.filter((owner) => roomFor(owner.path) > 0);
   const alreadyRepresented = scored.length - unrepresented.length;
+
+  // A file named after a distinctive entity in the request owns that entity's
+  // behaviour, however few of the other objectives it happens to cover. That
+  // evidence cannot express itself through `idfCoverage`, which is a FRACTION of
+  // the objective set: measured, `arc/job/adapters/gaussian.py` is capped at
+  // 0.377 for "which Gaussian route keywords to emit" because `route` and `emit`
+  // exist only in its comments, so it can never reach the top three on coverage
+  // no matter how plainly it owns the concept.
+  //
+  // One reserved slot, taken from the last of the existing owner budget rather
+  // than added to it, so the lane's bounds are unchanged.
+  const entityPaths = new Set<string>();
+  for (const objective of objectives) {
+    const sharing = filesByBasename.get(objective);
+    if (sharing === undefined || sharing.size > MAX_FILES_PER_ENTITY) continue;
+    for (const path of sharing) entityPaths.add(path);
+  }
   const selectedOwners = unrepresented.slice(0, config.maxConceptOwnerFiles);
+  let entityOwnerPath: string | undefined;
+  if (config.maxConceptOwnerFiles > 0) {
+    const alreadySelected = new Set(selectedOwners.map((owner) => owner.path));
+    const entityOwner = unrepresented.find(
+      (owner) => entityPaths.has(owner.path) && !alreadySelected.has(owner.path));
+    if (entityOwner !== undefined) {
+      entityOwnerPath = entityOwner.path;
+      selectedOwners.splice(config.maxConceptOwnerFiles - 1, 1, entityOwner);
+    } else {
+      entityOwnerPath = selectedOwners.find((owner) => entityPaths.has(owner.path))?.path;
+    }
+  }
 
   const candidates: ConceptOwnerCandidate[] = [];
+  const queues: { owner: ConceptOwnerFile; ranked: RankedDefinition[]; budget: number }[] = [];
   for (const owner of selectedOwners) {
     const evidence = byFile.get(owner.path);
     if (evidence === undefined) continue;
@@ -363,12 +597,37 @@ export function retrieveConceptOwners(input: ConceptOwnerInput): ConceptOwnerRes
       .sort((left, right) =>
         right.weight - left.weight
         || left.definition.symbol.fqName.localeCompare(right.definition.symbol.fqName));
-    const budget = roomFor(owner.path);
-    let admittedHere = 0;
-    for (const { definition, weight } of ranked) {
-      if (admittedHere >= budget) break;
+    queues.push({ owner, ranked, budget: roomFor(owner.path) });
+  }
+
+  // Admit one definition per owner per pass rather than draining each owner in
+  // turn. With three owner files, three definitions each and an overall cap of
+  // six, draining meant the first two owners consumed the whole budget and THE
+  // THIRD OWNER SLOT WAS DEAD BY CONSTRUCTION. Measured on the ARC normal-mode
+  // request: `arc/checks/nmd.py` was elected owner #3 and contributed nothing,
+  // which is the case this lane was built for. Every bound is unchanged — same
+  // owner count, same per-owner budget, same total.
+  const cursors = queues.map(() => 0);
+  const taken = queues.map(() => 0);
+  for (let pass = 0; pass < config.maxDefinitionsPerConceptOwner; pass += 1) {
+    if (candidates.length >= config.maxConceptOwnerCandidates) break;
+    for (let index = 0; index < queues.length; index += 1) {
       if (candidates.length >= config.maxConceptOwnerCandidates) break;
-      if (input.existingSymbolIds.has(definition.symbol.id)) continue;
+      const queue = queues[index];
+      if (queue === undefined || taken[index]! >= queue.budget) continue;
+      let next: RankedDefinition | undefined;
+      while (cursors[index]! < queue.ranked.length) {
+        const entry = queue.ranked[cursors[index]!]!;
+        cursors[index]! += 1;
+        if (input.existingSymbolIds.has(entry.definition.symbol.id)) continue;
+        next = entry;
+        break;
+      }
+      if (next === undefined) continue;
+      taken[index]! += 1;
+      const owner = queue.owner;
+      const { definition, weight } = next;
+      {
       const definitionCoverage = idfTotal === 0 ? 0 : Math.min(1, weight / idfTotal);
       // Owner strength decides how much the file's ownership is worth; the
       // definition's own coverage decides how much of that this definition earns.
@@ -388,7 +647,7 @@ export function retrieveConceptOwners(input: ConceptOwnerInput): ConceptOwnerRes
           `${owner.path} appears to own this behaviour (${owner.reason}); this definition covers `
           + `${matched.slice(0, 4).join(", ")}`,
       });
-      admittedHere += 1;
+      }
     }
   }
 
@@ -397,6 +656,9 @@ export function retrieveConceptOwners(input: ConceptOwnerInput): ConceptOwnerRes
     diagnostics: {
       active: true,
       objectives,
+      objectiveProvenance: provenance,
+      ineligibleObjectives: provenance.filter((row) => !row.eligible).map((row) => row.objective),
+      entityOwnerPath,
       filesExamined: byFile.size,
       owners: selectedOwners,
       ownerCapReached: unrepresented.length > config.maxConceptOwnerFiles,
