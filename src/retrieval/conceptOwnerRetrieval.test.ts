@@ -265,3 +265,99 @@ test("M142-C: the lane can be disabled outright", async () => {
     repo.db.close();
   }
 });
+
+// --- §14 non-displacement contract ---------------------------------------------
+
+/**
+ * A pool that genuinely overflows, with the owner file OUTSIDE the top of it.
+ * The filler definitions all match the request's wording, so ordinary ranking
+ * fills the cap with them and the concept-owner recoveries have to come from
+ * somewhere — which is exactly the situation the eviction rule mishandled.
+ */
+const EVICTION_FILES: Record<string, string> = {
+  "pkg/normal_mode_checks.py":
+    "\"\"\"Checks over normal-mode behaviour.\"\"\"\n\n"
+    + "def evaluate_mode_displacement(vectors, threshold):\n"
+    + "    \"\"\"Evaluate how far each item is displaced along the mode.\"\"\"\n"
+    + "    return [v for v in vectors if v > threshold]\n\n"
+    + "def identify_displaced_atoms(vectors, threshold):\n"
+    + "    \"\"\"Identify which items are displaced beyond the threshold.\"\"\"\n"
+    + "    return [i for i, v in enumerate(vectors) if v > threshold]\n\n"
+    + "def summarize_mode_behaviour(vectors):\n"
+    + "    \"\"\"Summarize the normal-mode behaviour implied by the displacement values.\"\"\"\n"
+    + "    return {'displaced': identify_displaced_atoms(vectors, 0.1)}\n",
+  "pkg/filler.py": Array.from(
+    { length: 30 },
+    (_unused, index) =>
+      `def analyse_displacement_value_${index}(values):\n`
+      + `    """Analyse displacement values for mode ${index}."""\n`
+      + "    return values\n",
+  ).join("\n"),
+};
+
+const EVICTION_TASK = "How are displacement values analysed to determine normal mode behaviour?";
+
+/**
+ * The lane must not buy its slots from the ranking.
+ *
+ * The first cut displaced the weakest ordinary candidates, on the M140-C
+ * precedent. That is safe for a lane whose findings ARE the answer, and unsafe
+ * here, because the output cap does not only decide what is delivered — it is the
+ * evidence base that later, rank-derived inferences read. Measured on
+ * django-11815: four recoveries evicted four ranked candidates, two of them from
+ * the gold directory, which turned `resolveLocalSubsystem`'s 8-vs-7 majority into
+ * a 6-vs-6 tie broken the other way. The elected subsystem moved, the gold lead
+ * became "generic infrastructure outside the issue's subsystem", and it fell from
+ * lead to support to discarded — with its own score never changing.
+ *
+ * Stated as an invariant rather than as that case: whatever ordinary ranking would
+ * have returned is still returned once the lane runs.
+ */
+test("M142-C: recovered definitions never evict an organically ranked candidate", async () => {
+  const repo = await indexRepo(EVICTION_FILES);
+  try {
+    const shaped = shapeSweQuery({ problemStatement: EVICTION_TASK });
+    // Small enough that the pool genuinely overflows, so admission has to choose.
+    const maxResults = 4;
+    const base = { query: shaped.query, shaped, taskText: EVICTION_TASK, maxResults };
+
+    const without = hybridRetrieve(repo.db, { ...base, enableConceptOwnerRetrieval: false });
+    const admitted = hybridRetrieve(repo.db, base);
+
+    const recovered = admitted.candidates.filter((candidate) =>
+      candidate.sources.includes(HybridCandidateSource.ConceptOwner));
+    assert.ok(recovered.length > 0, "fixture must actually exercise concept-owner admission");
+
+    const survived = new Set(admitted.candidates.map((candidate) => candidate.symbolId));
+    for (const candidate of without.candidates) {
+      assert.ok(
+        survived.has(candidate.symbolId),
+        `${candidate.fqName} was ranked into the pool and the concept-owner lane evicted it`,
+      );
+    }
+    // Still bounded: the lane cannot grow the pool past its own cap.
+    assert.ok(
+      admitted.candidates.length <= maxResults + CONCEPT_OWNER_DEFAULTS.maxConceptOwnerCandidates,
+      `pool grew to ${admitted.candidates.length}, beyond the lane's own bound`,
+    );
+  } finally {
+    repo.db.close();
+  }
+});
+
+test("M142-C: the lane does not change what ordinary ranking already leads with", async () => {
+  const repo = await indexRepo(EVICTION_FILES);
+  try {
+    const shaped = shapeSweQuery({ problemStatement: EVICTION_TASK });
+    const base = { query: shaped.query, shaped, taskText: EVICTION_TASK, maxResults: 4 };
+    const without = hybridRetrieve(repo.db, { ...base, enableConceptOwnerRetrieval: false });
+    const admitted = hybridRetrieve(repo.db, base);
+    assert.equal(
+      admitted.candidates[0]?.fqName,
+      without.candidates[0]?.fqName,
+      "a rescue lane whose findings rank last must not move the top of the ranking",
+    );
+  } finally {
+    repo.db.close();
+  }
+});

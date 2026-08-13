@@ -354,7 +354,7 @@ export function hybridRetrieve(
   count(input.profile, "upstream_rescue_candidates", upstreamRescue.diagnostics.rescuedCandidatesAdmitted);
   count(input.profile, "upstream_rescue_edges_examined", upstreamRescue.diagnostics.incomingEdgesExamined);
 
-  const candidates = admitConceptOwnersWithinCap(ranked, maxResults, conceptOwner);
+  const candidates = admitConceptOwnersBesideCap(ranked, maxResults, conceptOwner);
   count(input.profile, "candidates.after_cap", candidates.length);
   count(input.profile, "literal_symbol_candidates", candidates.filter((candidate) =>
     candidate.sources.includes(HybridCandidateSource.Symbol)).length);
@@ -703,21 +703,34 @@ function graphExpandedCandidates(
 
 /**
  * Keep the concept-owner lane's findings inside the returned pool without
- * inflating their scores (M142-C).
+ * inflating their scores, and without evicting anything (M142-C).
  *
  * A definition the request could not name is, by construction, weakly ranked —
  * that is why nothing found it. Measured on ARC: the recovered `arc/checks/nmd.py`
  * definitions score around 0.8 against a pool floor of ~1.4, so ranking alone
- * discards exactly the candidates the lane exists to recover.
+ * discards exactly the candidates the lane exists to recover. Raising the lane's
+ * score contribution until it clears the floor would be tuning a constant to an
+ * outcome, so its findings are admitted BESIDE the ranking rather than through it.
  *
- * Raising the lane's score contribution until it clears the floor would be tuning
- * a constant to an outcome. Instead the lane's findings are admitted THROUGH the
- * cap rather than through the ranking, which is the same separation M140-C
- * established for orchestration paths: a bounded number of slots, taken from the
- * weakest ordinary candidates, with every score left truthful so downstream
- * pivot ordering still places them honestly.
+ * They are not admitted at the ranking's EXPENSE. The first cut took the slots
+ * from the weakest ordinary candidates, on the M140-C precedent. That is wrong
+ * here, for a reason M140-C never faced: the output cap does not just decide what
+ * is delivered, it decides the evidence base that later, rank-derived inferences
+ * read. Evicting the tail silently rewrites those inferences.
+ *
+ * Measured on django-11815: four recoveries evicted four ranked candidates, two of
+ * them from `db/migrations`, which moved that directory from 8 anchored candidates
+ * to 6 against `contrib/auth/migrations`' 7 to 6 — an exact tie, broken
+ * alphabetically, so `resolveLocalSubsystem` elected the wrong subsystem. The gold
+ * lead `EnumSerializer` was then outside it, and `isGenericInfrastructure` demotes
+ * an out-of-subsystem CLASS with no symbol/path/test pointer (the strong-lexical
+ * exemption is function/method only). It fell from lead to support to discarded.
+ *
+ * So the cap bounds what ORDINARY RANKING returns, and a lane that exists because
+ * ranking cannot see its findings does not compete for ranking's slots. The pool
+ * is still bounded: the lane admits at most `maxConceptOwnerCandidates`.
  */
-function admitConceptOwnersWithinCap(
+function admitConceptOwnersBesideCap(
   ranked: readonly HybridCandidate[],
   maxResults: number,
   conceptOwner: ConceptOwnerResult,
@@ -734,16 +747,7 @@ function admitConceptOwnersWithinCap(
   if (missing.length === 0) {
     return capped;
   }
-  // Displace from the tail, and never displace another concept-owner recovery.
-  const keep: HybridCandidate[] = [];
-  const displaceable: HybridCandidate[] = [];
-  for (const candidate of capped) {
-    (candidate.sources.includes(HybridCandidateSource.ConceptOwner) ? keep : displaceable)
-      .push(candidate);
-  }
-  const room = Math.min(missing.length, displaceable.length);
-  const survivors = displaceable.slice(0, displaceable.length - room);
-  return [...keep, ...survivors, ...missing.slice(0, room)].sort(
+  return [...capped, ...missing].sort(
     (left, right) =>
       right.scores.final - left.scores.final
       || left.fqName.localeCompare(right.fqName)
