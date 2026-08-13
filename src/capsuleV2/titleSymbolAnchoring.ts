@@ -214,6 +214,16 @@ function splitDotted(term: string): [string, string] {
 
 // --- candidate construction ---------------------------------------------------
 
+// A title-injected candidate asserts exactly ONE thing: the title names this
+// symbol, exactly. That is a `symbol` (name-identity) match and nothing else.
+//
+// It used to also claim `lexical`/`fts`/`tfidf`/`bm25` = 1 — the maximum of four
+// MEASURED retrieval quantities that were never measured for it, because the
+// premise of the injection is that retrieval did not produce this candidate. The
+// role gate and the decoy classifier read those fields and were being told the
+// candidate had the strongest possible lexical match in the pool. M143 §13
+// forbids replacing the organic scorecard with synthesized values; a component
+// vtrace did not measure reports 0, not 1.
 function buildTitleSymbolCandidate(symbol: SymbolRecord, term: string): HybridCandidate {
   const actionable = ACTIONABLE_KINDS.has(symbol.kind);
   return {
@@ -223,10 +233,10 @@ function buildTitleSymbolCandidate(symbol: SymbolRecord, term: string): HybridCa
     localName: symbol.localName,
     kind: symbol.kind,
     scores: {
-      lexical: 1,
-      fts: 1,
-      tfidf: 1,
-      bm25: 1,
+      lexical: 0,
+      fts: 0,
+      tfidf: 0,
+      bm25: 0,
       symbol: 1,
       path: 0,
       testToImpl: 0,
