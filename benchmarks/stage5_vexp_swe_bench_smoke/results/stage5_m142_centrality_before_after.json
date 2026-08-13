@@ -13,7 +13,7 @@
   },
   "candidate": {
     "label": "m142_after",
-    "vtraceHead": "0e4edc7804a280c2ab924ec05764914066c53a28",
+    "vtraceHead": "bb4d4e1af15e2af38a481c62e0abec2e8bef6209",
     "vtraceBranch": "main",
     "arcRoot": "/home/calvin/code/ARC",
     "arcHead": "2f3fd462600d23e671afb6e3ea4623c6b51674bf",
@@ -41,12 +41,12 @@
       },
       "candidate": {
         "fqName": "arc/reaction/reaction.py::ARCReaction",
-        "rank": 15,
+        "rank": 13,
         "inDegree": 299,
         "centrality": 0.4008,
         "centralityContribution": 0.2004,
-        "finalScore": 1.378,
-        "scoreWithoutCentrality": 1.1776,
+        "finalScore": 1.4388,
+        "scoreWithoutCentrality": 1.2384,
         "localEvidence": 1.3051,
         "hubPenalty": 0,
         "selected": false,
@@ -114,8 +114,8 @@
         "inDegree": 299,
         "centrality": 0.4008,
         "centralityContribution": 0.2004,
-        "finalScore": 1.597,
-        "scoreWithoutCentrality": 1.3966,
+        "finalScore": 1.6258,
+        "scoreWithoutCentrality": 1.4254,
         "localEvidence": 1.4921,
         "hubPenalty": 0,
         "selected": true,
@@ -158,8 +158,20 @@
         "selected": true,
         "pivot": false
       },
-      "candidate": null,
-      "droppedFromPool": true
+      "candidate": {
+        "fqName": "arc/species/species.py::ARCSpecies",
+        "rank": 10,
+        "inDegree": 746,
+        "centrality": 1,
+        "centralityContribution": 0.5,
+        "finalScore": 1.3206,
+        "scoreWithoutCentrality": 0.8206,
+        "localEvidence": 0.8804,
+        "hubPenalty": 0,
+        "selected": true,
+        "pivot": false
+      },
+      "droppedFromPool": false
     },
     {
       "case": "arc_explicit_which_lookup",
@@ -177,8 +189,20 @@
         "selected": true,
         "pivot": false
       },
-      "candidate": null,
-      "droppedFromPool": true
+      "candidate": {
+        "fqName": "arc/species/species.py::ARCSpecies",
+        "rank": 24,
+        "inDegree": 746,
+        "centrality": 1,
+        "centralityContribution": 0.5,
+        "finalScore": 0.8787,
+        "scoreWithoutCentrality": 0.3787,
+        "localEvidence": 0.5858,
+        "hubPenalty": 0,
+        "selected": false,
+        "pivot": false
+      },
+      "droppedFromPool": false
     },
     {
       "case": "arc_explicit_arc_class_lookup",
@@ -233,8 +257,8 @@
         "inDegree": 299,
         "centrality": 0.4008,
         "centralityContribution": 0.2004,
-        "finalScore": 1.8013,
-        "scoreWithoutCentrality": 1.6009,
+        "finalScore": 1.8575,
+        "scoreWithoutCentrality": 1.6571,
         "localEvidence": 1.6471,
         "hubPenalty": 0,
         "selected": true,
@@ -264,8 +288,8 @@
         "inDegree": 746,
         "centrality": 1,
         "centralityContribution": 0.5,
-        "finalScore": 2.0603,
-        "scoreWithoutCentrality": 1.5603,
+        "finalScore": 2.1926,
+        "scoreWithoutCentrality": 1.6926,
         "localEvidence": 1.6826,
         "hubPenalty": 0,
         "selected": true,

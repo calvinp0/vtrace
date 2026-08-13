@@ -1,0 +1,272 @@
+{
+  "schemaVersion": "stage5.m142.checkpoint-paired.v1",
+  "protocol": "run_stage5_m140_paired_benchmark.ts (M134 provenance-safe, isolated per-side indexes)",
+  "predecessor": {
+    "label": "m141-562cff6",
+    "commit": "562cff6a5fcf5634e13d768fbc73e4de19b9b578",
+    "tree": "0f9acb3739fedebde719d1dfd0aeeca58e934a9e",
+    "note": "M141 evidence commit; the M141 functional state is identical (562cff6 only edits a results markdown report)"
+  },
+  "targetCorpora": {
+    "django": "targets/django-{pred,cand}",
+    "cross_repo": "targets/cross_repo-{pred,cand}",
+    "fixtureIdentity": "/home/calvin/bench/vtrace-m141/fixtures/{django,cross_repo}.m141.json",
+    "isolatedIndexes": true
+  },
+  "stages": [
+    {
+      "stage": "m141_predecessor",
+      "commit": "562cff6a5fcf5634e13d768fbc73e4de19b9b578",
+      "changedCases": null,
+      "frozen50": {
+        "cases": 50,
+        "evaluated": 50,
+        "top1GoldFile": 39,
+        "top3GoldFile": 44,
+        "goldFileAnywhere": 47,
+        "goldSymbolAnywhere": 31,
+        "missingGold": 3,
+        "meanPivotCount": 2.1,
+        "meanSupportCount": 3.88,
+        "meanEstimatedTokens": 1806.44
+      },
+      "suites": {
+        "django": {
+          "cases": 20,
+          "evaluated": 20,
+          "top1GoldFile": 18,
+          "top3GoldFile": 20,
+          "goldFileAnywhere": 20,
+          "goldSymbolAnywhere": 14,
+          "missingGold": 0,
+          "meanPivotCount": 2.05,
+          "meanSupportCount": 3.95,
+          "meanEstimatedTokens": 1225.05
+        },
+        "cross_repo": {
+          "cases": 30,
+          "evaluated": 30,
+          "top1GoldFile": 21,
+          "top3GoldFile": 24,
+          "goldFileAnywhere": 27,
+          "goldSymbolAnywhere": 17,
+          "missingGold": 3,
+          "meanPivotCount": 2.133,
+          "meanSupportCount": 3.833,
+          "meanEstimatedTokens": 2194.033
+        }
+      },
+      "provenanceValid": true
+    },
+    {
+      "stage": "m142_A_only",
+      "commit": "321f9a37ffad85b24162e469f7735daba81a0884",
+      "changedCases": 19,
+      "frozen50": {
+        "cases": 50,
+        "evaluated": 50,
+        "top1GoldFile": 39,
+        "top3GoldFile": 44,
+        "goldFileAnywhere": 47,
+        "goldSymbolAnywhere": 30,
+        "missingGold": 3,
+        "meanPivotCount": 2.1,
+        "meanSupportCount": 3.88,
+        "meanEstimatedTokens": 1810.24
+      },
+      "suites": {
+        "django": {
+          "cases": 20,
+          "evaluated": 20,
+          "top1GoldFile": 18,
+          "top3GoldFile": 20,
+          "goldFileAnywhere": 20,
+          "goldSymbolAnywhere": 14,
+          "missingGold": 0,
+          "meanPivotCount": 2.05,
+          "meanSupportCount": 3.95,
+          "meanEstimatedTokens": 1249.9
+        },
+        "cross_repo": {
+          "cases": 30,
+          "evaluated": 30,
+          "top1GoldFile": 21,
+          "top3GoldFile": 24,
+          "goldFileAnywhere": 27,
+          "goldSymbolAnywhere": 16,
+          "missingGold": 3,
+          "meanPivotCount": 2.133,
+          "meanSupportCount": 3.833,
+          "meanEstimatedTokens": 2183.8
+        }
+      },
+      "provenanceValid": true
+    },
+    {
+      "stage": "m142_A_B_pool_relative",
+      "commit": "69826d356790533109cbc401f89dd3dd25dc7b52",
+      "changedCases": 46,
+      "frozen50": {
+        "cases": 50,
+        "evaluated": 50,
+        "top1GoldFile": 36,
+        "top3GoldFile": 43,
+        "goldFileAnywhere": 46,
+        "goldSymbolAnywhere": 30,
+        "missingGold": 4,
+        "meanPivotCount": 2.1,
+        "meanSupportCount": 3.88,
+        "meanEstimatedTokens": 1885.32
+      },
+      "suites": {
+        "django": {
+          "cases": 20,
+          "evaluated": 20,
+          "top1GoldFile": 17,
+          "top3GoldFile": 20,
+          "goldFileAnywhere": 20,
+          "goldSymbolAnywhere": 14,
+          "missingGold": 0,
+          "meanPivotCount": 2.05,
+          "meanSupportCount": 3.95,
+          "meanEstimatedTokens": 1363.1
+        },
+        "cross_repo": {
+          "cases": 30,
+          "evaluated": 30,
+          "top1GoldFile": 19,
+          "top3GoldFile": 23,
+          "goldFileAnywhere": 26,
+          "goldSymbolAnywhere": 16,
+          "missingGold": 4,
+          "meanPivotCount": 2.133,
+          "meanSupportCount": 3.833,
+          "meanEstimatedTokens": 2233.467
+        }
+      },
+      "provenanceValid": true
+    },
+    {
+      "stage": "m142_A_B_C_checkpoint",
+      "commit": "0e4edc7804a280c2ab924ec05764914066c53a28",
+      "changedCases": 47,
+      "frozen50": {
+        "cases": 50,
+        "evaluated": 50,
+        "top1GoldFile": 36,
+        "top3GoldFile": 42,
+        "goldFileAnywhere": 48,
+        "goldSymbolAnywhere": 28,
+        "missingGold": 2,
+        "meanPivotCount": 2.06,
+        "meanSupportCount": 3.88,
+        "meanEstimatedTokens": 1859.1
+      },
+      "suites": {
+        "django": {
+          "cases": 20,
+          "evaluated": 20,
+          "top1GoldFile": 16,
+          "top3GoldFile": 19,
+          "goldFileAnywhere": 20,
+          "goldSymbolAnywhere": 13,
+          "missingGold": 0,
+          "meanPivotCount": 1.95,
+          "meanSupportCount": 3.95,
+          "meanEstimatedTokens": 1345.9
+        },
+        "cross_repo": {
+          "cases": 30,
+          "evaluated": 30,
+          "top1GoldFile": 20,
+          "top3GoldFile": 23,
+          "goldFileAnywhere": 28,
+          "goldSymbolAnywhere": 15,
+          "missingGold": 2,
+          "meanPivotCount": 2.133,
+          "meanSupportCount": 3.833,
+          "meanEstimatedTokens": 2201.233
+        }
+      },
+      "provenanceValid": true
+    },
+    {
+      "stage": "m142_B_revised_gate_only",
+      "commit": "bb4d4e1",
+      "changedCases": 38,
+      "frozen50": {
+        "cases": 50,
+        "evaluated": 50,
+        "top1GoldFile": 37,
+        "top3GoldFile": 42,
+        "goldFileAnywhere": 48,
+        "goldSymbolAnywhere": 28,
+        "missingGold": 2,
+        "meanPivotCount": 2.06,
+        "meanSupportCount": 3.88,
+        "meanEstimatedTokens": 1839.36
+      },
+      "suites": {
+        "django": {
+          "cases": 20,
+          "evaluated": 20,
+          "top1GoldFile": 16,
+          "top3GoldFile": 19,
+          "goldFileAnywhere": 20,
+          "goldSymbolAnywhere": 13,
+          "missingGold": 0,
+          "meanPivotCount": 1.95,
+          "meanSupportCount": 3.95,
+          "meanEstimatedTokens": 1322.9
+        },
+        "cross_repo": {
+          "cases": 30,
+          "evaluated": 30,
+          "top1GoldFile": 21,
+          "top3GoldFile": 23,
+          "goldFileAnywhere": 28,
+          "goldSymbolAnywhere": 15,
+          "missingGold": 2,
+          "meanPivotCount": 2.133,
+          "meanSupportCount": 3.833,
+          "meanEstimatedTokens": 2183.667
+        }
+      },
+      "provenanceValid": true
+    }
+  ],
+  "unshippedVariantsMeasured": [
+    {
+      "variant": "gate_plus_title_skip_ranked_out",
+      "frozen50": {
+        "cases": 50,
+        "evaluated": 50,
+        "top1GoldFile": 35,
+        "top3GoldFile": 39,
+        "goldFileAnywhere": 46,
+        "goldSymbolAnywhere": 28,
+        "missingGold": 4,
+        "meanPivotCount": 2.04,
+        "meanSupportCount": 3.8,
+        "meanEstimatedTokens": 1763.9
+      },
+      "note": "measured, not shipped"
+    },
+    {
+      "variant": "gate_plus_title_readmit_organic",
+      "frozen50": {
+        "cases": 50,
+        "evaluated": 50,
+        "top1GoldFile": 35,
+        "top3GoldFile": 39,
+        "goldFileAnywhere": 48,
+        "goldSymbolAnywhere": 28,
+        "missingGold": 2,
+        "meanPivotCount": 2.04,
+        "meanSupportCount": 3.8,
+        "meanEstimatedTokens": 1763.96
+      },
+      "note": "measured, not shipped"
+    }
+  ]
+}

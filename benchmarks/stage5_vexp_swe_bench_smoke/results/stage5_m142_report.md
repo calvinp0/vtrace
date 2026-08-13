@@ -1,20 +1,40 @@
 # M142 — Behavioral Retrieval Robustness, Concept Ownership, Fresh-Worktree Bootstrap
 
 **Verdict: INCOMPLETE.** Workstreams A, B and C are implemented, tested and
-evidenced. Workstream D is measured and root-caused but not implemented.
-Workstream E was not started. The paired regression benchmark was prepared and
-launched but had not returned when this report was written.
+evidenced, and the checkpoint paired benchmark has now been read, bisected and
+attributed — it found a real regression in B, which has been redesigned and
+re-measured. Workstream D is measured and root-caused but not implemented.
+Workstream E was not started.
 
-Per §143 this is INCOMPLETE, not MIXED: two mandatory workstreams are not
-implemented, and the frozen-50 / Django / cross_repo comparison has not been read.
+Per §98 this is INCOMPLETE, not MIXED: two mandatory workstreams are not
+implemented and the preservation suite has not been run.
 
 ```text
 Workstream A — Prose vs Identifier Signal Hygiene     PASS
-Workstream B — Relevance-Gated Centrality             PASS
+Workstream B — Relevance-Gated Centrality             PASS (redesigned after the benchmark)
 Workstream C — Behavioral Concept-Owner Retrieval     MIXED
 Workstream D — Response Usefulness and Boundedness    NOT IMPLEMENTED (measured)
 Workstream E — Fresh-Worktree Index Bootstrap         NOT STARTED
+
+Checkpoint paired benchmark    READ, BISECTED, ATTRIBUTED (0 unexplained)
+Final paired benchmark         NOT RUN (candidate tree not final)
+Preservation suite             NOT RUN
 ```
+
+Frozen-50, M141 predecessor → current revised checkpoint:
+
+```text
+                     M141    A     A+B   A+B+C   revised
+top-1 gold file        39    39     36     36       37
+top-3 gold file        44    44     43     42       42
+gold file anywhere     47    47     46     48       48
+gold symbol anywhere   31    30     30     28       28
+missing gold            3     3      4      2        2
+mean tokens          1806  1810   1885   1859     1839
+```
+
+Two Top-1 losses remain against M141, both attributed and neither unexplained;
+file-level recall is better than M141 (`anywhere` 47→48, `missingGold` 3→2).
 
 ---
 
@@ -43,10 +63,16 @@ and `.md`); neither was staged.
 ## Functional commits
 
 ```text
-321f9a3  Separate prose from identifier intent
-69826d3  Gate graph centrality on task relevance
-0e4edc7  Retrieve behavioral concept owners
+321f9a37ffad85b24162e469f7735daba81a0884  Separate prose from identifier intent
+69826d356790533109cbc401f89dd3dd25dc7b52  Gate graph centrality on task relevance
+0e4edc7804a280c2ab924ec05764914066c53a28  Retrieve behavioral concept owners
+dce0b15                                   Cap centrality at a candidate's own identifying evidence
+bb4d4e1                                   Keep the title-symbol lane's pool-cap injection rule
 ```
+
+`0e4edc7` is the checkpoint the first paired benchmark measured; `df1da70` is its
+evidence commit and touches no source. `dce0b15` and `bb4d4e1` are the response to
+what that benchmark found.
 
 ## Reproduction
 
@@ -162,42 +188,66 @@ evidence and was still delivered.
 Only 9 of 150 pooled candidates had a centrality contribution above 0.05, so the
 gate is narrowly targeted rather than a broad rescore.
 
-### Fix
+### First fix, and why the benchmark rejected it
 
-Centrality is scaled by the candidate's share of the strongest local evidence in
-the pool:
+The first cut scaled centrality by the candidate's share of the strongest local
+evidence **in the pool**. It achieved the ARC objective, and the paired benchmark
+then charged the entire frozen-50 Top-1 loss (39 → 36) to it. Two mechanisms:
+
+- **`django-11740`** — `ForeignKey` (188 dependents, `symbol=0.00`,
+  `lexical=0.22`) was correctly demoted out of the capped pool. The title-symbol
+  lane read that absence as "retrieval never found it" and injected a synthesized
+  candidate at `TITLE_SYMBOL_FINAL` 2.5, past the gold lead at 1.90. The
+  correction was inverted into a promotion by an adjacent lane.
+- **`flask-5014`** — `Blueprint`, the gold lead with an exact `symbol=1.00`,
+  carried 75% of the pool's best local evidence and so lost a quarter of its
+  centrality. That cost 0.089 of ordering value, and it lost the lead by
+  **0.004**. A pool-relative share makes every candidate's score depend on
+  unrelated candidates, so near-ties flip on movements involving neither.
+
+### Fix as shipped
+
+What actually separates the two populations is not how much evidence a candidate
+has but **what kind**. `ARCSpecies` carries `symbol=0, path=0, testToImpl=0,
+bodyLiteral=0` on every behavioural query and rides lexical 0.59–0.64 plus domain
+0–0.33. `Blueprint` and `MigrationAutodetector`, both gold leads, carry an exact
+`symbol=1.00`. The share does not separate them (0.49–0.51 against 0.74–0.75);
+the evidence *kind* does — and it is the same question the hub penalty already
+asks, just as a cliff at zero.
 
 ```text
-centralitySupport = weights.centrality * centrality * relevanceShare
+centralitySupport = weights.centrality * min(centrality, identifyingEvidence)
 ```
 
-Not a threshold. A cut-off needs a constant nobody can derive and behaves
-discontinuously either side of it; a share is already in the units of the thing
-being asked about. Centrality cannot create relevance because it is multiplied by
-relevance — and it still reorders plausible candidates.
-
-Scoring now runs in two phases: the share is pool-relative and unknowable until
-every candidate's local evidence exists. `recomputeWithWeakenedLexical`
-re-derives the gate from the scorecard (`localEvidence / share` recovers the pool
-maximum) rather than reusing a stale share.
+`identifyingEvidence` is local evidence minus issue-domain affinity — the one
+component every symbol in a topically relevant package earns, and therefore the
+loophole. No new constant (`HUB_WEAK_LEXICAL_MAX` is the existing bar, and the
+cap compares two already-normalised quantities), no pool coupling, and the
+all-or-nothing hub penalty becomes the zero-evidence end of a continuous rule.
+The two-phase scoring the pool-relative share required is gone.
 
 ### Result
 
-| candidate | case | before | after |
+| candidate | case | M141 | shipped gate |
 | --- | --- | --- | --- |
 | `ARCSpecies` | normal-mode | rank 14, f=1.393, **selected** | dropped from pool |
 | `ARCSpecies` | Gaussian route | rank 9, f=1.436 | dropped from pool |
 | `ARCSpecies` | reactant index | rank 14, f=1.276 | dropped from pool |
-| `ARCSpecies` | TS-guess order | rank 10, f=1.371, **selected** | dropped from pool |
-| `ARCSpecies` | `which()` lookup | rank 11, f=1.086, **selected** | dropped from pool |
-| `ARCSpecies` | ARC-class lookup | rank 2, f=2.193, selected | **rank 2**, f=2.060, selected |
-| `ARCReaction` | reactant index | rank 2, f=1.631, selected | **rank 2**, f=1.597, selected |
-| `ARCReaction` | ARC-class lookup | rank 3, f=1.858, selected | **rank 3**, f=1.801, selected |
+| `ARCSpecies` | `which()` lookup | rank 11, f=1.086, **selected** | rank 24, f=0.879, not selected |
+| `ARCSpecies` | TS-guess order | rank 10, f=1.371, **selected** | rank 10, f=1.321, still selected |
+| `ARCSpecies` | ARC-class lookup | rank 2, f=2.193, selected | **rank 2, f=2.193**, selected |
+| `ARCReaction` | reactant index | rank 2, f=1.631, selected | **rank 2**, f=1.626, selected |
+| `ARCReaction` | ARC-class lookup | rank 3, f=1.857, selected | **rank 3, f=1.857**, selected |
 
-Centrality-only delivery eliminated on five of six queries; both positive controls
-— the questions genuinely about those objects — preserved at the same rank.
+Centrality-only delivery is eliminated on four of six queries and demoted out of
+delivery on a fifth. **TS-guess is the honest exception**: `ARCSpecies` is still
+delivered there at rank 10. Both positive controls are now *byte-identical* to
+M141 — the pool-relative version had moved them (2.193 → 2.060, 1.857 → 1.801).
 
-Fixtures in `src/retrieval/centralityRelevanceGate.test.ts` (6 tests) include the
+Both benchmark regressions this workstream caused are gone: `flask-5014` and
+`sympy-16766` are back to their M141 leads.
+
+Fixtures in `src/retrieval/centralityRelevanceGate.test.ts` (8 tests) include the
 §26 generic case (`CoreObject` with 200 dependents vs a low-fan-in
 `build_gaussian_route`) and the §27 positive control. Recorded in the fixture:
 the obvious multi-module spelling yields an in-degree of **zero**, because
@@ -253,12 +303,18 @@ index to overcome, which changes the schema and invalidates every existing index
 | --- | --- | --- |
 | Gaussian route keywords | `gaussian.py` visible, no `which` lead | **PASS** — via Workstream A, not the lane |
 | normal-mode displacement | `arc/checks/nmd.py` visible via contained definitions | **PARTIAL** — the lane selects nmd.py as an owner and admits `get_bond_length_in_reaction` / `get_displaced_xyzs` into the pool, but `analyze_ts_normal_mode_displacement` is not among them and nmd.py does not win a delivery slot |
-| reactant atom index space | `get_reactants_and_products`, `get_bonds` | **FAIL** — `reaction.py` is the top-ranked owner but the two named definitions are still not delivered |
+| reactant atom index space | `get_reactants_and_products`, `get_bonds` | **PARTIAL** — `reaction.py` is now the **top-1 owner file** under the revised gate (it was not before), but the two named definitions are still not the ones delivered |
 | TS-guess atom order | `get_single_mapped_product_xyz`, `order_xyz_by_atom_map` | **FAIL** — the lane's owners (`heuristics.py`, `isomerization.py`) are not where those definitions live; `order_xyz_by_atom_map` is rank 6 and unselected, which is a **selection** failure, not a retrieval one |
 
 The §90 classification matters here: two of the four remaining misses are "ranked
 but not selected", not "not generated". Making the owner's definitions win a
 delivery slot is selection work the lane does not do.
+
+Owner-file top-1 across the four behavioural cases moved **1/4 → 2/4** when the
+centrality gate was redesigned; the reactant-index case gained it. That is a
+Workstream B effect landing on a Workstream C acceptance, and the acceptance
+artifacts were regenerated against the shipped implementation so the recorded
+numbers describe what is actually committed.
 
 Controls hold: `find function get_bonds` and `How does ARC work?` both close the
 gate (`explicit symbol lookup`, `only 0 behavioural objective(s)`), and a
@@ -322,33 +378,77 @@ implementation.
 ```text
 bun run typecheck              pass
 bun run typecheck:benchmarks   pass
-bun test                       4245 pass / 0 fail / 49 skip, 256 files
+bun test                       4198 pass / 0 fail / 49 skip, 256 files
 git diff --check               clean
 ```
 
-New tests: 26 across 3 files — prose/identifier hygiene (10), centrality
-relevance gate (6), concept-owner retrieval (10).
+New tests: 28 across 3 files — prose/identifier hygiene (10), centrality
+relevance gate (8), concept-owner retrieval (10).
 
-## Regression benchmarks — NOT READ
+`src/logicFlow/flowScalability.test.ts` ("explored work stays flat as the
+surrounding graph grows 50x") is **flaky on a 5 s wall-clock timeout**, failing
+3 of 4 sampled runs on the **M141 predecessor** and 1 of 3 on the current tree.
+Pre-existing harness precondition, not attributable to M142 (§71 pattern).
 
-The provenance-safe paired protocol was **prepared and launched** but had not
-returned. Predecessor worktree at `562cff6` with its own dependency install;
-isolated target corpora per side under separate `--out-root`s (which also avoids
-the M141 index-lock collision by construction). At the time of writing the
-predecessor corpus was at 20/20 Django and 28/30 cross_repo; the candidate corpus
-and the comparison had not started.
+## Checkpoint paired benchmark — read, bisected, attributed
 
-**No frozen-50, Django-expanded or cross_repo_30 numbers exist for M142, and no
-changed-case attribution has been performed.** The three commits are therefore
-unvalidated against the regression suites, and the retrieval changes in A, B and
-C are all capable of moving those cases.
+Provenance-safe M134 protocol, `provenanceValid=true` on every run. Predecessor
+worktree at `562cff6` with its own dependency install; isolated target corpora per
+side under separate `--out-root`s, which also avoids the M141 index-lock collision
+by construction.
 
-Also not run: the M131/M132/M136/M137/M138/M139/M140/M141 preservation gates and
-the TCKDB acceptance.
+The first comparison charged the checkpoint with frozen-50 Top-1 39 → 36. Rather
+than reason about which of three commits did it, each was measured separately
+against the same predecessor over the same corpora:
+
+```text
+                     M141    A     A+B   A+B+C   revised
+top-1 gold file        39    39     36     36       37
+top-3 gold file        44    44     43     42       42
+gold file anywhere     47    47     46     48       48
+gold symbol anywhere   31    30     30     28       28
+missing gold            3     3      4      2        2
+mean tokens          1806  1810   1885   1859     1839
+changed cases           -    19     46     47       38
+```
+
+**A is neutral** (39 → 39). **B owned the entire Top-1 loss.** **C is net-positive
+on file recall** (`missingGold` 4 → 2, `anywhere` 46 → 48) at the cost of one
+Top-3 and two symbol-level hits. B was redesigned in response; see that section.
+
+Per-suite at the revised checkpoint: Django Top-1 17/20, cross_repo Top-1 20/30.
+
+Eight cases move a gold-visibility metric anywhere across the five stages, and
+**none is unexplained** — `stage5_m142_checkpoint_changed_case_ledger.json`
+carries the per-case attribution. Two Top-1 regressions remain against M141:
+
+- **`django-11740` (REGRESSION, `centrality_gate_x_title_injection`)** — the gate
+  correctly demotes an irrelevant 188-dependent hub out of the capped pool, and
+  the title-symbol lane re-injects it at a constant 2.5 because it cannot tell
+  "never retrieved" from "retrieved and ranked out". Two fixes were implemented
+  and measured; **both cost more than they save** (Top-1 37 → 35), so neither
+  shipped. The distinction itself (`evaluatedById`) is kept on the retrieval
+  result because the C1 concept-support work needs exactly that separation.
+- **`django-11815` (REGRESSION, `concept_owner_commit_secondary_selection`)** —
+  gold `EnumSerializer` falls from lead to candidate rank 3 and loses the single
+  pivot slot to a migration file. The bisect places the flip at `0e4edc7`, which
+  carried both the concept-owner lane and the `coeditExpansion` structural-symbol
+  filter; the concept-owner lane reports no admissions on this case, so the coedit
+  representative change is the likelier producer. **Not root-caused to a line.**
+
+Also not run: the M131/M132/M136/M137/M138/M139/M140/M141 preservation gates, the
+TCKDB acceptance, and the final paired benchmark (§80) — the candidate tree is not
+final while D and E are unimplemented.
 
 ## Recommended next step
 
-Read the paired comparison first; it gates everything else. Then, in order:
-attribute every changed case, run the preservation gates, finish Workstream D's
-metric semantics, and profile Workstream E. M142 cannot be closed as PASS or
-MIXED until the regression evidence exists.
+The checkpoint gate is cleared, so functional work may continue. In order: root-
+cause `django-11815` to a line, split C into C1 (selection) and C2 (representation)
+per §10, run the preservation gates, then D and E. M142 cannot be closed as PASS
+or MIXED until D, E and the preservation suite exist.
+
+The `django-11740` root cause is worth carrying forward as a design note rather
+than a fix attempt: **an anchor lane must not treat pool-cap absence as evidence
+of absence.** Two corrections were measured here and both lose more than they win,
+which says the title lane's synthesized score — not merely its presence — is doing
+the work. That is a ranking question, not an injection question.

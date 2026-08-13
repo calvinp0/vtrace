@@ -13,7 +13,7 @@
   },
   "candidate": {
     "label": "m142_after",
-    "vtraceHead": "0e4edc7804a280c2ab924ec05764914066c53a28",
+    "vtraceHead": "bb4d4e1af15e2af38a481c62e0abec2e8bef6209",
     "vtraceBranch": "main",
     "arcRoot": "/home/calvin/code/ARC",
     "arcHead": "2f3fd462600d23e671afb6e3ea4623c6b51674bf",
@@ -47,7 +47,7 @@
         "ownerTop1": false,
         "ownerTop3": false,
         "ownerAnywhere": false,
-        "ownerBestCandidateRank": 13,
+        "ownerBestCandidateRank": 14,
         "requiredDefinitions": [
           {
             "fqName": "arc/checks/nmd.py::analyze_ts_normal_mode_displacement",
@@ -249,32 +249,32 @@
     {
       "case": "arc_normal_mode_displacement",
       "predecessorEngineBytes": 62217,
-      "candidateEngineBytes": 69906
+      "candidateEngineBytes": 68033
     },
     {
       "case": "arc_gaussian_route_keywords",
       "predecessorEngineBytes": 54188,
-      "candidateEngineBytes": 55656
+      "candidateEngineBytes": 53978
     },
     {
       "case": "arc_reactant_atom_index_space",
       "predecessorEngineBytes": 60857,
-      "candidateEngineBytes": 67076
+      "candidateEngineBytes": 63069
     },
     {
       "case": "arc_ts_guess_atom_order",
       "predecessorEngineBytes": 64069,
-      "candidateEngineBytes": 70932
+      "candidateEngineBytes": 67942
     },
     {
       "case": "arc_explicit_which_lookup",
       "predecessorEngineBytes": 47982,
-      "candidateEngineBytes": 53803
+      "candidateEngineBytes": 54151
     },
     {
       "case": "arc_explicit_arc_class_lookup",
       "predecessorEngineBytes": 46348,
-      "candidateEngineBytes": 52590
+      "candidateEngineBytes": 49802
     },
     {
       "case": "arc_broad_vague_control",
