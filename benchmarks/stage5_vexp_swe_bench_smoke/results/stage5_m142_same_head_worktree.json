@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "stage5.m142.same-head-worktree.v1",
+  "purpose": "M142 \u00a754: a fresh sibling worktree at the SAME HEAD gets its own worktree identity, its own index and its own readiness - and should not repeat work whose inputs are unchanged.",
+  "fixture": {
+    "worktreeA": "/home/calvin/bench/vtrace-m142/e/arc-base - ARC @3da32ea0, indexed first",
+    "worktreeB": "/home/calvin/bench/vtrace-m142/e/arc-sibling - ARC @3da32ea0, brand new, its own .vtrace",
+    "rule": "B never reads A's index. What crosses the boundary is a content-derived snapshot record, selected from the shared repository registry keyed on gitCommonDir."
+  },
+  "measuredThroughProductPath": {
+    "worktreeA_ms": 40595,
+    "worktreeB_ms": 6737,
+    "speedup": "~6x"
+  },
+  "mechanism": "initRepo calls selectReusableSnapshot, which prefers an exact HEAD match and validates repositoryId, parser version and parser config fingerprint, then passes the snapshot as previousSnapshot with baseSnapshotWorktreeId/baseSnapshotHead recorded in the diagnostics.",
+  "equivalence": "Byte-identical to a clean full index built where no sibling snapshot and no shared cache are reachable: 325 files, 9012 symbols, 21693 edges, all FTS tables equal.",
+  "authorityIsolation": "B writes its own manifest, fingerprint, readiness and final state. None of those are inherited (\u00a755).",
+  "verdict": "PASS"
+}

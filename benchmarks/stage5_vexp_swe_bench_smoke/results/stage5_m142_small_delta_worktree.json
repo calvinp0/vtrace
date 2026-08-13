@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "stage5.m142.small-delta-worktree.v1",
+  "purpose": "M142 \u00a756: a sibling worktree at the same HEAD with ONE edited file.",
+  "fixture": "a third ARC worktree with a single function appended to arc/checks/nmd.py",
+  "measured": {
+    "reuseAvailable_ms": 54374,
+    "cleanFullSameContent_ms": 58112,
+    "timingVariance": "identical clean-full work measured 42477 and 58112 ms on this machine, so the two numbers above are within noise"
+  },
+  "expectedIdeal": "unchanged files reuse their immutable parse work; only the changed file is recomputed; the dirty fingerprint stays truthful; readiness stays independent",
+  "observed": "ALL 325 files are re-parsed. Only one file changed.",
+  "rootCause": {
+    "where": "src/indexer/indexProject.ts - fullParseCacheContextCompatible",
+    "code": "requires previousSnapshot.files.length === scannedFiles.length AND scannedFiles.every(file => same contentHash, language and size)",
+    "effect": "one differing file makes the flag false, and canReuseFullParseCache then returns false for EVERY file even though it already performs its own per-file identity check",
+    "cost": "parsing is 89-90% of the run, so effectively the entire index cost is paid again for a one-line edit"
+  },
+  "correctnessUnaffected": "The resulting index is still byte-identical to a clean full index of the same edited content (325 files, 9013 symbols, 21693 edges). This is a performance defect, not a correctness one.",
+  "notFixed": {
+    "section": "\u00a760/\u00a761/\u00a768",
+    "reason": "The flag guards binding. A cached parse result carries edge targets resolved against the symbol set present when it was cached; the incremental path repairs that with rebindCachedEdgeTargets against an existing symbol table, which a fresh worktree's full rebuild does not have. \u00a760 permits reuse only where the incremental architecture ALREADY proves equivalence for the case at hand, and it does not here. M132 previously showed edge counts moving when resolver ambiguity changed.",
+    "recommendedFix": "Decouple per-file parse reuse from the repo-wide binding flag by rebinding reused results against the freshly parsed symbol set before persistence, gated on the \u00a763/\u00a764 equivalence pair plus the M132/M140 edge gates."
+  },
+  "verdict": "DEFECT, root-caused, deliberately not fixed"
+}

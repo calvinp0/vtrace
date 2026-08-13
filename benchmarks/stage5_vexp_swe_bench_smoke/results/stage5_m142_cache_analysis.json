@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "stage5.m142.cache-analysis.v1",
+  "purpose": "M142 \u00a753: is M118's parse cache doing its intended job for a same-HEAD sibling worktree?",
+  "cacheLocation": "gitCommonDir/vtrace/repositories/<repositoryId>/parse-cache - shared across every worktree of the repository BY DESIGN.",
+  "observedForARC": {
+    "entries": 9670,
+    "sizeOnDisk": "352M"
+  },
+  "directIndexProjectCall": {
+    "parseCacheHits": 0,
+    "parseCacheMisses": 325,
+    "note": "This looked like M118 failing outright. It is not - see below."
+  },
+  "correction": "The cache lookup key is built by cacheInputFromSnapshot(previous), i.e. it is derived from a PREVIOUS SNAPSHOT rather than from current content. A caller that supplies no previousSnapshot therefore cannot hit the cache at all. The product path never does that: initRepo/reindexRepo select a sibling snapshot first, which is what makes the cache reachable.",
+  "conclusion": "M118 does its job when driven through the product path (6.7s vs 40.6s on a same-HEAD sibling). It is unreachable for any caller that invokes indexProject directly without a snapshot, and it is disabled wholesale for a small delta by the repo-wide binding flag.",
+  "measurementTrap": "IndexPerformanceDiagnostics.timingsMs is zeroed unless options.parserVersion is supplied, so a naive profile reports every phase as 0ms."
+}
