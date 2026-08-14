@@ -29,6 +29,26 @@ const VTRACE_SOURCE_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.u
 // policy or rendering change must NOT invalidate an otherwise-valid index.
 const PARSER_SOURCE_DIRS = ["src/parsers"] as const;
 const INDEXER_SOURCE_DIRS = ["src/indexer", "src/db"] as const;
+// Index-deriving source that lives OUTSIDE the directories above. Membership of
+// this list is not a judgement call: `indexerFingerprintCoverage.test.ts` walks
+// the import closure of the index write path and fails if a value import
+// reaches source that no fingerprint hashes. M146-A added these three after
+// measuring that a change to any of them altered stored index content while
+// every existing index still reported `ready: true`.
+const INDEXER_SOURCE_FILES = [
+  // Stored identities: normalizeFilePath, buildFQName, computeFileId,
+  // computeSymbolId, and the Language / SymbolKind / EdgeType enums persisted
+  // as symbol and edge rows.
+  "src/domain/types.ts",
+  // Validation gates on the same enums: `isLanguage` decides whether a file is
+  // parsed at all, so tightening a guard silently shrinks what gets indexed.
+  "src/domain/guards.ts",
+  // Content hashing behind file records and the dirty fingerprint.
+  "src/fs/hashFile.ts",
+  // Git blob/status enumeration, which decides what an incremental run treats
+  // as changed and what the snapshot records as head/dirty.
+  "src/fs/git.ts",
+] as const;
 const SCHEMA_SOURCE_FILES = ["src/db/schema.ts"] as const;
 const CONFIG_SOURCE_FILES = [
   "src/fs/scanRepo.ts",
@@ -151,6 +171,57 @@ const MISMATCH_REASONS: Record<(typeof FRESHNESS_FIELDS)[number], string> = {
   repo_head: "repo head changed",
 };
 
+/**
+ * M146-A. Fingerprint fields whose disagreement means the stored index CONTENT
+ * was derived under semantics this runtime no longer agrees with, each mapped to
+ * the rebuild reason it justifies.
+ *
+ * Readiness answers "may this index be used?"; this answers the separate
+ * question "may a refresh REUSE what is already stored?". They must agree, and
+ * before M146-A they did not: the reindex path compared only the parser, config
+ * and format fields, so a change confined to `indexer_fingerprint` left the
+ * previous snapshot marked compatible. The planner then chose a no-op and the
+ * run stamped the NEW fingerprints onto content derived by the OLD semantics —
+ * turning a correctly-refused index into a silently-accepted stale one.
+ *
+ * `vtrace_commit` is deliberately absent: it moves on every commit, including
+ * ones that cannot affect derivation, and rebuilding on it would make every
+ * VTRACE update reindex the world. `repo_head` is absent because source movement
+ * is what the incremental planner exists to handle.
+ */
+const DERIVATION_REBUILD_REASONS: ReadonlyArray<
+  readonly [keyof IndexFingerprint, "parser_incompatible" | "configuration_incompatible" | "derivation_incompatible" | "schema_incompatible"]
+> = [
+  ["parser_fingerprint", "parser_incompatible"],
+  ["config_hash", "configuration_incompatible"],
+  ["indexer_fingerprint", "derivation_incompatible"],
+  ["schema_version", "schema_incompatible"],
+  ["index_format_version", "schema_incompatible"],
+];
+
+/** Fingerprint fields intentionally excluded from the reuse decision above. */
+export const NON_DERIVATION_FINGERPRINT_FIELDS = ["vtrace_commit"] as const;
+
+/**
+ * The reason a refresh must discard stored content, or `undefined` when every
+ * derivation-relevant fingerprint agrees. Reasons are reported in the order
+ * above so the most specific cause wins.
+ */
+export function resolveDerivationRebuildReason(
+  stored: Partial<IndexFingerprint> | undefined,
+  expected: IndexFingerprint,
+): "parser_incompatible" | "configuration_incompatible" | "derivation_incompatible" | "schema_incompatible" | undefined {
+  if (stored === undefined) {
+    return undefined;
+  }
+  for (const [field, reason] of DERIVATION_REBUILD_REASONS) {
+    if (stored[field] !== expected[field]) {
+      return reason;
+    }
+  }
+  return undefined;
+}
+
 export function resolveVtraceDir(repoPath: string): string {
   return path.join(path.resolve(repoPath), REPO_LOCAL_STATE_DIRNAME);
 }
@@ -172,7 +243,7 @@ export function resolveIndexDbPath(repoPath: string): string {
 export async function computeIndexFingerprints(): Promise<IndexFingerprint> {
   const [parserFingerprint, indexerFingerprint, schemaHash, configHash] = await Promise.all([
     hashSources(PARSER_SOURCE_DIRS, []),
-    hashSources(INDEXER_SOURCE_DIRS, []),
+    hashSources(INDEXER_SOURCE_DIRS, INDEXER_SOURCE_FILES),
     hashSources([], SCHEMA_SOURCE_FILES),
     hashSources([], CONFIG_SOURCE_FILES),
   ]);

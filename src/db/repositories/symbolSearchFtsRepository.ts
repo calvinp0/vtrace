@@ -5,7 +5,7 @@ import {
   type FileRecord,
   type SymbolRecord,
 } from "../../domain/types";
-import { buildFtsSearchText } from "../../retrieval/searchSymbolsShared";
+import { buildFtsSearchText } from "../../indexer/searchTextDerivation";
 
 export function deleteSymbolSearchIndexForFile(
   db: Database,

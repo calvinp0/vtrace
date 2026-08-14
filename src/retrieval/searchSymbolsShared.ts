@@ -3,6 +3,11 @@ import type { Database } from "bun:sqlite";
 
 import { parseSymbolKind } from "../domain/guards";
 import { type SymbolKind } from "../domain/types";
+// The stored FTS text is derived by the indexer; a query has to tokenize the
+// same way to match it. Re-exported so existing callers keep their import site.
+import { buildFtsSearchText, collectSearchTerms } from "../indexer/searchTextDerivation";
+
+export { buildFtsSearchText };
 import {
   SymbolSearchMatchField,
   SymbolSearchMatchType,
@@ -336,10 +341,6 @@ export function rankSearchCandidates(
     .filter((result): result is SymbolSearchResult => result !== undefined)
     .sort(compareSearchResults)
     .slice(0, maxResults);
-}
-
-export function buildFtsSearchText(value: string): string {
-  return collectSearchTerms(value).join(" ");
 }
 
 export function buildFtsMatchQuery(query: string): string | undefined {
@@ -1260,45 +1261,6 @@ function collectOrderedSearchTerms(value: string): string[] {
   }
 
   return terms;
-}
-
-function collectSearchTerms(value: string): string[] {
-  const rawSegments = value.replace(/\\/g, "/").match(/[A-Za-z0-9]+/g) ?? [];
-  const terms = new Set<string>();
-
-  for (const rawSegment of rawSegments) {
-    const lowerRawSegment = rawSegment.toLowerCase();
-
-    if (lowerRawSegment.length === 0) {
-      continue;
-    }
-
-    terms.add(lowerRawSegment);
-
-    const splitSegments = rawSegment
-      .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
-      .toLowerCase()
-      .split(/\s+/)
-      .filter((segment) => segment.length > 0);
-
-    for (const segment of splitSegments) {
-      terms.add(segment);
-    }
-
-    for (let start = 0; start < splitSegments.length; start += 1) {
-      let combined = "";
-
-      for (let end = start; end < splitSegments.length; end += 1) {
-        combined += splitSegments[end] ?? "";
-
-        if (end > start) {
-          terms.add(combined);
-        }
-      }
-    }
-  }
-
-  return [...terms].sort();
 }
 
 function buildBroadTermVariants(term: string): string[] {
