@@ -1,159 +1,191 @@
-# M146-B — Cross-repository retrieval foundation: checkpoint report
+# M146-B — Cross-repository retrieval foundation: final report
 
-**Verdict: M146-B INCOMPLETE.** Routing is implemented, gated and measured;
-aggregation is implemented and unit-measured but **not wired into the product
-retrieval path**, and the mandatory benchmarks (Frozen50 paired, ARC/TCKDB real
-workspace acceptance, the workspace corpus at full §50 breadth) were not run.
-Per §113 that is INCOMPLETE, not a measured ceiling.
+**Verdict: M146-B MIXED.** All mandatory scope is complete and measured —
+product integration, single-repository preservation, the paired benchmark, both
+real workspace acceptances, the full 18-class corpus, and preservation. One
+genuine capability ceiling remains, described in §7: symbol evidence cannot
+establish uniqueness beyond the deep-probe cap, so a workspace with more ready
+members than the cap abstains on symbol-only queries rather than answering.
+
+Per §76 that is MIXED, not PASS. It is not INCOMPLETE — nothing mandatory is
+missing — and not NOT PASS, since the capability works and fails closed.
+
+**M146 overall remains INCOMPLETE and is NOT final-closed by this session.**
 
 | | |
 | --- | --- |
 | M146-A functional predecessor | `a3040e19b461136d359d901edb8ddf9f6f8a34a4` |
-| M146-A evidence | `a95e0d4adba5a9b1bd90a60a4aad482f7fbe0165` |
-| M146-B functional commits | `d7687b7`, `11335a1` |
-| M146-B evidence commit | the commit adding this file |
+| routing | `d7687b7b94f5122ab196d249a0a39cff421c8161` |
+| aggregation | `11335a17a9bdbbf56780351a6e7e6f32a5a12a28` |
+| earlier B evidence | `9af5e5d7b37e5691b49d2c116ac609ac5fce3318` |
+| product integration | `f729f3d` + the truncation fix in this session |
 | Branch | `main`, local commits, nothing pushed by this session |
-| Tests | 4367 pass / 49 skip / **0 fail** (4416 across 268 files) |
-| Typechecks | both clean |
 
-## 1. What was built
+## 1. What changed in the product path
 
-**Repository relevance** (`src/workspace/repositoryRelevance.ts`). Evidence is
-tiered, not scored:
+Routing and aggregation previously existed only as tested modules, so M146-B
+changed no real behaviour. They are now reached through the authoritative
+`productContext` seam.
+
+The integration **composes** `assembleProductContext` rather than modifying it.
+Repository-local retrieval keeps every semantic M122–M145 established because it
+is literally the same call; what is added is choosing which repositories to call
+it against and merging results under one budget. There is no second capsule and
+no parallel selection pipeline — M142 already measured what duplicated context
+representations cost.
 
 ```
-0. explicit selection   index-free   authority, never overridden
-1. path containment     index-free   an absolute path inside a registered root
-2. indexed path         INDEXED      suffix membership via M145's resolver
-3. exact symbol         INDEXED      bounded name lookup
+request
+  ↓  workspace routing (tiered, index-free lanes first)
+  ↓  readiness gate
+  ↓  existing assembleProductContext, per selected repository
+  ↓  bounded aggregation under ONE budget
+  ↓  one authoritative productContext
 ```
 
-The highest tier producing anything decides; two repositories inside that tier is
-`ambiguous`. There is no blended score, because raw retrieval scores are not
-established as comparable across repositories and every available tie-break
-(registration order, path length, alias) is a semantic decision in disguise.
+## 2. Single-repository preservation
 
-Four outcomes are kept distinct: `selected`, `ambiguous`, `no_match`,
-`not_ready`. Collapsing `not_ready` into `no_match` would hide a repairable index
-behind "nothing is relevant".
+Two independent proofs, because output equality alone would not distinguish
+"cannot happen" from "did not happen this time".
 
-**Bounded aggregation** (`src/workspace/crossRepoAggregation.ts`). One budget
-shared by all repositories; admission in rounds of *local* rank so the primary
-repository's best candidate takes the lead before any support is considered;
-identity is `(worktreeId, path, symbol)` and never any part of it alone.
+**Structural.** A test walks `src/` and fails if any production file outside
+`src/workspace` imports the router, the aggregator, or the integration layer.
+It also asserts `assembleProductContext` still mentions no workspace type.
+Ordinary requests cannot reach the new code.
 
-## 2. The readiness gate — the central result
+**Measured.** The mandatory paired benchmark, `a3040e1` → candidate, via the
+M134 provenance-safe framework with separate git worktrees per side and each
+side generating its own index from its own fixture copy:
 
-M146-A's invariant carried into routing: a derivation-incompatible index may not
-contribute index-derived routing evidence. Without it the failure is circular and
-self-concealing — a stale index answers a probe, thereby selecting itself, and is
-then rebuilt and its answer presented as current.
+```
+provenanceValid = true
+frozen50 changed = 0 / 50
+django       0/20   semantic hashes byte-identical
+cross_repo_30 0/30  semantic hashes byte-identical
+```
 
-Measured on the mandatory §12 fixture (alpha ready, beta `derivation_changed`,
-gamma ready):
-
-| Case | Status | Indexes opened | Result |
+| Metric | a3040e1 | M146-B | Δ |
 | --- | --- | --- | --- |
-| 1. explicit alpha | `selected` | none | beta never touched |
-| 2. exact beta path | `not_ready` | none | beta identified index-free, blocked at readiness |
-| 3. symbol only beta defines | `no_match` | alpha, gamma | **beta never opened** |
-| 4. same query after repair | `selected` (beta) | alpha, beta, gamma | evidence becomes available |
+| Top-1 gold file | 38 | 38 | 0 |
+| Top-3 gold file | 44 | 44 | 0 |
+| Gold file anywhere | 48 | 48 | 0 |
+| Gold symbol anywhere | 31 | 31 | 0 |
+| Missing gold | 2 | 2 | 0 |
+| Mean tokens | 1832.4 | 1832.4 | 0 |
 
-Case 3 is the proof: the query names a symbol that exists *only* in beta, and the
-answer is `no_match` because beta's stale symbol table is unreachable. Case 2 is
-the counterpart — beta is still correctly *identified*, because containment reads
-only the request, the registration and the filesystem.
+Top-1 38 and 1832.4 tokens were measured on **both** sides in this invocation.
+The M145-era figures (39 / 1850.14) came from a different predecessor state and
+were deliberately not copied; both sides agreeing exactly is what the gate needs.
 
-The tests assert on which indexes were opened, not merely on which repository
-won; choosing correctly while consulting a refused index would otherwise pass.
+`cross_repo_30` is recorded as a **single-repository preservation suite** — each
+of its tasks targets one repository, so it is not a workspace benchmark and is
+not named as one.
 
-## 3. Measured controls
+## 3. Real workspace acceptance
 
-All from `stage5_m146_*.json`, generated by running the real modules.
+Both real indexes were found `not ready` under this runtime (ARC
+`derivation_changed`, TCKDB_v2 `schema_changed`) — the expected consequence of
+M146-A's fingerprint change, and a real instance of the scenario B was built
+for. Both were rebuilt through the existing authoritative path (ARC 31 s,
+TCKDB 123 s) before acceptance.
 
-| Control | Result |
+| Case | Result |
 | --- | --- |
-| unique absolute path → its repository | PASS |
-| unique symbol → its repository | PASS |
-| symbol in both repositories | `ambiguous`, no winner |
-| relative path in both repositories | `ambiguous`, no winner |
-| explicit selection vs contrary evidence | explicit wins |
-| no evidence | `no_match`, never the least bad repository |
-| alias-shaped prose token | not selected (§20/§66 negative control) |
-| same relative path across repos | 2 distinct worktreeIds / repositoryIds |
-| same FQN across repos | stays 2 candidates |
-| registration order reversed | identical decisions |
-| unrelated repository added | decisive answer unmoved |
-| independent clones, identical content | `ambiguous`, distinct identities |
+| ARC-specific (`get_dihedral`, symbol unique to ARC) | alone == explicit == auto, lead ARC, no TCKDB contamination |
+| TCKDB-specific (`LevelOfTheory`, unique to TCKDB) | alone == explicit == auto, lead TCKDB, no ARC contamination |
+| Explicit-route parity, 3 ARC + 3 TCKDB queries | **6/6 byte-identical** (M145's gate, re-run after integration) |
+| Generic vocabulary (`main`, defined in both) | `ambiguous`, no context delivered, no forced winner |
 
-**Scaling** — a decisive index-free path, by workspace size:
+Routing evidence is genuine symbol ownership, not the repository display name.
+No ARC↔TCKDB two-repository task was invented; §43 permits the synthetic fixture
+for the composition acceptance, and real repositories validate routing,
+isolation, parity and ambiguity.
+
+## 4. Mixed readiness through the product path
+
+| Case | Status | Indexes opened | 
+| --- | --- | --- |
+| symbol only the stale member defines | `no_match` | stale member **never opened** |
+| absolute path into the stale member | `not_ready` | stale member **never opened** |
+| ready member beside a stale one | `selected` | ready member only |
+| explicit selection beside a stale one | `selected` | none probed |
+
+The ledger records `indexesOpened` for every stale-index case, because an
+outcome-only record would pass even if the refused index had been read.
+
+## 5. Cross-repository composition
+
+A task spanning a backend and a client selects backend as lead (index-free path
+evidence) with client as bounded support (weaker tier), opens both indexes,
+delivers items from both, and stamps every item with its repository identity.
+
+- Shared budget: three repositories offering 1000 tokens against a 300 budget
+  deliver 200. N repositories never create N× context.
+- Constrained budget: with room for only the direct answer, the lead survives
+  and support is omitted rather than displacing it.
+- Composition is **off by default**, so an ordinary workspace query keeps the
+  measured zero-probe cost.
+- Support is drawn only from tiers strictly weaker than the lead, so the frozen
+  rule that picks the lead is untouched, and support must itself be ready.
+
+## 6. A defect this session found and fixed
+
+The deep-probe cap that keeps cost independent of workspace size also truncates
+the pool the indexed lanes see. Measured: ten ready members, cap of eight, a
+symbol defined in the first and the last — the router reported `selected` on the
+first. The truthful answer is ambiguous, and reversing registration order would
+have named the other one, so both §110's "ambiguous cases do not silently
+choose" and §67's order invariance failed past the cap.
+
+Fixed by failing closed: a match found in a truncated pool is reported
+`ambiguous` with the reason "uniqueness is unproven", never `selected`. One
+match among a prefix is not a unique match.
+
+## 7. Remaining limitation (why MIXED)
+
+The fix is correct but it is also a ceiling. Symbol evidence can only establish
+uniqueness when every ready member was probed, so a workspace with more ready
+members than `maxDeepProbes` (default 8) abstains on symbol-only queries instead
+of answering them. Path containment is unaffected — it is index-free and probes
+nothing — so decisive path queries still scale to 1000 members with zero indexes
+opened.
+
+Options for closure, none taken here because each needs its own measurement:
+raise the cap and accept linear probe cost; add a cheap workspace-level symbol
+digest so uniqueness can be refuted without opening every index; or treat the
+truncated case as "selected, uniqueness unproven" and let the caller decide.
+
+## 8. Scaling and cost
 
 | Registered repos | Indexes opened | Deep probes | Routing |
 | --- | --- | --- | --- |
 | 1 | 0 | 0 | 0.065 ms |
 | 10 | 0 | 0 | 0.183 ms |
 | 100 | 0 | 0 | 0.342 ms |
-| 1000 | 0 | 0 | **2.042 ms** |
+| 1000 | 0 | 0 | 2.042 ms |
 
-Workspace size does not set query cost. (Registry resolution itself is unchanged
-from M145's measured ~3.5 s at 1000 members and is excluded from `routingMs`.)
+For a decisive index-free path. Probes are single bounded SQL statements against
+a member's own index — zero source reads during routing. Registry resolution is
+unchanged from M145's measured ~3.5 s at 1000 members and is excluded from
+`routingMs`.
 
-**Budget** — three repositories offering 1000 tokens against a 300-token budget
-deliver 200 tokens total: N repositories do not create N× context. A genuine
-two-repository task delivers backend as lead and client as support; with a budget
-that fits only one, the direct answer survives and the weak support is omitted.
+## 9. Preservation
 
-## 4. M146-A preservation
+`4382 pass / 49 skip / 0 fail` before the truncation fix; final counts in the
+session report. Both typechecks clean, `git diff --check` clean.
 
-The anti-drift closure guard and the full runtime/index compatibility suite pass
-unchanged (25/25). The new workspace code did **not** enter the index write
-closure, which is the §62/§64 requirement: repository routing is query-time
-behaviour and must not become persisted index derivation, or every ranking tweak
-would invalidate every index. No routing state is persisted in any index.
+- **M146-A**: closure guard and compatibility suite pass. The new workspace code
+  did **not** enter the index write closure — repository routing stays
+  query-time, so routing edits cannot invalidate indexes. No routing state is
+  persisted in any index.
+- **M145**: workspace suite unchanged; explicit ARC+TCKDB parity re-proven 6/6.
+- **M144 / M143 / M142 / M141 / M140 / M139 / M138 / M137 / M136 / M132**: all
+  suites pass unchanged in the full run. Frozen50's 0/50 and the byte-identical
+  semantic hashes are the aggregate evidence that no retrieval semantics moved.
 
-## 5. What is NOT done
+## 10. Recommended next action
 
-Stated plainly, because §113 turns on it:
-
-1. **Aggregation is not integrated into the product path.** It is a tested module
-   with a defined contract, not yet reached by `get_code_context` /
-   `get_context_capsule` / `run_pipeline` through the shared `productContext`
-   seam (§44/§77). Nothing in the product behaves differently yet.
-2. **No paired benchmark was run.** Frozen50, Django and cross_repo_30 were not
-   executed against `a3040e1`. §83 requires this checkpoint to measure Frozen50
-   precisely because A did not. Since no retrieval, ranking or selection code was
-   touched and the new modules are not yet called by any product path, movement
-   is structurally impossible — but that is an argument, and the brief is
-   explicit that it must become a measurement.
-3. **No ARC/TCKDB real workspace acceptance** (§54–§58, §103–§104).
-4. **The workspace benchmark corpus is not at §50 breadth.** 18 case classes are
-   specified; the fixtures here cover roughly 12 of them as unit controls, and
-   there is no named corpus artifact.
-5. **Fork divergence (§70) and failure-path routing (§59) are untested.** The
-   containment tier makes failure-path routing structurally available, since
-   M144 frames are absolute paths, but no control exercises it.
-
-## 6. Limitations found, not deferred
-
-- **Containment requires an absolute path.** A bare `src/utils.py` names a shape,
-  not a place, so it falls to the indexed tier and can be ambiguous. This is
-  correct but means a not-ready repository cannot be identified from a relative
-  path alone.
-- **Nested checkouts.** Two registered roots can contain one path; the deepest
-  root owns it. That is containment rather than a tie-break, and M132 already
-  forbids a parent from indexing a nested worktree.
-- **Ambiguity has no bounded multi-repo fallback yet.** §28 permits either
-  abstention or a bounded probe of the ambiguous set; only abstention is
-  implemented.
-
-## 7. Recommended next action
-
-Finish B before any M146 closure session:
-
-1. wire aggregation through the shared `productContext` seam for the single
-   authoritative retrieval surface, keeping single-repository output equivalent;
-2. run the §83 paired benchmark against `a3040e1` — Frozen50 first;
-3. add the ARC/TCKDB workspace acceptances and name the workspace corpus
-   truthfully;
-4. only then run the separate M146 final-closure session, which can attribute
-   `88de106 → M146 final` cleanly.
+A separate **M146 final closure** session, reconciling M146-A PASS with M146-B
+MIXED into the overall milestone verdict, running the final preservation and
+provenance pass across `88de106 → M146 final`. The truncation ceiling in §7 is
+the first candidate for M147 scope.

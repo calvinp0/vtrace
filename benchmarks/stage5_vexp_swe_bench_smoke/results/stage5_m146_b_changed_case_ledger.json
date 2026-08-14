@@ -1,0 +1,12 @@
+{
+  "milestone": "M146-B",
+  "standardSuites": [
+    "django(20)",
+    "cross_repo_30(30)"
+  ],
+  "changedCases": [],
+  "changedCaseCount": 0,
+  "rule": "every gold movement must name case, predecessor, candidate, mode, and mechanism",
+  "result": "No case moved on either suite; both semantic hashes are byte-identical, so there is nothing to attribute.",
+  "structuralReason": "ordinary single-repository requests cannot reach the workspace router: a test walks src/ and fails if any production file outside src/workspace imports it"
+}
