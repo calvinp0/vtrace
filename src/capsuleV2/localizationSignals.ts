@@ -79,7 +79,11 @@ const MIN_SYMBOL_TERM_LENGTH = 3;
  * Detect how strongly the issue text already localizes the edit site, resolved
  * against the indexed repo. Pure read-only over `db`; deterministic.
  */
-export function detectLocalizationSignals(db: Database, task: string): LocalizationSignals {
+export function detectLocalizationSignals(
+  db: Database,
+  task: string,
+  options: { readonly indexedPaths?: readonly string[] } = {},
+): LocalizationSignals {
   const reasons: string[] = [];
 
   // --- 1. Traceback frames (the strongest user-provided localization signal) ---
@@ -106,7 +110,10 @@ export function detectLocalizationSignals(db: Database, task: string): Localizat
   const explicitSymbolMentions = uniqueStrings([...shaped.likelySymbols, ...titleTerms]);
 
   // --- 3. Resolve everything against the index (existence only) -----------------
-  const allPaths = listAllFilePaths(db);
+  // The caller may already hold this list (M144 shares one read between the
+  // failure-frame membership test and this detector). Reading it twice per task
+  // is a full table scan for an answer we already have.
+  const allPaths = options.indexedPaths ?? listAllFilePaths(db);
 
   const resolvedFiles = new Set<string>();
   let anyTracebackPathResolved = false;

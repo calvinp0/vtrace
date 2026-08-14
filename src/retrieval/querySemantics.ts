@@ -95,6 +95,19 @@ export interface DerivedQueryIntent {
 
 export interface DeriveQueryIntentOptions {
   readonly projectNameAliases?: ReadonlySet<string>;
+  /**
+   * Does `pathHint` name a file inside the ACTIVE repository? (M144)
+   *
+   * A traceback is printed by an interpreter that walked through whatever code
+   * happened to be on the stack — the reporter's own script, the standard
+   * library, an unrelated dependency. Only the caller knows which of those paths
+   * belong to the repository being searched, so the membership test is injected
+   * rather than guessed here; this module stays pure and deterministic.
+   *
+   * Omitted means "unknown", and unknown must not change anything: without a
+   * resolver every frame stays eligible exactly as it was before M144.
+   */
+  readonly isRepositoryPath?: (pathHint: string) => boolean;
 }
 
 // Small task-language set. This affects identifier confidence only; tokens stay
@@ -316,7 +329,12 @@ export function deriveQueryIntent(task: string, options: DeriveQueryIntentOption
   const branchClauses = allClauses.filter((clause) => clause.kind === "alternative_branches");
   const comparisonIdentifiers = collectComparisonIdentifiers(task);
   const contrastIdentifiers = unique(contrastClauses.flatMap((clause) => clause.contrastIdentifiers));
-  const explicitSignals = collectExplicitIdentifierSignals(task, contrastClauses, comparisonIdentifiers);
+  const explicitSignals = collectExplicitIdentifierSignals(
+    task,
+    contrastClauses,
+    comparisonIdentifiers,
+    options.isRepositoryPath,
+  );
   const projectReferences = collectProjectReferences(task, options.projectNameAliases ?? new Set());
   const explicit = explicitSignals
     .filter((signal) => !projectReferences.some((term) => sameIdentifier(term, signal.term)) || hasExplicitProjectSymbolContext(task, signal.term))
@@ -500,9 +518,19 @@ function collectComparisonIdentifiers(task: string): string[] {
  * `<module>`, `<listcomp>` and `<genexpr>` are frame labels, not names, and
  * match neither shape.
  */
-const TRACEBACK_FRAME_SHAPES: readonly RegExp[] = [
-  new RegExp(String.raw`\bfile\s+["'][^"'\n]*["']\s*,\s*line\s+\d+\s*,\s*in\s+(${IDENTIFIER})`, "giu"),
-  /\bline\s+\d+\s*,\s*in\s+([A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)+|[A-Za-z_][A-Za-z0-9_]*_[A-Za-z0-9_]*)/gu,
+// The complete shape captures the FILE as well as the name (M144): which frame
+// is worth trusting depends on whose code it is, and only the path says that.
+const TRACEBACK_FRAME_SHAPES: ReadonlyArray<{ readonly pattern: RegExp; readonly pathGroup: number; readonly nameGroup: number }> = [
+  {
+    pattern: new RegExp(String.raw`\bfile\s+["']([^"'\n]*)["']\s*,\s*line\s+\d+\s*,\s*in\s+(${IDENTIFIER})`, "giu"),
+    pathGroup: 1,
+    nameGroup: 2,
+  },
+  {
+    pattern: /\bline\s+\d+\s*,\s*in\s+([A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)+|[A-Za-z_][A-Za-z0-9_]*_[A-Za-z0-9_]*)/gu,
+    pathGroup: 0,
+    nameGroup: 1,
+  },
 ];
 
 const LANGUAGE_PROTOCOL_DUNDER = /^__[A-Za-z0-9_]+__$/u;
@@ -510,32 +538,78 @@ const LANGUAGE_PROTOCOL_DUNDER = /^__[A-Za-z0-9_]+__$/u;
 // which the indented source echo above it never does.
 const RAISED_EXCEPTION_AFTER_FRAME = /(?:^|\n|\|)\s*[A-Za-z_][A-Za-z0-9_.]*\s*:\s*\S/u;
 
-function lastTracebackFrameIdentifier(task: string): string | undefined {
-  let last: { end: number; term: string } | undefined;
-  for (const pattern of TRACEBACK_FRAME_SHAPES) {
-    for (const match of task.matchAll(pattern)) {
+function lastTracebackFrameIdentifier(
+  task: string,
+  isRepositoryPath?: (pathHint: string) => boolean,
+): string | undefined {
+  const frames: Array<{ end: number; term: string; pathHint: string | undefined }> = [];
+  for (const shape of TRACEBACK_FRAME_SHAPES) {
+    for (const match of task.matchAll(shape.pattern)) {
       // Both shapes end with the captured name, so the match end orders frames
       // by where their identifier appears.
-      const end = (match.index ?? 0) + match[0].length;
-      if (last === undefined || end >= last.end) last = { end, term: match[1]! };
+      frames.push({
+        end: (match.index ?? 0) + match[0].length,
+        term: match[shape.nameGroup]!,
+        pathHint: shape.pathGroup === 0 ? undefined : (match[shape.pathGroup] ?? "").trim(),
+      });
     }
   }
-  if (last === undefined) return undefined;
-  if (LANGUAGE_PROTOCOL_DUNDER.test(leaf(last.term))) return undefined;
-  if (!RAISED_EXCEPTION_AFTER_FRAME.test(task.slice(last.end))) return undefined;
-  return last.term;
+  if (frames.length === 0) return undefined;
+  // Both shapes end with the captured name, so a COMPLETE frame is also matched
+  // by the bare-tail shape at the same offset — and that duplicate carries no
+  // path. Left in, it would re-admit a frame the repository filter just rejected
+  // (`httplib._send_output` matches the tail shape too). Same offset means same
+  // frame; keep the entry that knows which file it came from.
+  const byEnd = new Map<number, { end: number; term: string; pathHint: string | undefined }>();
+  for (const frame of frames) {
+    const existing = byEnd.get(frame.end);
+    if (existing === undefined || (existing.pathHint === undefined && frame.pathHint !== undefined)) {
+      byEnd.set(frame.end, frame);
+    }
+  }
+  const ordered = [...byEnd.values()].sort((a, b) => a.end - b.end);
+  const deepest = ordered.at(-1)!;
+
+  // Completeness is a property of the TRACEBACK, not of the frame we end up
+  // choosing: it asks whether the excerpt runs all the way to the exception or
+  // was cut off mid-stack. So it is always measured after the DEEPEST frame,
+  // even when the frame selected below is an earlier one. pylint-8898 is cut
+  // mid-`sre_parse` and must stay rejected however the selection changes.
+  if (!RAISED_EXCEPTION_AFTER_FRAME.test(task.slice(deepest.end))) return undefined;
+
+  // M144: prefer the deepest frame that is THIS repository's own code. A frame
+  // in the standard library or in the reporter's own script names a function
+  // that does not exist here, and asserting it as an explicit identifier spends
+  // the request's strongest signal on a symbol the index cannot contain —
+  // `psf/requests-1724` ends in `httplib._send_output` while the last frame the
+  // project itself owns is `sessions.py::send`. Frames with no path (the bare
+  // `line N, in name` tail) carry no membership evidence either way, so they
+  // stay eligible rather than being filtered on an absence.
+  //
+  // Without a resolver this is a no-op: `selected` is the deepest frame, which
+  // is exactly the pre-M144 choice.
+  const eligible = isRepositoryPath === undefined
+    ? ordered
+    : ordered.filter((frame) => frame.pathHint === undefined || frame.pathHint.length === 0
+      || isRepositoryPath(frame.pathHint));
+  const selected = eligible.at(-1);
+  if (selected === undefined) return undefined;
+
+  if (LANGUAGE_PROTOCOL_DUNDER.test(leaf(selected.term))) return undefined;
+  return selected.term;
 }
 
 function collectExplicitIdentifierSignals(
   task: string,
   clauses: readonly ContrastClause[],
   comparisonIdentifiers: readonly string[],
+  isRepositoryPath?: (pathHint: string) => boolean,
 ): IdentifierSignal[] {
   const out: IdentifierSignal[] = [];
   const add = (term: string, source: SymbolHypothesisSource, reason: string): void => {
     out.push({ term, confidence: "explicit_identifier", source, eligibleAsSymbol: true, reason });
   };
-  const frame = lastTracebackFrameIdentifier(task);
+  const frame = lastTracebackFrameIdentifier(task, isRepositoryPath);
   if (frame !== undefined) add(frame, "traceback_frame", "identifier in the traceback frame where execution stopped");
   for (const term of comparisonIdentifiers) add(term, "comparison", "explicit comparison operand");
   for (const term of clauses.flatMap((clause) => clause.positiveIdentifiers)) {

@@ -52,6 +52,7 @@ import {
   type CoeditCandidateItem,
 } from "./multiFileCoeditHints";
 import { detectLocalizationSignals, type LocalizationSignals } from "./localizationSignals";
+import { createLazyRepositoryPathPredicate } from "../retrieval/repositoryPathMembership";
 import { retrieveDocSections, type DocSection } from "./docRetrieval";
 import { detectEditRiskDirectives } from "./editRiskDirectives";
 import {
@@ -177,11 +178,17 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       ? { timingsMs: {}, counters: {} }
       : undefined;
   const taskDerivationStarted = performance.now();
+  // M144: whether a path the task names belongs to THIS repository. Lazy, so a
+  // task with no traceback path never pays for the lookup, and memoized, so a
+  // deep traceback costs one table scan rather than one per frame.
+  const failureEvidenceCounters = { queries: 0 };
+  const repositoryPaths = createLazyRepositoryPathPredicate(input.db, failureEvidenceCounters);
   const shaped = shapeSweQuery({
     problemStatement: input.task,
     failToPass: extractFailingTests(input.task),
   }, {
     projectNameAliases: resolveProjectNameAliases(input.repoRoot),
+    isRepositoryPath: repositoryPaths.isRepositoryPath,
     ...(documentProfile === undefined ? {} : { performanceProfile: documentProfile }),
   });
   // Intent planner: detect intent + select the strategy (generators, role policy,
@@ -192,7 +199,9 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   // against this repo's index). Independent of retrieval scoring; consumed by the
   // cost-aware context policy to skip injection for already-localized tasks. Always
   // computed so the diagnostic is present on both the inject and no_context paths.
-  const localizationSignals = detectLocalizationSignals(input.db, input.task);
+  const localizationSignals = detectLocalizationSignals(input.db, input.task, {
+    indexedPaths: repositoryPaths.indexedPaths(),
+  });
   const plan = planIntent(input.intent, input.task, shaped);
   const objectiveDecompositionStarted = documentProfile === undefined ? 0 : performance.now();
   const pathContext = createPathRelevanceContext(

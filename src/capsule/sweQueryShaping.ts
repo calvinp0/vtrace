@@ -66,6 +66,13 @@ export interface ShapeSweQueryOptions {
   maxIdentifiers?: number;
   /** Known repository-name aliases, used only to reject project-as-symbol noise. */
   projectNameAliases?: ReadonlySet<string>;
+  /**
+   * Does a path named by the task belong to the ACTIVE repository? (M144)
+   * Passed straight to `deriveQueryIntent`, which uses it to ignore traceback
+   * frames from the standard library or the reporter's own machine. Omitted
+   * means "unknown", and unknown changes nothing.
+   */
+  isRepositoryPath?: (pathHint: string) => boolean;
   performanceProfile?: {
     timingsMs: Record<string, number>;
     counters: Record<string, number>;
@@ -153,12 +160,12 @@ export function shapeSweQuery(
   record: SweIssueRecord,
   options: ShapeSweQueryOptions = {},
 ): ShapedSweQuery {
-  const { performanceProfile, projectNameAliases, ...shapeOptions } = options;
+  const { performanceProfile, projectNameAliases, isRepositoryPath, ...shapeOptions } = options;
   const config = { ...DEFAULT_OPTIONS, ...stripUndefined(shapeOptions) };
   const problem = (record.problemStatement ?? "").trim();
   const hints = (record.hintsText ?? "").trim();
   const prose = `${problem}\n${hints}`;
-  const derivedIntent = deriveQueryIntent(prose, { projectNameAliases });
+  const derivedIntent = deriveQueryIntent(prose, { projectNameAliases, isRepositoryPath });
   const positiveProse = derivedIntent.positiveSearchText;
 
   const failingTests = dedupeNonEmpty((record.failToPass ?? []).map((id) => id.trim()));
