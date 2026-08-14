@@ -75,6 +75,13 @@ export const EVIDENCE_REQUIRES_READY_INDEX: Readonly<Record<RepositoryEvidenceKi
  * chosen per lane. A lane that reads indexer-derived state sees ready members
  * only, so adding one cannot accidentally omit the gate.
  */
+const TIER_ORDER: readonly RepositoryEvidenceKind[] = [
+  RepositoryEvidenceKind.ExplicitRoute,
+  RepositoryEvidenceKind.PathContainment,
+  RepositoryEvidenceKind.IndexedPath,
+  RepositoryEvidenceKind.ExactSymbol,
+];
+
 function poolForEvidence(
   kind: RepositoryEvidenceKind,
   members: readonly RegisteredRepository[],
@@ -137,6 +144,17 @@ export interface RepositoryRelevanceRequest {
   /** Opens bounded read-only access to a member. Only called for ready members. */
   readonly probe?: ((repository: RegisteredRepository) => RepositoryProbe | null) | undefined;
   readonly limits?: RepositoryRelevanceLimits | undefined;
+  /**
+   * Also collect repositories whose evidence sits BELOW the deciding tier, as
+   * bounded supporting context for a task that genuinely spans repositories.
+   *
+   * Off by default, and that default is load-bearing: gathering support means
+   * running the indexed lanes even when an index-free hint already decided, so
+   * a decisive path would start opening indexes to look for repositories that
+   * merely could contribute. The lead is chosen by the same frozen rule either
+   * way — support is additive and never changes who leads.
+   */
+  readonly collectSupportingEvidence?: boolean | undefined;
 }
 
 export interface RepositoryRelevanceDiagnostics {
@@ -160,6 +178,12 @@ export interface RepositoryRelevance {
   readonly selected: readonly RepositoryNominee[];
   /** Bounded. The plausible set for `ambiguous`, the blocked set for `not_ready`. */
   readonly candidates: readonly RepositoryNominee[];
+  /**
+   * Ready repositories carrying evidence at a strictly weaker tier than the
+   * lead. Empty unless `collectSupportingEvidence` was requested. Distinct from
+   * `candidates`: these are not rival answers, they are additional context.
+   */
+  readonly supporting: readonly RepositoryNominee[];
   readonly reason: string;
   readonly diagnostics: RepositoryRelevanceDiagnostics;
 }
@@ -190,6 +214,11 @@ export function nominateRepositories(request: RepositoryRelevanceRequest): Repos
   // Counted per member, not per lane: consulting one index twice is one probe.
   const deepProbedAliases = new Set<string>();
   const evidence: RepositoryEvidence[] = [];
+  // Composition is opt-in precisely so the default path keeps its measured cost:
+  // a decisive index-free hint must not start opening indexes to look for repos
+  // that merely COULD support it.
+  const collectSupporting = request.collectSupportingEvidence === true;
+  let decidingTier: RepositoryEvidenceKind | null = null;
 
   // ---- Tier 0: explicit selection -----------------------------------------
   // Highest authority (§17). Resolved through M145 so its ambiguity and
@@ -231,7 +260,7 @@ export function nominateRepositories(request: RepositoryRelevanceRequest): Repos
       });
     }
   }
-  if (hasTier(evidence, RepositoryEvidenceKind.PathContainment)) {
+  if (hasTier(evidence, RepositoryEvidenceKind.PathContainment) && !collectSupporting) {
     return decide({
       tier: RepositoryEvidenceKind.PathContainment,
       evidence,
@@ -241,12 +270,17 @@ export function nominateRepositories(request: RepositoryRelevanceRequest): Repos
       diagnostics: baseDiagnostics(members, readyMembers, excluded, deepProbedAliases.size),
     });
   }
+  decidingTier ??= hasTier(evidence, RepositoryEvidenceKind.PathContainment)
+    ? RepositoryEvidenceKind.PathContainment
+    : null;
 
   // ---- Tier 2: indexed path membership (READY MEMBERS ONLY) ----------------
   // Both indexed lanes draw from the same gated pool, bounded so workspace size
   // never sets query cost.
-  const probeTargets = poolForEvidence(RepositoryEvidenceKind.IndexedPath, members, readyMembers)
-    .slice(0, limits.maxDeepProbes);
+  const probeTargets = decidingTier !== null && !collectSupporting
+    ? []
+    : poolForEvidence(RepositoryEvidenceKind.IndexedPath, members, readyMembers)
+      .slice(0, limits.maxDeepProbes);
   const probes = new Map<string, RepositoryProbe>();
   if (request.probe !== undefined && pathHints.length > 0) {
     const scopes: PathMembershipScope[] = [];
@@ -284,7 +318,7 @@ export function nominateRepositories(request: RepositoryRelevanceRequest): Repos
       }
     }
   }
-  if (hasTier(evidence, RepositoryEvidenceKind.IndexedPath)) {
+  if (hasTier(evidence, RepositoryEvidenceKind.IndexedPath) && decidingTier === null && !collectSupporting) {
     return decide({
       tier: RepositoryEvidenceKind.IndexedPath,
       evidence,
@@ -294,6 +328,9 @@ export function nominateRepositories(request: RepositoryRelevanceRequest): Repos
       diagnostics: baseDiagnostics(members, readyMembers, excluded, deepProbedAliases.size),
     });
   }
+  decidingTier ??= hasTier(evidence, RepositoryEvidenceKind.IndexedPath)
+    ? RepositoryEvidenceKind.IndexedPath
+    : null;
 
   // ---- Tier 3: exact symbol (READY MEMBERS ONLY) ---------------------------
   const symbolHints = (request.symbolHints ?? []).filter((hint) => hint.trim().length > 0);
@@ -314,9 +351,12 @@ export function nominateRepositories(request: RepositoryRelevanceRequest): Repos
       }
     }
   }
-  if (hasTier(evidence, RepositoryEvidenceKind.ExactSymbol)) {
+  decidingTier ??= hasTier(evidence, RepositoryEvidenceKind.ExactSymbol)
+    ? RepositoryEvidenceKind.ExactSymbol
+    : null;
+  if (decidingTier !== null) {
     return decide({
-      tier: RepositoryEvidenceKind.ExactSymbol,
+      tier: decidingTier,
       evidence,
       members,
       readinessByAlias,
@@ -330,6 +370,7 @@ export function nominateRepositories(request: RepositoryRelevanceRequest): Repos
     status: RepositoryRelevanceStatus.NoMatch,
     selected: [],
     candidates: [],
+    supporting: [],
     reason: members.length === 0
       ? "No enabled repository is registered in this workspace."
       : "No repository carries evidence for this request.",
@@ -353,6 +394,21 @@ function decide(input: {
   const aliases = [...new Set(tierEvidence.map((entry) => entry.alias))].sort();
   const nominees = aliases.map((alias) => buildNominee(alias, input.members, input.readinessByAlias, tierEvidence));
 
+  // Support is drawn only from strictly weaker tiers, and never from a
+  // repository already leading: a repo that matched the deciding tier is an
+  // answer or a rival, not context.
+  const leadTierIndex = TIER_ORDER.indexOf(input.tier);
+  const weaker = input.evidence.filter((entry) => TIER_ORDER.indexOf(entry.kind) > leadTierIndex);
+  const supportingAliases = [...new Set(weaker.map((entry) => entry.alias))]
+    .filter((alias) => !aliases.includes(alias))
+    .sort();
+  const supporting = supportingAliases
+    .map((alias) => buildNominee(alias, input.members, input.readinessByAlias, weaker))
+    // Support reads indexed state by construction, so an unready member can
+    // never be support even though it can still be a lead nominee.
+    .filter((nominee) => nominee.ready)
+    .slice(0, input.limits.maxReportedCandidates);
+
   const diagnostics = (candidatesOmitted: number): RepositoryRelevanceDiagnostics => ({
     ...input.diagnostics,
     decidingTier: input.tier,
@@ -366,6 +422,7 @@ function decide(input: {
       status: RepositoryRelevanceStatus.Ambiguous,
       selected: [],
       candidates: reported,
+      supporting: [],
       reason: `${nominees.length} repositories match this request on ${input.tier} evidence: ${aliases.join(", ")}.`,
       diagnostics: diagnostics(nominees.length - reported.length),
     };
@@ -379,6 +436,7 @@ function decide(input: {
       status: RepositoryRelevanceStatus.NotReady,
       selected: [],
       candidates: [nominee],
+      supporting: [],
       reason: `${nominee.alias} is the relevant repository but its index cannot answer: ${nominee.notReadyReason}.`,
       diagnostics: diagnostics(0),
     };
@@ -388,6 +446,7 @@ function decide(input: {
     status: RepositoryRelevanceStatus.Selected,
     selected: [nominee],
     candidates: [nominee],
+    supporting,
     reason: `${nominee.alias} selected on ${input.tier} evidence.`,
     diagnostics: diagnostics(0),
   };
