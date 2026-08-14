@@ -1,0 +1,91 @@
+{
+  "schemaVersion": "stage5.m143.final-changed-case-ledger.v1",
+  "purpose": "M143 \u00a779/\u00a780: every case that differs between the M142 functional predecessor and the M143 functional candidate, with its mechanism and classification.",
+  "predecessor": "41fb0a9ba22b0f69e3349aca77b4ae2b15908504",
+  "candidate": "93a34d194b2360094d61b27f2ecc12f6dccacdb3",
+  "goldVisibilityMovements": [],
+  "goldVisibilityMovementCount": 0,
+  "nonGoldSemanticMovements": [
+    {
+      "case": "django__django-11740",
+      "suite": "django",
+      "fieldsChanged": [
+        "modelVisibleContext",
+        "tokenAccounting"
+      ],
+      "leadBefore": "django/db/models/fields/related.py",
+      "leadAfter": "django/db/models/fields/related.py",
+      "leadChanged": false,
+      "selectedFilesChanged": false,
+      "mechanism": "title_evidence_truthfulness",
+      "classification": "NEUTRAL - explanation-only",
+      "explained": true,
+      "detail": "Injected title candidate no longer asserts lexical/fts/tfidf/bm25 = 1. The model-visible justification loses the false 'strong lexical match' clause; token accounting follows. Retrieval, ranking and selection are untouched."
+    },
+    {
+      "case": "django__django-11133",
+      "suite": "django",
+      "fieldsChanged": [
+        "modelVisibleContext",
+        "tokenAccounting"
+      ],
+      "leadBefore": "http/response.py",
+      "leadAfter": "http/response.py",
+      "leadChanged": false,
+      "selectedFilesChanged": false,
+      "mechanism": "title_evidence_truthfulness",
+      "classification": "NEUTRAL - explanation-only",
+      "explained": true,
+      "detail": "Injected title candidate no longer asserts lexical/fts/tfidf/bm25 = 1. The model-visible justification loses the false 'strong lexical match' clause; token accounting follows. Retrieval, ranking and selection are untouched."
+    },
+    {
+      "case": "django__django-12276",
+      "suite": "django",
+      "fieldsChanged": [
+        "modelVisibleContext",
+        "tokenAccounting"
+      ],
+      "leadBefore": "forms/widgets.py",
+      "leadAfter": "forms/widgets.py",
+      "leadChanged": false,
+      "selectedFilesChanged": false,
+      "mechanism": "title_evidence_truthfulness",
+      "classification": "NEUTRAL - explanation-only",
+      "explained": true,
+      "detail": "Injected title candidate no longer asserts lexical/fts/tfidf/bm25 = 1. The model-visible justification loses the false 'strong lexical match' clause; token accounting follows. Retrieval, ranking and selection are untouched."
+    },
+    {
+      "case": "django__django-13112",
+      "suite": "django",
+      "fieldsChanged": [
+        "modelVisibleContext",
+        "tokenAccounting"
+      ],
+      "leadBefore": "db/models/fields/related.py",
+      "leadAfter": "db/models/fields/related.py",
+      "leadChanged": false,
+      "selectedFilesChanged": false,
+      "mechanism": "title_evidence_truthfulness",
+      "classification": "NEUTRAL - explanation-only",
+      "explained": true,
+      "detail": "Injected title candidate no longer asserts lexical/fts/tfidf/bm25 = 1. The model-visible justification loses the false 'strong lexical match' clause; token accounting follows. Retrieval, ranking and selection are untouched."
+    },
+    {
+      "case": "sympy__sympy-16766",
+      "suite": "cross_repo",
+      "fieldsChanged": [
+        "modelVisibleContext",
+        "tokenAccounting"
+      ],
+      "leadBefore": "sympy/printing/pycode.py",
+      "leadAfter": "sympy/printing/pycode.py",
+      "leadChanged": false,
+      "selectedFilesChanged": false,
+      "mechanism": "title_evidence_truthfulness",
+      "classification": "NEUTRAL - explanation-only",
+      "explained": true,
+      "detail": "Injected title candidate no longer asserts lexical/fts/tfidf/bm25 = 1. The model-visible justification loses the false 'strong lexical match' clause; token accounting follows. Retrieval, ranking and selection are untouched."
+    }
+  ],
+  "unexplained": []
+}

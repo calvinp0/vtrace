@@ -1,0 +1,263 @@
+{
+  "schemaVersion": "stage5.m140.multi-suite-paired-comparison.v1",
+  "predecessor": {
+    "label": "m142-final-41fb0a9",
+    "commit": "41fb0a9ba22b0f69e3349aca77b4ae2b15908504",
+    "tree": "49c7dd7ea3521158b6cb25724099bd0e89e556e5"
+  },
+  "candidate": {
+    "label": "m143-final-93a34d1",
+    "commit": "93a34d194b2360094d61b27f2ecc12f6dccacdb3",
+    "tree": "33cce78e9bfc3c2339deb1dce4ee3af3363d76bb"
+  },
+  "provenanceValid": true,
+  "suites": [
+    {
+      "name": "django",
+      "caseCount": 20,
+      "fixtureHash": "fffa734a3a2f64b88cebce8655a7413c70d4467827cf1408724a985b90cb95e5",
+      "sameFixtureHash": true,
+      "sameTargetCorpusHash": true,
+      "isolatedIndexes": true,
+      "provenanceValid": true,
+      "authoritative": true,
+      "semanticallyEqual": false,
+      "predecessorSemanticHash": "885a69977b3a774c87a738493ed6db52b66e44988f4f7fce3133e503ddb430db",
+      "candidateSemanticHash": "6ba5894217b3dbf626524a4db128c5526efdd9dce00ebebc2d33713a77a2e055",
+      "differences": {
+        "selectedFiles": 0,
+        "lead": 0,
+        "roles": 0,
+        "contentModes": 0,
+        "modelVisibleContext": 4,
+        "tokenAccounting": 4,
+        "qualityMetrics": 0
+      },
+      "changedCases": [
+        {
+          "instanceId": "django__django-11740",
+          "fields": [
+            "modelVisibleContext",
+            "tokenAccounting"
+          ],
+          "predecessorLead": "django/db/models/fields/related.py",
+          "candidateLead": "django/db/models/fields/related.py",
+          "predecessorSelectedFiles": [
+            "django/db/models/fields/related.py",
+            "django/db/migrations/autodetector.py",
+            "django/db/models/fields/related_descriptors.py",
+            "django/db/migrations/operations/fields.py"
+          ],
+          "candidateSelectedFiles": [
+            "django/db/models/fields/related.py",
+            "django/db/migrations/autodetector.py",
+            "django/db/models/fields/related_descriptors.py",
+            "django/db/migrations/operations/fields.py"
+          ],
+          "predecessorGoldVisible": true,
+          "candidateGoldVisible": true
+        },
+        {
+          "instanceId": "django__django-11133",
+          "fields": [
+            "modelVisibleContext",
+            "tokenAccounting"
+          ],
+          "predecessorLead": "http/response.py",
+          "candidateLead": "http/response.py",
+          "predecessorSelectedFiles": [
+            "http/response.py",
+            "core/checks/database.py"
+          ],
+          "candidateSelectedFiles": [
+            "http/response.py",
+            "core/checks/database.py"
+          ],
+          "predecessorGoldVisible": true,
+          "candidateGoldVisible": true
+        },
+        {
+          "instanceId": "django__django-12276",
+          "fields": [
+            "modelVisibleContext",
+            "tokenAccounting"
+          ],
+          "predecessorLead": "forms/widgets.py",
+          "candidateLead": "forms/widgets.py",
+          "predecessorSelectedFiles": [
+            "forms/widgets.py",
+            "core/files/storage.py",
+            "core/files/uploadhandler.py"
+          ],
+          "candidateSelectedFiles": [
+            "forms/widgets.py",
+            "core/files/storage.py",
+            "core/files/uploadhandler.py"
+          ],
+          "predecessorGoldVisible": true,
+          "candidateGoldVisible": true
+        },
+        {
+          "instanceId": "django__django-13112",
+          "fields": [
+            "modelVisibleContext",
+            "tokenAccounting"
+          ],
+          "predecessorLead": "db/models/fields/related.py",
+          "candidateLead": "db/models/fields/related.py",
+          "predecessorSelectedFiles": [
+            "db/models/fields/related.py",
+            "contrib/admin/utils.py",
+            "core/management/commands/makemigrations.py",
+            "core/management/commands/migrate.py",
+            "db/migrations/autodetector.py",
+            "db/backends/ddl_references.py"
+          ],
+          "candidateSelectedFiles": [
+            "db/models/fields/related.py",
+            "contrib/admin/utils.py",
+            "core/management/commands/makemigrations.py",
+            "core/management/commands/migrate.py",
+            "db/migrations/autodetector.py",
+            "db/backends/ddl_references.py"
+          ],
+          "predecessorGoldVisible": true,
+          "candidateGoldVisible": true
+        }
+      ],
+      "quality": {
+        "predecessor": {
+          "cases": 20,
+          "evaluated": 20,
+          "top1GoldFile": 17,
+          "top3GoldFile": 20,
+          "goldFileAnywhere": 20,
+          "goldSymbolAnywhere": 14,
+          "missingGold": 0,
+          "meanPivotCount": 2.05,
+          "meanSupportCount": 3.95,
+          "meanEstimatedTokens": 1341.75
+        },
+        "candidate": {
+          "cases": 20,
+          "evaluated": 20,
+          "top1GoldFile": 17,
+          "top3GoldFile": 20,
+          "goldFileAnywhere": 20,
+          "goldSymbolAnywhere": 14,
+          "missingGold": 0,
+          "meanPivotCount": 2.05,
+          "meanSupportCount": 3.95,
+          "meanEstimatedTokens": 1340.75
+        }
+      }
+    },
+    {
+      "name": "cross_repo",
+      "caseCount": 30,
+      "fixtureHash": "76be17081196e45eadc903b38bd8cebe6cb8141568178b73a6781ead4fe641c4",
+      "sameFixtureHash": true,
+      "sameTargetCorpusHash": true,
+      "isolatedIndexes": true,
+      "provenanceValid": true,
+      "authoritative": true,
+      "semanticallyEqual": false,
+      "predecessorSemanticHash": "ed869742593d93102555ec6c3eb7382060ecc44efb467a7141c022eeb9e17327",
+      "candidateSemanticHash": "c4415ad385e144e7dd7c83f0477b453f6e44df18f244d8da53d3a4027fa6e433",
+      "differences": {
+        "selectedFiles": 0,
+        "lead": 0,
+        "roles": 0,
+        "contentModes": 0,
+        "modelVisibleContext": 1,
+        "tokenAccounting": 1,
+        "qualityMetrics": 0
+      },
+      "changedCases": [
+        {
+          "instanceId": "sympy__sympy-16766",
+          "fields": [
+            "modelVisibleContext",
+            "tokenAccounting"
+          ],
+          "predecessorLead": "sympy/printing/pycode.py",
+          "candidateLead": "sympy/printing/pycode.py",
+          "predecessorSelectedFiles": [
+            "sympy/printing/pycode.py",
+            "sympy/utilities/lambdify.py",
+            "sympy/plotting/experimental_lambdify.py",
+            "sympy/ntheory/generate.py",
+            "sympy/tensor/indexed.py",
+            "sympy/printing/glsl.py"
+          ],
+          "candidateSelectedFiles": [
+            "sympy/printing/pycode.py",
+            "sympy/utilities/lambdify.py",
+            "sympy/plotting/experimental_lambdify.py",
+            "sympy/ntheory/generate.py",
+            "sympy/tensor/indexed.py",
+            "sympy/printing/glsl.py"
+          ],
+          "predecessorGoldVisible": true,
+          "candidateGoldVisible": true
+        }
+      ],
+      "quality": {
+        "predecessor": {
+          "cases": 30,
+          "evaluated": 30,
+          "top1GoldFile": 21,
+          "top3GoldFile": 24,
+          "goldFileAnywhere": 28,
+          "goldSymbolAnywhere": 17,
+          "missingGold": 2,
+          "meanPivotCount": 2.133,
+          "meanSupportCount": 3.833,
+          "meanEstimatedTokens": 2165.033
+        },
+        "candidate": {
+          "cases": 30,
+          "evaluated": 30,
+          "top1GoldFile": 21,
+          "top3GoldFile": 24,
+          "goldFileAnywhere": 28,
+          "goldSymbolAnywhere": 17,
+          "missingGold": 2,
+          "meanPivotCount": 2.133,
+          "meanSupportCount": 3.833,
+          "meanEstimatedTokens": 2164.833
+        }
+      }
+    }
+  ],
+  "frozen50": {
+    "caseCount": 50,
+    "changedCaseCount": 5,
+    "quality": {
+      "predecessor": {
+        "cases": 50,
+        "evaluated": 50,
+        "top1GoldFile": 38,
+        "top3GoldFile": 44,
+        "goldFileAnywhere": 48,
+        "goldSymbolAnywhere": 31,
+        "missingGold": 2,
+        "meanPivotCount": 2.1,
+        "meanSupportCount": 3.88,
+        "meanEstimatedTokens": 1835.72
+      },
+      "candidate": {
+        "cases": 50,
+        "evaluated": 50,
+        "top1GoldFile": 38,
+        "top3GoldFile": 44,
+        "goldFileAnywhere": 48,
+        "goldSymbolAnywhere": 31,
+        "missingGold": 2,
+        "meanPivotCount": 2.1,
+        "meanSupportCount": 3.88,
+        "meanEstimatedTokens": 1835.2
+      }
+    }
+  }
+}

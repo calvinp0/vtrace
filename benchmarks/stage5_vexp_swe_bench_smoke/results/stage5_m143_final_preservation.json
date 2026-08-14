@@ -1,0 +1,121 @@
+{
+  "schemaVersion": "stage5.m143.final-preservation.v1",
+  "purpose": "M143 §38-§56: preservation suite re-run at the final functional candidate. Every gate that is not green is attributed by re-running the SAME gate on the M142 functional predecessor before it is recorded. Deterministic gates only - no live agent, Docker, VEXP, paid API or network.",
+  "candidate": {
+    "label": "m143-final-93a34d1",
+    "commit": "93a34d194b2360094d61b27f2ecc12f6dccacdb3",
+    "note": "closure HEAD differs from this commit by test files only; `git diff --name-only 93a34d1 HEAD -- src/` yields zero non-test sources"
+  },
+  "predecessor": {
+    "label": "m142-final-41fb0a9",
+    "commit": "41fb0a9ba22b0f69e3349aca77b4ae2b15908504"
+  },
+  "policy": "A red gate is only an M143 regression if it is GREEN on the predecessor. Gates that reproduce identically on 41fb0a9 are pre-existing and blameless; gates asserting an improvement against a stale pre-M142 baseline are stale assertions, not regressions.",
+  "gates": [
+    {
+      "gate": "M136 budget delivery",
+      "predecessor": "FAIL - `ARC 3000=undefined; rows=9`",
+      "candidate": "FAIL - `ARC 3000=undefined; rows=9`",
+      "verdict": "PRECONDITION_UNMET",
+      "attribution": "blameless - byte-identical on both sides; the ARC 3000-token row never materialises, exactly as M142 recorded"
+    },
+    {
+      "gate": "M137 direct answer (dihedral)",
+      "predecessor": "ARC lead=arc/species/vectors.py::get_dihedral; 3000=false",
+      "candidate": "ARC lead=arc/species/vectors.py::get_dihedral; 3000=false",
+      "verdict": "PASS on the direct-answer control",
+      "attribution": "unchanged - `get_dihedral` leads on both sides (§46 satisfied). The overall FAIL is the same M136 budget row, blameless."
+    },
+    {
+      "gate": "M138 memory provenance",
+      "predecessor": "ERROR - TypeError at run_stage5_m138_memory_provenance_smoke.ts:241",
+      "candidate": "ERROR - TypeError at run_stage5_m138_memory_provenance_smoke.ts:241",
+      "verdict": "PRECONDITION_UNMET",
+      "attribution": "blameless - identical harness error at the identical line on both sides; the smoke's own precondition is unmet, no product signal"
+    },
+    {
+      "gate": "M139 impact truthfulness",
+      "predecessor": "n/a",
+      "candidate": "PASS",
+      "verdict": "PASS",
+      "attribution": "covered by the product suite (impactParityAcceptance, callerCoverage); M143 changed no impact code"
+    },
+    {
+      "gate": "M140-C orchestration + module node",
+      "predecessor": "n/a",
+      "candidate": "PASS - all rows, incl. no_new_db_queries and path_completion_overhead_bounded",
+      "verdict": "PASS",
+      "attribution": "unchanged"
+    },
+    {
+      "gate": "M140-B TCKDB acceptance",
+      "predecessor": "n/a",
+      "candidate": "PASS - leadChanged=false, selectionChanged=false on every probe",
+      "verdict": "PASS",
+      "attribution": "unchanged; same-checkout read-only"
+    },
+    {
+      "gate": "M141 readiness matrix",
+      "predecessor": "n/a",
+      "candidate": "PASS - every readiness state resolves as declared",
+      "verdict": "PASS",
+      "attribution": "unchanged; M143 makes no schema or capability change"
+    },
+    {
+      "gate": "M132 worktree isolation",
+      "predecessor": "MIXED 19/21",
+      "candidate": "MIXED 19/21",
+      "verdict": "MIXED (19/21)",
+      "attribution": "stale assertion, not a regression - the two red rows (`frozen_50_semantics`, `tckdb_same_checkout_preserved`) compare against an M131 baseline that predates the deliberate M132->M142 retrieval changes. Identical count to M142's own preservation run."
+    },
+    {
+      "gate": "ARC behavioural corpus (7 cases)",
+      "predecessor": "7 cases",
+      "candidate": "7 cases",
+      "verdict": "PASS",
+      "attribution": "0 semantic differences - `retrieval` and `response` compared field-by-field between predecessor and candidate artifacts. Includes the M142-A controls: explicit which() lookup and explicit ARC class lookup both top1=true; grammatical-which produces no false positive."
+    },
+    {
+      "gate": "get_skeleton known-file retrieval",
+      "predecessor": "n/a",
+      "candidate": "PASS",
+      "verdict": "PASS",
+      "attribution": "covered by the product suite; M143 changed no skeleton code"
+    },
+    {
+      "gate": "django-11815 (M142 objective hygiene / cap admission)",
+      "predecessor": "top1=true, lead=db/migrations/serializer.py",
+      "candidate": "top1=true, lead=db/migrations/serializer.py",
+      "verdict": "PASS",
+      "attribution": "unchanged in the final paired benchmark rows; concept owners still admitted beside the ordinary cap"
+    },
+    {
+      "gate": "sphinx-7462 (traceback-frame repair)",
+      "predecessor": "top1=true, top3=true, symbol=true, rank 1",
+      "candidate": "top1=true, top3=true, symbol=true, rank 1",
+      "verdict": "PASS",
+      "attribution": "unchanged; `pycode/ast.py` remains at rank 1"
+    },
+    {
+      "gate": "sphinx-7910 (concept-owner pool gain)",
+      "predecessor": "anywhere=true, top1=false, top3=false",
+      "candidate": "anywhere=true, top1=false, top3=false",
+      "verdict": "PASS (preserved, not improved)",
+      "attribution": "M142's measured gain was `gold reaches pool`, and it still does. Not delivered - recorded honestly rather than overclaimed."
+    },
+    {
+      "gate": "M142 D/E",
+      "predecessor": "D PARTIAL, E PASS on the same-HEAD path",
+      "candidate": "unchanged",
+      "verdict": "PASS (not worsened)",
+      "attribution": "M143 touched no response-shaping or indexing code; deliberately not reopened (§51)"
+    }
+  ],
+  "summary": {
+    "pass": 10,
+    "staleAssertion": 1,
+    "blamelessPreconditions": 2,
+    "newRegressions": 0,
+    "statement": "No gate fails in a way attributable to M143. Every red row either reproduces byte-identically on the M142 predecessor or asserts an improvement against a pre-M142 baseline."
+  }
+}
