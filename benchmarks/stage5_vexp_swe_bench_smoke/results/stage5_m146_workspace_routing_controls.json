@@ -1,0 +1,132 @@
+{
+  "milestone": "M146-B",
+  "controls": {
+    "unique_absolute_path": {
+      "status": "selected",
+      "selected": [
+        "b"
+      ],
+      "candidates": [
+        "b"
+      ],
+      "decidingTier": "path_containment",
+      "reposRegistered": 2,
+      "reposReady": 2,
+      "reposDeepProbed": 0,
+      "indexesOpened": [],
+      "excludedNotReady": [],
+      "routingMs": 0.1
+    },
+    "unique_symbol": {
+      "status": "selected",
+      "selected": [
+        "b"
+      ],
+      "candidates": [
+        "b"
+      ],
+      "decidingTier": "exact_symbol",
+      "reposRegistered": 2,
+      "reposReady": 2,
+      "reposDeepProbed": 2,
+      "indexesOpened": [
+        "a",
+        "b"
+      ],
+      "excludedNotReady": [],
+      "routingMs": 1.49
+    },
+    "ambiguous_symbol": {
+      "status": "ambiguous",
+      "selected": [],
+      "candidates": [
+        "a",
+        "b"
+      ],
+      "decidingTier": "exact_symbol",
+      "reposRegistered": 2,
+      "reposReady": 2,
+      "reposDeepProbed": 2,
+      "indexesOpened": [
+        "a",
+        "b"
+      ],
+      "excludedNotReady": [],
+      "routingMs": 1.15
+    },
+    "ambiguous_relative_path": {
+      "status": "ambiguous",
+      "selected": [],
+      "candidates": [
+        "a",
+        "b"
+      ],
+      "decidingTier": "indexed_path",
+      "reposRegistered": 2,
+      "reposReady": 2,
+      "reposDeepProbed": 2,
+      "indexesOpened": [
+        "a",
+        "b"
+      ],
+      "excludedNotReady": [],
+      "routingMs": 2.194
+    },
+    "explicit_overrides_evidence": {
+      "status": "selected",
+      "selected": [
+        "a"
+      ],
+      "candidates": [
+        "a"
+      ],
+      "decidingTier": "explicit_route",
+      "reposRegistered": 2,
+      "reposReady": 2,
+      "reposDeepProbed": 0,
+      "indexesOpened": [],
+      "excludedNotReady": [],
+      "routingMs": 0.123
+    },
+    "no_match": {
+      "status": "no_match",
+      "selected": [],
+      "candidates": [],
+      "decidingTier": null,
+      "reposRegistered": 2,
+      "reposReady": 2,
+      "reposDeepProbed": 2,
+      "indexesOpened": [
+        "a",
+        "b"
+      ],
+      "excludedNotReady": [],
+      "routingMs": 1.275
+    },
+    "display_name_prose": {
+      "status": "no_match",
+      "selected": [],
+      "candidates": [],
+      "decidingTier": null,
+      "reposRegistered": 2,
+      "reposReady": 2,
+      "reposDeepProbed": 2,
+      "indexesOpened": [
+        "a",
+        "b"
+      ],
+      "excludedNotReady": [],
+      "routingMs": 1.07
+    }
+  },
+  "expectations": {
+    "unique_absolute_path": "selected b",
+    "unique_symbol": "selected b",
+    "ambiguous_symbol": "ambiguous, no winner",
+    "ambiguous_relative_path": "ambiguous, no winner",
+    "explicit_overrides_evidence": "selected a despite evidence for b",
+    "no_match": "no_match, never the least bad repository",
+    "display_name_prose": "not selected on an alias-shaped token"
+  },
+  "verdict": "PASS"
+}

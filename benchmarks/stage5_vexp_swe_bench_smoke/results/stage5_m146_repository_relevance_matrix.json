@@ -1,0 +1,29 @@
+{
+  "milestone": "M146-B",
+  "question": "which signals may route a query, and which require an index this runtime still agrees with?",
+  "evidenceRequiresReadyIndex": {
+    "explicit_route": false,
+    "path_containment": false,
+    "indexed_path": true,
+    "exact_symbol": true
+  },
+  "tierOrder": [
+    "explicit_route",
+    "path_containment",
+    "indexed_path",
+    "exact_symbol"
+  ],
+  "rationale": {
+    "noBlendedScore": "raw retrieval scores are not established as comparable across repositories (M122-M145 calibrated each against its own corpus); a blended score would also need a tie-break, and order/path/alias are all semantic decisions in disguise",
+    "gateIsStructural": "the member pool a lane may draw on is derived from EVIDENCE_REQUIRES_READY_INDEX, so a lane added later cannot omit the gate"
+  },
+  "rejectedSignals": {
+    "repository_display_name": "M135/M137 project-name bias; alias is display metadata and prose is not a typed repository reference",
+    "fts_and_document_match": "lexical and ambiguous, and index-derived so they inherit the gate without adding exactness",
+    "package_dependency_metadata": "M147 territory; inferring a cross-repo relationship the index does not contain"
+  },
+  "defaultLimits": {
+    "maxDeepProbes": 8,
+    "maxReportedCandidates": 4
+  }
+}

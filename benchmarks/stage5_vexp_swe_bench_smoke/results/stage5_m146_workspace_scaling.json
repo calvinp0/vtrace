@@ -1,0 +1,57 @@
+{
+  "milestone": "M146-B",
+  "question": "does workspace size set query cost?",
+  "requirement": "a decisive index-free path must not deep-probe the workspace",
+  "measurements": [
+    {
+      "registeredRepos": 1,
+      "decisivePathQuery": {
+        "status": "selected",
+        "selected": [
+          "target"
+        ],
+        "reposDeepProbed": 0,
+        "indexesOpened": 0,
+        "routingMs": 0.065
+      }
+    },
+    {
+      "registeredRepos": 10,
+      "decisivePathQuery": {
+        "status": "selected",
+        "selected": [
+          "target"
+        ],
+        "reposDeepProbed": 0,
+        "indexesOpened": 0,
+        "routingMs": 0.183
+      }
+    },
+    {
+      "registeredRepos": 100,
+      "decisivePathQuery": {
+        "status": "selected",
+        "selected": [
+          "target"
+        ],
+        "reposDeepProbed": 0,
+        "indexesOpened": 0,
+        "routingMs": 0.342
+      }
+    },
+    {
+      "registeredRepos": 1000,
+      "decisivePathQuery": {
+        "status": "selected",
+        "selected": [
+          "target"
+        ],
+        "reposDeepProbed": 0,
+        "indexesOpened": 0,
+        "routingMs": 2.042
+      }
+    }
+  ],
+  "verdict": "PASS",
+  "note": "routingMs excludes workspace registry resolution, which M145 already measured at ~3.5 s for 1000 members and is unchanged here"
+}
