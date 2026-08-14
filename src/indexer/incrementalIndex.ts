@@ -15,6 +15,8 @@ export type FullRebuildReason =
   | "schema_incompatible"
   | "parser_incompatible"
   | "configuration_incompatible"
+  /** M146-A: indexer-side derivation semantics moved; stored content is obsolete. */
+  | "derivation_incompatible"
   | "snapshot_missing"
   | "snapshot_invalid"
   | "closure_uncertain"

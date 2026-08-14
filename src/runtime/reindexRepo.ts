@@ -2,7 +2,12 @@ import { getLatestIndexRun, getIndexRunSummary } from "../db/repositories/indexR
 import { openIndexerDatabase } from "../db/sqlite";
 import { readGitHead } from "../fs/git";
 import { indexProject } from "../indexer/indexProject";
-import { INDEX_FORMAT_VERSION, computeIndexFingerprints, readIndexMeta, recordIndexMeta } from "../indexer/indexMeta";
+import {
+  computeIndexFingerprints,
+  readIndexMeta,
+  recordIndexMeta,
+  resolveDerivationRebuildReason,
+} from "../indexer/indexMeta";
 import { withWorktreeIndexLock } from "../indexer/worktreeIndexLock";
 import { resolveWorktreeIdentity } from "../indexer/worktreeIdentity";
 import { recordReusableSnapshot, selectReusableSnapshot } from "../indexer/sharedSnapshots";
@@ -96,17 +101,18 @@ async function reindexRepoAndRefreshStateUnlocked(input: {
     const localMeta = await readIndexMeta(input.repoRoot);
     const currentFiles = await scanRepo(input.repoRoot);
     const localSnapshot = localMeta?.manifest?.files;
+    // Every derivation-relevant fingerprint is compared, not a hand-picked few:
+    // a mismatch confined to `indexer_fingerprint` used to leave the snapshot
+    // "compatible", so the planner reused content the runtime had already
+    // refused and then stamped it as current.
     const localIncompatibility = localMeta === undefined || localMeta === null
       ? undefined
-      : localMeta.parser_fingerprint !== fingerprints.parser_fingerprint
-        ? "parser_incompatible" as const
-        : localMeta.config_hash !== fingerprints.config_hash
-          ? "configuration_incompatible" as const
-          : localMeta.index_format_version !== INDEX_FORMAT_VERSION || localSnapshot === undefined
-            ? "schema_incompatible" as const
-            : !isValidSnapshotSet(localSnapshot)
-              ? "snapshot_invalid" as const
-            : undefined;
+      : resolveDerivationRebuildReason(localMeta, fingerprints)
+        ?? (localSnapshot === undefined
+          ? "schema_incompatible" as const
+          : !isValidSnapshotSet(localSnapshot)
+            ? "snapshot_invalid" as const
+            : undefined);
     const reusable = localSnapshot === undefined
       ? await selectReusableSnapshot({
         identity,
