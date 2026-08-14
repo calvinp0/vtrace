@@ -6,7 +6,23 @@ import { resolveRepoLocalPaths } from "../setup/repoState";
 export const WORKSPACE_CONFIG_FILENAME = "workspace.json" as const;
 export const WORKSPACE_CONFIG_SCHEMA_VERSION = "1.0.0" as const;
 
-export interface WorkspaceRepoConfig {
+/**
+ * M145 identity fields are OPTIONAL and additive, and `schemaVersion` stays at
+ * 1.0.0 on purpose. A reader that predates them ignores unknown keys, so a
+ * config carrying identity is still readable by older code, while bumping the
+ * version would have made every existing workspace file fail the strict equality
+ * check below for no correctness gain. §111: decide the bump, do not reflex it.
+ */
+export interface WorkspaceRepoIdentityRecord {
+  /** Path-derived id. Records WHICH LOCATION was registered. */
+  readonly repositoryId?: string;
+  readonly worktreeId?: string;
+  /** Instance evidence. Records WHICH REPOSITORY was there when registered. */
+  readonly repositoryInstance?: string | null;
+  readonly worktreeInstance?: string | null;
+}
+
+export interface WorkspaceRepoConfig extends WorkspaceRepoIdentityRecord {
   readonly alias: string;
   readonly rootPath: string;
   readonly statePath?: string;
@@ -21,7 +37,7 @@ export interface WorkspaceConfig {
   readonly repos: readonly WorkspaceRepoConfig[];
 }
 
-export interface ResolvedWorkspaceRepoConfig {
+export interface ResolvedWorkspaceRepoConfig extends WorkspaceRepoIdentityRecord {
   readonly alias: string;
   readonly rootPath: string;
   readonly configPath: string;
@@ -34,6 +50,12 @@ export interface ResolvedWorkspaceConfig {
   readonly configPath: string;
   readonly name?: string;
   readonly primaryRepoAlias: string;
+  /**
+   * Did the FILE name a primary, or did normalization fall back to the first
+   * entry? Routing may only default to an explicitly named one (§75), so the
+   * two cases cannot be allowed to look alike downstream.
+   */
+  readonly primaryRepoAliasExplicit: boolean;
   readonly repos: readonly ResolvedWorkspaceRepoConfig[];
 }
 
@@ -111,8 +133,10 @@ export function normalizeWorkspaceConfig(
     throw new Error(`Workspace config contains duplicate repo rootPath: ${duplicateRootPath}`);
   }
 
-  const primaryRepoAlias = typeof raw.primaryRepoAlias === "string" && raw.primaryRepoAlias.trim().length > 0
-    ? raw.primaryRepoAlias.trim()
+  const primaryRepoAliasExplicit = typeof raw.primaryRepoAlias === "string"
+    && raw.primaryRepoAlias.trim().length > 0;
+  const primaryRepoAlias = primaryRepoAliasExplicit
+    ? (raw.primaryRepoAlias as string).trim()
     : normalizedRepos[0]!.alias;
 
   if (!aliases.includes(primaryRepoAlias)) {
@@ -125,6 +149,7 @@ export function normalizeWorkspaceConfig(
       ? { name: raw.name.trim() }
       : {}),
     primaryRepoAlias,
+    primaryRepoAliasExplicit,
     repos: normalizedRepos,
   };
 }
@@ -167,6 +192,12 @@ export function formatWorkspaceConfigForWrite(
         ...(statePath === undefined || statePath === localPaths.statePath ? {} : { statePath }),
         ...(dbPath === undefined || dbPath === localPaths.dbPath ? {} : { dbPath }),
         enabled: repo.enabled !== false,
+        // Round-tripped, not recomputed: rewriting the file for an unrelated
+        // reason must not quietly re-bless a registration.
+        ...(repo.repositoryId === undefined ? {} : { repositoryId: repo.repositoryId }),
+        ...(repo.worktreeId === undefined ? {} : { worktreeId: repo.worktreeId }),
+        ...(repo.repositoryInstance === undefined ? {} : { repositoryInstance: repo.repositoryInstance }),
+        ...(repo.worktreeInstance === undefined ? {} : { worktreeInstance: repo.worktreeInstance }),
       };
     }),
   };
@@ -215,6 +246,30 @@ function normalizeRepoConfig(
     statePath,
     dbPath,
     enabled: raw.enabled !== false,
+    ...readIdentityRecord(raw),
+  };
+}
+
+/**
+ * Identity is read back verbatim and never repaired. A registration that records
+ * a repository which is no longer there must stay readable so the registry can
+ * REPORT the mismatch; silently refreshing it here would delete the evidence
+ * §109 exists to catch.
+ */
+function readIdentityRecord(raw: Record<string, unknown>): WorkspaceRepoIdentityRecord {
+  return {
+    ...(typeof raw.repositoryId === "string" && raw.repositoryId.length > 0
+      ? { repositoryId: raw.repositoryId }
+      : {}),
+    ...(typeof raw.worktreeId === "string" && raw.worktreeId.length > 0
+      ? { worktreeId: raw.worktreeId }
+      : {}),
+    ...(typeof raw.repositoryInstance === "string" || raw.repositoryInstance === null
+      ? { repositoryInstance: raw.repositoryInstance as string | null }
+      : {}),
+    ...(typeof raw.worktreeInstance === "string" || raw.worktreeInstance === null
+      ? { worktreeInstance: raw.worktreeInstance as string | null }
+      : {}),
   };
 }
 

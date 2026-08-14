@@ -28,45 +28,48 @@
 // answers "could this path name a file here", which is the right question for
 // REJECTING foreign frames; it is not a licence to treat the match as the
 // author's intent.
+//
+// M145 (§97). The rule now lives in `src/workspace/pathMembership.ts`, which
+// answers for a set of registered worktrees and distinguishes a unique
+// resolution from an ambiguous one. This module is the single-repository view of
+// that resolver, and the collapse is exact rather than approximate: with one
+// scope `ambiguous` cannot arise, and `exact` implies a suffix match, so
+// `exact | unique_resolved` is precisely the set the M144 boolean called true.
 
 import type { Database } from "bun:sqlite";
 
 import { listAllFilePaths } from "../db/repositories/filesRepository";
-import { normalizeFilePath } from "../domain/types";
+import {
+  createPathMembershipResolver,
+  PathMembershipStatus,
+  normalizePathHint,
+  pathsShareSuffixBoundary,
+  type PathMembershipScope,
+} from "../workspace/pathMembership";
 
-/** Strip drive letters, backslashes, `./` and leading `/` so shapes compare. */
-export function normalizePathHint(pathHint: string): string {
-  return normalizeFilePath(
-    pathHint.replace(/\\/g, "/").replace(/^[A-Za-z]:\//, "").replace(/^\.\//, "").replace(/^\/+/, ""),
-  );
-}
+export { normalizePathHint, pathsShareSuffixBoundary };
 
-/**
- * Do two paths name the same file, allowing either to carry extra leading
- * segments? Anchored on `/` in both directions, so `related.py` never matches
- * `unrelated.py` and `a/widgets.py` never matches `b/widgets.py`.
- */
-export function pathsShareSuffixBoundary(left: string, right: string): boolean {
-  const a = normalizePathHint(left);
-  const b = normalizePathHint(right);
-  if (a.length === 0 || b.length === 0) return false;
-  return a === b || a.endsWith(`/${b}`) || b.endsWith(`/${a}`);
+/** The single-repository scope M144's callers imply: one unnamed worktree. */
+function singleRepositoryScope(indexedPaths: () => readonly string[]): PathMembershipScope {
+  return {
+    worktreeId: "active",
+    repositoryId: "active",
+    alias: "active",
+    worktreeRoot: "",
+    indexedPaths,
+  };
 }
 
 /** Membership predicate over an already-materialized indexed path list. */
 export function createRepositoryPathPredicate(
   indexedPaths: readonly string[],
 ): (pathHint: string) => boolean {
-  const cache = new Map<string, boolean>();
-  return (pathHint: string): boolean => {
-    const hint = normalizePathHint(pathHint);
-    if (hint.length === 0) return false;
-    const cached = cache.get(hint);
-    if (cached !== undefined) return cached;
-    const member = indexedPaths.some((indexed) => pathsShareSuffixBoundary(indexed, hint));
-    cache.set(hint, member);
-    return member;
-  };
+  const resolver = createPathMembershipResolver([singleRepositoryScope(() => indexedPaths)]);
+  return (pathHint: string): boolean => isMember(resolver.resolve(pathHint).status);
+}
+
+function isMember(status: PathMembershipStatus): boolean {
+  return status === PathMembershipStatus.Exact || status === PathMembershipStatus.UniqueResolved;
 }
 
 /**
@@ -82,7 +85,6 @@ export function createLazyRepositoryPathPredicate(
   counters?: { queries: number },
 ): RepositoryPathAccess {
   let paths: readonly string[] | undefined;
-  let predicate: ((pathHint: string) => boolean) | undefined;
   const indexedPaths = (): readonly string[] => {
     if (paths === undefined) {
       paths = listAllFilePaths(db);
@@ -90,11 +92,9 @@ export function createLazyRepositoryPathPredicate(
     }
     return paths;
   };
+  const resolver = createPathMembershipResolver([singleRepositoryScope(indexedPaths)]);
   return {
-    isRepositoryPath: (pathHint: string): boolean => {
-      predicate ??= createRepositoryPathPredicate(indexedPaths());
-      return predicate(pathHint);
-    },
+    isRepositoryPath: (pathHint: string): boolean => isMember(resolver.resolve(pathHint).status),
     indexedPaths,
     /** True once the path list has actually been read — the §74 counter. */
     materialized: (): boolean => paths !== undefined,
