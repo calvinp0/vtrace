@@ -69,12 +69,15 @@ export interface WorktreeIndexManifest {
     gitCommonDir: string | null;
     repositoryId: string;
     isGitRepository: boolean;
+    /** M145 instance evidence. Optional: indexes written before M145 have none. */
+    instanceFingerprint?: string | null;
   };
   worktree: {
     root: string;
     gitDir: string | null;
     worktreeId: string;
     isGitWorktree: boolean;
+    instanceFingerprint?: string | null;
   };
   snapshot: {
     headCommit: string | null;
@@ -215,6 +218,7 @@ export async function buildIndexMeta(
         gitDir: identity.worktree.worktreeGitDir,
         worktreeId: identity.worktree.worktreeId,
         isGitWorktree: identity.worktree.isGitWorktree,
+        instanceFingerprint: identity.worktree.instanceFingerprint,
       },
       snapshot: { ...identity.snapshot },
       index: {

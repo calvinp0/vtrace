@@ -15,7 +15,11 @@ import {
   type WorktreeIndexFreshnessStatus,
   type WorktreeIndexManifest,
 } from "./indexMeta";
-import { resolveWorktreeIdentity, type ResolvedWorktreeIdentity } from "./worktreeIdentity";
+import {
+  compareInstanceFingerprints,
+  resolveWorktreeIdentity,
+  type ResolvedWorktreeIdentity,
+} from "./worktreeIdentity";
 
 /**
  * M141 Workstream A.
@@ -196,11 +200,24 @@ export async function evaluateIndexReadiness(
 
   // Every dimension is evaluated; none short-circuits. That is what makes
   // `sourceFresh=true, schemaCompatible=false` expressible at all.
+  // Path-derived ids answer "which location", so on their own they cannot see a
+  // repository that was replaced at the same path (M145-A measured both ids as
+  // unchanged across exactly that swap). Instance evidence is consulted second
+  // and can only ever REFUTE: `null` means the index predates M145 or the root
+  // is not a Git worktree, and silence must not read as a mismatch.
   const repositoryCompatible = manifest.repository.repositoryId === identity.repository.repositoryId
-    && manifest.repository.gitCommonDir === identity.repository.gitCommonDir;
+    && manifest.repository.gitCommonDir === identity.repository.gitCommonDir
+    && compareInstanceFingerprints(
+      manifest.repository.instanceFingerprint,
+      identity.repository.instanceFingerprint,
+    ) !== false;
   const worktreeCompatible = manifest.worktree.worktreeId === identity.worktree.worktreeId
     && manifest.worktree.root === worktreeRoot
-    && manifest.worktree.gitDir === identity.worktree.worktreeGitDir;
+    && manifest.worktree.gitDir === identity.worktree.worktreeGitDir
+    && compareInstanceFingerprints(
+      manifest.worktree.instanceFingerprint,
+      identity.worktree.instanceFingerprint,
+    ) !== false;
 
   const formatMismatch = manifest.schemaVersion !== INDEX_FORMAT_VERSION
     || manifest.index.indexSchemaVersion !== INDEX_FORMAT_VERSION

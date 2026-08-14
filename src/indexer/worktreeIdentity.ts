@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { execFile as execFileCallback } from "node:child_process";
-import { realpath } from "node:fs/promises";
+import { realpath, stat } from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
 
@@ -10,10 +10,31 @@ import { isRecognizedRepoSourcePath } from "../fs/scanRepo";
 
 const execFile = promisify(execFileCallback);
 
+/**
+ * Instance-fingerprint algorithm tag. Comparisons are only made between equal
+ * tags, so a future algorithm never silently reinterprets an older value.
+ */
+const INSTANCE_FINGERPRINT_VERSION = "fs1" as const;
+
 export interface RepositoryIdentity {
   readonly gitCommonDir: string | null;
   readonly repositoryId: string;
   readonly isGitRepository: boolean;
+  /**
+   * Which physical Git object store currently sits at `gitCommonDir` (M145).
+   *
+   * `repositoryId` is a hash of that PATH, so it answers "which location" and
+   * not "which repository": deleting a clone and putting an unrelated one at the
+   * same path yields an identical `repositoryId`. Measured, not assumed — the
+   * M145-A probe recorded `sameRepository=true, sameWorktree=true` across
+   * exactly that replacement.
+   *
+   * The fingerprint is filesystem instance evidence about the common dir, so a
+   * replacement is a different directory and reads differently, while a moved
+   * checkout keeps its inode and stays the same repository. `null` outside Git,
+   * where no such evidence exists; two `null`s are never a match.
+   */
+  readonly instanceFingerprint: string | null;
 }
 
 export interface WorktreeIdentity {
@@ -22,6 +43,12 @@ export interface WorktreeIdentity {
   readonly worktreeGitDir: string | null;
   readonly worktreeId: string;
   readonly isGitWorktree: boolean;
+  /**
+   * The same evidence for THIS worktree's own git dir. Sibling worktrees share a
+   * common dir and therefore a repository fingerprint, but each linked worktree
+   * has its own `.git/worktrees/<name>` directory and its own fingerprint.
+   */
+  readonly instanceFingerprint: string | null;
 }
 
 export interface WorktreeSnapshot {
@@ -62,13 +89,19 @@ export async function resolveWorktreeIdentity(repoRoot: string): Promise<Resolve
   } catch {
     const repositoryId = stableId("non-git-repository", requestedRoot);
     return {
-      repository: { gitCommonDir: null, repositoryId, isGitRepository: false },
+      repository: {
+        gitCommonDir: null,
+        repositoryId,
+        isGitRepository: false,
+        instanceFingerprint: null,
+      },
       worktree: {
         repositoryId,
         worktreeRoot: requestedRoot,
         worktreeGitDir: null,
         worktreeId: stableId("non-git-worktree", requestedRoot),
         isGitWorktree: false,
+        instanceFingerprint: null,
       },
       snapshot: {
         headCommit: null,
@@ -85,15 +118,29 @@ export async function resolveWorktreeIdentity(repoRoot: string): Promise<Resolve
   const gitCommonDir = await canonicalPath(resolveGitPath(worktreeRoot, commonDir));
   const repositoryId = stableId("repository", gitCommonDir);
   const worktreeId = stableId("worktree", `${gitCommonDir}\0${worktreeRoot}`);
-  const [headCommit, branch, dirtyState] = await Promise.all([
+  const [headCommit, branch, dirtyState, repositoryInstance, worktreeInstance] = await Promise.all([
     gitOutputOrNull(worktreeRoot, ["rev-parse", "HEAD"]),
     gitOutputOrNull(worktreeRoot, ["symbolic-ref", "--quiet", "--short", "HEAD"]),
     computeDirtyFingerprint(worktreeRoot),
+    resolveInstanceFingerprint(gitCommonDir),
+    resolveInstanceFingerprint(worktreeGitDir),
   ]);
 
   return {
-    repository: { gitCommonDir, repositoryId, isGitRepository: true },
-    worktree: { repositoryId, worktreeRoot, worktreeGitDir, worktreeId, isGitWorktree: true },
+    repository: {
+      gitCommonDir,
+      repositoryId,
+      isGitRepository: true,
+      instanceFingerprint: repositoryInstance,
+    },
+    worktree: {
+      repositoryId,
+      worktreeRoot,
+      worktreeGitDir,
+      worktreeId,
+      isGitWorktree: true,
+      instanceFingerprint: worktreeInstance,
+    },
     snapshot: {
       headCommit,
       branch,
@@ -144,6 +191,49 @@ export async function computeDirtyFingerprint(repoRoot: string): Promise<string 
     digest.update("\n");
   }
   return digest.digest("hex");
+}
+
+/**
+ * Filesystem instance evidence for a Git directory: which device, which inode,
+ * and when that directory was created. Creation time disambiguates the one case
+ * inode numbers cannot — a freed inode reused by a later directory at the same
+ * path — and is dropped when the filesystem does not record it rather than
+ * being faked as 0.
+ *
+ * ~0.007 ms per call (M145-A measurement), so this is affordable on the identity
+ * path that already spends three Git subprocesses.
+ */
+export async function resolveInstanceFingerprint(gitDir: string | null): Promise<string | null> {
+  if (gitDir === null) return null;
+  try {
+    const stats = await stat(gitDir);
+    const birth = Number.isFinite(stats.birthtimeMs) && stats.birthtimeMs > 0
+      ? String(Math.round(stats.birthtimeMs))
+      : "-";
+    return `${INSTANCE_FINGERPRINT_VERSION}:${stats.dev}:${stats.ino}:${birth}`;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Does instance evidence CONTRADICT a match? Three-valued on purpose.
+ *
+ * `null` means "no claim": one side predates the fingerprint, or the root is not
+ * a Git worktree. M132 settled the policy for exactly this shape — an artifact
+ * that makes no claim must not be read as making a failing one — so a missing
+ * fingerprint can never manufacture a mismatch, and two missing fingerprints are
+ * not evidence of sameness either.
+ */
+export function compareInstanceFingerprints(
+  left: string | null | undefined,
+  right: string | null | undefined,
+): boolean | null {
+  if (typeof left !== "string" || typeof right !== "string") return null;
+  if (!left.startsWith(`${INSTANCE_FINGERPRINT_VERSION}:`) || !right.startsWith(`${INSTANCE_FINGERPRINT_VERSION}:`)) {
+    return null;
+  }
+  return left === right;
 }
 
 async function canonicalPath(value: string): Promise<string> {
