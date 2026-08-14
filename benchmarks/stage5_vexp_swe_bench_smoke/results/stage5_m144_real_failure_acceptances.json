@@ -1,0 +1,47 @@
+{
+  "schemaVersion": "stage5.m144.real-failure-acceptances.v1",
+  "milestone": "M144-D",
+  "section": "§80, §126 — every activation, not only the ones that helped",
+  "activations": [
+    {
+      "instanceId": "psf__requests-1724",
+      "repo": "psf/requests",
+      "predecessorFrameIdentifier": "_send_output",
+      "candidateFrameIdentifier": "send",
+      "lead": "requests/sessions.py::send",
+      "leadIsGold": true,
+      "evaluationOnly": {
+        "goldFiles": [
+          "requests/sessions.py"
+        ]
+      }
+    }
+  ],
+  "nonActivations": [
+    {
+      "instanceId": "django__django-12774",
+      "reason": "unchanged_all_frames_in_repository",
+      "frameIdentifier": "in_bulk"
+    },
+    {
+      "instanceId": "sympy__sympy-13372",
+      "reason": "unchanged_all_frames_in_repository",
+      "frameIdentifier": "evalf"
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-7462",
+      "reason": "unchanged_all_frames_in_repository",
+      "frameIdentifier": "unparse"
+    },
+    {
+      "instanceId": "pydata__xarray-3677",
+      "reason": "unchanged_rejected_by_m142_guard",
+      "frameIdentifier": null
+    },
+    {
+      "instanceId": "pylint-dev__pylint-8898",
+      "reason": "unchanged_rejected_by_m142_guard",
+      "frameIdentifier": null
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "stage5.m144.django11740-failure-evidence.v1",
+  "milestone": "M144",
+  "section": "§30, §81, §83, §105, §125",
+  "questionAskedFirst": "Does the original task actually contain usable failure evidence?",
+  "answer": "NO.",
+  "detail": {
+    "task": "fix changing a UUIDField to a ForeignKey not creating a cross-app migration dependency in the autodetector",
+    "labelSource": "manual_verified",
+    "rawEvidenceForms": [],
+    "failingTest": null,
+    "tracebackFrames": [],
+    "exceptionLocation": null,
+    "reproductionCommand": null,
+    "explicitCodeReference": "The task names the autodetector in PROSE. That is task-entity evidence, not observed-failure evidence: nothing in it says where a failure was observed or exercised. §12 forbids collapsing the two."
+  },
+  "determination": "not_addressable_under_m144_supplied_evidence_scope",
+  "roleInM144": "negative control (§83): no evidence must produce no effect",
+  "observedEffect": {
+    "hasTracebackFrames": false,
+    "selectionChanged": false,
+    "lead": "django/db/models/fields/related.py::ForeignKey",
+    "leadIsGold": false,
+    "indexedPathsRead": 0
+  },
+  "note": "django-11740 remains top1=false, unchanged, and is still the M142 regression M143 root-caused. M144 did not rewrite the task, did not add a title mechanism, and did not manufacture evidence for it."
+}

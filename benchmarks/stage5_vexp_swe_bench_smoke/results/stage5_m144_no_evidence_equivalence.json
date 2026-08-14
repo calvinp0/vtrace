@@ -1,0 +1,75 @@
+{
+  "schemaVersion": "stage5.m144.no-evidence-equivalence.v1",
+  "milestone": "M144-C",
+  "section": "\u00a762, \u00a763, \u00a7124",
+  "gate": "A task with no recognized failure evidence must produce the M143 output exactly.",
+  "method": "The provenance-valid final paired benchmark (93a34d1 -> M144) compares selectedFiles, lead, roles, contentModes, modelVisibleContext, tokenAccounting and qualityMetrics per case. Equivalence is read off that comparison, not asserted separately.",
+  "subset": {
+    "definition": "frozen-50 cases whose task contains no traceback frame \u2014 the only input the shipped rule reads",
+    "cases": 44,
+    "instanceIds": [
+      "astropy__astropy-14365",
+      "astropy__astropy-14369",
+      "astropy__astropy-14539",
+      "astropy__astropy-14598",
+      "django__django-10880",
+      "django__django-10973",
+      "django__django-11095",
+      "django__django-11133",
+      "django__django-11206",
+      "django__django-11490",
+      "django__django-11728",
+      "django__django-11740",
+      "django__django-11749",
+      "django__django-11815",
+      "django__django-11820",
+      "django__django-12050",
+      "django__django-12273",
+      "django__django-12276",
+      "django__django-12325",
+      "django__django-12858",
+      "django__django-13012",
+      "django__django-13112",
+      "django__django-13195",
+      "matplotlib__matplotlib-22719",
+      "matplotlib__matplotlib-24627",
+      "matplotlib__matplotlib-24970",
+      "matplotlib__matplotlib-25960",
+      "mwaskom__seaborn-3187",
+      "pallets__flask-5014",
+      "psf__requests-1142",
+      "psf__requests-5414",
+      "pydata__xarray-2905",
+      "pytest-dev__pytest-10051",
+      "pytest-dev__pytest-5262",
+      "pytest-dev__pytest-7432",
+      "scikit-learn__scikit-learn-10844",
+      "scikit-learn__scikit-learn-11578",
+      "sphinx-doc__sphinx-7748",
+      "sphinx-doc__sphinx-7910",
+      "sphinx-doc__sphinx-9230",
+      "sympy__sympy-12419",
+      "sympy__sympy-12481",
+      "sympy__sympy-15599",
+      "sympy__sympy-16766"
+    ]
+  },
+  "result": {
+    "casesInSubsetThatChanged": [],
+    "changedCount": 0,
+    "equivalenceHolds": true
+  },
+  "strongerProperty": {
+    "claim": "A task with no traceback path never reaches the new code at ALL, so equivalence is structural rather than empirical.",
+    "evidence": "`isRepositoryPath` is consulted from exactly one place \u2014 the traceback frame selector \u2014 and the indexed path list is read lazily. Measured: indexedPathsRead = 0 on all 44 no-traceback cases (stage5_m144_failure_localization_performance.json).",
+    "verified": true
+  },
+  "wholeCorpus": {
+    "cases": 50,
+    "unchanged": 49,
+    "changed": 1,
+    "changedInstanceIds": [
+      "psf__requests-1724"
+    ]
+  }
+}

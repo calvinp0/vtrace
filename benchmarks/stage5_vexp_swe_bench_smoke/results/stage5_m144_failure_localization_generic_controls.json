@@ -1,0 +1,246 @@
+{
+  "schemaVersion": "stage5.m144.failure-localization-generic-controls.v1",
+  "milestone": "M144-C",
+  "section": "§64, §87, §88, §94",
+  "method": "Synthetic indexed path lists against the pure frame selector: every control states a rule that holds for any repository, not a fact about one corpus.",
+  "summary": {
+    "frameControls": 11,
+    "frameControlsPassing": 11,
+    "discriminatingControls": 4,
+    "proseFalsePositiveControls": 8,
+    "proseControlsPassing": 8,
+    "allPassing": true
+  },
+  "frameControls": [
+    {
+      "id": "raising_production_frame",
+      "section": "§52",
+      "intent": "A raising frame inside the repository is strong corroboration and stays selected.",
+      "predecessorSelection": "compute_widget",
+      "candidateSelection": "compute_widget",
+      "expectedPredecessorSelection": "compute_widget",
+      "expectedCandidateSelection": "compute_widget",
+      "discriminating": false,
+      "status": "pass"
+    },
+    {
+      "id": "framework_traceback_frame",
+      "section": "§51",
+      "intent": "A frame in framework/library code must not name the failure site.",
+      "predecessorSelection": "raw_decode",
+      "candidateSelection": "compute_widget",
+      "expectedPredecessorSelection": "raw_decode",
+      "expectedCandidateSelection": "compute_widget",
+      "discriminating": true,
+      "status": "pass"
+    },
+    {
+      "id": "installed_copy_of_own_code",
+      "section": "§24",
+      "intent": "An installed copy of the project's own code IS repository code.",
+      "predecessorSelection": "compute_widget",
+      "candidateSelection": "compute_widget",
+      "expectedPredecessorSelection": "compute_widget",
+      "expectedCandidateSelection": "compute_widget",
+      "discriminating": false,
+      "status": "pass"
+    },
+    {
+      "id": "foreign_dependency_at_same_prefix",
+      "section": "§24, §67",
+      "intent": "A genuinely foreign dependency under the same prefix is still foreign.",
+      "predecessorSelection": "vendor_call",
+      "candidateSelection": null,
+      "expectedPredecessorSelection": "vendor_call",
+      "expectedCandidateSelection": null,
+      "discriminating": true,
+      "status": "pass"
+    },
+    {
+      "id": "symptom_site_vs_controlling_caller",
+      "section": "§53",
+      "intent": "The deepest in-repository frame can be a generic accessor while the behaviour is the caller's. The M142 dunder guard must survive repository filtering.",
+      "predecessorSelection": null,
+      "candidateSelection": null,
+      "expectedPredecessorSelection": null,
+      "expectedCandidateSelection": null,
+      "discriminating": false,
+      "status": "pass"
+    },
+    {
+      "id": "unresolved_path_stays_unknown",
+      "section": "§25, §67",
+      "intent": "Every frame outside the repository yields no identifier, not a fallback to the deepest.",
+      "predecessorSelection": "_parse",
+      "candidateSelection": null,
+      "expectedPredecessorSelection": "_parse",
+      "expectedCandidateSelection": null,
+      "discriminating": true,
+      "status": "pass"
+    },
+    {
+      "id": "truncated_traceback_abstains",
+      "section": "§13, §70",
+      "intent": "A stack cut before the exception names no site, whichever frame filtering would pick.",
+      "predecessorSelection": null,
+      "candidateSelection": null,
+      "expectedPredecessorSelection": null,
+      "expectedCandidateSelection": null,
+      "discriminating": false,
+      "status": "pass"
+    },
+    {
+      "id": "duplicate_evidence_does_not_multiply",
+      "section": "§69",
+      "intent": "The same frame repeated stays ONE selection; authority cannot be multiplied by repetition.",
+      "predecessorSelection": "compute_widget",
+      "candidateSelection": "compute_widget",
+      "expectedPredecessorSelection": "compute_widget",
+      "expectedCandidateSelection": "compute_widget",
+      "discriminating": false,
+      "status": "pass"
+    },
+    {
+      "id": "conflicting_anchors_pick_the_repository_one",
+      "section": "§70",
+      "intent": "When frames disagree about whose code ran last, membership — not depth — decides, and the deepest frame this repository owns is the answer.",
+      "predecessorSelection": "sendall",
+      "candidateSelection": "beta_step",
+      "expectedPredecessorSelection": "sendall",
+      "expectedCandidateSelection": "beta_step",
+      "discriminating": true,
+      "status": "pass"
+    },
+    {
+      "id": "no_failure_evidence_no_effect",
+      "section": "§62, §63",
+      "intent": "A task with no traceback yields no frame identifier with or without an index.",
+      "predecessorSelection": null,
+      "candidateSelection": null,
+      "expectedPredecessorSelection": null,
+      "expectedCandidateSelection": null,
+      "discriminating": false,
+      "status": "pass"
+    },
+    {
+      "id": "bare_tail_frame_not_filtered_on_absence",
+      "section": "§20, §22",
+      "intent": "A frame with no path carries no membership evidence and must not be rejected for that.",
+      "predecessorSelection": "render_template",
+      "candidateSelection": "render_template",
+      "expectedPredecessorSelection": "render_template",
+      "expectedCandidateSelection": "render_template",
+      "discriminating": false,
+      "status": "pass"
+    }
+  ],
+  "proseFalsePositiveControls": [
+    {
+      "prose": "tests show this is slow",
+      "extractedPaths": [],
+      "extractedReproductionCommands": [],
+      "frameIdentifier": null,
+      "status": "pass"
+    },
+    {
+      "prose": "this error is conceptual",
+      "extractedPaths": [],
+      "extractedReproductionCommands": [],
+      "frameIdentifier": null,
+      "status": "pass"
+    },
+    {
+      "prose": "see file format documentation",
+      "extractedPaths": [],
+      "extractedReproductionCommands": [],
+      "frameIdentifier": null,
+      "status": "pass"
+    },
+    {
+      "prose": "the stack implementation is generic",
+      "extractedPaths": [],
+      "extractedReproductionCommands": [],
+      "frameIdentifier": null,
+      "status": "pass"
+    },
+    {
+      "prose": "traceback support was added recently",
+      "extractedPaths": [],
+      "extractedReproductionCommands": [],
+      "frameIdentifier": null,
+      "status": "pass"
+    },
+    {
+      "prose": "pytest versions: 5.4.x, current master",
+      "extractedPaths": [],
+      "extractedReproductionCommands": [],
+      "frameIdentifier": null,
+      "status": "pass"
+    },
+    {
+      "prose": "the file handling in this module is confusing",
+      "extractedPaths": [],
+      "extractedReproductionCommands": [],
+      "frameIdentifier": null,
+      "status": "pass"
+    },
+    {
+      "prose": "an exception to the rule is documented above",
+      "extractedPaths": [],
+      "extractedReproductionCommands": [],
+      "frameIdentifier": null,
+      "status": "pass"
+    }
+  ],
+  "unshippedMechanismControls": [
+    {
+      "id": "failing_test_to_direct_production_call",
+      "section": "§48",
+      "mechanism": "failing test symbol -> direct calls -> production owner",
+      "status": "measured_not_shipped",
+      "measurement": "All 6 failing-test mentions in the frozen 50 are BARE names (`test_app`, `test_foo`, `test_f_true`, `test_requests`, `test_skip_location`, `test_it`, `test_arit`, `test_Mod`); the corpus contains ZERO pytest node ids. Only 3 of the 6 cases resolve any symbol of that name, and django-12273's `test_f_true` does not exist in the repository at all. A lane keyed on a bare test name would be resolving a string that names nothing."
+    },
+    {
+      "id": "broad_module_import_negative",
+      "section": "§49",
+      "mechanism": "test imports a package but exercises unrelated behaviour",
+      "status": "not_applicable_no_shipped_lane",
+      "measurement": "No test-to-production relation lane was shipped, so there is no import-derived ownership claim to control. Recorded rather than dropped: the control becomes required the moment such a lane exists."
+    },
+    {
+      "id": "test_helper_second_hop",
+      "section": "§50",
+      "mechanism": "failing test -> helper -> production",
+      "status": "not_applicable_no_shipped_lane",
+      "measurement": "Same reason as the broad-import control."
+    },
+    {
+      "id": "direct_relation_from_frame_to_owner",
+      "section": "§29, §45",
+      "mechanism": "deepest in-repository frame -> direct calls -> behaviour owner",
+      "status": "measured_not_shipped",
+      "measurement": "REAL and reachable: pylint-8898's gold (`pylint/utils/utils.py`) is reached by direct `calls` edges from the deepest in-repository frame `_config_initialization`, and it is the ONE frozen-50 case where no frame is itself gold. It was not shipped for two measured reasons. (1) Its traceback is truncated — no exception line — so using it requires relaxing the M142 completeness guard that M142 measured as harmful. (2) The case already has gold ANYWHERE; only the lead is wrong, so the lane would have to carry ranking authority, which is exactly the §43 architecture M143 condemned in the title lane. Direct-relation precision across all six traceback cases is recorded in stage5_m144_traceback_attribution.json."
+    },
+    {
+      "id": "reproduction_command_attribution",
+      "section": "§39, §123",
+      "mechanism": "reproduction command -> test target -> subsystem",
+      "status": "not_justified_evidence_absent",
+      "measurement": "The frozen 50 contains ONE genuine reproduction command (`manage.py migrate`, django-13112), which names a management command rather than a test target, and one near-miss the typed shape correctly rejects (`pytest versions: 5.4.x` in pytest-7432 is prose). §123 makes the artifact conditional on the evidence existing; it does not."
+    },
+    {
+      "id": "explicit_source_path_positive",
+      "section": "§54, §89",
+      "mechanism": "task names a source path directly",
+      "status": "already_solved_organically",
+      "measurement": "psf-5414's GitHub blob anchor (`.../requests/models.py#L401`) already reaches gold top-1 through M103 anchor preservation plus ordinary path retrieval. §89 forbids counting it as an M144 gain."
+    },
+    {
+      "id": "title_subject_is_or_is_not_owner",
+      "section": "§60, §106",
+      "mechanism": "failure evidence vs title evidence",
+      "status": "no_interaction_possible",
+      "measurement": "The five title-injection cases (django-11740, django-13112, django-11133, django-12276, sympy-16766) carry no traceback frame, so the shipped rule is unreachable on all of them. Verified per case in stage5_m144_failure_evidence_metrics.json."
+    }
+  ]
+}

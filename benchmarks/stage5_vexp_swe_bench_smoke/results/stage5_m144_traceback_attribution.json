@@ -1,0 +1,1017 @@
+{
+  "schemaVersion": "stage5.m144.traceback-attribution.v1",
+  "milestone": "M144-B",
+  "section": "§21, §22, §38, §41, §52, §53, §66, §67",
+  "question": "Which frame of a traceback names the code that must change? Measured per role (deepest in-repository, shallowest in-repository, raising) against gold, plus whether a bounded direct relation from the deepest frame reaches gold.",
+  "roleAccuracy": {
+    "casesWithFrames": 6,
+    "deepestInRepoIsGold": 4,
+    "shallowestInRepoIsGold": 3,
+    "anyInRepoFrameIsGold": 5,
+    "goldOnlyViaDirectRelationFromDeepest": 1
+  },
+  "directRelationPrecision": {
+    "relations": 24,
+    "targetingGold": 15,
+    "targetingNonGold": 9,
+    "precision": 0.625
+  },
+  "cases": [
+    {
+      "instanceId": "django__django-12774",
+      "frameRoles": {
+        "totalFrames": 4,
+        "inRepoFrames": 2,
+        "externalFrames": 2,
+        "deepestInRepoFrameIndex": 4,
+        "shallowestInRepoFrameIndex": 3,
+        "raisingFrameInRepo": true,
+        "evaluationOnly": {
+          "deepestInRepoIsGold": true,
+          "shallowestInRepoIsGold": false,
+          "anyInRepoFrameIsGold": true,
+          "goldReachedByDirectRelationFromDeepest": true
+        }
+      },
+      "frames": [
+        {
+          "raw": "/usr/local/lib/python3.8/code.py",
+          "normalized": "usr/local/lib/python3.8/code.py",
+          "form": "traceback_frame",
+          "shape": "stdlib",
+          "frameIndex": 1,
+          "frameSymbol": "runcode",
+          "raisingFrame": false,
+          "strictOutcome": "external_unresolved",
+          "strictPath": null,
+          "fallbackPath": null,
+          "fallbackOnly": false,
+          "resolvedFileIsTest": null,
+          "frameSymbolResolved": [],
+          "evaluationOnly": {
+            "resolvesToGold": false
+          }
+        },
+        {
+          "raw": "<console>",
+          "normalized": "<console>",
+          "form": "traceback_frame",
+          "shape": "interpreter_pseudo",
+          "frameIndex": 2,
+          "frameSymbol": "<module>",
+          "raisingFrame": false,
+          "strictOutcome": "external_unresolved",
+          "strictPath": null,
+          "fallbackPath": null,
+          "fallbackOnly": false,
+          "resolvedFileIsTest": null,
+          "frameSymbolResolved": [],
+          "evaluationOnly": {
+            "resolvesToGold": false
+          }
+        },
+        {
+          "raw": "/app/venv/lib/python3.8/site-packages/django/db/models/manager.py",
+          "normalized": "app/venv/lib/python3.8/site-packages/django/db/models/manager.py",
+          "form": "traceback_frame",
+          "shape": "site_packages",
+          "frameIndex": 3,
+          "frameSymbol": "manager_method",
+          "raisingFrame": false,
+          "strictOutcome": "resolved_segment_suffix",
+          "strictPath": "db/models/manager.py",
+          "fallbackPath": "db/models/manager.py",
+          "fallbackOnly": false,
+          "resolvedFileIsTest": false,
+          "frameSymbolResolved": [],
+          "evaluationOnly": {
+            "resolvesToGold": false
+          }
+        },
+        {
+          "raw": "/app/venv/lib/python3.8/site-packages/django/db/models/query.py",
+          "normalized": "app/venv/lib/python3.8/site-packages/django/db/models/query.py",
+          "form": "traceback_frame",
+          "shape": "site_packages",
+          "frameIndex": 4,
+          "frameSymbol": "in_bulk",
+          "raisingFrame": true,
+          "strictOutcome": "resolved_segment_suffix",
+          "strictPath": "db/models/query.py",
+          "fallbackPath": "db/models/query.py",
+          "fallbackOnly": false,
+          "resolvedFileIsTest": false,
+          "frameSymbolResolved": [
+            "db/models/query.py::QuerySet.in_bulk"
+          ],
+          "evaluationOnly": {
+            "resolvesToGold": true
+          }
+        }
+      ],
+      "directRelationsFromDeepestFrame": [
+        {
+          "fromSymbol": "db/models/query.py::QuerySet.in_bulk",
+          "edgeType": "calls",
+          "toPath": "db/models/query.py",
+          "toSymbol": "db/models/query.py::QuerySet._chain",
+          "evaluationOnly": {
+            "targetIsGold": true
+          }
+        },
+        {
+          "fromSymbol": "db/models/query.py::QuerySet.in_bulk",
+          "edgeType": "calls",
+          "toPath": "db/models/query.py",
+          "toSymbol": "db/models/query.py::QuerySet.filter",
+          "evaluationOnly": {
+            "targetIsGold": true
+          }
+        }
+      ],
+      "relationsInspected": 2,
+      "evaluationOnly": {
+        "goldFiles": [
+          "django/db/models/query.py"
+        ]
+      }
+    },
+    {
+      "instanceId": "sympy__sympy-13372",
+      "frameRoles": {
+        "totalFrames": 6,
+        "inRepoFrames": 5,
+        "externalFrames": 1,
+        "deepestInRepoFrameIndex": 6,
+        "shallowestInRepoFrameIndex": 1,
+        "raisingFrameInRepo": true,
+        "evaluationOnly": {
+          "deepestInRepoIsGold": true,
+          "shallowestInRepoIsGold": true,
+          "anyInRepoFrameIsGold": true,
+          "goldReachedByDirectRelationFromDeepest": true
+        }
+      },
+      "frames": [
+        {
+          "raw": "./sympy/core/evalf.py",
+          "normalized": "sympy/core/evalf.py",
+          "form": "traceback_frame",
+          "shape": "repo_relative",
+          "frameIndex": 1,
+          "frameSymbol": "evalf",
+          "raisingFrame": false,
+          "strictOutcome": "resolved_segment_suffix",
+          "strictPath": "sympy/core/evalf.py",
+          "fallbackPath": "sympy/core/evalf.py",
+          "fallbackOnly": false,
+          "resolvedFileIsTest": false,
+          "frameSymbolResolved": [
+            "sympy/core/evalf.py::EvalfMixin.evalf",
+            "sympy/core/evalf.py::evalf"
+          ],
+          "evaluationOnly": {
+            "resolvesToGold": true
+          }
+        },
+        {
+          "raw": "<stdin>",
+          "normalized": "<stdin>",
+          "form": "traceback_frame",
+          "shape": "interpreter_pseudo",
+          "frameIndex": 2,
+          "frameSymbol": "<module>",
+          "raisingFrame": false,
+          "strictOutcome": "external_unresolved",
+          "strictPath": null,
+          "fallbackPath": null,
+          "fallbackOnly": false,
+          "resolvedFileIsTest": null,
+          "frameSymbolResolved": [],
+          "evaluationOnly": {
+            "resolvesToGold": false
+          }
+        },
+        {
+          "raw": "./sympy/core/evalf.py",
+          "normalized": "sympy/core/evalf.py",
+          "form": "traceback_frame",
+          "shape": "repo_relative",
+          "frameIndex": 3,
+          "frameSymbol": "evalf",
+          "raisingFrame": false,
+          "strictOutcome": "resolved_segment_suffix",
+          "strictPath": "sympy/core/evalf.py",
+          "fallbackPath": "sympy/core/evalf.py",
+          "fallbackOnly": false,
+          "resolvedFileIsTest": false,
+          "frameSymbolResolved": [
+            "sympy/core/evalf.py::EvalfMixin.evalf",
+            "sympy/core/evalf.py::evalf"
+          ],
+          "evaluationOnly": {
+            "resolvesToGold": true
+          }
+        },
+        {
+          "raw": "./sympy/core/evalf.py",
+          "normalized": "sympy/core/evalf.py",
+          "form": "traceback_frame",
+          "shape": "repo_relative",
+          "frameIndex": 4,
+          "frameSymbol": "evalf",
+          "raisingFrame": false,
+          "strictOutcome": "resolved_segment_suffix",
+          "strictPath": "sympy/core/evalf.py",
+          "fallbackPath": "sympy/core/evalf.py",
+          "fallbackOnly": false,
+          "resolvedFileIsTest": false,
+          "frameSymbolResolved": [
+            "sympy/core/evalf.py::EvalfMixin.evalf",
+            "sympy/core/evalf.py::evalf"
+          ],
+          "evaluationOnly": {
+            "resolvesToGold": true
+          }
+        },
+        {
+          "raw": "./sympy/core/evalf.py",
+          "normalized": "sympy/core/evalf.py",
+          "form": "traceback_frame",
+          "shape": "repo_relative",
+          "frameIndex": 5,
+          "frameSymbol": "evalf_mul",
+          "raisingFrame": false,
+          "strictOutcome": "resolved_segment_suffix",
+          "strictPath": "sympy/core/evalf.py",
+          "fallbackPath": "sympy/core/evalf.py",
+          "fallbackOnly": false,
+          "resolvedFileIsTest": false,
+          "frameSymbolResolved": [
+            "sympy/core/evalf.py::evalf_mul"
+          ],
+          "evaluationOnly": {
+            "resolvesToGold": true
+          }
+        },
+        {
+          "raw": "./sympy/core/evalf.py",
+          "normalized": "sympy/core/evalf.py",
+          "form": "traceback_frame",
+          "shape": "repo_relative",
+          "frameIndex": 6,
+          "frameSymbol": "evalf",
+          "raisingFrame": true,
+          "strictOutcome": "resolved_segment_suffix",
+          "strictPath": "sympy/core/evalf.py",
+          "fallbackPath": "sympy/core/evalf.py",
+          "fallbackOnly": false,
+          "resolvedFileIsTest": false,
+          "frameSymbolResolved": [
+            "sympy/core/evalf.py::EvalfMixin.evalf",
+            "sympy/core/evalf.py::evalf"
+          ],
+          "evaluationOnly": {
+            "resolvesToGold": true
+          }
+        }
+      ],
+      "directRelationsFromDeepestFrame": [
+        {
+          "fromSymbol": "sympy/core/evalf.py::EvalfMixin.evalf",
+          "edgeType": "calls",
+          "toPath": "sympy/core/compatibility.py",
+          "toSymbol": "sympy/core/compatibility.py::is_sequence",
+          "evaluationOnly": {
+            "targetIsGold": false
+          }
+        },
+        {
+          "fromSymbol": "sympy/core/evalf.py::EvalfMixin.evalf",
+          "edgeType": "calls",
+          "toPath": "sympy/core/evalf.py",
+          "toSymbol": "sympy/core/evalf.py::EvalfMixin._eval_evalf",
+          "evaluationOnly": {
+            "targetIsGold": true
+          }
+        },
+        {
+          "fromSymbol": "sympy/core/evalf.py::EvalfMixin.evalf",
+          "edgeType": "calls",
+          "toPath": "sympy/core/evalf.py",
+          "toSymbol": "sympy/core/evalf.py::evalf",
+          "evaluationOnly": {
+            "targetIsGold": true
+          }
+        },
+        {
+          "fromSymbol": "sympy/core/evalf.py::EvalfMixin.evalf",
+          "edgeType": "references",
+          "toPath": "sympy/core/singleton.py",
+          "toSymbol": "sympy/core/singleton.py::S",
+          "evaluationOnly": {
+            "targetIsGold": false
+          }
+        },
+        {
+          "fromSymbol": "sympy/core/evalf.py::EvalfMixin.evalf",
+          "edgeType": "references",
+          "toPath": "sympy/core/evalf.py",
+          "toSymbol": "sympy/core/evalf.py::LG10",
+          "evaluationOnly": {
+            "targetIsGold": true
+          }
+        },
+        {
+          "fromSymbol": "sympy/core/evalf.py::EvalfMixin.evalf",
+          "edgeType": "calls",
+          "toPath": "sympy/core/evalf.py",
+          "toSymbol": "sympy/core/evalf.py::_create_evalf_table",
+          "evaluationOnly": {
+            "targetIsGold": true
+          }
+        },
+        {
+          "fromSymbol": "sympy/core/evalf.py::EvalfMixin.evalf",
+          "edgeType": "references",
+          "toPath": "sympy/core/evalf.py",
+          "toSymbol": "sympy/core/evalf.py::evalf_table",
+          "evaluationOnly": {
+            "targetIsGold": true
+          }
+        },
+        {
+          "fromSymbol": "sympy/core/evalf.py::EvalfMixin.evalf",
+          "edgeType": "references",
+          "toPath": "sympy/core/evalf.py",
+          "toSymbol": "sympy/core/evalf.py::evalf_table",
+          "evaluationOnly": {
+            "targetIsGold": true
+          }
+        },
+        {
+          "fromSymbol": "sympy/core/evalf.py::EvalfMixin.evalf",
+          "edgeType": "calls",
+          "toPath": "sympy/core/evalf.py",
+          "toSymbol": "sympy/core/evalf.py::evalf_subs",
+          "evaluationOnly": {
+            "targetIsGold": true
+          }
+        },
+        {
+          "fromSymbol": "sympy/core/evalf.py::EvalfMixin.evalf",
+          "edgeType": "calls",
+          "toPath": "sympy/core/evalf.py",
+          "toSymbol": "sympy/core/evalf.py::check_target",
+          "evaluationOnly": {
+            "targetIsGold": true
+          }
+        },
+        {
+          "fromSymbol": "sympy/core/evalf.py::EvalfMixin.evalf",
+          "edgeType": "calls",
+          "toPath": "sympy/core/evalf.py",
+          "toSymbol": "sympy/core/evalf.py::chop_parts",
+          "evaluationOnly": {
+            "targetIsGold": true
+          }
+        }
+      ],
+      "relationsInspected": 11,
+      "evaluationOnly": {
+        "goldFiles": [
+          "sympy/core/evalf.py"
+        ]
+      }
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-7462",
+      "frameRoles": {
+        "totalFrames": 1,
+        "inRepoFrames": 1,
+        "externalFrames": 0,
+        "deepestInRepoFrameIndex": 1,
+        "shallowestInRepoFrameIndex": 1,
+        "raisingFrameInRepo": true,
+        "evaluationOnly": {
+          "deepestInRepoIsGold": true,
+          "shallowestInRepoIsGold": true,
+          "anyInRepoFrameIsGold": true,
+          "goldReachedByDirectRelationFromDeepest": false
+        }
+      },
+      "frames": [
+        {
+          "raw": "\\path\\to\\site-packages\\sphinx\\domains\\python.py",
+          "normalized": "path/to/site-packages/sphinx/domains/python.py",
+          "form": "traceback_frame",
+          "shape": "site_packages",
+          "frameIndex": 1,
+          "frameSymbol": "unparse",
+          "raisingFrame": true,
+          "strictOutcome": "resolved_segment_suffix",
+          "strictPath": "sphinx/domains/python.py",
+          "fallbackPath": "sphinx/domains/python.py",
+          "fallbackOnly": false,
+          "resolvedFileIsTest": false,
+          "frameSymbolResolved": [],
+          "evaluationOnly": {
+            "resolvesToGold": true
+          }
+        }
+      ],
+      "directRelationsFromDeepestFrame": [],
+      "relationsInspected": 0,
+      "evaluationOnly": {
+        "goldFiles": [
+          "sphinx/domains/python.py",
+          "sphinx/pycode/ast.py"
+        ]
+      }
+    },
+    {
+      "instanceId": "psf__requests-1724",
+      "frameRoles": {
+        "totalFrames": 7,
+        "inRepoFrames": 4,
+        "externalFrames": 3,
+        "deepestInRepoFrameIndex": 4,
+        "shallowestInRepoFrameIndex": 1,
+        "raisingFrameInRepo": false,
+        "evaluationOnly": {
+          "deepestInRepoIsGold": true,
+          "shallowestInRepoIsGold": false,
+          "anyInRepoFrameIsGold": true,
+          "goldReachedByDirectRelationFromDeepest": true
+        }
+      },
+      "frames": [
+        {
+          "raw": "/Users/hwkns/test_requests.py",
+          "normalized": "Users/hwkns/test_requests.py",
+          "form": "traceback_frame",
+          "shape": "absolute_foreign",
+          "frameIndex": 1,
+          "frameSymbol": "<module>",
+          "raisingFrame": false,
+          "strictOutcome": "resolved_segment_suffix",
+          "strictPath": "test_requests.py",
+          "fallbackPath": "test_requests.py",
+          "fallbackOnly": false,
+          "resolvedFileIsTest": true,
+          "frameSymbolResolved": [
+            "test_requests.py::<module>"
+          ],
+          "evaluationOnly": {
+            "resolvesToGold": false
+          }
+        },
+        {
+          "raw": "/Library/Python/2.7/site-packages/requests/api.py",
+          "normalized": "Library/Python/2.7/site-packages/requests/api.py",
+          "form": "traceback_frame",
+          "shape": "site_packages",
+          "frameIndex": 2,
+          "frameSymbol": "request",
+          "raisingFrame": false,
+          "strictOutcome": "resolved_segment_suffix",
+          "strictPath": "requests/api.py",
+          "fallbackPath": "requests/api.py",
+          "fallbackOnly": false,
+          "resolvedFileIsTest": false,
+          "frameSymbolResolved": [
+            "requests/api.py::request"
+          ],
+          "evaluationOnly": {
+            "resolvesToGold": false
+          }
+        },
+        {
+          "raw": "/Library/Python/2.7/site-packages/requests/sessions.py",
+          "normalized": "Library/Python/2.7/site-packages/requests/sessions.py",
+          "form": "traceback_frame",
+          "shape": "site_packages",
+          "frameIndex": 3,
+          "frameSymbol": "request",
+          "raisingFrame": false,
+          "strictOutcome": "resolved_segment_suffix",
+          "strictPath": "requests/sessions.py",
+          "fallbackPath": "requests/sessions.py",
+          "fallbackOnly": false,
+          "resolvedFileIsTest": false,
+          "frameSymbolResolved": [
+            "requests/sessions.py::Session.request"
+          ],
+          "evaluationOnly": {
+            "resolvesToGold": true
+          }
+        },
+        {
+          "raw": "/Library/Python/2.7/site-packages/requests/sessions.py",
+          "normalized": "Library/Python/2.7/site-packages/requests/sessions.py",
+          "form": "traceback_frame",
+          "shape": "site_packages",
+          "frameIndex": 4,
+          "frameSymbol": "send",
+          "raisingFrame": false,
+          "strictOutcome": "resolved_segment_suffix",
+          "strictPath": "requests/sessions.py",
+          "fallbackPath": "requests/sessions.py",
+          "fallbackOnly": false,
+          "resolvedFileIsTest": false,
+          "frameSymbolResolved": [
+            "requests/sessions.py::Session.send"
+          ],
+          "evaluationOnly": {
+            "resolvesToGold": true
+          }
+        },
+        {
+          "raw": "/System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/httplib.py",
+          "normalized": "System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/httplib.py",
+          "form": "traceback_frame",
+          "shape": "stdlib",
+          "frameIndex": 5,
+          "frameSymbol": "_send_request",
+          "raisingFrame": false,
+          "strictOutcome": "external_unresolved",
+          "strictPath": null,
+          "fallbackPath": null,
+          "fallbackOnly": false,
+          "resolvedFileIsTest": null,
+          "frameSymbolResolved": [],
+          "evaluationOnly": {
+            "resolvesToGold": false
+          }
+        },
+        {
+          "raw": "/System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/httplib.py",
+          "normalized": "System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/httplib.py",
+          "form": "traceback_frame",
+          "shape": "stdlib",
+          "frameIndex": 6,
+          "frameSymbol": "endheaders",
+          "raisingFrame": false,
+          "strictOutcome": "external_unresolved",
+          "strictPath": null,
+          "fallbackPath": null,
+          "fallbackOnly": false,
+          "resolvedFileIsTest": null,
+          "frameSymbolResolved": [],
+          "evaluationOnly": {
+            "resolvesToGold": false
+          }
+        },
+        {
+          "raw": "/System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/httplib.py",
+          "normalized": "System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/httplib.py",
+          "form": "traceback_frame",
+          "shape": "stdlib",
+          "frameIndex": 7,
+          "frameSymbol": "_send_output",
+          "raisingFrame": true,
+          "strictOutcome": "external_unresolved",
+          "strictPath": null,
+          "fallbackPath": null,
+          "fallbackOnly": false,
+          "resolvedFileIsTest": null,
+          "frameSymbolResolved": [],
+          "evaluationOnly": {
+            "resolvesToGold": false
+          }
+        }
+      ],
+      "directRelationsFromDeepestFrame": [
+        {
+          "fromSymbol": "requests/sessions.py::Session.send",
+          "edgeType": "calls",
+          "toPath": "requests/hooks.py",
+          "toSymbol": "requests/hooks.py::dispatch_hook",
+          "evaluationOnly": {
+            "targetIsGold": false
+          }
+        },
+        {
+          "fromSymbol": "requests/sessions.py::Session.send",
+          "edgeType": "references",
+          "toPath": "requests/models.py",
+          "toSymbol": "requests/models.py::PreparedRequest",
+          "evaluationOnly": {
+            "targetIsGold": false
+          }
+        },
+        {
+          "fromSymbol": "requests/sessions.py::Session.send",
+          "edgeType": "calls",
+          "toPath": "requests/sessions.py",
+          "toSymbol": "requests/sessions.py::Session.get_adapter",
+          "evaluationOnly": {
+            "targetIsGold": true
+          }
+        },
+        {
+          "fromSymbol": "requests/sessions.py::Session.send",
+          "edgeType": "calls",
+          "toPath": "requests/cookies.py",
+          "toSymbol": "requests/cookies.py::extract_cookies_to_jar",
+          "evaluationOnly": {
+            "targetIsGold": false
+          }
+        },
+        {
+          "fromSymbol": "requests/sessions.py::Session.send",
+          "edgeType": "calls",
+          "toPath": "requests/sessions.py",
+          "toSymbol": "requests/sessions.py::SessionRedirectMixin.resolve_redirects",
+          "evaluationOnly": {
+            "targetIsGold": true
+          }
+        }
+      ],
+      "relationsInspected": 5,
+      "evaluationOnly": {
+        "goldFiles": [
+          "requests/sessions.py"
+        ]
+      }
+    },
+    {
+      "instanceId": "pydata__xarray-3677",
+      "frameRoles": {
+        "totalFrames": 6,
+        "inRepoFrames": 5,
+        "externalFrames": 1,
+        "deepestInRepoFrameIndex": 6,
+        "shallowestInRepoFrameIndex": 2,
+        "raisingFrameInRepo": true,
+        "evaluationOnly": {
+          "deepestInRepoIsGold": false,
+          "shallowestInRepoIsGold": true,
+          "anyInRepoFrameIsGold": true,
+          "goldReachedByDirectRelationFromDeepest": false
+        }
+      },
+      "frames": [
+        {
+          "raw": "mwe.py",
+          "normalized": "mwe.py",
+          "form": "traceback_frame",
+          "shape": "repo_relative",
+          "frameIndex": 1,
+          "frameSymbol": "<module>",
+          "raisingFrame": false,
+          "strictOutcome": "external_unresolved",
+          "strictPath": null,
+          "fallbackPath": null,
+          "fallbackOnly": false,
+          "resolvedFileIsTest": null,
+          "frameSymbolResolved": [],
+          "evaluationOnly": {
+            "resolvesToGold": false
+          }
+        },
+        {
+          "raw": "/home/tegn500/Documents/Work/Code/xarray/xarray/core/dataset.py",
+          "normalized": "home/tegn500/Documents/Work/Code/xarray/xarray/core/dataset.py",
+          "form": "traceback_frame",
+          "shape": "absolute_foreign",
+          "frameIndex": 2,
+          "frameSymbol": "merge",
+          "raisingFrame": false,
+          "strictOutcome": "resolved_segment_suffix",
+          "strictPath": "xarray/core/dataset.py",
+          "fallbackPath": "xarray/core/dataset.py",
+          "fallbackOnly": false,
+          "resolvedFileIsTest": false,
+          "frameSymbolResolved": [
+            "xarray/core/dataset.py::Dataset.merge"
+          ],
+          "evaluationOnly": {
+            "resolvesToGold": true
+          }
+        },
+        {
+          "raw": "/home/tegn500/Documents/Work/Code/xarray/xarray/core/merge.py",
+          "normalized": "home/tegn500/Documents/Work/Code/xarray/xarray/core/merge.py",
+          "form": "traceback_frame",
+          "shape": "absolute_foreign",
+          "frameIndex": 3,
+          "frameSymbol": "dataset_merge_method",
+          "raisingFrame": false,
+          "strictOutcome": "resolved_segment_suffix",
+          "strictPath": "xarray/core/merge.py",
+          "fallbackPath": "xarray/core/merge.py",
+          "fallbackOnly": false,
+          "resolvedFileIsTest": false,
+          "frameSymbolResolved": [
+            "xarray/core/merge.py::dataset_merge_method"
+          ],
+          "evaluationOnly": {
+            "resolvesToGold": false
+          }
+        },
+        {
+          "raw": "/home/tegn500/Documents/Work/Code/xarray/xarray/core/merge.py",
+          "normalized": "home/tegn500/Documents/Work/Code/xarray/xarray/core/merge.py",
+          "form": "traceback_frame",
+          "shape": "absolute_foreign",
+          "frameIndex": 4,
+          "frameSymbol": "merge_core",
+          "raisingFrame": false,
+          "strictOutcome": "resolved_segment_suffix",
+          "strictPath": "xarray/core/merge.py",
+          "fallbackPath": "xarray/core/merge.py",
+          "fallbackOnly": false,
+          "resolvedFileIsTest": false,
+          "frameSymbolResolved": [
+            "xarray/core/merge.py::merge_core"
+          ],
+          "evaluationOnly": {
+            "resolvesToGold": false
+          }
+        },
+        {
+          "raw": "/home/tegn500/Documents/Work/Code/xarray/xarray/core/merge.py",
+          "normalized": "home/tegn500/Documents/Work/Code/xarray/xarray/core/merge.py",
+          "form": "traceback_frame",
+          "shape": "absolute_foreign",
+          "frameIndex": 5,
+          "frameSymbol": "coerce_pandas_values",
+          "raisingFrame": false,
+          "strictOutcome": "resolved_segment_suffix",
+          "strictPath": "xarray/core/merge.py",
+          "fallbackPath": "xarray/core/merge.py",
+          "fallbackOnly": false,
+          "resolvedFileIsTest": false,
+          "frameSymbolResolved": [
+            "xarray/core/merge.py::coerce_pandas_values"
+          ],
+          "evaluationOnly": {
+            "resolvesToGold": false
+          }
+        },
+        {
+          "raw": "/home/tegn500/Documents/Work/Code/xarray/xarray/core/common.py",
+          "normalized": "home/tegn500/Documents/Work/Code/xarray/xarray/core/common.py",
+          "form": "traceback_frame",
+          "shape": "absolute_foreign",
+          "frameIndex": 6,
+          "frameSymbol": "__getattr__",
+          "raisingFrame": true,
+          "strictOutcome": "resolved_segment_suffix",
+          "strictPath": "xarray/core/common.py",
+          "fallbackPath": "xarray/core/common.py",
+          "fallbackOnly": false,
+          "resolvedFileIsTest": false,
+          "frameSymbolResolved": [
+            "xarray/core/common.py::AttrAccessMixin.__getattr__"
+          ],
+          "evaluationOnly": {
+            "resolvesToGold": false
+          }
+        }
+      ],
+      "directRelationsFromDeepestFrame": [
+        {
+          "fromSymbol": "xarray/core/common.py::AttrAccessMixin.__getattr__",
+          "edgeType": "references",
+          "toPath": "xarray/core/common.py",
+          "toSymbol": "xarray/core/common.py::AttrAccessMixin._attr_sources",
+          "evaluationOnly": {
+            "targetIsGold": false
+          }
+        }
+      ],
+      "relationsInspected": 1,
+      "evaluationOnly": {
+        "goldFiles": [
+          "xarray/core/dataset.py"
+        ]
+      }
+    },
+    {
+      "instanceId": "pylint-dev__pylint-8898",
+      "frameRoles": {
+        "totalFrames": 8,
+        "inRepoFrames": 3,
+        "externalFrames": 5,
+        "deepestInRepoFrameIndex": 4,
+        "shallowestInRepoFrameIndex": 2,
+        "raisingFrameInRepo": false,
+        "evaluationOnly": {
+          "deepestInRepoIsGold": false,
+          "shallowestInRepoIsGold": false,
+          "anyInRepoFrameIsGold": false,
+          "goldReachedByDirectRelationFromDeepest": true
+        }
+      },
+      "frames": [
+        {
+          "raw": "/home/lihu/.venv/bin/pylint",
+          "normalized": "home/lihu/.venv/bin/pylint",
+          "form": "traceback_frame",
+          "shape": "absolute_foreign",
+          "frameIndex": 1,
+          "frameSymbol": "<module>",
+          "raisingFrame": false,
+          "strictOutcome": "external_unresolved",
+          "strictPath": null,
+          "fallbackPath": null,
+          "fallbackOnly": false,
+          "resolvedFileIsTest": null,
+          "frameSymbolResolved": [],
+          "evaluationOnly": {
+            "resolvesToGold": false
+          }
+        },
+        {
+          "raw": "/home/lihu/.venv/lib/python3.10/site-packages/pylint/__init__.py",
+          "normalized": "home/lihu/.venv/lib/python3.10/site-packages/pylint/__init__.py",
+          "form": "traceback_frame",
+          "shape": "site_packages",
+          "frameIndex": 2,
+          "frameSymbol": "run_pylint",
+          "raisingFrame": false,
+          "strictOutcome": "resolved_segment_suffix",
+          "strictPath": "pylint/__init__.py",
+          "fallbackPath": "pylint/__init__.py",
+          "fallbackOnly": false,
+          "resolvedFileIsTest": false,
+          "frameSymbolResolved": [
+            "pylint/__init__.py::run_pylint"
+          ],
+          "evaluationOnly": {
+            "resolvesToGold": false
+          }
+        },
+        {
+          "raw": "/home/lihu/.venv/lib/python3.10/site-packages/pylint/lint/run.py",
+          "normalized": "home/lihu/.venv/lib/python3.10/site-packages/pylint/lint/run.py",
+          "form": "traceback_frame",
+          "shape": "site_packages",
+          "frameIndex": 3,
+          "frameSymbol": "__init__",
+          "raisingFrame": false,
+          "strictOutcome": "resolved_segment_suffix",
+          "strictPath": "pylint/lint/run.py",
+          "fallbackPath": "pylint/lint/run.py",
+          "fallbackOnly": false,
+          "resolvedFileIsTest": false,
+          "frameSymbolResolved": [
+            "pylint/lint/run.py::Run.__init__"
+          ],
+          "evaluationOnly": {
+            "resolvesToGold": false
+          }
+        },
+        {
+          "raw": "/home/lihu/.venv/lib/python3.10/site-packages/pylint/config/config_initialization.py",
+          "normalized": "home/lihu/.venv/lib/python3.10/site-packages/pylint/config/config_initialization.py",
+          "form": "traceback_frame",
+          "shape": "site_packages",
+          "frameIndex": 4,
+          "frameSymbol": "_config_initialization",
+          "raisingFrame": false,
+          "strictOutcome": "resolved_segment_suffix",
+          "strictPath": "pylint/config/config_initialization.py",
+          "fallbackPath": "pylint/config/config_initialization.py",
+          "fallbackOnly": false,
+          "resolvedFileIsTest": false,
+          "frameSymbolResolved": [
+            "pylint/config/config_initialization.py::_config_initialization"
+          ],
+          "evaluationOnly": {
+            "resolvesToGold": false
+          }
+        },
+        {
+          "raw": "/usr/lib/python3.10/sre_compile.py",
+          "normalized": "usr/lib/python3.10/sre_compile.py",
+          "form": "traceback_frame",
+          "shape": "stdlib",
+          "frameIndex": 5,
+          "frameSymbol": "compile",
+          "raisingFrame": false,
+          "strictOutcome": "external_unresolved",
+          "strictPath": null,
+          "fallbackPath": null,
+          "fallbackOnly": false,
+          "resolvedFileIsTest": null,
+          "frameSymbolResolved": [],
+          "evaluationOnly": {
+            "resolvesToGold": false
+          }
+        },
+        {
+          "raw": "/usr/lib/python3.10/sre_parse.py",
+          "normalized": "usr/lib/python3.10/sre_parse.py",
+          "form": "traceback_frame",
+          "shape": "stdlib",
+          "frameIndex": 6,
+          "frameSymbol": "parse",
+          "raisingFrame": false,
+          "strictOutcome": "external_unresolved",
+          "strictPath": null,
+          "fallbackPath": null,
+          "fallbackOnly": false,
+          "resolvedFileIsTest": null,
+          "frameSymbolResolved": [],
+          "evaluationOnly": {
+            "resolvesToGold": false
+          }
+        },
+        {
+          "raw": "/usr/lib/python3.10/sre_parse.py",
+          "normalized": "usr/lib/python3.10/sre_parse.py",
+          "form": "traceback_frame",
+          "shape": "stdlib",
+          "frameIndex": 7,
+          "frameSymbol": "_parse_sub",
+          "raisingFrame": false,
+          "strictOutcome": "external_unresolved",
+          "strictPath": null,
+          "fallbackPath": null,
+          "fallbackOnly": false,
+          "resolvedFileIsTest": null,
+          "frameSymbolResolved": [],
+          "evaluationOnly": {
+            "resolvesToGold": false
+          }
+        },
+        {
+          "raw": "/usr/lib/python3.10/sre_parse.py",
+          "normalized": "usr/lib/python3.10/sre_parse.py",
+          "form": "traceback_frame",
+          "shape": "stdlib",
+          "frameIndex": 8,
+          "frameSymbol": "_parse",
+          "raisingFrame": true,
+          "strictOutcome": "external_unresolved",
+          "strictPath": null,
+          "fallbackPath": null,
+          "fallbackOnly": false,
+          "resolvedFileIsTest": null,
+          "frameSymbolResolved": [],
+          "evaluationOnly": {
+            "resolvesToGold": false
+          }
+        }
+      ],
+      "directRelationsFromDeepestFrame": [
+        {
+          "fromSymbol": "pylint/config/config_initialization.py::_config_initialization",
+          "edgeType": "calls",
+          "toPath": "pylint/utils/utils.py",
+          "toSymbol": "pylint/utils/utils.py::_unquote",
+          "evaluationOnly": {
+            "targetIsGold": true
+          }
+        },
+        {
+          "fromSymbol": "pylint/config/config_initialization.py::_config_initialization",
+          "edgeType": "calls",
+          "toPath": "pylint/config/config_initialization.py",
+          "toSymbol": "pylint/config/config_initialization.py::_order_all_first",
+          "evaluationOnly": {
+            "targetIsGold": false
+          }
+        },
+        {
+          "fromSymbol": "pylint/config/config_initialization.py::_config_initialization",
+          "edgeType": "calls",
+          "toPath": "pylint/utils/utils.py",
+          "toSymbol": "pylint/utils/utils.py::_splitstrip",
+          "evaluationOnly": {
+            "targetIsGold": true
+          }
+        },
+        {
+          "fromSymbol": "pylint/config/config_initialization.py::_config_initialization",
+          "edgeType": "references",
+          "toPath": "pylint/config/exceptions.py",
+          "toSymbol": "pylint/config/exceptions.py::_UnrecognizedOptionError",
+          "evaluationOnly": {
+            "targetIsGold": false
+          }
+        },
+        {
+          "fromSymbol": "pylint/config/config_initialization.py::_config_initialization",
+          "edgeType": "calls",
+          "toPath": "pylint/config/config_file_parser.py",
+          "toSymbol": "pylint/config/config_file_parser.py::_ConfigurationFileParser",
+          "evaluationOnly": {
+            "targetIsGold": false
+          }
+        }
+      ],
+      "relationsInspected": 5,
+      "evaluationOnly": {
+        "goldFiles": [
+          "pylint/config/argument.py",
+          "pylint/utils/__init__.py",
+          "pylint/utils/utils.py"
+        ]
+      }
+    }
+  ]
+}
