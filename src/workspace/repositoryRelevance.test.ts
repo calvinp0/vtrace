@@ -491,3 +491,129 @@ describe("M146-B fan-out bounds", () => {
     expect(relevance.diagnostics.candidatesOmitted).toBe(3);
   });
 });
+
+// ---------------------------------------------------------------------------
+// §34-§37 — failure-path routing and fork divergence
+// ---------------------------------------------------------------------------
+
+describe("M146-B failure-path routing (§34-§36)", () => {
+  test("a traceback frame owned by one repository routes there", async () => {
+    // Closes the M144 -> M145 -> M146 chain: M144 extracts the frame, M145 owns
+    // the path, M146 turns ownership into a repository nomination. The frame is
+    // an absolute path, so it routes on index-free containment.
+    const root = await makeWorkspaceRoot("m146b-failure-");
+    const appRepo = await indexedRepo(root, "app", { "src/app_main.py": "def run():\n    return 1\n" });
+    const libRepo = await indexedRepo(root, "lib", { "lib/parser.py": "def parse_payload():\n    raise ValueError('bad')\n" });
+    const config = await writeFixtureWorkspace({
+      configPath: resolveWorkspaceConfigPath(appRepo),
+      repos: [{ alias: "app", rootPath: appRepo }, { alias: "lib", rootPath: libRepo }],
+      primaryRepoAlias: "app",
+    });
+
+    const { relevance } = await nominate(config, {
+      pathHints: [path.join(libRepo, "lib/parser.py")],
+    });
+
+    expect(relevance.status).toBe(RepositoryRelevanceStatus.Selected);
+    expect(relevance.selected.map((repo) => repo.alias)).toEqual(["lib"]);
+    expect(relevance.diagnostics.decidingTier).toBe(RepositoryEvidenceKind.PathContainment);
+  });
+
+  test("a traceback frame owned by a stale repository still identifies it", async () => {
+    const root = await makeWorkspaceRoot("m146b-failure-stale-");
+    const appRepo = await indexedRepo(root, "app", { "src/app_main.py": "def run():\n    return 1\n" });
+    const libRepo = await indexedRepo(root, "lib", { "lib/parser.py": "def parse_payload():\n    raise ValueError('bad')\n" });
+    await breakDerivation(libRepo);
+    const config = await writeFixtureWorkspace({
+      configPath: resolveWorkspaceConfigPath(appRepo),
+      repos: [{ alias: "app", rootPath: appRepo }, { alias: "lib", rootPath: libRepo }],
+      primaryRepoAlias: "app",
+    });
+
+    const { relevance, probeRequests } = await nominate(config, {
+      pathHints: [path.join(libRepo, "lib/parser.py")],
+    });
+
+    expect(relevance.status).toBe(RepositoryRelevanceStatus.NotReady);
+    expect(relevance.candidates.map((repo) => repo.alias)).toEqual(["lib"]);
+    expect(probeRequests).not.toContain("lib");
+  });
+
+  test("a failure path outside every registered repository routes nowhere", async () => {
+    const { config } = await genericWorkspace();
+
+    const { relevance } = await nominate(config, {
+      pathHints: ["/usr/lib/python3.11/site-packages/foreign/mod.py"],
+    });
+
+    // §36: no fuzzy routing. An external frame is external.
+    expect(relevance.status).toBe(RepositoryRelevanceStatus.NoMatch);
+    expect(relevance.selected).toEqual([]);
+  });
+});
+
+describe("M146-B fork divergence (§37)", () => {
+  test("current indexed evidence selects the fork that has the symbol", async () => {
+    const root = await makeWorkspaceRoot("m146b-fork-");
+    const upstream = await indexedRepo(root, "upstream", {
+      "src/shared.py": "def common_helper():\n    return 1\n",
+    });
+    const fork = await indexedRepo(root, "fork", {
+      "src/shared.py": "def common_helper():\n    return 1\n",
+      "src/fork_feature.py": "def divergentFeature():\n    return 2\n",
+    });
+    const config = await writeFixtureWorkspace({
+      configPath: resolveWorkspaceConfigPath(upstream),
+      repos: [{ alias: "upstream", rootPath: upstream }, { alias: "fork", rootPath: fork }],
+      primaryRepoAlias: "upstream",
+    });
+
+    const divergent = await nominate(config, { symbolHints: ["divergentFeature"] });
+    expect(divergent.relevance.status).toBe(RepositoryRelevanceStatus.Selected);
+    expect(divergent.relevance.selected.map((repo) => repo.alias)).toEqual(["fork"]);
+
+    // Where the forks do not diverge, neither may be preferred — not by remote,
+    // lineage, path length or registration order.
+    const shared = await nominate(config, { symbolHints: ["common_helper"] });
+    expect(shared.relevance.status).toBe(RepositoryRelevanceStatus.Ambiguous);
+    expect(shared.relevance.candidates.map((repo) => repo.alias)).toEqual(["fork", "upstream"]);
+  });
+});
+
+describe("M146-B probe truncation soundness", () => {
+  test("a match found in a truncated pool is ambiguous, not unique", async () => {
+    // The bound that keeps cost independent of workspace size also means the
+    // unprobed remainder is exactly where a rival would hide. Measured before
+    // the fix: ten ready members, cap of eight, symbol in the first and last —
+    // reported `selected` on the first, and reversing registration order would
+    // have named the other. Uniqueness must be earned, not assumed.
+    const root = await makeWorkspaceRoot("m146b-truncation-");
+    const repos = [];
+    for (let index = 0; index < 10; index += 1) {
+      const files = index === 0 || index === 9
+        ? { "src/f.py": "def sharedAcrossFarApart():\n    return 1\n" }
+        : { "src/f.py": `def only${index}():\n    return ${index}\n` };
+      repos.push({ alias: `r${index}`, rootPath: await indexedRepo(root, `r${index}`, files) });
+    }
+    const config = await writeFixtureWorkspace({
+      configPath: path.join(root, "truncation.workspace.json"),
+      repos,
+      primaryRepoAlias: "r0",
+    });
+
+    const { relevance } = await nominate(config, { symbolHints: ["sharedAcrossFarApart"] });
+
+    expect(relevance.status).toBe(RepositoryRelevanceStatus.Ambiguous);
+    expect(relevance.selected).toEqual([]);
+    expect(relevance.reason).toContain("uniqueness is unproven");
+    expect(relevance.diagnostics.reposDeepProbed).toBe(8);
+  });
+
+  test("an untruncated pool still resolves a unique match", async () => {
+    const { config } = await genericWorkspace();
+
+    const { relevance } = await nominate(config, { symbolHints: ["BetaOnly"] });
+
+    expect(relevance.status).toBe(RepositoryRelevanceStatus.Selected);
+  });
+});

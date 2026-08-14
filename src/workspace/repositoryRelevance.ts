@@ -277,10 +277,17 @@ export function nominateRepositories(request: RepositoryRelevanceRequest): Repos
   // ---- Tier 2: indexed path membership (READY MEMBERS ONLY) ----------------
   // Both indexed lanes draw from the same gated pool, bounded so workspace size
   // never sets query cost.
+  const indexedPool = poolForEvidence(RepositoryEvidenceKind.IndexedPath, members, readyMembers);
   const probeTargets = decidingTier !== null && !collectSupporting
     ? []
-    : poolForEvidence(RepositoryEvidenceKind.IndexedPath, members, readyMembers)
-      .slice(0, limits.maxDeepProbes);
+    : indexedPool.slice(0, limits.maxDeepProbes);
+  // Probing a prefix of the ready members cannot establish that a match is
+  // UNIQUE across the workspace: the cap is what makes cost bounded, and the
+  // unprobed remainder is exactly where a rival would hide. Measured: with ten
+  // ready members and a cap of eight, a symbol defined in the first and last
+  // reported `selected` on the first, and reversing registration order would
+  // have named the other one.
+  const deepProbeTruncated = probeTargets.length < indexedPool.length;
   const probes = new Map<string, RepositoryProbe>();
   if (request.probe !== undefined && pathHints.length > 0) {
     const scopes: PathMembershipScope[] = [];
@@ -325,6 +332,7 @@ export function nominateRepositories(request: RepositoryRelevanceRequest): Repos
       members,
       readinessByAlias,
       limits,
+      deepProbeTruncated,
       diagnostics: baseDiagnostics(members, readyMembers, excluded, deepProbedAliases.size),
     });
   }
@@ -361,6 +369,7 @@ export function nominateRepositories(request: RepositoryRelevanceRequest): Repos
       members,
       readinessByAlias,
       limits,
+      deepProbeTruncated,
       diagnostics: baseDiagnostics(members, readyMembers, excluded, deepProbedAliases.size),
     });
   }
@@ -388,6 +397,8 @@ function decide(input: {
   members: readonly RegisteredRepository[];
   readinessByAlias: ReadonlyMap<string, WorkspaceRepoReadiness>;
   limits: Required<RepositoryRelevanceLimits>;
+  /** True when the indexed lanes saw only a prefix of the ready members. */
+  deepProbeTruncated?: boolean;
   diagnostics: Omit<RepositoryRelevanceDiagnostics, "decidingTier" | "candidatesOmitted">;
 }): RepositoryRelevance {
   const tierEvidence = input.evidence.filter((entry) => entry.kind === input.tier);
@@ -425,6 +436,20 @@ function decide(input: {
       supporting: [],
       reason: `${nominees.length} repositories match this request on ${input.tier} evidence: ${aliases.join(", ")}.`,
       diagnostics: diagnostics(nominees.length - reported.length),
+    };
+  }
+
+  // One match among a truncated pool is not a unique match. Fail closed rather
+  // than report certainty the probe never earned; the alternative would also
+  // make the answer depend on registration order past the cap.
+  if (input.deepProbeTruncated === true && EVIDENCE_REQUIRES_READY_INDEX[input.tier]) {
+    return {
+      status: RepositoryRelevanceStatus.Ambiguous,
+      selected: [],
+      candidates: nominees.slice(0, input.limits.maxReportedCandidates),
+      supporting: [],
+      reason: `${nominees.length} repository match(es) found, but only part of the workspace was probed, so uniqueness is unproven: ${aliases.join(", ")}.`,
+      diagnostics: diagnostics(0),
     };
   }
 
