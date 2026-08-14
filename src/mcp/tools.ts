@@ -201,6 +201,7 @@ import {
   type ResolvedWorkspaceConfig,
   type ResolvedWorkspaceRepoConfig,
 } from "../workspace/config";
+import { compareRecordedIdentity, RegistrationStatus } from "../workspace/registry";
 import { createMcpToolRegistry } from "./registry";
 import {
   McpErrorCode,
@@ -429,6 +430,14 @@ interface WorkspaceRepoStatus {
   readonly latestRunId: number | null;
   readonly readiness: RepoLocalState["readiness"] | null;
   readonly indexReadiness: IndexReadinessSummary;
+  /**
+   * M145: is the repository at this registered path still the one the workspace
+   * registered? Independent of `indexReadiness`, which asks whether the stored
+   * INDEX belongs to the worktree — a replaced checkout can carry an index that
+   * is perfectly valid for the repository it was built from.
+   */
+  readonly registration: RegistrationStatus;
+  readonly registrationMismatches: readonly string[];
   readonly freshness: unknown;
   readonly watcher: unknown;
   readonly binding?: ReadyRepoBinding;
@@ -4236,7 +4245,11 @@ async function inspectWorkspaceRepoStatus(
   const initialized = config?.initialized === true && state?.initialized === true && dbPresent;
   const latestRunId = state?.latestRunId ?? null;
   const indexPresent = latestRunId !== null && dbPresent;
-  const ready = initialized && state?.readiness.status === "ready";
+  const registration = await inspectRegistrationStatus(spec);
+  const ready = initialized
+    && state?.readiness.status === "ready"
+    && registration.status !== RegistrationStatus.Mismatch
+    && registration.status !== RegistrationStatus.Unavailable;
   const indexReadiness = summarizeIndexReadiness(withRuntimeSignals(
     await evaluateIndexReadiness(spec.rootPath, { probe: "full" }),
     {
@@ -4267,6 +4280,8 @@ async function inspectWorkspaceRepoStatus(
     latestRunId,
     readiness: state?.readiness ?? null,
     indexReadiness,
+    registration: registration.status,
+    registrationMismatches: registration.mismatches,
     freshness,
     watcher: buildFileWatcherStatus(state),
     ...(ready && config !== undefined && state !== undefined
@@ -4283,6 +4298,29 @@ async function inspectWorkspaceRepoStatus(
       }
       : {}),
   };
+}
+
+/**
+ * Compare the identity a workspace entry recorded at registration against the
+ * repository at that path now. An entry that recorded nothing is `unrecorded`
+ * and vouches for nothing — it must not be reported as verified, and it must not
+ * be treated as a mismatch either.
+ */
+async function inspectRegistrationStatus(
+  spec: ResolvedWorkspaceRepoConfig,
+): Promise<{ status: RegistrationStatus; mismatches: readonly string[] }> {
+  try {
+    const identity = await resolveWorktreeIdentity(spec.rootPath);
+    const mismatches = compareRecordedIdentity(spec, identity);
+
+    return mismatches === null
+      ? { status: RegistrationStatus.Unrecorded, mismatches: [] }
+      : mismatches.length === 0
+        ? { status: RegistrationStatus.Verified, mismatches: [] }
+        : { status: RegistrationStatus.Mismatch, mismatches };
+  } catch {
+    return { status: RegistrationStatus.Unavailable, mismatches: ["root_unresolvable"] };
+  }
 }
 
 function hasMultiRepoRequest(
@@ -5757,6 +5795,15 @@ function resolveWorkspaceRepoSkipReason(status: WorkspaceRepoStatus): string {
   if (!status.enabled) {
     return "repo_disabled";
   }
+  // Ordered ahead of readiness on purpose: when a different repository occupies
+  // the registered path, "not ready" would be a true statement about the wrong
+  // question. The index may well be pristine — for the repository that left.
+  if (status.registration === RegistrationStatus.Unavailable) {
+    return "repo_path_unavailable";
+  }
+  if (status.registration === RegistrationStatus.Mismatch) {
+    return "repo_identity_mismatch";
+  }
   if (!status.configPresent || !status.statePresent) {
     return "repo_not_initialized";
   }
@@ -6300,10 +6347,15 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
           });
         }
         if (error instanceof WorktreeIndexLockError) {
+          // Bounded by construction (§68): acquisition returns rather than
+          // waits, and the response names the claim that blocked it so the
+          // caller can tell "someone is indexing this" from "a stale artifact".
           return failure(McpErrorCode.HandlerFailed, error.message, {
             reason: error.code,
             action: "retry",
             repoRoot,
+            lockOwner: { pid: error.owner.pid, worktreeId: error.owner.worktreeId },
+            waitedMs: error.waitedMs,
           });
         }
         throw error;

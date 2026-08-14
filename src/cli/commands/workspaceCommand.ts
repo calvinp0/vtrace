@@ -13,6 +13,8 @@ import {
   type ResolvedWorkspaceConfig,
   type WorkspaceConfig,
 } from "../../workspace/config";
+import { evaluateWorkspaceReadiness } from "../../workspace/readiness";
+import { captureRepoIdentityRecord, resolveWorkspaceRegistry } from "../../workspace/registry";
 import { inspectWorkspaceRepoStatus } from "../../workspace/status";
 import { formatJson } from "../formatters";
 import type { CliOptions, CommandResult, ResolvedCliOptions } from "../types";
@@ -89,6 +91,7 @@ async function initWorkspace(
         alias,
         rootPath: repoRoot,
         enabled: true,
+        ...(await captureRepoIdentityRecord(repoRoot)),
       },
     ],
   };
@@ -130,6 +133,19 @@ async function addWorkspaceRepo(
     throw new Error(`Workspace repo rootPath already exists: ${repoRoot}`);
   }
 
+  // Two spellings of one worktree — a symlink, or a path that canonicalises onto
+  // an existing member — are one member, not two (§44). Registering it twice
+  // would give the same authoritative index two aliases and two lock claims.
+  const identityRecord = await captureRepoIdentityRecord(repoRoot);
+  const registry = await resolveWorkspaceRegistry({ config: workspace });
+  const duplicate = registry.repositories.find((repo) => repo.worktreeId === identityRecord.worktreeId);
+
+  if (duplicate !== undefined) {
+    throw new Error(
+      `Workspace repo ${duplicate.alias} is already the same worktree (${duplicate.rootPath}).`,
+    );
+  }
+
   const serializableWorkspace = formatWorkspaceConfigForWrite(workspace);
   const updated = await writeWorkspaceConfig(workspace.configPath, {
     ...serializableWorkspace,
@@ -139,6 +155,7 @@ async function addWorkspaceRepo(
         alias,
         rootPath: repoRoot,
         enabled: true,
+        ...identityRecord,
       },
     ],
   });
@@ -180,19 +197,45 @@ async function statusWorkspaceRepos(
 
   const workspace = await readWorkspaceConfigForCommand(parsed.repoPath, options);
   const statuses = await Promise.all(workspace.repos.map((repo) => inspectWorkspaceRepoStatus(repo)));
+  const registry = await resolveWorkspaceRegistry({ config: workspace });
+  const readiness = await evaluateWorkspaceReadiness(registry);
+  const byAlias = new Map(readiness.repos.map((repo) => [repo.alias, repo]));
 
   return {
-    workspace: formatWorkspaceSummary(workspace),
-    repos: statuses.map((status) => ({
-      alias: status.repoAlias,
-      rootPath: status.repoRoot,
-      enabled: status.enabled,
-      configExists: status.configPresent,
-      stateExists: status.statePresent,
-      indexExists: status.indexPresent,
-      readiness: status.readiness,
-      reason: status.notReadyReason,
-    })),
+    workspace: {
+      ...formatWorkspaceSummary(workspace),
+      workspaceId: registry.workspaceId,
+      // A count, never a single boolean: one stale member must stay visible.
+      summary: {
+        total: readiness.total,
+        ready: readiness.ready,
+        stale: readiness.stale,
+        missing: readiness.missing,
+        mismatched: readiness.mismatched,
+        unavailable: readiness.unavailable,
+      },
+    },
+    repos: statuses.map((status) => {
+      const resolved = byAlias.get(status.repoAlias);
+
+      return {
+        alias: status.repoAlias,
+        rootPath: status.repoRoot,
+        enabled: status.enabled,
+        configExists: status.configPresent,
+        stateExists: status.statePresent,
+        indexExists: status.indexPresent,
+        readiness: status.readiness,
+        reason: status.notReadyReason,
+        identity: resolved === undefined ? null : {
+          repositoryId: resolved.repositoryId,
+          worktreeId: resolved.worktreeId,
+          registration: resolved.registration,
+          ready: resolved.ready,
+          indexState: resolved.index?.state ?? null,
+        },
+      };
+    }),
   };
 }
 

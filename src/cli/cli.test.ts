@@ -276,6 +276,10 @@ test("workspace init creates a primary workspace config without indexing", async
       primaryRepoAlias: "primary",
       repoCount: 1,
     });
+    // M145: registration records the identity that was vouched for, so a later
+    // repository at the same path can be told apart from this one. The fixture
+    // is not a Git worktree, so there is no instance evidence to record — a
+    // recorded `null` is the honest answer, not a placeholder.
     assert.deepEqual(config, {
       schemaVersion: "1.0.0",
       primaryRepoAlias: "primary",
@@ -284,9 +288,15 @@ test("workspace init creates a primary workspace config without indexing", async
           alias: "primary",
           rootPath: repoRoot,
           enabled: true,
+          repositoryId: config.repos[0].repositoryId,
+          worktreeId: config.repos[0].worktreeId,
+          repositoryInstance: null,
+          worktreeInstance: null,
         },
       ],
     });
+    assert.match(config.repos[0].repositoryId, /^[0-9a-f]{24}$/u);
+    assert.match(config.repos[0].worktreeId, /^[0-9a-f]{24}$/u);
     await assert.rejects(
       readFile(path.join(repoRoot, REPO_LOCAL_STATE_DIRNAME, "index.sqlite"), "utf8"),
       { code: "ENOENT" },
@@ -332,12 +342,19 @@ test("workspace add appends an enabled repo without indexing it", async () => {
       enabled: true,
     });
     assert.deepEqual(
-      config.repos.map((repo: { alias: string; rootPath: string; enabled: boolean }) => repo),
+      config.repos.map((repo: { alias: string; rootPath: string; enabled: boolean }) => ({
+        alias: repo.alias,
+        rootPath: repo.rootPath,
+        enabled: repo.enabled,
+      })),
       [
         { alias: "main", rootPath: repoRoot, enabled: true },
         { alias: "sibling", rootPath: siblingRoot, enabled: true },
       ],
     );
+    // Distinct roots are distinct registrations, and `add` records the second
+    // one's identity rather than inheriting the first's.
+    assert.notEqual(config.repos[0].worktreeId, config.repos[1].worktreeId);
     await assert.rejects(
       readFile(path.join(siblingRoot, REPO_LOCAL_STATE_DIRNAME, "index.sqlite"), "utf8"),
       { code: "ENOENT" },
