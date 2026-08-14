@@ -99,7 +99,10 @@ describe("M141 index readiness", () => {
     expect(readiness.schemaCompatible).toBe(false);
     expect(readiness.ready).toBe(false);
     expect(readiness.state).toBe("schema_incompatible");
-    expect(readiness.reason).toBe("schema_changed");
+    // M146-A: the state still says the index cannot be consumed, but the reason
+    // now names the actual cause. Nothing about the stored SCHEMA moved here —
+    // the parser did — and `index_status` renders this reason to the user.
+    expect(readiness.reason).toBe("derivation_changed");
     expect(readiness.recommendedAction).toBe("full_rebuild");
   });
 
@@ -116,9 +119,11 @@ describe("M141 index readiness", () => {
     // Pre-M141 this asserted the defect: state "fresh", isStale false.
     expect(status.state).toBe("possibly_stale");
     expect(status.isStale).toBe(true);
-    expect(status.reasons.map((reason) => reason.code)).toContain("index_schema_incompatible");
+    expect(status.reasons.map((reason) => reason.code)).toContain("index_derivation_incompatible");
     expect(status.recommendedAction).toContain("Rebuild");
     expect(productSide.status).not.toBe("fresh");
+    // The pre-M141 legacy freshness contract is deliberately untouched by the
+    // M146-A reason split: product tools still see exactly what they always did.
     expect(productSide.reason).toBe("index_schema_changed");
   });
 

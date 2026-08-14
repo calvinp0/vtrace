@@ -64,6 +64,14 @@ export type IndexReadinessReason =
   | "dirty_fingerprint_changed"
   | "head_changed"
   | "schema_changed"
+  /**
+   * M146-A. The stored representation is readable, but its CONTENTS were
+   * produced by indexer/parser semantics this runtime no longer agrees with.
+   * Distinct from `schema_changed`, which means the table shape itself moved:
+   * both need a full rebuild, but only one of them is a database-schema change,
+   * and `index_status` renders this reason to the user verbatim.
+   */
+  | "derivation_changed"
   | "schema_unsupported"
   | "capability_missing"
   | "wrong_repository"
@@ -222,10 +230,16 @@ export async function evaluateIndexReadiness(
   const formatMismatch = manifest.schemaVersion !== INDEX_FORMAT_VERSION
     || manifest.index.indexSchemaVersion !== INDEX_FORMAT_VERSION
     || stored.index_format_version !== expected.index_format_version;
-  const runtimeMismatch = stored.schema_version !== expected.schema_version
-    || stored.indexer_fingerprint !== expected.indexer_fingerprint
+  // Representation vs derivation. `schema_version` pairs the declared init-state
+  // version with a hash of the DDL, so it moves when the stored SHAPE changes;
+  // the fingerprints move when the semantics that FILLED that shape changed.
+  // Both force a full rebuild, so `schemaCompatible` covers them jointly and its
+  // pre-M146 meaning is unchanged — only the reported reason distinguishes them.
+  const representationMismatch = formatMismatch || stored.schema_version !== expected.schema_version;
+  const derivationMismatch = stored.indexer_fingerprint !== expected.indexer_fingerprint
     || stored.parser_fingerprint !== expected.parser_fingerprint
     || manifest.index.parserVersion !== expected.parser_fingerprint;
+  const runtimeMismatch = stored.schema_version !== expected.schema_version || derivationMismatch;
   const schemaCompatible = !formatMismatch && !runtimeMismatch;
   // A stored index newer than anything this runtime knows cannot be rebuilt
   // into compatibility by re-indexing with an older binary.
@@ -287,6 +301,7 @@ export async function evaluateIndexReadiness(
     worktreeCompatible,
     schemaCompatible,
     schemaUnsupported,
+    representationMismatch,
     capabilityCompatible,
     configurationChanged,
     headChanged,
@@ -377,6 +392,7 @@ function classify(input: {
   worktreeCompatible: boolean;
   schemaCompatible: boolean;
   schemaUnsupported: boolean;
+  representationMismatch: boolean;
   capabilityCompatible: boolean;
   configurationChanged: boolean;
   headChanged: boolean;
@@ -392,9 +408,20 @@ function classify(input: {
     return { state: "worktree_mismatch", reason: "wrong_worktree", recommendedAction: "inspect_index" };
   }
   if (!input.schemaCompatible) {
-    return input.schemaUnsupported
-      ? { state: "schema_incompatible", reason: "schema_unsupported", recommendedAction: "unsupported_runtime_upgrade" }
-      : { state: "schema_incompatible", reason: "schema_changed", recommendedAction: "full_rebuild" };
+    if (input.schemaUnsupported) {
+      return {
+        state: "schema_incompatible",
+        reason: "schema_unsupported",
+        recommendedAction: "unsupported_runtime_upgrade",
+      };
+    }
+    // Same state and same remediation either way; the reason stops the product
+    // telling a user the database schema changed when a parser was edited.
+    return {
+      state: "schema_incompatible",
+      reason: input.representationMismatch ? "schema_changed" : "derivation_changed",
+      recommendedAction: "full_rebuild",
+    };
   }
   if (!input.capabilityCompatible) {
     return { state: "capability_incompatible", reason: "capability_missing", recommendedAction: "full_rebuild" };

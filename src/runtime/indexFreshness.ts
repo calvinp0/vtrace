@@ -18,6 +18,10 @@ export type IndexFreshnessReasonCode =
   // M141: runtime-compatibility causes. Source freshness alone never made an
   // index usable, but before M141 only the product tools knew that.
   | "index_schema_incompatible"
+  // M146-A: the stored index is readable but was DERIVED by indexer/parser
+  // semantics this runtime disagrees with. Same remediation as a schema change,
+  // different cause, and users act on the cause.
+  | "index_derivation_incompatible"
   | "index_capability_missing"
   | "index_repository_mismatch"
   | "index_worktree_mismatch"
@@ -185,7 +189,11 @@ function readinessReasons(readiness: IndexReadinessSummary | null): IndexFreshne
   }
   switch (readiness.state) {
     case "schema_incompatible":
-      return [{ code: "index_schema_incompatible" }];
+      return [{
+        code: readiness.reason === "derivation_changed"
+          ? "index_derivation_incompatible"
+          : "index_schema_incompatible",
+      }];
     case "capability_incompatible":
       return [{ code: "index_capability_missing" }];
     case "repository_mismatch":

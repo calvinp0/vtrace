@@ -176,7 +176,10 @@ describe("M141 cross-tool readiness parity", () => {
     // The exact defect M141 exists to remove.
     assert.equal(status.ready, false, "index_status must not report a schema-incompatible index as ready");
     assert.equal(status.state, "schema_incompatible");
-    assert.equal(status.reason, "schema_changed");
+    // M146-A: a different indexer/parser build is a DERIVATION change. The
+    // parity requirement is unchanged — every tool must name the same cause —
+    // and the cause is now the truthful one.
+    assert.equal(status.reason, "derivation_changed");
     assert.equal(status.action, "full_rebuild");
     assert.equal(status.legacyIsStale, true);
 
