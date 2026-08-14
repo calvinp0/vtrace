@@ -1,0 +1,137 @@
+{
+  "milestone": "M146-A",
+  "method": "real source mutated on disk; readiness asked of a FRESH bun process so the mutated runtime is genuinely loaded",
+  "fixture": "single-file python repo + one yaml document, git-initialised and indexed",
+  "baseline": {
+    "fingerprints": {
+      "index_format_version": 5,
+      "schema_version": "1.0.0+48e884e386a7",
+      "indexer_fingerprint": "f20ea1abc73696b7",
+      "parser_fingerprint": "e633009f0a91e53a",
+      "config_hash": "4b003f2216cc9f0a"
+    },
+    "readiness": {
+      "ready": true,
+      "state": "ready",
+      "reason": "fresh",
+      "recommendedAction": "none",
+      "sourceFresh": true,
+      "schemaCompatible": true,
+      "capabilityCompatible": true,
+      "repositoryCompatible": true,
+      "worktreeCompatible": true,
+      "failedDimensions": []
+    }
+  },
+  "question": "does a change confined to ranking/selection/response force a rebuild?",
+  "expectation": "no fingerprint moves; index stays ready",
+  "results": [
+    {
+      "mutatedFile": "src/retrieval/searchSymbolsShared.ts",
+      "fingerprintsMoved": [],
+      "readiness": {
+        "ready": true,
+        "state": "ready",
+        "reason": "fresh",
+        "recommendedAction": "none",
+        "sourceFresh": true,
+        "schemaCompatible": true,
+        "capabilityCompatible": true,
+        "repositoryCompatible": true,
+        "worktreeCompatible": true,
+        "failedDimensions": []
+      },
+      "timingsMs": {
+        "fingerprintResolveMs": 9.234,
+        "compatibilityCheckManifestMs": 11.245,
+        "compatibilityCheckFullProbeMs": 8.275
+      }
+    },
+    {
+      "mutatedFile": "src/retrieval/searchSymbolsFts.ts",
+      "fingerprintsMoved": [],
+      "readiness": {
+        "ready": true,
+        "state": "ready",
+        "reason": "fresh",
+        "recommendedAction": "none",
+        "sourceFresh": true,
+        "schemaCompatible": true,
+        "capabilityCompatible": true,
+        "repositoryCompatible": true,
+        "worktreeCompatible": true,
+        "failedDimensions": []
+      },
+      "timingsMs": {
+        "fingerprintResolveMs": 10.867,
+        "compatibilityCheckManifestMs": 12.364,
+        "compatibilityCheckFullProbeMs": 10.412
+      }
+    },
+    {
+      "mutatedFile": "src/capsuleV2/buildCapsuleV2.ts",
+      "fingerprintsMoved": [],
+      "readiness": {
+        "ready": true,
+        "state": "ready",
+        "reason": "fresh",
+        "recommendedAction": "none",
+        "sourceFresh": true,
+        "schemaCompatible": true,
+        "capabilityCompatible": true,
+        "repositoryCompatible": true,
+        "worktreeCompatible": true,
+        "failedDimensions": []
+      },
+      "timingsMs": {
+        "fingerprintResolveMs": 9.371,
+        "compatibilityCheckManifestMs": 12.447,
+        "compatibilityCheckFullProbeMs": 10.578
+      }
+    },
+    {
+      "mutatedFile": "src/capsuleV2/budgetAllocator.ts",
+      "fingerprintsMoved": [],
+      "readiness": {
+        "ready": true,
+        "state": "ready",
+        "reason": "fresh",
+        "recommendedAction": "none",
+        "sourceFresh": true,
+        "schemaCompatible": true,
+        "capabilityCompatible": true,
+        "repositoryCompatible": true,
+        "worktreeCompatible": true,
+        "failedDimensions": []
+      },
+      "timingsMs": {
+        "fingerprintResolveMs": 9.881,
+        "compatibilityCheckManifestMs": 12.625,
+        "compatibilityCheckFullProbeMs": 8.457
+      }
+    },
+    {
+      "mutatedFile": "src/mcp/responseEnvelope.ts",
+      "fingerprintsMoved": [],
+      "readiness": {
+        "ready": true,
+        "state": "ready",
+        "reason": "fresh",
+        "recommendedAction": "none",
+        "sourceFresh": true,
+        "schemaCompatible": true,
+        "capabilityCompatible": true,
+        "repositoryCompatible": true,
+        "worktreeCompatible": true,
+        "failedDimensions": []
+      },
+      "timingsMs": {
+        "fingerprintResolveMs": 9.793,
+        "compatibilityCheckManifestMs": 13.526,
+        "compatibilityCheckFullProbeMs": 10.899
+      }
+    }
+  ],
+  "verdict": "PASS",
+  "note": "searchSymbolsShared is the sharpest control available: it is where the FTS tokenizer used to live, and is query-only from M146-A onward"
+}

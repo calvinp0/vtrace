@@ -1,0 +1,41 @@
+{
+  "milestone": "M146-A",
+  "method": "real source mutated on disk; readiness asked of a FRESH bun process so the mutated runtime is genuinely loaded",
+  "fixture": "single-file python repo + one yaml document, git-initialised and indexed",
+  "baseline": {
+    "fingerprints": {
+      "index_format_version": 5,
+      "schema_version": "1.0.0+48e884e386a7",
+      "indexer_fingerprint": "f20ea1abc73696b7",
+      "parser_fingerprint": "e633009f0a91e53a",
+      "config_hash": "4b003f2216cc9f0a"
+    },
+    "readiness": {
+      "ready": true,
+      "state": "ready",
+      "reason": "fresh",
+      "recommendedAction": "none",
+      "sourceFresh": true,
+      "schemaCompatible": true,
+      "capabilityCompatible": true,
+      "repositoryCompatible": true,
+      "worktreeCompatible": true,
+      "failedDimensions": []
+    }
+  },
+  "question": "what does compatibility checking cost, and does it happen per query?",
+  "measurements": {
+    "baseline": {
+      "fingerprintResolveMs": 8.523,
+      "compatibilityCheckManifestMs": 9.996,
+      "compatibilityCheckFullProbeMs": 9.481
+    },
+    "note": "fingerprintResolveMs content-hashes ~46 source files once per request and is reusable across workspace members via EvaluateIndexReadinessOptions.expected"
+  },
+  "perQueryCost": {
+    "gitSubprocesses": "one rev-parse/status per readiness evaluation, not per candidate",
+    "filesystemScans": "none during scoring; readiness runs at index/workspace load",
+    "dbReads": "none in manifest probe mode; one read-only open in full probe mode"
+  },
+  "whenChecked": "at readiness evaluation (index open or product request), not at MCP startup; workspace members are not eagerly revalidated on reconnect"
+}

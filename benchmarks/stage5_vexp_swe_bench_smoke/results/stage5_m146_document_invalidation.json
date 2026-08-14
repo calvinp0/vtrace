@@ -1,0 +1,82 @@
+{
+  "milestone": "M146-A",
+  "method": "real source mutated on disk; readiness asked of a FRESH bun process so the mutated runtime is genuinely loaded",
+  "fixture": "single-file python repo + one yaml document, git-initialised and indexed",
+  "baseline": {
+    "fingerprints": {
+      "index_format_version": 5,
+      "schema_version": "1.0.0+48e884e386a7",
+      "indexer_fingerprint": "f20ea1abc73696b7",
+      "parser_fingerprint": "e633009f0a91e53a",
+      "config_hash": "4b003f2216cc9f0a"
+    },
+    "readiness": {
+      "ready": true,
+      "state": "ready",
+      "reason": "fresh",
+      "recommendedAction": "none",
+      "sourceFresh": true,
+      "schemaCompatible": true,
+      "capabilityCompatible": true,
+      "repositoryCompatible": true,
+      "worktreeCompatible": true,
+      "failedDimensions": []
+    }
+  },
+  "question": "does a document extraction/chunking change reject document-derived state?",
+  "expectation": "config_hash moves; ready=false",
+  "results": [
+    {
+      "mutatedFile": "src/documents/documentChunks.ts",
+      "fingerprintsMoved": [
+        "config_hash"
+      ],
+      "readiness": {
+        "ready": false,
+        "state": "source_stale",
+        "reason": "source_changed",
+        "recommendedAction": "incremental_refresh",
+        "sourceFresh": false,
+        "schemaCompatible": true,
+        "capabilityCompatible": true,
+        "repositoryCompatible": true,
+        "worktreeCompatible": true,
+        "failedDimensions": [
+          "source"
+        ]
+      },
+      "timingsMs": {
+        "fingerprintResolveMs": 9.722,
+        "compatibilityCheckManifestMs": 10.036,
+        "compatibilityCheckFullProbeMs": 9.915
+      }
+    },
+    {
+      "mutatedFile": "src/documents/documentPolicy.ts",
+      "fingerprintsMoved": [
+        "config_hash"
+      ],
+      "readiness": {
+        "ready": false,
+        "state": "source_stale",
+        "reason": "source_changed",
+        "recommendedAction": "incremental_refresh",
+        "sourceFresh": false,
+        "schemaCompatible": true,
+        "capabilityCompatible": true,
+        "repositoryCompatible": true,
+        "worktreeCompatible": true,
+        "failedDimensions": [
+          "source"
+        ]
+      },
+      "timingsMs": {
+        "fingerprintResolveMs": 7.657,
+        "compatibilityCheckManifestMs": 12.359,
+        "compatibilityCheckFullProbeMs": 9.732
+      }
+    }
+  ],
+  "verdict": "PASS",
+  "knownImprecision": "config_hash covers both scope rules and document construction, so readiness reports this as source staleness rather than derivation. It fails closed, and reindexRepo treats a config_hash mismatch as configuration_incompatible -> full rebuild, so remediation is correct; only the label is coarse."
+}

@@ -1,0 +1,50 @@
+{
+  "milestone": "M146-A",
+  "method": "real source mutated on disk; readiness asked of a FRESH bun process so the mutated runtime is genuinely loaded",
+  "fixture": "single-file python repo + one yaml document, git-initialised and indexed",
+  "baseline": {
+    "fingerprints": {
+      "index_format_version": 5,
+      "schema_version": "1.0.0+48e884e386a7",
+      "indexer_fingerprint": "f20ea1abc73696b7",
+      "parser_fingerprint": "e633009f0a91e53a",
+      "config_hash": "4b003f2216cc9f0a"
+    },
+    "readiness": {
+      "ready": true,
+      "state": "ready",
+      "reason": "fresh",
+      "recommendedAction": "none",
+      "sourceFresh": true,
+      "schemaCompatible": true,
+      "capabilityCompatible": true,
+      "repositoryCompatible": true,
+      "worktreeCompatible": true,
+      "failedDimensions": []
+    }
+  },
+  "question": "does the reported cause distinguish a representation change from a derivation change?",
+  "before": "both reported state=schema_incompatible, reason=schema_changed, so a parser edit told the user the database schema had changed",
+  "taxonomy": {
+    "schema_changed": "the stored representation cannot be interpreted as-is",
+    "derivation_changed": "the representation is readable; its contents were produced under obsolete semantics",
+    "source_changed": "the repository contents moved",
+    "wrong_repository": "the index belongs to another checkout"
+  },
+  "results": {
+    "derivationChange": {
+      "mutated": "src/indexer/searchTextDerivation.ts",
+      "state": "schema_incompatible",
+      "reason": "derivation_changed",
+      "recommendedAction": "full_rebuild"
+    },
+    "schemaChange": {
+      "mutated": "src/db/schema.ts",
+      "state": "schema_incompatible",
+      "reason": "schema_changed",
+      "recommendedAction": "full_rebuild"
+    }
+  },
+  "preserved": "state, ready, and every readiness boolean keep their M141 meanings; only the reason is finer. The pre-M141 legacy freshness reason (index_schema_changed) is byte-identical.",
+  "verdict": "PASS"
+}

@@ -1,0 +1,91 @@
+{
+  "milestone": "M146-A",
+  "workflow": "update VTRACE -> reconnect MCP -> ask about an index the previous runtime built",
+  "method": "each reconnect is a genuinely separate bun process, so the mutated runtime is actually loaded; in-process mutation cannot simulate this once a module is imported",
+  "caseA": {
+    "question": "does a reconnected runtime refuse an index built under different derivation semantics?",
+    "runtimeA": {
+      "ready": true,
+      "state": "ready",
+      "reason": "fresh",
+      "recommendedAction": "none",
+      "storedFtsTerms": [
+        "body json jsonbody parse parsejson parsejsonbody",
+        "compute computetotal computetotalprice price total totalprice",
+        "http httprequest httprequestparser parser request requestparser",
+        "module"
+      ],
+      "remediated": null,
+      "readinessCheckMs": 20.968
+    },
+    "afterUpgradeBeforeRebuild": {
+      "ready": false,
+      "state": "schema_incompatible",
+      "reason": "derivation_changed",
+      "recommendedAction": "full_rebuild",
+      "storedFtsTerms": [
+        "body json jsonbody parse parsejson parsejsonbody",
+        "compute computetotal computetotalprice price total totalprice",
+        "http httprequest httprequestparser parser request requestparser",
+        "module"
+      ],
+      "remediated": null,
+      "readinessCheckMs": 34.727
+    },
+    "afterRecommendedRebuild": {
+      "ready": true,
+      "state": "ready",
+      "reason": "fresh",
+      "recommendedAction": "none",
+      "storedFtsTerms": [
+        "body json parse parsejsonbody",
+        "compute computetotalprice price total",
+        "http httprequestparser parser request",
+        "module"
+      ],
+      "remediated": true,
+      "readinessCheckMs": 9.952
+    },
+    "defectFoundAndFixed": {
+      "symptom": "before M146-A the rebuild regenerated nothing and stamped the NEW fingerprints onto the OLD content, so a correctly-refused index became permanently and wrongly ready",
+      "rootCause": "reindexRepo decided snapshot reuse from its own ladder comparing parser_fingerprint, config_hash and index_format_version, but never indexer_fingerprint or schema_version",
+      "fix": "resolveDerivationRebuildReason in indexMeta.ts is now the single authority and compares every derivation-relevant fingerprint",
+      "proof": "storedFtsTerms after remediation no longer contain the combined terms the old tokenizer produced"
+    },
+    "verdict": "PASS"
+  },
+  "caseB": {
+    "question": "does a reconnected runtime keep an index whose only change was query-time?",
+    "requirement": "mandatory product acceptance: upgrading VTRACE must not cost a reindex when derivation did not move",
+    "beforeUpgrade": {
+      "ready": true,
+      "state": "ready",
+      "reason": "fresh",
+      "recommendedAction": "none",
+      "storedFtsTerms": [
+        "body json jsonbody parse parsejson parsejsonbody",
+        "compute computetotal computetotalprice price total totalprice",
+        "http httprequest httprequestparser parser request requestparser",
+        "module"
+      ],
+      "remediated": null,
+      "readinessCheckMs": 18.729
+    },
+    "afterQueryOnlyUpgrade": {
+      "ready": true,
+      "state": "ready",
+      "reason": "fresh",
+      "recommendedAction": "none",
+      "storedFtsTerms": [
+        "body json jsonbody parse parsejson parsejsonbody",
+        "compute computetotal computetotalprice price total totalprice",
+        "http httprequest httprequestparser parser request requestparser",
+        "module"
+      ],
+      "remediated": null,
+      "readinessCheckMs": 17.549
+    },
+    "verdict": "PASS"
+  },
+  "startupCost": "compatibility is evaluated lazily at readiness/index open, not at MCP startup; workspace members are not eagerly opened or revalidated on reconnect, so startup does not scale with member count. Lazy is acceptable because it fails closed: no retrieval path reaches an index without a verdict."
+}

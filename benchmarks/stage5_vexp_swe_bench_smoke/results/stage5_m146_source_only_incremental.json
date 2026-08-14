@@ -1,0 +1,46 @@
+{
+  "milestone": "M146-A",
+  "method": "real source mutated on disk; readiness asked of a FRESH bun process so the mutated runtime is genuinely loaded",
+  "fixture": "single-file python repo + one yaml document, git-initialised and indexed",
+  "baseline": {
+    "fingerprints": {
+      "index_format_version": 5,
+      "schema_version": "1.0.0+48e884e386a7",
+      "indexer_fingerprint": "f20ea1abc73696b7",
+      "parser_fingerprint": "e633009f0a91e53a",
+      "config_hash": "4b003f2216cc9f0a"
+    },
+    "readiness": {
+      "ready": true,
+      "state": "ready",
+      "reason": "fresh",
+      "recommendedAction": "none",
+      "sourceFresh": true,
+      "schemaCompatible": true,
+      "capabilityCompatible": true,
+      "repositoryCompatible": true,
+      "worktreeCompatible": true,
+      "failedDimensions": []
+    }
+  },
+  "question": "is a repository edit classified as source staleness rather than runtime incompatibility?",
+  "expectation": "no fingerprint moves; sourceFresh=false; schemaCompatible=true; incremental_refresh",
+  "result": {
+    "fingerprintsMoved": [],
+    "readiness": {
+      "ready": false,
+      "state": "source_stale",
+      "reason": "dirty_fingerprint_changed",
+      "recommendedAction": "incremental_refresh",
+      "sourceFresh": false,
+      "schemaCompatible": true,
+      "capabilityCompatible": true,
+      "repositoryCompatible": true,
+      "worktreeCompatible": true,
+      "failedDimensions": [
+        "source"
+      ]
+    }
+  },
+  "verdict": "PASS"
+}
