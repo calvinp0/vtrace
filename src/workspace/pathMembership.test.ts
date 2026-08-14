@@ -159,14 +159,28 @@ describe("M145 path membership — workspace collisions (§30, §31, §35)", () 
   });
 
   test("an exact path inside one worktree beats a colliding suffix elsewhere", () => {
-    // The absolute path names a location; only one worktree contains it.
+    // Both members index `src/foo/bar.py`, so both produce a suffix match. Only
+    // one of them CONTAINS the named location, and that outranks the other.
     const result = createPathMembershipResolver([
       scope("a", "/w/a", ["src/foo/bar.py"]),
-      scope("b", "/w/b", ["other/bar.py"]),
+      scope("b", "/w/b", ["src/foo/bar.py"]),
     ]).resolve("/w/a/src/foo/bar.py");
 
     expect(result.status).toBe(PathMembershipStatus.Exact);
     expect(result.worktreeId).toBe("wt-a");
+    expect(result.matches).toHaveLength(1);
+  });
+
+  test("adding a colliding repository leaves an absolute path unambiguous", () => {
+    const alone = createPathMembershipResolver([scope("a", "/w/a", ["src/foo/bar.py"])])
+      .resolve("/w/a/src/foo/bar.py");
+    const beside = createPathMembershipResolver([
+      scope("a", "/w/a", ["src/foo/bar.py"]),
+      scope("b", "/w/b", ["src/foo/bar.py"]),
+    ]).resolve("/w/a/src/foo/bar.py");
+
+    expect(beside.status).toBe(alone.status);
+    expect(beside.worktreeId).toBe(alone.worktreeId);
   });
 
   test("a requests frame never resolves into urllib3 just because both are registered", () => {

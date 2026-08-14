@@ -130,6 +130,18 @@ function lastSegment(value: string): string {
 }
 
 /**
+ * The bucket key for an indexed path, without normalizing the whole path.
+ *
+ * Only the final segment can change the key, and only a backslash separator can
+ * change which segment is final — every other part of normalization rewrites
+ * leading material. Skipping the rest keeps index construction proportional to
+ * the path list without changing a single bucket assignment.
+ */
+function bucketKey(indexedPath: string): string {
+  return lastSegment(indexedPath.includes("\\") ? indexedPath.replace(/\\/g, "/") : indexedPath);
+}
+
+/**
  * A scope prepared for repeated lookups.
  *
  * The index is keyed on last path segment, which is a NECESSARY condition for a
@@ -151,7 +163,7 @@ function prepareScope(scope: PathMembershipScope): PreparedScope {
       if (index === undefined) {
         index = new Map();
         for (const indexed of scope.indexedPaths()) {
-          const key = lastSegment(normalizePathHint(indexed));
+          const key = bucketKey(indexed);
           const bucket = index.get(key);
           if (bucket === undefined) index.set(key, [indexed]);
           else bucket.push(indexed);
@@ -239,20 +251,28 @@ function computeResolution(
     });
   }
 
-  const status = matches.length === 0
+  // An exact match outranks every suffix match. `/w/a/src/foo/bar.py` names a
+  // location, and a repository that merely happens to index `src/foo/bar.py`
+  // does not contain that location — treating the two as equal evidence would
+  // make an unambiguous absolute path ambiguous the moment an unrelated
+  // repository joined the workspace, which is the invariance §92 protects.
+  const exact = matches.filter((match) => match.kind === "exact");
+  const decisive = exact.length > 0 ? exact : matches;
+
+  const status = decisive.length === 0
     ? (absolute ? PathMembershipStatus.External : PathMembershipStatus.Unresolved)
-    : matches.length > 1
+    : decisive.length > 1
       ? PathMembershipStatus.Ambiguous
-      : matches[0]!.kind === "exact"
+      : decisive[0]!.kind === "exact"
         ? PathMembershipStatus.Exact
         : PathMembershipStatus.UniqueResolved;
 
   return {
     status,
     normalizedHint: normalized,
-    matches,
-    worktreeId: matches.length === 1 ? matches[0]!.worktreeId : null,
-    selected: describeSelected(status, matches, selectedWorktreeId),
+    matches: decisive,
+    worktreeId: decisive.length === 1 ? decisive[0]!.worktreeId : null,
+    selected: describeSelected(status, decisive, selectedWorktreeId),
   };
 }
 
