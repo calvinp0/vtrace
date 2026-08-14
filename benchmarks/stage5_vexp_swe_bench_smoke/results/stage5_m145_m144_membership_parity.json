@@ -1,0 +1,217 @@
+{
+  "schemaVersion": "stage5.m145.m144-membership-parity.v1",
+  "note": "Legacy single-repository boolean vs the M145 workspace-aware resolver collapsed to one scope. Disagreement on any shape would mean M144 behaviour moved.",
+  "total": 26,
+  "disagreements": 0,
+  "pass": true,
+  "rows": [
+    {
+      "case": "requests-1724 deepest in-repo frame",
+      "hint": "requests/sessions.py",
+      "legacyMember": true,
+      "resolverStatus": "unique_resolved",
+      "resolverMember": true,
+      "agrees": true
+    },
+    {
+      "case": "requests-1724 deepest in-repo frame",
+      "hint": "/Users/hwkns/test_requests.py",
+      "legacyMember": true,
+      "resolverStatus": "unique_resolved",
+      "resolverMember": true,
+      "agrees": true
+    },
+    {
+      "case": "requests-1724 deepest in-repo frame",
+      "hint": "/usr/lib/python2.7/httplib.py",
+      "legacyMember": false,
+      "resolverStatus": "external",
+      "resolverMember": false,
+      "agrees": true
+    },
+    {
+      "case": "requests-1724 deepest in-repo frame",
+      "hint": "/usr/lib/python2.7/socket.py",
+      "legacyMember": false,
+      "resolverStatus": "external",
+      "resolverMember": false,
+      "agrees": true
+    },
+    {
+      "case": "django-12774 frames through an installed copy",
+      "hint": "/app/venv/lib/python3.8/site-packages/django/db/models/query.py",
+      "legacyMember": true,
+      "resolverStatus": "unique_resolved",
+      "resolverMember": true,
+      "agrees": true
+    },
+    {
+      "case": "django-12774 frames through an installed copy",
+      "hint": "django/db/models/query.py",
+      "legacyMember": true,
+      "resolverStatus": "unique_resolved",
+      "resolverMember": true,
+      "agrees": true
+    },
+    {
+      "case": "django-12774 frames through an installed copy",
+      "hint": "./django/db/models/sql/compiler.py",
+      "legacyMember": true,
+      "resolverStatus": "unique_resolved",
+      "resolverMember": true,
+      "agrees": true
+    },
+    {
+      "case": "django-12774 frames through an installed copy",
+      "hint": "/usr/lib/python3.8/sre_parse.py",
+      "legacyMember": false,
+      "resolverStatus": "external",
+      "resolverMember": false,
+      "agrees": true
+    },
+    {
+      "case": "xarray-3677 repo-relative shapes",
+      "hint": "xarray/core/merge.py",
+      "legacyMember": true,
+      "resolverStatus": "unique_resolved",
+      "resolverMember": true,
+      "agrees": true
+    },
+    {
+      "case": "xarray-3677 repo-relative shapes",
+      "hint": "./xarray/core/dataset.py",
+      "legacyMember": true,
+      "resolverStatus": "unique_resolved",
+      "resolverMember": true,
+      "agrees": true
+    },
+    {
+      "case": "xarray-3677 repo-relative shapes",
+      "hint": "core/merge.py",
+      "legacyMember": true,
+      "resolverStatus": "unique_resolved",
+      "resolverMember": true,
+      "agrees": true
+    },
+    {
+      "case": "xarray-3677 repo-relative shapes",
+      "hint": "/usr/lib/python3.8/copy.py",
+      "legacyMember": false,
+      "resolverStatus": "external",
+      "resolverMember": false,
+      "agrees": true
+    },
+    {
+      "case": "pylint-8898 windows and installed shapes",
+      "hint": "\\path\\to\\site-packages\\pylint\\config\\argument.py",
+      "legacyMember": true,
+      "resolverStatus": "unique_resolved",
+      "resolverMember": true,
+      "agrees": true
+    },
+    {
+      "case": "pylint-8898 windows and installed shapes",
+      "hint": "pylint/config/argument.py",
+      "legacyMember": true,
+      "resolverStatus": "unique_resolved",
+      "resolverMember": true,
+      "agrees": true
+    },
+    {
+      "case": "pylint-8898 windows and installed shapes",
+      "hint": "C:/venv/lib/site-packages/pylint/lint/pylinter.py",
+      "legacyMember": true,
+      "resolverStatus": "unique_resolved",
+      "resolverMember": true,
+      "agrees": true
+    },
+    {
+      "case": "pylint-8898 windows and installed shapes",
+      "hint": "/usr/lib/python3.10/re.py",
+      "legacyMember": false,
+      "resolverStatus": "external",
+      "resolverMember": false,
+      "agrees": true
+    },
+    {
+      "case": "sympy-13372 evalf shapes",
+      "hint": "./sympy/core/evalf.py",
+      "legacyMember": true,
+      "resolverStatus": "unique_resolved",
+      "resolverMember": true,
+      "agrees": true
+    },
+    {
+      "case": "sympy-13372 evalf shapes",
+      "hint": "sympy/core/mul.py",
+      "legacyMember": true,
+      "resolverStatus": "unique_resolved",
+      "resolverMember": true,
+      "agrees": true
+    },
+    {
+      "case": "sympy-13372 evalf shapes",
+      "hint": "core/evalf.py",
+      "legacyMember": true,
+      "resolverStatus": "unique_resolved",
+      "resolverMember": true,
+      "agrees": true
+    },
+    {
+      "case": "sympy-13372 evalf shapes",
+      "hint": "/usr/lib/python3.9/inspect.py",
+      "legacyMember": false,
+      "resolverStatus": "external",
+      "resolverMember": false,
+      "agrees": true
+    },
+    {
+      "case": "negative controls: near-miss segment boundaries",
+      "hint": "myfoo/bar.py",
+      "legacyMember": false,
+      "resolverStatus": "unresolved",
+      "resolverMember": false,
+      "agrees": true
+    },
+    {
+      "case": "negative controls: near-miss segment boundaries",
+      "hint": "foo/bar.py.bak",
+      "legacyMember": false,
+      "resolverStatus": "unresolved",
+      "resolverMember": false,
+      "agrees": true
+    },
+    {
+      "case": "negative controls: near-miss segment boundaries",
+      "hint": "prefixfoo/bar.py",
+      "legacyMember": false,
+      "resolverStatus": "unresolved",
+      "resolverMember": false,
+      "agrees": true
+    },
+    {
+      "case": "negative controls: near-miss segment boundaries",
+      "hint": "b/widgets.py",
+      "legacyMember": false,
+      "resolverStatus": "unresolved",
+      "resolverMember": false,
+      "agrees": true
+    },
+    {
+      "case": "negative controls: near-miss segment boundaries",
+      "hint": "unrelated.py",
+      "legacyMember": false,
+      "resolverStatus": "unresolved",
+      "resolverMember": false,
+      "agrees": true
+    },
+    {
+      "case": "negative controls: near-miss segment boundaries",
+      "hint": "foo/bar.py",
+      "legacyMember": true,
+      "resolverStatus": "unique_resolved",
+      "resolverMember": true,
+      "agrees": true
+    }
+  ]
+}

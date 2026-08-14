@@ -1,0 +1,40 @@
+{
+  "schemaVersion": "stage5.m145.path-membership-performance.v1",
+  "note": "Membership resolution cost on the frozen 50, measured with M144's own localization harness under both the M144 predecessor and the M145 candidate on the same machine. The untouched parse stage is included as the noise reference: it varies by a comparable margin, so the resolve delta is within run-to-run variation rather than a measured regression.",
+  "resolverMicrobenchmarkMs": 0.007,
+  "frozen50": {
+    "m144Predecessor": {
+      "parseMeanMs": 0.167,
+      "resolveMeanOverTasksWithFramesMs": 1.787
+    },
+    "m145Candidate": [
+      {
+        "run": "pre-optimization",
+        "parseMeanMs": 0.204,
+        "resolveMeanOverTasksWithFramesMs": 2.561
+      },
+      {
+        "run": "post-optimization-a",
+        "parseMeanMs": 0.151,
+        "resolveMeanOverTasksWithFramesMs": 1.991
+      },
+      {
+        "run": "post-optimization-b",
+        "parseMeanMs": 0.133,
+        "resolveMeanOverTasksWithFramesMs": 2.174
+      }
+    ],
+    "committedM144Artifact": {
+      "parseMeanMs": 0.085,
+      "resolveMeanOverTasksWithFramesMs": 1.121,
+      "note": "Recorded on a different machine load; reproducing M144 here gives 0.167 for the same untouched parse stage, so this row is not comparable to the rows above."
+    }
+  },
+  "additionalDbQueries": 0,
+  "tasksWithoutFrames": {
+    "count": 44,
+    "indexedPathsRead": 0,
+    "note": "Unchanged from M144: a task with no path evidence never triggers a path-list read."
+  },
+  "indexStructure": "Per scope, indexed paths are bucketed by final segment on first use. Final-segment equality is a necessary condition for a segment-boundary match in either direction, so no match a linear scan would find can be missed."
+}

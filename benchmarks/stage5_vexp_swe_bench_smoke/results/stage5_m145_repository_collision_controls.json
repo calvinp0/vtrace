@@ -1,0 +1,17 @@
+{
+  "schemaVersion": "stage5.m145.repository-collision-controls.v1",
+  "sameRelativePath": {
+    "repoA": "/tmp/m145-acceptance-hvy6o8/collisions/a",
+    "repoB": "/tmp/m145-acceptance-hvy6o8/collisions/b",
+    "files": [
+      "src/utils.py",
+      "src/models.py"
+    ]
+  },
+  "routedAloneWorktreeId": "721586074e7b3e276447a8d5",
+  "routedBesideWorktreeId": "721586074e7b3e276447a8d5",
+  "identicalContent": {
+    "sameHead": true,
+    "sameWorktree": false
+  }
+}

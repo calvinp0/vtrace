@@ -1,0 +1,8 @@
+{
+  "schemaVersion": "stage5.m145.stale-registration.v1",
+  "registration": "unavailable",
+  "mismatches": [
+    "root_unavailable"
+  ],
+  "routeReason": "workspace_registration_stale"
+}

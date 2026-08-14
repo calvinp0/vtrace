@@ -1,0 +1,13 @@
+{
+  "schemaVersion": "stage5.m145.same-path-collision.v1",
+  "relativePath": "src/utils.py",
+  "a": {
+    "alias": "a",
+    "worktreeId": "863c627a349b73a4877c1e2d"
+  },
+  "b": {
+    "alias": "b",
+    "worktreeId": "7000b136ae549ab97c82d13f"
+  },
+  "distinct": true
+}

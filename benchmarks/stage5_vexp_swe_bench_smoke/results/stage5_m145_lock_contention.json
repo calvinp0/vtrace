@@ -1,0 +1,10 @@
+{
+  "schemaVersion": "stage5.m145.lock-contention.v1",
+  "code": "index_in_progress",
+  "owner": {
+    "pid": 2760912,
+    "worktreeId": "560e83abbd3f54a322d2de35"
+  },
+  "refusalMs": 9.091,
+  "hung": false
+}

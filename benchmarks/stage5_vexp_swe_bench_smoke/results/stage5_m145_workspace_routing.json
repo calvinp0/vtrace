@@ -1,0 +1,88 @@
+{
+  "schemaVersion": "stage5.m145.workspace-routing.v1",
+  "cases": [
+    {
+      "case": "explicit alias A",
+      "selector": {
+        "alias": "a"
+      },
+      "routed": "a",
+      "source": "alias",
+      "reason": null,
+      "candidates": []
+    },
+    {
+      "case": "explicit alias B",
+      "selector": {
+        "alias": "b"
+      },
+      "routed": "b",
+      "source": "alias",
+      "reason": null,
+      "candidates": []
+    },
+    {
+      "case": "explicit worktree id",
+      "selector": {
+        "worktreeId": "813aa79330603e34a21ff260"
+      },
+      "routed": "b",
+      "source": "worktree_id",
+      "reason": null,
+      "candidates": []
+    },
+    {
+      "case": "explicit path",
+      "selector": {
+        "repoPath": "/tmp/m145-acceptance-hvy6o8/routing/x/requests"
+      },
+      "routed": "a",
+      "source": "path",
+      "reason": null,
+      "candidates": []
+    },
+    {
+      "case": "cwd inside repo",
+      "selector": {
+        "cwd": "/tmp/m145-acceptance-hvy6o8/routing/y/requests/src"
+      },
+      "routed": "b",
+      "source": "cwd",
+      "reason": null,
+      "candidates": []
+    },
+    {
+      "case": "ambiguous display name",
+      "selector": {
+        "alias": "requests"
+      },
+      "routed": null,
+      "source": null,
+      "reason": "workspace_repository_ambiguous",
+      "candidates": [
+        "a",
+        "b"
+      ]
+    },
+    {
+      "case": "unknown alias",
+      "selector": {
+        "alias": "nope"
+      },
+      "routed": null,
+      "source": null,
+      "reason": "workspace_repository_unknown",
+      "candidates": []
+    },
+    {
+      "case": "cwd at workspace root falls to configured default",
+      "selector": {
+        "cwd": "/tmp/m145-acceptance-hvy6o8/routing"
+      },
+      "routed": "a",
+      "source": "configured_default",
+      "reason": null,
+      "candidates": []
+    }
+  ]
+}

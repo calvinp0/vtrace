@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "stage5.m145.ambiguous-path-cases.v1",
+  "cases": [
+    {
+      "hint": "src/foo/bar.py",
+      "status": "ambiguous",
+      "worktreeId": null,
+      "matched": [
+        "a",
+        "b"
+      ]
+    },
+    {
+      "hint": "/Users/hwkns/src/foo/bar.py",
+      "status": "ambiguous",
+      "worktreeId": null,
+      "matched": [
+        "a",
+        "b"
+      ]
+    },
+    {
+      "hint": "foo/bar.py",
+      "status": "ambiguous",
+      "worktreeId": null,
+      "matched": [
+        "a",
+        "b"
+      ]
+    }
+  ],
+  "exactStaysExact": {
+    "status": "exact",
+    "worktreeId": "8a1ec18d6fc85fc7f795ab7f"
+  }
+}

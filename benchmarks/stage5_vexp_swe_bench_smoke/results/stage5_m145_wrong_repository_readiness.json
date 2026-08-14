@@ -1,0 +1,8 @@
+{
+  "schemaVersion": "stage5.m145.wrong-repository-readiness.v1",
+  "registration": "mismatch",
+  "ready": false,
+  "mismatches": "mismatch",
+  "indexConsulted": false,
+  "reason": "A different repository now occupies /tmp/m145-acceptance-hvy6o8/readiness/slot (repositoryInstance, worktreeInstance)."
+}

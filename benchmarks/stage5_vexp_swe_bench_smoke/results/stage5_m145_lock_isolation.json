@@ -1,0 +1,8 @@
+{
+  "schemaVersion": "stage5.m145.lock-isolation.v1",
+  "unrelatedRepositoriesParallel": [
+    "b",
+    "main"
+  ],
+  "siblingWorktreeUnblocked": true
+}

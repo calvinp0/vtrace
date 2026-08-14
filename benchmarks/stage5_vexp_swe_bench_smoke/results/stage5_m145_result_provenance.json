@@ -1,0 +1,10 @@
+{
+  "schemaVersion": "stage5.m145.result-provenance.v1",
+  "envelope": {
+    "workspaceId": "workspace:/tmp/m145-acceptance-hvy6o8/provenance/.vtrace/workspace.json",
+    "repositoryId": "3724784b4a1b586f3c576f39",
+    "worktreeId": "863c627a349b73a4877c1e2d"
+  },
+  "envelopeBytes": 171,
+  "perCandidateFields": 0
+}

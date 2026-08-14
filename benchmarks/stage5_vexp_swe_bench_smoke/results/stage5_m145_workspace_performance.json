@@ -1,0 +1,40 @@
+{
+  "schemaVersion": "stage5.m145.performance.v1",
+  "timingsMs": {
+    "worktreeIdentityResolveMs": 16.455,
+    "pathMembershipResolveMs": 0.007,
+    "workspaceLoadMs": 11.316,
+    "explicitRouteMs": 0.031,
+    "readinessResolveMs": 21.209,
+    "indexLockRefusalMs": 9.091
+  },
+  "scaling": {
+    "schemaVersion": "stage5.m145.routing-performance.v1",
+    "rows": [
+      {
+        "registeredRepos": 1,
+        "workspaceLoadMs": 2.994,
+        "routeMsPerLookup": 0.000837,
+        "routedResponseBytes": 168
+      },
+      {
+        "registeredRepos": 10,
+        "workspaceLoadMs": 28.202,
+        "routeMsPerLookup": 0.002287,
+        "routedResponseBytes": 168
+      },
+      {
+        "registeredRepos": 100,
+        "workspaceLoadMs": 282.066,
+        "routeMsPerLookup": 0.001849,
+        "routedResponseBytes": 168
+      },
+      {
+        "registeredRepos": 1000,
+        "workspaceLoadMs": 3548.644,
+        "routeMsPerLookup": 0.010222,
+        "routedResponseBytes": 168
+      }
+    ]
+  }
+}
