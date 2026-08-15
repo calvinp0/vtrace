@@ -1,3 +1,7 @@
+import {
+  ensureIndexAccessCapability,
+  type EnsureIndexAccessCapabilityOutcome,
+} from "../access/indexAccessLifecycle";
 import { getLatestIndexRun, getIndexRunSummary } from "../db/repositories/indexRunsRepository";
 import { openIndexerDatabase } from "../db/sqlite";
 import { readGitHead } from "../fs/git";
@@ -59,6 +63,13 @@ export interface ReindexRepoResult {
   readonly indexResult: IndexProjectResult;
   readonly state: RepoLocalState | null;
   readonly sessionCompression: ReindexSessionCompressionDiagnostics;
+  /**
+   * M148-A. What the physical access-path migration did on the way out of the
+   * lifecycle. Reported rather than silent: the difference between `indexed`
+   * and `fallback` is the difference between a keyed lookup and a symbol-table
+   * scan for every workspace membership question this index answers.
+   */
+  readonly accessCapability: EnsureIndexAccessCapabilityOutcome;
   readonly staleLockRecovered: boolean;
 }
 
@@ -182,6 +193,23 @@ async function reindexRepoAndRefreshStateUnlocked(input: {
     const sessionCompression = runBoundedSessionCompressionSweep(db, input.repoRoot);
     reportSessionCompressionDiagnostics(input.progress, sessionCompression);
 
+    // M148-A. The narrowest point where an authoritative index has just been
+    // written, the worktree lock is held, and a writable handle is already open.
+    //
+    // It runs on every lifecycle invocation, not only on a rebuild, because the
+    // user-important case is the index that is ALREADY compatible: `vtrace index`
+    // on an unchanged repository plans a `noop` refresh — no file is parsed, no
+    // symbol regenerated, no graph or FTS content rewritten — and still leaves
+    // with the access path installed. That is what makes gaining the access path
+    // a lifecycle operation rather than a reason to reparse a repository.
+    //
+    // Never fatal: a migration that cannot run leaves an index that is
+    // semantically identical and merely unoptimised (`nameLookupAccess:
+    // fallback`), and failing the whole index run over that would be a lie with
+    // an expensive remedy.
+    const accessCapability = ensureIndexAccessCapability(db);
+    reportAccessCapabilityDiagnostics(input.progress, accessCapability);
+
     const state = await refreshRepoLocalStateAfterIndex({
       repoRoot: input.repoRoot,
       dbPath: input.dbPath,
@@ -198,6 +226,7 @@ async function reindexRepoAndRefreshStateUnlocked(input: {
       indexResult,
       state,
       sessionCompression,
+      accessCapability,
     };
   } finally {
     db.close();
@@ -348,6 +377,30 @@ function reportSessionCompressionDiagnostics(
     kind: "phase_end",
     phase: "compress_sessions",
     note: `${diagnostics.compressedSessionCount} compressed, ${diagnostics.prunedToolCallObservationCount} observations consolidated`,
+  });
+}
+
+/**
+ * Report the access migration only when it DID something, or when it failed.
+ * The common case — already installed — emits nothing, so ordinary progress and
+ * `--json` output for an unchanged repository stay byte-identical.
+ */
+function reportAccessCapabilityDiagnostics(
+  progress: ProgressReporter | null | undefined,
+  outcome: EnsureIndexAccessCapabilityOutcome,
+): void {
+  if (progress === undefined || progress === null) return;
+  if (!outcome.attempted) return;
+  if (outcome.error === null && !outcome.applied) return;
+
+  progress.report({ kind: "phase_begin", phase: "access_paths", label: "Ensuring index access paths" });
+  progress.report({
+    kind: "phase_end",
+    phase: "access_paths",
+    note: outcome.error !== null
+      // Truthful about consequence: the index still answers, it just scans.
+      ? `skipped (${outcome.error}); name lookups use ${outcome.state.nameLookupAccess}`
+      : `${outcome.created.length} installed`,
   });
 }
 

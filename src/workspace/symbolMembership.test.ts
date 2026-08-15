@@ -32,7 +32,18 @@ const NAME_ACCESS_PATH_DDL = [
   "CREATE INDEX IF NOT EXISTS idx_symbols_fq_name ON symbols(fq_name)",
 ] as const;
 
-/** A repository with enough distinct names for the population sweep to mean something. */
+const NAME_ACCESS_PATH_INDEXES = ["idx_symbols_local_name", "idx_symbols_fq_name"] as const;
+
+/**
+ * A repository with enough distinct names for the population sweep to mean
+ * something, in the state that predates the access path.
+ *
+ * M148-A made the migration part of the index lifecycle, so a freshly indexed
+ * repository now arrives ALREADY migrated. That is the product improvement, and
+ * it is exactly what these controls must undo: the property under test is that
+ * the two access modes agree, which needs a database in each mode.
+ */
+
 async function membershipRepo(): Promise<string> {
   const root = await makeWorkspaceRoot("m147-membership-");
   const files: Record<string, string> = {};
@@ -49,6 +60,12 @@ async function membershipRepo(): Promise<string> {
   }
   const repoRoot = await makeFixtureRepo(path.join(root, "repo"), { files });
   await initRepo({ repoPath: repoRoot });
+  const db = new Database(resolveIndexDbPath(repoRoot));
+  try {
+    for (const name of NAME_ACCESS_PATH_INDEXES) db.run(`DROP INDEX IF EXISTS ${name}`);
+  } finally {
+    db.close();
+  }
   return repoRoot;
 }
 

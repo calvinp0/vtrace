@@ -43,6 +43,17 @@ async function indexedRepo(prefix: string): Promise<string> {
   }
   const repoRoot = await makeFixtureRepo(path.join(root, "repo"), { files });
   await initRepo({ repoPath: repoRoot });
+  // M148-A wired the migration into the index lifecycle, so a freshly indexed
+  // repository now arrives WITH the access path. These controls are about the
+  // migration itself, whose starting state is an index that lacks it — the
+  // state every index built before M148-A is in. Constructed deliberately
+  // rather than relied on as a side effect of how indexing happens to work.
+  const db = new Database(resolveIndexDbPath(repoRoot));
+  try {
+    for (const name of SYMBOL_NAME_ACCESS_PATH_INDEXES) db.run(`DROP INDEX IF EXISTS ${name}`);
+  } finally {
+    db.close();
+  }
   return repoRoot;
 }
 
@@ -58,9 +69,11 @@ function derivedContent(db: Database): string {
 }
 
 describe("M147 symbol-name access path", () => {
-  test("a freshly built index does not carry it, and says so", async () => {
+  test("an index built before the lifecycle integration does not carry it, and says so", async () => {
     // The starting state every existing installation is in. Reported honestly
-    // rather than assumed either way.
+    // rather than assumed either way. (What a FRESH index carries now is
+    // M148-A's question, measured against the catalogue in
+    // `indexAccessLifecycle.test.ts`.)
     const repoRoot = await indexedRepo("m147-access-fresh-");
     const db = new Database(resolveIndexDbPath(repoRoot), { readonly: true });
 

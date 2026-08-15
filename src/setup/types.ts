@@ -1,3 +1,4 @@
+import type { EnsureIndexAccessCapabilityOutcome } from "../access/indexAccessLifecycle";
 import type { ProgressReporter } from "../cli/progress";
 import type { IndexProjectResult } from "../indexer/types";
 import type { IndexRunSummary } from "../memory/types";
@@ -142,4 +143,10 @@ export interface InitRepoResult {
   config: RepoLocalConfig;
   state: RepoLocalState;
   indexResult: IndexProjectResult;
+  /**
+   * M148-A. What the additive access-path migration did for this fresh index.
+   * A physical capability, never a readiness verdict: a repository whose
+   * migration failed is initialized and usable, only unoptimized.
+   */
+  accessCapability: EnsureIndexAccessCapabilityOutcome;
 }

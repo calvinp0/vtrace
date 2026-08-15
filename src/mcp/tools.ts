@@ -52,6 +52,10 @@ import {
 import { persistObservation } from "../db/repositories/observationsRepository";
 import { getSessionById } from "../db/repositories/sessionsRepository";
 import { openIndexerDatabase } from "../db/sqlite";
+import {
+  inspectIndexAccessCapability,
+  type IndexAccessCapabilityState,
+} from "../access/indexAccessLifecycle";
 import { parseSymbolKind } from "../domain/guards";
 import { type SymbolKind } from "../domain/types";
 import { buildHandoffPayload, deterministicHandoffBuilder } from "../handoff/buildHandoff";
@@ -3354,6 +3358,25 @@ const INDEX_STATUS_SCHEMA = objectProperty(
     freshness: INDEX_FRESHNESS_SCHEMA,
     watcher: FILE_WATCHER_STATUS_SCHEMA,
     performance: { type: ["object", "null"], description: "Diagnostics from the most recent index operation.", additionalProperties: true },
+    accessCapability: {
+      type: ["object", "null"],
+      description:
+        "M148-A physical access capability, read from the SQLite catalogue. `nameLookupAccess` is "
+        + "`indexed` when exact-name membership is a keyed lookup and `fallback` when it scans the "
+        + "symbol table — a performance mode, NOT a readiness or compatibility verdict.",
+      properties: {
+        version: { type: "integer", description: "Access-path version this runtime declares." },
+        nameLookupAccess: {
+          type: "string",
+          enum: ["indexed", "fallback", "unknown"],
+          description: "How exact-name membership is answered. `unknown` only when the index could not be read.",
+        },
+        present: { type: "array", items: { type: "string" }, description: "Installed access-path indexes." },
+        missing: { type: "array", items: { type: "string" }, description: "Access-path indexes not yet installed." },
+      },
+      required: ["version", "nameLookupAccess", "present", "missing"],
+      additionalProperties: false,
+    },
     runtime: {
       type: "object",
       description: "Runtime/build provenance for stale-process diagnosis.",
@@ -5828,6 +5851,26 @@ function formatMultiRepoRetrievalSummary(summary: MultiRepoRetrievalSummary) {
   };
 }
 
+/**
+ * The installed physical access capability, read from the database catalogue.
+ *
+ * Opened read-only and closed immediately: `index_status` is a read surface, and
+ * a status call that silently installed an index would make the migration
+ * implicit exactly where M146-A made the lifecycle explicit. An index that
+ * cannot be opened reports `unknown` rather than guessing `fallback`.
+ */
+function readIndexAccessCapability(dbPath: string): IndexAccessCapabilityState | null {
+  let db: ReturnType<typeof openIndexerDatabase> | null = null;
+  try {
+    db = openIndexerDatabase(dbPath);
+    return inspectIndexAccessCapability(db);
+  } catch {
+    return null;
+  } finally {
+    db?.close();
+  }
+}
+
 async function inspectIndexStatus(
   context: McpServerContext,
 ): Promise<{
@@ -5846,6 +5889,7 @@ async function inspectIndexStatus(
   freshness: unknown;
   watcher: unknown;
   performance: import("../indexer/incrementalIndex").IndexPerformanceDiagnostics | null;
+  accessCapability: IndexAccessCapabilityState | null;
 }> {
   if (context.repoRoot === null) {
     throw new Error("MCP tool requires a repo-bound server context.");
@@ -5897,6 +5941,11 @@ async function inspectIndexStatus(
     freshness,
     watcher: buildFileWatcherStatus(state),
     performance: indexMeta?.manifest?.performance ?? null,
+    // M148-A. A PERFORMANCE capability, reported beside readiness rather than
+    // inside it: `fallback` answers the same membership questions with the same
+    // rows, so folding it into `ready` would refuse a correct index over a query
+    // plan. Read from the catalogue, read-only — `index_status` never migrates.
+    accessCapability: dbPresent ? readIndexAccessCapability(dbPath) : null,
   };
 }
 

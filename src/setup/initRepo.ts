@@ -1,5 +1,9 @@
 import path from "node:path";
 
+import {
+  ensureIndexAccessCapability,
+  type EnsureIndexAccessCapabilityOutcome,
+} from "../access/indexAccessLifecycle";
 import { getLatestIndexRun, getIndexRunSummary } from "../db/repositories/indexRunsRepository";
 import { openIndexerDatabase } from "../db/sqlite";
 import { readGitHead } from "../fs/git";
@@ -67,6 +71,12 @@ async function initRepoUnlocked(
       ...(reusable === undefined ? {} : { baseSnapshotWorktreeId: reusable.worktreeId, baseSnapshotHead: reusable.headCommit ?? undefined }),
       ...(options.onProgress === undefined ? {} : { onProgress: options.onProgress }),
     });
+    // M148-A. The other fresh-index lifecycle path: `vtrace init`/`setup` builds
+    // the FIRST index, and it must leave optimized for the same reason a
+    // reindex does. Same seam, same lock, same writable handle, and the same
+    // non-fatal contract — a repository that could not gain the access path is
+    // fully initialized, just unoptimized.
+    const accessCapability = ensureIndexAccessCapability(db);
     const latestRun = getLatestIndexRun(db);
     const latestRunSummary = latestRun === undefined ? undefined : getIndexRunSummary(db, latestRun.id);
     const lastIndexSnapshot = buildLastIndexSnapshot({
@@ -122,6 +132,7 @@ async function initRepoUnlocked(
       config,
       state,
       indexResult,
+      accessCapability,
     };
   } finally {
     db.close();
