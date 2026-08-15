@@ -50,6 +50,7 @@ const ZERO_SCORECARD: CapsuleV2Scorecard = {
   actionability: 0,
   hub_penalty: 0,
   direct_answer: 0,
+  mechanism_evidence: 0,
   final: 0,
 };
 

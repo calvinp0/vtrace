@@ -184,8 +184,6 @@ export function evaluateMechanismEvidence(input: MechanismEvidenceInput): Mechan
       withheldReason: `no fact implements the requested ${input.objective.operation} operation`,
     };
   }
-  matched.sort((a, b) => strengthOf(b) - strengthOf(a));
-
   // Gate 3. Mechanism evidence answers "how", never "about what". A definition
   // the request is not about does not become the answer by containing a loop.
   if (input.subjectRelevance < MECHANISM_SUBJECT_FLOOR) {
@@ -197,6 +195,7 @@ export function evaluateMechanismEvidence(input: MechanismEvidenceInput): Mechan
     };
   }
 
+  matched.sort((a, b) => strengthOf(b) - strengthOf(a));
   // The STRONGEST single fact, not a sum over facts.
   const score = strengthOf(matched[0]!);
   if (score <= 0) {
@@ -218,25 +217,26 @@ export function evaluateMechanismEvidence(input: MechanismEvidenceInput): Mechan
  * and the whole point of §47 — must not be punished for it.
  */
 /**
- * Kinds whose statement can be either decisive or incidental, and which
- * therefore have to prove they produce the definition's result.
+ * The only kinds exempt from proving they produce the definition's result.
  *
- * The distinction is about the KIND, not the request. Taking element zero,
- * sorting, or branching can each happen deep inside a builder without being what
- * the definition is for — those need the proof. Consulting a cache, returning a
- * stored attribute, reaching for a fallback or reading a precedence table cannot
- * happen "incidentally": doing them IS the behaviour being asked about, and
- * requiring them to sit on a return line would only measure how the author
- * happened to spell it. `if key in CACHE:` is the clearest case — it is the
- * whole answer to "how is this cached?" and it is not a return statement.
+ * Everything else must prove it, because almost every mechanism CAN occur
+ * incidentally. A `break` inside a loop, an `except` handler that returns, a
+ * sort deep inside a builder — each produces a true fact about a statement that
+ * is nonetheless not what the definition is for. Measured on ARC's Gaussian
+ * route-keyword request, exempting first-success and fallback gave the direct
+ * tier to nearly every candidate in the pool, which made the component a
+ * constant and let tiny lexical differences decide the lead.
+ *
+ * These three cannot happen incidentally: consulting a keyed cache, returning a
+ * stored attribute, or reading a precedence table IS the behaviour being asked
+ * about. Requiring them to sit on a return line would measure how the author
+ * spelled it rather than what the code does — `if key in CACHE:` is the whole
+ * answer to "how is this cached?" and is not a return statement.
  */
-const RESULT_BEARING_REQUIRED: ReadonlySet<MechanismFactKind> = new Set<MechanismFactKind>([
-  "first_item_selection",
-  "sort_then_first",
-  "min_selection",
-  "max_selection",
-  "ordering_established",
-  "conditional_choice",
+const RESULT_BEARING_EXEMPT: ReadonlySet<MechanismFactKind> = new Set<MechanismFactKind>([
+  "cache_lookup",
+  "attribute_return",
+  "priority_lookup",
 ]);
 
 /**
@@ -252,20 +252,41 @@ const RESULT_BEARING_REQUIRED: ReadonlySet<MechanismFactKind> = new Set<Mechanis
  * element zero of a collection, and it is measured rather than assumed.
  */
 function strengthOf(entry: MatchedMechanism): number {
-  const proven = !RESULT_BEARING_REQUIRED.has(entry.kind) || entry.resultBearing;
+  const proven = RESULT_BEARING_EXEMPT.has(entry.kind) || entry.resultBearing;
   if (entry.compatibility === "direct") {
     return proven ? DIRECT_MECHANISM_EVIDENCE : PARTIAL_MECHANISM_EVIDENCE;
   }
   return proven ? PARTIAL_MECHANISM_EVIDENCE : 0;
 }
 
-function operandMatchesSubject(operand: string, subjectTerms: ReadonlySet<string>): boolean {
-  if (operand.length === 0 || subjectTerms.size === 0) return false;
-  const tokens = new Set(tokenize(operand));
-  for (const term of subjectTerms) {
-    if (tokens.has(term)) return true;
+/** Do this definition's own name tokens overlap the request's subject terms? */
+function namesSubject(name: string, subjectTerms: ReadonlySet<string>): boolean {
+  if (subjectTerms.size === 0) return false;
+  for (const token of tokenize(name)) {
+    for (const term of subjectTerms) {
+      if (stemEqual(token, term)) return true;
+    }
   }
   return false;
+}
+
+/**
+ * Equal, or sharing a long enough prefix that they are the same word: `option` /
+ * `options`, `family` / `families`. Deliberately the same shape as the domain
+ * lane's stem rule so two parts of the scorecard cannot disagree about whether a
+ * candidate names a subject.
+ */
+function stemEqual(a: string, b: string): boolean {
+  if (a === b) return true;
+  const limit = Math.min(a.length, b.length);
+  let shared = 0;
+  while (shared < limit && a[shared] === b[shared]) shared += 1;
+  return shared >= 4 && shared >= limit - 3;
+}
+
+function operandMatchesSubject(operand: string, subjectTerms: ReadonlySet<string>): boolean {
+  if (operand.length === 0) return false;
+  return namesSubject(operand, subjectTerms);
 }
 
 /** A human-readable `why` line for a delivered candidate (§66). */

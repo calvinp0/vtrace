@@ -524,9 +524,12 @@ function detectFallbackBranch(
   for (let index = 0; index < lines.length; index += 1) {
     if (!/^\s*except\b|^\s*\}?\s*catch\b/u.test(lines[index] ?? "")) continue;
     for (let scan = index + 1; scan < Math.min(lines.length, index + 5); scan += 1) {
-      if (/\breturn\b|=\s*[A-Za-z_][A-Za-z0-9_.]*\s*\(/u.test(lines[scan] ?? "")) {
-        return { kind: "fallback_branch", subject: "", lineOffset: scan };
-      }
+      const body = lines[scan] ?? "";
+      // Same rule as every other fallback shape: a handler that returns None is
+      // giving up, not routing around a failure.
+      const recovers = /=\s*[A-Za-z_][A-Za-z0-9_.]*\s*\(/u.test(body)
+        || (/^\s*return\s+\S/u.test(body) && !/^\s*return\s+(?:None|null|undefined)\s*$/u.test(body));
+      if (recovers) return { kind: "fallback_branch", subject: "", lineOffset: scan };
     }
   }
   void source;

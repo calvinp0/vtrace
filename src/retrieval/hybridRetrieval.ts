@@ -1056,7 +1056,14 @@ function assemble(
         localName: entry.symbol.localName,
         fqName: entry.symbol.fqName,
         filePath: entry.symbol.filePath,
-        subjectRelevance: Math.max(lexical, domain, path, symbol),
+        // IDENTIFYING evidence only — deliberately excluding `domain`. Issue-domain
+        // affinity is the component every symbol in a topically relevant package
+        // earns, so it says nothing about which of them the request is about; the
+        // M142 centrality gate excludes it for exactly this reason. Measured on
+        // ARC's Gaussian route-keyword request, letting domain satisfy the gate
+        // handed a Hessian PARSER full selection evidence on the strength of the
+        // token `gaussian` in its path, and took the lead off the owner file.
+        subjectRelevance: Math.max(lexical, path, symbol),
       });
       if (evaluated.matched.length > 0) mechanismEvidenceById.set(entry.symbol.id, evaluated);
       mechanismEvidence = evaluated.score;

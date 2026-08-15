@@ -53,6 +53,7 @@ function fullScorecard(over: Partial<CapsuleV2Scorecard>): CapsuleV2Scorecard {
     actionability: 1,
     hub_penalty: 0,
     direct_answer: 0,
+  mechanism_evidence: 0,
     final: 0,
     ...over,
   };

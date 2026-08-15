@@ -28,7 +28,8 @@ const REPORT_JSON = path.join(RESULTS, "stage5_m48_ruleout_sufficiency_validator
 
 const ZERO_SCORECARD: CapsuleV2Scorecard = {
   lexical: 0, symbol: 0, path: 0, test_to_impl: 0, body_literal: 0,
-  graph_proximity: 0, centrality: 0, actionability: 0, hub_penalty: 0, direct_answer: 0, final: 0,
+  graph_proximity: 0, centrality: 0, actionability: 0, hub_penalty: 0, direct_answer: 0,
+    mechanism_evidence: 0, final: 0,
 };
 
 interface CapturedCase {
