@@ -1,0 +1,150 @@
+{
+  "schemaVersion": "stage5.m149.paired-comparison.v1",
+  "milestone": "M149",
+  "predecessor": {
+    "label": "m148-cc06012",
+    "commit": "2aaac750b326478bb3f29576aa1454365d0f734d",
+    "tree": "53503e4c9d2972ebd30da01d0441b4f0af2c9dad",
+    "note": "M148 final functional. cc06012..f6d36fc touches only benchmark results, so f6d36fc is evidence-only."
+  },
+  "candidate": {
+    "label": "m149",
+    "commit": "ebc4fda7d42cfe8706e9ee128fe56ec8e5405a83",
+    "tree": "beedf3cef894e31dfef2345651ab7945fe7f6402",
+    "srcDirty": false
+  },
+  "protocol": "stage5.retrieval.protocol.v1 dual-root — both sides executed in one session against the same fixtures and the same pre-existing target indexes, with only the implementation root differing. Neither side indexes or writes to a target, so the corpus is an immutable shared input rather than per-side state.",
+  "provenanceValid": true,
+  "suites": [
+    {
+      "name": "django",
+      "caseCount": 20,
+      "fixtureHash": "b78a30889bfef6eb4f0f5fe4167b39c04908f9f01370c4db5c82eee7f2e690b0",
+      "sameFixtureHash": true,
+      "sameTargetCorpusHash": true,
+      "sharedImmutableTargetCorpus": true,
+      "neitherSideWritesTargets": true,
+      "provenanceValid": true,
+      "authoritative": true,
+      "semanticallyEqual": true,
+      "predecessorSemanticHash": "0659dfc07e0f69e00edab990b22ebb3e513613046f3d5daeba2cd5213a480d41",
+      "candidateSemanticHash": "0659dfc07e0f69e00edab990b22ebb3e513613046f3d5daeba2cd5213a480d41",
+      "differences": {
+        "selectedFiles": 0,
+        "lead": 0,
+        "roles": 0,
+        "contentModes": 0,
+        "modelVisibleContext": 0,
+        "tokenAccounting": 0,
+        "qualityMetrics": 0
+      },
+      "changedCases": [],
+      "quality": {
+        "predecessor": {
+          "cases": 20,
+          "evaluated": 20,
+          "top1GoldFile": 17,
+          "top3GoldFile": 20,
+          "goldFileAnywhere": 20,
+          "goldSymbolAnywhere": 14,
+          "missingGold": 0,
+          "meanPivotCount": 2.05,
+          "meanSupportCount": 3.95,
+          "meanEstimatedTokens": 1363.7
+        },
+        "candidate": {
+          "cases": 20,
+          "evaluated": 20,
+          "top1GoldFile": 17,
+          "top3GoldFile": 20,
+          "goldFileAnywhere": 20,
+          "goldSymbolAnywhere": 14,
+          "missingGold": 0,
+          "meanPivotCount": 2.05,
+          "meanSupportCount": 3.95,
+          "meanEstimatedTokens": 1363.7
+        }
+      }
+    },
+    {
+      "name": "cross_repo_30",
+      "caseCount": 30,
+      "fixtureHash": "bd01fe017657cd978f2be34495ad473ed29f94e801e1245c8fa6b787ae96db11",
+      "sameFixtureHash": true,
+      "sameTargetCorpusHash": true,
+      "sharedImmutableTargetCorpus": true,
+      "neitherSideWritesTargets": true,
+      "provenanceValid": true,
+      "authoritative": true,
+      "semanticallyEqual": true,
+      "predecessorSemanticHash": "99249af1a09735424c4f831718e8374b08773f69f59554e724e3fd7f6791bd1e",
+      "candidateSemanticHash": "99249af1a09735424c4f831718e8374b08773f69f59554e724e3fd7f6791bd1e",
+      "differences": {
+        "selectedFiles": 0,
+        "lead": 0,
+        "roles": 0,
+        "contentModes": 0,
+        "modelVisibleContext": 0,
+        "tokenAccounting": 0,
+        "qualityMetrics": 0
+      },
+      "changedCases": [],
+      "quality": {
+        "predecessor": {
+          "cases": 30,
+          "evaluated": 30,
+          "top1GoldFile": 21,
+          "top3GoldFile": 24,
+          "goldFileAnywhere": 28,
+          "goldSymbolAnywhere": 17,
+          "missingGold": 2,
+          "meanPivotCount": 2.133,
+          "meanSupportCount": 3.833,
+          "meanEstimatedTokens": 2144.867
+        },
+        "candidate": {
+          "cases": 30,
+          "evaluated": 30,
+          "top1GoldFile": 21,
+          "top3GoldFile": 24,
+          "goldFileAnywhere": 28,
+          "goldSymbolAnywhere": 17,
+          "missingGold": 2,
+          "meanPivotCount": 2.133,
+          "meanSupportCount": 3.833,
+          "meanEstimatedTokens": 2144.867
+        }
+      }
+    }
+  ],
+  "frozen50": {
+    "caseCount": 50,
+    "changedCaseCount": 0,
+    "quality": {
+      "predecessor": {
+        "cases": 50,
+        "evaluated": 50,
+        "top1GoldFile": 38,
+        "top3GoldFile": 44,
+        "goldFileAnywhere": 48,
+        "goldSymbolAnywhere": 31,
+        "missingGold": 2,
+        "meanPivotCount": 2.1,
+        "meanSupportCount": 3.88,
+        "meanEstimatedTokens": 1832.4
+      },
+      "candidate": {
+        "cases": 50,
+        "evaluated": 50,
+        "top1GoldFile": 38,
+        "top3GoldFile": 44,
+        "goldFileAnywhere": 48,
+        "goldSymbolAnywhere": 31,
+        "missingGold": 2,
+        "meanPivotCount": 2.1,
+        "meanSupportCount": 3.88,
+        "meanEstimatedTokens": 1832.4
+      }
+    }
+  }
+}

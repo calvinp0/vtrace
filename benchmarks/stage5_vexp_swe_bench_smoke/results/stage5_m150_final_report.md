@@ -1,278 +1,191 @@
-# M150 — Behavioral Decision-Point and Execution-Mechanism Retrieval
+# M150 — Behavioral Decision-Point and Execution-Mechanism Retrieval (final)
 
 **Verdict: MIXED.**
 
-A → PASS, B → PASS, C → PASS, D → MIXED, E → MIXED.
+A → PASS · B → PASS · C → PASS · **D → MIXED** · **E → MIXED**.
 
-M150 set out to make retrievable the behaviour that lives in a statement rather
-than a name. It succeeds on the failure that motivated it and on the generic
-mechanism vocabulary, and it does not succeed on distributed ordering evidence.
-One M142 preservation case regressed. Both are recorded below rather than
-smoothed away (§88, §112).
+The continuation did what it set out to do — the subject-alignment discriminator
+exists, is derived from a corpus rather than from ARC, and closed the Gaussian
+regression with no cost anywhere else. Two D requirements remain unimplemented,
+so the milestone does not reach PASS. §111 is explicit that this is MIXED and not
+PASS, and it is recorded as MIXED.
 
-- M149 predecessor (functional): `2aaac750b326478bb3f29576aa1454365d0f734d`
-- M150 final functional: `ab8e4f0`
-- Branch `main`, nothing pushed, no co-author trailers.
+- M149 predecessor: `2aaac750b326478bb3f29576aa1454365d0f734d`
+- M150 checkpoint: `ab8e4f02eaacdbcfa8fc56f1b056db232ce1452c`
+- M150 final functional: `ebc4fda`
+- Branch `main`, ahead 23, **nothing pushed**, no co-author trailers.
+
+Functional commits: `09a39e2` operation semantics · `ee35b05` mechanism facts ·
+`9a81a1c` mechanism scoring · `ab8e4f0` discrimination fixes · `ebc4fda` subject
+alignment. The checkpoint's history is untouched (§2).
 
 ---
 
-## 1. What was wrong (M150-A — PASS)
+## 1. What the continuation changed
 
-Reproduced against the M149 predecessor on a fresh ARC index, not reasoned about.
+One thing: **mechanism evidence is now tied to what the request asks about**,
+decided from the mechanism's own operand and one hop of provenance. Full design,
+rejected alternatives and measurements: `stage5_m150_subject_alignment_design.md`.
 
-Query: `How does ARC decide which reaction family wins?`
+```
+operand names the subject            -> direct_operand
+else producer of operand names it    -> local_producer
+else request names no subject at all -> undecidable
+else                                 -> none   (zero contribution)
+```
 
-| symbol | rank | final | delivered |
+Nothing about the candidate's path, file, class or domain score participates
+(§8, §15). The rule was fixed against the generic corpus and frozen **before**
+ARC was re-measured (§33).
+
+Weights unchanged: direct `0.55`, partial `0.20`, ceiling = direct, strongest
+single fact. The corpus said the defect was discrimination, not magnitude (§34).
+
+## 2. Why the family case works and the Gaussian case does not
+
+Same operation, same fact kind, same result-bearing property. Only the subject
+differs (`stage5_m150_arc_family_subject_trace.json`,
+`stage5_m150_gaussian_regression_trace.json`):
+
+| candidate | operand | provenance | alignment | mech | rank |
+| --- | --- | --- | --- | --- | --- |
+| `determine_family` | `product_dicts` | `get_reaction_family_products` | **local_producer** | **0.55** | **1** |
+| `GaussianParser.parse_cartesian_hessian_lower_triangle` | `tokens` | `line.split` | none | 0 | — |
+| `GaussianParser.load_scan_pivot_atoms` | `output` | `_load_scan_specs` | none | 0 | — |
+| `GaussianAdapter.write_input_file` | `species` | — | none | 0 | — |
+
+`product_dicts` encodes neither `reaction` nor `family`; the call that produced
+it encodes both. That one hop is the whole mechanism, and it is why operand-name
+matching alone (§11's warning) would have failed.
+
+## 3. Corpus (§18, §31, §61–§65)
+
+A dedicated 15-case corpus over a committed 13-module fixture repository, run
+through the **product retrieval path** (§63), against all three implementation
+roots.
+
+| metric | M149 | checkpoint | final |
 | --- | --- | --- | --- |
-| `family.py::get_reaction_family` — memoisation helper | **1** | 1.9000 | **lead pivot** |
-| `reaction.py::ARCReaction.family` — accessor | 2 | 1.9000 | pivot |
-| `family.py::get_reaction_family_products` | 3 | 1.7406 | support |
-| `reaction.py::ARCReaction.determine_family` — **decides** | **16** | 1.5750 | **no** |
-| `family.py::get_all_families` — establishes ordering | — | — | **never generated** |
-| `product_dicts[0]` — the deciding statement | — | — | **not visible** |
+| correct mechanism lead | 7 | 8 | 8 |
+| correct definition Top-1 | 7 | 8 | 8 |
+| correct definition Top-3 | 10 | 12 | 12 |
+| correct anywhere | 12 | 13 | 13 |
+| missing mechanism | 3 | 2 | 2 |
+| same-operation wrong-subject **lead** | 0 | 0 | 0 |
+| **same-operation wrong-subject bonus** | 0 (no capability) | **2** | **0** |
+| negative-control bonus | 0 | 0 | 0 |
+| decision statement visible | 5/9 | 6/9 | 6/9 |
+| **ordering helper visible** | 1/4 | 1/4 | **1/4** |
+| mechanism support used | 0 | 0 | **0** |
+| module nodes delivered | 0 | 0 | 0 |
 
-**Root cause, and it is not the M142 defect.** `symbolHypotheses` is empty and
-`ARC` is correctly classified as a project reference, so no prose word became an
-identifier. The failure is that `reaction` and `family` drive four independent
-signals — lexical, symbol, domain, path — and **nothing in the scorecard
-represents the requested operation**. A helper that names the subject perfectly
-and chooses nothing had no way to be recognised as choosing nothing.
+Attribution: `M149 → checkpoint` = operation-compatible mechanism capability;
+`checkpoint → final` = subject-alignment discrimination. The discriminator
+removed every wrong-subject bonus at zero cost to correct leads, Top-3 or
+coverage.
 
-The persisted index made this unfixable by ranking alone: it stored names,
-signatures, docstrings, paths, edges and body *literals*. No statement-level
-representation existed, so `product_dicts[0]` was not merely unranked — it was
-absent from the index entirely.
+The two flat rows are the honest headline: **ordering-helper visibility and
+mechanism support did not move, because neither was implemented.**
 
-The `intent confidence: low / fallbackApplied: true` the agent reported comes
-from the intent classifier, which is a separate layer. The operator cues in the
-sentence are unambiguous regardless, which is why the new derivation reads the
-grammar and never consults classifier confidence (§67–§69).
+## 4. ARC acceptance
 
-## 2. Separating subject from operation (M150-B — PASS)
+| query | operation | lead | result |
+| --- | --- | --- | --- |
+| which reaction family **wins** | `selection` | `determine_family` | **PASS** |
+| how is lookup **cached** | `caching` | `get_reaction_family` | **PASS** |
+| where is it **stored** on ARCReaction | `storage` | `ARCReaction.family_own_reverse` | **PASS** |
+| where is `determine_family` **defined** | none (suppressed) | `determine_family` | **PASS** |
+| what determines **precedence/order** | `ordering` | `_dihedral_angle` | **FAIL** |
 
-`src/retrieval/behavioralObjective.ts` derives a typed operation from the
-already-parsed `DerivedQueryIntent` — the same seam `evaluateOrchestrationIntent`
-uses, not a parallel parser. Operations: `selection`, `ordering`, `fallback`,
-`caching`, `storage`. Each earns its place only because a mechanism fact
-implements it, so a recognised operation always has something to retrieve.
-`validate`, `convert`, `retry` and the rest of §9 are deliberately absent.
+Selection-query watchlist: `determine_family` rank **1**, 2.1245, lead pivot,
+mechanism 0.55; `get_reaction_family` rank 2 at **1.9000 unchanged**, mechanism
+**0**, withheld with reason *"no fact implements the requested selection
+operation"*; `ARCReaction.family` **1.9000 unchanged**; `product_dicts[0]`
+**visible**; `get_all_families` **still never generated**.
 
-Cue **strength** is modelled, not presence, because the discriminating cases
-share their nouns. Measured on the four-query contrast set:
+Nothing is penalised. The cache helper and accessor hold their predecessor
+scores exactly; the decider gained evidence for a question they do not answer.
 
-| query | operation | cue |
-| --- | --- | --- |
-| How does ARC decide which reaction family **wins**? | `selection` | `decide` |
-| How is reaction-family lookup **cached**? | `caching` | `how is … cached` |
-| **Where is** the *selected* reaction family **stored on** ARCReaction? | `storage` | `where is … stored` |
-| What determines the **precedence/order** …? | `ordering` | `precedence` |
+§108 scorecard: 1 ✔ · 2 ✔ · 3 ✘ ordering helper not visible · 4 ✔ · 5 ✘ ordering →
+selection relationship not shown · 6 ✔ · 7 ✔ · 8 ✔.
 
-The third is the load-bearing one: it contains a selection word and is not a
-selection question. Operations are behavioural objectives and never identifier
-hypotheses; `\b` does not match across `_`, so `choose_candidate` cannot fire a
-cue, and an explicit lookup frame suppresses the derivation outright (§10, §44).
+## 5. M142 preservation — regression closed (§38, §80)
 
-## 3. Indexing what a definition does (M150-C — PASS)
+| case | M149 | checkpoint | final |
+| --- | --- | --- | --- |
+| normal-mode displacement | top1 false | false | false (unchanged) |
+| **Gaussian route keywords** | **top1 true** | **top1 false** | **top1 true — restored** |
+| reactant atom index space | top1 true | true | true |
+| TS-guess atom-order | anywhere false | false | **anywhere true (gain)** |
+| explicit `which()` lookup | `common.py::which` | unchanged | unchanged |
+| explicit `ARC` class lookup | `arc/main.py::ARC` | unchanged | unchanged |
+| broad vague control | no lead | unchanged | unchanged |
 
-`src/indexer/extractMechanismFacts.ts` derives twelve bounded fact kinds from
-definition bodies at index time, sliced by the same byte ranges the body-literal
-lane uses, with strings and comments blanked first — ARC has a docstring quoting
-`product_dicts[0]`, and prose about code is not code.
-
-Stored in `symbol_mechanism_facts`, additive exactly like `edge_call_sites`. A
-pre-M150 index probes `sqlite_master` once, finds no table, and degrades to
-precisely its pre-M150 behaviour; readiness reports
-`behavioral_mechanism_evidence` as a **missing capability**, never as an
-incompatible schema (§51).
-
-Three truthfulness commitments:
-
-- A fact states only what the statement shows. Taking element zero is
-  `first_item_selection`, never `winner_by_priority` — there is no such kind to
-  promote it to. The ordering that made element zero the winner lives elsewhere
-  (§62).
-- Ordering and selection are different kinds, so sorting for display is not a
-  choice (§38) and a precedence question is not answered by whatever calls `[0]`.
-- Each fact records whether it produces the definition's **result**. This is the
-  property that separates the three ARC functions that all take element zero:
-
-| definition | statement | result-bearing |
-| --- | --- | --- |
-| `determine_family` | `family, … = product_dicts[0]['family']` then `return family` | **yes** |
-| `get_reactant_num` | `group = self.groups[self.reactants[0][0]]`, returns a *count* | no |
-| `get_reactive_bonds_from_family` | `bond = tuple(sorted(...))`, appended to a list | no |
-
-**Scale on ARC** (`stage5_m150_mechanism_scale.json`): 7154 callables, 1624 carry
-facts, 2549 facts total, of which only **619 are result-bearing**. The largest
-kind, `first_item_selection`, has 968 facts and 59 result-bearing — the
-selectivity is in the property, not in a threshold. Index time 21.3s → 22.4s
-(+5.1%). Query-time source reads: **0**; facts load via one indexed `SELECT` over
-the already-bounded candidate pool, never a repository body scan (§56, §94).
-
-Only callables carry facts. A class's byte range covers its methods, and
-extracting from it re-attributed eight facts from six properties and two methods
-onto `ARCReaction` itself, which then rode all of them at once. Module symbols
-are excluded, so no `<module>` node can become answer-bearing (§28).
-
-## 4. Scoring and delivery (M150-D — MIXED)
-
-`src/retrieval/mechanismEvidence.ts` compares the requested operation against the
-indexed facts. The contribution enters `final` alongside the other bounded,
-attributable adjustments, gated three ways:
-
-1. **No declared operation → zero.** An ordinary lookup or a bug report pays
-   nothing and cannot move.
-2. **No compatible fact → zero.** A cache helper earns nothing on a selection
-   question — not penalised, simply not evidence for that question. On a cache
-   question the same fact is the strongest evidence in the pool. That reversal is
-   the argument that this is relevance rather than a bonus (§12, §39).
-3. **Below the subject-relevance floor → zero**, measured on *identifying*
-   evidence excluding domain affinity.
-
-The contribution is the **strongest single fact, never a sum**. Summing rewarded
-the wrong thing: `get_reactive_bonds_from_family` carried four weakly-compatible
-mechanisms and out-earned the function that actually decides, because containing
-more control flow read as being more decisive.
-
-`W_mech` was **not** chosen to clear 1.9. Direct = 0.55, partial = 0.20, ceiling
-= direct. The magnitudes were fixed against the generic mechanism cases and the
-negative controls before ARC was re-measured, and the ARC result is reported as
-an outcome of that calibration.
-
-**Delivered.** `determine_family` becomes the lead pivot rendered `full`, so the
-deciding statement `product_dicts[0]['family']` is in the model-visible context
-(§25). No new content mode was required.
-
-**Not delivered.** The bounded `mechanism_support` role and statement-slice
-content mode were designed but **not implemented**. Consequently `get_all_families`
-is still never generated, and the ordering → first-item relationship is not made
-visible. This is the main reason D is MIXED rather than PASS.
-
-## 5. Acceptance and preservation (M150-E — MIXED)
-
-### ARC contrast set (`stage5_m150_arc_family_{before,after}.json`)
-
-| query | before → lead | after → lead |
-| --- | --- | --- |
-| selection | `get_reaction_family` (cache) | **`determine_family`** |
-| cache control | `get_reaction_family` | `get_reaction_family` (held) |
-| accessor control | `ARCReaction` (class) | `ARCReaction.family_own_reverse` |
-| identifier control | `determine_family` | `determine_family` (unchanged) |
-| ordering | `_dihedral_angle` | `_dihedral_angle` (**unchanged — still wrong**) |
-
-Watchlist on the selection query, after:
-
-| symbol | rank | final | mechanism | delivered |
-| --- | --- | --- | --- | --- |
-| `determine_family` | **1** | 2.1256 | 0.55 | **lead pivot** |
-| `get_reaction_family` | 3 | **1.9000** | 0 | support |
-| `ARCReaction.family` | 4 | **1.9000** | 0 | — |
-| `get_all_families` | — | — | — | **not generated** |
-
-The cache helper and the accessor are at **exactly their predecessor scores**.
-Nothing was penalised; `determine_family` gained evidence for answering a part of
-the question they do not answer.
-
-§108 scorecard: 1 ✔ cache helper no longer the lead · 2 ✔ selection function is
-primary answer-bearing evidence · 3 ✘ ordering helper not visible · 4 ✔
-`product_dicts[0]` visible · 5 ✘ ordering → selection relationship not shown · 6
-✔ cache query still favours the cache helper · 7 ✔ storage query favours the
-accessor · 8 ✔ direct identifier lookup unchanged.
-
-### Generic mechanism cases (§31–§40)
-
-All nine pass at the extraction and scoring layers, with both negative controls
-clean: `first_character(name) → name[0]` yields **no fact at all** (the operand is
-singular, refused before query gating ever runs), and sorting for display yields
-ordering evidence that never reaches the direct tier on a selection question.
-46 focused tests across the three new modules.
-
-They are **unit and scoring level**, not a repository-scale corpus. The dedicated
-deterministic M150 corpus of §46 was **not built**, so the §72 corpus metrics
-(mechanism lead rate, Top-1/Top-3 over a discriminating corpus) are **not
-reported**. E is MIXED for this reason as well.
-
-### Paired preservation (`stage5_m150_paired_comparison.json`)
-
-M149 `2aaac75` → M150 `9a81a1c`, dual-root, shared immutable corpora,
-`provenanceValid=true`, `srcDirty=false`:
-
-| suite | changed | semantic hashes |
-| --- | --- | --- |
-| django (20) | **0/20** | byte-identical |
-| cross_repo_30 (30) | **0/30** | byte-identical |
-| **Frozen50** | **0/50** | Top-1 38, Top-3 44, gold anywhere 48, gold symbol 31, missing 2, mean tokens 1832.4 — all equal to the M149 baseline |
-
-**Stated honestly:** those corpora were indexed before M150 and carry no
-mechanism facts, so this proves M150 has **no side effect** on them — it does not
-prove the operation gate holds when facts are present. That was measured
-separately on the ARC index (2549 facts) by running the M142 behavioural probe
-from both roots against the same index.
-
-### M142 preservation — one regression
-
-| case | predecessor | candidate |
-| --- | --- | --- |
-| normal-mode displacement | owner top1 false | unchanged |
-| **Gaussian route keywords** | owner **top1 true** | owner **top1 false** (top3 still true) |
-| reactant atom index space | owner top1 true | **unchanged** |
-| TS-guess atom order | owner top1 false | unchanged |
-| explicit `which()` lookup | `common.py::which` | **unchanged** |
-| explicit `ARC` class lookup | `arc/main.py::ARC` | **unchanged** |
-| broad vague control | no lead | unchanged |
-
-`How does ARC decide which Gaussian route keywords to emit?` contains `decide`,
-so it derives `selection`. A dozen Gaussian-named parsers each carry a genuine
-result-bearing first-item selection and each clears the relevance floor on
-lexical score, so the component is near-uniform across that pool and small
-lexical differences reorder the lead. Selecting *something* is not evidence about
-selecting *the thing asked about*.
-
-Two fixes were measured and rejected during the milestone rather than shipped: a
-subject-match strength modifier (broke the cache and ordering contrast controls
-without repairing the case) and raising the relevance floor (arbitrary). §76 is
-otherwise intact — `which()` is still not generated from grammatical *which*, and
-explicit lookup is unchanged.
-
-### Other preservation
-
-M140 module invariant: zero `<module>` nodes delivered (facts are restricted to
-callables). M141 readiness: `behavioral_mechanism_evidence` participates in
-`capabilityCompatible` / `missingCapabilities`. M139/M147/M148/M149: untouched by
-this change and covered by the full suite.
+M142 prose/identifier hygiene intact: `which()` is still not generated from
+grammatical *which* (§81). Alignment uses no domain/path evidence, so no
+centrality-style relevance creation (§82).
 
 ## 6. Gates
 
-`bun run typecheck` ✔ · `bun run typecheck:benchmarks` ✔ · `bun test` **4517 pass,
-0 fail, 49 skip, 279 files** ✔ · `git diff --check` clean ✔.
+| gate | result |
+| --- | --- |
+| `bun test` | **4525 pass / 0 fail / 49 skip / 279 files** |
+| `bun run typecheck` / `:benchmarks` | clean |
+| `git diff --check` | clean |
+| **Frozen50** M149 → final | **0/50 changed**, byte-identical hashes, `provenanceValid=true`, `srcDirty=false` |
+| django / cross_repo_30 | 0/20, 0/30 — Top-1 38, Top-3 44, anywhere 48, symbol 31, missing 2, tokens 1832.4 |
+| **full ≡ incremental** | **equivalent** — fact rows and normalized-graph hash byte-identical after an edit (24 → 25 facts, both sides) |
+| **no-op reindex** | **stable** — fact rows and graph hash unchanged |
+| **TCKDB same-checkout** | 0/6 leads changed, 1/6 delivered sets changed, 0 module nodes |
+| ARC + TCKDB authoritative indexes | **byte-identical** (mtime + size) |
 
-Derivation fingerprint **intentionally changes**: `src/indexer/` gained a module,
-so `indexer_fingerprint` moves and existing indexes are correctly reported
-`derivation_incompatible` and rebuilt. No index is silently invalidated (§100).
+Frozen50 remains **preservation evidence only** (§77): those corpora predate
+mechanism facts, so 0/50 shows no side effect rather than showing the gate holds
+with evidence present. That was measured separately on ARC (2566 facts) and
+TCKDB (fresh isolated index).
 
-Real ARC and TCKDB indexes were never opened for writing; all measurement used
-isolated copies under `/home/calvin/bench/vtrace-m150/`.
+**TCKDB changed set**, attributed: *"What determines the order the records are
+returned in?"* — lead unchanged, two support slots differ. Cause
+`decision_point_ranking` on an `ordering` operation. Neutral: TCKDB has no gold
+standard here and the lead is stable.
 
-## 7. Not done
+**Derivation fingerprint** intentionally moves (`src/indexer/` gained a module and
+a column), so field indexes rebuild rather than being silently invalidated (§74).
 
-- `mechanism_support` role and statement-slice content mode (§21–§27, §59–§61).
-- The dedicated M150 mechanism corpus and its §72 metrics (§46–§48).
-- TCKDB same-checkout acceptance (§84).
-- Full/incremental/no-op equivalence for the new table (§53, §54). `normalizeGraph`
-  now includes mechanism facts so the gate *can* run; it was not run.
-- Changed-case ledger (§87) — vacuous at 0/50, but the M142 regression is
-  attributed above under cause `decision_point_ranking`.
+ARC mechanism scale: 7154 callables, 1628 carry facts, 2566 facts, **619
+result-bearing**. `first_item_selection` 983 facts → 59 result-bearing. Index
+21.3s → 22.2s. Query-time source reads **0**; facts load via one indexed SELECT
+over the already-bounded candidate pool (§93, §94).
+
+## 7. Not done — why D and E stay MIXED
+
+1. **`mechanism_support` role (§41–§46, §54–§56, §60).** Not implemented.
+   `get_all_families` is still never generated. Investigated: the causal chain is
+   `determine_family` --(provenance)--> `get_reaction_family_products` --(calls)-->
+   `get_all_families`. The stored provenance reaches hop 1; the ordering fact
+   lives at hop 2. A bounded two-step discovery of exactly the §55 shape would
+   reach it. Failure classification for `get_all_families`: **not generated** —
+   it is absent from the candidate pool entirely, not ranked-and-dropped.
+2. **Statement slice (§48–§51).** Not implemented. `product_dicts[0]` is visible
+   only because `determine_family` is delivered as a `full` pivot — §48 says
+   explicitly not to rely on that.
+3. **Ordering query (§66, §67).** Still led by `_dihedral_angle` on a symbol-name
+   accident. Needs (1) and probably the §68 selection/ordering emphasis split.
+
+Also not run: M139/M140/M141/M146/M147/M148/M149 dedicated preservation runners
+(§106) — covered by the full suite, which is not the same thing and is not
+claimed to be.
 
 ## 8. Recommended next scope
 
-Not M151. The reachable retrieval core is not yet trustworthy enough to build
-workspace routing on top of, which was the whole argument for doing M150 first.
+Still **not M151**. Finish M150-D:
 
-Finish M150 before proceeding: implement the bounded `mechanism_support` role and
-statement slice, build the discriminating corpus, and use it to resolve the
-Gaussian regression on evidence rather than intuition. The open question that
-corpus must answer is how mechanism evidence should discriminate *within* a
-topically relevant pool where many definitions genuinely perform the requested
-operation — the ARC selection query has one such definition and the Gaussian query
-has a dozen, and only a corpus can say which of the rejected discriminators is
-right.
+1. Bounded mechanism-support discovery over the stored provenance chain, capped
+   at 1 helper, admitted only when it carries an ordering/priority fact the
+   decision consumes.
+2. The statement slice, through the existing product-context machinery.
+3. The ordering query, once (1) exists.
+4. The dedicated preservation runners of §106.
+
+The corpus now exists and discriminates, so all four are measurable rather than
+argued — which is the difference between this state and the checkpoint.

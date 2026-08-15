@@ -3,13 +3,13 @@
   "corpus": "ARC @ /home/calvin/code/ARC",
   "indexedSymbols": 9014,
   "callableSymbols": 7154,
-  "symbolsWithFacts": 1624,
-  "totalFacts": 2549,
+  "symbolsWithFacts": 1628,
+  "totalFacts": 2566,
   "resultBearingFacts": 619,
   "byKind": [
     {
       "kind": "first_item_selection",
-      "total": 968,
+      "total": 983,
       "resultBearing": 59
     },
     {
@@ -44,7 +44,7 @@
     },
     {
       "kind": "sort_then_first",
-      "total": 62,
+      "total": 64,
       "resultBearing": 8
     },
     {

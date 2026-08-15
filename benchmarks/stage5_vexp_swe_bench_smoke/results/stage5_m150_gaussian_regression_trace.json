@@ -1,0 +1,230 @@
+{
+  "schemaVersion": "stage5.m150.subject-trace.v1",
+  "note": "Why result parsers no longer receive selection evidence on a route-keyword request.",
+  "query": "How does ARC decide which Gaussian route keywords to emit?",
+  "operation": "selection",
+  "operationCue": "decide",
+  "subjectTerms": [
+    "gaussian",
+    "route",
+    "keywords",
+    "emit"
+  ],
+  "lead": "arc/job/adapters/gaussian.py::GaussianAdapter._user_requested_verytight",
+  "candidates": [
+    {
+      "fqName": "arc/job/adapters/gaussian.py::GaussianAdapter._user_requested_verytight",
+      "indexed": true,
+      "ordinaryRank": 5,
+      "finalScore": 1.5436,
+      "lexical": 0.9422,
+      "domain": 0.6667,
+      "mechanismContribution": 0,
+      "deliveredAs": "pivot",
+      "facts": [],
+      "matched": [],
+      "withheldReason": "no mechanism facts for this definition"
+    },
+    {
+      "fqName": "arc/job/adapters/gaussian.py::GaussianAdapter.write_input_file",
+      "indexed": true,
+      "ordinaryRank": null,
+      "finalScore": null,
+      "lexical": null,
+      "domain": null,
+      "mechanismContribution": 0,
+      "deliveredAs": null,
+      "facts": [
+        {
+          "kind": "cache_lookup",
+          "operand": "input_file_memory",
+          "provenance": "",
+          "resultBearing": false,
+          "statement": "input_dict['memory'] = self.input_file_memory"
+        },
+        {
+          "kind": "first_item_selection",
+          "operand": "species",
+          "provenance": "",
+          "resultBearing": false,
+          "statement": "if self.rotor_index is not None and self.species[0].rotors_dict:"
+        },
+        {
+          "kind": "first_item_selection",
+          "operand": "scans",
+          "provenance": "torsions_to_scans",
+          "resultBearing": false,
+          "statement": "scans = [scans] if not isinstance(scans[0], list) else scans"
+        },
+        {
+          "kind": "first_item_selection",
+          "operand": "constraint_tuple",
+          "provenance": "",
+          "resultBearing": false,
+          "statement": "constraint_type = constraint_type_dict[len(constraint_tuple[0])]"
+        },
+        {
+          "kind": "first_item_selection",
+          "operand": "restricted_list",
+          "provenance": "",
+          "resultBearing": false,
+          "statement": "input_dict['restricted'] = restricted_list[0]"
+        },
+        {
+          "kind": "first_success_return",
+          "operand": "args",
+          "provenance": "",
+          "resultBearing": false,
+          "statement": "break"
+        },
+        {
+          "kind": "default_then_override",
+          "operand": "max_c",
+          "provenance": "",
+          "resultBearing": false,
+          "statement": "max_c = int(match.group(1))"
+        }
+      ],
+      "matched": [
+        {
+          "kind": "first_item_selection",
+          "compatibility": "direct",
+          "alignment": "none",
+          "operand": "species",
+          "provenance": "",
+          "resultBearing": false
+        },
+        {
+          "kind": "first_item_selection",
+          "compatibility": "direct",
+          "alignment": "none",
+          "operand": "scans",
+          "provenance": "torsions_to_scans",
+          "resultBearing": false
+        },
+        {
+          "kind": "first_item_selection",
+          "compatibility": "direct",
+          "alignment": "none",
+          "operand": "constraint_tuple",
+          "provenance": "",
+          "resultBearing": false
+        },
+        {
+          "kind": "first_item_selection",
+          "compatibility": "direct",
+          "alignment": "none",
+          "operand": "restricted_list",
+          "provenance": "",
+          "resultBearing": false
+        },
+        {
+          "kind": "first_success_return",
+          "compatibility": "direct",
+          "alignment": "none",
+          "operand": "args",
+          "provenance": "",
+          "resultBearing": false
+        }
+      ],
+      "withheldReason": "mechanism matched but subject relevance 0 is below the 0.15 floor"
+    },
+    {
+      "fqName": "arc/parser/adapters/gaussian.py::GaussianParser.parse_cartesian_hessian_lower_triangle",
+      "indexed": true,
+      "ordinaryRank": null,
+      "finalScore": null,
+      "lexical": null,
+      "domain": null,
+      "mechanismContribution": 0,
+      "deliveredAs": null,
+      "facts": [
+        {
+          "kind": "first_item_selection",
+          "operand": "tokens",
+          "provenance": "line.split",
+          "resultBearing": false,
+          "statement": "col_offset = int(tokens[0]) - 1"
+        },
+        {
+          "kind": "max_selection",
+          "operand": "max_index",
+          "provenance": "max",
+          "resultBearing": false,
+          "statement": "max_index = max(max_index, row)"
+        },
+        {
+          "kind": "first_success_return",
+          "operand": "range(len(lines)",
+          "provenance": "",
+          "resultBearing": false,
+          "statement": "break"
+        },
+        {
+          "kind": "fallback_branch",
+          "operand": "",
+          "provenance": "",
+          "resultBearing": false,
+          "statement": "max_index = max(max_index, row)"
+        }
+      ],
+      "matched": [
+        {
+          "kind": "first_item_selection",
+          "compatibility": "direct",
+          "alignment": "none",
+          "operand": "tokens",
+          "provenance": "line.split",
+          "resultBearing": false
+        },
+        {
+          "kind": "max_selection",
+          "compatibility": "direct",
+          "alignment": "none",
+          "operand": "max_index",
+          "provenance": "max",
+          "resultBearing": false
+        },
+        {
+          "kind": "first_success_return",
+          "compatibility": "direct",
+          "alignment": "none",
+          "operand": "range(len(lines)",
+          "provenance": "",
+          "resultBearing": false
+        }
+      ],
+      "withheldReason": "mechanism matched but subject relevance 0 is below the 0.15 floor"
+    },
+    {
+      "fqName": "arc/parser/adapters/gaussian.py::GaussianParser.load_scan_pivot_atoms",
+      "indexed": true,
+      "ordinaryRank": null,
+      "finalScore": null,
+      "lexical": null,
+      "domain": null,
+      "mechanismContribution": 0,
+      "deliveredAs": null,
+      "facts": [
+        {
+          "kind": "first_item_selection",
+          "operand": "output",
+          "provenance": "_load_scan_specs",
+          "resultBearing": true,
+          "statement": "return output[0] if len(output) > 0 else []"
+        }
+      ],
+      "matched": [
+        {
+          "kind": "first_item_selection",
+          "compatibility": "direct",
+          "alignment": "none",
+          "operand": "output",
+          "provenance": "_load_scan_specs",
+          "resultBearing": true
+        }
+      ],
+      "withheldReason": "mechanism matched but subject relevance 0 is below the 0.15 floor"
+    }
+  ]
+}

@@ -1,0 +1,173 @@
+{
+  "schemaVersion": "stage5.m150.tckdb-acceptance.v1",
+  "target": "/home/calvin/code/TCKDB_v2",
+  "index": "/home/calvin/bench/vtrace-m150/tckdb-m150.sqlite",
+  "note": "Same checkout, same isolated index, both implementation roots. Authoritative TCKDB index untouched.",
+  "changedLeads": 0,
+  "changedSets": 1,
+  "moduleNodesDelivered": 0,
+  "cases": [
+    {
+      "query": "How does the system decide which connection is used?",
+      "predecessorLead": "backend/alembic/versions/b7e4d1a9c026_name_constraints_the_way_the_model_spells_them.py::_decide",
+      "finalLead": "backend/alembic/versions/b7e4d1a9c026_name_constraints_the_way_the_model_spells_them.py::_decide",
+      "leadChanged": false,
+      "deliveredSetChanged": false,
+      "predecessorTokens": 4124,
+      "finalTokens": 4124,
+      "moduleNodesDelivered": 0,
+      "attribution": "unchanged",
+      "predecessorDelivered": [
+        "backend/alembic/versions/b7e4d1a9c026_name_constraints_the_way_the_model_spells_them.py::_decide",
+        "backend/app/api/startup_checks.py::report_database_encoding_at_startup",
+        "backend/app/api/routes/health.py::status",
+        "backend/scripts/generate_scientific_check_register.py::_PREAMBLE",
+        "backend/app/services/scientific_read/releases.py::get_release_selections",
+        "backend/app/scientific_checks/declarations.py::CHECK_FREQ_N_IMAG_AGREES_WITH_ITS_MODES"
+      ],
+      "finalDelivered": [
+        "backend/alembic/versions/b7e4d1a9c026_name_constraints_the_way_the_model_spells_them.py::_decide",
+        "backend/app/api/startup_checks.py::report_database_encoding_at_startup",
+        "backend/app/api/routes/health.py::status",
+        "backend/scripts/generate_scientific_check_register.py::_PREAMBLE",
+        "backend/app/services/scientific_read/releases.py::get_release_selections",
+        "backend/app/scientific_checks/declarations.py::CHECK_FREQ_N_IMAG_AGREES_WITH_ITS_MODES"
+      ]
+    },
+    {
+      "query": "How is the species record validated before insertion?",
+      "predecessorLead": "schemas/python/tckdb-schemas/tckdb_schemas/workflows/computed_species_upload.py::StatmechInBundle.validate_scientific_interpretation",
+      "finalLead": "schemas/python/tckdb-schemas/tckdb_schemas/workflows/computed_species_upload.py::StatmechInBundle.validate_scientific_interpretation",
+      "leadChanged": false,
+      "deliveredSetChanged": false,
+      "predecessorTokens": 2004,
+      "finalTokens": 2004,
+      "moduleNodesDelivered": 0,
+      "attribution": "unchanged",
+      "predecessorDelivered": [
+        "schemas/python/tckdb-schemas/tckdb_schemas/workflows/computed_species_upload.py::StatmechInBundle.validate_scientific_interpretation",
+        "backend/app/services/record_review.py::_insert_or_adopt_review",
+        "schemas/python/tckdb-schemas/tckdb_schemas/fragments/identity.py::SpeciesEntryIdentityValidatorMixin",
+        "backend/app/schemas/reads/scientific_species_calculations.py::CalculationProvenanceBlock",
+        "evaluate_species_entry_frequency",
+        "backend/app/schemas/reads/scientific_species_calculations.py::SpeciesCalculationsSearchRecord.validation"
+      ],
+      "finalDelivered": [
+        "schemas/python/tckdb-schemas/tckdb_schemas/workflows/computed_species_upload.py::StatmechInBundle.validate_scientific_interpretation",
+        "backend/app/services/record_review.py::_insert_or_adopt_review",
+        "schemas/python/tckdb-schemas/tckdb_schemas/fragments/identity.py::SpeciesEntryIdentityValidatorMixin",
+        "backend/app/schemas/reads/scientific_species_calculations.py::CalculationProvenanceBlock",
+        "evaluate_species_entry_frequency",
+        "backend/app/schemas/reads/scientific_species_calculations.py::SpeciesCalculationsSearchRecord.validation"
+      ]
+    },
+    {
+      "query": "Where is the level of theory stored on a record?",
+      "predecessorLead": "backend/app/db/models/level_of_theory.py::LevelOfTheory",
+      "finalLead": "backend/app/db/models/level_of_theory.py::LevelOfTheory",
+      "leadChanged": false,
+      "deliveredSetChanged": false,
+      "predecessorTokens": 797,
+      "finalTokens": 797,
+      "moduleNodesDelivered": 0,
+      "attribution": "unchanged",
+      "predecessorDelivered": [
+        "backend/app/db/models/level_of_theory.py::LevelOfTheory",
+        "backend/app/schemas/entities/level_of_theory.py::LevelOfTheoryBase",
+        "backend/app/services/calculation_resolution.py::resolve_level_of_theory_ref",
+        "backend/app/services/scientific_read/handles.py::reconcile_level_of_theory_pair",
+        "backend/alembic/versions/e1a5c3f7b9d4_level_of_theory_spin_treatment.py::depends_on",
+        "backend/app/db/models/level_of_theory.py::LevelOfTheory.method"
+      ],
+      "finalDelivered": [
+        "backend/app/db/models/level_of_theory.py::LevelOfTheory",
+        "backend/app/schemas/entities/level_of_theory.py::LevelOfTheoryBase",
+        "backend/app/services/calculation_resolution.py::resolve_level_of_theory_ref",
+        "backend/app/services/scientific_read/handles.py::reconcile_level_of_theory_pair",
+        "backend/alembic/versions/e1a5c3f7b9d4_level_of_theory_spin_treatment.py::depends_on",
+        "backend/app/db/models/level_of_theory.py::LevelOfTheory.method"
+      ]
+    },
+    {
+      "query": "How is the result cached between requests?",
+      "predecessorLead": "schemas/python/tckdb-schemas/tckdb_schemas/literature.py::LiteratureUploadRequest",
+      "finalLead": "schemas/python/tckdb-schemas/tckdb_schemas/literature.py::LiteratureUploadRequest",
+      "leadChanged": false,
+      "deliveredSetChanged": false,
+      "predecessorTokens": 3509,
+      "finalTokens": 3509,
+      "moduleNodesDelivered": 0,
+      "attribution": "unchanged",
+      "predecessorDelivered": [
+        "schemas/python/tckdb-schemas/tckdb_schemas/literature.py::LiteratureUploadRequest",
+        "schemas/python/tckdb-schemas/tckdb_schemas/workflows/computed_species_upload.py::ComputedSpeciesUploadRequest",
+        "backend/app/importers/cccbdb/property_table_ingest.py::PropertyTableFetcher.load_cached_html",
+        "backend/app/schemas/reads/scientific_species_calculations.py::SpeciesCalculationsSearchRequest",
+        "backend/app/importers/cccbdb/snapshot.py::_find_cached_raw_html",
+        "backend/app/db/models/calculation.py::CalculationPathSearchResult"
+      ],
+      "finalDelivered": [
+        "schemas/python/tckdb-schemas/tckdb_schemas/literature.py::LiteratureUploadRequest",
+        "schemas/python/tckdb-schemas/tckdb_schemas/workflows/computed_species_upload.py::ComputedSpeciesUploadRequest",
+        "backend/app/importers/cccbdb/property_table_ingest.py::PropertyTableFetcher.load_cached_html",
+        "backend/app/schemas/reads/scientific_species_calculations.py::SpeciesCalculationsSearchRequest",
+        "backend/app/importers/cccbdb/snapshot.py::_find_cached_raw_html",
+        "backend/app/db/models/calculation.py::CalculationPathSearchResult"
+      ]
+    },
+    {
+      "query": "What determines the order the records are returned in?",
+      "predecessorLead": "backend/app/services/record_review.py::apply_review_policy",
+      "finalLead": "backend/app/services/record_review.py::apply_review_policy",
+      "leadChanged": false,
+      "deliveredSetChanged": true,
+      "predecessorTokens": 1402,
+      "finalTokens": 1473,
+      "moduleNodesDelivered": 0,
+      "attribution": "behavioral_operation_intent / mechanism ranking — see delivered sets",
+      "predecessorDelivered": [
+        "backend/app/services/record_review.py::apply_review_policy",
+        "backend/app/services/release/records.py::ChildTable",
+        "backend/app/services/scientific_read/literature_records.py::_load_kinetics",
+        "backend/app/services/accepted_science.py::lock_scientific_records",
+        "backend/app/services/artifact_integrity.py::record_integrity_observation",
+        "_record_provenance"
+      ],
+      "finalDelivered": [
+        "backend/app/services/record_review.py::apply_review_policy",
+        "backend/app/services/release/records.py::ChildTable",
+        "backend/app/services/scientific_read/species_transport.py::get_species_transport",
+        "backend/app/services/scientific_read/species_statmech.py::get_species_statmech",
+        "backend/app/services/scientific_read/literature_records.py::_load_kinetics",
+        "build_transport_record"
+      ]
+    },
+    {
+      "query": "How does the loader convert a molecule into its stored representation?",
+      "predecessorLead": "backend/app/importers/cccbdb/parsers/molecule_catalog.py::_parse_other_names",
+      "finalLead": "backend/app/importers/cccbdb/parsers/molecule_catalog.py::_parse_other_names",
+      "leadChanged": false,
+      "deliveredSetChanged": false,
+      "predecessorTokens": 2146,
+      "finalTokens": 2146,
+      "moduleNodesDelivered": 0,
+      "attribution": "unchanged",
+      "predecessorDelivered": [
+        "backend/app/importers/cccbdb/parsers/molecule_catalog.py::_parse_other_names",
+        "backend/app/services/machine_review/context_adapter.py::stored_projection_from_record_machine_review",
+        "backend/app/importers/cccbdb/normalizers/units.py::convert_to_canonical",
+        "backend/app/services/species_resolution.py::CHECK_SPECIES_KIND_MATCHES_STORED_IDENTITY",
+        "backend/app/scientific_checks/declarations.py::CHECK_REPRODUCIBILITY_IS_ITS_OWN_JUDGEMENT",
+        "backend/app/chemistry/species.py::derive_term_symbol"
+      ],
+      "finalDelivered": [
+        "backend/app/importers/cccbdb/parsers/molecule_catalog.py::_parse_other_names",
+        "backend/app/services/machine_review/context_adapter.py::stored_projection_from_record_machine_review",
+        "backend/app/importers/cccbdb/normalizers/units.py::convert_to_canonical",
+        "backend/app/services/species_resolution.py::CHECK_SPECIES_KIND_MATCHES_STORED_IDENTITY",
+        "backend/app/scientific_checks/declarations.py::CHECK_REPRODUCIBILITY_IS_ITS_OWN_JUDGEMENT",
+        "backend/app/chemistry/species.py::derive_term_symbol"
+      ]
+    }
+  ]
+}
