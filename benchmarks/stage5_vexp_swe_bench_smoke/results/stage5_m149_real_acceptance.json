@@ -1,0 +1,214 @@
+{
+  "schemaVersion": "stage5.m149.real-acceptance.v1",
+  "milestone": "M149",
+  "note": "Read-only over the real ARC / TCKDB_v2 / vtrace indexes. M147's eleven-member control is not reconstructible on this machine (three real indexed repositories remain), so member-scale bounding is measured synthetically in stage5_m149_coverage_scale.json instead.",
+  "members": [
+    {
+      "alias": "ARC",
+      "rootPath": "/home/calvin/code/ARC",
+      "ready": true,
+      "readinessReason": "ready"
+    },
+    {
+      "alias": "TCKDB_v2",
+      "rootPath": "/home/calvin/code/TCKDB_v2",
+      "ready": false,
+      "readinessReason": "source_stale (head_changed)"
+    },
+    {
+      "alias": "vtrace",
+      "rootPath": "/home/calvin/code/vtrace",
+      "ready": false,
+      "readinessReason": "index_corrupt (index_unreadable)"
+    }
+  ],
+  "reposReady": 1,
+  "reposTotal": 3,
+  "refusedAliases": [
+    "TCKDB_v2",
+    "vtrace"
+  ],
+  "refusedNeverOpened": true,
+  "cases": [
+    {
+      "id": "absent_symbol_over_real_members",
+      "status": "no_match",
+      "reason": "No checked repository defines this name, but 2 eligible repository/repositories could not be checked: TCKDB_v2 (index_refused), vtrace (index_refused).",
+      "reasonChars": 151,
+      "selected": [],
+      "decidingTier": null,
+      "reposReady": 1,
+      "reposEnabled": 3,
+      "excludedNotReady": [
+        {
+          "alias": "TCKDB_v2",
+          "reason": "source_stale (head_changed)"
+        },
+        {
+          "alias": "vtrace",
+          "reason": "index_corrupt (index_unreadable)"
+        }
+      ],
+      "excludedNotReadyTotal": 2,
+      "coverage": [
+        {
+          "capability": "symbol_exact_lookup",
+          "purpose": "deciding",
+          "scope": "enabled_members",
+          "considered": 3,
+          "answered": 1,
+          "refusedWithoutEvidence": 2,
+          "omittedByBound": 0,
+          "unknownOther": 0,
+          "complete": false,
+          "examples": [
+            {
+              "alias": "TCKDB_v2",
+              "reason": "index_refused"
+            },
+            {
+              "alias": "vtrace",
+              "reason": "index_refused"
+            }
+          ],
+          "examplesOmitted": 0
+        }
+      ],
+      "negativeClaimStrength": "bounded_absence",
+      "indexesOpened": [
+        "ARC"
+      ],
+      "elapsedMs": 2.134
+    },
+    {
+      "id": "absent_path_over_real_members",
+      "status": "no_match",
+      "reason": "No checked repository indexes this path, but 2 eligible repository/repositories could not be checked: TCKDB_v2 (index_refused), vtrace (index_refused).",
+      "reasonChars": 151,
+      "selected": [],
+      "decidingTier": null,
+      "reposReady": 1,
+      "reposEnabled": 3,
+      "excludedNotReady": [
+        {
+          "alias": "TCKDB_v2",
+          "reason": "source_stale (head_changed)"
+        },
+        {
+          "alias": "vtrace",
+          "reason": "index_corrupt (index_unreadable)"
+        }
+      ],
+      "excludedNotReadyTotal": 2,
+      "coverage": [
+        {
+          "capability": "path_membership",
+          "purpose": "deciding",
+          "scope": "enabled_members",
+          "considered": 3,
+          "answered": 1,
+          "refusedWithoutEvidence": 2,
+          "omittedByBound": 0,
+          "unknownOther": 0,
+          "complete": false,
+          "examples": [
+            {
+              "alias": "TCKDB_v2",
+              "reason": "index_refused"
+            },
+            {
+              "alias": "vtrace",
+              "reason": "index_refused"
+            }
+          ],
+          "examplesOmitted": 0
+        }
+      ],
+      "negativeClaimStrength": "bounded_absence",
+      "indexesOpened": [
+        "ARC"
+      ],
+      "elapsedMs": 1.17
+    },
+    {
+      "id": "no_hints_at_all",
+      "status": "no_match",
+      "reason": "This request names no path or symbol to route on, so no repository was checked.",
+      "reasonChars": 79,
+      "selected": [],
+      "decidingTier": null,
+      "reposReady": 1,
+      "reposEnabled": 3,
+      "excludedNotReady": [
+        {
+          "alias": "TCKDB_v2",
+          "reason": "source_stale (head_changed)"
+        },
+        {
+          "alias": "vtrace",
+          "reason": "index_corrupt (index_unreadable)"
+        }
+      ],
+      "excludedNotReadyTotal": 2,
+      "coverage": [],
+      "negativeClaimStrength": null,
+      "indexesOpened": [],
+      "elapsedMs": 0.017
+    }
+  ],
+  "realIndexesUntouched": true,
+  "indexStampsBefore": [
+    {
+      "path": "/home/calvin/code/ARC/.vtrace/index.sqlite",
+      "mtimeMs": 1786795565695.9707,
+      "size": 103321600
+    },
+    {
+      "path": "/home/calvin/code/ARC/.vtrace/index.meta.json",
+      "mtimeMs": 1786745355337.8054,
+      "size": 283252
+    },
+    {
+      "path": "/home/calvin/code/TCKDB_v2/.vtrace/index.sqlite",
+      "mtimeMs": 1786789314009.3237,
+      "size": 585621504
+    },
+    {
+      "path": "/home/calvin/code/TCKDB_v2/.vtrace/index.meta.json",
+      "mtimeMs": 1786788625458.3625,
+      "size": 1083695
+    },
+    {
+      "path": "/home/calvin/code/vtrace/.vtrace/index.sqlite",
+      "mtimeMs": 1781276951567.196,
+      "size": 999247872
+    }
+  ],
+  "indexStampsAfter": [
+    {
+      "path": "/home/calvin/code/ARC/.vtrace/index.sqlite",
+      "mtimeMs": 1786795565695.9707,
+      "size": 103321600
+    },
+    {
+      "path": "/home/calvin/code/ARC/.vtrace/index.meta.json",
+      "mtimeMs": 1786745355337.8054,
+      "size": 283252
+    },
+    {
+      "path": "/home/calvin/code/TCKDB_v2/.vtrace/index.sqlite",
+      "mtimeMs": 1786789314009.3237,
+      "size": 585621504
+    },
+    {
+      "path": "/home/calvin/code/TCKDB_v2/.vtrace/index.meta.json",
+      "mtimeMs": 1786788625458.3625,
+      "size": 1083695
+    },
+    {
+      "path": "/home/calvin/code/vtrace/.vtrace/index.sqlite",
+      "mtimeMs": 1781276951567.196,
+      "size": 999247872
+    }
+  ]
+}

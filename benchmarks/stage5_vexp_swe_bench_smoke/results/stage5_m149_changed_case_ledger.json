@@ -1,0 +1,44 @@
+{
+  "schemaVersion": "stage5.m149.changed-case-ledger.v1",
+  "milestone": "M149",
+  "deterministicBenchmarkChangedCases": 0,
+  "benchmarkNote": "Frozen50 / Django / cross_repo_30: 0 of 50 cases changed, semantic hashes byte-identical. M149 altered no selected context; every change below is a CLAIM change in the workspace layer, which those suites do not exercise.",
+  "claimChanges": {
+    "scope_corrected": [
+      {
+        "scenario": "complete_exact_path_absence",
+        "before": "No repository carries evidence for this request.",
+        "after": "No eligible repository indexes this path; all 3 were checked."
+      },
+      {
+        "scenario": "complete_exact_symbol_absence",
+        "before": "No repository carries evidence for this request.",
+        "after": "No eligible repository defines this name; all 2 were checked."
+      }
+    ],
+    "absence_claim_weakened": [
+      {
+        "scenario": "nothing_checked_no_hints",
+        "before": "No repository carries evidence for this request.",
+        "after": "This request names no path or symbol to route on, so no repository was checked."
+      },
+      {
+        "scenario": "nothing_checked_no_probe",
+        "before": "No repository carries evidence for this request.",
+        "after": "No repository could be checked for this request: no index probe was available."
+      }
+    ]
+  },
+  "coverageMetadataOnly": [
+    {
+      "change": "EvidenceCoverage added to routing diagnostics and the routing summary",
+      "selectedContextImpact": "none"
+    },
+    {
+      "change": "presentTotal/unknownTotal/reposExcludedNotReadyTotal added",
+      "selectedContextImpact": "none"
+    }
+  ],
+  "regressions": [],
+  "unexpected": []
+}

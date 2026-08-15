@@ -1,0 +1,69 @@
+{
+  "schemaVersion": "stage5.m149.ownership-matrix.v1",
+  "milestone": "M149",
+  "note": "No product surface emits an 'owner' claim. The strongest sentence is '<alias> selected on <tier> evidence', which names the evidence that decided rather than asserting ownership. These rows verify a support-only repository never becomes the lead.",
+  "rows": [
+    {
+      "scenario": "support_repo_is_not_owner",
+      "definitionRepository": "owner",
+      "supportRepositories": [
+        "client"
+      ],
+      "supportKind": "shared path at a weaker tier",
+      "claimEmitted": "owner selected on path_containment evidence.",
+      "selected": [
+        "owner"
+      ],
+      "supportingReported": [
+        "client"
+      ],
+      "supportBecameOwner": false,
+      "unchangedFromPredecessor": true
+    },
+    {
+      "scenario": "tests_only_support",
+      "definitionRepository": "impl",
+      "supportRepositories": [
+        "tests"
+      ],
+      "supportKind": "test files only",
+      "claimEmitted": "impl selected on exact_symbol evidence.",
+      "selected": [
+        "impl"
+      ],
+      "supportingReported": [],
+      "supportBecameOwner": false,
+      "unchangedFromPredecessor": true
+    },
+    {
+      "scenario": "config_docs_only_support",
+      "definitionRepository": "impl",
+      "supportRepositories": [
+        "docs"
+      ],
+      "supportKind": "config/docs only",
+      "claimEmitted": "impl selected on exact_symbol evidence.",
+      "selected": [
+        "impl"
+      ],
+      "supportingReported": [],
+      "supportBecameOwner": false,
+      "unchangedFromPredecessor": true
+    },
+    {
+      "scenario": "reverse_support_direction",
+      "definitionRepository": "impl",
+      "supportRepositories": [
+        "wrapper"
+      ],
+      "supportKind": "wrapper registered FIRST; ordering must not confer ownership",
+      "claimEmitted": "impl selected on exact_symbol evidence.",
+      "selected": [
+        "impl"
+      ],
+      "supportingReported": [],
+      "supportBecameOwner": false,
+      "unchangedFromPredecessor": true
+    }
+  ]
+}
