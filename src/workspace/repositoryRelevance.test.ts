@@ -31,6 +31,7 @@ import {
   type RepositoryProbe,
   type RepositoryRelevanceRequest,
 } from "./repositoryRelevance";
+import { MembershipAccessPath, UniquenessProofStatus } from "./repositoryPresence";
 import {
   cleanupWorkspaceFixtures,
   cloneFixtureRepo,
@@ -214,13 +215,41 @@ describe("M146-B mixed readiness (§12)", () => {
     expect(after.probeRequests).toContain("beta");
   }, 60_000);
 
-  test("a stale member never blocks a ready member's answer", async () => {
+  test("a stale member leaves a ready member's uniqueness unproven (M147)", async () => {
+    // M146 reported `selected(gamma)` here, on the reasoning that beta being
+    // stale is beta's problem. M147 measures what that answer actually claimed:
+    // gamma is the ONLY repository defining the name — a statement about beta,
+    // which was never asked and could not have answered. beta is UNKNOWN, and
+    // UNKNOWN is not ABSENT, so the uniqueness claim is withheld and the reason
+    // names the member that must be repaired.
     const { config } = await mixedReadinessWorkspace();
 
     const { relevance } = await nominate(config, { symbolHints: ["gamma_only"] });
 
+    expect(relevance.status).toBe(RepositoryRelevanceStatus.Ambiguous);
+    expect(relevance.selected).toEqual([]);
+    expect(relevance.reason).toContain("beta");
+    expect(relevance.reason).toContain("index_refused");
+
+    const proof = relevance.diagnostics.presenceProof!;
+    expect(proof.status).toBe(UniquenessProofStatus.Unproven);
+    expect(proof.present).toEqual(["gamma"]);
+    expect(proof.unknown.map((entry) => entry.alias)).toEqual(["beta"]);
+    expect(proof.definitelyAbsent).toBe(1);
+  }, 60_000);
+
+  test("repairing the stale member completes the proof", async () => {
+    // The same query, the same workspace, one repaired index: the difference
+    // between an unproven claim and a proven one is a member that can answer.
+    const { beta, config, betaFingerprint } = await mixedReadinessWorkspace();
+
+    await repairDerivation(beta, betaFingerprint);
+    const { relevance } = await nominate(config, { symbolHints: ["gamma_only"] });
+
     expect(relevance.status).toBe(RepositoryRelevanceStatus.Selected);
     expect(relevance.selected.map((repo) => repo.alias)).toEqual(["gamma"]);
+    expect(relevance.diagnostics.presenceProof!.status).toBe(UniquenessProofStatus.Unique);
+    expect(relevance.diagnostics.presenceProof!.definitelyAbsent).toBe(2);
   }, 60_000);
 });
 
@@ -461,7 +490,12 @@ describe("M146-B fan-out bounds", () => {
     expect(elapsedMs).toBeLessThan(20_000);
   }, 60_000);
 
-  test("deep probes stay under the configured bound", async () => {
+  test("membership questions stay under the presence bound (M147)", async () => {
+    // M147 moves the exact-symbol lane off `maxDeepProbes`, which bounded a
+    // PREFIX of the ready members, and onto `maxPresenceScans`, which bounds how
+    // many members may be asked. The bound still exists — workspace size must
+    // never set query cost — but it now bounds a keyed membership question
+    // rather than a search whose truncation silently weakened the answer.
     const root = await makeWorkspaceRoot("m146b-bound-");
     const repos = [];
     for (let index = 0; index < 4; index += 1) {
@@ -476,10 +510,13 @@ describe("M146-B fan-out bounds", () => {
       primaryRepoAlias: "repo-0",
     });
 
-    const { relevance, probeRequests } = await nominate(config, { symbolHints: ["shared"], limits: { maxDeepProbes: 2 } });
+    const bounded = await nominate(config, { symbolHints: ["shared"], limits: { maxPresenceScans: 2 } });
+    expect(bounded.probeRequests.length).toBeLessThanOrEqual(2);
+    expect(bounded.relevance.diagnostics.reposPresenceScanned).toBeLessThanOrEqual(2);
 
-    expect(probeRequests.length).toBeLessThanOrEqual(2);
-    expect(relevance.diagnostics.reposDeepProbed).toBeLessThanOrEqual(2);
+    // And the members it could not reach are named rather than dropped.
+    const proof = bounded.relevance.diagnostics.presenceProof!;
+    expect(proof.unknown.map((entry) => entry.reason)).toEqual(["beyond_scan_bound", "beyond_scan_bound"]);
   }, 60_000);
 
   test("ambiguous candidate reporting is bounded", async () => {
@@ -622,17 +659,93 @@ describe("M146-B probe truncation soundness", () => {
     });
 
     for (const config of [forward, reversed]) {
+      // Bounded below the workspace: the M146 ceiling, reproduced exactly.
       const { relevance } = await nominate(config, {
         symbolHints: ["sharedAcrossFarApart"],
-        limits: { maxDeepProbes: 2 },
+        limits: { maxPresenceScans: 2 },
       });
 
-      // Pre-fix this reported `selected` on whichever member survived the
-      // slice, so reversing the order changed the apparent unique owner.
+      // Pre-M146 this reported `selected` on whichever member survived the
+      // slice, so reversing the order changed the apparent unique owner. It
+      // still fails closed under M147, now naming the members it could not ask.
       expect(relevance.status).toBe(RepositoryRelevanceStatus.Ambiguous);
       expect(relevance.selected).toEqual([]);
-      expect(relevance.reason).toContain("uniqueness is unproven");
-      expect(relevance.diagnostics.reposDeepProbed).toBe(2);
+      expect(relevance.reason).toContain("could not be checked");
+      expect(relevance.diagnostics.presenceProof!.status).toBe(UniquenessProofStatus.Unproven);
+      expect(relevance.diagnostics.reposPresenceScanned).toBe(2);
+    }
+  }, 60_000);
+
+  test("M147 — a bounded scan that finds nothing does not claim nothing exists", async () => {
+    // `no_match` is itself a statement about every member. When the bound left
+    // members unasked, the outcome stays `no_match` — nothing was found and no
+    // repository is selected — but the reason may not assert a global negative
+    // the scan never established. Measured on ARC in a real ten-member
+    // workspace: bounded at eight, the owner was never asked and the router
+    // reported "No repository carries evidence for this request."
+    const root = await makeWorkspaceRoot("m147-bounded-nomatch-");
+    const repos = [];
+    for (let index = 0; index < 4; index += 1) {
+      repos.push({
+        alias: `r${index}`,
+        rootPath: await indexedRepo(root, `r${index}`, {
+          "src/f.py": `def only${index}():\n    return ${index}\n`,
+        }),
+      });
+    }
+    const config = await writeFixtureWorkspace({
+      configPath: path.join(root, "bounded.workspace.json"), repos, primaryRepoAlias: "r0",
+    });
+
+    // `only3` exists, but only in the member the bound cannot reach.
+    const { relevance } = await nominate(config, {
+      symbolHints: ["only3"], limits: { maxPresenceScans: 2 },
+    });
+
+    expect(relevance.status).toBe(RepositoryRelevanceStatus.NoMatch);
+    expect(relevance.selected).toEqual([]);
+    expect(relevance.reason).toContain("could not be checked");
+    expect(relevance.reason).not.toContain("No repository carries evidence");
+    expect(relevance.diagnostics.presenceProof!.status).toBe(UniquenessProofStatus.Unproven);
+    expect(relevance.diagnostics.presenceProof!.unknown).toHaveLength(2);
+  }, 60_000);
+
+  test("M147 — an unbounded scan resolves the same workspace truthfully", async () => {
+    // The same fixture the ceiling was measured on. With every member asked,
+    // the answer is no longer withheld for lack of evidence: it is genuinely
+    // ambiguous, because two repositories really do define the name, and BOTH
+    // are named rather than one being picked by position.
+    const root = await makeWorkspaceRoot("m147-untruncated-");
+    const repos = [];
+    for (let index = 0; index < 4; index += 1) {
+      const files = index === 0 || index === 3
+        ? { "src/f.py": "def sharedAcrossFarApart():\n    return 1\n" }
+        : { "src/f.py": `def only${index}():\n    return ${index}\n` };
+      repos.push({ alias: `r${index}`, rootPath: await indexedRepo(root, `r${index}`, files) });
+    }
+    const forward = await writeFixtureWorkspace({
+      configPath: path.join(root, "forward.workspace.json"), repos, primaryRepoAlias: "r0",
+    });
+    const reversed = await writeFixtureWorkspace({
+      configPath: path.join(root, "reversed.workspace.json"), repos: [...repos].reverse(), primaryRepoAlias: "r3",
+    });
+
+    for (const config of [forward, reversed]) {
+      const shared = await nominate(config, { symbolHints: ["sharedAcrossFarApart"] });
+      expect(shared.relevance.status).toBe(RepositoryRelevanceStatus.Ambiguous);
+      expect(shared.relevance.diagnostics.presenceProof!.status).toBe(UniquenessProofStatus.Ambiguous);
+      expect(shared.relevance.diagnostics.presenceProof!.present).toEqual(["r0", "r3"]);
+
+      // And the case M146 could never resolve: a name only the LAST member
+      // defines, which a prefix-bounded search would have missed entirely.
+      const unique = await nominate(config, { symbolHints: ["only2"] });
+      expect(unique.relevance.status).toBe(RepositoryRelevanceStatus.Selected);
+      expect(unique.relevance.selected.map((repo) => repo.alias)).toEqual(["r2"]);
+      const proof = unique.relevance.diagnostics.presenceProof!;
+      expect(proof.status).toBe(UniquenessProofStatus.Unique);
+      expect(proof.owner).toBe("r2");
+      expect(proof.definitelyAbsent).toBe(3);
+      expect(proof.unknown).toEqual([]);
     }
   }, 60_000);
 

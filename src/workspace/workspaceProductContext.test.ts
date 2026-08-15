@@ -266,12 +266,33 @@ describe("M146-B mixed readiness through the product path (§16)", () => {
     expect(result.indexesOpenedForRetrieval).toEqual([]);
   }, 60_000);
 
-  test("a ready repository still answers normally beside a stale one", async () => {
+  test("a symbol-only answer waits for the stale member to be repairable (M147)", async () => {
+    // M146 returned gamma's context here. The claim underneath it — that gamma
+    // is the only repository defining the name — was about beta, which was
+    // never asked. M147 withholds the claim and says which index to repair,
+    // rather than retrieving from a repository whose exclusivity was assumed.
     const { config } = await mixedWorkspace();
 
     const { result } = await runWorkspace(config, {
       task: "what does gamma_only do?",
       symbolHints: ["gamma_only"],
+    });
+
+    expect(result.routing.status).toBe(RepositoryRelevanceStatus.Ambiguous);
+    expect(result.routing.reason).toContain("beta");
+    expect(result.context).toBeNull();
+    expect(result.indexesOpenedForRetrieval).toEqual([]);
+  }, 60_000);
+
+  test("a path-routed answer beside a stale member is unaffected (M147)", async () => {
+    // The presence proof governs the exact-symbol lane only. Absolute-path
+    // containment decides a LOCATION and makes no global-negative claim, so a
+    // stale sibling has nothing to contribute and nothing to block.
+    const { config, gamma } = await mixedWorkspace();
+
+    const { result } = await runWorkspace(config, {
+      task: "what does gamma_only do?",
+      pathHints: [path.join(gamma, "src/gamma_only.py")],
     });
 
     expect(result.routing.status).toBe(RepositoryRelevanceStatus.Selected);
