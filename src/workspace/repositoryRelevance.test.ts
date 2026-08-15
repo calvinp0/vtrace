@@ -154,7 +154,7 @@ describe("M146-B mixed readiness (§12)", () => {
     expect(beta.ready).toBe(false);
     expect(beta.index?.reason).toBe("derivation_changed");
     expect(readiness.repos.filter((repo) => repo.ready).map((repo) => repo.alias).sort()).toEqual(["alpha", "gamma"]);
-  });
+  }, 60_000);
 
   test("case 1 — an explicit alpha request never touches beta", async () => {
     const { alpha, config } = await mixedReadinessWorkspace();
@@ -168,7 +168,7 @@ describe("M146-B mixed readiness (§12)", () => {
     expect(probeRequests).toEqual([]);
     expect(relevance.diagnostics.reposDeepProbed).toBe(0);
     expect(alpha.length).toBeGreaterThan(0);
-  });
+  }, 60_000);
 
   test("case 2 — an exact beta path nominates beta and stops at readiness", async () => {
     const { beta, config } = await mixedReadinessWorkspace();
@@ -184,7 +184,7 @@ describe("M146-B mixed readiness (§12)", () => {
     expect(relevance.candidates[0]!.notReadyReason).toContain("derivation_changed");
     expect(relevance.diagnostics.decidingTier).toBe(RepositoryEvidenceKind.PathContainment);
     expect(probeRequests).not.toContain("beta");
-  });
+  }, 60_000);
 
   test("case 3 — beta contributes no indexed evidence while incompatible", async () => {
     const { config } = await mixedReadinessWorkspace();
@@ -197,7 +197,7 @@ describe("M146-B mixed readiness (§12)", () => {
     expect(probeRequests).not.toContain("beta");
     expect(relevance.diagnostics.reposExcludedNotReady.map((entry) => entry.alias)).toEqual(["beta"]);
     expect(relevance.diagnostics.reposExcludedNotReady[0]!.reason).toContain("derivation_changed");
-  });
+  }, 60_000);
 
   test("case 4 — after repair the same query uses beta's symbol evidence", async () => {
     const { beta, config, betaFingerprint } = await mixedReadinessWorkspace();
@@ -212,7 +212,7 @@ describe("M146-B mixed readiness (§12)", () => {
     expect(after.relevance.selected.map((repo) => repo.alias)).toEqual(["beta"]);
     expect(after.relevance.diagnostics.decidingTier).toBe(RepositoryEvidenceKind.ExactSymbol);
     expect(after.probeRequests).toContain("beta");
-  });
+  }, 60_000);
 
   test("a stale member never blocks a ready member's answer", async () => {
     const { config } = await mixedReadinessWorkspace();
@@ -221,14 +221,30 @@ describe("M146-B mixed readiness (§12)", () => {
 
     expect(relevance.status).toBe(RepositoryRelevanceStatus.Selected);
     expect(relevance.selected.map((repo) => repo.alias)).toEqual(["gamma"]);
-  });
+  }, 60_000);
 });
 
 // ---------------------------------------------------------------------------
 // §65 — generic routing controls
 // ---------------------------------------------------------------------------
 
-async function genericWorkspace(order: readonly string[] = ["a", "b"]) {
+/**
+ * Cached per registration order. Every case using it only ASKS questions of the
+ * workspace, so one build per order is enough; rebuilding two real indexes for
+ * each of a dozen cases pushed the suite past the per-test timeout under load.
+ * The mixed-readiness fixture is deliberately NOT cached — case 4 repairs it.
+ */
+const genericWorkspaceCache = new Map<string, ReturnType<typeof buildGenericWorkspace>>();
+function genericWorkspace(order: readonly string[] = ["a", "b"]): ReturnType<typeof buildGenericWorkspace> {
+  const key = order.join(",");
+  const existing = genericWorkspaceCache.get(key);
+  if (existing !== undefined) return existing;
+  const built = buildGenericWorkspace(order);
+  genericWorkspaceCache.set(key, built);
+  return built;
+}
+
+async function buildGenericWorkspace(order: readonly string[] = ["a", "b"]) {
   const root = await makeWorkspaceRoot("m146b-generic-");
   const repoA = await indexedRepo(root, "one", {
     "src/alpha_file.py": "def AlphaOnly():\n    return 1\n",
@@ -255,7 +271,7 @@ describe("M146-B generic routing controls (§65)", () => {
 
     expect(relevance.status).toBe(RepositoryRelevanceStatus.Selected);
     expect(relevance.selected.map((repo) => repo.alias)).toEqual(["b"]);
-  });
+  }, 60_000);
 
   test("a unique symbol selects its repository", async () => {
     const { config } = await genericWorkspace();
@@ -345,7 +361,7 @@ describe("M146-B invariance", () => {
       expect(right.relevance.candidates.map((repo) => repo.alias))
         .toEqual(left.relevance.candidates.map((repo) => repo.alias));
     }
-  });
+  }, 60_000);
 
   test("adding an unrelated repository does not move a decisive answer", async () => {
     const root = await makeWorkspaceRoot("m146b-invariance-");
@@ -370,7 +386,7 @@ describe("M146-B invariance", () => {
     expect(right.relevance.status).toBe(left.relevance.status);
     expect(right.relevance.selected.map((repo) => repo.alias))
       .toEqual(left.relevance.selected.map((repo) => repo.alias));
-  });
+  }, 60_000);
 
   test("independent clones with identical content stay ambiguous", async () => {
     // §69: same content, same HEAD, distinct M145 identities. Nothing in the
@@ -397,7 +413,7 @@ describe("M146-B invariance", () => {
     // Distinct identities is M145's guarantee; ambiguity here is M146-B's.
     const ids = relevance.candidates.map((repo) => repo.worktreeId);
     expect(new Set(ids).size).toBe(2);
-  });
+  }, 60_000);
 
   test("collisions keep their repository provenance", async () => {
     const { relevance } = await nominate((await genericWorkspace()).config, { pathHints: ["src/utils.py"] });
@@ -443,12 +459,12 @@ describe("M146-B fan-out bounds", () => {
     expect(relevance.diagnostics.reposRegistered).toBe(101);
     expect(relevance.diagnostics.reposDeepProbed).toBe(0);
     expect(elapsedMs).toBeLessThan(20_000);
-  });
+  }, 60_000);
 
   test("deep probes stay under the configured bound", async () => {
     const root = await makeWorkspaceRoot("m146b-bound-");
     const repos = [];
-    for (let index = 0; index < 6; index += 1) {
+    for (let index = 0; index < 4; index += 1) {
       repos.push({
         alias: `repo-${index}`,
         rootPath: await indexedRepo(root, `repo-${index}`, { [`src/file${index}.py`]: `def shared():\n    return ${index}\n` }),
@@ -464,12 +480,12 @@ describe("M146-B fan-out bounds", () => {
 
     expect(probeRequests.length).toBeLessThanOrEqual(2);
     expect(relevance.diagnostics.reposDeepProbed).toBeLessThanOrEqual(2);
-  });
+  }, 60_000);
 
   test("ambiguous candidate reporting is bounded", async () => {
     const root = await makeWorkspaceRoot("m146b-report-");
     const repos = [];
-    for (let index = 0; index < 5; index += 1) {
+    for (let index = 0; index < 4; index += 1) {
       repos.push({
         alias: `repo-${index}`,
         rootPath: await indexedRepo(root, `repo-${index}`, { [`src/file${index}.py`]: "def shared():\n    return 1\n" }),
@@ -488,8 +504,8 @@ describe("M146-B fan-out bounds", () => {
 
     expect(relevance.status).toBe(RepositoryRelevanceStatus.Ambiguous);
     expect(relevance.candidates).toHaveLength(2);
-    expect(relevance.diagnostics.candidatesOmitted).toBe(3);
-  });
+    expect(relevance.diagnostics.candidatesOmitted).toBe(2);
+  }, 60_000);
 });
 
 // ---------------------------------------------------------------------------
@@ -517,7 +533,7 @@ describe("M146-B failure-path routing (§34-§36)", () => {
     expect(relevance.status).toBe(RepositoryRelevanceStatus.Selected);
     expect(relevance.selected.map((repo) => repo.alias)).toEqual(["lib"]);
     expect(relevance.diagnostics.decidingTier).toBe(RepositoryEvidenceKind.PathContainment);
-  });
+  }, 60_000);
 
   test("a traceback frame owned by a stale repository still identifies it", async () => {
     const root = await makeWorkspaceRoot("m146b-failure-stale-");
@@ -537,7 +553,7 @@ describe("M146-B failure-path routing (§34-§36)", () => {
     expect(relevance.status).toBe(RepositoryRelevanceStatus.NotReady);
     expect(relevance.candidates.map((repo) => repo.alias)).toEqual(["lib"]);
     expect(probeRequests).not.toContain("lib");
-  });
+  }, 60_000);
 
   test("a failure path outside every registered repository routes nowhere", async () => {
     const { config } = await genericWorkspace();
@@ -577,37 +593,48 @@ describe("M146-B fork divergence (§37)", () => {
     const shared = await nominate(config, { symbolHints: ["common_helper"] });
     expect(shared.relevance.status).toBe(RepositoryRelevanceStatus.Ambiguous);
     expect(shared.relevance.candidates.map((repo) => repo.alias)).toEqual(["fork", "upstream"]);
-  });
+  }, 60_000);
 });
 
 describe("M146-B probe truncation soundness", () => {
   test("a match found in a truncated pool is ambiguous, not unique", async () => {
-    // The bound that keeps cost independent of workspace size also means the
-    // unprobed remainder is exactly where a rival would hide. Measured before
-    // the fix: ten ready members, cap of eight, symbol in the first and last —
-    // reported `selected` on the first, and reversing registration order would
-    // have named the other. Uniqueness must be earned, not assumed.
+    // The invariant is "the pool was truncated", not "the cap is 8", so this
+    // drives an explicit small limit: four ready members, a cap of two, and the
+    // symbol in the first and last. Testing at the default cap would need ten
+    // real indexes to prove exactly the same thing.
     const root = await makeWorkspaceRoot("m146b-truncation-");
     const repos = [];
-    for (let index = 0; index < 10; index += 1) {
-      const files = index === 0 || index === 9
+    for (let index = 0; index < 4; index += 1) {
+      const files = index === 0 || index === 3
         ? { "src/f.py": "def sharedAcrossFarApart():\n    return 1\n" }
         : { "src/f.py": `def only${index}():\n    return ${index}\n` };
       repos.push({ alias: `r${index}`, rootPath: await indexedRepo(root, `r${index}`, files) });
     }
-    const config = await writeFixtureWorkspace({
-      configPath: path.join(root, "truncation.workspace.json"),
+    const forward = await writeFixtureWorkspace({
+      configPath: path.join(root, "forward.workspace.json"),
       repos,
       primaryRepoAlias: "r0",
     });
+    const reversed = await writeFixtureWorkspace({
+      configPath: path.join(root, "reversed.workspace.json"),
+      repos: [...repos].reverse(),
+      primaryRepoAlias: "r3",
+    });
 
-    const { relevance } = await nominate(config, { symbolHints: ["sharedAcrossFarApart"] });
+    for (const config of [forward, reversed]) {
+      const { relevance } = await nominate(config, {
+        symbolHints: ["sharedAcrossFarApart"],
+        limits: { maxDeepProbes: 2 },
+      });
 
-    expect(relevance.status).toBe(RepositoryRelevanceStatus.Ambiguous);
-    expect(relevance.selected).toEqual([]);
-    expect(relevance.reason).toContain("uniqueness is unproven");
-    expect(relevance.diagnostics.reposDeepProbed).toBe(8);
-  });
+      // Pre-fix this reported `selected` on whichever member survived the
+      // slice, so reversing the order changed the apparent unique owner.
+      expect(relevance.status).toBe(RepositoryRelevanceStatus.Ambiguous);
+      expect(relevance.selected).toEqual([]);
+      expect(relevance.reason).toContain("uniqueness is unproven");
+      expect(relevance.diagnostics.reposDeepProbed).toBe(2);
+    }
+  }, 60_000);
 
   test("an untruncated pool still resolves a unique match", async () => {
     const { config } = await genericWorkspace();

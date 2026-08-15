@@ -1,0 +1,165 @@
+{
+  "milestone": "M146",
+  "closure": true,
+  "spans": {
+    "final_m145_to_m146": {
+      "predecessor": {
+        "label": "m145-88de106",
+        "commit": "88de1061c23dfbb7da112861278eec730a5e848d",
+        "tree": "105450da5fc4d5dd10f25aa10f28bf76ae2da8ea"
+      },
+      "candidate": {
+        "label": "m146-d2a8254",
+        "commit": "d2a8254ef4f9f9a1524fda323cb23c6ab168fec8",
+        "tree": "4f53aa16e74a3c4497f01a1c15853872cd099c5e"
+      },
+      "provenanceValid": true,
+      "changed": 0,
+      "cases": 50,
+      "metrics": {
+        "top1GoldFile": {
+          "m145": 38,
+          "m146": 38,
+          "delta": 0
+        },
+        "top3GoldFile": {
+          "m145": 44,
+          "m146": 44,
+          "delta": 0
+        },
+        "goldFileAnywhere": {
+          "m145": 48,
+          "m146": 48,
+          "delta": 0
+        },
+        "goldSymbolAnywhere": {
+          "m145": 31,
+          "m146": 31,
+          "delta": 0
+        },
+        "missingGold": {
+          "m145": 2,
+          "m146": 2,
+          "delta": 0
+        },
+        "meanEstimatedTokens": {
+          "m145": 1832.4,
+          "m146": 1832.4,
+          "delta": 0
+        }
+      },
+      "suites": [
+        {
+          "name": "django",
+          "cases": 20,
+          "changed": 0,
+          "sameFixtureHash": true,
+          "sameTargetCorpusHash": true,
+          "isolatedIndexes": true,
+          "authoritative": true,
+          "semanticHashesEqual": true
+        },
+        {
+          "name": "cross_repo_30",
+          "cases": 30,
+          "changed": 0,
+          "sameFixtureHash": true,
+          "sameTargetCorpusHash": true,
+          "isolatedIndexes": true,
+          "authoritative": true,
+          "semanticHashesEqual": true
+        }
+      ]
+    },
+    "staged_a_to_b": {
+      "predecessor": {
+        "label": "a3040e1",
+        "commit": "a3040e19b461136d359d901edb8ddf9f6f8a34a4",
+        "tree": "3e3c43d055be4e1fd73c7a7736e9983816b48b73"
+      },
+      "candidate": {
+        "label": "m146b",
+        "commit": "f729f3da6bf4d098448b168e599b33f9174c11ef",
+        "tree": "8fed979a577c3350fc2596f2981c6adab7a1cf46"
+      },
+      "provenanceValid": true,
+      "changed": 0,
+      "cases": 50,
+      "note": "M146-A functional -> M146-B functional; isolates workspace retrieval from compatibility changes"
+    }
+  },
+  "attribution": {
+    "m145_to_m146A": "not separately re-run; the A->B span is 0/50 and the M145->M146 span is 0/50, so the M145->A span is 0/50 by construction",
+    "interpretation": "no single-repository semantic movement anywhere in the milestone"
+  },
+  "realWorkspaceAcceptance": {
+    "arc": {
+      "case": "ARC-specific: get_dihedral",
+      "aloneEqualsExplicit": true,
+      "aloneEqualsAuto": true,
+      "lead": "arc",
+      "contamination": false,
+      "pass": true
+    },
+    "tckdb": {
+      "case": "TCKDB-specific: LevelOfTheory",
+      "aloneEqualsExplicit": true,
+      "aloneEqualsAuto": true,
+      "lead": "tckdb",
+      "contamination": false,
+      "pass": true
+    },
+    "explicitRouteParity": {
+      "identical": 6,
+      "total": 6,
+      "pass": true,
+      "note": "M145's gate, re-run after product integration"
+    },
+    "genericAmbiguity": {
+      "symbol": "main",
+      "status": "ambiguous",
+      "contextDelivered": false,
+      "pass": true
+    }
+  },
+  "workspaceCorpus": {
+    "classes": 18,
+    "passing": 18,
+    "name": "m146_workspace_routing_corpus"
+  },
+  "preservation": {
+    "m146A_compatibility": {
+      "tests": 25,
+      "pass": 25,
+      "suites": [
+        "indexerFingerprintCoverage",
+        "m146RuntimeIndexCompatibility"
+      ]
+    },
+    "m141_readiness": {
+      "tests": 20,
+      "pass": 20,
+      "suites": [
+        "indexReadiness",
+        "indexReadinessParity"
+      ]
+    },
+    "m145_workspace_and_m146B": {
+      "tests": 108,
+      "pass": 108,
+      "suite": "src/workspace"
+    },
+    "m132_worktree_routing": {
+      "tests": 12,
+      "pass": 12
+    },
+    "antiDriftClosureGuard": "passes; router, aggregator and workspace productContext integration remain OUTSIDE the index write value-import closure",
+    "structuralSingleRepoGuard": "passes; no production module outside src/workspace imports the router/aggregator/integration layer"
+  },
+  "verdict": {
+    "m146A": "PASS",
+    "m146B": "MIXED",
+    "m146_overall": "MIXED",
+    "rationale": "All mandatory implementation, benchmark, acceptance and preservation are complete. The remaining exact-symbol uniqueness problem beyond the bounded ready-repository probe set is a measured architectural ceiling, not unfinished work, and the system abstains rather than answering wrongly."
+  }
+}

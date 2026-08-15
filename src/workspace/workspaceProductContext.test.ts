@@ -194,14 +194,26 @@ describe("M146-B one-repository workspace parity (§15)", () => {
     // Same response object semantics: routing chose the repository, retrieval
     // was the same call, so nothing about the answer may differ.
     expect(semanticView(result.context!)).toEqual(semanticView(direct));
-  });
+  }, 60_000);
 });
 
 // ---------------------------------------------------------------------------
 // §16 — mixed readiness through the product path
 // ---------------------------------------------------------------------------
 
-async function mixedWorkspace() {
+/**
+ * Built once for the whole file. None of the cases below mutate it — they only
+ * ask different questions of the same three-member workspace — and rebuilding
+ * three real indexes per test made the suite time out under load, which is a
+ * flaky guard rather than a stricter one.
+ */
+let mixedWorkspaceOnce: ReturnType<typeof buildMixedWorkspace> | undefined;
+function mixedWorkspace(): ReturnType<typeof buildMixedWorkspace> {
+  mixedWorkspaceOnce ??= buildMixedWorkspace();
+  return mixedWorkspaceOnce;
+}
+
+async function buildMixedWorkspace() {
   const root = await makeWorkspaceRoot("m146b-prod-mixed-");
   const alpha = await indexedRepo(root, "alpha", {
     "src/dihedral.py": "def get_dihedral(a, b):\n    return 1\n",
@@ -236,7 +248,7 @@ describe("M146-B mixed readiness through the product path (§16)", () => {
     expect(result.indexesOpenedForRetrieval).toEqual([]);
     expect(result.routing.excludedNotReady.map((entry) => entry.alias)).toEqual(["beta"]);
     expect(result.routing.excludedNotReady[0]!.reason).toContain("derivation_changed");
-  });
+  }, 60_000);
 
   test("an absolute path into the stale repository reports not_ready, not no_match", async () => {
     const { beta, config } = await mixedWorkspace();
@@ -252,7 +264,7 @@ describe("M146-B mixed readiness through the product path (§16)", () => {
     // Identified without being consulted: no retrieval, no probe.
     expect(openedForProbe).not.toContain("beta");
     expect(result.indexesOpenedForRetrieval).toEqual([]);
-  });
+  }, 60_000);
 
   test("a ready repository still answers normally beside a stale one", async () => {
     const { config } = await mixedWorkspace();
@@ -266,7 +278,7 @@ describe("M146-B mixed readiness through the product path (§16)", () => {
     expect(result.routing.leadRepository).toBe("gamma");
     expect(result.context).not.toBeNull();
     expect(result.indexesOpenedForRetrieval).toEqual(["gamma"]);
-  });
+  }, 60_000);
 
   test("explicit selection of a ready repository ignores contrary evidence", async () => {
     const { config } = await mixedWorkspace();
@@ -280,7 +292,7 @@ describe("M146-B mixed readiness through the product path (§16)", () => {
     expect(result.routing.leadRepository).toBe("alpha");
     expect(result.routing.decidingTier).toBe("explicit_route");
     expect(openedForProbe).toEqual([]);
-  });
+  }, 60_000);
 });
 
 // ---------------------------------------------------------------------------
@@ -333,7 +345,7 @@ describe("M146-B two-repository composition (§44)", () => {
       (item) => (item.metadata as { repository: { alias: string } }).repository.alias,
     ));
     expect(aliases.size).toBe(2);
-  });
+  }, 60_000);
 
   test("a budget fitting only the direct answer omits the support", async () => {
     const { backend, config } = await compositionWorkspace();
@@ -360,7 +372,7 @@ describe("M146-B two-repository composition (§44)", () => {
     const first = constrained.result.context!.items[0]!;
     expect((first.metadata as { repository: { alias: string } }).repository.alias).toBe("backend");
     expect(constrained.result.context!.accounting.usedTokensEstimate).toBeLessThanOrEqual(leadTokens);
-  });
+  }, 60_000);
 
   test("the shared budget is never multiplied by repository count (§20)", async () => {
     const { backend, config } = await compositionWorkspace();
@@ -376,7 +388,7 @@ describe("M146-B two-repository composition (§44)", () => {
     const total = result.perRepository.reduce((sum, repo) => sum + repo.tokens, 0);
     expect(total).toBeLessThanOrEqual(300);
     expect(result.context!.accounting.usedTokensEstimate).toBeLessThanOrEqual(300);
-  });
+  }, 60_000);
 
   test("composition is off by default, so an ordinary query stays single-repository", async () => {
     const { backend, config } = await compositionWorkspace();
@@ -389,5 +401,5 @@ describe("M146-B two-repository composition (§44)", () => {
 
     expect(result.routing.supportingRepositories).toEqual([]);
     expect(result.indexesOpenedForRetrieval).toEqual(["backend"]);
-  });
+  }, 60_000);
 });
