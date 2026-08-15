@@ -111,7 +111,7 @@ export const MECHANISM_CASES: readonly MechanismCase[] = [
     expected: "ordering.py::process",
     wrongSubject: ["ordering.py::process_unordered"],
     decisionStatement: "xs[0]",
-    orderingHelper: "ordering.py::collect",
+    orderingHelper: "ordering.py::ordered_candidates",
     category: "sort-then-first with a real ordering producer",
   },
 
@@ -146,7 +146,7 @@ export const MECHANISM_CASES: readonly MechanismCase[] = [
   {
     id: "ordering_query",
     query: "What establishes the order the candidates are considered in?",
-    expected: "ordering.py::collect",
+    expected: "ordering.py::ordered_candidates",
     wrongSubject: [],
     category: "ordering question, not a selection question",
   },
@@ -166,7 +166,7 @@ export const MECHANISM_CASES: readonly MechanismCase[] = [
     expected: "supportcap.py::decide",
     wrongSubject: [],
     decisionStatement: "xs[0]",
-    orderingHelper: "supportcap.py::ranked_candidates",
+    orderingHelper: "supportcap.py::ranked_entries",
     negativeControls: [
       "supportcap.py::validate",
       "supportcap.py::annotate",

@@ -43,6 +43,15 @@ export function itemBlockText(item: CapsuleV2Item): string {
     case CapsuleV2ContentMode.Skeleton:
       lines.push("  skeleton only");
       break;
+    case CapsuleV2ContentMode.MechanismSlice: {
+      lines.push("");
+      const slice = item.mechanism_slice;
+      lines.push(slice === undefined
+        ? "  decision:"
+        : `  decision (${item.path}:${slice.start_line}-${slice.end_line}, deciding line ${slice.decision_line}):`);
+      lines.push(indent(item.source ?? "", "  "));
+      break;
+    }
     case CapsuleV2ContentMode.DocumentExcerpt:
       lines.push("");
       lines.push(`  ${item.document_kind ?? "document"} excerpt:`);

@@ -45,6 +45,15 @@ import {
   type ClassMethodExpansion,
   type RefinedRoledCandidate,
 } from "./debugRoles";
+import type { HybridScoreComponents } from "../retrieval/hybridScoring";
+import { buildMechanismSlice } from "./mechanismSlice";
+import {
+  discoverMechanismSupport,
+  inactiveMechanismSupport,
+  MECHANISM_SUPPORT_LIMITS,
+  type MechanismSupportResult,
+} from "../retrieval/mechanismSupport";
+import { hasBehavioralOperation } from "../retrieval/behavioralObjective";
 import { selectPathCompletion, type PathCompletionResult } from "./pathCompletion";
 import { detectActionabilityHints } from "./actionabilityHints";
 import {
@@ -1017,6 +1026,33 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       item.pivot_rank_penalties = rankMeta.penalties;
       item.pivot_rank_reason = rankMeta.reason;
     }
+    // §48: the deciding statement must be delivered deliberately, never left to
+    // whether the whole body happened to fit. Locate it always; when the body was
+    // compressed away, deliver the slice INSTEAD of a bare signature, so a
+    // budget-squeezed decider still shows the line that decides.
+    const mechanismEvidence = retrieval.mechanismEvidenceById.get(entry.candidate.symbolId);
+    if (mechanismEvidence !== undefined && mechanismEvidence.score > 0) {
+      const anchor = mechanismEvidence.matched[0];
+      const symbol = getSymbolById(input.db, entry.candidate.symbolId);
+      if (anchor !== undefined && symbol !== undefined) {
+        const slice = buildMechanismSlice(input.repoRoot, symbol, {
+          kind: anchor.kind, subject: anchor.subject, lineOffset: anchor.lineOffset,
+          evidence: anchor.evidence, provenance: anchor.provenance,
+          resultBearing: anchor.resultBearing,
+        });
+        if (slice !== undefined) {
+          item.mechanism_slice = {
+            start_line: slice.startLine, end_line: slice.endLine,
+            decision_line: slice.decisionLine, lines: slice.lines,
+            bytes: slice.bytes, truncated: slice.truncated,
+          };
+          if (item.content_mode !== CapsuleV2ContentMode.Full) {
+            item.content_mode = CapsuleV2ContentMode.MechanismSlice;
+            item.source = slice.source;
+          }
+        }
+      }
+    }
     usedTokens += item.estimated_tokens;
     pivots.push(item);
   });
@@ -1224,6 +1260,90 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   }
   recordCapsuleTiming(capsuleProfile, "structural.path_completion", pathCompletionStarted);
 
+  // --- M150 bounded mechanism support -----------------------------------------
+  //
+  // Ranking already found the decider and put it in `pivots`. What is still
+  // missing is the evidence explaining WHY its choice has the semantics the
+  // request asked about — for a first-item selection, the code that established
+  // the order. Seeded ONLY from already-selected pivots that carry mechanism
+  // evidence, so this can never become a general helper-expansion lane (§11).
+  const mechanismSupportStarted = capsuleProfile === undefined ? 0 : performance.now();
+  const objective = retrieval.behavioralObjective;
+  const deliveredPivotFqNames = new Set(pivots.map((item) => item.fq_name));
+  const mechanismSeeds = hasBehavioralOperation(objective)
+    ? pivotCandidates
+      .filter((entry) => deliveredPivotFqNames.has(entry.candidate.fqName))
+      .flatMap((entry) => {
+        const evidence = retrieval.mechanismEvidenceById.get(entry.candidate.symbolId);
+        if (evidence === undefined || evidence.score <= 0) return [];
+        const fact = evidence.matched.find((matched) => matched.provenance.length > 0);
+        if (fact === undefined) return [];
+        return [{
+          symbolId: entry.candidate.symbolId,
+          fqName: entry.candidate.fqName,
+          provenance: fact.provenance,
+        }];
+      })
+    : [];
+  const mechanismSupport: MechanismSupportResult = hasBehavioralOperation(objective)
+    ? discoverMechanismSupport({
+      db: input.db,
+      operation: objective.operation,
+      seeds: mechanismSeeds,
+      deliveredSymbolIds: new Set([
+        ...pivotCandidates.map((entry) => entry.candidate.symbolId),
+        ...orderedSupport.slice(0, maxSupportSlots).map((entry) => entry.candidate.symbolId),
+      ]),
+    })
+    : inactiveMechanismSupport("request declares no behavioural operation");
+  recordCapsuleTiming(capsuleProfile, "structural.mechanism_support", mechanismSupportStarted);
+
+  // The helper enters through the ROLE, carrying the ordinary score and rank
+  // retrieval computed for it. Nothing here adjusts either (§10).
+  const mechanismSupportSymbolIds = new Map<string, { reason: string; ordinaryRank: number | null }>();
+  for (const helper of mechanismSupport.candidates) {
+    const evaluated = retrieval.evaluatedById.get(helper.symbol.id);
+    const ordinaryRank = evaluated === undefined
+      ? null
+      : ([...retrieval.evaluatedById.values()].findIndex((c) => c.symbolId === helper.symbol.id) + 1) || null;
+    const candidate: HybridCandidate = evaluated ?? {
+      symbolId: helper.symbol.id,
+      filePath: helper.symbol.filePath,
+      fqName: helper.symbol.fqName,
+      localName: helper.symbol.localName,
+      kind: helper.symbol.kind,
+      // A symbol ordinary retrieval never generated has no earned score, and
+      // inventing one would be exactly the inflation §10 forbids. Zero is the
+      // truthful value: it did not compete.
+      scores: unscoredComponents(),
+      sources: [],
+      evidence: [],
+      matches: [],
+    };
+    mechanismSupportSymbolIds.set(helper.symbol.id, { reason: helper.reason, ordinaryRank });
+    const entry: RefinedRoledCandidate = {
+      candidate,
+      role: CandidateRole.Support,
+      roleReason: helper.reason,
+      signals: NO_DEBUG_ROLE_SIGNALS,
+    };
+    // Splicing past the slot cap would leave the helper permanently unpacked, so
+    // when support is full the weakest winner is DISPLACED rather than the
+    // explanation silently dropped. The displaced entry keeps its place behind
+    // the cap and is reported as budget-dropped, exactly as M140-C does.
+    if (orderedSupport.length < maxSupportSlots) {
+      orderedSupport = [...orderedSupport, entry];
+    } else {
+      const displaced = orderedSupport[maxSupportSlots - 1]!;
+      orderedSupport = [
+        ...orderedSupport.slice(0, maxSupportSlots - 1),
+        entry,
+        displaced,
+        ...orderedSupport.slice(maxSupportSlots),
+      ];
+    }
+  }
+
   // Combined token ceiling for co-edit items, so the lane can never inflate the
   // capsule: whatever does not fit under the fraction is discarded (and counted).
   const coeditTokenCeiling = Math.floor(input.maxTokens * COEDIT_BUDGET_FRACTION);
@@ -1261,6 +1381,31 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
         continue;
       }
       fileEvidenceTokensUsed += item.estimated_tokens;
+    }
+    const mechanismRole = mechanismSupportSymbolIds.get(entry.candidate.symbolId);
+    if (mechanismRole !== undefined) {
+      // §43: the role and the ordinary rank sit side by side. The item is here
+      // because it explains the decision, and it is honest about not having
+      // earned a place on its own evidence.
+      item.selection_role = "mechanism_support";
+      item.selection_reason = mechanismRole.reason;
+      if (mechanismRole.ordinaryRank !== null) item.ordinary_rank = mechanismRole.ordinaryRank;
+      const helper = mechanismSupport.candidates.find(
+        (found) => found.symbol.id === entry.candidate.symbolId);
+      if (helper !== undefined) {
+        const slice = buildMechanismSlice(input.repoRoot, helper.symbol, helper.fact);
+        if (slice !== undefined) {
+          // The ordering line is the whole reason this helper is here; a bare
+          // signature would name it without showing it (§22).
+          item.content_mode = CapsuleV2ContentMode.MechanismSlice;
+          item.source = slice.source;
+          item.mechanism_slice = {
+            start_line: slice.startLine, end_line: slice.endLine,
+            decision_line: slice.decisionLine, lines: slice.lines,
+            bytes: slice.bytes, truncated: slice.truncated,
+          };
+        }
+      }
     }
     if (entry.candidate.symbolId === pathCompletionSymbolId && pathCompletion.selection !== undefined) {
       // §19/§41: the role and the rank are reported side by side. The item is
@@ -1822,6 +1967,22 @@ function renderPivot(
 // Render a support item as a signature (or a skeleton when none is indexed).
 // Support never carries a source body — that is what distinguishes it from a
 // pivot. Dropped entirely when it does not fit the remaining budget.
+/**
+ * The scorecard of a symbol ordinary retrieval never generated.
+ *
+ * All zeros, deliberately. A mechanism-support helper is here because of a
+ * causal relation, not because it competed and won, and inventing a score for it
+ * would be exactly the rank/score inflation the role exists to avoid (§10).
+ */
+function unscoredComponents(): HybridScoreComponents {
+  return {
+    lexical: 0, fts: 0, tfidf: 0, bm25: 0, symbol: 0, path: 0, testToImpl: 0,
+    bodyLiteral: 0, domain: 0, graph: 0, graphProximity: 0, centrality: 0,
+    actionability: 1, inDegree: 0, localEvidence: 0, hubPenalty: 0,
+    actionabilityPenalty: 0, final: 0,
+  };
+}
+
 function renderSupport(
   db: Database,
   repoRoot: string,

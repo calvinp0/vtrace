@@ -106,6 +106,12 @@ export enum CapsuleV2ContentMode {
   Skeleton = "skeleton",
   /** Matched line-bounded configuration/document excerpt. */
   DocumentExcerpt = "document_excerpt",
+  /**
+   * M150: the bounded real-source region around a decision-bearing statement.
+   * Its own mode because it is neither a whole body nor a signature, and calling
+   * it either would misdescribe what the reader is being shown (§29).
+   */
+  MechanismSlice = "mechanism_slice",
 }
 
 /**
@@ -192,9 +198,25 @@ export interface CapsuleV2Item extends DebugRoleSignals {
    * claim that the item ranked well. `ordinary_rank` is the rank it genuinely
    * earned, carried alongside so the two readings stay separable.
    */
-  selection_role?: "orchestration_support";
+  /**
+   * M150 `mechanism_support`: this item is not one of the strongest ordinary
+   * answer candidates, but it carries the causal evidence needed to interpret an
+   * already-selected decision. Deliberately DISTINCT from
+   * `orchestration_support`, which means the item completes an exact short call
+   * path — merging the two would make both explanations misleading (§30, §64).
+   */
+  selection_role?: "orchestration_support" | "mechanism_support";
   selection_reason?: string;
   ordinary_rank?: number;
+  /** M150: the decision-bearing statement region, when one was delivered. */
+  mechanism_slice?: {
+    readonly start_line: number;
+    readonly end_line: number;
+    readonly decision_line: number;
+    readonly lines: number;
+    readonly bytes: number;
+    readonly truncated: boolean;
+  };
   /**
    * Pivot-ranking v2 metadata (debug/report only — NOT rendered into the prompt,
    * so it never affects token accounting). Present on pivots when the v2 ranker

@@ -18,7 +18,7 @@ def audit(entry):
     return entry
 
 
-def ranked_candidates(data):
+def ranked_entries(data):
     """Every candidate, most preferred first."""
     return sorted(data.entries, key=lambda entry: entry.rank)
 
@@ -29,5 +29,5 @@ def decide(data):
     annotate(data)
     normalise(data)
     audit(data)
-    xs = ranked_candidates(data)
+    xs = ranked_entries(data)
     return xs[0]

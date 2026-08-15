@@ -7,7 +7,7 @@ def priority(backend):
     return PRIORITY.get(backend.kind, 99)
 
 
-def collect(data):
+def ordered_candidates(data):
     """Every eligible backend, most preferred first."""
     return sorted(build_candidates(data), key=priority)
 
@@ -22,7 +22,7 @@ def build_candidates(data):
 
 def process(data):
     """Which candidate wins."""
-    xs = collect(data)
+    xs = ordered_candidates(data)
     return xs[0]
 
 
