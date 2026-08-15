@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "stage5.m148.access-atomicity.v1",
+  "measuredAt": "2026-08-15T11:28:40.404Z",
+  "injectedFailure": "an object already occupies the name idx_symbols_fq_name",
+  "outcome": {
+    "applied": false,
+    "error": "there is already a table named idx_symbols_fq_name",
+    "state": {
+      "version": 1,
+      "nameLookupAccess": "fallback",
+      "present": [],
+      "missing": [
+        "idx_symbols_local_name",
+        "idx_symbols_fq_name"
+      ]
+    }
+  },
+  "firstIndexRolledBack": true,
+  "halfInstalledStateReported": "fallback",
+  "derivedContentIdentical": true,
+  "thrown": false,
+  "note": "A failure is reported, never thrown: the index remains semantically usable and unoptimized."
+}

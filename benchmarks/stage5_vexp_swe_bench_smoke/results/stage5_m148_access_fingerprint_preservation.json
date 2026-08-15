@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "stage5.m148.access-fingerprint-preservation.v1",
+  "measuredAt": "2026-08-15T11:28:40.404Z",
+  "control": "mutate src/access/indexAccessLifecycle.ts, recompute every derivation fingerprint",
+  "before": {
+    "index_format_version": 5,
+    "schema_version": "1.0.0+48e884e386a7",
+    "vtrace_commit": "e335b7093e57f7f4a39981483dce00d52326757a",
+    "indexer_fingerprint": "f20ea1abc73696b7ce788f882c84230a660f12f6ba2a2175f7e209baa99ac96b",
+    "parser_fingerprint": "e633009f0a91e53a54703dee3321497365873d1e47f63c855013b487b217f46c",
+    "config_hash": "4b003f2216cc9f0a1eb6b43e4c949ca7d730784e4a4ce2b54b1aaef3550e7de5"
+  },
+  "after": {
+    "index_format_version": 5,
+    "schema_version": "1.0.0+48e884e386a7",
+    "vtrace_commit": "e335b7093e57f7f4a39981483dce00d52326757a",
+    "indexer_fingerprint": "f20ea1abc73696b7ce788f882c84230a660f12f6ba2a2175f7e209baa99ac96b",
+    "parser_fingerprint": "e633009f0a91e53a54703dee3321497365873d1e47f63c855013b487b217f46c",
+    "config_hash": "4b003f2216cc9f0a1eb6b43e4c949ca7d730784e4a4ce2b54b1aaef3550e7de5"
+  },
+  "unchanged": true,
+  "antiDriftClosureGuard": "src/indexer/indexerFingerprintCoverage.test.ts — passes with no new exemption",
+  "seam": "src/runtime/reindexRepo.ts and src/setup/initRepo.ts, both ABOVE the indexer fingerprint roots"
+}

@@ -1,0 +1,72 @@
+{
+  "schemaVersion": "stage5.m148.access-performance.v1",
+  "measuredAt": "2026-08-15T11:28:40.404Z",
+  "protocol": "measured on byte copies of the real indexes; user-owned indexes are never mutated",
+  "fixtureScale": {
+    "freshIndexTotalMs": 262,
+    "freshAccessEnsureMs": 1.172,
+    "existingIndexLifecycleMs": 54,
+    "existingIndexAccessEnsureMs": 0.512
+  },
+  "realCorpora": [
+    {
+      "repository": "ARC",
+      "dbSizeMb": 98.5,
+      "symbolCount": 9014,
+      "fileCount": 325,
+      "migrationMissingBefore": true,
+      "migrationDurationMs": 8.95,
+      "idempotentSecondRunMs": 0.041,
+      "idempotentSecondRunApplied": false,
+      "presentLookupUs": {
+        "before": 1.6,
+        "after": 1.3
+      },
+      "absentLookupUs": {
+        "before": 1848,
+        "after": 2
+      },
+      "semanticResultsIdentical": true,
+      "filesParsedDuringMigration": 0,
+      "indexedPathLane": {
+        "queryPlan": "SCAN files USING COVERING INDEX sqlite_autoindex_files_2",
+        "readAllPathsUs": 63.4,
+        "openReadCloseUs": 280.8,
+        "projectedProofMs": {
+          "members100": 28.1,
+          "members1000": 280.8
+        }
+      }
+    },
+    {
+      "repository": "TCKDB_v2",
+      "dbSizeMb": 558.5,
+      "symbolCount": 30974,
+      "fileCount": 1232,
+      "migrationMissingBefore": true,
+      "migrationDurationMs": 43.514,
+      "idempotentSecondRunMs": 0.027,
+      "idempotentSecondRunApplied": false,
+      "presentLookupUs": {
+        "before": 0.7,
+        "after": 2.6
+      },
+      "absentLookupUs": {
+        "before": 8043.5,
+        "after": 2
+      },
+      "semanticResultsIdentical": true,
+      "filesParsedDuringMigration": 0,
+      "indexedPathLane": {
+        "queryPlan": "SCAN files USING COVERING INDEX sqlite_autoindex_files_2",
+        "readAllPathsUs": 308.4,
+        "openReadCloseUs": 754.2,
+        "projectedProofMs": {
+          "members100": 75.4,
+          "members1000": 754.2
+        }
+      }
+    }
+  ],
+  "comparison": "the rejected schema-fingerprint approach would have forced ARC ~31 s and TCKDB_v2 ~123 s full rebuilds"
+}

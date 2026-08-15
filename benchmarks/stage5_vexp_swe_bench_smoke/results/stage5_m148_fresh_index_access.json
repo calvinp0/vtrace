@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "stage5.m148.fresh-index-access.v1",
+  "measuredAt": "2026-08-15T11:28:40.404Z",
+  "productPath": "initRepo (vtrace init / setup) -> ensureIndexAccessCapability",
+  "repository": {
+    "files": 4,
+    "symbols": 148
+  },
+  "catalogueAfterIndexing": [
+    "idx_symbols_file_id_start_byte",
+    "idx_symbols_fq_name",
+    "idx_symbols_local_name",
+    "sqlite_autoindex_symbols_1"
+  ],
+  "requiredIndexesPresent": true,
+  "outcome": {
+    "attempted": true,
+    "applied": true,
+    "created": [
+      "idx_symbols_local_name",
+      "idx_symbols_fq_name"
+    ],
+    "state": {
+      "version": 1,
+      "nameLookupAccess": "indexed",
+      "present": [
+        "idx_symbols_local_name",
+        "idx_symbols_fq_name"
+      ],
+      "missing": []
+    },
+    "durationMs": 1.172,
+    "error": null
+  },
+  "cost": {
+    "freshIndexTotalMs": 262,
+    "accessEnsureMs": 1.172,
+    "overheadPercentOfIndexRun": 0.447
+  },
+  "note": "Verified from the SQLite catalogue, not from the migration's own report."
+}

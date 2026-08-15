@@ -1,0 +1,33 @@
+{
+  "schemaVersion": "stage5.m148.indexed-path-product-acceptance.v1",
+  "measuredAt": "2026-08-15T11:28:40.404Z",
+  "path": "assembleWorkspaceProductContext (M146-B product integration)",
+  "scenario": "a ready owner for src/a_only.py, with one enabled member refused",
+  "result": {
+    "routing": {
+      "autoRouted": true,
+      "status": "ambiguous",
+      "reason": "a indexes this path, but 1 eligible repository/repositories could not be checked, so it is not provably the only one: b (index_refused).",
+      "decidingTier": "indexed_path",
+      "leadRepository": null,
+      "supportingRepositories": [],
+      "repositoriesRegistered": 3,
+      "repositoriesReady": 2,
+      "repositoriesDeepProbed": 2,
+      "excludedNotReady": [
+        {
+          "alias": "b",
+          "reason": "schema_incompatible (derivation_changed)"
+        }
+      ],
+      "candidates": [
+        "a"
+      ]
+    },
+    "contextDelivered": false,
+    "indexesOpenedForRetrieval": [],
+    "openRepositoryCalls": [],
+    "assembleCalled": false
+  },
+  "expectation": "no context delivered, no repository opened for retrieval, reason names the unknown member"
+}
