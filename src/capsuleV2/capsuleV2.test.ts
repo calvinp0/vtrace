@@ -37,6 +37,9 @@ const SCORECARD_KEYS = [
   "actionability",
   "hub_penalty",
   "direct_answer",
+  // M150: bounded behavioural-mechanism evidence. Always present, 0 for any
+  // request that declares no operation.
+  "mechanism_evidence",
   "final",
 ] as const;
 

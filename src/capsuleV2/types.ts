@@ -73,6 +73,8 @@ export interface CapsuleV2Scorecard {
   hub_penalty: number;
   /** Definition-local capability match; non-zero only for capability lookup intent. */
   direct_answer: number;
+  /** M150 bounded behavioural-mechanism evidence; 0 for non-behavioural requests. */
+  mechanism_evidence: number;
   final: number;
 }
 
@@ -89,6 +91,7 @@ export function toScorecard(scores: HybridScoreComponents): CapsuleV2Scorecard {
     actionability: scores.actionability,
     hub_penalty: scores.hubPenalty,
     direct_answer: scores.directAnswerScore ?? 0,
+    mechanism_evidence: scores.mechanismEvidence ?? 0,
     final: scores.final,
   };
 }

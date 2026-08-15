@@ -71,6 +71,19 @@ import {
   type ConceptOwnerResult,
 } from "./conceptOwnerRetrieval";
 import {
+  deriveBehavioralObjective,
+  hasBehavioralOperation,
+  type BehavioralObjective,
+  type BehavioralObjectiveResult,
+} from "./behavioralObjective";
+import {
+  evaluateMechanismEvidence,
+  mechanismEvidenceReason,
+  type MechanismEvidence,
+} from "./mechanismEvidence";
+import { loadMechanismFactsFor } from "../db/repositories/mechanismFactsRepository";
+import type { MechanismFact } from "../indexer/extractMechanismFacts";
+import {
   inactiveUpstreamRescue,
   rescueUpstreamCandidates,
   selectUpstreamRescueSeeds,
@@ -237,6 +250,15 @@ export interface HybridRetrievalResult {
    * scored candidates lets a lane re-admit the real scorecard instead.
    */
   evaluatedById: ReadonlyMap<string, HybridCandidate>;
+  /** What operation the request asked about, or why none was derived (M150-B). */
+  behavioralObjective: BehavioralObjectiveResult;
+  /**
+   * Mechanism evidence per scored candidate, including the withheld ones. A
+   * downstream selector needs the MATCHES (which statement, at which line) to
+   * deliver a slice, and needs the withheld reasons to explain a candidate that
+   * carries a mechanism but earned nothing for it.
+   */
+  mechanismEvidenceById: ReadonlyMap<string, MechanismEvidence>;
 }
 
 const DEFAULTS = Object.freeze({
@@ -281,6 +303,8 @@ export function hybridRetrieve(
       conceptOwner: inactiveConceptOwner("no results requested"),
       orchestrationPaths: [],
       evaluatedById: new Map(),
+      behavioralObjective: { operation: null, suppressedBy: "no results requested", considered: [] },
+      mechanismEvidenceById: new Map(),
     };
   }
   const lexicalPoolSize = input.lexicalPoolSize
@@ -295,6 +319,11 @@ export function hybridRetrieve(
   const derivedIntent = input.shaped.derivedIntent
     ?? deriveQueryIntent(input.taskText ?? input.query);
   const exactNameEligible = exactSymbolEligibleTerms(derivedIntent);
+  // The requested OPERATION, derived once from the same grammar for the same
+  // reason: the scoring pass and the diagnostics must not be able to disagree
+  // about what the request asked for.
+  const behavioralObjective = deriveBehavioralObjective(derivedIntent);
+  const mechanismEvidenceById = new Map<string, MechanismEvidence>();
 
   // Retrieval is a UNION of independent candidate generators. Each emits the
   // SAME structured candidate (file/symbol identity + source + evidence) and a
@@ -330,7 +359,7 @@ export function hybridRetrieve(
   // under one normalisation, which is what keeps rescued content inside the
   // normal selection/budget path rather than beside it.
   let ranked = timed(input.profile, "candidate_processing.score_sort_cap", () =>
-    assemble(db, raw, input, derivedIntent));
+    assemble(db, raw, input, derivedIntent, behavioralObjective, mechanismEvidenceById));
   const upstreamRescue = timed(input.profile, "structural.upstream_rescue", () =>
     upstreamRescueCandidates(db, input, derivedIntent, ranked, raw));
   // Concept-owner rescue needs the RANKING too, for a different reason: "the pool
@@ -348,7 +377,7 @@ export function hybridRetrieve(
     || conceptOwner.diagnostics.candidatesAdmitted > 0
   ) {
     ranked = timed(input.profile, "candidate_processing.score_sort_cap", () =>
-      assemble(db, raw, input, derivedIntent));
+      assemble(db, raw, input, derivedIntent, behavioralObjective, mechanismEvidenceById));
   }
   count(input.profile, "upstream_rescue_seeds", upstreamRescue.diagnostics.seeds.length);
   count(input.profile, "upstream_rescue_candidates", upstreamRescue.diagnostics.rescuedCandidatesAdmitted);
@@ -400,6 +429,8 @@ export function hybridRetrieve(
     conceptOwner: conceptOwner.diagnostics,
     orchestrationPaths,
     evaluatedById: new Map(ranked.map((candidate) => [candidate.symbolId, candidate])),
+    behavioralObjective,
+    mechanismEvidenceById,
   };
 }
 
@@ -881,11 +912,23 @@ function assemble(
   raw: ReadonlyMap<SymbolId, RawCandidate>,
   input: HybridRetrievalInput,
   derivedIntent: DerivedQueryIntent,
+  behavioralObjective: BehavioralObjectiveResult,
+  mechanismEvidenceById: Map<string, MechanismEvidence>,
 ): HybridCandidate[] {
   const entries = [...raw.values()];
   if (entries.length === 0) {
     return [];
   }
+
+  // Mechanism facts are read ONLY when the request declared an operation, and
+  // only for the symbols already in the pool — one indexed lookup over a bounded
+  // id list, no source read and no repository scan (§56, §94). A request with no
+  // operation never touches the table at all.
+  const mechanismFacts: ReadonlyMap<SymbolId, MechanismFact[]> =
+    hasBehavioralOperation(behavioralObjective)
+      ? loadMechanismFactsFor(db, entries.map((entry) => entry.symbol.id))
+      : new Map();
+  count(input.profile, "mechanism_facts_loaded", mechanismFacts.size);
 
   // BM25 over the candidate pool: idf is computed across exactly the symbols in
   // contention, so a rare discriminating term outweighs a ubiquitous one.
@@ -998,10 +1041,32 @@ function assemble(
     // adjustments so the contribution stays separable and inspectable.
     const upstreamRescueScore = round(entry.upstreamRescue);
     const conceptOwnerScore = round(entry.conceptOwner);
+
+    // M150: does this definition PERFORM the operation the request asked about?
+    //
+    // The subject gate reads the candidate's own already-normalised subject
+    // signals. It asks whether the request is about this code at all, which is a
+    // different question from whether the code implements the behaviour — and
+    // mechanism evidence is only allowed to answer the second.
+    let mechanismEvidence = 0;
+    if (hasBehavioralOperation(behavioralObjective)) {
+      const evaluated = evaluateMechanismEvidence({
+        objective: behavioralObjective,
+        facts: mechanismFacts.get(entry.symbol.id) ?? [],
+        localName: entry.symbol.localName,
+        fqName: entry.symbol.fqName,
+        filePath: entry.symbol.filePath,
+        subjectRelevance: Math.max(lexical, domain, path, symbol),
+      });
+      if (evaluated.matched.length > 0) mechanismEvidenceById.set(entry.symbol.id, evaluated);
+      mechanismEvidence = evaluated.score;
+    }
+
     const finalWithoutCentrality = round(Math.max(
       0,
       rawFinalWithoutCentrality - hub.penalty - action.penalty + positiveObjectiveScore
-      + directAnswerScore + upstreamRescueScore + conceptOwnerScore - contrastPenalty,
+      + directAnswerScore + upstreamRescueScore + conceptOwnerScore + mechanismEvidence
+      - contrastPenalty,
     ));
 
     // The hub penalty already stripped this candidate's centrality when it had no
@@ -1054,6 +1119,17 @@ function assemble(
     if (directAnswerScore > 0) {
       evidence.push(`${directAnswer.reason} (+${directAnswerScore.toFixed(2)} direct answer)`);
     }
+    // §66: the `why` must say what the candidate DOES, not merely that a name
+    // matched. A lead on a behavioural question whose only explanation is
+    // "strong lexical match" is exactly the uninformative reason M150 set out to
+    // replace.
+    if (mechanismEvidence > 0) {
+      const reason = mechanismEvidenceReason(
+        behavioralObjective as BehavioralObjective,
+        mechanismEvidenceById.get(entry.symbol.id)!,
+      );
+      if (reason !== undefined) evidence.push(`${reason} (+${mechanismEvidence.toFixed(2)} mechanism)`);
+    }
 
     const scores: HybridScoreComponents = {
       lexical,
@@ -1078,6 +1154,7 @@ function assemble(
       directAnswerScore,
       ...(upstreamRescueScore > 0 ? { upstreamRescueScore } : {}),
       ...(conceptOwnerScore > 0 ? { conceptOwnerScore } : {}),
+      ...(mechanismEvidence > 0 ? { mechanismEvidence } : {}),
       centralityRelevanceShare: gate.relevanceShare,
       centralitySupport: gate.support,
       final,

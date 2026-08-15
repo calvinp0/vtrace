@@ -127,6 +127,18 @@ export interface HybridScoreComponents {
    */
   conceptOwnerScore?: number;
   /**
+   * Bounded behavioural-mechanism evidence: this definition performs the
+   * OPERATION the request asked about — takes the first of an ordered collection,
+   * falls back, consults a precedence table (M150). Zero unless the request
+   * declared an operation AND a compatible fact was indexed AND the candidate
+   * already carries subject relevance, so an ordinary lookup never sees it.
+   *
+   * Kept as its own component, like `conceptOwnerScore`, so operation evidence
+   * can never be mistaken for a lexical or subject match: the whole point is
+   * that naming the subject and implementing the behaviour are different claims.
+   */
+  mechanismEvidence?: number;
+  /**
    * Weighted sum of the components above, minus `hubPenalty` and
    * `actionabilityPenalty`; the ranking key.
    */
@@ -756,6 +768,7 @@ export function recomputeWithWeakenedLexical(
       - actionabilityPenalty
       + (scores.positiveObjectiveScore ?? 0)
       + (scores.directAnswerScore ?? 0)
+      + (scores.mechanismEvidence ?? 0)
       - (scores.contrastPenalty ?? 0),
   );
 

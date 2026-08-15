@@ -109,6 +109,11 @@ export function countEvidenceTypes(scorecard: CapsuleV2Scorecard): number {
   if (scorecard.test_to_impl >= EVIDENCE_PRESENT_MIN) count += 1;
   if (scorecard.body_literal >= EVIDENCE_PRESENT_MIN) count += 1;
   if (scorecard.graph_proximity >= EVIDENCE_PRESENT_MIN) count += 1;
+  // M150: performing the requested operation is a distinct kind of evidence from
+  // any of the above, all of which measure the SUBJECT. Omitting it would leave
+  // the pivot ranker unable to see the one signal that says this definition
+  // answers the question.
+  if (scorecard.mechanism_evidence >= EVIDENCE_PRESENT_MIN) count += 1;
   return count;
 }
 
