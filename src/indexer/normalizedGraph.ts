@@ -10,6 +10,9 @@ export interface NormalizedGraph {
   readonly edges: readonly unknown[];
   readonly symbolSearch: readonly unknown[];
   readonly bodyLiterals: readonly unknown[];
+  /** M150 mechanism facts. Part of the graph identity: full and incremental
+   * indexing must derive byte-identical facts or the equivalence gate fails. */
+  readonly mechanismFacts: readonly unknown[];
 }
 
 export class GraphValidationError extends Error {
@@ -50,7 +53,11 @@ export function normalizeGraph(db: Database): NormalizedGraph {
     SELECT symbol_id, file_path_raw, literals
     FROM symbol_body_literals_fts ORDER BY file_path_raw, symbol_id
   `).all();
-  return { files, symbols, edges, symbolSearch, bodyLiterals };
+  const mechanismFacts = db.query(`
+    SELECT symbol_id, file_path_raw, ordinal, kind, subject, line_offset, evidence, result_bearing
+    FROM symbol_mechanism_facts ORDER BY file_path_raw, symbol_id, ordinal
+  `).all();
+  return { files, symbols, edges, symbolSearch, bodyLiterals, mechanismFacts };
 }
 
 export function normalizedGraphHash(db: Database): string {

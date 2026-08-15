@@ -8,6 +8,10 @@ import {
   replaceBodyLiteralsForFile,
   type SymbolBodyLiterals,
 } from "./repositories/bodyLiteralsRepository";
+import {
+  replaceMechanismFactsForFile,
+} from "./repositories/mechanismFactsRepository";
+import type { SymbolMechanismFacts } from "../indexer/extractMechanismFacts";
 import { insertEdges } from "./repositories/edgesRepository";
 import { replaceFile } from "./repositories/filesRepository";
 import { replaceSymbolSearchIndexForFile } from "./repositories/symbolSearchFtsRepository";
@@ -22,6 +26,13 @@ export interface PersistParseResultOptions {
    * index bodies are unaffected.
    */
   readonly bodyLiterals?: readonly SymbolBodyLiterals[];
+  /**
+   * Pre-extracted decision-bearing mechanism facts (M150), built from the same
+   * raw content and the same byte ranges as `bodyLiterals`. Same contract: when
+   * provided the file's facts are replaced, when omitted they are left untouched,
+   * so a caller that does not index bodies is unaffected.
+   */
+  readonly mechanismFacts?: readonly SymbolMechanismFacts[];
 }
 
 export function persistParseResult(
@@ -40,6 +51,9 @@ export function persistParseResult(
     replaceSymbolSearchIndexForFile(db, file, parseResult.symbols);
     if (options.bodyLiterals !== undefined) {
       replaceBodyLiteralsForFile(db, file, options.bodyLiterals);
+    }
+    if (options.mechanismFacts !== undefined) {
+      replaceMechanismFactsForFile(db, file, options.mechanismFacts);
     }
     insertEdges(db, parseResult.edges);
   });

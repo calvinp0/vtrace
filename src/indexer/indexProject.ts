@@ -20,10 +20,12 @@ import { createIndexRun } from "../db/repositories/indexRunsRepository";
 import { insertSymbolRunStates } from "../db/repositories/symbolRunStatesRepository";
 import { deleteSymbolSearchIndexForFile } from "../db/repositories/symbolSearchFtsRepository";
 import { deleteBodyLiteralsForFile } from "../db/repositories/bodyLiteralsRepository";
+import { deleteMechanismFactsForFile } from "../db/repositories/mechanismFactsRepository";
 import { replaceDocumentChunksForFile } from "../db/repositories/documentsRepository";
 import { persistParseResult } from "../db/persistParseResult";
 import { listAllSymbols } from "../db/repositories/symbolsRepository";
 import { buildSymbolBodyLiterals } from "./extractBodyLiterals";
+import { buildSymbolMechanismFacts } from "./extractMechanismFacts";
 import {
   ParserError,
   ParserErrorCode,
@@ -350,6 +352,7 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
     const invalidationStarted = performance.now();
     options.db.run("DELETE FROM symbol_search_fts");
     options.db.run("DELETE FROM symbol_body_literals_fts");
+    options.db.run("DELETE FROM symbol_mechanism_facts");
     options.db.run("DELETE FROM document_search_fts");
     options.db.run("DELETE FROM document_chunks");
     options.db.run("DELETE FROM edges");
@@ -360,8 +363,10 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
     for (let index = 0; index < successfulResults.length; index += 1) {
       const parseResult = successfulResults[index]!;
       const fileLocalResult = { ...parseResult, edges: parseResult.edges.filter((edge) => !isDeferredEdgeType(edge.edgeType)) };
-      const bodyLiterals = buildSymbolBodyLiterals(fileLocalResult.symbols, contentByPath.get(parseResult.file.path) ?? "");
-      persistParseResult(options.db, fileLocalResult, { bodyLiterals });
+      const fileContent = contentByPath.get(parseResult.file.path) ?? "";
+      const bodyLiterals = buildSymbolBodyLiterals(fileLocalResult.symbols, fileContent);
+      const mechanismFacts = buildSymbolMechanismFacts(fileLocalResult.symbols, fileContent);
+      persistParseResult(options.db, fileLocalResult, { bodyLiterals, mechanismFacts });
       const documentKind = documentKindForLanguage(parseResult.file.language);
       if (documentKind !== undefined) {
         const content = contentByPath.get(parseResult.file.path) ?? "";
@@ -642,7 +647,7 @@ function makePerformanceDiagnostics(
 }
 
 function countLiveGraphRows(db: Database): number {
-  return ["files", "symbols", "edges", "symbol_search_fts", "symbol_body_literals_fts"]
+  return ["files", "symbols", "edges", "symbol_search_fts", "symbol_body_literals_fts", "symbol_mechanism_facts"]
     .reduce((total, table) => total + ((db.query(`SELECT COUNT(*) AS count FROM ${table}`).get() as { count: number }).count), 0);
 }
 
@@ -840,6 +845,7 @@ function pruneRemovedFiles(
     for (const filePath of removedPaths) {
       deleteSymbolSearchIndexForFile(db, { path: filePath });
       deleteBodyLiteralsForFile(db, { path: filePath });
+      deleteMechanismFactsForFile(db, { path: filePath });
       deleteFileByPath(db, filePath);
     }
   });

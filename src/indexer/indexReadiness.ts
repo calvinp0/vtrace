@@ -98,7 +98,18 @@ export type IndexReadinessAction =
  * so there is no truthful cheap probe that distinguishes "index predates M140"
  * from "repository genuinely has no module-scope imports".
  */
-export const INDEX_CAPABILITIES = ["edge_call_sites", "document_chunks"] as const;
+export const INDEX_CAPABILITIES = [
+  "edge_call_sites",
+  "document_chunks",
+  /**
+   * M150 decision-bearing mechanism facts. Optional by the same contract as the
+   * two above: an index written before M150 is structurally readable and every
+   * pre-M150 lane works on it unchanged, so calling its schema incompatible would
+   * be false. Behavioural mechanism retrieval is the one thing it cannot do, and
+   * naming exactly that is what §51 asks for.
+   */
+  "behavioral_mechanism_evidence",
+] as const;
 export type IndexCapability = (typeof INDEX_CAPABILITIES)[number];
 
 /** Index format versions this runtime can read without a rebuild. */
@@ -510,12 +521,13 @@ async function probeIndexIntegrityAndCapabilities(
 function readCapabilities(db: Database): Record<IndexCapability, boolean> | null {
   try {
     const rows = db.query(
-      "SELECT name FROM sqlite_master WHERE type = 'table' AND name IN ('edge_call_sites', 'document_chunks')",
+      "SELECT name FROM sqlite_master WHERE type = 'table' AND name IN ('edge_call_sites', 'document_chunks', 'symbol_mechanism_facts')",
     ).all() as Array<{ name: string }>;
     const present = new Set(rows.map((row) => row.name));
     return {
       edge_call_sites: present.has("edge_call_sites"),
       document_chunks: present.has("document_chunks"),
+      behavioral_mechanism_evidence: present.has("symbol_mechanism_facts"),
     };
   } catch {
     return null;

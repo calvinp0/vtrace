@@ -398,6 +398,39 @@ export function initializeSchema(db: Database): void {
       literals,
       tokenize = 'unicode61'
     );
+
+    -- M150 decision-bearing mechanism facts: what a definition's body DOES
+    -- (takes the first item, establishes an order, falls back, consults a cache)
+    -- as opposed to what it is NAMED. Purely additive, exactly like
+    -- edge_call_sites: an index written before M150 simply has no rows here, and
+    -- readiness reports behavioral_mechanism_evidence as a missing CAPABILITY
+    -- rather than calling the whole schema incompatible.
+    --
+    -- Location is a line OFFSET within the owning definition, never an absolute
+    -- line: an edit anywhere above the symbol moves every absolute line in the
+    -- file and would churn every fact in it. The primary key doubles as the
+    -- per-symbol lookup index.
+    CREATE TABLE IF NOT EXISTS symbol_mechanism_facts (
+      symbol_id TEXT NOT NULL,
+      file_path_raw TEXT NOT NULL,
+      ordinal INTEGER NOT NULL CHECK (ordinal >= 0),
+      kind TEXT NOT NULL,
+      subject TEXT NOT NULL,
+      line_offset INTEGER NOT NULL CHECK (line_offset >= 0),
+      evidence TEXT NOT NULL,
+      result_bearing INTEGER NOT NULL CHECK (result_bearing IN (0, 1)),
+      PRIMARY KEY (symbol_id, ordinal),
+      FOREIGN KEY (symbol_id)
+        REFERENCES symbols(id)
+        ON DELETE CASCADE
+        DEFERRABLE INITIALLY DEFERRED
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_symbol_mechanism_facts_kind
+      ON symbol_mechanism_facts(kind, symbol_id);
+
+    CREATE INDEX IF NOT EXISTS idx_symbol_mechanism_facts_path
+      ON symbol_mechanism_facts(file_path_raw);
   `);
 
   ensureColumnExists(db, "symbols", "decorators", "TEXT");
