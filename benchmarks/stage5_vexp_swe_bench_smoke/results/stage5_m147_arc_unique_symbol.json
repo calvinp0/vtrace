@@ -1,0 +1,70 @@
+{
+  "schemaVersion": "stage5.m147.arc-unique-symbol.v1",
+  "milestone": "M147-H",
+  "question": "does an ARC-only exact symbol select ARC in a workspace larger than the deep-probe cap?",
+  "readyRepositories": 10,
+  "deepProbeCap": 8,
+  "boundSimulationNote": "m146BoundSimulation reproduces the M146 ceiling by bounding the scan at the deep-probe cap. Its ambiguity is the behaviour M147 replaces, measured on the same workspace and the same query.",
+  "symbol": "ACTIONS_PATTERN",
+  "status": "selected",
+  "selected": [
+    "ARC"
+  ],
+  "reason": "ARC selected on exact_symbol evidence.",
+  "routingMs": 3.19,
+  "reposReady": 10,
+  "reposPresenceScanned": 10,
+  "presenceAccessPaths": {
+    "indexed": 10,
+    "fallback": 0,
+    "unreported": 0
+  },
+  "proof": {
+    "present": [
+      "ARC"
+    ],
+    "unknown": [],
+    "definitelyAbsent": 9,
+    "status": "unique",
+    "owner": "ARC",
+    "reason": "ARC defines this name and all 9 other eligible repositories are proven not to."
+  },
+  "indexesOpened": 10,
+  "independentCensusOwners": [
+    "ARC"
+  ],
+  "expected": "selected(ARC)",
+  "agreesWithCensus": true,
+  "m146BoundSimulation": {
+    "symbol": "ACTIONS_PATTERN",
+    "status": "no_match",
+    "selected": [],
+    "reason": "No repository carries evidence for this request.",
+    "routingMs": 1.83,
+    "reposReady": 10,
+    "reposPresenceScanned": 8,
+    "presenceAccessPaths": {
+      "indexed": 8,
+      "fallback": 0,
+      "unreported": 0
+    },
+    "proof": {
+      "present": [],
+      "unknown": [
+        {
+          "alias": "ARC",
+          "reason": "beyond_scan_bound"
+        },
+        {
+          "alias": "TCKDB_v2",
+          "reason": "beyond_scan_bound"
+        }
+      ],
+      "definitelyAbsent": 8,
+      "status": "unproven",
+      "owner": null,
+      "reason": "No checked repository defines this name, but 2 eligible repository/repositories could not be checked: ARC (beyond_scan_bound), TCKDB_v2 (beyond_scan_bound)."
+    },
+    "indexesOpened": 8
+  }
+}

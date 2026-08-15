@@ -1,0 +1,39 @@
+{
+  "schemaVersion": "stage5.m147.summary-freshness.v1",
+  "milestone": "M147-D",
+  "question": "what invalidates the presence evidence, and can refused derived state supply absence truth?",
+  "design": "Presence evidence is read from the member's own symbol table, so it is invalidated by exactly what invalidates the index: the M146-A derivation fingerprints. No separate version contract was introduced, because a second contract is a second thing that can disagree.",
+  "invalidatedBy": [
+    "parser_fingerprint (symbol extraction semantics)",
+    "indexer_fingerprint (stored identity and name derivation)",
+    "schema_version (stored shape)",
+    "config_hash (file inclusion scope)",
+    "repository / worktree identity mismatch",
+    "source staleness"
+  ],
+  "accessPathInvalidation": "The access path is not derived content and carries no fingerprint of its own. Its version is read from the database catalogue, so it cannot claim to be installed when it is not.",
+  "refusedMemberControl": {
+    "member": "repo-3",
+    "readyBefore": true,
+    "readyAfterDerivationBreak": false,
+    "reasonAfter": "derivation_changed",
+    "routeWhileRefused": {
+      "status": "ambiguous",
+      "proofStatus": "unproven",
+      "unknown": [
+        {
+          "alias": "repo-3",
+          "reason": "index_refused"
+        }
+      ]
+    },
+    "routeAfterRepair": {
+      "status": "selected",
+      "selected": [
+        "repo-11"
+      ],
+      "proofStatus": "unique"
+    },
+    "refusedMemberContributedAbsence": false
+  }
+}

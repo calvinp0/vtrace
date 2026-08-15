@@ -1,0 +1,95 @@
+{
+  "schemaVersion": "stage5.m147.registration-order.v1",
+  "milestone": "M147-G",
+  "question": "can the order repositories were registered in change who owns a symbol?",
+  "requirement": "Identical verdict AND identical proof under every permutation. M146 measured an owner that changed when the workspace was reversed; that is the failure this control exists for.",
+  "symbol": "ACTIONS_PATTERN",
+  "rows": [
+    {
+      "order": "forward",
+      "registration": [
+        "psf__requests-5414",
+        "pallets__flask-5014",
+        "mwaskom__seaborn-3187",
+        "pydata__xarray-2905",
+        "pydata__xarray-3677",
+        "pydata__xarray-4695",
+        "pytest-dev__pytest-7432",
+        "pytest-dev__pytest-10051",
+        "ARC",
+        "TCKDB_v2"
+      ],
+      "status": "selected",
+      "selected": [
+        "ARC"
+      ],
+      "proofStatus": "unique",
+      "definitelyAbsent": 9
+    },
+    {
+      "order": "reversed",
+      "registration": [
+        "TCKDB_v2",
+        "ARC",
+        "pytest-dev__pytest-10051",
+        "pytest-dev__pytest-7432",
+        "pydata__xarray-4695",
+        "pydata__xarray-3677",
+        "pydata__xarray-2905",
+        "mwaskom__seaborn-3187",
+        "pallets__flask-5014",
+        "psf__requests-5414"
+      ],
+      "status": "selected",
+      "selected": [
+        "ARC"
+      ],
+      "proofStatus": "unique",
+      "definitelyAbsent": 9
+    },
+    {
+      "order": "arc_last",
+      "registration": [
+        "psf__requests-5414",
+        "pallets__flask-5014",
+        "mwaskom__seaborn-3187",
+        "pydata__xarray-2905",
+        "pydata__xarray-3677",
+        "pydata__xarray-4695",
+        "pytest-dev__pytest-7432",
+        "pytest-dev__pytest-10051",
+        "TCKDB_v2",
+        "ARC"
+      ],
+      "status": "selected",
+      "selected": [
+        "ARC"
+      ],
+      "proofStatus": "unique",
+      "definitelyAbsent": 9
+    },
+    {
+      "order": "arc_first",
+      "registration": [
+        "ARC",
+        "psf__requests-5414",
+        "pallets__flask-5014",
+        "mwaskom__seaborn-3187",
+        "pydata__xarray-2905",
+        "pydata__xarray-3677",
+        "pydata__xarray-4695",
+        "pytest-dev__pytest-7432",
+        "pytest-dev__pytest-10051",
+        "TCKDB_v2"
+      ],
+      "status": "selected",
+      "selected": [
+        "ARC"
+      ],
+      "proofStatus": "unique",
+      "definitelyAbsent": 9
+    }
+  ],
+  "distinctOutcomes": 1,
+  "invariant": true
+}

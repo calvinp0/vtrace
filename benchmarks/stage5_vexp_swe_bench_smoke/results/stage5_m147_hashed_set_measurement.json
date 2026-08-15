@@ -1,0 +1,71 @@
+{
+  "schemaVersion": "stage5.m147.candidateB_hashedSortedSet.v1",
+  "milestone": "M147-B",
+  "question": "does hashing the name set to fixed-width digests trade acceptable ambiguity for size?",
+  "hashFunction": "SHA-256, big-endian byte order, no seed. Deterministic across runtimes and machines.",
+  "falseNegativePolicy": "Zero is required, not desirable. A false negative records a rival owner as proven absent, which is a false uniqueness claim.",
+  "repositories": [
+    {
+      "repository": "ARC",
+      "uniqueRoutableNames": 15805,
+      "measurement": {
+        "buildMs": 16.03,
+        "bytes": 126440,
+        "bytesPerName": 8,
+        "absentLookupUs": 1.444,
+        "presentLookupUs": 1.605,
+        "internalDigestCollisions": 0,
+        "falseNegatives": 0,
+        "provesAbsence": true,
+        "note": "64-bit SHA-256 prefix. A collision can only ADD a maybe-present, never remove a name."
+      }
+    },
+    {
+      "repository": "TCKDB_v2",
+      "uniqueRoutableNames": 49165,
+      "measurement": {
+        "buildMs": 41.8,
+        "bytes": 393320,
+        "bytesPerName": 8,
+        "absentLookupUs": 1.185,
+        "presentLookupUs": 1.104,
+        "internalDigestCollisions": 0,
+        "falseNegatives": 0,
+        "provesAbsence": true,
+        "note": "64-bit SHA-256 prefix. A collision can only ADD a maybe-present, never remove a name."
+      }
+    },
+    {
+      "repository": "sympy__sympy-12419",
+      "uniqueRoutableNames": 39787,
+      "measurement": {
+        "buildMs": 30.66,
+        "bytes": 318296,
+        "bytesPerName": 8,
+        "absentLookupUs": 0.961,
+        "presentLookupUs": 1.006,
+        "internalDigestCollisions": 0,
+        "falseNegatives": 0,
+        "provesAbsence": true,
+        "note": "64-bit SHA-256 prefix. A collision can only ADD a maybe-present, never remove a name."
+      }
+    },
+    {
+      "repository": "psf__requests-1142",
+      "uniqueRoutableNames": 1336,
+      "measurement": {
+        "buildMs": 1.13,
+        "bytes": 10688,
+        "bytesPerName": 8,
+        "absentLookupUs": 1.025,
+        "presentLookupUs": 1.054,
+        "internalDigestCollisions": 0,
+        "falseNegatives": 0,
+        "provesAbsence": true,
+        "note": "64-bit SHA-256 prefix. A collision can only ADD a maybe-present, never remove a name."
+      }
+    }
+  ],
+  "shipped": false,
+  "rejectedBecause": "Same second-artifact cost as the Bloom filter without its size advantage, and 8 bytes/name across a 1000-member workspace is eager state bought to save 200 ms."
+}

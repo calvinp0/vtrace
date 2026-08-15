@@ -1,0 +1,67 @@
+{
+  "schemaVersion": "stage5.m147.candidateA_exactStringSet.v1",
+  "milestone": "M147-B",
+  "question": "what does an exact in-memory name set cost to build, hold and query?",
+  "hashFunction": "SHA-256, big-endian byte order, no seed. Deterministic across runtimes and machines.",
+  "falseNegativePolicy": "Zero is required, not desirable. A false negative records a rival owner as proven absent, which is a false uniqueness claim.",
+  "repositories": [
+    {
+      "repository": "ARC",
+      "uniqueRoutableNames": 15805,
+      "measurement": {
+        "buildMs": 1.58,
+        "inMemoryStringBytes": 787563,
+        "bytesPerName": 49.83,
+        "absentLookupUs": 0.165,
+        "presentLookupUs": 0.106,
+        "falsePositives": 0,
+        "falseNegatives": 0,
+        "provesAbsence": true
+      }
+    },
+    {
+      "repository": "TCKDB_v2",
+      "uniqueRoutableNames": 49165,
+      "measurement": {
+        "buildMs": 5.15,
+        "inMemoryStringBytes": 3230564,
+        "bytesPerName": 65.71,
+        "absentLookupUs": 0.059,
+        "presentLookupUs": 0.044,
+        "falsePositives": 0,
+        "falseNegatives": 0,
+        "provesAbsence": true
+      }
+    },
+    {
+      "repository": "sympy__sympy-12419",
+      "uniqueRoutableNames": 39787,
+      "measurement": {
+        "buildMs": 3.57,
+        "inMemoryStringBytes": 1620919,
+        "bytesPerName": 40.74,
+        "absentLookupUs": 0.046,
+        "presentLookupUs": 0.028,
+        "falsePositives": 0,
+        "falseNegatives": 0,
+        "provesAbsence": true
+      }
+    },
+    {
+      "repository": "psf__requests-1142",
+      "uniqueRoutableNames": 1336,
+      "measurement": {
+        "buildMs": 0.16,
+        "inMemoryStringBytes": 51132,
+        "bytesPerName": 38.27,
+        "absentLookupUs": 0.034,
+        "presentLookupUs": 0.012,
+        "falsePositives": 0,
+        "falseNegatives": 0,
+        "provesAbsence": true
+      }
+    }
+  ],
+  "shipped": false,
+  "rejectedBecause": "Exact and fastest to query, but 38-66 bytes per name means ~3 MB for TCKDB alone and gigabytes across a large workspace, held eagerly to answer one question about one name."
+}

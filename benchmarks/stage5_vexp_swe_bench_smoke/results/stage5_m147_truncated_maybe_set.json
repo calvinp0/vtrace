@@ -1,0 +1,58 @@
+{
+  "schemaVersion": "stage5.m147.truncated-maybe-set.v1",
+  "milestone": "M147-F",
+  "question": "when the scan bound cannot reach every eligible member, is the uniqueness claim withheld?",
+  "requirement": "Any member the scan could not reach is UNKNOWN, and one unknown member withholds the claim. Raising the bound is what buys the answer; the bound never buys it by itself.",
+  "members": 12,
+  "symbol": "LastMemberOnly",
+  "bounds": {
+    "bound_1": {
+      "bound": 1,
+      "status": "no_match",
+      "selected": [],
+      "proofStatus": "unproven",
+      "unknownCount": 11,
+      "reposPresenceScanned": 1,
+      "claimsUniqueness": false
+    },
+    "bound_4": {
+      "bound": 4,
+      "status": "no_match",
+      "selected": [],
+      "proofStatus": "unproven",
+      "unknownCount": 8,
+      "reposPresenceScanned": 4,
+      "claimsUniqueness": false
+    },
+    "bound_8": {
+      "bound": 8,
+      "status": "no_match",
+      "selected": [],
+      "proofStatus": "unproven",
+      "unknownCount": 4,
+      "reposPresenceScanned": 8,
+      "claimsUniqueness": false
+    },
+    "bound_11": {
+      "bound": 11,
+      "status": "no_match",
+      "selected": [],
+      "proofStatus": "unproven",
+      "unknownCount": 1,
+      "reposPresenceScanned": 11,
+      "claimsUniqueness": false
+    },
+    "bound_12": {
+      "bound": 12,
+      "status": "selected",
+      "selected": [
+        "repo-11"
+      ],
+      "proofStatus": "unique",
+      "unknownCount": 0,
+      "reposPresenceScanned": 12,
+      "claimsUniqueness": true
+    }
+  },
+  "claimsUniquenessWhileTruncated": 0
+}

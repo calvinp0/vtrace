@@ -1,0 +1,127 @@
+{
+  "schemaVersion": "stage5.m147.preservation.v1",
+  "milestone": "M147-K",
+  "fullSuite": {
+    "pass": 4411,
+    "fail": 0,
+    "skip": 49,
+    "files": 272,
+    "durationSeconds": 147.6
+  },
+  "typechecks": {
+    "src": "clean",
+    "benchmarks": "clean"
+  },
+  "suites": [
+    {
+      "area": "workspace routing (M145/M146/M147)",
+      "path": "src/workspace",
+      "pass": 129,
+      "fail": 0
+    },
+    {
+      "area": "access-path migration (M147)",
+      "path": "src/access",
+      "pass": 9,
+      "fail": 0
+    },
+    {
+      "area": "M146-A runtime/index compatibility",
+      "path": "src/indexer/m146RuntimeIndexCompatibility.test.ts",
+      "pass": 17,
+      "fail": 0
+    },
+    {
+      "area": "M146-A anti-drift fingerprint closure",
+      "path": "src/indexer/indexerFingerprintCoverage.test.ts",
+      "pass": 8,
+      "fail": 0
+    },
+    {
+      "area": "M141 readiness dimensions",
+      "path": "src/indexer/indexReadiness.test.ts",
+      "pass": 16,
+      "fail": 0
+    },
+    {
+      "area": "M132 nested-worktree exclusion",
+      "path": "src/indexer/nestedWorktreeIndexing.test.ts",
+      "pass": 6,
+      "fail": 0
+    },
+    {
+      "area": "M145 worktree identity",
+      "path": "src/indexer/worktreeIdentity.test.ts",
+      "pass": 8,
+      "fail": 0
+    },
+    {
+      "area": "M132 worktree routing",
+      "path": "src/mcp/worktreeRouting.test.ts",
+      "pass": 12,
+      "fail": 0
+    }
+  ],
+  "milestoneClaims": [
+    {
+      "milestone": "M146-A",
+      "claim": "query-only changes reuse indexes; producer changes invalidate",
+      "status": "PRESERVED",
+      "evidence": "Routing and proof logic are query-time and enter no fingerprint. The access-path module lives outside src/indexer and src/db and is not imported by the index write path, so the anti-drift closure is unchanged and still passes (8/8)."
+    },
+    {
+      "milestone": "M146-A",
+      "claim": "derivation-incompatible index may not provide deep routing evidence",
+      "status": "STRENGTHENED",
+      "evidence": "It could not supply PRESENT before; under M147 it also cannot supply ABSENT. stage5_m147_stale_repo_presence_guard.json, stage5_m147_summary_freshness.json."
+    },
+    {
+      "milestone": "M146-B",
+      "claim": "routing tiers unchanged, no blended score, no tiebreak",
+      "status": "PRESERVED",
+      "evidence": "Tier table and TIER_ORDER untouched. The proof gates the exact-symbol verdict; it never ranks or orders repositories."
+    },
+    {
+      "milestone": "M146-B",
+      "claim": "single-repository productContext parity",
+      "status": "PRESERVED",
+      "evidence": "Structural: no production module outside src/workspace imports the router (asserted by test). Behavioural: paired Frozen50 byte-identical."
+    },
+    {
+      "milestone": "M146-B",
+      "claim": "registration-order invariance",
+      "status": "PRESERVED",
+      "evidence": "stage5_m147_registration_order.json - 1 distinct outcome across 4 permutations on a real 10-member workspace; proof fields identical, not merely the verdict."
+    },
+    {
+      "milestone": "M146-B",
+      "claim": "truncated indexed search fails closed",
+      "status": "PRESERVED",
+      "evidence": "stage5_m147_truncated_maybe_set.json - 0 uniqueness claims while any member was unreached, at bounds 1/4/8/11."
+    },
+    {
+      "milestone": "M145",
+      "claim": "workspace identity, repository/worktree replacement, readiness isolation",
+      "status": "PRESERVED",
+      "evidence": "src/workspace 129/129 including every M145 identity case; presence evidence is scoped to the member whose index answered."
+    },
+    {
+      "milestone": "M144",
+      "claim": "traceback/failure-path routing semantics",
+      "status": "PRESERVED",
+      "evidence": "Failure evidence routes on absolute-path containment (index-free tier 1), which the proof does not gate. workspaceProductContext.test.ts::a path-routed answer beside a stale member is unaffected."
+    },
+    {
+      "milestone": "M143",
+      "claim": "no fabricated lexical/FTS/TFIDF evidence",
+      "status": "PRESERVED",
+      "evidence": "The proof reports present/absent/unknown and never a score. No presenceScore enters any candidate scorecard."
+    },
+    {
+      "milestone": "M142/M141/M140/M139/M138/M137/M136/M132",
+      "claim": "retrieval, readiness, orchestration, impact, memory, budget and worktree behaviour",
+      "status": "PRESERVED",
+      "evidence": "Full suite 4411 pass / 0 fail; Frozen50 paired 0/50 changed with byte-identical CSVs."
+    }
+  ]
+}

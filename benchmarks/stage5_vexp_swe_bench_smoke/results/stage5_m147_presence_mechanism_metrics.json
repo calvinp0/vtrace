@@ -1,0 +1,349 @@
+{
+  "schemaVersion": "stage5.m147.presence-mechanism-metrics.v1",
+  "milestone": "M147-B",
+  "question": "what does it cost to prove an exact identifier is ABSENT from a repository?",
+  "hashFunction": "SHA-256, big-endian byte order, no seed. Deterministic across runtimes and machines.",
+  "measurementNote": "Lookup costs are per query, warm. Absence is measured separately from presence because a presence probe may exit early while an absence proof cannot.",
+  "repositories": [
+    {
+      "repository": "ARC",
+      "uniqueRoutableNames": 15805,
+      "indexBytes": 102346752,
+      "candidateA_exactStringSet": {
+        "buildMs": 1.58,
+        "inMemoryStringBytes": 787563,
+        "bytesPerName": 49.83,
+        "absentLookupUs": 0.165,
+        "presentLookupUs": 0.106,
+        "falsePositives": 0,
+        "falseNegatives": 0,
+        "provesAbsence": true
+      },
+      "candidateB_hashedSortedSet": {
+        "buildMs": 16.03,
+        "bytes": 126440,
+        "bytesPerName": 8,
+        "absentLookupUs": 1.444,
+        "presentLookupUs": 1.605,
+        "internalDigestCollisions": 0,
+        "falseNegatives": 0,
+        "provesAbsence": true,
+        "note": "64-bit SHA-256 prefix. A collision can only ADD a maybe-present, never remove a name."
+      },
+      "candidateC_bloom": [
+        {
+          "bitsPerItem": 8,
+          "hashCount": 5,
+          "buildMs": 19.6,
+          "bytes": 15805,
+          "bytesPerName": 1,
+          "absentLookupUs": 0.561,
+          "presentLookupUs": 0.613,
+          "falseNegatives": 0,
+          "falsePositiveTrials": 20000,
+          "falsePositives": 446,
+          "falsePositiveRate": 0.0223
+        },
+        {
+          "bitsPerItem": 10,
+          "hashCount": 7,
+          "buildMs": 13.04,
+          "bytes": 19757,
+          "bytesPerName": 1.25,
+          "absentLookupUs": 0.575,
+          "presentLookupUs": 0.614,
+          "falseNegatives": 0,
+          "falsePositiveTrials": 20000,
+          "falsePositives": 176,
+          "falsePositiveRate": 0.0088
+        },
+        {
+          "bitsPerItem": 12,
+          "hashCount": 8,
+          "buildMs": 9.38,
+          "bytes": 23708,
+          "bytesPerName": 1.5,
+          "absentLookupUs": 0.573,
+          "presentLookupUs": 0.683,
+          "falseNegatives": 0,
+          "falsePositiveTrials": 20000,
+          "falsePositives": 57,
+          "falsePositiveRate": 0.00285
+        }
+      ],
+      "candidateG_directDbProbe": {
+        "openMs": 0.141,
+        "unindexed": {
+          "absentUs": 1332.51,
+          "presentUs": 601.63,
+          "queryPlan": "SCAN symbols"
+        },
+        "indexed": {
+          "absentUs": 3.169,
+          "presentUs": 3.469,
+          "queryPlan": "MULTI-INDEX OR / SEARCH USING INDEX",
+          "indexBuildMs": 6.7,
+          "addedBytes": 958464
+        },
+        "falsePositives": 0,
+        "falseNegatives": 0,
+        "provesAbsence": true
+      }
+    },
+    {
+      "repository": "TCKDB_v2",
+      "uniqueRoutableNames": 49165,
+      "indexBytes": 564715520,
+      "candidateA_exactStringSet": {
+        "buildMs": 5.15,
+        "inMemoryStringBytes": 3230564,
+        "bytesPerName": 65.71,
+        "absentLookupUs": 0.059,
+        "presentLookupUs": 0.044,
+        "falsePositives": 0,
+        "falseNegatives": 0,
+        "provesAbsence": true
+      },
+      "candidateB_hashedSortedSet": {
+        "buildMs": 41.8,
+        "bytes": 393320,
+        "bytesPerName": 8,
+        "absentLookupUs": 1.185,
+        "presentLookupUs": 1.104,
+        "internalDigestCollisions": 0,
+        "falseNegatives": 0,
+        "provesAbsence": true,
+        "note": "64-bit SHA-256 prefix. A collision can only ADD a maybe-present, never remove a name."
+      },
+      "candidateC_bloom": [
+        {
+          "bitsPerItem": 8,
+          "hashCount": 5,
+          "buildMs": 37.59,
+          "bytes": 49165,
+          "bytesPerName": 1,
+          "absentLookupUs": 0.826,
+          "presentLookupUs": 1.08,
+          "falseNegatives": 0,
+          "falsePositiveTrials": 20000,
+          "falsePositives": 432,
+          "falsePositiveRate": 0.0216
+        },
+        {
+          "bitsPerItem": 10,
+          "hashCount": 7,
+          "buildMs": 96.08,
+          "bytes": 61457,
+          "bytesPerName": 1.25,
+          "absentLookupUs": 0.593,
+          "presentLookupUs": 0.829,
+          "falseNegatives": 0,
+          "falsePositiveTrials": 20000,
+          "falsePositives": 181,
+          "falsePositiveRate": 0.00905
+        },
+        {
+          "bitsPerItem": 12,
+          "hashCount": 8,
+          "buildMs": 37.56,
+          "bytes": 73748,
+          "bytesPerName": 1.5,
+          "absentLookupUs": 3.601,
+          "presentLookupUs": 0.745,
+          "falseNegatives": 0,
+          "falsePositiveTrials": 20000,
+          "falsePositives": 53,
+          "falsePositiveRate": 0.00265
+        }
+      ],
+      "candidateG_directDbProbe": {
+        "openMs": 0.047,
+        "unindexed": {
+          "absentUs": 4974.08,
+          "presentUs": 2439.27,
+          "queryPlan": "SCAN symbols"
+        },
+        "indexed": {
+          "absentUs": 3.192,
+          "presentUs": 3.767,
+          "queryPlan": "MULTI-INDEX OR / SEARCH USING INDEX",
+          "indexBuildMs": 23.2,
+          "addedBytes": 3883008
+        },
+        "falsePositives": 0,
+        "falseNegatives": 0,
+        "provesAbsence": true
+      }
+    },
+    {
+      "repository": "sympy__sympy-12419",
+      "uniqueRoutableNames": 39787,
+      "indexBytes": 77660160,
+      "candidateA_exactStringSet": {
+        "buildMs": 3.57,
+        "inMemoryStringBytes": 1620919,
+        "bytesPerName": 40.74,
+        "absentLookupUs": 0.046,
+        "presentLookupUs": 0.028,
+        "falsePositives": 0,
+        "falseNegatives": 0,
+        "provesAbsence": true
+      },
+      "candidateB_hashedSortedSet": {
+        "buildMs": 30.66,
+        "bytes": 318296,
+        "bytesPerName": 8,
+        "absentLookupUs": 0.961,
+        "presentLookupUs": 1.006,
+        "internalDigestCollisions": 0,
+        "falseNegatives": 0,
+        "provesAbsence": true,
+        "note": "64-bit SHA-256 prefix. A collision can only ADD a maybe-present, never remove a name."
+      },
+      "candidateC_bloom": [
+        {
+          "bitsPerItem": 8,
+          "hashCount": 5,
+          "buildMs": 35.48,
+          "bytes": 39787,
+          "bytesPerName": 1,
+          "absentLookupUs": 0.576,
+          "presentLookupUs": 0.69,
+          "falseNegatives": 0,
+          "falsePositiveTrials": 20000,
+          "falsePositives": 419,
+          "falsePositiveRate": 0.02095
+        },
+        {
+          "bitsPerItem": 10,
+          "hashCount": 7,
+          "buildMs": 33.27,
+          "bytes": 49734,
+          "bytesPerName": 1.25,
+          "absentLookupUs": 0.552,
+          "presentLookupUs": 0.729,
+          "falseNegatives": 0,
+          "falsePositiveTrials": 20000,
+          "falsePositives": 145,
+          "falsePositiveRate": 0.00725
+        },
+        {
+          "bitsPerItem": 12,
+          "hashCount": 8,
+          "buildMs": 34.1,
+          "bytes": 59681,
+          "bytesPerName": 1.5,
+          "absentLookupUs": 0.62,
+          "presentLookupUs": 0.824,
+          "falseNegatives": 0,
+          "falsePositiveTrials": 20000,
+          "falsePositives": 43,
+          "falsePositiveRate": 0.00215
+        }
+      ],
+      "candidateG_directDbProbe": {
+        "openMs": 0.03,
+        "unindexed": {
+          "absentUs": 3509.53,
+          "presentUs": 1365.92,
+          "queryPlan": "SCAN symbols"
+        },
+        "indexed": {
+          "absentUs": 3.132,
+          "presentUs": 3.737,
+          "queryPlan": "MULTI-INDEX OR / SEARCH USING INDEX",
+          "indexBuildMs": 14.2,
+          "addedBytes": 2072576
+        },
+        "falsePositives": 0,
+        "falseNegatives": 0,
+        "provesAbsence": true
+      }
+    },
+    {
+      "repository": "psf__requests-1142",
+      "uniqueRoutableNames": 1336,
+      "indexBytes": 3825664,
+      "candidateA_exactStringSet": {
+        "buildMs": 0.16,
+        "inMemoryStringBytes": 51132,
+        "bytesPerName": 38.27,
+        "absentLookupUs": 0.034,
+        "presentLookupUs": 0.012,
+        "falsePositives": 0,
+        "falseNegatives": 0,
+        "provesAbsence": true
+      },
+      "candidateB_hashedSortedSet": {
+        "buildMs": 1.13,
+        "bytes": 10688,
+        "bytesPerName": 8,
+        "absentLookupUs": 1.025,
+        "presentLookupUs": 1.054,
+        "internalDigestCollisions": 0,
+        "falseNegatives": 0,
+        "provesAbsence": true,
+        "note": "64-bit SHA-256 prefix. A collision can only ADD a maybe-present, never remove a name."
+      },
+      "candidateC_bloom": [
+        {
+          "bitsPerItem": 8,
+          "hashCount": 5,
+          "buildMs": 1.02,
+          "bytes": 1336,
+          "bytesPerName": 1,
+          "absentLookupUs": 0.511,
+          "presentLookupUs": 0.562,
+          "falseNegatives": 0,
+          "falsePositiveTrials": 20000,
+          "falsePositives": 437,
+          "falsePositiveRate": 0.02185
+        },
+        {
+          "bitsPerItem": 10,
+          "hashCount": 7,
+          "buildMs": 0.8,
+          "bytes": 1670,
+          "bytesPerName": 1.25,
+          "absentLookupUs": 0.581,
+          "presentLookupUs": 0.68,
+          "falseNegatives": 0,
+          "falsePositiveTrials": 20000,
+          "falsePositives": 168,
+          "falsePositiveRate": 0.0084
+        },
+        {
+          "bitsPerItem": 12,
+          "hashCount": 8,
+          "buildMs": 0.9,
+          "bytes": 2004,
+          "bytesPerName": 1.5,
+          "absentLookupUs": 0.52,
+          "presentLookupUs": 0.667,
+          "falseNegatives": 0,
+          "falsePositiveTrials": 20000,
+          "falsePositives": 60,
+          "falsePositiveRate": 0.003
+        }
+      ],
+      "candidateG_directDbProbe": {
+        "openMs": 0.038,
+        "unindexed": {
+          "absentUs": 41.88,
+          "presentUs": 21.28,
+          "queryPlan": "SCAN symbols"
+        },
+        "indexed": {
+          "absentUs": 2.964,
+          "presentUs": 3.029,
+          "queryPlan": "MULTI-INDEX OR / SEARCH USING INDEX",
+          "indexBuildMs": 0.4,
+          "addedBytes": 73728
+        },
+        "falsePositives": 0,
+        "falseNegatives": 0,
+        "provesAbsence": true
+      }
+    }
+  ]
+}

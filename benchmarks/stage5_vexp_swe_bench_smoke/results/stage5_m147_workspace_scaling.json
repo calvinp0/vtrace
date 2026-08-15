@@ -1,0 +1,543 @@
+{
+  "schemaVersion": "stage5.m147.workspace-scaling.v1",
+  "milestone": "M147-B",
+  "question": "is a direct membership probe across every ready index cheap enough to replace a truncated deep search?",
+  "method": "A real vtrace index (psf__requests-1142) replicated N times. Each sweep opens every member, asks one exact-name membership question, and closes. Nothing is cached between sweeps.",
+  "storageNote": "Measured on both a disk-backed ext4 filesystem and tmpfs, because os.tmpdir() is tmpfs on this machine and would otherwise flatter the result.",
+  "sourceIndex": {
+    "path": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/psf__requests-1142/.vtrace/index.sqlite",
+    "bytes": 3825664
+  },
+  "openCostVersusIndexSize": [
+    {
+      "repository": "ARC",
+      "indexBytes": 102346752,
+      "openMs": 0.061
+    },
+    {
+      "repository": "TCKDB_v2",
+      "indexBytes": 564715520,
+      "openMs": 0.02
+    },
+    {
+      "repository": "psf__requests-1142",
+      "indexBytes": 3825664,
+      "openMs": 0.023
+    }
+  ],
+  "measurements": [
+    {
+      "storage": "disk_ext4",
+      "nameIndexPresent": false,
+      "readyRepositories": 1,
+      "indexBytesEach": 3825664,
+      "totalIndexBytes": 3825664,
+      "absentSweep": {
+        "openMs": 0.04,
+        "queryMs": 0.35,
+        "closeMs": 0.03,
+        "totalMs": 0.41,
+        "hits": 0
+      },
+      "absentSweepFirst": {
+        "openMs": 0.26,
+        "queryMs": 0.65,
+        "closeMs": 0.1,
+        "totalMs": 1.01,
+        "hits": 0
+      },
+      "presentSweep": {
+        "openMs": 0.03,
+        "queryMs": 0.21,
+        "closeMs": 0.02,
+        "totalMs": 0.26,
+        "hits": 1
+      },
+      "absentUsPerRepository": 410
+    },
+    {
+      "storage": "disk_ext4",
+      "nameIndexPresent": false,
+      "readyRepositories": 10,
+      "indexBytesEach": 3825664,
+      "totalIndexBytes": 38256640,
+      "absentSweep": {
+        "openMs": 0.14,
+        "queryMs": 2.75,
+        "closeMs": 0.2,
+        "totalMs": 3.08,
+        "hits": 0
+      },
+      "absentSweepFirst": {
+        "openMs": 0.25,
+        "queryMs": 3.94,
+        "closeMs": 0.24,
+        "totalMs": 4.44,
+        "hits": 0
+      },
+      "presentSweep": {
+        "openMs": 0.11,
+        "queryMs": 1.65,
+        "closeMs": 0.17,
+        "totalMs": 1.93,
+        "hits": 10
+      },
+      "absentUsPerRepository": 308
+    },
+    {
+      "storage": "disk_ext4",
+      "nameIndexPresent": false,
+      "readyRepositories": 100,
+      "indexBytesEach": 3825664,
+      "totalIndexBytes": 382566400,
+      "absentSweep": {
+        "openMs": 1.57,
+        "queryMs": 29.77,
+        "closeMs": 2.95,
+        "totalMs": 34.29,
+        "hits": 0
+      },
+      "absentSweepFirst": {
+        "openMs": 10.27,
+        "queryMs": 41.47,
+        "closeMs": 2.85,
+        "totalMs": 54.59,
+        "hits": 0
+      },
+      "presentSweep": {
+        "openMs": 1.38,
+        "queryMs": 17.46,
+        "closeMs": 2.33,
+        "totalMs": 21.17,
+        "hits": 100
+      },
+      "absentUsPerRepository": 342.9
+    },
+    {
+      "storage": "disk_ext4",
+      "nameIndexPresent": false,
+      "readyRepositories": 1000,
+      "indexBytesEach": 3825664,
+      "totalIndexBytes": 3825664000,
+      "absentSweep": {
+        "openMs": 12.53,
+        "queryMs": 270.99,
+        "closeMs": 27.75,
+        "totalMs": 311.28,
+        "hits": 0
+      },
+      "absentSweepFirst": {
+        "openMs": 60.67,
+        "queryMs": 382.63,
+        "closeMs": 25.55,
+        "totalMs": 468.85,
+        "hits": 0
+      },
+      "presentSweep": {
+        "openMs": 12.44,
+        "queryMs": 169.46,
+        "closeMs": 31.89,
+        "totalMs": 213.79,
+        "hits": 1000
+      },
+      "absentUsPerRepository": 311.28
+    },
+    {
+      "storage": "disk_ext4",
+      "nameIndexPresent": true,
+      "readyRepositories": 1,
+      "indexBytesEach": 3825664,
+      "totalIndexBytes": 3825664,
+      "absentSweep": {
+        "openMs": 0.02,
+        "queryMs": 0.18,
+        "closeMs": 0.02,
+        "totalMs": 0.22,
+        "hits": 0
+      },
+      "absentSweepFirst": {
+        "openMs": 0.04,
+        "queryMs": 0.29,
+        "closeMs": 0.02,
+        "totalMs": 0.35,
+        "hits": 0
+      },
+      "presentSweep": {
+        "openMs": 0.02,
+        "queryMs": 0.19,
+        "closeMs": 0.02,
+        "totalMs": 0.23,
+        "hits": 1
+      },
+      "absentUsPerRepository": 220
+    },
+    {
+      "storage": "disk_ext4",
+      "nameIndexPresent": true,
+      "readyRepositories": 10,
+      "indexBytesEach": 3825664,
+      "totalIndexBytes": 38256640,
+      "absentSweep": {
+        "openMs": 0.12,
+        "queryMs": 1.56,
+        "closeMs": 0.15,
+        "totalMs": 1.83,
+        "hits": 0
+      },
+      "absentSweepFirst": {
+        "openMs": 0.18,
+        "queryMs": 2.21,
+        "closeMs": 0.17,
+        "totalMs": 2.57,
+        "hits": 0
+      },
+      "presentSweep": {
+        "openMs": 0.1,
+        "queryMs": 1.49,
+        "closeMs": 0.15,
+        "totalMs": 1.74,
+        "hits": 10
+      },
+      "absentUsPerRepository": 183
+    },
+    {
+      "storage": "disk_ext4",
+      "nameIndexPresent": true,
+      "readyRepositories": 100,
+      "indexBytesEach": 3825664,
+      "totalIndexBytes": 382566400,
+      "absentSweep": {
+        "openMs": 1.31,
+        "queryMs": 16.18,
+        "closeMs": 2.49,
+        "totalMs": 19.98,
+        "hits": 0
+      },
+      "absentSweepFirst": {
+        "openMs": 2.67,
+        "queryMs": 18.24,
+        "closeMs": 3.63,
+        "totalMs": 24.55,
+        "hits": 0
+      },
+      "presentSweep": {
+        "openMs": 1.46,
+        "queryMs": 15.27,
+        "closeMs": 2.08,
+        "totalMs": 18.81,
+        "hits": 100
+      },
+      "absentUsPerRepository": 199.8
+    },
+    {
+      "storage": "disk_ext4",
+      "nameIndexPresent": true,
+      "readyRepositories": 1000,
+      "indexBytesEach": 3825664,
+      "totalIndexBytes": 3825664000,
+      "absentSweep": {
+        "openMs": 21.1,
+        "queryMs": 162.33,
+        "closeMs": 22.7,
+        "totalMs": 206.14,
+        "hits": 0
+      },
+      "absentSweepFirst": {
+        "openMs": 27.83,
+        "queryMs": 181.14,
+        "closeMs": 30.61,
+        "totalMs": 239.58,
+        "hits": 0
+      },
+      "presentSweep": {
+        "openMs": 14.8,
+        "queryMs": 155.73,
+        "closeMs": 22.95,
+        "totalMs": 193.48,
+        "hits": 1000
+      },
+      "absentUsPerRepository": 206.14
+    },
+    {
+      "storage": "tmpfs",
+      "nameIndexPresent": false,
+      "readyRepositories": 1,
+      "indexBytesEach": 3825664,
+      "totalIndexBytes": 3825664,
+      "absentSweep": {
+        "openMs": 0.03,
+        "queryMs": 0.32,
+        "closeMs": 0.02,
+        "totalMs": 0.37,
+        "hits": 0
+      },
+      "absentSweepFirst": {
+        "openMs": 0.05,
+        "queryMs": 0.62,
+        "closeMs": 0.04,
+        "totalMs": 0.72,
+        "hits": 0
+      },
+      "presentSweep": {
+        "openMs": 0.02,
+        "queryMs": 0.2,
+        "closeMs": 0.02,
+        "totalMs": 0.23,
+        "hits": 1
+      },
+      "absentUsPerRepository": 370
+    },
+    {
+      "storage": "tmpfs",
+      "nameIndexPresent": false,
+      "readyRepositories": 10,
+      "indexBytesEach": 3825664,
+      "totalIndexBytes": 38256640,
+      "absentSweep": {
+        "openMs": 0.16,
+        "queryMs": 3.46,
+        "closeMs": 0.35,
+        "totalMs": 3.97,
+        "hits": 0
+      },
+      "absentSweepFirst": {
+        "openMs": 0.24,
+        "queryMs": 4.54,
+        "closeMs": 0.37,
+        "totalMs": 5.15,
+        "hits": 0
+      },
+      "presentSweep": {
+        "openMs": 0.18,
+        "queryMs": 1.96,
+        "closeMs": 0.17,
+        "totalMs": 2.32,
+        "hits": 10
+      },
+      "absentUsPerRepository": 397
+    },
+    {
+      "storage": "tmpfs",
+      "nameIndexPresent": false,
+      "readyRepositories": 100,
+      "indexBytesEach": 3825664,
+      "totalIndexBytes": 382566400,
+      "absentSweep": {
+        "openMs": 1.42,
+        "queryMs": 29.24,
+        "closeMs": 4.14,
+        "totalMs": 34.8,
+        "hits": 0
+      },
+      "absentSweepFirst": {
+        "openMs": 2.51,
+        "queryMs": 34,
+        "closeMs": 5.77,
+        "totalMs": 42.28,
+        "hits": 0
+      },
+      "presentSweep": {
+        "openMs": 1.41,
+        "queryMs": 18.79,
+        "closeMs": 3.17,
+        "totalMs": 23.38,
+        "hits": 100
+      },
+      "absentUsPerRepository": 348
+    },
+    {
+      "storage": "tmpfs",
+      "nameIndexPresent": false,
+      "readyRepositories": 1000,
+      "indexBytesEach": 3825664,
+      "totalIndexBytes": 3825664000,
+      "absentSweep": {
+        "openMs": 14.77,
+        "queryMs": 288.67,
+        "closeMs": 30.34,
+        "totalMs": 333.78,
+        "hits": 0
+      },
+      "absentSweepFirst": {
+        "openMs": 21.58,
+        "queryMs": 382.12,
+        "closeMs": 28.99,
+        "totalMs": 432.7,
+        "hits": 0
+      },
+      "presentSweep": {
+        "openMs": 13.29,
+        "queryMs": 172.96,
+        "closeMs": 28.4,
+        "totalMs": 214.65,
+        "hits": 1000
+      },
+      "absentUsPerRepository": 333.78
+    },
+    {
+      "storage": "tmpfs",
+      "nameIndexPresent": true,
+      "readyRepositories": 1,
+      "indexBytesEach": 3825664,
+      "totalIndexBytes": 3825664,
+      "absentSweep": {
+        "openMs": 0.02,
+        "queryMs": 0.2,
+        "closeMs": 0.02,
+        "totalMs": 0.23,
+        "hits": 0
+      },
+      "absentSweepFirst": {
+        "openMs": 0.02,
+        "queryMs": 0.22,
+        "closeMs": 0.02,
+        "totalMs": 0.26,
+        "hits": 0
+      },
+      "presentSweep": {
+        "openMs": 0.02,
+        "queryMs": 0.18,
+        "closeMs": 0.01,
+        "totalMs": 0.21,
+        "hits": 1
+      },
+      "absentUsPerRepository": 230
+    },
+    {
+      "storage": "tmpfs",
+      "nameIndexPresent": true,
+      "readyRepositories": 10,
+      "indexBytesEach": 3825664,
+      "totalIndexBytes": 38256640,
+      "absentSweep": {
+        "openMs": 0.12,
+        "queryMs": 1.71,
+        "closeMs": 0.18,
+        "totalMs": 2.01,
+        "hits": 0
+      },
+      "absentSweepFirst": {
+        "openMs": 0.16,
+        "queryMs": 1.96,
+        "closeMs": 0.19,
+        "totalMs": 2.31,
+        "hits": 0
+      },
+      "presentSweep": {
+        "openMs": 0.14,
+        "queryMs": 1.69,
+        "closeMs": 0.18,
+        "totalMs": 2.01,
+        "hits": 10
+      },
+      "absentUsPerRepository": 201
+    },
+    {
+      "storage": "tmpfs",
+      "nameIndexPresent": true,
+      "readyRepositories": 100,
+      "indexBytesEach": 3825664,
+      "totalIndexBytes": 382566400,
+      "absentSweep": {
+        "openMs": 1.39,
+        "queryMs": 15.91,
+        "closeMs": 2.17,
+        "totalMs": 19.46,
+        "hits": 0
+      },
+      "absentSweepFirst": {
+        "openMs": 2.19,
+        "queryMs": 15.76,
+        "closeMs": 2.72,
+        "totalMs": 20.67,
+        "hits": 0
+      },
+      "presentSweep": {
+        "openMs": 1.04,
+        "queryMs": 15.44,
+        "closeMs": 2.64,
+        "totalMs": 19.12,
+        "hits": 100
+      },
+      "absentUsPerRepository": 194.6
+    },
+    {
+      "storage": "tmpfs",
+      "nameIndexPresent": true,
+      "readyRepositories": 1000,
+      "indexBytesEach": 3825664,
+      "totalIndexBytes": 3825664000,
+      "absentSweep": {
+        "openMs": 15.35,
+        "queryMs": 159.41,
+        "closeMs": 25.2,
+        "totalMs": 199.97,
+        "hits": 0
+      },
+      "absentSweepFirst": {
+        "openMs": 19.13,
+        "queryMs": 170.52,
+        "closeMs": 19.49,
+        "totalMs": 209.14,
+        "hits": 0
+      },
+      "presentSweep": {
+        "openMs": 13.92,
+        "queryMs": 153.14,
+        "closeMs": 23.58,
+        "totalMs": 190.64,
+        "hits": 1000
+      },
+      "absentUsPerRepository": 199.97
+    }
+  ],
+  "largeRepositoryWorkspace": {
+    "question": "does the improvement hold when every ready member is a real large repository rather than a small one?",
+    "sourceIndex": {
+      "repository": "ARC",
+      "path": "/home/calvin/code/ARC/.vtrace/index.sqlite",
+      "bytes": 102346752,
+      "uniqueRoutableNames": 15805
+    },
+    "storage": "disk_ext4",
+    "measurements": [
+      {
+        "nameIndexPresent": false,
+        "readyRepositories": 10,
+        "indexBytesEach": 102346752,
+        "openMs": 0.64,
+        "absentQueryMs": 26.14,
+        "usPerRepository": 2614.2,
+        "hits": 0
+      },
+      {
+        "nameIndexPresent": false,
+        "readyRepositories": 100,
+        "indexBytesEach": 102346752,
+        "openMs": 688.95,
+        "absentQueryMs": 7723.37,
+        "usPerRepository": 77233.7,
+        "hits": 0
+      },
+      {
+        "nameIndexPresent": true,
+        "readyRepositories": 10,
+        "indexBytesEach": 102346752,
+        "openMs": 0.26,
+        "absentQueryMs": 2.09,
+        "usPerRepository": 209.1,
+        "hits": 0
+      },
+      {
+        "nameIndexPresent": true,
+        "readyRepositories": 100,
+        "indexBytesEach": 102346752,
+        "openMs": 15.15,
+        "absentQueryMs": 20.66,
+        "usPerRepository": 206.6,
+        "hits": 0
+      }
+    ],
+    "finding": "Unindexed absence cost degrades superlinearly once the working set exceeds page cache: 2.6 ms/repo at 10 members, 77 ms/repo at 100. The indexed path is flat at ~207 us/repo. At 100 ARC-sized ready members that is 7723 ms versus 21 ms."
+  }
+}

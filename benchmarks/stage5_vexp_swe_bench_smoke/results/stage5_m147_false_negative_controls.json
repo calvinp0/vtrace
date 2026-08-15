@@ -1,0 +1,33 @@
+{
+  "schemaVersion": "stage5.m147.false-negative-controls.v1",
+  "milestone": "M147-B",
+  "question": "can the membership probe ever report ABSENT for a name the repository defines?",
+  "requirement": "Zero false negatives, measured over the entire name population rather than a sample. One false negative is one false uniqueness claim.",
+  "method": "Every distinct local_name and fq_name in the repository is queried back through the exact membership statement routing uses. Near-miss absent names (suffixed, upper-cased, and SQL wildcard characters) check the opposite direction.",
+  "repositories": [
+    {
+      "repository": "ARC",
+      "accessPath": "indexed",
+      "namesQueried": 15805,
+      "falseNegatives": 0,
+      "falseNegativeExamples": [],
+      "nearMissAbsentQueried": 1004,
+      "falsePositives": 0
+    },
+    {
+      "repository": "TCKDB_v2",
+      "accessPath": "indexed",
+      "namesQueried": 49218,
+      "falseNegatives": 0,
+      "falseNegativeExamples": [],
+      "nearMissAbsentQueried": 1004,
+      "falsePositives": 0
+    }
+  ],
+  "falseNegativesTotal": 0,
+  "falsePositivesTotal": 0,
+  "propertyTests": [
+    "src/workspace/symbolMembership.test.ts::neither access path ever answers 'absent' for a name the repository defines",
+    "src/workspace/symbolMembership.test.ts::both access paths return identical answers across the whole name population"
+  ]
+}

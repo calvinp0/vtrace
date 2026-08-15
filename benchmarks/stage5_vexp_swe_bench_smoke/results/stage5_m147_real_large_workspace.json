@@ -1,0 +1,235 @@
+{
+  "schemaVersion": "stage5.m147.real-large-workspace.v1",
+  "milestone": "M147-H",
+  "question": "does the presence proof resolve real symbol-only queries in a workspace with more ready members than the deep-probe cap?",
+  "deepProbeCap": 8,
+  "members": [
+    {
+      "alias": "psf__requests-5414",
+      "ready": true,
+      "reason": "ready",
+      "staged": true,
+      "indexBytes": 2842624
+    },
+    {
+      "alias": "pallets__flask-5014",
+      "ready": true,
+      "reason": "ready",
+      "staged": true,
+      "indexBytes": 3792896
+    },
+    {
+      "alias": "mwaskom__seaborn-3187",
+      "ready": true,
+      "reason": "ready",
+      "staged": true,
+      "indexBytes": 12009472
+    },
+    {
+      "alias": "pydata__xarray-2905",
+      "ready": true,
+      "reason": "ready",
+      "staged": true,
+      "indexBytes": 21520384
+    },
+    {
+      "alias": "pydata__xarray-3677",
+      "ready": true,
+      "reason": "ready",
+      "staged": true,
+      "indexBytes": 19144704
+    },
+    {
+      "alias": "pydata__xarray-4695",
+      "ready": true,
+      "reason": "ready",
+      "staged": true,
+      "indexBytes": 20983808
+    },
+    {
+      "alias": "pytest-dev__pytest-7432",
+      "ready": true,
+      "reason": "ready",
+      "staged": true,
+      "indexBytes": 14716928
+    },
+    {
+      "alias": "pytest-dev__pytest-10051",
+      "ready": true,
+      "reason": "ready",
+      "staged": true,
+      "indexBytes": 17616896
+    },
+    {
+      "alias": "ARC",
+      "ready": true,
+      "reason": "ready",
+      "staged": false,
+      "indexBytes": 103305216
+    },
+    {
+      "alias": "TCKDB_v2",
+      "ready": true,
+      "reason": "ready",
+      "staged": false,
+      "indexBytes": 585621504
+    }
+  ],
+  "readyMembers": 10,
+  "totalMembers": 10,
+  "exceedsDeepProbeCap": true,
+  "cases": {
+    "arcUniqueSymbol": {
+      "symbol": "ACTIONS_PATTERN",
+      "status": "selected",
+      "selected": [
+        "ARC"
+      ],
+      "reason": "ARC selected on exact_symbol evidence.",
+      "routingMs": 3.19,
+      "reposReady": 10,
+      "reposPresenceScanned": 10,
+      "presenceAccessPaths": {
+        "indexed": 10,
+        "fallback": 0,
+        "unreported": 0
+      },
+      "proof": {
+        "present": [
+          "ARC"
+        ],
+        "unknown": [],
+        "definitelyAbsent": 9,
+        "status": "unique",
+        "owner": "ARC",
+        "reason": "ARC defines this name and all 9 other eligible repositories are proven not to."
+      },
+      "indexesOpened": 10,
+      "independentCensusOwners": [
+        "ARC"
+      ],
+      "expected": "selected(ARC)",
+      "agreesWithCensus": true,
+      "m146BoundSimulation": {
+        "symbol": "ACTIONS_PATTERN",
+        "status": "no_match",
+        "selected": [],
+        "reason": "No repository carries evidence for this request.",
+        "routingMs": 1.83,
+        "reposReady": 10,
+        "reposPresenceScanned": 8,
+        "presenceAccessPaths": {
+          "indexed": 8,
+          "fallback": 0,
+          "unreported": 0
+        },
+        "proof": {
+          "present": [],
+          "unknown": [
+            {
+              "alias": "ARC",
+              "reason": "beyond_scan_bound"
+            },
+            {
+              "alias": "TCKDB_v2",
+              "reason": "beyond_scan_bound"
+            }
+          ],
+          "definitelyAbsent": 8,
+          "status": "unproven",
+          "owner": null,
+          "reason": "No checked repository defines this name, but 2 eligible repository/repositories could not be checked: ARC (beyond_scan_bound), TCKDB_v2 (beyond_scan_bound)."
+        },
+        "indexesOpened": 8
+      }
+    },
+    "tckdbUniqueSymbol": {
+      "symbol": "ACTIVE_MACHINE_REVIEW_PROMPT_VERSION",
+      "status": "selected",
+      "selected": [
+        "TCKDB_v2"
+      ],
+      "reason": "TCKDB_v2 selected on exact_symbol evidence.",
+      "routingMs": 2.13,
+      "reposReady": 10,
+      "reposPresenceScanned": 10,
+      "presenceAccessPaths": {
+        "indexed": 10,
+        "fallback": 0,
+        "unreported": 0
+      },
+      "proof": {
+        "present": [
+          "TCKDB_v2"
+        ],
+        "unknown": [],
+        "definitelyAbsent": 9,
+        "status": "unique",
+        "owner": "TCKDB_v2",
+        "reason": "TCKDB_v2 defines this name and all 9 other eligible repositories are proven not to."
+      },
+      "indexesOpened": 10,
+      "independentCensusOwners": [
+        "TCKDB_v2"
+      ],
+      "expected": "selected(TCKDB_v2)",
+      "agreesWithCensus": true,
+      "m146BoundSimulation": {
+        "symbol": "ACTIVE_MACHINE_REVIEW_PROMPT_VERSION",
+        "status": "no_match",
+        "selected": [],
+        "reason": "No repository carries evidence for this request.",
+        "routingMs": 1.77,
+        "reposReady": 10,
+        "reposPresenceScanned": 8,
+        "presenceAccessPaths": {
+          "indexed": 8,
+          "fallback": 0,
+          "unreported": 0
+        },
+        "proof": {
+          "present": [],
+          "unknown": [
+            {
+              "alias": "ARC",
+              "reason": "beyond_scan_bound"
+            },
+            {
+              "alias": "TCKDB_v2",
+              "reason": "beyond_scan_bound"
+            }
+          ],
+          "definitelyAbsent": 8,
+          "status": "unproven",
+          "owner": null,
+          "reason": "No checked repository defines this name, but 2 eligible repository/repositories could not be checked: ARC (beyond_scan_bound), TCKDB_v2 (beyond_scan_bound)."
+        },
+        "indexesOpened": 8
+      }
+    },
+    "noOwner": {
+      "symbol": "ZzNoRealRepositoryDefinesThisIdentifier",
+      "status": "no_match",
+      "selected": [],
+      "reason": "No repository carries evidence for this request.",
+      "routingMs": 2.14,
+      "reposReady": 10,
+      "reposPresenceScanned": 10,
+      "presenceAccessPaths": {
+        "indexed": 10,
+        "fallback": 0,
+        "unreported": 0
+      },
+      "proof": {
+        "present": [],
+        "unknown": [],
+        "definitelyAbsent": 10,
+        "status": "absent",
+        "owner": null,
+        "reason": "No eligible repository defines this name; all 10 were checked."
+      },
+      "indexesOpened": 10,
+      "expected": "no_match"
+    }
+  }
+}

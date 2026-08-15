@@ -1,0 +1,192 @@
+{
+  "schemaVersion": "stage5.m147.presence-performance.v1",
+  "milestone": "M147-B",
+  "question": "under the router's own access pattern, is the fallback membership query adequate or is a physical name access path required?",
+  "accessPattern": "nominateRepositories caches every probe it opens for the duration of one request, so N members means N SQLite connections held open simultaneously. This measurement reproduces that rather than opening and closing each member in turn.",
+  "membershipSql": "SELECT 1 AS hit FROM symbols WHERE local_name = ? OR fq_name = ? LIMIT 1",
+  "storage": "disk_ext4 (/var/tmp)",
+  "rows": [
+    {
+      "sizeClass": "small",
+      "repository": "psf__requests-1142",
+      "indexBytesEach": 3825664,
+      "readyRepositories": 10,
+      "fallback": {
+        "openMs": 0.66,
+        "absentQueryMs": 4.37,
+        "totalMs": 5.02,
+        "usPerRepository": 502.2,
+        "hits": 0,
+        "peakRssBytes": 60547072,
+        "connectionsHeldOpen": 10
+      },
+      "indexed": {
+        "openMs": 0.41,
+        "absentQueryMs": 2.35,
+        "totalMs": 2.76,
+        "usPerRepository": 276,
+        "hits": 0,
+        "peakRssBytes": 57257984,
+        "connectionsHeldOpen": 10
+      },
+      "answersIdentical": true,
+      "speedup": 1.8
+    },
+    {
+      "sizeClass": "small",
+      "repository": "psf__requests-1142",
+      "indexBytesEach": 3825664,
+      "readyRepositories": 100,
+      "fallback": {
+        "openMs": 15.75,
+        "absentQueryMs": 76,
+        "totalMs": 91.76,
+        "usPerRepository": 917.6,
+        "hits": 0,
+        "peakRssBytes": 119832576,
+        "connectionsHeldOpen": 100
+      },
+      "indexed": {
+        "openMs": 5.83,
+        "absentQueryMs": 38.36,
+        "totalMs": 44.19,
+        "usPerRepository": 441.9,
+        "hits": 0,
+        "peakRssBytes": 95940608,
+        "connectionsHeldOpen": 100
+      },
+      "answersIdentical": true,
+      "speedup": 2.1
+    },
+    {
+      "sizeClass": "small",
+      "repository": "psf__requests-1142",
+      "indexBytesEach": 3825664,
+      "readyRepositories": 1000,
+      "fallback": {
+        "openMs": 77.37,
+        "absentQueryMs": 694.17,
+        "totalMs": 771.54,
+        "usPerRepository": 771.5,
+        "hits": 0,
+        "peakRssBytes": 679940096,
+        "connectionsHeldOpen": 1000
+      },
+      "indexed": {
+        "openMs": 34.73,
+        "absentQueryMs": 319.85,
+        "totalMs": 354.58,
+        "usPerRepository": 354.6,
+        "hits": 0,
+        "peakRssBytes": 627396608,
+        "connectionsHeldOpen": 1000
+      },
+      "answersIdentical": true,
+      "speedup": 2.2
+    },
+    {
+      "sizeClass": "medium",
+      "repository": "sphinx-doc__sphinx-7462",
+      "indexBytesEach": 22253568,
+      "readyRepositories": 10,
+      "fallback": {
+        "openMs": 0.34,
+        "absentQueryMs": 29.33,
+        "totalMs": 29.67,
+        "usPerRepository": 2966.8,
+        "hits": 0,
+        "peakRssBytes": 212885504,
+        "connectionsHeldOpen": 10
+      },
+      "indexed": {
+        "openMs": 0.28,
+        "absentQueryMs": 3.3,
+        "totalMs": 3.58,
+        "usPerRepository": 357.8,
+        "hits": 0,
+        "peakRssBytes": 168067072,
+        "connectionsHeldOpen": 10
+      },
+      "answersIdentical": true,
+      "speedup": 8.3
+    },
+    {
+      "sizeClass": "medium",
+      "repository": "sphinx-doc__sphinx-7462",
+      "indexBytesEach": 22253568,
+      "readyRepositories": 100,
+      "fallback": {
+        "openMs": 3.27,
+        "absentQueryMs": 211.11,
+        "totalMs": 214.39,
+        "usPerRepository": 2143.9,
+        "hits": 0,
+        "peakRssBytes": 341155840,
+        "connectionsHeldOpen": 100
+      },
+      "indexed": {
+        "openMs": 7.46,
+        "absentQueryMs": 27.88,
+        "totalMs": 35.34,
+        "usPerRepository": 353.4,
+        "hits": 0,
+        "peakRssBytes": 246284288,
+        "connectionsHeldOpen": 100
+      },
+      "answersIdentical": true,
+      "speedup": 6.1
+    },
+    {
+      "sizeClass": "large",
+      "repository": "ARC",
+      "indexBytesEach": 102346752,
+      "readyRepositories": 10,
+      "fallback": {
+        "openMs": 0.19,
+        "absentQueryMs": 28.79,
+        "totalMs": 28.98,
+        "usPerRepository": 2898.2,
+        "hits": 0,
+        "peakRssBytes": 219688960,
+        "connectionsHeldOpen": 10
+      },
+      "indexed": {
+        "openMs": 0.34,
+        "absentQueryMs": 2.12,
+        "totalMs": 2.46,
+        "usPerRepository": 245.9,
+        "hits": 0,
+        "peakRssBytes": 206966784,
+        "connectionsHeldOpen": 10
+      },
+      "answersIdentical": true,
+      "speedup": 11.8
+    },
+    {
+      "sizeClass": "large",
+      "repository": "ARC",
+      "indexBytesEach": 102346752,
+      "readyRepositories": 100,
+      "fallback": {
+        "openMs": 862.37,
+        "absentQueryMs": 11088.71,
+        "totalMs": 11951.08,
+        "usPerRepository": 119510.8,
+        "hits": 0,
+        "peakRssBytes": 338329600,
+        "connectionsHeldOpen": 100
+      },
+      "indexed": {
+        "openMs": 37.36,
+        "absentQueryMs": 28.36,
+        "totalMs": 65.72,
+        "usPerRepository": 657.2,
+        "hits": 0,
+        "peakRssBytes": 269512704,
+        "connectionsHeldOpen": 100
+      },
+      "answersIdentical": true,
+      "speedup": 181.8
+    }
+  ]
+}
