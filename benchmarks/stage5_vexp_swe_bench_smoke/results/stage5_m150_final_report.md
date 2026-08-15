@@ -2,190 +2,162 @@
 
 **Verdict: MIXED.**
 
-A → PASS · B → PASS · C → PASS · **D → MIXED** · **E → PASS**.
+A → PASS · B → PASS · C → PASS · **D → MIXED** · E → PASS.
 
-D falls one requirement short: the explicit ARC ordering query still leads with a
-symbol-name accident. §86 names that case exactly ("mechanism_support works but
-explicit ordering query still fails"), so the milestone closes MIXED. Everything
-else in D and all of E is done and measured.
+The capability §79 names is delivered: a definition now enters the candidate pool
+**because of its indexed, subject-aligned mechanism evidence**, when its name
+gives no lexical clue at all. What it does not yet do is *win* — `get_all_families`
+is generated and ranks 24 behind a lexical accident holding the pool maximum. §80's
+first clause names that exactly ("becomes generated but does not become useful
+answer-bearing evidence"), so the milestone closes MIXED.
 
 - M149 predecessor `2aaac750b326478bb3f29576aa1454365d0f734d`
-- checkpoint 1 `ab8e4f02eaacdbcfa8fc56f1b056db232ce1452c`
-- checkpoint 2 `ebc4fda7d42cfe8706e9ee128fe56ec8e5405a83`
-- **final functional `650e916`**
-- Branch `main`, ahead 25, **nothing pushed**, no co-author trailers.
+- checkpoints `ab8e4f02eaacdbcfa8fc56f1b056db232ce1452c` · `ebc4fda7d42cfe8706e9ee128fe56ec8e5405a83` · `650e916fa0b024c1d739615b9a8b5f669fd3429f`
+- **final functional `ed8db5b`**
+- Branch `main`, ahead 27, **nothing pushed**, no co-author trailers.
 
-Functional commits: `09a39e2` · `ee35b05` · `9a81a1c` · `ab8e4f0` · `ebc4fda` ·
-`650e916`. No prior commit rewritten.
-
-**Mechanism weights unchanged** (direct 0.55, partial 0.20, ceiling = direct,
-strongest single fact). **Subject-alignment policy unchanged**. Nothing in this
-phase touched either (§3, §4).
+**Frozen and confirmed unchanged:** mechanism weights (0.55 / 0.20, strongest
+single fact), subject-alignment policy (operand + one-hop provenance, no
+path/class/domain), `mechanism_support` contract (cap 1, exact relations, depth 2),
+statement-slice contract (real source, structural bounds).
 
 ---
 
 ## 1. What this phase added
 
-**Bounded causal support discovery.** `get_all_families` was classified before
-anything was built: `not_generated` — absent from the pool, not ranked-and-dropped
-(§8). So it was a discovery problem, and the fix is a role, not a score.
-
-Seeded only from already-selected pivots carrying mechanism evidence, it follows
-the operand provenance recorded at index time, then one exact `calls` edge:
+An operation-fact candidate lane. It runs the pipeline backwards for one step:
 
 ```
-determine_family
-  --operand_provenance--> get_reaction_family_products
-  --exact_call---------->  get_all_families   (ordering_established, result-bearing)
+declared behavioral operation
+  -> fact kinds that DIRECTLY implement it   (partial kinds may not create candidates)
+  -> the SAME subject-alignment policy       (before admission, never after)
+  -> a bounded few ordinary candidates       (cap 3)
 ```
 
-Measured on ARC: **depth 2, 4 causal edges examined, 4 helpers examined, 1
-eligible, 1 selected, 0 source reads, 2.98 ms.** Caps: seeds 3, depth 2, helpers
-examined 24, selected **1**.
+Admission is **not** selection, a role, or a score. An admitted definition
+competes on the same evidence as everything else and can still lose.
 
-`resultBearing` is the negative control that makes it safe. A helper that sorts a
-list and *returns* it establishes the order its caller consumes; one that sorts a
-list to log it and returns something else does not. Both contain `sorted(...)`.
+**No access index was needed** (§56). `EXPLAIN QUERY PLAN` reports
+`SEARCH ... USING INDEX idx_symbol_mechanism_facts_kind (kind=?)` — an index
+search, 46 of 2566 rows in 0.73 ms on ARC. No capability or migration was invented
+for symmetry.
 
-**The decision slice**, as its own content mode. The statement is now located
-deliberately rather than being present by luck when the whole body fits (§48), and
-a budget-compressed decider delivers the slice instead of a bare signature.
-Slices are real source, never paraphrase (§24).
+One artifact was fixed along the way: an admitted candidate carried `fts = 0` and
+was judged as though its name matched nothing, purely because a different lane
+found it first. It is now scored by the same `rankSearchCandidates` the lexical
+lane uses. That is not a boost — an unrelated definition still scores nothing.
 
-| slice | file lines | deciding line | lines | bytes |
-| --- | --- | --- | --- | --- |
-| `determine_family` decision | 647–650 | **648** | 4 | 171 |
-| `get_all_families` ordering | 765–771 | **769** | 7 | 471 |
+## 2. Scale — measured, bounded, flat (§54, §72)
 
-**Roles stay distinct.** `mechanism_support` is a separate value from
-`orchestration_support`; neither is relabelled (§30, §64).
+| mechanism facts | lookup ms | alignment ms | total ms | facts examined | owners considered | admitted |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 100 | 0.18 | 0.96 | 1.46 | 100 | 64 | 2 |
+| 1,000 | 0.36 | 0.38 | 0.88 | 400 | 64 | 3 |
+| 10,000 | 0.32 | 0.23 | 0.67 | 400 | 64 | 3 |
+| **ARC 2,566** | 0.41 | 0.16 | **0.73** | 38 | 38 | 1 |
+| **TCKDB_v2 2,680** | 0.28 | 0.07 | **0.51** | 64 | 60 | 0 |
 
-## 2. Corpus — four sides, identical fixtures
+Work caps at 400 facts / 64 owners and stops growing; 10,000 facts costs *less*
+than 100. **0 source reads** during lookup, alignment and admission.
 
-Two fixtures were lexically incoherent (a decision documented in terms of
-*entries* whose helper spoke of *candidates*), so queries were being answered by
-accident. The fixtures were fixed rather than the queries reworded toward
-implementation vocabulary (§47), and **all four sides were re-run afterwards**, so
-every column below is comparable.
+## 3. The generation-time negative control (§45, §46, §71)
 
-| metric | M149 | `ab8e4f0` | `ebc4fda` | **final** |
-| --- | --- | --- | --- | --- |
-| correct mechanism lead | 7 | 9 | 9 | **9** |
-| correct Top-1 | 7 | 9 | 9 | **9** |
-| correct Top-3 | 11 | 13 | 13 | **13** |
-| correct anywhere | 13 | 13 | 13 | 13 |
-| missing mechanism | 2 | 2 | 2 | 2 |
-| same-operation wrong-subject **lead** | 0 | 0 | 0 | **0** |
-| same-operation wrong-subject **bonus** | 0 *(no capability)* | **2** | 0 | **0** |
-| negative-control bonus | 0 | 0 | 0 | **0** |
-| negative-control **delivered** | 1 | 0 | 1 | **0** |
-| decision statement visible | 5/9 | 6/9 | 6/9 | 6/9 |
-| **ordering helper visible** | 2/4 | 2/4 | 2/4 | **3/4** |
-| **mechanism support used** | 0 | 0 | 0 | **1** |
-| max support per case | 0 | 0 | 0 | **1** (cap) |
-| module nodes delivered | 0 | 0 | 0 | **0** |
-| mean delivered tokens | 269 | 300 | 304 | 304 |
+The danger was the checkpoint regression reappearing at generation time — every
+Gaussian parser carrying a first-item selection flooding a route-keyword request.
 
-Attribution: `M149 → ab8e4f0` = mechanism capability; `ab8e4f0 → ebc4fda` =
-subject alignment; `ebc4fda → final` = support + slice. Each phase moved exactly
-the rows it was built for and nothing else.
+| query | examined | **rejected** | **admitted** | lead |
+| --- | ---: | ---: | ---: | --- |
+| Gaussian route keywords | 64 | **64** | **0** | `GaussianAdapter._user_requested_verytight` (owner, Top-1 **true**) |
+| ARC precedence/order | 38 | 37 | 1 | — |
+| ARC family selection | 64 | 61 | 3 | `determine_family` |
 
-**Ordering visibility is 3/4, not 4/4, and the denominator is honest** (§38). The
-fourth case is `unhelpful_operand_name`, whose *primary* is not generated either,
-so there is no seed to discover support from. That is a candidate-generation
-limit, not a support limit.
+Representative refusals on the ordering query — correct operation fact, wrong
+subject: `arc/common.py::dfs` (operand `visited`),
+`ARCReaction.get_expected_changing_bonds` (`r_label_dict`),
+`arkane.py::_all_available_years` (`years`). Each carries a genuine
+result-bearing ordering fact and none is about reaction families.
 
-`support_cap` (§19) delivers exactly **1** helper out of five called, with the
-logger, cache, normaliser and auditor all refused. `unknown_ordering` (§20)
-delivers **no** support and claims nothing about ordering.
+## 4. ARC results
 
-## 3. ARC acceptance
+**Ordering query** — `What determines the precedence/order when multiple reaction families match?`
 
-| query | operation | lead | verdict |
-| --- | --- | --- | --- |
-| which reaction family **wins** | `selection` | `determine_family` | **PASS** |
-| how is lookup **cached** | `caching` | `get_reaction_family` | **PASS** |
-| where **stored** on ARCReaction | `storage` | `ARCReaction.family_own_reverse` | **PASS** |
-| where is `determine_family` **defined** | none (suppressed) | `determine_family` | **PASS** |
-| what determines **precedence/order** | `ordering` | `_dihedral_angle` | **FAIL** |
+| symbol | rank | final | lexical | mechanism | source |
+| --- | ---: | ---: | ---: | ---: | --- |
+| `_dihedral_angle` | **1** | 1.9000 | **1.0000** | 0 | symbol |
+| `determine_family` | 3 | 1.7639 | 0.8632 | 0 | lexical |
+| **`get_all_families`** | **24** | 1.0549 | 0.2003 | **0.55** | **`operation_fact`** |
 
-Selection query, final:
+**Generated — which it never was before, and purely from mechanism evidence.**
+But `_dihedral_angle` holds `lexical = 1.0` (the pool maximum) from a file-stem
+coincidence: the query says *families* and *order*, and it lives in
+`linear_utils/families.py`. Closing a 0.85 gap would require either penalising it
+by name — which §25 forbids — or an M142-class lexical-decoy fix that §2–§4
+freeze. **§40 not met.**
 
-| symbol | rank | score | role |
-| --- | --- | --- | --- |
-| `determine_family` | **1** | 2.1245 | **lead pivot**, `mechanism_slice` at line 648 |
-| `get_reaction_family` | 2 | **1.9000 unchanged** | pivot, mechanism **0** |
-| `ARCReaction.family` | 3 | **1.9000 unchanged** | support, mechanism 0 |
-| `get_all_families` | — *(never generated)* | — | **`mechanism_support`**, `mechanism_slice` at line 769 |
+**Selection query preserved exactly** (§41): `determine_family` rank 1 lead pivot
+with the decision slice; `get_reaction_family` rank 2 at **1.9000 unchanged**,
+mechanism 0; `ARCReaction.family` **1.9000 unchanged**; `get_all_families`
+delivered as `mechanism_support`. Cache (§42), accessor (§43) and direct
+identifier (§44) contrasts all hold.
 
-`product_dicts[0]` visible; the ordering → selection relationship is now
-model-visible through the delivered slice
-(`dict.fromkeys(rmg_families)  # de-duplicate, preserving order`). Nothing is
-penalised — the cache helper and accessor hold their predecessor scores exactly.
+## 5. Corpus — five phases, identical fixtures
 
-§43 ✔ · §44 ✔ · §45 ✔ · §46 ✔ · **§47 ✘**.
+| metric | M149 | ab8e4f0 | ebc4fda | 650e916 | **final** |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| correct lead | 7 | 9 | 9 | 9 | **9** |
+| correct Top-3 | 11 | 13 | 13 | 13 | **13** |
+| wrong-subject mechanism bonus | 0* | **2** | 0 | 0 | **0** |
+| wrong-subject candidates admitted | — | — | — | — | **0** |
+| negative-control delivered | 1 | 0 | 1 | 0 | **0** |
+| ordering helper visible | 2/4 | 2/4 | 2/4 | 3/4 | **3/4** |
+| mechanism support delivered | 0 | 0 | 0 | 1 | **1** |
+| module nodes delivered | 0 | 0 | 0 | 0 | **0** |
 
-The ordering query fails for a reason outside this phase's mechanism: `families`
-and `order` match file stems, handing `_dihedral_angle` and
-`get_resonance_bond_orders` `symbol=1`, while `get_all_families` is not generated
-at all. The generic `ordering_query` case **passes** — it leads with the orderer,
-not its consumer — so the operation distinction itself works; ARC's instance is
-blocked upstream in candidate generation.
+\* no mechanism capability. Attribution: capability → alignment → support/slice →
+candidate generation. Nothing regressed at any phase.
 
-## 4. Preservation
+## 6. Preservation and gates
 
 | gate | result |
 | --- | --- |
-| M142 Gaussian route keywords | owner Top-1 **true** (regression stays closed) |
-| M142 normal-mode / reactant-index | unchanged |
-| M142 TS-guess atom order | `anywhere` **true** (gain held) |
-| M142 `which()` / ARC-class controls | unchanged (§50) |
-| M140 module invisibility | **0** delivered `<module>` nodes (§65) |
-| M140 `orchestration_support` | distinct value, not relabelled (§64) |
-| M139 impact | untouched — only exact `calls` used, never potential (§66) |
+| M142 Gaussian route keywords | owner Top-1 **true** |
+| M142 NMD / reactant-index / TS-guess | unchanged (TS-guess gain held) |
+| M142 `which()` + ARC-class controls | unchanged (§48) |
+| M140 module invisibility | **0** `<module>` delivered |
+| M140 role separation | ordinary / `mechanism_support` / `orchestration_support` all distinct |
+| M139 exact relations | only exact `calls`; no potential/reference used |
 | **Frozen50** M149 → final | **0/50**, byte-identical, `provenanceValid=true`, `srcDirty=false` |
 | django / cross_repo_30 | 0/20, 0/30 — 38/44/48/31/2, tokens 1832.4 |
-| **TCKDB same-checkout** | **0/6 leads changed**, 1/6 sets, 0 module nodes |
-| full ≡ incremental / no-op | equivalent and stable (unchanged; retrieval-only phase) |
+| **TCKDB** | **0/6 leads changed**, 1/6 sets, 0 module nodes |
+| derivation fingerprints | **unchanged** — retrieval-only, no schema/capability change |
 | ARC + TCKDB authoritative indexes | **byte-identical** |
 
-Frozen50 remains preservation evidence only (§71): those corpora predate
-mechanism facts. Positive capability evidence is the corpus and the ARC
-contrasts.
+`bun test` **4544 pass / 0 fail / 49 skip**, both typechecks and `git diff --check`
+clean. Ten new candidate-generation tests (wrong-subject refusal, same-file,
+same-class, producer admission, no-provenance refusal, caps, zero source reads,
+direct-kinds-only).
 
 **Changed-case attribution.** Frozen50/django/cross_repo: none. TCKDB: one
-delivered set on *"What determines the order the records are returned in?"* —
-lead unchanged, support slots differ; cause `ordering_precedence_retrieval`;
-classification **NEUTRAL** (no gold standard, lead stable). Corpus movements
-`ebc4fda → final`: ordering visibility 2/4→3/4 and support 0→1, cause
-`mechanism_support`, **IMPROVEMENT**; negative-control delivery 1→0, cause
-`mechanism_support`, **IMPROVEMENT**. No REGRESSION anywhere.
+delivered set on the ordering query, lead unchanged — cause
+`operation_fact_candidate_generation`, **NEUTRAL**. Corpus `650e916 → final`: no
+metric moved; the lane admits candidates that then compete normally. No
+REGRESSION anywhere across all five phases.
 
-**Derivation fingerprints unchanged** — this phase is retrieval-only; no schema
-or capability change (§56).
+## 7. Remaining limitation — one, and it is precise
 
-## 5. Gates
+`get_all_families` is generated and carries correct ordering evidence; it loses to
+a candidate whose `lexical = 1.0` comes from a file-stem coincidence. This is a
+**lexical-decoy** problem of the M142 class, not a mechanism problem: every M150
+lane behaved correctly on this query. Closing it means letting the decoy lose on
+its own evidence — the M142 generic-token down-weighting already does this for
+*name* matches and does not currently cover *path-stem* matches.
 
-`bun test` **4534 pass / 0 fail / 49 skip / 280 files** · `bun run typecheck` and
-`:benchmarks` clean · `git diff --check` clean. Nine new focused support tests
-including the two-hop ARC shape, the unrelated-sort negative control, the
-five-helper crowd, unknown ordering, and the cap.
+That is a self-contained next step and it is the only thing standing between M150
+and PASS.
 
-## 6. Remaining limitations
+## 8. Recommended scope
 
-1. **ARC ordering query** (§47) — the one blocker for D. Needs `get_all_families`
-   generated as a candidate; the operation semantics already work generically.
-2. **Ordering visibility 3/4** — the fourth case needs candidate generation for
-   unhelpfully-named primaries, not more support.
-3. **Two-hop producer chains** (`wrapper()` hiding the real producer) remain
-   unresolved by design; one hop carries every measured real case.
-4. **Dedicated preservation runners** for M139/M141/M146/M147/M148/M149 (§81) were
-   not run individually; they are covered by the full suite, which is not the
-   same claim.
-
-## 7. Recommended next scope
-
-Not M151. One focused piece of work closes M150: make an ordering-fact-carrying
-definition generable for an `ordering` request, so `get_all_families` can lead the
-query that asks what establishes precedence. Everything else D needs now exists,
-is bounded, and is measured.
+Not M151. Extend M142's generic-token lexical down-weighting to path-stem-only
+matches, so a candidate explained solely by a directory name cannot hold the pool
+maximum. Then re-run the ARC ordering acceptance and the §75 preservation runners.
+Everything else M150 needs is built, bounded, measured and preserved.

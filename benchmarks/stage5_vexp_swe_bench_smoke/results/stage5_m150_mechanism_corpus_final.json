@@ -1,9 +1,9 @@
 {
   "schemaVersion": "stage5.m150.mechanism-corpus.v1",
-  "label": "support3",
+  "label": "final2",
   "implementationRoot": "/home/calvin/code/vtrace",
   "corpus": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/fixtures/m150_mechanism_corpus",
-  "indexMs": 847,
+  "indexMs": 792,
   "mechanismFactsIndexed": 25,
   "mechanismCapability": true,
   "summary": {
@@ -22,14 +22,14 @@
     "mechanismSupportUsedCases": 1,
     "maxMechanismSupportPerCase": 1,
     "moduleNodesDelivered": 0,
-    "meanDeliveredTokens": 304
+    "meanDeliveredTokens": 313
   },
   "cases": [
     {
       "id": "backend_vs_frequency",
       "category": "same operation, different subject",
       "query": "How does the system decide which backend wins?",
-      "elapsedMs": 29.99,
+      "elapsedMs": 27.22,
       "lead": "firstsuccess.py::resolve_backend",
       "correctMechanismLead": false,
       "correctTop1": false,
@@ -46,7 +46,7 @@
       "expected": {
         "fqName": "selection.py::choose_backend",
         "rank": 3,
-        "final": 2.0161,
+        "final": 2.0102,
         "mechanismEvidence": 0.55,
         "deliveredAs": "pivot",
         "ordinaryRank": null
@@ -64,19 +64,19 @@
       "ordering": {
         "fqName": "selection.py::matching_backends",
         "rank": 1,
-        "final": 2.1932,
+        "final": 2.1987,
         "mechanismEvidence": 0,
         "deliveredAs": "support",
         "ordinaryRank": null
       },
       "negatives": [],
-      "deliveredTokens": 341
+      "deliveredTokens": 354
     },
     {
       "id": "frequency_not_backend",
       "category": "same operation, subject reversed",
       "query": "How does the parser obtain the first frequency?",
-      "elapsedMs": 6.85,
+      "elapsedMs": 5.91,
       "lead": "mixed.py::first_frequency",
       "correctMechanismLead": false,
       "correctTop1": false,
@@ -116,7 +116,7 @@
       "id": "same_file_worker",
       "category": "same file, different subject",
       "query": "How is it decided which worker takes the next job?",
-      "elapsedMs": 6.95,
+      "elapsedMs": 5.53,
       "lead": "mixed.py::pick_worker",
       "correctMechanismLead": true,
       "correctTop1": true,
@@ -164,7 +164,7 @@
       "id": "same_class_route_keywords",
       "category": "same class, different subject (Gaussian regression shape)",
       "query": "How does the adapter decide which route keywords to emit?",
-      "elapsedMs": 6.45,
+      "elapsedMs": 5.79,
       "lead": "adapters.py::ProgramAdapter.route_keywords",
       "correctMechanismLead": true,
       "correctTop1": true,
@@ -198,13 +198,13 @@
       ],
       "ordering": null,
       "negatives": [],
-      "deliveredTokens": 393
+      "deliveredTokens": 407
     },
     {
       "id": "same_class_cache_control",
       "category": "cache contrast inside the same class",
       "query": "How is the route reused rather than recomputed?",
-      "elapsedMs": 4.34,
+      "elapsedMs": 4.22,
       "lead": "adapters.py::ProgramAdapter.cached_route",
       "correctMechanismLead": true,
       "correctTop1": true,
@@ -235,7 +235,7 @@
       "id": "unhelpful_operand_name",
       "category": "operand name carries no subject; only the producer does",
       "query": "How does the system choose which backend wins?",
-      "elapsedMs": 8.41,
+      "elapsedMs": 7.28,
       "lead": "selection.py::choose_backend",
       "correctMechanismLead": false,
       "correctTop1": false,
@@ -276,13 +276,13 @@
         "ordinaryRank": null
       },
       "negatives": [],
-      "deliveredTokens": 326
+      "deliveredTokens": 339
     },
     {
       "id": "two_hop_producer",
       "category": "two-hop producer chain (measures whether one hop suffices)",
       "query": "How is the backend picked when the choice is made indirectly?",
-      "elapsedMs": 5.48,
+      "elapsedMs": 4.47,
       "lead": "fallbacks.py::select_backend",
       "correctMechanismLead": false,
       "correctTop1": false,
@@ -298,8 +298,8 @@
       "moduleNodesDelivered": 0,
       "expected": {
         "fqName": "twohop.py::indirect_choice",
-        "rank": 2,
-        "final": 1.2963,
+        "rank": 3,
+        "final": 1.3555,
         "mechanismEvidence": 0,
         "deliveredAs": "support",
         "ordinaryRank": null
@@ -307,13 +307,13 @@
       "wrongSubject": [],
       "ordering": null,
       "negatives": [],
-      "deliveredTokens": 195
+      "deliveredTokens": 190
     },
     {
       "id": "sorted_backend_preference",
       "category": "sort-then-first with a real ordering producer",
       "query": "How is the preferred candidate selected?",
-      "elapsedMs": 7.31,
+      "elapsedMs": 5.43,
       "lead": "ordering.py::ordered_candidates",
       "correctMechanismLead": false,
       "correctTop1": false,
@@ -329,8 +329,8 @@
       "moduleNodesDelivered": 0,
       "expected": {
         "fqName": "ordering.py::process",
-        "rank": 11,
-        "final": 1.1393,
+        "rank": 12,
+        "final": 0.8466,
         "mechanismEvidence": 0,
         "deliveredAs": null,
         "ordinaryRank": null
@@ -348,7 +348,7 @@
       "ordering": {
         "fqName": "ordering.py::ordered_candidates",
         "rank": 1,
-        "final": 2.3577,
+        "final": 2.3641,
         "mechanismEvidence": 0.55,
         "deliveredAs": "pivot",
         "ordinaryRank": null
@@ -360,7 +360,7 @@
       "id": "first_success_backend",
       "category": "first-success over two subjects",
       "query": "How does the system decide which backend to use?",
-      "elapsedMs": 6.25,
+      "elapsedMs": 6.44,
       "lead": "firstsuccess.py::resolve_backend",
       "correctMechanismLead": true,
       "correctTop1": true,
@@ -377,7 +377,7 @@
       "expected": {
         "fqName": "firstsuccess.py::resolve_backend",
         "rank": 2,
-        "final": 2.1609,
+        "final": 2.15,
         "mechanismEvidence": 0.55,
         "deliveredAs": "pivot",
         "ordinaryRank": null
@@ -394,13 +394,13 @@
       ],
       "ordering": null,
       "negatives": [],
-      "deliveredTokens": 338
+      "deliveredTokens": 354
     },
     {
       "id": "fallback_backend",
       "category": "two fallback chains, one subject",
       "query": "When does the system fall back to a different backend?",
-      "elapsedMs": 5.31,
+      "elapsedMs": 5.53,
       "lead": "fallbacks.py::select_backend",
       "correctMechanismLead": true,
       "correctTop1": true,
@@ -434,13 +434,13 @@
       ],
       "ordering": null,
       "negatives": [],
-      "deliveredTokens": 375
+      "deliveredTokens": 388
     },
     {
       "id": "priority_backend",
       "category": "two precedence tables",
       "query": "How is precedence between backends determined?",
-      "elapsedMs": 3.32,
+      "elapsedMs": 4.07,
       "lead": "priorities.py::choose_backend_by_priority",
       "correctMechanismLead": true,
       "correctTop1": true,
@@ -474,13 +474,13 @@
       ],
       "ordering": null,
       "negatives": [],
-      "deliveredTokens": 209
+      "deliveredTokens": 224
     },
     {
       "id": "ordering_query",
       "category": "ordering question, not a selection question",
       "query": "What establishes the order the candidates are considered in?",
-      "elapsedMs": 4.33,
+      "elapsedMs": 4.2,
       "lead": "ordering.py::ordered_candidates",
       "correctMechanismLead": true,
       "correctTop1": true,
@@ -505,13 +505,13 @@
       "wrongSubject": [],
       "ordering": null,
       "negatives": [],
-      "deliveredTokens": 342
+      "deliveredTokens": 357
     },
     {
       "id": "unknown_ordering",
       "category": "first-item selection with no local ordering evidence",
       "query": "How is the winning candidate decided when the caller supplies them?",
-      "elapsedMs": 5.99,
+      "elapsedMs": 6.25,
       "lead": "supportcap.py::decide",
       "correctMechanismLead": false,
       "correctTop1": false,
@@ -527,8 +527,8 @@
       "moduleNodesDelivered": 0,
       "expected": {
         "fqName": "preordered.py::take_winner",
-        "rank": 6,
-        "final": 1.3488,
+        "rank": 4,
+        "final": 1.2239,
         "mechanismEvidence": 0.55,
         "deliveredAs": "pivot",
         "ordinaryRank": null
@@ -536,13 +536,13 @@
       "wrongSubject": [],
       "ordering": null,
       "negatives": [],
-      "deliveredTokens": 277
+      "deliveredTokens": 284
     },
     {
       "id": "support_cap",
       "category": "one decision, five helpers, one establishes ordering",
       "query": "How is it decided which entry wins?",
-      "elapsedMs": 6.95,
+      "elapsedMs": 5.78,
       "lead": "supportcap.py::decide",
       "correctMechanismLead": true,
       "correctTop1": true,
@@ -609,13 +609,13 @@
           "ordinaryRank": null
         }
       ],
-      "deliveredTokens": 328
+      "deliveredTokens": 348
     },
     {
       "id": "incidental_negatives",
       "category": "incidental [0] and display sorting must stay inert",
       "query": "How does the scheduler choose which worker wins?",
-      "elapsedMs": 6.99,
+      "elapsedMs": 5.16,
       "lead": "mixed.py::pick_worker",
       "correctMechanismLead": true,
       "correctTop1": true,
@@ -665,7 +665,7 @@
           "ordinaryRank": null
         }
       ],
-      "deliveredTokens": 316
+      "deliveredTokens": 329
     }
   ]
 }

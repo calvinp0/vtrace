@@ -9,8 +9,8 @@
   },
   "candidate": {
     "label": "m149",
-    "commit": "650e916fa0b024c1d739615b9a8b5f669fd3429f",
-    "tree": "c5942ac8a17216bb01c4f66a7a98100460616612",
+    "commit": "ed8db5b71e64023e750d1202dd1accaf6e6d9e90",
+    "tree": "29f6de7d3c6b2bc5a3a388cba0281e587c7dde43",
     "srcDirty": false
   },
   "protocol": "stage5.retrieval.protocol.v1 dual-root — both sides executed in one session against the same fixtures and the same pre-existing target indexes, with only the implementation root differing. Neither side indexes or writes to a target, so the corpus is an immutable shared input rather than per-side state.",
