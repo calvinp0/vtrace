@@ -154,6 +154,8 @@ export interface DirectEvidenceResult {
   readonly strongSymbolIds: Set<string>;
   /** Mentions dropped because they matched too many files/symbols. */
   readonly rejectedAmbiguousCount: number;
+  /** Weak file-derived symbols refused for lacking independent evidence (M150). */
+  readonly pathOnlyRejectedCount: number;
   /** Mentions dropped by the generic-word stoplist. */
   readonly rejectedGenericCount: number;
 }
@@ -165,6 +167,7 @@ const EMPTY: DirectEvidenceResult = {
   candidates: [],
   strongSymbolIds: new Set(),
   rejectedAmbiguousCount: 0,
+  pathOnlyRejectedCount: 0,
   rejectedGenericCount: 0,
 };
 
@@ -181,6 +184,28 @@ export interface DirectEvidenceInput {
    * product path always supplies it.
    */
   readonly exactNameEligibleTerms?: ReadonlySet<string>;
+  /**
+   * Does this symbol have relevance the request established INDEPENDENTLY of any
+   * path or file-name coincidence? (M150 §13)
+   *
+   * A file-stem mention corroborates a FILE — a file with that basename really
+   * does exist. It says nothing about which definition inside it answers the
+   * question, and the WEAK tier nonetheless synthesized `lexical: 1` and an
+   * answer-grade final for whichever definition happened to come first.
+   * Measured on ARC: "…the precedence/order when multiple reaction families
+   * match" resolved `families` to `linear_utils/families.py` and handed
+   * `_dihedral_angle` — a geometry helper with no relation to the question —
+   * the strongest score in the pool, above the ordering implementation M150 had
+   * correctly generated from mechanism evidence.
+   *
+   * Deliberately supplied by the CALLER: independence has to be judged against
+   * the retrieval pool this lane cannot see, and defining it here from anything
+   * path-shaped would make the test circular.
+   *
+   * Omitted means "unknown", and unknown must not change anything: without a
+   * predicate every stem resolution behaves exactly as it did before M150.
+   */
+  readonly hasIndependentEvidence?: (symbolId: string) => boolean;
 }
 
 // Recover candidates for the exact code mentions in the task. Pure with respect
@@ -200,11 +225,28 @@ export function anchorDirectEvidence(input: DirectEvidenceInput): DirectEvidence
   const strongSymbolIds = new Set<string>();
   const seenSymbolIds = new Set<string>();
   let rejectedAmbiguous = 0;
+  let pathOnlyRejected = 0;
   let weakCount = 0;
   let fileMentionCount = 0;
 
   const admit = (resolved: ResolvedMention): void => {
     for (const entry of resolved.symbols) {
+      // §10: a path may tell VTRACE where to look; it cannot by itself prove
+      // which symbol answers the question. A WEAK FILE-derived mention may only
+      // synthesize answer-grade relevance for a definition the request already
+      // reached some other way. Strong mentions name a symbol or module path
+      // outright and are untouched; so is every stem resolution whose symbol
+      // does have independent evidence, which is what keeps the M96 recoveries
+      // (`autoreload`, `inspectdb`, `contour`) working.
+      if (
+        resolved.tier === "weak"
+        && resolved.fileDerived === true
+        && input.hasIndependentEvidence !== undefined
+        && !input.hasIndependentEvidence(entry.symbol.id)
+      ) {
+        pathOnlyRejected += 1;
+        continue;
+      }
       if (candidates.length >= MAX_TOTAL_CANDIDATES) return;
       if (resolved.tier === "weak" && weakCount >= MAX_WEAK_CANDIDATES) return;
       if (seenSymbolIds.has(entry.symbol.id)) continue;
@@ -243,6 +285,7 @@ export function anchorDirectEvidence(input: DirectEvidenceInput): DirectEvidence
       ...EMPTY,
       mentions: extraction.mentions,
       rejectedAmbiguousCount: rejectedAmbiguous,
+      pathOnlyRejectedCount: pathOnlyRejected,
       rejectedGenericCount: extraction.rejectedGeneric,
     };
   }
@@ -253,6 +296,7 @@ export function anchorDirectEvidence(input: DirectEvidenceInput): DirectEvidence
     candidates,
     strongSymbolIds,
     rejectedAmbiguousCount: rejectedAmbiguous,
+    pathOnlyRejectedCount: pathOnlyRejected,
     rejectedGenericCount: extraction.rejectedGeneric,
   };
 }
@@ -409,6 +453,13 @@ interface ResolvedMention {
   readonly mention: DirectEvidenceMention;
   readonly tier: DirectEvidenceTier;
   readonly symbols: ResolvedSymbol[];
+  /**
+   * Was the symbol chosen from a FILE the mention resolved, rather than named by
+   * the mention itself? Only these are subject to the independence gate — the
+   * mention corroborates the file, and picking a definition out of it is an
+   * inference the mention does not license on its own.
+   */
+  readonly fileDerived?: boolean;
 }
 
 function resolveMention(
@@ -562,7 +613,9 @@ function resolveFileStemWord(
       symbolsForResolvedFile(index, file, [], task, 1, `file stem \`${mention.term}\``),
     );
     if (symbols.length === 0) return undefined;
-    return { mention, tier: "weak", symbols };
+    // The evidence here is "a file with this basename exists", not "the task
+    // named this definition" — which is exactly the distinction the gate needs.
+    return { mention, tier: "weak", symbols, fileDerived: true };
   }
 
   if (mention.term.length < MIN_WORD_SYMBOL_LENGTH) return undefined;

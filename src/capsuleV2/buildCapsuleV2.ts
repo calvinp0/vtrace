@@ -465,6 +465,22 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
     exactNameEligibleTerms: exactSymbolEligibleTerms(
       shaped.derivedIntent ?? deriveQueryIntent(input.task),
     ),
+    // §13/§14: independence is judged against the retrieval pool, which the lane
+    // cannot see. A definition counts as independently relevant when the request
+    // reached it some way that is NOT path-shaped — lexical, domain, a body
+    // literal, a failing test, or subject-aligned behavioural mechanism evidence.
+    // `path` and `symbol` are deliberately excluded: `symbol` is what a
+    // file-derived mention synthesizes, so consulting it would make the test
+    // circular, and `path` is the coincidence under scrutiny.
+    hasIndependentEvidence: (symbolId) => {
+      const scored = retrieval.evaluatedById.get(symbolId);
+      if (scored === undefined) return false;
+      return scored.scores.lexical > 0
+        || scored.scores.domain > 0
+        || scored.scores.bodyLiteral > 0
+        || scored.scores.testToImpl > 0
+        || (scored.scores.mechanismEvidence ?? 0) > 0;
+    },
   });
   const directEvidenceBoosted: Array<{ path: string; symbol: string; tier: string }> = [];
   // WEAK-tier ordering metadata: the boosted/injected final buys budget (a
