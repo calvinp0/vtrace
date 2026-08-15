@@ -48,7 +48,7 @@ import {
   type HybridScoreWeights,
 } from "./hybridScoring";
 import { searchSymbols } from "./searchSymbols";
-import { normalizeMaxResults } from "./searchSymbolsShared";
+import { normalizeMaxResults, rankSearchCandidates } from "./searchSymbolsShared";
 import type { SymbolSearchMatch } from "./types";
 import { searchBodyLiterals } from "../db/repositories/bodyLiteralsRepository";
 import { extractBodyLiterals, type BodyLiteral } from "../indexer/extractBodyLiterals";
@@ -82,6 +82,11 @@ import {
   type MechanismEvidence,
 } from "./mechanismEvidence";
 import { loadMechanismFactsFor } from "../db/repositories/mechanismFactsRepository";
+import {
+  generateOperationFactCandidates,
+  inactiveOperationFacts,
+  type OperationFactResult,
+} from "./operationFactCandidates";
 import type { MechanismFact } from "../indexer/extractMechanismFacts";
 import {
   inactiveUpstreamRescue,
@@ -109,6 +114,13 @@ export enum HybridCandidateSource {
   UpstreamRescue = "upstream_rescue",
   /** Reached because its FILE aggregates the behaviour the request describes (M142-C). */
   ConceptOwner = "concept_owner",
+  /**
+   * Reached because an indexed mechanism fact says this definition performs the
+   * OPERATION the request asked about, on the subject it asked about (M150).
+   * Kept as its own source so a behaviourally-found candidate is never mistaken
+   * for a lexical hit in diagnostics.
+   */
+  OperationFact = "operation_fact",
 }
 
 export interface HybridCandidate {
@@ -234,6 +246,8 @@ export interface HybridRetrievalResult {
   upstreamRescue: UpstreamRescueDiagnostics;
   /** What the behavioural concept-owner lane did, including "nothing". */
   conceptOwner: ConceptOwnerDiagnostics;
+  /** What the operation-fact candidate lane admitted, refused, and why (M150). */
+  operationFactCandidates: OperationFactResult;
   /**
    * Every rescued symbol with its ordinary rank, including the ones the output
    * cap excluded. Empty whenever the lane did not activate.
@@ -304,6 +318,7 @@ export function hybridRetrieve(
       orchestrationPaths: [],
       evaluatedById: new Map(),
       behavioralObjective: { operation: null, suppressedBy: "no results requested", considered: [] },
+      operationFactCandidates: inactiveOperationFacts("no results requested"),
       mechanismEvidenceById: new Map(),
     };
   }
@@ -345,6 +360,51 @@ export function hybridRetrieve(
   const bodyLiteralMatches = timed(input.profile, "lexical.body_literal", () =>
     bodyLiteralCandidates(db, input, raw));
   count(input.profile, "body_literal_matches", bodyLiteralMatches.length);
+  // The operation-fact lane. It runs with the query-side generators rather than
+  // with the rescue lanes because what it produces is an ORDINARY candidate: a
+  // definition the request is genuinely about, found through indexed behaviour
+  // instead of through its name. Placed before graph expansion so an admitted
+  // definition can seed neighbours like any other candidate.
+  const operationFacts = timed(input.profile, "lexical.operation_facts", () =>
+    hasBehavioralOperation(behavioralObjective)
+      ? generateOperationFactCandidates(db, behavioralObjective)
+      : inactiveOperationFacts("request declares no behavioural operation"));
+  for (const admitted of operationFacts.candidates) {
+    const entry = ensureCandidate(db, raw, admitted.symbol.id, admitted.symbol);
+    if (entry === undefined) continue;
+    entry.sources.add(HybridCandidateSource.OperationFact);
+    entry.evidence.add(admitted.reason);
+    // Score its LEXICAL evidence with the same function the lexical lane uses.
+    //
+    // A candidate admitted here would otherwise carry `fts = 0` and be judged as
+    // if it had no name match at all — not because it lacks one, but because a
+    // different lane found it first. Measured on ARC: `get_all_families` on a
+    // request naming `families` was scored as though the word never appeared in
+    // its name. That is an artifact of lane order, not a ranking judgement, and
+    // removing it is not the same as boosting the candidate: the score is
+    // whatever `rankSearchCandidates` says it is, which for an unrelated
+    // definition is still nothing.
+    const [scored] = rankSearchCandidates(
+      [{
+        symbol_id: admitted.symbol.id,
+        file_path: admitted.symbol.filePath,
+        fq_name: admitted.symbol.fqName,
+        local_name: admitted.symbol.localName,
+        kind: admitted.symbol.kind,
+        signature: admitted.symbol.signature,
+        docstring: admitted.symbol.docstring ?? null,
+      }],
+      input.query,
+      1,
+    );
+    if (scored !== undefined) {
+      entry.fts = Math.max(entry.fts, scored.score);
+      if (entry.matches.length === 0) entry.matches = scored.matches;
+    }
+  }
+  count(input.profile, "operation_fact_candidates", operationFacts.diagnostics.candidatesAdmitted);
+  count(input.profile, "operation_fact_owners_examined", operationFacts.diagnostics.ownersExamined);
+
   // Graph + same-module expansion run over EVERYTHING the query-side generators
   // surfaced, so they can pull in a target lexical search missed.
   const seeds = [...raw.keys()];
@@ -430,6 +490,7 @@ export function hybridRetrieve(
     orchestrationPaths,
     evaluatedById: new Map(ranked.map((candidate) => [candidate.symbolId, candidate])),
     behavioralObjective,
+    operationFactCandidates: operationFacts,
     mechanismEvidenceById,
   };
 }

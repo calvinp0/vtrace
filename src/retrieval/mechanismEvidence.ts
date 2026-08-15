@@ -39,7 +39,7 @@ import { tokenize } from "./hybridScoring";
  * `cache_lookup` is direct for `caching` and absent for `selection`;
  * `attribute_return` is direct for `storage` and absent everywhere else.
  */
-const COMPATIBILITY: Readonly<
+export const COMPATIBILITY: Readonly<
   Record<BehavioralOperation, Readonly<Partial<Record<MechanismFactKind, "direct" | "partial">>>>
 > = Object.freeze({
   selection: {
@@ -182,6 +182,21 @@ export const NO_MECHANISM_EVIDENCE: MechanismEvidence = Object.freeze({
  * M142 centrality gate established for centrality. Two runs over the same
  * request and the same definition give the same number.
  */
+/**
+ * Fact kinds that DIRECTLY implement an operation — the ones for which a
+ * definition carrying the fact is an answer rather than a contribution.
+ *
+ * Candidate generation uses only these. A `partial` fact strengthens a candidate
+ * the query already reached; it is not authority to pull a new definition into
+ * the pool (§16).
+ */
+export function directFactKindsFor(operation: BehavioralOperation): MechanismFactKind[] {
+  const table = COMPATIBILITY[operation];
+  return (Object.keys(table) as MechanismFactKind[])
+    .filter((kind) => table[kind] === "direct")
+    .sort();
+}
+
 export function evaluateMechanismEvidence(input: MechanismEvidenceInput): MechanismEvidence {
   if (input.facts.length === 0) {
     return { score: 0, matched: [], withheldReason: "no mechanism facts for this definition" };
@@ -324,7 +339,7 @@ function strengthOf(entry: MatchedMechanism): number {
  * only when the operand itself is uninformative — `xs`, `product_dicts` — is the
  * producing call worth consulting. That is also the cheaper test.
  */
-function alignmentOf(
+export function alignmentOf(
   operand: string,
   provenance: string,
   subjectTerms: ReadonlySet<string>,
