@@ -39,7 +39,12 @@ export type RepositoryPresenceState =
  * problem, and these three have genuinely different remedies.
  */
 export const PresenceUnknownReason = Object.freeze({
-  /** M146-A refused its derivation. Its symbol table may not reflect this runtime. */
+  /**
+   * This runtime will not read the member's derived state: a refused
+   * derivation, an incompatible schema, or a source snapshot that has moved on.
+   * The precise readiness verdict travels in `reposExcludedNotReady`; this names
+   * the CLASS of remedy — repair that index — as distinct from raising a bound.
+   */
   IndexRefused: "index_refused",
   /** The scan bound was reached before this member. Cost bound, not a judgement. */
   BeyondScanBound: "beyond_scan_bound",
@@ -102,6 +107,23 @@ export interface UniquenessProof {
 }
 
 /**
+ * How a lane describes the thing it is proving membership of.
+ *
+ * M148-B reuses this reducer for indexed-path evidence, and the proof's reasons
+ * are read by users: a path lane reporting "defines this name" would describe a
+ * question nobody asked. The logic is identical for every lane — only the noun
+ * changes — so the noun is a parameter and the rule stays in one place.
+ */
+export interface PresenceClaimSubject {
+  /** Verb for a repository that HAS the evidence. */
+  readonly verb: string;
+  /** What is being looked for, as it reads mid-sentence. */
+  readonly noun: string;
+}
+
+const EXACT_NAME_SUBJECT: PresenceClaimSubject = Object.freeze({ verb: "defines", noun: "this name" });
+
+/**
  * Decide what a set of presence observations proves about global uniqueness.
  *
  * The invariants this must hold, in the order they bite:
@@ -117,6 +139,7 @@ export interface UniquenessProof {
  */
 export function proveExactUniqueness(
   observations: readonly RepositoryPresenceObservation[],
+  subject: PresenceClaimSubject = EXACT_NAME_SUBJECT,
 ): UniquenessProof {
   const present = observations
     .filter((entry) => entry.state === RepositoryPresenceState.Present)
@@ -142,7 +165,7 @@ export function proveExactUniqueness(
       ...base,
       status: UniquenessProofStatus.Ambiguous,
       owner: null,
-      reason: `${present.length} repositories define this name: ${present.join(", ")}.`,
+      reason: `${present.length} repositories ${subject.verb} ${subject.noun}: ${present.join(", ")}.`,
     };
   }
 
@@ -155,8 +178,8 @@ export function proveExactUniqueness(
       status: UniquenessProofStatus.Unproven,
       owner: null,
       reason: present.length === 1
-        ? `${present[0]} defines this name, but ${unknown.length} eligible repository/repositories could not be checked, so it is not provably the only one: ${blockers}.`
-        : `No checked repository defines this name, but ${unknown.length} eligible repository/repositories could not be checked: ${blockers}.`,
+        ? `${present[0]} ${subject.verb} ${subject.noun}, but ${unknown.length} eligible repository/repositories could not be checked, so it is not provably the only one: ${blockers}.`
+        : `No checked repository ${subject.verb} ${subject.noun}, but ${unknown.length} eligible repository/repositories could not be checked: ${blockers}.`,
     };
   }
 
@@ -165,7 +188,7 @@ export function proveExactUniqueness(
       ...base,
       status: UniquenessProofStatus.Unique,
       owner: present[0]!,
-      reason: `${present[0]} defines this name and all ${definitelyAbsent} other eligible repositories are proven not to.`,
+      reason: `${present[0]} ${subject.verb} ${subject.noun} and all ${definitelyAbsent} other eligible repositories are proven not to.`,
     };
   }
 
@@ -173,6 +196,6 @@ export function proveExactUniqueness(
     ...base,
     status: UniquenessProofStatus.Absent,
     owner: null,
-    reason: `No eligible repository defines this name; all ${definitelyAbsent} were checked.`,
+    reason: `No eligible repository ${subject.verb} ${subject.noun}; all ${definitelyAbsent} were checked.`,
   };
 }

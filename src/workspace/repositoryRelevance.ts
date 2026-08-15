@@ -136,7 +136,12 @@ export interface RepositoryProbe {
 }
 
 export interface RepositoryRelevanceLimits {
-  /** Ready repositories that may be deep-probed for one request. */
+  /**
+   * Ready repositories whose indexed path set may be read while gathering
+   * SUPPORTING evidence — context beneath an already-decided lead. Support
+   * makes no uniqueness claim, so a prefix of the members is sound here in a
+   * way it never was for a deciding lane.
+   */
   readonly maxDeepProbes?: number;
   /** Nominees reported when the answer is ambiguous. Diagnostics stay bounded. */
   readonly maxReportedCandidates?: number;
@@ -148,14 +153,26 @@ export interface RepositoryRelevanceLimits {
    * cost does not grow with the repository.
    */
   readonly maxPresenceScans?: number;
+  /**
+   * Ready repositories that may be asked an indexed-path membership question
+   * when the lane can DECIDE. M148-B measured the access pattern rather than
+   * assuming it: `files` carries a UNIQUE covering index on `path`, so reading
+   * a repository's whole path set costs 0.08 ms for ARC's 325 files and 0.21 ms
+   * for TCKDB's 1232, against a 0.02-0.14 ms open — the same order as the
+   * exact-name lane, which is why the two share a bound rather than the path
+   * lane keeping the far smaller cost bound that used to double as a
+   * correctness bound.
+   */
+  readonly maxPathMembershipScans?: number;
 }
 
 export const DEFAULT_RELEVANCE_LIMITS: Required<RepositoryRelevanceLimits> = Object.freeze({
-  // Deep probes are bounded so workspace SIZE never sets query cost (§25). The
-  // tiering means a decisive path already answers with zero of them.
+  // Support gathering is bounded so workspace SIZE never sets query cost (§25).
+  // The tiering means a decisive path already answers with zero of them.
   maxDeepProbes: 8,
   maxReportedCandidates: 4,
   maxPresenceScans: 1024,
+  maxPathMembershipScans: 1024,
 });
 
 export interface RepositoryRelevanceRequest {
@@ -207,6 +224,15 @@ export interface RepositoryRelevanceDiagnostics {
   readonly reposPresenceScanned: number;
   /** Access paths observed during the scan. Never assumed from configuration. */
   readonly presenceAccessPaths: Readonly<Record<MembershipAccessPath, number>>;
+  /**
+   * M148-B: the same proof for the indexed-path lane, when that lane could
+   * decide. Reported separately from `presenceProof` because the two lanes ask
+   * different questions of different evidence and can reach different verdicts
+   * about the same workspace.
+   */
+  readonly indexedPathProof: UniquenessProof | null;
+  /** Ready members actually asked an indexed-path membership question. */
+  readonly reposPathMembershipScanned: number;
 }
 
 export interface RepositoryRelevance {
@@ -311,27 +337,61 @@ export function nominateRepositories(request: RepositoryRelevanceRequest): Repos
     ? RepositoryEvidenceKind.PathContainment
     : null;
 
-  // ---- Tier 2: indexed path membership (READY MEMBERS ONLY) ----------------
-  // Both indexed lanes draw from the same gated pool, bounded so workspace size
-  // never sets query cost.
-  const indexedPool = poolForEvidence(RepositoryEvidenceKind.IndexedPath, members, readyMembers);
-  const probeTargets = decidingTier !== null && !collectSupporting
-    ? []
-    : indexedPool.slice(0, limits.maxDeepProbes);
-  // Probing a prefix of the ready members cannot establish that a match is
-  // UNIQUE across the workspace: the cap is what makes cost bounded, and the
-  // unprobed remainder is exactly where a rival would hide. Measured: with ten
-  // ready members and a cap of eight, a symbol defined in the first and last
-  // reported `selected` on the first, and reversing registration order would
-  // have named the other one.
-  const deepProbeTruncated = probeTargets.length < indexedPool.length;
+  // ---- Tier 2: indexed path membership -------------------------------------
+  //
+  // M148-B applies M147's correction to this lane. It used to draw on the READY
+  // members alone, which silently equated "we did not inspect that repository"
+  // with "that repository does not index this path" — and reported the one
+  // ready match as the unique owner. Measured on a three-member workspace where
+  // the refused member DID index the path: `selected(a)` on indexed_path
+  // evidence, a global negative claim about a repository that was never asked.
+  //
+  //   NOT ASKED IS NOT ABSENT.  REFUSED IS UNKNOWN.
+  //
+  // So the eligible population is every ENABLED member. A ready member answers
+  // present or absent from its own index; a refused one contributes UNKNOWN,
+  // and one unknown is enough to withhold a uniqueness claim. Its stale index
+  // is still never opened — being unknown is precisely what stops us asking it.
   const probes = new Map<string, RepositoryProbe>();
-  if (request.probe !== undefined && pathHints.length > 0) {
+  // A lane that only gathers SUPPORT beneath a decided lead makes no uniqueness
+  // claim, so it keeps the small prefix bound and computes no proof. A lane that
+  // may decide must ask everyone.
+  const indexedPathDecides = decidingTier === null;
+  const indexedPathRuns = request.probe !== undefined && pathHints.length > 0
+    && (indexedPathDecides || collectSupporting);
+  let indexedPathProof: UniquenessProof | null = null;
+  let pathMembershipScanned = 0;
+
+  if (indexedPathRuns) {
+    const pathObservations: RepositoryPresenceObservation[] = [];
     const scopes: PathMembershipScope[] = [];
-    for (const repo of probeTargets) {
-      const probe = openProbe(request.probe, repo, probes);
-      if (probe === null || repo.worktreeId === null || repo.repositoryId === null) continue;
+    const scanned: string[] = [];
+    const population = indexedPathDecides
+      ? members
+      : poolForEvidence(RepositoryEvidenceKind.IndexedPath, members, readyMembers)
+        .slice(0, limits.maxDeepProbes);
+    const bound = indexedPathDecides ? limits.maxPathMembershipScans : limits.maxDeepProbes;
+
+    for (const repo of population) {
+      const unknownReason = pathProbeRefusal({
+        ready: readinessByAlias.get(repo.alias)?.ready === true,
+        withinBound: pathMembershipScanned < bound,
+      });
+      if (unknownReason !== null) {
+        pathObservations.push(unknownObservation(repo.alias, unknownReason));
+        continue;
+      }
+      const probe = openProbe(request.probe!, repo, probes);
+      // No identity means no scope: M145 keys membership on worktree identity,
+      // and a member that cannot be scoped could not be asked — which is an
+      // unknown answer, not an absent one.
+      if (probe === null || repo.worktreeId === null || repo.repositoryId === null) {
+        pathObservations.push(unknownObservation(repo.alias, PresenceUnknownReason.ProbeUnavailable));
+        continue;
+      }
       deepProbedAliases.add(repo.alias);
+      pathMembershipScanned += 1;
+      scanned.push(repo.alias);
       scopes.push({
         worktreeId: repo.worktreeId,
         repositoryId: repo.repositoryId,
@@ -341,6 +401,7 @@ export function nominateRepositories(request: RepositoryRelevanceRequest): Repos
       });
     }
 
+    const matched = new Set<string>();
     if (scopes.length > 0) {
       const resolver = createPathMembershipResolver(scopes);
       const aliasByWorktree = new Map(scopes.map((scope) => [scope.worktreeId, scope.alias]));
@@ -351,9 +412,11 @@ export function nominateRepositories(request: RepositoryRelevanceRequest): Repos
           continue;
         }
         for (const match of resolution.matches) {
+          const alias = aliasByWorktree.get(match.worktreeId) ?? match.alias;
+          matched.add(alias);
           evidence.push({
             kind: RepositoryEvidenceKind.IndexedPath,
-            alias: aliasByWorktree.get(match.worktreeId) ?? match.alias,
+            alias,
             worktreeId: match.worktreeId,
             hint,
             detail: `${match.kind} match on ${match.matchedPaths.join(", ")}`,
@@ -361,7 +424,30 @@ export function nominateRepositories(request: RepositoryRelevanceRequest): Repos
         }
       }
     }
+
+    // PRESENT means "carried decisive path evidence", which is the same thing
+    // the lane nominates on. An absolute hint that resolves EXACTLY inside one
+    // worktree outranks a repository that merely indexes the same shape (M145),
+    // and counting the outranked member as present would make an unambiguous
+    // absolute path ambiguous the moment a similarly-laid-out repository joined.
+    for (const alias of scanned) {
+      pathObservations.push({
+        alias,
+        state: matched.has(alias)
+          ? RepositoryPresenceState.Present
+          : RepositoryPresenceState.DefinitelyAbsent,
+        unknownReason: null,
+        // The access-path field describes the exact-NAME lookup M147 measured;
+        // this lane reads the `files` covering index and reports nothing here.
+        accessPath: MembershipAccessPath.Unreported,
+      });
+    }
+
+    if (indexedPathDecides) {
+      indexedPathProof = proveExactUniqueness(pathObservations, { verb: "indexes", noun: "this path" });
+    }
   }
+
   if (hasTier(evidence, RepositoryEvidenceKind.IndexedPath) && decidingTier === null && !collectSupporting) {
     return decide({
       tier: RepositoryEvidenceKind.IndexedPath,
@@ -369,8 +455,11 @@ export function nominateRepositories(request: RepositoryRelevanceRequest): Repos
       members,
       readinessByAlias,
       limits,
-      deepProbeTruncated,
-      diagnostics: baseDiagnostics(members, readyMembers, excluded, deepProbedAliases.size),
+      presenceProof: indexedPathProof,
+      diagnostics: baseDiagnostics(members, readyMembers, excluded, deepProbedAliases.size, {
+        pathMembershipScanned,
+        indexedPathProof,
+      }),
     });
   }
   decidingTier ??= hasTier(evidence, RepositoryEvidenceKind.IndexedPath)
@@ -464,25 +553,33 @@ export function nominateRepositories(request: RepositoryRelevanceRequest): Repos
       members,
       readinessByAlias,
       limits,
-      // The prefix bound governs the indexed-PATH lane only. The exact-symbol
-      // lane no longer probes a prefix, so carrying its truncation flag here
-      // would abstain over a search that was never truncated.
-      deepProbeTruncated: decidingTier === RepositoryEvidenceKind.IndexedPath ? deepProbeTruncated : false,
-      // The proof governs only the lane it was computed for. A path-tier answer
-      // is not a global-negative claim and does not wait on one.
-      presenceProof: decidingTier === RepositoryEvidenceKind.ExactSymbol ? presenceProof : null,
-      diagnostics: baseDiagnostics(members, readyMembers, excluded, deepProbedAliases.size, presenceScanned, accessPaths, presenceProof),
+      // Each lane waits on ITS OWN proof and no other. A path-tier answer is not
+      // a claim about symbol membership, so a symbol-lane unknown may not
+      // withhold it — and vice versa.
+      presenceProof: decidingTier === RepositoryEvidenceKind.ExactSymbol
+        ? presenceProof
+        : decidingTier === RepositoryEvidenceKind.IndexedPath ? indexedPathProof : null,
+      diagnostics: baseDiagnostics(members, readyMembers, excluded, deepProbedAliases.size, {
+        presenceScanned,
+        presenceAccessPaths: accessPaths,
+        presenceProof,
+        pathMembershipScanned,
+        indexedPathProof,
+      }),
     });
   }
 
   // §29: no evidence means no match. Never the highest weak score.
   //
   // "No repository carries evidence" is itself a claim about every member, so it
-  // may not be made over members that were never asked. When the symbol lane ran
-  // and some member could not answer, the outcome is still `no_match` — nothing
-  // was found, and declining to answer selects no repository — but the reason
-  // says which members are missing instead of asserting a global negative the
-  // scan did not establish.
+  // may not be made over members that were never asked. When either lane ran and
+  // some member could not answer, the outcome is still `no_match` — nothing was
+  // found, and declining to answer selects no repository — but the reason says
+  // which members are missing instead of asserting a global negative the scan
+  // did not establish. M148-B extends that to the path lane: an unknown member
+  // could be exactly the repository that indexes the path.
+  const unprovenLane = [indexedPathProof, presenceProof]
+    .find((proof) => proof !== null && proof.status === UniquenessProofStatus.Unproven) ?? null;
   return {
     status: RepositoryRelevanceStatus.NoMatch,
     selected: [],
@@ -490,11 +587,17 @@ export function nominateRepositories(request: RepositoryRelevanceRequest): Repos
     supporting: [],
     reason: members.length === 0
       ? "No enabled repository is registered in this workspace."
-      : presenceProof !== null && presenceProof.status === UniquenessProofStatus.Unproven
-        ? presenceProof.reason
+      : unprovenLane !== null
+        ? unprovenLane.reason
         : "No repository carries evidence for this request.",
     diagnostics: {
-      ...baseDiagnostics(members, readyMembers, excluded, deepProbedAliases.size, presenceScanned, accessPaths, presenceProof),
+      ...baseDiagnostics(members, readyMembers, excluded, deepProbedAliases.size, {
+        presenceScanned,
+        presenceAccessPaths: accessPaths,
+        presenceProof,
+        pathMembershipScanned,
+        indexedPathProof,
+      }),
       decidingTier: null,
       candidatesOmitted: 0,
     },
@@ -507,9 +610,7 @@ function decide(input: {
   members: readonly RegisteredRepository[];
   readinessByAlias: ReadonlyMap<string, WorkspaceRepoReadiness>;
   limits: Required<RepositoryRelevanceLimits>;
-  /** True when the indexed lanes saw only a prefix of the ready members. */
-  deepProbeTruncated?: boolean;
-  /** The M147 proof, when the deciding tier is the exact-symbol lane. */
+  /** The presence proof computed by the DECIDING lane, when it computed one. */
   presenceProof?: UniquenessProof | null;
   diagnostics: Omit<RepositoryRelevanceDiagnostics, "decidingTier" | "candidatesOmitted">;
 }): RepositoryRelevance {
@@ -551,12 +652,12 @@ function decide(input: {
     };
   }
 
-  // M147: a single match is only a UNIQUE match once every other eligible
-  // repository is proven not to hold the name. `unproven` means some member
-  // could not answer — a refused index, or one past the scan bound — so the
-  // global negative was never established and the match stands alone only by
-  // assumption. Fail closed, and say which members are missing rather than
-  // reporting a bare ambiguity nobody can act on.
+  // M147, extended to the indexed-path lane by M148-B: a single match is only a
+  // UNIQUE match once every other eligible repository is proven not to hold the
+  // evidence. `unproven` means some member could not answer — a refused index,
+  // or one past the scan bound — so the global negative was never established
+  // and the match stands alone only by assumption. Fail closed, and say which
+  // members are missing rather than reporting a bare ambiguity nobody can act on.
   if (input.presenceProof !== null && input.presenceProof !== undefined
     && input.presenceProof.status === UniquenessProofStatus.Unproven) {
     return {
@@ -565,20 +666,6 @@ function decide(input: {
       candidates: nominees.slice(0, input.limits.maxReportedCandidates),
       supporting: [],
       reason: input.presenceProof.reason,
-      diagnostics: diagnostics(0),
-    };
-  }
-
-  // One match among a truncated pool is not a unique match. Fail closed rather
-  // than report certainty the probe never earned; the alternative would also
-  // make the answer depend on registration order past the cap.
-  if (input.deepProbeTruncated === true && EVIDENCE_REQUIRES_READY_INDEX[input.tier]) {
-    return {
-      status: RepositoryRelevanceStatus.Ambiguous,
-      selected: [],
-      candidates: nominees.slice(0, input.limits.maxReportedCandidates),
-      supporting: [],
-      reason: `${nominees.length} repository match(es) found, but only part of the workspace was probed, so uniqueness is unproven: ${aliases.join(", ")}.`,
       diagnostics: diagnostics(0),
     };
   }
@@ -688,14 +775,20 @@ const NO_PRESENCE_SCAN: Readonly<Record<MembershipAccessPath, number>> = Object.
   [MembershipAccessPath.Unreported]: 0,
 });
 
+interface PresenceDiagnostics {
+  readonly presenceScanned?: number;
+  readonly presenceAccessPaths?: Readonly<Record<MembershipAccessPath, number>>;
+  readonly presenceProof?: UniquenessProof | null;
+  readonly pathMembershipScanned?: number;
+  readonly indexedPathProof?: UniquenessProof | null;
+}
+
 function baseDiagnostics(
   members: readonly RegisteredRepository[],
   readyMembers: readonly RegisteredRepository[],
   excluded: readonly { alias: string; reason: string }[],
   deepProbed: number,
-  presenceScanned = 0,
-  presenceAccessPaths: Readonly<Record<MembershipAccessPath, number>> = NO_PRESENCE_SCAN,
-  presenceProof: UniquenessProof | null = null,
+  presence: PresenceDiagnostics = {},
 ): Omit<RepositoryRelevanceDiagnostics, "decidingTier" | "candidatesOmitted"> {
   return {
     reposRegistered: members.length,
@@ -704,9 +797,37 @@ function baseDiagnostics(
     reposMetadataChecked: members.length,
     reposDeepProbed: deepProbed,
     reposExcludedNotReady: excluded,
-    reposPresenceScanned: presenceScanned,
-    presenceAccessPaths,
-    presenceProof,
+    reposPresenceScanned: presence.presenceScanned ?? 0,
+    presenceAccessPaths: presence.presenceAccessPaths ?? NO_PRESENCE_SCAN,
+    presenceProof: presence.presenceProof ?? null,
+    reposPathMembershipScanned: presence.pathMembershipScanned ?? 0,
+    indexedPathProof: presence.indexedPathProof ?? null,
+  };
+}
+
+/**
+ * Why a member cannot contribute a path-membership ANSWER, or null when it can.
+ *
+ * Named rather than inlined so the two reasons stay distinguishable in the
+ * proof: a refused index is repaired by rebuilding it, and a member past the
+ * scan bound is reached by raising the bound. Reporting both as "unknown" would
+ * send a user to the wrong remedy.
+ */
+function pathProbeRefusal(state: {
+  readonly ready: boolean;
+  readonly withinBound: boolean;
+}): PresenceUnknownReason | null {
+  if (!state.ready) return PresenceUnknownReason.IndexRefused;
+  if (!state.withinBound) return PresenceUnknownReason.BeyondScanBound;
+  return null;
+}
+
+function unknownObservation(alias: string, reason: PresenceUnknownReason): RepositoryPresenceObservation {
+  return {
+    alias,
+    state: RepositoryPresenceState.Unknown,
+    unknownReason: reason,
+    accessPath: MembershipAccessPath.Unreported,
   };
 }
 
