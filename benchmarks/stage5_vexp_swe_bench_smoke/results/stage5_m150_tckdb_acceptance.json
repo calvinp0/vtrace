@@ -3,7 +3,7 @@
   "target": "/home/calvin/code/TCKDB_v2",
   "index": "/home/calvin/bench/vtrace-m150/tckdb-m150.sqlite",
   "note": "Same checkout, same isolated index, both implementation roots. Authoritative TCKDB index untouched.",
-  "changedLeads": 0,
+  "changedLeads": 1,
   "changedSets": 1,
   "moduleNodesDelivered": 0,
   "cases": [
@@ -118,11 +118,11 @@
     {
       "query": "What determines the order the records are returned in?",
       "predecessorLead": "backend/app/services/record_review.py::apply_review_policy",
-      "finalLead": "backend/app/services/record_review.py::apply_review_policy",
-      "leadChanged": false,
+      "finalLead": "backend/app/services/scientific_read/species_transport.py::get_species_transport",
+      "leadChanged": true,
       "deliveredSetChanged": true,
       "predecessorTokens": 1402,
-      "finalTokens": 1473,
+      "finalTokens": 2462,
       "moduleNodesDelivered": 0,
       "attribution": "behavioral_operation_intent / mechanism ranking — see delivered sets",
       "predecessorDelivered": [
@@ -134,11 +134,11 @@
         "_record_provenance"
       ],
       "finalDelivered": [
-        "backend/app/services/record_review.py::apply_review_policy",
-        "backend/app/services/release/records.py::ChildTable",
         "backend/app/services/scientific_read/species_transport.py::get_species_transport",
+        "backend/app/services/record_review.py::apply_review_policy",
         "backend/app/services/scientific_read/species_statmech.py::get_species_statmech",
         "backend/app/services/scientific_read/literature_records.py::_load_kinetics",
+        "backend/app/services/accepted_science.py::lock_scientific_records",
         "build_transport_record"
       ]
     },

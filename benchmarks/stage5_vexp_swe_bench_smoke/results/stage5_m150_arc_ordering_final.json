@@ -56,8 +56,8 @@
       }
     ],
     "sourceReads": 0,
-    "lookupMs": 0.37,
-    "alignmentMs": 0.59
+    "lookupMs": 0.34,
+    "alignmentMs": 0.64
   },
   "admitted": [
     {
@@ -69,11 +69,11 @@
       "statement": "rmg_families = list(dict.fromkeys(rmg_families))  # de-duplicate, preserving order"
     }
   ],
-  "lead": "arc/job/adapters/ts/linear_utils/families.py::_dihedral_angle",
+  "lead": "arc/reaction/reaction.py::ARCReaction.determine_family",
   "watch": [
     {
       "fqName": "arc/family/family.py::get_all_families",
-      "rank": 24,
+      "rank": 22,
       "final": 1.0549,
       "lexical": 0.2003,
       "domain": 0.3333,
@@ -85,19 +85,17 @@
     },
     {
       "fqName": "arc/job/adapters/ts/linear_utils/families.py::_dihedral_angle",
-      "rank": 1,
-      "final": 1.9,
-      "lexical": 1,
-      "domain": 0,
+      "rank": null,
+      "final": null,
+      "lexical": null,
+      "domain": null,
       "mechanism": 0,
-      "sources": [
-        "symbol"
-      ],
-      "deliveredAs": "pivot"
+      "sources": [],
+      "deliveredAs": null
     },
     {
       "fqName": "arc/reaction/reaction.py::ARCReaction.determine_family",
-      "rank": 3,
+      "rank": 1,
       "final": 1.7639,
       "lexical": 0.8632,
       "domain": 1,
@@ -105,7 +103,7 @@
       "sources": [
         "lexical"
       ],
-      "deliveredAs": "support"
+      "deliveredAs": "pivot"
     }
   ],
   "moduleNodesDelivered": 0

@@ -60,8 +60,8 @@
       }
     ],
     "sourceReads": 0,
-    "lookupMs": 0.73,
-    "alignmentMs": 0.07
+    "lookupMs": 0.86,
+    "alignmentMs": 0.08
   },
   "admitted": [],
   "lead": "arc/job/adapters/gaussian.py::GaussianAdapter._user_requested_verytight",

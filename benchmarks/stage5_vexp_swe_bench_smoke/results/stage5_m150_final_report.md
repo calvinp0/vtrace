@@ -4,17 +4,20 @@
 
 A → PASS · B → PASS · C → PASS · **D → MIXED** · E → PASS.
 
-The capability §79 names is delivered: a definition now enters the candidate pool
-**because of its indexed, subject-aligned mechanism evidence**, when its name
-gives no lexical clue at all. What it does not yet do is *win* — `get_all_families`
-is generated and ranks 24 behind a lexical accident holding the pool maximum. §80's
-first clause names that exactly ("becomes generated but does not become useful
-answer-bearing evidence"), so the milestone closes MIXED.
+The path-only decoy is gone: `_dihedral_angle` no longer leads the ARC ordering
+query, and the root cause was found, named and fixed generically. But the ordering
+*implementation* still is not the primary answer — `get_all_families` sits at rank
+22 while the selection *consumer* leads. §80's third clause covers this, so the
+milestone closes MIXED.
+
+Final phase: `fe5c220` — path-evidence gate. See
+`stage5_m150_path_evidence_contract.md` for the full root cause and rule.
 
 - M149 predecessor `2aaac750b326478bb3f29576aa1454365d0f734d`
 - checkpoints `ab8e4f02eaacdbcfa8fc56f1b056db232ce1452c` · `ebc4fda7d42cfe8706e9ee128fe56ec8e5405a83` · `650e916fa0b024c1d739615b9a8b5f669fd3429f`
-- **final functional `ed8db5b`**
-- Branch `main`, ahead 27, **nothing pushed**, no co-author trailers.
+- checkpoint `ed8db5b71e64023e750d1202dd1accaf6e6d9e90`
+- **final functional `fe5c220`**
+- Branch `main`, ahead 29, **nothing pushed**, no co-author trailers.
 
 **Frozen and confirmed unchanged:** mechanism weights (0.55 / 0.20, strongest
 single fact), subject-alignment policy (operand + one-hop provenance, no
@@ -81,18 +84,17 @@ result-bearing ordering fact and none is about reaction families.
 
 **Ordering query** — `What determines the precedence/order when multiple reaction families match?`
 
-| symbol | rank | final | lexical | mechanism | source |
+| symbol | rank at `ed8db5b` | **rank final** | final score | mechanism | source |
 | --- | ---: | ---: | ---: | ---: | --- |
-| `_dihedral_angle` | **1** | 1.9000 | **1.0000** | 0 | symbol |
-| `determine_family` | 3 | 1.7639 | 0.8632 | 0 | lexical |
-| **`get_all_families`** | **24** | 1.0549 | 0.2003 | **0.55** | **`operation_fact`** |
+| `_dihedral_angle` | **1** (1.9000) | **out of the lead** | — | 0 | synthesized stem tier |
+| `determine_family` | 3 | **1** | 1.7639 | 0 | lexical |
+| **`get_all_families`** | 24 | **22** | 1.0549 | **0.55** | **`operation_fact`** |
 
 **Generated — which it never was before, and purely from mechanism evidence.**
-But `_dihedral_angle` holds `lexical = 1.0` (the pool maximum) from a file-stem
-coincidence: the query says *families* and *order*, and it lives in
-`linear_utils/families.py`. Closing a 0.85 gap would require either penalising it
-by name — which §25 forbids — or an M142-class lexical-decoy fix that §2–§4
-freeze. **§40 not met.**
+The path-stem decoy no longer leads (§7). But the lead is now the selection
+*consumer*, not the ordering *implementation*, and §32 asks the reverse emphasis
+for an ordering request. **§30/§40 partially met: decoy removed, primacy not
+achieved.**
 
 **Selection query preserved exactly** (§41): `determine_family` rank 1 lead pivot
 with the decision slice; `get_reaction_family` rank 2 at **1.9000 unchanged**,
@@ -126,9 +128,9 @@ candidate generation. Nothing regressed at any phase.
 | M140 module invisibility | **0** `<module>` delivered |
 | M140 role separation | ordinary / `mechanism_support` / `orchestration_support` all distinct |
 | M139 exact relations | only exact `calls`; no potential/reference used |
-| **Frozen50** M149 → final | **0/50**, byte-identical, `provenanceValid=true`, `srcDirty=false` |
-| django / cross_repo_30 | 0/20, 0/30 — 38/44/48/31/2, tokens 1832.4 |
-| **TCKDB** | **0/6 leads changed**, 1/6 sets, 0 module nodes |
+| **Frozen50** M149 → final | **16/50 composition changed, every quality metric identical** — Top-1 38, Top-3 44, anywhere 48, symbol 31, missing 2 on both sides; tokens 1832.40 → 1832.48. `provenanceValid=true`, `srcDirty=false` |
+| django / cross_repo_30 | 9/20, 7/30 — all quality metrics identical on both sides |
+| **TCKDB** | 1/6 leads changed (ordering query), 1/6 sets, 0 module nodes |
 | derivation fingerprints | **unchanged** — retrieval-only, no schema/capability change |
 | ARC + TCKDB authoritative indexes | **byte-identical** |
 
@@ -137,27 +139,58 @@ clean. Ten new candidate-generation tests (wrong-subject refusal, same-file,
 same-class, producer admission, no-provenance refusal, caps, zero source reads,
 direct-kinds-only).
 
-**Changed-case attribution.** Frozen50/django/cross_repo: none. TCKDB: one
-delivered set on the ordering query, lead unchanged — cause
-`operation_fact_candidate_generation`, **NEUTRAL**. Corpus `650e916 → final`: no
-metric moved; the lane admits candidates that then compete normally. No
-REGRESSION anywhere across all five phases.
+**Changed-case attribution** (`stage5_m150_final_changed_case_ledger.json`).
+Frozen50 16/50, django 9/20, cross_repo_30 7/30 and the TCKDB lead: all cause
+`path_only_relevance_gate`, all quality **NEUTRAL** — support-slot composition
+with gold-file and gold-symbol outcomes identical on both sides. §66 anticipated
+this: cases ranked on path-only accidental evidence moved, and nothing measuring
+answer quality did. Corpus across six phases: no metric regressed at any phase.
+**Zero REGRESSION, zero unexpected.** One IMPROVEMENT: the ARC ordering decoy.
 
-## 7. Remaining limitation — one, and it is precise
+## 7. The path-evidence gate (final phase)
 
-`get_all_families` is generated and carries correct ordering evidence; it loses to
-a candidate whose `lexical = 1.0` comes from a file-stem coincidence. This is a
-**lexical-decoy** problem of the M142 class, not a mechanism problem: every M150
-lane behaved correctly on this query. Closing it means letting the decoy lose on
-its own evidence — the M142 generic-token down-weighting already does this for
-*name* matches and does not currently cover *path-stem* matches.
+**Producer, named exactly:** `directEvidenceAnchoring.ts`, branch (a) of
+`resolveFileStemWord`. Not FTS, not path scoring, not the domain lane. It resolves
+the prose word `families` to `linear_utils/families.py`, picks the first top-level
+def out of that file, and **synthesizes** `lexical: 1 / final: 1.9` by tier.
+M142 had already fixed the sibling branch (b); branch (a) was documented as
+"deliberately left alone" — sound reasoning about the FILE that silently extended
+to a symbol it did not cover.
 
-That is a self-contained next step and it is the only thing standing between M150
-and PASS.
+**Rule:** a weak *file-derived* mention may synthesize answer-grade relevance only
+for a definition with independent relevance (`lexical | domain | bodyLiteral |
+testToImpl | mechanismEvidence`). `path` and `symbol` are excluded — `symbol` is
+what the mention synthesizes, so consulting it would be circular. The predicate is
+caller-supplied; omitted means unknown and changes nothing.
 
-## 8. Recommended scope
+**Result:** `_dihedral_angle` **1.9000 / rank 1 → out of the lead**. No constant
+shaved, no threshold introduced, no ARC-specific exception.
 
-Not M151. Extend M142's generic-token lexical down-weighting to path-stem-only
-matches, so a candidate explained solely by a directory name cannot hold the pool
-maximum. Then re-run the ARC ordering acceptance and the §75 preservation runners.
-Everything else M150 needs is built, bounded, measured and preserved.
+**Frozen50 moved 16/50 — and every quality metric is identical:** Top-1 38, Top-3
+44, gold anywhere 48, gold symbol 31, missing 2 on both sides; mean tokens 1832.40
+→ 1832.48. Support-slot composition only. Cause `path_only_relevance_gate`,
+quality **NEUTRAL** (§66, §68). django 9/20, cross_repo_30 7/30, same story.
+TCKDB: 1/6 leads changed on the ordering query, also NEUTRAL — neither candidate
+is an established gold answer there.
+
+## 8. Remaining limitation — one, and it is precise
+
+The ordering query now leads with `determine_family` (the selection *consumer*) at
+1.7639, while `get_all_families` — the ordering *implementation*, correctly
+generated via `operation_fact` — sits at rank 22 on 1.0549. §32 asks the reverse
+emphasis for an ordering request: orderer primary, consumer secondary.
+
+This is no longer a path-decoy problem, a generation problem, or a mechanism
+problem. It is that an ordering fact contributes 0.55 while the consumer's own
+lexical evidence is far stronger, because the query's vocabulary
+(`precedence`, `order`, `families`, `match`) matches `determine_family`'s
+name and docstring better than it matches `get_all_families`.
+
+## 9. Recommended scope
+
+Not M151. One question remains and it is a scoring-emphasis question, not a
+retrieval one: for an explicit `ordering` request, should a direct
+`ordering_established` fact outweigh a consumer's lexical advantage? The weights
+are frozen for good reason, so this needs its own measured phase against the
+existing corpus rather than a tweak here. Everything else M150 needs is built,
+bounded, measured and preserved.
