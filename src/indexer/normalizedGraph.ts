@@ -54,7 +54,7 @@ export function normalizeGraph(db: Database): NormalizedGraph {
     FROM symbol_body_literals_fts ORDER BY file_path_raw, symbol_id
   `).all();
   const mechanismFacts = db.query(`
-    SELECT symbol_id, file_path_raw, ordinal, kind, subject, line_offset, evidence, result_bearing
+    SELECT symbol_id, file_path_raw, ordinal, kind, subject, line_offset, evidence, provenance, result_bearing
     FROM symbol_mechanism_facts ORDER BY file_path_raw, symbol_id, ordinal
   `).all();
   return { files, symbols, edges, symbolSearch, bodyLiterals, mechanismFacts };

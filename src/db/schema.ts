@@ -418,6 +418,7 @@ export function initializeSchema(db: Database): void {
       subject TEXT NOT NULL,
       line_offset INTEGER NOT NULL CHECK (line_offset >= 0),
       evidence TEXT NOT NULL,
+      provenance TEXT NOT NULL DEFAULT '',
       result_bearing INTEGER NOT NULL CHECK (result_bearing IN (0, 1)),
       PRIMARY KEY (symbol_id, ordinal),
       FOREIGN KEY (symbol_id)
@@ -434,6 +435,7 @@ export function initializeSchema(db: Database): void {
   `);
 
   ensureColumnExists(db, "symbols", "decorators", "TEXT");
+  ensureColumnExists(db, "symbol_mechanism_facts", "provenance", "TEXT NOT NULL DEFAULT ''");
   ensureObservationProvenanceSchema(db);
   ensureEdgeCheckSupportsCallsReferences(db);
   ensureSessionLifecycleSchema(db);

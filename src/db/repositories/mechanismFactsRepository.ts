@@ -18,6 +18,7 @@ export interface MechanismFactRow {
   readonly subject: string;
   readonly line_offset: number;
   readonly evidence: string;
+  readonly provenance: string;
   readonly result_bearing: number;
 }
 
@@ -49,12 +50,12 @@ export function replaceMechanismFactsForFile(
       db.run(
         `
           INSERT INTO symbol_mechanism_facts (
-            symbol_id, file_path_raw, ordinal, kind, subject, line_offset, evidence, result_bearing
+            symbol_id, file_path_raw, ordinal, kind, subject, line_offset, evidence, provenance, result_bearing
           )
-          VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
         `,
         [entry.symbolId, normalizedPath, ordinal, fact.kind, fact.subject, fact.lineOffset, fact.evidence,
-          fact.resultBearing ? 1 : 0],
+          fact.provenance, fact.resultBearing ? 1 : 0],
       );
     });
   }
@@ -86,7 +87,7 @@ export function loadMechanismFactsFor(
     const rows = db
       .query(
         `
-          SELECT symbol_id, kind, subject, line_offset, evidence, result_bearing
+          SELECT symbol_id, kind, subject, line_offset, evidence, provenance, result_bearing
           FROM symbol_mechanism_facts
           WHERE symbol_id IN (${placeholders})
           ORDER BY symbol_id ASC, ordinal ASC
@@ -100,6 +101,7 @@ export function loadMechanismFactsFor(
         subject: row.subject,
         lineOffset: row.line_offset,
         evidence: row.evidence,
+        provenance: row.provenance ?? "",
         resultBearing: row.result_bearing === 1,
       });
       out.set(row.symbol_id, facts);

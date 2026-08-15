@@ -10,7 +10,6 @@ import {
 import {
   evaluateMechanismEvidence,
   DIRECT_MECHANISM_EVIDENCE,
-  PARTIAL_MECHANISM_EVIDENCE,
   MECHANISM_SUBJECT_FLOOR,
 } from "./mechanismEvidence";
 
@@ -86,13 +85,17 @@ test("sorting for display never reaches the direct tier on a selection question"
   // does not select. In practice the subject-relevance floor also excludes a
   // display helper from a backend question; this asserts the tier, which holds
   // regardless of subject.
+  // Since subject alignment landed this is now zero, not merely sub-direct:
+  // `names` is neither the backend nor produced by anything that names one.
   const sorting = score("How is the preferred backend selected?", "def render(names):\n    return ', '.join(sorted(names))\n");
   expect(sorting).toBeLessThan(DIRECT_MECHANISM_EVIDENCE);
-  expect(sorting).toBe(PARTIAL_MECHANISM_EVIDENCE);
+  expect(sorting).toBe(0);
 });
 
 test("an ordering helper is direct evidence on a precedence question", () => {
-  const body = "def all_families(rmg, arc):\n    rmg = list(dict.fromkeys(rmg))\n    return rmg + arc\n";
+  // Realistic operand names: ARC's own helper works on `rmg_families` /
+  // `arc_families`, and the abbreviation `rmg` hid the subject the request names.
+  const body = "def all_families(rmg_families, arc_families):\n    rmg_families = list(dict.fromkeys(rmg_families))\n    return rmg_families + arc_families\n";
   expect(score("What determines the precedence when multiple families match?", body))
     .toBe(DIRECT_MECHANISM_EVIDENCE);
 });
@@ -101,7 +104,9 @@ test("an ordering helper is direct evidence on a precedence question", () => {
 
 test("the definition that performs the operation outscores one that delegates", () => {
   const delegator = "def get_family(label):\n    if label in CACHE:\n        return CACHE[label]\n    CACHE[label] = build(label)\n    return CACHE[label]\n";
-  const decider = "def determine_family(self):\n    dicts = self.product_dicts\n    family = dicts[0]['family']\n    return family\n";
+  // Shaped like ARC's real determine_family: the operand name says nothing about
+  // the subject, and the call that produced it says everything.
+  const decider = "def determine_family(self):\n    product_dicts = get_reaction_family_products(rxn=self)\n    family = product_dicts[0]['family']\n    return family\n";
   const question = "How does it decide which family wins?";
   expect(score(question, decider)).toBeGreaterThan(score(question, delegator));
 });
@@ -149,4 +154,79 @@ test("evaluation is pool-independent and repeatable", () => {
   const first = score("How does the system choose which option wins?", SELECTOR);
   const second = score("How does the system choose which option wins?", SELECTOR);
   expect(first).toBe(second);
+});
+
+// --- subject alignment (§7, §10, §11, §19-§29) --------------------------------
+
+test("the same operation on a different subject earns nothing", () => {
+  // Both take element zero of a collection they just built. Only one of them is
+  // choosing a backend. This is the Gaussian regression in miniature.
+  const chooser = "def choose_backend(config):\n    candidates = matching_backends(config)\n    return candidates[0]\n";
+  const parser = "def parse_frequency(output):\n    frequencies = extract_frequencies(output)\n    return frequencies[0]\n";
+  const question = "How does the system decide which backend wins?";
+  expect(score(question, chooser)).toBe(DIRECT_MECHANISM_EVIDENCE);
+  expect(score(question, parser)).toBe(0);
+});
+
+test("the alignment reverses with the subject, like compatibility does", () => {
+  const chooser = "def choose_backend(config):\n    candidates = matching_backends(config)\n    return candidates[0]\n";
+  const parser = "def parse_frequency(output):\n    frequencies = extract_frequencies(output)\n    return frequencies[0]\n";
+  const question = "How is the reported frequency selected?";
+  expect(score(question, parser)).toBe(DIRECT_MECHANISM_EVIDENCE);
+  expect(score(question, chooser)).toBe(0);
+});
+
+test("an uninformative operand aligns through its one-hop producer", () => {
+  // §11/§22: `xs` names nothing. Only the call that produced it connects the
+  // mechanism to the subject, which is exactly ARC's product_dicts shape.
+  const body = "def resolve(config):\n    xs = matching_backends_for(config)\n    return xs[0]\n";
+  expect(score("How does the system choose which backend wins?", body))
+    .toBe(DIRECT_MECHANISM_EVIDENCE);
+});
+
+test("a wrong producer in a topically plausible definition earns nothing", () => {
+  // §25: path, class and file all look right; the operand's producer does not.
+  const body = "def route(self, level):\n    values = parse_frequencies(self.output)\n    return values[0]\n";
+  expect(score("How does the adapter decide which route keywords to emit?", body)).toBe(0);
+});
+
+test("alignment is decided locally, never from the candidate's path or name", () => {
+  // The definition is NAMED for the subject and still earns nothing, because the
+  // statement it runs is about something else. §8 forbids the alternative.
+  const body = "def backend_selector(output):\n    frequencies = extract_frequencies(output)\n    return frequencies[0]\n";
+  expect(score("How does the system decide which backend wins?", body)).toBe(0);
+});
+
+test("a request naming no subject cannot refuse alignment", () => {
+  const body = "def process(data):\n    options = collect(data)\n    return options[0]\n";
+  const evidence = evaluateMechanismEvidence({
+    objective: { ...objective("How does it decide which one wins?"), subjectTerms: [] },
+    facts: extractMechanismFacts(body),
+    localName: "process",
+    fqName: "mod.py::process",
+    filePath: "mod.py",
+    subjectRelevance: 0.8,
+  });
+  expect(evidence.matched[0]?.alignment).toBe("undecidable");
+  expect(evidence.score).toBe(DIRECT_MECHANISM_EVIDENCE);
+});
+
+test("a cache question is not refused because the operand names the cache", () => {
+  // The operand of a cache consult is the STORE. Testing it against the
+  // request's subject would refuse the only fact that answers the question.
+  expect(score("How is the result cached?", CACHE_WRAPPER)).toBe(DIRECT_MECHANISM_EVIDENCE);
+});
+
+test("withholding on alignment names the value the mechanism actually acts on", () => {
+  const evidence = evaluateMechanismEvidence({
+    objective: objective("How does the system decide which backend wins?"),
+    facts: extractMechanismFacts("def parse_frequency(output):\n    frequencies = extract_frequencies(output)\n    return frequencies[0]\n"),
+    localName: "parse_frequency",
+    fqName: "mod.py::parse_frequency",
+    filePath: "mod.py",
+    subjectRelevance: 0.8,
+  });
+  expect(evidence.score).toBe(0);
+  expect(evidence.withheldReason).toContain("frequencies");
+  expect(evidence.withheldReason).toContain("does not ask about");
 });

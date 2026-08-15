@@ -130,9 +130,35 @@ export interface MechanismEvidence {
   readonly withheldReason?: string;
 }
 
+/**
+ * How closely a mechanism is tied to what the request is ASKING ABOUT.
+ *
+ * Operation compatibility says a definition performs a selection; this says
+ * whether it performs the selection of the thing in the question. The two are
+ * independent, and the checkpoint had only the first — which is why a dozen
+ * Gaussian result parsers each received full selection evidence on a request
+ * about route keywords (§6, §10).
+ *
+ * Deliberately LOCAL. Candidate path, file, class and domain score are all
+ * excluded: those are the signals that already made the wrong candidates look
+ * plausible, and letting any of them satisfy alignment would restate the defect
+ * rather than fix it (§8, §15).
+ */
+export type SubjectAlignment =
+  /** The operand the mechanism acts on names the subject. */
+  | "direct_operand"
+  /** The call that produced the operand names the subject. */
+  | "local_producer"
+  /** Neither does; the request has nothing to say about this value. */
+  | "none"
+  /** The request names no subject at all, so alignment cannot be decided. */
+  | "undecidable";
+
 export interface MatchedMechanism {
   readonly kind: MechanismFactKind;
   readonly compatibility: "direct" | "partial";
+  readonly alignment: SubjectAlignment;
+  readonly provenance: string;
   readonly subject: string;
   readonly lineOffset: number;
   readonly evidence: string;
@@ -174,6 +200,8 @@ export function evaluateMechanismEvidence(input: MechanismEvidenceInput): Mechan
       lineOffset: fact.lineOffset,
       evidence: fact.evidence,
       subjectMatched: operandMatchesSubject(fact.subject, subjectTerms),
+      alignment: alignmentOf(fact.subject, fact.provenance, subjectTerms),
+      provenance: fact.provenance,
       resultBearing: fact.resultBearing,
     });
   }
@@ -195,6 +223,18 @@ export function evaluateMechanismEvidence(input: MechanismEvidenceInput): Mechan
     };
   }
 
+  // The early refusal must honour the same exemption `strengthOf` does, or a
+  // cache consult is rejected here before the tier logic ever sees it.
+  if (matched.every((entry) =>
+    entry.alignment === "none" && !STATEMENT_FORM_IS_THE_BEHAVIOUR.has(entry.kind))) {
+    return {
+      score: 0,
+      matched,
+      withheldReason:
+        `mechanism performs ${input.objective.operation} on `
+        + `\`${matched[0]!.subject || "an unnamed value"}\`, which the request does not ask about`,
+    };
+  }
   matched.sort((a, b) => strengthOf(b) - strengthOf(a));
   // The STRONGEST single fact, not a sum over facts.
   const score = strengthOf(matched[0]!);
@@ -233,7 +273,7 @@ export function evaluateMechanismEvidence(input: MechanismEvidenceInput): Mechan
  * spelled it rather than what the code does — `if key in CACHE:` is the whole
  * answer to "how is this cached?" and is not a return statement.
  */
-const RESULT_BEARING_EXEMPT: ReadonlySet<MechanismFactKind> = new Set<MechanismFactKind>([
+const STATEMENT_FORM_IS_THE_BEHAVIOUR: ReadonlySet<MechanismFactKind> = new Set<MechanismFactKind>([
   "cache_lookup",
   "attribute_return",
   "priority_lookup",
@@ -252,16 +292,52 @@ const RESULT_BEARING_EXEMPT: ReadonlySet<MechanismFactKind> = new Set<MechanismF
  * element zero of a collection, and it is measured rather than assumed.
  */
 function strengthOf(entry: MatchedMechanism): number {
-  const proven = RESULT_BEARING_EXEMPT.has(entry.kind) || entry.resultBearing;
-  if (entry.compatibility === "direct") {
-    return proven ? DIRECT_MECHANISM_EVIDENCE : PARTIAL_MECHANISM_EVIDENCE;
-  }
-  return proven ? PARTIAL_MECHANISM_EVIDENCE : 0;
+  // These three kinds are exempt from BOTH proofs, for one reason. Their
+  // statement form is the behaviour, so they cannot occur incidentally — and for
+  // the same reason their operand is the STORE rather than the subject. A cache
+  // consult names the cache (`if key in CACHE`), an accessor names the private
+  // field; testing either against "how is the result cached?" would refuse the
+  // only fact that answers it. Selection-family kinds are the ambiguous ones,
+  // and they are the ones both proofs exist for.
+  const unambiguous = STATEMENT_FORM_IS_THE_BEHAVIOUR.has(entry.kind);
+  const proven = unambiguous || entry.resultBearing;
+  const aligned = unambiguous
+    || entry.alignment === "direct_operand"
+    || entry.alignment === "local_producer"
+    // A request that names no subject cannot refute alignment, and refusing
+    // evidence on an undecidable question would silently disable the lane for
+    // the shortest behavioural requests.
+    || entry.alignment === "undecidable";
+  if (entry.compatibility === "direct" && proven && aligned) return DIRECT_MECHANISM_EVIDENCE;
+  // Missing EITHER proof keeps the fact as real but secondary evidence; missing
+  // both means the statement is neither what this definition is for nor about
+  // what was asked, and earns nothing.
+  if (entry.compatibility === "direct" && (proven || aligned)) return PARTIAL_MECHANISM_EVIDENCE;
+  if (entry.compatibility === "partial" && proven && aligned) return PARTIAL_MECHANISM_EVIDENCE;
+  return 0;
 }
 
-/** Do this definition's own name tokens overlap the request's subject terms? */
+/**
+ * Decide alignment from the operand first, then from its one-hop producer.
+ *
+ * The order matters: `keywords[0]` is about keywords whatever produced it, and
+ * only when the operand itself is uninformative — `xs`, `product_dicts` — is the
+ * producing call worth consulting. That is also the cheaper test.
+ */
+function alignmentOf(
+  operand: string,
+  provenance: string,
+  subjectTerms: ReadonlySet<string>,
+): SubjectAlignment {
+  if (subjectTerms.size === 0) return "undecidable";
+  if (namesSubject(operand, subjectTerms)) return "direct_operand";
+  if (namesSubject(provenance, subjectTerms)) return "local_producer";
+  return "none";
+}
+
+/** Do these name tokens overlap the request's subject terms? */
 function namesSubject(name: string, subjectTerms: ReadonlySet<string>): boolean {
-  if (subjectTerms.size === 0) return false;
+  if (name.length === 0) return false;
   for (const token of tokenize(name)) {
     for (const term of subjectTerms) {
       if (stemEqual(token, term)) return true;
@@ -271,10 +347,10 @@ function namesSubject(name: string, subjectTerms: ReadonlySet<string>): boolean 
 }
 
 /**
- * Equal, or sharing a long enough prefix that they are the same word: `option` /
- * `options`, `family` / `families`. Deliberately the same shape as the domain
- * lane's stem rule so two parts of the scorecard cannot disagree about whether a
- * candidate names a subject.
+ * Equal, or sharing a long enough prefix to be the same word: `option`/`options`,
+ * `family`/`families`, `backend`/`backends`. The same shape as the domain lane's
+ * stem rule, so two parts of the scorecard cannot disagree about whether a name
+ * mentions a subject.
  */
 function stemEqual(a: string, b: string): boolean {
   if (a === b) return true;

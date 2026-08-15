@@ -97,6 +97,19 @@ export interface MechanismFact {
   /** The statement, trimmed and bounded. What §25 requires be showable. */
   readonly evidence: string;
   /**
+   * The local producer of the operand: the callee of the assignment that gave
+   * the operand its value inside this same body. Empty when the operand arrived
+   * as a parameter, from an attribute, or from no call at all.
+   *
+   * This is the one piece of provenance M150 needs, and the smallest that works.
+   * An operand's NAME frequently says nothing about the subject — ARC decides a
+   * reaction family from `product_dicts[0]`, and `product_dicts` encodes neither
+   * word — while the call that produced it, `get_reaction_family_products(...)`,
+   * says both. Resolved at index time from the same body: one hop, no graph
+   * traversal, no query-time cost.
+   */
+  readonly provenance: string;
+  /**
    * Does this mechanism produce what the definition RETURNS?
    *
    * The single most important property a fact carries, and the one that
@@ -181,13 +194,7 @@ export function looksLikeCollection(operand: string, body: string): boolean {
   for (const noun of COLLECTION_NOUNS) {
     if (leaf.endsWith(`_${noun}`) || leaf.startsWith(`${noun}_`)) return true;
   }
-  // Plural morphology: `dicts`, `options`, `backends`, `families`. Excludes the
-  // common singular endings that merely happen to finish in `s`.
-  const plural = /s$/u.test(leaf)
-    && leaf.length >= 4
-    && !/(?:ss|us|is|as|ies|ous|ness|sis|status|class|address|process|access)$/u.test(leaf);
-  if (plural) return true;
-  if (/ies$/u.test(leaf) && leaf.length >= 5) return true;
+  if (isPlural(leaf)) return true;
   // Assigned from a collection-producing call anywhere in the same body.
   const assignment = new RegExp(
     String.raw`\b${escape(leaf)}\s*(?::[^=\n]*)?=\s*([A-Za-z_][A-Za-z0-9_.]*)\s*\(`,
@@ -197,6 +204,12 @@ export function looksLikeCollection(operand: string, body: string): boolean {
   if (assigned !== null) {
     const callee = (assigned[1] ?? "").split(".").at(-1)?.toLowerCase() ?? "";
     if (COLLECTION_CALLS.has(callee)) return true;
+    // The PRODUCER may be plural where the operand is not. `xs =
+    // matching_backends_for(config)` is the shape §22 is about: the variable
+    // name says nothing and the call says "backends". Requiring a plural token
+    // in the callee keeps `value = compute(x)` out, and the §37 control is
+    // untouched because its operand is a parameter that no call produced.
+    if (tokenizeName(callee).some(isPlural)) return true;
   }
   // Assigned a list/tuple literal or a comprehension.
   if (new RegExp(String.raw`\b${escape(leaf)}\s*(?::[^=\n]*)?=\s*[\[(]`, "u").test(body)) return true;
@@ -205,6 +218,23 @@ export function looksLikeCollection(operand: string, body: string): boolean {
   // Measured by length — you do not call len() on a scalar.
   if (new RegExp(String.raw`\blen\s*\(\s*(?:self\.)?${escape(leaf)}\s*\)`, "u").test(body)) return true;
   return false;
+}
+
+/** Plural morphology, excluding the endings that merely finish in `s`. */
+function isPlural(token: string): boolean {
+  if (token.length < 4) return false;
+  if (/ies$/u.test(token) && token.length >= 5) return true;
+  return /s$/u.test(token)
+    && !/(?:ss|us|is|as|ous|ness|sis|status|class|address|process|access)$/u.test(token);
+}
+
+/** camelCase / snake_case split, lowercased. */
+function tokenizeName(value: string): string[] {
+  return value
+    .replace(/([a-z0-9])([A-Z])/gu, "$1 $2")
+    .split(/[^A-Za-z0-9]+/u)
+    .map((token) => token.toLowerCase())
+    .filter(Boolean);
 }
 
 function escape(value: string): string {
@@ -253,6 +283,7 @@ export function extractMechanismFacts(body: string, options: {
       subject: subject.toLowerCase(),
       lineOffset,
       evidence: evidence.trim().slice(0, MAX_EVIDENCE_CHARS),
+      provenance: producerOf(lines, subject),
       resultBearing: producesResult(lines, lineOffset),
     });
   };
@@ -608,6 +639,33 @@ function producesResult(lines: readonly string[], lineOffset: number): boolean {
     }
   }
   return false;
+}
+
+/**
+ * The callee that produced `operand` inside this body, if any.
+ *
+ * Deliberately ONE hop and deliberately local. Two hops was measured on the
+ * corpus and does not pay for itself yet (`wrapper(config)` hides
+ * `matching_backends_for` behind a name that says nothing), and chasing further
+ * would rebuild a data-flow engine to answer a ranking question — §12 and §95
+ * both forbid that. A missing producer is reported as absent, never guessed.
+ */
+function producerOf(lines: readonly string[], operand: string): string {
+  if (operand.length === 0) return "";
+  const assignment = new RegExp(
+    String.raw`^\s*(?:self\.)?${escape(operand)}\s*(?::[^=\n]*)?=\s*(?:await\s+)?((?:self\.)?[A-Za-z_][A-Za-z0-9_.]*)\s*\(`,
+    "iu",
+  );
+  for (const line of lines) {
+    const match = assignment.exec(line);
+    if (match === null) continue;
+    const callee = match[1]!.replace(/^self\./u, "");
+    const leaf = callee.split(".").at(-1) ?? callee;
+    // A wrapper that only converts a container tells us nothing about subject.
+    if (WRAPPER_CALLS.has(leaf.toLowerCase())) continue;
+    return callee.toLowerCase();
+  }
+  return "";
 }
 
 function indentOf(line: string): number {
