@@ -24,6 +24,7 @@ import type { Database } from "bun:sqlite";
 
 import type { ProductContextItem, ProductContextResponse } from "../productContext/types";
 import { aggregateCrossRepoContext, type CrossRepoCandidate } from "./crossRepoAggregation";
+import type { EvidenceCoverage } from "./evidenceClaims";
 import type { RegisteredRepository, WorkspaceRegistry, WorkspaceRouteSelector } from "./registry";
 import type { WorkspaceReadiness } from "./readiness";
 import {
@@ -73,9 +74,24 @@ export interface WorkspaceRoutingSummary {
   readonly repositoriesRegistered: number;
   readonly repositoriesReady: number;
   readonly repositoriesDeepProbed: number;
-  /** Members excluded because their index cannot answer. Never "low relevance". */
+  /**
+   * Members excluded because their index cannot answer. Never "low relevance",
+   * and BOUNDED — `excludedNotReadyTotal` carries the real count so a
+   * thousand-member workspace does not put a thousand records in the response.
+   */
   readonly excludedNotReady: readonly { readonly alias: string; readonly reason: string }[];
+  readonly excludedNotReadyTotal: number;
+  readonly excludedNotReadyOmitted: number;
   readonly candidates: readonly string[];
+  /**
+   * M149: what the routing scan actually covered, per evidence capability.
+   *
+   * Present on SUCCESS as well as failure. `supportingRepositories` is drawn
+   * from a bounded prefix scan, so an empty or short list is not a statement
+   * that no other repository could contribute — and before this there was no
+   * field in the response that could tell those two apart.
+   */
+  readonly coverage: readonly EvidenceCoverage[];
 }
 
 export interface WorkspaceProductContextResult {
@@ -306,7 +322,10 @@ function summarize(relevance: RepositoryRelevance, composed: boolean): Workspace
     repositoriesReady: relevance.diagnostics.reposReady,
     repositoriesDeepProbed: relevance.diagnostics.reposDeepProbed,
     excludedNotReady: relevance.diagnostics.reposExcludedNotReady,
+    excludedNotReadyTotal: relevance.diagnostics.reposExcludedNotReadyTotal,
+    excludedNotReadyOmitted: relevance.diagnostics.reposExcludedNotReadyOmitted,
     // Bounded: the plausible set, never the workspace.
     candidates: relevance.candidates.map((repo) => repo.alias),
+    coverage: relevance.diagnostics.coverage,
   };
 }

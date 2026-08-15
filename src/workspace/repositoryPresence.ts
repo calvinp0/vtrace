@@ -22,6 +22,14 @@
  * returns what they entitle a caller to conclude, which is the only reason the
  * rule can be read in one place and tested without a workspace.
  */
+import { boundedJoin, MAX_REPORTED_COVERAGE_EXAMPLES } from "./evidenceClaims";
+
+/**
+ * Members named in a proof's lists and reason. M149 §51: the proof is read by a
+ * model, and a 1000-member workspace must not spend its budget on 1000 aliases
+ * when a count says the same thing.
+ */
+const MAX_REPORTED_PROOF_MEMBERS = MAX_REPORTED_COVERAGE_EXAMPLES;
 
 /** What a single repository contributed to the proof. */
 export const RepositoryPresenceState = Object.freeze({
@@ -100,8 +108,19 @@ export interface UniquenessProof {
   readonly status: UniquenessProofStatus;
   /** Non-null only for `unique`. */
   readonly owner: string | null;
+  /**
+   * Members holding the evidence, BOUNDED (M149 §51). `presentTotal` is the real
+   * count; this list is capped so a workspace-scale answer does not carry a
+   * member record per repository. The verdict is computed from the totals, never
+   * from these lists.
+   */
   readonly present: readonly string[];
+  readonly presentTotal: number;
+  readonly presentOmitted: number;
+  /** Members that could not answer, bounded the same way. */
   readonly unknown: readonly { readonly alias: string; readonly reason: PresenceUnknownReason }[];
+  readonly unknownTotal: number;
+  readonly unknownOmitted: number;
   readonly definitelyAbsent: number;
   readonly reason: string;
 }
@@ -156,7 +175,18 @@ export function proveExactUniqueness(
     .filter((entry) => entry.state === RepositoryPresenceState.DefinitelyAbsent)
     .length;
 
-  const base = { present, unknown, definitelyAbsent };
+  // The lists travel BOUNDED; the verdict is decided from the totals. Keeping
+  // those two apart is the whole point — truncating a report must never be able
+  // to change what the report concludes (M149 §51/§134).
+  const base = {
+    present: present.slice(0, MAX_REPORTED_PROOF_MEMBERS),
+    presentTotal: present.length,
+    presentOmitted: Math.max(0, present.length - MAX_REPORTED_PROOF_MEMBERS),
+    unknown: unknown.slice(0, MAX_REPORTED_PROOF_MEMBERS),
+    unknownTotal: unknown.length,
+    unknownOmitted: Math.max(0, unknown.length - MAX_REPORTED_PROOF_MEMBERS),
+    definitelyAbsent,
+  };
 
   // Settled by the count alone. A missing answer can only add a third owner, so
   // waiting for it would not change the conclusion.
@@ -165,14 +195,14 @@ export function proveExactUniqueness(
       ...base,
       status: UniquenessProofStatus.Ambiguous,
       owner: null,
-      reason: `${present.length} repositories ${subject.verb} ${subject.noun}: ${present.join(", ")}.`,
+      reason: `${present.length} repositories ${subject.verb} ${subject.noun}: ${boundedJoin(present)}.`,
     };
   }
 
   // Every remaining conclusion is a claim ABOUT the repositories that did not
   // answer, so one unknown member is enough to withhold it.
   if (unknown.length > 0) {
-    const blockers = unknown.map((entry) => `${entry.alias} (${entry.reason})`).join(", ");
+    const blockers = boundedJoin(unknown.map((entry) => `${entry.alias} (${entry.reason})`));
     return {
       ...base,
       status: UniquenessProofStatus.Unproven,

@@ -28,6 +28,14 @@
  */
 import type { Database } from "bun:sqlite";
 
+import {
+  composeCoverage,
+  EvidenceCapability,
+  EvidenceScope,
+  MAX_REPORTED_COVERAGE_EXAMPLES,
+  type CoverageExample,
+  type EvidenceCoverage,
+} from "./evidenceClaims";
 import { createPathMembershipResolver, PathMembershipStatus, type PathMembershipScope } from "./pathMembership";
 import { normalizePathHint } from "./pathMembership";
 import type { RegisteredRepository, WorkspaceRegistry, WorkspaceRouteSelector } from "./registry";
@@ -208,8 +216,15 @@ export interface RepositoryRelevanceDiagnostics {
   readonly reposMetadataChecked: number;
   /** Members whose index was actually opened and queried. */
   readonly reposDeepProbed: number;
-  /** Members excluded from indexed lanes because their index is unusable. */
+  /**
+   * Members excluded from indexed lanes because their index is unusable,
+   * BOUNDED (M149 §51). `reposExcludedNotReadyTotal` is the real count; a
+   * workspace with 900 refused members reports the count and four examples, not
+   * 900 records.
+   */
   readonly reposExcludedNotReady: readonly { readonly alias: string; readonly reason: string }[];
+  readonly reposExcludedNotReadyTotal: number;
+  readonly reposExcludedNotReadyOmitted: number;
   /** Which tier produced the decision. null when nothing did. */
   readonly decidingTier: RepositoryEvidenceKind | null;
   readonly candidatesOmitted: number;
@@ -233,6 +248,16 @@ export interface RepositoryRelevanceDiagnostics {
   readonly indexedPathProof: UniquenessProof | null;
   /** Ready members actually asked an indexed-path membership question. */
   readonly reposPathMembershipScanned: number;
+  /**
+   * M149: what each lane that ran actually covered. At most one entry per lane,
+   * so this is bounded by construction rather than by a cap.
+   *
+   * Reported even when routing succeeded, because a POSITIVE answer can still
+   * rest on a partial scan — `supporting` naming three repositories after a
+   * bounded prefix scan is not a claim that only three support the request, and
+   * without this a consumer had no way to tell the difference.
+   */
+  readonly coverage: readonly EvidenceCoverage[];
 }
 
 export interface RepositoryRelevance {
@@ -361,9 +386,12 @@ export function nominateRepositories(request: RepositoryRelevanceRequest): Repos
     && (indexedPathDecides || collectSupporting);
   let indexedPathProof: UniquenessProof | null = null;
   let pathMembershipScanned = 0;
+  // What each lane covered, accumulated as the lanes run. At most one entry per
+  // lane, so no cap is needed to keep it bounded.
+  const coverage: EvidenceCoverage[] = [];
+  const pathObservations: RepositoryPresenceObservation[] = [];
 
   if (indexedPathRuns) {
-    const pathObservations: RepositoryPresenceObservation[] = [];
     const scopes: PathMembershipScope[] = [];
     const scanned: string[] = [];
     const population = indexedPathDecides
@@ -399,6 +427,23 @@ export function nominateRepositories(request: RepositoryRelevanceRequest): Repos
         worktreeRoot: repo.rootPath,
         indexedPaths: probe.indexedPaths,
       });
+    }
+
+    // A support-mode scan reads a PREFIX of the ready members, so the ones it
+    // never reached owe an observation too. Without them `supporting` reads as
+    // the complete list of repositories that could contribute, when it is only
+    // the list among those we got around to asking (M149 §27).
+    if (!indexedPathDecides) {
+      const observed = new Set(pathObservations.map((entry) => entry.alias));
+      for (const repo of members) {
+        if (observed.has(repo.alias) || scanned.includes(repo.alias)) continue;
+        pathObservations.push(unknownObservation(
+          repo.alias,
+          readinessByAlias.get(repo.alias)?.ready === true
+            ? PresenceUnknownReason.BeyondScanBound
+            : PresenceUnknownReason.IndexRefused,
+        ));
+      }
     }
 
     const matched = new Set<string>();
@@ -446,6 +491,12 @@ export function nominateRepositories(request: RepositoryRelevanceRequest): Repos
     if (indexedPathDecides) {
       indexedPathProof = proveExactUniqueness(pathObservations, { verb: "indexes", noun: "this path" });
     }
+    coverage.push(coverageFromObservations({
+      capability: EvidenceCapability.PathMembership,
+      purpose: indexedPathDecides ? "deciding" : "support",
+      considered: members.length,
+      observations: pathObservations,
+    }));
   }
 
   if (hasTier(evidence, RepositoryEvidenceKind.IndexedPath) && decidingTier === null && !collectSupporting) {
@@ -459,6 +510,7 @@ export function nominateRepositories(request: RepositoryRelevanceRequest): Repos
       diagnostics: baseDiagnostics(members, readyMembers, excluded, deepProbedAliases.size, {
         pathMembershipScanned,
         indexedPathProof,
+        coverage,
       }),
     });
   }
@@ -541,6 +593,12 @@ export function nominateRepositories(request: RepositoryRelevanceRequest): Repos
       }
     }
     presenceProof = proveExactUniqueness(observations);
+    coverage.push(coverageFromObservations({
+      capability: EvidenceCapability.SymbolExactLookup,
+      purpose: "deciding",
+      considered: members.length,
+      observations,
+    }));
   }
 
   decidingTier ??= hasTier(evidence, RepositoryEvidenceKind.ExactSymbol)
@@ -565,6 +623,7 @@ export function nominateRepositories(request: RepositoryRelevanceRequest): Repos
         presenceProof,
         pathMembershipScanned,
         indexedPathProof,
+        coverage,
       }),
     });
   }
@@ -578,8 +637,23 @@ export function nominateRepositories(request: RepositoryRelevanceRequest): Repos
   // which members are missing instead of asserting a global negative the scan
   // did not establish. M148-B extends that to the path lane: an unknown member
   // could be exactly the repository that indexes the path.
-  const unprovenLane = [indexedPathProof, presenceProof]
-    .find((proof) => proof !== null && proof.status === UniquenessProofStatus.Unproven) ?? null;
+  //
+  // M149 sharpens what that sentence may claim. Before, ONE string covered three
+  // epistemically different outcomes: every member was asked and none matched;
+  // some member could not be asked; and no lane ran at all because the request
+  // named nothing to check. Measured on a two-member workspace with no hints:
+  //
+  //   reason  No repository carries evidence for this request.
+  //   probed  0
+  //
+  // Nothing was checked, and the sentence read as a finding about the workspace.
+  // A negative may now only be stated as far as a lane actually reached, so the
+  // proof's own wording — which already says how many members were checked — is
+  // preferred over the generic sentence whenever a lane produced one.
+  const laneProofs = [indexedPathProof, presenceProof]
+    .filter((proof): proof is UniquenessProof => proof !== null);
+  const unprovenLane = laneProofs.find((proof) => proof.status === UniquenessProofStatus.Unproven) ?? null;
+  const absentLane = laneProofs.find((proof) => proof.status === UniquenessProofStatus.Absent) ?? null;
   return {
     status: RepositoryRelevanceStatus.NoMatch,
     selected: [],
@@ -589,7 +663,10 @@ export function nominateRepositories(request: RepositoryRelevanceRequest): Repos
       ? "No enabled repository is registered in this workspace."
       : unprovenLane !== null
         ? unprovenLane.reason
-        : "No repository carries evidence for this request.",
+        : absentLane !== null
+          // Earned: every eligible member answered from an exact source.
+          ? absentLane.reason
+          : nothingCheckedReason(pathHints.length + symbolHints.length > 0),
     diagnostics: {
       ...baseDiagnostics(members, readyMembers, excluded, deepProbedAliases.size, {
         presenceScanned,
@@ -597,6 +674,7 @@ export function nominateRepositories(request: RepositoryRelevanceRequest): Repos
         presenceProof,
         pathMembershipScanned,
         indexedPathProof,
+        coverage,
       }),
       decidingTier: null,
       candidatesOmitted: 0,
@@ -781,6 +859,7 @@ interface PresenceDiagnostics {
   readonly presenceProof?: UniquenessProof | null;
   readonly pathMembershipScanned?: number;
   readonly indexedPathProof?: UniquenessProof | null;
+  readonly coverage?: readonly EvidenceCoverage[];
 }
 
 function baseDiagnostics(
@@ -796,13 +875,66 @@ function baseDiagnostics(
     reposReady: readyMembers.length,
     reposMetadataChecked: members.length,
     reposDeepProbed: deepProbed,
-    reposExcludedNotReady: excluded,
+    // Bounded: the COUNT is the fact a caller acts on, and four named examples
+    // are enough to start diagnosing. A workspace-sized list is not (§51).
+    reposExcludedNotReady: excluded.slice(0, MAX_REPORTED_COVERAGE_EXAMPLES),
+    reposExcludedNotReadyTotal: excluded.length,
+    reposExcludedNotReadyOmitted: Math.max(0, excluded.length - MAX_REPORTED_COVERAGE_EXAMPLES),
     reposPresenceScanned: presence.presenceScanned ?? 0,
     presenceAccessPaths: presence.presenceAccessPaths ?? NO_PRESENCE_SCAN,
     presenceProof: presence.presenceProof ?? null,
     reposPathMembershipScanned: presence.pathMembershipScanned ?? 0,
     indexedPathProof: presence.indexedPathProof ?? null,
+    coverage: presence.coverage ?? [],
   };
+}
+
+/**
+ * Turn a lane's observations into a bounded coverage record.
+ *
+ * The unknown REASONS are kept apart rather than summed, because they have
+ * different remedies and a consumer that cannot tell them apart will suggest the
+ * wrong one: a refused index is repaired by rebuilding it, and a member past the
+ * bound is reached by raising the bound.
+ */
+function coverageFromObservations(input: {
+  readonly capability: EvidenceCapability;
+  readonly purpose: "deciding" | "support";
+  readonly considered: number;
+  readonly observations: readonly RepositoryPresenceObservation[];
+}): EvidenceCoverage {
+  const unknown = input.observations.filter(
+    (entry) => entry.state === RepositoryPresenceState.Unknown,
+  );
+  const examples: CoverageExample[] = unknown.map((entry) => ({
+    alias: entry.alias,
+    reason: entry.unknownReason ?? PresenceUnknownReason.ProbeUnavailable,
+  }));
+  const countBy = (reason: PresenceUnknownReason): number =>
+    unknown.filter((entry) => entry.unknownReason === reason).length;
+  return composeCoverage({
+    capability: input.capability,
+    purpose: input.purpose,
+    // A lane asks the enabled members; a disabled member is outside the
+    // population entirely, so no lane may speak for the whole workspace.
+    scope: EvidenceScope.EnabledMembers,
+    considered: input.considered,
+    answered: input.observations.length - unknown.length,
+    refusedWithoutEvidence: countBy(PresenceUnknownReason.IndexRefused),
+    omittedByBound: countBy(PresenceUnknownReason.BeyondScanBound),
+    unknownOther: countBy(PresenceUnknownReason.ProbeUnavailable),
+    examples,
+  });
+}
+
+/**
+ * The sentence for "no lane produced an answer". Split by WHY, because the two
+ * cases have different remedies and neither is a finding about the workspace.
+ */
+function nothingCheckedReason(hintsPresent: boolean): string {
+  return hintsPresent
+    ? "No repository could be checked for this request: no index probe was available."
+    : "This request names no path or symbol to route on, so no repository was checked.";
 }
 
 /**

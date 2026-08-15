@@ -231,7 +231,11 @@ describe("M148-B indexed-path proof controls (§51)", () => {
     const { relevance } = await nominate(config, { pathHints: ["src/nothing_indexes_this.py"] });
 
     expect(relevance.status).toBe(RepositoryRelevanceStatus.NoMatch);
-    expect(relevance.reason).toBe("No repository carries evidence for this request.");
+    // M149 §16: this outcome is an EARNED absence, and it now says so. The
+    // predecessor emitted "No repository carries evidence for this request." —
+    // the same sentence it emitted when no lane had run at all, which made a
+    // complete negative and a total non-observation indistinguishable.
+    expect(relevance.reason).toBe("No eligible repository indexes this path; all 3 were checked.");
     // Negative proof, not silence: every member was asked and answered.
     const proof = relevance.diagnostics.indexedPathProof!;
     expect(proof.status).toBe(UniquenessProofStatus.Absent);
