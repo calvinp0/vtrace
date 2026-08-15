@@ -1,0 +1,317 @@
+{
+  "schemaVersion": "stage5.m150.arc-family.v1",
+  "label": "after",
+  "index": "/home/calvin/bench/vtrace-m150/arc-m150.sqlite",
+  "cases": [
+    {
+      "id": "selection",
+      "query": "How does ARC decide which reaction family wins?",
+      "queryProvenance": "reconstructed_from_report",
+      "operation": "selection",
+      "operationCue": "decide",
+      "operationSuppressedBy": null,
+      "subjectTerms": [
+        "reaction",
+        "family"
+      ],
+      "lead": "arc/reaction/reaction.py::determine_family",
+      "pivots": [
+        "arc/reaction/reaction.py::ARCReaction.determine_family",
+        "arc/family/family.py::ReactionFamily.get_reactant_num"
+      ],
+      "support": [
+        "arc/job/adapters/ts/seed_hub.py::_get_no2_ono_atoms_from_reaction",
+        "find_all_breaking_bonds",
+        "arc/family/family.py::get_reaction_family",
+        "arc/reaction/reaction.py::ARCReaction.family"
+      ],
+      "watchlist": [
+        {
+          "fqName": "arc/family/family.py::get_reaction_family",
+          "rank": 3,
+          "final": 1.9,
+          "mechanismEvidence": 0,
+          "deliveredAs": "support"
+        },
+        {
+          "fqName": "arc/family/family.py::get_reaction_family_products",
+          "rank": 8,
+          "final": 1.7413,
+          "mechanismEvidence": 0,
+          "deliveredAs": null
+        },
+        {
+          "fqName": "arc/family/family.py::get_all_families",
+          "rank": null,
+          "final": null,
+          "mechanismEvidence": 0,
+          "deliveredAs": null
+        },
+        {
+          "fqName": "arc/reaction/reaction.py::ARCReaction.determine_family",
+          "rank": 1,
+          "final": 2.1256,
+          "mechanismEvidence": 0.55,
+          "deliveredAs": "pivot"
+        },
+        {
+          "fqName": "arc/reaction/reaction.py::ARCReaction.family",
+          "rank": 4,
+          "final": 1.9,
+          "mechanismEvidence": 0,
+          "deliveredAs": "support"
+        }
+      ],
+      "decisionStatementVisible": true,
+      "estimatedTokens": 1172
+    },
+    {
+      "id": "cache_control",
+      "query": "How is reaction-family lookup cached?",
+      "queryProvenance": "authored_control",
+      "operation": "caching",
+      "operationCue": "cached?",
+      "operationSuppressedBy": null,
+      "subjectTerms": [
+        "reaction",
+        "family",
+        "lookup"
+      ],
+      "lead": "arc/family/family.py::get_reaction_family",
+      "pivots": [
+        "arc/family/family.py::get_reaction_family",
+        "arc/reaction/reaction.py::ARCReaction.family"
+      ],
+      "support": [
+        "arc/job/adapters/ts/linear.py::cached_map_rxn",
+        "arc/job/adapters/ts/linear_utils/families.py::build_baeyer_villiger_step2_ts",
+        "find_all_breaking_bonds",
+        "arc/family/family.py::ReactionFamily"
+      ],
+      "watchlist": [
+        {
+          "fqName": "arc/family/family.py::get_reaction_family",
+          "rank": 1,
+          "final": 1.9475,
+          "mechanismEvidence": 0.55,
+          "deliveredAs": "pivot"
+        },
+        {
+          "fqName": "arc/family/family.py::get_reaction_family_products",
+          "rank": 12,
+          "final": 1.2252,
+          "mechanismEvidence": 0,
+          "deliveredAs": null
+        },
+        {
+          "fqName": "arc/family/family.py::get_all_families",
+          "rank": null,
+          "final": null,
+          "mechanismEvidence": 0,
+          "deliveredAs": null
+        },
+        {
+          "fqName": "arc/reaction/reaction.py::ARCReaction.determine_family",
+          "rank": 8,
+          "final": 1.3752,
+          "mechanismEvidence": 0,
+          "deliveredAs": null
+        },
+        {
+          "fqName": "arc/reaction/reaction.py::ARCReaction.family",
+          "rank": 2,
+          "final": 1.9,
+          "mechanismEvidence": 0,
+          "deliveredAs": "pivot"
+        }
+      ],
+      "decisionStatementVisible": false,
+      "estimatedTokens": 657
+    },
+    {
+      "id": "accessor_control",
+      "query": "Where is the selected reaction family stored on ARCReaction?",
+      "queryProvenance": "authored_control",
+      "operation": "storage",
+      "operationCue": "where is the selected reaction family stored",
+      "operationSuppressedBy": null,
+      "subjectTerms": [
+        "reaction",
+        "family",
+        "arc"
+      ],
+      "lead": "arc/reaction/reaction.py::family_own_reverse",
+      "pivots": [
+        "arc/reaction/reaction.py::ARCReaction.family_own_reverse",
+        "arc/reaction/reaction.py::ARCReaction.family"
+      ],
+      "support": [
+        "arc/family/family.py::get_reaction_family",
+        "arc/molecule/molecule.py::Molecule.get_symmetry_number",
+        "arc/species/species.py::ARCSpecies.generate_conformers",
+        "find_all_breaking_bonds"
+      ],
+      "watchlist": [
+        {
+          "fqName": "arc/family/family.py::get_reaction_family",
+          "rank": 3,
+          "final": 1.9,
+          "mechanismEvidence": 0,
+          "deliveredAs": "support"
+        },
+        {
+          "fqName": "arc/family/family.py::get_reaction_family_products",
+          "rank": 8,
+          "final": 1.7511,
+          "mechanismEvidence": 0,
+          "deliveredAs": null
+        },
+        {
+          "fqName": "arc/family/family.py::get_all_families",
+          "rank": null,
+          "final": null,
+          "mechanismEvidence": 0,
+          "deliveredAs": null
+        },
+        {
+          "fqName": "arc/reaction/reaction.py::ARCReaction.determine_family",
+          "rank": 9,
+          "final": 1.735,
+          "mechanismEvidence": 0,
+          "deliveredAs": null
+        },
+        {
+          "fqName": "arc/reaction/reaction.py::ARCReaction.family",
+          "rank": 2,
+          "final": 2.1706,
+          "mechanismEvidence": 0.55,
+          "deliveredAs": "pivot"
+        }
+      ],
+      "decisionStatementVisible": false,
+      "estimatedTokens": 535
+    },
+    {
+      "id": "identifier_control",
+      "query": "Where is determine_family defined?",
+      "queryProvenance": "authored_control",
+      "operation": null,
+      "operationCue": null,
+      "operationSuppressedBy": "no behavioural operation cue",
+      "subjectTerms": [],
+      "lead": "arc/reaction/reaction.py::determine_family",
+      "pivots": [
+        "arc/reaction/reaction.py::ARCReaction.determine_family",
+        "arc/family/family.py::determine_possible_reaction_products_from_family"
+      ],
+      "support": [
+        "arc/scheduler.py::Scheduler.determine_most_stable_conformer",
+        "arc/family/family.py::get_reaction_family_products",
+        "arc/family/family.py::check_family_name",
+        "arc/family/family.py::is_reversible"
+      ],
+      "watchlist": [
+        {
+          "fqName": "arc/family/family.py::get_reaction_family",
+          "rank": null,
+          "final": null,
+          "mechanismEvidence": 0,
+          "deliveredAs": null
+        },
+        {
+          "fqName": "arc/family/family.py::get_reaction_family_products",
+          "rank": 7,
+          "final": 1.4269,
+          "mechanismEvidence": 0,
+          "deliveredAs": "support"
+        },
+        {
+          "fqName": "arc/family/family.py::get_all_families",
+          "rank": null,
+          "final": null,
+          "mechanismEvidence": 0,
+          "deliveredAs": null
+        },
+        {
+          "fqName": "arc/reaction/reaction.py::ARCReaction.determine_family",
+          "rank": 3,
+          "final": 1.5737,
+          "mechanismEvidence": 0,
+          "deliveredAs": "pivot"
+        },
+        {
+          "fqName": "arc/reaction/reaction.py::ARCReaction.family",
+          "rank": null,
+          "final": null,
+          "mechanismEvidence": 0,
+          "deliveredAs": null
+        }
+      ],
+      "decisionStatementVisible": true,
+      "estimatedTokens": 1994
+    },
+    {
+      "id": "ordering",
+      "query": "What determines the precedence/order when multiple reaction families match?",
+      "queryProvenance": "authored_control",
+      "operation": "ordering",
+      "operationCue": "precedence",
+      "operationSuppressedBy": null,
+      "subjectTerms": [
+        "reaction",
+        "families",
+        "match"
+      ],
+      "lead": "arc/job/adapters/ts/linear_utils/families.py::_dihedral_angle",
+      "pivots": [
+        "arc/job/adapters/ts/linear_utils/families.py::_dihedral_angle",
+        "arc/reaction/reaction.py::get_resonance_bond_orders"
+      ],
+      "support": [
+        "arc/family/family.py::determine_possible_reaction_products_from_family",
+        "arc/job/adapters/ts/linear.py::interpolate_addition",
+        "find_all_breaking_bonds",
+        "arc/reaction/reaction.py::ARCReaction.determine_family"
+      ],
+      "watchlist": [
+        {
+          "fqName": "arc/family/family.py::get_reaction_family",
+          "rank": null,
+          "final": null,
+          "mechanismEvidence": 0,
+          "deliveredAs": null
+        },
+        {
+          "fqName": "arc/family/family.py::get_reaction_family_products",
+          "rank": 8,
+          "final": 1.3004,
+          "mechanismEvidence": 0,
+          "deliveredAs": null
+        },
+        {
+          "fqName": "arc/family/family.py::get_all_families",
+          "rank": null,
+          "final": null,
+          "mechanismEvidence": 0,
+          "deliveredAs": null
+        },
+        {
+          "fqName": "arc/reaction/reaction.py::ARCReaction.determine_family",
+          "rank": 3,
+          "final": 1.7675,
+          "mechanismEvidence": 0,
+          "deliveredAs": "support"
+        },
+        {
+          "fqName": "arc/reaction/reaction.py::ARCReaction.family",
+          "rank": null,
+          "final": null,
+          "mechanismEvidence": 0,
+          "deliveredAs": null
+        }
+      ],
+      "decisionStatementVisible": false,
+      "estimatedTokens": 1103
+    }
+  ]
+}
