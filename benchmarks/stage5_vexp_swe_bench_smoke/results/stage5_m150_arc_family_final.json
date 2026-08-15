@@ -23,7 +23,7 @@
         "build_singlet_carbene_intra_disproportionation_ts",
         "find_all_breaking_bonds",
         "arc/reaction/reaction.py::ARCReaction.family",
-        "arc/family/family.py::ReactionFamily.get_reactant_num"
+        "arc/family/family.py::get_all_families"
       ],
       "watchlist": [
         {
@@ -45,7 +45,7 @@
           "rank": null,
           "final": null,
           "mechanismEvidence": 0,
-          "deliveredAs": null
+          "deliveredAs": "support"
         },
         {
           "fqName": "arc/reaction/reaction.py::ARCReaction.determine_family",
@@ -63,7 +63,7 @@
         }
       ],
       "decisionStatementVisible": true,
-      "estimatedTokens": 1134
+      "estimatedTokens": 1180
     },
     {
       "id": "cache_control",

@@ -1,0 +1,130 @@
+{
+  "schemaVersion": "stage5.m150.arc-contrast.v1",
+  "cases": [
+    {
+      "id": "selection",
+      "query": "How does ARC decide which reaction family wins?",
+      "elapsedMs": 241.54,
+      "lead": "arc/reaction/reaction.py::ARCReaction.determine_family",
+      "pivots": [
+        "arc/reaction/reaction.py::ARCReaction.determine_family",
+        "arc/family/family.py::get_reaction_family"
+      ],
+      "mechanismSupport": [
+        "arc/family/family.py::get_all_families"
+      ],
+      "slices": [
+        {
+          "fq": "arc/reaction/reaction.py::ARCReaction.determine_family",
+          "start_line": 647,
+          "end_line": 650,
+          "decision_line": 648,
+          "lines": 4,
+          "bytes": 171,
+          "truncated": false
+        },
+        {
+          "fq": "arc/family/family.py::get_all_families",
+          "start_line": 765,
+          "end_line": 771,
+          "decision_line": 769,
+          "lines": 7,
+          "bytes": 471,
+          "truncated": false
+        }
+      ],
+      "decisionStatementVisible": true,
+      "moduleNodes": 0,
+      "tokens": 1180
+    },
+    {
+      "id": "cache",
+      "query": "How is reaction-family lookup cached?",
+      "elapsedMs": 188.2,
+      "lead": "arc/family/family.py::get_reaction_family",
+      "pivots": [
+        "arc/family/family.py::get_reaction_family",
+        "arc/reaction/reaction.py::ARCReaction.family"
+      ],
+      "mechanismSupport": [],
+      "slices": [
+        {
+          "fq": "arc/family/family.py::get_reaction_family",
+          "start_line": 49,
+          "end_line": 55,
+          "decision_line": 53,
+          "lines": 7,
+          "bytes": 273,
+          "truncated": false
+        }
+      ],
+      "decisionStatementVisible": false,
+      "moduleNodes": 0,
+      "tokens": 657
+    },
+    {
+      "id": "storage",
+      "query": "Where is the selected reaction family stored on ARCReaction?",
+      "elapsedMs": 211.28,
+      "lead": "arc/reaction/reaction.py::ARCReaction.family_own_reverse",
+      "pivots": [
+        "arc/reaction/reaction.py::ARCReaction.family_own_reverse",
+        "arc/reaction/reaction.py::ARCReaction.family"
+      ],
+      "mechanismSupport": [],
+      "slices": [
+        {
+          "fq": "arc/reaction/reaction.py::ARCReaction.family_own_reverse",
+          "start_line": 280,
+          "end_line": 284,
+          "decision_line": 284,
+          "lines": 5,
+          "bytes": 236,
+          "truncated": false
+        },
+        {
+          "fq": "arc/reaction/reaction.py::ARCReaction.family",
+          "start_line": 265,
+          "end_line": 269,
+          "decision_line": 269,
+          "lines": 5,
+          "bytes": 185,
+          "truncated": false
+        }
+      ],
+      "decisionStatementVisible": false,
+      "moduleNodes": 0,
+      "tokens": 535
+    },
+    {
+      "id": "identifier",
+      "query": "Where is determine_family defined?",
+      "elapsedMs": 580.46,
+      "lead": "arc/reaction/reaction.py::ARCReaction.determine_family",
+      "pivots": [
+        "arc/reaction/reaction.py::ARCReaction.determine_family",
+        "arc/family/family.py::determine_possible_reaction_products_from_family"
+      ],
+      "mechanismSupport": [],
+      "slices": [],
+      "decisionStatementVisible": true,
+      "moduleNodes": 0,
+      "tokens": 1994
+    },
+    {
+      "id": "ordering",
+      "query": "What determines the precedence/order when multiple reaction families match?",
+      "elapsedMs": 314.71,
+      "lead": "arc/job/adapters/ts/linear_utils/families.py::_dihedral_angle",
+      "pivots": [
+        "arc/job/adapters/ts/linear_utils/families.py::_dihedral_angle",
+        "arc/reaction/reaction.py::get_resonance_bond_orders"
+      ],
+      "mechanismSupport": [],
+      "slices": [],
+      "decisionStatementVisible": false,
+      "moduleNodes": 0,
+      "tokens": 1057
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "stage5.m150.statement-slice.v1",
+  "cases": [
+    {
+      "query": "How does ARC decide which reaction family wins?",
+      "definition": "arc/reaction/reaction.py::ARCReaction.determine_family",
+      "contentMode": "full",
+      "slice": {
+        "start_line": 647,
+        "end_line": 650,
+        "decision_line": 648,
+        "lines": 4,
+        "bytes": 171,
+        "truncated": false
+      },
+      "before": "statement present only because the whole body happened to fit",
+      "after": "statement located deliberately; slice delivered when the body is compressed"
+    },
+    {
+      "query": "How does ARC decide which reaction family wins? (ordering helper)",
+      "definition": "arc/family/family.py::get_all_families",
+      "contentMode": "mechanism_slice",
+      "slice": {
+        "start_line": 765,
+        "end_line": 771,
+        "decision_line": 769,
+        "lines": 7,
+        "bytes": 471,
+        "truncated": false
+      },
+      "source": "    # RMG recommends (see ``ts_adapters_by_rmg_family``), and benchmark/user reactions may\n    # belong to such families (e.g. Intra_RH_Add_Endocyclic). Without this, ARC could not\n    # even determine the family of those reactions, so mapping and TS search would fail.\n    rmg_families.extend(get_rmg_family_directories())\n    rmg_families = list(dict.fromkeys(rmg_families))  # de-duplicate, preserving order\nelse:\n    rmg_families = list(family_sets[rmg_family_set]) \\"
+    }
+  ]
+}

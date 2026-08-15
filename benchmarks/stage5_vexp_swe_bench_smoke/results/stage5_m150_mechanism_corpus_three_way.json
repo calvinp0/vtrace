@@ -1,37 +1,37 @@
 {
-  "schemaVersion": "stage5.m150.mechanism-corpus-three-way.v1",
-  "note": "Same corpus, same fixture source, same queries; only the implementation root differs (§31).",
+  "schemaVersion": "stage5.m150.mechanism-corpus-four-way.v1",
+  "note": "Same corpus, same fixture source, same queries; only the implementation root differs. All four sides re-run after the fixture coherence fix, so every column is comparable.",
   "sides": {
     "m149": {
-      "label": "M149 predecessor 2aaac75",
-      "mechanismCapability": false,
+      "label": "M149 2aaac75",
+      "capability": false,
       "summary": {
         "cases": 15,
         "correctMechanismLead": 7,
         "correctTop1": 7,
-        "correctTop3": 10,
-        "correctAnywhere": 12,
-        "missingMechanism": 3,
+        "correctTop3": 11,
+        "correctAnywhere": 13,
+        "missingMechanism": 2,
         "sameOperationWrongSubjectLead": 0,
         "sameOperationWrongSubjectBonusCases": 0,
         "negativeControlBonusCases": 0,
         "negativeControlDeliveredCases": 1,
         "decisionStatementVisible": "5/9",
-        "orderingHelperVisible": "1/4",
+        "orderingHelperVisible": "2/4",
         "mechanismSupportUsedCases": 0,
         "maxMechanismSupportPerCase": 0,
         "moduleNodesDelivered": 0,
-        "meanDeliveredTokens": 266
+        "meanDeliveredTokens": 269
       }
     },
     "checkpoint": {
-      "label": "M150 checkpoint ab8e4f0",
-      "mechanismCapability": true,
+      "label": "M150 ab8e4f0",
+      "capability": true,
       "summary": {
         "cases": 15,
-        "correctMechanismLead": 8,
-        "correctTop1": 8,
-        "correctTop3": 12,
+        "correctMechanismLead": 9,
+        "correctTop1": 9,
+        "correctTop3": 13,
         "correctAnywhere": 13,
         "missingMechanism": 2,
         "sameOperationWrongSubjectLead": 0,
@@ -39,21 +39,21 @@
         "negativeControlBonusCases": 0,
         "negativeControlDeliveredCases": 0,
         "decisionStatementVisible": "6/9",
-        "orderingHelperVisible": "1/4",
+        "orderingHelperVisible": "2/4",
         "mechanismSupportUsedCases": 0,
         "maxMechanismSupportPerCase": 0,
         "moduleNodesDelivered": 0,
-        "meanDeliveredTokens": 295
+        "meanDeliveredTokens": 300
       }
     },
-    "final": {
-      "label": "M150 final",
-      "mechanismCapability": true,
+    "aligned": {
+      "label": "M150 ebc4fda",
+      "capability": true,
       "summary": {
         "cases": 15,
-        "correctMechanismLead": 8,
-        "correctTop1": 8,
-        "correctTop3": 12,
+        "correctMechanismLead": 9,
+        "correctTop1": 9,
+        "correctTop3": 13,
         "correctAnywhere": 13,
         "missingMechanism": 2,
         "sameOperationWrongSubjectLead": 0,
@@ -61,543 +61,178 @@
         "negativeControlBonusCases": 0,
         "negativeControlDeliveredCases": 1,
         "decisionStatementVisible": "6/9",
-        "orderingHelperVisible": "1/4",
+        "orderingHelperVisible": "2/4",
         "mechanismSupportUsedCases": 0,
         "maxMechanismSupportPerCase": 0,
         "moduleNodesDelivered": 0,
-        "meanDeliveredTokens": 297
+        "meanDeliveredTokens": 304
+      }
+    },
+    "final": {
+      "label": "M150 final 650e916",
+      "capability": true,
+      "summary": {
+        "cases": 15,
+        "correctMechanismLead": 9,
+        "correctTop1": 9,
+        "correctTop3": 13,
+        "correctAnywhere": 13,
+        "missingMechanism": 2,
+        "sameOperationWrongSubjectLead": 0,
+        "sameOperationWrongSubjectBonusCases": 0,
+        "negativeControlBonusCases": 0,
+        "negativeControlDeliveredCases": 0,
+        "decisionStatementVisible": "6/9",
+        "orderingHelperVisible": "3/4",
+        "mechanismSupportUsedCases": 1,
+        "maxMechanismSupportPerCase": 1,
+        "moduleNodesDelivered": 0,
+        "meanDeliveredTokens": 304
       }
     }
   },
   "attribution": {
     "m149_to_checkpoint": "operation-compatible mechanism capability",
-    "checkpoint_to_final": "subject-alignment discrimination"
+    "checkpoint_to_aligned": "subject-alignment discrimination",
+    "aligned_to_final": "mechanism_support + decision slice + ordering emphasis"
   },
   "cases": [
     {
       "id": "backend_vs_frequency",
-      "category": "same operation, different subject",
-      "query": "How does the system decide which backend wins?",
-      "m149": {
-        "lead": "supportcap.py::decide",
-        "correctMechanismLead": false,
-        "correctTop3": false,
-        "sameOperationWrongSubjectLead": false,
-        "sameOperationWrongSubjectBonus": 0,
-        "decisionStatementVisible": false,
-        "orderingHelperVisible": true,
-        "expectedMechanism": 0
-      },
-      "checkpoint": {
-        "lead": "firstsuccess.py::resolve_backend",
-        "correctMechanismLead": false,
-        "correctTop3": true,
-        "sameOperationWrongSubjectLead": false,
-        "sameOperationWrongSubjectBonus": 0,
-        "decisionStatementVisible": true,
-        "orderingHelperVisible": true,
-        "expectedMechanism": 0.55
-      },
-      "final": {
-        "lead": "firstsuccess.py::resolve_backend",
-        "correctMechanismLead": false,
-        "correctTop3": true,
-        "sameOperationWrongSubjectLead": false,
-        "sameOperationWrongSubjectBonus": 0,
-        "decisionStatementVisible": true,
-        "orderingHelperVisible": true,
-        "expectedMechanism": 0.55
-      }
+      "m149": false,
+      "checkpoint": false,
+      "aligned": false,
+      "final": false,
+      "supportUsed": [],
+      "orderingVisible": true
     },
     {
       "id": "frequency_not_backend",
-      "category": "same operation, subject reversed",
-      "query": "How does the parser obtain the first frequency?",
-      "m149": {
-        "lead": "mixed.py::first_frequency",
-        "correctMechanismLead": false,
-        "correctTop3": true,
-        "sameOperationWrongSubjectLead": false,
-        "sameOperationWrongSubjectBonus": 0,
-        "decisionStatementVisible": true,
-        "orderingHelperVisible": null,
-        "expectedMechanism": 0
-      },
-      "checkpoint": {
-        "lead": "mixed.py::first_frequency",
-        "correctMechanismLead": false,
-        "correctTop3": true,
-        "sameOperationWrongSubjectLead": false,
-        "sameOperationWrongSubjectBonus": 0,
-        "decisionStatementVisible": true,
-        "orderingHelperVisible": null,
-        "expectedMechanism": 0
-      },
-      "final": {
-        "lead": "mixed.py::first_frequency",
-        "correctMechanismLead": false,
-        "correctTop3": true,
-        "sameOperationWrongSubjectLead": false,
-        "sameOperationWrongSubjectBonus": 0,
-        "decisionStatementVisible": true,
-        "orderingHelperVisible": null,
-        "expectedMechanism": 0
-      }
+      "m149": false,
+      "checkpoint": false,
+      "aligned": false,
+      "final": false,
+      "supportUsed": [],
+      "orderingVisible": null
     },
     {
       "id": "same_file_worker",
-      "category": "same file, different subject",
-      "query": "How is it decided which worker takes the next job?",
-      "m149": {
-        "lead": "mixed.py::pick_worker",
-        "correctMechanismLead": true,
-        "correctTop3": true,
-        "sameOperationWrongSubjectLead": false,
-        "sameOperationWrongSubjectBonus": 0,
-        "decisionStatementVisible": true,
-        "orderingHelperVisible": null,
-        "expectedMechanism": 0
-      },
-      "checkpoint": {
-        "lead": "mixed.py::pick_worker",
-        "correctMechanismLead": true,
-        "correctTop3": true,
-        "sameOperationWrongSubjectLead": false,
-        "sameOperationWrongSubjectBonus": 0,
-        "decisionStatementVisible": true,
-        "orderingHelperVisible": null,
-        "expectedMechanism": 0
-      },
-      "final": {
-        "lead": "mixed.py::pick_worker",
-        "correctMechanismLead": true,
-        "correctTop3": true,
-        "sameOperationWrongSubjectLead": false,
-        "sameOperationWrongSubjectBonus": 0,
-        "decisionStatementVisible": true,
-        "orderingHelperVisible": null,
-        "expectedMechanism": 0
-      }
+      "m149": true,
+      "checkpoint": true,
+      "aligned": true,
+      "final": true,
+      "supportUsed": [],
+      "orderingVisible": null
     },
     {
       "id": "same_class_route_keywords",
-      "category": "same class, different subject (Gaussian regression shape)",
-      "query": "How does the adapter decide which route keywords to emit?",
-      "m149": {
-        "lead": "adapters.py::ProgramAdapter.route_keywords",
-        "correctMechanismLead": true,
-        "correctTop3": true,
-        "sameOperationWrongSubjectLead": false,
-        "sameOperationWrongSubjectBonus": 0,
-        "decisionStatementVisible": true,
-        "orderingHelperVisible": null,
-        "expectedMechanism": 0
-      },
-      "checkpoint": {
-        "lead": "adapters.py::ProgramAdapter.route_keywords",
-        "correctMechanismLead": true,
-        "correctTop3": true,
-        "sameOperationWrongSubjectLead": false,
-        "sameOperationWrongSubjectBonus": 0.55,
-        "decisionStatementVisible": true,
-        "orderingHelperVisible": null,
-        "expectedMechanism": 0.55
-      },
-      "final": {
-        "lead": "adapters.py::ProgramAdapter.route_keywords",
-        "correctMechanismLead": true,
-        "correctTop3": true,
-        "sameOperationWrongSubjectLead": false,
-        "sameOperationWrongSubjectBonus": 0,
-        "decisionStatementVisible": true,
-        "orderingHelperVisible": null,
-        "expectedMechanism": 0.55
-      }
+      "m149": true,
+      "checkpoint": true,
+      "aligned": true,
+      "final": true,
+      "supportUsed": [],
+      "orderingVisible": null
     },
     {
       "id": "same_class_cache_control",
-      "category": "cache contrast inside the same class",
-      "query": "How is the route reused rather than recomputed?",
-      "m149": {
-        "lead": "adapters.py::ProgramAdapter.cached_route",
-        "correctMechanismLead": true,
-        "correctTop3": true,
-        "sameOperationWrongSubjectLead": false,
-        "sameOperationWrongSubjectBonus": 0,
-        "decisionStatementVisible": null,
-        "orderingHelperVisible": null,
-        "expectedMechanism": 0
-      },
-      "checkpoint": {
-        "lead": "adapters.py::ProgramAdapter.cached_route",
-        "correctMechanismLead": true,
-        "correctTop3": true,
-        "sameOperationWrongSubjectLead": false,
-        "sameOperationWrongSubjectBonus": 0,
-        "decisionStatementVisible": null,
-        "orderingHelperVisible": null,
-        "expectedMechanism": 0.55
-      },
-      "final": {
-        "lead": "adapters.py::ProgramAdapter.cached_route",
-        "correctMechanismLead": true,
-        "correctTop3": true,
-        "sameOperationWrongSubjectLead": false,
-        "sameOperationWrongSubjectBonus": 0,
-        "decisionStatementVisible": null,
-        "orderingHelperVisible": null,
-        "expectedMechanism": 0.55
-      }
+      "m149": true,
+      "checkpoint": true,
+      "aligned": true,
+      "final": true,
+      "supportUsed": [],
+      "orderingVisible": null
     },
     {
       "id": "unhelpful_operand_name",
-      "category": "operand name carries no subject; only the producer does",
-      "query": "How does the system choose which backend wins?",
-      "m149": {
-        "lead": "selection.py::choose_backend",
-        "correctMechanismLead": false,
-        "correctTop3": false,
-        "sameOperationWrongSubjectLead": false,
-        "sameOperationWrongSubjectBonus": 0,
-        "decisionStatementVisible": false,
-        "orderingHelperVisible": false,
-        "expectedMechanism": 0
-      },
-      "checkpoint": {
-        "lead": "selection.py::choose_backend",
-        "correctMechanismLead": false,
-        "correctTop3": false,
-        "sameOperationWrongSubjectLead": false,
-        "sameOperationWrongSubjectBonus": 0,
-        "decisionStatementVisible": false,
-        "orderingHelperVisible": false,
-        "expectedMechanism": 0
-      },
-      "final": {
-        "lead": "selection.py::choose_backend",
-        "correctMechanismLead": false,
-        "correctTop3": false,
-        "sameOperationWrongSubjectLead": false,
-        "sameOperationWrongSubjectBonus": 0,
-        "decisionStatementVisible": false,
-        "orderingHelperVisible": false,
-        "expectedMechanism": 0
-      }
+      "m149": false,
+      "checkpoint": false,
+      "aligned": false,
+      "final": false,
+      "supportUsed": [],
+      "orderingVisible": false
     },
     {
       "id": "two_hop_producer",
-      "category": "two-hop producer chain (measures whether one hop suffices)",
-      "query": "How is the backend picked when the choice is made indirectly?",
-      "m149": {
-        "lead": "fallbacks.py::select_backend",
-        "correctMechanismLead": false,
-        "correctTop3": true,
-        "sameOperationWrongSubjectLead": false,
-        "sameOperationWrongSubjectBonus": 0,
-        "decisionStatementVisible": false,
-        "orderingHelperVisible": null,
-        "expectedMechanism": 0
-      },
-      "checkpoint": {
-        "lead": "fallbacks.py::select_backend",
-        "correctMechanismLead": false,
-        "correctTop3": true,
-        "sameOperationWrongSubjectLead": false,
-        "sameOperationWrongSubjectBonus": 0,
-        "decisionStatementVisible": false,
-        "orderingHelperVisible": null,
-        "expectedMechanism": 0
-      },
-      "final": {
-        "lead": "fallbacks.py::select_backend",
-        "correctMechanismLead": false,
-        "correctTop3": true,
-        "sameOperationWrongSubjectLead": false,
-        "sameOperationWrongSubjectBonus": 0,
-        "decisionStatementVisible": false,
-        "orderingHelperVisible": null,
-        "expectedMechanism": 0
-      }
+      "m149": false,
+      "checkpoint": false,
+      "aligned": false,
+      "final": false,
+      "supportUsed": [],
+      "orderingVisible": null
     },
     {
       "id": "sorted_backend_preference",
-      "category": "sort-then-first with a real ordering producer",
-      "query": "How is the preferred candidate selected?",
-      "m149": {
-        "lead": "supportcap.py::ranked_candidates",
-        "correctMechanismLead": false,
-        "correctTop3": false,
-        "sameOperationWrongSubjectLead": false,
-        "sameOperationWrongSubjectBonus": 0,
-        "decisionStatementVisible": false,
-        "orderingHelperVisible": false,
-        "expectedMechanism": 0
-      },
-      "checkpoint": {
-        "lead": "supportcap.py::ranked_candidates",
-        "correctMechanismLead": false,
-        "correctTop3": false,
-        "sameOperationWrongSubjectLead": false,
-        "sameOperationWrongSubjectBonus": 0,
-        "decisionStatementVisible": false,
-        "orderingHelperVisible": false,
-        "expectedMechanism": 0
-      },
-      "final": {
-        "lead": "supportcap.py::ranked_candidates",
-        "correctMechanismLead": false,
-        "correctTop3": false,
-        "sameOperationWrongSubjectLead": false,
-        "sameOperationWrongSubjectBonus": 0,
-        "decisionStatementVisible": false,
-        "orderingHelperVisible": false,
-        "expectedMechanism": 0
-      }
+      "m149": false,
+      "checkpoint": false,
+      "aligned": false,
+      "final": false,
+      "supportUsed": [],
+      "orderingVisible": true
     },
     {
       "id": "first_success_backend",
-      "category": "first-success over two subjects",
-      "query": "How does the system decide which backend to use?",
-      "m149": {
-        "lead": "fallbacks.py::select_backend",
-        "correctMechanismLead": false,
-        "correctTop3": false,
-        "sameOperationWrongSubjectLead": false,
-        "sameOperationWrongSubjectBonus": 0,
-        "decisionStatementVisible": null,
-        "orderingHelperVisible": null,
-        "expectedMechanism": 0
-      },
-      "checkpoint": {
-        "lead": "firstsuccess.py::resolve_backend",
-        "correctMechanismLead": true,
-        "correctTop3": true,
-        "sameOperationWrongSubjectLead": false,
-        "sameOperationWrongSubjectBonus": 0,
-        "decisionStatementVisible": null,
-        "orderingHelperVisible": null,
-        "expectedMechanism": 0.55
-      },
-      "final": {
-        "lead": "firstsuccess.py::resolve_backend",
-        "correctMechanismLead": true,
-        "correctTop3": true,
-        "sameOperationWrongSubjectLead": false,
-        "sameOperationWrongSubjectBonus": 0,
-        "decisionStatementVisible": null,
-        "orderingHelperVisible": null,
-        "expectedMechanism": 0.55
-      }
+      "m149": false,
+      "checkpoint": true,
+      "aligned": true,
+      "final": true,
+      "supportUsed": [],
+      "orderingVisible": null
     },
     {
       "id": "fallback_backend",
-      "category": "two fallback chains, one subject",
-      "query": "When does the system fall back to a different backend?",
-      "m149": {
-        "lead": "fallbacks.py::select_backend",
-        "correctMechanismLead": true,
-        "correctTop3": true,
-        "sameOperationWrongSubjectLead": false,
-        "sameOperationWrongSubjectBonus": 0,
-        "decisionStatementVisible": null,
-        "orderingHelperVisible": null,
-        "expectedMechanism": 0
-      },
-      "checkpoint": {
-        "lead": "fallbacks.py::select_backend",
-        "correctMechanismLead": true,
-        "correctTop3": true,
-        "sameOperationWrongSubjectLead": false,
-        "sameOperationWrongSubjectBonus": 0.55,
-        "decisionStatementVisible": null,
-        "orderingHelperVisible": null,
-        "expectedMechanism": 0.55
-      },
-      "final": {
-        "lead": "fallbacks.py::select_backend",
-        "correctMechanismLead": true,
-        "correctTop3": true,
-        "sameOperationWrongSubjectLead": false,
-        "sameOperationWrongSubjectBonus": 0,
-        "decisionStatementVisible": null,
-        "orderingHelperVisible": null,
-        "expectedMechanism": 0.55
-      }
+      "m149": true,
+      "checkpoint": true,
+      "aligned": true,
+      "final": true,
+      "supportUsed": [],
+      "orderingVisible": null
     },
     {
       "id": "priority_backend",
-      "category": "two precedence tables",
-      "query": "How is precedence between backends determined?",
-      "m149": {
-        "lead": "priorities.py::choose_backend_by_priority",
-        "correctMechanismLead": true,
-        "correctTop3": true,
-        "sameOperationWrongSubjectLead": false,
-        "sameOperationWrongSubjectBonus": 0,
-        "decisionStatementVisible": null,
-        "orderingHelperVisible": null,
-        "expectedMechanism": 0
-      },
-      "checkpoint": {
-        "lead": "priorities.py::choose_backend_by_priority",
-        "correctMechanismLead": true,
-        "correctTop3": true,
-        "sameOperationWrongSubjectLead": false,
-        "sameOperationWrongSubjectBonus": 0,
-        "decisionStatementVisible": null,
-        "orderingHelperVisible": null,
-        "expectedMechanism": 0.55
-      },
-      "final": {
-        "lead": "priorities.py::choose_backend_by_priority",
-        "correctMechanismLead": true,
-        "correctTop3": true,
-        "sameOperationWrongSubjectLead": false,
-        "sameOperationWrongSubjectBonus": 0,
-        "decisionStatementVisible": null,
-        "orderingHelperVisible": null,
-        "expectedMechanism": 0.55
-      }
+      "m149": true,
+      "checkpoint": true,
+      "aligned": true,
+      "final": true,
+      "supportUsed": [],
+      "orderingVisible": null
     },
     {
       "id": "ordering_query",
-      "category": "ordering question, not a selection question",
-      "query": "What establishes the order the candidates are considered in?",
-      "m149": {
-        "lead": "ordering.py::build_candidates",
-        "correctMechanismLead": false,
-        "correctTop3": false,
-        "sameOperationWrongSubjectLead": false,
-        "sameOperationWrongSubjectBonus": 0,
-        "decisionStatementVisible": null,
-        "orderingHelperVisible": null,
-        "expectedMechanism": 0
-      },
-      "checkpoint": {
-        "lead": "ordering.py::build_candidates",
-        "correctMechanismLead": false,
-        "correctTop3": false,
-        "sameOperationWrongSubjectLead": false,
-        "sameOperationWrongSubjectBonus": 0,
-        "decisionStatementVisible": null,
-        "orderingHelperVisible": null,
-        "expectedMechanism": 0.55
-      },
-      "final": {
-        "lead": "ordering.py::build_candidates",
-        "correctMechanismLead": false,
-        "correctTop3": false,
-        "sameOperationWrongSubjectLead": false,
-        "sameOperationWrongSubjectBonus": 0,
-        "decisionStatementVisible": null,
-        "orderingHelperVisible": null,
-        "expectedMechanism": 0.55
-      }
+      "m149": false,
+      "checkpoint": true,
+      "aligned": true,
+      "final": true,
+      "supportUsed": [],
+      "orderingVisible": null
     },
     {
       "id": "unknown_ordering",
-      "category": "first-item selection with no local ordering evidence",
-      "query": "How is the winning candidate decided when the caller supplies them?",
-      "m149": {
-        "lead": "supportcap.py::decide",
-        "correctMechanismLead": false,
-        "correctTop3": true,
-        "sameOperationWrongSubjectLead": false,
-        "sameOperationWrongSubjectBonus": 0,
-        "decisionStatementVisible": true,
-        "orderingHelperVisible": null,
-        "expectedMechanism": 0
-      },
-      "checkpoint": {
-        "lead": "supportcap.py::decide",
-        "correctMechanismLead": false,
-        "correctTop3": true,
-        "sameOperationWrongSubjectLead": false,
-        "sameOperationWrongSubjectBonus": 0,
-        "decisionStatementVisible": true,
-        "orderingHelperVisible": null,
-        "expectedMechanism": 0.55
-      },
-      "final": {
-        "lead": "supportcap.py::decide",
-        "correctMechanismLead": false,
-        "correctTop3": true,
-        "sameOperationWrongSubjectLead": false,
-        "sameOperationWrongSubjectBonus": 0,
-        "decisionStatementVisible": true,
-        "orderingHelperVisible": null,
-        "expectedMechanism": 0.55
-      }
+      "m149": false,
+      "checkpoint": false,
+      "aligned": false,
+      "final": false,
+      "supportUsed": [],
+      "orderingVisible": null
     },
     {
       "id": "support_cap",
-      "category": "one decision, five helpers, one establishes ordering",
-      "query": "How is it decided which entry wins?",
-      "m149": {
-        "lead": "supportcap.py::decide",
-        "correctMechanismLead": true,
-        "correctTop3": true,
-        "sameOperationWrongSubjectLead": false,
-        "sameOperationWrongSubjectBonus": 0,
-        "decisionStatementVisible": true,
-        "orderingHelperVisible": false,
-        "expectedMechanism": 0
-      },
-      "checkpoint": {
-        "lead": "supportcap.py::decide",
-        "correctMechanismLead": true,
-        "correctTop3": true,
-        "sameOperationWrongSubjectLead": false,
-        "sameOperationWrongSubjectBonus": 0,
-        "decisionStatementVisible": true,
-        "orderingHelperVisible": false,
-        "expectedMechanism": 0
-      },
-      "final": {
-        "lead": "supportcap.py::decide",
-        "correctMechanismLead": true,
-        "correctTop3": true,
-        "sameOperationWrongSubjectLead": false,
-        "sameOperationWrongSubjectBonus": 0,
-        "decisionStatementVisible": true,
-        "orderingHelperVisible": false,
-        "expectedMechanism": 0
-      }
+      "m149": true,
+      "checkpoint": true,
+      "aligned": true,
+      "final": true,
+      "supportUsed": [
+        "supportcap.py::ranked_entries"
+      ],
+      "orderingVisible": true
     },
     {
       "id": "incidental_negatives",
-      "category": "incidental [0] and display sorting must stay inert",
-      "query": "How does the scheduler choose which worker wins?",
-      "m149": {
-        "lead": "mixed.py::pick_worker",
-        "correctMechanismLead": true,
-        "correctTop3": true,
-        "sameOperationWrongSubjectLead": false,
-        "sameOperationWrongSubjectBonus": 0,
-        "decisionStatementVisible": null,
-        "orderingHelperVisible": null,
-        "expectedMechanism": 0
-      },
-      "checkpoint": {
-        "lead": "mixed.py::pick_worker",
-        "correctMechanismLead": true,
-        "correctTop3": true,
-        "sameOperationWrongSubjectLead": false,
-        "sameOperationWrongSubjectBonus": 0,
-        "decisionStatementVisible": null,
-        "orderingHelperVisible": null,
-        "expectedMechanism": 0.55
-      },
-      "final": {
-        "lead": "mixed.py::pick_worker",
-        "correctMechanismLead": true,
-        "correctTop3": true,
-        "sameOperationWrongSubjectLead": false,
-        "sameOperationWrongSubjectBonus": 0,
-        "decisionStatementVisible": null,
-        "orderingHelperVisible": null,
-        "expectedMechanism": 0.55
-      }
+      "m149": true,
+      "checkpoint": true,
+      "aligned": true,
+      "final": true,
+      "supportUsed": [],
+      "orderingVisible": null
     }
   ]
 }

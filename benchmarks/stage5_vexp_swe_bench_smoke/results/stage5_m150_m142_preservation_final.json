@@ -1,8 +1,8 @@
 {
   "schemaVersion": "stage5.m142.behavioral-failures.v1",
-  "label": "m150_align",
+  "label": "m150_final",
   "generatedFrom": {
-    "vtraceHead": "f7177de66b5e0b57e8f8c6d0c621a6346b388abf",
+    "vtraceHead": "9843d7d1a5ed60b3e5d8a6e104b8e2016bec15a8",
     "vtraceBranch": "main",
     "arcRoot": "/home/calvin/code/ARC",
     "arcHead": "c0b65ddb211f694a82e6979a724ab31f871f7a87",
@@ -18,7 +18,7 @@
       "query": "How does ARC verify that a saddle point actually connects the intended reactants and products by looking at how the atoms move in the imaginary vibration?",
       "queryProvenance": "reconstructed_from_report",
       "reportedFailure": "the normal-mode displacement check module never surfaced; a differently-named quantity (expected atom count with largest displacement) was returned instead",
-      "elapsedMs": 451.06,
+      "elapsedMs": 467.83,
       "identifierRoles": {
         "likelySymbols": [],
         "identifiers": [],
@@ -387,7 +387,7 @@
       "query": "How does ARC decide which Gaussian route keywords to emit?",
       "queryProvenance": "reconstructed_from_report",
       "reportedFailure": "arc/job/adapters/common.py::which became a lead pivot from the grammatical word 'which'; arc/main.py::ARC was reported to surface from the project name",
-      "elapsedMs": 262.81,
+      "elapsedMs": 295.82,
       "identifierRoles": {
         "likelySymbols": [],
         "identifiers": [],
@@ -731,7 +731,7 @@
       "query": "When a reaction is mapped, how is the atom index space of the reactants established and where does the bond list used for it come from?",
       "queryProvenance": "reconstructed_from_report",
       "reportedFailure": "get_reactants_and_products / get_bonds never surfaced",
-      "elapsedMs": 396.04,
+      "elapsedMs": 408.55,
       "identifierRoles": {
         "likelySymbols": [],
         "identifiers": [],
@@ -1099,7 +1099,7 @@
       "query": "How is the atom order of a transition state guess brought into line with the numbering used by the mapped product geometry?",
       "queryProvenance": "reconstructed_from_report",
       "reportedFailure": "get_single_mapped_product_xyz / order_xyz_by_atom_map never surfaced",
-      "elapsedMs": 360.24,
+      "elapsedMs": 441.24,
       "identifierRoles": {
         "likelySymbols": [],
         "identifiers": [],
@@ -1468,7 +1468,7 @@
       "query": "Where is which() implemented?",
       "queryProvenance": "reconstructed_from_report",
       "reportedFailure": "n/a — positive control",
-      "elapsedMs": 137.75,
+      "elapsedMs": 150.89,
       "identifierRoles": {
         "likelySymbols": [
           "which"
@@ -1832,7 +1832,7 @@
       "query": "Where is the ARC class defined?",
       "queryProvenance": "reconstructed_from_report",
       "reportedFailure": "n/a — positive control",
-      "elapsedMs": 283.04,
+      "elapsedMs": 319.44,
       "identifierRoles": {
         "likelySymbols": [
           "ARC",
@@ -2240,7 +2240,7 @@
       "query": "How does ARC work?",
       "queryProvenance": "reconstructed_from_report",
       "reportedFailure": "n/a — negative control: must not expand half the repository",
-      "elapsedMs": 23.62,
+      "elapsedMs": 23.86,
       "identifierRoles": {
         "likelySymbols": [],
         "identifiers": [],
