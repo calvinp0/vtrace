@@ -9,10 +9,13 @@ product surface now uses the M146–M149 workspace router to select the reposito
 and feeds it through the existing authoritative retrieval/Capsule pipeline, with
 single-repository semantics, boundedness and evidence scope preserved.
 
-E is MIXED — not for anything M151 does, but because two mandatory §133 gates
-cannot be reported as clean and honestly attributed at the same time. Both are
-pre-existing conditions reproduced at the M150 baseline. They are stated in full
-in *Limitations* rather than smoothed into PASS (§135).
+E is MIXED for one reason, and it is not that product reads corrupt the index.
+The byte-identity gate rested on an assumption that measurement refuted:
+`index.sqlite` does not hold repository-derived state alone. Product reads
+deliberately persist three supported features into the same file. Every gate that
+can be stated about repository evidence now passes; the invariant still unmet is
+**physical isolation** of the two kinds of state, which is a storage milestone
+rather than the tail of a wiring one.
 
 ---
 
@@ -22,15 +25,16 @@ in *Limitations* rather than smoothed into PASS (§135).
 | --- | --- |
 | M150 final functional (predecessor) | `2d3010e4e5eb28d5febf78c6014cd394817cb7ec` |
 | M150 evidence / M151 base | `6117f5f2dfa49ab0511db904100ed0b05c7b30fe` |
-| M151 final functional | `01be7197` (`Route product requests through the workspace router`) |
+| M151 pre-closure functional | `01be71974369a560f86e35fd9b74e71b812193b9` |
+| M151 final functional | `87b3f5a4` (`Pin what a product read may change in the index it queries`) |
 | M151 evidence | this commit |
 
 `2d3010e4..6117f5f2` touches no `src/` path, so the paired predecessor root is
 functionally identical to M150 final.
 
-Branch `main`, 35 ahead of `origin/main`, **nothing pushed**, **no co-author
-trailers**. 14 pre-existing worktrees preserved; 1 M151-created worktree
-(`/tmp/m151-baseline`) removed at close.
+Branch `main`, 37 ahead of `origin/main`, **nothing pushed**, **no co-author
+trailers**. 14 pre-existing worktrees preserved; 3 M151-created worktrees
+(`/tmp/m151-baseline`, `/tmp/m151-pred`, `/tmp/m151-iso`) all removed at close.
 
 ---
 
@@ -250,11 +254,64 @@ Limitations.
 
 ---
 
+## Read-path mutability (M151-E)
+
+The closure gate was "the index file is byte-identical after a product read".
+Decomposing it by layer against a fresh index refuted the premise
+(`stage5_m151_read_path_mutation_audit.md`):
+
+| layer | index changed? |
+| --- | --- |
+| `new Database(path)` open + close | no |
+| `openIndexerDatabase` open + close | **no** |
+| `initializeSchema` alone | **no** |
+| read-only open + `SELECT`s | no |
+| `get_code_context` | **yes** |
+
+`openIndexerDatabase` is not the writer. On a current index
+`CREATE … IF NOT EXISTS` is a genuine no-op — page count, freelist, object count
+and `schema_version` are static across every layer. What moves is three supported
+features persisting on purpose:
+
+| write | feature | consumer |
+| --- | --- | --- |
+| observation auto-capture | memory | `search_memory`, `get_session_context` |
+| capsule manifest | staleness; `capsuleManifestId` is in the response | `check_capsule_staleness` |
+| deferred VEXP ref | the ref handed to the caller | `expand_vexp_ref` |
+
+So a file hash cannot distinguish corrupted evidence from a recorded lookup, and
+the gate was replaced with a per-table one. Measured across **3 repositories
+(fixture, ARC, TCKDB_v2) × 4 product surfaces × 3 repeated calls**
+(`stage5_m151_table_family_preservation.json`):
+
+| property | result |
+| --- | --- |
+| every table classified — unclassified fails the run | **true** |
+| repository-derived tables unchanged (symbols, edges, FTS, documents, mechanism facts, run states, index_runs) | **true** |
+| schema digest unchanged | **true** |
+| object count unchanged — no schema install, no migration | **true** |
+| derivation fingerprint unchanged | **true** |
+| only documented product/session families mutated | **true** |
+| `index_status` writes | **none**, on every repository |
+
+Also asserted in `src/mcp/readPathImmutability.test.ts`: a read-only handle over a
+ready index writes nothing and rejects DDL structurally, and a product read
+against an unindexed repository does not manufacture an index to answer from.
+
+The three writes were **not** suppressed. They are supported behaviour, and
+withholding a deferred ref would either emit an unresolvable reference or change
+delivered content and break the frozen M151-D parity gate.
+
+What remains unmet is physical isolation — see *Limitations*.
+
+---
+
 ## Preservation
 
 | gate | result |
 | --- | --- |
-| Frozen50 (django 20 + cross_repo_30 30) | **0/50 changed**, provenance valid |
+| Frozen50 `6117f5f2` → `87b3f5a4` (django 20 + cross_repo_30 30) | **0/50 changed**, `provenanceValid: true`, `srcDirty: false` |
+| Isolation `01be7197` → `87b3f5a4` (closure commit alone) | **0/50 changed**, `provenanceValid: true`, `srcDirty: false` |
 | M150 behavioural (ARC selection + ordering) | preserved, verified through the wired path |
 | M149 claim truthfulness | preserved — coverage survives MCP serialization; no claim strengthened |
 | M148 indexed-path / lifecycle | preserved; read paths add no migration |
@@ -274,14 +331,14 @@ evidence the wiring works. The product corpus is that evidence.
 ## Verification
 
 ```
-bun test                    4599 pass · 0 fail · 49 skip   (4648 across 285 files)
+bun test                    4606 pass · 0 fail · 49 skip   (4655 across 286 files)
 bun run typecheck           clean
 bun run typecheck:benchmarks clean
 git diff --check            clean
 ```
 
 Baseline note: the M150 tree measured **4561 pass / 49 skip** in this same
-environment, so M151 adds 38 tests and changes no existing result. M150's report
+environment, so M151 adds 45 tests and changes no existing result. M150's report
 recorded 4602 pass; that figure was measured in a different environment state and
 is not reproducible here — stated rather than quietly adopted.
 
@@ -289,31 +346,27 @@ is not reproducible here — stated rather than quietly adopted.
 
 ## Limitations
 
-**1. Read paths mutate the lead repository's index. Pre-existing.**
+**1. Repository evidence and product/session state share one file.**
 
-Three consecutive `get_code_context` calls against ARC produced three different
-file hashes (size stable after the first). The M150 baseline tree reproduces this
-exactly, so it is the long-standing behaviour of `withReadyRepoDb` →
-`openIndexerDatabase`, which runs the schema initializer against whichever
-repository retrieval binds to.
+This is the unresolved invariant, and it is an architectural one rather than a
+defect in any read path. `index.sqlite` holds both what `index_repo` derives from
+source and what supported product features persist — observation auto-capture,
+capsule manifests, deferred VEXP references. So "the index file changed" cannot by
+itself distinguish corrupted evidence from a recorded lookup.
 
-Every path **M151 adds** is read-only: the routing probe and the supporting-repo
-composition open members with `{ readonly: true }`, and a member probed for a
-route but not led is byte-identical afterwards (asserted in the test suite). So
-§21/§90 hold for M151's additions and do **not** hold for the pre-existing lead
-binding. This is why E is MIXED rather than PASS, and it is the first thing M152
-should fix.
+The evidence gap is closed per table (see *Read-path mutability* above); the
+architectural gap is not. Closing it means moving three subsystems into a separate
+`session.sqlite`, which touches ~31 non-test source files and 19 test files plus
+migration, lifecycle and concurrency work. That is the next milestone.
 
-**2. ARC and TCKDB indexes were rebuilt as authorized setup.**
-
-Both were `possibly_stale / schema_changed`, so `assembleProductContext` failed
-closed and delivered 0 items for every real query — identically at the M150
-baseline. Rebuilt under explicit user authorization through the supported
-`index_repo` write path, with identity, readiness, source HEAD and hashes recorded
-before and after (`stage5_m151_index_rebuild_provenance.json`). ARC 29.8 s,
-TCKDB 150.9 s; both `ready=true` and correctly bound afterwards. Stale→fresh
-differences are **not** attributed to M151, and the paired comparison ran both
-functional sides against the same rebuilt state.
+**2. ARC and TCKDB_v2 were explicitly re-indexed once as authorized validation
+setup**, because their pre-existing indexes were `possibly_stale / schema_changed`
+— a condition reproduced on the M150 baseline. After those explicit writes, every
+M151 product and status read left all repository-derived state byte-identical.
+Recorded in `stage5_m151_index_rebuild_provenance.json` (ARC 29.8 s, TCKDB 150.9 s;
+both `ready=true` and correctly bound afterwards). Stale→fresh differences are
+**not** attributed to M151, and both paired comparisons ran their two functional
+sides against equivalent index state.
 
 **3. `index_status` latency is O(members).** 360 ms at 1000 members, because
 `inspectWorkspaceRepoStatus` runs a full readiness probe per member. The
@@ -336,19 +389,30 @@ members; 11/100/1000 are synthetic and labelled as such throughout.
 
 ---
 
-## Recommended M152 scope
+## Recommended next milestones
 
-M151's own precondition for M152 is met — the workspace layer is product-reachable.
-Before richer cross-repository semantics, M152 should:
+**M152 — Separate repository index state from product session state.**
 
-1. **Remove the read-path write** (limitation 1). It is a correctness invariant the
-   whole workspace story now depends on, and it is one binding.
-2. **Make `index_status` coverage O(1)-ish** by reading manifest metadata instead of
-   probing every member (limitation 3).
-3. Then the intended M152 subject: cross-repository dependency and evidence
-   composition — implementation in A depending on generated/client behaviour in B,
-   one concept split across repositories, ownership vs support, bounded cross-repo
-   dependency slices.
+```
+index.sqlite     repository-derived evidence, immutable under product reads
+session.sqlite   observations, capsule manifests, deferred refs,
+                 sessions, project rules
+```
+
+All three features preserved, delivered content unchanged. This comes before
+cross-repository semantics deliberately: once workspace composition begins writing
+observations and manifests for several repositories in one request, commingled
+evidence and runtime state becomes materially harder to reason about. Establish
+the ownership boundary first.
+
+**M153 — Cross-repository behavioural routing and evidence composition**, with the
+subproblems M151 measured but did not solve: behavioural repository nomination when
+no path or identifier exists, bounded supporting-repository composition semantics,
+cross-repository ownership vs support, and cross-repository dependency/evidence
+chains.
+
+The `index_status` O(members) census cost (limitation 3) is a small preparatory
+performance workstream that can attach to either, depending on measurements.
 
 ## Artifacts
 
@@ -366,7 +430,12 @@ stage5_m151_index_open_counts.json
 stage5_m151_index_status_workspace_coverage.json
 stage5_m151_index_rebuild_provenance.json
 stage5_m151_paired_comparison.json
+stage5_m151_readonly_isolation_comparison.json
+stage5_m151_read_path_mutation_audit.md
+stage5_m151_index_mutability_contract.md
+stage5_m151_table_family_preservation.json
 stage5_m151_final_report.md
 ```
 
-Runners: `run_stage5_m151_{reachability,product_corpus,real_acceptance,index_rebuild,paired_benchmark}.ts`
+Runners: `run_stage5_m151_{reachability,product_corpus,real_acceptance,index_rebuild,paired_benchmark,table_family_preservation}.ts`
+Guard: `src/db/indexTableFamilies.ts` + `src/mcp/readPathImmutability.test.ts`

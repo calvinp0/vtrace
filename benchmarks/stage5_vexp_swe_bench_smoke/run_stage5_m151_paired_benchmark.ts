@@ -71,6 +71,10 @@ async function main(): Promise<void> {
   const candidateRoot = path.resolve(values.get("--candidate-root") ?? process.cwd());
   const outDir = path.resolve(values.get("--out-dir") ?? "benchmarks/stage5_vexp_swe_bench_smoke/results");
   const prefix = values.get("--report-prefix") ?? "stage5_m151";
+  // Two comparisons share this runner: M150 -> final, and the §82 isolation of
+  // the closure commit alone. They must not overwrite each other.
+  const outputName = values.get("--output-name") ?? "stage5_m151_paired_comparison.json";
+  const predecessorLabel = values.get("--predecessor-label") ?? "m150-2d3010e4";
 
   const predecessorCommit = git(predecessorRoot, ["rev-parse", "HEAD"]);
   const candidateCommit = git(candidateRoot, ["rev-parse", "HEAD"]);
@@ -122,13 +126,16 @@ async function main(): Promise<void> {
     schemaVersion: "stage5.m151.paired-comparison.v1",
     milestone: "M151",
     predecessor: {
-      label: "m150-2d3010e4",
+      label: predecessorLabel,
       commit: predecessorCommit,
       tree: git(predecessorRoot, ["rev-parse", "HEAD^{tree}"]),
-      note:
-        "M150 final functional is 2d3010e4. The root used here is 6117f5f2, and "
-        + "2d3010e4..6117f5f2 touches no src/ path, so it is functionally identical "
-        + "and 6117f5f2 is evidence-only.",
+      note: predecessorLabel.startsWith("m150")
+        ? "M150 final functional is 2d3010e4. The root used here is 6117f5f2, and "
+          + "2d3010e4..6117f5f2 touches no src/ path, so it is functionally identical "
+          + "and 6117f5f2 is evidence-only."
+        : "M151 pre-closure functional. This run isolates the closure commit alone, "
+          + "which adds a table-family classifier and its regression test and is "
+          + "imported by no product path, so 0/50 is the expected result.",
     },
     candidate: {
       label: "m151",
@@ -166,7 +173,7 @@ async function main(): Promise<void> {
   };
 
   await writeFile(
-    path.join(outDir, "stage5_m151_paired_comparison.json"),
+    path.join(outDir, outputName),
     `${JSON.stringify(output, null, 2)}\n`,
   );
 

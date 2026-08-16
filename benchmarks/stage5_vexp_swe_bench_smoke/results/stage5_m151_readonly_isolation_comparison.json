@@ -2,10 +2,10 @@
   "schemaVersion": "stage5.m151.paired-comparison.v1",
   "milestone": "M151",
   "predecessor": {
-    "label": "m150-2d3010e4",
-    "commit": "6117f5f2dfa49ab0511db904100ed0b05c7b30fe",
-    "tree": "e08fabcbaec6648c7195fd816ffcd9abe0a3ca81",
-    "note": "M150 final functional is 2d3010e4. The root used here is 6117f5f2, and 2d3010e4..6117f5f2 touches no src/ path, so it is functionally identical and 6117f5f2 is evidence-only."
+    "label": "m151-01be7197",
+    "commit": "01be71974369a560f86e35fd9b74e71b812193b9",
+    "tree": "af61806c9eff52c73b06a2fa26deaf609f8c92f8",
+    "note": "M151 pre-closure functional. This run isolates the closure commit alone, which adds a table-family classifier and its regression test and is imported by no product path, so 0/50 is the expected result."
   },
   "candidate": {
     "label": "m151",

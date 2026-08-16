@@ -273,24 +273,33 @@ async function main(): Promise<void> {
           tckdbBefore: before.tckdb,
           tckdbAfter: after.tckdb,
           tckdbUnchanged: before.tckdb === after.tckdb,
-          finding:
-            "The LEAD repository's index file changes on every read. Measured: three "
-            + "consecutive get_code_context calls against ARC produced three different "
-            + "file hashes (size stable after the first).",
-          attribution:
-            "PRE-EXISTING, not M151. The identical probe run against the M150 baseline "
-            + "tree reproduces it exactly, so this is the long-standing behaviour of "
-            + "`withReadyRepoDb` -> `openIndexerDatabase`, which runs the schema "
-            + "initializer on the repository retrieval binds to.",
+          fileHashIsTheWrongQuestion:
+            "A changed file hash cannot distinguish 'retrieval corrupted the index' "
+            + "from 'search_memory recorded a lookup', because index.sqlite holds BOTH "
+            + "repository-derived state and product/session state. The authoritative "
+            + "verdict is per table, in stage5_m151_table_family_preservation.json.",
+          rootCause:
+            "MEASURED, and it refutes the earlier attribution. `openIndexerDatabase` "
+            + "and `initializeSchema` write NOTHING on a current index - opening, "
+            + "schema-initialising and querying are all byte-identical. What moves is "
+            + "three supported FEATURES persisting on purpose: observation "
+            + "auto-capture, capsule manifests, and deferred VEXP references. See "
+            + "stage5_m151_read_path_mutation_audit.md.",
+          repositoryDerivedStateIsImmutable:
+            "Across 3 repositories x 4 product surfaces x 3 repeated calls: every "
+            + "repository-derived table (symbols, edges, FTS, documents, mechanism "
+            + "facts, run states, index_runs), the schema, the object set and the "
+            + "derivation fingerprint are unchanged, and no unclassified table moved.",
           m151AddedPathsAreReadOnly:
             "Every path M151 introduces opens members with { readonly: true }: the "
             + "routing probe and the supporting-repository composition. A member that "
             + "is probed for a route but does not lead is byte-identical afterwards, "
             + "asserted in src/mcp/workspaceProductRouting.test.ts.",
           consequence:
-            "§21/§90 hold for M151's own additions and do NOT hold for the pre-existing "
-            + "lead-retrieval binding. Recorded as a standing limitation rather than "
-            + "claimed as an M151 result either way.",
+            "No migration, schema installation, repair or rebuild occurs on any read "
+            + "path. The unresolved invariant is PHYSICAL ISOLATION - product/session "
+            + "state still shares a file with repository evidence - which is a storage "
+            + "milestone, not a wiring one. That is why E remains MIXED.",
         },
         cases: rows,
       }, null, 2)}\n`,

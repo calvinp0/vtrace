@@ -1,0 +1,278 @@
+{
+  "milestone": "M151",
+  "generatedAt": "2026-08-16T11:40:38.138Z",
+  "note": "The byte-identity gate assumed index.sqlite holds repository-derived state alone. It does not. This proves the invariant that actually matters: repeated product reads leave every repository-derived table, the schema, the object set and the derivation fingerprint untouched, and mutate only the three documented product/session families.",
+  "families": {
+    "repository_derived": [
+      "files",
+      "symbols",
+      "edges",
+      "edge_call_sites",
+      "symbol_mechanism_facts",
+      "document_chunks",
+      "index_runs",
+      "file_run_states",
+      "symbol_run_states",
+      "document_search_fts*",
+      "symbol_search_fts*",
+      "symbol_body_literals_fts*"
+    ],
+    "product_session": [
+      "observations",
+      "observation_file_links",
+      "observation_symbol_links",
+      "observation_fq_name_links",
+      "capsule_manifests",
+      "capsule_manifest_items",
+      "deferred_vexp_refs",
+      "deferred_vexp_ref_tombstones",
+      "sessions",
+      "session_compression_summaries",
+      "project_rules"
+    ],
+    "unclassifiedFailsTheRun": true
+  },
+  "summary": {
+    "repositoriesExercised": 3,
+    "surfacesPerRepository": 4,
+    "callsPerSurface": 3,
+    "classificationComplete": true,
+    "repositoryDerivedUnchangedEverywhere": true,
+    "schemaUnchangedEverywhere": true,
+    "objectCountUnchangedEverywhere": true,
+    "derivationFingerprintUnchangedEverywhere": true,
+    "onlyDocumentedFamiliesMutated": true
+  },
+  "fixture": {
+    "repoRoot": "/tmp/m151-family-C5ll7t/fixture",
+    "query": "pick_winner",
+    "tablesClassified": 38,
+    "unclassifiedTables": [],
+    "classificationComplete": true,
+    "indexFileHashBefore": "994461bd909cbfca",
+    "indexFileHashAfter": "a5dee4092dd61dd6",
+    "indexFileSizeBefore": 376832,
+    "indexFileSizeAfter": 376832,
+    "derivationFingerprintBefore": "d727842a41da27b9",
+    "derivationFingerprintAfter": "d727842a41da27b9",
+    "derivationFingerprintUnchanged": true,
+    "schemaUnchanged": true,
+    "objectCountUnchanged": true,
+    "repositoryDerivedUnchanged": true,
+    "derivedTablesChanged": [],
+    "productSessionTablesChanged": [
+      "capsule_manifest_items 0 -> 2",
+      "capsule_manifests 0 -> 2",
+      "deferred_vexp_refs 0 -> 1",
+      "observation_file_links 0 -> 1",
+      "observation_fq_name_links 0 -> 1",
+      "observation_symbol_links 0 -> 1",
+      "observations 0 -> 1"
+    ],
+    "unclassifiedTablesChanged": [],
+    "perSurface": [
+      {
+        "surface": "get_code_context",
+        "calls": 3,
+        "ok": true,
+        "repositoryDerivedUnchanged": true,
+        "schemaUnchanged": true,
+        "objectCountUnchanged": true,
+        "derivedTablesChanged": [],
+        "productSessionTablesChanged": [
+          "capsule_manifest_items 0 -> 2",
+          "capsule_manifests 0 -> 2",
+          "deferred_vexp_refs 0 -> 1",
+          "observation_file_links 0 -> 1",
+          "observation_fq_name_links 0 -> 1",
+          "observation_symbol_links 0 -> 1",
+          "observations 0 -> 1"
+        ],
+        "unclassifiedTablesChanged": []
+      },
+      {
+        "surface": "run_pipeline",
+        "calls": 3,
+        "ok": true,
+        "repositoryDerivedUnchanged": true,
+        "schemaUnchanged": true,
+        "objectCountUnchanged": true,
+        "derivedTablesChanged": [],
+        "productSessionTablesChanged": [
+          "deferred_vexp_refs 1 -> 1"
+        ],
+        "unclassifiedTablesChanged": []
+      },
+      {
+        "surface": "get_context_capsule",
+        "calls": 3,
+        "ok": true,
+        "repositoryDerivedUnchanged": true,
+        "schemaUnchanged": true,
+        "objectCountUnchanged": true,
+        "derivedTablesChanged": [],
+        "productSessionTablesChanged": [],
+        "unclassifiedTablesChanged": []
+      },
+      {
+        "surface": "index_status",
+        "calls": 3,
+        "ok": true,
+        "repositoryDerivedUnchanged": true,
+        "schemaUnchanged": true,
+        "objectCountUnchanged": true,
+        "derivedTablesChanged": [],
+        "productSessionTablesChanged": [],
+        "unclassifiedTablesChanged": []
+      }
+    ]
+  },
+  "readAfterWrite": {
+    "note": "index_repo -> H0, then repeated get_code_context. Derived state must not move.",
+    "repositoryDerivedUnchanged": true,
+    "schemaUnchanged": true,
+    "productSessionTablesChanged": [
+      "deferred_vexp_refs 1 -> 1"
+    ]
+  },
+  "arc": {
+    "repoRoot": "/home/calvin/code/ARC",
+    "query": "How does ARC decide which reaction family wins?",
+    "tablesClassified": 38,
+    "unclassifiedTables": [],
+    "classificationComplete": true,
+    "indexFileHashBefore": "bb0f93a5f87c9227",
+    "indexFileHashAfter": "438017007af4e736",
+    "indexFileSizeBefore": 112467968,
+    "indexFileSizeAfter": 112467968,
+    "derivationFingerprintBefore": "788588917e181670",
+    "derivationFingerprintAfter": "788588917e181670",
+    "derivationFingerprintUnchanged": true,
+    "schemaUnchanged": true,
+    "objectCountUnchanged": true,
+    "repositoryDerivedUnchanged": true,
+    "derivedTablesChanged": [],
+    "productSessionTablesChanged": [
+      "deferred_vexp_refs 53 -> 53"
+    ],
+    "unclassifiedTablesChanged": [],
+    "perSurface": [
+      {
+        "surface": "get_code_context",
+        "calls": 3,
+        "ok": true,
+        "repositoryDerivedUnchanged": true,
+        "schemaUnchanged": true,
+        "objectCountUnchanged": true,
+        "derivedTablesChanged": [],
+        "productSessionTablesChanged": [],
+        "unclassifiedTablesChanged": []
+      },
+      {
+        "surface": "run_pipeline",
+        "calls": 3,
+        "ok": true,
+        "repositoryDerivedUnchanged": true,
+        "schemaUnchanged": true,
+        "objectCountUnchanged": true,
+        "derivedTablesChanged": [],
+        "productSessionTablesChanged": [
+          "deferred_vexp_refs 53 -> 53"
+        ],
+        "unclassifiedTablesChanged": []
+      },
+      {
+        "surface": "get_context_capsule",
+        "calls": 3,
+        "ok": true,
+        "repositoryDerivedUnchanged": true,
+        "schemaUnchanged": true,
+        "objectCountUnchanged": true,
+        "derivedTablesChanged": [],
+        "productSessionTablesChanged": [],
+        "unclassifiedTablesChanged": []
+      },
+      {
+        "surface": "index_status",
+        "calls": 3,
+        "ok": true,
+        "repositoryDerivedUnchanged": true,
+        "schemaUnchanged": true,
+        "objectCountUnchanged": true,
+        "derivedTablesChanged": [],
+        "productSessionTablesChanged": [],
+        "unclassifiedTablesChanged": []
+      }
+    ]
+  },
+  "tckdb": {
+    "repoRoot": "/home/calvin/code/TCKDB_v2",
+    "query": "How are thermodynamic properties stored?",
+    "tablesClassified": 38,
+    "unclassifiedTables": [],
+    "classificationComplete": true,
+    "indexFileHashBefore": "ad51f2d0ab5b12f7",
+    "indexFileHashAfter": "4950a5f5ac6acc26",
+    "indexFileSizeBefore": 620572672,
+    "indexFileSizeAfter": 620572672,
+    "derivationFingerprintBefore": "fb818769746d240b",
+    "derivationFingerprintAfter": "fb818769746d240b",
+    "derivationFingerprintUnchanged": true,
+    "schemaUnchanged": true,
+    "objectCountUnchanged": true,
+    "repositoryDerivedUnchanged": true,
+    "derivedTablesChanged": [],
+    "productSessionTablesChanged": [
+      "deferred_vexp_refs 37 -> 37"
+    ],
+    "unclassifiedTablesChanged": [],
+    "perSurface": [
+      {
+        "surface": "get_code_context",
+        "calls": 3,
+        "ok": true,
+        "repositoryDerivedUnchanged": true,
+        "schemaUnchanged": true,
+        "objectCountUnchanged": true,
+        "derivedTablesChanged": [],
+        "productSessionTablesChanged": [],
+        "unclassifiedTablesChanged": []
+      },
+      {
+        "surface": "run_pipeline",
+        "calls": 3,
+        "ok": true,
+        "repositoryDerivedUnchanged": true,
+        "schemaUnchanged": true,
+        "objectCountUnchanged": true,
+        "derivedTablesChanged": [],
+        "productSessionTablesChanged": [
+          "deferred_vexp_refs 37 -> 37"
+        ],
+        "unclassifiedTablesChanged": []
+      },
+      {
+        "surface": "get_context_capsule",
+        "calls": 3,
+        "ok": true,
+        "repositoryDerivedUnchanged": true,
+        "schemaUnchanged": true,
+        "objectCountUnchanged": true,
+        "derivedTablesChanged": [],
+        "productSessionTablesChanged": [],
+        "unclassifiedTablesChanged": []
+      },
+      {
+        "surface": "index_status",
+        "calls": 3,
+        "ok": true,
+        "repositoryDerivedUnchanged": true,
+        "schemaUnchanged": true,
+        "objectCountUnchanged": true,
+        "derivedTablesChanged": [],
+        "productSessionTablesChanged": [],
+        "unclassifiedTablesChanged": []
+      }
+    ]
+  }
+}

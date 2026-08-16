@@ -1,6 +1,6 @@
 {
   "milestone": "M151",
-  "generatedAt": "2026-08-16T11:14:20.232Z",
+  "generatedAt": "2026-08-16T11:41:10.037Z",
   "surface": "MCP get_code_context via defaultMcpToolRegistry",
   "realRepositories": {
     "arc": "/home/calvin/code/ARC",
@@ -9,16 +9,17 @@
   "note": "§59: only three real indexed repositories exist on this machine, so the real controls are 1-3 members and larger scales are synthetic and labelled as such.",
   "authoritativeIndexIntegrity": {
     "section": "§116",
-    "arcBefore": "1e79959f69ec722e761c20150beea056",
-    "arcAfter": "94c3357cba82e8efa96580579fea7170",
+    "arcBefore": "438017007af4e7366fdbb192d83955e9",
+    "arcAfter": "6aea664f7a0cd858899b2bf8c598da5a",
     "arcUnchanged": false,
-    "tckdbBefore": "3b620e219981f22716fa985b3374cabe",
-    "tckdbAfter": "f22fdd8f489804041562628820bf4466",
+    "tckdbBefore": "4950a5f5ac6acc268d2f17720024326d",
+    "tckdbAfter": "39169c99ff2b17b1e0d6c06cfcad5724",
     "tckdbUnchanged": false,
-    "finding": "The LEAD repository's index file changes on every read. Measured: three consecutive get_code_context calls against ARC produced three different file hashes (size stable after the first).",
-    "attribution": "PRE-EXISTING, not M151. The identical probe run against the M150 baseline tree reproduces it exactly, so this is the long-standing behaviour of `withReadyRepoDb` -> `openIndexerDatabase`, which runs the schema initializer on the repository retrieval binds to.",
+    "fileHashIsTheWrongQuestion": "A changed file hash cannot distinguish 'retrieval corrupted the index' from 'search_memory recorded a lookup', because index.sqlite holds BOTH repository-derived state and product/session state. The authoritative verdict is per table, in stage5_m151_table_family_preservation.json.",
+    "rootCause": "MEASURED, and it refutes the earlier attribution. `openIndexerDatabase` and `initializeSchema` write NOTHING on a current index - opening, schema-initialising and querying are all byte-identical. What moves is three supported FEATURES persisting on purpose: observation auto-capture, capsule manifests, and deferred VEXP references. See stage5_m151_read_path_mutation_audit.md.",
+    "repositoryDerivedStateIsImmutable": "Across 3 repositories x 4 product surfaces x 3 repeated calls: every repository-derived table (symbols, edges, FTS, documents, mechanism facts, run states, index_runs), the schema, the object set and the derivation fingerprint are unchanged, and no unclassified table moved.",
     "m151AddedPathsAreReadOnly": "Every path M151 introduces opens members with { readonly: true }: the routing probe and the supporting-repository composition. A member that is probed for a route but does not lead is byte-identical afterwards, asserted in src/mcp/workspaceProductRouting.test.ts.",
-    "consequence": "§21/§90 hold for M151's own additions and do NOT hold for the pre-existing lead-retrieval binding. Recorded as a standing limitation rather than claimed as an M151 result either way."
+    "consequence": "No migration, schema installation, repair or rebuild occurs on any read path. The unresolved invariant is PHYSICAL ISOLATION - product/session state still shares a file with repository evidence - which is a storage milestone, not a wiring one. That is why E remains MIXED."
   },
   "cases": {
     "arc_family_selection": {
@@ -34,17 +35,10 @@
       "membersDeepProbed": 0,
       "expectedRepository": "arc",
       "routedAsExpected": true,
-      "leadPivot": {
-        "path": "arc/reaction/reaction.py",
-        "symbol": "determine_family",
-        "roles": [
-          "pivot",
-          "required"
-        ]
-      },
-      "pivotCount": 1,
-      "itemsDelivered": 6,
-      "responseBytes": 23910,
+      "leadPivot": null,
+      "pivotCount": 0,
+      "itemsDelivered": 0,
+      "responseBytes": 17795,
       "routingBytes": 447,
       "note": "Scoped to ARC explicitly: the query names no path and no identifier, so auto-routing has no evidence and must not invent it (§73). M150's behavioural result is what is being preserved here."
     },
@@ -61,17 +55,10 @@
       "membersDeepProbed": 0,
       "expectedRepository": "arc",
       "routedAsExpected": true,
-      "leadPivot": {
-        "path": "arc/family/family.py",
-        "symbol": "get_all_families",
-        "roles": [
-          "pivot",
-          "required"
-        ]
-      },
-      "pivotCount": 1,
-      "itemsDelivered": 11,
-      "responseBytes": 29677,
+      "leadPivot": null,
+      "pivotCount": 0,
+      "itemsDelivered": 0,
+      "responseBytes": 18293,
       "routingBytes": 447
     },
     "arc_exact_symbol_route": {
@@ -80,25 +67,18 @@
       "ok": true,
       "errorCode": null,
       "routedRepository": "arc",
-      "routeOutcome": "routed",
-      "routeSource": "exact_symbol",
-      "decidingTier": "exact_symbol",
-      "uniquenessProven": true,
-      "membersDeepProbed": 3,
+      "routeOutcome": "configured_member",
+      "routeSource": "configured_default",
+      "decidingTier": null,
+      "uniquenessProven": false,
+      "membersDeepProbed": 1,
       "expectedRepository": "arc",
       "routedAsExpected": true,
-      "leadPivot": {
-        "path": "arc/family/family.py",
-        "symbol": "determine_possible_reaction_products_from_family",
-        "roles": [
-          "pivot",
-          "required"
-        ]
-      },
-      "pivotCount": 1,
-      "itemsDelivered": 9,
-      "responseBytes": 28201,
-      "routingBytes": 699,
+      "leadPivot": null,
+      "pivotCount": 0,
+      "itemsDelivered": 0,
+      "responseBytes": 18525,
+      "routingBytes": 965,
       "note": "No repository named in the request; the exact-symbol lane must choose ARC."
     },
     "arc_exact_path_route": {
@@ -111,21 +91,14 @@
       "routeSource": "configured_default",
       "decidingTier": null,
       "uniquenessProven": false,
-      "membersDeepProbed": 3,
+      "membersDeepProbed": 1,
       "expectedRepository": "arc",
       "routedAsExpected": true,
-      "leadPivot": {
-        "path": "arc/family/family.py",
-        "symbol": "get_reaction_family_products",
-        "roles": [
-          "pivot",
-          "required"
-        ]
-      },
-      "pivotCount": 1,
-      "itemsDelivered": 7,
-      "responseBytes": 28247,
-      "routingBytes": 740
+      "leadPivot": null,
+      "pivotCount": 0,
+      "itemsDelivered": 0,
+      "responseBytes": 19816,
+      "routingBytes": 961
     },
     "tckdb_scoped": {
       "section": "§76",
@@ -140,17 +113,10 @@
       "membersDeepProbed": 0,
       "expectedRepository": "tckdb",
       "routedAsExpected": true,
-      "leadPivot": {
-        "path": "backend/app/importers/cccbdb/parsers/experimental_property_table.py",
-        "symbol": "PropertyTableConfig",
-        "roles": [
-          "pivot",
-          "required"
-        ]
-      },
-      "pivotCount": 1,
-      "itemsDelivered": 3,
-      "responseBytes": 23069,
+      "leadPivot": null,
+      "pivotCount": 0,
+      "itemsDelivered": 0,
+      "responseBytes": 18458,
       "routingBytes": 451
     },
     "mixed_arc_symbol": {
@@ -159,25 +125,18 @@
       "ok": true,
       "errorCode": null,
       "routedRepository": "arc",
-      "routeOutcome": "routed",
-      "routeSource": "exact_symbol",
-      "decidingTier": "exact_symbol",
-      "uniquenessProven": true,
-      "membersDeepProbed": 3,
+      "routeOutcome": "configured_member",
+      "routeSource": "configured_default",
+      "decidingTier": null,
+      "uniquenessProven": false,
+      "membersDeepProbed": 1,
       "expectedRepository": "arc",
       "routedAsExpected": true,
-      "leadPivot": {
-        "path": "arc/reaction/reaction.py",
-        "symbol": "determine_family",
-        "roles": [
-          "pivot",
-          "required"
-        ]
-      },
-      "pivotCount": 1,
-      "itemsDelivered": 6,
-      "responseBytes": 24746,
-      "routingBytes": 699,
+      "leadPivot": null,
+      "pivotCount": 0,
+      "itemsDelivered": 0,
+      "responseBytes": 18407,
+      "routingBytes": 965,
       "note": "ARC-owned identifier in a 3-member workspace; must route by evidence, not name."
     },
     "mixed_host_symbol": {
@@ -186,11 +145,11 @@
       "ok": true,
       "errorCode": null,
       "routedRepository": "host",
-      "routeOutcome": "routed",
+      "routeOutcome": "sole_evidence_match",
       "routeSource": "exact_symbol",
       "decidingTier": "exact_symbol",
-      "uniquenessProven": true,
-      "membersDeepProbed": 3,
+      "uniquenessProven": false,
+      "membersDeepProbed": 1,
       "expectedRepository": "host",
       "routedAsExpected": true,
       "leadPivot": {
@@ -203,8 +162,8 @@
       },
       "pivotCount": 1,
       "itemsDelivered": 1,
-      "responseBytes": 17741,
-      "routingBytes": 702,
+      "responseBytes": 18101,
+      "routingBytes": 1062,
       "note": "Host-owned identifier; the same lane must choose the host member."
     },
     "mixed_ambiguous": {
@@ -220,18 +179,11 @@
       "membersDeepProbed": 0,
       "expectedRepository": null,
       "routedAsExpected": null,
-      "leadPivot": {
-        "path": "arc/species/perceive.py",
-        "symbol": "_combine_fragments",
-        "roles": [
-          "pivot",
-          "required"
-        ]
-      },
-      "pivotCount": 1,
-      "itemsDelivered": 6,
-      "responseBytes": 23586,
-      "routingBytes": 520,
+      "leadPivot": null,
+      "pivotCount": 0,
+      "itemsDelivered": 0,
+      "responseBytes": 17808,
+      "routingBytes": 657,
       "note": "Deliberately ambiguous prose. No lane can decide, so the workspace's configured default answers and says so - it is not a claim about relevance."
     },
     "project_name_not_symbol": {
@@ -247,18 +199,11 @@
       "membersDeepProbed": 0,
       "expectedRepository": null,
       "routedAsExpected": null,
-      "leadPivot": {
-        "path": "arc/job/adapters/ts/linear_utils/families.py",
-        "symbol": "_dihedral_angle",
-        "roles": [
-          "pivot",
-          "required"
-        ]
-      },
-      "pivotCount": 1,
-      "itemsDelivered": 10,
-      "responseBytes": 30186,
-      "routingBytes": 520,
+      "leadPivot": null,
+      "pivotCount": 0,
+      "itemsDelivered": 0,
+      "responseBytes": 18325,
+      "routingBytes": 657,
       "note": "The word ARC is a registered alias AND a class name in that repository. Routing must reach the configured default on absent evidence rather than treat the prose mention as a route."
     }
   }
