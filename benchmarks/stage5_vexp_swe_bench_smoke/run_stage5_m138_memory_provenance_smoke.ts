@@ -5,6 +5,7 @@ import { createHash } from "node:crypto";
 import { copyFile, mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
+import { existsSync } from "node:fs";
 import { Database } from "bun:sqlite";
 
 import { buildCapsuleV2 } from "../../src/capsuleV2/buildCapsuleV2";
@@ -36,6 +37,10 @@ import {
 import {
   createEphemeralSessionDatabase,
   type WritableProductStores,
+} from "../../src/session/sessionStore";
+import {
+  resolveSessionDbPath,
+  resolveSessionDbPathForIndexDb,
 } from "../../src/session/sessionStore";
 
 /**
@@ -77,9 +82,20 @@ async function main(): Promise<void> {
   await resolveResults();
   const scratch = await mkdtemp(path.join(workspaceRoot(), "vtrace-m138-"));
   try {
+    // M152: an index copy no longer carries session history, which is the point
+    // of the split — but this acceptance is ABOUT ARC's real observations, so
+    // the session store is copied beside it deliberately (§96, §149). A frozen
+    // retrieval benchmark would copy the index alone and inherit nothing.
     const arcCopy = path.join(scratch, "arc.sqlite");
     await copyFile(ARC_DB, arcCopy);
-    const actualRows = readLegacyArcRows(ARC_DB);
+    const arcSessionSource = resolveSessionDbPath(ARC_ROOT);
+    if (existsSync(arcSessionSource)) {
+      await copyFile(arcSessionSource, resolveSessionDbPathForIndexDb(arcCopy));
+    }
+    // M152: ARC's observations live in the SESSION store now. Reading them
+    // there is the M138 preservation check — the historical rows must still
+    // be present and still classify the same way after the move (§99).
+    const actualRows = readLegacyArcRows(arcSessionSource);
     const currentContext = await resolveCurrentObservationContext(ARC_ROOT);
     const legacyAudit = actualRows.map((row) => auditLegacyRow(row, currentContext));
 
@@ -185,8 +201,9 @@ async function main(): Promise<void> {
   }
 }
 
-function readLegacyArcRows(dbPath: string): any[] {
-  const db = new Database(dbPath, { readonly: true });
+function readLegacyArcRows(sessionDbPath: string): any[] {
+  if (!existsSync(sessionDbPath)) return [];
+  const db = new Database(sessionDbPath, { readonly: true });
   try {
     return db.query(`
       SELECT id, repo_root, tool_name, query_text, summary, body, source_run_id, created_at_ms

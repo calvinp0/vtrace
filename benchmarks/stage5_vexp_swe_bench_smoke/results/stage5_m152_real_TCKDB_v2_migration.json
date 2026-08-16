@@ -1,0 +1,175 @@
+{
+  "milestone": "M152-E",
+  "label": "TCKDB_v2",
+  "repoRoot": "/home/calvin/code/TCKDB_v2",
+  "indexPath": "/home/calvin/code/TCKDB_v2/.vtrace/index.sqlite",
+  "sessionPath": "/home/calvin/code/TCKDB_v2/.vtrace/session.sqlite",
+  "preMigration": {
+    "indexHash": "addcf133402a1a2c012dba871fb0e59d0938896dc6c52f00b0cf19fe06269956",
+    "indexSizeBytes": 648060928,
+    "legacySessionTables": 0,
+    "legacyRowTotal": 851,
+    "indexRuns": 29,
+    "files": 1252,
+    "symbols": 31366,
+    "sessionStorePresent": false
+  },
+  "migration": {
+    "performedBy": "index_repo_lifecycle",
+    "parityBasis": "recorded_pre_state",
+    "outcome": "not_legacy",
+    "rowsCopied": 0,
+    "durationMs": 2,
+    "indexHashAfter": "addcf133402a1a2c012dba871fb0e59d0938896dc6c52f00b0cf19fe06269956",
+    "indexSizeAfterBytes": 648060928,
+    "sessionSizeBytes": 1122304
+  },
+  "parity": [
+    {
+      "family": "sessions",
+      "rowsBefore": 0,
+      "rowsAfter": 0,
+      "idsPreserved": null,
+      "contentPreserved": null,
+      "rowsPreserved": true,
+      "duplicates": 0
+    },
+    {
+      "family": "observations",
+      "rowsBefore": 49,
+      "rowsAfter": 49,
+      "idsPreserved": null,
+      "contentPreserved": null,
+      "rowsPreserved": true,
+      "duplicates": 0
+    },
+    {
+      "family": "observation_file_links",
+      "rowsBefore": 150,
+      "rowsAfter": 150,
+      "idsPreserved": null,
+      "contentPreserved": null,
+      "rowsPreserved": true,
+      "duplicates": 0
+    },
+    {
+      "family": "observation_symbol_links",
+      "rowsBefore": 149,
+      "rowsAfter": 149,
+      "idsPreserved": null,
+      "contentPreserved": null,
+      "rowsPreserved": true,
+      "duplicates": 0
+    },
+    {
+      "family": "observation_fq_name_links",
+      "rowsBefore": 161,
+      "rowsAfter": 161,
+      "idsPreserved": null,
+      "contentPreserved": null,
+      "rowsPreserved": true,
+      "duplicates": 0
+    },
+    {
+      "family": "session_compression_summaries",
+      "rowsBefore": 0,
+      "rowsAfter": 0,
+      "idsPreserved": null,
+      "contentPreserved": null,
+      "rowsPreserved": true,
+      "duplicates": 0
+    },
+    {
+      "family": "capsule_manifests",
+      "rowsBefore": 43,
+      "rowsAfter": 43,
+      "idsPreserved": null,
+      "contentPreserved": null,
+      "rowsPreserved": true,
+      "duplicates": 0
+    },
+    {
+      "family": "capsule_manifest_items",
+      "rowsBefore": 262,
+      "rowsAfter": 262,
+      "idsPreserved": null,
+      "contentPreserved": null,
+      "rowsPreserved": true,
+      "duplicates": 0
+    },
+    {
+      "family": "project_rules",
+      "rowsBefore": 0,
+      "rowsAfter": 0,
+      "idsPreserved": null,
+      "contentPreserved": null,
+      "rowsPreserved": true,
+      "duplicates": 0
+    },
+    {
+      "family": "deferred_vexp_refs",
+      "rowsBefore": 37,
+      "rowsAfter": 37,
+      "idsPreserved": null,
+      "contentPreserved": null,
+      "rowsPreserved": true,
+      "duplicates": 0
+    },
+    {
+      "family": "deferred_vexp_ref_tombstones",
+      "rowsBefore": 0,
+      "rowsAfter": 0,
+      "idsPreserved": null,
+      "contentPreserved": null,
+      "rowsPreserved": true,
+      "duplicates": 0
+    }
+  ],
+  "ownership": {
+    "productOwnedStillInIndex": [],
+    "unclassifiedIndexObjects": [],
+    "unclassifiedSessionObjects": [],
+    "derivedCopiedIntoSession": [],
+    "indexObjectCount": 27,
+    "sessionObjectCount": 12
+  },
+  "hashMatrix": {
+    "h0Index": "addcf133402a1a2c012dba871fb0e59d0938896dc6c52f00b0cf19fe06269956",
+    "hFinalIndex": "addcf133402a1a2c012dba871fb0e59d0938896dc6c52f00b0cf19fe06269956",
+    "indexUnchangedAcrossProductActivity": true,
+    "h0Session": "c867f67c27a8b8402122595bfced35479d3711a1e279f73bbb3ab5afcaf1f744",
+    "hFinalSession": "69462654822b2008f97acce1c27943caf0252453e9cf4b2feee408be9463f27d",
+    "sessionChangedAsExpected": true
+  },
+  "featureResults": {
+    "searchMemory": {
+      "ok": true,
+      "migratedObservationsVisible": 49,
+      "matched": 5
+    },
+    "getSessionContext": {
+      "ok": true,
+      "observations": 3
+    },
+    "newObservation": {
+      "ok": true,
+      "id": "e8b22658701d501276b5554adf835011d6e2c594675b035e819ba47227eafa1d"
+    },
+    "newManifest": {
+      "ok": true,
+      "id": "f43bd50c1b49e5ee62aaa4c21084715db57a3f268bbcb47823102aa025efc124",
+      "resolvable": true
+    }
+  },
+  "gates": {
+    "migrationCompleted": true,
+    "allFamiliesRowsPreserved": true,
+    "allFamiliesIdsPreserved": true,
+    "allFamiliesContentPreserved": true,
+    "noDuplicates": true,
+    "indexOwnsNoProductState": true,
+    "noUnclassifiedObjects": true,
+    "noEvidenceCopiedIntoSession": true,
+    "indexByteIdenticalUnderProductActivity": true
+  }
+}

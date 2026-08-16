@@ -83,23 +83,23 @@
     "results": [],
     "accounting": {
       "matchedCurrent": 0,
-      "suppressedStale": 0,
+      "suppressedStale": 1,
       "suppressedForeign": 0,
-      "provenanceIncomplete": 6
+      "provenanceIncomplete": 0
     },
     "conflicts": []
   },
   "targetedLegacyObservationsSuppressed": 2,
   "currentTool": {
-    "dependentSymbolCount": 3,
-    "dependentFileCount": 3,
+    "dependentSymbolCount": 4,
+    "dependentFileCount": 4,
     "withinEnvelope": true
   },
   "afterCurrentTool": {
     "results": [
       {
-        "id": "ddc8cb1580f07e0b81923bcd6bfbb063544f0ab207a11e4307d53aa45479b5d5",
-        "summary": "Computed impact graph for arc/species/vectors.py::get_dihedral with 3 dependents across 3 files.",
+        "id": "3c8fdf28d47deb750494837e4da42f3873208606e49d197f58bc4153047d6b69",
+        "summary": "Computed impact graph for arc/species/vectors.py::get_dihedral with 4 dependents across 4 files.",
         "freshness": {
           "state": "current",
           "currentTruthEligible": true,
@@ -116,11 +116,11 @@
     ],
     "accounting": {
       "matchedCurrent": 1,
-      "suppressedStale": 0,
+      "suppressedStale": 1,
       "suppressedForeign": 0,
-      "provenanceIncomplete": 6
+      "provenanceIncomplete": 0
     },
     "conflicts": []
   },
-  "pass": true
+  "pass": false
 }

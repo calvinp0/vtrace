@@ -5,10 +5,10 @@
   "noVexp": true,
   "noPaidApis": true,
   "noNetwork": true,
-  "arcMemoryPass": true,
+  "arcMemoryPass": false,
   "compatibilityPass": true,
   "exactAnswerPass": true,
-  "flowImpactPass": true,
+  "flowImpactPass": false,
   "tckdbPass": true,
-  "verdict": "PASS"
+  "verdict": "FAIL"
 }

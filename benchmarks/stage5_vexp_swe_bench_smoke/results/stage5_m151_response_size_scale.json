@@ -1,12 +1,12 @@
 {
   "milestone": "M151",
-  "generatedAt": "2026-08-16T11:02:34.285Z",
+  "generatedAt": "2026-08-16T13:20:59.401Z",
   "note": "§143. Routing metadata and the coverage example lists are flat across workspace size; only counts move.",
   "rows": [
     {
       "members": 11,
       "routingBytes": 1568,
-      "totalResponseBytes": 20338,
+      "totalResponseBytes": 20328,
       "coverageExamplesEmitted": 4,
       "candidatesEmitted": 1,
       "supportingEmitted": 0,
@@ -26,7 +26,7 @@
     {
       "members": 1000,
       "routingBytes": 1586,
-      "totalResponseBytes": 20357,
+      "totalResponseBytes": 20355,
       "coverageExamplesEmitted": 4,
       "candidatesEmitted": 1,
       "supportingEmitted": 0,

@@ -1,6 +1,6 @@
 {
   "milestone": "M151",
-  "generatedAt": "2026-08-16T11:02:34.285Z",
+  "generatedAt": "2026-08-16T13:20:59.401Z",
   "surface": "MCP get_code_context via defaultMcpToolRegistry",
   "note": "§141 routing truth table. Every row is a real product response; no row calls nominateRepositories directly (§100).",
   "cases": [
@@ -32,9 +32,9 @@
           "omittedByBound": 0
         }
       ],
-      "contextSemanticHash": "22a5c3cdd4e0911b",
+      "contextSemanticHash": "b51984635fe0389e",
       "itemsDelivered": 1,
-      "responseBytes": 17752,
+      "responseBytes": 17754,
       "routingBytes": 705
     },
     {
@@ -55,9 +55,9 @@
       "supportingRepositories": [],
       "supportersInspected": false,
       "claimScopes": [],
-      "contextSemanticHash": "17d76ff2cac930f9",
+      "contextSemanticHash": "9218be84c7a77fa8",
       "itemsDelivered": 2,
-      "responseBytes": 18285,
+      "responseBytes": 18276,
       "routingBytes": 508
     },
     {
@@ -88,9 +88,9 @@
           "omittedByBound": 0
         }
       ],
-      "contextSemanticHash": "fbc0be6b8cce0daf",
+      "contextSemanticHash": "3c4807ce660abde1",
       "itemsDelivered": 1,
-      "responseBytes": 17710,
+      "responseBytes": 17711,
       "routingBytes": 702
     },
     {
@@ -121,7 +121,7 @@
           "omittedByBound": 0
         }
       ],
-      "contextSemanticHash": "804a9dfe9b113ab3",
+      "contextSemanticHash": "07053d37dcf156f9",
       "itemsDelivered": 2,
       "responseBytes": 18413,
       "routingBytes": 698
@@ -144,9 +144,9 @@
       "supportingRepositories": [],
       "supportersInspected": false,
       "claimScopes": [],
-      "contextSemanticHash": "e95eb573c5668279",
+      "contextSemanticHash": "f8deed2747be61fe",
       "itemsDelivered": 3,
-      "responseBytes": 19563,
+      "responseBytes": 19558,
       "routingBytes": 490
     },
     {
@@ -177,9 +177,9 @@
           "omittedByBound": 0
         }
       ],
-      "contextSemanticHash": "51d69da4b3027f47",
+      "contextSemanticHash": "9ea815c868ae930b",
       "itemsDelivered": 3,
-      "responseBytes": 18849,
+      "responseBytes": 18848,
       "routingBytes": 742
     },
     {
@@ -200,7 +200,7 @@
       "supportingRepositories": [],
       "supportersInspected": false,
       "claimScopes": [],
-      "contextSemanticHash": "cfcc2a1570f822d5",
+      "contextSemanticHash": "70468c8e0f3cf333",
       "itemsDelivered": 4,
       "responseBytes": 19095,
       "routingBytes": 522
@@ -233,9 +233,9 @@
           "omittedByBound": 0
         }
       ],
-      "contextSemanticHash": "1b34d320b5517632",
+      "contextSemanticHash": "f6ef318690f44daf",
       "itemsDelivered": 4,
-      "responseBytes": 19299,
+      "responseBytes": 19297,
       "routingBytes": 746
     },
     {
@@ -256,9 +256,9 @@
       "supportingRepositories": [],
       "supportersInspected": false,
       "claimScopes": [],
-      "contextSemanticHash": "83a589d29c9ab729",
+      "contextSemanticHash": "f954d1c12309dcaa",
       "itemsDelivered": 4,
-      "responseBytes": 18814,
+      "responseBytes": 18812,
       "routingBytes": 449
     },
     {
@@ -368,9 +368,9 @@
       "supportingRepositories": [],
       "supportersInspected": false,
       "claimScopes": [],
-      "contextSemanticHash": "fdd32698958f597b",
+      "contextSemanticHash": "1c8d0278ee2ba5d2",
       "itemsDelivered": 1,
-      "responseBytes": 17196,
+      "responseBytes": 17192,
       "routingBytes": 449
     },
     {
@@ -401,9 +401,9 @@
           "omittedByBound": 0
         }
       ],
-      "contextSemanticHash": "947bf4bd81c606f4",
+      "contextSemanticHash": "2a4f92a0ebb166dc",
       "itemsDelivered": 4,
-      "responseBytes": 19693,
+      "responseBytes": 19694,
       "routingBytes": 924
     },
     {
@@ -436,7 +436,7 @@
       ],
       "contextSemanticHash": "90c006fd0ef5dfc2",
       "itemsDelivered": 0,
-      "responseBytes": 14305,
+      "responseBytes": 14307,
       "routingBytes": 847
     },
     {

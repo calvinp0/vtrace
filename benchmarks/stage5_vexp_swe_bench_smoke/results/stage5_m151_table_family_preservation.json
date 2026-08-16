@@ -1,6 +1,6 @@
 {
   "milestone": "M151",
-  "generatedAt": "2026-08-16T11:40:38.138Z",
+  "generatedAt": "2026-08-16T13:26:31.485Z",
   "note": "The byte-identity gate assumed index.sqlite holds repository-derived state alone. It does not. This proves the invariant that actually matters: repeated product reads leave every repository-derived table, the schema, the object set and the derivation fingerprint untouched, and mutate only the three documented product/session families.",
   "families": {
     "repository_derived": [
@@ -44,31 +44,23 @@
     "onlyDocumentedFamiliesMutated": true
   },
   "fixture": {
-    "repoRoot": "/tmp/m151-family-C5ll7t/fixture",
+    "repoRoot": "/tmp/m151-family-TJ3djg/fixture",
     "query": "pick_winner",
-    "tablesClassified": 38,
+    "tablesClassified": 27,
     "unclassifiedTables": [],
     "classificationComplete": true,
-    "indexFileHashBefore": "994461bd909cbfca",
-    "indexFileHashAfter": "a5dee4092dd61dd6",
-    "indexFileSizeBefore": 376832,
-    "indexFileSizeAfter": 376832,
-    "derivationFingerprintBefore": "d727842a41da27b9",
-    "derivationFingerprintAfter": "d727842a41da27b9",
+    "indexFileHashBefore": "a38e1789850c488f",
+    "indexFileHashAfter": "a38e1789850c488f",
+    "indexFileSizeBefore": 200704,
+    "indexFileSizeAfter": 200704,
+    "derivationFingerprintBefore": "62e441215545a23e",
+    "derivationFingerprintAfter": "62e441215545a23e",
     "derivationFingerprintUnchanged": true,
     "schemaUnchanged": true,
     "objectCountUnchanged": true,
     "repositoryDerivedUnchanged": true,
     "derivedTablesChanged": [],
-    "productSessionTablesChanged": [
-      "capsule_manifest_items 0 -> 2",
-      "capsule_manifests 0 -> 2",
-      "deferred_vexp_refs 0 -> 1",
-      "observation_file_links 0 -> 1",
-      "observation_fq_name_links 0 -> 1",
-      "observation_symbol_links 0 -> 1",
-      "observations 0 -> 1"
-    ],
+    "productSessionTablesChanged": [],
     "unclassifiedTablesChanged": [],
     "perSurface": [
       {
@@ -79,15 +71,7 @@
         "schemaUnchanged": true,
         "objectCountUnchanged": true,
         "derivedTablesChanged": [],
-        "productSessionTablesChanged": [
-          "capsule_manifest_items 0 -> 2",
-          "capsule_manifests 0 -> 2",
-          "deferred_vexp_refs 0 -> 1",
-          "observation_file_links 0 -> 1",
-          "observation_fq_name_links 0 -> 1",
-          "observation_symbol_links 0 -> 1",
-          "observations 0 -> 1"
-        ],
+        "productSessionTablesChanged": [],
         "unclassifiedTablesChanged": []
       },
       {
@@ -98,9 +82,7 @@
         "schemaUnchanged": true,
         "objectCountUnchanged": true,
         "derivedTablesChanged": [],
-        "productSessionTablesChanged": [
-          "deferred_vexp_refs 1 -> 1"
-        ],
+        "productSessionTablesChanged": [],
         "unclassifiedTablesChanged": []
       },
       {
@@ -131,30 +113,26 @@
     "note": "index_repo -> H0, then repeated get_code_context. Derived state must not move.",
     "repositoryDerivedUnchanged": true,
     "schemaUnchanged": true,
-    "productSessionTablesChanged": [
-      "deferred_vexp_refs 1 -> 1"
-    ]
+    "productSessionTablesChanged": []
   },
   "arc": {
     "repoRoot": "/home/calvin/code/ARC",
     "query": "How does ARC decide which reaction family wins?",
-    "tablesClassified": 38,
+    "tablesClassified": 27,
     "unclassifiedTables": [],
     "classificationComplete": true,
-    "indexFileHashBefore": "bb0f93a5f87c9227",
-    "indexFileHashAfter": "438017007af4e736",
+    "indexFileHashBefore": "aa3592b287117da9",
+    "indexFileHashAfter": "aa3592b287117da9",
     "indexFileSizeBefore": 112467968,
     "indexFileSizeAfter": 112467968,
-    "derivationFingerprintBefore": "788588917e181670",
-    "derivationFingerprintAfter": "788588917e181670",
+    "derivationFingerprintBefore": "81eec73450400e9a",
+    "derivationFingerprintAfter": "81eec73450400e9a",
     "derivationFingerprintUnchanged": true,
     "schemaUnchanged": true,
     "objectCountUnchanged": true,
     "repositoryDerivedUnchanged": true,
     "derivedTablesChanged": [],
-    "productSessionTablesChanged": [
-      "deferred_vexp_refs 53 -> 53"
-    ],
+    "productSessionTablesChanged": [],
     "unclassifiedTablesChanged": [],
     "perSurface": [
       {
@@ -176,9 +154,7 @@
         "schemaUnchanged": true,
         "objectCountUnchanged": true,
         "derivedTablesChanged": [],
-        "productSessionTablesChanged": [
-          "deferred_vexp_refs 53 -> 53"
-        ],
+        "productSessionTablesChanged": [],
         "unclassifiedTablesChanged": []
       },
       {
@@ -208,23 +184,21 @@
   "tckdb": {
     "repoRoot": "/home/calvin/code/TCKDB_v2",
     "query": "How are thermodynamic properties stored?",
-    "tablesClassified": 38,
+    "tablesClassified": 27,
     "unclassifiedTables": [],
     "classificationComplete": true,
-    "indexFileHashBefore": "ad51f2d0ab5b12f7",
-    "indexFileHashAfter": "4950a5f5ac6acc26",
-    "indexFileSizeBefore": 620572672,
-    "indexFileSizeAfter": 620572672,
-    "derivationFingerprintBefore": "fb818769746d240b",
-    "derivationFingerprintAfter": "fb818769746d240b",
+    "indexFileHashBefore": "addcf133402a1a2c",
+    "indexFileHashAfter": "addcf133402a1a2c",
+    "indexFileSizeBefore": 648060928,
+    "indexFileSizeAfter": 648060928,
+    "derivationFingerprintBefore": "b3eba6fca0de5094",
+    "derivationFingerprintAfter": "b3eba6fca0de5094",
     "derivationFingerprintUnchanged": true,
     "schemaUnchanged": true,
     "objectCountUnchanged": true,
     "repositoryDerivedUnchanged": true,
     "derivedTablesChanged": [],
-    "productSessionTablesChanged": [
-      "deferred_vexp_refs 37 -> 37"
-    ],
+    "productSessionTablesChanged": [],
     "unclassifiedTablesChanged": [],
     "perSurface": [
       {
@@ -246,9 +220,7 @@
         "schemaUnchanged": true,
         "objectCountUnchanged": true,
         "derivedTablesChanged": [],
-        "productSessionTablesChanged": [
-          "deferred_vexp_refs 37 -> 37"
-        ],
+        "productSessionTablesChanged": [],
         "unclassifiedTablesChanged": []
       },
       {

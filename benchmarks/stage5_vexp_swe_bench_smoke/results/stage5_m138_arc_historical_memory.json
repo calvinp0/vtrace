@@ -2,9 +2,9 @@
   "schemaVersion": "stage5.m138.arc-historical-memory.v1",
   "results": [
     {
-      "id": "ddc8cb1580f07e0b81923bcd6bfbb063544f0ab207a11e4307d53aa45479b5d5",
-      "summary": "Computed impact graph for arc/species/vectors.py::get_dihedral with 3 dependents across 3 files.",
-      "createdAtMs": 1786305392929,
+      "id": "3c8fdf28d47deb750494837e4da42f3873208606e49d197f58bc4153047d6b69",
+      "summary": "Computed impact graph for arc/species/vectors.py::get_dihedral with 4 dependents across 4 files.",
+      "createdAtMs": 1786886986011,
       "freshness": {
         "state": "current",
         "currentTruthEligible": true,
@@ -17,56 +17,12 @@
         "indexMatch": true,
         "implementationCompatible": true
       },
-      "observedHead": "1202705be46edf01c84bfb89e3fa94f76f7ae15e",
+      "observedHead": "c0b65ddb211f694a82e6979a724ab31f871f7a87",
       "observedWorktree": "c85329dd70bb66cdabe1f7e0",
-      "observedImplementation": "3c4be01ed73d78d73572602810cfdfbbfa943275",
+      "observedImplementation": "e50fac7668cecb5979a51563b9437663a6c9f4fb",
       "observedImplementationDirtyFingerprint": null,
-      "observedIndex": "bf6502e43e27f31be50d118b8dac4048bdfa3dcf221c6f03a61ce0d78e9fcfa9"
-    },
-    {
-      "id": "de8a260e6103dba7d639e58df36c2fe0a3367f9a6933e378fcc55f08837c1496",
-      "summary": "Computed impact graph for arc/species/vectors.py::get_dihedral with 10 dependents across 7 files.",
-      "createdAtMs": 1786291909834,
-      "freshness": {
-        "state": "provenance_incomplete",
-        "currentTruthEligible": false,
-        "reasons": [
-          "legacy_provenance_missing"
-        ],
-        "repoMatch": null,
-        "worktreeMatch": null,
-        "sourceStateMatch": null,
-        "indexMatch": null,
-        "implementationCompatible": null
-      },
-      "observedHead": null,
-      "observedWorktree": null,
-      "observedImplementation": null,
-      "observedImplementationDirtyFingerprint": null,
-      "observedIndex": null
-    },
-    {
-      "id": "11eb50079ef5f5b21315452c6de554d51450853c520461bbe572ef7c3c242ecd",
-      "summary": "Computed impact graph for arc/species/vectors.py::get_dihedral with 1327 dependents across 95 files.",
-      "createdAtMs": 1786281675073,
-      "freshness": {
-        "state": "provenance_incomplete",
-        "currentTruthEligible": false,
-        "reasons": [
-          "legacy_provenance_missing"
-        ],
-        "repoMatch": null,
-        "worktreeMatch": null,
-        "sourceStateMatch": null,
-        "indexMatch": null,
-        "implementationCompatible": null
-      },
-      "observedHead": null,
-      "observedWorktree": null,
-      "observedImplementation": null,
-      "observedImplementationDirtyFingerprint": null,
-      "observedIndex": null
+      "observedIndex": "9fb3d64391f291310fc65284a43bd901f0bf292462bd13e13d5ef19ecf251ee9"
     }
   ],
-  "pass": true
+  "pass": false
 }

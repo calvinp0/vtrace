@@ -1,6 +1,6 @@
 {
   "milestone": "M151",
-  "generatedAt": "2026-08-16T11:02:34.285Z",
+  "generatedAt": "2026-08-16T13:20:59.401Z",
   "note": "§124. Verdicts come from the full census; `repos` is a bounded sample. `omittedByBound` counts records not serialized and is independent of `coverageComplete`.",
   "rows": [
     {
@@ -18,7 +18,7 @@
         "examplesEmitted": 4
       },
       "censusMatchesWorkspace": true,
-      "latencyMs": 17.52
+      "latencyMs": 38.25
     },
     {
       "members": 100,
@@ -35,7 +35,7 @@
         "examplesEmitted": 4
       },
       "censusMatchesWorkspace": true,
-      "latencyMs": 40.92
+      "latencyMs": 131.77
     },
     {
       "members": 1000,
@@ -52,7 +52,7 @@
         "examplesEmitted": 4
       },
       "censusMatchesWorkspace": true,
-      "latencyMs": 297.78
+      "latencyMs": 726.9
     },
     {
       "members": 11,

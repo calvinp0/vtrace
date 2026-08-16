@@ -1,6 +1,6 @@
 {
   "milestone": "M151",
-  "generatedAt": "2026-08-16T11:02:34.285Z",
+  "generatedAt": "2026-08-16T13:20:59.401Z",
   "note": "§145. The hard requirement is refusedIndexesOpenedForRetrieval = 0 at every scale.",
   "rows": [
     {
