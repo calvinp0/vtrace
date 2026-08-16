@@ -1891,3 +1891,53 @@ rerun (§24). Verification: typechecks clean, `bun test` 4670 pass / 0 fail,
   candidate propagation to delivery selection. A milestone that only counts
   aggregate movement would have discarded a correct fix and kept looking in the
   stage it had just cleared.
+
+## M153-C5 continuation (commits e3761ab9, <evidence>)
+
+Verdict unchanged: **INCOMPLETE** (A PASS · B PASS · C NOT PASS · D/E not run).
+C5 focused verdict **PASS**; M153-C still NOT PASS (§72). One generic delivery
+defect fixed — the discard gate read the one-per-query answer-role GRANT where it
+should read the answer-role EVIDENCE, deleting every proven direct implementer
+after the first under the reason "no relevance to the task". `get_filetype` moves
+discard → support; it is then lost to the bounded delivery envelope (support #14
+of 17, 4 delivered), which is recorded rather than bypassed. Behavioural unique
+recoveries **0**, oracle calibration unchanged on all 35 cases, taxonomy
+unchanged. Lane still default-off; workspace routing not rerun (§48).
+Verification: typechecks clean, `bun test` 4676 pass / 0 fail, `git diff --check`
+clean. Holdout unconsumed, ARC and TCKDB not run.
+
+## M153-C5 standing findings
+
+- **A grant is not evidence** (M153-C5): M150 bounded answer-role authority to one
+  candidate per query, which is right, and then wired the DISCARD gate to that
+  grant. So the second and third definitions that retrieval had just proven
+  implement the requested operation were deleted under the reason "no
+  lexical/symbol/path/test/graph relevance to the task" — a statement contradicted
+  by a field on the candidate the gate did not read. Bounding who may ACT on
+  evidence is a different decision from deciding who HAS it.
+
+- **A fixture with one eligible candidate cannot test a tie-break** (M153-C5): the
+  M150 delivery fixture holds exactly one grant-eligible definition, so its grant
+  is unopposed and the grant and the evidence can never disagree in it. The defect
+  was three phases old and fully covered by passing tests. A bound of "at most
+  one" needs a fixture with at least two.
+
+- **The obvious explanation was the wrong one** (M153-C5): the working hypothesis
+  was that weak lexical evidence blocked delivery. The M150 control has lexical
+  0.000 against `get_filetype`'s 0.028, identical zero localEvidence/domain/graph,
+  and is delivered as lead. Three-way controls refuted in one run what a two-way
+  comparison would have confirmed.
+
+- **The fact records the mechanism, not the result** (M153-C5): sphinx's three
+  competing implementers carry facts identical in every indexed field — same kind,
+  operand, provenance and result-bearing flag — differing only in what they
+  return (a filetype, a stripped filename, a suffix). `operation_fact` proves
+  participation in a selection over the right operand; it does not prove the
+  definition's RESULT is what was asked for. That is the honest ceiling, and it
+  names the next representation question rather than licensing a promotion.
+
+- **Zero unique recoveries is the metric that mattered** (M153-C5): across 20
+  primary implementations in 4 calibration repositories, the lane delivered
+  nothing ordinary retrieval could not already reach — and nothing wrong either.
+  Aggregate Top-1 had been flat for three phases while the more informative
+  question, "does this lane recover anything at all", went unasked.

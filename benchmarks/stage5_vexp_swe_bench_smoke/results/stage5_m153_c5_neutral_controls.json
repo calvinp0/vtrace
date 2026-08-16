@@ -1,0 +1,69 @@
+{
+  "artifact": "M153-C5 neutral controls",
+  "suite": "src/capsule/behavioralDeliveryAuthority.test.ts",
+  "vocabularyPolicy": "no token, symbol name or code shape borrowed from any corpus repository (§19, §34)",
+  "whyANewFixtureWasNeeded": "the existing M150 delivery fixture holds exactly one grant-eligible candidate, so the grant and the evidence can never disagree in it; reproducing the defect requires two proven implementers where only one is named after the request",
+  "fixture": {
+    "grantHolder": "formatter_for_ledger_entry — first-success loop over `formatter_rules`, named after the request",
+    "grantLoser": "apply_stamp — identical mechanism, named after nothing in the request; measured mechanismEvidence 0.55, lexical 0.028, localEvidence 0, domain 0, graph 0 (the sphinx get_filetype profile)",
+    "wrongSubject": "sweep_retry_handlers — same mechanism over `retry_handlers`, a subject the request never names",
+    "consumer": "render_ledger_entry — calls the selector, performs no selection, and is the most lexically obvious symbol present",
+    "query": "How does the dispatcher decide which formatter renders a given ledger entry?"
+  },
+  "controls": [
+    {
+      "kind": "setup",
+      "name": "§34 two proven implementers compete for one grant",
+      "beforeFix": "pass",
+      "afterFix": "pass",
+      "proves": "the fixture actually reaches the condition under test"
+    },
+    {
+      "kind": "setup",
+      "name": "§34 the loser has none of the evidence the discard gate looks for",
+      "beforeFix": "pass",
+      "afterFix": "pass",
+      "proves": "localEvidence, domain and graph are all genuinely zero, so the next assertion is not passing for an unrelated reason"
+    },
+    {
+      "kind": "positive",
+      "name": "§34 a proven implementer that loses the grant is kept as support, not discarded",
+      "beforeFix": "fail",
+      "afterFix": "pass",
+      "proves": "the defect itself — the only control that changes"
+    },
+    {
+      "kind": "negative",
+      "name": "§41 keeping the loser does not create a second proven-implementer pivot",
+      "beforeFix": "pass",
+      "afterFix": "pass",
+      "proves": "answer authority stays bounded at one edit target; evidence buys survival as support, never a pivot slot"
+    },
+    {
+      "kind": "negative",
+      "name": "§35 the same mechanism on a subject the request never names gains nothing",
+      "beforeFix": "pass",
+      "afterFix": "pass",
+      "proves": "subject alignment still gates the direct tier, so the widened discard gate cannot catch a wrong-subject fact"
+    },
+    {
+      "kind": "negative",
+      "name": "§36 a consumer of the selection gains no answer authority",
+      "beforeFix": "pass",
+      "afterFix": "pass",
+      "proves": "a partial fact cannot hold the grant however strong its name match"
+    }
+  ],
+  "summary": {
+    "beforeFix": { "pass": 5, "fail": 1 },
+    "afterFix": { "pass": 6, "fail": 0 },
+    "negativeControlsInvariant": true,
+    "candidatesGainingAnswerAuthorityPerQuery": {
+      "neutralFixture": 2,
+      "sphinxProbe": 3,
+      "requestsProbe": 1,
+      "m150Fixture": 1,
+      "note": "eligible candidates, of which exactly one may become a pivot — unchanged by C5"
+    }
+  }
+}

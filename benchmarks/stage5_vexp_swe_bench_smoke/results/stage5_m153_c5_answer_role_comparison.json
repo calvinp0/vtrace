@@ -1,0 +1,74 @@
+{
+  "question": "which candidate holds the single answer-role grant, and does the target?",
+  "controls": [
+    {
+      "label": "A ordinary-evidence behavioural (requests get_adapter)",
+      "target": "requests/sessions.py::Session.get_adapter",
+      "targetHasEvidence": true,
+      "eligibleCount": 1,
+      "eligibleRanked": [
+        {
+          "fqName": "requests/sessions.py::Session.get_adapter",
+          "poolRank": 1,
+          "final": 2.443,
+          "mechanismEvidence": 0.55
+        }
+      ],
+      "grantHolder": {
+        "fqName": "requests/sessions.py::Session.get_adapter",
+        "poolRank": 1
+      },
+      "targetHoldsGrant": true
+    },
+    {
+      "label": "B behavioural-only (sphinx get_filetype)",
+      "target": "sphinx/util/__init__.py::get_filetype",
+      "targetHasEvidence": true,
+      "eligibleCount": 3,
+      "eligibleRanked": [
+        {
+          "fqName": "sphinx/ext/autosummary/__init__.py::get_rst_suffix",
+          "poolRank": 24,
+          "final": 1.3509,
+          "mechanismEvidence": 0.55
+        },
+        {
+          "fqName": "sphinx/project.py::Project.path2doc",
+          "poolRank": 63,
+          "final": 0.7665,
+          "mechanismEvidence": 0.55
+        },
+        {
+          "fqName": "sphinx/util/__init__.py::get_filetype",
+          "poolRank": 65,
+          "final": 0.6016,
+          "mechanismEvidence": 0.55
+        }
+      ],
+      "grantHolder": {
+        "fqName": "sphinx/ext/autosummary/__init__.py::get_rst_suffix",
+        "poolRank": 24
+      },
+      "targetHoldsGrant": false
+    },
+    {
+      "label": "C M150 weak-name direct implementer (pipeline.py::alpha)",
+      "target": "pipeline.py::beta",
+      "targetHasEvidence": true,
+      "eligibleCount": 1,
+      "eligibleRanked": [
+        {
+          "fqName": "pipeline.py::beta",
+          "poolRank": 1,
+          "final": 1.2001,
+          "mechanismEvidence": 0.55
+        }
+      ],
+      "grantHolder": {
+        "fqName": "pipeline.py::beta",
+        "poolRank": 1
+      },
+      "targetHoldsGrant": true
+    }
+  ]
+}

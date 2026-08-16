@@ -1,0 +1,286 @@
+{
+  "summary": {
+    "expectedImplementationsScored": 20,
+    "ordinary_sufficient": 6,
+    "behavioural_unique": 0,
+    "behavioural_support": 0,
+    "not_delivered": 14,
+    "behaviouralUniqueCases": [],
+    "behaviouralSupportCases": [],
+    "repositories": [
+      "requests",
+      "flask",
+      "pytest",
+      "sphinx"
+    ]
+  },
+  "rows": [
+    {
+      "caseId": "rq_adapter_selection",
+      "repository": "requests",
+      "category": "selection",
+      "fqName": "requests/sessions.py::Session.get_adapter",
+      "pooled": true,
+      "sources": [
+        "lexical",
+        "operation_fact"
+      ],
+      "answerRoleEvidence": true,
+      "delivered": true,
+      "deliveredRole": "pivot",
+      "attribution": "ordinary_sufficient"
+    },
+    {
+      "caseId": "rq_adapter_ranking_false_premise",
+      "repository": "requests",
+      "category": "ordering",
+      "fqName": "requests/sessions.py::Session.mount",
+      "pooled": true,
+      "sources": [
+        "lexical"
+      ],
+      "answerRoleEvidence": false,
+      "delivered": false,
+      "deliveredRole": null,
+      "attribution": "not_delivered"
+    },
+    {
+      "caseId": "rq_setting_precedence",
+      "repository": "requests",
+      "category": "configuration_precedence",
+      "fqName": "requests/sessions.py::merge_setting",
+      "pooled": true,
+      "sources": [
+        "lexical"
+      ],
+      "answerRoleEvidence": false,
+      "delivered": true,
+      "deliveredRole": "support",
+      "attribution": "ordinary_sufficient"
+    },
+    {
+      "caseId": "rq_encoding_fallback",
+      "repository": "requests",
+      "category": "fallback",
+      "fqName": "requests/models.py::Response.text",
+      "pooled": false,
+      "sources": [],
+      "answerRoleEvidence": false,
+      "delivered": false,
+      "deliveredRole": null,
+      "attribution": "not_delivered"
+    },
+    {
+      "caseId": "rq_redirect_auth_reuse",
+      "repository": "requests",
+      "category": "project_name_reuse",
+      "fqName": "requests/sessions.py::SessionRedirectMixin.rebuild_auth",
+      "pooled": false,
+      "sources": [],
+      "answerRoleEvidence": false,
+      "delivered": false,
+      "deliveredRole": null,
+      "attribution": "not_delivered"
+    },
+    {
+      "caseId": "fl_error_handler_dispatch",
+      "repository": "flask",
+      "category": "dispatch",
+      "fqName": "src/flask/app.py::Flask._find_error_handler",
+      "pooled": true,
+      "sources": [
+        "lexical"
+      ],
+      "answerRoleEvidence": false,
+      "delivered": true,
+      "deliveredRole": "support",
+      "attribution": "ordinary_sufficient"
+    },
+    {
+      "caseId": "fl_error_handler_scoring_false_premise",
+      "repository": "flask",
+      "category": "dispatch",
+      "fqName": "src/flask/app.py::Flask._find_error_handler",
+      "pooled": true,
+      "sources": [
+        "lexical"
+      ],
+      "answerRoleEvidence": false,
+      "delivered": false,
+      "deliveredRole": null,
+      "attribution": "not_delivered"
+    },
+    {
+      "caseId": "fl_project_name_reuse",
+      "repository": "flask",
+      "category": "project_name_reuse",
+      "fqName": "src/flask/app.py::Flask._find_error_handler",
+      "pooled": true,
+      "sources": [
+        "lexical"
+      ],
+      "answerRoleEvidence": false,
+      "delivered": false,
+      "deliveredRole": null,
+      "attribution": "not_delivered"
+    },
+    {
+      "caseId": "fl_response_coercion",
+      "repository": "flask",
+      "category": "dispatch",
+      "fqName": "src/flask/app.py::Flask.make_response",
+      "pooled": true,
+      "sources": [
+        "lexical"
+      ],
+      "answerRoleEvidence": false,
+      "delivered": true,
+      "deliveredRole": "pivot",
+      "attribution": "ordinary_sufficient"
+    },
+    {
+      "caseId": "fl_env_config_precedence",
+      "repository": "flask",
+      "category": "configuration_precedence",
+      "fqName": "src/flask/config.py::Config.from_prefixed_env",
+      "pooled": true,
+      "sources": [
+        "lexical"
+      ],
+      "answerRoleEvidence": false,
+      "delivered": true,
+      "deliveredRole": "support",
+      "attribution": "ordinary_sufficient"
+    },
+    {
+      "caseId": "pt_fixture_applicability",
+      "repository": "pytest",
+      "category": "selection",
+      "fqName": "src/_pytest/fixtures.py::FixtureManager.getfixturedefs",
+      "pooled": true,
+      "sources": [
+        "lexical"
+      ],
+      "answerRoleEvidence": false,
+      "delivered": false,
+      "deliveredRole": null,
+      "attribution": "not_delivered"
+    },
+    {
+      "caseId": "pt_fixture_override",
+      "repository": "pytest",
+      "category": "override_resolution",
+      "fqName": "src/_pytest/fixtures.py::FixtureRequest._getnextfixturedef",
+      "pooled": false,
+      "sources": [],
+      "answerRoleEvidence": false,
+      "delivered": false,
+      "deliveredRole": null,
+      "attribution": "not_delivered"
+    },
+    {
+      "caseId": "pt_fixture_ranking_false_premise",
+      "repository": "pytest",
+      "category": "ordering",
+      "fqName": "src/_pytest/fixtures.py::FixtureRequest._getnextfixturedef",
+      "pooled": false,
+      "sources": [],
+      "answerRoleEvidence": false,
+      "delivered": false,
+      "deliveredRole": null,
+      "attribution": "not_delivered"
+    },
+    {
+      "caseId": "pt_fixture_scope_ordering",
+      "repository": "pytest",
+      "category": "ordering",
+      "fqName": "src/_pytest/fixtures.py::FixtureManager.getfixtureclosure",
+      "pooled": true,
+      "sources": [
+        "lexical"
+      ],
+      "answerRoleEvidence": false,
+      "delivered": false,
+      "deliveredRole": null,
+      "attribution": "not_delivered"
+    },
+    {
+      "caseId": "sp_parser_selection",
+      "repository": "sphinx",
+      "category": "parser_selection",
+      "fqName": "sphinx/util/__init__.py::get_filetype",
+      "pooled": true,
+      "sources": [
+        "operation_fact"
+      ],
+      "answerRoleEvidence": true,
+      "delivered": false,
+      "deliveredRole": null,
+      "attribution": "not_delivered"
+    },
+    {
+      "caseId": "sp_parser_selection",
+      "repository": "sphinx",
+      "category": "parser_selection",
+      "fqName": "sphinx/registry.py::SphinxComponentRegistry.get_source_parser",
+      "pooled": true,
+      "sources": [
+        "lexical"
+      ],
+      "answerRoleEvidence": false,
+      "delivered": true,
+      "deliveredRole": "support",
+      "attribution": "ordinary_sufficient"
+    },
+    {
+      "caseId": "sp_project_name_reuse",
+      "repository": "sphinx",
+      "category": "project_name_reuse",
+      "fqName": "sphinx/util/__init__.py::get_filetype",
+      "pooled": true,
+      "sources": [
+        "lexical"
+      ],
+      "answerRoleEvidence": false,
+      "delivered": false,
+      "deliveredRole": null,
+      "attribution": "not_delivered"
+    },
+    {
+      "caseId": "sp_xref_resolution",
+      "repository": "sphinx",
+      "category": "fallback",
+      "fqName": "sphinx/domains/python.py::PythonDomain.find_obj",
+      "pooled": false,
+      "sources": [],
+      "answerRoleEvidence": false,
+      "delivered": false,
+      "deliveredRole": null,
+      "attribution": "not_delivered"
+    },
+    {
+      "caseId": "sp_builder_selection",
+      "repository": "sphinx",
+      "category": "selection",
+      "fqName": "sphinx/registry.py::SphinxComponentRegistry.create_builder",
+      "pooled": false,
+      "sources": [],
+      "answerRoleEvidence": false,
+      "delivered": false,
+      "deliveredRole": null,
+      "attribution": "not_delivered"
+    },
+    {
+      "caseId": "sp_parser_registry_false_premise",
+      "repository": "sphinx",
+      "category": "parser_selection",
+      "fqName": "sphinx/util/__init__.py::get_filetype",
+      "pooled": false,
+      "sources": [],
+      "answerRoleEvidence": false,
+      "delivered": false,
+      "deliveredRole": null,
+      "attribution": "not_delivered"
+    }
+  ]
+}
