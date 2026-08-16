@@ -124,6 +124,23 @@ function evaluateCase(impl: Impl, db: Database, testCase: OperationEmphasisCase)
     ? null
     : implementer.rank !== null && consumer.rank !== null && implementer.rank < consumer.rank;
 
+  // §41: the pool decided an answer; did delivery honour it? A disagreement is
+  // recorded with its reason rather than left as a silent divergence (§42).
+  const poolPrimary = implementer !== null && consumer !== null
+    && implementer.rank !== null && consumer.rank !== null
+    && implementer.rank < consumer.rank
+    ? implementer.fqName
+    : null;
+  const capsuleLeadsImplementer = implementer === null ? null : lead === implementer.fqName;
+  const poolVsCapsuleAgreement = poolPrimary === null ? null : lead === poolPrimary;
+  const disagreementReason = poolVsCapsuleAgreement === false
+    ? (implementer!.deliveredAs === null
+      ? "direct implementer not delivered"
+      : `delivered as ${implementer!.deliveredAs}, lead is ${lead ?? "none"}`)
+    : null;
+  const emptyCapsuleDespiteImplementer = implementer !== null
+    && implementer.generated && items.length === 0;
+
   // §23/§42: with no indexed ordering source, nothing may be delivered claiming
   // to establish one. Selecting an element is a truthful weaker statement.
   const overclaim = testCase.directImplementer !== null
@@ -145,6 +162,10 @@ function evaluateCase(impl: Impl, db: Database, testCase: OperationEmphasisCase)
     consumerLeads: consumer === null ? null : lead === consumer.fqName,
     consumerDelivered: consumer === null ? null : consumer.deliveredAs !== null,
     directImplementerBeatsConsumer: beatsConsumer,
+    capsuleLeadsImplementer,
+    poolVsCapsuleAgreement,
+    disagreementReason,
+    emptyCapsuleDespiteImplementer,
     wrongSubjectOperationBonus: wrongSubject.reduce(
       (max, entry) => Math.max(max, entry.mechanismEvidence + entry.operationFulfillment), 0),
     unknownOrderingOverclaim: overclaim,
@@ -159,7 +180,7 @@ function evaluateCase(impl: Impl, db: Database, testCase: OperationEmphasisCase)
 type CaseResult = ReturnType<typeof evaluateCase>;
 
 /** A pair passes only when BOTH directions put the right definition first (§25). */
-function pairedReversal(cases: readonly CaseResult[]): { passed: number; total: number; pairs: unknown[] } {
+function pairedReversal(cases: readonly CaseResult[]): { passed: number; capsulePassed: number; total: number; pairs: unknown[] } {
   const byId = new Map(cases.map((entry) => [entry.id, entry]));
   const seen = new Set<string>();
   const pairs: unknown[] = [];
@@ -178,10 +199,15 @@ function pairedReversal(cases: readonly CaseResult[]): { passed: number; total: 
       rightBeatsConsumer: right.directImplementerBeatsConsumer,
       reversed: left.directImplementerBeatsConsumer === true
         && right.directImplementerBeatsConsumer === true,
+      leftCapsuleLead: left.capsuleLeadsImplementer,
+      rightCapsuleLead: right.capsuleLeadsImplementer,
+      capsuleReversed: left.capsuleLeadsImplementer === true
+        && right.capsuleLeadsImplementer === true,
     });
   }
   return {
     passed: pairs.filter((entry) => (entry as { reversed: boolean }).reversed).length,
+    capsulePassed: pairs.filter((entry) => (entry as { capsuleReversed: boolean }).capsuleReversed).length,
     total: pairs.length,
     pairs,
   };
@@ -190,6 +216,7 @@ function pairedReversal(cases: readonly CaseResult[]): { passed: number; total: 
 function summarize(cases: readonly CaseResult[]) {
   const decidable = cases.filter((entry) => entry.directImplementerBeatsConsumer !== null);
   const withImplementer = cases.filter((entry) => entry.implementer !== null);
+  const agreeable = cases.filter((entry) => entry.poolVsCapsuleAgreement !== null);
   const reversal = pairedReversal(cases);
   return {
     cases: cases.length,
@@ -197,8 +224,14 @@ function summarize(cases: readonly CaseResult[]) {
     directImplementerTop3: `${withImplementer.filter((entry) => entry.directImplementerTop3).length}/${withImplementer.length}`,
     directImplementerGenerated: `${withImplementer.filter((entry) => entry.implementer?.generated).length}/${withImplementer.length}`,
     directImplementerBeatsConsumer: `${decidable.filter((entry) => entry.directImplementerBeatsConsumer).length}/${decidable.length}`,
+    capsuleLeadsImplementer: `${withImplementer.filter((entry) => entry.capsuleLeadsImplementer).length}/${withImplementer.length}`,
+    poolVsCapsuleAgreement: `${agreeable.filter((entry) => entry.poolVsCapsuleAgreement).length}/${agreeable.length}`,
+    disagreementReasons: cases.filter((entry) => entry.disagreementReason !== null)
+      .map((entry) => `${entry.id}: ${entry.disagreementReason}`),
+    emptyCapsuleDespiteImplementer: cases.filter((entry) => entry.emptyCapsuleDespiteImplementer).length,
     consumerLeads: cases.filter((entry) => entry.consumerLeads === true).length,
-    pairedRoleReversal: `${reversal.passed}/${reversal.total}`,
+    pairedPoolRoleReversal: `${reversal.passed}/${reversal.total}`,
+    pairedCapsuleRoleReversal: `${reversal.capsulePassed}/${reversal.total}`,
     wrongSubjectOperationBonusCases: cases.filter((entry) => entry.wrongSubjectOperationBonus > 0).length,
     unknownOrderingOverclaim: cases.filter((entry) => entry.unknownOrderingOverclaim === true).length,
     moduleNodesDelivered: cases.reduce((sum, entry) => sum + entry.moduleNodesDelivered, 0),

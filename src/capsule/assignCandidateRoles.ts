@@ -23,6 +23,7 @@ import {
   HUB_IN_DEGREE_THRESHOLD,
   STRONG_DIRECT_LEXICAL,
 } from "../retrieval/hybridScoring";
+import { DIRECT_MECHANISM_EVIDENCE } from "../retrieval/mechanismEvidence";
 
 export enum CandidateRole {
   /** A likely implementation/edit target. Rendered as full/focused source. */
@@ -65,8 +66,23 @@ export function assignCandidateRoles(
   const maxPivots = options.maxPivots ?? Number.POSITIVE_INFINITY;
 
   let pivotsSoFar = 0;
+  // Answer-role authority is granted to ONE candidate: the highest-ranked direct
+  // implementer of the requested operation. The point of this phase is that the
+  // answer retrieval already chose survives into delivery — not that every
+  // definition performing the operation becomes an edit target. Measured on the
+  // mechanism corpus, the unbounded form let `mixed.py::first_backend` take the
+  // lead on a question about a different module's indirect choice, because it too
+  // ends in `backends[0]`: operand alignment is enough to SCORE a candidate and
+  // not enough to make it the answer when something else outranks it (§12, §57).
+  //
+  // Candidates arrive in final-score order, so "first seen" is "best ranked", and
+  // the relational ordering that placed the implementer above its consumer has
+  // already been applied. At most one pivot is ever added this way.
+  let answerRoleGranted = false;
   return candidates.map((candidate) => {
-    let { role, why } = classify(candidate);
+    const isAnswerRole = hasAnswerRoleEvidence(candidate) && !answerRoleGranted;
+    if (isAnswerRole) answerRoleGranted = true;
+    let { role, why } = classify(candidate, isAnswerRole);
     // Enforce the pivot cap (micro emits a single pivot): a would-be pivot beyond
     // the cap is still strong context, so it demotes to support rather than away.
     if (role === CandidateRole.Pivot) {
@@ -117,8 +133,18 @@ export function supportOf(roled: readonly RoledCandidate[]): HybridCandidate[] {
   return roled.filter((r) => r.role === CandidateRole.Support).map((r) => r.candidate);
 }
 
+/**
+ * Does this candidate perform the requested operation, proven against its own
+ * operand? The direct tier is the outcome of every proof `mechanismEvidence`
+ * applies, so a partial fact — a consumer, a prerequisite — never reaches it.
+ */
+export function hasAnswerRoleEvidence(candidate: HybridCandidate): boolean {
+  return (candidate.scores.mechanismEvidence ?? 0) >= DIRECT_MECHANISM_EVIDENCE;
+}
+
 function classify(
   candidate: HybridCandidate,
+  answerRole: boolean,
 ): { role: CandidateRole; why: string } {
   const s = candidate.scores;
 
@@ -130,12 +156,27 @@ function classify(
   // DIRECT edit-target evidence: a concrete pointer at this exact symbol, as
   // opposed to soft graph reach, centrality, or issue-domain flavour.
   const concretePointer = s.symbol > 0 || s.path > 0 || s.testToImpl > 0;
-  const directEvidence = concretePointer || s.lexical >= STRONG_DIRECT_LEXICAL;
+  // M150: this definition PERFORMS the operation the request asked about, on the
+  // value the request named. Every signal above answers "is the request about
+  // this code?" by looking at its NAME and its PATH, and a behavioural question
+  // is frequently answered by a definition that matches neither — `get_all_families`
+  // establishes ARC's family ordering with lexical 0.05, and `alpha` sorts the
+  // plugins with lexical 0. Ranking already places both first; without this the
+  // role layer discards one and demotes the other to a signature, so the product
+  // forgets an answer retrieval had already found.
+  //
+  // It is direct evidence in the same sense the others are — a claim about THIS
+  // symbol, not its neighbourhood — and it is not cheap to obtain: the direct
+  // tier requires a compatible fact that produces the definition's result and
+  // whose operand names the subject, which is the same proof that refused all 64
+  // Gaussian owners. A partial fact never reaches it, so a consumer or a
+  // prerequisite of the requested operation cannot qualify here (§13).
+  const directEvidence = concretePointer || s.lexical >= STRONG_DIRECT_LEXICAL || answerRole;
   const anyProximity = s.graph > 0 || s.domain > 0;
   const isGenericHub = s.inDegree >= HUB_IN_DEGREE_THRESHOLD && !directEvidence;
 
   // Nothing ties it to the task except (at most) centrality / graph reach.
-  if (s.localEvidence <= 0 && !anyProximity) {
+  if (s.localEvidence <= 0 && !anyProximity && !answerRole) {
     return {
       role: CandidateRole.Discard,
       why: isGenericHub
@@ -161,11 +202,17 @@ function classify(
   // extra strictness is the single-pivot cap and the skip-on-empty policy, so a
   // strong lexical edit target the shaping never promoted to a likely-symbol can
   // still anchor a micro capsule rather than forcing a needless skip.
+  // `localEvidence` and the hub penalty are both computed from name/path/domain
+  // signals, so they restate the same blind spot in two more currencies: ARC's
+  // orderer carries a 0.0116 hub penalty for having seven callers and a dull
+  // name. Answer-role evidence satisfies what they are actually asking — that
+  // the candidate be tied to the task by something about ITSELF rather than by
+  // its centrality — so it is admitted in each, and nowhere else.
   const meetsPivotBar =
     s.actionability === 1
     && directEvidence
-    && s.localEvidence >= PIVOT_LOCAL_EVIDENCE_MIN
-    && s.hubPenalty === 0
+    && (s.localEvidence >= PIVOT_LOCAL_EVIDENCE_MIN || answerRole)
+    && (s.hubPenalty === 0 || answerRole)
     && !isGenericHub;
 
   if (meetsPivotBar) {

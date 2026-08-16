@@ -107,14 +107,22 @@ export const OPERATION_EMPHASIS_CASES: readonly OperationEmphasisCase[] = [
   },
 
   // --- §20 fallback precedence ----------------------------------------------
+  //
+  // `routes_for` returns `[primary(config), fallback(config)]`: the ORDER of that
+  // list is the precedence, and no indexed fact kind records it. Measured, not
+  // assumed — the symbol carries no mechanism fact at all, so there is nothing to
+  // rank and nothing to deliver. This is therefore a truthfulness control and not
+  // a paired case: with no indexed ordering source the honest answer is the same
+  // one `unknown_ordering` expects (§21, §69). Recording a fabricated expectation
+  // here would have charged a derivation gap to the delivery layer, and rewording
+  // the query toward the implementation would have been worse (§69).
   {
     id: "route_ordering",
     query: "What determines fallback route precedence?",
     operation: "ordering",
-    directImplementer: "backends.py::routes_for",
+    directImplementer: null,
     consumer: "backends.py::dispatch",
-    pairedWith: "route_selection",
-    category: "fallback precedence",
+    category: "fallback precedence established by list order — no indexed fact",
   },
   {
     id: "route_selection",
@@ -122,8 +130,21 @@ export const OPERATION_EMPHASIS_CASES: readonly OperationEmphasisCase[] = [
     operation: "selection",
     directImplementer: "backends.py::dispatch",
     consumer: "backends.py::routes_for",
-    pairedWith: "route_ordering",
-    category: "fallback precedence, reversed",
+    category: "fallback selection over an unindexed precedence",
+  },
+
+  // --- §22 deliverability / role control ------------------------------------
+  // A test symbol carrying a perfectly good ordering fact. Answer-role evidence
+  // must not make it an edit target: "never a pivot" is decided before any
+  // operation reasoning, and this proves the new eligibility path did not slip
+  // underneath that rule.
+  {
+    id: "test_symbol_not_promoted",
+    query: "What determines queue precedence?",
+    operation: "ordering",
+    directImplementer: null,
+    wrongSubject: ["ordering_test.py::test_queue_order"],
+    category: "test symbol carrying an ordering fact is never an answer",
   },
 
   // --- §22 the implementer's name says nothing ------------------------------
