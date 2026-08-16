@@ -31,14 +31,36 @@ import { getSymbolsByIds } from "../db/repositories/symbolsRepository";
 import type { MechanismFactKind } from "../indexer/extractMechanismFacts";
 import { isStructuralSymbolKind, type SymbolRecord } from "../domain/types";
 import type { BehavioralObjective } from "./behavioralObjective";
-import { alignmentOf, directFactKindsFor, type SubjectAlignment } from "./mechanismEvidence";
+import { alignmentOf, directFactKindsFor, subjectMatchClass, type SubjectAlignment } from "./mechanismEvidence";
 
 /** Explicit, tested bounds (§17, §18, §61). */
 export const OPERATION_FACT_LIMITS = Object.freeze({
   /** Rows read from the fact index. Indexed by kind, so this is a LIMIT not a scan. */
   maxFactsQueried: 400,
-  /** Distinct owning definitions whose alignment is evaluated. */
-  maxOwnersExamined: 64,
+  /**
+   * Distinct owning definitions whose alignment is evaluated.
+   *
+   * M153. This was 64, and it was bounding the wrong stage. The rows are ordered
+   * `(kind, symbol_id)` and `symbol_id` is a content hash, so the owners this cap
+   * kept were an arbitrary prefix with no relation to the request — and alignment,
+   * the only step that knows which owner is relevant, never ran on the rest.
+   *
+   * Measured: sphinx holds 106 result-bearing direct-selection facts and
+   * `get_filetype` — a correct, subject-aligned, direct implementer — is owner
+   * number 96. It was discarded before it could be considered, while a weaker
+   * owner that happened to hash earlier was admitted. No amount of scoring could
+   * have recovered it, because it was never scored.
+   *
+   * Raising it to the row limit removes the sub-truncation without removing the
+   * bound: `maxFactsQueried` is the real bound and is unchanged, so the work here
+   * is still capped by the same 400 rows the query already fetched. Alignment is a
+   * string comparison against the fact's own operand and provenance — the code
+   * below notes that a rejected fact costs exactly that and no row fetch — while
+   * the expensive step, resolving owners to symbols, stays bounded by
+   * `maxAdmitted`. Cheap stage bounded by the fetch, expensive stage bounded by
+   * admission.
+   */
+  maxOwnersExamined: 400,
   /** Definitions admitted into the ordinary candidate pool. */
   maxAdmitted: 3,
 });
@@ -160,10 +182,30 @@ export function generateOperationFactCandidates(
   }
 
   // Nearest evidence first: an operand that names the subject outranks one that
-  // only its producer names.
+  // only its producer names, and within that an EXACT subject-term match outranks
+  // a stem approximation.
+  //
+  // M153. The exactness class is what stops admission being decided by nothing.
+  // The bounded pool takes `maxAdmitted` owners, and before this the tie among
+  // equally-aligned facts was broken on `symbol_id` — a content hash. Measured on
+  // sphinx: `get_filetype`, `Project.path2doc` and `get_rst_suffix` all carry a
+  // `first_success_return` on `source_suffix`, while
+  // `newest_template_mtime` carries one on `mtimes_of_files` that reaches the
+  // subject only through the stem rule. All four ranked equal, three were taken by
+  // hash order, and the correct implementer was not among them.
+  //
+  // `symbol_id` remains the FINAL tie-break so the result stays deterministic
+  // (§103), but it now decides only between candidates that are genuinely
+  // indistinguishable on evidence rather than merely unexamined.
+  const exactness = (row: FactRow): number => {
+    const operand = subjectMatchClass(row.subject, subjectTerms);
+    const producer = subjectMatchClass(row.provenance, subjectTerms);
+    return operand === "exact" || producer === "exact" ? 0 : 1;
+  };
   aligned.sort((left, right) => {
     const rank = (value: SubjectAlignment): number => (value === "direct_operand" ? 0 : 1);
     return rank(left.alignment) - rank(right.alignment)
+      || exactness(left.row) - exactness(right.row)
       || left.row.symbol_id.localeCompare(right.row.symbol_id);
   });
 

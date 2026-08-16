@@ -8,7 +8,9 @@ import {
   type BehavioralObjective,
 } from "./behavioralObjective";
 import {
+  alignmentOf,
   evaluateMechanismEvidence,
+  subjectMatchClass,
   DIRECT_MECHANISM_EVIDENCE,
   MECHANISM_SUBJECT_FLOOR,
 } from "./mechanismEvidence";
@@ -229,4 +231,41 @@ test("withholding on alignment names the value the mechanism actually acts on", 
   expect(evidence.score).toBe(0);
   expect(evidence.withheldReason).toContain("frequencies");
   expect(evidence.withheldReason).toContain("does not ask about");
+});
+
+// --- M153: subject match CLASS, not just yes/no --------------------------------
+//
+// `namesSubject` answers a boolean, which leaves every aligned fact
+// indistinguishable and forces candidate admission to break ties on `symbol_id` —
+// a content hash. Exact token identity is strictly stronger evidence than a stem
+// approximation, and saying so costs no score and no threshold.
+
+test("M153 an exact subject-term token is an exact match", () => {
+  expect(subjectMatchClass("source_suffix", new Set(["source", "file"]))).toBe("exact");
+});
+
+test("M153 a stem-only overlap is weaker than exact", () => {
+  // `files` reaches `file` only through the stem rule.
+  expect(subjectMatchClass("mtimes_of_files", new Set(["file"]))).toBe("stem");
+});
+
+test("M153 no shared token at all is no match", () => {
+  expect(subjectMatchClass("unrelated_thing", new Set(["backend", "parser"]))).toBe("none");
+});
+
+test("M153 an exact match anywhere in the name wins over a stem match", () => {
+  // Both apply; the class must report the stronger one.
+  expect(subjectMatchClass("files_and_source", new Set(["source", "file"]))).toBe("exact");
+});
+
+test("M153 an empty name matches nothing", () => {
+  expect(subjectMatchClass("", new Set(["backend"]))).toBe("none");
+});
+
+test("M153 the class agrees with the alignment predicate it backs", () => {
+  // Whatever counts as a match for alignment must be a non-"none" class, or the
+  // two would disagree about the same fact.
+  const terms = new Set(["adapter"]);
+  expect(subjectMatchClass("adapters", terms)).not.toBe("none");
+  expect(alignmentOf("adapters", "", terms)).toBe("direct_operand");
 });

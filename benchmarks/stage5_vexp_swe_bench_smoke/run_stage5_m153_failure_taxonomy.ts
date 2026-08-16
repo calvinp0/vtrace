@@ -210,7 +210,11 @@ for (const entry of BEHAVIORAL_CASES as readonly BehavioralCase[]) {
 
   const primaries = expected.filter((e) => e.role === "PRIMARY_IMPLEMENTER");
   const primaryNames = new Set(primaries.map((e) => e.fqName.split("::")[1]?.split(".").pop() ?? ""));
-  const nameOf = (fq: string) => fq.split(".").pop() ?? fq;
+  // The path half of an FQN contains dots (`sphinx/util/__init__.py`), so the
+  // symbol half has to be taken FIRST. Splitting the whole string on "." turned
+  // `sphinx/util/__init__.py::get_filetype` into `py::get_filetype` and made an
+  // admitted candidate look unadmitted.
+  const nameOf = (fq: string) => (fq.split("::")[1] ?? fq).split(".").pop() ?? fq;
   const expectedAdmitted = admittedFqNames.some((fq) => primaryNames.has(nameOf(fq)));
   const expectedRejectedForSubject = rejectedForSubject.some((r) => primaryNames.has(nameOf(r.fqName)));
 

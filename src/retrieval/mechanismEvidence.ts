@@ -381,13 +381,38 @@ export function alignmentOf(
 
 /** Do these name tokens overlap the request's subject terms? */
 function namesSubject(name: string, subjectTerms: ReadonlySet<string>): boolean {
-  if (name.length === 0) return false;
+  return subjectMatchClass(name, subjectTerms) !== "none";
+}
+
+/**
+ * HOW a name matches the request's subject, as a class rather than a magnitude.
+ *
+ * `namesSubject` answers yes/no, which leaves every aligned fact indistinguishable
+ * and forces admission to break ties on `symbol_id` — a content hash, i.e. on
+ * nothing. Measured on sphinx: `source_suffix` (token `source`, the subject term
+ * exactly) and `mtimes_of_files` (token `files`, matching `file` only through the
+ * stem rule) were equally aligned, so which one entered the bounded candidate set
+ * was decided by hash order, and `get_filetype` lost to it.
+ *
+ * Exact token identity is strictly stronger evidence than a stem approximation,
+ * and saying so costs no score and no threshold — it is the same kind of
+ * structural class distinction the rest of the behavioural chain is built from.
+ */
+export type SubjectMatchClass = "exact" | "stem" | "none";
+
+export function subjectMatchClass(
+  name: string,
+  subjectTerms: ReadonlySet<string>,
+): SubjectMatchClass {
+  if (name.length === 0) return "none";
+  let approximate = false;
   for (const token of tokenize(name)) {
     for (const term of subjectTerms) {
-      if (stemEqual(token, term)) return true;
+      if (token === term) return "exact";
+      if (stemEqual(token, term)) approximate = true;
     }
   }
-  return false;
+  return approximate ? "stem" : "none";
 }
 
 /**
