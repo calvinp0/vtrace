@@ -1,0 +1,265 @@
+{
+  "milestone": "M151",
+  "generatedAt": "2026-08-16T11:14:20.232Z",
+  "surface": "MCP get_code_context via defaultMcpToolRegistry",
+  "realRepositories": {
+    "arc": "/home/calvin/code/ARC",
+    "tckdb": "/home/calvin/code/TCKDB_v2"
+  },
+  "note": "§59: only three real indexed repositories exist on this machine, so the real controls are 1-3 members and larger scales are synthetic and labelled as such.",
+  "authoritativeIndexIntegrity": {
+    "section": "§116",
+    "arcBefore": "1e79959f69ec722e761c20150beea056",
+    "arcAfter": "94c3357cba82e8efa96580579fea7170",
+    "arcUnchanged": false,
+    "tckdbBefore": "3b620e219981f22716fa985b3374cabe",
+    "tckdbAfter": "f22fdd8f489804041562628820bf4466",
+    "tckdbUnchanged": false,
+    "finding": "The LEAD repository's index file changes on every read. Measured: three consecutive get_code_context calls against ARC produced three different file hashes (size stable after the first).",
+    "attribution": "PRE-EXISTING, not M151. The identical probe run against the M150 baseline tree reproduces it exactly, so this is the long-standing behaviour of `withReadyRepoDb` -> `openIndexerDatabase`, which runs the schema initializer on the repository retrieval binds to.",
+    "m151AddedPathsAreReadOnly": "Every path M151 introduces opens members with { readonly: true }: the routing probe and the supporting-repository composition. A member that is probed for a route but does not lead is byte-identical afterwards, asserted in src/mcp/workspaceProductRouting.test.ts.",
+    "consequence": "§21/§90 hold for M151's own additions and do NOT hold for the pre-existing lead-retrieval binding. Recorded as a standing limitation rather than claimed as an M151 result either way."
+  },
+  "cases": {
+    "arc_family_selection": {
+      "section": "§63",
+      "query": "How does ARC decide which reaction family wins?",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "arc",
+      "routeOutcome": "explicit_member",
+      "routeSource": "alias",
+      "decidingTier": null,
+      "uniquenessProven": false,
+      "membersDeepProbed": 0,
+      "expectedRepository": "arc",
+      "routedAsExpected": true,
+      "leadPivot": {
+        "path": "arc/reaction/reaction.py",
+        "symbol": "determine_family",
+        "roles": [
+          "pivot",
+          "required"
+        ]
+      },
+      "pivotCount": 1,
+      "itemsDelivered": 6,
+      "responseBytes": 23910,
+      "routingBytes": 447,
+      "note": "Scoped to ARC explicitly: the query names no path and no identifier, so auto-routing has no evidence and must not invent it (§73). M150's behavioural result is what is being preserved here."
+    },
+    "arc_family_ordering": {
+      "section": "§64",
+      "query": "What determines the precedence/order when multiple reaction families match?",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "arc",
+      "routeOutcome": "explicit_member",
+      "routeSource": "alias",
+      "decidingTier": null,
+      "uniquenessProven": false,
+      "membersDeepProbed": 0,
+      "expectedRepository": "arc",
+      "routedAsExpected": true,
+      "leadPivot": {
+        "path": "arc/family/family.py",
+        "symbol": "get_all_families",
+        "roles": [
+          "pivot",
+          "required"
+        ]
+      },
+      "pivotCount": 1,
+      "itemsDelivered": 11,
+      "responseBytes": 29677,
+      "routingBytes": 447
+    },
+    "arc_exact_symbol_route": {
+      "section": "§66",
+      "query": "what does determine_family do",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "arc",
+      "routeOutcome": "routed",
+      "routeSource": "exact_symbol",
+      "decidingTier": "exact_symbol",
+      "uniquenessProven": true,
+      "membersDeepProbed": 3,
+      "expectedRepository": "arc",
+      "routedAsExpected": true,
+      "leadPivot": {
+        "path": "arc/family/family.py",
+        "symbol": "determine_possible_reaction_products_from_family",
+        "roles": [
+          "pivot",
+          "required"
+        ]
+      },
+      "pivotCount": 1,
+      "itemsDelivered": 9,
+      "responseBytes": 28201,
+      "routingBytes": 699,
+      "note": "No repository named in the request; the exact-symbol lane must choose ARC."
+    },
+    "arc_exact_path_route": {
+      "section": "§65",
+      "query": "Explain arc/reaction.py",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "arc",
+      "routeOutcome": "configured_member",
+      "routeSource": "configured_default",
+      "decidingTier": null,
+      "uniquenessProven": false,
+      "membersDeepProbed": 3,
+      "expectedRepository": "arc",
+      "routedAsExpected": true,
+      "leadPivot": {
+        "path": "arc/family/family.py",
+        "symbol": "get_reaction_family_products",
+        "roles": [
+          "pivot",
+          "required"
+        ]
+      },
+      "pivotCount": 1,
+      "itemsDelivered": 7,
+      "responseBytes": 28247,
+      "routingBytes": 740
+    },
+    "tckdb_scoped": {
+      "section": "§76",
+      "query": "How are thermodynamic properties stored?",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "tckdb",
+      "routeOutcome": "explicit_member",
+      "routeSource": "alias",
+      "decidingTier": null,
+      "uniquenessProven": false,
+      "membersDeepProbed": 0,
+      "expectedRepository": "tckdb",
+      "routedAsExpected": true,
+      "leadPivot": {
+        "path": "backend/app/importers/cccbdb/parsers/experimental_property_table.py",
+        "symbol": "PropertyTableConfig",
+        "roles": [
+          "pivot",
+          "required"
+        ]
+      },
+      "pivotCount": 1,
+      "itemsDelivered": 3,
+      "responseBytes": 23069,
+      "routingBytes": 451
+    },
+    "mixed_arc_symbol": {
+      "section": "§77",
+      "query": "explain determine_family",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "arc",
+      "routeOutcome": "routed",
+      "routeSource": "exact_symbol",
+      "decidingTier": "exact_symbol",
+      "uniquenessProven": true,
+      "membersDeepProbed": 3,
+      "expectedRepository": "arc",
+      "routedAsExpected": true,
+      "leadPivot": {
+        "path": "arc/reaction/reaction.py",
+        "symbol": "determine_family",
+        "roles": [
+          "pivot",
+          "required"
+        ]
+      },
+      "pivotCount": 1,
+      "itemsDelivered": 6,
+      "responseBytes": 24746,
+      "routingBytes": 699,
+      "note": "ARC-owned identifier in a 3-member workspace; must route by evidence, not name."
+    },
+    "mixed_host_symbol": {
+      "section": "§77",
+      "query": "explain host_marker",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "host",
+      "routeOutcome": "routed",
+      "routeSource": "exact_symbol",
+      "decidingTier": "exact_symbol",
+      "uniquenessProven": true,
+      "membersDeepProbed": 3,
+      "expectedRepository": "host",
+      "routedAsExpected": true,
+      "leadPivot": {
+        "path": "src/host_marker.py",
+        "symbol": "host_marker",
+        "roles": [
+          "pivot",
+          "required"
+        ]
+      },
+      "pivotCount": 1,
+      "itemsDelivered": 1,
+      "responseBytes": 17741,
+      "routingBytes": 702,
+      "note": "Host-owned identifier; the same lane must choose the host member."
+    },
+    "mixed_ambiguous": {
+      "section": "§77",
+      "query": "How does the system decide what to do?",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "arc",
+      "routeOutcome": "configured_member",
+      "routeSource": "configured_default",
+      "decidingTier": null,
+      "uniquenessProven": false,
+      "membersDeepProbed": 0,
+      "expectedRepository": null,
+      "routedAsExpected": null,
+      "leadPivot": {
+        "path": "arc/species/perceive.py",
+        "symbol": "_combine_fragments",
+        "roles": [
+          "pivot",
+          "required"
+        ]
+      },
+      "pivotCount": 1,
+      "itemsDelivered": 6,
+      "responseBytes": 23586,
+      "routingBytes": 520,
+      "note": "Deliberately ambiguous prose. No lane can decide, so the workspace's configured default answers and says so - it is not a claim about relevance."
+    },
+    "project_name_not_symbol": {
+      "section": "§74/§75",
+      "query": "What does ARC do with reaction families?",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "arc",
+      "routeOutcome": "configured_member",
+      "routeSource": "configured_default",
+      "decidingTier": null,
+      "uniquenessProven": false,
+      "membersDeepProbed": 0,
+      "expectedRepository": null,
+      "routedAsExpected": null,
+      "leadPivot": {
+        "path": "arc/job/adapters/ts/linear_utils/families.py",
+        "symbol": "_dihedral_angle",
+        "roles": [
+          "pivot",
+          "required"
+        ]
+      },
+      "pivotCount": 1,
+      "itemsDelivered": 10,
+      "responseBytes": 30186,
+      "routingBytes": 520,
+      "note": "The word ARC is a registered alias AND a class name in that repository. Routing must reach the configured default on absent evidence rather than treat the prose mention as a route."
+    }
+  }
+}

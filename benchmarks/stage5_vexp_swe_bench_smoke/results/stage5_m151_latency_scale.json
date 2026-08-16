@@ -1,0 +1,35 @@
+{
+  "milestone": "M151",
+  "generatedAt": "2026-08-16T11:02:34.285Z",
+  "note": "§144. Measured, not projected. Synthetic members isolate routing/status cost from retrieval cost; only the 2-member row indexes both members.",
+  "rows": [
+    {
+      "scenario": "2-member fixture workspace, routed by exact symbol",
+      "members": 2,
+      "getCodeContextTotalMs": 48.38,
+      "indexStatusMs": null,
+      "note": "Both members indexed; the symbol lane asks both and retrieval runs once."
+    },
+    {
+      "scenario": "11-member synthetic workspace",
+      "members": 11,
+      "getCodeContextTotalMs": 54.13,
+      "indexStatusMs": 17.52,
+      "note": "Synthetic members are registered but never indexed; this separates routing/status cost from retrieval cost (§57)."
+    },
+    {
+      "scenario": "100-member synthetic workspace",
+      "members": 100,
+      "getCodeContextTotalMs": 48.72,
+      "indexStatusMs": 40.92,
+      "note": "Synthetic members are registered but never indexed; this separates routing/status cost from retrieval cost (§57)."
+    },
+    {
+      "scenario": "1000-member synthetic workspace",
+      "members": 1000,
+      "getCodeContextTotalMs": 55.06,
+      "indexStatusMs": 297.78,
+      "note": "Synthetic members are registered but never indexed; this separates routing/status cost from retrieval cost (§57)."
+    }
+  ]
+}

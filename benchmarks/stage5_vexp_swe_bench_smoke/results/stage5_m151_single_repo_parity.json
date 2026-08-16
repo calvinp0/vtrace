@@ -1,0 +1,29 @@
+{
+  "milestone": "M151",
+  "note": "Single-repository semantics are preserved structurally, not by matching: a request that resolves to one repository runs the same producer it always did. The third row is the §28 hard control - a second member EXISTING must not change the lead's delivered context.",
+  "cases": [
+    {
+      "id": "no_workspace_config",
+      "selectedRepo": "repo",
+      "routeOutcome": "single_repository",
+      "contextSemanticHash": "22a5c3cdd4e0911b",
+      "items": 1
+    },
+    {
+      "id": "one_member_workspace",
+      "selectedRepo": "alpha",
+      "routeOutcome": "routed",
+      "contextSemanticHash": "22a5c3cdd4e0911b",
+      "items": 1
+    },
+    {
+      "id": "two_member_workspace_lead_unchanged",
+      "selectedRepo": "alpha",
+      "routeOutcome": "routed",
+      "contextSemanticHash": "22a5c3cdd4e0911b",
+      "items": 1
+    }
+  ],
+  "semanticHashIdentical": true,
+  "generatedAt": "2026-08-16T11:02:34.285Z"
+}

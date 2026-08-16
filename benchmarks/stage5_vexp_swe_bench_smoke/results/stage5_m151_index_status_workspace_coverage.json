@@ -1,0 +1,77 @@
+{
+  "milestone": "M151",
+  "generatedAt": "2026-08-16T11:02:34.285Z",
+  "note": "§124. Verdicts come from the full census; `repos` is a bounded sample. `omittedByBound` counts records not serialized and is independent of `coverageComplete`.",
+  "rows": [
+    {
+      "members": 11,
+      "responseBytes": 10039,
+      "reposRecordsEmitted": 4,
+      "coverage": {
+        "registeredMembers": 11,
+        "enabledMembers": 11,
+        "readyMembers": 1,
+        "refusedMembers": 10,
+        "unsettledMembers": 10,
+        "coverageComplete": false,
+        "omittedByBound": 7,
+        "examplesEmitted": 4
+      },
+      "censusMatchesWorkspace": true,
+      "latencyMs": 17.52
+    },
+    {
+      "members": 100,
+      "responseBytes": 10044,
+      "reposRecordsEmitted": 4,
+      "coverage": {
+        "registeredMembers": 100,
+        "enabledMembers": 100,
+        "readyMembers": 1,
+        "refusedMembers": 99,
+        "unsettledMembers": 99,
+        "coverageComplete": false,
+        "omittedByBound": 96,
+        "examplesEmitted": 4
+      },
+      "censusMatchesWorkspace": true,
+      "latencyMs": 40.92
+    },
+    {
+      "members": 1000,
+      "responseBytes": 10051,
+      "reposRecordsEmitted": 4,
+      "coverage": {
+        "registeredMembers": 1000,
+        "enabledMembers": 1000,
+        "readyMembers": 1,
+        "refusedMembers": 999,
+        "unsettledMembers": 999,
+        "coverageComplete": false,
+        "omittedByBound": 996,
+        "examplesEmitted": 4
+      },
+      "censusMatchesWorkspace": true,
+      "latencyMs": 297.78
+    },
+    {
+      "members": 11,
+      "allMembersReady": true,
+      "responseBytes": 11765,
+      "reposRecordsEmitted": 4,
+      "coverage": {
+        "registeredMembers": 11,
+        "enabledMembers": 11,
+        "readyMembers": 11,
+        "refusedMembers": 0,
+        "unsettledMembers": 0,
+        "coverageComplete": true,
+        "omittedByBound": 7,
+        "examplesEmitted": 4
+      },
+      "censusMatchesWorkspace": true,
+      "latencyMs": null,
+      "note": "coverageComplete true WITH omittedByBound > 0: every member was accounted for, and only four detail records were serialized."
+    }
+  ]
+}
