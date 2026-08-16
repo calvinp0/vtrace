@@ -1,0 +1,540 @@
+{
+  "schemaVersion": "stage5.m150.operation-emphasis.v1",
+  "label": "sym2",
+  "implementationRoot": "/home/calvin/code/vtrace",
+  "corpus": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/fixtures/m150_operation_emphasis",
+  "indexMs": 551,
+  "mechanismFactsIndexed": 12,
+  "mechanismCapability": true,
+  "summary": {
+    "cases": 10,
+    "directImplementerTop1": "3/9",
+    "directImplementerTop3": "4/9",
+    "directImplementerGenerated": "6/9",
+    "directImplementerBeatsConsumer": "6/8",
+    "consumerLeads": 2,
+    "pairedRoleReversal": "2/4",
+    "wrongSubjectOperationBonusCases": 0,
+    "unknownOrderingOverclaim": 0,
+    "moduleNodesDelivered": 0,
+    "meanDeliveredTokens": 155,
+    "pairs": [
+      {
+        "pair": "plugin_ordering / plugin_selection",
+        "leftTop1": false,
+        "rightTop1": false,
+        "leftBeatsConsumer": false,
+        "rightBeatsConsumer": true,
+        "reversed": false
+      },
+      {
+        "pair": "rule_ordering / rule_selection",
+        "leftTop1": false,
+        "rightTop1": true,
+        "leftBeatsConsumer": true,
+        "rightBeatsConsumer": true,
+        "reversed": true
+      },
+      {
+        "pair": "backend_ordering / backend_selection",
+        "leftTop1": true,
+        "rightTop1": true,
+        "leftBeatsConsumer": true,
+        "rightBeatsConsumer": true,
+        "reversed": true
+      },
+      {
+        "pair": "route_ordering / route_selection",
+        "leftTop1": false,
+        "rightTop1": false,
+        "leftBeatsConsumer": false,
+        "rightBeatsConsumer": true,
+        "reversed": false
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "plugin_ordering",
+      "category": "paired role reversal, uninformative names",
+      "query": "What determines plugin precedence?",
+      "operation": "ordering",
+      "elapsedMs": 18.05,
+      "lead": null,
+      "directImplementerTop1": false,
+      "directImplementerTop3": false,
+      "directImplementerDelivered": false,
+      "consumerLeads": false,
+      "consumerDelivered": false,
+      "directImplementerBeatsConsumer": false,
+      "wrongSubjectOperationBonus": 0,
+      "unknownOrderingOverclaim": null,
+      "moduleNodesDelivered": 0,
+      "implementer": {
+        "fqName": "emphasis.py::alpha",
+        "generated": false,
+        "rank": null,
+        "final": null,
+        "lexical": null,
+        "domain": null,
+        "mechanismEvidence": 0,
+        "operationFulfillment": 0,
+        "sources": [],
+        "deliveredAs": null,
+        "why": null
+      },
+      "consumer": {
+        "fqName": "emphasis.py::beta",
+        "generated": false,
+        "rank": null,
+        "final": null,
+        "lexical": null,
+        "domain": null,
+        "mechanismEvidence": 0,
+        "operationFulfillment": 0,
+        "sources": [],
+        "deliveredAs": null,
+        "why": null
+      },
+      "wrongSubject": [
+        {
+          "fqName": "emphasis.py::gamma",
+          "generated": false,
+          "rank": null,
+          "final": null,
+          "lexical": null,
+          "domain": null,
+          "mechanismEvidence": 0,
+          "operationFulfillment": 0,
+          "sources": [],
+          "deliveredAs": null,
+          "why": null
+        }
+      ],
+      "deliveredTokens": 0
+    },
+    {
+      "id": "plugin_selection",
+      "category": "paired role reversal, reverse emphasis",
+      "query": "How does the system decide which plugin wins?",
+      "operation": "selection",
+      "elapsedMs": 7.26,
+      "lead": "unknown.py::take_first",
+      "directImplementerTop1": false,
+      "directImplementerTop3": true,
+      "directImplementerDelivered": true,
+      "consumerLeads": false,
+      "consumerDelivered": true,
+      "directImplementerBeatsConsumer": true,
+      "wrongSubjectOperationBonus": 0,
+      "unknownOrderingOverclaim": null,
+      "moduleNodesDelivered": 0,
+      "implementer": {
+        "fqName": "emphasis.py::beta",
+        "generated": true,
+        "rank": 1,
+        "final": 1.5519,
+        "lexical": 0.14,
+        "domain": 0,
+        "mechanismEvidence": 0.55,
+        "operationFulfillment": 0.8619,
+        "sources": [
+          "operation_fact"
+        ],
+        "deliveredAs": "support",
+        "why": null
+      },
+      "consumer": {
+        "fqName": "emphasis.py::alpha",
+        "generated": true,
+        "rank": 2,
+        "final": 1.5518,
+        "lexical": 0.1012,
+        "domain": 0,
+        "mechanismEvidence": 0.2,
+        "operationFulfillment": 0,
+        "sources": [
+          "graph"
+        ],
+        "deliveredAs": "support",
+        "why": null
+      },
+      "wrongSubject": [
+        {
+          "fqName": "emphasis.py::gamma",
+          "generated": false,
+          "rank": null,
+          "final": null,
+          "lexical": null,
+          "domain": null,
+          "mechanismEvidence": 0,
+          "operationFulfillment": 0,
+          "sources": [],
+          "deliveredAs": null,
+          "why": null
+        }
+      ],
+      "deliveredTokens": 129
+    },
+    {
+      "id": "rule_ordering",
+      "category": "consumer holds the stronger lexical overlap",
+      "query": "What determines rule candidate precedence?",
+      "operation": "ordering",
+      "elapsedMs": 3.16,
+      "lead": "lexicaladv.py::rule_candidate_selector",
+      "directImplementerTop1": false,
+      "directImplementerTop3": false,
+      "directImplementerDelivered": false,
+      "consumerLeads": true,
+      "consumerDelivered": true,
+      "directImplementerBeatsConsumer": true,
+      "wrongSubjectOperationBonus": 0,
+      "unknownOrderingOverclaim": null,
+      "moduleNodesDelivered": 0,
+      "implementer": {
+        "fqName": "lexicaladv.py::prepare",
+        "generated": true,
+        "rank": 1,
+        "final": 1.9001,
+        "lexical": 0.0727,
+        "domain": 0,
+        "mechanismEvidence": 0.55,
+        "operationFulfillment": 1.2774,
+        "sources": [
+          "operation_fact"
+        ],
+        "deliveredAs": null,
+        "why": null
+      },
+      "consumer": {
+        "fqName": "lexicaladv.py::rule_candidate_selector",
+        "generated": true,
+        "rank": 2,
+        "final": 1.9,
+        "lexical": 1,
+        "domain": 1,
+        "mechanismEvidence": 0,
+        "operationFulfillment": 0,
+        "sources": [
+          "lexical"
+        ],
+        "deliveredAs": "pivot",
+        "why": null
+      },
+      "wrongSubject": [],
+      "deliveredTokens": 172
+    },
+    {
+      "id": "rule_selection",
+      "category": "consumer holds the stronger lexical overlap, reversed",
+      "query": "How is the winning rule candidate decided?",
+      "operation": "selection",
+      "elapsedMs": 3.86,
+      "lead": "lexicaladv.py::rule_candidate_selector",
+      "directImplementerTop1": true,
+      "directImplementerTop3": true,
+      "directImplementerDelivered": true,
+      "consumerLeads": false,
+      "consumerDelivered": true,
+      "directImplementerBeatsConsumer": true,
+      "wrongSubjectOperationBonus": 0,
+      "unknownOrderingOverclaim": null,
+      "moduleNodesDelivered": 0,
+      "implementer": {
+        "fqName": "lexicaladv.py::rule_candidate_selector",
+        "generated": true,
+        "rank": 1,
+        "final": 2.45,
+        "lexical": 1,
+        "domain": 1,
+        "mechanismEvidence": 0.55,
+        "operationFulfillment": 0,
+        "sources": [
+          "lexical",
+          "operation_fact"
+        ],
+        "deliveredAs": "pivot",
+        "why": null
+      },
+      "consumer": {
+        "fqName": "lexicaladv.py::prepare",
+        "generated": true,
+        "rank": 2,
+        "final": 1.4299,
+        "lexical": 0.0299,
+        "domain": 0,
+        "mechanismEvidence": 0.2,
+        "operationFulfillment": 0,
+        "sources": [
+          "graph"
+        ],
+        "deliveredAs": "support",
+        "why": null
+      },
+      "wrongSubject": [],
+      "deliveredTokens": 211
+    },
+    {
+      "id": "backend_ordering",
+      "category": "first-success traversal",
+      "query": "What determines backend precedence?",
+      "operation": "ordering",
+      "elapsedMs": 4.12,
+      "lead": "backends.py::ordered_backends",
+      "directImplementerTop1": true,
+      "directImplementerTop3": true,
+      "directImplementerDelivered": true,
+      "consumerLeads": false,
+      "consumerDelivered": true,
+      "directImplementerBeatsConsumer": true,
+      "wrongSubjectOperationBonus": 0,
+      "unknownOrderingOverclaim": null,
+      "moduleNodesDelivered": 0,
+      "implementer": {
+        "fqName": "backends.py::ordered_backends",
+        "generated": true,
+        "rank": 1,
+        "final": 2.3147,
+        "lexical": 0.9431,
+        "domain": 1,
+        "mechanismEvidence": 0,
+        "operationFulfillment": 0,
+        "sources": [
+          "lexical"
+        ],
+        "deliveredAs": "pivot",
+        "why": null
+      },
+      "consumer": {
+        "fqName": "backends.py::resolve",
+        "generated": true,
+        "rank": 3,
+        "final": 1.8431,
+        "lexical": 0.9431,
+        "domain": 1,
+        "mechanismEvidence": 0,
+        "operationFulfillment": 0,
+        "sources": [
+          "lexical"
+        ],
+        "deliveredAs": "support",
+        "why": null
+      },
+      "wrongSubject": [],
+      "deliveredTokens": 332
+    },
+    {
+      "id": "backend_selection",
+      "category": "first-success traversal, reversed",
+      "query": "How does the system decide which backend succeeds?",
+      "operation": "selection",
+      "elapsedMs": 3.38,
+      "lead": "backends.py::resolve",
+      "directImplementerTop1": true,
+      "directImplementerTop3": true,
+      "directImplementerDelivered": true,
+      "consumerLeads": false,
+      "consumerDelivered": true,
+      "directImplementerBeatsConsumer": true,
+      "wrongSubjectOperationBonus": 0,
+      "unknownOrderingOverclaim": null,
+      "moduleNodesDelivered": 0,
+      "implementer": {
+        "fqName": "backends.py::resolve",
+        "generated": true,
+        "rank": 1,
+        "final": 2.4001,
+        "lexical": 0.711,
+        "domain": 1,
+        "mechanismEvidence": 0.55,
+        "operationFulfillment": 0.2391,
+        "sources": [
+          "lexical",
+          "operation_fact"
+        ],
+        "deliveredAs": "pivot",
+        "why": null
+      },
+      "consumer": {
+        "fqName": "backends.py::ordered_backends",
+        "generated": true,
+        "rank": 2,
+        "final": 2.4,
+        "lexical": 1,
+        "domain": 1,
+        "mechanismEvidence": 0,
+        "operationFulfillment": 0,
+        "sources": [
+          "lexical"
+        ],
+        "deliveredAs": "pivot",
+        "why": null
+      },
+      "wrongSubject": [],
+      "deliveredTokens": 375
+    },
+    {
+      "id": "route_ordering",
+      "category": "fallback precedence",
+      "query": "What determines fallback route precedence?",
+      "operation": "ordering",
+      "elapsedMs": 1.8,
+      "lead": null,
+      "directImplementerTop1": false,
+      "directImplementerTop3": false,
+      "directImplementerDelivered": false,
+      "consumerLeads": false,
+      "consumerDelivered": false,
+      "directImplementerBeatsConsumer": false,
+      "wrongSubjectOperationBonus": 0,
+      "unknownOrderingOverclaim": null,
+      "moduleNodesDelivered": 0,
+      "implementer": {
+        "fqName": "backends.py::routes_for",
+        "generated": false,
+        "rank": null,
+        "final": null,
+        "lexical": null,
+        "domain": null,
+        "mechanismEvidence": 0,
+        "operationFulfillment": 0,
+        "sources": [],
+        "deliveredAs": null,
+        "why": null
+      },
+      "consumer": {
+        "fqName": "backends.py::dispatch",
+        "generated": false,
+        "rank": null,
+        "final": null,
+        "lexical": null,
+        "domain": null,
+        "mechanismEvidence": 0,
+        "operationFulfillment": 0,
+        "sources": [],
+        "deliveredAs": null,
+        "why": null
+      },
+      "wrongSubject": [],
+      "deliveredTokens": 0
+    },
+    {
+      "id": "route_selection",
+      "category": "fallback precedence, reversed",
+      "query": "Which route implementation is ultimately chosen?",
+      "operation": "selection",
+      "elapsedMs": 2.57,
+      "lead": "backends.py::routes_for",
+      "directImplementerTop1": false,
+      "directImplementerTop3": false,
+      "directImplementerDelivered": false,
+      "consumerLeads": true,
+      "consumerDelivered": true,
+      "directImplementerBeatsConsumer": true,
+      "wrongSubjectOperationBonus": 0,
+      "unknownOrderingOverclaim": null,
+      "moduleNodesDelivered": 0,
+      "implementer": {
+        "fqName": "backends.py::dispatch",
+        "generated": true,
+        "rank": 1,
+        "final": 2.4001,
+        "lexical": 0.0902,
+        "domain": 0,
+        "mechanismEvidence": 0.55,
+        "operationFulfillment": 1.7599,
+        "sources": [
+          "operation_fact"
+        ],
+        "deliveredAs": null,
+        "why": null
+      },
+      "consumer": {
+        "fqName": "backends.py::routes_for",
+        "generated": true,
+        "rank": 2,
+        "final": 2.4,
+        "lexical": 1,
+        "domain": 1,
+        "mechanismEvidence": 0,
+        "operationFulfillment": 0,
+        "sources": [
+          "lexical"
+        ],
+        "deliveredAs": "pivot",
+        "why": null
+      },
+      "wrongSubject": [],
+      "deliveredTokens": 165
+    },
+    {
+      "id": "channel_ordering",
+      "category": "direct implementer with a generic name",
+      "query": "What determines channel precedence?",
+      "operation": "ordering",
+      "elapsedMs": 3.98,
+      "lead": null,
+      "directImplementerTop1": false,
+      "directImplementerTop3": false,
+      "directImplementerDelivered": false,
+      "consumerLeads": null,
+      "consumerDelivered": null,
+      "directImplementerBeatsConsumer": null,
+      "wrongSubjectOperationBonus": 0,
+      "unknownOrderingOverclaim": null,
+      "moduleNodesDelivered": 0,
+      "implementer": {
+        "fqName": "genericname.py::process",
+        "generated": false,
+        "rank": null,
+        "final": null,
+        "lexical": null,
+        "domain": null,
+        "mechanismEvidence": 0,
+        "operationFulfillment": 0,
+        "sources": [],
+        "deliveredAs": null,
+        "why": null
+      },
+      "consumer": null,
+      "wrongSubject": [],
+      "deliveredTokens": 0
+    },
+    {
+      "id": "unknown_ordering",
+      "category": "no indexed ordering source",
+      "query": "What establishes precedence between entries?",
+      "operation": "ordering",
+      "elapsedMs": 2.98,
+      "lead": "lexicaladv.py::prepare",
+      "directImplementerTop1": null,
+      "directImplementerTop3": null,
+      "directImplementerDelivered": null,
+      "consumerLeads": false,
+      "consumerDelivered": false,
+      "directImplementerBeatsConsumer": null,
+      "wrongSubjectOperationBonus": 0,
+      "unknownOrderingOverclaim": false,
+      "moduleNodesDelivered": 0,
+      "implementer": null,
+      "consumer": {
+        "fqName": "unknown.py::take_first",
+        "generated": true,
+        "rank": 9,
+        "final": 0.4747,
+        "lexical": 0.249,
+        "domain": 0,
+        "mechanismEvidence": 0,
+        "operationFulfillment": 0,
+        "sources": [
+          "concept_owner"
+        ],
+        "deliveredAs": null,
+        "why": null
+      },
+      "wrongSubject": [],
+      "deliveredTokens": 167
+    }
+  ]
+}
