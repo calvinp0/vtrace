@@ -1,0 +1,2559 @@
+{
+  "schemaVersion": "stage5.m155.changed-cases.v1",
+  "cases": [
+    {
+      "instance_id": "astropy__astropy-14365",
+      "repo": "astropy/astropy",
+      "before": "M129",
+      "after": "M140",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "astropy/io/ascii/qdp.py",
+      "candidateLead": "astropy/io/ascii/qdp.py",
+      "goldFiles": [
+        "astropy/io/ascii/qdp.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "contract-only change",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "astropy__astropy-14598",
+      "repo": "astropy/astropy",
+      "before": "M129",
+      "after": "M140",
+      "historicalResult": "hit_support",
+      "candidateResult": "hit_support",
+      "historicalLead": "astropy/io/fits/diff.py",
+      "candidateLead": "astropy/io/fits/diff.py",
+      "goldFiles": [
+        "astropy/io/fits/card.py"
+      ],
+      "historicalRole": "support",
+      "candidateRole": "support",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-11206",
+      "repo": "django/django",
+      "before": "M129",
+      "after": "M140",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "utils/numberformat.py",
+      "candidateLead": "utils/numberformat.py",
+      "goldFiles": [
+        "django/utils/numberformat.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-11490",
+      "repo": "django/django",
+      "before": "M129",
+      "after": "M140",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "db/models/sql/compiler.py",
+      "candidateLead": "db/models/sql/compiler.py",
+      "goldFiles": [
+        "django/db/models/sql/compiler.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-11815",
+      "repo": "django/django",
+      "before": "M129",
+      "after": "M140",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "db/migrations/serializer.py",
+      "candidateLead": "db/migrations/serializer.py",
+      "goldFiles": [
+        "django/db/migrations/serializer.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-11820",
+      "repo": "django/django",
+      "before": "M129",
+      "after": "M140",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "db/models/base.py",
+      "candidateLead": "db/models/base.py",
+      "goldFiles": [
+        "django/db/models/base.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-12774",
+      "repo": "django/django",
+      "before": "M129",
+      "after": "M140",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "db/models/query.py",
+      "candidateLead": "db/models/query.py",
+      "goldFiles": [
+        "django/db/models/query.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "contract-only change",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-13195",
+      "repo": "django/django",
+      "before": "M129",
+      "after": "M140",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "http/response.py",
+      "candidateLead": "http/response.py",
+      "goldFiles": [
+        "django/contrib/messages/storage/cookie.py",
+        "django/contrib/sessions/middleware.py",
+        "django/http/response.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-13363",
+      "repo": "django/django",
+      "before": "M129",
+      "after": "M140",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "db/models/functions/datetime.py",
+      "candidateLead": "db/models/functions/datetime.py",
+      "goldFiles": [
+        "django/db/models/functions/datetime.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "contract-only change",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-13551",
+      "repo": "django/django",
+      "before": "M129",
+      "after": "M140",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "contrib/auth/tokens.py",
+      "candidateLead": "contrib/auth/tokens.py",
+      "goldFiles": [
+        "django/contrib/auth/tokens.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "contract-only change",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-13590",
+      "repo": "django/django",
+      "before": "M129",
+      "after": "M140",
+      "historicalResult": "missing",
+      "candidateResult": "missing",
+      "historicalLead": "contrib/postgres/fields/ranges.py",
+      "candidateLead": "contrib/postgres/fields/ranges.py",
+      "goldFiles": [
+        "django/db/models/sql/query.py"
+      ],
+      "historicalRole": "missing",
+      "candidateRole": "missing",
+      "classification": "contract-only change",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-13658",
+      "repo": "django/django",
+      "before": "M129",
+      "after": "M140",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "core/management/__init__.py",
+      "candidateLead": "core/management/__init__.py",
+      "goldFiles": [
+        "django/core/management/__init__.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "contract-only change",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-13810",
+      "repo": "django/django",
+      "before": "M129",
+      "after": "M140",
+      "historicalResult": "missing",
+      "candidateResult": "missing",
+      "historicalLead": "core/handlers/asgi.py",
+      "candidateLead": "core/handlers/asgi.py",
+      "goldFiles": [
+        "django/core/handlers/base.py"
+      ],
+      "historicalRole": "missing",
+      "candidateRole": "missing",
+      "classification": "contract-only change",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-13820",
+      "repo": "django/django",
+      "before": "M129",
+      "after": "M140",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "db/migrations/loader.py",
+      "candidateLead": "db/migrations/loader.py",
+      "goldFiles": [
+        "django/db/migrations/loader.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "contract-only change",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-14608",
+      "repo": "django/django",
+      "before": "M129",
+      "after": "M140",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top3",
+      "historicalLead": "forms/formsets.py",
+      "candidateLead": "forms/boundfield.py",
+      "goldFiles": [
+        "django/forms/formsets.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "path authority",
+      "directionLabel": "REGRESSION"
+    },
+    {
+      "instance_id": "django__django-14792",
+      "repo": "django/django",
+      "before": "M129",
+      "after": "M140",
+      "historicalResult": "missing",
+      "candidateResult": "missing",
+      "historicalLead": "db/models/functions/datetime.py",
+      "candidateLead": "db/models/functions/datetime.py",
+      "goldFiles": [
+        "django/utils/timezone.py"
+      ],
+      "historicalRole": "missing",
+      "candidateRole": "missing",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-15037",
+      "repo": "django/django",
+      "before": "M129",
+      "after": "M140",
+      "historicalResult": "hit_support",
+      "candidateResult": "hit_support",
+      "historicalLead": "contrib/contenttypes/fields.py",
+      "candidateLead": "contrib/contenttypes/fields.py",
+      "goldFiles": [
+        "django/core/management/commands/inspectdb.py"
+      ],
+      "historicalRole": "support",
+      "candidateRole": "support",
+      "classification": "contract-only change",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-15503",
+      "repo": "django/django",
+      "before": "M129",
+      "after": "M140",
+      "historicalResult": "hit_support",
+      "candidateResult": "hit_support",
+      "historicalLead": "contrib/sessions/backends/base.py",
+      "candidateLead": "contrib/sessions/backends/base.py",
+      "goldFiles": [
+        "django/db/models/fields/json.py"
+      ],
+      "historicalRole": "support",
+      "candidateRole": "support",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-16256",
+      "repo": "django/django",
+      "before": "M129",
+      "after": "M140",
+      "historicalResult": "hit_support",
+      "candidateResult": "hit_support",
+      "historicalLead": "db/models/query.py",
+      "candidateLead": "db/models/query.py",
+      "goldFiles": [
+        "django/contrib/contenttypes/fields.py",
+        "django/db/models/fields/related_descriptors.py"
+      ],
+      "historicalRole": "support",
+      "candidateRole": "support",
+      "classification": "contract-only change",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-16667",
+      "repo": "django/django",
+      "before": "M129",
+      "after": "M140",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "forms/widgets.py",
+      "candidateLead": "forms/widgets.py",
+      "goldFiles": [
+        "django/forms/widgets.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "contract-only change",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-16819",
+      "repo": "django/django",
+      "before": "M129",
+      "after": "M140",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "db/migrations/operations/models.py",
+      "candidateLead": "db/migrations/operations/models.py",
+      "goldFiles": [
+        "django/db/migrations/operations/models.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-16877",
+      "repo": "django/django",
+      "before": "M129",
+      "after": "M140",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "template/defaultfilters.py",
+      "candidateLead": "template/defaultfilters.py",
+      "goldFiles": [
+        "django/template/defaultfilters.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-17084",
+      "repo": "django/django",
+      "before": "M129",
+      "after": "M140",
+      "historicalResult": "missing",
+      "candidateResult": "missing",
+      "historicalLead": "db/models/functions/window.py",
+      "candidateLead": "db/models/functions/window.py",
+      "goldFiles": [
+        "django/db/models/sql/query.py"
+      ],
+      "historicalRole": "missing",
+      "candidateRole": "missing",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-22719",
+      "repo": "matplotlib/matplotlib",
+      "before": "M129",
+      "after": "M140",
+      "historicalResult": "hit_top3",
+      "candidateResult": "hit_top3",
+      "historicalLead": "lib/matplotlib/units.py",
+      "candidateLead": "lib/matplotlib/units.py",
+      "goldFiles": [
+        "lib/matplotlib/category.py"
+      ],
+      "historicalRole": "support",
+      "candidateRole": "support",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-24870",
+      "repo": "matplotlib/matplotlib",
+      "before": "M129",
+      "after": "M140",
+      "historicalResult": "hit_support",
+      "candidateResult": "hit_support",
+      "historicalLead": "lib/mpl_toolkits/mplot3d/axes3d.py",
+      "candidateLead": "lib/mpl_toolkits/mplot3d/axes3d.py",
+      "goldFiles": [
+        "lib/matplotlib/contour.py",
+        "lib/matplotlib/tri/_tricontour.py"
+      ],
+      "historicalRole": "support",
+      "candidateRole": "support",
+      "classification": "contract-only change",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "psf__requests-1142",
+      "repo": "psf/requests",
+      "before": "M129",
+      "after": "M140",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "requests/models.py",
+      "candidateLead": "requests/models.py",
+      "goldFiles": [
+        "requests/models.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "psf__requests-1921",
+      "repo": "psf/requests",
+      "before": "M129",
+      "after": "M140",
+      "historicalResult": "hit_top3",
+      "candidateResult": "hit_top3",
+      "historicalLead": "requests/adapters.py",
+      "candidateLead": "requests/adapters.py",
+      "goldFiles": [
+        "requests/sessions.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "contract-only change",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "psf__requests-5414",
+      "repo": "psf/requests",
+      "before": "M129",
+      "after": "M140",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "requests/models.py",
+      "candidateLead": "requests/models.py",
+      "goldFiles": [
+        "requests/models.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "pydata__xarray-2905",
+      "repo": "pydata/xarray",
+      "before": "M129",
+      "after": "M140",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "xarray/core/variable.py",
+      "candidateLead": "xarray/core/variable.py",
+      "goldFiles": [
+        "xarray/core/variable.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "pydata__xarray-4695",
+      "repo": "pydata/xarray",
+      "before": "M129",
+      "after": "M140",
+      "historicalResult": "hit_support",
+      "candidateResult": "hit_support",
+      "historicalLead": "xarray/backends/api.py",
+      "candidateLead": "xarray/backends/api.py",
+      "goldFiles": [
+        "xarray/core/dataarray.py"
+      ],
+      "historicalRole": "support",
+      "candidateRole": "support",
+      "classification": "contract-only change",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "pydata__xarray-6599",
+      "repo": "pydata/xarray",
+      "before": "M129",
+      "after": "M140",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "xarray/core/computation.py",
+      "candidateLead": "xarray/core/computation.py",
+      "goldFiles": [
+        "xarray/core/computation.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "pylint-dev__pylint-4551",
+      "repo": "pylint-dev/pylint",
+      "before": "M129",
+      "after": "M140",
+      "historicalResult": "missing",
+      "candidateResult": "missing",
+      "historicalLead": "pylint/checkers/python3.py",
+      "candidateLead": "pylint/lint/pylinter.py",
+      "goldFiles": [
+        "pylint/pyreverse/diagrams.py",
+        "pylint/pyreverse/inspector.py",
+        "pylint/pyreverse/utils.py",
+        "pylint/pyreverse/writer.py"
+      ],
+      "historicalRole": "missing",
+      "candidateRole": "missing",
+      "classification": "unknown",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "pytest-dev__pytest-7432",
+      "repo": "pytest-dev/pytest",
+      "before": "M129",
+      "after": "M140",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "src/_pytest/skipping.py",
+      "candidateLead": "src/_pytest/skipping.py",
+      "goldFiles": [
+        "src/_pytest/skipping.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "contract-only change",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-10844",
+      "repo": "scikit-learn/scikit-learn",
+      "before": "M129",
+      "after": "M140",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "sklearn/metrics/cluster/supervised.py",
+      "candidateLead": "sklearn/metrics/cluster/supervised.py",
+      "goldFiles": [
+        "sklearn/metrics/cluster/supervised.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "contract-only change",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-11578",
+      "repo": "scikit-learn/scikit-learn",
+      "before": "M129",
+      "after": "M140",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "sklearn/linear_model/logistic.py",
+      "candidateLead": "sklearn/linear_model/logistic.py",
+      "goldFiles": [
+        "sklearn/linear_model/logistic.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-7462",
+      "repo": "sphinx-doc/sphinx",
+      "before": "M129",
+      "after": "M140",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "sphinx/domains/python.py",
+      "candidateLead": "sphinx/domains/python.py",
+      "goldFiles": [
+        "sphinx/domains/python.py",
+        "sphinx/pycode/ast.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-9230",
+      "repo": "sphinx-doc/sphinx",
+      "before": "M129",
+      "after": "M140",
+      "historicalResult": "missing",
+      "candidateResult": "missing",
+      "historicalLead": "sphinx/pycode/ast.py",
+      "candidateLead": "sphinx/pycode/ast.py",
+      "goldFiles": [
+        "sphinx/util/docfields.py"
+      ],
+      "historicalRole": "missing",
+      "candidateRole": "missing",
+      "classification": "contract-only change",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "sympy__sympy-12419",
+      "repo": "sympy/sympy",
+      "before": "M129",
+      "after": "M140",
+      "historicalResult": "hit_top3",
+      "candidateResult": "hit_support",
+      "historicalLead": "sympy/physics/quantum/identitysearch.py",
+      "candidateLead": "sympy/matrices/matrices.py",
+      "goldFiles": [
+        "sympy/matrices/expressions/matexpr.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "support",
+      "classification": "path authority",
+      "directionLabel": "REGRESSION"
+    },
+    {
+      "instance_id": "sympy__sympy-12481",
+      "repo": "sympy/sympy",
+      "before": "M129",
+      "after": "M140",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "sympy/combinatorics/permutations.py",
+      "candidateLead": "sympy/combinatorics/permutations.py",
+      "goldFiles": [
+        "sympy/combinatorics/permutations.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "sympy__sympy-13372",
+      "repo": "sympy/sympy",
+      "before": "M129",
+      "after": "M140",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "sympy/core/evalf.py",
+      "candidateLead": "sympy/core/evalf.py",
+      "goldFiles": [
+        "sympy/core/evalf.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "contract-only change",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "sympy__sympy-13974",
+      "repo": "sympy/sympy",
+      "before": "M129",
+      "after": "M140",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "sympy/physics/quantum/tensorproduct.py",
+      "candidateLead": "sympy/physics/quantum/tensorproduct.py",
+      "goldFiles": [
+        "sympy/physics/quantum/tensorproduct.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "contract-only change",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "sympy__sympy-15599",
+      "repo": "sympy/sympy",
+      "before": "M129",
+      "after": "M140",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "sympy/core/mod.py",
+      "candidateLead": "sympy/core/mod.py",
+      "goldFiles": [
+        "sympy/core/mod.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "contract-only change",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "sympy__sympy-16597",
+      "repo": "sympy/sympy",
+      "before": "M129",
+      "after": "M140",
+      "historicalResult": "hit_discarded",
+      "candidateResult": "hit_support",
+      "historicalLead": "sympy/calculus/finite_diff.py",
+      "candidateLead": "sympy/calculus/finite_diff.py",
+      "goldFiles": [
+        "sympy/assumptions/ask.py",
+        "sympy/assumptions/ask_generated.py",
+        "sympy/core/assumptions.py",
+        "sympy/core/power.py",
+        "sympy/printing/tree.py",
+        "sympy/tensor/indexed.py"
+      ],
+      "historicalRole": "discarded",
+      "candidateRole": "support",
+      "classification": "candidate cap",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "sympy__sympy-16766",
+      "repo": "sympy/sympy",
+      "before": "M129",
+      "after": "M140",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "sympy/printing/pycode.py",
+      "candidateLead": "sympy/printing/pycode.py",
+      "goldFiles": [
+        "sympy/printing/pycode.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "sympy__sympy-16792",
+      "repo": "sympy/sympy",
+      "before": "M129",
+      "after": "M140",
+      "historicalResult": "hit_discarded",
+      "candidateResult": "missing",
+      "historicalLead": "sympy/solvers/ode.py",
+      "candidateLead": "sympy/utilities/autowrap.py",
+      "goldFiles": [
+        "sympy/utilities/codegen.py"
+      ],
+      "historicalRole": "discarded",
+      "candidateRole": "missing",
+      "classification": "path authority",
+      "directionLabel": "REGRESSION"
+    },
+    {
+      "instance_id": "sympy__sympy-20428",
+      "repo": "sympy/sympy",
+      "before": "M129",
+      "after": "M140",
+      "historicalResult": "missing",
+      "candidateResult": "missing",
+      "historicalLead": "sympy/polys/polyclasses.py",
+      "candidateLead": "sympy/polys/polyclasses.py",
+      "goldFiles": [
+        "sympy/polys/domains/expressiondomain.py"
+      ],
+      "historicalRole": "missing",
+      "candidateRole": "missing",
+      "classification": "contract-only change",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "sympy__sympy-24213",
+      "repo": "sympy/sympy",
+      "before": "M129",
+      "after": "M140",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "sympy/physics/units/unitsystem.py",
+      "candidateLead": "sympy/physics/units/unitsystem.py",
+      "goldFiles": [
+        "sympy/physics/units/unitsystem.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "contract-only change",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "astropy__astropy-14365",
+      "repo": "astropy/astropy",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "astropy/io/ascii/qdp.py",
+      "candidateLead": "astropy/io/ascii/qdp.py",
+      "goldFiles": [
+        "astropy/io/ascii/qdp.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "contract-only change",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "astropy__astropy-14369",
+      "repo": "astropy/astropy",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top3",
+      "candidateResult": "hit_top3",
+      "historicalLead": "astropy/io/ascii/cds.py",
+      "candidateLead": "astropy/io/ascii/cds.py",
+      "goldFiles": [
+        "astropy/units/format/cds.py",
+        "astropy/units/format/cds_parsetab.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "contract-only change",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "astropy__astropy-14539",
+      "repo": "astropy/astropy",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "astropy/io/fits/diff.py",
+      "candidateLead": "astropy/io/fits/diff.py",
+      "goldFiles": [
+        "astropy/io/fits/diff.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "astropy__astropy-7166",
+      "repo": "astropy/astropy",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top3",
+      "candidateResult": "hit_top3",
+      "historicalLead": "astropy/stats/lombscargle/_statistics.py",
+      "candidateLead": "astropy/stats/lombscargle/_statistics.py",
+      "goldFiles": [
+        "astropy/utils/misc.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-10880",
+      "repo": "django/django",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top3",
+      "candidateResult": "hit_top3",
+      "historicalLead": "db/models/sql/query.py",
+      "candidateLead": "db/models/sql/query.py",
+      "goldFiles": [
+        "django/db/models/aggregates.py"
+      ],
+      "historicalRole": "support",
+      "candidateRole": "support",
+      "classification": "contract-only change",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-10973",
+      "repo": "django/django",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "db/backends/postgresql/client.py",
+      "candidateLead": "db/backends/postgresql/client.py",
+      "goldFiles": [
+        "django/db/backends/postgresql/client.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-11133",
+      "repo": "django/django",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "http/response.py",
+      "candidateLead": "http/response.py",
+      "goldFiles": [
+        "django/http/response.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-11206",
+      "repo": "django/django",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "utils/numberformat.py",
+      "candidateLead": "utils/numberformat.py",
+      "goldFiles": [
+        "django/utils/numberformat.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-11490",
+      "repo": "django/django",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "db/models/sql/compiler.py",
+      "candidateLead": "db/models/sql/compiler.py",
+      "goldFiles": [
+        "django/db/models/sql/compiler.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "contract-only change",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-11728",
+      "repo": "django/django",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "contrib/admindocs/utils.py",
+      "candidateLead": "contrib/admindocs/utils.py",
+      "goldFiles": [
+        "django/contrib/admindocs/utils.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-11740",
+      "repo": "django/django",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "skipped_no_context",
+      "candidateResult": "skipped_no_context",
+      "historicalLead": null,
+      "candidateLead": null,
+      "goldFiles": [
+        "django/db/migrations/autodetector.py"
+      ],
+      "historicalRole": "missing",
+      "candidateRole": "discarded",
+      "classification": "candidate cap",
+      "directionLabel": "IMPROVEMENT"
+    },
+    {
+      "instance_id": "django__django-11749",
+      "repo": "django/django",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "core/management/__init__.py",
+      "candidateLead": "core/management/__init__.py",
+      "goldFiles": [
+        "django/core/management/__init__.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-11815",
+      "repo": "django/django",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "db/migrations/serializer.py",
+      "candidateLead": "db/migrations/serializer.py",
+      "goldFiles": [
+        "django/db/migrations/serializer.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-11820",
+      "repo": "django/django",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "db/models/base.py",
+      "candidateLead": "db/models/base.py",
+      "goldFiles": [
+        "django/db/models/base.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-12050",
+      "repo": "django/django",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "db/models/sql/query.py",
+      "candidateLead": "db/models/sql/query.py",
+      "goldFiles": [
+        "django/db/models/sql/query.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-12273",
+      "repo": "django/django",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top3",
+      "candidateResult": "hit_top3",
+      "historicalLead": "forms/models.py",
+      "candidateLead": "forms/models.py",
+      "goldFiles": [
+        "django/db/models/base.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-12276",
+      "repo": "django/django",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "forms/widgets.py",
+      "candidateLead": "forms/widgets.py",
+      "goldFiles": [
+        "django/forms/widgets.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "contract-only change",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-12325",
+      "repo": "django/django",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top3",
+      "candidateResult": "hit_top3",
+      "historicalLead": "db/models/sql/query.py",
+      "candidateLead": "db/models/sql/query.py",
+      "goldFiles": [
+        "django/db/models/base.py",
+        "django/db/models/options.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-12774",
+      "repo": "django/django",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "db/models/query.py",
+      "candidateLead": "db/models/query.py",
+      "goldFiles": [
+        "django/db/models/query.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "contract-only change",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-12858",
+      "repo": "django/django",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "db/models/base.py",
+      "candidateLead": "db/models/base.py",
+      "goldFiles": [
+        "django/db/models/base.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-13012",
+      "repo": "django/django",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "db/models/expressions.py",
+      "candidateLead": "db/models/expressions.py",
+      "goldFiles": [
+        "django/db/models/expressions.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-13112",
+      "repo": "django/django",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "db/models/fields/related.py",
+      "candidateLead": "db/models/fields/related.py",
+      "goldFiles": [
+        "django/db/models/fields/related.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-13195",
+      "repo": "django/django",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "http/response.py",
+      "candidateLead": "http/response.py",
+      "goldFiles": [
+        "django/contrib/messages/storage/cookie.py",
+        "django/contrib/sessions/middleware.py",
+        "django/http/response.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-13363",
+      "repo": "django/django",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "db/models/functions/datetime.py",
+      "candidateLead": "db/models/functions/datetime.py",
+      "goldFiles": [
+        "django/db/models/functions/datetime.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "contract-only change",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-13512",
+      "repo": "django/django",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top3",
+      "candidateResult": "hit_top3",
+      "historicalLead": "contrib/admin/views/main.py",
+      "candidateLead": "contrib/admin/views/main.py",
+      "goldFiles": [
+        "django/contrib/admin/utils.py",
+        "django/forms/fields.py"
+      ],
+      "historicalRole": "support",
+      "candidateRole": "support",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-13513",
+      "repo": "django/django",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top3",
+      "candidateResult": "hit_top3",
+      "historicalLead": "views/generic/__init__.py",
+      "candidateLead": "views/generic/__init__.py",
+      "goldFiles": [
+        "django/views/debug.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-13551",
+      "repo": "django/django",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "contrib/auth/tokens.py",
+      "candidateLead": "contrib/auth/tokens.py",
+      "goldFiles": [
+        "django/contrib/auth/tokens.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-13590",
+      "repo": "django/django",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "missing",
+      "candidateResult": "missing",
+      "historicalLead": "contrib/postgres/fields/ranges.py",
+      "candidateLead": "contrib/postgres/fields/ranges.py",
+      "goldFiles": [
+        "django/db/models/sql/query.py"
+      ],
+      "historicalRole": "missing",
+      "candidateRole": "missing",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-13658",
+      "repo": "django/django",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "core/management/__init__.py",
+      "candidateLead": "core/management/__init__.py",
+      "goldFiles": [
+        "django/core/management/__init__.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-13810",
+      "repo": "django/django",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "missing",
+      "candidateResult": "missing",
+      "historicalLead": "core/handlers/asgi.py",
+      "candidateLead": "core/handlers/asgi.py",
+      "goldFiles": [
+        "django/core/handlers/base.py"
+      ],
+      "historicalRole": "missing",
+      "candidateRole": "missing",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-13820",
+      "repo": "django/django",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "db/migrations/loader.py",
+      "candidateLead": "db/migrations/loader.py",
+      "goldFiles": [
+        "django/db/migrations/loader.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-14608",
+      "repo": "django/django",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top3",
+      "candidateResult": "hit_top3",
+      "historicalLead": "forms/boundfield.py",
+      "candidateLead": "forms/boundfield.py",
+      "goldFiles": [
+        "django/forms/formsets.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-14792",
+      "repo": "django/django",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "missing",
+      "candidateResult": "missing",
+      "historicalLead": "db/models/functions/datetime.py",
+      "candidateLead": "db/models/functions/datetime.py",
+      "goldFiles": [
+        "django/utils/timezone.py"
+      ],
+      "historicalRole": "missing",
+      "candidateRole": "missing",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-15037",
+      "repo": "django/django",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_support",
+      "candidateResult": "hit_discarded",
+      "historicalLead": "contrib/contenttypes/fields.py",
+      "candidateLead": "contrib/contenttypes/fields.py",
+      "goldFiles": [
+        "django/core/management/commands/inspectdb.py"
+      ],
+      "historicalRole": "support",
+      "candidateRole": "discarded",
+      "classification": "candidate cap",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-15503",
+      "repo": "django/django",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_support",
+      "candidateResult": "hit_support",
+      "historicalLead": "contrib/sessions/backends/base.py",
+      "candidateLead": "contrib/sessions/backends/base.py",
+      "goldFiles": [
+        "django/db/models/fields/json.py"
+      ],
+      "historicalRole": "support",
+      "candidateRole": "support",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-15695",
+      "repo": "django/django",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "db/migrations/operations/models.py",
+      "candidateLead": "db/migrations/operations/models.py",
+      "goldFiles": [
+        "django/db/migrations/operations/models.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-15731",
+      "repo": "django/django",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top3",
+      "candidateResult": "hit_top3",
+      "historicalLead": "core/signing.py",
+      "candidateLead": "core/signing.py",
+      "goldFiles": [
+        "django/db/models/manager.py"
+      ],
+      "historicalRole": "support",
+      "candidateRole": "support",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-16256",
+      "repo": "django/django",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_support",
+      "candidateResult": "hit_top3",
+      "historicalLead": "db/models/query.py",
+      "candidateLead": "db/models/query.py",
+      "goldFiles": [
+        "django/contrib/contenttypes/fields.py",
+        "django/db/models/fields/related_descriptors.py"
+      ],
+      "historicalRole": "support",
+      "candidateRole": "support",
+      "classification": "unknown",
+      "directionLabel": "IMPROVEMENT"
+    },
+    {
+      "instance_id": "django__django-16263",
+      "repo": "django/django",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top3",
+      "candidateResult": "hit_top3",
+      "historicalLead": "db/models/query.py",
+      "candidateLead": "db/models/query.py",
+      "goldFiles": [
+        "django/db/models/expressions.py",
+        "django/db/models/query_utils.py",
+        "django/db/models/sql/query.py",
+        "django/db/models/sql/where.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-16333",
+      "repo": "django/django",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "contrib/auth/forms.py",
+      "candidateLead": "contrib/auth/forms.py",
+      "goldFiles": [
+        "django/contrib/auth/forms.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "contract-only change",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-16569",
+      "repo": "django/django",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "forms/formsets.py",
+      "candidateLead": "forms/formsets.py",
+      "goldFiles": [
+        "django/forms/formsets.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-16667",
+      "repo": "django/django",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "forms/widgets.py",
+      "candidateLead": "forms/widgets.py",
+      "goldFiles": [
+        "django/forms/widgets.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-16819",
+      "repo": "django/django",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "db/migrations/operations/models.py",
+      "candidateLead": "db/migrations/operations/models.py",
+      "goldFiles": [
+        "django/db/migrations/operations/models.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-16877",
+      "repo": "django/django",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "template/defaultfilters.py",
+      "candidateLead": "template/defaultfilters.py",
+      "goldFiles": [
+        "django/template/defaultfilters.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-16938",
+      "repo": "django/django",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top3",
+      "candidateResult": "hit_top3",
+      "historicalLead": "db/models/query.py",
+      "candidateLead": "db/models/query.py",
+      "goldFiles": [
+        "django/core/serializers/python.py",
+        "django/core/serializers/xml_serializer.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-17084",
+      "repo": "django/django",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "missing",
+      "candidateResult": "hit_discarded",
+      "historicalLead": "db/models/functions/window.py",
+      "candidateLead": "db/models/functions/window.py",
+      "goldFiles": [
+        "django/db/models/sql/query.py"
+      ],
+      "historicalRole": "missing",
+      "candidateRole": "discarded",
+      "classification": "candidate cap",
+      "directionLabel": "IMPROVEMENT"
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-22719",
+      "repo": "matplotlib/matplotlib",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top3",
+      "candidateResult": "hit_top3",
+      "historicalLead": "lib/matplotlib/units.py",
+      "candidateLead": "lib/matplotlib/units.py",
+      "goldFiles": [
+        "lib/matplotlib/category.py"
+      ],
+      "historicalRole": "support",
+      "candidateRole": "support",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-24627",
+      "repo": "matplotlib/matplotlib",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "lib/matplotlib/axes/_base.py",
+      "candidateLead": "lib/matplotlib/axes/_base.py",
+      "goldFiles": [
+        "lib/matplotlib/axes/_base.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-24870",
+      "repo": "matplotlib/matplotlib",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_support",
+      "candidateResult": "hit_support",
+      "historicalLead": "lib/mpl_toolkits/mplot3d/axes3d.py",
+      "candidateLead": "lib/mpl_toolkits/mplot3d/axes3d.py",
+      "goldFiles": [
+        "lib/matplotlib/contour.py",
+        "lib/matplotlib/tri/_tricontour.py"
+      ],
+      "historicalRole": "support",
+      "candidateRole": "support",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-24970",
+      "repo": "matplotlib/matplotlib",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "missing",
+      "candidateResult": "missing",
+      "historicalLead": "lib/matplotlib/_api/deprecation.py",
+      "candidateLead": "lib/matplotlib/_api/deprecation.py",
+      "goldFiles": [
+        "lib/matplotlib/colors.py"
+      ],
+      "historicalRole": "missing",
+      "candidateRole": "missing",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-25332",
+      "repo": "matplotlib/matplotlib",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "missing",
+      "candidateResult": "hit_discarded",
+      "historicalLead": "lib/matplotlib/figure.py",
+      "candidateLead": "lib/matplotlib/figure.py",
+      "goldFiles": [
+        "lib/matplotlib/cbook.py"
+      ],
+      "historicalRole": "missing",
+      "candidateRole": "discarded",
+      "classification": "candidate cap",
+      "directionLabel": "IMPROVEMENT"
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-25960",
+      "repo": "matplotlib/matplotlib",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "lib/matplotlib/figure.py",
+      "candidateLead": "lib/matplotlib/figure.py",
+      "goldFiles": [
+        "lib/matplotlib/figure.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-26466",
+      "repo": "matplotlib/matplotlib",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_discarded",
+      "candidateResult": "hit_discarded",
+      "historicalLead": "lib/matplotlib/transforms.py",
+      "candidateLead": "lib/matplotlib/transforms.py",
+      "goldFiles": [
+        "lib/matplotlib/text.py"
+      ],
+      "historicalRole": "discarded",
+      "candidateRole": "discarded",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "mwaskom__seaborn-3187",
+      "repo": "mwaskom/seaborn",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "seaborn/utils.py",
+      "candidateLead": "seaborn/utils.py",
+      "goldFiles": [
+        "seaborn/_core/scales.py",
+        "seaborn/utils.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "pallets__flask-5014",
+      "repo": "pallets/flask",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "src/flask/blueprints.py",
+      "candidateLead": "src/flask/blueprints.py",
+      "goldFiles": [
+        "src/flask/blueprints.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "psf__requests-1142",
+      "repo": "psf/requests",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "requests/models.py",
+      "candidateLead": "requests/models.py",
+      "goldFiles": [
+        "requests/models.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "psf__requests-1724",
+      "repo": "psf/requests",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top3",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "requests/api.py",
+      "candidateLead": "requests/sessions.py",
+      "goldFiles": [
+        "requests/sessions.py"
+      ],
+      "historicalRole": "support",
+      "candidateRole": "pivot",
+      "classification": "path authority",
+      "directionLabel": "IMPROVEMENT"
+    },
+    {
+      "instance_id": "psf__requests-1921",
+      "repo": "psf/requests",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top3",
+      "candidateResult": "hit_top3",
+      "historicalLead": "requests/adapters.py",
+      "candidateLead": "requests/adapters.py",
+      "goldFiles": [
+        "requests/sessions.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "psf__requests-5414",
+      "repo": "psf/requests",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "requests/models.py",
+      "candidateLead": "requests/models.py",
+      "goldFiles": [
+        "requests/models.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "pydata__xarray-2905",
+      "repo": "pydata/xarray",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "xarray/core/variable.py",
+      "candidateLead": "xarray/core/variable.py",
+      "goldFiles": [
+        "xarray/core/variable.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "contract-only change",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "pydata__xarray-3677",
+      "repo": "pydata/xarray",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "xarray/core/dataset.py",
+      "candidateLead": "xarray/core/dataset.py",
+      "goldFiles": [
+        "xarray/core/dataset.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "pydata__xarray-6599",
+      "repo": "pydata/xarray",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "xarray/core/computation.py",
+      "candidateLead": "xarray/core/computation.py",
+      "goldFiles": [
+        "xarray/core/computation.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "pydata__xarray-6938",
+      "repo": "pydata/xarray",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "xarray/core/dataset.py",
+      "candidateLead": "xarray/core/dataset.py",
+      "goldFiles": [
+        "xarray/core/dataset.py",
+        "xarray/core/variable.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "pydata__xarray-6992",
+      "repo": "pydata/xarray",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top3",
+      "candidateResult": "hit_top3",
+      "historicalLead": "xarray/core/concat.py",
+      "candidateLead": "xarray/core/concat.py",
+      "goldFiles": [
+        "xarray/core/dataset.py",
+        "xarray/core/indexes.py"
+      ],
+      "historicalRole": "support",
+      "candidateRole": "support",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "pylint-dev__pylint-4551",
+      "repo": "pylint-dev/pylint",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "missing",
+      "candidateResult": "missing",
+      "historicalLead": "pylint/lint/pylinter.py",
+      "candidateLead": "pylint/lint/pylinter.py",
+      "goldFiles": [
+        "pylint/pyreverse/diagrams.py",
+        "pylint/pyreverse/inspector.py",
+        "pylint/pyreverse/utils.py",
+        "pylint/pyreverse/writer.py"
+      ],
+      "historicalRole": "missing",
+      "candidateRole": "missing",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "pylint-dev__pylint-8898",
+      "repo": "pylint-dev/pylint",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_discarded",
+      "candidateResult": "hit_discarded",
+      "historicalLead": "pylint/config/config_initialization.py",
+      "candidateLead": "pylint/config/config_initialization.py",
+      "goldFiles": [
+        "pylint/config/argument.py",
+        "pylint/utils/__init__.py",
+        "pylint/utils/utils.py"
+      ],
+      "historicalRole": "discarded",
+      "candidateRole": "discarded",
+      "classification": "contract-only change",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "pytest-dev__pytest-10051",
+      "repo": "pytest-dev/pytest",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "src/_pytest/logging.py",
+      "candidateLead": "src/_pytest/logging.py",
+      "goldFiles": [
+        "src/_pytest/logging.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "pytest-dev__pytest-5262",
+      "repo": "pytest-dev/pytest",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "src/_pytest/capture.py",
+      "candidateLead": "src/_pytest/capture.py",
+      "goldFiles": [
+        "src/_pytest/capture.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "pytest-dev__pytest-6197",
+      "repo": "pytest-dev/pytest",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "missing",
+      "candidateResult": "missing",
+      "historicalLead": "src/_pytest/assertion/__init__.py",
+      "candidateLead": "src/_pytest/assertion/__init__.py",
+      "goldFiles": [
+        "src/_pytest/python.py"
+      ],
+      "historicalRole": "missing",
+      "candidateRole": "missing",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "pytest-dev__pytest-7432",
+      "repo": "pytest-dev/pytest",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "src/_pytest/skipping.py",
+      "candidateLead": "src/_pytest/skipping.py",
+      "goldFiles": [
+        "src/_pytest/skipping.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-10844",
+      "repo": "scikit-learn/scikit-learn",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "sklearn/metrics/cluster/supervised.py",
+      "candidateLead": "sklearn/metrics/cluster/supervised.py",
+      "goldFiles": [
+        "sklearn/metrics/cluster/supervised.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-11578",
+      "repo": "scikit-learn/scikit-learn",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "sklearn/linear_model/logistic.py",
+      "candidateLead": "sklearn/linear_model/logistic.py",
+      "goldFiles": [
+        "sklearn/linear_model/logistic.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "contract-only change",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-7462",
+      "repo": "sphinx-doc/sphinx",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "sphinx/domains/python.py",
+      "candidateLead": "sphinx/domains/python.py",
+      "goldFiles": [
+        "sphinx/domains/python.py",
+        "sphinx/pycode/ast.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-7748",
+      "repo": "sphinx-doc/sphinx",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "sphinx/ext/autodoc/__init__.py",
+      "candidateLead": "sphinx/ext/autodoc/__init__.py",
+      "goldFiles": [
+        "sphinx/ext/autodoc/__init__.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-7910",
+      "repo": "sphinx-doc/sphinx",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "missing",
+      "candidateResult": "hit_discarded",
+      "historicalLead": "sphinx/ext/autodoc/__init__.py",
+      "candidateLead": "sphinx/ext/autodoc/__init__.py",
+      "goldFiles": [
+        "sphinx/ext/napoleon/__init__.py"
+      ],
+      "historicalRole": "missing",
+      "candidateRole": "discarded",
+      "classification": "candidate cap",
+      "directionLabel": "IMPROVEMENT"
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-9230",
+      "repo": "sphinx-doc/sphinx",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "missing",
+      "candidateResult": "missing",
+      "historicalLead": "sphinx/pycode/ast.py",
+      "candidateLead": "sphinx/pycode/ast.py",
+      "goldFiles": [
+        "sphinx/util/docfields.py"
+      ],
+      "historicalRole": "missing",
+      "candidateRole": "missing",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-9698",
+      "repo": "sphinx-doc/sphinx",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_discarded",
+      "candidateResult": "hit_discarded",
+      "historicalLead": "sphinx/addnodes.py",
+      "candidateLead": "sphinx/domains/index.py",
+      "goldFiles": [
+        "sphinx/domains/python.py"
+      ],
+      "historicalRole": "discarded",
+      "candidateRole": "discarded",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-9711",
+      "repo": "sphinx-doc/sphinx",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "sphinx/extension.py",
+      "candidateLead": "sphinx/extension.py",
+      "goldFiles": [
+        "sphinx/extension.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "sympy__sympy-12419",
+      "repo": "sympy/sympy",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_support",
+      "candidateResult": "hit_support",
+      "historicalLead": "sympy/matrices/matrices.py",
+      "candidateLead": "sympy/matrices/matrices.py",
+      "goldFiles": [
+        "sympy/matrices/expressions/matexpr.py"
+      ],
+      "historicalRole": "support",
+      "candidateRole": "support",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "sympy__sympy-12481",
+      "repo": "sympy/sympy",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "sympy/combinatorics/permutations.py",
+      "candidateLead": "sympy/combinatorics/permutations.py",
+      "goldFiles": [
+        "sympy/combinatorics/permutations.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "sympy__sympy-13372",
+      "repo": "sympy/sympy",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "sympy/core/evalf.py",
+      "candidateLead": "sympy/core/evalf.py",
+      "goldFiles": [
+        "sympy/core/evalf.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "sympy__sympy-13480",
+      "repo": "sympy/sympy",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "sympy/functions/elementary/hyperbolic.py",
+      "candidateLead": "sympy/functions/elementary/hyperbolic.py",
+      "goldFiles": [
+        "sympy/functions/elementary/hyperbolic.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "sympy__sympy-13974",
+      "repo": "sympy/sympy",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "sympy/physics/quantum/tensorproduct.py",
+      "candidateLead": "sympy/physics/quantum/tensorproduct.py",
+      "goldFiles": [
+        "sympy/physics/quantum/tensorproduct.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "contract-only change",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "sympy__sympy-15599",
+      "repo": "sympy/sympy",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "sympy/core/mod.py",
+      "candidateLead": "sympy/core/mod.py",
+      "goldFiles": [
+        "sympy/core/mod.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "sympy__sympy-15875",
+      "repo": "sympy/sympy",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "missing",
+      "candidateResult": "missing",
+      "historicalLead": "sympy/integrals/integrals.py",
+      "candidateLead": "sympy/integrals/integrals.py",
+      "goldFiles": [
+        "sympy/core/add.py"
+      ],
+      "historicalRole": "missing",
+      "candidateRole": "missing",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "sympy__sympy-16597",
+      "repo": "sympy/sympy",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_support",
+      "candidateResult": "hit_discarded",
+      "historicalLead": "sympy/calculus/finite_diff.py",
+      "candidateLead": "sympy/calculus/finite_diff.py",
+      "goldFiles": [
+        "sympy/assumptions/ask.py",
+        "sympy/assumptions/ask_generated.py",
+        "sympy/core/assumptions.py",
+        "sympy/core/power.py",
+        "sympy/printing/tree.py",
+        "sympy/tensor/indexed.py"
+      ],
+      "historicalRole": "support",
+      "candidateRole": "discarded",
+      "classification": "candidate cap",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "sympy__sympy-16766",
+      "repo": "sympy/sympy",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "sympy/printing/pycode.py",
+      "candidateLead": "sympy/printing/pycode.py",
+      "goldFiles": [
+        "sympy/printing/pycode.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "sympy__sympy-16792",
+      "repo": "sympy/sympy",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "missing",
+      "candidateResult": "hit_discarded",
+      "historicalLead": "sympy/utilities/autowrap.py",
+      "candidateLead": "sympy/utilities/autowrap.py",
+      "goldFiles": [
+        "sympy/utilities/codegen.py"
+      ],
+      "historicalRole": "missing",
+      "candidateRole": "discarded",
+      "classification": "candidate cap",
+      "directionLabel": "IMPROVEMENT"
+    },
+    {
+      "instance_id": "sympy__sympy-18189",
+      "repo": "sympy/sympy",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "sympy/solvers/diophantine.py",
+      "candidateLead": "sympy/solvers/diophantine.py",
+      "goldFiles": [
+        "sympy/solvers/diophantine.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "sympy__sympy-19637",
+      "repo": "sympy/sympy",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top3",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "sympy/printing/codeprinter.py",
+      "candidateLead": "sympy/core/sympify.py",
+      "goldFiles": [
+        "sympy/core/sympify.py"
+      ],
+      "historicalRole": "support",
+      "candidateRole": "pivot",
+      "classification": "path authority",
+      "directionLabel": "IMPROVEMENT"
+    },
+    {
+      "instance_id": "sympy__sympy-20428",
+      "repo": "sympy/sympy",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "missing",
+      "candidateResult": "missing",
+      "historicalLead": "sympy/polys/polyclasses.py",
+      "candidateLead": "sympy/polys/polyclasses.py",
+      "goldFiles": [
+        "sympy/polys/domains/expressiondomain.py"
+      ],
+      "historicalRole": "missing",
+      "candidateRole": "missing",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "sympy__sympy-20801",
+      "repo": "sympy/sympy",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "missing",
+      "candidateResult": "missing",
+      "historicalLead": "sympy/core/symbol.py",
+      "candidateLead": "sympy/core/symbol.py",
+      "goldFiles": [
+        "sympy/core/numbers.py"
+      ],
+      "historicalRole": "missing",
+      "candidateRole": "missing",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "sympy__sympy-23413",
+      "repo": "sympy/sympy",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top3",
+      "candidateResult": "hit_top3",
+      "historicalLead": "sympy/matrices/normalforms.py",
+      "candidateLead": "sympy/matrices/normalforms.py",
+      "goldFiles": [
+        "sympy/polys/matrices/normalforms.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "sympy__sympy-24213",
+      "repo": "sympy/sympy",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "sympy/physics/units/unitsystem.py",
+      "candidateLead": "sympy/physics/units/unitsystem.py",
+      "goldFiles": [
+        "sympy/physics/units/unitsystem.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "contract-only change",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "sympy__sympy-24562",
+      "repo": "sympy/sympy",
+      "before": "M140",
+      "after": "M150",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "sympy/core/numbers.py",
+      "candidateLead": "sympy/core/numbers.py",
+      "goldFiles": [
+        "sympy/core/numbers.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-11740",
+      "repo": "django/django",
+      "before": "M152",
+      "after": "M154",
+      "historicalResult": "skipped_no_context",
+      "candidateResult": "skipped_no_context",
+      "historicalLead": null,
+      "candidateLead": null,
+      "goldFiles": [
+        "django/db/migrations/autodetector.py"
+      ],
+      "historicalRole": "discarded",
+      "candidateRole": "discarded",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-11820",
+      "repo": "django/django",
+      "before": "M152",
+      "after": "M154",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "db/models/base.py",
+      "candidateLead": "db/models/base.py",
+      "goldFiles": [
+        "django/db/models/base.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "django__django-15037",
+      "repo": "django/django",
+      "before": "M152",
+      "after": "M154",
+      "historicalResult": "hit_discarded",
+      "candidateResult": "hit_discarded",
+      "historicalLead": "contrib/contenttypes/fields.py",
+      "candidateLead": "contrib/contenttypes/fields.py",
+      "goldFiles": [
+        "django/core/management/commands/inspectdb.py"
+      ],
+      "historicalRole": "discarded",
+      "candidateRole": "discarded",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-24627",
+      "repo": "matplotlib/matplotlib",
+      "before": "M152",
+      "after": "M154",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "lib/matplotlib/axes/_base.py",
+      "candidateLead": "lib/matplotlib/axes/_base.py",
+      "goldFiles": [
+        "lib/matplotlib/axes/_base.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "sympy__sympy-15875",
+      "repo": "sympy/sympy",
+      "before": "M152",
+      "after": "M154",
+      "historicalResult": "missing",
+      "candidateResult": "missing",
+      "historicalLead": "sympy/integrals/integrals.py",
+      "candidateLead": "sympy/integrals/integrals.py",
+      "goldFiles": [
+        "sympy/core/add.py"
+      ],
+      "historicalRole": "missing",
+      "candidateRole": "missing",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    },
+    {
+      "instance_id": "sympy__sympy-18189",
+      "repo": "sympy/sympy",
+      "before": "M152",
+      "after": "M154",
+      "historicalResult": "hit_top1_pivot",
+      "candidateResult": "hit_top1_pivot",
+      "historicalLead": "sympy/solvers/diophantine.py",
+      "candidateLead": "sympy/solvers/diophantine.py",
+      "goldFiles": [
+        "sympy/solvers/diophantine.py"
+      ],
+      "historicalRole": "pivot",
+      "candidateRole": "pivot",
+      "classification": "delivery",
+      "directionLabel": "NEUTRAL"
+    }
+  ]
+}

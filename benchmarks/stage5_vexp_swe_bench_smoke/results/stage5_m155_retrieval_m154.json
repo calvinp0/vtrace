@@ -1,0 +1,26 @@
+{
+  "schemaVersion": "stage5.m155.candidate-retrieval.v1",
+  "candidate": "M154",
+  "metrics": {
+    "label": "M154",
+    "cases": 100,
+    "evaluated": 100,
+    "unevaluated": 0,
+    "goldFileTop1": 0.57,
+    "goldFileTop3": 0.73,
+    "goldFileAnywhere": 0.89,
+    "goldSymbolScorable": 100,
+    "goldSymbolTop1": 0.29,
+    "goldSymbolTop3": 0.38,
+    "goldSymbolAnywhere": 0.64,
+    "missingGold": 0.11,
+    "goldDelivered": 0.78,
+    "goldDiscarded": 0.11,
+    "usefulSupport": 0.11,
+    "misleadingLead": 0.41,
+    "emptyResult": 0.02,
+    "tokensMean": 1648,
+    "tokensMedian": 1165,
+    "tokensP90": 3750
+  }
+}

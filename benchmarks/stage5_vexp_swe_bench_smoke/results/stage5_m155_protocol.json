@@ -1,0 +1,146 @@
+{
+  "schemaVersion": "stage5.m155.protocol.v1",
+  "milestone": "M155",
+  "frozenAt": "2026-08-16",
+  "purpose": "Broad SWE-bench regression and agent-utility qualification of the frozen M154 product.",
+  "candidate": {
+    "label": "M154",
+    "commit": "051a7c559efcc90848390922b8a42293fb66dba5",
+    "description": "M154 final functional commit (agent workflow safety + search-contract hardening).",
+    "m154Predecessor": "e3761ab989a14aea4e233844070491084f33b2ce",
+    "productFreeze": "No product code may change during M155. Behavioural repository routing default OFF."
+  },
+  "taskCorpus": {
+    "manifest": "benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_m155_task_manifest.json",
+    "caseCount": 100,
+    "repositoryCount": 12,
+    "fixtureSha256": "5ef1371ccaa1d941a7d8971a79df6d5b3ef243a3f5f4acf3d60b281775e06851",
+    "taskOrderHash": "3a1a09d196b80a056b05a10458e493c2da0b16a952aa004fe720dad1f360716e",
+    "goldLabelHash": "927308c91e811517a6d5e32687145685eead377cc95d14eff953bf5c62441d38",
+    "selectionSource": "historical — the frozen M103/M105-M108 100-case Stage 5 pool, reconstructed from stage5_m108_case_selection.json plus its committed M105/M106/M107 exclusion lists",
+    "vexpTaskListCopied": false
+  },
+  "layers": {
+    "note": "M155 §17 — retrieval-only qualification and live agent resolution are reported separately and never conflated.",
+    "deterministicRetrieval": {
+      "status": "RUNNING",
+      "driver": "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m140_paired_benchmark.ts",
+      "preparer": "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m134_prepare_targets.ts",
+      "scorer": "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_retrieval_eval.ts",
+      "intent": "debug",
+      "budgetTokens": 8000,
+      "queryShaping": "fixture task text, derived from problem_statement by the committed structured derivation. No per-task manual rewriting (§18).",
+      "goldLabels": "gold_patch; evaluation-only, never fed into retrieval",
+      "indexPolicy": "Each side indexes its OWN isolated copy of the same immutable source corpus with its own bin/vtrace. No index, manifest, parse cache or state is shared between sides.",
+      "costs": "no agent, no Docker, no VEXP, no network, no paid API"
+    },
+    "livePairedAgent": {
+      "status": "DEFERRED — user decision 2026-08-16: defer until B/C are read (§65, §95).",
+      "runner": "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts",
+      "runnerSha256": "ccd1247d7dd5b9556e57e52dda31e617637236ecbc68c3339dd8644d750b643c",
+      "protocolFlag": "--protocol all (baseline + vtrace-indexed; vexp NOT run, no --allow-vexp)",
+      "conditionA": "baseline — agent, no VTRACE context",
+      "conditionB": "vtrace-indexed — same agent, same tools, plus VTRACE context injected as text",
+      "model": "claude-opus-4-5-20251101 (historical Stage 5 model, recovered from captured M108 run rows)",
+      "maxTurns": 250,
+      "costLimitUsdPerTask": 3,
+      "allowedTools": [
+        "Edit",
+        "Write",
+        "Bash",
+        "Read",
+        "Glob",
+        "Grep",
+        "TodoWrite"
+      ],
+      "allowedToolsSource": "vexp-swe-bench/src/harness/orchestrator.ts DEFAULT_ALLOWED_TOOLS — IDENTICAL for both arms (§36 baseline not crippled, §37 VTRACE arm free to grep/read/git)",
+      "vtraceDelivery": "indexed-context injection via _vtrace_instructions.md. NOT MCP tools — see stage5_m155_protocol_audit.md Finding 1.",
+      "mcpConfig": "--strict-mcp-config with empty {mcpServers:{}}; no VTRACE tool is callable by the agent",
+      "promptDiff": "shared anti-loop tool-use-discipline block injected into BOTH arms; STAGE5_TOKEN_DISCIPLINE block is vtrace-only (documented asymmetry, §62)",
+      "grader": "authoritative SWE-bench grading via --mode evaluate --eval-mode docker (§104). Patch existence is never treated as success.",
+      "mandatoryGuards": [
+        "--stage5-env-guard",
+        "--stage5-env-drift-check",
+        "--expected-testbed-prefix",
+        "--stage5-agent-shell-guard",
+        "--stage5-host-pip-firewall"
+      ],
+      "sequential": "live runs share results/_agent_stream.jsonl and must not overlap"
+    }
+  },
+  "historicalAnchors": [
+    {
+      "label": "M129",
+      "commit": "1678871643c34e184e0fc9f5009a14ed4b7799ee",
+      "era": "document-aware retrieval"
+    },
+    {
+      "label": "M140",
+      "commit": "249f61feabf26ee183d500a8ffb761e2c3ac09e6",
+      "era": "structural module / orchestration correctness"
+    },
+    {
+      "label": "M150",
+      "commit": "6117f5f2dfa49ab0511db904100ed0b05c7b30fe",
+      "era": "behavioural decision / mechanism retrieval"
+    },
+    {
+      "label": "M152",
+      "commit": "bcdd962e42cfdfccbce89e14885a90f405ba3490",
+      "era": "repository-evidence / session-state split"
+    },
+    {
+      "label": "M154",
+      "commit": "051a7c559efcc90848390922b8a42293fb66dba5",
+      "era": "current candidate"
+    }
+  ],
+  "adjacentTransitions": [
+    "M129→M140",
+    "M140→M150",
+    "M150→M152",
+    "M152→M154"
+  ],
+  "rerunPolicy": {
+    "frozenBefore": "any live run",
+    "legitimate": [
+      "infrastructure failure",
+      "API/network failure",
+      "runner crash",
+      "corrupted environment",
+      "treatment invalidity (tool registration failed, index missing, wrong worktree, crash before model)"
+    ],
+    "illegitimate": [
+      "agent made a bad decision",
+      "patch failed tests",
+      "VTRACE gave a bad result",
+      "baseline happened to fail",
+      "disappointing outcome"
+    ],
+    "deterministicLayer": "a deterministic rerun is only permitted on infrastructure failure; identical inputs must reproduce identical semantic hashes"
+  },
+  "failureClassification": [
+    "valid completed run",
+    "infra failure",
+    "treatment-invalid run",
+    "rerun",
+    "excluded (with reason)"
+  ],
+  "provenance": {
+    "schema": "stage5.benchmark-provenance.v1",
+    "required": [
+      "provenanceValid",
+      "srcDirty=false",
+      "sameFixtureHash",
+      "isolatedIndexes",
+      "sameTargetCorpusHash"
+    ],
+    "failClosed": "comparePairedArtifacts fails closed on provenance mismatch; an exploratory override can never satisfy a milestone gate"
+  },
+  "invariants": {
+    "behaviouralRoutingDefault": "OFF for every M155 arm",
+    "searchSymbols": "NOT added in M155",
+    "crossRevisionIndexing": "NOT added in M155",
+    "productCodeChanged": "expected NO"
+  }
+}

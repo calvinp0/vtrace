@@ -2020,3 +2020,76 @@ routing default-OFF, now asserted by test. Holdouts unconsumed; ARC not run.
   repositories — zero paired regressions on BOTH sides, one improvement traded
   for one regression. Fixing a proven rule violation is worth doing; claiming it
   explains the original report is not, and C is MIXED for that reason.
+
+## M155 — Broad SWE-bench Regression and Agent-Utility Qualification (commit <evidence>)
+
+Verdict **INCOMPLETE at decision point** (A PASS · B PASS · C PASS · D DEFERRED ·
+E NOT RUN). Candidate `051a7c559efcc90848390922b8a42293fb66dba5` (M154 final
+functional). An evaluation milestone: no product code changed, behavioural routing
+default-OFF, `git status --porcelain src/` empty.
+
+A recovered the historical protocol from repository evidence and found three
+defects, two of which would have invalidated the measurement. B/C then rebuilt 500
+repository indexes — five architecture-era anchors (M129, M140, M150, M152, M154)
+each indexing its own isolated copy of the same immutable 100-case corpus with its
+own `bin/vtrace` — and ran four adjacent paired comparisons, all `provenanceValid`
+with isolated indexes and identical fixture hashes.
+
+Broad result across five eras: gold **delivered** to the model 79% → 78% (M140
+peak 80%), gold symbol anywhere **64.0% at every checkpoint**, File Top-3 73% →
+73%, File Top-1 +1pt, median tokens −20, median latency +19% (593 → 708 ms).
+Three regressions (all M129→M140, all `path authority`, incl. the known
+`sympy__sympy-12419`), zero delivered-gold improvements. M152 store split 0/100
+semantic changes; M154 2/100, all outcome-neutral pure discard-bucket movement.
+Verification: typechecks clean, `bun test` 4724 pass / 0 fail, `git diff --check`
+clean. Holdouts unconsumed; ARC and TCKDB not run; no live agent spend.
+
+## M155 standing findings
+
+- **The regression suite could not observe the work it was policing** (M155-A):
+  the committed `expanded`/`cross_repo_30` baselines, labelled authoritative, read
+  workspace indexes built once on 2026-06-08 at a commit 491 back. Freshly indexed
+  at M154 the same instance yields `document_chunks` 0→6, `symbol_mechanism_facts`
+  0→79, `module` symbols 0→69. M129's document lane, M150's mechanism facts and
+  M140-A's module import-owner contributed nothing to any measurement taken on
+  that corpus. The tables were present but empty — opening a stale index migrates
+  its schema without populating it, so the instrument reported a product whose
+  newest lanes were structurally inert, and reported it as authoritative.
+
+- **"Found" and "delivered" are different claims** (M155-B): `gold anywhere` rose
+  85% → 89% at M140→M150 and every downstream milestone inherited the gain. Over
+  the same step `discarded` rose 6% → 11% and gold actually delivered to the model
+  FELL 80% → 78%. Five of the eight improvements are cases moving
+  `missing → discarded`: gold entered the candidate pool and was still withheld. A
+  metric that counts evidence the model never sees will report progress that no
+  agent can use.
+
+- **Flat is a finding when the instrument can finally see** (M155-C): across five
+  architecture eras on the broad corpus, gold symbol anywhere is 64.0% at every
+  single checkpoint and File Top-3 is unchanged. The local wins were real in their
+  fixtures and did not accumulate. The reason is visible in the same run:
+  Frozen50's delivered-gold is 90% at all five checkpoints, and Frozen50 is ~19
+  points easier on Top-1 than the broad corpus. Steering by a suite that is both
+  easier and blind to index-side change is how five eras produced a flat result.
+
+- **The same path defect recurred, and the guard existed** (M155-B): the first
+  misleading-lead detector compared a repository-relative gold path against a
+  workspace-relative lead literally, scoring 26 of 100 correct leads as misleading
+  and putting Top-1 (57%) and misleading-lead (67%) at a sum above 100. M143-A hit
+  this exact defect — it inverted that milestone's conclusion — and left
+  `samePath` plus a permanent guard test behind. New benchmark code did not reach
+  for it. An arithmetic impossibility in the output caught it; nothing else would
+  have.
+
+- **A cost with no delivered benefit is still a cost** (M155-C): M150's mechanism
+  lane raised median retrieval latency 562 → 717 ms and p90 1249 → 1607 ms, and it
+  persists unchanged through M154. Over the same transition delivered gold fell.
+  The lane's benefit is real in its own fixtures; on 100 unfamiliar tasks it is
+  ~26% median latency for nothing the model receives.
+
+- **VTRACE has never been given to the agent as a tool** (M155-A): the Stage 5
+  VTRACE condition injects pre-computed text. `--vtrace-method mcp` parses and is
+  never dispatched; the harness spawns the agent with `--strict-mcp-config` and an
+  empty `{mcpServers:{}}`. Every question about tool discovery, usage rate, call
+  ordering and per-tool utility is therefore UNAVAILABLE rather than zero — and
+  the product's tool surface has never been measured in front of an agent at all.
