@@ -2,6 +2,8 @@
 import { access } from "node:fs/promises";
 import path from "node:path";
 
+import { Database } from "bun:sqlite";
+
 import { createCharacterBudget } from "../capsule/budget";
 import {
   CapsuleBudgetModel,
@@ -173,6 +175,7 @@ import { inspectIndexFreshness } from "../runtime/indexFreshness";
 import { reindexRepoAndRefreshState } from "../runtime/reindexRepo";
 import {
   readIndexMeta,
+  resolveIndexDbPath,
   type WorktreeIndexFreshnessResult,
 } from "../indexer/indexMeta";
 import {
@@ -206,6 +209,14 @@ import {
   type ResolvedWorkspaceRepoConfig,
 } from "../workspace/config";
 import { compareRecordedIdentity, RegistrationStatus } from "../workspace/registry";
+import {
+  ProductRouteOutcome,
+  resolveProductRoute,
+  type ProductRoute,
+  type ProductRoutingMetadata,
+} from "../workspace/productRoute";
+import { MAX_REPORTED_COVERAGE_EXAMPLES } from "../workspace/evidenceClaims";
+import { mergeRepositoryContributions } from "../workspace/workspaceProductContext";
 import { createMcpToolRegistry } from "./registry";
 import {
   McpErrorCode,
@@ -3325,13 +3336,29 @@ const INDEX_STATUS_SCHEMA = objectProperty(
           description: "Workspace name when configured.",
         },
         primaryRepoAlias: stringProperty("Primary repo alias."),
-        selectedRepos: arrayProperty("Selected repo aliases.", stringProperty("Repo alias.")),
-        configuredRepos: arrayProperty("All configured repo aliases.", stringProperty("Repo alias.")),
+        selectedRepos: arrayProperty("Bounded sample of selected repo aliases. `selectedReposTotal` carries the real count.", stringProperty("Repo alias.")),
+        selectedReposTotal: integerProperty("Selected repo aliases in total."),
+        configuredRepos: arrayProperty("Bounded sample of configured repo aliases. `configuredReposTotal` carries the real count.", stringProperty("Repo alias.")),
+        configuredReposTotal: integerProperty("Configured repo aliases in total."),
       },
       required: ["name", "primaryRepoAlias", "selectedRepos", "configuredRepos"],
       additionalProperties: false,
     },
-    repos: arrayProperty("Per-repo status entries when a multi-repo workspace config is active.", WORKSPACE_REPO_STATUS_SCHEMA),
+    coverage: objectProperty(
+      "M151 workspace census, computed over every selected member. Verdicts come from these totals, never from the bounded `repos` sample. Not a readiness verdict: repository readiness stays per repository.",
+      {
+        registeredMembers: integerProperty("Members the workspace registers."),
+        enabledMembers: integerProperty("Registered members that are enabled."),
+        readyMembers: integerProperty("Members whose index can currently answer."),
+        refusedMembers: integerProperty("Enabled members whose index cannot currently answer."),
+        unsettledMembers: integerProperty("Members whose state could not be established at all."),
+        coverageComplete: booleanProperty("True when every selected member returned a readiness answer. Independent of `omittedByBound`."),
+        omittedByBound: integerProperty("Member DETAIL RECORDS not serialized. A display bound, never an evidence gap."),
+        examplesEmitted: integerProperty("Member detail records actually serialized."),
+      },
+      ["registeredMembers", "enabledMembers", "readyMembers", "refusedMembers", "coverageComplete", "omittedByBound"],
+    ),
+    repos: arrayProperty("Bounded sample of per-repo status entries when a multi-repo workspace config is active. `coverage` carries the authoritative totals.", WORKSPACE_REPO_STATUS_SCHEMA),
     repoRoot: stringProperty("Bound repo root."),
     configPath: stringProperty("Repo-local config path."),
     statePath: stringProperty("Repo-local state path."),
@@ -4353,15 +4380,268 @@ function hasMultiRepoRequest(
   return selection.isWorkspace || (requestedAliases !== undefined && requestedAliases.length > 0);
 }
 
+/**
+ * M151: choose the repository a product request concerns, before anything opens
+ * an index.
+ *
+ * This replaces a gate that refused every workspace outright. The refusal tested
+ * whether a workspace EXISTED rather than what the request asked for, so it fired
+ * with no `repos` argument and with exactly one alias alike, and the remediation
+ * it advised ("omit repos or select exactly one") could not be performed.
+ *
+ * The route it returns is bound to a member's own root, and the caller rebinds to
+ * that root before `withReadyRepoDb`. Everything downstream — orchestration,
+ * product assembly, freshness, observations — then runs unchanged against one
+ * repository, which is what keeps a single response from describing two.
+ */
+async function resolveProductRouteForRequest(
+  context: McpServerContext,
+  toolId: McpToolId,
+  request: {
+    readonly query: string;
+    readonly requestedRoot?: string | undefined;
+    readonly repos?: readonly string[] | undefined;
+    readonly includeSupporting?: boolean | undefined;
+  },
+): Promise<
+  | { ok: true; route: ProductRoute }
+  | { ok: false; result: McpToolExecutionResult<never> }
+> {
+  if (context.repoRoot === null) {
+    return {
+      ok: false,
+      result: repoNotReady(toolId, `MCP tool ${toolId} requires a repo-bound server context.`),
+    };
+  }
+
+  const repos = request.repos ?? [];
+  if (repos.length > 1) {
+    return {
+      ok: false,
+      result: invalidRequest(
+        toolId,
+        "Selecting several repositories explicitly is not supported. Name one repository, "
+        + "or omit `repos` and pass include_supporting_repos to let routing compose bounded support.",
+        { requestedRepos: [...repos] },
+      ),
+    };
+  }
+
+  const route = await resolveProductRoute({
+    boundRepoRoot: context.repoRoot,
+    ...(request.requestedRoot === undefined ? {} : { requestedRoot: request.requestedRoot }),
+    ...(repos.length === 0 ? {} : { requestedAliases: repos }),
+    query: request.query,
+    ...(request.includeSupporting === undefined
+      ? {}
+      : { includeSupporting: request.includeSupporting }),
+  });
+
+  if (route.lead !== null) {
+    return { ok: true, route };
+  }
+
+  // No lead. The two failures are different facts and are reported as such: a
+  // request that under-specifies which member it concerns is answerable once it
+  // says, while a workspace whose members are all refused is not answerable at
+  // all until an index is repaired. Neither is phrased as an absence of the
+  // target from source code (§82).
+  const failure = route.explicitSelectionFailure;
+  const details = {
+    workspaceRouting: formatProductRoutingMetadata(route.routing),
+    // An explicit selection that did not resolve keeps naming the alias it did
+    // not recognise and the ones it knows. That contract predates M151 and
+    // callers depend on it.
+    ...(failure === null
+      ? { availableRepos: route.registry.repositories.map((repo) => repo.alias).slice(0, 8) }
+      : {
+        requestedRepos: [...repos],
+        unknownRepos: [...failure.unknownRepos],
+        availableRepos: [...failure.availableRepos],
+        routeReason: failure.reason,
+      }),
+  };
+
+  return {
+    ok: false,
+    result: route.outcome === ProductRouteOutcome.NoUsableMember
+      ? repoNotReady(toolId, route.routing.reason, details)
+      : invalidRequest(toolId, route.routing.reason, details),
+  };
+}
+
+/**
+ * Add bounded context from repositories routing nominated as SUPPORTING.
+ *
+ * The lead's response arrives already assembled by the ordinary pipeline and is
+ * returned unchanged when nothing supports it — which is every default request,
+ * because supporters are only ever discovered when the caller opted in. That is
+ * what makes "another member exists" unable to alter the lead's answer.
+ *
+ * Supporters are opened READ-ONLY and merged by the workspace layer's own
+ * allocator, so there is one cross-repository budget and one provenance rule
+ * rather than a second copy of either here (§43, §55).
+ */
+async function composeSupportingRepositories(input: {
+  readonly route: ProductRoute;
+  readonly leadContext: ProductContextResponse;
+  readonly task: string;
+  readonly intent: CapsuleIntent;
+  readonly budgetTokens: number;
+}): Promise<{
+  readonly context: ProductContextResponse;
+  readonly perRepository: readonly {
+    alias: string;
+    itemsSelected: number;
+    tokens: number;
+    itemsOmitted: number;
+  }[];
+}> {
+  if (input.route.supporting.length === 0) {
+    return { context: input.leadContext, perRepository: [] };
+  }
+
+  const contributions = [{ alias: input.route.lead!.alias, response: input.leadContext }];
+  const handles: Database[] = [];
+
+  try {
+    for (const supporter of input.route.supporting) {
+      let db: Database;
+      try {
+        // READ-ONLY: a supporting repository is not the request's target and a
+        // read path may not write to its index (§21, §90).
+        db = new Database(resolveIndexDbPath(supporter.rootPath), { readonly: true });
+      } catch {
+        continue;
+      }
+      handles.push(db);
+      contributions.push({
+        alias: supporter.alias,
+        response: await assembleProductContext({
+          db,
+          repoRoot: supporter.rootPath,
+          task: input.task,
+          intent: input.intent,
+          budgetTokens: input.budgetTokens,
+        }),
+      });
+    }
+
+    if (contributions.length === 1) {
+      return { context: input.leadContext, perRepository: [] };
+    }
+
+    // ONE envelope across every contributing repository, never one per repo.
+    const merged = mergeRepositoryContributions(contributions, input.leadContext, input.budgetTokens);
+
+    return { context: merged.context, perRepository: merged.perRepository };
+  } finally {
+    for (const handle of handles) {
+      try {
+        handle.close();
+      } catch {
+        // A supporting handle that cannot close must not fail the request.
+      }
+    }
+  }
+}
+
+/**
+ * The model-visible routing record. Counts and bounded examples only: M149
+ * removed member-by-member growth from the product layer, and serialising the
+ * router's own state here would put it straight back (§15, §62).
+ */
+function formatProductRoutingMetadata(routing: ProductRoutingMetadata) {
+  return {
+    isWorkspace: routing.isWorkspace,
+    outcome: routing.outcome,
+    routeSource: routing.routeSource,
+    reason: routing.reason,
+    decidingTier: routing.decidingTier,
+    leadRepository: routing.leadRepository,
+    supportingRepositories: [...routing.supportingRepositories].slice(0, MAX_REPORTED_COVERAGE_EXAMPLES),
+    supportersInspected: routing.supportersInspected,
+    uniquenessProven: routing.uniquenessProven,
+    coverage: {
+      repositoriesRegistered: routing.repositoriesRegistered,
+      repositoriesEnabled: routing.repositoriesEnabled,
+      repositoriesReady: routing.repositoriesReady,
+      repositoriesDeepProbed: routing.repositoriesDeepProbed,
+      excludedNotReadyTotal: routing.excludedNotReadyTotal,
+      excludedNotReadyOmitted: routing.excludedNotReadyOmitted,
+      excludedNotReady: [...routing.excludedNotReady].slice(0, MAX_REPORTED_COVERAGE_EXAMPLES),
+      candidates: [...routing.candidates].slice(0, MAX_REPORTED_COVERAGE_EXAMPLES),
+      evidence: routing.coverage.map((entry) => ({
+        capability: entry.capability,
+        purpose: entry.purpose,
+        scope: entry.scope,
+        considered: entry.considered,
+        answered: entry.answered,
+        refusedWithoutEvidence: entry.refusedWithoutEvidence,
+        omittedByBound: entry.omittedByBound,
+        unknownOther: entry.unknownOther,
+        complete: entry.complete,
+        examples: [...entry.examples],
+        examplesOmitted: entry.examplesOmitted,
+      })),
+    },
+  };
+}
+
 function formatWorkspaceMetadata(selection: WorkspaceRepoSelection) {
   const configuredAliases = selection.workspaceConfig?.repos.map((repo) => repo.alias)
     ?? selection.statuses.map((repo) => repo.repoAlias);
 
+  // M151: these were whole-workspace alias lists, so the block still grew with
+  // member count even after the status records were bounded. The counts carry
+  // the totals and the lists became bounded samples of them (§121).
   return {
     name: selection.workspaceConfig?.name ?? null,
     primaryRepoAlias: selection.workspaceConfig?.primaryRepoAlias ?? selection.selectedAliases[0] ?? "repo",
-    selectedRepos: [...selection.selectedAliases],
-    configuredRepos: [...configuredAliases],
+    selectedRepos: [...selection.selectedAliases].slice(0, MAX_REPORTED_COVERAGE_EXAMPLES),
+    selectedReposTotal: selection.selectedAliases.length,
+    configuredRepos: [...configuredAliases].slice(0, MAX_REPORTED_COVERAGE_EXAMPLES),
+    configuredReposTotal: configuredAliases.length,
+  };
+}
+
+/**
+ * M151: the workspace census `index_status` reports, computed over every selected
+ * member.
+ *
+ * Two things are deliberately kept apart.
+ *
+ * `omittedByBound` counts member DETAIL RECORDS that were not serialised. It is a
+ * display bound and says nothing about how much of the workspace was accounted
+ * for — `coverageComplete: true` alongside `omittedByBound: 996` is the normal
+ * shape for a large healthy workspace, because all 1000 members were counted and
+ * four were shown.
+ *
+ * `coverageComplete` is the epistemic claim: every selected member returned a
+ * readiness answer. It goes false when a member's state could not be established
+ * at all, never because the list was truncated.
+ *
+ * And neither one is a readiness verdict. Repository readiness stays per
+ * repository, exactly as M141/M148 left it (§18, §81).
+ */
+function summarizeWorkspaceCoverage(statuses: readonly WorkspaceRepoStatus[]) {
+  const enabled = statuses.filter((status) => status.enabled);
+  const ready = statuses.filter((status) => status.readiness?.status === "ready" && status.initialized);
+  const refused = enabled.filter((status) => status.readiness?.status !== "ready" || !status.initialized);
+  // A member whose config/state could not be read at all never answered the
+  // readiness question, so the census cannot claim to have covered it.
+  const unsettled = statuses.filter((status) => status.readiness === null && !status.configPresent);
+
+  return {
+    registeredMembers: statuses.length,
+    enabledMembers: enabled.length,
+    readyMembers: ready.length,
+    refusedMembers: refused.length,
+    unsettledMembers: unsettled.length,
+    coverageComplete: unsettled.length === 0,
+    // Detail records not serialised. A serialization bound, not an evidence gap.
+    omittedByBound: Math.max(0, statuses.length - MAX_REPORTED_COVERAGE_EXAMPLES),
+    examplesEmitted: Math.min(statuses.length, MAX_REPORTED_COVERAGE_EXAMPLES),
   };
 }
 
@@ -7752,6 +8032,102 @@ const RESPONSE_BUDGET_SCHEMA = objectProperty(
   ],
 );
 
+/**
+ * M151: which repository answered, and how much of the workspace that rests on.
+ *
+ * Additive and optional — a consumer that ignores it reads `productContext` and
+ * the capsule exactly as before (§41, §86). Everything here is a count or a
+ * bounded example list, so the block's size does not grow with the workspace
+ * (§15, §51, §62).
+ */
+const WORKSPACE_EVIDENCE_COVERAGE_SCHEMA: McpSchemaProperty = objectProperty(
+  "What one routing lane actually covered. Verdicts come from the full totals; `examples` is a bounded sample.",
+  {
+    capability: stringProperty("Evidence capability this scan used."),
+    purpose: stringProperty("`deciding` when the lane could choose a repository, `support` when it only gathered context."),
+    scope: stringProperty("The population the scan claims to cover."),
+    considered: integerProperty("Members in that population."),
+    answered: integerProperty("Members that returned a trustworthy answer."),
+    refusedWithoutEvidence: integerProperty("Members whose index this runtime refused. Repair the index."),
+    omittedByBound: integerProperty("Members the scan bound never reached. Raise the bound."),
+    unknownOther: integerProperty("Ready, but unanswerable for another reason."),
+    complete: booleanProperty("True only when every considered member answered."),
+    examples: arrayProperty(
+      "Bounded examples. Never the population, and never the basis of a verdict.",
+      objectProperty("One named member and why it is listed.", {
+        alias: stringProperty("Workspace member alias."),
+        reason: stringProperty("Why this member is an example."),
+      }, ["alias", "reason"]),
+    ),
+    examplesOmitted: integerProperty("Members matching this example set that were not named."),
+  },
+  ["capability", "purpose", "scope", "considered", "answered", "complete"],
+);
+
+const WORKSPACE_ROUTING_SCHEMA: McpSchemaProperty = objectProperty(
+  "M151 workspace routing provenance: which repository answered and what the routing scan covered. Absent for a request that resolved without a workspace.",
+  {
+    isWorkspace: booleanProperty("Whether a workspace config governed this request."),
+    outcome: stringProperty("single_repository | explicit_member | routed | configured_member | abstained | no_usable_member."),
+    routeSource: {
+      type: ["string", "null"],
+      description: "Which authority or evidence tier selected the lead repository.",
+    },
+    reason: stringProperty("Why routing reached this outcome. Never a claim about whether a target exists in source."),
+    decidingTier: {
+      type: ["string", "null"],
+      description: "The evidence tier that decided, when evidence decided.",
+    },
+    leadRepository: {
+      type: ["string", "null"],
+      description: "Alias of the repository whose retrieval produced this response.",
+    },
+    supportingRepositories: arrayProperty(
+      "Repositories contributing bounded supporting context. Empty unless the request opted in; an empty list is never a claim that no repository could support it — read `supportersInspected`.",
+      stringProperty("Workspace member alias."),
+    ),
+    supportersInspected: booleanProperty("Whether supporting repositories were looked for at all."),
+    uniquenessProven: booleanProperty("Whether the deciding lane proved no other member could hold the target. False when a member could not be checked; never an absence claim either way."),
+    perRepository: arrayProperty(
+      "Token accounting per contributing repository, present only when more than one contributed.",
+      objectProperty("One repository's share of the single shared envelope.", {
+        alias: stringProperty("Workspace member alias."),
+        itemsSelected: integerProperty("Items this repository contributed."),
+        tokens: integerProperty("Tokens this repository's items consumed."),
+        itemsOmitted: integerProperty("Items this repository offered that the shared budget omitted."),
+      }, ["alias", "itemsSelected", "tokens", "itemsOmitted"]),
+    ),
+    coverage: objectProperty(
+      "Bounded workspace census for this request. Counts are authoritative; named lists are bounded samples.",
+      {
+        repositoriesRegistered: integerProperty("Members registered in the workspace."),
+        repositoriesEnabled: integerProperty("Registered members that are enabled."),
+        repositoriesReady: integerProperty("Enabled members whose index can currently answer."),
+        repositoriesDeepProbed: integerProperty("Members whose index was opened read-only to prove a route."),
+        excludedNotReadyTotal: integerProperty("Enabled members excluded because their index cannot answer."),
+        excludedNotReadyOmitted: integerProperty("Excluded members not named in `excludedNotReady`."),
+        excludedNotReady: arrayProperty(
+          "Bounded examples of excluded members. A safety exclusion, never a relevance judgement.",
+          objectProperty("One excluded member.", {
+            alias: stringProperty("Workspace member alias."),
+            reason: stringProperty("Why its index cannot answer."),
+          }, ["alias", "reason"]),
+        ),
+        candidates: arrayProperty(
+          "Bounded plausible set when routing could not decide.",
+          stringProperty("Workspace member alias."),
+        ),
+        evidence: arrayProperty(
+          "Per-lane coverage. At most one entry per lane that ran.",
+          WORKSPACE_EVIDENCE_COVERAGE_SCHEMA,
+        ),
+      },
+      ["repositoriesRegistered", "repositoriesEnabled", "repositoriesReady", "repositoriesDeepProbed"],
+    ),
+  },
+  ["isWorkspace", "outcome", "reason", "leadRepository", "supportersInspected", "uniquenessProven", "coverage"],
+);
+
 const PRODUCT_CONTEXT_RESPONSE_SCHEMA: McpSchemaProperty = {
   type: "object",
   description: "Versioned M119 role-aware product context shared by get_code_context, get_context_capsule, and run_pipeline. It includes repository/freshness identity, deduplicated items, final model-visible text, approximate token accounting, and monotonic latency accounting.",
@@ -8177,6 +8553,7 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
           accounting: CONTEXT_ACCOUNTING_SCHEMA,
           responseBudget: RESPONSE_BUDGET_SCHEMA,
           productContext: PRODUCT_CONTEXT_RESPONSE_SCHEMA,
+          workspaceRouting: WORKSPACE_ROUTING_SCHEMA,
           capsuleResult: CAPSULE_V2_PRODUCT_RESPONSE_SCHEMA,
           authoritativeCapsuleManifestId: {
             type: ["string", "null"],
@@ -8250,6 +8627,14 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
       const legacyIntentRequested = parseOptionalStringField(McpToolId.RunPipeline, input, "intent");
       const intentRequested = presetRequested ?? legacyIntentRequested;
       const repos = parseOptionalStringArrayField(McpToolId.RunPipeline, input, "repos");
+      // M151: opt in to bounded supporting-repository context. Off by default so
+      // an ordinary workspace request costs one retrieval, and so another member
+      // merely EXISTING can never change what the lead returns.
+      const includeSupportingRepos = parseOptionalBoolean(
+        McpToolId.RunPipeline,
+        input,
+        "include_supporting_repos",
+      );
 
       // Hidden migration aliases; compatibility validation never changes routing.
       const engineSnake = parseOptionalStringField(McpToolId.RunPipeline, input, "capsule_engine");
@@ -8328,6 +8713,9 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
       if (repos !== undefined && !Array.isArray(repos)) {
         return repos;
       }
+      if (includeSupportingRepos !== undefined && typeof includeSupportingRepos !== "boolean") {
+        return includeSupportingRepos;
+      }
       if (engineSnake !== undefined && typeof engineSnake !== "string") {
         return engineSnake;
       }
@@ -8381,22 +8769,25 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
         );
       }
 
-      const selection = await resolveWorkspaceRepoSelection(context, McpToolId.RunPipeline, repos);
+      const routed = await resolveProductRouteForRequest(context, McpToolId.RunPipeline, {
+        query,
+        ...(requestedRoot === undefined ? {} : { requestedRoot }),
+        ...(repos === undefined ? {} : { repos }),
+        ...(includeSupportingRepos === undefined
+          ? {}
+          : { includeSupporting: includeSupportingRepos }),
+      });
 
-      if (!selection.ok) {
-        return selection.result;
+      if (!routed.ok) {
+        return routed.result;
       }
 
-      if (hasMultiRepoRequest(selection.selection, repos)) {
-        return invalidRequest(
-          McpToolId.RunPipeline,
-          "The authoritative capsule is currently single-repo; omit repos or select exactly one.",
-          {},
-        );
-      }
+      const productRoute = routed.route;
 
+      // Bind to the member routing chose. `requestedRoot` still overrides, so an
+      // explicit root keeps M132's precedence exactly as it was.
       return withReadyRepoDb(
-        context,
+        rebindMcpContext(context, productRoute.lead!.rootPath),
         McpToolId.RunPipeline,
         async (binding, db) => {
           const currentObservationContext = await resolveCurrentObservationContext(binding.repoRoot);
@@ -8532,12 +8923,24 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
             ...(sessionId === undefined ? {} : { sessionId }),
           });
 
+          // M151: bounded supporting-repository context, only when the request
+          // asked for it. `productContext` above is the lead's own response and
+          // is what a default request returns untouched, so the mere existence
+          // of another member cannot change the answer.
+          const composition = await composeSupportingRepositories({
+            route: productRoute,
+            leadContext: productContext,
+            task: query,
+            intent: capsuleV2Intent ?? capsuleIntentForPreset(orchestration.intentDecision.selected),
+            budgetTokens: capsuleBudgetTokens ?? maxTokens ?? CAPSULE_V2_PRODUCT_DEFAULT_BUDGET_TOKENS,
+          });
+
           // One compact provenance stamp per response: which worktree answered and
           // why it was chosen. Request-level, never repeated per selected item.
           const routedProductContext = {
-            ...productContext,
+            ...composition.context,
             repository: {
-              ...productContext.repository,
+              ...composition.context.repository,
               routingSource: routingSourceFor({
                 requestedRoot,
                 clientContextRoot: context.clientContextRoot ?? null,
@@ -8549,6 +8952,12 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
           const assembledOutput = {
             ...output,
             productContext: routedProductContext,
+            workspaceRouting: {
+              ...formatProductRoutingMetadata(productRoute.routing),
+              ...(composition.perRepository.length === 0
+                ? {}
+                : { perRepository: composition.perRepository }),
+            },
             diagnostics: {
               ...output.diagnostics,
               freshness,
@@ -9080,6 +9489,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
           inspectFirst: INSPECT_FIRST_SCHEMA,
           accounting: CONTEXT_ACCOUNTING_SCHEMA,
           productContext: PRODUCT_CONTEXT_RESPONSE_SCHEMA,
+          workspaceRouting: WORKSPACE_ROUTING_SCHEMA,
           classification: CLASSIFICATION_SCHEMA,
           routingProfile: ROUTING_PROFILE_SCHEMA,
           capsuleProfile: CAPSULE_PROFILE_SCHEMA,
@@ -9215,22 +9625,22 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
         );
       }
 
-      const selection = await resolveWorkspaceRepoSelection(context, McpToolId.GetContextCapsule, repos);
+      // M151: the same resolver `run_pipeline` uses, so both surfaces agree on
+      // which repository answered rather than one routing and the other not (§42).
+      const routed = await resolveProductRouteForRequest(context, McpToolId.GetContextCapsule, {
+        query,
+        ...(requestedRoot === undefined ? {} : { requestedRoot }),
+        ...(repos === undefined ? {} : { repos }),
+      });
 
-      if (!selection.ok) {
-        return selection.result;
+      if (!routed.ok) {
+        return routed.result;
       }
 
-      if (hasMultiRepoRequest(selection.selection, repos)) {
-        return invalidRequest(
-          McpToolId.GetContextCapsule,
-          "The authoritative capsule is currently single-repo; omit repos or select exactly one.",
-          {},
-        );
-      }
+      const productRoute = routed.route;
 
       return withReadyRepoDb(
-        context,
+        rebindMcpContext(context, productRoute.lead!.rootPath),
         McpToolId.GetContextCapsule,
         async (binding, db) => {
           const sourceRunId = getLatestIndexRun(db)?.id ?? null;
@@ -9282,6 +9692,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
             capsuleManifestId,
             capsuleResult,
             productContext,
+            workspaceRouting: formatProductRoutingMetadata(productRoute.routing),
           };
           const accounting = await buildContextAccountingBestEffort({
             repoRoot: binding.repoRoot,
@@ -9792,11 +10203,20 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
       }
 
       if (hasMultiRepoRequest(selection.selection, repos)) {
+        // M151: one full status record per member had no bound, so a 1000-member
+        // workspace serialised 1000 of them. The census below is computed over
+        // EVERY selected member and the record list is a bounded sample of it —
+        // truth from the totals, never from what happened to be displayed (§39).
+        const statuses = selection.selection.statuses;
+
         return {
           ok: true,
           output: {
             workspace: formatWorkspaceMetadata(selection.selection),
-            repos: selection.selection.statuses.map(formatWorkspaceRepoStatus),
+            coverage: summarizeWorkspaceCoverage(statuses),
+            // Deterministic: `statuses` follows the config's own member order,
+            // so the sample does not depend on filesystem or SQLite ordering.
+            repos: statuses.slice(0, MAX_REPORTED_COVERAGE_EXAMPLES).map(formatWorkspaceRepoStatus),
             runtime: getRuntimeProvenance(),
           },
         };

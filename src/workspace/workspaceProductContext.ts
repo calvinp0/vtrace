@@ -200,7 +200,20 @@ export async function assembleWorkspaceProductContext(
  * shared budget. The lead repository's response is the base, so its request-level
  * facts (repository identity, freshness, intent) stay authoritative rather than
  * being recomputed from a blend.
+ *
+ * Exported for M151: the real product path routes and retrieves its lead through
+ * the MCP pipeline, then composes supporters here. Sharing this function is what
+ * keeps there being ONE cross-repository allocator and one provenance rule rather
+ * than a second copy in an MCP handler (§43, §55).
  */
+export function mergeRepositoryContributions(
+  contributions: readonly { alias: string; response: ProductContextResponse }[],
+  leadContext: ProductContextResponse,
+  budgetTokens: number | undefined,
+): Pick<WorkspaceProductContextResult, "context" | "perRepository"> {
+  return mergeContributions(contributions, leadContext, budgetTokens);
+}
+
 function mergeContributions(
   contributions: readonly { alias: string; response: ProductContextResponse }[],
   leadContext: ProductContextResponse,

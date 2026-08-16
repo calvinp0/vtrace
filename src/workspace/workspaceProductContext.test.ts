@@ -124,11 +124,20 @@ const semanticView = (response: NonNullable<Awaited<ReturnType<typeof runDirect>
 // ---------------------------------------------------------------------------
 
 describe("M146-B single-repository structural no-op (§14)", () => {
-  test("no production module outside src/workspace reaches the router or aggregator", async () => {
-    // Output equality alone would not prove this: it would still hold if every
-    // ordinary request ran the router and happened to agree. The guarantee is
-    // that ordinary requests cannot reach it at all.
+  test("only the declared product seam reaches the router or aggregator", async () => {
+    // M146-B asserted NOTHING outside src/workspace reached these modules, which
+    // was true and was also the defect M151 existed to fix: four milestones of
+    // routing were unreachable from the product.
+    //
+    // The invariant that survives is narrower and is the one that actually
+    // protects single-repository behaviour: exactly ONE production module may
+    // compose the workspace layer, so there is a single seam to audit rather
+    // than a handler that grew its own repository loop (§43). That a request
+    // without a workspace config still never runs the router is a BEHAVIOURAL
+    // guarantee, measured through the real product surface by the M151 corpus,
+    // not something an import graph can establish either way.
     const workspaceModules = ["workspaceProductContext", "repositoryRelevance", "crossRepoAggregation"];
+    const authorizedSeam = new Set(["src/mcp/tools.ts -> workspaceProductContext"]);
     const offenders: string[] = [];
 
     const walk = async (dir: string): Promise<void> => {
@@ -143,7 +152,8 @@ describe("M146-B single-repository structural no-op (§14)", () => {
         const source = await readFile(entryPath, "utf8");
         for (const module of workspaceModules) {
           if (new RegExp(`from\\s+["'][^"']*${module}["']`).test(source)) {
-            offenders.push(`${path.relative(VTRACE_ROOT, entryPath)} -> ${module}`);
+            const reference = `${path.relative(VTRACE_ROOT, entryPath)} -> ${module}`;
+            if (!authorizedSeam.has(reference)) offenders.push(reference);
           }
         }
       }
