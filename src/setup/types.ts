@@ -2,6 +2,9 @@ import type { EnsureIndexAccessCapabilityOutcome } from "../access/indexAccessLi
 import type { ProgressReporter } from "../cli/progress";
 import type { IndexProjectResult } from "../indexer/types";
 import type { IndexRunSummary } from "../memory/types";
+// Type-only: the runtime edge runs the other way (generatedStateExclusion reads
+// REPO_LOCAL_STATE_DIRNAME from here), so this import is erased at compile time.
+import type { GeneratedStateExclusionResult } from "./generatedStateExclusion";
 
 export const INIT_STATE_SCHEMA_VERSION = "1.0.0" as const;
 export const REPO_LOCAL_STATE_DIRNAME = ".vtrace" as const;
@@ -149,4 +152,12 @@ export interface InitRepoResult {
    * migration failed is initialized and usable, only unoptimized.
    */
   accessCapability: EnsureIndexAccessCapabilityOutcome;
+  /**
+   * M154-B. What initialization did about `.vtrace/` being stageable. Like
+   * `accessCapability`, a physical outcome rather than a readiness verdict: a
+   * repository that could not gain the exclusion is fully initialized, it just
+   * stages unsafely — which is exactly why the result carries a `remediation`
+   * string the caller is expected to surface.
+   */
+  generatedStateExclusion: GeneratedStateExclusionResult;
 }

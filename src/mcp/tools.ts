@@ -171,6 +171,10 @@ import {
   resolveRepoLocalPaths,
 } from "../setup/repoState";
 import { initRepo } from "../setup/initRepo";
+import {
+  ensureGeneratedStateExcluded,
+  type GeneratedStateExclusionResult,
+} from "../setup/generatedStateExclusion";
 import type { RepoLocalConfig, RepoLocalState } from "../setup/types";
 import { buildFileWatcherStatus } from "../runtime/fileWatcher";
 import { inspectIndexFreshness } from "../runtime/indexFreshness";
@@ -6625,6 +6629,7 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
     indexReadiness: IndexReadinessSummary;
     outcomes: BoundedIndexOutcomes;
     fileOutcomes: IndexProjectResult["files"];
+    generatedStateExclusion: GeneratedStateExclusionResult;
   }>({
     metadata: {
       toolId: McpToolId.IndexRepo,
@@ -6683,8 +6688,21 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
             required: ["path", "language", "status", "diagnostics"],
             additionalProperties: false,
           }),
+          generatedStateExclusion: objectProperty(
+            "What indexing did about vtrace's own generated state being stageable by `git add -A`. Local and untracked: no tracked project file and no global Git configuration is ever modified.",
+            {
+              status: stringProperty("established | already_ignored | not_a_git_repository | tracked_paths_present | unavailable."),
+              pattern: { type: ["string", "null"], description: "Root-anchored ignore pattern that applies, or null." },
+              excludeFilePath: { type: ["string", "null"], description: "Local exclude file consulted or written. In a linked worktree this is the SHARED common-dir file, the only one Git reads." },
+              wroteFile: booleanProperty("True only when this call wrote bytes. False on every repeat."),
+              ignoredBy: { type: ["string", "null"], description: "Pre-existing rule already covering the directory, when one does." },
+              trackedPaths: arrayProperty("Tracked paths under .vtrace/, bounded. Non-empty only when vtrace refused.", stringProperty("Repo-relative path.")),
+              remediation: { type: ["string", "null"], description: "Set whenever generated state is still stageable. Surface it." },
+            },
+            ["status", "pattern", "excludeFilePath", "wroteFile", "ignoredBy", "trackedPaths", "remediation"],
+          ),
         },
-        ["repoRoot", "latestRunId", "readiness", "indexSummary", "latestRun", "lock", "performance", "indexReadiness", "outcomes", "fileOutcomes"],
+        ["repoRoot", "latestRunId", "readiness", "indexSummary", "latestRun", "lock", "performance", "indexReadiness", "outcomes", "fileOutcomes", "generatedStateExclusion"],
       ),
     },
     async handler({ context, request }) {
@@ -6785,10 +6803,17 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
         { mode: detail === "debug" ? "debug" : "summary" },
       );
 
+      // M154-B. `initRepo` establishes this on a first index, but a repository
+      // initialized before the exclusion existed reaches this handler through
+      // the reindex branch and would never gain it. Re-asserting is idempotent
+      // and writes nothing when a rule already covers the directory.
+      const generatedStateExclusion = await ensureGeneratedStateExcluded(repoRoot);
+
       return {
         ok: true,
         output: {
           repoRoot,
+          generatedStateExclusion,
           latestRunId: state.latestRunId,
           readiness: state.readiness,
           indexSummary: state.indexSummary,

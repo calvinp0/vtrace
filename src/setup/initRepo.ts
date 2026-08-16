@@ -7,6 +7,7 @@ import {
 import { getLatestIndexRun, getIndexRunSummary } from "../db/repositories/indexRunsRepository";
 import { openIndexerDatabase } from "../db/sqlite";
 import { readGitHead } from "../fs/git";
+import { ensureGeneratedStateExcluded } from "./generatedStateExclusion";
 import { recordIndexMeta } from "../indexer/indexMeta";
 import { withWorktreeIndexLock } from "../indexer/worktreeIndexLock";
 import { indexProject } from "../indexer/indexProject";
@@ -47,6 +48,12 @@ async function initRepoUnlocked(
   detection: Awaited<ReturnType<typeof detectRepoRoot>>,
 ): Promise<InitRepoResult> {
   const paths = resolveRepoLocalPaths(detection.repoRoot);
+
+  // Before the first byte of generated state exists, not after: the window in
+  // which `.vtrace/` is untracked-and-unignored is the window in which `git add -A`
+  // sweeps it into a commit, and initialization is the only lifecycle point that
+  // reliably precedes it.
+  const generatedStateExclusion = await ensureGeneratedStateExcluded(detection.repoRoot);
 
   await ensureRepoLocalStateDirectory(paths);
 
@@ -133,6 +140,7 @@ async function initRepoUnlocked(
       state,
       indexResult,
       accessCapability,
+      generatedStateExclusion,
     };
   } finally {
     db.close();
