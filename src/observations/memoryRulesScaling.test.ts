@@ -15,8 +15,9 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 
 import { openIndexerDatabase } from "../db/sqlite";
+import { createTestProductStores } from "../testing/productStores";
 import { getLatestIndexRun } from "../db/repositories/indexRunsRepository";
-import { listObservations, persistObservation } from "../db/repositories/observationsRepository";
+import { listObservations, persistObservation } from "../session/repositories/observationsRepository";
 import { listSymbolsForFile } from "../db/repositories/symbolsRepository";
 import { indexProject } from "../indexer/indexProject";
 import { ObservationKind, ObservationSource } from "./types";
@@ -49,6 +50,12 @@ function moduleSource(fileName: string, symbolCount: number, generation: number)
 
 interface Fixture {
   readonly db: Database;
+  /**
+   * Both stores. The query counter below instruments the INDEX handle only,
+   * which is exactly what M141 measures: run-chain discovery behind staleness.
+   * Loading the observations themselves is a session read and legitimately O(N).
+   */
+  readonly stores: ReturnType<typeof createTestProductStores>;
   readonly repoRoot: string;
   readonly latestRunId: number;
   queries(): number;
@@ -64,6 +71,7 @@ async function buildFixture(input: {
   const repoRoot = await mkdtemp(path.join(tmpdir(), "m141-memscale-"));
   roots.push(repoRoot);
   const db = openIndexerDatabase();
+  const stores = createTestProductStores(db);
 
   for (let generation = 1; generation <= input.runCount; generation += 1) {
     for (const fileName of FILES) {
@@ -79,7 +87,7 @@ async function buildFixture(input: {
     .flatMap((fileName) => listSymbolsForFile(db, fileName).map((symbol) => symbol.id));
 
   for (let index = 0; index < input.observationCount; index += 1) {
-    persistObservation(db, {
+    persistObservation(stores, {
       repoRoot,
       sessionId: "m141-session",
       kind: ObservationKind.Insight,
@@ -104,11 +112,12 @@ async function buildFixture(input: {
 
   return {
     db,
+    stores,
     repoRoot,
     latestRunId: getLatestIndexRun(db)!.id,
     queries: () => queries,
     reset: () => { queries = 0; },
-    close: () => db.close(),
+    close: () => stores.close(),
   };
 }
 
@@ -120,7 +129,7 @@ describe("M141 memory-rule scaling", () => {
     for (const observationCount of counts) {
       const fixture = await buildFixture({ runCount: 5, symbolsPerFile: 60, observationCount });
       fixture.reset();
-      searchMemory(fixture.db, { query: "alpha", maxResults: 5 });
+      searchMemory(fixture.stores, { query: "alpha", maxResults: 5 });
       measured.push({ observations: observationCount, queries: fixture.queries() });
       fixture.close();
     }
@@ -135,7 +144,7 @@ describe("M141 memory-rule scaling", () => {
 
   test("the run-diff memo does not change any staleness verdict", async () => {
     const fixture = await buildFixture({ runCount: 5, symbolsPerFile: 60, observationCount: 30 });
-    const observations = listObservations(fixture.db);
+    const observations = listObservations(fixture.stores.session);
 
     const uncached = observations.map((observation) => (
       getObservationStaleness(fixture.db, observation, fixture.latestRunId)
@@ -156,8 +165,8 @@ describe("M141 memory-rule scaling", () => {
 
     // "zeta" matches nothing, so no observation may survive; "alpha finding 3"
     // matches, and its staleness must be resolved exactly as before.
-    expect(searchMemory(fixture.db, { query: "zeta", maxResults: 10 })).toEqual([]);
-    const matched = searchMemory(fixture.db, { query: "alpha finding 3", maxResults: 10 });
+    expect(searchMemory(fixture.stores, { query: "zeta", maxResults: 10 })).toEqual([]);
+    const matched = searchMemory(fixture.stores, { query: "alpha finding 3", maxResults: 10 });
     expect(matched.length).toBeGreaterThan(0);
     for (const result of matched) {
       expect(result.staleness.observationId).toBe(result.observation.id);

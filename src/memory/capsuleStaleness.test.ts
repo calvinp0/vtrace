@@ -21,10 +21,11 @@ import {
   getCapsuleManifestById,
   getCapsuleStaleness,
   persistCapsuleManifest,
-} from "../db/repositories/capsuleManifestsRepository";
+} from "../session/repositories/capsuleManifestsRepository";
 import { listIndexRuns } from "../db/repositories/indexRunsRepository";
 import { listSymbolsForFile } from "../db/repositories/symbolsRepository";
 import { openIndexerDatabase } from "../db/sqlite";
+import { createTestProductStores } from "../testing/productStores";
 import { EdgeType, SymbolKind, type SymbolRecord } from "../domain/types";
 import { indexProject } from "../indexer/indexProject";
 import { routeQuery } from "../intent/routeQuery";
@@ -48,11 +49,12 @@ test("a persisted source-backed capsule manifest remains fresh across an unchang
   await withTempRepo(async (repoRoot) => {
     await writeCapsuleTrustRepo(repoRoot);
     const db = openIndexerDatabase();
+    const stores = createTestProductStores(db);
 
     try {
       await indexProject({ repoRoot, db });
       const sourceRunId = latestRunId(db);
-      const manifest = persistCapsuleManifest(db, {
+      const manifest = persistCapsuleManifest(stores, {
         sourceRunId,
         capsule: buildSourceBackedCapsule(db, repoRoot),
         createdAtMs: 1,
@@ -86,11 +88,11 @@ test("a persisted source-backed capsule manifest remains fresh across an unchang
           },
         ],
       );
-      assert.deepEqual(getCapsuleManifestById(db, manifest.id), manifest);
+      assert.deepEqual(getCapsuleManifestById(stores.session, manifest.id), manifest);
 
       await indexProject({ repoRoot, db });
       const comparisonRunId = latestRunId(db);
-      const staleness = getCapsuleStaleness(db, manifest.id, comparisonRunId);
+      const staleness = getCapsuleStaleness(stores, manifest.id, comparisonRunId);
 
       assert.equal(staleness?.status, StaleStateStatus.Fresh);
       assert.deepEqual(
@@ -110,10 +112,11 @@ test("file removal marks affected capsule items stale", async () => {
   await withTempRepo(async (repoRoot) => {
     await writeCapsuleTrustRepo(repoRoot);
     const db = openIndexerDatabase();
+    const stores = createTestProductStores(db);
 
     try {
       await indexProject({ repoRoot, db });
-      const manifest = persistCapsuleManifest(db, {
+      const manifest = persistCapsuleManifest(stores, {
         sourceRunId: latestRunId(db),
         capsule: buildSourceBackedCapsule(db, repoRoot),
         createdAtMs: 1,
@@ -122,7 +125,7 @@ test("file removal marks affected capsule items stale", async () => {
       await rm(path.join(repoRoot, "src", "service.ts"));
       await indexProject({ repoRoot, db });
 
-      const staleness = getCapsuleStaleness(db, manifest.id, latestRunId(db));
+      const staleness = getCapsuleStaleness(stores, manifest.id, latestRunId(db));
 
       assert.equal(staleness?.status, StaleStateStatus.Stale);
       assert.deepEqual(
@@ -149,10 +152,11 @@ test("symbol removal marks compressed capsule items stale without source-backed 
   await withTempRepo(async (repoRoot) => {
     await writeCapsuleTrustRepo(repoRoot);
     const db = openIndexerDatabase();
+    const stores = createTestProductStores(db);
 
     try {
       await indexProject({ repoRoot, db });
-      const manifest = persistCapsuleManifest(db, {
+      const manifest = persistCapsuleManifest(stores, {
         sourceRunId: latestRunId(db),
         capsule: buildCompressedCapsule(db),
         createdAtMs: 1,
@@ -168,7 +172,7 @@ test("symbol removal marks compressed capsule items stale without source-backed 
       );
       await indexProject({ repoRoot, db });
 
-      const staleness = getCapsuleStaleness(db, manifest.id, latestRunId(db));
+      const staleness = getCapsuleStaleness(stores, manifest.id, latestRunId(db));
 
       assert.equal(staleness?.items[0]?.status, StaleStateStatus.Stale);
       assert.deepEqual(
@@ -185,10 +189,11 @@ test("symbol modification marks compressed capsule items stale", async () => {
   await withTempRepo(async (repoRoot) => {
     await writeCapsuleTrustRepo(repoRoot);
     const db = openIndexerDatabase();
+    const stores = createTestProductStores(db);
 
     try {
       await indexProject({ repoRoot, db });
-      const manifest = persistCapsuleManifest(db, {
+      const manifest = persistCapsuleManifest(stores, {
         sourceRunId: latestRunId(db),
         capsule: buildCompressedCapsule(db),
         createdAtMs: 1,
@@ -204,7 +209,7 @@ test("symbol modification marks compressed capsule items stale", async () => {
       );
       await indexProject({ repoRoot, db });
 
-      const staleness = getCapsuleStaleness(db, manifest.id, latestRunId(db));
+      const staleness = getCapsuleStaleness(stores, manifest.id, latestRunId(db));
 
       assert.equal(staleness?.items[0]?.status, StaleStateStatus.Stale);
       assert.deepEqual(
@@ -221,10 +226,11 @@ test("source-backed file modification marks affected items stale even when the r
   await withTempRepo(async (repoRoot) => {
     await writeCapsuleTrustRepo(repoRoot);
     const db = openIndexerDatabase();
+    const stores = createTestProductStores(db);
 
     try {
       await indexProject({ repoRoot, db });
-      const manifest = persistCapsuleManifest(db, {
+      const manifest = persistCapsuleManifest(stores, {
         sourceRunId: latestRunId(db),
         capsule: buildSourceBackedCapsule(db, repoRoot),
         createdAtMs: 1,
@@ -241,7 +247,7 @@ test("source-backed file modification marks affected items stale even when the r
       );
       await indexProject({ repoRoot, db });
 
-      const staleness = getCapsuleStaleness(db, manifest.id, latestRunId(db));
+      const staleness = getCapsuleStaleness(stores, manifest.id, latestRunId(db));
 
       assert.equal(staleness?.items[0]?.status, StaleStateStatus.Stale);
       assert.deepEqual(
@@ -259,10 +265,11 @@ test("unrelated later changes do not falsely mark capsule items stale", async ()
   await withTempRepo(async (repoRoot) => {
     await writeCapsuleTrustRepo(repoRoot);
     const db = openIndexerDatabase();
+    const stores = createTestProductStores(db);
 
     try {
       await indexProject({ repoRoot, db });
-      const manifest = persistCapsuleManifest(db, {
+      const manifest = persistCapsuleManifest(stores, {
         sourceRunId: latestRunId(db),
         capsule: buildSourceBackedCapsule(db, repoRoot),
         createdAtMs: 1,
@@ -271,7 +278,7 @@ test("unrelated later changes do not falsely mark capsule items stale", async ()
       await writeFile(path.join(repoRoot, "src", "extra.ts"), "export const extra = 1;\n");
       await indexProject({ repoRoot, db });
 
-      const staleness = getCapsuleStaleness(db, manifest.id, latestRunId(db));
+      const staleness = getCapsuleStaleness(stores, manifest.id, latestRunId(db));
 
       assert.equal(staleness?.status, StaleStateStatus.Fresh);
       assert.equal(staleness?.items.every((item) => item.status === StaleStateStatus.Fresh), true);
@@ -285,10 +292,11 @@ test("capsule stale output is deterministic and preserves manifest item order", 
   await withTempRepo(async (repoRoot) => {
     await writeCapsuleTrustRepo(repoRoot);
     const db = openIndexerDatabase();
+    const stores = createTestProductStores(db);
 
     try {
       await indexProject({ repoRoot, db });
-      const manifest = persistCapsuleManifest(db, {
+      const manifest = persistCapsuleManifest(stores, {
         sourceRunId: latestRunId(db),
         capsule: buildSourceBackedCapsule(db, repoRoot),
         createdAtMs: 1,
@@ -306,8 +314,8 @@ test("capsule stale output is deterministic and preserves manifest item order", 
       await indexProject({ repoRoot, db });
       const comparisonRunId = latestRunId(db);
 
-      const first = getCapsuleStaleness(db, manifest.id, comparisonRunId);
-      const second = getCapsuleStaleness(db, manifest.id, comparisonRunId);
+      const first = getCapsuleStaleness(stores, manifest.id, comparisonRunId);
+      const second = getCapsuleStaleness(stores, manifest.id, comparisonRunId);
 
       assert.deepEqual(second, first);
       assert.deepEqual(
@@ -326,10 +334,11 @@ test("capsule stale output is deterministic and preserves manifest item order", 
 test("mixed Python/Cython capsule trust stays deterministic after a controlled fixture change", async () => {
   await withMixedPyCythonRepo(async (repoRoot) => {
     const db = openIndexerDatabase();
+    const stores = createTestProductStores(db);
 
     try {
       await indexProject({ repoRoot, db });
-      const manifest = persistCapsuleManifest(db, {
+      const manifest = persistCapsuleManifest(stores, {
         sourceRunId: latestRunId(db),
         capsule: buildMixedFixtureCapsule(db, repoRoot, "background offsets"),
         createdAtMs: 1,
@@ -339,8 +348,8 @@ test("mixed Python/Cython capsule trust stays deterministic after a controlled f
       await indexProject({ repoRoot, db });
 
       const comparisonRunId = latestRunId(db);
-      const first = getCapsuleStaleness(db, manifest.id, comparisonRunId);
-      const second = getCapsuleStaleness(db, manifest.id, comparisonRunId);
+      const first = getCapsuleStaleness(stores, manifest.id, comparisonRunId);
+      const second = getCapsuleStaleness(stores, manifest.id, comparisonRunId);
       const changedItem = first?.items.find((item) => {
         return item.filePath === MIXED_PY_CYTHON_BACKGROUND_FILE_PATH
           && item.symbol.fqName === MIXED_PY_CYTHON_CONTROLLED_CHANGE_SYMBOL_FQ_NAME;

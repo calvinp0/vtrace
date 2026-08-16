@@ -36,6 +36,20 @@ import {
   resolveWorkspaceRoot,
   SHARED_RUNNER_OPTIONS_HELP,
 } from "./lib/runnerPaths";
+import {
+  createEphemeralSessionDatabase,
+  type WritableProductStores,
+} from "../../src/session/sessionStore";
+
+/**
+ * M152: a writable pair over an already-open index handle, with an in-memory
+ * session store. These smokes measure retrieval, not persistence, so product
+ * state is deliberately thrown away rather than written beside a real index.
+ */
+function productStoresFor(indexDb: Database): WritableProductStores {
+  return { index: indexDb, session: createEphemeralSessionDatabase() };
+}
+
 
 const ROOT = path.resolve("benchmarks/stage5_vexp_swe_bench_smoke");
 // M141: reports go to an untracked run directory unless --out/--evidence
@@ -541,7 +555,7 @@ async function postFixArcSections(): Promise<Record<string, unknown> | undefined
     await copyFile(sourceIndex, isolatedIndex);
     const db = new Database(isolatedIndex);
     try {
-      const orchestration = runPipelineOrchestrator(db, ARC_ROOT, {
+      const orchestration = runPipelineOrchestrator(productStoresFor(db), ARC_ROOT, {
         query: ARC_TASK,
         intent: RunPipelinePresetIntent.Debug,
         maxBudgetCharacters: ARC_MAX_TOKENS * 4,

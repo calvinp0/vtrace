@@ -1,11 +1,11 @@
 import { createHash } from "node:crypto";
-import type { Database } from "bun:sqlite";
+import type { ProductStores, SessionDatabase, WritableProductStores } from "../session/sessionStore";
 
 import { getLatestIndexRun } from "../db/repositories/indexRunsRepository";
 import {
   listObservationsForSession,
   persistObservation,
-} from "../db/repositories/observationsRepository";
+} from "../session/repositories/observationsRepository";
 import {
   getSessionById,
   getSessionCompressionSummary,
@@ -13,7 +13,7 @@ import {
   listSessions,
   markSessionCompressed,
   persistSessionCompressionSummary,
-} from "../db/repositories/sessionsRepository";
+} from "../session/repositories/sessionsRepository";
 import {
   ObservationKind,
   ObservationOrigin,
@@ -99,7 +99,7 @@ export interface CompressInactiveSessionsResult {
 }
 
 export function getSessionCompressionEligibility(
-  db: Database,
+  db: SessionDatabase,
   input: {
     nowMs: number;
     inactiveAfterMs?: number;
@@ -129,10 +129,11 @@ export function getSessionCompressionEligibility(
 }
 
 export function compressInactiveSessions(
-  db: Database,
+  stores: WritableProductStores,
   input: CompressInactiveSessionsInput,
 ): CompressInactiveSessionsResult {
   const dryRun = input.dryRun === true;
+  const db = stores.session;
   const eligible = getSessionCompressionEligibility(db, input)
     .filter((eligibility) => eligibility.eligible);
   const limit = input.limit === undefined
@@ -144,13 +145,13 @@ export function compressInactiveSessions(
   const previews: SessionCompressionPreview[] = [];
 
   for (const eligibility of selected) {
-    previews.push(previewSessionCompression(db, eligibility));
+    previews.push(previewSessionCompression(stores, eligibility));
 
     if (dryRun) {
       continue;
     }
 
-    const summary = compressSession(db, {
+    const summary = compressSession(stores, {
       sessionId: eligibility.session.sessionId,
       nowMs: input.nowMs,
     });
@@ -174,12 +175,12 @@ export function compressInactiveSessions(
 }
 
 function previewSessionCompression(
-  db: Database,
+  stores: ProductStores,
   eligibility: SessionCompressionEligibility,
 ): SessionCompressionPreview {
   const sessionId = eligibility.session.sessionId;
-  const observations = listObservationsForSession(db, sessionId);
-  const consolidationGroups = previewPassiveObservationConsolidationForSession(db, {
+  const observations = listObservationsForSession(stores.session, sessionId);
+  const consolidationGroups = previewPassiveObservationConsolidationForSession(stores, {
     sessionId,
   });
 
@@ -195,12 +196,13 @@ function previewSessionCompression(
 }
 
 export function compressSession(
-  db: Database,
+  stores: WritableProductStores,
   input: {
     sessionId: string;
     nowMs: number;
   },
 ): SessionCompressionSummary | undefined {
+  const db = stores.session;
   const existingSummary = getSessionCompressionSummary(db, input.sessionId);
 
   if (existingSummary !== undefined) {
@@ -218,7 +220,7 @@ export function compressSession(
   }
 
   const observations = listObservationsForSession(db, session.sessionId);
-  const consolidationGroups = previewPassiveObservationConsolidationForSession(db, {
+  const consolidationGroups = previewPassiveObservationConsolidationForSession(stores, {
     sessionId: session.sessionId,
   });
   const draft = buildSessionCompressionSummaryDraft(
@@ -227,7 +229,7 @@ export function compressSession(
     input.nowMs,
     consolidationGroups.reduce((total, group) => total + group.sourceObservationCount, 0),
   );
-  const summaryObservation = persistObservation(db, {
+  const summaryObservation = persistObservation(stores, {
     repoRoot: session.repoRoot,
     sessionId: session.sessionId,
     sessionAgentKind: session.agentKind,
@@ -237,7 +239,7 @@ export function compressSession(
     queryText: draft.keyTerms.join(" "),
     summary: `Compressed session ${session.sessionId}: ${draft.prunedToolCallObservationCount} repeated tool calls consolidated, ${draft.preservedDurableObservationCount} durable observations preserved.`,
     body: formatSummaryBody(draft),
-    sourceRunId: getLatestIndexRun(db)?.id,
+    sourceRunId: getLatestIndexRun(stores.index)?.id,
     ...(commonSessionProvenance(observations) === undefined ? {} : {
       scope: ObservationScope.Repository,
       origin: ObservationOrigin.AutomaticCapture,
@@ -255,7 +257,7 @@ export function compressSession(
   };
   const persisted = persistSessionCompressionSummary(db, { summary });
 
-  consolidatePassiveObservationsForSession(db, {
+  consolidatePassiveObservationsForSession(stores, {
     sessionId: session.sessionId,
     nowMs: input.nowMs,
   });

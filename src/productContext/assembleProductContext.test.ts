@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "bun:test";
 
 import { INLINES_TASK, seedCapsuleV2Fixture } from "../capsuleV2/__fixtures__/capsuleV2Fixture";
+import { createTestProductStores } from "../testing/productStores";
 import { CapsuleIntent } from "../capsuleV2/types";
 import { estimateTokens } from "../capsuleV2/tokens";
 import { assembleProductContext, buildUnresolvedProductContext } from "./assembleProductContext";
@@ -11,10 +12,11 @@ const FRESH_FIXTURE = { status: "fresh", reason: "fixture_index", action: "none"
 
 test("shared product response is role-aware, structural, deduplicated, and honestly accounted", async () => {
   const { db, repoRoot } = seedCapsuleV2Fixture();
+  const stores = createTestProductStores(db);
   try {
     let tick = 0;
     const response = await assembleProductContext({
-      db,
+      stores,
       repoRoot,
       task: INLINES_TASK,
       intent: CapsuleIntent.Modify,
@@ -75,11 +77,12 @@ test("shared product response is role-aware, structural, deduplicated, and hones
 
 test("stable IDs and ordering do not depend on timing", async () => {
   const { db, repoRoot } = seedCapsuleV2Fixture();
+  const stores = createTestProductStores(db);
   try {
     let firstTick = 0;
     let secondTick = 100;
-    const first = await assembleProductContext({ db, repoRoot, task: INLINES_TASK, budgetTokens: 8_000, freshnessOverride: FRESH_FIXTURE, now: () => ++firstTick });
-    const second = await assembleProductContext({ db, repoRoot, task: INLINES_TASK, budgetTokens: 8_000, freshnessOverride: FRESH_FIXTURE, now: () => secondTick += 3 });
+    const first = await assembleProductContext({ stores, repoRoot, task: INLINES_TASK, budgetTokens: 8_000, freshnessOverride: FRESH_FIXTURE, now: () => ++firstTick });
+    const second = await assembleProductContext({ stores, repoRoot, task: INLINES_TASK, budgetTokens: 8_000, freshnessOverride: FRESH_FIXTURE, now: () => secondTick += 3 });
     assert.deepEqual(
       second.items.map(({ id, stableId, path, symbol, roles }) => ({ id, stableId, path, symbol, roles })),
       first.items.map(({ id, stableId, path, symbol, roles }) => ({ id, stableId, path, symbol, roles })),
@@ -94,8 +97,9 @@ test("stable IDs and ordering do not depend on timing", async () => {
 
 test("shared assembler fails closed before rendering when the index snapshot is not fresh", async () => {
   const { db, repoRoot } = seedCapsuleV2Fixture();
+  const stores = createTestProductStores(db);
   try {
-    const response = await assembleProductContext({ db, repoRoot, task: INLINES_TASK, budgetTokens: 8_000 });
+    const response = await assembleProductContext({ stores, repoRoot, task: INLINES_TASK, budgetTokens: 8_000 });
     assert.equal(response.resolved, false);
     assert.equal(response.freshness.status, "missing");
     assert.equal(response.items.length, 0);

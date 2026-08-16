@@ -28,13 +28,14 @@ import { MCP_SERVER_ID, MCP_SERVER_SCHEMA, McpToolId, type McpServerContext } fr
 import { searchMemory } from "../../src/observations/searchMemory";
 import { selectRelevantProjectRules } from "../../src/projectRules/projectRules";
 import { resolveCurrentObservationContext } from "../../src/observations/provenance";
-import { listObservations } from "../../src/db/repositories/observationsRepository";
+import { listObservations } from "../../src/session/repositories/observationsRepository";
 import {
   prepareRunnerOutput,
   prepareScratchRoot,
   describeRunnerPaths,
   SHARED_RUNNER_OPTIONS_HELP,
 } from "./lib/runnerPaths";
+import { ProductStoreLease } from "../../src/session/sessionStore";
 
 const execFile = promisify(execFileCallback);
 const RUNNER_NAME = "m141_evidence";
@@ -202,6 +203,10 @@ async function memoryRulesProfile(repoRoot: string | undefined) {
   }
 
   const db = new Database(dbPath, { readonly: true });
+  // M152: the real repository's session store, read-only. The query counter
+  // below still instruments the INDEX handle, which is what M141 measures.
+  const lease = new ProductStoreLease(db, dbPath);
+  const stores = lease.read;
   let queries = 0;
   const originalQuery = db.query.bind(db);
   (db as unknown as { query: (sql: string) => unknown }).query = (sql: string) => {
@@ -210,7 +215,7 @@ async function memoryRulesProfile(repoRoot: string | undefined) {
   };
 
   const context = await resolveCurrentObservationContext(root);
-  const observations = listObservations(db).length;
+  const observations = listObservations(stores.session).length;
   const query = "How does a species object get its 2D molecular graph when rebuilt from a "
     + "serialized dictionary, and under what conditions is connectivity re-derived from "
     + "Cartesian coordinates rather than taken from the stored adjacency list?";
@@ -220,14 +225,15 @@ async function memoryRulesProfile(repoRoot: string | undefined) {
   for (let index = 0; index < 5; index += 1) {
     queries = 0;
     const searchStarted = performance.now();
-    searchMemory(db, { query, maxResults: 6, linkedFilePaths, currentContext: context });
+    searchMemory(stores, { query, maxResults: 6, linkedFilePaths, currentContext: context });
     const searchMs = performance.now() - searchStarted;
     const searchQueries = queries;
     const rulesStarted = performance.now();
-    selectRelevantProjectRules(db, { repoRoot: root, query, intent: "explain", linkedFilePaths, linkedFqNames: [] });
+    selectRelevantProjectRules(stores.session, { repoRoot: root, query, intent: "explain", linkedFilePaths, linkedFqNames: [] });
     const rulesMs = performance.now() - rulesStarted;
     samples.push({ searchMs: round(searchMs), rulesMs: round(rulesMs), queries: searchQueries });
   }
+  lease.close();
   db.close();
 
   const searchTimes = samples.map((sample) => sample.searchMs).sort((left, right) => left - right);

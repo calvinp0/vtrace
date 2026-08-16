@@ -1,5 +1,6 @@
 import { hasIndexedFiles } from "../../db/repositories/filesRepository";
 import { openIndexerDatabase } from "../../db/sqlite";
+import { ProductStoreLease } from "../../session/sessionStore";
 import { formatRunPipelineOrchestrationOutput } from "../../runPipeline/formatRunPipelineOutput";
 import { runPipelineOrchestrator } from "../../runPipeline/runPipelineOrchestrator";
 import {
@@ -64,13 +65,14 @@ export async function runRunPipelineCommand(
 
   try {
     const db = openIndexerDatabase(resolvedRepo.dbPath);
+    const lease = new ProductStoreLease(db, resolvedRepo.dbPath);
     try {
       if (!hasIndexedFiles(db)) {
         return failure(`Repo not indexed: ${resolvedRepo.repoRoot}`);
       }
       const accountingStartedAt = performance.now();
       const currentObservationContext = await resolveCurrentObservationContext(resolvedRepo.repoRoot);
-      const orchestration = runPipelineOrchestrator(db, resolvedRepo.repoRoot, {
+      const orchestration = runPipelineOrchestrator(lease.write, resolvedRepo.repoRoot, {
         query: parsed.query,
         ...(parsed.maxResults === undefined ? {} : { maxResults: parsed.maxResults }),
         ...(parsed.maxBudgetCharacters === undefined ? {} : { maxBudgetCharacters: parsed.maxBudgetCharacters }),
@@ -84,7 +86,7 @@ export async function runRunPipelineCommand(
       });
       const formatted = formatRunPipelineOrchestrationOutput(orchestration);
       const productContext = await assembleProductContext({
-        db,
+        stores: lease.read,
         repoRoot: resolvedRepo.repoRoot,
         task: parsed.query,
         intent: parsed.capsuleIntent ?? CapsuleIntent.Auto,
@@ -116,6 +118,7 @@ export async function runRunPipelineCommand(
       }
       return success(`${JSON.stringify(withAccounting)}\n`);
     } finally {
+      lease.close();
       db.close();
     }
   } catch (error) {

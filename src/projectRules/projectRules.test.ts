@@ -4,11 +4,13 @@ import os from "node:os";
 import path from "node:path";
 import { test } from "bun:test";
 
-import { listProjectRules } from "../db/repositories/projectRulesRepository";
-import { persistObservation } from "../db/repositories/observationsRepository";
+import { listProjectRules } from "../session/repositories/projectRulesRepository";
+import { persistObservation } from "../session/repositories/observationsRepository";
 import { getLatestIndexRun } from "../db/repositories/indexRunsRepository";
 import { listSymbolsForFile } from "../db/repositories/symbolsRepository";
 import { openIndexerDatabase } from "../db/sqlite";
+import { createTestProductStores } from "../testing/productStores";
+import { ProductStoreLease } from "../session/sessionStore";
 import { indexProject } from "../indexer/indexProject";
 import { runPipelineOrchestrator } from "../runPipeline/runPipelineOrchestrator";
 import { formatRunPipelineOrchestrationOutput } from "../runPipeline/formatRunPipelineOutput";
@@ -30,12 +32,12 @@ import {
 import { ProjectRuleStatus } from "./types";
 
 test("repeated durable observations generate deterministic candidate rules without mutating evidence", async () => {
-  await withProjectRuleFixture(async ({ repoRoot, db }) => {
+  await withProjectRuleFixture(async ({ repoRoot, db, stores }) => {
     await indexProject({ repoRoot, db });
     const sourceRunId = getLatestIndexRun(db)?.id;
 
     const observations = [100, 200, 300].map((createdAtMs, index) => {
-      return persistObservation(db, {
+      return persistObservation(stores, {
         repoRoot,
         kind: index === 0 ? ObservationKind.Decision : ObservationKind.Insight,
         source: ObservationSource.Manual,
@@ -48,15 +50,15 @@ test("repeated durable observations generate deterministic candidate rules witho
       });
     });
 
-    const result = generateProjectRuleCandidates(db, {
+    const result = generateProjectRuleCandidates(stores.session, {
       repoRoot,
       nowMs: 1_000,
     });
-    const second = generateProjectRuleCandidates(db, {
+    const second = generateProjectRuleCandidates(stores.session, {
       repoRoot,
       nowMs: 2_000,
     });
-    const rules = listProjectRules(db, { repoRoot });
+    const rules = listProjectRules(stores.session, { repoRoot });
 
     assert.equal(result.created.length, 1);
     assert.equal(second.created.length, 0);
@@ -74,12 +76,12 @@ test("repeated durable observations generate deterministic candidate rules witho
 });
 
 test("candidate threshold and raw passive ineligibility stay conservative", async () => {
-  await withProjectRuleFixture(async ({ repoRoot, db }) => {
+  await withProjectRuleFixture(async ({ repoRoot, db, stores }) => {
     await indexProject({ repoRoot, db });
     const sourceRunId = getLatestIndexRun(db)?.id;
 
     for (const createdAtMs of [100, 200]) {
-      persistObservation(db, {
+      persistObservation(stores, {
         repoRoot,
         kind: ObservationKind.Decision,
         source: ObservationSource.Manual,
@@ -91,7 +93,7 @@ test("candidate threshold and raw passive ineligibility stay conservative", asyn
       });
     }
     for (const createdAtMs of [300, 400, 500]) {
-      persistObservation(db, {
+      persistObservation(stores, {
         repoRoot,
         kind: ObservationKind.ToolCall,
         source: ObservationSource.McpAuto,
@@ -105,23 +107,23 @@ test("candidate threshold and raw passive ineligibility stay conservative", asyn
       });
     }
 
-    const result = generateProjectRuleCandidates(db, {
+    const result = generateProjectRuleCandidates(stores.session, {
       repoRoot,
       nowMs: 1_000,
     });
 
     assert.equal(result.created.length, 0);
-    assert.equal(listProjectRules(db, { repoRoot }).length, 0);
+    assert.equal(listProjectRules(stores.session, { repoRoot }).length, 0);
   });
 });
 
 test("candidate generation dedupes and updates existing candidates with new matching evidence", async () => {
-  await withProjectRuleFixture(async ({ repoRoot, db }) => {
+  await withProjectRuleFixture(async ({ repoRoot, db, stores }) => {
     await indexProject({ repoRoot, db });
     const sourceRunId = getLatestIndexRun(db)?.id;
 
     for (const createdAtMs of [100, 200, 300]) {
-      persistObservation(db, {
+      persistObservation(stores, {
         repoRoot,
         kind: ObservationKind.Decision,
         source: ObservationSource.Manual,
@@ -133,10 +135,10 @@ test("candidate generation dedupes and updates existing candidates with new matc
       });
     }
 
-    const first = generateProjectRuleCandidates(db, { repoRoot, nowMs: 1_000 });
+    const first = generateProjectRuleCandidates(stores.session, { repoRoot, nowMs: 1_000 });
     const ruleId = first.created[0]!.id;
 
-    persistObservation(db, {
+    persistObservation(stores, {
       repoRoot,
       kind: ObservationKind.Insight,
       source: ObservationSource.Manual,
@@ -147,8 +149,8 @@ test("candidate generation dedupes and updates existing candidates with new matc
       linkedFilePaths: ["src/service.ts"],
     });
 
-    const second = generateProjectRuleCandidates(db, { repoRoot, nowMs: 2_000 });
-    const rules = listProjectRules(db, { repoRoot });
+    const second = generateProjectRuleCandidates(stores.session, { repoRoot, nowMs: 2_000 });
+    const rules = listProjectRules(stores.session, { repoRoot });
 
     assert.equal(second.created.length, 0);
     assert.equal(second.updated.length, 1);
@@ -160,12 +162,12 @@ test("candidate generation dedupes and updates existing candidates with new matc
 });
 
 test("term-only repeated evidence creates a low-confidence deterministic candidate", async () => {
-  await withProjectRuleFixture(async ({ repoRoot, db }) => {
+  await withProjectRuleFixture(async ({ repoRoot, db, stores }) => {
     await indexProject({ repoRoot, db });
     const sourceRunId = getLatestIndexRun(db)?.id;
 
     for (const createdAtMs of [100, 200, 300]) {
-      persistObservation(db, {
+      persistObservation(stores, {
         repoRoot,
         kind: ObservationKind.Insight,
         source: ObservationSource.Manual,
@@ -178,7 +180,7 @@ test("term-only repeated evidence creates a low-confidence deterministic candida
       });
     }
 
-    const result = generateProjectRuleCandidates(db, { repoRoot, nowMs: 1_000 });
+    const result = generateProjectRuleCandidates(stores.session, { repoRoot, nowMs: 1_000 });
     const candidate = result.created[0]!;
 
     assert.equal(result.created.length, 1);
@@ -191,12 +193,12 @@ test("term-only repeated evidence creates a low-confidence deterministic candida
 });
 
 test("consolidated passive summaries and repeated anti-patterns can generate candidates", async () => {
-  await withProjectRuleFixture(async ({ repoRoot, db }) => {
+  await withProjectRuleFixture(async ({ repoRoot, db, stores }) => {
     await indexProject({ repoRoot, db });
     const sourceRunId = getLatestIndexRun(db)?.id;
 
     for (const createdAtMs of [100, 200, 300]) {
-      persistObservation(db, {
+      persistObservation(stores, {
         repoRoot,
         kind: ObservationKind.Insight,
         source: ObservationSource.McpAuto,
@@ -208,7 +210,7 @@ test("consolidated passive summaries and repeated anti-patterns can generate can
         createdAtMs,
         linkedFilePaths: ["src/service.ts"],
       });
-      persistObservation(db, {
+      persistObservation(stores, {
         repoRoot,
         kind: ObservationKind.DeadEnd,
         source: ObservationSource.McpAuto,
@@ -222,7 +224,7 @@ test("consolidated passive summaries and repeated anti-patterns can generate can
       });
     }
 
-    const result = generateProjectRuleCandidates(db, { repoRoot, nowMs: 1_000 });
+    const result = generateProjectRuleCandidates(stores.session, { repoRoot, nowMs: 1_000 });
     const summaries = result.created.map((rule) => rule.summary).sort();
 
     assert.equal(result.created.length, 2);
@@ -232,14 +234,14 @@ test("consolidated passive summaries and repeated anti-patterns can generate can
 });
 
 test("manual promotion, dismiss, disable, and relevance selection keep candidates non-authoritative", async () => {
-  await withProjectRuleFixture(async ({ repoRoot, db }) => {
+  await withProjectRuleFixture(async ({ repoRoot, db, stores }) => {
     await indexProject({ repoRoot, db });
     const sourceRunId = getLatestIndexRun(db)?.id;
 
-    seedDurableRuleEvidence(db, repoRoot, "src/service.ts", sourceRunId);
-    const generated = generateProjectRuleCandidates(db, { repoRoot, nowMs: 1_000 });
+    seedDurableRuleEvidence(stores, repoRoot, "src/service.ts", sourceRunId);
+    const generated = generateProjectRuleCandidates(stores.session, { repoRoot, nowMs: 1_000 });
     const candidate = generated.created[0]!;
-    const beforePromotion = selectRelevantProjectRules(db, {
+    const beforePromotion = selectRelevantProjectRules(stores.session, {
       repoRoot,
       query: "change src/service.ts service workflow",
       linkedFilePaths: ["src/service.ts"],
@@ -248,36 +250,36 @@ test("manual promotion, dismiss, disable, and relevance selection keep candidate
     assert.equal(beforePromotion.active.length, 0);
     assert.equal(beforePromotion.candidates.length, 1);
 
-    const active = promoteProjectRule(db, candidate.id, 2_000);
-    const afterPromotion = selectRelevantProjectRules(db, {
+    const active = promoteProjectRule(stores.session, candidate.id, 2_000);
+    const afterPromotion = selectRelevantProjectRules(stores.session, {
       repoRoot,
       query: "change src/service.ts service workflow",
       linkedFilePaths: ["src/service.ts"],
     });
-    const irrelevant = selectRelevantProjectRules(db, {
+    const irrelevant = selectRelevantProjectRules(stores.session, {
       repoRoot,
       query: "models only",
       linkedFilePaths: ["src/models.ts"],
     });
-    const disabled = disableProjectRule(db, active.id, 3_000);
+    const disabled = disableProjectRule(stores.session, active.id, 3_000);
 
     assert.equal(active.status, ProjectRuleStatus.Active);
     assert.equal(afterPromotion.active[0]!.rule.id, active.id);
     assert.equal(irrelevant.active.length, 0);
     assert.equal(disabled.status, ProjectRuleStatus.Disabled);
-    assert.equal(selectRelevantProjectRules(db, {
+    assert.equal(selectRelevantProjectRules(stores.session, {
       repoRoot,
       query: "change src/service.ts service workflow",
       linkedFilePaths: ["src/service.ts"],
     }).active.length, 0);
 
-    seedDurableRuleEvidence(db, repoRoot, "src/models.ts", sourceRunId, 500);
-    const secondGenerated = generateProjectRuleCandidates(db, { repoRoot, nowMs: 4_000 });
+    seedDurableRuleEvidence(stores, repoRoot, "src/models.ts", sourceRunId, 500);
+    const secondGenerated = generateProjectRuleCandidates(stores.session, { repoRoot, nowMs: 4_000 });
     const secondCandidate = secondGenerated.created.find((rule) => rule.id !== candidate.id)!;
-    const dismissed = dismissProjectRule(db, secondCandidate.id, 5_000);
+    const dismissed = dismissProjectRule(stores.session, secondCandidate.id, 5_000);
 
     assert.equal(dismissed.status, ProjectRuleStatus.Dismissed);
-    assert.equal(selectRelevantProjectRules(db, {
+    assert.equal(selectRelevantProjectRules(stores.session, {
       repoRoot,
       query: "change src/models.ts model workflow",
       linkedFilePaths: ["src/models.ts"],
@@ -286,24 +288,24 @@ test("manual promotion, dismiss, disable, and relevance selection keep candidate
 });
 
 test("dismissed candidates are not recreated and promoted matching rules prevent duplicate candidates", async () => {
-  await withProjectRuleFixture(async ({ repoRoot, db }) => {
+  await withProjectRuleFixture(async ({ repoRoot, db, stores }) => {
     await indexProject({ repoRoot, db });
     const sourceRunId = getLatestIndexRun(db)?.id;
 
-    seedDurableRuleEvidence(db, repoRoot, "src/service.ts", sourceRunId);
-    const first = generateProjectRuleCandidates(db, { repoRoot, nowMs: 1_000 });
-    const dismissed = dismissProjectRule(db, first.created[0]!.id, 2_000);
-    const afterDismiss = generateProjectRuleCandidates(db, { repoRoot, nowMs: 3_000 });
+    seedDurableRuleEvidence(stores, repoRoot, "src/service.ts", sourceRunId);
+    const first = generateProjectRuleCandidates(stores.session, { repoRoot, nowMs: 1_000 });
+    const dismissed = dismissProjectRule(stores.session, first.created[0]!.id, 2_000);
+    const afterDismiss = generateProjectRuleCandidates(stores.session, { repoRoot, nowMs: 3_000 });
 
     assert.equal(dismissed.status, ProjectRuleStatus.Dismissed);
     assert.equal(afterDismiss.created.length, 0);
     assert.equal(afterDismiss.updated.length, 0);
-    assert.equal(listProjectRules(db, { repoRoot }).length, 1);
+    assert.equal(listProjectRules(stores.session, { repoRoot }).length, 1);
 
-    seedDurableRuleEvidence(db, repoRoot, "src/models.ts", sourceRunId, 500);
-    const second = generateProjectRuleCandidates(db, { repoRoot, nowMs: 4_000 });
-    const promoted = promoteProjectRule(db, second.created[0]!.id, 5_000);
-    persistObservation(db, {
+    seedDurableRuleEvidence(stores, repoRoot, "src/models.ts", sourceRunId, 500);
+    const second = generateProjectRuleCandidates(stores.session, { repoRoot, nowMs: 4_000 });
+    const promoted = promoteProjectRule(stores.session, second.created[0]!.id, 5_000);
+    persistObservation(stores, {
       repoRoot,
       kind: ObservationKind.Insight,
       source: ObservationSource.Manual,
@@ -315,8 +317,8 @@ test("dismissed candidates are not recreated and promoted matching rules prevent
       linkedFilePaths: ["src/models.ts"],
     });
 
-    const afterPromote = generateProjectRuleCandidates(db, { repoRoot, nowMs: 6_000 });
-    const rules = listProjectRules(db, { repoRoot });
+    const afterPromote = generateProjectRuleCandidates(stores.session, { repoRoot, nowMs: 6_000 });
+    const rules = listProjectRules(stores.session, { repoRoot });
 
     assert.equal(promoted.status, ProjectRuleStatus.Active);
     assert.equal(afterPromote.created.length, 0);
@@ -327,30 +329,30 @@ test("dismissed candidates are not recreated and promoted matching rules prevent
 });
 
 test("direct active rules are selectable, status-filtered, and never semantically paraphrase-match", async () => {
-  await withProjectRuleFixture(async ({ repoRoot, db }) => {
+  await withProjectRuleFixture(async ({ repoRoot, db, stores }) => {
     await indexProject({ repoRoot, db });
-    const active = createActiveProjectRule(db, {
+    const active = createActiveProjectRule(stores.session, {
       repoRoot,
       summary: "When changing billing adapters, update invoice tests.",
       files: ["src/service.ts"],
       terms: ["billing", "adapter", "invoice", "tests"],
       nowMs: 1_000,
     });
-    const candidate = createActiveProjectRule(db, {
+    const candidate = createActiveProjectRule(stores.session, {
       repoRoot,
       summary: "Temporary candidate-shaped service guidance.",
       files: ["src/service.ts"],
       terms: ["service"],
       nowMs: 1_100,
     });
-    const disabled = disableProjectRule(db, candidate.id, 1_200);
+    const disabled = disableProjectRule(stores.session, candidate.id, 1_200);
 
-    const selected = selectRelevantProjectRules(db, {
+    const selected = selectRelevantProjectRules(stores.session, {
       repoRoot,
       query: "billing adapter invoice tests",
       linkedFilePaths: ["src/service.ts"],
     });
-    const paraphraseOnly = selectRelevantProjectRules(db, {
+    const paraphraseOnly = selectRelevantProjectRules(stores.session, {
       repoRoot,
       query: "payment connector receipt specs",
       linkedFilePaths: [],
@@ -365,7 +367,7 @@ test("direct active rules are selectable, status-filtered, and never semanticall
 });
 
 test("active rules are injected into formatted run_pipeline output with deterministic caps", async () => {
-  await withProjectRuleFixture(async ({ repoRoot, db }) => {
+  await withProjectRuleFixture(async ({ repoRoot, db, stores }) => {
     await indexProject({ repoRoot, db });
     const sourceRunId = getLatestIndexRun(db)?.id;
 
@@ -373,15 +375,15 @@ test("active rules are injected into formatted run_pipeline output with determin
       if (filePath.endsWith("extra.ts") || filePath.endsWith("fourth.ts")) {
         await writeFile(path.join(repoRoot, filePath), `export const value${index} = ${index};\n`);
       }
-      seedDurableRuleEvidence(db, repoRoot, filePath, sourceRunId, 100 + index * 10);
+      seedDurableRuleEvidence(stores, repoRoot, filePath, sourceRunId, 100 + index * 10);
     }
 
-    const generated = generateProjectRuleCandidates(db, { repoRoot, nowMs: 1_000 });
+    const generated = generateProjectRuleCandidates(stores.session, { repoRoot, nowMs: 1_000 });
     for (const rule of generated.created) {
-      promoteProjectRule(db, rule.id, 2_000 + rule.id.charCodeAt(rule.id.length - 1));
+      promoteProjectRule(stores.session, rule.id, 2_000 + rule.id.charCodeAt(rule.id.length - 1));
     }
 
-    const output = formatRunPipelineOrchestrationOutput(runPipelineOrchestrator(db, repoRoot, {
+    const output = formatRunPipelineOrchestrationOutput(runPipelineOrchestrator(stores, repoRoot, {
       query: "change src/service.ts service workflow",
       includeMemory: true,
       intent: "modify",
@@ -396,7 +398,7 @@ test("active rules are injected into formatted run_pipeline output with determin
 });
 
 test("run_pipeline surfaces relevant candidate previews without active guidance", async () => {
-  await withProjectRuleFixture(async ({ repoRoot, db }) => {
+  await withProjectRuleFixture(async ({ repoRoot, db, stores }) => {
     await indexProject({ repoRoot, db });
     const sourceRunId = getLatestIndexRun(db)?.id;
 
@@ -404,11 +406,11 @@ test("run_pipeline surfaces relevant candidate previews without active guidance"
       if (filePath.endsWith("extra.ts") || filePath.endsWith("fourth.ts")) {
         await writeFile(path.join(repoRoot, filePath), `export const value${index} = ${index};\n`);
       }
-      seedDurableRuleEvidence(db, repoRoot, filePath, sourceRunId, 100 + index * 10);
+      seedDurableRuleEvidence(stores, repoRoot, filePath, sourceRunId, 100 + index * 10);
     }
 
-    const generated = generateProjectRuleCandidates(db, { repoRoot, nowMs: 1_000 });
-    const output = formatRunPipelineOrchestrationOutput(runPipelineOrchestrator(db, repoRoot, {
+    const generated = generateProjectRuleCandidates(stores.session, { repoRoot, nowMs: 1_000 });
+    const output = formatRunPipelineOrchestrationOutput(runPipelineOrchestrator(stores, repoRoot, {
       query: "change src/service.ts service workflow",
       includeMemory: true,
       intent: "modify",
@@ -421,7 +423,7 @@ test("run_pipeline surfaces relevant candidate previews without active guidance"
     assert.equal(output.rules.candidates.some((rule) => rule.summary.includes("src/service.ts")), true);
     assert.deepEqual(
       output.rules.candidates.map((rule) => rule.id),
-      formatRunPipelineOrchestrationOutput(runPipelineOrchestrator(db, repoRoot, {
+      formatRunPipelineOrchestrationOutput(runPipelineOrchestrator(stores, repoRoot, {
         query: "change src/service.ts service workflow",
         includeMemory: true,
         intent: "modify",
@@ -432,14 +434,14 @@ test("run_pipeline surfaces relevant candidate previews without active guidance"
 });
 
 test("irrelevant candidates do not appear in rule relevance previews", async () => {
-  await withProjectRuleFixture(async ({ repoRoot, db }) => {
+  await withProjectRuleFixture(async ({ repoRoot, db, stores }) => {
     await indexProject({ repoRoot, db });
     const sourceRunId = getLatestIndexRun(db)?.id;
 
-    seedDurableRuleEvidence(db, repoRoot, "src/service.ts", sourceRunId);
+    seedDurableRuleEvidence(stores, repoRoot, "src/service.ts", sourceRunId);
     await writeFile(path.join(repoRoot, "src", "kernel.ts"), "export const kernel = 1;\n");
     for (const createdAtMs of [500, 501, 502]) {
-      persistObservation(db, {
+      persistObservation(stores, {
         repoRoot,
         kind: ObservationKind.Decision,
         source: ObservationSource.Manual,
@@ -452,8 +454,8 @@ test("irrelevant candidates do not appear in rule relevance previews", async () 
       });
     }
 
-    generateProjectRuleCandidates(db, { repoRoot, nowMs: 1_000 });
-    const selected = selectRelevantProjectRules(db, {
+    generateProjectRuleCandidates(stores.session, { repoRoot, nowMs: 1_000 });
+    const selected = selectRelevantProjectRules(stores.session, {
       repoRoot,
       query: "service read user",
       linkedFilePaths: ["src/service.ts"],
@@ -465,23 +467,23 @@ test("irrelevant candidates do not appear in rule relevance previews", async () 
 });
 
 test("rules linked to changed code become stale and stale active rules are not injected", async () => {
-  await withProjectRuleFixture(async ({ repoRoot, db }) => {
+  await withProjectRuleFixture(async ({ repoRoot, db, stores }) => {
     await indexProject({ repoRoot, db });
     const sourceRunId = getLatestIndexRun(db)?.id;
 
-    seedDurableRuleEvidence(db, repoRoot, "src/service.ts", sourceRunId);
-    const generated = generateProjectRuleCandidates(db, { repoRoot, nowMs: 1_000 });
-    const active = promoteProjectRule(db, generated.created[0]!.id, 2_000);
+    seedDurableRuleEvidence(stores, repoRoot, "src/service.ts", sourceRunId);
+    const generated = generateProjectRuleCandidates(stores.session, { repoRoot, nowMs: 1_000 });
+    const active = promoteProjectRule(stores.session, generated.created[0]!.id, 2_000);
 
     await writeServiceFile(repoRoot, "loadUser");
     await indexProject({ repoRoot, db });
     const latestRunId = getLatestIndexRun(db)!.id;
-    const stale = markProjectRulesStaleForRun(db, {
+    const stale = markProjectRulesStaleForRun(stores, {
       repoRoot,
       runId: latestRunId,
       nowMs: 3_000,
     });
-    const selected = selectRelevantProjectRules(db, {
+    const selected = selectRelevantProjectRules(stores.session, {
       repoRoot,
       query: "change src/service.ts service workflow",
       linkedFilePaths: ["src/service.ts"],
@@ -496,22 +498,22 @@ test("rules linked to changed code become stale and stale active rules are not i
 });
 
 test("stale candidates are not shown as fresh candidate previews", async () => {
-  await withProjectRuleFixture(async ({ repoRoot, db }) => {
+  await withProjectRuleFixture(async ({ repoRoot, db, stores }) => {
     await indexProject({ repoRoot, db });
     const sourceRunId = getLatestIndexRun(db)?.id;
 
-    seedDurableRuleEvidence(db, repoRoot, "src/service.ts", sourceRunId);
-    const generated = generateProjectRuleCandidates(db, { repoRoot, nowMs: 1_000 });
+    seedDurableRuleEvidence(stores, repoRoot, "src/service.ts", sourceRunId);
+    const generated = generateProjectRuleCandidates(stores.session, { repoRoot, nowMs: 1_000 });
 
     await writeServiceFile(repoRoot, "loadUser");
     await indexProject({ repoRoot, db });
     const latestRunId = getLatestIndexRun(db)!.id;
-    const stale = markProjectRulesStaleForRun(db, {
+    const stale = markProjectRulesStaleForRun(stores, {
       repoRoot,
       runId: latestRunId,
       nowMs: 2_000,
     });
-    const selected = selectRelevantProjectRules(db, {
+    const selected = selectRelevantProjectRules(stores.session, {
       repoRoot,
       query: "change src/service.ts service workflow",
       linkedFilePaths: ["src/service.ts"],
@@ -529,6 +531,7 @@ test("rules command lists, adds active rules, generates, and promotes inspectabl
   const repoRoot = path.join(root, "repo");
   const dbPath = path.join(root, "rules.sqlite");
   const db = openIndexerDatabase(dbPath);
+const stores = new ProductStoreLease(db, dbPath).write;
   let dbClosed = false;
 
   try {
@@ -536,8 +539,8 @@ test("rules command lists, adds active rules, generates, and promotes inspectabl
     await writeModelFile(repoRoot);
     await writeServiceFile(repoRoot, "readUser");
     await indexProject({ repoRoot, db });
-    seedDurableRuleEvidence(db, repoRoot, "src/service.ts", getLatestIndexRun(db)?.id);
-    seedDurableRuleEvidence(db, repoRoot, "src/models.ts", getLatestIndexRun(db)?.id, 500);
+    seedDurableRuleEvidence(stores, repoRoot, "src/service.ts", getLatestIndexRun(db)?.id);
+    seedDurableRuleEvidence(stores, repoRoot, "src/models.ts", getLatestIndexRun(db)?.id, 500);
     db.close();
     dbClosed = true;
 
@@ -583,16 +586,16 @@ test("rules command lists, adds active rules, generates, and promotes inspectabl
 });
 
 function seedDurableRuleEvidence(
-  db: ReturnType<typeof openIndexerDatabase>,
+  stores: ReturnType<typeof createTestProductStores>,
   repoRoot: string,
   filePath: string,
   sourceRunId: number | undefined,
   baseCreatedAtMs = 100,
 ): void {
-  const symbol = listSymbolsForFile(db, filePath)[0];
+  const symbol = listSymbolsForFile(stores.index, filePath)[0];
 
   for (const [index, createdAtMs] of [baseCreatedAtMs, baseCreatedAtMs + 1, baseCreatedAtMs + 2].entries()) {
-    persistObservation(db, {
+    persistObservation(stores, {
       repoRoot,
       kind: ObservationKind.Decision,
       source: ObservationSource.Manual,
@@ -608,18 +611,24 @@ function seedDurableRuleEvidence(
 }
 
 async function withProjectRuleFixture(
-  run: (input: { repoRoot: string; db: ReturnType<typeof openIndexerDatabase> }) => Promise<void>,
+  run: (input: {
+    repoRoot: string;
+    db: ReturnType<typeof openIndexerDatabase>;
+    stores: ReturnType<typeof createTestProductStores>;
+  }) => Promise<void>,
 ): Promise<void> {
   const root = await mkdtemp(path.join(os.tmpdir(), "vtrace-project-rules-"));
   const repoRoot = path.join(root, "repo");
   const db = openIndexerDatabase();
+  const stores = createTestProductStores(db);
 
   try {
     await mkdir(path.join(repoRoot, "src"), { recursive: true });
     await writeModelFile(repoRoot);
     await writeServiceFile(repoRoot, "readUser");
-    await run({ repoRoot, db });
+    await run({ repoRoot, db, stores });
   } finally {
+    stores.close();
     db.close();
     await rm(root, { recursive: true, force: true });
   }

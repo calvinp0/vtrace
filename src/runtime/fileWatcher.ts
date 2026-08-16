@@ -14,6 +14,7 @@ import {
   writeRepoLocalState,
 } from "../setup/repoState";
 import { openIndexerDatabase } from "../db/sqlite";
+import { ProductStoreLease } from "../session/sessionStore";
 import type {
   ObservedFileChangeEvent,
   ObservedFileChangeState,
@@ -174,14 +175,16 @@ async function detectFileThrashingBestEffort(input: {
 }): Promise<void> {
   try {
     const db = openIndexerDatabase(input.dbPath);
+    const lease = new ProductStoreLease(db, input.dbPath);
 
     try {
-      detectFileThrashingAntiPatterns(db, {
+      detectFileThrashingAntiPatterns(lease.write, {
         repoRoot: input.repoRoot,
         events: input.events,
         currentContext: await resolveCurrentObservationContext(input.repoRoot),
       });
     } finally {
+      lease.close();
       db.close();
     }
   } catch {

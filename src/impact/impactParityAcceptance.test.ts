@@ -5,6 +5,7 @@ import path from "node:path";
 import { test } from "bun:test";
 
 import { openIndexerDatabase } from "../db/sqlite";
+import { createTestProductStores } from "../testing/productStores";
 import { indexProject } from "../indexer/indexProject";
 import { runPipelineOrchestrator } from "../runPipeline/runPipelineOrchestrator";
 import { RunPipelineImpactSkipReason } from "../runPipeline/types";
@@ -243,16 +244,21 @@ const EVIDENCE_CASES: readonly EvidenceCase[] = [
 ];
 
 async function withParityRepo(
-  run: (ctx: { repoRoot: string; db: ReturnType<typeof openIndexerDatabase> }) => Promise<void>,
+  run: (ctx: {
+    repoRoot: string;
+    db: ReturnType<typeof openIndexerDatabase>;
+    stores: ReturnType<typeof createTestProductStores>;
+  }) => Promise<void>,
 ): Promise<void> {
   const root = await mkdtemp(path.join(os.tmpdir(), "vtrace-impact-parity-"));
   const repoRoot = path.join(root, "repo");
   const db = openIndexerDatabase();
+  const stores = createTestProductStores(db);
 
   try {
     await writeParityRepo(repoRoot);
     await indexProject({ repoRoot, db });
-    await run({ repoRoot, db });
+    await run({ repoRoot, db, stores });
   } finally {
     db.close();
     await rm(root, { recursive: true, force: true });
@@ -370,8 +376,8 @@ test("a references focal reports reference evidence usage in coverage", async ()
 });
 
 test("run_pipeline impact section includes evidence for a refactor query naming a focal symbol", async () => {
-  await withParityRepo(async ({ db, repoRoot }) => {
-    const out = runPipelineOrchestrator(db, repoRoot, {
+  await withParityRepo(async ({ db, repoRoot, stores }) => {
+    const out = runPipelineOrchestrator(stores, repoRoot, {
       query: "refactor do_work function",
       intent: "refactor",
     });
@@ -393,8 +399,8 @@ test("run_pipeline impact section includes evidence for a refactor query naming 
 });
 
 test("run_pipeline skips impact with not_requested_by_intent reason for a non-refactor query", async () => {
-  await withParityRepo(async ({ db, repoRoot }) => {
-    const out = runPipelineOrchestrator(db, repoRoot, {
+  await withParityRepo(async ({ db, repoRoot, stores }) => {
+    const out = runPipelineOrchestrator(stores, repoRoot, {
       query: "explore do_work module",
       intent: "explore",
     });
@@ -408,8 +414,8 @@ test("run_pipeline skips impact with not_requested_by_intent reason for a non-re
 });
 
 test("run_pipeline skips impact with no_focal_symbol reason when nothing matches", async () => {
-  await withParityRepo(async ({ db, repoRoot }) => {
-    const out = runPipelineOrchestrator(db, repoRoot, {
+  await withParityRepo(async ({ db, repoRoot, stores }) => {
+    const out = runPipelineOrchestrator(stores, repoRoot, {
       query: "refactor nonexistent_symbol_zzz everywhere",
       intent: "refactor",
     });
@@ -421,8 +427,8 @@ test("run_pipeline skips impact with no_focal_symbol reason when nothing matches
 });
 
 test("run_pipeline skips impact with multiple_focal_symbols reason when several candidates match", async () => {
-  await withParityRepo(async ({ db, repoRoot }) => {
-    const out = runPipelineOrchestrator(db, repoRoot, {
+  await withParityRepo(async ({ db, repoRoot, stores }) => {
+    const out = runPipelineOrchestrator(stores, repoRoot, {
       query: "refactor do_work and entry",
       intent: "refactor",
     });
@@ -449,6 +455,7 @@ test("impact skip taxonomy is complete and impact_error maps to an honest get_im
   const root = await mkdtemp(path.join(os.tmpdir(), "vtrace-impact-error-"));
   const repoRoot = path.join(root, "repo");
   const db = openIndexerDatabase();
+  const stores = createTestProductStores(db);
   try {
     await mkdir(path.join(repoRoot, "src", "pkg"), { recursive: true });
     await writeFile(path.join(repoRoot, "src", "pkg", "__init__.py"), "");

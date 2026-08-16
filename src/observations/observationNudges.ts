@@ -1,7 +1,7 @@
-import type { Database } from "bun:sqlite";
+import type { SessionDatabase } from "../session/sessionStore";
 
-import { listObservationsForSession } from "../db/repositories/observationsRepository";
-import { getSessionById } from "../db/repositories/sessionsRepository";
+import { listObservationsForSession } from "../session/repositories/observationsRepository";
+import { getSessionById } from "../session/repositories/sessionsRepository";
 import {
   ObservationKind,
   ObservationSource,
@@ -77,7 +77,7 @@ const NUDGE_EXCLUDED_TOOLS = new Set<string>([
 ]);
 
 export function evaluateObservationNudge(
-  db: Database,
+  db: SessionDatabase,
   input: EvaluateObservationNudgeInput,
 ): ObservationNudgeState {
   if (input.sessionId === undefined || input.sessionId === null) {

@@ -21,6 +21,7 @@ import { inspectWorktreeIndexFreshness } from "../indexer/indexReadiness";
 import { resolveWorktreeIdentity } from "../indexer/worktreeIdentity";
 import { StaleStateStatus } from "../memory/types";
 import { searchMemory } from "../observations/searchMemory";
+import type { ProductStores } from "../session/sessionStore";
 import { resolveCurrentObservationContext } from "../observations/provenance";
 import type { CurrentObservationContext } from "../observations/types";
 import { selectRelevantProjectRules } from "../projectRules/projectRules";
@@ -49,7 +50,12 @@ const MAX_RULE_ITEMS = 3;
 const MAX_SUMMARY_CHARS = 320;
 
 export interface AssembleProductContextInput {
-  db: Database;
+  /**
+   * Repository evidence and product/session state. Both are READ here: the
+   * capsule comes from the index, memory and rules from the session store, and
+   * assembling a product context writes to neither (§22).
+   */
+  stores: ProductStores;
   repoRoot: string;
   task: string;
   intent?: CapsuleIntent;
@@ -201,7 +207,7 @@ export async function assembleProductContext(
       totalMs: Math.max(freshnessMs, elapsed(totalStarted, now())),
       intent: input.intent ?? CapsuleIntent.Auto,
       budgetTokens,
-      indexRunId: indexMeta?.manifest.index.runId ?? getLatestIndexRun(input.db)?.id ?? null,
+      indexRunId: indexMeta?.manifest.index.runId ?? getLatestIndexRun(input.stores.index)?.id ?? null,
       indexMode,
     });
   }
@@ -211,7 +217,7 @@ export async function assembleProductContext(
   // or alter any of those policies.
   const capsuleBuildStarted = now();
   const authoritative = input.authoritativeRetrieval ?? buildAuthoritativeProductRetrieval(
-    input.db,
+    input.stores.index,
     input.repoRoot,
     {
       query: input.task,
@@ -231,14 +237,14 @@ export async function assembleProductContext(
   const drafts: DraftItem[] = [];
   let roleOrder = 0;
   for (const pivot of product.pivots) {
-    drafts.push(sourceDraft(input.db, pivot, ["pivot", ...(isRequiredPivot(pivot) ? ["required" as const] : [])], roleOrder++));
+    drafts.push(sourceDraft(input.stores.index, pivot, ["pivot", ...(isRequiredPivot(pivot) ? ["required" as const] : [])], roleOrder++));
   }
   for (const support of product.support) {
     const roles: ProductContextRole[] = ["support"];
     if (support.contentMode !== "full") roles.push("skeleton");
     if (isDocumentationPath(support.path)) roles.push("documentation");
     if (support.documentKind !== undefined) roles.push("configuration");
-    drafts.push(sourceDraft(input.db, support, roles, roleOrder++));
+    drafts.push(sourceDraft(input.stores.index, support, roles, roleOrder++));
   }
   if (product.pivots.length > 0) {
     addActionabilityTargets(product.actionabilityHints, drafts, () => roleOrder++);
@@ -246,7 +252,7 @@ export async function assembleProductContext(
 
   const impactStarted = now();
   if (product.pivots.length > 0) {
-    addImpactEvidence(input.db, input.repoRoot, product.pivots, drafts, () => roleOrder++);
+    addImpactEvidence(input.stores.index, input.repoRoot, product.pivots, drafts, () => roleOrder++);
   }
   const impactMs = elapsed(impactStarted, now());
 
@@ -297,7 +303,7 @@ export async function assembleProductContext(
       headCommit: identity.snapshot.headCommit,
       branch: identity.snapshot.branch,
       detached: identity.snapshot.detached,
-      indexRunId: indexMeta?.manifest.index.runId ?? getLatestIndexRun(input.db)?.id ?? null,
+      indexRunId: indexMeta?.manifest.index.runId ?? getLatestIndexRun(input.stores.index)?.id ?? null,
       indexMode,
     },
     freshness: {
@@ -556,7 +562,7 @@ function attachStableContextReferences(items: ProductContextItem[]): void {
 
 function addMemoryAndRules(input: AssembleProductContextInput, currentContext: CurrentObservationContext, product: ReturnType<typeof toCapsuleV2ProductResponse>, drafts: DraftItem[], nextOrder: () => number): void {
   const linkedFiles = unique([...product.pivots, ...product.support].map((item) => item.path));
-  const memories = searchMemory(input.db, {
+  const memories = searchMemory(input.stores, {
     query: input.task,
     maxResults: MAX_MEMORY_ITEMS * 2,
     ...(input.sessionId ? { sessionId: input.sessionId } : {}),
@@ -577,7 +583,7 @@ function addMemoryAndRules(input: AssembleProductContextInput, currentContext: C
       metadata: { source: result.observation.source, type: "memory", createdAtMs: result.observation.createdAtMs, staleness: "fresh" },
     });
   }
-  const rules = selectRelevantProjectRules(input.db, {
+  const rules = selectRelevantProjectRules(input.stores.session, {
     repoRoot: input.repoRoot,
     query: input.task,
     intent: product.intent,

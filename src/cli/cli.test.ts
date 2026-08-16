@@ -9,15 +9,17 @@ import { test } from "bun:test";
 import { buildCapsule, createSourceBackedCapsuleBuilder } from "../capsule/buildCapsule";
 import { createCharacterBudget } from "../capsule/budget";
 import { CapsuleInclusionReasonKind, type CapsuleSupportingCandidate } from "../capsule/types";
-import { persistCapsuleManifest } from "../db/repositories/capsuleManifestsRepository";
+import { persistCapsuleManifest } from "../session/repositories/capsuleManifestsRepository";
 import { listIndexRuns } from "../db/repositories/indexRunsRepository";
 import {
   listObservationsForSession,
   persistObservation,
-} from "../db/repositories/observationsRepository";
+} from "../session/repositories/observationsRepository";
 import { ObservationKind, ObservationSource } from "../observations/types";
 import { listSymbolsForFile } from "../db/repositories/symbolsRepository";
 import { openIndexerDatabase } from "../db/sqlite";
+import { createTestProductStores } from "../testing/productStores";
+import { ProductStoreLease } from "../session/sessionStore";
 import { EdgeType, SymbolKind, type SymbolRecord } from "../domain/types";
 import {
   SymbolSearchMatchField,
@@ -227,6 +229,7 @@ test("init command bootstraps repo-local state and prints readiness metadata", a
     const firstOutput = JSON.parse(first.stdout);
     const secondOutput = JSON.parse(second.stdout);
     const db = openIndexerDatabase(secondOutput.paths.dbPath);
+const stores = new ProductStoreLease(db, secondOutput.paths.dbPath).write;
 
     try {
       assert.equal(firstOutput.repoRoot, repoRoot);
@@ -495,6 +498,7 @@ test("repeated setup is safe and reuses existing ready repo state without anothe
     const first = await runCli(["setup", repoRoot]);
     const second = await runCli(["setup", repoRoot]);
     const db = openIndexerDatabase(path.join(repoRoot, REPO_LOCAL_STATE_DIRNAME, "index.sqlite"));
+const stores = new ProductStoreLease(db, path.join(repoRoot, REPO_LOCAL_STATE_DIRNAME, "index.sqlite")).write;
 
     try {
       assert.equal(first.exitCode, 0);
@@ -861,6 +865,7 @@ test("status and doctor surface possibly stale freshness warnings without mutati
 
     const statePath = path.join(repoRoot, REPO_LOCAL_STATE_DIRNAME, "state.json");
     const db = openIndexerDatabase(path.join(repoRoot, REPO_LOCAL_STATE_DIRNAME, "index.sqlite"));
+const stores = new ProductStoreLease(db, path.join(repoRoot, REPO_LOCAL_STATE_DIRNAME, "index.sqlite")).write;
 
     try {
       const beforeState = await readFile(statePath, "utf8");
@@ -1606,6 +1611,7 @@ test("inspect-symbol prints persisted data for a known symbol", async () => {
     await writeFixtureRepo(repoRoot);
     await runCli(["index", repoRoot], { dbPath });
     const db = openIndexerDatabase(dbPath);
+const stores = new ProductStoreLease(db, dbPath).write;
 
     try {
       const symbol = listSymbolsForFile(db, "src/service.ts")[0];
@@ -2506,14 +2512,14 @@ test("missing symbol lookups fail cleanly with deterministic messages", async ()
 });
 
 function seedRepeatedPassiveSession(
-  db: ReturnType<typeof openIndexerDatabase>,
+  stores: ReturnType<typeof createTestProductStores>,
   repoRoot: string,
   sessionId: string,
 ): void {
-  const sourceRunId = listIndexRuns(db).at(-1)?.id;
+  const sourceRunId = listIndexRuns(stores.index).at(-1)?.id;
 
   for (const [index, createdAtMs] of [100, 120, 140].entries()) {
-    persistObservation(db, {
+    persistObservation(stores, {
       repoRoot,
       sessionId,
       kind: ObservationKind.ToolCall,
@@ -2528,7 +2534,7 @@ function seedRepeatedPassiveSession(
       linkedFilePaths: ["src/service.ts"],
     });
   }
-  persistObservation(db, {
+  persistObservation(stores, {
     repoRoot,
     sessionId,
     kind: ObservationKind.Decision,
@@ -2549,8 +2555,9 @@ test("compress-sessions consolidates repeated passive observations, preserves du
     assert.equal(indexed.exitCode, 0);
 
     const db = openIndexerDatabase(dbPath);
+const stores = new ProductStoreLease(db, dbPath).write;
     try {
-      seedRepeatedPassiveSession(db, repoRoot, "session-cli");
+      seedRepeatedPassiveSession(stores, repoRoot, "session-cli");
     } finally {
       db.close();
     }
@@ -2573,8 +2580,9 @@ test("compress-sessions consolidates repeated passive observations, preserves du
     assert.deepEqual(report.compressedSessionIds, ["session-cli"]);
 
     const after = openIndexerDatabase(dbPath);
+    const afterStores = new ProductStoreLease(after, dbPath);
     try {
-      const observations = listObservationsForSession(after, "session-cli");
+      const observations = listObservationsForSession(afterStores.read.session, "session-cli");
       // The three repeated passive tool calls are gone.
       assert.equal(
         observations.filter((observation) => observation.summary.startsWith("Repeated capsule")).length,
@@ -2591,6 +2599,7 @@ test("compress-sessions consolidates repeated passive observations, preserves du
         true,
       );
     } finally {
+      afterStores.close();
       after.close();
     }
 
@@ -2611,8 +2620,9 @@ test("compress-sessions --dry-run previews the effect without mutating", async (
     assert.equal((await runCli(["index", repoRoot], { dbPath })).exitCode, 0);
 
     const db = openIndexerDatabase(dbPath);
+const stores = new ProductStoreLease(db, dbPath).write;
     try {
-      seedRepeatedPassiveSession(db, repoRoot, "session-cli");
+      seedRepeatedPassiveSession(stores, repoRoot, "session-cli");
     } finally {
       db.close();
     }
@@ -2634,9 +2644,14 @@ test("compress-sessions --dry-run previews the effect without mutating", async (
 
     // Nothing was mutated by the dry run.
     const after = openIndexerDatabase(dbPath);
+    const afterStores = new ProductStoreLease(after, dbPath);
     try {
-      assert.equal(listObservationsForSession(after, "session-cli").length, 4);
+      assert.equal(
+        listObservationsForSession(afterStores.read.session, "session-cli").length,
+        4,
+      );
     } finally {
+      afterStores.close();
       after.close();
     }
   });
@@ -2648,8 +2663,9 @@ test("compress-sessions skips recent active sessions under the default idle thre
     assert.equal((await runCli(["index", repoRoot], { dbPath })).exitCode, 0);
 
     const db = openIndexerDatabase(dbPath);
+const stores = new ProductStoreLease(db, dbPath).write;
     try {
-      persistObservation(db, {
+      persistObservation(stores, {
         repoRoot,
         sessionId: "session-recent",
         kind: ObservationKind.ToolCall,
@@ -3018,6 +3034,7 @@ export function SessionFeature(): string {
 
 function persistSourceBackedFixtureManifest(repoRoot: string): { manifestId: string } {
   const db = openIndexerDatabase(repoLocalDbPath(repoRoot));
+const stores = new ProductStoreLease(db, repoLocalDbPath(repoRoot)).write;
 
   try {
     const sourceRunId = listIndexRuns(db).at(-1)?.id;
@@ -3026,7 +3043,7 @@ function persistSourceBackedFixtureManifest(repoRoot: string): { manifestId: str
     const readUser = findSymbol(listSymbolsForFile(db, "src/service.ts"), "readUser");
     const user = findSymbol(listSymbolsForFile(db, "src/models.ts"), "User");
     const capsule = buildCapsule(
-      createSourceBackedCapsuleBuilder({ db, repoRoot }),
+      createSourceBackedCapsuleBuilder({ db, stores, repoRoot }),
       {
         query: "read user",
         rerankedCandidates: [makeRerankedCandidate(readUser)],
@@ -3034,7 +3051,7 @@ function persistSourceBackedFixtureManifest(repoRoot: string): { manifestId: str
         maxBudget: createCharacterBudget(5_000),
       },
     );
-    const manifest = persistCapsuleManifest(db, {
+    const manifest = persistCapsuleManifest(stores, {
       sourceRunId: sourceRunId!,
       capsule,
       createdAtMs: 1,

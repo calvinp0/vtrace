@@ -5,8 +5,9 @@ import path from "node:path";
 import { test } from "bun:test";
 
 import { persistParseResult } from "../db/persistParseResult";
-import { persistObservation } from "../db/repositories/observationsRepository";
+import { persistObservation } from "../session/repositories/observationsRepository";
 import { openIndexerDatabase } from "../db/sqlite";
+import { createTestProductStores } from "../testing/productStores";
 import { SymbolKind } from "../domain/types";
 import { getImpactGraph } from "../impact/getImpactGraph";
 import { indexProject } from "../indexer/indexProject";
@@ -129,6 +130,7 @@ test("generic retrieval benchmark case metadata stays explicit and deterministic
 
 test("generic retrieval/reranking benchmarks cover exact, broad, concept, file, and ambiguous queries", () => {
   const db = openIndexerDatabase();
+  const stores = createTestProductStores(db);
 
   try {
     seedGenericRetrievalBenchmarkFixture(db);
@@ -155,6 +157,7 @@ test("generic retrieval/reranking benchmarks cover exact, broad, concept, file, 
 test("mixed Python/Cython boundary benchmark remains synthetic and deterministic", async () => {
   await withMixedPyCythonRepo(async (repoRoot) => {
     const db = openIndexerDatabase();
+    const stores = createTestProductStores(db);
 
     try {
       await indexProject({ repoRoot, db });
@@ -184,6 +187,7 @@ test("mixed Python/Cython boundary benchmark remains synthetic and deterministic
 test("impact graph benchmark captures graph-backed dependents for Python references", async () => {
   await withPythonImpactBenchmarkFixture(async (repoRoot) => {
     const db = openIndexerDatabase();
+    const stores = createTestProductStores(db);
 
     try {
       await indexProject({ repoRoot, db });
@@ -227,10 +231,11 @@ test("impact graph benchmark captures graph-backed dependents for Python referen
 
 test("memory and rule benchmark keeps active guidance distinct from candidates", () => {
   const db = openIndexerDatabase();
+  const stores = createTestProductStores(db);
   const repoRoot = "/synthetic/retrieval-benchmark";
 
   try {
-    const observation = persistObservation(db, {
+    const observation = persistObservation(stores, {
       repoRoot,
       sessionId: "benchmark-session",
       kind: ObservationKind.Decision,
@@ -242,7 +247,7 @@ test("memory and rule benchmark keeps active guidance distinct from candidates",
       linkedFilePaths: ["src/runPipeline/deferredVexpStore.ts"],
       linkedFqNames: ["src/runPipeline/deferredVexpStore.ts::persistVrefRecord"],
     });
-    createActiveProjectRule(db, {
+    createActiveProjectRule(stores.session, {
       repoRoot,
       summary: "Keep watcher behavior explicit and stale state visible.",
       files: ["src/runtime/fileWatcher.ts"],
@@ -251,7 +256,7 @@ test("memory and rule benchmark keeps active guidance distinct from candidates",
     });
 
     for (const createdAtMs of [300, 400, 500]) {
-      persistObservation(db, {
+      persistObservation(stores, {
         repoRoot,
         kind: ObservationKind.Insight,
         source: ObservationSource.Manual,
@@ -263,18 +268,18 @@ test("memory and rule benchmark keeps active guidance distinct from candidates",
       });
     }
 
-    const generated = generateProjectRuleCandidates(db, { repoRoot, nowMs: 600 });
-    const memoryResults = searchMemory(db, {
+    const generated = generateProjectRuleCandidates(stores.session, { repoRoot, nowMs: 600 });
+    const memoryResults = searchMemory(stores, {
       query: "what previous decision mentioned V-REF persistence",
       maxResults: 4,
     });
-    const selectedRules = selectRelevantProjectRules(db, {
+    const selectedRules = selectRelevantProjectRules(stores.session, {
       repoRoot,
       query: "show project convention about watcher behavior",
       maxActive: 4,
       maxCandidates: 4,
     });
-    const selectedCandidateRules = selectRelevantProjectRules(db, {
+    const selectedCandidateRules = selectRelevantProjectRules(stores.session, {
       repoRoot,
       query: "docs tests convention",
       maxActive: 4,
@@ -293,6 +298,7 @@ test("memory and rule benchmark keeps active guidance distinct from candidates",
 
 test("route-oriented broad prose surfaces sibling files without fabricating path signals", () => {
   const db = openIndexerDatabase();
+  const stores = createTestProductStores(db);
 
   try {
     for (const file of SCIENTIFIC_ROUTES_FIXTURE) {
@@ -342,6 +348,7 @@ test("route-oriented broad prose surfaces sibling files without fabricating path
 
 test("graph reranking benchmark output is stable for connected generic symbols", () => {
   const db = openIndexerDatabase();
+  const stores = createTestProductStores(db);
 
   try {
     seedGenericRetrievalBenchmarkFixture(db);

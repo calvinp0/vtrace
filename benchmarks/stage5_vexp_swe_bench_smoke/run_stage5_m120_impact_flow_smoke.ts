@@ -5,6 +5,7 @@ import path from "node:path";
 
 import { CapsuleIntent } from "../../src/capsuleV2/types";
 import { openIndexerDatabase } from "../../src/db/sqlite";
+import { ProductStoreLease } from "../../src/session/sessionStore";
 import { getImpactGraph, type ImpactGraphOutput } from "../../src/impact/getImpactGraph";
 import { indexProject } from "../../src/indexer/indexProject";
 import { normalizeGraph } from "../../src/indexer/normalizedGraph";
@@ -38,6 +39,7 @@ const record = async (name: string, run: () => Promise<string> | string): Promis
 const tempRoot = await mkdtemp(path.join(os.tmpdir(), "vtrace-m120-smoke-"));
 const repoRoot = path.join(tempRoot, "repo");
 const db = openIndexerDatabase();
+const stores = new ProductStoreLease(db, ":memory:").write;
 
 try {
   await writeFixture(repoRoot);
@@ -225,7 +227,7 @@ try {
     } finally { fullDb.close(); }
   });
   await record("19_product_context_impact_integration", async () => {
-    const product = await assembleProductContext({ db, repoRoot, task: "impact callers of src/lib.ts work", intent: CapsuleIntent.Impact, budgetTokens: 8_000, freshnessOverride: { status: "fresh", reason: "smoke", action: "none" } });
+    const product = await assembleProductContext({ stores, repoRoot, task: "impact callers of src/lib.ts work", intent: CapsuleIntent.Impact, budgetTokens: 8_000, freshnessOverride: { status: "fresh", reason: "smoke", action: "none" } });
     const impactItems = product.items.filter((item) => item.roles.includes("impact"));
     assert.ok(impactItems.length > 0, JSON.stringify({ resolved: product.resolved, leadPivot: product.leadPivot, items: product.items.map((item) => ({ path: item.path, symbol: item.symbol, roles: item.roles })) }));
     assert.ok(impactItems.every((item) => item.metadata?.contextReference === `[${item.id}]`));

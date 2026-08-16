@@ -9,10 +9,26 @@ import { createMcpServer } from "../../src/mcp/server";
 import { MCP_SERVER_SCHEMA, McpToolId } from "../../src/mcp/types";
 import { assembleProductContext } from "../../src/productContext/assembleProductContext";
 import {
+
   prepareRunnerOutput,
   resolveWorkspaceRoot,
   SHARED_RUNNER_OPTIONS_HELP,
 } from "./lib/runnerPaths";
+
+import {
+  createEphemeralSessionDatabase,
+  type ProductStores,
+} from "../../src/session/sessionStore";
+
+/**
+ * M152: a read-only pair over an already-open index handle. Benchmarks read
+ * memory and rules from a session store; `read` never creates one, so a smoke
+ * run against a temporary or read-only index inherits no product state.
+ */
+function productStoresFor(indexDb: Database): ProductStores {
+  return { index: indexDb, session: createEphemeralSessionDatabase() };
+}
+
 
 // M141: reports go to an untracked run directory unless --out/--evidence
 // asks otherwise, so validating the evidence can never overwrite it.
@@ -183,7 +199,7 @@ async function tckdbAcceptance(scratch: string): Promise<Json> {
       capsuleIntent: CapsuleIntent.Modify,
     });
     const product = await assembleProductContext({
-      db: database,
+      stores: productStoresFor(database),
       repoRoot: TCKDB_ROOT,
       task: TCKDB_QUERY,
       intent: CapsuleIntent.Modify,

@@ -5,9 +5,15 @@ import path from "node:path";
 import { Database } from "bun:sqlite";
 import { test } from "bun:test";
 
-import { persistObservation, listObservations } from "../db/repositories/observationsRepository";
+import { persistObservation, listObservations } from "../session/repositories/observationsRepository";
 import { initializeSchema } from "../db/schema";
 import { openIndexerDatabase } from "../db/sqlite";
+import { createTestProductStores, createTestSessionDatabase } from "../testing/productStores";
+import { ProductStoreLease } from "../session/sessionStore";
+import {
+  LegacyMigrationOutcome,
+  migrateLegacySessionState,
+} from "../session/legacyMigration";
 import { initRepo } from "../setup/initRepo";
 import { runPipelineOrchestrator } from "../runPipeline/runPipelineOrchestrator";
 import { classifyObservationCompatibility } from "./compatibility";
@@ -98,14 +104,15 @@ test("M138 compatibility matrix is deterministic across repo, worktree, HEAD, di
 });
 
 test("M138 search suppresses legacy/stale evidence, labels historical results, prioritizes current, and surfaces conflicts", () => {
-  const db = memoryDb();
+  const stores = memoryStores();
+  const db = stores.index;
   try {
     const staleContext = withContext({ headCommit: "old-head" }, { headCommit: "old-head", identity: "old-index" });
-    persistImpact(db, staleContext, 1327, 95, 100);
-    persistImpact(db, staleContext, 10, 7, 200);
-    const currentA = persistImpact(db, BASE_CONTEXT, 3, 3, 300);
-    const currentConflict = persistImpact(db, BASE_CONTEXT, 4, 4, 301);
-    persistObservation(db, {
+    persistImpact(stores, staleContext, 1327, 95, 100);
+    persistImpact(stores, staleContext, 10, 7, 200);
+    const currentA = persistImpact(stores, BASE_CONTEXT, 3, 3, 300);
+    const currentConflict = persistImpact(stores, BASE_CONTEXT, 4, 4, 301);
+    persistObservation(stores, {
       repoRoot: "/legacy/arc",
       kind: ObservationKind.Insight,
       source: ObservationSource.Manual,
@@ -113,7 +120,7 @@ test("M138 search suppresses legacy/stale evidence, labels historical results, p
       createdAtMs: 50,
     });
 
-    const normal = searchMemoryDetailed(db, {
+    const normal = searchMemoryDetailed(stores, {
       query: "get_dihedral dependents",
       maxResults: 10,
       currentContext: BASE_CONTEXT,
@@ -124,7 +131,7 @@ test("M138 search suppresses legacy/stale evidence, labels historical results, p
     assert.equal(normal.conflicts.length, 1);
     assert.deepEqual(normal.conflicts[0]?.observationIds, [currentA.id, currentConflict.id].sort());
 
-    const historical = searchMemoryDetailed(db, {
+    const historical = searchMemoryDetailed(stores, {
       query: "get_dihedral dependents",
       maxResults: 10,
       currentContext: BASE_CONTEXT,
@@ -141,7 +148,7 @@ test("M138 search suppresses legacy/stale evidence, labels historical results, p
       && result.compatibility?.state === ObservationCompatibilityState.ProvenanceIncomplete
     )), true);
   } finally {
-    db.close();
+    stores.close();
   }
 });
 
@@ -159,10 +166,21 @@ test("M138 global and repository workflow notes remain applicable while missing 
   assertState(legacy, BASE_CONTEXT, ObservationCompatibilityState.ProvenanceIncomplete, false);
 });
 
-test("M138 legacy observation schema upgrades in place without inventing provenance", () => {
-  const db = new Database(":memory:");
+test("M138 legacy observations migrate into the session store without inventing provenance", () => {
+  // Before M152 this asserted that `initializeSchema` upgraded a legacy
+  // `observations` table IN PLACE inside the index. That upgrade path is gone
+  // with the table: observations live in `session.sqlite` now, and the way a
+  // pre-provenance row reaches the current schema is the legacy drain.
+  //
+  // The property under test is unchanged and is the one that matters (§99): a
+  // row that never recorded provenance must arrive WITHOUT provenance, and be
+  // classified `ProvenanceIncomplete`, rather than being handed the current
+  // context's identity on the way across.
+  const indexDb = new Database(":memory:");
+  const sessionDb = createTestSessionDatabase();
   try {
-    db.exec(`
+    initializeSchema(indexDb);
+    indexDb.exec(`
       CREATE TABLE observations (
         id TEXT PRIMARY KEY, repo_root TEXT NOT NULL, session_id TEXT,
         kind TEXT NOT NULL, source TEXT NOT NULL, tool_name TEXT, query_text TEXT,
@@ -174,29 +192,50 @@ test("M138 legacy observation schema upgrades in place without inventing provena
         'Legacy technical claim', '', NULL, NULL, 1
       );
     `);
-    initializeSchema(db);
-    const observation = listObservations(db)[0]!;
+
+    const result = migrateLegacySessionState({
+      indexDb,
+      indexDbPath: "/legacy/repo/.vtrace/index.sqlite",
+      sessionDb,
+      nowMs: 1,
+    });
+    assert.equal(result.outcome, LegacyMigrationOutcome.Migrated);
+    assert.equal(result.totalRowsCopied, 1);
+
+    const observation = listObservations(sessionDb)[0]!;
+    assert.equal(observation.id, "legacy-id");
     assert.equal(observation.provenance, undefined);
     assert.equal(observation.scope, undefined);
     assertState(observation, BASE_CONTEXT, ObservationCompatibilityState.ProvenanceIncomplete, false);
-    const columns = db.query("PRAGMA table_info(observations)").all() as Array<{ name: string }>;
+
+    // The current provenance columns exist on the migrated row's table, and the
+    // legacy table is gone from the index entirely (§134, §136).
+    const columns = sessionDb.query("PRAGMA table_info(observations)").all() as Array<{ name: string }>;
     assert.equal(columns.some((column) => column.name === "provenance_json"), true);
+    assert.equal(
+      indexDb.query(
+        "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'observations'",
+      ).all().length,
+      0,
+    );
   } finally {
-    db.close();
+    sessionDb.close();
+    indexDb.close();
   }
 });
 
 test("M138 provenance-complete observation round-trips and session context uses the shared gate", () => {
-  const db = memoryDb();
+  const stores = memoryStores();
+  const db = stores.index;
   try {
-    const current = persistImpact(db, BASE_CONTEXT, 3, 3, 100, "session-a");
-    persistImpact(db, withContext({ headCommit: "old" }, { headCommit: "old", identity: "old" }), 10, 7, 200, "session-a");
-    const reloaded = listObservations(db).find((observation) => observation.id === current.id)!;
+    const current = persistImpact(stores, BASE_CONTEXT, 3, 3, 100, "session-a");
+    persistImpact(stores, withContext({ headCommit: "old" }, { headCommit: "old", identity: "old" }), 10, 7, 200, "session-a");
+    const reloaded = listObservations(stores.session).find((observation) => observation.id === current.id)!;
     assert.equal(reloaded.provenance?.schemaVersion, OBSERVATION_PROVENANCE_SCHEMA_VERSION);
-    const normal = getSessionContext(db, { sessionId: "session-a", limit: 10, currentContext: BASE_CONTEXT });
+    const normal = getSessionContext(stores, { sessionId: "session-a", limit: 10, currentContext: BASE_CONTEXT });
     assert.deepEqual(normal.observations.map((observation) => observation.id), [current.id]);
     assert.equal(normal.suppressedObservationCount, 1);
-    const historical = getSessionContext(db, {
+    const historical = getSessionContext(stores, {
       sessionId: "session-a",
       limit: 10,
       currentContext: BASE_CONTEXT,
@@ -207,25 +246,26 @@ test("M138 provenance-complete observation round-trips and session context uses 
       compatibility.state === ObservationCompatibilityState.StaleRepoState
     )), true);
   } finally {
-    db.close();
+    stores.close();
   }
 });
 
 test("M138 many stale matches stay bounded before serialization", () => {
-  const db = memoryDb();
+  const stores = memoryStores();
+  const db = stores.index;
   try {
     const stale = withContext({ headCommit: "old" }, { headCommit: "old", identity: "old" });
     for (let index = 0; index < 250; index += 1) {
-      persistImpact(db, stale, 1000 + index, 90, index);
+      persistImpact(stores, stale, 1000 + index, 90, index);
     }
-    const normal = searchMemoryDetailed(db, {
+    const normal = searchMemoryDetailed(stores, {
       query: "get_dihedral dependents",
       maxResults: 5,
       currentContext: BASE_CONTEXT,
     });
     assert.equal(normal.results.length, 0);
     assert.equal(normal.accounting.suppressedStale, 250);
-    const historical = searchMemoryDetailed(db, {
+    const historical = searchMemoryDetailed(stores, {
       query: "get_dihedral dependents",
       maxResults: 5,
       currentContext: BASE_CONTEXT,
@@ -233,7 +273,7 @@ test("M138 many stale matches stay bounded before serialization", () => {
     });
     assert.equal(historical.results.length, 5);
   } finally {
-    db.close();
+    stores.close();
   }
 });
 
@@ -243,8 +283,10 @@ test("M138 automatic run-pipeline memory injection excludes strong legacy eviden
     await writeFile(path.join(repoRoot, "service.ts"), "export function createSession() { return 1; }\n");
     const initialized = await initRepo({ repoPath: repoRoot });
     const db = openIndexerDatabase(initialized.paths.dbPath);
+    const lease = new ProductStoreLease(db, initialized.paths.dbPath);
+    const stores = lease.write;
     try {
-      persistObservation(db, {
+      persistObservation(stores, {
         repoRoot,
         kind: ObservationKind.Warning,
         source: ObservationSource.McpAuto,
@@ -257,7 +299,7 @@ test("M138 automatic run-pipeline memory injection excludes strong legacy eviden
       const context = await import("./provenance").then(({ resolveCurrentObservationContext }) => (
         resolveCurrentObservationContext(repoRoot)
       ));
-      const output = runPipelineOrchestrator(db, repoRoot, {
+      const output = runPipelineOrchestrator(stores, repoRoot, {
         query: "rename createSession legacy danger",
         includeMemory: true,
         currentObservationContext: context,
@@ -273,14 +315,15 @@ test("M138 automatic run-pipeline memory injection excludes strong legacy eviden
   }
 });
 
-function memoryDb(): Database {
+/** An in-memory index paired with an in-memory session store. */
+function memoryStores(): ReturnType<typeof createTestProductStores> {
   const db = new Database(":memory:");
   initializeSchema(db);
-  return db;
+  return createTestProductStores(db);
 }
 
 function persistImpact(
-  db: Database,
+  stores: ReturnType<typeof createTestProductStores>,
   context: CurrentObservationContext,
   dependentCount: number,
   fileCount: number,
@@ -289,7 +332,7 @@ function persistImpact(
 ) {
   const queryText = "arc/species/vectors.py::get_dihedral";
   const resultValue = { target: queryText, dependentCount, fileCount };
-  return persistObservation(db, {
+  return persistObservation(stores, {
     repoRoot: context.repository.worktreeRoot,
     sessionId,
     kind: ObservationKind.ToolCall,

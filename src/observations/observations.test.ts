@@ -10,13 +10,13 @@ import {
   listObservations,
   listObservationsForSession,
   persistObservation,
-} from "../db/repositories/observationsRepository";
+} from "../session/repositories/observationsRepository";
 import {
   countSessions,
   getSessionById,
   listSessionCleanupCandidates,
   upsertSession,
-} from "../db/repositories/sessionsRepository";
+} from "../session/repositories/sessionsRepository";
 import {
   getLatestIndexRun,
   listFileDiffsForRun,
@@ -24,6 +24,7 @@ import {
 } from "../db/repositories/indexRunsRepository";
 import { listSymbolsForFile } from "../db/repositories/symbolsRepository";
 import { openIndexerDatabase } from "../db/sqlite";
+import { createTestProductStores } from "../testing/productStores";
 import { indexProject } from "../indexer/indexProject";
 import { routeQuery } from "../intent/routeQuery";
 import { FileChangeType, StaleStateStatus } from "../memory/types";
@@ -56,13 +57,13 @@ import {
 } from "./types";
 
 test("observations persist deterministically with explicit kinds and structural links", async () => {
-  await withObservationFixture(async ({ repoRoot, db }) => {
+  await withObservationFixture(async ({ repoRoot, db, stores }) => {
     await indexProject({ repoRoot, db });
     const readUser = listSymbolsForFile(db, "src/service.ts").find((symbol) => symbol.localName === "readUser");
 
     assert.notEqual(readUser, undefined);
 
-    const observation = persistObservation(db, {
+    const observation = persistObservation(stores, {
       repoRoot,
       sessionId: "session-a",
       kind: ObservationKind.Decision,
@@ -79,7 +80,7 @@ test("observations persist deterministically with explicit kinds and structural 
       linkedFqNames: ["src/service.ts::readUser"],
     });
 
-    assert.deepEqual(getObservationById(db, observation.id), observation);
+    assert.deepEqual(getObservationById(stores.session, observation.id), observation);
     assert.equal(observation.kind, ObservationKind.Decision);
     assert.equal(observation.linkedFilePaths[0], "src/service.ts");
     assert.deepEqual(
@@ -87,24 +88,24 @@ test("observations persist deterministically with explicit kinds and structural 
       [[readUser!.id, readUser!.fqName, readUser!.kind]],
     );
     assert.deepEqual(observation.linkedFqNames, ["src/service.ts::readUser"]);
-    assert.equal(countObservations(db), 1);
-    assert.equal(countSessions(db), 1);
-    assert.deepEqual(getSessionById(db, "session-a"), {
+    assert.equal(countObservations(stores.session), 1);
+    assert.equal(countSessions(stores.session), 1);
+    assert.deepEqual(getSessionById(stores.session, "session-a"), {
       sessionId: "session-a",
       repoRoot,
       startedAtMs: 100,
       lastActivityAtMs: 100,
       status: SessionStatus.Active,
     });
-    assert.deepEqual(listObservations(db), [observation]);
+    assert.deepEqual(listObservations(stores.session), [observation]);
   });
 });
 
 test("observation identity is content-stable and createdAtMs remains metadata only", async () => {
-  await withObservationFixture(async ({ repoRoot, db }) => {
+  await withObservationFixture(async ({ repoRoot, db, stores }) => {
     await indexProject({ repoRoot, db });
 
-    const first = persistObservation(db, {
+    const first = persistObservation(stores, {
       repoRoot,
       sessionId: "session-a",
       kind: ObservationKind.Decision,
@@ -118,7 +119,7 @@ test("observation identity is content-stable and createdAtMs remains metadata on
       linkedFilePaths: ["src/service.ts"],
       linkedFqNames: ["src/service.ts::readUser"],
     });
-    const second = persistObservation(db, {
+    const second = persistObservation(stores, {
       repoRoot,
       sessionId: "session-a",
       kind: ObservationKind.Decision,
@@ -135,13 +136,13 @@ test("observation identity is content-stable and createdAtMs remains metadata on
 
     assert.equal(second.id, first.id);
     assert.equal(second.createdAtMs, 100);
-    assert.equal(countObservations(db), 1);
+    assert.equal(countObservations(stores.session), 1);
   });
 });
 
 test("session-linked observations update explicit session activity without changing observation truth", async () => {
-  await withObservationFixture(async ({ repoRoot, db }) => {
-    const first = persistObservation(db, {
+  await withObservationFixture(async ({ repoRoot, db, stores }) => {
+    const first = persistObservation(stores, {
       repoRoot,
       sessionId: "session-a",
       kind: ObservationKind.Decision,
@@ -150,7 +151,7 @@ test("session-linked observations update explicit session activity without chang
       body: "The adapter owns session orchestration.",
       createdAtMs: 100,
     });
-    const second = persistObservation(db, {
+    const second = persistObservation(stores, {
       repoRoot,
       sessionId: "session-a",
       kind: ObservationKind.Decision,
@@ -161,8 +162,8 @@ test("session-linked observations update explicit session activity without chang
     });
 
     assert.equal(first.id, second.id);
-    assert.equal(countObservations(db), 1);
-    assert.deepEqual(getSessionById(db, "session-a"), {
+    assert.equal(countObservations(stores.session), 1);
+    assert.deepEqual(getSessionById(stores.session, "session-a"), {
       sessionId: "session-a",
       repoRoot,
       startedAtMs: 100,
@@ -173,8 +174,8 @@ test("session-linked observations update explicit session activity without chang
 });
 
 test("session linkage integrity rejects repo-root mismatches for persisted sessions", async () => {
-  await withObservationFixture(async ({ repoRoot, db }) => {
-    persistObservation(db, {
+  await withObservationFixture(async ({ repoRoot, db, stores }) => {
+    persistObservation(stores, {
       repoRoot,
       sessionId: "session-a",
       kind: ObservationKind.Decision,
@@ -185,7 +186,7 @@ test("session linkage integrity rejects repo-root mismatches for persisted sessi
     });
 
     assert.throws(() => {
-      persistObservation(db, {
+      persistObservation(stores, {
         repoRoot: "/other/repo",
         sessionId: "session-a",
         kind: ObservationKind.Warning,
@@ -199,15 +200,15 @@ test("session linkage integrity rejects repo-root mismatches for persisted sessi
 });
 
 test("session-linked activity reactivates inactive sessions deterministically", async () => {
-  await withObservationFixture(async ({ repoRoot, db }) => {
-    upsertSession(db, {
+  await withObservationFixture(async ({ repoRoot, db, stores }) => {
+    upsertSession(stores.session, {
       sessionId: "session-a",
       repoRoot,
       activityAtMs: 100,
       status: SessionStatus.Inactive,
     });
 
-    persistObservation(db, {
+    persistObservation(stores, {
       repoRoot,
       sessionId: "session-a",
       kind: ObservationKind.Warning,
@@ -217,7 +218,7 @@ test("session-linked activity reactivates inactive sessions deterministically", 
       createdAtMs: 300,
     });
 
-    assert.deepEqual(getSessionById(db, "session-a"), {
+    assert.deepEqual(getSessionById(stores.session, "session-a"), {
       sessionId: "session-a",
       repoRoot,
       startedAtMs: 100,
@@ -228,7 +229,7 @@ test("session-linked activity reactivates inactive sessions deterministically", 
 });
 
 test("searchMemory stays deterministic and penalizes stale observations without removing them", async () => {
-  await withObservationFixture(async ({ repoRoot, db }) => {
+  await withObservationFixture(async ({ repoRoot, db, stores }) => {
     await indexProject({ repoRoot, db });
     const initialRunId = getLatestIndexRun(db)?.id;
     const readUser = listSymbolsForFile(db, "src/service.ts").find((symbol) => symbol.localName === "readUser");
@@ -236,7 +237,7 @@ test("searchMemory stays deterministic and penalizes stale observations without 
     assert.notEqual(initialRunId, undefined);
     assert.notEqual(readUser, undefined);
 
-    persistObservation(db, {
+    persistObservation(stores, {
       repoRoot,
       kind: ObservationKind.Warning,
       source: ObservationSource.Manual,
@@ -247,7 +248,7 @@ test("searchMemory stays deterministic and penalizes stale observations without 
       linkedFilePaths: ["src/service.ts"],
       linkedSymbolIds: [readUser!.id],
     });
-    persistObservation(db, {
+    persistObservation(stores, {
       repoRoot,
       kind: ObservationKind.Insight,
       source: ObservationSource.Manual,
@@ -261,8 +262,8 @@ test("searchMemory stays deterministic and penalizes stale observations without 
     await rewriteServiceFile(repoRoot, "loadUser");
     await indexProject({ repoRoot, db });
 
-    const first = searchMemory(db, { query: "session loader workflow", maxResults: 4 });
-    const second = searchMemory(db, { query: "session loader workflow", maxResults: 4 });
+    const first = searchMemory(stores, { query: "session loader workflow", maxResults: 4 });
+    const second = searchMemory(stores, { query: "session loader workflow", maxResults: 4 });
 
     assert.deepEqual(second, first);
     assert.equal(first.length, 2);
@@ -273,7 +274,7 @@ test("searchMemory stays deterministic and penalizes stale observations without 
 });
 
 test("observation staleness reasons are derived conservatively from file and symbol diffs", async () => {
-  await withObservationFixture(async ({ repoRoot, db }) => {
+  await withObservationFixture(async ({ repoRoot, db, stores }) => {
     await indexProject({ repoRoot, db });
     const initialRunId = getLatestIndexRun(db)?.id;
     const readUser = listSymbolsForFile(db, "src/service.ts").find((symbol) => symbol.localName === "readUser");
@@ -281,7 +282,7 @@ test("observation staleness reasons are derived conservatively from file and sym
     assert.notEqual(initialRunId, undefined);
     assert.notEqual(readUser, undefined);
 
-    const observation = persistObservation(db, {
+    const observation = persistObservation(stores, {
       repoRoot,
       kind: ObservationKind.Insight,
       source: ObservationSource.Manual,
@@ -333,9 +334,9 @@ test("observation staleness reasons are derived conservatively from file and sym
 });
 
 test("session inspection listing stays compact, bounded, and newest-first", async () => {
-  await withObservationFixture(async ({ repoRoot, db }) => {
+  await withObservationFixture(async ({ repoRoot, db, stores }) => {
     for (let index = 0; index < 12; index += 1) {
-      persistObservation(db, {
+      persistObservation(stores, {
         repoRoot,
         sessionId: `session-${index}`,
         kind: ObservationKind.Decision,
@@ -346,8 +347,8 @@ test("session inspection listing stays compact, bounded, and newest-first", asyn
       });
     }
 
-    const first = listInspectableSessions(db);
-    const second = listInspectableSessions(db);
+    const first = listInspectableSessions(stores.session);
+    const second = listInspectableSessions(stores.session);
 
     assert.deepEqual(second, first);
     assert.equal(first.length, 10);
@@ -377,12 +378,12 @@ test("session inspection listing stays compact, bounded, and newest-first", asyn
 });
 
 test("getSessionContext returns recent observations, deterministic session summaries, and optional ranked session-local context", async () => {
-  await withObservationFixture(async ({ repoRoot, db }) => {
+  await withObservationFixture(async ({ repoRoot, db, stores }) => {
     await indexProject({ repoRoot, db });
     const sourceRunId = getLatestIndexRun(db)?.id;
     const readUser = listSymbolsForFile(db, "src/service.ts").find((symbol) => symbol.localName === "readUser");
 
-    persistObservation(db, {
+    persistObservation(stores, {
       repoRoot,
       sessionId: "session-a",
       kind: ObservationKind.Decision,
@@ -395,7 +396,7 @@ test("getSessionContext returns recent observations, deterministic session summa
       linkedFilePaths: ["src/service.ts"],
       linkedSymbolIds: readUser === undefined ? [] : [readUser.id],
     });
-    persistObservation(db, {
+    persistObservation(stores, {
       repoRoot,
       sessionId: "session-a",
       kind: ObservationKind.Warning,
@@ -408,7 +409,7 @@ test("getSessionContext returns recent observations, deterministic session summa
       linkedFilePaths: ["src/service.ts"],
       linkedSymbolIds: readUser === undefined ? [] : [readUser.id],
     });
-    persistObservation(db, {
+    persistObservation(stores, {
       repoRoot,
       sessionId: "session-b",
       kind: ObservationKind.DeadEnd,
@@ -419,11 +420,11 @@ test("getSessionContext returns recent observations, deterministic session summa
       createdAtMs: 200,
     });
 
-    const recent = getSessionContext(db, {
+    const recent = getSessionContext(stores, {
       sessionId: "session-a",
       limit: 2,
     });
-    const ranked = getSessionContext(db, {
+    const ranked = getSessionContext(stores, {
       sessionId: "session-a",
       limit: 1,
       query: "parser warning",
@@ -474,8 +475,8 @@ test("getSessionContext returns recent observations, deterministic session summa
 });
 
 test("readInspectableSession returns explicit session state, derived summary, and a tiny preview", async () => {
-  await withObservationFixture(async ({ repoRoot, db }) => {
-    persistObservation(db, {
+  await withObservationFixture(async ({ repoRoot, db, stores }) => {
+    persistObservation(stores, {
       repoRoot,
       sessionId: "session-a",
       kind: ObservationKind.Decision,
@@ -486,7 +487,7 @@ test("readInspectableSession returns explicit session state, derived summary, an
       createdAtMs: 100,
       linkedFilePaths: ["src/service.ts"],
     });
-    persistObservation(db, {
+    persistObservation(stores, {
       repoRoot,
       sessionId: "session-a",
       kind: ObservationKind.Warning,
@@ -497,7 +498,7 @@ test("readInspectableSession returns explicit session state, derived summary, an
       createdAtMs: 200,
       linkedFilePaths: ["src/models.ts"],
     });
-    persistObservation(db, {
+    persistObservation(stores, {
       repoRoot,
       sessionId: "session-a",
       kind: ObservationKind.Insight,
@@ -508,7 +509,7 @@ test("readInspectableSession returns explicit session state, derived summary, an
       createdAtMs: 300,
       linkedFilePaths: ["src/session.ts"],
     });
-    persistObservation(db, {
+    persistObservation(stores, {
       repoRoot,
       sessionId: "session-a",
       kind: ObservationKind.ToolCall,
@@ -520,7 +521,7 @@ test("readInspectableSession returns explicit session state, derived summary, an
       linkedFilePaths: ["src/service.ts"],
     });
 
-    const read = readInspectableSession(db, "session-a");
+    const read = readInspectableSession(stores, "session-a");
 
     assert.notEqual(read, undefined);
     assert.deepEqual(read!.session, {
@@ -572,12 +573,12 @@ test("readInspectableSession returns explicit session state, derived summary, an
       },
     ]);
     assert.equal(read!.recentObservations.length, 3);
-    assert.equal(readInspectableSession(db, "missing-session"), undefined);
+    assert.equal(readInspectableSession(stores, "missing-session"), undefined);
   });
 });
 
 test("passive consolidation groups repeated auto tool calls and leaves below-threshold calls alone", async () => {
-  await withObservationFixture(async ({ repoRoot, db }) => {
+  await withObservationFixture(async ({ repoRoot, db, stores }) => {
     await indexProject({ repoRoot, db });
     const sourceRunId = getLatestIndexRun(db)?.id;
     const readUser = listSymbolsForFile(db, "src/service.ts").find((symbol) => symbol.localName === "readUser");
@@ -585,7 +586,7 @@ test("passive consolidation groups repeated auto tool calls and leaves below-thr
     assert.notEqual(readUser, undefined);
 
     const repeated = [100, 120, 140].map((createdAtMs, index) => {
-      return persistObservation(db, {
+      return persistObservation(stores, {
         repoRoot,
         sessionId: "session-consolidate",
         kind: ObservationKind.ToolCall,
@@ -608,7 +609,7 @@ test("passive consolidation groups repeated auto tool calls and leaves below-thr
         linkedSymbolIds: [readUser!.id],
       });
     });
-    const belowThreshold = persistObservation(db, {
+    const belowThreshold = persistObservation(stores, {
       repoRoot,
       sessionId: "session-consolidate",
       kind: ObservationKind.ToolCall,
@@ -630,11 +631,11 @@ test("passive consolidation groups repeated auto tool calls and leaves below-thr
       [3],
     );
 
-    const first = consolidatePassiveObservationsForSession(db, {
+    const first = consolidatePassiveObservationsForSession(stores, {
       sessionId: "session-consolidate",
       nowMs: 500,
     });
-    const second = consolidatePassiveObservationsForSession(db, {
+    const second = consolidatePassiveObservationsForSession(stores, {
       sessionId: "session-consolidate",
       nowMs: 700,
     });
@@ -645,7 +646,7 @@ test("passive consolidation groups repeated auto tool calls and leaves below-thr
     assert.equal(second!.prunedSourceObservationCount, 0);
     assert.deepEqual(second!.consolidatedObservationIds, []);
 
-    const remaining = listObservations(db).filter((observation) => observation.sessionId === "session-consolidate");
+    const remaining = listObservations(stores.session).filter((observation) => observation.sessionId === "session-consolidate");
     const consolidated = remaining.find((observation) => observation.toolName === PASSIVE_CONSOLIDATION_TOOL_NAME);
 
     assert.notEqual(consolidated, undefined);
@@ -668,15 +669,15 @@ test("passive consolidation groups repeated auto tool calls and leaves below-thr
     assert.equal(remaining.some((observation) => repeated.some((source) => source.id === observation.id)), false);
     assert.equal(remaining.some((observation) => observation.id === belowThreshold.id), true);
 
-    assert.equal(searchMemory(db, { query: "run_pipeline", maxResults: 5 })[0]?.observation.id, consolidated!.id);
-    assert.equal(searchMemory(db, { query: "read user workflow", maxResults: 5 })[0]?.observation.id, consolidated!.id);
-    assert.equal(searchMemory(db, { query: "src/service.ts", maxResults: 5 })[0]?.observation.id, consolidated!.id);
-    assert.equal(searchMemory(db, { query: readUser!.fqName, maxResults: 5 })[0]?.observation.id, consolidated!.id);
+    assert.equal(searchMemory(stores, { query: "run_pipeline", maxResults: 5 })[0]?.observation.id, consolidated!.id);
+    assert.equal(searchMemory(stores, { query: "read user workflow", maxResults: 5 })[0]?.observation.id, consolidated!.id);
+    assert.equal(searchMemory(stores, { query: "src/service.ts", maxResults: 5 })[0]?.observation.id, consolidated!.id);
+    assert.equal(searchMemory(stores, { query: readUser!.fqName, maxResults: 5 })[0]?.observation.id, consolidated!.id);
   });
 });
 
 test("passive consolidation never prunes durable manual or anti-pattern observations", async () => {
-  await withObservationFixture(async ({ repoRoot, db }) => {
+  await withObservationFixture(async ({ repoRoot, db, stores }) => {
     const durableInputs = [
       {
         kind: ObservationKind.Decision,
@@ -701,7 +702,7 @@ test("passive consolidation never prunes durable manual or anti-pattern observat
     ] as const;
 
     for (const [index, input] of durableInputs.entries()) {
-      persistObservation(db, {
+      persistObservation(stores, {
         repoRoot,
         sessionId: "session-durable",
         kind: input.kind,
@@ -715,7 +716,7 @@ test("passive consolidation never prunes durable manual or anti-pattern observat
       });
     }
 
-    const result = consolidatePassiveObservationsForSession(db, {
+    const result = consolidatePassiveObservationsForSession(stores, {
       sessionId: "session-durable",
       nowMs: 500,
     });
@@ -724,7 +725,7 @@ test("passive consolidation never prunes durable manual or anti-pattern observat
     assert.deepEqual(result!.groups, []);
     assert.equal(result!.prunedSourceObservationCount, 0);
     assert.deepEqual(
-      listObservations(db)
+      listObservations(stores.session)
         .filter((observation) => observation.sessionId === "session-durable")
         .map((observation) => observation.summary)
         .sort(),
@@ -734,7 +735,7 @@ test("passive consolidation never prunes durable manual or anti-pattern observat
 });
 
 test("consolidated observations remain session-visible, memory-visible, and stale-aware", async () => {
-  await withObservationFixture(async ({ repoRoot, db }) => {
+  await withObservationFixture(async ({ repoRoot, db, stores }) => {
     await indexProject({ repoRoot, db });
     const sourceRunId = getLatestIndexRun(db)?.id;
     const readUser = listSymbolsForFile(db, "src/service.ts").find((symbol) => symbol.localName === "readUser");
@@ -742,7 +743,7 @@ test("consolidated observations remain session-visible, memory-visible, and stal
     assert.notEqual(readUser, undefined);
 
     for (const [index, createdAtMs] of [100, 120, 140].entries()) {
-      persistObservation(db, {
+      persistObservation(stores, {
         repoRoot,
         sessionId: "session-stale-consolidated",
         kind: ObservationKind.ToolCall,
@@ -759,17 +760,17 @@ test("consolidated observations remain session-visible, memory-visible, and stal
       });
     }
 
-    const result = consolidatePassiveObservationsForSession(db, {
+    const result = consolidatePassiveObservationsForSession(stores, {
       sessionId: "session-stale-consolidated",
       nowMs: 500,
     });
     const consolidated = result?.consolidatedObservationIds[0] === undefined
       ? undefined
-      : getObservationById(db, result.consolidatedObservationIds[0]);
+      : getObservationById(stores.session, result.consolidatedObservationIds[0]);
 
     assert.notEqual(consolidated, undefined);
 
-    const context = getSessionContext(db, {
+    const context = getSessionContext(stores, {
       sessionId: "session-stale-consolidated",
       limit: 10,
       query: "get_impact_graph",
@@ -788,14 +789,14 @@ test("consolidated observations remain session-visible, memory-visible, and stal
 });
 
 test("inactive sessions compress into stable searchable summaries while preserving durable observations", async () => {
-  await withObservationFixture(async ({ repoRoot, db }) => {
+  await withObservationFixture(async ({ repoRoot, db, stores }) => {
     await indexProject({ repoRoot, db });
     const sourceRunId = getLatestIndexRun(db)?.id;
     const readUser = listSymbolsForFile(db, "src/service.ts").find((symbol) => symbol.localName === "readUser");
 
     assert.notEqual(readUser, undefined);
 
-    persistObservation(db, {
+    persistObservation(stores, {
       repoRoot,
       sessionId: "session-compress",
       kind: ObservationKind.ToolCall,
@@ -810,7 +811,7 @@ test("inactive sessions compress into stable searchable summaries while preservi
       linkedFilePaths: ["src/service.ts"],
       linkedSymbolIds: [readUser!.id],
     });
-    persistObservation(db, {
+    persistObservation(stores, {
       repoRoot,
       sessionId: "session-compress",
       kind: ObservationKind.ToolCall,
@@ -825,7 +826,7 @@ test("inactive sessions compress into stable searchable summaries while preservi
       linkedFilePaths: ["src/service.ts"],
       linkedSymbolIds: [readUser!.id],
     });
-    persistObservation(db, {
+    persistObservation(stores, {
       repoRoot,
       sessionId: "session-compress",
       kind: ObservationKind.ToolCall,
@@ -840,7 +841,7 @@ test("inactive sessions compress into stable searchable summaries while preservi
       linkedFilePaths: ["src/service.ts"],
       linkedSymbolIds: [readUser!.id],
     });
-    persistObservation(db, {
+    persistObservation(stores, {
       repoRoot,
       sessionId: "session-compress",
       kind: ObservationKind.ToolCall,
@@ -855,7 +856,7 @@ test("inactive sessions compress into stable searchable summaries while preservi
       linkedFilePaths: ["src/service.ts"],
       linkedSymbolIds: [readUser!.id],
     });
-    persistObservation(db, {
+    persistObservation(stores, {
       repoRoot,
       sessionId: "session-compress",
       kind: ObservationKind.Decision,
@@ -868,7 +869,7 @@ test("inactive sessions compress into stable searchable summaries while preservi
       linkedFilePaths: ["src/service.ts"],
       linkedSymbolIds: [readUser!.id],
     });
-    persistObservation(db, {
+    persistObservation(stores, {
       repoRoot,
       sessionId: "session-compress",
       kind: ObservationKind.Insight,
@@ -880,7 +881,7 @@ test("inactive sessions compress into stable searchable summaries while preservi
       createdAtMs: 300,
       linkedFilePaths: ["src/models.ts"],
     });
-    persistObservation(db, {
+    persistObservation(stores, {
       repoRoot,
       sessionId: "session-compress",
       kind: ObservationKind.ToolCall,
@@ -893,7 +894,7 @@ test("inactive sessions compress into stable searchable summaries while preservi
       linkedFilePaths: ["src/service.ts"],
       linkedFqNames: ["src/service.ts::readUser"],
     });
-    persistObservation(db, {
+    persistObservation(stores, {
       repoRoot,
       sessionId: "session-recent",
       kind: ObservationKind.ToolCall,
@@ -906,7 +907,7 @@ test("inactive sessions compress into stable searchable summaries while preservi
       linkedFilePaths: ["src/service.ts"],
     });
 
-    const beforeThreshold = getSessionCompressionEligibility(db, {
+    const beforeThreshold = getSessionCompressionEligibility(stores.session, {
       nowMs: 350 + DEFAULT_SESSION_COMPRESSION_INACTIVE_AFTER_MS - 1,
     });
     assert.equal(
@@ -914,7 +915,7 @@ test("inactive sessions compress into stable searchable summaries while preservi
       false,
     );
 
-    const atThreshold = getSessionCompressionEligibility(db, {
+    const atThreshold = getSessionCompressionEligibility(stores.session, {
       nowMs: 350 + DEFAULT_SESSION_COMPRESSION_INACTIVE_AFTER_MS,
     });
     assert.equal(
@@ -927,11 +928,11 @@ test("inactive sessions compress into stable searchable summaries while preservi
     );
 
     const compressedAtMs = 350 + DEFAULT_SESSION_COMPRESSION_INACTIVE_AFTER_MS;
-    const firstCompression = compressInactiveSessions(db, {
+    const firstCompression = compressInactiveSessions(stores, {
       repoRoot,
       nowMs: compressedAtMs,
     });
-    const secondCompression = compressInactiveSessions(db, {
+    const secondCompression = compressInactiveSessions(stores, {
       repoRoot,
       nowMs: compressedAtMs,
     });
@@ -960,13 +961,13 @@ test("inactive sessions compress into stable searchable summaries while preservi
     assert.equal(summary.preservedDurableObservationCount, 3);
     assert.equal(summary.prunedToolCallObservationCount, 3);
 
-    const compressedSession = getSessionById(db, "session-compress");
+    const compressedSession = getSessionById(stores.session, "session-compress");
     assert.equal(compressedSession?.status, SessionStatus.Compressed);
     assert.equal(compressedSession?.compressedAtMs, compressedAtMs);
     assert.equal(compressedSession?.summaryId, summary.id);
     assert.equal(compressedSession?.lastActivityAtMs, 350);
 
-    const remaining = listObservations(db).filter((observation) => observation.sessionId === "session-compress");
+    const remaining = listObservations(stores.session).filter((observation) => observation.sessionId === "session-compress");
     assert.equal(
       remaining.some((observation) =>
         observation.source === ObservationSource.McpAuto
@@ -996,7 +997,7 @@ test("inactive sessions compress into stable searchable summaries while preservi
       true,
     );
 
-    const context = getSessionContext(db, {
+    const context = getSessionContext(stores, {
       sessionId: "session-compress",
       query: "impact memory",
       limit: 10,
@@ -1019,29 +1020,29 @@ test("inactive sessions compress into stable searchable summaries while preservi
     const consolidated = remaining.find((observation) => observation.toolName === PASSIVE_CONSOLIDATION_TOOL_NAME);
     assert.notEqual(consolidated, undefined);
     assert.match(consolidated!.body, /source_observation_count=3/);
-    assert.equal(searchMemory(db, { query: "run_pipeline", maxResults: 3 })[0]?.observation.id, consolidated!.id);
+    assert.equal(searchMemory(stores, { query: "run_pipeline", maxResults: 3 })[0]?.observation.id, consolidated!.id);
     assert.equal(
-      searchMemory(db, { query: "get_impact_graph", maxResults: 3 }).some((result) => {
+      searchMemory(stores, { query: "get_impact_graph", maxResults: 3 }).some((result) => {
         return result.observation.id === summary.summaryObservationId
           || result.observation.toolName === "get_impact_graph";
       }),
       true,
     );
     assert.equal(
-      searchMemory(db, { query: "src/service.ts", maxResults: 3 }).some((result) => {
+      searchMemory(stores, { query: "src/service.ts", maxResults: 3 }).some((result) => {
         return result.observation.id === summary.summaryObservationId
           || result.observation.id === consolidated!.id;
       }),
       true,
     );
     assert.equal(
-      searchMemory(db, { query: "memory", maxResults: 3 }).some((result) => {
+      searchMemory(stores, { query: "memory", maxResults: 3 }).some((result) => {
         return result.observation.id === summary.summaryObservationId;
       }),
       true,
     );
     assert.equal(
-      searchMemory(db, { query: "src/service.ts::readUser", maxResults: 3 }).some((result) => {
+      searchMemory(stores, { query: "src/service.ts::readUser", maxResults: 3 }).some((result) => {
         return result.observation.id === summary.summaryObservationId
           || result.observation.id === consolidated!.id
           || result.observation.toolName === "get_impact_graph";
@@ -1049,7 +1050,7 @@ test("inactive sessions compress into stable searchable summaries while preservi
       true,
     );
 
-    const summaryObservation = getObservationById(db, summary.summaryObservationId);
+    const summaryObservation = getObservationById(stores.session, summary.summaryObservationId);
     assert.notEqual(summaryObservation, undefined);
     await rewriteServiceFile(repoRoot, "loadUser");
     await indexProject({ repoRoot, db });
@@ -1061,11 +1062,11 @@ test("inactive sessions compress into stable searchable summaries while preservi
       true,
     );
 
-    const beforeRetention = listSessionCleanupCandidates(db, {
+    const beforeRetention = listSessionCleanupCandidates(stores.session, {
       nowMs: compressedAtMs + DEFAULT_SESSION_RETENTION_AFTER_MS - 1,
       retentionAfterMs: DEFAULT_SESSION_RETENTION_AFTER_MS,
     });
-    const afterRetention = listSessionCleanupCandidates(db, {
+    const afterRetention = listSessionCleanupCandidates(stores.session, {
       nowMs: compressedAtMs + DEFAULT_SESSION_RETENTION_AFTER_MS,
       retentionAfterMs: DEFAULT_SESSION_RETENTION_AFTER_MS,
     });
@@ -1077,6 +1078,7 @@ test("inactive sessions compress into stable searchable summaries while preservi
 
 test("best-effort visible-capsule auto-capture never fails the primary path", () => {
   const db = openIndexerDatabase();
+  const stores = createTestProductStores(db);
   const routedQuery = routeQuery(db, "session loader");
   const capsule = {
     query: "session loader",
@@ -1092,11 +1094,15 @@ test("best-effort visible-capsule auto-capture never fails the primary path", ()
     compressed: false,
   } satisfies Capsule;
 
+  // M152: the store that has to break for this to mean anything is the SESSION
+  // store — auto-capture writes there now. Closing the index handle alone would
+  // leave the write perfectly able to succeed and the test passing vacuously.
+  stores.close();
   db.close();
 
   assert.doesNotThrow(() => {
     const captured = captureVisibleCapsuleObservationBestEffort({
-      db,
+      stores,
       repoRoot: "/tmp/repo",
       sourceRunId: null,
       routedQuery,
@@ -1110,7 +1116,7 @@ test("best-effort visible-capsule auto-capture never fails the primary path", ()
 });
 
 test("compressInactiveSessions honors a bounded limit with deterministic session selection", async () => {
-  await withObservationFixture(async ({ repoRoot, db }) => {
+  await withObservationFixture(async ({ repoRoot, db, stores }) => {
     await indexProject({ repoRoot, db });
     const sourceRunId = getLatestIndexRun(db)?.id;
 
@@ -1119,7 +1125,7 @@ test("compressInactiveSessions honors a bounded limit with deterministic session
       ["session-b", 200],
       ["session-c", 300],
     ] as const) {
-      persistObservation(db, {
+      persistObservation(stores, {
         repoRoot,
         sessionId,
         kind: ObservationKind.ToolCall,
@@ -1137,8 +1143,8 @@ test("compressInactiveSessions honors a bounded limit with deterministic session
 
     const nowMs = 300 + DEFAULT_SESSION_COMPRESSION_INACTIVE_AFTER_MS;
 
-    const first = compressInactiveSessions(db, { repoRoot, nowMs, limit: 2 });
-    const firstAgainPreviewOnly = compressInactiveSessions(db, {
+    const first = compressInactiveSessions(stores, { repoRoot, nowMs, limit: 2 });
+    const firstAgainPreviewOnly = compressInactiveSessions(stores, {
       repoRoot,
       nowMs,
       limit: 2,
@@ -1158,27 +1164,27 @@ test("compressInactiveSessions honors a bounded limit with deterministic session
       firstAgainPreviewOnly.previews.map((preview) => preview.sessionId),
       ["session-c"],
     );
-    assert.equal(getSessionById(db, "session-c")?.status, SessionStatus.Active);
+    assert.equal(getSessionById(stores.session, "session-c")?.status, SessionStatus.Active);
 
     // A second bounded sweep finishes the remainder.
-    const second = compressInactiveSessions(db, { repoRoot, nowMs, limit: 2 });
+    const second = compressInactiveSessions(stores, { repoRoot, nowMs, limit: 2 });
     assert.equal(second.eligibleSessionCount, 1);
     assert.equal(second.processedSessionCount, 1);
     assert.deepEqual(
       second.compressedSummaries.map((summary) => summary.sessionId),
       ["session-c"],
     );
-    assert.equal(getSessionById(db, "session-c")?.status, SessionStatus.Compressed);
+    assert.equal(getSessionById(stores.session, "session-c")?.status, SessionStatus.Compressed);
   });
 });
 
 test("compressInactiveSessions dry run previews the effect without mutating observations or sessions", async () => {
-  await withObservationFixture(async ({ repoRoot, db }) => {
+  await withObservationFixture(async ({ repoRoot, db, stores }) => {
     await indexProject({ repoRoot, db });
     const sourceRunId = getLatestIndexRun(db)?.id;
 
     for (const [index, createdAtMs] of [100, 120, 140].entries()) {
-      persistObservation(db, {
+      persistObservation(stores, {
         repoRoot,
         sessionId: "session-dry",
         kind: ObservationKind.ToolCall,
@@ -1193,7 +1199,7 @@ test("compressInactiveSessions dry run previews the effect without mutating obse
         linkedFilePaths: ["src/service.ts"],
       });
     }
-    persistObservation(db, {
+    persistObservation(stores, {
       repoRoot,
       sessionId: "session-dry",
       kind: ObservationKind.Decision,
@@ -1206,11 +1212,11 @@ test("compressInactiveSessions dry run previews the effect without mutating obse
       linkedFilePaths: ["src/service.ts"],
     });
 
-    const observationsBefore = listObservationsForSession(db, "session-dry").length;
+    const observationsBefore = listObservationsForSession(stores.session, "session-dry").length;
     assert.equal(observationsBefore, 4);
 
     const nowMs = 160 + DEFAULT_SESSION_COMPRESSION_INACTIVE_AFTER_MS;
-    const preview = compressInactiveSessions(db, { repoRoot, nowMs, dryRun: true });
+    const preview = compressInactiveSessions(stores, { repoRoot, nowMs, dryRun: true });
 
     assert.equal(preview.dryRun, true);
     assert.deepEqual(preview.compressedSummaries, []);
@@ -1222,31 +1228,37 @@ test("compressInactiveSessions dry run previews the effect without mutating obse
     assert.equal(preview.previews[0]!.prunedToolCallObservationCount, 3);
 
     // Dry run mutates nothing.
-    assert.equal(listObservationsForSession(db, "session-dry").length, observationsBefore);
-    assert.equal(getSessionById(db, "session-dry")?.status, SessionStatus.Active);
+    assert.equal(listObservationsForSession(stores.session, "session-dry").length, observationsBefore);
+    assert.equal(getSessionById(stores.session, "session-dry")?.status, SessionStatus.Active);
 
     // A real run then performs exactly what the preview promised.
-    const applied = compressInactiveSessions(db, { repoRoot, nowMs });
+    const applied = compressInactiveSessions(stores, { repoRoot, nowMs });
     assert.equal(applied.dryRun, false);
     assert.equal(applied.compressedSummaries.length, 1);
     assert.equal(applied.compressedSummaries[0]!.prunedToolCallObservationCount, 3);
-    assert.equal(getSessionById(db, "session-dry")?.status, SessionStatus.Compressed);
+    assert.equal(getSessionById(stores.session, "session-dry")?.status, SessionStatus.Compressed);
   });
 });
 
 async function withObservationFixture(
-  run: (input: { repoRoot: string; db: ReturnType<typeof openIndexerDatabase> }) => Promise<void>,
+  run: (input: {
+    repoRoot: string;
+    db: ReturnType<typeof openIndexerDatabase>;
+    stores: ReturnType<typeof createTestProductStores>;
+  }) => Promise<void>,
 ): Promise<void> {
   const root = await mkdtemp(path.join(os.tmpdir(), "vtrace-observations-"));
   const repoRoot = path.join(root, "repo");
   const db = openIndexerDatabase();
+  const stores = createTestProductStores(db);
 
   try {
     await mkdir(path.join(repoRoot, "src"), { recursive: true });
     await writeModelFile(repoRoot);
     await writeServiceFile(repoRoot, "readUser");
-    await run({ repoRoot, db });
+    await run({ repoRoot, db, stores });
   } finally {
+    stores.close();
     db.close();
     await rm(root, { recursive: true, force: true });
   }

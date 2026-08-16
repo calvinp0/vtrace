@@ -1,10 +1,16 @@
 import { createHash } from "node:crypto";
 import type { Database } from "bun:sqlite";
 
+import type {
+  SessionDatabase,
+  WritableProductStores,
+  WritableSessionDatabase,
+} from "../sessionStore";
+
 import { normalizeFilePath } from "../../domain/types";
 import { buildObservationSemanticKey } from "../../observations/provenance";
 import { upsertSession } from "./sessionsRepository";
-import { getSymbolById } from "./symbolsRepository";
+import { getSymbolById } from "../../db/repositories/symbolsRepository";
 import {
   ObservationOrigin,
   ObservationScope,
@@ -88,16 +94,21 @@ export interface PersistObservationInput {
 }
 
 export function persistObservation(
-  db: Database,
+  stores: WritableProductStores,
   input: PersistObservationInput,
 ): Observation {
+  // The one place a product write reads repository evidence: linked symbol ids
+  // are hydrated from `symbols` before the observation is stored. The index
+  // handle is used for that lookup and for nothing else — it never joins, and
+  // it is never written (§37, §48).
+  const db = stores.session;
   if (input.summary.trim().length === 0) {
     throw new Error("Observation summary must not be empty");
   }
 
   const createdAtMs = input.createdAtMs ?? Date.now();
   const linkedFilePaths = normalizeLinkedFilePaths(input.linkedFilePaths ?? []);
-  const linkedSymbols = resolveLinkedSymbols(db, input.linkedSymbolIds ?? []);
+  const linkedSymbols = resolveLinkedSymbols(stores.index, input.linkedSymbolIds ?? []);
   const linkedFqNames = normalizeLinkedFqNames([
     ...(input.linkedFqNames ?? []),
     ...linkedSymbols.map((link) => link.fqName),
@@ -257,7 +268,7 @@ export function persistObservation(
 }
 
 export function getObservationById(
-  db: Database,
+  db: SessionDatabase,
   observationId: string,
 ): Observation | undefined {
   const row = db.query(`
@@ -289,7 +300,7 @@ export function getObservationById(
 }
 
 export function getObservationByDedupeKey(
-  db: Database,
+  db: SessionDatabase,
   dedupeKey: string,
 ): Observation | undefined {
   const row = db.query(`
@@ -320,7 +331,7 @@ export function getObservationByDedupeKey(
   return row === null ? undefined : hydrateObservation(db, observationRowToRecord(row));
 }
 
-export function listObservations(db: Database): Observation[] {
+export function listObservations(db: SessionDatabase): Observation[] {
   const rows = db.query(`
     SELECT
       id,
@@ -350,7 +361,7 @@ export function listObservations(db: Database): Observation[] {
 }
 
 export function listObservationsForSession(
-  db: Database,
+  db: SessionDatabase,
   sessionId: string,
 ): Observation[] {
   const rows = db.query(`
@@ -382,13 +393,13 @@ export function listObservationsForSession(
   return rows.map((row) => hydrateObservation(db, observationRowToRecord(row)));
 }
 
-export function countObservations(db: Database): number {
+export function countObservations(db: SessionDatabase): number {
   const row = db.query("SELECT COUNT(*) AS count FROM observations").get() as { count: number };
   return row.count;
 }
 
 export function deleteEphemeralToolCallObservationsForSession(
-  db: Database,
+  db: WritableSessionDatabase,
   sessionId: string,
 ): number {
   const row = db.query(`
@@ -413,7 +424,7 @@ export function deleteEphemeralToolCallObservationsForSession(
 }
 
 export function deleteObservationsByIds(
-  db: Database,
+  db: WritableSessionDatabase,
   observationIds: readonly string[],
 ): number {
   const uniqueIds = [...new Set(observationIds)];
@@ -441,7 +452,7 @@ export function deleteObservationsByIds(
 }
 
 function hydrateObservation(
-  db: Database,
+  db: SessionDatabase,
   observation: ObservationRecord,
 ): Observation {
   return {
@@ -453,7 +464,7 @@ function hydrateObservation(
 }
 
 function listObservationFileLinks(
-  db: Database,
+  db: SessionDatabase,
   observationId: string,
 ): ObservationFileLinkRecord[] {
   const rows = db.query(`
@@ -474,7 +485,7 @@ function listObservationFileLinks(
 }
 
 function listObservationSymbolLinks(
-  db: Database,
+  db: SessionDatabase,
   observationId: string,
 ): ObservationSymbolLinkRecord[] {
   const rows = db.query(`
@@ -501,7 +512,7 @@ function listObservationSymbolLinks(
 }
 
 function listObservationFQNameLinks(
-  db: Database,
+  db: SessionDatabase,
   observationId: string,
 ): ObservationFQNameLinkRecord[] {
   const rows = db.query(`
@@ -539,8 +550,13 @@ function normalizeLinkedFilePaths(paths: readonly string[]): string[] {
   return normalized;
 }
 
+/**
+ * Hydrate stored symbol identity from the REPOSITORY index. Session state
+ * records what a symbol was called and where it lived at capture time; it does
+ * not own the symbol table, and this is a read (§29, §37).
+ */
 function resolveLinkedSymbols(
-  db: Database,
+  indexDb: Database,
   linkedSymbolIds: readonly string[],
 ): ObservationSymbolLinkRecord[] {
   const seen = new Set<string>();
@@ -552,7 +568,7 @@ function resolveLinkedSymbols(
     }
 
     seen.add(symbolId);
-    const symbol = getSymbolById(db, symbolId);
+    const symbol = getSymbolById(indexDb, symbolId);
 
     if (symbol === undefined) {
       throw new Error(`Symbol not found: ${symbolId}`);

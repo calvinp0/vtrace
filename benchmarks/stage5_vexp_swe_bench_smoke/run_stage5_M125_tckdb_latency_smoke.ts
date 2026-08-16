@@ -14,6 +14,7 @@ import { seedCustomFixture } from "../../src/capsuleV2/__fixtures__/capsuleV2Fix
 import { CapsuleIntent } from "../../src/capsuleV2/types";
 import { SymbolKind } from "../../src/domain/types";
 import { openIndexerDatabase } from "../../src/db/sqlite";
+import { ProductStoreLease } from "../../src/session/sessionStore";
 import { indexProject } from "../../src/indexer/indexProject";
 import { routeQuery } from "../../src/intent/routeQuery";
 import { assembleProductContext } from "../../src/productContext/assembleProductContext";
@@ -36,6 +37,20 @@ import {
   prepareRunnerOutput,
   SHARED_RUNNER_OPTIONS_HELP,
 } from "./lib/runnerPaths";
+import {
+  createEphemeralSessionDatabase,
+  type WritableProductStores,
+} from "../../src/session/sessionStore";
+
+/**
+ * M152: an in-memory session store paired with an already-open index handle.
+ * These acceptance runs seed and read product state within one process; nothing
+ * is written beside a real index.
+ */
+function productStoresFor(indexDb: Database): WritableProductStores {
+  return { index: indexDb, session: createEphemeralSessionDatabase() };
+}
+
 
 const ROOT = path.resolve("benchmarks/stage5_vexp_swe_bench_smoke");
 // M141: reports go to an untracked run directory unless --out/--evidence
@@ -214,7 +229,7 @@ async function runTckdb(args: Args) {
       includeTimingDiagnostics: true,
     });
     const product = await assembleProductContext({
-      db,
+      stores: productStoresFor(db),
       repoRoot: args.tckdbRoot,
       task: EXACT_TASK,
       intent: CapsuleIntent.Modify,
@@ -273,7 +288,7 @@ async function runTckdb(args: Args) {
       const built = buildAuthority(db, args.tckdbRoot, EXACT_TASK);
       const assembledAt = performance.now();
       await assembleProductContext({
-        db,
+        stores: productStoresFor(db),
         repoRoot: args.tckdbRoot,
         task: EXACT_TASK,
         intent: CapsuleIntent.Modify,
@@ -380,6 +395,7 @@ async function verifyIncrementalFullEquivalence(
     },
   });
   const db = openIndexerDatabase(dbPath);
+  const stores = new ProductStoreLease(db, dbPath).write;
   try {
     const fullStarted = performance.now();
     const full = await indexProject({ repoRoot, db, refreshMode: "full" });

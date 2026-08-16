@@ -1,17 +1,22 @@
 import { createHash } from "node:crypto";
-import type { Database } from "bun:sqlite";
+import type {
+  ProductStores,
+  SessionDatabase,
+  WritableProductStores,
+  WritableSessionDatabase,
+} from "../session/sessionStore";
 
 import {
   listFileDiffsForRun,
   listSymbolDiffsForRun,
 } from "../db/repositories/indexRunsRepository";
-import { listObservations } from "../db/repositories/observationsRepository";
+import { listObservations } from "../session/repositories/observationsRepository";
 import {
   createActiveProjectRule as createActiveProjectRuleRecord,
   listProjectRules,
   updateProjectRuleStatus,
   upsertProjectRuleCandidate,
-} from "../db/repositories/projectRulesRepository";
+} from "../session/repositories/projectRulesRepository";
 import { normalizeFilePath } from "../domain/types";
 import { FileChangeType } from "../memory/types";
 import { AntiPatternType } from "../observations/antiPatterns";
@@ -49,7 +54,7 @@ interface EvidenceItem {
 }
 
 export function createActiveProjectRule(
-  db: Database,
+  db: WritableSessionDatabase,
   input: {
     readonly repoRoot: string;
     readonly summary: string;
@@ -89,7 +94,7 @@ export function createActiveProjectRule(
 }
 
 export function generateProjectRuleCandidates(
-  db: Database,
+  db: WritableSessionDatabase,
   input: {
     readonly repoRoot: string;
     readonly threshold?: number;
@@ -158,7 +163,7 @@ export function buildProjectRuleCandidateGroups(
 }
 
 export function promoteProjectRule(
-  db: Database,
+  db: WritableSessionDatabase,
   ruleId: string,
   nowMs = Date.now(),
 ): ProjectRuleRecord {
@@ -178,7 +183,7 @@ export function promoteProjectRule(
 }
 
 export function dismissProjectRule(
-  db: Database,
+  db: WritableSessionDatabase,
   ruleId: string,
   nowMs = Date.now(),
 ): ProjectRuleRecord {
@@ -196,7 +201,7 @@ export function dismissProjectRule(
 }
 
 export function disableProjectRule(
-  db: Database,
+  db: WritableSessionDatabase,
   ruleId: string,
   nowMs = Date.now(),
 ): ProjectRuleRecord {
@@ -214,7 +219,7 @@ export function disableProjectRule(
 }
 
 export function selectRelevantProjectRules(
-  db: Database,
+  db: SessionDatabase,
   input: {
     readonly repoRoot: string;
     readonly query: string;
@@ -275,15 +280,16 @@ export function selectRelevantProjectRules(
 }
 
 export function markProjectRulesStaleForRun(
-  db: Database,
+  stores: WritableProductStores,
   input: {
     readonly repoRoot: string;
     readonly runId: number;
     readonly nowMs?: number;
   },
 ): ProjectRuleRecord[] {
-  const fileDiffs = listFileDiffsForRun(db, input.runId) ?? [];
-  const symbolDiffs = listSymbolDiffsForRun(db, input.runId) ?? [];
+  const db = stores.session;
+  const fileDiffs = listFileDiffsForRun(stores.index, input.runId) ?? [];
+  const symbolDiffs = listSymbolDiffsForRun(stores.index, input.runId) ?? [];
   const changedFileDiffs = fileDiffs.filter((diff) => diff.changeType !== FileChangeType.Unchanged);
   const changedSymbolDiffs = symbolDiffs.filter((diff) => diff.changeType !== FileChangeType.Unchanged);
   const staleRules: ProjectRuleRecord[] = [];
@@ -640,7 +646,7 @@ function collectProjectRuleStaleReasons(
   });
 }
 
-function requireProjectRule(db: Database, ruleId: string): ProjectRuleRecord {
+function requireProjectRule(db: SessionDatabase, ruleId: string): ProjectRuleRecord {
   const rule = listProjectRules(db).find((candidate) => candidate.id === ruleId);
 
   if (rule === undefined) {

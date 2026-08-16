@@ -19,6 +19,7 @@ import {
 } from "./extractSymbolContent";
 import { loadSymbolSource, type LoadSymbolSourceResult } from "./loadSymbolSource";
 import { selectCapsuleMemories } from "./selectCapsuleMemories";
+import type { ProductStores } from "../session/sessionStore";
 import {
   CapsuleContentMode,
   CapsuleFileRepresentationMode,
@@ -110,6 +111,12 @@ interface CapsuleRuleSelector {
 
 export interface SourceBackedCapsuleBuilderOptions {
   db: Database;
+  /**
+   * Product/session state, for the memory and rules selectors below. Optional:
+   * a capsule built without it simply surfaces no memories and no rules, which
+   * is what a caller with no session store should get (§35).
+   */
+  stores?: ProductStores;
   repoRoot: string;
   currentObservationContext?: CurrentObservationContext;
   excludeMemoryObservation?: (input: {
@@ -177,8 +184,11 @@ export function createSourceBackedCapsuleBuilder(
     createSourceBackedContentProvider(options),
     {
       build(input) {
+        if (options.stores === undefined) {
+          return [];
+        }
         return selectCapsuleMemories({
-          db: options.db,
+          stores: options.stores,
           query: input.query,
           intent: input.profileSelection?.profile.targetIntent,
           pivots: input.pivots,
@@ -202,8 +212,11 @@ export function createSourceBackedCapsuleBuilder(
     },
     {
       build(input) {
+        if (options.stores === undefined) {
+          return [];
+        }
         const contextItems = [...input.pivots, ...input.supportingItems];
-        const selected = selectRelevantProjectRules(options.db, {
+        const selected = selectRelevantProjectRules(options.stores.session, {
           repoRoot: options.repoRoot,
           query: input.query,
           intent: input.profileSelection?.profile.targetIntent,

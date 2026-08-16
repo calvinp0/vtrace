@@ -1,4 +1,4 @@
-import type { Database } from "bun:sqlite";
+import type { SessionDatabase, WritableSessionDatabase } from "../sessionStore";
 
 import {
   SessionStatus,
@@ -51,7 +51,7 @@ export interface UpsertSessionInput {
 }
 
 export function upsertSession(
-  db: Database,
+  db: WritableSessionDatabase,
   input: UpsertSessionInput,
 ): SessionRecord {
   const existing = getSessionById(db, input.sessionId);
@@ -121,7 +121,7 @@ export function upsertSession(
 }
 
 export function getSessionById(
-  db: Database,
+  db: SessionDatabase,
   sessionId: string,
 ): SessionRecord | undefined {
   const row = db.query(`
@@ -141,7 +141,7 @@ export function getSessionById(
   return row === null ? undefined : sessionRowToRecord(row);
 }
 
-export function listSessions(db: Database): SessionRecord[] {
+export function listSessions(db: SessionDatabase): SessionRecord[] {
   const rows = db.query(`
     SELECT
       session_id,
@@ -160,7 +160,7 @@ export function listSessions(db: Database): SessionRecord[] {
 }
 
 export function listSessionsWithObservationCounts(
-  db: Database,
+  db: SessionDatabase,
   limit: number,
 ): SessionListItem[] {
   const rows = db.query(`
@@ -207,7 +207,7 @@ export interface PersistSessionCompressionSummaryInput {
 }
 
 export function persistSessionCompressionSummary(
-  db: Database,
+  db: WritableSessionDatabase,
   input: PersistSessionCompressionSummaryInput,
 ): SessionCompressionSummary {
   const existing = getSessionCompressionSummary(db, input.summary.sessionId);
@@ -262,7 +262,7 @@ export function persistSessionCompressionSummary(
 }
 
 export function markSessionCompressed(
-  db: Database,
+  db: WritableSessionDatabase,
   input: {
     sessionId: string;
     compressedAtMs: number;
@@ -293,7 +293,7 @@ export function markSessionCompressed(
 }
 
 export function getSessionCompressionSummary(
-  db: Database,
+  db: SessionDatabase,
   sessionId: string,
 ): SessionCompressionSummary | undefined {
   const row = db.query(`
@@ -322,7 +322,7 @@ export function getSessionCompressionSummary(
 }
 
 export function listSessionCleanupCandidates(
-  db: Database,
+  db: SessionDatabase,
   input: {
     nowMs: number;
     retentionAfterMs: number;
@@ -368,7 +368,7 @@ export function listSessionCleanupCandidates(
   }
 }
 
-export function countSessions(db: Database): number {
+export function countSessions(db: SessionDatabase): number {
   const row = db.query("SELECT COUNT(*) AS count FROM sessions").get() as { count: number };
   return row.count;
 }

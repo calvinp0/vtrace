@@ -1,11 +1,11 @@
-import type { Database } from "bun:sqlite";
+import type { ProductStores, SessionDatabase } from "../session/sessionStore";
 
 import {
   getSessionById,
   getSessionCompressionSummary,
   listSessionsWithObservationCounts,
-} from "../db/repositories/sessionsRepository";
-import { listObservationsForSession } from "../db/repositories/observationsRepository";
+} from "../session/repositories/sessionsRepository";
+import { listObservationsForSession } from "../session/repositories/observationsRepository";
 import { buildSessionSummary } from "./buildSessionSummary";
 import type {
   Observation,
@@ -17,14 +17,15 @@ import type {
 const LIST_SESSIONS_MAX_COUNT = 10;
 const READ_SESSION_PREVIEW_MAX_COUNT = 3;
 
-export function listInspectableSessions(db: Database): SessionListItem[] {
+export function listInspectableSessions(db: SessionDatabase): SessionListItem[] {
   return listSessionsWithObservationCounts(db, LIST_SESSIONS_MAX_COUNT);
 }
 
 export function readInspectableSession(
-  db: Database,
+  stores: ProductStores,
   sessionId: string,
 ): ReadSessionResult | undefined {
+  const db = stores.session;
   const session = getSessionById(db, sessionId);
 
   if (session === undefined) {
@@ -35,7 +36,7 @@ export function readInspectableSession(
 
   return {
     session,
-    summary: buildSessionSummary(db, observations),
+    summary: buildSessionSummary(stores.index, observations),
     compressedSummary: getSessionCompressionSummary(db, sessionId) ?? null,
     recentObservations: observations
       .slice(0, READ_SESSION_PREVIEW_MAX_COUNT)

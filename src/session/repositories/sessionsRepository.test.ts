@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { test } from "bun:test";
 
-import { openIndexerDatabase } from "../sqlite";
+import { openIndexerDatabase } from "../../db/sqlite";
+import { createTestProductStores } from "../../testing/productStores";
 import { SessionStatus } from "../../observations/types";
 import {
   countSessions,
@@ -12,15 +13,16 @@ import {
 
 test("sessions persist explicitly and repeated activity updates remain predictable", () => {
   const db = openIndexerDatabase();
+  const stores = createTestProductStores(db);
 
   try {
-    const created = upsertSession(db, {
+    const created = upsertSession(stores.session, {
       sessionId: "session-a",
       repoRoot: "/repo/demo",
       activityAtMs: 200,
       agentKind: "mcp",
     });
-    const updated = upsertSession(db, {
+    const updated = upsertSession(stores.session, {
       sessionId: "session-a",
       repoRoot: "/repo/demo",
       activityAtMs: 500,
@@ -42,9 +44,9 @@ test("sessions persist explicitly and repeated activity updates remain predictab
       lastActivityAtMs: 500,
       status: SessionStatus.Active,
     });
-    assert.deepEqual(getSessionById(db, "session-a"), updated);
-    assert.deepEqual(listSessions(db), [updated]);
-    assert.equal(countSessions(db), 1);
+    assert.deepEqual(getSessionById(stores.session, "session-a"), updated);
+    assert.deepEqual(listSessions(stores.session), [updated]);
+    assert.equal(countSessions(stores.session), 1);
   } finally {
     db.close();
   }
@@ -52,16 +54,17 @@ test("sessions persist explicitly and repeated activity updates remain predictab
 
 test("sessions reject repo-root mismatches for the same session id", () => {
   const db = openIndexerDatabase();
+  const stores = createTestProductStores(db);
 
   try {
-    upsertSession(db, {
+    upsertSession(stores.session, {
       sessionId: "session-a",
       repoRoot: "/repo/demo",
       activityAtMs: 100,
     });
 
     assert.throws(() => {
-      upsertSession(db, {
+      upsertSession(stores.session, {
         sessionId: "session-a",
         repoRoot: "/repo/other",
         activityAtMs: 200,

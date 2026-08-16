@@ -18,9 +18,10 @@ import { type CapsuleProfileSelectionResult } from "../capsuleProfiles/types";
 import {
   getCapsuleStaleness,
   persistCapsuleManifest,
-} from "../db/repositories/capsuleManifestsRepository";
+} from "../session/repositories/capsuleManifestsRepository";
 import { getLatestIndexRun } from "../db/repositories/indexRunsRepository";
 import { openIndexerDatabase } from "../db/sqlite";
+import { createTestProductStores } from "../testing/productStores";
 import { SymbolKind } from "../domain/types";
 import { indexProject } from "../indexer/indexProject";
 import { getIntentRoutingProfile } from "../intent/profile";
@@ -287,12 +288,13 @@ test("handoff payload is JSON-safe for later cli and file export integration", (
 test("mixed Python/Cython handoff payload stays deterministic and carries real trust metadata", async () => {
   await withMixedPyCythonRepo(async (repoRoot) => {
     const db = openIndexerDatabase();
+    const stores = createTestProductStores(db);
 
     try {
       await indexProject({ repoRoot, db });
       const sourceRunId = getLatestIndexRun(db)!.id;
       const pipeline = buildMixedFixturePipeline(db, repoRoot, "background");
-      const manifest = persistCapsuleManifest(db, {
+      const manifest = persistCapsuleManifest(stores, {
         sourceRunId,
         capsule: pipeline.capsule,
         createdAtMs: 1,
@@ -301,7 +303,7 @@ test("mixed Python/Cython handoff payload stays deterministic and carries real t
       await applyMixedPyCythonControlledChange(repoRoot);
       await indexProject({ repoRoot, db });
 
-      const staleness = getCapsuleStaleness(db, manifest.id, getLatestIndexRun(db)!.id);
+      const staleness = getCapsuleStaleness(stores, manifest.id, getLatestIndexRun(db)!.id);
       const input = {
         pipeline,
         metadata: {

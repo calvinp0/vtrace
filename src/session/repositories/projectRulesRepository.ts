@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import type { Database } from "bun:sqlite";
+import type { SessionDatabase, WritableSessionDatabase } from "../sessionStore";
 
 import {
   ProjectRuleConfidence,
@@ -42,7 +42,7 @@ export interface CreateActiveProjectRuleInput {
 }
 
 export function createActiveProjectRule(
-  db: Database,
+  db: WritableSessionDatabase,
   input: CreateActiveProjectRuleInput,
 ): ProjectRuleRecord {
   const nowMs = input.nowMs ?? Date.now();
@@ -98,7 +98,7 @@ export function createActiveProjectRule(
 }
 
 export function upsertProjectRuleCandidate(
-  db: Database,
+  db: WritableSessionDatabase,
   input: UpsertProjectRuleCandidateInput,
 ): { rule: ProjectRuleRecord; action: "created" | "updated" | "unchanged" } {
   const nowMs = input.nowMs ?? Date.now();
@@ -204,7 +204,7 @@ export function upsertProjectRuleCandidate(
 }
 
 export function getProjectRuleById(
-  db: Database,
+  db: SessionDatabase,
   ruleId: string,
 ): ProjectRuleRecord | undefined {
   const row = db.query(`
@@ -217,7 +217,7 @@ export function getProjectRuleById(
 }
 
 export function getProjectRuleBySignature(
-  db: Database,
+  db: SessionDatabase,
   repoRoot: string,
   signature: string,
 ): ProjectRuleRecord | undefined {
@@ -231,7 +231,7 @@ export function getProjectRuleBySignature(
 }
 
 export function listProjectRules(
-  db: Database,
+  db: SessionDatabase,
   input: {
     readonly repoRoot?: string;
     readonly statuses?: readonly ProjectRuleStatus[];
@@ -262,7 +262,7 @@ export function listProjectRules(
 }
 
 export function updateProjectRuleStatus(
-  db: Database,
+  db: WritableSessionDatabase,
   input: {
     readonly ruleId: string;
     readonly status: ProjectRuleStatus;

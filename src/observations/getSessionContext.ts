@@ -1,13 +1,13 @@
-import type { Database } from "bun:sqlite";
+import type { ProductStores } from "../session/sessionStore";
 
 import {
   getSessionById,
   getSessionCompressionSummary,
-} from "../db/repositories/sessionsRepository";
+} from "../session/repositories/sessionsRepository";
 import {
   listObservations,
   listObservationsForSession,
-} from "../db/repositories/observationsRepository";
+} from "../session/repositories/observationsRepository";
 import { buildSessionSummary } from "./buildSessionSummary";
 import { searchMemory } from "./searchMemory";
 import { classifyObservationCompatibility } from "./compatibility";
@@ -22,9 +22,10 @@ export interface GetSessionContextInput {
 }
 
 export function getSessionContext(
-  db: Database,
+  stores: ProductStores,
   input: GetSessionContextInput = {},
 ): SessionContextResult {
+  const db = stores.session;
   const limit = normalizeLimit(input.limit ?? 5);
   const session = input.sessionId === undefined
     ? null
@@ -40,7 +41,7 @@ export function getSessionContext(
     compatibilityByObservationId,
   ).slice(0, limit);
   const rankedObservations = input.query !== undefined && input.query.trim().length > 0
-    ? searchMemory(db, {
+    ? searchMemory(stores, {
       query: input.query,
       sessionId: input.sessionId,
       maxResults: limit,
@@ -57,7 +58,7 @@ export function getSessionContext(
       : getSessionCompressionSummary(db, session.sessionId) ?? null,
     summary: session === null
       ? null
-      : buildSessionSummary(db, listObservationsForSession(db, session.sessionId)),
+      : buildSessionSummary(stores.index, listObservationsForSession(db, session.sessionId)),
     observations: recentObservations,
     ...(input.currentContext === undefined ? {} : {
       compatibilityByObservationId,

@@ -10,7 +10,7 @@ import { Database } from "bun:sqlite";
 import { buildCapsuleV2 } from "../../src/capsuleV2/buildCapsuleV2";
 import { CapsuleIntent } from "../../src/capsuleV2/types";
 import { initializeSchema } from "../../src/db/schema";
-import { persistObservation } from "../../src/db/repositories/observationsRepository";
+import { persistObservation } from "../../src/session/repositories/observationsRepository";
 import { getImpactGraph } from "../../src/impact/getImpactGraph";
 import { compactImpactProductResponse } from "../../src/impact/impactResponseEnvelope";
 import { searchLogicFlow } from "../../src/logicFlow/searchLogicFlow";
@@ -33,6 +33,20 @@ import {
   resolveWorkspaceRoot,
   SHARED_RUNNER_OPTIONS_HELP,
 } from "./lib/runnerPaths";
+import {
+  createEphemeralSessionDatabase,
+  type WritableProductStores,
+} from "../../src/session/sessionStore";
+
+/**
+ * M152: an in-memory session store paired with an already-open index handle.
+ * These acceptance runs seed and read product state within one process; nothing
+ * is written beside a real index.
+ */
+function productStoresFor(indexDb: Database): WritableProductStores {
+  return { index: indexDb, session: createEphemeralSessionDatabase() };
+}
+
 
 // M141: reports go to an untracked run directory unless --out/--evidence
 // asks otherwise, so validating the evidence can never overwrite it.
@@ -213,14 +227,15 @@ function auditLegacyRow(row: any, current: CurrentObservationContext) {
 function controlledAcceptance(base: CurrentObservationContext) {
   const db = new Database(":memory:");
   initializeSchema(db);
+  const stores = productStoresFor(db);
   try {
     const staleHead = context(base, { headCommit: "old-head" }, { headCommit: "old-head", identity: "old-index" });
-    saveImpact(db, staleHead, 1327, 95, 1);
-    saveImpact(db, staleHead, 10, 7, 2);
-    saveImpact(db, base, 3, 3, 3, "session-current");
-    saveImpact(db, base, 4, 4, 4, "session-current");
-    const normal = searchMemoryDetailed(db, { query: "get_dihedral dependents", maxResults: 10, currentContext: base });
-    const historical = searchMemoryDetailed(db, { query: "get_dihedral dependents", maxResults: 10, currentContext: base, includeStale: true });
+    saveImpact(stores, staleHead, 1327, 95, 1);
+    saveImpact(stores, staleHead, 10, 7, 2);
+    saveImpact(stores, base, 3, 3, 3, "session-current");
+    saveImpact(stores, base, 4, 4, 4, "session-current");
+    const normal = searchMemoryDetailed(stores, { query: "get_dihedral dependents", maxResults: 10, currentContext: base });
+    const historical = searchMemoryDetailed(stores, { query: "get_dihedral dependents", maxResults: 10, currentContext: base, includeStale: true });
     const staleObservation = historical.results.find((result) => result.observation.summary.includes("1327"))!.observation;
     const worktreeContext = context(base, { worktreeId: "other-worktree" }, { worktreeId: "other-worktree", identity: "other-index" });
     const repoContext = context(base, { repositoryId: "other-repo", worktreeId: "other-worktree" }, { worktreeId: "other-worktree", identity: "other-index" });
@@ -256,17 +271,18 @@ function controlledAcceptance(base: CurrentObservationContext) {
 function scaleAcceptance(base: CurrentObservationContext, classification1000Ms: number) {
   const db = new Database(":memory:");
   initializeSchema(db);
+  const stores = productStoresFor(db);
   try {
     const stale = context(base, { headCommit: "scale-old" }, { headCommit: "scale-old", identity: "scale-old-index" });
-    for (let index = 0; index < 1_000; index += 1) saveImpact(db, stale, 10_000 + index, 95, index, "scale-session");
+    for (let index = 0; index < 1_000; index += 1) saveImpact(stores, stale, 10_000 + index, 95, index, "scale-session");
     const searchStarted = performance.now();
-    const normal = searchMemoryDetailed(db, { query: "get_dihedral dependents", maxResults: 5, currentContext: base });
+    const normal = searchMemoryDetailed(stores, { query: "get_dihedral dependents", maxResults: 5, currentContext: base });
     const searchMs = performance.now() - searchStarted;
     const historicalStarted = performance.now();
-    const historical = searchMemoryDetailed(db, { query: "get_dihedral dependents", maxResults: 5, currentContext: base, includeStale: true });
+    const historical = searchMemoryDetailed(stores, { query: "get_dihedral dependents", maxResults: 5, currentContext: base, includeStale: true });
     const historicalSearchMs = performance.now() - historicalStarted;
     const sessionStarted = performance.now();
-    const session = getSessionContext(db, { sessionId: "scale-session", limit: 5, currentContext: base });
+    const session = getSessionContext(stores, { sessionId: "scale-session", limit: 5, currentContext: base });
     const sessionContextMs = performance.now() - sessionStarted;
     return {
       matchingStaleObservations: 1_000,
@@ -372,8 +388,8 @@ function compatibilityMatrixArtifact(controlled: ReturnType<typeof controlledAcc
   };
 }
 
-function saveImpact(db: Database, current: CurrentObservationContext, dependents: number, files: number, createdAtMs: number, sessionId?: string) {
-  return persistObservation(db, {
+function saveImpact(stores: WritableProductStores, current: CurrentObservationContext, dependents: number, files: number, createdAtMs: number, sessionId?: string) {
+  return persistObservation(stores, {
     repoRoot: current.repository.worktreeRoot, sessionId, kind: ObservationKind.ToolCall,
     source: ObservationSource.McpAuto, toolName: "get_impact_graph", queryText: IMPACT_QUERY,
     summary: `Computed impact graph for ${IMPACT_QUERY} with ${dependents} dependents across ${files} files.`,

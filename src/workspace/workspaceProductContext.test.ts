@@ -14,6 +14,7 @@ import { Database } from "bun:sqlite";
 
 import { resolveIndexDbPath, resolveIndexMetaPath, type IndexMeta } from "../indexer/indexMeta";
 import { assembleProductContext } from "../productContext/assembleProductContext";
+import { ProductStoreLease } from "../session/sessionStore";
 import { initRepo } from "../setup/initRepo";
 import { resolveWorkspaceConfigPath, type ResolvedWorkspaceConfig } from "./config";
 import { evaluateWorkspaceReadiness } from "./readiness";
@@ -75,7 +76,8 @@ async function runWorkspace(
         return db === null ? null : createDatabaseProbe(db);
       },
       assemble: ({ repository, db, task, budgetTokens }) => assembleProductContext({
-        db,
+        // Each member reads its OWN session store, and `read` creates none.
+        stores: new ProductStoreLease(db, resolveIndexDbPath(repository.rootPath)).read,
         repoRoot: repository.rootPath,
         task,
         ...(budgetTokens === undefined ? {} : { budgetTokens }),
@@ -93,7 +95,7 @@ async function runDirect(repoRoot: string, task: string, budgetTokens?: number) 
   const db = new Database(resolveIndexDbPath(repoRoot), { readonly: true });
   try {
     return await assembleProductContext({
-      db,
+      stores: new ProductStoreLease(db, resolveIndexDbPath(repoRoot)).read,
       repoRoot,
       task,
       ...(budgetTokens === undefined ? {} : { budgetTokens }),

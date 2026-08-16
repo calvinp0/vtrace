@@ -9,9 +9,11 @@ import { getLatestIndexRun } from "../db/repositories/indexRunsRepository";
 import {
   countObservations,
   listObservations,
-} from "../db/repositories/observationsRepository";
-import { getSessionById } from "../db/repositories/sessionsRepository";
+} from "../session/repositories/observationsRepository";
+import { getSessionById } from "../session/repositories/sessionsRepository";
 import { openIndexerDatabase } from "../db/sqlite";
+import { createTestProductStores } from "../testing/productStores";
+import { ProductStoreLease } from "../session/sessionStore";
 import { indexProject } from "../indexer/indexProject";
 import { StaleStateStatus } from "../memory/types";
 import { recordObservedFileChanges } from "../runtime/fileWatcher";
@@ -59,9 +61,10 @@ test("file thrashing detection persists one deduped anti-pattern observation for
     });
 
     const db = openIndexerDatabase(initialized.paths.dbPath);
+const stores = new ProductStoreLease(db, initialized.paths.dbPath).write;
 
     try {
-      const observations = listObservations(db).filter((observation) => {
+      const observations = listObservations(stores.session).filter((observation) => {
         return observation.kind === ObservationKind.DeadEnd
           && observation.body.includes(`anti_pattern=${AntiPatternType.FileThrashing}`);
       });
@@ -72,9 +75,9 @@ test("file thrashing detection persists one deduped anti-pattern observation for
       assert.equal(observations[0]!.body.includes(`severity=${AntiPatternSeverity.Medium}`), true);
       assert.equal(observations[0]!.body.includes("change_count=5"), true);
       assert.deepEqual(observations[0]!.linkedFilePaths, ["src/service.ts"]);
-      assert.equal(countObservations(db), 1);
-      assert.equal(getSessionContext(db, { limit: 3 }).observations[0]?.id, observations[0]!.id);
-      assert.equal(searchMemory(db, { query: "file_thrashing src/service.ts", maxResults: 3 })[0]?.observation.id, observations[0]!.id);
+      assert.equal(countObservations(stores.session), 1);
+      assert.equal(getSessionContext(stores, { limit: 3 }).observations[0]?.id, observations[0]!.id);
+      assert.equal(searchMemory(stores, { query: "file_thrashing src/service.ts", maxResults: 3 })[0]?.observation.id, observations[0]!.id);
     } finally {
       db.close();
     }
@@ -114,10 +117,11 @@ test("file thrashing detection ignores below-threshold, outside-window, and igno
     }
 
     const db = openIndexerDatabase(initialized.paths.dbPath);
+const stores = new ProductStoreLease(db, initialized.paths.dbPath).write;
 
     try {
       assert.equal(
-        listObservations(db).some((observation) => observation.body.includes("anti_pattern=")),
+        listObservations(stores.session).some((observation) => observation.body.includes("anti_pattern=")),
         false,
       );
       assert.equal((await readRepoLocalState(initialized.paths.statePath)).observedFileChangeEvents?.length, DEFAULT_FILE_THRASHING_CHANGE_THRESHOLD * 2 - 1);
@@ -142,9 +146,10 @@ test("file thrashing observations participate in existing diff-based staleness",
     }
 
     const db = openIndexerDatabase(initialized.paths.dbPath);
+const stores = new ProductStoreLease(db, initialized.paths.dbPath).write;
 
     try {
-      const observation = searchMemory(db, { query: "file_thrashing service", maxResults: 1 })[0]?.observation;
+      const observation = searchMemory(stores, { query: "file_thrashing service", maxResults: 1 })[0]?.observation;
       assert.notEqual(observation, undefined);
 
       await writeServiceFile(repoRoot, "readUserChanged");
@@ -170,9 +175,10 @@ test("symbol added then removed detection persists a possible dead-end anti-patt
     assert.equal((await runIndexCommand([repoRoot], { cwd: repoRoot })).exitCode, 0);
 
     const db = openIndexerDatabase(initialized.paths.dbPath);
+const stores = new ProductStoreLease(db, initialized.paths.dbPath).write;
 
     try {
-      const observations = listObservations(db).filter((observation) => {
+      const observations = listObservations(stores.session).filter((observation) => {
         return observation.body.includes(`anti_pattern=${AntiPatternType.SymbolAddedThenRemoved}`);
       });
 
@@ -184,12 +190,12 @@ test("symbol added then removed detection persists a possible dead-end anti-patt
       assert.deepEqual(observations[0]!.linkedFilePaths, ["src/service.ts"]);
       assert.deepEqual(observations[0]!.linkedFqNames, ["src/service.ts::temporaryDeadEnd"]);
 
-      detectSymbolAddedThenRemovedAntiPatterns(db, {
+      detectSymbolAddedThenRemovedAntiPatterns(stores, {
         repoRoot,
         runId: getLatestIndexRun(db)!.id,
       });
       assert.equal(
-        listObservations(db).filter((observation) => observation.body.includes(`anti_pattern=${AntiPatternType.SymbolAddedThenRemoved}`)).length,
+        listObservations(stores.session).filter((observation) => observation.body.includes(`anti_pattern=${AntiPatternType.SymbolAddedThenRemoved}`)).length,
         1,
       );
     } finally {
@@ -202,6 +208,7 @@ test("session-bound anti-pattern observations survive compression and remain sea
   await withRepoFixture(async (repoRoot) => {
     await writeFixtureRepo(repoRoot);
     const db = openIndexerDatabase();
+    const stores = createTestProductStores(db);
 
     try {
       await indexProject({ repoRoot, db });
@@ -210,7 +217,7 @@ test("session-bound anti-pattern observations survive compression and remain sea
       await writeServiceFile(repoRoot, "readUser");
       await indexProject({ repoRoot, db });
 
-      const detected = detectSymbolAddedThenRemovedAntiPatterns(db, {
+      const detected = detectSymbolAddedThenRemovedAntiPatterns(stores, {
         repoRoot,
         runId: getLatestIndexRun(db)!.id,
         sessionId: "anti-session",
@@ -219,12 +226,12 @@ test("session-bound anti-pattern observations survive compression and remain sea
       assert.equal(detected.length, 1);
       assert.equal(detected[0]!.sessionId, "anti-session");
 
-      const compressed = compressInactiveSessions(db, {
+      const compressed = compressInactiveSessions(stores, {
         repoRoot,
         nowMs: detected[0]!.createdAtMs + DEFAULT_SESSION_COMPRESSION_INACTIVE_AFTER_MS,
       });
-      const session = getSessionById(db, "anti-session");
-      const context = getSessionContext(db, { sessionId: "anti-session", query: "dead-end temporary", limit: 5 });
+      const session = getSessionById(stores.session, "anti-session");
+      const context = getSessionContext(stores, { sessionId: "anti-session", query: "dead-end temporary", limit: 5 });
 
       assert.equal(session?.status, SessionStatus.Compressed);
       assert.equal(compressed.compressedSummaries[0]?.observationCounts.dead_end, 1);
@@ -232,7 +239,7 @@ test("session-bound anti-pattern observations survive compression and remain sea
       assert.equal(compressed.compressedSummaries[0]?.prunedToolCallObservationCount, 0);
       assert.equal(context.observations.some((observation) => observation.id === detected[0]!.id), true);
       assert.equal(
-        searchMemory(db, { query: "symbol_added_then_removed", maxResults: 5 }).some((result) => result.observation.id === detected[0]!.id),
+        searchMemory(stores, { query: "symbol_added_then_removed", maxResults: 5 }).some((result) => result.observation.id === detected[0]!.id),
         true,
       );
     } finally {

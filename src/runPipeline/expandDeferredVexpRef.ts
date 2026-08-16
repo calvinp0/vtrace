@@ -1,9 +1,9 @@
-import type { Database } from "bun:sqlite";
+import type { WritableSessionDatabase } from "../session/sessionStore";
 
 import {
   isPersistentDeferredVexpRefExpired,
   resolvePersistentDeferredVexpRef,
-} from "../db/repositories/deferredVexpRefsRepository";
+} from "../session/repositories/deferredVexpRefsRepository";
 import {
   type DeferredVexpEntry,
   type DeferredVexpStore,
@@ -23,7 +23,13 @@ export type DeferredVexpResolution =
 export function resolveDeferredVexpRef(input: {
   readonly hash: string;
   readonly store: DeferredVexpStore;
-  readonly db?: Database;
+  /**
+   * The session store. Optional because the in-process store answers most
+   * expansions on its own; writable because RESOLVING a persisted ref updates
+   * its last-accessed timestamp, which is a session write and not an index one
+   * (§19, §179).
+   */
+  readonly db?: WritableSessionDatabase;
 }): DeferredVexpResolution {
   const processEntry = input.store.resolve(input.hash);
 

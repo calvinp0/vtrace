@@ -17,7 +17,7 @@ import { prepareCapsuleAssembly } from "../capsuleProfiles/orchestrator";
 import {
   getCapsuleStaleness,
   persistCapsuleManifest,
-} from "../db/repositories/capsuleManifestsRepository";
+} from "../session/repositories/capsuleManifestsRepository";
 import { listAllEdges } from "../db/repositories/edgesRepository";
 import { getImpactGraph } from "../impact/getImpactGraph";
 import { searchLogicFlow } from "../logicFlow/searchLogicFlow";
@@ -29,6 +29,7 @@ import {
 } from "../db/repositories/indexRunsRepository";
 import { listAllSymbols, listSymbolsForFile } from "../db/repositories/symbolsRepository";
 import { openIndexerDatabase } from "../db/sqlite";
+import { createTestProductStores } from "../testing/productStores";
 import { EdgeType, Language, type EdgeRecord, type SymbolRecord } from "../domain/types";
 import { detectLanguage } from "../fs/languageDetection";
 import { buildHandoffPayload, deterministicHandoffBuilder } from "../handoff/buildHandoff";
@@ -118,6 +119,9 @@ export async function runRealRepoValidation(
     controlledChange: options.enableControlledChange !== false,
   });
   const db = openIndexerDatabase();
+  // The validation harness is self-contained: an in-memory index paired with an
+  // in-memory session store, so it never touches a repository's real .vtrace.
+  const stores = createTestProductStores(db);
 
   try {
     const firstIndex = await indexProject({ repoRoot, db });
@@ -139,6 +143,7 @@ export async function runRealRepoValidation(
     for (const queryDefinition of querySet.queries) {
       const evaluation = evaluateQuery({
         db,
+        stores,
         repoRoot,
         queryDefinition,
         maxResults,
@@ -158,6 +163,7 @@ export async function runRealRepoValidation(
       : await runControlledChangeValidation({
         repoRoot,
         db,
+        stores,
         queryResults,
         plan: options.controlledChange,
         maxBudgetCharacters,
@@ -260,6 +266,7 @@ function evaluateQuery(input: {
   const graphOrderingDeterministic = isDeepStrictEqual(routedFirst, routedSecond);
   const firstPipeline = buildCapsulePipeline({
     db: input.db,
+    stores: input.stores,
     repoRoot: input.repoRoot,
     query: input.queryDefinition.query,
     routedQuery: routedFirst,
@@ -267,6 +274,7 @@ function evaluateQuery(input: {
   });
   const secondPipeline = buildCapsulePipeline({
     db: input.db,
+    stores: input.stores,
     repoRoot: input.repoRoot,
     query: input.queryDefinition.query,
     routedQuery: routedFirst,
@@ -567,7 +575,7 @@ function buildCapsulePipeline(input: {
   return {
     selection: preparedAssembly.selection,
     capsule: buildCapsule(
-      createSourceBackedCapsuleBuilder({ db: input.db, repoRoot: input.repoRoot }),
+      createSourceBackedCapsuleBuilder({ db: input.db, stores: input.stores, repoRoot: input.repoRoot }),
       preparedAssembly.builderInput,
     ),
   };
@@ -620,10 +628,11 @@ async function runControlledChangeValidation(input: {
 
     const latestRunId = getLatestIndexRun(input.db)?.id ?? null;
     const targetQuery = input.plan?.query ?? target.symbol.localName;
-    const manifest = persistCapsuleManifest(input.db, {
+    const manifest = persistCapsuleManifest(input.stores, {
       sourceRunId: latestRunId ?? 1,
       capsule: buildControlledChangeCapsule({
         db: input.db,
+        stores: input.stores,
         repoRoot: input.repoRoot,
         query: targetQuery,
         symbol: target.symbol,
@@ -644,8 +653,8 @@ async function runControlledChangeValidation(input: {
     const firstSymbolDiffs = listSymbolDiffsForRun(input.db, comparisonRunId) ?? [];
     const secondFileDiffs = listFileDiffsForRun(input.db, comparisonRunId) ?? [];
     const secondSymbolDiffs = listSymbolDiffsForRun(input.db, comparisonRunId) ?? [];
-    const firstStaleness = getCapsuleStaleness(input.db, manifest.id, comparisonRunId);
-    const secondStaleness = getCapsuleStaleness(input.db, manifest.id, comparisonRunId);
+    const firstStaleness = getCapsuleStaleness(input.stores, manifest.id, comparisonRunId);
+    const secondStaleness = getCapsuleStaleness(input.stores, manifest.id, comparisonRunId);
     const sourceRepoMutated = (await readFile(originalFilePath, "utf8")) !== originalContents;
     const runSummary = getIndexRunSummary(input.db, comparisonRunId)!;
 
@@ -689,7 +698,7 @@ function buildControlledChangeCapsule(input: {
   maxBudgetCharacters: number;
 }) {
   return buildCapsule(
-    createSourceBackedCapsuleBuilder({ db: input.db, repoRoot: input.repoRoot }),
+    createSourceBackedCapsuleBuilder({ db: input.db, stores: input.stores, repoRoot: input.repoRoot }),
     {
       query: input.query,
       rerankedCandidates: [makeManualGraphSearchResult(input.symbol)],

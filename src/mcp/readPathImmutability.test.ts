@@ -1,18 +1,23 @@
-// M151-E — what a product read is allowed to change in the index it queries.
+// M151-E / M152 — what a product read is allowed to change in the stores it uses.
 //
-// The closure gate started as "the index file is byte-identical after a read" and
-// that gate was wrong, because `index.sqlite` does not hold repository-derived
-// state alone. Three supported features persist into the same file on purpose:
-// observation auto-capture, capsule manifests, and deferred VEXP references.
-//
-// So the invariant worth locking in is narrower and stronger than a file hash:
+// M151 wanted "the index file is byte-identical after a read" and could not have
+// it: `index.sqlite` did not hold repository-derived state alone. Three supported
+// features persisted into the same file on purpose — observation auto-capture,
+// capsule manifests, and deferred VEXP references — so the invariant had to be
+// stated per table:
 //
 //   repository-derived tables  -> never change during a product read
 //   product/session tables     -> may change, and ONLY these may
-//   schema / object set        -> never change (no migration, no schema install)
 //
-// Every table is classified and an unclassified table FAILS, so a table added
-// later cannot quietly land on the wrong side of the boundary.
+// M152 moved those three families into `session.sqlite`. The gate M151 wanted is
+// therefore now available, and it is what this file asserts (§57, §143):
+//
+//   index.sqlite   -> BYTE-IDENTICAL across every product/session request
+//   session.sqlite -> changes exactly when a feature persists, and it must
+//                     actually change, or auto-capture has silently stopped
+//
+// The per-table classification is kept as the finer-grained guard underneath, so
+// a table added later still cannot quietly land on the wrong side.
 
 import assert from "node:assert/strict";
 import { execFile as execFileCallback } from "node:child_process";
@@ -28,6 +33,8 @@ import { initRepo } from "../setup/initRepo";
 import { resolveRepoLocalPaths } from "../setup/repoState";
 import { resolveIndexDbPath } from "../indexer/indexMeta";
 import { classifyIndexTable } from "../db/indexTableFamilies";
+import { resolveSessionDbPath } from "../session/sessionStore";
+import { openProductIndexDatabase } from "../db/sqlite";
 import { defaultMcpToolRegistry } from "./tools";
 import { MCP_SERVER_ID, MCP_SERVER_SCHEMA, McpToolId } from "./types";
 import type { McpServerContext } from "./types";
@@ -74,6 +81,13 @@ function snapshot(dbPath: string): Snapshot {
   } finally {
     db.close();
   }
+}
+
+/** The whole-file hash. Meaningful for `index.sqlite` only after M152. */
+async function fileHash(filePath: string): Promise<string | null> {
+  const file = Bun.file(filePath);
+  if (!(await file.exists())) return null;
+  return createHash("sha256").update(Buffer.from(await file.arrayBuffer())).digest("hex");
 }
 
 function changedTables(before: Snapshot, after: Snapshot): string[] {
@@ -165,23 +179,53 @@ describe("product reads and the index they query (M151-E)", () => {
     assert.equal(after.objectCount, before.objectCount, "no object created during a product read");
   });
 
-  test("only the three documented product/session families may move", async () => {
-    const dbPath = resolveIndexDbPath(repoRoot);
-    const before = snapshot(dbPath);
-    await callTool(McpToolId.GetCodeContext, { query: "pick_winner" });
-    const after = snapshot(dbPath);
+  test("no product/session table exists in the index at all (M152)", () => {
+    const present = snapshot(resolveIndexDbPath(repoRoot)).names.filter(
+      (name) => classify(name) === "product_session",
+    );
+    assert.deepEqual(present, [], "index.sqlite must own no product/session table after M152");
+  });
 
-    const changed = changedTables(before, after);
-    // Something must have moved, or this test would pass vacuously and stop
-    // guarding anything the day auto-capture is refactored away.
-    expect(changed.length).toBeGreaterThan(0);
-    for (const name of changed) {
-      assert.equal(
-        classify(name),
-        "product_session",
-        `${name} changed during a product read but is not documented product/session state`,
-      );
+  test("the index is byte-identical across product requests, and the session store is not", async () => {
+    // The gate M151-E could not state. `index.sqlite` is now repository evidence
+    // and nothing else, so a whole-file hash means exactly one thing (§57, §143).
+    const dbPath = resolveIndexDbPath(repoRoot);
+    const sessionPath = resolveSessionDbPath(repoRoot);
+
+    const indexBefore = await fileHash(dbPath);
+    assert.notEqual(indexBefore, null);
+
+    for (const [toolId, input] of [
+      [McpToolId.GetCodeContext, { query: "pick_winner" }],
+      [McpToolId.RunPipeline, { query: "pick_winner" }],
+      [McpToolId.GetContextCapsule, { query: "pick_winner" }],
+      [McpToolId.SearchMemory, { query: "pick_winner" }],
+      [McpToolId.IndexStatus, {}],
+    ] as [McpToolId, Record<string, unknown>][]) {
+      for (let call = 0; call < 2; call += 1) {
+        assert.equal((await callTool(toolId, input)).ok, true, `${toolId} must succeed`);
+      }
     }
+
+    assert.equal(
+      await fileHash(dbPath),
+      indexBefore,
+      "no product request may change index.sqlite",
+    );
+
+    // And the writes did happen — they went to the other file. Without this the
+    // test would pass vacuously the day auto-capture is refactored away (§60).
+    const sessionAfter = await fileHash(sessionPath);
+    assert.notEqual(sessionAfter, null, "product requests must have created the session store");
+
+    const sessionTables = snapshot(sessionPath).names.filter(
+      (name) => classify(name) === "repository_derived",
+    );
+    assert.deepEqual(
+      sessionTables,
+      [],
+      "no repository-derived table may be copied into the session store",
+    );
   });
 
   test("index_status writes nothing at all", async () => {
@@ -206,6 +250,25 @@ describe("product reads and the index they query (M151-E)", () => {
     db.close();
 
     assert.deepEqual(changedTables(before, snapshot(dbPath)), []);
+  });
+
+  test("the product's own index connection rejects writes structurally", () => {
+    // M152 makes this enforceable rather than aspirational: with no legitimate
+    // product writer left, the product binding is genuinely read-only (§119,
+    // §120, §123).
+    const db = openProductIndexDatabase(resolveIndexDbPath(repoRoot));
+    try {
+      assert.throws(
+        () => db.run("CREATE TABLE m152_should_not_exist (id TEXT)"),
+        "the product index connection must reject DDL",
+      );
+      assert.throws(
+        () => db.run("DELETE FROM files"),
+        "the product index connection must reject DML",
+      );
+    } finally {
+      db.close();
+    }
   });
 
   test("a read-only handle rejects writes structurally", () => {

@@ -1,5 +1,5 @@
 import { createHash } from "node:crypto";
-import type { Database } from "bun:sqlite";
+import type { SessionDatabase, WritableSessionDatabase } from "../sessionStore";
 
 import {
   type DeferredVexpContent,
@@ -51,7 +51,7 @@ interface DeferredVexpRefRow {
 }
 
 export function persistDeferredVexpRef(
-  db: Database,
+  db: WritableSessionDatabase,
   input: PersistDeferredVexpRefInput,
   options: {
     readonly maxRecords?: number;
@@ -127,7 +127,7 @@ export function persistDeferredVexpRef(
 }
 
 export function resolvePersistentDeferredVexpRef(
-  db: Database,
+  db: WritableSessionDatabase,
   hash: string,
   options: { readonly now?: () => number } = {},
 ): PersistentDeferredVexpRefRecord | null {
@@ -180,7 +180,7 @@ export function resolvePersistentDeferredVexpRef(
 }
 
 export function isPersistentDeferredVexpRefExpired(
-  db: Database,
+  db: SessionDatabase,
   hash: string,
 ): boolean {
   if (!isValidDeferredVexpHash(hash)) {
@@ -197,7 +197,7 @@ export function isPersistentDeferredVexpRefExpired(
 }
 
 export function expirePersistentDeferredVexpRef(
-  db: Database,
+  db: WritableSessionDatabase,
   hash: string,
   options: {
     readonly reason?: string;
@@ -238,7 +238,7 @@ export function expirePersistentDeferredVexpRef(
 }
 
 export function cleanupDeferredVexpRefs(
-  db: Database,
+  db: WritableSessionDatabase,
   options: {
     readonly maxRecords?: number;
     readonly maxTombstones?: number;

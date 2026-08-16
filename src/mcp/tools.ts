@@ -43,7 +43,7 @@ import {
   getCapsuleStaleness,
   persistCapsuleManifestBestEffort,
   persistCapsuleV2ManifestBestEffort,
-} from "../db/repositories/capsuleManifestsRepository";
+} from "../session/repositories/capsuleManifestsRepository";
 import { hasIndexedFiles } from "../db/repositories/filesRepository";
 import {
   getIndexRunById,
@@ -51,9 +51,11 @@ import {
   getLatestIndexRun,
   listIndexRuns,
 } from "../db/repositories/indexRunsRepository";
-import { persistObservation } from "../db/repositories/observationsRepository";
-import { getSessionById } from "../db/repositories/sessionsRepository";
-import { openIndexerDatabase } from "../db/sqlite";
+import { persistObservation } from "../session/repositories/observationsRepository";
+import { getSessionById } from "../session/repositories/sessionsRepository";
+import { listLegacySessionTables } from "../session/legacyMigration";
+import { ProductStoreLease, SessionStore } from "../session/sessionStore";
+import { openProductIndexDatabase } from "../db/sqlite";
 import {
   inspectIndexAccessCapability,
   type IndexAccessCapabilityState,
@@ -4146,10 +4148,24 @@ async function resolveReadyRepoBinding(
   };
 }
 
+/**
+ * M152. Every MCP tool's access to storage, and the point where the two stores
+ * are bound with different authority.
+ *
+ * `index.sqlite` opens READ-ONLY. No product tool has any business writing
+ * repository evidence, and after the store split none of them needs to — so the
+ * invariant §57 states is now enforced by the connection rather than asserted
+ * about it. The session store is leased alongside and opened lazily: a tool that
+ * persists nothing creates no file (§35).
+ */
 async function withReadyRepoDb<TOutput>(
   context: McpServerContext,
   toolId: McpToolId,
-  execute: (binding: ReadyRepoBinding, db: ReturnType<typeof openIndexerDatabase>) => Promise<McpToolExecutionResult<TOutput>> | McpToolExecutionResult<TOutput>,
+  execute: (
+    binding: ReadyRepoBinding,
+    db: ReturnType<typeof openProductIndexDatabase>,
+    stores: ProductStoreLease,
+  ) => Promise<McpToolExecutionResult<TOutput>> | McpToolExecutionResult<TOutput>,
   requestedRoot?: string,
 ): Promise<McpToolExecutionResult<TOutput>> {
   const resolved = await resolveReadyRepoBinding(context, toolId, requestedRoot);
@@ -4158,9 +4174,45 @@ async function withReadyRepoDb<TOutput>(
     return resolved.result;
   }
 
-  const db = openIndexerDatabase(resolved.binding.dbPath);
+  let db: ReturnType<typeof openProductIndexDatabase>;
+  try {
+    db = openProductIndexDatabase(resolved.binding.dbPath);
+  } catch (error) {
+    return repoNotReady(
+      toolId,
+      `Repository index could not be opened for reading: ${resolved.binding.repoRoot}`,
+      {
+        repoRoot: resolved.binding.repoRoot,
+        dbPath: resolved.binding.dbPath,
+        detail: error instanceof Error ? error.message : String(error),
+      },
+    );
+  }
+
+  const lease = new ProductStoreLease(db, resolved.binding.dbPath);
 
   try {
+    // A pre-M152 index still holds product/session tables. Reading it is safe;
+    // treating it as authoritative is not, because new writes go to the session
+    // store and the two would diverge. Refuse with the command that fixes it
+    // rather than silently running a split-brain (§79, §159, §160).
+    const legacyTables = listLegacySessionTables(db);
+    if (legacyTables.length > 0) {
+      return repoNotReady(
+        toolId,
+        "Product/session state uses the pre-M152 mixed storage layout. "
+        + "Run `vtrace index <repo>` to move it into session.sqlite; "
+        + "no state is discarded.",
+        {
+          repoRoot: resolved.binding.repoRoot,
+          dbPath: resolved.binding.dbPath,
+          reason: "session_store_migration_required",
+          action: "call_index_repo",
+          legacyTableCount: legacyTables.length,
+        },
+      );
+    }
+
     if (!hasIndexedFiles(db)) {
       return repoNotReady(
         toolId,
@@ -4172,8 +4224,9 @@ async function withReadyRepoDb<TOutput>(
       );
     }
 
-    return await execute(resolved.binding, db);
+    return await execute(resolved.binding, db, lease);
   } finally {
+    lease.close();
     db.close();
   }
 }
@@ -4503,6 +4556,7 @@ async function composeSupportingRepositories(input: {
 
   const contributions = [{ alias: input.route.lead!.alias, response: input.leadContext }];
   const handles: Database[] = [];
+  const supporterLeases: ProductStoreLease[] = [];
 
   try {
     for (const supporter of input.route.supporting) {
@@ -4515,10 +4569,17 @@ async function composeSupportingRepositories(input: {
         continue;
       }
       handles.push(db);
+      // The supporter's OWN session store, read-only. Composing a supporter's
+      // context surfaces the memory that supporter recorded, exactly as it did
+      // when both halves shared one file — but `read` creates nothing, so being
+      // nominated as a supporter never brings a session store into existence
+      // (§35, §52, §89).
+      const supporterStores = new ProductStoreLease(db, resolveIndexDbPath(supporter.rootPath));
+      supporterLeases.push(supporterStores);
       contributions.push({
         alias: supporter.alias,
         response: await assembleProductContext({
-          db,
+          stores: supporterStores.read,
           repoRoot: supporter.rootPath,
           task: input.task,
           intent: input.intent,
@@ -4536,6 +4597,9 @@ async function composeSupportingRepositories(input: {
 
     return { context: merged.context, perRepository: merged.perRepository };
   } finally {
+    for (const lease of supporterLeases) {
+      lease.close();
+    }
     for (const handle of handles) {
       try {
         handle.close();
@@ -5099,7 +5163,7 @@ function formatObservationSearchResult(result: ObservationSearchResult, repoAlia
 }
 
 function runIntentAwareCapsulePipeline(
-  db: ReturnType<typeof openIndexerDatabase>,
+  db: ReturnType<typeof openProductIndexDatabase>,
   repoRoot: string,
   input: BuildCapsuleInput,
 ) {
@@ -5232,7 +5296,7 @@ interface RunPipelineImpactCandidate {
 }
 
 function maybeBuildRunPipelineImpactSummary(
-  db: ReturnType<typeof openIndexerDatabase>,
+  db: ReturnType<typeof openProductIndexDatabase>,
   pipeline: ReturnType<typeof runIntentAwareCapsulePipeline>,
 ): RunPipelineImpactSummary | null {
   const triggerReason = resolveRunPipelineImpactTriggerReason(
@@ -5389,7 +5453,7 @@ function escapeRegExp(value: string): string {
 }
 
 function runReliablePipeline(
-  db: ReturnType<typeof openIndexerDatabase>,
+  db: ReturnType<typeof openProductIndexDatabase>,
   repoRoot: string,
   input: BuildCapsuleInput,
 ): {
@@ -5566,7 +5630,7 @@ async function runMultiRepoContextCapsulePipeline(
       continue;
     }
 
-    const db = openIndexerDatabase(status.binding.dbPath);
+    const db = openProductIndexDatabase(status.binding.dbPath);
 
     try {
       if (!hasIndexedFiles(db)) {
@@ -5599,6 +5663,7 @@ async function runMultiRepoContextCapsulePipeline(
         supportCount: pipeline.capsule.supportingItems.length,
       });
     } finally {
+      stores.close();
       db.close();
     }
   }
@@ -5663,7 +5728,11 @@ async function runMultiRepoPipelineOrchestration(
       continue;
     }
 
-    const db = openIndexerDatabase(status.binding.dbPath);
+    // Read-only, exactly like the single-repository path: an explicitly selected
+    // member is queried, not reindexed. Each member gets its OWN session store,
+    // so state derived from repository A can never land in repository B (§51, §88).
+    const db = openProductIndexDatabase(status.binding.dbPath);
+    const stores = new ProductStoreLease(db, status.binding.dbPath);
 
     try {
       if (!hasIndexedFiles(db)) {
@@ -5671,7 +5740,7 @@ async function runMultiRepoPipelineOrchestration(
         continue;
       }
 
-      const orchestration = runPipelineOrchestrator(db, status.binding.repoRoot, {
+      const orchestration = runPipelineOrchestrator(stores.write, status.binding.repoRoot, {
         query: input.query,
         maxResults: input.maxResults,
         maxBudgetCharacters: perRepoBudget,
@@ -5704,6 +5773,7 @@ async function runMultiRepoPipelineOrchestration(
         supportCount: orchestration.context.capsule.supportingItems.length,
       });
     } finally {
+      stores.close();
       db.close();
     }
   }
@@ -6140,9 +6210,9 @@ function formatMultiRepoRetrievalSummary(summary: MultiRepoRetrievalSummary) {
  * cannot be opened reports `unknown` rather than guessing `fallback`.
  */
 function readIndexAccessCapability(dbPath: string): IndexAccessCapabilityState | null {
-  let db: ReturnType<typeof openIndexerDatabase> | null = null;
+  let db: ReturnType<typeof openProductIndexDatabase> | null = null;
   try {
-    db = openIndexerDatabase(dbPath);
+    db = openProductIndexDatabase(dbPath);
     return inspectIndexAccessCapability(db);
   } catch {
     return null;
@@ -6389,8 +6459,15 @@ function createExpandVexpRefToolDefinition(
 
       const store = options.store ?? getSharedDeferredVexpStore();
       const resolvedBinding = await resolveReadyRepoBinding(context, McpToolId.ExpandVexpRef);
-      const persistentDb = resolvedBinding.ok
-        ? openIndexerDatabase(resolvedBinding.binding.dbPath)
+      // Resolving a persisted ref updates its last-accessed timestamp: a
+      // session write, never an index one, so the index is not opened here at
+      // all. A repository that has never persisted a ref has no store to
+      // consult, and asking is not a reason to create one (§35, §76).
+      const persistentStore = resolvedBinding.ok
+        ? SessionStore.forIndexDb(resolvedBinding.binding.dbPath)
+        : undefined;
+      const persistentDb = persistentStore?.exists === true
+        ? persistentStore.writeSession()
         : undefined;
       const resolution = (() => {
         try {
@@ -6400,7 +6477,7 @@ function createExpandVexpRefToolDefinition(
             ...(persistentDb === undefined ? {} : { db: persistentDb }),
           });
         } finally {
-          persistentDb?.close();
+          persistentStore?.close();
         }
       })();
 
@@ -6497,7 +6574,8 @@ async function captureExpandVexpRefObservationFromContext(
     return;
   }
 
-  const db = openIndexerDatabase(resolved.binding.dbPath);
+  const db = openProductIndexDatabase(resolved.binding.dbPath);
+  const lease = new ProductStoreLease(db, resolved.binding.dbPath);
 
   try {
     if (!hasIndexedFiles(db)) {
@@ -6506,7 +6584,7 @@ async function captureExpandVexpRefObservationFromContext(
 
     const currentContext = await resolveCurrentObservationContext(resolved.binding.repoRoot);
     captureExpandVexpRefObservationBestEffort({
-      db,
+      stores: lease.write,
       repoRoot: resolved.binding.repoRoot,
       sourceRunId: getLatestIndexRun(db)?.id ?? null,
       toolName: McpToolId.ExpandVexpRef,
@@ -6517,6 +6595,7 @@ async function captureExpandVexpRefObservationFromContext(
       currentContext,
     });
   } finally {
+    lease.close();
     db.close();
   }
 }
@@ -6783,7 +6862,7 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
       return withReadyRepoDb(
         context,
         McpToolId.SearchSymbols,
-        async (_binding, db) => {
+        async (_binding, db, stores) => {
           const results = searchSymbols(db, {
             query,
             maxResults: maxResults ?? MCP_PIPELINE_DEFAULTS.maxResults,
@@ -6910,7 +6989,7 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
       return withReadyRepoDb(
         context,
         McpToolId.BuildCapsule,
-        async (binding, db) => {
+        async (binding, db, stores) => {
           const pipeline = runIntentAwareCapsulePipeline(db, binding.repoRoot, {
             query,
             maxResults,
@@ -7039,7 +7118,7 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
       return withReadyRepoDb(
         context,
         McpToolId.BuildHandoff,
-        async (binding, db) => {
+        async (binding, db, stores) => {
           const pipeline = runIntentAwareCapsulePipeline(db, binding.repoRoot, {
             query,
             maxResults,
@@ -7125,7 +7204,7 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
       return withReadyRepoDb(
         context,
         McpToolId.RouteQuery,
-        async (_binding, db) => {
+        async (_binding, db, stores) => {
           const routed = routeQuery(db, query, {
             maxResults: maxResults ?? MCP_PIPELINE_DEFAULTS.maxResults,
           });
@@ -7180,7 +7259,7 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
       return withReadyRepoDb(
         context,
         McpToolId.ListRuns,
-        async (_binding, db) => {
+        async (_binding, db, stores) => {
           const runs = listIndexRuns(db);
 
           if (runs.length === 0) {
@@ -7262,8 +7341,8 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
       return withReadyRepoDb(
         context,
         McpToolId.CheckCapsuleStaleness,
-        async (_binding, db) => {
-          const manifest = getCapsuleManifestById(db, manifestId);
+        async (_binding, db, stores) => {
+          const manifest = getCapsuleManifestById(stores.read.session, manifestId);
 
           if (manifest === undefined) {
             return invalidRequest(
@@ -7295,7 +7374,7 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
           }
 
           try {
-            const staleness = getCapsuleStaleness(db, manifestId, comparisonRunId)!;
+            const staleness = getCapsuleStaleness(stores.read, manifestId, comparisonRunId)!;
 
             return {
               ok: true,
@@ -7406,7 +7485,7 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
       return withReadyRepoDb(
         context,
         McpToolId.SaveObservation,
-        async (binding, db) => {
+        async (binding, db, stores) => {
           try {
             const currentContext = await resolveCurrentObservationContext(binding.repoRoot);
             const resolvedScope = scope ?? (
@@ -7421,7 +7500,7 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
               queryText,
               semanticOptions: intent === undefined ? {} : { intent },
             });
-            const observation = persistObservation(db, {
+            const observation = persistObservation(stores.write, {
               repoRoot: binding.repoRoot,
               sessionId,
               sessionAgentKind: "mcp",
@@ -7558,7 +7637,11 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
             continue;
           }
 
-          const db = openIndexerDatabase(status.binding.dbPath);
+          const db = openProductIndexDatabase(status.binding.dbPath);
+          // Each member answers from its OWN session store. Memory has never
+          // been shared across repositories and physical separation is what
+          // enforced that; the split preserves it exactly (§88, §93).
+          const memberStores = new ProductStoreLease(db, status.binding.dbPath);
 
           try {
             if (!hasIndexedFiles(db)) {
@@ -7566,7 +7649,7 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
             }
 
             const currentContext = await resolveCurrentObservationContext(status.binding.repoRoot);
-            const searched = searchMemoryDetailed(db, {
+            const searched = searchMemoryDetailed(memberStores.read, {
                 query,
                 maxResults,
                 sessionId,
@@ -7579,6 +7662,7 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
             for (const key of Object.keys(accounting)) accounting[key] += searched.accounting[key];
             conflicts.push(...searched.conflicts);
           } finally {
+            memberStores.close();
             db.close();
           }
         }
@@ -7604,9 +7688,9 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
       return withReadyRepoDb(
         context,
         McpToolId.SearchMemory,
-        async (binding, db) => {
+        async (binding, db, stores) => {
           const currentContext = await resolveCurrentObservationContext(binding.repoRoot);
-          const searched = searchMemoryDetailed(db, {
+          const searched = searchMemoryDetailed(stores.read, {
             query,
             maxResults,
             sessionId,
@@ -7618,7 +7702,7 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
           const results = [...searched.results];
 
           captureSearchMemoryObservationBestEffort({
-            db,
+            stores: stores.write,
             repoRoot: binding.repoRoot,
             sourceRunId: getLatestIndexRun(db)?.id ?? null,
             toolName: McpToolId.SearchMemory,
@@ -7744,9 +7828,9 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
       return withReadyRepoDb(
         context,
         McpToolId.GetSessionContext,
-        async (binding, db) => {
+        async (binding, db, stores) => {
           const currentContext = await resolveCurrentObservationContext(binding.repoRoot);
-          const contextResult = getSessionContext(db, {
+          const contextResult = getSessionContext(stores.read, {
             sessionId,
             limit,
             query,
@@ -7759,7 +7843,7 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
           ];
 
           captureSessionContextObservationBestEffort({
-            db,
+            stores: stores.write,
             repoRoot: binding.repoRoot,
             sourceRunId: getLatestIndexRun(db)?.id ?? null,
             toolName: McpToolId.GetSessionContext,
@@ -7837,10 +7921,10 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
       return withReadyRepoDb(
         context,
         McpToolId.ListSessions,
-        async (_binding, db) => ({
+        async (_binding, db, stores) => ({
           ok: true,
           output: {
-            sessions: listInspectableSessions(db).map(formatSessionListItem),
+            sessions: listInspectableSessions(stores.read.session).map(formatSessionListItem),
           },
         }),
       );
@@ -7924,8 +8008,8 @@ const LEGACY_MCP_TOOL_DEFINITIONS_UNFROZEN = [
       return withReadyRepoDb(
         context,
         McpToolId.ReadSession,
-        async (_binding, db) => {
-          const sessionResult = readInspectableSession(db, sessionId);
+        async (_binding, db, stores) => {
+          const sessionResult = readInspectableSession(stores.read, sessionId);
 
           if (sessionResult === undefined) {
             return invalidRequest(
@@ -8789,13 +8873,13 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
       return withReadyRepoDb(
         rebindMcpContext(context, productRoute.lead!.rootPath),
         McpToolId.RunPipeline,
-        async (binding, db) => {
+        async (binding, db, stores) => {
           const currentObservationContext = await resolveCurrentObservationContext(binding.repoRoot);
           const preexistingSessionStatus = sessionId === undefined
             ? undefined
-            : getSessionById(db, sessionId)?.status;
+            : getSessionById(stores.read.session, sessionId)?.status;
           const accountingStartedAt = performance.now();
-          const orchestration = runPipelineOrchestrator(db, binding.repoRoot, {
+          const orchestration = runPipelineOrchestrator(stores.write, binding.repoRoot, {
             query,
             maxResults,
             maxBudgetCharacters,
@@ -8819,7 +8903,7 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
           // do not spam the observation store.
           if (orchestration.context.included) {
             captureVisibleCapsuleObservationBestEffort({
-              db,
+              stores: stores.write,
               repoRoot: binding.repoRoot,
               sourceRunId: getLatestIndexRun(db)?.id ?? null,
               routedQuery: orchestration.context.routedQuery,
@@ -8839,7 +8923,7 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
           if (saveObservation === true || observationText !== undefined) {
             const capsule = orchestration.context.capsule;
             const linkedItems = [...capsule.pivots, ...capsule.supportingItems].slice(0, 6);
-            const observation = persistObservation(db, {
+            const observation = persistObservation(stores.write, {
               repoRoot: binding.repoRoot,
               sessionId,
               sessionAgentKind: "mcp",
@@ -8902,7 +8986,7 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
               { observedSourceChanges: binding.state.observedFileChanges !== undefined },
             )),
           });
-          const nudge = evaluateObservationNudge(db, {
+          const nudge = evaluateObservationNudge(stores.read.session, {
             sessionId,
             currentToolName: McpToolId.RunPipeline,
             ...(preexistingSessionStatus === SessionStatus.Compressed
@@ -8911,7 +8995,7 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
           });
 
           const productContext = await assembleProductContext({
-            db,
+            stores: stores.read,
             repoRoot: binding.repoRoot,
             task: query,
             intent: capsuleV2Intent ?? capsuleIntentForPreset(orchestration.intentDecision.selected),
@@ -9233,7 +9317,7 @@ async function checkIndexForGetCodeContext(
       }),
     };
   }
-  const db = openIndexerDatabase(resolved.binding.dbPath);
+  const db = openProductIndexDatabase(resolved.binding.dbPath);
   const indexMissing = !hasIndexedFiles(db);
   db.close();
   readiness = withRuntimeSignals(readiness, {
@@ -9642,7 +9726,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
       return withReadyRepoDb(
         rebindMcpContext(context, productRoute.lead!.rootPath),
         McpToolId.GetContextCapsule,
-        async (binding, db) => {
+        async (binding, db, stores) => {
           const sourceRunId = getLatestIndexRun(db)?.id ?? null;
           const accountingStartedAt = performance.now();
           const productBudgetTokens = capsuleBudgetTokens
@@ -9661,7 +9745,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
             },
           );
           const productContext = await assembleProductContext({
-            db,
+            stores: stores.read,
             repoRoot: binding.repoRoot,
             task: query,
             intent: capsuleV2Intent ?? capsuleIntentForPreset(capsulePreset),
@@ -9672,7 +9756,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
           const result = authoritativeRetrieval.result;
           const capsuleResult = toCapsuleV2ProductResponse(result, { query });
           const capsuleManifestId = persistCapsuleManifestBestEffort(
-            db,
+            stores.write,
             authoritativeRetrieval.capsule,
             sourceRunId,
           );
@@ -9845,7 +9929,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
       return withReadyRepoDb(
         context,
         McpToolId.GetImpactGraph,
-        async (binding, db) => {
+        async (binding, db, stores) => {
           const accountingStartedAt = performance.now();
           const result = getImpactGraph(db, {
             symbolFqn,
@@ -9887,7 +9971,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
           // never the larger pre-envelope working graph. Before M138 this seam
           // produced the real ARC 10/7 memory claim while the tool returned 3/3.
           captureImpactGraphObservationBestEffort({
-            db,
+            stores: stores.write,
             repoRoot: binding.repoRoot,
             sourceRunId: getLatestIndexRun(db)?.id ?? null,
             output: compactedOutput,
@@ -10011,7 +10095,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
       return withReadyRepoDb(
         context,
         McpToolId.SearchLogicFlow,
-        async (binding, db) => {
+        async (binding, db, stores) => {
           const accountingStartedAt = performance.now();
           const result = searchLogicFlow(db, {
             start,
@@ -10033,7 +10117,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
 
           const currentContext = await resolveCurrentObservationContext(binding.repoRoot);
           captureLogicFlowObservationBestEffort({
-            db,
+            stores: stores.write,
             repoRoot: binding.repoRoot,
             sourceRunId: getLatestIndexRun(db)?.id ?? null,
             output: result.output,
@@ -10113,7 +10197,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
       return withReadyRepoDb(
         context,
         McpToolId.GetSkeleton,
-        async (binding, db) => {
+        async (binding, db, stores) => {
           const accountingStartedAt = performance.now();
           const output = await getSkeleton(db, {
             repoRoot: binding.repoRoot,
@@ -10123,7 +10207,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
 
           const currentContext = await resolveCurrentObservationContext(binding.repoRoot);
           captureSkeletonObservationBestEffort({
-            db,
+            stores: stores.write,
             repoRoot: binding.repoRoot,
             sourceRunId: getLatestIndexRun(db)?.id ?? null,
             output,

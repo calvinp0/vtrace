@@ -1,9 +1,10 @@
-import { getCapsuleManifestById, getCapsuleStaleness } from "../../db/repositories/capsuleManifestsRepository";
+import { getCapsuleManifestById, getCapsuleStaleness } from "../../session/repositories/capsuleManifestsRepository";
 import {
   getIndexRunById,
   listIndexRuns,
 } from "../../db/repositories/indexRunsRepository";
 import { openIndexerDatabase } from "../../db/sqlite";
+import { ProductStoreLease } from "../../session/sessionStore";
 import { formatCapsuleStaleness } from "../formatters";
 import type { CliOptions, CommandResult } from "../types";
 import {
@@ -48,13 +49,14 @@ export async function runCheckCapsuleCommand(
 
   try {
     const db = openIndexerDatabase(resolvedRepo.dbPath);
+    const lease = new ProductStoreLease(db, resolvedRepo.dbPath);
 
     try {
       if (listIndexRuns(db).length === 0) {
         return failure(`Repo not indexed: ${repoRoot}`);
       }
 
-      if (getCapsuleManifestById(db, manifestId) === undefined) {
+      if (getCapsuleManifestById(lease.read.session, manifestId) === undefined) {
         return failure(`Capsule manifest not found: ${manifestId}`);
       }
 
@@ -63,9 +65,10 @@ export async function runCheckCapsuleCommand(
       }
 
       return success(formatCapsuleStaleness(
-        getCapsuleStaleness(db, manifestId, comparisonRunId)!,
+        getCapsuleStaleness(lease.read, manifestId, comparisonRunId)!,
       ));
     } finally {
+      lease.close();
       db.close();
     }
   } catch (error) {

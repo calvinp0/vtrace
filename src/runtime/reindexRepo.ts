@@ -25,6 +25,12 @@ import {
 } from "../observations/sessionLifecycle";
 import { markProjectRulesStaleForRun } from "../projectRules/projectRules";
 import {
+  LegacyMigrationOutcome,
+  migrateLegacySessionState,
+  type LegacyMigrationResult,
+} from "../session/legacyMigration";
+import { ProductStoreLease } from "../session/sessionStore";
+import {
   buildLastIndexSnapshot,
   buildRepoLocalState,
   evaluateRepoReadiness,
@@ -63,6 +69,13 @@ export interface ReindexRepoResult {
   readonly indexResult: IndexProjectResult;
   readonly state: RepoLocalState | null;
   readonly sessionCompression: ReindexSessionCompressionDiagnostics;
+  /**
+   * M152. What the legacy session-state drain did on the way in. Null when the
+   * store split is not involved at all (an index written after M152 has no
+   * session tables to move). Reported rather than silent, because "your memory
+   * moved files" is exactly the kind of thing a user should be able to see.
+   */
+  readonly legacySessionMigration: LegacyMigrationResult | null;
   /**
    * M148-A. What the physical access-path migration did on the way out of the
    * lifecycle. Reported rather than silent: the difference between `indexed`
@@ -105,6 +118,14 @@ async function reindexRepoAndRefreshStateUnlocked(input: {
   readonly refreshMode?: IndexRefreshMode;
 }): Promise<Omit<ReindexRepoResult, "staleLockRecovered">> {
   const db = openIndexerDatabase(input.dbPath);
+  // M152. The ONE migration seam (§167). It runs here and not on a product read
+  // because this is where the worktree lock is already held, the writable index
+  // handle already exists, and the caller already expects the index to change.
+  //
+  // Before the indexer touches anything: a crash mid-index must not be able to
+  // strand session rows in a file that is being rewritten around them.
+  const lease = new ProductStoreLease(db, input.dbPath);
+  const legacySessionMigration = drainLegacySessionState(db, input.dbPath, lease);
 
   try {
     const fingerprints = await computeIndexFingerprints();
@@ -156,7 +177,7 @@ async function reindexRepoAndRefreshStateUnlocked(input: {
     const latestRun = getLatestIndexRun(db);
 
     if (latestRun !== undefined) {
-      markProjectRulesStaleForRun(db, {
+      markProjectRulesStaleForRun(lease.write, {
         repoRoot: input.repoRoot,
         runId: latestRun.id,
       });
@@ -183,14 +204,14 @@ async function reindexRepoAndRefreshStateUnlocked(input: {
       }
     }
 
-    detectSymbolAddedThenRemovedAntiPatterns(db, {
+    detectSymbolAddedThenRemovedAntiPatterns(lease.write, {
       repoRoot: input.repoRoot,
       ...(!input.usesDbPathOverride ? {
         currentContext: await resolveCurrentObservationContext(input.repoRoot),
       } : {}),
     });
 
-    const sessionCompression = runBoundedSessionCompressionSweep(db, input.repoRoot);
+    const sessionCompression = runBoundedSessionCompressionSweep(lease, input.repoRoot);
     reportSessionCompressionDiagnostics(input.progress, sessionCompression);
 
     // M148-A. The narrowest point where an authoritative index has just been
@@ -226,10 +247,39 @@ async function reindexRepoAndRefreshStateUnlocked(input: {
       indexResult,
       state,
       sessionCompression,
+      legacySessionMigration,
       accessCapability,
     };
   } finally {
+    lease.close();
     db.close();
+  }
+}
+
+/**
+ * Drain a pre-M152 mixed index into its session store, if it is one.
+ *
+ * Never fatal, and deliberately so: a repository whose session store cannot be
+ * written still has a perfectly indexable repository, and failing the whole
+ * index run would make an optional product-state feature block the operation the
+ * user actually asked for (§110, §169). The legacy tables are dropped only after
+ * a successful copy, so a failure here leaves the old state exactly where it was
+ * and the next `index_repo` retries it (§25).
+ */
+function drainLegacySessionState(
+  indexDb: ReturnType<typeof openIndexerDatabase>,
+  indexDbPath: string,
+  lease: ProductStoreLease,
+): LegacyMigrationResult | null {
+  try {
+    const result = migrateLegacySessionState({
+      indexDb,
+      indexDbPath,
+      sessionDb: lease.write.session,
+    });
+    return result.outcome === LegacyMigrationOutcome.NotLegacy ? null : result;
+  } catch {
+    return null;
   }
 }
 
@@ -242,13 +292,13 @@ async function reindexRepoAndRefreshStateUnlocked(input: {
  * fails the reindex.
  */
 export function runBoundedSessionCompressionSweep(
-  db: ReturnType<typeof openIndexerDatabase>,
+  lease: ProductStoreLease,
   repoRoot: string,
 ): ReindexSessionCompressionDiagnostics {
   const limit = DEFAULT_REINDEX_SESSION_COMPRESSION_LIMIT;
 
   try {
-    const result = compressInactiveSessions(db, {
+    const result = compressInactiveSessions(lease.write, {
       repoRoot,
       nowMs: Date.now(),
       limit,

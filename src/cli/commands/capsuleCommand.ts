@@ -62,6 +62,7 @@ import {
 } from "../../metrics/contextAccounting";
 import { hasIndexedFiles } from "../../db/repositories/filesRepository";
 import { openIndexerDatabase } from "../../db/sqlite";
+import { ProductStoreLease } from "../../session/sessionStore";
 import { routeQuery } from "../../intent/routeQuery";
 import type { HybridCandidate } from "../../retrieval/hybridRetrieval";
 import type { HybridScoreComponents } from "../../retrieval/hybridScoring";
@@ -128,6 +129,7 @@ export async function runCapsuleCommand(
 
   try {
     const db = openIndexerDatabase(resolvedRepo.dbPath);
+    const lease = new ProductStoreLease(db, resolvedRepo.dbPath);
 
     try {
       if (!hasIndexedFiles(db)) {
@@ -158,7 +160,7 @@ export async function runCapsuleCommand(
         });
         const product = toCapsuleV2ProductResponse(result);
         const productContext = await assembleProductContext({
-          db,
+          stores: lease.read,
           repoRoot,
           task: query,
           intent: parsed.intent ?? CapsuleIntent.Auto,
@@ -203,6 +205,7 @@ export async function runCapsuleCommand(
       }
 
     } finally {
+      lease.close();
       db.close();
     }
   } catch (error) {

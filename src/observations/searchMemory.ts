@@ -1,7 +1,9 @@
 import type { Database } from "bun:sqlite";
 
+import type { ProductStores } from "../session/sessionStore";
+
 import { getLatestIndexRun } from "../db/repositories/indexRunsRepository";
-import { listObservations } from "../db/repositories/observationsRepository";
+import { listObservations } from "../session/repositories/observationsRepository";
 import { StaleStateStatus } from "../memory/types";
 import {
   createObservationStalenessCache,
@@ -47,16 +49,23 @@ const OBSERVATION_SEARCH_SCORE_WEIGHTS = Object.freeze({
 });
 
 export function searchMemory(
-  db: Database,
+  stores: ProductStores,
   input: SearchMemoryInput,
 ): ObservationSearchResult[] {
-  return [...searchMemoryDetailed(db, input).results];
+  return [...searchMemoryDetailed(stores, input).results];
 }
 
+/**
+ * Reads BOTH stores and writes neither. Observations come from
+ * `session.sqlite`; the index run they are compared against comes from
+ * `index.sqlite`, which is what keeps a memory from an older repository state
+ * being served as if it were current (§17, §99).
+ */
 export function searchMemoryDetailed(
-  db: Database,
+  stores: ProductStores,
   input: SearchMemoryInput,
 ): ObservationSearchResponse {
+  const db = stores.session;
   const normalizedQuery = normalizeObservationText(input.query);
 
   if (normalizedQuery.length === 0) {
@@ -71,11 +80,11 @@ export function searchMemoryDetailed(
   // Expensive index-run discovery happens once per request, not once per
   // observation: the comparison head and the per-run diffs behind it are
   // identical for every observation being scored.
-  const comparisonRunId = getLatestIndexRun(db)?.id ?? null;
+  const comparisonRunId = getLatestIndexRun(stores.index)?.id ?? null;
   const stalenessCache = createObservationStalenessCache();
   const scored = listObservations(db)
     .map((observation) => scoreObservation(
-      db,
+      stores.index,
       observation,
       normalizedQuery,
       queryTerms,
@@ -122,7 +131,7 @@ export function searchMemoryDetailed(
 }
 
 function scoreObservation(
-  db: Database,
+  indexDb: Database,
   observation: Observation,
   normalizedQuery: string,
   queryTerms: readonly string[],
@@ -240,7 +249,7 @@ function scoreObservation(
     return undefined;
   }
 
-  const staleness = getObservationStaleness(db, observation, comparisonRunId, stalenessCache);
+  const staleness = getObservationStaleness(indexDb, observation, comparisonRunId, stalenessCache);
   const compatibility = currentContext === undefined
     ? undefined
     : classifyObservationCompatibility(observation, currentContext);

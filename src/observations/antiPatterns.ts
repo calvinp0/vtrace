@@ -1,12 +1,12 @@
 import { createHash } from "node:crypto";
-import type { Database } from "bun:sqlite";
+import type { WritableProductStores } from "../session/sessionStore";
 
 import {
   getIndexRunById,
   getLatestIndexRun,
   listSymbolDiffsForRun,
 } from "../db/repositories/indexRunsRepository";
-import { persistObservation } from "../db/repositories/observationsRepository";
+import { persistObservation } from "../session/repositories/observationsRepository";
 import { normalizeFilePath } from "../domain/types";
 import { FileChangeType } from "../memory/types";
 import type { ObservedFileChangeEvent } from "../setup/types";
@@ -60,7 +60,7 @@ export interface DetectSymbolAddedThenRemovedInput {
 }
 
 export function detectFileThrashingAntiPatterns(
-  db: Database,
+  stores: WritableProductStores,
   input: DetectFileThrashingInput,
 ): Observation[] {
   const changeThreshold = input.changeThreshold ?? DEFAULT_FILE_THRASHING_CHANGE_THRESHOLD;
@@ -93,7 +93,7 @@ export function detectFileThrashingAntiPatterns(
       const lastEventAtMs = eventsInWindow[eventsInWindow.length - 1]!;
       const windowBucketStartMs = Math.floor(firstEventAtMs / windowMs) * windowMs;
 
-      persisted.push(persistObservation(db, {
+      persisted.push(persistObservation(stores, {
         repoRoot: input.repoRoot,
         kind: ObservationKind.DeadEnd,
         source: ObservationSource.McpAuto,
@@ -113,7 +113,7 @@ export function detectFileThrashingAntiPatterns(
           `last_event_at_ms=${lastEventAtMs}`,
           `summary=Possible repeated edits to the same indexed source file in a short window.`,
         ].join("\n"),
-        sourceRunId: input.sourceRunId ?? getLatestIndexRun(db)?.id,
+        sourceRunId: input.sourceRunId ?? getLatestIndexRun(stores.index)?.id,
         ...antiPatternProvenance(input.currentContext, {
           queryText: `${AntiPatternType.FileThrashing} ${filePath}`,
           semanticOptions: { changeThreshold, windowMs, filePath },
@@ -139,19 +139,19 @@ export function detectFileThrashingAntiPatterns(
 }
 
 export function detectSymbolAddedThenRemovedAntiPatterns(
-  db: Database,
+  stores: WritableProductStores,
   input: DetectSymbolAddedThenRemovedInput,
 ): Observation[] {
   const run = input.runId === undefined
-    ? getLatestIndexRun(db)
-    : getIndexRunById(db, input.runId);
+    ? getLatestIndexRun(stores.index)
+    : getIndexRunById(stores.index, input.runId);
 
   if (run === undefined || run.previousRunId === undefined) {
     return [];
   }
 
-  const currentDiffs = listSymbolDiffsForRun(db, run.id) ?? [];
-  const previousDiffs = listSymbolDiffsForRun(db, run.previousRunId) ?? [];
+  const currentDiffs = listSymbolDiffsForRun(stores.index, run.id) ?? [];
+  const previousDiffs = listSymbolDiffsForRun(stores.index, run.previousRunId) ?? [];
   const previousAddedKeys = new Set(
     previousDiffs
       .filter((diff) => diff.changeType === FileChangeType.Added)
@@ -170,7 +170,7 @@ export function detectSymbolAddedThenRemovedAntiPatterns(
     const symbolFqn = diff.fqName;
     const filePath = diff.filePath;
 
-    return persistObservation(db, {
+    return persistObservation(stores, {
       repoRoot: input.repoRoot,
       ...(input.sessionId === undefined ? {} : { sessionId: input.sessionId }),
       ...(input.sessionAgentKind === undefined ? {} : { sessionAgentKind: input.sessionAgentKind }),

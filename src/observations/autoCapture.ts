@@ -1,8 +1,8 @@
 import { createHash } from "node:crypto";
-import type { Database } from "bun:sqlite";
+import type { WritableProductStores } from "../session/sessionStore";
 
 import type { Capsule } from "../capsule/types";
-import { persistObservation } from "../db/repositories/observationsRepository";
+import { persistObservation } from "../session/repositories/observationsRepository";
 import type { ImpactGraphOutput } from "../impact/getImpactGraph";
 import type { RoutedQueryResult } from "../intent/routeQuery";
 import type { LogicFlowOutput } from "../logicFlow/searchLogicFlow";
@@ -12,7 +12,7 @@ import { ObservationOrigin, ObservationScope, type CurrentObservationContext, ty
 import { buildObservationProvenance } from "./provenance";
 
 export interface CaptureVisibleCapsuleObservationInput {
-  db: Database;
+  stores: WritableProductStores;
   repoRoot: string;
   sourceRunId: number | null;
   routedQuery: RoutedQueryResult;
@@ -47,7 +47,7 @@ export function captureVisibleCapsuleObservation(
     `top_pivots=${topPivots.join(", ")}`,
   ].join("\n");
 
-  return persistObservation(input.db, {
+  return persistObservation(input.stores, {
     repoRoot: input.repoRoot,
     ...(input.sessionId === undefined ? {} : { sessionId: input.sessionId }),
     ...(input.sessionAgentKind === undefined ? {} : { sessionAgentKind: input.sessionAgentKind }),
@@ -91,7 +91,7 @@ export function captureVisibleCapsuleObservation(
 }
 
 export interface CaptureToolCallObservationInput {
-  db: Database;
+  stores: WritableProductStores;
   repoRoot: string;
   sourceRunId: number | null;
   toolName: string;
@@ -114,7 +114,7 @@ export interface CaptureToolCallObservationInput {
 export function captureToolCallObservation(
   input: CaptureToolCallObservationInput,
 ): Observation {
-  return persistObservation(input.db, {
+  return persistObservation(input.stores, {
     repoRoot: input.repoRoot,
     ...(input.sessionId === undefined ? {} : { sessionId: input.sessionId }),
     sessionAgentKind: input.sessionAgentKind ?? "mcp",
@@ -161,7 +161,7 @@ export function captureToolCallObservationBestEffort(
 }
 
 export function captureImpactGraphObservationBestEffort(input: {
-  db: Database;
+  stores: WritableProductStores;
   repoRoot: string;
   sourceRunId: number | null;
   output: ImpactGraphOutput;
@@ -179,7 +179,7 @@ export function captureImpactGraphObservationBestEffort(input: {
   const linkedFqNames = input.output.nodes.map((node) => node.fqName);
 
   return captureToolCallObservationBestEffort({
-    db: input.db,
+    stores: input.stores,
     repoRoot: input.repoRoot,
     sourceRunId: input.sourceRunId,
     toolName: input.toolName,
@@ -230,7 +230,7 @@ export function captureImpactGraphObservationBestEffort(input: {
 }
 
 export function captureLogicFlowObservationBestEffort(input: {
-  db: Database;
+  stores: WritableProductStores;
   repoRoot: string;
   sourceRunId: number | null;
   output: LogicFlowOutput;
@@ -256,7 +256,7 @@ export function captureLogicFlowObservationBestEffort(input: {
   ];
 
   return captureToolCallObservationBestEffort({
-    db: input.db,
+    stores: input.stores,
     repoRoot: input.repoRoot,
     sourceRunId: input.sourceRunId,
     toolName: input.toolName,
@@ -305,7 +305,7 @@ export function captureLogicFlowObservationBestEffort(input: {
 }
 
 export function captureSkeletonObservationBestEffort(input: {
-  db: Database;
+  stores: WritableProductStores;
   repoRoot: string;
   sourceRunId: number | null;
   output: GetSkeletonOutput;
@@ -321,7 +321,7 @@ export function captureSkeletonObservationBestEffort(input: {
   }
 
   return captureToolCallObservationBestEffort({
-    db: input.db,
+    stores: input.stores,
     repoRoot: input.repoRoot,
     sourceRunId: input.sourceRunId,
     toolName: input.toolName,
@@ -357,7 +357,7 @@ export function captureSkeletonObservationBestEffort(input: {
 }
 
 export function captureSearchMemoryObservationBestEffort(input: {
-  db: Database;
+  stores: WritableProductStores;
   repoRoot: string;
   sourceRunId: number | null;
   toolName: string;
@@ -375,7 +375,7 @@ export function captureSearchMemoryObservationBestEffort(input: {
   }
 
   return captureToolCallObservationBestEffort({
-    db: input.db,
+    stores: input.stores,
     repoRoot: input.repoRoot,
     sourceRunId: input.sourceRunId,
     toolName: input.toolName,
@@ -409,7 +409,7 @@ export function captureSearchMemoryObservationBestEffort(input: {
 }
 
 export function captureSessionContextObservationBestEffort(input: {
-  db: Database;
+  stores: WritableProductStores;
   repoRoot: string;
   sourceRunId: number | null;
   toolName: string;
@@ -431,7 +431,7 @@ export function captureSessionContextObservationBestEffort(input: {
   const scope = input.sessionId === undefined ? "recent repo context" : `session ${input.sessionId}`;
 
   return captureToolCallObservationBestEffort({
-    db: input.db,
+    stores: input.stores,
     repoRoot: input.repoRoot,
     sourceRunId: input.sourceRunId,
     toolName: input.toolName,
@@ -462,7 +462,7 @@ export function captureSessionContextObservationBestEffort(input: {
 }
 
 export function captureExpandVexpRefObservationBestEffort(input: {
-  db: Database;
+  stores: WritableProductStores;
   repoRoot: string;
   sourceRunId: number | null;
   toolName: string;
@@ -478,7 +478,7 @@ export function captureExpandVexpRefObservationBestEffort(input: {
   }
 
   return captureToolCallObservationBestEffort({
-    db: input.db,
+    stores: input.stores,
     repoRoot: input.repoRoot,
     sourceRunId: input.sourceRunId,
     toolName: input.toolName,

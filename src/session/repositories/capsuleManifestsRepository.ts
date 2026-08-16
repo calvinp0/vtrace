@@ -1,5 +1,9 @@
 import { createHash } from "node:crypto";
-import type { Database } from "bun:sqlite";
+import type {
+  ProductStores,
+  SessionDatabase,
+  WritableProductStores,
+} from "../sessionStore";
 
 import type { Capsule, CapsuleItem } from "../../capsule/types";
 import { computeCapsuleStaleness } from "../../memory/computeCapsuleStaleness";
@@ -14,7 +18,7 @@ import {
   getIndexRunById,
   listFileDiffsForRun,
   listSymbolDiffsForRun,
-} from "./indexRunsRepository";
+} from "../../db/repositories/indexRunsRepository";
 
 interface CapsuleManifestRow {
   id: string;
@@ -42,10 +46,10 @@ export interface PersistCapsuleManifestInput {
 }
 
 export function persistCapsuleManifest(
-  db: Database,
+  stores: WritableProductStores,
   input: PersistCapsuleManifestInput,
 ): CapsuleManifest {
-  return persistCapsuleManifestFromItems(db, {
+  return persistCapsuleManifestFromItems(stores, {
     sourceRunId: input.sourceRunId,
     query: input.capsule.query,
     items: capsuleToManifestItems(input.capsule),
@@ -81,12 +85,18 @@ export interface PersistCapsuleManifestFromItemsInput {
  * ordinals are reassigned from array order so callers need not pre-number them.
  */
 export function persistCapsuleManifestFromItems(
-  db: Database,
+  stores: WritableProductStores,
   input: PersistCapsuleManifestFromItemsInput,
 ): CapsuleManifest {
-  if (getIndexRunById(db, input.sourceRunId) === undefined) {
+  // The run is validated against the INDEX and the manifest is written to the
+  // SESSION store. `source_run_id` is no longer a foreign key — it cannot be,
+  // across two files — so this check is what keeps a manifest from claiming a
+  // provenance the index never had (§28, §29).
+  if (getIndexRunById(stores.index, input.sourceRunId) === undefined) {
     throw new Error(`Index run not found: ${input.sourceRunId}`);
   }
+
+  const db = stores.session;
 
   const items = input.items.map((item, itemOrdinal) => ({ ...item, itemOrdinal }));
   const manifestId = computeCapsuleManifestId(input.sourceRunId, input.query, items);
@@ -156,7 +166,7 @@ export function persistCapsuleManifestFromItems(
  * calls on the same repo state return the same id without duplicate rows.
  */
 export function persistCapsuleManifestBestEffort(
-  db: Database,
+  stores: WritableProductStores,
   capsule: Capsule,
   sourceRunId: number | null,
 ): string | null {
@@ -169,7 +179,7 @@ export function persistCapsuleManifestBestEffort(
   }
 
   try {
-    return persistCapsuleManifest(db, { sourceRunId, capsule }).id;
+    return persistCapsuleManifest(stores, { sourceRunId, capsule }).id;
   } catch {
     return null;
   }
@@ -189,7 +199,7 @@ export function persistCapsuleManifestBestEffort(
  * difference from the v1 path). Never throws.
  */
 export function persistCapsuleV2ManifestBestEffort(
-  db: Database,
+  stores: WritableProductStores,
   query: string,
   items: readonly CapsuleManifestItemFields[],
   sourceRunId: number | null,
@@ -203,14 +213,14 @@ export function persistCapsuleV2ManifestBestEffort(
   }
 
   try {
-    return persistCapsuleManifestFromItems(db, { sourceRunId, query, items }).id;
+    return persistCapsuleManifestFromItems(stores, { sourceRunId, query, items }).id;
   } catch {
     return null;
   }
 }
 
 export function getCapsuleManifestById(
-  db: Database,
+  db: SessionDatabase,
   capsuleId: string,
 ): CapsuleManifest | undefined {
   const row = db.query(`
@@ -234,7 +244,7 @@ export function getCapsuleManifestById(
 }
 
 export function listCapsuleManifestItems(
-  db: Database,
+  db: SessionDatabase,
   capsuleId: string,
 ): CapsuleManifestItemRecord[] {
   const rows = db.query(`
@@ -266,13 +276,22 @@ export function listCapsuleManifestItems(
   }));
 }
 
+/**
+ * Is a stored manifest still current?
+ *
+ * Reads the manifest from the session store and the run history from the index,
+ * which is the whole point of the split: rebuilding an index no longer deletes
+ * the manifests derived from it (a CASCADE used to), so "the manifest exists"
+ * and "the manifest is current" stay two different questions (§18, §145).
+ */
 export function getCapsuleStaleness(
-  db: Database,
+  stores: ProductStores,
   capsuleId: string,
   comparisonRunId: number,
 ): CapsuleStalenessResult | undefined {
-  const manifest = getCapsuleManifestById(db, capsuleId);
-  const comparisonRun = getIndexRunById(db, comparisonRunId);
+  const manifest = getCapsuleManifestById(stores.session, capsuleId);
+  const comparisonRun = getIndexRunById(stores.index, comparisonRunId);
+  const db = stores.index;
 
   if (manifest === undefined || comparisonRun === undefined) {
     return undefined;
@@ -285,12 +304,12 @@ export function getCapsuleStaleness(
   return computeCapsuleStaleness({
     manifest,
     comparisonRunId,
-    steps: listComparisonSteps(db, manifest.sourceRunId, comparisonRunId),
+    steps: listComparisonSteps(stores.index, manifest.sourceRunId, comparisonRunId),
   });
 }
 
 function listComparisonSteps(
-  db: Database,
+  db: import("bun:sqlite").Database,
   sourceRunId: number,
   comparisonRunId: number,
 ): CapsuleStalenessComparisonStep[] {

@@ -1,6 +1,6 @@
-import type { Database } from "bun:sqlite";
+import type { ProductStores } from "../session/sessionStore";
 
-import { listObservations } from "../db/repositories/observationsRepository";
+import { listObservations } from "../session/repositories/observationsRepository";
 import { StaleStateStatus } from "../memory/types";
 import { getObservationStaleness } from "../observations/staleness";
 import { classifyObservationCompatibility } from "../observations/compatibility";
@@ -31,7 +31,7 @@ export const CAPSULE_MEMORY_MAX_COUNT = 3;
 const CAPSULE_MEMORY_MIN_QUERY_TERM_MATCHES_WITHOUT_STRUCTURE = 3;
 
 export interface SelectCapsuleMemoriesInput {
-  readonly db: Database;
+  readonly stores: ProductStores;
   readonly query: string;
   readonly intent?: string;
   readonly pivots: readonly CapsuleItem[];
@@ -66,12 +66,12 @@ export function selectCapsuleMemories(
   const linkedSymbolIds = new Set(anchoredItems.map((item) => item.symbolId));
   const linkedFilePaths = new Set(anchoredItems.map((item) => normalizePath(item.filePath)));
   const maxCount = normalizeMaxCount(input.maxCount ?? CAPSULE_MEMORY_MAX_COUNT);
-  const rankedCandidates = listObservations(input.db)
+  const rankedCandidates = listObservations(input.stores.session)
     .filter((observation) => input.excludeObservation?.(observation) !== true)
     .filter((observation) => input.currentContext === undefined
       || classifyObservationCompatibility(observation, input.currentContext).currentTruthEligible)
     .map((observation) => scoreObservation({
-      db: input.db,
+      stores: input.stores,
       observation,
       queryTerms,
       intent: input.intent,
@@ -104,7 +104,7 @@ export function selectCapsuleMemories(
 }
 
 function scoreObservation(input: {
-  readonly db: Database;
+  readonly stores: ProductStores;
   readonly observation: Observation;
   readonly queryTerms: readonly string[];
   readonly intent?: string;
@@ -125,7 +125,7 @@ function scoreObservation(input: {
   const queryTermMatches = input.queryTerms.filter((term) => observationTerms.includes(term));
   const intentMatch = input.intent !== undefined
     && input.observation.intent === input.intent;
-  const staleness = getObservationStaleness(input.db, input.observation);
+  const staleness = getObservationStaleness(input.stores.index, input.observation);
   const score = (
     linkedSymbolMatches.length * CAPSULE_MEMORY_SCORE_WEIGHTS.linkedSymbolOverlap
     + linkedFileMatches.length * CAPSULE_MEMORY_SCORE_WEIGHTS.linkedFileOverlap

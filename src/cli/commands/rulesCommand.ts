@@ -1,5 +1,6 @@
-import { listProjectRules } from "../../db/repositories/projectRulesRepository";
+import { listProjectRules } from "../../session/repositories/projectRulesRepository";
 import { openIndexerDatabase } from "../../db/sqlite";
+import { ProductStoreLease } from "../../session/sessionStore";
 import {
   createActiveProjectRule,
   disableProjectRule,
@@ -36,17 +37,20 @@ export async function runRulesCommand(
     const resolvedRepo = await resolveRepoCommandPaths(resolvedOptions, parsed.repoPath);
     await ensureDatabaseDirectory(resolvedRepo.dbPath);
     const db = openIndexerDatabase(resolvedRepo.dbPath);
+    // Rules are product state: read from the index, written to the session
+    // store. The lease keeps both handles' lifetimes tied to this command.
+    const lease = new ProductStoreLease(db, resolvedRepo.dbPath);
 
     try {
       switch (parsed.action) {
         case "list":
           return success(formatJson({
             repoRoot: resolvedRepo.repoRoot,
-            rules: listProjectRules(db, { repoRoot: resolvedRepo.repoRoot })
+            rules: listProjectRules(lease.read.session, { repoRoot: resolvedRepo.repoRoot })
               .map(formatProjectRuleForOutput),
           }));
         case "generate": {
-          const result = generateProjectRuleCandidates(db, {
+          const result = generateProjectRuleCandidates(lease.write.session, {
             repoRoot: resolvedRepo.repoRoot,
           });
           return success(formatJson({
@@ -57,7 +61,7 @@ export async function runRulesCommand(
           }));
         }
         case "generate-candidates": {
-          const result = generateProjectRuleCandidates(db, {
+          const result = generateProjectRuleCandidates(lease.write.session, {
             repoRoot: resolvedRepo.repoRoot,
           });
           return success(formatJson({
@@ -70,7 +74,7 @@ export async function runRulesCommand(
         case "add-active":
           return success(formatJson({
             repoRoot: resolvedRepo.repoRoot,
-            rule: formatProjectRuleForOutput(createActiveProjectRule(db, {
+            rule: formatProjectRuleForOutput(createActiveProjectRule(lease.write.session, {
               repoRoot: resolvedRepo.repoRoot,
               summary: requireOption(parsed.options, "summary"),
               files: parsed.options.file,
@@ -83,20 +87,21 @@ export async function runRulesCommand(
         case "promote":
           return success(formatJson({
             repoRoot: resolvedRepo.repoRoot,
-            rule: formatProjectRuleForOutput(promoteProjectRule(db, requireRuleId(parsed))),
+            rule: formatProjectRuleForOutput(promoteProjectRule(lease.write.session, requireRuleId(parsed))),
           }));
         case "dismiss":
           return success(formatJson({
             repoRoot: resolvedRepo.repoRoot,
-            rule: formatProjectRuleForOutput(dismissProjectRule(db, requireRuleId(parsed))),
+            rule: formatProjectRuleForOutput(dismissProjectRule(lease.write.session, requireRuleId(parsed))),
           }));
         case "disable":
           return success(formatJson({
             repoRoot: resolvedRepo.repoRoot,
-            rule: formatProjectRuleForOutput(disableProjectRule(db, requireRuleId(parsed))),
+            rule: formatProjectRuleForOutput(disableProjectRule(lease.write.session, requireRuleId(parsed))),
           }));
       }
     } finally {
+      lease.close();
       db.close();
     }
   } catch (error) {

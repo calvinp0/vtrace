@@ -9,9 +9,11 @@ import { listIndexRuns } from "../db/repositories/indexRunsRepository";
 import {
   listObservationsForSession,
   persistObservation,
-} from "../db/repositories/observationsRepository";
-import { getSessionById } from "../db/repositories/sessionsRepository";
+} from "../session/repositories/observationsRepository";
+import { getSessionById } from "../session/repositories/sessionsRepository";
 import { openIndexerDatabase } from "../db/sqlite";
+import { createTestProductStores } from "../testing/productStores";
+import { ProductStoreLease } from "../session/sessionStore";
 import { ObservationKind, ObservationSource, SessionStatus } from "../observations/types";
 import { initRepo } from "../setup/initRepo";
 import {
@@ -71,10 +73,11 @@ function seedAncientPassiveSession(
   sessionId: string,
 ): void {
   const db = openIndexerDatabase(dbPath);
+const stores = new ProductStoreLease(db, dbPath).write;
   try {
     const sourceRunId = listIndexRuns(db).at(-1)?.id;
     for (const [index, createdAtMs] of [100, 120, 140].entries()) {
-      persistObservation(db, {
+      persistObservation(stores, {
         repoRoot,
         sessionId,
         kind: ObservationKind.ToolCall,
@@ -89,7 +92,7 @@ function seedAncientPassiveSession(
         linkedFilePaths: ["src/service.ts"],
       });
     }
-    persistObservation(db, {
+    persistObservation(stores, {
       repoRoot,
       sessionId,
       kind: ObservationKind.Decision,
@@ -122,9 +125,10 @@ test("reindex runs a bounded session compression sweep that compresses inactive 
     assert.equal(result.sessionCompression.prunedToolCallObservationCount, 3);
 
     const db = openIndexerDatabase(fixture.dbPath);
+const stores = new ProductStoreLease(db, fixture.dbPath).write;
     try {
-      assert.equal(getSessionById(db, "session-old")?.status, SessionStatus.Compressed);
-      const observations = listObservationsForSession(db, "session-old");
+      assert.equal(getSessionById(stores.session, "session-old")?.status, SessionStatus.Compressed);
+      const observations = listObservationsForSession(stores.session, "session-old");
       assert.equal(
         observations.filter((observation) => observation.summary.startsWith("Repeated capsule")).length,
         0,
@@ -157,8 +161,9 @@ test("reindex sweep is idempotent across repeated reindexes", async () => {
 test("reindex sweep skips recent active sessions", async () => {
   await withReindexFixture(async (fixture) => {
     const db = openIndexerDatabase(fixture.dbPath);
+const stores = new ProductStoreLease(db, fixture.dbPath).write;
     try {
-      persistObservation(db, {
+      persistObservation(stores, {
         repoRoot: fixture.repoRoot,
         sessionId: "session-recent",
         kind: ObservationKind.ToolCall,
@@ -181,9 +186,14 @@ test("reindex sweep skips recent active sessions", async () => {
     assert.equal(result.sessionCompression.compressedSessionCount, 0);
 
     const after = openIndexerDatabase(fixture.dbPath);
+    const afterStores = new ProductStoreLease(after, fixture.dbPath);
     try {
-      assert.equal(getSessionById(after, "session-recent")?.status, SessionStatus.Active);
+      assert.equal(
+        getSessionById(afterStores.read.session, "session-recent")?.status,
+        SessionStatus.Active,
+      );
     } finally {
+      afterStores.close();
       after.close();
     }
   });
@@ -192,17 +202,20 @@ test("reindex sweep skips recent active sessions", async () => {
 test("session compression sweep failure is isolated and never throws", async () => {
   await withReindexFixture(async (fixture) => {
     const db = openIndexerDatabase(fixture.dbPath);
+    const lease = new ProductStoreLease(db, fixture.dbPath);
     try {
-      // Force the sweep to fail by removing a table it depends on. The sweep
-      // must capture the error as a diagnostic, not throw — so a reindex that
-      // calls it can never fail because of compression.
-      db.run("DROP TABLE sessions");
-      const diagnostics = runBoundedSessionCompressionSweep(db, fixture.repoRoot);
+      // Force the sweep to fail by removing a table it depends on — in the
+      // SESSION store now, which is where sessions live. The sweep must capture
+      // the error as a diagnostic, not throw, so a reindex can never fail
+      // because of compression (§41, §110).
+      lease.write.session.run("DROP TABLE sessions");
+      const diagnostics = runBoundedSessionCompressionSweep(lease, fixture.repoRoot);
 
       assert.equal(diagnostics.attempted, true);
       assert.equal(diagnostics.compressedSessionCount, 0);
       assert.notEqual(diagnostics.error, null);
     } finally {
+      lease.close();
       db.close();
     }
   });
@@ -256,6 +269,7 @@ test("a structural symbol change falls back instead of retaining stale incoming 
     assert.equal(result.indexResult.performance?.mode, "full_rebuild");
     assert.equal(result.indexResult.performance?.fallbackReason, "closure_uncertain");
     const db = openIndexerDatabase(fixture.dbPath);
+const stores = new ProductStoreLease(db, fixture.dbPath).write;
     try {
       const ghost = db.query("SELECT COUNT(*) AS count FROM symbols WHERE local_name = 'User'").get() as { count: number };
       assert.equal(ghost.count, 0);

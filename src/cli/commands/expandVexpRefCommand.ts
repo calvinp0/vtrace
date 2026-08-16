@@ -1,5 +1,6 @@
 import { hasIndexedFiles } from "../../db/repositories/filesRepository";
 import { openIndexerDatabase } from "../../db/sqlite";
+import { ProductStoreLease } from "../../session/sessionStore";
 import { resolveDeferredVexpRef } from "../../runPipeline/expandDeferredVexpRef";
 import {
   DEFERRED_VEXP_HASH_PATTERN,
@@ -77,6 +78,7 @@ export async function runExpandVexpRefCommand(
 
   try {
     const db = openIndexerDatabase(resolvedRepo.dbPath);
+    const lease = new ProductStoreLease(db, resolvedRepo.dbPath);
     try {
       if (!hasIndexedFiles(db)) {
         return failure(`Repo not indexed: ${resolvedRepo.repoRoot}`);
@@ -85,11 +87,11 @@ export async function runExpandVexpRefCommand(
       let resolution = resolveDeferredVexpRef({
         hash: requestedHash,
         store,
-        db,
+        db: lease.write.session,
       });
 
       if (!resolution.resolved && parsed.query !== undefined && parsed.query.length > 0) {
-        runPipelineOrchestrator(db, resolvedRepo.repoRoot, {
+        runPipelineOrchestrator(lease.write, resolvedRepo.repoRoot, {
           query: parsed.query,
           ...(parsed.intent === undefined ? {} : { intent: parsed.intent }),
           ...(parsed.maxBudgetCharacters === undefined ? {} : { maxBudgetCharacters: parsed.maxBudgetCharacters }),
@@ -99,7 +101,7 @@ export async function runExpandVexpRefCommand(
         resolution = resolveDeferredVexpRef({
           hash: requestedHash,
           store,
-          db,
+          db: lease.write.session,
         });
       }
 
@@ -151,6 +153,7 @@ export async function runExpandVexpRefCommand(
         })}\n`,
       );
     } finally {
+      lease.close();
       db.close();
     }
   } catch (error) {

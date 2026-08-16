@@ -74,8 +74,9 @@ import { getLatestIndexRun } from "../db/repositories/indexRunsRepository";
 import {
   persistCapsuleManifestBestEffort,
   persistCapsuleV2ManifestBestEffort,
-} from "../db/repositories/capsuleManifestsRepository";
-import { persistDeferredVexpRef } from "../db/repositories/deferredVexpRefsRepository";
+} from "../session/repositories/capsuleManifestsRepository";
+import { persistDeferredVexpRef } from "../session/repositories/deferredVexpRefsRepository";
+import type { ProductStores, WritableProductStores } from "../session/sessionStore";
 import {
   selectRelevantProjectRules,
 } from "../projectRules/projectRules";
@@ -333,7 +334,7 @@ interface ImpactCandidate {
 }
 
 export function runPipelineOrchestrator(
-  db: Database,
+  stores: WritableProductStores,
   repoRoot: string,
   rawInput: RunPipelineOrchestratorInput,
   options: {
@@ -341,6 +342,10 @@ export function runPipelineOrchestrator(
     deferredStore?: DeferredVexpStore;
   } = {},
 ): RunPipelineOrchestration {
+  // Retrieval reads the index; only the memory, rules and deferred-ref sections
+  // below touch the session store, and they are handed `stores` explicitly so
+  // the split is visible at each call rather than hidden in one handle (§44).
+  const db = stores.index;
   const capsuleCompatibility = resolveCapsuleCompatibility(rawInput.capsuleEngine);
   const classifier = options.classifier ?? defaultIntentClassifier;
   const deferredStore = options.deferredStore ?? getSharedDeferredVexpStore();
@@ -384,7 +389,7 @@ export function runPipelineOrchestrator(
   // Persist a deterministic capsule manifest so the emitted manifest id
   // resolves against a real store in check_capsule_staleness / check-capsule.
   const capsuleManifestId = persistCapsuleManifestBestEffort(
-    db,
+    stores,
     context.capsule,
     getLatestIndexRun(db)?.id ?? null,
   );
@@ -396,14 +401,14 @@ export function runPipelineOrchestrator(
   // identical to before.
   const impact = runImpactSection(db, repoRoot, context, normalizedIntent);
   const flow = runFlowSection(db, repoRoot, context);
-  const memory = runMemorySection(db, {
+  const memory = runMemorySection(stores, {
     query,
     sessionId: rawInput.sessionId ?? null,
     intentDecision,
     includeMemory: rawInput.includeMemory,
     currentObservationContext: rawInput.currentObservationContext,
   });
-  const rules = runRulesSection(db, repoRoot, {
+  const rules = runRulesSection(stores, repoRoot, {
     query,
     intent: intentDecision.selected,
     context,
@@ -412,7 +417,7 @@ export function runPipelineOrchestrator(
   // Build one product response from the request-local authoritative selection.
   // Impact, memory, and rule summaries enrich that response without rerunning
   // retrieval or packing.
-  const capsuleV2Build = buildCapsuleSection(db, repoRoot, query, rawInput, {
+  const capsuleV2Build = buildCapsuleSection(stores, repoRoot, query, rawInput, {
     prebuilt: context.authoritativeRetrieval.result,
     compatibilityWarnings: capsuleCompatibility.warnings,
     retrievalVersion: context.authoritativeRetrieval.version,
@@ -424,7 +429,7 @@ export function runPipelineOrchestrator(
   });
 
   const deferred = buildDeferredPlaceholders({
-    db,
+    stores,
     context,
     impact,
     flow,
@@ -574,7 +579,7 @@ export function deriveRulesDigestSeam(
 }
 
 function buildCapsuleSection(
-  db: Database,
+  stores: WritableProductStores,
   repoRoot: string,
   query: string,
   rawInput: RunPipelineOrchestratorInput,
@@ -593,14 +598,14 @@ function buildCapsuleSection(
       rules: deps.digestEnrichments?.rules ?? null,
     });
     const capsuleV2ManifestId = persistCapsuleV2ManifestBestEffort(
-      db,
+      stores,
       query,
       capsuleV2ToManifestItemFields(result),
-      getLatestIndexRun(db)?.id ?? null,
+      getLatestIndexRun(stores.index)?.id ?? null,
     );
     // Additive debug-oriented enrichment: bounded source excerpts from the
     // neighborhood of the top pivot(s). Best-effort and never fails the run.
-    const pivotNeighborhood = buildPivotNeighborhoods(db, repoRoot, capsuleV2);
+    const pivotNeighborhood = buildPivotNeighborhoods(stores.index, repoRoot, capsuleV2);
     // Compact, deterministic inspect-first guidance — the same shared projection
     // the Stage 5 injected path uses. Null when the v2 result has no actionable
     // pivot (e.g. a no_context capsule); that is not a failure.
@@ -1402,7 +1407,7 @@ function detectFlowDirectionalCue(
 }
 
 function runMemorySection(
-  db: Database,
+  stores: ProductStores,
   input: {
     query: string;
     sessionId: string | null;
@@ -1411,13 +1416,13 @@ function runMemorySection(
     currentObservationContext: CurrentObservationContext | undefined;
   },
 ): OrchestrationMemorySection {
-  const session = runSessionMemorySection(db, input);
-  const durable = runDurableMemorySection(db, input);
+  const session = runSessionMemorySection(stores, input);
+  const durable = runDurableMemorySection(stores, input);
   return { session, durable };
 }
 
 function runRulesSection(
-  db: Database,
+  stores: ProductStores,
   repoRoot: string,
   input: {
     query: string;
@@ -1429,7 +1434,7 @@ function runRulesSection(
     ...input.context.capsule.pivots,
     ...input.context.capsule.supportingItems,
   ];
-  const selected = selectRelevantProjectRules(db, {
+  const selected = selectRelevantProjectRules(stores.session, {
     repoRoot,
     query: input.query,
     intent: input.intent,
@@ -1450,7 +1455,7 @@ function runRulesSection(
 }
 
 function runSessionMemorySection(
-  db: Database,
+  stores: ProductStores,
   input: {
     sessionId: string | null;
     currentObservationContext: CurrentObservationContext | undefined;
@@ -1466,7 +1471,7 @@ function runSessionMemorySection(
     };
   }
 
-  const context: SessionContextResult = getSessionContext(db, {
+  const context: SessionContextResult = getSessionContext(stores, {
     sessionId: input.sessionId,
     limit: RUN_PIPELINE_DEFAULTS.sessionRecentObservationLimit,
     currentContext: input.currentObservationContext,
@@ -1493,7 +1498,7 @@ function runSessionMemorySection(
 }
 
 function runDurableMemorySection(
-  db: Database,
+  stores: ProductStores,
   input: {
     query: string;
     intentDecision: RunPipelineIntentDecision;
@@ -1524,7 +1529,7 @@ function runDurableMemorySection(
     };
   }
 
-  const results = searchMemory(db, {
+  const results = searchMemory(stores, {
     query: input.query,
     maxResults: RUN_PIPELINE_DEFAULTS.durableMemoryMaxResults,
     currentContext: input.currentObservationContext,
@@ -1548,7 +1553,7 @@ function runDurableMemorySection(
 }
 
 function buildDeferredPlaceholders(input: {
-  db: Database;
+  stores: WritableProductStores;
   context: OrchestrationContextSection;
   impact: OrchestrationImpactSection;
   flow: OrchestrationFlowSection;
@@ -1581,7 +1586,7 @@ function buildDeferredPlaceholders(input: {
         origin: "run_pipeline",
       },
     });
-    persistDeferredVexpRef(input.db, {
+    persistDeferredVexpRef(input.stores.session, {
       entry,
       repoRoot: input.repoRoot,
       sourceRunId: input.sourceRunId,
@@ -1620,7 +1625,7 @@ function buildDeferredPlaceholders(input: {
         origin: "run_pipeline",
       },
     });
-    persistDeferredVexpRef(input.db, {
+    persistDeferredVexpRef(input.stores.session, {
       entry,
       repoRoot: input.repoRoot,
       sourceRunId: input.sourceRunId,
@@ -1664,7 +1669,7 @@ function buildDeferredPlaceholders(input: {
         origin: "run_pipeline",
       },
     });
-    persistDeferredVexpRef(input.db, {
+    persistDeferredVexpRef(input.stores.session, {
       entry,
       repoRoot: input.repoRoot,
       sourceRunId: input.sourceRunId,
@@ -1706,7 +1711,7 @@ function buildDeferredPlaceholders(input: {
         origin: "run_pipeline",
       },
     });
-    persistDeferredVexpRef(input.db, {
+    persistDeferredVexpRef(input.stores.session, {
       entry,
       repoRoot: input.repoRoot,
       sourceRunId: input.sourceRunId,
@@ -1746,7 +1751,7 @@ function buildDeferredPlaceholders(input: {
         origin: "run_pipeline",
       },
     });
-    persistDeferredVexpRef(input.db, {
+    persistDeferredVexpRef(input.stores.session, {
       entry,
       repoRoot: input.repoRoot,
       sourceRunId: input.sourceRunId,

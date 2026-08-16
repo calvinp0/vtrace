@@ -1,5 +1,6 @@
 import { listIndexRuns } from "../../db/repositories/indexRunsRepository";
 import { openIndexerDatabase } from "../../db/sqlite";
+import { ProductStoreLease } from "../../session/sessionStore";
 import {
   DEFAULT_SESSION_COMPRESSION_INACTIVE_AFTER_MS,
   compressInactiveSessions,
@@ -54,12 +55,13 @@ export async function runCompressSessionsCommand(
 
   try {
     const db = openIndexerDatabase(resolvedRepo.dbPath);
+    const lease = new ProductStoreLease(db, resolvedRepo.dbPath);
     try {
       if (listIndexRuns(db).length === 0) {
         return failure(`Repo not indexed: ${resolvedRepo.repoRoot}`);
       }
 
-      const result = compressInactiveSessions(db, {
+      const result = compressInactiveSessions(lease.write, {
         repoRoot: resolvedRepo.repoRoot,
         nowMs: Date.now(),
         inactiveAfterMs: parsed.inactiveAfterMs,
@@ -91,6 +93,7 @@ export async function runCompressSessionsCommand(
 
       return success(formatReport(report));
     } finally {
+      lease.close();
       db.close();
     }
   } catch (error) {

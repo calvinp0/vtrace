@@ -6,7 +6,8 @@ import path from "node:path";
 import { seedCapsuleV2Fixture, seedCustomFixture } from "../../src/capsuleV2/__fixtures__/capsuleV2Fixture";
 import { CapsuleIntent } from "../../src/capsuleV2/types";
 import { openIndexerDatabase } from "../../src/db/sqlite";
-import { persistObservation } from "../../src/db/repositories/observationsRepository";
+import { ProductStoreLease } from "../../src/session/sessionStore";
+import { persistObservation } from "../../src/session/repositories/observationsRepository";
 import { ObservationKind, ObservationSource } from "../../src/observations/types";
 import { createActiveProjectRule } from "../../src/projectRules/projectRules";
 import { assembleProductContext, buildUnresolvedProductContext } from "../../src/productContext/assembleProductContext";
@@ -16,9 +17,26 @@ import { createMcpServer } from "../../src/mcp/server";
 import { MCP_SERVER_SCHEMA, McpToolId } from "../../src/mcp/types";
 import { inspectWorktreeIndexFreshness } from "../../src/indexer/indexReadiness";
 import {
+
   prepareRunnerOutput,
   SHARED_RUNNER_OPTIONS_HELP,
 } from "./lib/runnerPaths";
+
+import { Database } from "bun:sqlite";
+import {
+  createEphemeralSessionDatabase,
+  type ProductStores,
+} from "../../src/session/sessionStore";
+
+/**
+ * M152: a read-only pair over an already-open index handle. Benchmarks read
+ * memory and rules from a session store; `read` never creates one, so a smoke
+ * run against a temporary or read-only index inherits no product state.
+ */
+function productStoresFor(indexDb: Database): ProductStores {
+  return { index: indexDb, session: createEphemeralSessionDatabase() };
+}
+
 
 // M141: no tracked default. Callers pass an explicit directory; the CLI resolves
 // one through the shared contract (untracked unless --out/--evidence says otherwise).
@@ -66,7 +84,7 @@ export async function runM119ProductPathSmoke(outDir: string): Promise<{ rows: S
   const python = seedCapsuleV2Fixture();
   try {
     const product = await assembleProductContext({
-      db: python.db,
+      stores: productStoresFor(python.db),
       repoRoot: python.repoRoot,
       task: "Modify ModelAdmin.get_inline_instances and inspect callers plus the inlines documentation",
       intent: CapsuleIntent.Modify,
@@ -100,7 +118,7 @@ export async function runM119ProductPathSmoke(outDir: string): Promise<{ rows: S
   ]);
   try {
     const product = await assembleProductContext({
-      db: coedit.db,
+      stores: productStoresFor(coedit.db),
       repoRoot: coedit.repoRoot,
       task: "Modify parser grammar p_expression for NUMBER and update generated parser tables",
       intent: CapsuleIntent.Modify,
@@ -116,7 +134,7 @@ export async function runM119ProductPathSmoke(outDir: string): Promise<{ rows: S
   const empty = seedCustomFixture([]);
   try {
     rows.push(toRow("no_context", "shared_assembler", await assembleProductContext({
-      db: empty.db,
+      stores: productStoresFor(empty.db),
       repoRoot: empty.repoRoot,
       task: "zzzz entirely absent symbol",
       budgetTokens: 8_000,
@@ -135,8 +153,9 @@ export async function runM119ProductPathSmoke(outDir: string): Promise<{ rows: S
     git(repo, ["-c", "user.name=VTRACE", "-c", "user.email=vtrace@example.invalid", "commit", "-qm", "fixture"]);
     const initialized = await initRepo({ repoPath: repo });
     const db = openIndexerDatabase(initialized.paths.dbPath);
+    const stores = new ProductStoreLease(db, initialized.paths.dbPath).write;
     try {
-      persistObservation(db, {
+      persistObservation(stores, {
         repoRoot: repo,
         kind: ObservationKind.Insight,
         source: ObservationSource.Manual,
@@ -146,7 +165,7 @@ export async function runM119ProductPathSmoke(outDir: string): Promise<{ rows: S
         sourceRunId: 1,
         linkedFilePaths: ["src/rank.ts"],
       });
-      createActiveProjectRule(db, {
+      createActiveProjectRule(stores.session, {
         repoRoot: repo,
         summary: "Update rank tests whenever rankCandidates ordering changes.",
         files: ["src/rank.ts", "src/rank.test.ts"],
@@ -205,7 +224,7 @@ export async function runM119ProductPathSmoke(outDir: string): Promise<{ rows: S
     const linkedDb = openIndexerDatabase(linkedInit.paths.dbPath);
     try {
       rows.push(toRow("linked_worktree", "shared_assembler", await assembleProductContext({
-        db: linkedDb,
+        stores: productStoresFor(linkedDb),
         repoRoot: linked,
         task: parityInput.task,
         intent: CapsuleIntent.Modify,

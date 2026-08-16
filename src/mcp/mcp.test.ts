@@ -14,10 +14,12 @@ import {
   type CapsuleSupportingCandidate,
 } from "../capsule/types";
 import { prepareCapsuleAssembly } from "../capsuleProfiles/orchestrator";
-import { persistCapsuleManifest } from "../db/repositories/capsuleManifestsRepository";
+import { persistCapsuleManifest } from "../session/repositories/capsuleManifestsRepository";
 import { listIndexRuns } from "../db/repositories/indexRunsRepository";
-import { countObservations, listObservations, persistObservation } from "../db/repositories/observationsRepository";
+import { countObservations, listObservations, persistObservation } from "../session/repositories/observationsRepository";
 import { openIndexerDatabase } from "../db/sqlite";
+import { createTestProductStores } from "../testing/productStores";
+import { ProductStoreLease } from "../session/sessionStore";
 import { indexProject } from "../indexer/indexProject";
 import { routeQuery } from "../intent/routeQuery";
 import {
@@ -2672,6 +2674,7 @@ test("run_pipeline memory can surface relevant compressed session summaries", as
       context: { repoRoot: initialized.repoRoot },
     });
     const db = openIndexerDatabase(initialized.paths.dbPath);
+const stores = new ProductStoreLease(db, initialized.paths.dbPath).write;
 
     try {
       await server.handleRequest({
@@ -2683,12 +2686,12 @@ test("run_pipeline memory can surface relevant compressed session summaries", as
           sessionId: "session-compress",
         },
       });
-      const session = db.query(`
+      const session = stores.session.query(`
         SELECT last_activity_at_ms AS lastActivityAtMs
         FROM sessions
         WHERE session_id = 'session-compress'
       `).get() as { lastActivityAtMs: number };
-      const compressed = compressInactiveSessions(db, {
+      const compressed = compressInactiveSessions(stores, {
         repoRoot,
         nowMs: session.lastActivityAtMs + DEFAULT_SESSION_COMPRESSION_INACTIVE_AFTER_MS,
       });
@@ -2727,12 +2730,13 @@ test("run_pipeline memory can surface relevant consolidated passive summaries", 
       context: { repoRoot: initialized.repoRoot },
     });
     const db = openIndexerDatabase(initialized.paths.dbPath);
+const stores = new ProductStoreLease(db, initialized.paths.dbPath).write;
     const sourceRunId = listIndexRuns(db).at(-1)?.id;
 
     try {
       const currentContext = await resolveCurrentObservationContext(repoRoot);
       for (const [index, createdAtMs] of [100, 120, 140].entries()) {
-        persistObservation(db, {
+        persistObservation(stores, {
           repoRoot,
           sessionId: "session-consolidated-memory",
           kind: ObservationKind.ToolCall,
@@ -2757,7 +2761,7 @@ test("run_pipeline memory can surface relevant consolidated passive summaries", 
         });
       }
 
-      const consolidated = consolidatePassiveObservationsForSession(db, {
+      const consolidated = consolidatePassiveObservationsForSession(stores, {
         sessionId: "session-consolidated-memory",
         nowMs: 500,
       });
@@ -2897,6 +2901,7 @@ test("run_pipeline authoritative selection avoids a divergent relaxed-assembly f
       context: { repoRoot: initialized.repoRoot },
     });
     const db = openIndexerDatabase(initialized.paths.dbPath);
+const stores = new ProductStoreLease(db, initialized.paths.dbPath).write;
 
     try {
       const fallbackBudget = findRunPipelineFallbackBudget(db, initialized.repoRoot, "Session");
@@ -2986,9 +2991,10 @@ test("run_pipeline and adjacent visible MCP outputs conform to their declared sc
       context: { repoRoot: initialized.repoRoot },
     });
     const db = openIndexerDatabase(initialized.paths.dbPath);
+const stores = new ProductStoreLease(db, initialized.paths.dbPath).write;
 
     try {
-      createActiveProjectRule(db, {
+      createActiveProjectRule(stores.session, {
         repoRoot: initialized.repoRoot,
         summary: "When changing session creation, inspect the controller caller.",
         files: ["src/session.ts"],
@@ -2996,7 +3002,7 @@ test("run_pipeline and adjacent visible MCP outputs conform to their declared sc
         nowMs: 100,
       });
       for (const createdAtMs of [200, 300, 400]) {
-        persistObservation(db, {
+        persistObservation(stores, {
           repoRoot: initialized.repoRoot,
           kind: ObservationKind.Decision,
           source: ObservationSource.Manual,
@@ -3007,7 +3013,7 @@ test("run_pipeline and adjacent visible MCP outputs conform to their declared sc
           createdAtMs,
         });
       }
-      const generatedCandidates = generateProjectRuleCandidates(db, {
+      const generatedCandidates = generateProjectRuleCandidates(stores.session, {
         repoRoot: initialized.repoRoot,
         nowMs: 500,
       });
@@ -3172,6 +3178,7 @@ test("run_pipeline auto-captures a deduped tool-call observation on happy path a
       context: { repoRoot: initialized.repoRoot },
     });
     const db = openIndexerDatabase(initialized.paths.dbPath);
+const stores = new ProductStoreLease(db, initialized.paths.dbPath).write;
 
     try {
       const silentFirst = await server.handleRequest({
@@ -3182,7 +3189,7 @@ test("run_pipeline auto-captures a deduped tool-call observation on happy path a
       });
       assert.equal(silentFirst.result.ok, true);
       assert.equal(silentFirst.result.output.savedObservation, null);
-      assert.equal(countObservations(db), 1);
+      assert.equal(countObservations(stores.session), 1);
 
       // Repeating the same silent call must dedupe — still exactly one observation.
       const silentSecond = await server.handleRequest({
@@ -3193,7 +3200,7 @@ test("run_pipeline auto-captures a deduped tool-call observation on happy path a
       });
       assert.equal(silentSecond.result.ok, true);
       assert.equal(silentSecond.result.output.savedObservation, null);
-      assert.equal(countObservations(db), 1);
+      assert.equal(countObservations(stores.session), 1);
 
       const saved = await server.handleRequest({
         schema: MCP_SERVER_SCHEMA,
@@ -3209,9 +3216,9 @@ test("run_pipeline auto-captures a deduped tool-call observation on happy path a
       assert.equal(saved.result.output.savedObservation?.observation.toolName, "run_pipeline");
       assert.equal(saved.result.output.savedObservation?.observation.sessionId, "pipeline-session");
       // Auto-capture (no session) + session-bound auto-capture + explicit session-bound observation.
-      assert.equal(countObservations(db), 3);
+      assert.equal(countObservations(stores.session), 3);
       assert.equal(
-        listObservations(db).some((observation) => {
+        listObservations(stores.session).some((observation) => {
           return observation.toolName === "run_pipeline"
             && observation.source === "mcp_auto"
             && observation.sessionId === "pipeline-session";
@@ -3232,6 +3239,7 @@ test("run_pipeline diagnostics include progressive observation nudges without pe
       context: { repoRoot: initialized.repoRoot },
     });
     const db = openIndexerDatabase(initialized.paths.dbPath);
+const stores = new ProductStoreLease(db, initialized.paths.dbPath).write;
 
     try {
       const noSession = await server.handleRequest({
@@ -3275,9 +3283,9 @@ test("run_pipeline diagnostics include progressive observation nudges without pe
       assert.equal(third.result.output.diagnostics.nudge.toolCallCount, 3);
       assert.equal(third.result.output.diagnostics.nudge.nextNudgeAfterToolCallCount, 8);
 
-      const afterThirdCount = countObservations(db);
+      const afterThirdCount = countObservations(stores.session);
       assert.equal(
-        listObservations(db).filter((observation) => observation.sessionId === "nudge-session").length,
+        listObservations(stores.session).filter((observation) => observation.sessionId === "nudge-session").length,
         3,
       );
 
@@ -3293,7 +3301,7 @@ test("run_pipeline diagnostics include progressive observation nudges without pe
         },
       });
       assert.equal(saved.result.ok, true);
-      assert.equal(countObservations(db), afterThirdCount + 1);
+      assert.equal(countObservations(stores.session), afterThirdCount + 1);
 
       const afterDurable = await server.handleRequest({
         schema: MCP_SERVER_SCHEMA,
@@ -3511,6 +3519,7 @@ test("get_code_context returns nextTool=index_repo when the index is missing", a
     const server = bound.server;
 
     const db = openIndexerDatabase(initialized.paths.dbPath);
+const stores = new ProductStoreLease(db, initialized.paths.dbPath).write;
     try {
       db.exec("DELETE FROM files");
     } finally {
@@ -4218,6 +4227,7 @@ test("visible structural MCP tools auto-capture compact deterministic tool-call 
       context: { repoRoot: initialized.repoRoot },
     });
     const db = openIndexerDatabase(initialized.paths.dbPath);
+const stores = new ProductStoreLease(db, initialized.paths.dbPath).write;
 
     try {
       const impactRequest = {
@@ -4252,17 +4262,17 @@ test("visible structural MCP tools auto-capture compact deterministic tool-call 
       const deliveredImpact = await server.handleRequest(impactRequest);
       assert.equal(deliveredImpact.result.ok, true);
       assert.equal((await server.handleRequest(impactRequest)).result.ok, true);
-      assert.equal(countObservations(db), 1);
+      assert.equal(countObservations(stores.session), 1);
 
       assert.equal((await server.handleRequest(skeletonRequest)).result.ok, true);
       assert.equal((await server.handleRequest(skeletonRequest)).result.ok, true);
-      assert.equal(countObservations(db), 2);
+      assert.equal(countObservations(stores.session), 2);
 
       assert.equal((await server.handleRequest(logicFlowRequest)).result.ok, true);
       assert.equal((await server.handleRequest(logicFlowRequest)).result.ok, true);
-      assert.equal(countObservations(db), 3);
+      assert.equal(countObservations(stores.session), 3);
 
-      const observations = listObservations(db);
+      const observations = listObservations(stores.session);
       const impact = observations.find((observation) => observation.toolName === "get_impact_graph");
       const skeleton = observations.find((observation) => observation.toolName === "get_skeleton");
       const logicFlow = observations.find((observation) => observation.toolName === "search_logic_flow");
@@ -4306,7 +4316,7 @@ test("visible structural MCP tools auto-capture compact deterministic tool-call 
       });
       assert.equal(searched.result.ok, true);
       assert.equal(searched.result.output.results[0]?.observation.toolName, "get_impact_graph");
-      assert.equal(countObservations(db), 4);
+      assert.equal(countObservations(stores.session), 4);
 
       const contextResult = await server.handleRequest({
         schema: MCP_SERVER_SCHEMA,
@@ -4335,7 +4345,7 @@ test("visible structural MCP tools auto-capture compact deterministic tool-call 
         true,
       );
       assert.equal(repeatedContextResult.result.ok, true);
-      assert.equal(countObservations(db), 5);
+      assert.equal(countObservations(stores.session), 5);
     } finally {
       db.close();
     }
@@ -4350,6 +4360,7 @@ test("noisy or explicit MCP tools do not auto-capture observations", async () =>
       context: { repoRoot: initialized.repoRoot },
     });
     const db = openIndexerDatabase(initialized.paths.dbPath);
+const stores = new ProductStoreLease(db, initialized.paths.dbPath).write;
 
     try {
       const indexStatus = await server.handleRequest({
@@ -4367,7 +4378,7 @@ test("noisy or explicit MCP tools do not auto-capture observations", async () =>
 
       assert.equal(indexStatus.result.ok, true);
       assert.equal(workspaceSetup.result.ok, true);
-      assert.equal(countObservations(db), 0);
+      assert.equal(countObservations(stores.session), 0);
 
       const saved = await server.handleRequest({
         schema: MCP_SERVER_SCHEMA,
@@ -4382,8 +4393,8 @@ test("noisy or explicit MCP tools do not auto-capture observations", async () =>
       });
 
       assert.equal(saved.result.ok, true);
-      assert.equal(countObservations(db), 1);
-      assert.equal(listObservations(db)[0]?.summary, "Explicit save only");
+      assert.equal(countObservations(stores.session), 1);
+      assert.equal(listObservations(stores.session)[0]?.summary, "Explicit save only");
     } finally {
       db.close();
     }
@@ -4395,6 +4406,7 @@ test("save_observation, search_memory, and get_session_context delegate to the r
     await writeMcpFixtureRepo(repoRoot);
     const initialized = await initRepo({ repoPath: repoRoot });
     const db = openIndexerDatabase(initialized.paths.dbPath);
+const stores = new ProductStoreLease(db, initialized.paths.dbPath).write;
 
     try {
       const sessionSymbol = db.query(`
@@ -4428,7 +4440,7 @@ test("save_observation, search_memory, and get_session_context delegate to the r
       assert.equal(saved.result.output.observation.kind, "warning");
       assert.equal(saved.result.output.observation.sessionId, "session-alpha");
       assert.equal(saved.result.output.observation.linkedSymbols[0]?.symbolId, sessionSymbol!.id);
-      assert.equal(countObservations(db), 1, "save_observation should only create its explicit row");
+      assert.equal(countObservations(stores.session), 1, "save_observation should only create its explicit row");
 
       const searched = await server.handleRequest({
         schema: MCP_SERVER_SCHEMA,
@@ -4670,6 +4682,7 @@ test.skip("get_context_capsule auto-captures one deduped tool-call observation o
     const first = await server.handleRequest(request);
     const second = await server.handleRequest(request);
     const db = openIndexerDatabase(initialized.paths.dbPath);
+const stores = new ProductStoreLease(db, initialized.paths.dbPath).write;
 
     try {
       assert.equal(first.result.ok, true);
@@ -4681,7 +4694,7 @@ test.skip("get_context_capsule auto-captures one deduped tool-call observation o
         { ...secondAccounting, latencyMs: 0 },
         { ...firstAccounting, latencyMs: 0 },
       );
-      assert.equal(countObservations(db), 1);
+      assert.equal(countObservations(stores.session), 1);
       const memory = await server.handleRequest({
         schema: MCP_SERVER_SCHEMA,
         requestId: "req-auto-memory",
@@ -4721,6 +4734,7 @@ test.skip("build_capsule no longer has unique memory behavior — calling it doe
       context: { repoRoot: initialized.repoRoot },
     });
     const db = openIndexerDatabase(initialized.paths.dbPath);
+const stores = new ProductStoreLease(db, initialized.paths.dbPath).write;
 
     try {
       // get_context_capsule auto-captures one observation.
@@ -4730,7 +4744,7 @@ test.skip("build_capsule no longer has unique memory behavior — calling it doe
         toolId: McpToolId.GetContextCapsule,
         input: { query: "Session" },
       });
-      assert.equal(countObservations(db), 1);
+      assert.equal(countObservations(stores.session), 1);
 
       // build_capsule (hidden legacy) must not add its own observation.
       const legacy = await server.handleRequest({
@@ -4740,7 +4754,7 @@ test.skip("build_capsule no longer has unique memory behavior — calling it doe
         input: { query: "Session" },
       });
       assert.equal(legacy.result.ok, true);
-      assert.equal(countObservations(db), 1);
+      assert.equal(countObservations(stores.session), 1);
 
       // Calling build_capsule first and then get_context_capsule second must
       // also result in exactly one observation, captured under the visible
@@ -4823,12 +4837,13 @@ test("check_capsule_staleness delegates to the real staleness service and return
     await writeMcpFixtureRepo(repoRoot);
     const initialized = await initRepo({ repoPath: repoRoot });
     const db = openIndexerDatabase(initialized.paths.dbPath);
+const stores = new ProductStoreLease(db, initialized.paths.dbPath).write;
 
     try {
       const sourceRunId = listIndexRuns(db).at(-1)!.id;
       const routed = routeQuery(db, "readUser", { maxResults: 2 });
       const capsule = buildCapsule(
-        createSourceBackedCapsuleBuilder({ db, repoRoot }),
+        createSourceBackedCapsuleBuilder({ db, stores, repoRoot }),
         {
           query: "readUser",
           rerankedCandidates: routed.rerankedResults,
@@ -4836,7 +4851,7 @@ test("check_capsule_staleness delegates to the real staleness service and return
           maxBudget: createCharacterBudget(2_000),
         },
       );
-      const manifest = persistCapsuleManifest(db, {
+      const manifest = persistCapsuleManifest(stores, {
         sourceRunId,
         capsule,
         createdAtMs: 1,
@@ -4909,12 +4924,13 @@ test("check_capsule_staleness missing manifest and run cases fail cleanly and de
     await writeMcpFixtureRepo(repoRoot);
     const initialized = await initRepo({ repoPath: repoRoot });
     const db = openIndexerDatabase(initialized.paths.dbPath);
+const stores = new ProductStoreLease(db, initialized.paths.dbPath).write;
 
     try {
       const sourceRunId = listIndexRuns(db).at(-1)!.id;
       const routed = routeQuery(db, "readUser", { maxResults: 2 });
       const capsule = buildCapsule(
-        createSourceBackedCapsuleBuilder({ db, repoRoot }),
+        createSourceBackedCapsuleBuilder({ db, stores, repoRoot }),
         {
           query: "readUser",
           rerankedCandidates: routed.rerankedResults,
@@ -4922,7 +4938,7 @@ test("check_capsule_staleness missing manifest and run cases fail cleanly and de
           maxBudget: createCharacterBudget(2_000),
         },
       );
-      const manifest = persistCapsuleManifest(db, {
+      const manifest = persistCapsuleManifest(stores, {
         sourceRunId,
         capsule,
         createdAtMs: 1,

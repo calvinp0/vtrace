@@ -225,6 +225,10 @@ import {
   productV2ProbeDir,
   productV2ProbeFilePath,
 } from "./stage5_product_v2_probe";
+import {
+  ProductStoreLease,
+  type ProductStores,
+} from "../../src/session/sessionStore";
 
 // Stage 5 is a SMOKE integration harness around the external `vexp-swe-bench`
 // benchmark. It proves the baseline-vs-vtrace measurement workflow on a tiny
@@ -4740,6 +4744,12 @@ const MAX_STAGE5_MEMORY_ITEMS = 3;
 
 export interface Stage5DigestEnrichmentInputs {
   readonly db: Database;
+  /**
+   * Where the index lives, so the SESSION store beside it can be read for the
+   * rules and memory seams. Omitted by in-memory callers, which then resolve an
+   * in-memory (empty) session store rather than a developer's live one (§150).
+   */
+  readonly dbPath?: string;
   readonly repoRoot: string;
   readonly query: string;
   readonly result: CapsuleV2Result;
@@ -4772,12 +4782,12 @@ function buildStage5ImpactSeam(
 // repo index carries no active rules (the common case for a fresh SWE-bench
 // workspace — there is no prior agent-rule store), keeping the honest warning.
 function buildStage5RulesSeam(
-  db: Database,
+  stores: ProductStores,
   repoRoot: string,
   query: string,
   intent: string,
 ): CapsuleV2DigestRulesSeam | null {
-  const selected = selectRelevantProjectRules(db, { repoRoot, query, intent });
+  const selected = selectRelevantProjectRules(stores.session, { repoRoot, query, intent });
   if (selected.active.length === 0) return null;
   return {
     activeCount: selected.activeTotal,
@@ -4794,10 +4804,10 @@ function buildStage5RulesSeam(
 // SWE-bench workspace — no observation store), keeping the honest warning. There is
 // no Stage 5 vtrace session, so sessionCount is 0 (durable evidence only).
 function buildStage5MemorySeam(
-  db: Database,
+  stores: ProductStores,
   query: string,
 ): CapsuleV2DigestMemorySeam | null {
-  const results = searchMemory(db, { query, maxResults: MAX_STAGE5_MEMORY_ITEMS });
+  const results = searchMemory(stores, { query, maxResults: MAX_STAGE5_MEMORY_ITEMS });
   if (results.length === 0) return null;
   let staleCount = 0;
   const items = results.map((entry) => {
@@ -4820,11 +4830,20 @@ function buildStage5MemorySeam(
 export function buildStage5DigestEnrichments(
   input: Stage5DigestEnrichmentInputs,
 ): InjectedDigestEnrichments {
-  return {
-    impact: buildStage5ImpactSeam(input.db, input.repoRoot, input.result),
-    rules: buildStage5RulesSeam(input.db, input.repoRoot, input.query, input.intent),
-    memory: buildStage5MemorySeam(input.db, input.query),
-  };
+  // M152. Rules and memory come from the workspace's SESSION store, read-only
+  // and lazily: a fresh SWE-bench workspace has none, `read` creates none, and
+  // both seams stay null exactly as they did when the two halves shared a file.
+  const lease = new ProductStoreLease(input.db, input.dbPath ?? ":memory:");
+  try {
+    const stores = lease.read;
+    return {
+      impact: buildStage5ImpactSeam(input.db, input.repoRoot, input.result),
+      rules: buildStage5RulesSeam(stores, input.repoRoot, input.query, input.intent),
+      memory: buildStage5MemorySeam(stores, input.query),
+    };
+  } finally {
+    lease.close();
+  }
 }
 
 // Best-effort harness wrapper: open the workspace index, compute enrichments, close.
@@ -4846,6 +4865,7 @@ export function buildStage5DigestEnrichmentsBestEffort(input: {
     db = open(input.dbPath);
     return buildStage5DigestEnrichments({
       db,
+      dbPath: input.dbPath,
       repoRoot: input.repoRoot,
       query: input.query,
       result: input.result,

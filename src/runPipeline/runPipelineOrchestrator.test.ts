@@ -5,8 +5,9 @@ import path from "node:path";
 import { test } from "bun:test";
 
 import { openIndexerDatabase } from "../db/sqlite";
+import { createTestProductStores } from "../testing/productStores";
 import { indexProject } from "../indexer/indexProject";
-import { persistObservation } from "../db/repositories/observationsRepository";
+import { persistObservation } from "../session/repositories/observationsRepository";
 import { ObservationKind, ObservationSource } from "../observations/types";
 import {
   deriveImpactDigestSeam,
@@ -27,19 +28,25 @@ import { CapsuleIntent } from "../capsuleV2/types";
 // behaviors that distinguish run_pipeline from the bare context capsule.
 
 type RunInput = (
-  input: { repoRoot: string; db: ReturnType<typeof openIndexerDatabase> },
+  input: {
+    repoRoot: string;
+    db: ReturnType<typeof openIndexerDatabase>;
+    stores: ReturnType<typeof createTestProductStores>;
+  },
 ) => Promise<void> | void;
 
 async function withFixture(run: RunInput): Promise<void> {
   const root = await mkdtemp(path.join(os.tmpdir(), "vtrace-run-pipeline-"));
   const repoRoot = path.join(root, "repo");
   const db = openIndexerDatabase();
+  const stores = createTestProductStores(db);
   try {
     await mkdir(path.join(repoRoot, "src"), { recursive: true });
     await writeFixtureRepo(repoRoot);
     await indexProject({ repoRoot, db });
-    await run({ repoRoot, db });
+    await run({ repoRoot, db, stores });
   } finally {
+    stores.close();
     db.close();
     await rm(root, { recursive: true, force: true });
   }
@@ -82,19 +89,19 @@ async function writeFixtureRepo(repoRoot: string): Promise<void> {
 }
 
 function runFormatted(
-  db: ReturnType<typeof openIndexerDatabase>,
+  stores: ReturnType<typeof createTestProductStores>,
   repoRoot: string,
   input: RunPipelineOrchestratorInput,
   deferredStore?: DeferredVexpStore,
 ) {
   return formatRunPipelineOrchestrationOutput(
-    runPipelineOrchestrator(db, repoRoot, input, deferredStore ? { deferredStore } : {}),
+    runPipelineOrchestrator(stores, repoRoot, input, deferredStore ? { deferredStore } : {}),
   );
 }
 
 test("auto intent resolves to exactly one concrete preset", async () => {
-  await withFixture(({ db, repoRoot }) => {
-    const out = runFormatted(db, repoRoot, { query: "explore the base module" });
+  await withFixture(({ db, repoRoot, stores }) => {
+    const out = runFormatted(stores, repoRoot, { query: "explore the base module" });
     assert.equal(out.intent.requested, "auto");
     assert.ok(
       ["explore", "debug", "modify", "refactor"].includes(out.intent.selected),
@@ -105,11 +112,11 @@ test("auto intent resolves to exactly one concrete preset", async () => {
 });
 
 test("explicit presets materially change orchestration behavior", async () => {
-  await withFixture(({ db, repoRoot }) => {
-    const debug = runFormatted(db, repoRoot, { query: "why does base fail", intent: "debug" });
-    const explore = runFormatted(db, repoRoot, { query: "why does base fail", intent: "explore" });
-    const modify = runFormatted(db, repoRoot, { query: "change base behavior", intent: "modify" });
-    const refactor = runFormatted(db, repoRoot, { query: "rename base everywhere", intent: "refactor" });
+  await withFixture(({ db, repoRoot, stores }) => {
+    const debug = runFormatted(stores, repoRoot, { query: "why does base fail", intent: "debug" });
+    const explore = runFormatted(stores, repoRoot, { query: "why does base fail", intent: "explore" });
+    const modify = runFormatted(stores, repoRoot, { query: "change base behavior", intent: "modify" });
+    const refactor = runFormatted(stores, repoRoot, { query: "rename base everywhere", intent: "refactor" });
 
     assert.equal(debug.intent.selected, "debug");
     assert.equal(explore.intent.selected, "explore");
@@ -127,8 +134,8 @@ test("explicit presets materially change orchestration behavior", async () => {
 });
 
 test("impact is included for a refactor task naming one symbol with dependents", async () => {
-  await withFixture(({ db, repoRoot }) => {
-    const out = runFormatted(db, repoRoot, { query: "refactor base function", intent: "refactor" });
+  await withFixture(({ db, repoRoot, stores }) => {
+    const out = runFormatted(stores, repoRoot, { query: "refactor base function", intent: "refactor" });
     assert.equal(out.impact.included, true);
     assert.equal(out.impact.skipReason, null);
     assert.equal(out.impact.focalSymbol?.localName, "base");
@@ -138,8 +145,8 @@ test("impact is included for a refactor task naming one symbol with dependents",
 });
 
 test("impact is skipped with an explicit reason for an explore task", async () => {
-  await withFixture(({ db, repoRoot }) => {
-    const out = runFormatted(db, repoRoot, { query: "explore base module", intent: "explore" });
+  await withFixture(({ db, repoRoot, stores }) => {
+    const out = runFormatted(stores, repoRoot, { query: "explore base module", intent: "explore" });
     assert.equal(out.impact.included, false);
     assert.equal(out.impact.skipReason, "not_requested_by_intent");
     assert.equal(out.impact.focalSymbol, null);
@@ -147,11 +154,11 @@ test("impact is skipped with an explicit reason for an explore task", async () =
 });
 
 test("explicit capsule impact intent ungates impact for a non-refactor query", async () => {
-  await withFixture(({ db, repoRoot }) => {
+  await withFixture(({ db, repoRoot, stores }) => {
     // The preset auto-resolves away from refactor, but an explicit impact intent
     // drives the run_pipeline impact section the same way it drives Capsule v2 —
     // no phrase hack required.
-    const out = runFormatted(db, repoRoot, {
+    const out = runFormatted(stores, repoRoot, {
       query: "inspect base function",
       intent: "debug",
       capsuleIntent: CapsuleIntent.Impact,
@@ -166,8 +173,8 @@ test("explicit capsule impact intent ungates impact for a non-refactor query", a
 });
 
 test("explicit impact phrasing ungates impact without the refactor preset", async () => {
-  await withFixture(({ db, repoRoot }) => {
-    const out = runFormatted(db, repoRoot, { query: "what is the impact of base" });
+  await withFixture(({ db, repoRoot, stores }) => {
+    const out = runFormatted(stores, repoRoot, { query: "what is the impact of base" });
     assert.equal(out.intent.resolvedIntent, "impact");
     assert.equal(out.intent.intentSource, "phrase");
     assert.equal(out.impact.included, true);
@@ -177,8 +184,8 @@ test("explicit impact phrasing ungates impact without the refactor preset", asyn
 });
 
 test("debug intent stays clear of impact and reports the intent-level skip reason", async () => {
-  await withFixture(({ db, repoRoot }) => {
-    const out = runFormatted(db, repoRoot, { query: "fix base function", intent: "debug" });
+  await withFixture(({ db, repoRoot, stores }) => {
+    const out = runFormatted(stores, repoRoot, { query: "fix base function", intent: "debug" });
     assert.equal(out.intent.resolvedIntent, "debug");
     assert.equal(out.intent.impactEligible, false);
     assert.equal(out.impact.included, false);
@@ -187,8 +194,8 @@ test("debug intent stays clear of impact and reports the intent-level skip reaso
 });
 
 test("impact intent with no resolvable focal symbol reports no_focal_symbol, not a non-intent skip", async () => {
-  await withFixture(({ db, repoRoot }) => {
-    const out = runFormatted(db, repoRoot, {
+  await withFixture(({ db, repoRoot, stores }) => {
+    const out = runFormatted(stores, repoRoot, {
       query: "what is the impact of nonexistent_symbol_zzz",
     });
     assert.equal(out.intent.resolvedIntent, "impact");
@@ -200,8 +207,8 @@ test("impact intent with no resolvable focal symbol reports no_focal_symbol, not
 });
 
 test("impact intent mentioning multiple symbols reports multiple_focal_symbols", async () => {
-  await withFixture(({ db, repoRoot }) => {
-    const out = runFormatted(db, repoRoot, {
+  await withFixture(({ db, repoRoot, stores }) => {
+    const out = runFormatted(stores, repoRoot, {
       query: "trace the impact across alpha and base",
       capsuleIntent: CapsuleIntent.Impact,
     });
@@ -213,8 +220,8 @@ test("impact intent mentioning multiple symbols reports multiple_focal_symbols",
 });
 
 test("flow is included with a directional cue resolving start and end", async () => {
-  await withFixture(({ db, repoRoot }) => {
-    const out = runFormatted(db, repoRoot, { query: "trace the flow from beta to base", intent: "explore" });
+  await withFixture(({ db, repoRoot, stores }) => {
+    const out = runFormatted(stores, repoRoot, { query: "trace the flow from beta to base", intent: "explore" });
     assert.equal(out.flow.included, true);
     assert.equal(out.flow.skipReason, null);
     assert.equal(out.flow.endpointStrategy, "directional_cue");
@@ -228,8 +235,8 @@ test("flow is included with a directional cue resolving start and end", async ()
 });
 
 test("flow paths render compact bounded source excerpts", async () => {
-  await withFixture(({ db, repoRoot }) => {
-    const out = runFormatted(db, repoRoot, { query: "trace the flow from beta to base", intent: "explore" });
+  await withFixture(({ db, repoRoot, stores }) => {
+    const out = runFormatted(stores, repoRoot, { query: "trace the flow from beta to base", intent: "explore" });
     const excerpts = out.flow.paths?.[0]?.sourceExcerpts ?? [];
     assert.ok(excerpts.length >= 1, "expected at least one inline flow excerpt");
 
@@ -246,8 +253,8 @@ test("flow paths render compact bounded source excerpts", async () => {
 });
 
 test("impact dependents render bounded source excerpts", async () => {
-  await withFixture(({ db, repoRoot }) => {
-    const out = runFormatted(db, repoRoot, { query: "refactor base function", intent: "refactor" });
+  await withFixture(({ db, repoRoot, stores }) => {
+    const out = runFormatted(stores, repoRoot, { query: "refactor base function", intent: "refactor" });
     const dependents = (out.impact.topDependents ?? []).filter((node) => node.distance > 0);
     assert.ok(dependents.length >= 1, "expected at least one dependent");
 
@@ -261,8 +268,8 @@ test("impact dependents render bounded source excerpts", async () => {
 });
 
 test("flow falls back to bidirectional probing when no directional cue is present", async () => {
-  await withFixture(({ db, repoRoot }) => {
-    const out = runFormatted(db, repoRoot, { query: "show the link between beta and base", intent: "explore" });
+  await withFixture(({ db, repoRoot, stores }) => {
+    const out = runFormatted(stores, repoRoot, { query: "show the link between beta and base", intent: "explore" });
     assert.equal(out.flow.included, true);
     assert.equal(out.flow.endpointStrategy, "bidirectional_probe");
     // beta -> base is reachable, base -> beta is not, so probing picks beta -> base.
@@ -273,8 +280,8 @@ test("flow falls back to bidirectional probing when no directional cue is presen
 });
 
 test("flow is skipped with a reason when fewer than two endpoints are inferred", async () => {
-  await withFixture(({ db, repoRoot }) => {
-    const out = runFormatted(db, repoRoot, { query: "why does base fail", intent: "explore" });
+  await withFixture(({ db, repoRoot, stores }) => {
+    const out = runFormatted(stores, repoRoot, { query: "why does base fail", intent: "explore" });
     assert.equal(out.flow.included, false);
     assert.equal(out.flow.skipReason, "not_enough_endpoints");
     assert.equal(out.flow.matchedCandidates, 1);
@@ -284,8 +291,8 @@ test("flow is skipped with a reason when fewer than two endpoints are inferred",
 });
 
 test("flow is skipped as ambiguous when more than two endpoints are inferred", async () => {
-  await withFixture(({ db, repoRoot }) => {
-    const out = runFormatted(db, repoRoot, { query: "compare alpha beta base orphan", intent: "explore" });
+  await withFixture(({ db, repoRoot, stores }) => {
+    const out = runFormatted(stores, repoRoot, { query: "compare alpha beta base orphan", intent: "explore" });
     assert.equal(out.flow.included, false);
     assert.equal(out.flow.skipReason, "ambiguous_endpoints");
     assert.ok(out.flow.matchedCandidates > 2);
@@ -293,8 +300,8 @@ test("flow is skipped as ambiguous when more than two endpoints are inferred", a
 });
 
 test("memory session evidence is included when a populated session is provided", async () => {
-  await withFixture(({ db, repoRoot }) => {
-    persistObservation(db, {
+  await withFixture(({ db, repoRoot, stores }) => {
+    persistObservation(stores, {
       repoRoot,
       sessionId: "sess-1",
       kind: ObservationKind.Decision,
@@ -306,7 +313,7 @@ test("memory session evidence is included when a populated session is provided",
       linkedFilePaths: ["src/base.ts"],
     });
 
-    const out = runFormatted(db, repoRoot, {
+    const out = runFormatted(stores, repoRoot, {
       query: "base failure",
       intent: "debug",
       sessionId: "sess-1",
@@ -321,8 +328,8 @@ test("memory session evidence is included when a populated session is provided",
 });
 
 test("memory is skipped with explicit reasons when no session and explore intent", async () => {
-  await withFixture(({ db, repoRoot }) => {
-    const out = runFormatted(db, repoRoot, { query: "explore base", intent: "explore" });
+  await withFixture(({ db, repoRoot, stores }) => {
+    const out = runFormatted(stores, repoRoot, { query: "explore base", intent: "explore" });
     assert.equal(out.memory.session.included, false);
     assert.equal(out.memory.session.skipReason, "no_session_requested");
     assert.equal(out.memory.durable.included, false);
@@ -331,10 +338,10 @@ test("memory is skipped with explicit reasons when no session and explore intent
 });
 
 test("deferred references are emitted with stable 12-hex hashes", async () => {
-  await withFixture(({ db, repoRoot }) => {
+  await withFixture(({ db, repoRoot, stores }) => {
     const store = createDeferredVexpStore({ now: () => 0 });
     const out = runFormatted(
-      db,
+      stores,
       repoRoot,
       { query: "trace the flow from beta to base", intent: "explore" },
       store,
@@ -354,8 +361,8 @@ test("deferred references are emitted with stable 12-hex hashes", async () => {
 });
 
 test("run_pipeline output differs materially from the context capsule it wraps", async () => {
-  await withFixture(({ db, repoRoot }) => {
-    const orchestration = runPipelineOrchestrator(db, repoRoot, {
+  await withFixture(({ db, repoRoot, stores }) => {
+    const orchestration = runPipelineOrchestrator(stores, repoRoot, {
       query: "refactor base function",
       intent: "refactor",
     });
@@ -376,21 +383,21 @@ test("run_pipeline output differs materially from the context capsule it wraps",
 });
 
 test("repeated runs produce identical formatted output", async () => {
-  await withFixture(({ db, repoRoot }) => {
+  await withFixture(({ db, repoRoot, stores }) => {
     const input: RunPipelineOrchestratorInput = {
       query: "trace the flow from beta to base",
       intent: "refactor",
       sessionId: "sess-determinism",
     };
-    const first = runFormatted(db, repoRoot, input, createDeferredVexpStore({ now: () => 0 }));
-    const second = runFormatted(db, repoRoot, input, createDeferredVexpStore({ now: () => 0 }));
+    const first = runFormatted(stores, repoRoot, input, createDeferredVexpStore({ now: () => 0 }));
+    const second = runFormatted(stores, repoRoot, input, createDeferredVexpStore({ now: () => 0 }));
     assert.deepEqual(second, first);
   });
 });
 
 test.skip("default orchestration omits the Capsule v2 section entirely", async () => {
-  await withFixture(({ db, repoRoot }) => {
-    const out = runFormatted(db, repoRoot, { query: "modify base function", intent: "modify" });
+  await withFixture(({ db, repoRoot, stores }) => {
+    const out = runFormatted(stores, repoRoot, { query: "modify base function", intent: "modify" });
     // No opt-in => no v2 discriminator and no v2 product block (v1 byte-compatible).
     assert.equal((out as Record<string, unknown>).contextEngine, undefined);
     assert.equal((out as Record<string, unknown>).capsuleV2, undefined);
@@ -401,8 +408,8 @@ test.skip("default orchestration omits the Capsule v2 section entirely", async (
 });
 
 test("capsuleEngine=v2 adds bounded pivot-neighborhood excerpts", async () => {
-  await withFixture(({ db, repoRoot }) => {
-    const out = runFormatted(db, repoRoot, {
+  await withFixture(({ db, repoRoot, stores }) => {
+    const out = runFormatted(stores, repoRoot, {
       query: "base in src/base.ts#L1-L3 returns wrong value",
       intent: "debug",
       capsuleEngine: "v2",
@@ -436,13 +443,13 @@ test("capsuleEngine=v2 adds bounded pivot-neighborhood excerpts", async () => {
 });
 
 test("pivot-neighborhood enrichment leaves flow and impact sections unchanged", async () => {
-  await withFixture(({ db, repoRoot }) => {
-    const withV2 = runFormatted(db, repoRoot, {
+  await withFixture(({ db, repoRoot, stores }) => {
+    const withV2 = runFormatted(stores, repoRoot, {
       query: "trace the flow from beta to base",
       intent: "explore",
       capsuleEngine: "v2",
     });
-    const withoutV2 = runFormatted(db, repoRoot, {
+    const withoutV2 = runFormatted(stores, repoRoot, {
       query: "trace the flow from beta to base",
       intent: "explore",
     });
@@ -455,14 +462,14 @@ test("pivot-neighborhood enrichment leaves flow and impact sections unchanged", 
 });
 
 test("pivot-neighborhood is deterministic across repeated v2 runs", async () => {
-  await withFixture(({ db, repoRoot }) => {
+  await withFixture(({ db, repoRoot, stores }) => {
     const input: RunPipelineOrchestratorInput = {
       query: "base in src/base.ts#L1-L3 returns wrong value",
       intent: "debug",
       capsuleEngine: "v2",
     };
-    const first = runFormatted(db, repoRoot, input, createDeferredVexpStore({ now: () => 0 }));
-    const second = runFormatted(db, repoRoot, input, createDeferredVexpStore({ now: () => 0 }));
+    const first = runFormatted(stores, repoRoot, input, createDeferredVexpStore({ now: () => 0 }));
+    const second = runFormatted(stores, repoRoot, input, createDeferredVexpStore({ now: () => 0 }));
     assert.deepEqual(
       (second as Record<string, unknown>).pivotNeighborhood,
       (first as Record<string, unknown>).pivotNeighborhood,
@@ -471,8 +478,8 @@ test("pivot-neighborhood is deterministic across repeated v2 runs", async () => 
 });
 
 test.skip("capsuleEngine=v2 adds the v2 section while preserving the v1 sections", async () => {
-  await withFixture(({ db, repoRoot }) => {
-    const out = runFormatted(db, repoRoot, {
+  await withFixture(({ db, repoRoot, stores }) => {
+    const out = runFormatted(stores, repoRoot, {
       query: "modify base function to accept a label",
       intent: "modify",
       capsuleEngine: "v2",
@@ -496,14 +503,14 @@ test.skip("capsuleEngine=v2 adds the v2 section while preserving the v1 sections
 });
 
 test("capsuleEngine=v2 orchestration is deterministic across repeated runs", async () => {
-  await withFixture(({ db, repoRoot }) => {
+  await withFixture(({ db, repoRoot, stores }) => {
     const input: RunPipelineOrchestratorInput = {
       query: "modify base function to accept a label",
       intent: "modify",
       capsuleEngine: "v2",
     };
-    const first = runFormatted(db, repoRoot, input, createDeferredVexpStore({ now: () => 0 }));
-    const second = runFormatted(db, repoRoot, input, createDeferredVexpStore({ now: () => 0 }));
+    const first = runFormatted(stores, repoRoot, input, createDeferredVexpStore({ now: () => 0 }));
+    const second = runFormatted(stores, repoRoot, input, createDeferredVexpStore({ now: () => 0 }));
     assert.deepEqual(
       (second as Record<string, unknown>).capsuleV2,
       (first as Record<string, unknown>).capsuleV2,
@@ -512,11 +519,11 @@ test("capsuleEngine=v2 orchestration is deterministic across repeated runs", asy
 });
 
 test("unversioned capsule and deprecated aliases share one authoritative result", async () => {
-  await withFixture(({ db, repoRoot }) => {
+  await withFixture(({ db, repoRoot, stores }) => {
     const base = { query: "modify base function to accept a label", intent: "modify" } as const;
-    const current = runFormatted(db, repoRoot, base);
-    const deprecatedDefault = runFormatted(db, repoRoot, { ...base, capsuleEngine: "default" });
-    const deprecatedV2 = runFormatted(db, repoRoot, { ...base, capsuleEngine: "v2" });
+    const current = runFormatted(stores, repoRoot, base);
+    const deprecatedDefault = runFormatted(stores, repoRoot, { ...base, capsuleEngine: "default" });
+    const deprecatedV2 = runFormatted(stores, repoRoot, { ...base, capsuleEngine: "v2" });
 
     assert.deepEqual(deprecatedDefault.capsuleResult, current.capsuleResult);
     assert.deepEqual(deprecatedV2.capsuleResult, current.capsuleResult);
@@ -533,7 +540,7 @@ test("unversioned capsule and deprecated aliases share one authoritative result"
 });
 
 test("explicit legacy capsule requests fail before classification or retrieval", async () => {
-  await withFixture(({ db, repoRoot }) => {
+  await withFixture(({ db, repoRoot, stores }) => {
     let classifications = 0;
     const classifier = {
       classify() {
@@ -560,8 +567,8 @@ test("explicit legacy capsule requests fail before classification or retrieval",
 });
 
 test("runtime provenance identifies the source-backed executable and current implementations", async () => {
-  await withFixture(({ db, repoRoot }) => {
-    const output = runFormatted(db, repoRoot, { query: "modify base", intent: "modify" });
+  await withFixture(({ db, repoRoot, stores }) => {
+    const output = runFormatted(stores, repoRoot, { query: "modify base", intent: "modify" });
     assert.match(output.runtime.executablePath, /\/bin\/vtrace$/);
     assert.equal(output.runtime.capsuleImplementation, "hybrid");
     assert.equal(output.runtime.retrievalImplementation, "product-retrieval-v2");
@@ -573,8 +580,8 @@ test("runtime provenance identifies the source-backed executable and current imp
 // --- Unified capsule-engine selection (requested / effective / fallback) ---
 
 test.skip("default path records requested=default, effective=v1 with no fallback", async () => {
-  await withFixture(({ db, repoRoot }) => {
-    const out = runFormatted(db, repoRoot, { query: "modify base function", intent: "modify" });
+  await withFixture(({ db, repoRoot, stores }) => {
+    const out = runFormatted(stores, repoRoot, { query: "modify base function", intent: "modify" });
     assert.deepEqual((out as Record<string, unknown>).capsuleEngine, {
       requested: "default",
       effective: "v1",
@@ -588,9 +595,9 @@ test.skip("default path records requested=default, effective=v1 with no fallback
 });
 
 test.skip("explicit v1 and legacy stay on v1 but are recorded distinctly", async () => {
-  await withFixture(({ db, repoRoot }) => {
+  await withFixture(({ db, repoRoot, stores }) => {
     for (const requested of ["v1", "legacy"] as const) {
-      const out = runFormatted(db, repoRoot, {
+      const out = runFormatted(stores, repoRoot, {
         query: "modify base function",
         intent: "modify",
         capsuleEngine: requested,
@@ -613,8 +620,8 @@ test.skip("explicit v1 and legacy stay on v1 but are recorded distinctly", async
 });
 
 test.skip("capsuleEngine=v2 records effective=v2 and emits compact inspect-first guidance", async () => {
-  await withFixture(({ db, repoRoot }) => {
-    const out = runFormatted(db, repoRoot, {
+  await withFixture(({ db, repoRoot, stores }) => {
+    const out = runFormatted(stores, repoRoot, {
       query: "base in src/base.ts#L1-L3 returns wrong value",
       intent: "debug",
       capsuleEngine: "v2",
@@ -646,7 +653,7 @@ test.skip("capsuleEngine=v2 records effective=v2 and emits compact inspect-first
 });
 
 test.skip("a genuine v2 build failure falls back to v1 with a fallback reason, preserving v1 sections", async () => {
-  await withFixture(({ db, repoRoot }) => {
+  await withFixture(({ db, repoRoot, stores }) => {
     const orchestration = runPipelineOrchestrator(
       db,
       repoRoot,
@@ -680,8 +687,8 @@ test.skip("a genuine v2 build failure falls back to v1 with a fallback reason, p
 // digest, so the agent-facing render answers "what depends on this" / "what prior
 // knowledge / rules apply" in the same block — not just pivots/support.
 test("M56: capsule v2 digest folds the impact section for an impact-intent query", async () => {
-  await withFixture(({ db, repoRoot }) => {
-    const orchestration = runPipelineOrchestrator(db, repoRoot, {
+  await withFixture(({ db, repoRoot, stores }) => {
+    const orchestration = runPipelineOrchestrator(stores, repoRoot, {
       query: "what is the impact of base",
       capsuleEngine: "v2",
     });
@@ -705,8 +712,8 @@ test("M56: capsule v2 digest folds the impact section for an impact-intent query
 });
 
 test("M56: capsule v2 digest carries no impact line when the query does not request impact", async () => {
-  await withFixture(({ db, repoRoot }) => {
-    const orchestration = runPipelineOrchestrator(db, repoRoot, {
+  await withFixture(({ db, repoRoot, stores }) => {
+    const orchestration = runPipelineOrchestrator(stores, repoRoot, {
       query: "why does base fail",
       intent: "debug",
       capsuleEngine: "v2",
@@ -720,8 +727,8 @@ test("M56: capsule v2 digest carries no impact line when the query does not requ
 });
 
 test("M56: capsule v2 digest folds active project rules when rules are surfaced", async () => {
-  await withFixture(({ db, repoRoot }) => {
-    const orchestration = runPipelineOrchestrator(db, repoRoot, {
+  await withFixture(({ db, repoRoot, stores }) => {
+    const orchestration = runPipelineOrchestrator(stores, repoRoot, {
       query: "modify base function",
       intent: "modify",
       capsuleEngine: "v2",

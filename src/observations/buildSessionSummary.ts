@@ -13,8 +13,13 @@ import {
 const SESSION_SUMMARY_MAX_LINKS = 5;
 const SESSION_SUMMARY_MAX_QUERY_TERMS = 5;
 
+/**
+ * Summarise a session's observations. Takes the INDEX handle, not the session
+ * one: the observations arrive as values, and what this reads from a database is
+ * the run history each observation's staleness is judged against (§17).
+ */
 export function buildSessionSummary(
-  db: Database,
+  indexDb: Database,
   observations: readonly Observation[],
 ): SessionSummary {
   const kindCounts = createEmptyKindCounts();
@@ -40,7 +45,7 @@ export function buildSessionSummary(
   for (const observation of observations) {
     incrementKindCount(kindCounts, observation.kind);
 
-    const staleness = getObservationStaleness(db, observation);
+    const staleness = getObservationStaleness(indexDb, observation);
 
     if (staleness.status === StaleStateStatus.Stale) {
       staleObservationCount += 1;

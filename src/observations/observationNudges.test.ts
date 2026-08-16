@@ -1,9 +1,10 @@
 import assert from "node:assert/strict";
 import { test } from "bun:test";
 
-import { persistObservation } from "../db/repositories/observationsRepository";
-import { markSessionCompressed } from "../db/repositories/sessionsRepository";
+import { persistObservation } from "../session/repositories/observationsRepository";
+import { markSessionCompressed } from "../session/repositories/sessionsRepository";
 import { openIndexerDatabase } from "../db/sqlite";
+import { createTestProductStores } from "../testing/productStores";
 import {
   OBSERVATION_NUDGE_FIRST_TOOL_CALL_COUNT,
   OBSERVATION_NUDGE_REPEAT_INTERVAL_TOOL_CALL_COUNT,
@@ -21,11 +22,12 @@ const REPO_ROOT = "/repo";
 
 test("observation nudge appears at the first passive tool-call threshold", () => {
   const db = openIndexerDatabase();
+  const stores = createTestProductStores(db);
 
   try {
-    persistToolCalls(db, "session-nudge", OBSERVATION_NUDGE_FIRST_TOOL_CALL_COUNT);
+    persistToolCalls(stores, "session-nudge", OBSERVATION_NUDGE_FIRST_TOOL_CALL_COUNT);
 
-    const nudge = evaluateObservationNudge(db, {
+    const nudge = evaluateObservationNudge(stores.session, {
       sessionId: "session-nudge",
       currentToolName: "run_pipeline",
     });
@@ -39,24 +41,26 @@ test("observation nudge appears at the first passive tool-call threshold", () =>
       OBSERVATION_NUDGE_FIRST_TOOL_CALL_COUNT + OBSERVATION_NUDGE_REPEAT_INTERVAL_TOOL_CALL_COUNT,
     );
     assert.deepEqual(
-      evaluateObservationNudge(db, {
+      evaluateObservationNudge(stores.session, {
         sessionId: "session-nudge",
         currentToolName: "run_pipeline",
       }),
       nudge,
     );
   } finally {
+    stores.close();
     db.close();
   }
 });
 
 test("observation nudge stays quiet before threshold and between scheduled counts", () => {
   const db = openIndexerDatabase();
+  const stores = createTestProductStores(db);
 
   try {
-    persistToolCalls(db, "session-quiet", OBSERVATION_NUDGE_FIRST_TOOL_CALL_COUNT - 1);
+    persistToolCalls(stores, "session-quiet", OBSERVATION_NUDGE_FIRST_TOOL_CALL_COUNT - 1);
 
-    const early = evaluateObservationNudge(db, {
+    const early = evaluateObservationNudge(stores.session, {
       sessionId: "session-quiet",
       currentToolName: "run_pipeline",
     });
@@ -64,9 +68,9 @@ test("observation nudge stays quiet before threshold and between scheduled count
     assert.equal(early.reason, ObservationNudgeReason.BelowThreshold);
     assert.equal(early.nextNudgeAfterToolCallCount, OBSERVATION_NUDGE_FIRST_TOOL_CALL_COUNT);
 
-    persistToolCalls(db, "session-quiet", 2, OBSERVATION_NUDGE_FIRST_TOOL_CALL_COUNT);
+    persistToolCalls(stores, "session-quiet", 2, OBSERVATION_NUDGE_FIRST_TOOL_CALL_COUNT);
 
-    const waiting = evaluateObservationNudge(db, {
+    const waiting = evaluateObservationNudge(stores.session, {
       sessionId: "session-quiet",
       currentToolName: "run_pipeline",
     });
@@ -77,21 +81,23 @@ test("observation nudge stays quiet before threshold and between scheduled count
       OBSERVATION_NUDGE_FIRST_TOOL_CALL_COUNT + OBSERVATION_NUDGE_REPEAT_INTERVAL_TOOL_CALL_COUNT,
     );
   } finally {
+    stores.close();
     db.close();
   }
 });
 
 test("observation nudge repeats briefly on the deterministic interval", () => {
   const db = openIndexerDatabase();
+  const stores = createTestProductStores(db);
 
   try {
     persistToolCalls(
-      db,
+      stores,
       "session-brief",
       OBSERVATION_NUDGE_FIRST_TOOL_CALL_COUNT + OBSERVATION_NUDGE_REPEAT_INTERVAL_TOOL_CALL_COUNT,
     );
 
-    const nudge = evaluateObservationNudge(db, {
+    const nudge = evaluateObservationNudge(stores.session, {
       sessionId: "session-brief",
       currentToolName: "run_pipeline",
     });
@@ -104,16 +110,18 @@ test("observation nudge repeats briefly on the deterministic interval", () => {
       OBSERVATION_NUDGE_FIRST_TOOL_CALL_COUNT + 2 * OBSERVATION_NUDGE_REPEAT_INTERVAL_TOOL_CALL_COUNT,
     );
   } finally {
+    stores.close();
     db.close();
   }
 });
 
 test("observation nudge self-disables after durable observations including anti-patterns", () => {
   const db = openIndexerDatabase();
+  const stores = createTestProductStores(db);
 
   try {
-    persistToolCalls(db, "session-durable", OBSERVATION_NUDGE_FIRST_TOOL_CALL_COUNT);
-    persistObservation(db, {
+    persistToolCalls(stores, "session-durable", OBSERVATION_NUDGE_FIRST_TOOL_CALL_COUNT);
+    persistObservation(stores, {
       repoRoot: REPO_ROOT,
       sessionId: "session-durable",
       kind: ObservationKind.Decision,
@@ -124,7 +132,7 @@ test("observation nudge self-disables after durable observations including anti-
       createdAtMs: 10_000,
     });
 
-    const afterManual = evaluateObservationNudge(db, {
+    const afterManual = evaluateObservationNudge(stores.session, {
       sessionId: "session-durable",
       currentToolName: "run_pipeline",
     });
@@ -132,8 +140,8 @@ test("observation nudge self-disables after durable observations including anti-
     assert.equal(afterManual.reason, ObservationNudgeReason.DurableObservationExists);
     assert.equal(afterManual.durableObservationCount, 1);
 
-    persistToolCalls(db, "session-anti", OBSERVATION_NUDGE_FIRST_TOOL_CALL_COUNT);
-    persistObservation(db, {
+    persistToolCalls(stores, "session-anti", OBSERVATION_NUDGE_FIRST_TOOL_CALL_COUNT);
+    persistObservation(stores, {
       repoRoot: REPO_ROOT,
       sessionId: "session-anti",
       kind: ObservationKind.DeadEnd,
@@ -144,7 +152,7 @@ test("observation nudge self-disables after durable observations including anti-
       createdAtMs: 20_000,
     });
 
-    const afterAntiPattern = evaluateObservationNudge(db, {
+    const afterAntiPattern = evaluateObservationNudge(stores.session, {
       sessionId: "session-anti",
       currentToolName: "run_pipeline",
     });
@@ -152,15 +160,17 @@ test("observation nudge self-disables after durable observations including anti-
     assert.equal(afterAntiPattern.reason, ObservationNudgeReason.DurableObservationExists);
     assert.equal(afterAntiPattern.durableObservationCount, 1);
   } finally {
+    stores.close();
     db.close();
   }
 });
 
 test("observation nudge excluded tools no-session and compressed sessions are deterministic", () => {
   const db = openIndexerDatabase();
+  const stores = createTestProductStores(db);
 
   try {
-    assert.deepEqual(evaluateObservationNudge(db, {
+    assert.deepEqual(evaluateObservationNudge(stores.session, {
       currentToolName: "run_pipeline",
     }), {
       enabled: false,
@@ -172,28 +182,28 @@ test("observation nudge excluded tools no-session and compressed sessions are de
       nextNudgeAfterToolCallCount: null,
     });
 
-    persistToolCalls(db, "session-excluded", OBSERVATION_NUDGE_FIRST_TOOL_CALL_COUNT);
-    const excluded = evaluateObservationNudge(db, {
+    persistToolCalls(stores, "session-excluded", OBSERVATION_NUDGE_FIRST_TOOL_CALL_COUNT);
+    const excluded = evaluateObservationNudge(stores.session, {
       sessionId: "session-excluded",
       currentToolName: "save_observation",
     });
     assert.equal(excluded.enabled, false);
     assert.equal(excluded.reason, ObservationNudgeReason.ExcludedTool);
 
-    persistToolCalls(db, "session-compressed", OBSERVATION_NUDGE_FIRST_TOOL_CALL_COUNT);
-    markSessionCompressed(db, {
+    persistToolCalls(stores, "session-compressed", OBSERVATION_NUDGE_FIRST_TOOL_CALL_COUNT);
+    markSessionCompressed(stores.session, {
       sessionId: "session-compressed",
       compressedAtMs: 30_000,
       summaryId: "summary-compressed",
     });
-    const compressed = evaluateObservationNudge(db, {
+    const compressed = evaluateObservationNudge(stores.session, {
       sessionId: "session-compressed",
       currentToolName: "run_pipeline",
     });
     assert.equal(compressed.enabled, false);
     assert.equal(compressed.reason, ObservationNudgeReason.SessionCompressed);
 
-    const preexistingCompressed = evaluateObservationNudge(db, {
+    const preexistingCompressed = evaluateObservationNudge(stores.session, {
       sessionId: "session-excluded",
       currentToolName: "run_pipeline",
       preexistingSessionStatus: SessionStatus.Compressed,
@@ -201,19 +211,20 @@ test("observation nudge excluded tools no-session and compressed sessions are de
     assert.equal(preexistingCompressed.enabled, false);
     assert.equal(preexistingCompressed.reason, ObservationNudgeReason.SessionCompressed);
   } finally {
+    stores.close();
     db.close();
   }
 });
 
 function persistToolCalls(
-  db: ReturnType<typeof openIndexerDatabase>,
+  stores: ReturnType<typeof createTestProductStores>,
   sessionId: string,
   count: number,
   startIndex = 0,
 ): void {
   for (let index = 0; index < count; index += 1) {
     const ordinal = startIndex + index;
-    persistObservation(db, {
+    persistObservation(stores, {
       repoRoot: REPO_ROOT,
       sessionId,
       sessionAgentKind: "mcp",

@@ -5,9 +5,10 @@ import path from "node:path";
 import { test } from "bun:test";
 
 import { prepareCapsuleAssembly } from "../capsuleProfiles/orchestrator";
-import { persistObservation } from "../db/repositories/observationsRepository";
+import { persistObservation } from "../session/repositories/observationsRepository";
 import { listSymbolsForFile } from "../db/repositories/symbolsRepository";
 import { openIndexerDatabase } from "../db/sqlite";
+import { createTestProductStores } from "../testing/productStores";
 import { EdgeType, type SymbolRecord } from "../domain/types";
 import { indexProject } from "../indexer/indexProject";
 import { routeQuery } from "../intent/routeQuery";
@@ -35,8 +36,8 @@ import {
 } from "./types";
 
 test("memory surfacing is deterministic and preserves stable ordering", async () => {
-  await withMemoryFixture(async ({ repoRoot, db, readUser, normalizeUser }) => {
-    const newer = persistObservation(db, {
+  await withMemoryFixture(async ({ repoRoot, db, stores, readUser, normalizeUser }) => {
+    const newer = persistObservation(stores, {
       repoRoot,
       kind: ObservationKind.Warning,
       source: ObservationSource.Manual,
@@ -48,7 +49,7 @@ test("memory surfacing is deterministic and preserves stable ordering", async ()
       createdAtMs: 300,
       linkedFilePaths: ["src/service.ts"],
     });
-    const older = persistObservation(db, {
+    const older = persistObservation(stores, {
       repoRoot,
       kind: ObservationKind.Insight,
       source: ObservationSource.Manual,
@@ -61,8 +62,10 @@ test("memory surfacing is deterministic and preserves stable ordering", async ()
       linkedFilePaths: ["src/service.ts"],
     });
 
-    const first = buildExplainCapsule(db, repoRoot, "explain user service", readUser, normalizeUser);
-    const second = buildExplainCapsule(db, repoRoot, "explain user service", readUser, normalizeUser);
+    const first = buildExplainCapsule(db,
+      stores, repoRoot, "explain user service", readUser, normalizeUser);
+    const second = buildExplainCapsule(db,
+      stores, repoRoot, "explain user service", readUser, normalizeUser);
 
     assert.deepEqual(second, first);
     assert.deepEqual(
@@ -74,12 +77,12 @@ test("memory surfacing is deterministic and preserves stable ordering", async ()
 });
 
 test("stale memories are penalized but can still surface when structurally relevant", async () => {
-  await withMemoryFixture(async ({ repoRoot, db, normalizeUser }) => {
+  await withMemoryFixture(async ({ repoRoot, db, stores, normalizeUser }) => {
     const initialRunId = getLatestIndexRun(db)?.id;
 
     assert.notEqual(initialRunId, undefined);
 
-    const staleObservation = persistObservation(db, {
+    const staleObservation = persistObservation(stores, {
       repoRoot,
       kind: ObservationKind.Warning,
       source: ObservationSource.Manual,
@@ -96,7 +99,7 @@ test("stale memories are penalized but can still surface when structurally relev
     await writeServiceFile(repoRoot, "loadUser");
     await indexProject({ repoRoot, db });
 
-    const freshObservation = persistObservation(db, {
+    const freshObservation = persistObservation(stores, {
       repoRoot,
       kind: ObservationKind.Insight,
       source: ObservationSource.Manual,
@@ -111,6 +114,7 @@ test("stale memories are penalized but can still surface when structurally relev
 
     const capsule = buildExplainCapsule(
       db,
+      stores,
       repoRoot,
       "explain user service",
       findSymbol(db, "src/service.ts", "loadUser"),
@@ -131,8 +135,8 @@ test("stale memories are penalized but can still surface when structurally relev
 });
 
 test("structurally linked memories outrank weak text-only matches", async () => {
-  await withMemoryFixture(async ({ repoRoot, db, readUser, normalizeUser }) => {
-    const structural = persistObservation(db, {
+  await withMemoryFixture(async ({ repoRoot, db, stores, readUser, normalizeUser }) => {
+    const structural = persistObservation(stores, {
       repoRoot,
       kind: ObservationKind.Decision,
       source: ObservationSource.Manual,
@@ -144,7 +148,7 @@ test("structurally linked memories outrank weak text-only matches", async () => 
       createdAtMs: 200,
       linkedSymbolIds: [readUser.id],
     });
-    persistObservation(db, {
+    persistObservation(stores, {
       repoRoot,
       kind: ObservationKind.Insight,
       source: ObservationSource.Manual,
@@ -156,7 +160,8 @@ test("structurally linked memories outrank weak text-only matches", async () => 
       createdAtMs: 300,
     });
 
-    const capsule = buildExplainCapsule(db, repoRoot, "explain read user service", readUser, normalizeUser);
+    const capsule = buildExplainCapsule(db,
+      stores, repoRoot, "explain read user service", readUser, normalizeUser);
 
     assert.deepEqual(
       capsule.memories?.map((memory) => memory.observationId),
@@ -170,8 +175,8 @@ test("structurally linked memories outrank weak text-only matches", async () => 
 });
 
 test("manual observations can surface when strongly relevant", async () => {
-  await withMemoryFixture(async ({ repoRoot, db, readUser, normalizeUser }) => {
-    const observation = persistObservation(db, {
+  await withMemoryFixture(async ({ repoRoot, db, stores, readUser, normalizeUser }) => {
+    const observation = persistObservation(stores, {
       repoRoot,
       kind: ObservationKind.Decision,
       source: ObservationSource.Manual,
@@ -184,7 +189,8 @@ test("manual observations can surface when strongly relevant", async () => {
       linkedSymbolIds: [readUser.id],
     });
 
-    const capsule = buildExplainCapsule(db, repoRoot, "explain read user service", readUser, normalizeUser);
+    const capsule = buildExplainCapsule(db,
+      stores, repoRoot, "explain read user service", readUser, normalizeUser);
 
     assert.deepEqual(
       capsule.memories?.map((memory) => memory.observationId),
@@ -194,8 +200,8 @@ test("manual observations can surface when strongly relevant", async () => {
 });
 
 test("auto-captured observations can surface when strongly relevant", async () => {
-  await withMemoryFixture(async ({ repoRoot, db, readUser, normalizeUser }) => {
-    const observation = persistObservation(db, {
+  await withMemoryFixture(async ({ repoRoot, db, stores, readUser, normalizeUser }) => {
+    const observation = persistObservation(stores, {
       repoRoot,
       kind: ObservationKind.ToolCall,
       source: ObservationSource.McpAuto,
@@ -210,7 +216,8 @@ test("auto-captured observations can surface when strongly relevant", async () =
       linkedSymbolIds: [readUser.id],
     });
 
-    const capsule = buildExplainCapsule(db, repoRoot, "explain reader service", readUser, normalizeUser);
+    const capsule = buildExplainCapsule(db,
+      stores, repoRoot, "explain reader service", readUser, normalizeUser);
 
     assert.deepEqual(
       capsule.memories?.map((memory) => memory.observationId),
@@ -220,8 +227,8 @@ test("auto-captured observations can surface when strongly relevant", async () =
 });
 
 test("capsules omit the memories section when nothing is relevant and keep normal behavior", async () => {
-  await withMemoryFixture(async ({ repoRoot, db, readUser, normalizeUser }) => {
-    persistObservation(db, {
+  await withMemoryFixture(async ({ repoRoot, db, stores, readUser, normalizeUser }) => {
+    persistObservation(stores, {
       repoRoot,
       kind: ObservationKind.Warning,
       source: ObservationSource.Manual,
@@ -234,7 +241,8 @@ test("capsules omit the memories section when nothing is relevant and keep norma
       linkedFilePaths: ["src/models.ts"],
     });
 
-    const capsule = buildExplainCapsule(db, repoRoot, "explain read user service", readUser, normalizeUser);
+    const capsule = buildExplainCapsule(db,
+      stores, repoRoot, "explain read user service", readUser, normalizeUser);
 
     assert.equal(capsule.memories, undefined);
     assert.equal(capsule.pivots[0]?.symbolId, readUser.id);
@@ -244,8 +252,8 @@ test("capsules omit the memories section when nothing is relevant and keep norma
 });
 
 test("source-backed builder surfaces memories without a parallel builder input path", async () => {
-  await withMemoryFixture(async ({ repoRoot, db, readUser, normalizeUser }) => {
-    persistObservation(db, {
+  await withMemoryFixture(async ({ repoRoot, db, stores, readUser, normalizeUser }) => {
+    persistObservation(stores, {
       repoRoot,
       kind: ObservationKind.Insight,
       source: ObservationSource.Manual,
@@ -274,7 +282,7 @@ test("source-backed builder surfaces memories without a parallel builder input p
     );
 
     const capsule = buildCapsule(
-      createSourceBackedCapsuleBuilder({ db, repoRoot }),
+      createSourceBackedCapsuleBuilder({ db, stores, repoRoot }),
       prepared.builderInput,
     );
 
@@ -283,31 +291,32 @@ test("source-backed builder surfaces memories without a parallel builder input p
 });
 
 test("source-backed capsules surface relevant active rules separately from memories", async () => {
-  await withMemoryFixture(async ({ repoRoot, db, readUser, normalizeUser }) => {
-    const relevant = createActiveProjectRule(db, {
+  await withMemoryFixture(async ({ repoRoot, db, stores, readUser, normalizeUser }) => {
+    const relevant = createActiveProjectRule(stores.session, {
       repoRoot,
       summary: "When changing the reader service, update normalization tests.",
       files: ["src/service.ts"],
       terms: ["reader", "service", "normalization"],
       nowMs: 100,
     });
-    createActiveProjectRule(db, {
+    createActiveProjectRule(stores.session, {
       repoRoot,
       summary: "Kernel rules belong elsewhere.",
       files: ["src/kernel.ts"],
       terms: ["kernel"],
       nowMs: 200,
     });
-    const disabled = createActiveProjectRule(db, {
+    const disabled = createActiveProjectRule(stores.session, {
       repoRoot,
       summary: "Disabled reader service guidance.",
       files: ["src/service.ts"],
       terms: ["reader", "service"],
       nowMs: 300,
     });
-    disableProjectRule(db, disabled.id, 400);
+    disableProjectRule(stores.session, disabled.id, 400);
 
-    const capsule = buildExplainCapsule(db, repoRoot, "explain reader service", readUser, normalizeUser);
+    const capsule = buildExplainCapsule(db,
+      stores, repoRoot, "explain reader service", readUser, normalizeUser);
 
     assert.deepEqual(capsule.memories, undefined);
     assert.deepEqual(capsule.rules?.active.map((rule) => rule.id), [relevant.id]);
@@ -319,11 +328,11 @@ test("source-backed capsules surface relevant active rules separately from memor
 });
 
 test("source-backed capsules do not inject candidate rules as active guidance", async () => {
-  await withMemoryFixture(async ({ repoRoot, db, readUser, normalizeUser }) => {
+  await withMemoryFixture(async ({ repoRoot, db, stores, readUser, normalizeUser }) => {
     const sourceRunId = getLatestIndexRun(db)?.id;
 
     for (const createdAtMs of [100, 200, 300]) {
-      persistObservation(db, {
+      persistObservation(stores, {
         repoRoot,
         kind: ObservationKind.Decision,
         source: ObservationSource.Manual,
@@ -336,8 +345,9 @@ test("source-backed capsules do not inject candidate rules as active guidance", 
       });
     }
 
-    const generated = generateProjectRuleCandidates(db, { repoRoot, nowMs: 1_000 });
-    const capsule = buildExplainCapsule(db, repoRoot, "explain reader service normalization", readUser, normalizeUser);
+    const generated = generateProjectRuleCandidates(stores.session, { repoRoot, nowMs: 1_000 });
+    const capsule = buildExplainCapsule(db,
+      stores, repoRoot, "explain reader service normalization", readUser, normalizeUser);
 
     assert.equal(generated.created.length, 1);
     assert.equal(generated.created[0]?.status, "candidate");
@@ -356,6 +366,7 @@ async function withMemoryFixture(
   const root = await mkdtemp(path.join(os.tmpdir(), "vtrace-layer9-memory-"));
   const repoRoot = path.join(root, "repo");
   const db = openIndexerDatabase();
+  const stores = createTestProductStores(db);
 
   try {
     await mkdir(path.join(repoRoot, "src"), { recursive: true });
@@ -366,10 +377,12 @@ async function withMemoryFixture(
     await run({
       repoRoot,
       db,
+      stores,
       readUser: findSymbol(db, "src/service.ts", "readUser"),
       normalizeUser: findSymbol(db, "src/service.ts", "normalizeUser"),
     });
   } finally {
+    stores.close();
     db.close();
     await rm(root, { recursive: true, force: true });
   }
@@ -377,6 +390,7 @@ async function withMemoryFixture(
 
 function buildExplainCapsule(
   db: ReturnType<typeof openIndexerDatabase>,
+  stores: ReturnType<typeof createTestProductStores>,
   repoRoot: string,
   query: string,
   pivot: SymbolRecord,
@@ -393,7 +407,7 @@ function buildExplainCapsule(
   });
 
   return buildCapsule(
-    createSourceBackedCapsuleBuilder({ db, repoRoot }),
+    createSourceBackedCapsuleBuilder({ db, stores, repoRoot }),
     prepared.builderInput,
   );
 }

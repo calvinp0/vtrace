@@ -17,10 +17,15 @@ import {
 import { listAllEdges, listEdgesForFile } from "./repositories/edgesRepository";
 import { getFileByPath, insertFile } from "./repositories/filesRepository";
 import { listSymbolsForFile } from "./repositories/symbolsRepository";
+import { classifyIndexTable } from "./indexTableFamilies";
 import { openIndexerDatabase } from "./sqlite";
 import { persistParseResult } from "./persistParseResult";
 
-test("schema initializes correctly", () => {
+test("the index schema installs repository evidence and nothing else", () => {
+  // M152: `capsule_manifests`, `sessions` and `project_rules` used to be
+  // asserted here. They are not missing — they moved to `session.sqlite`, and a
+  // fresh index owning any of them again would be the regression this checks
+  // for (§136).
   const db = openIndexerDatabase();
 
   try {
@@ -34,16 +39,18 @@ test("schema initializes correctly", () => {
     const tableNames = new Set(tables.map((table) => table.name));
 
     assert.equal(tableNames.has("edges"), true);
-    assert.equal(tableNames.has("capsule_manifest_items"), true);
-    assert.equal(tableNames.has("capsule_manifests"), true);
     assert.equal(tableNames.has("files"), true);
     assert.equal(tableNames.has("file_run_states"), true);
     assert.equal(tableNames.has("index_runs"), true);
-    assert.equal(tableNames.has("project_rules"), true);
-    assert.equal(tableNames.has("sessions"), true);
     assert.equal(tableNames.has("symbol_run_states"), true);
     assert.equal(tableNames.has("symbols"), true);
+    assert.equal(tableNames.has("symbol_mechanism_facts"), true);
     assert.equal(tableNames.has("symbol_search_fts"), true);
+
+    const productOwned = [...tableNames].filter(
+      (name) => classifyIndexTable(name) === "product_session",
+    );
+    assert.deepEqual(productOwned, [], "a fresh index must own no product/session table");
   } finally {
     db.close();
   }

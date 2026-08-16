@@ -5,12 +5,14 @@ import path from "node:path";
 import { test } from "bun:test";
 
 import { openIndexerDatabase } from "../db/sqlite";
+import { createTestProductStores } from "../testing/productStores";
+import { ProductStoreLease } from "../session/sessionStore";
 import {
   cleanupDeferredVexpRefs,
   expirePersistentDeferredVexpRef,
   persistDeferredVexpRef,
   resolvePersistentDeferredVexpRef,
-} from "../db/repositories/deferredVexpRefsRepository";
+} from "../session/repositories/deferredVexpRefsRepository";
 import { runExpandVexpRefCommand } from "../cli/commands/expandVexpRefCommand";
 import { runRunPipelineCommand } from "../cli/commands/runPipelineCommand";
 import { initRepo } from "../setup/initRepo";
@@ -165,6 +167,7 @@ test("deferredVexpStore hash changes when payload changes under the same stable 
 
 test("persistent deferred V-REF repository survives new store instances", () => {
   const db = openIndexerDatabase();
+  const stores = createTestProductStores(db);
   const firstStore = createDeferredVexpStore();
   const entry = firstStore.publish({
     stableId: "vexp:capsule:persistent",
@@ -173,7 +176,7 @@ test("persistent deferred V-REF repository survives new store instances", () => 
     metadata: { origin: "test" },
   });
 
-  persistDeferredVexpRef(db, {
+  persistDeferredVexpRef(stores.session, {
     entry,
     repoRoot: "/repo/example",
     sourceRunId: null,
@@ -183,7 +186,7 @@ test("persistent deferred V-REF repository survives new store instances", () => 
 
   const secondStore = createDeferredVexpStore();
   assert.equal(secondStore.resolve(entry.hash), null);
-  const persisted = resolvePersistentDeferredVexpRef(db, entry.hash);
+  const persisted = resolvePersistentDeferredVexpRef(stores.session, entry.hash);
   assert.notEqual(persisted, null);
   assert.deepEqual(persisted!.content, entry.content);
   assert.equal(persisted!.sessionId, "session-1");
@@ -192,6 +195,7 @@ test("persistent deferred V-REF repository survives new store instances", () => 
 
 test("persistent deferred V-REF cleanup evicts oldest records with tombstones", () => {
   const db = openIndexerDatabase();
+  const stores = createTestProductStores(db);
   const store = createDeferredVexpStore({ now: () => 1_000 });
   const first = store.publish({
     stableId: "vexp:capsule:first-persistent",
@@ -212,16 +216,16 @@ test("persistent deferred V-REF cleanup evicts oldest records with tombstones", 
     metadata: {},
   });
 
-  persistDeferredVexpRef(db, { entry: first, repoRoot: "/repo/example", now: () => 1_000 }, { maxRecords: 3 });
-  persistDeferredVexpRef(db, { entry: second, repoRoot: "/repo/example", now: () => 1_001 }, { maxRecords: 3 });
-  persistDeferredVexpRef(db, { entry: third, repoRoot: "/repo/example", now: () => 1_002 }, { maxRecords: 3 });
+  persistDeferredVexpRef(stores.session, { entry: first, repoRoot: "/repo/example", now: () => 1_000 }, { maxRecords: 3 });
+  persistDeferredVexpRef(stores.session, { entry: second, repoRoot: "/repo/example", now: () => 1_001 }, { maxRecords: 3 });
+  persistDeferredVexpRef(stores.session, { entry: third, repoRoot: "/repo/example", now: () => 1_002 }, { maxRecords: 3 });
 
-  cleanupDeferredVexpRefs(db, { maxRecords: 2, now: () => 1_003 });
+  cleanupDeferredVexpRefs(stores.session, { maxRecords: 2, now: () => 1_003 });
 
-  assert.equal(resolvePersistentDeferredVexpRef(db, first.hash), null);
-  assert.notEqual(resolvePersistentDeferredVexpRef(db, second.hash), null);
-  assert.notEqual(resolvePersistentDeferredVexpRef(db, third.hash), null);
-  const tombstone = db.query(`SELECT reason FROM deferred_vexp_ref_tombstones WHERE hash = ?`).get(first.hash) as
+  assert.equal(resolvePersistentDeferredVexpRef(stores.session, first.hash), null);
+  assert.notEqual(resolvePersistentDeferredVexpRef(stores.session, second.hash), null);
+  assert.notEqual(resolvePersistentDeferredVexpRef(stores.session, third.hash), null);
+  const tombstone = stores.session.query(`SELECT reason FROM deferred_vexp_ref_tombstones WHERE hash = ?`).get(first.hash) as
     | { reason: string }
     | null;
   assert.equal(tombstone?.reason, "capacity_evicted");
@@ -591,8 +595,9 @@ test("CLI expand-vexp-ref --query fallback republishes when persistent lookup mi
     assert.notEqual(hash, undefined);
 
     const db = openIndexerDatabase(initialized.paths.dbPath);
+const stores = new ProductStoreLease(db, initialized.paths.dbPath).write;
     try {
-      expirePersistentDeferredVexpRef(db, hash!, {
+      expirePersistentDeferredVexpRef(stores.session, hash!, {
         reason: "test_removed",
         repoRoot: initialized.repoRoot,
       });
@@ -637,8 +642,9 @@ test("expand_vexp_ref returns expired when a previously published V-REF has been
     // Explicitly expire the emitted V-REF in the process-shared store.
     getSharedDeferredVexpStore().expire(hash);
     const db = openIndexerDatabase(initialized.paths.dbPath);
+const stores = new ProductStoreLease(db, initialized.paths.dbPath).write;
     try {
-      expirePersistentDeferredVexpRef(db, hash, {
+      expirePersistentDeferredVexpRef(stores.session, hash, {
         reason: "test_expired",
         repoRoot: initialized.repoRoot,
       });

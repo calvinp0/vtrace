@@ -1,13 +1,13 @@
 import { createHash } from "node:crypto";
-import type { Database } from "bun:sqlite";
+import type { ProductStores, WritableProductStores } from "../session/sessionStore";
 
 import { getLatestIndexRun } from "../db/repositories/indexRunsRepository";
 import {
   deleteObservationsByIds,
   listObservationsForSession,
   persistObservation,
-} from "../db/repositories/observationsRepository";
-import { getSessionById } from "../db/repositories/sessionsRepository";
+} from "../session/repositories/observationsRepository";
+import { getSessionById } from "../session/repositories/sessionsRepository";
 import {
   ObservationKind,
   ObservationOrigin,
@@ -70,33 +70,34 @@ export interface PassiveObservationConsolidationResult {
 }
 
 export function previewPassiveObservationConsolidationForSession(
-  db: Database,
+  stores: ProductStores,
   input: {
     sessionId: string;
     threshold?: number;
   },
 ): PassiveConsolidationGroup[] {
   return buildPassiveConsolidationGroups(
-    listObservationsForSession(db, input.sessionId),
+    listObservationsForSession(stores.session, input.sessionId),
     input.threshold ?? DEFAULT_PASSIVE_CONSOLIDATION_THRESHOLD,
   );
 }
 
 export function consolidatePassiveObservationsForSession(
-  db: Database,
+  stores: WritableProductStores,
   input: {
     sessionId: string;
     nowMs: number;
     threshold?: number;
   },
 ): PassiveObservationConsolidationResult | undefined {
+  const db = stores.session;
   const session = getSessionById(db, input.sessionId);
 
   if (session === undefined) {
     return undefined;
   }
 
-  const groups = previewPassiveObservationConsolidationForSession(db, {
+  const groups = previewPassiveObservationConsolidationForSession(stores, {
     sessionId: input.sessionId,
     threshold: input.threshold,
   });
@@ -115,7 +116,7 @@ export function consolidatePassiveObservationsForSession(
 
   const transaction = db.transaction(() => {
     for (const group of groups) {
-      const observation = persistObservation(db, {
+      const observation = persistObservation(stores, {
         repoRoot: session.repoRoot,
         sessionId: session.sessionId,
         sessionAgentKind: session.agentKind,
@@ -126,7 +127,7 @@ export function consolidatePassiveObservationsForSession(
         intent: group.intent,
         summary: group.summary,
         body: group.body,
-        sourceRunId: group.sourceRunId ?? getLatestIndexRun(db)?.id,
+        sourceRunId: group.sourceRunId ?? getLatestIndexRun(stores.index)?.id,
         ...(group.inheritedProvenance === undefined ? {} : {
           scope: ObservationScope.Repository,
           origin: ObservationOrigin.AutomaticCapture,
