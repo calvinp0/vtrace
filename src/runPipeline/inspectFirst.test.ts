@@ -138,14 +138,47 @@ test("confidence reflects how specific the lead signal is", () => {
   assert.equal(low?.confidence, "low");
 });
 
-test("rendered block is labeled as guidance, not enforcement, and carries the three sections", () => {
+test("rendered block is labeled as bounded guidance and carries its sections", () => {
   const text = renderInspectFirstText(buildInspectFirst(matplotlibShaped()));
   assert.ok(text.includes("VTRACE inspect-first"));
-  assert.ok(text.includes("guidance, not enforcement"));
+  // M154-D: the header states the coverage contract, because a reader who takes
+  // this block as the complete set of relevant code draws false conclusions from
+  // what it omits.
+  assert.ok(text.includes("bounded, non-exhaustive selection"));
   assert.ok(text.includes("Likely first file:"));
   assert.ok(text.includes("Related context:"));
-  assert.ok(text.includes("Avoid first:"));
   // No mandatory-output framing: it must not demand a checklist or block editing.
   assert.ok(!/checklist/i.test(text));
   assert.ok(!/do not edit|must emit|required format/i.test(text));
+});
+
+// M154-D. The block used to close with a constant "Avoid first: broad repository
+// grep/find before inspecting the targets above". Capsule v2 selects bounded
+// evidence and never enumerates a repository, so it cannot support that
+// instruction — and on a reuse-before-write question it is the instruction that
+// turns a selective miss into a duplicate implementation.
+test("no unsupported advice against searching further is ever emitted", () => {
+  const shapes = [
+    matplotlibShaped(),
+    response([], [item({ role: "support", path: "x.py", symbol: "thing", roleReason: "related context" })]),
+  ];
+  for (const shaped of shapes) {
+    const built = buildInspectFirst(shaped);
+    const text = renderInspectFirstText(built);
+    assert.ok(
+      !/grep|ripgrep|\brg\b|find\b|search/i.test(text),
+      `advice against further search leaked into the block: ${text}`,
+    );
+    if (built?.avoidFirst != null) {
+      // An avoid-hint may only name a target the evidence marks as a surface.
+      assert.match(built.avoidFirst, /surfaces and re-raises/);
+    }
+  }
+});
+
+test("an avoid-hint appears only when the lead is an evidenced failure surface", () => {
+  const plain = buildInspectFirst(response([], [
+    item({ role: "support", path: "x.py", symbol: "thing", roleReason: "related context" }),
+  ]));
+  assert.equal(plain?.avoidFirst, null, "no surface evidence means no avoid-hint");
 });

@@ -212,8 +212,20 @@ export function buildInspectFirst(
       confidence = "low";
     }
 
-    const avoidFirst =
-      "Broad repository grep/find before inspecting the targets above — start from these symbols first.";
+    // M154-D. This used to be a constant: every response, at every confidence,
+    // told the reader to avoid "broad repository grep/find" before inspecting the
+    // targets above. Capsule v2 selects bounded task-relevant evidence and never
+    // enumerates a repository, so it has no basis for that instruction — and it is
+    // most harmful exactly where it is least supported, on a low-confidence lead
+    // for a "does this already exist?" question, where not searching further is how
+    // an agent concludes something is missing and writes a second copy of it.
+    //
+    // What survives is the one avoid-hint the evidence actually supports: a lead
+    // that re-raises is where the failure surfaces, not where it is fixed. When
+    // nothing in the evidence says "do not start here", nothing is said.
+    const avoidFirst = winner.surface
+      ? `${formatTarget(likelyFirst)} is where the failure surfaces and re-raises — the fix usually lives further up the call path.`
+      : null;
 
     return { confidence, likelyFirst, related: related.slice(0, MAX_RELATED), avoidFirst };
   } catch {
@@ -231,7 +243,10 @@ export function renderInspectFirstText(inspect: InspectFirst | null): string {
   if (inspect === null) return "";
 
   const lines: string[] = [
-    `## VTRACE inspect-first (guidance, not enforcement; confidence: ${inspect.confidence})`,
+    // The parenthetical carries the coverage contract in the one place a reader
+    // cannot miss it, at no extra line cost: this is a bounded selection, so an
+    // absent symbol is unsearched, not absent.
+    `## VTRACE inspect-first (guidance from a bounded, non-exhaustive selection; confidence: ${inspect.confidence})`,
     "Likely first file:",
     `- ${formatTarget(inspect.likelyFirst)}`,
     `  Why: ${inspect.likelyFirst.why}`,

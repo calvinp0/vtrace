@@ -29,6 +29,7 @@ import { getIndexedSkeletonFileResult } from "../skeleton/getSkeleton";
 import {
   PRODUCT_CONTEXT_RESPONSE_VERSION,
   PRODUCT_CONTEXT_ROLES,
+  SELECTIVE_TASK_RETRIEVAL_COVERAGE,
   type ProductAccounting,
   type ProductContextContentMode,
   type ProductContextItem,
@@ -95,6 +96,7 @@ export function buildUnresolvedProductContext(input: {
   return {
     responseVersion: PRODUCT_CONTEXT_RESPONSE_VERSION,
     resolved: false,
+    coverage: SELECTIVE_TASK_RETRIEVAL_COVERAGE,
     task: input.task,
     taskHash: hash(input.task),
     intent: input.intent ?? "auto",
@@ -290,6 +292,7 @@ export async function assembleProductContext(
   return {
     responseVersion: PRODUCT_CONTEXT_RESPONSE_VERSION,
     resolved: product.actualMode !== "no_context" && product.pivots.length > 0,
+    coverage: SELECTIVE_TASK_RETRIEVAL_COVERAGE,
     task: input.task,
     taskHash: hash(input.task),
     intent: product.intent,

@@ -8243,6 +8243,15 @@ const PRODUCT_CONTEXT_RESPONSE_SCHEMA: McpSchemaProperty = {
   properties: {
     responseVersion: integerProperty("Product response contract version; M119 emits 2."),
     resolved: booleanProperty("Whether fresh, usable model-visible context was delivered."),
+    coverage: objectProperty(
+      "What this answer settles. Bounded task-ranked selection, so an omitted symbol or file is UNSEARCHED, not absent: this lane cannot prove absence, and `resolved: false` means retrieval found nothing to deliver, never that no implementation exists. Use exact path/symbol lookup when you need that proof, and ordinary text search when you need enumeration.",
+      {
+        mode: stringProperty("Always `selective_task_retrieval`."),
+        absenceClaim: stringProperty("Always `not_observed` — the weakest rung of the shared evidence scale (not_observed | bounded_absence | authoritative_absence)."),
+        enumerationComplete: booleanProperty("Always false. Completeness is a property of the exact lanes, not of ranked retrieval."),
+      },
+      ["mode", "absenceClaim", "enumerationComplete"],
+    ),
     resultState: stringProperty("Delivery-aware result: resolved, no_result, or delivery_failure."),
     retrievalFound: booleanProperty("Whether retrieval selected relevant evidence before budget delivery."),
     deliveryFailed: booleanProperty("True only when retrieval succeeded but no truthful representation fit."),
@@ -8285,7 +8294,7 @@ const PRODUCT_CONTEXT_RESPONSE_SCHEMA: McpSchemaProperty = {
     diagnostics: { type: "object", description: "Limitations, caps, duplicate-suppression counts, and fallback diagnostics.", additionalProperties: true },
   },
   required: [
-    "responseVersion", "resolved", "task", "taskHash", "intent", "capsuleMode",
+    "responseVersion", "resolved", "coverage", "task", "taskHash", "intent", "capsuleMode",
     "repository", "freshness", "accounting", "timing", "roleCounts", "items",
     "modelVisibleContext", "diagnostics",
   ],
@@ -8552,7 +8561,7 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
     toolId: McpToolId.RunPipeline,
     displayName: "Run Pipeline",
     description:
-      "Default Vtrace repo-context pipeline. get_code_context is the agent-friendly alias for this tool.",
+      "Default Vtrace repo-context pipeline. get_code_context is the agent-friendly alias for this tool and carries the same selective-retrieval contract: bounded task-relevant evidence, never an exhaustive repository enumeration.",
     inputSchema: objectSchema(
         "Pipeline orchestration request.",
         {
@@ -9498,7 +9507,7 @@ const GET_CODE_CONTEXT_TOOL_DEFINITION = Object.freeze({
     toolId: McpToolId.GetCodeContext,
     displayName: "Get Code Context",
     description:
-      "Vtrace default first-pass repo-context tool for broad coding, debugging, refactor, and code-understanding tasks. max_tokens bounds model-visible context; lower-priority support is compacted before answer-bearing evidence. resultState=no_result means retrieval missed, while delivery_failure means relevant evidence was found but could not fit. It is fail-closed on stale or missing indexes by default. Pass auto_refresh=if_stale only to explicitly refresh the selected repo_root worktree.",
+      "Vtrace default first-pass repo-context tool for broad coding, debugging, refactor, and code-understanding tasks. It returns BOUNDED TASK-RELEVANT evidence ranked for the request — it is selective, not an enumeration of the repository, so anything it does not return is unsearched rather than absent (see `coverage`). Do not read a miss as proof that something does not exist: for that, look the exact path or symbol up, or run ordinary text search. It answers about ONE indexed worktree at its current source state, never about another branch or revision; use Git for cross-revision questions. max_tokens bounds model-visible context; lower-priority support is compacted before answer-bearing evidence. resultState=no_result means retrieval missed, while delivery_failure means relevant evidence was found but could not fit. It is fail-closed on stale or missing indexes by default. Pass auto_refresh=if_stale only to explicitly refresh the selected repo_root worktree.",
     inputSchema: objectSchema(
       "Code-context request with optional explicit worktree selection and opt-in refresh.",
       {

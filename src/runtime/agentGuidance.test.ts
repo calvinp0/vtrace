@@ -21,7 +21,11 @@ test("writeVtraceAgentGuidanceBlock creates AGENTS.md when missing", async () =>
     assert.equal(agents, VTRACE_AGENT_GUIDANCE_BLOCK);
     assert.match(agents, /get_code_context/);
     assert.match(agents, /broad repo-understanding, debugging, refactor, and code-context tasks/);
-    assert.match(agents, /before manual grep or opening many files/);
+    // M154-D replaced "use get_code_context before manual grep" with the
+    // coverage truth. Advising against a search vtrace cannot itself perform is
+    // how a bounded miss becomes a duplicate implementation.
+    assert.match(agents, /unsearched, not absent/);
+    assert.ok(!/before manual grep/.test(agents));
     assert.match(agents, /If `get_code_context` reports `stale_index`, `missing_index`, or `repo_not_ready`, call `index_repo` and then retry `get_code_context`\./);
     // M132: `search_symbols` is a hidden legacy tool and must not be recommended.
     assert.doesNotMatch(agents, /search_symbols/);
