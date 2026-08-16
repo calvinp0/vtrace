@@ -1,0 +1,1812 @@
+[
+  {
+    "instance_id": "astropy__astropy-14365",
+    "repo": "astropy/astropy",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/astropy__astropy-14365",
+    "task": "ascii.qdp Table format assumes QDP commands are upper case — ascii.qdp assumes that commands in a QDP file are upper case, for example, for errors they must be \"READ SERR 1 2\" whereas QDP itself is not case sensitive and case use \"read serr 1 2\".\nErrors: ValueError\nTraceback: ValueError: Unrecognized QDP line: read serr 1 2",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "astropy/io/ascii/qdp.py"
+    ],
+    "expected_symbols": [
+      "_get_tables_from_qdp_file",
+      "_line_type"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "astropy__astropy-14369",
+    "repo": "astropy/astropy",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/astropy__astropy-14369",
+    "task": "Incorrect units read from MRT (CDS format) files with astropy.table — When reading MRT files (formatted according to the CDS standard which is also the format recommended by AAS/ApJ) with `format='ascii.cds'`, astropy.table incorrectly parses composite units.",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "astropy/units/format/cds.py",
+      "astropy/units/format/cds_parsetab.py"
+    ],
+    "expected_symbols": [
+      "_lr_action_items",
+      "_lr_goto_items",
+      "_lr_signature",
+      "_make_parser",
+      "p_division_of_units",
+      "p_product_of_units"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "astropy__astropy-14539",
+    "repo": "astropy/astropy",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/astropy__astropy-14539",
+    "task": "`io.fits.FITSDiff` may sometimes report differences between identical files — In some scenarios, `io.fits.FITSDiff` may report differences between identical files, even when comparing the same file to itself.",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "astropy/io/fits/diff.py"
+    ],
+    "expected_symbols": [
+      "_diff"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "astropy__astropy-14598",
+    "repo": "astropy/astropy",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/astropy__astropy-14598",
+    "task": "Inconsistency in double single-quote ('') management in FITS Card — The management of single-quotes in FITS cards seem correct, except *sometimes* when dealing with null strings, i.e. double single quotes (`''`), which sometimes are transformed into single single quotes (`'`).",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "astropy/io/fits/card.py"
+    ],
+    "expected_symbols": [
+      "Card",
+      "_split"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "astropy__astropy-7166",
+    "repo": "astropy/astropy",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/astropy__astropy-7166",
+    "task": "InheritDocstrings metaclass doesn't work for properties — Inside the InheritDocstrings metaclass it uses `inspect.isfunction` which returns `False` for properties.",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "astropy/utils/misc.py"
+    ],
+    "expected_symbols": [
+      "is_public_member"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-10880",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-10880",
+    "task": "Query syntax error with condition and distinct combination — A Count annotation containing both a Case condition and a distinct=True param produces a query error on Django 2.2 (whatever the db backend).",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/db/models/aggregates.py"
+    ],
+    "expected_symbols": [
+      "as_sql",
+      "get_group_by_cols"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-10973",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-10973",
+    "task": "Use subprocess.run and PGPASSWORD for client in postgres backend — subprocess.run was added in python 3.5 (which is the minimum version since Django 2.1).",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/db/backends/postgresql/client.py"
+    ],
+    "expected_symbols": [
+      "DatabaseClient",
+      "_escape_pgpass",
+      "runshell",
+      "runshell_db"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-11095",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-11095",
+    "task": "add ModelAdmin.get_inlines() hook to allow set inlines based on the request or model instance.",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/contrib/admin/options.py"
+    ],
+    "expected_symbols": [
+      "__str__",
+      "get_fieldsets",
+      "get_inline_instances",
+      "get_inlines",
+      "get_ordering"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-11133",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-11133",
+    "task": "HttpResponse doesn't handle memoryview objects — I am trying to write a BinaryField retrieved from the database into a HttpResponse.",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/http/response.py"
+    ],
+    "expected_symbols": [
+      "make_bytes"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-11206",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-11206",
+    "task": "utils.numberformat.format renders small decimals in exponential notation. — When using utils.number_format with decimal_pos, extremely small numbers get displayed using exponential notation.",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/utils/numberformat.py"
+    ],
+    "expected_symbols": [
+      "format"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-11490",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-11490",
+    "task": "Composed queries cannot change the list of columns with values()/values_list(). — Composed queries cannot change the list of columns when values()/values_list() is evaluated multiple times, e.g.",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/db/models/sql/compiler.py"
+    ],
+    "expected_symbols": [
+      "get_combinator_sql"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-11728",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-11728",
+    "task": "simplify_regexp() doesn't replace trailing groups. — replace_named_groups() fails to replace the final named group if the urlpattern passed in is missing a trailing '/'.",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/contrib/admindocs/utils.py"
+    ],
+    "expected_symbols": [
+      "replace_named_groups",
+      "replace_unnamed_groups"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-11740",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-11740",
+    "task": "Change uuid field to FK does not create dependency — (last modified by Simon Charette)\nErrors: ValueError",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/db/migrations/autodetector.py"
+    ],
+    "expected_symbols": [
+      "generate_altered_fields"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-11749",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-11749",
+    "task": "call_command fails when argument of required mutually exclusive group is passed in kwargs. — django.core.management.base.CommandError: Error: one of the arguments --shop-id --shop is required\nErrors: CommandError",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/core/management/__init__.py"
+    ],
+    "expected_symbols": [
+      "get_actions"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-11815",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-11815",
+    "task": "Migrations uses value of enum object instead of its name. — (last modified by oasl)\nErrors: ValueError\nTraceback: ValueError: 'Good' is not a valid Status",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/db/migrations/serializer.py"
+    ],
+    "expected_symbols": [
+      "EnumSerializer",
+      "EnumSerializer.serialize",
+      "FloatSerializer",
+      "serialize"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-11820",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-11820",
+    "task": "models.E015 is raised when Meta.ordering contains \"pk\" of a related field. — models.E015 is raised when Meta.ordering contains __pk of a related field, e.g.:\nFailing tests: test_app",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/db/models/base.py"
+    ],
+    "expected_symbols": [
+      "_check_ordering"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-12050",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-12050",
+    "task": "Query.resolve_lookup_value coerces value of type list to tuple — Changes introduced in #30687 cause an input value list to be coerced to tuple breaking exact value queries.",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/db/models/sql/query.py"
+    ],
+    "expected_symbols": [
+      "resolve_lookup_value",
+      "solve_lookup_type"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-12273",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-12273",
+    "task": "Resetting primary key for a child model doesn't work. — In the attached example code setting the primary key to None does not work (so that the existing object is overwritten on save()).\nFailing tests: test_f_true",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/db/models/base.py"
+    ],
+    "expected_symbols": [
+      "_get_pk_val",
+      "_set_pk_val"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-12276",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-12276",
+    "task": "FileInput shouldn't display required attribute when initial data exists. — (last modified by thenewguy)",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/forms/widgets.py"
+    ],
+    "expected_symbols": [
+      "use_required_attribute",
+      "value_from_datadict",
+      "value_omitted_from_data"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-12325",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-12325",
+    "task": "pk setup for MTI to parent get confused by multiple OneToOne references. — produces django.core.exceptions.ImproperlyConfigured: Add parent_link=True to appname.Picking.origin.",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/db/models/base.py",
+      "django/db/models/options.py"
+    ],
+    "expected_symbols": [
+      "__new__",
+      "_prepare"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-12774",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-12774",
+    "task": "Allow QuerySet.in_bulk() for fields with total UniqueConstraints. — If a field is unique by UniqueConstraint instead of unique=True running in_bulk() on that field will fail.\nErrors: ValueError\nTraceback: File \"/usr/local/lib/python3.8/code.py\", line 90, in runcode | File \"<console>\", line 1, in <module> | File \"/app/venv/lib/python3.8/site-packages/django/db/models/manager.py\", line 82, in manager_method | File \"/app/venv/lib/python3.8/site-packages/django/db/models/query.py\", line 680, in in_bulk | ValueError: in_bulk()'s field_name must be a unique field but 'slug' isn't.",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/db/models/query.py"
+    ],
+    "expected_symbols": [
+      "in_bulk"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-12858",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-12858",
+    "task": "models.E015 is raised when ordering uses lookups that are not transforms. — SystemCheckError: System check identified some issues:\nErrors: SystemCheckError\nTraceback: SystemCheckError: System check identified some issues:",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/db/models/base.py"
+    ],
+    "expected_symbols": [
+      "_check_ordering"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-13012",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-13012",
+    "task": "Constant expressions of an ExpressionWrapper object are incorrectly placed at the GROUP BY clause — I have a function that expects an arbitrary Query expression and constructs a query on a Postgres db\nErrors: ProgrammingError",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/db/models/expressions.py"
+    ],
+    "expected_symbols": [
+      "as_sql",
+      "get_group_by_cols",
+      "get_source_expressions",
+      "set_source_expressions"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-13112",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-13112",
+    "task": "makemigrations crashes for ForeignKey with mixed-case app name. — When i run \"python3 manage.py migrate\" on Django 3.1b1 shows me that error (Please, note that the code works well in 3.0)\nErrors: ValueError\nTraceback: ValueError: The field DJ_RegLogin.Content.category was declared with a lazy reference to 'dj_reglogin.category', but app 'dj_reglogin' isn't installed.",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/db/models/fields/related.py"
+    ],
+    "expected_symbols": [
+      "deconstruct"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-13195",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-13195",
+    "task": "HttpResponse.delete_cookie() should preserve cookie's samesite. — We noticed we were getting this warning message from Firefox:",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/contrib/messages/storage/cookie.py",
+      "django/contrib/sessions/middleware.py",
+      "django/http/response.py"
+    ],
+    "expected_symbols": [
+      "_store",
+      "_update_cookie",
+      "delete_cookie",
+      "process_response",
+      "set_signed_cookie"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-13363",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-13363",
+    "task": "Add support for tzinfo parameter to TruncDate() and TruncTime(). — (last modified by Joe Jackson)",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/db/models/functions/datetime.py"
+    ],
+    "expected_symbols": [
+      "TruncDate",
+      "TruncDate.as_sql",
+      "TruncTime",
+      "TruncTime.as_sql",
+      "as_sql"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-13512",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-13512",
+    "task": "Admin doesn't display properly unicode chars in JSONFields. — (last modified by ZhaoQi99)",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/contrib/admin/utils.py",
+      "django/forms/fields.py"
+    ],
+    "expected_symbols": [
+      "bound_data",
+      "display_for_field",
+      "has_changed",
+      "prepare_value"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-13513",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-13513",
+    "task": "debug error view doesn't respect exc.__suppress_context__ (PEP 415) — Consider the following view that raises an exception:\nErrors: RuntimeError | ValueError",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/views/debug.py"
+    ],
+    "expected_symbols": [
+      "_get_explicit_or_implicit_cause",
+      "_get_lines_from_file",
+      "explicit_or_implicit_cause",
+      "get_exception_traceback_frames",
+      "get_traceback_frames",
+      "technical_404_response"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-13551",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-13551",
+    "task": "Changing user's email could invalidate password reset tokens — Have account with email address foo@…",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/contrib/auth/tokens.py"
+    ],
+    "expected_symbols": [
+      "_make_hash_value",
+      "_make_token_with_timestamp",
+      "_num_seconds"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-13590",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-13590",
+    "task": "Upgrading 2.2>3.0 causes named tuples used as arguments to __range to error. — I noticed this while upgrading a project from 2.2 to 3.0.\nErrors: TypeError",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/db/models/sql/query.py"
+    ],
+    "expected_symbols": [
+      "resolve_lookup_value",
+      "solve_lookup_type"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-13658",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-13658",
+    "task": "ManagementUtility instantiates CommandParser without passing already-computed prog argument — ManagementUtility goes to the trouble to parse the program name from the argv it's passed rather than from sys.argv:",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/core/management/__init__.py"
+    ],
+    "expected_symbols": [
+      "execute"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-13810",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-13810",
+    "task": "MiddlewareNotUsed leaves undesired side effects when loading middleware in ASGI context — I experienced strange issues when working with ASGI , django-debug-toolbar and my own small middleware.\nErrors: TypeError",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/core/handlers/base.py"
+    ],
+    "expected_symbols": [
+      "load_middleware"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-13820",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-13820",
+    "task": "Permit migrations in non-namespace packages that don't have __file__ — This feature request, for which I will post a PR shortly, aims to improve the specificity of the migration loader's check for and rejection of PEP-420 namespace packages.",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/db/migrations/loader.py"
+    ],
+    "expected_symbols": [
+      "load_disk"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-14608",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-14608",
+    "task": "Add `nonform` CSS class for non form errors in FormSets — (last modified by Ties Jan Hefting)",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/forms/formsets.py"
+    ],
+    "expected_symbols": [
+      "clean",
+      "full_clean"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-14792",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-14792",
+    "task": "Reverse time zone conversion in Trunc()/Extract() database functions. — When using a time zone of \"Etc/GMT-10\" (or similar) for a Trunc class tzinfo, it appears there's a different behavior as of Django 3.2 in the resulting database query.",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/utils/timezone.py"
+    ],
+    "expected_symbols": [
+      "_get_timezone_name",
+      "get_current_timezone_name"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-15037",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-15037",
+    "task": "Foreign key to a specific field is not handled in inspectdb — (last modified by Tim Graham)",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/core/management/commands/inspectdb.py"
+    ],
+    "expected_symbols": [
+      "table2model"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-15503",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-15503",
+    "task": "has_key, has_keys, and has_any_keys JSONField() lookups don't handle numeric keys on SQLite, MySQL, and Oracle. — (last modified by TheTerrasque)\nErrors: AssertionError\nFailing tests: test_json_field_has_key\nTraceback: File \"H:\\Files\\Projects\\Electaco\\Webservice\\elecserve\\markers\\tests.py\", line 16, in test_json_field_has_key | AssertionError: 0 != 1 : Should have found 1 entry with key '1111'",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/db/models/fields/json.py"
+    ],
+    "expected_symbols": [
+      "CaseInsensitiveMixin",
+      "HasAnyKeys",
+      "HasKeyLookup",
+      "HasKeyLookup.as_sql",
+      "HasKeyLookup.compile_json_path_final_key",
+      "HasKeyOrArrayIndex",
+      "HasKeyOrArrayIndex.compile_json_path_final_key",
+      "KeyTransformIsNull",
+      "KeyTransformIsNull.as_oracle",
+      "__init__",
+      "as_oracle",
+      "as_sql",
+      "as_sqlite",
+      "compile_json_path_final_key"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-15572",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-15572",
+    "task": "Django 3.2.4+ autoreload breaks on empty string in TEMPLATES DIRS. — Django versions > 3.2.3 changes the way template dirs are handled, they are now normalized using pathlib.Path.\nFailing tests: django/template/autoreload.py::template_changed",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/template/autoreload.py"
+    ],
+    "expected_symbols": [
+      "get_template_directories"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-15695",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-15695",
+    "task": "RenameIndex() crashes when unnamed index is moving backward and forward. — RenameIndex() should restore the old auto-generated name when an unnamed index for unique_together is moving backward.\nErrors: ProgrammingError\nFailing tests: test_operations",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/db/migrations/operations/models.py"
+    ],
+    "expected_symbols": [
+      "database_forwards"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-15731",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-15731",
+    "task": "inspect.signature() returns incorrect signature on manager methods. — (last modified by Shiva Kumar)",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/db/models/manager.py"
+    ],
+    "expected_symbols": [
+      "_get_queryset_methods",
+      "check",
+      "create_method",
+      "manager_method"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-16256",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-16256",
+    "task": "acreate(), aget_or_create(), and aupdate_or_create() doesn't work as intended on related managers. — Async-compatible interface was added to QuerySet in 58b27e0dbb3d31ca1438790870b2b51ecdb10500.\nErrors: FieldError",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/contrib/contenttypes/fields.py",
+      "django/db/models/fields/related_descriptors.py"
+    ],
+    "expected_symbols": [
+      "Child",
+      "_get_target_ids",
+      "acreate",
+      "aget_or_create",
+      "aupdate_or_create",
+      "create",
+      "get_or_create",
+      "update_or_create"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-16263",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-16263",
+    "task": "Strip unused annotations from count queries — The query below produces a SQL statement that includes the Count('chapters'), despite not not being used in any filter operations.",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/db/models/expressions.py",
+      "django/db/models/query_utils.py",
+      "django/db/models/sql/query.py",
+      "django/db/models/sql/where.py"
+    ],
+    "expected_symbols": [
+      "_add_q",
+      "_contains_aggregate",
+      "build_filter",
+      "check_rel_lookup_compatibility",
+      "copy",
+      "get_aggregation",
+      "get_refs",
+      "refs_expression",
+      "relabeled_clone",
+      "replace_expressions",
+      "resolve_expression",
+      "resolve_lookup_value",
+      "solve_lookup_type"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-16333",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-16333",
+    "task": "UserCreationForm should save data from ManyToMany form fields — When using contrib.auth.forms.UserCreationForm with a custom User model which has ManyToManyField fields, the data in all related form fields (e.g. a ModelMultipleChoiceField) is not saved.",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/contrib/auth/forms.py"
+    ],
+    "expected_symbols": [
+      "save"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-16569",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-16569",
+    "task": "Formsets' add_fields() method fails in some circumstances if the argument index is None.\nErrors: TypeError",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/forms/formsets.py"
+    ],
+    "expected_symbols": [
+      "add_fields"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-16667",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-16667",
+    "task": "SelectDateWidget can crash with OverflowError. — Given a relatively common view like this:\nErrors: OverflowError\nTraceback: File \"[...]/site-packages/django/forms/widgets.py\", line 1160, in value_from_datadict | OverflowError: signed integer is greater than maximum | File \"<stdin>\", line 1, in <module> | OverflowError: Python int too large to convert to C long",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/forms/widgets.py"
+    ],
+    "expected_symbols": [
+      "value_from_datadict"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-16819",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-16819",
+    "task": "Reduce Add/RemoveIndex migration operations. — We should reduce AddIndex/RemoveIndex operations when optimizing migration operations.",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/db/migrations/operations/models.py"
+    ],
+    "expected_symbols": [
+      "RemoveIndex",
+      "describe",
+      "migration_name_fragment",
+      "reduce"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-16877",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-16877",
+    "task": "New template filter `escapeseq` — Following #34574, and after some conversations within the security team, it seems appropriate to provide a new template filter escapeseq which would be to escape what safeseq is to safe.",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/template/defaultfilters.py"
+    ],
+    "expected_symbols": [
+      "escape_filter",
+      "escapeseq",
+      "force_escape"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-16938",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-16938",
+    "task": "Serialization of m2m relation fails with custom manager using select_related — Serialization of many to many relation with custom manager using select_related cause FieldError: Field cannot be both deferred and traversed using select_related at the same time.\nErrors: FieldError\nTraceback: File \"/opt/venv/lib/python3.11/site-packages/django/core/serializers/__init__.py\", line 134, in serialize | File \"/opt/venv/lib/python3.11/site-packages/django/core/serializers/base.py\", line 167, in serialize | File \"/opt/venv/lib/python3.11/site-packages/django/core/serializers/python.py\", line 88, in handle_m2m_field | File \"/opt/venv/lib/python3.11/site-packages/django/core/serializers/python.py\", line 88, in <listcomp> | File \"/opt/venv/lib/python3.11/site-packages/django/db/models/sql/compiler.py\", line 73, in setup_query | File \"/opt/venv/lib/python3.11/site-packages/django/db/models/sql/compiler.py\", line 279, in get_select | File \"/opt/venv/lib/python3.11/site-packages/django/db/models/sql/compiler.py\", line 1209, in get_related_selections | File \"/opt/venv/lib/python3.11/site-packages/django/db/models/query_utils.py\", line 347, in select_related_descend",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/core/serializers/python.py",
+      "django/core/serializers/xml_serializer.py"
+    ],
+    "expected_symbols": [
+      "handle_m2m",
+      "m2m_value",
+      "queryset_iterator"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "django__django-17084",
+    "repo": "django/django",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-17084",
+    "task": "Cannot use aggregate over window functions since 4.2 — (last modified by younes-chaoui)\nErrors: GroupingError",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "django/db/models/sql/query.py"
+    ],
+    "expected_symbols": [
+      "get_aggregation"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "matplotlib__matplotlib-22719",
+    "repo": "matplotlib/matplotlib",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/matplotlib__matplotlib-22719",
+    "task": "[Bug]: Confusing deprecation warning when empty data passed to axis with category units — ### Bug summary\nErrors: MatplotlibDeprecationWarning | ConversionError\nTraceback: MatplotlibDeprecationWarning: Support for passing numbers through unit converters is deprecated since 3.5 and support will be removed two minor releases later;… | ConversionError: Failed to convert value(s) to axis units: array([], dtype=float64) | ConversionError: Failed to convert value(s) to axis units: []",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "lib/matplotlib/category.py"
+    ],
+    "expected_symbols": [
+      "convert",
+      "update"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "matplotlib__matplotlib-24627",
+    "repo": "matplotlib/matplotlib",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/matplotlib__matplotlib-24627",
+    "task": "cla(), clf() should unset the `.axes` and `.figure` attributes of deparented artists — mpl2.0b3: Removing an artist from its axes unsets its `.axes` attribute, but clearing the axes does not do so.",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "lib/matplotlib/axes/_base.py"
+    ],
+    "expected_symbols": [
+      "__clear"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "matplotlib__matplotlib-24870",
+    "repo": "matplotlib/matplotlib",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/matplotlib__matplotlib-24870",
+    "task": "[ENH]: Auto-detect bool arrays passed to contour()? — I find myself fairly regularly calling",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "lib/matplotlib/contour.py",
+      "lib/matplotlib/tri/_tricontour.py"
+    ],
+    "expected_symbols": [
+      "_autolev",
+      "_check_xyz",
+      "_contour_args",
+      "_process_args",
+      "_process_contour_level_args"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "matplotlib__matplotlib-24970",
+    "repo": "matplotlib/matplotlib",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/matplotlib__matplotlib-24970",
+    "task": "[Bug]: NumPy 1.24 deprecation warnings — ### Bug summary\nErrors: DeprecationWarning",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "lib/matplotlib/colors.py"
+    ],
+    "expected_symbols": [
+      "__call__"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "matplotlib__matplotlib-25332",
+    "repo": "matplotlib/matplotlib",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/matplotlib__matplotlib-25332",
+    "task": "[Bug]: Unable to pickle figure with aligned labels — ### Bug summary\nErrors: TypeError\nTraceback: TypeError: cannot pickle 'weakref.ReferenceType' object",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "lib/matplotlib/cbook.py"
+    ],
+    "expected_symbols": [
+      "Grouper",
+      "Grouper.__contains__",
+      "Grouper.__getstate__",
+      "Grouper.__init__",
+      "Grouper.__setstate__",
+      "__contains__",
+      "__getstate__",
+      "__init__",
+      "__setstate__"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "matplotlib__matplotlib-25960",
+    "repo": "matplotlib/matplotlib",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/matplotlib__matplotlib-25960",
+    "task": "[Bug]: wspace and hspace in subfigures not working — ### Bug summary",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "lib/matplotlib/figure.py"
+    ],
+    "expected_symbols": [
+      "subfigures"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "matplotlib__matplotlib-26466",
+    "repo": "matplotlib/matplotlib",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/matplotlib__matplotlib-26466",
+    "task": "Updating an array passed as the xy parameter to annotate updates the anottation — ### Bug report",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "lib/matplotlib/text.py"
+    ],
+    "expected_symbols": [
+      "_AnnotationBase",
+      "__call__",
+      "__init__",
+      "_get_scale",
+      "get_unit",
+      "set_unit"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "mwaskom__seaborn-3187",
+    "repo": "mwaskom/seaborn",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/mwaskom__seaborn-3187",
+    "task": "Wrong legend values of large ranges — As of 0.12.1, legends describing large numbers that were created using `ScalarFormatter` with an offset are formatted without their multiplicative offset value.",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "seaborn/_core/scales.py",
+      "seaborn/utils.py"
+    ],
+    "expected_symbols": [
+      "get_view_interval",
+      "spacer"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "pallets__flask-5014",
+    "repo": "pallets/flask",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/pallets__flask-5014",
+    "task": "Require a non-empty name for Blueprints — Things do not work correctly if a Blueprint is given an empty name (e.g. #4944).\nErrors: ValueError",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "src/flask/blueprints.py"
+    ],
+    "expected_symbols": [
+      "__init__"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "psf__requests-1142",
+    "repo": "psf/requests",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/psf__requests-1142",
+    "task": "requests.get is ALWAYS sending content length — It seems like that request.get always adds 'content-length' header to the request.",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "requests/models.py"
+    ],
+    "expected_symbols": [
+      "prepare_auth",
+      "prepare_body",
+      "prepare_content_length"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "psf__requests-1724",
+    "repo": "psf/requests",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/psf__requests-1724",
+    "task": "Unicode method names cause UnicodeDecodeError for some requests in Python 2.7.2 — The following example works fine:\nErrors: UnicodeDecodeError\nFailing tests: test_requests\nTraceback: File \"/Users/hwkns/test_requests.py\", line 6, in <module> | File \"/Library/Python/2.7/site-packages/requests/api.py\", line 44, in request | File \"/Library/Python/2.7/site-packages/requests/sessions.py\", line 335, in request | File \"/Library/Python/2.7/site-packages/requests/sessions.py\", line 438, in send | File \"/System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/httplib.py\", line 989, in _send_request | File \"/System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/httplib.py\", line 951, in endheaders | File \"/System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/httplib.py\", line 809, in _send_output | UnicodeDecodeError: 'ascii' codec can't decode byte 0xcf in position 140: ordinal not in range(128)",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "requests/sessions.py"
+    ],
+    "expected_symbols": [
+      "request"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "psf__requests-1921",
+    "repo": "psf/requests",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/psf__requests-1921",
+    "task": "Removing a default header of a session — [The docs](http://docs.python-requests.org/en/latest/user/advanced/#session-objects) say that you can prevent sending a session header by setting the headers value to None in the method's arguments.",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "requests/sessions.py"
+    ],
+    "expected_symbols": [
+      "merge_setting"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "psf__requests-5414",
+    "repo": "psf/requests",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/psf__requests-5414",
+    "task": "Getting http://.example.com raises UnicodeError — Attempting to get e.g. `http://.example.com` results in a `UnicodeError`. It seems like the intention so far has been to raise `InvalidUrl` instead (see e.g. [this line](https://github.com/psf/requests/blob/ca6f9af5dba09591007b15a7368bc0f006b7cc50/requests/models.py#L401)).\nErrors: UnicodeError",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "requests/models.py"
+    ],
+    "expected_symbols": [
+      "prepare_url"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "pydata__xarray-2905",
+    "repo": "pydata/xarray",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/pydata__xarray-2905",
+    "task": "Variable.__setitem__ coercing types on objects with a values property — #### Minimal example",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "xarray/core/variable.py"
+    ],
+    "expected_symbols": [
+      "as_compatible_data"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "pydata__xarray-3677",
+    "repo": "pydata/xarray",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/pydata__xarray-3677",
+    "task": "Merging dataArray into dataset using dataset method fails — While it's possible to merge a dataset and a dataarray object using the top-level `merge()` function, if you try the same thing with the `ds.merge()` method it fails.\nErrors: AttributeError\nTraceback: File \"mwe.py\", line 6, in <module> | File \"/home/tegn500/Documents/Work/Code/xarray/xarray/core/dataset.py\", line 3591, in merge | File \"/home/tegn500/Documents/Work/Code/xarray/xarray/core/merge.py\", line 835, in dataset_merge_method | File \"/home/tegn500/Documents/Work/Code/xarray/xarray/core/merge.py\", line 548, in merge_core | File \"/home/tegn500/Documents/Work/Code/xarray/xarray/core/merge.py\", line 394, in coerce_pandas_values | File \"/home/tegn500/Documents/Work/Code/xarray/xarray/core/common.py\", line 233, in __getattr__ | AttributeError: 'DataArray' object has no attribute 'items'",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "xarray/core/dataset.py"
+    ],
+    "expected_symbols": [
+      "merge"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "pydata__xarray-4695",
+    "repo": "pydata/xarray",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/pydata__xarray-4695",
+    "task": "Naming a dimension \"method\" throws error when calling \".loc\" — #### Code Sample, a copy-pastable example if possible\nErrors: ValueError\nTraceback: ValueError: Invalid fill method. Expecting pad (ffill), backfill (bfill) or nearest.",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "xarray/core/dataarray.py"
+    ],
+    "expected_symbols": [
+      "__getitem__",
+      "__setitem__"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "pydata__xarray-6599",
+    "repo": "pydata/xarray",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/pydata__xarray-6599",
+    "task": "`polyval` with timedelta64 coordinates produces wrong results — ### What happened?",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "xarray/core/computation.py"
+    ],
+    "expected_symbols": [
+      "_ensure_numeric",
+      "to_floatable"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "pydata__xarray-6938",
+    "repo": "pydata/xarray",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/pydata__xarray-6938",
+    "task": "`.swap_dims()` can modify original object — ### What happened?",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "xarray/core/dataset.py",
+      "xarray/core/variable.py"
+    ],
+    "expected_symbols": [
+      "_data_equals",
+      "_inplace_binary_op",
+      "equals",
+      "get_level_variable",
+      "level_names",
+      "name",
+      "swap_dims",
+      "to_base_variable",
+      "to_index",
+      "to_index_variable",
+      "values"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "pydata__xarray-6992",
+    "repo": "pydata/xarray",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/pydata__xarray-6992",
+    "task": "index refactor: more `_coord_names` than `_variables` on Dataset — ### What happened?\nErrors: ValueError\nTraceback: ValueError: __len__() should return >= 0",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "xarray/core/dataset.py",
+      "xarray/core/indexes.py"
+    ],
+    "expected_symbols": [
+      "drop_or_convert",
+      "keep_levels",
+      "reorder_levels",
+      "reset_index",
+      "set_index"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "pylint-dev__pylint-4551",
+    "repo": "pylint-dev/pylint",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/pylint-dev__pylint-4551",
+    "task": "Use Python type hints for UML generation — It seems that pyreverse does not read python type hints (as defined by [PEP 484](https://www.python.org/dev/peps/pep-0484/)), and this does not help when you use `None` as a default value :",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "pylint/pyreverse/diagrams.py",
+      "pylint/pyreverse/inspector.py",
+      "pylint/pyreverse/utils.py",
+      "pylint/pyreverse/writer.py"
+    ],
+    "expected_symbols": [
+      "class_names",
+      "get_annotation",
+      "get_annotation_label",
+      "get_values",
+      "handle_assignattr_type",
+      "infer_node",
+      "visit",
+      "visit_assignname",
+      "visit_import"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "pylint-dev__pylint-8898",
+    "repo": "pylint-dev/pylint",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/pylint-dev__pylint-8898",
+    "task": "bad-names-rgxs mangles regular expressions with commas — ### Bug description\nTraceback: File \"/home/lihu/.venv/bin/pylint\", line 8, in <module> | File \"/home/lihu/.venv/lib/python3.10/site-packages/pylint/__init__.py\", line 25, in run_pylint | File \"/home/lihu/.venv/lib/python3.10/site-packages/pylint/lint/run.py\", line 161, in __init__ | File \"/home/lihu/.venv/lib/python3.10/site-packages/pylint/config/config_initialization.py\", line 57, in _config_initialization | File \"/usr/lib/python3.10/sre_compile.py\", line 764, in compile | File \"/usr/lib/python3.10/sre_parse.py\", line 950, in parse | File \"/usr/lib/python3.10/sre_parse.py\", line 443, in _parse_sub | File \"/usr/lib/python3.10/sre_parse.py\", line 838, in _parse",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "pylint/config/argument.py",
+      "pylint/utils/__init__.py",
+      "pylint/utils/utils.py"
+    ],
+    "expected_symbols": [
+      "_check_csv",
+      "_check_regexp_csv",
+      "_comment",
+      "_regex_transformer",
+      "_regexp_csv_transfomer"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "pytest-dev__pytest-10051",
+    "repo": "pytest-dev/pytest",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/pytest-dev__pytest-10051",
+    "task": "caplog.get_records and caplog.clear conflict — `caplog.get_records()` gets decoupled from actual caplog records when `caplog.clear()` is called.",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "src/_pytest/logging.py"
+    ],
+    "expected_symbols": [
+      "clear",
+      "handleError",
+      "messages",
+      "reset",
+      "set_level"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "pytest-dev__pytest-5262",
+    "repo": "pytest-dev/pytest",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/pytest-dev__pytest-5262",
+    "task": "_pytest.capture.EncodedFile mode should not include `b` (binary) — Thanks for submitting an issue!\nErrors: TypeError\nFailing tests: test_foo",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "src/_pytest/capture.py"
+    ],
+    "expected_symbols": [
+      "__getattr__",
+      "mode",
+      "name"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "pytest-dev__pytest-6197",
+    "repo": "pytest-dev/pytest",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/pytest-dev__pytest-6197",
+    "task": "Regression in 5.2.3: pytest tries to collect random __init__.py files — This was caught by our build server this morning.\nErrors: AssertionError | InvocationError\nFailing tests: test_foo",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "src/_pytest/python.py"
+    ],
+    "expected_symbols": [
+      "Module",
+      "Module.__init__",
+      "Module._getobj",
+      "PyobjMixin",
+      "PyobjMixin._getobj",
+      "PyobjMixin._mount_obj_if_needed",
+      "PyobjMixin.obj",
+      "__init__",
+      "_genfunctions",
+      "_getobj",
+      "_mount_obj_if_needed",
+      "collect",
+      "isinitpath",
+      "obj"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "pytest-dev__pytest-7432",
+    "repo": "pytest-dev/pytest",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/pytest-dev__pytest-7432",
+    "task": "skipping: --runxfail breaks pytest.mark.skip location reporting — pytest versions: 5.4.x, current master\nFailing tests: test_skip_location | test_it",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "src/_pytest/skipping.py"
+    ],
+    "expected_symbols": [
+      "pytest_runtest_makereport"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "scikit-learn__scikit-learn-10844",
+    "repo": "scikit-learn/scikit-learn",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/scikit-learn__scikit-learn-10844",
+    "task": "fowlkes_mallows_score returns RuntimeWarning when variables get too big — If your issue is a usage question, submit it here instead:\nErrors: RuntimeWarning",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "sklearn/metrics/cluster/supervised.py"
+    ],
+    "expected_symbols": [
+      "entropy",
+      "fowlkes_mallows_score"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "scikit-learn__scikit-learn-11578",
+    "repo": "scikit-learn/scikit-learn",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/scikit-learn__scikit-learn-11578",
+    "task": "For probabilistic scorers, LogisticRegressionCV(multi_class='multinomial') uses OvR to calculate scores — For scorers such as `neg_log_loss` that use `.predict_proba()` to get probability estimates out of a classifier, the predictions used to generate the scores for `LogisticRegression(multi_class='multinomial')` do not seem to be the same predictions as…",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "sklearn/linear_model/logistic.py"
+    ],
+    "expected_symbols": [
+      "_log_reg_scoring_path"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "sphinx-doc__sphinx-7462",
+    "repo": "sphinx-doc/sphinx",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/sphinx-doc__sphinx-7462",
+    "task": "`IndexError: pop from empty list` for empty tuple type annotation — **Describe the bug**\nErrors: IndexError\nTraceback: File \"\\path\\to\\site-packages\\sphinx\\domains\\python.py\", line 112, in unparse | IndexError: pop from empty list",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "sphinx/domains/python.py",
+      "sphinx/pycode/ast.py"
+    ],
+    "expected_symbols": [
+      "unparse"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "sphinx-doc__sphinx-7748",
+    "repo": "sphinx-doc/sphinx",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/sphinx-doc__sphinx-7748",
+    "task": "autodoc_docstring_signature with overloaded methods — When using swig to wrap C++ classes for python, if they have overloaded methods, I believe the convention is to place the signatures for each of the overloaded C++ methods at the start of the docstring.",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "sphinx/ext/autodoc/__init__.py"
+    ],
+    "expected_symbols": [
+      "DocstringSignatureMixin",
+      "DocstringSignatureMixin._find_signature",
+      "DocstringSignatureMixin.get_doc",
+      "DocstringStripSignatureMixin",
+      "_find_signature",
+      "format_signature",
+      "get_doc"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "sphinx-doc__sphinx-7910",
+    "repo": "sphinx-doc/sphinx",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/sphinx-doc__sphinx-7910",
+    "task": "Decorated __init__ doesn't show up in docs — Subject: Decorated __init__ won't be documented.",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "sphinx/ext/napoleon/__init__.py"
+    ],
+    "expected_symbols": [
+      "Config",
+      "_skip_member"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "sphinx-doc__sphinx-9230",
+    "repo": "sphinx-doc/sphinx",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/sphinx-doc__sphinx-9230",
+    "task": "Doc rendering is incorrect when :param has datatype dict(str,str) — **Describe the bug**",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "sphinx/util/docfields.py"
+    ],
+    "expected_symbols": [
+      "transform"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "sphinx-doc__sphinx-9320",
+    "repo": "sphinx-doc/sphinx",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/sphinx-doc__sphinx-9320",
+    "task": "`sphinx-quickstart` with existing conf.py doesn't exit easily — **Describe the bug**",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "sphinx/cmd/quickstart.py"
+    ],
+    "expected_symbols": [
+      "allow_empty",
+      "ask_user",
+      "is_path",
+      "is_path_or_empty"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "sphinx-doc__sphinx-9698",
+    "repo": "sphinx-doc/sphinx",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/sphinx-doc__sphinx-9698",
+    "task": "An index entry with parens was registered for `py:method` directive with `:property:` option — ### Describe the bug",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "sphinx/domains/python.py"
+    ],
+    "expected_symbols": [
+      "get_index_text"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "sphinx-doc__sphinx-9711",
+    "repo": "sphinx-doc/sphinx",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/sphinx-doc__sphinx-9711",
+    "task": "needs_extensions checks versions using strings — ### Describe the bug",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "sphinx/extension.py"
+    ],
+    "expected_symbols": [
+      "verify_needs_extensions"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "sympy__sympy-12419",
+    "repo": "sympy/sympy",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/sympy__sympy-12419",
+    "task": "Sum of the elements of an identity matrix is zero — I think this is a bug.",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "sympy/matrices/expressions/matexpr.py"
+    ],
+    "expected_symbols": [
+      "_entry",
+      "_eval_derivative",
+      "_eval_determinant",
+      "conjugate"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "sympy__sympy-12481",
+    "repo": "sympy/sympy",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/sympy__sympy-12481",
+    "task": "`Permutation` constructor fails with non-disjoint cycles — Calling `Permutation([[0,1],[0,1]])` raises a `ValueError` instead of constructing the identity permutation.\nErrors: ValueError",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "sympy/combinatorics/permutations.py"
+    ],
+    "expected_symbols": [
+      "__new__"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "sympy__sympy-13372",
+    "repo": "sympy/sympy",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/sympy__sympy-13372",
+    "task": "UnboundLocalError in evalf — During handling of the above exception, another exception occurred:\nErrors: UnboundLocalError | KeyError | NotImplementedError\nTraceback: File \"./sympy/core/evalf.py\", line 1285, in evalf | KeyError: Max | File \"<stdin>\", line 1, in <module> | File \"./sympy/core/evalf.py\", line 1394, in evalf | File \"./sympy/core/evalf.py\", line 1286, in evalf | File \"./sympy/core/evalf.py\", line 538, in evalf_mul | File \"./sympy/core/evalf.py\", line 1308, in evalf | UnboundLocalError: local variable 'reprec' referenced before assignment",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "sympy/core/evalf.py"
+    ],
+    "expected_symbols": [
+      "evalf"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "sympy__sympy-13480",
+    "repo": "sympy/sympy",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/sympy__sympy-13480",
+    "task": ".subs on coth(log(tan(x))) errors for certain integral values — if cotm is S.ComplexInfinity:\nErrors: NameError\nTraceback: File \"C:\\Users\\E\\Desktop\\sympy-master\\sympy\\functions\\elementary\\hyperbolic.py\", line 590, in eval | NameError: name 'cotm' is not defined",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "sympy/functions/elementary/hyperbolic.py"
+    ],
+    "expected_symbols": [
+      "eval"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "sympy__sympy-13974",
+    "repo": "sympy/sympy",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/sympy__sympy-13974",
+    "task": "Evaluating powers of `TensorProduct` — Powers of tensor product expressions are not possible to evaluate with either `expand(tensorproduct=True)` method nor the `tensor_product_simp`function.",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "sympy/physics/quantum/tensorproduct.py"
+    ],
+    "expected_symbols": [
+      "tensor_product_simp",
+      "tensor_product_simp_Mul",
+      "tensor_product_simp_Pow"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "sympy__sympy-15599",
+    "repo": "sympy/sympy",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/sympy__sympy-15599",
+    "task": "Mod(3*i, 2) unchanged — `Mod(3*i, 2)` should reduce to `Mod(i, 2)` (as reported in [this post](https://stackoverflow.com/questions/53302669/sympify-does-not-simplify-remainder-as-expected)) and will do so with a change something like this:\nFailing tests: test_arit | test_Mod",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "sympy/core/mod.py"
+    ],
+    "expected_symbols": [
+      "doit"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "sympy__sympy-15875",
+    "repo": "sympy/sympy",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/sympy__sympy-15875",
+    "task": "is_zero is incorrect on complex integer — `is_zero` should return `None` if it cannot decide, but should never give the wrong answer.",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "sympy/core/add.py"
+    ],
+    "expected_symbols": [
+      "_eval_is_zero"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "sympy__sympy-16597",
+    "repo": "sympy/sympy",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/sympy__sympy-16597",
+    "task": "a.is_even does not imply a.is_finite — I'm not sure what the right answer is here:",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "sympy/assumptions/ask.py",
+      "sympy/assumptions/ask_generated.py",
+      "sympy/core/assumptions.py",
+      "sympy/core/power.py",
+      "sympy/printing/tree.py",
+      "sympy/tensor/indexed.py"
+    ],
+    "expected_symbols": [
+      "__new__",
+      "_eval_is_polynomial",
+      "_eval_is_rational",
+      "get_known_facts",
+      "get_known_facts_cnf",
+      "get_known_facts_dict",
+      "print_tree"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "sympy__sympy-16766",
+    "repo": "sympy/sympy",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/sympy__sympy-16766",
+    "task": "PythonCodePrinter doesn't support Indexed — I use `lambdify()` to generate some functions and save the code for further use.",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "sympy/printing/pycode.py"
+    ],
+    "expected_symbols": [
+      "_print_Indexed",
+      "_print_Not"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "sympy__sympy-16792",
+    "repo": "sympy/sympy",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/sympy__sympy-16792",
+    "task": "autowrap with cython backend fails when array arguments do not appear in wrapped expr — When using the cython backend for autowrap, it appears that the code is not correctly generated when the function in question has array arguments that do not appear in the final expression.\nErrors: TypeError\nTraceback: TypeError: only size-1 arrays can be converted to Python scalars",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "sympy/utilities/codegen.py"
+    ],
+    "expected_symbols": [
+      "dimensions",
+      "routine"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "sympy__sympy-18189",
+    "repo": "sympy/sympy",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/sympy__sympy-18189",
+    "task": "diophantine: incomplete results depending on syms order with permute=True — In [10]: diophantine(n**4 + m**4 - 2**4 - 3**4, syms=(m,n), permute=True)",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "sympy/solvers/diophantine.py"
+    ],
+    "expected_symbols": [
+      "diophantine"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "sympy__sympy-19637",
+    "repo": "sympy/sympy",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/sympy__sympy-19637",
+    "task": "kernS: 'kern' referenced before assignment — //  hit = kern in s\nErrors: UnboundLocalError",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "sympy/core/sympify.py"
+    ],
+    "expected_symbols": [
+      "kernS"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "sympy__sympy-20428",
+    "repo": "sympy/sympy",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/sympy__sympy-20428",
+    "task": "Result from clear_denoms() prints like zero poly but behaves wierdly (due to unstripped DMP) — The was the immediate cause of the ZeroDivisionError in #17990.\nErrors: ZeroDivisionError | IndexError\nTraceback: File \"<stdin>\", line 1, in <module> | File \"/Users/ehren/Documents/esym26/sympy/polys/polytools.py\", line 1227, in terms_gcd | File \"/Users/ehren/Documents/esym26/sympy/polys/polyclasses.py\", line 410, in terms_gcd | File \"/Users/ehren/Documents/esym26/sympy/polys/densebasic.py\", line 1681, in dmp_terms_gcd | File \"/Users/ehren/Documents/esym7/sympy/polys/polyclasses.py\", line 722, in primitive | File \"/Users/ehren/Documents/esym7/sympy/polys/densetools.py\", line 715, in dmp_ground_primitive | File \"/Users/ehren/Documents/esym7/sympy/polys/densetools.py\", line 689, in dup_primitive | File \"/Users/ehren/Documents/esym7/sympy/polys/densearith.py\", line 317, in dup_quo_ground",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "sympy/polys/domains/expressiondomain.py"
+    ],
+    "expected_symbols": [
+      "__bool__",
+      "__ne__",
+      "gcd"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "sympy__sympy-20801",
+    "repo": "sympy/sympy",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/sympy__sympy-20801",
+    "task": "S(0.0) == S.false returns True — This issue is related to those listed in #20033.",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "sympy/core/numbers.py"
+    ],
+    "expected_symbols": [
+      "__eq__",
+      "__ne__"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "sympy__sympy-23413",
+    "repo": "sympy/sympy",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/sympy__sympy-23413",
+    "task": "bug with HNF removing rows — `np.flip (hermite_normal_form (Matrix (np.flip (np.array ([[5, 8, 12], [0, 0, 1]]))).T).T))`",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "sympy/polys/matrices/normalforms.py"
+    ],
+    "expected_symbols": [
+      "_hermite_normal_form"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "sympy__sympy-24213",
+    "repo": "sympy/sympy",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/sympy__sympy-24213",
+    "task": "collect_factor_and_dimension does not detect equivalent dimensions in addition — Code to reproduce:\nErrors: ValueError\nTraceback: File \"<stdin>\", line 1, in <module> | File \"C:\\Python\\Python310\\lib\\site-packages\\sympy\\physics\\units\\unitsystem.py\", line 179, in _collect_factor_and_dimension | ValueError: Dimension of \"v1\" is Dimension(velocity), but it should be Dimension(acceleration*time)",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "sympy/physics/units/unitsystem.py"
+    ],
+    "expected_symbols": [
+      "_collect_factor_and_dimension"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  },
+  {
+    "instance_id": "sympy__sympy-24562",
+    "repo": "sympy/sympy",
+    "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/sympy__sympy-24562",
+    "task": "Rational calc value error — when calc Rational('0.5', '100'), the value is 1/100100; but Rational(0.5, 100) the value is 1/200, this value is the true value, and the version of sympy 1.8 is normal",
+    "intent": "debug",
+    "budget": 8000,
+    "label_source": "gold_patch",
+    "expected_files": [
+      "sympy/core/numbers.py"
+    ],
+    "expected_symbols": [
+      "__new__"
+    ],
+    "notes": "Auto-built from the SWE-bench gold reference patch (files + best-effort symbols). task derived from problem_statement (structured: base + error/test/traceback evidence). Expected labels are evaluation-only and never passed into Capsule v2 retrieval."
+  }
+]
