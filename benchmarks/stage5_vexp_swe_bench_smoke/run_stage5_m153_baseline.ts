@@ -25,7 +25,10 @@ import {
   buildWorkspaceHost,
   prepareRepository,
   repoRootFor,
+  resetSessionState,
   runCase,
+  sessionFingerprint,
+  sessionScopeFor,
   type CaseOutcome,
 } from "./m153BehavioralHarness";
 import { CORPUS_REPOSITORIES, splitOf } from "./behavioralCrossRepoCorpus";
@@ -54,14 +57,40 @@ if (!skipPrepare) {
 const hostRoot = await mkdtemp(path.join(os.tmpdir(), "m153-host-"));
 let oracle: CaseOutcome[] = [];
 let workspace: CaseOutcome[] = [];
+const isolation: Array<{
+  caseId: string;
+  oracleArmStartBytes: number;
+  workspaceArmStartBytes: number;
+  armsStartedEquivalent: boolean;
+}> = [];
 try {
   await buildWorkspaceHost({ hostRoot, primaryRepoAlias: "requests" });
   console.log(`workspace host ${hostRoot} (default=requests, ${CORPUS_REPOSITORIES.length} members)`);
 
+  // §48-§51. Every case in every arm starts from the SAME mutable product state:
+  // none. Without this the arms are not independent — a workspace request that
+  // routes somewhere writes observations there, and the next oracle call reads
+  // them, so the arm under test perturbs its own control.
+  const scope = sessionScopeFor(hostRoot);
   for (const entry of BEHAVIORAL_CASES) {
+    resetSessionState(scope);
+    const beforeOracle = scope.map((root) => sessionFingerprint(root).bytes);
     oracle.push(await runCase(entry, "oracle", hostRoot));
+
+    resetSessionState(scope);
+    const beforeWorkspace = scope.map((root) => sessionFingerprint(root).bytes);
     workspace.push(await runCase(entry, "workspace", hostRoot));
+
+    isolation.push({
+      caseId: entry.id,
+      // The invariant, recorded per case rather than asserted once: both arms
+      // began with every session store absent.
+      oracleArmStartBytes: beforeOracle.reduce((a, b) => a + b, 0),
+      workspaceArmStartBytes: beforeWorkspace.reduce((a, b) => a + b, 0),
+      armsStartedEquivalent: beforeOracle.every((b) => b === 0) && beforeWorkspace.every((b) => b === 0),
+    });
   }
+  resetSessionState(scope);
 } finally {
   await rm(hostRoot, { recursive: true, force: true });
 }
@@ -144,4 +173,20 @@ for (const [mode, rep] of [["ORACLE", oracleReport], ["WORKSPACE", workspaceRepo
     + `  abstentions=${rep.overall.abstentions}  errors=${rep.overall.errors}`,
   );
 }
+await writeFile(
+  path.join(outDir, `stage5_m153_session_isolation_validation${label === "m152" ? "" : `_${label}`}.json`),
+  `${JSON.stringify({
+    label,
+    policy: "session.sqlite discarded for every corpus repository and the host before EACH arm of EACH case",
+    scopeSize: sessionScopeFor(hostRoot).length,
+    casesChecked: isolation.length,
+    allArmsStartedEquivalent: isolation.every((row) => row.armsStartedEquivalent),
+    violations: isolation.filter((row) => !row.armsStartedEquivalent),
+    cases: isolation,
+  }, null, 2)}\n`,
+);
+
+console.log(
+  `session isolation: ${isolation.length} cases, arms equivalent = ${isolation.every((r) => r.armsStartedEquivalent)}`,
+);
 console.log(`\nwrote stage5_m153_${label}_{oracle,workspace}_baseline.json → ${outDir}`);

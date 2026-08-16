@@ -15,6 +15,7 @@
 // No agent, Docker, VEXP, network or paid API.
 
 import { execFile as execFileCallback } from "node:child_process";
+import { existsSync, rmSync, statSync } from "node:fs";
 import { mkdir, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { promisify } from "node:util";
@@ -25,6 +26,7 @@ import { defaultMcpToolRegistry } from "../../src/mcp/tools";
 import { MCP_SERVER_ID, MCP_SERVER_SCHEMA, McpToolId } from "../../src/mcp/types";
 import type { McpServerContext } from "../../src/mcp/types";
 import { resolveWorkspaceConfigPath, writeWorkspaceConfig } from "../../src/workspace/config";
+import { resolveSessionDbPath } from "../../src/session/sessionStore";
 
 import {
   BEHAVIORAL_CASES,
@@ -89,6 +91,56 @@ export async function prepareRepository(repoRoot: string): Promise<void> {
   if (result.ok !== true) {
     throw new Error(`index_repo failed for ${repoRoot}: ${result.error?.message ?? "unknown"}`);
   }
+}
+
+/**
+ * Discard every corpus repository's mutable product state, leaving its index
+ * untouched.
+ *
+ * WHY A BENCHMARK NEEDS THIS
+ * --------------------------
+ * M152 gave product state its own lifecycle, which is correct, and the
+ * consequence for benchmarking is that runs stop being independent. Two effects
+ * were measured, not theorised:
+ *
+ *   - re-running a corpus with `--skip-prepare` changed delivered item counts,
+ *     because observations written by the previous run were still there;
+ *   - with the behavioural lane enabled, a workspace request routed to a
+ *     DIFFERENT repository, and that repository then accumulated observations
+ *     which perturbed later oracle calls in the same pass — so the arm under
+ *     test was changing its own control.
+ *
+ * Neither is a product defect: §97 permits the final delivery to write. Both
+ * make a paired comparison meaningless, because the arms no longer start from
+ * the same state.
+ *
+ * Only `session.sqlite` is removed. The index is repository-derived evidence and
+ * rebuilding it would be both wasteful and a different experiment; the product
+ * recreates the session store on demand, verified to return identical context
+ * before and after.
+ */
+export function resetSessionState(repoRoots: readonly string[]): void {
+  for (const root of repoRoots) {
+    rmSync(resolveSessionDbPath(root), { force: true });
+  }
+}
+
+/** Every repository a run may write product state into, including the host. */
+export function sessionScopeFor(hostRoot: string): readonly string[] {
+  return [...CORPUS_REPOSITORIES.map((repo) => repoRootFor(repo.key)), hostRoot];
+}
+
+/**
+ * A fingerprint of a repository's mutable product state. Used to PROVE the
+ * paired-arm invariant rather than assert it: both arms must start each case
+ * from the same fingerprint, and neither may inherit the other's writes.
+ */
+export function sessionFingerprint(repoRoot: string): { path: string; bytes: number } {
+  const target = resolveSessionDbPath(repoRoot);
+  return {
+    path: target,
+    bytes: existsSync(target) ? statSync(target).size : 0,
+  };
 }
 
 export interface WorkspaceHostOptions {

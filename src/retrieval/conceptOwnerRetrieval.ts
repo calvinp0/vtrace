@@ -612,7 +612,12 @@ export function retrieveConceptOwners(input: ConceptOwnerInput): ConceptOwnerRes
   };
 }
 
-function isTestPath(filePath: string): boolean {
+/**
+ * Is this path test code? Exported because M153's behavioural routing probe must
+ * answer the same question, and two definitions of "is a test" that could drift
+ * apart is exactly the kind of parallel authority the architecture forbids.
+ */
+export function isTestPath(filePath: string): boolean {
   return /(^|\/)tests?\//.test(filePath)
     || /(^|\/)(?:test_[^/]+|[^/]+_test)\.[^/]+$/.test(filePath);
 }

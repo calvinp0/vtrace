@@ -38,6 +38,7 @@ import type { Database } from "bun:sqlite";
 
 import type { BehavioralObjective } from "../retrieval/behavioralObjective";
 import { generateOperationFactCandidates } from "../retrieval/operationFactCandidates";
+import { isTestPath } from "../retrieval/conceptOwnerRetrieval";
 import {
   BehavioralNominationStatus,
   classifyRepositoryEvidence,
@@ -1166,7 +1167,21 @@ export function createDatabaseProbe(db: Database): RepositoryProbe {
     // be asked to compare two across repositories that never calibrated them.
     behavioralEvidence: (objective): readonly BehavioralCandidateSummary[] => {
       const result = generateOperationFactCandidates(db, objective);
-      return result.candidates.map((candidate) => ({
+      return result.candidates
+        // §51, §66. A test that NAMES a behaviour is not a repository that
+        // IMPLEMENTS it, and routing is a claim about implementation ownership.
+        // Measured: "Where is the list of parsers ordered by priority?" routed to
+        // astropy, whose only admitted candidates were two `sort_eq` helpers in
+        // `astropy/table/tests/`, aligned because their operand `list1` shares a
+        // token with the query's word "list". Sphinx, which owns the mechanism,
+        // was outranked by another repository's test fixtures.
+        //
+        // Applied to the ROUTING probe only. The same definitions remain
+        // ordinary retrieval candidates inside their own repository, where a test
+        // is legitimate context; what they may not do is decide which repository
+        // a request belongs to.
+        .filter((candidate) => !isTestPath(candidate.symbol.fqName.split("::")[0] ?? ""))
+        .map((candidate) => ({
         fqName: candidate.symbol.fqName,
         factKind: candidate.factKind,
         alignment: candidate.alignment,

@@ -1,0 +1,1814 @@
+{
+  "label": "m153_iso_on",
+  "mode": "oracle",
+  "implementation": "M152 72ce221c7006dc9e477dcbfa2d7e7372c136fa8c",
+  "overall": {
+    "casesScored": 30,
+    "repositoryTop1": 100,
+    "primaryTop1": 3.3,
+    "primaryTop3": 3.3,
+    "requiredSupportPresent": 56.7,
+    "falsePremiseReconstructed": 0,
+    "absenceHeld": 100,
+    "casesWithMisleading": 13.3,
+    "misleadingPerCase": 0.13,
+    "emptyContext": 0,
+    "cleanAnswerRate": 0,
+    "abstentions": 0,
+    "errors": 2
+  },
+  "calibration": {
+    "casesScored": 19,
+    "repositoryTop1": 100,
+    "primaryTop1": 5.3,
+    "primaryTop3": 5.3,
+    "requiredSupportPresent": 63.2,
+    "falsePremiseReconstructed": 0,
+    "absenceHeld": 100,
+    "casesWithMisleading": 21.1,
+    "misleadingPerCase": 0.21,
+    "emptyContext": 0,
+    "cleanAnswerRate": 0,
+    "abstentions": 0,
+    "errors": 0
+  },
+  "holdout": {
+    "casesScored": 11,
+    "repositoryTop1": 100,
+    "primaryTop1": 0,
+    "primaryTop3": 0,
+    "requiredSupportPresent": 45.5,
+    "falsePremiseReconstructed": 0,
+    "absenceHeld": 100,
+    "casesWithMisleading": 0,
+    "misleadingPerCase": 0,
+    "emptyContext": 0,
+    "cleanAnswerRate": 0,
+    "abstentions": 0,
+    "errors": 0
+  },
+  "byRepository": {
+    "requests": {
+      "casesScored": 5,
+      "repositoryTop1": 100,
+      "primaryTop1": 20,
+      "primaryTop3": 20,
+      "requiredSupportPresent": 40,
+      "falsePremiseReconstructed": 0,
+      "absenceHeld": 100,
+      "casesWithMisleading": 40,
+      "misleadingPerCase": 0.4,
+      "emptyContext": 0,
+      "cleanAnswerRate": 0,
+      "abstentions": 0,
+      "errors": 0
+    },
+    "flask": {
+      "casesScored": 5,
+      "repositoryTop1": 100,
+      "primaryTop1": 0,
+      "primaryTop3": 0,
+      "requiredSupportPresent": 80,
+      "falsePremiseReconstructed": 0,
+      "absenceHeld": null,
+      "casesWithMisleading": 20,
+      "misleadingPerCase": 0.2,
+      "emptyContext": 0,
+      "cleanAnswerRate": 0,
+      "abstentions": 0,
+      "errors": 0
+    },
+    "pytest": {
+      "casesScored": 4,
+      "repositoryTop1": 100,
+      "primaryTop1": 0,
+      "primaryTop3": 0,
+      "requiredSupportPresent": 75,
+      "falsePremiseReconstructed": 0,
+      "absenceHeld": 100,
+      "casesWithMisleading": 0,
+      "misleadingPerCase": 0,
+      "emptyContext": 0,
+      "cleanAnswerRate": 0,
+      "abstentions": 0,
+      "errors": 0
+    },
+    "sphinx": {
+      "casesScored": 5,
+      "repositoryTop1": 100,
+      "primaryTop1": 0,
+      "primaryTop3": 0,
+      "requiredSupportPresent": 60,
+      "falsePremiseReconstructed": 0,
+      "absenceHeld": null,
+      "casesWithMisleading": 20,
+      "misleadingPerCase": 0.2,
+      "emptyContext": 0,
+      "cleanAnswerRate": 0,
+      "abstentions": 0,
+      "errors": 0
+    },
+    "xarray": {
+      "casesScored": 3,
+      "repositoryTop1": 100,
+      "primaryTop1": 0,
+      "primaryTop3": 0,
+      "requiredSupportPresent": 0,
+      "falsePremiseReconstructed": 0,
+      "absenceHeld": 100,
+      "casesWithMisleading": 0,
+      "misleadingPerCase": 0,
+      "emptyContext": 0,
+      "cleanAnswerRate": 0,
+      "abstentions": 0,
+      "errors": 0
+    },
+    "astropy": {
+      "casesScored": 4,
+      "repositoryTop1": 100,
+      "primaryTop1": 0,
+      "primaryTop3": 0,
+      "requiredSupportPresent": 75,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "casesWithMisleading": 0,
+      "misleadingPerCase": 0,
+      "emptyContext": 0,
+      "cleanAnswerRate": 0,
+      "abstentions": 0,
+      "errors": 0
+    },
+    "pylint": {
+      "casesScored": 4,
+      "repositoryTop1": 100,
+      "primaryTop1": 0,
+      "primaryTop3": 0,
+      "requiredSupportPresent": 50,
+      "falsePremiseReconstructed": 0,
+      "absenceHeld": null,
+      "casesWithMisleading": 0,
+      "misleadingPerCase": 0,
+      "emptyContext": 0,
+      "cleanAnswerRate": 0,
+      "abstentions": 0,
+      "errors": 0
+    }
+  },
+  "byCategory": {
+    "backend_selection": {
+      "casesScored": 2,
+      "repositoryTop1": 100,
+      "primaryTop1": 0,
+      "primaryTop3": 0,
+      "requiredSupportPresent": 0,
+      "falsePremiseReconstructed": 0,
+      "absenceHeld": null,
+      "casesWithMisleading": 0,
+      "misleadingPerCase": 0,
+      "emptyContext": 0,
+      "cleanAnswerRate": 0,
+      "abstentions": 0,
+      "errors": 0
+    },
+    "configuration_precedence": {
+      "casesScored": 2,
+      "repositoryTop1": 100,
+      "primaryTop1": 0,
+      "primaryTop3": 0,
+      "requiredSupportPresent": 100,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "casesWithMisleading": 0,
+      "misleadingPerCase": 0,
+      "emptyContext": 0,
+      "cleanAnswerRate": 0,
+      "abstentions": 0,
+      "errors": 1
+    },
+    "dispatch": {
+      "casesScored": 3,
+      "repositoryTop1": 100,
+      "primaryTop1": 0,
+      "primaryTop3": 0,
+      "requiredSupportPresent": 66.7,
+      "falsePremiseReconstructed": 0,
+      "absenceHeld": null,
+      "casesWithMisleading": 0,
+      "misleadingPerCase": 0,
+      "emptyContext": 0,
+      "cleanAnswerRate": 0,
+      "abstentions": 0,
+      "errors": 0
+    },
+    "explicit_identifier_absence": {
+      "casesScored": 0,
+      "repositoryTop1": 100,
+      "primaryTop1": null,
+      "primaryTop3": null,
+      "requiredSupportPresent": null,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": 100,
+      "casesWithMisleading": null,
+      "misleadingPerCase": null,
+      "emptyContext": null,
+      "cleanAnswerRate": null,
+      "abstentions": 0,
+      "errors": 0
+    },
+    "fallback": {
+      "casesScored": 3,
+      "repositoryTop1": 100,
+      "primaryTop1": 0,
+      "primaryTop3": 0,
+      "requiredSupportPresent": 33.3,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "casesWithMisleading": 0,
+      "misleadingPerCase": 0,
+      "emptyContext": 0,
+      "cleanAnswerRate": 0,
+      "abstentions": 0,
+      "errors": 0
+    },
+    "ordering": {
+      "casesScored": 3,
+      "repositoryTop1": 100,
+      "primaryTop1": 0,
+      "primaryTop3": 0,
+      "requiredSupportPresent": 100,
+      "falsePremiseReconstructed": 0,
+      "absenceHeld": null,
+      "casesWithMisleading": 33.3,
+      "misleadingPerCase": 0.33,
+      "emptyContext": 0,
+      "cleanAnswerRate": 0,
+      "abstentions": 0,
+      "errors": 0
+    },
+    "override_resolution": {
+      "casesScored": 2,
+      "repositoryTop1": 100,
+      "primaryTop1": 0,
+      "primaryTop3": 0,
+      "requiredSupportPresent": 100,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "casesWithMisleading": 0,
+      "misleadingPerCase": 0,
+      "emptyContext": 0,
+      "cleanAnswerRate": 0,
+      "abstentions": 0,
+      "errors": 0
+    },
+    "parser_selection": {
+      "casesScored": 2,
+      "repositoryTop1": 100,
+      "primaryTop1": 0,
+      "primaryTop3": 0,
+      "requiredSupportPresent": 50,
+      "falsePremiseReconstructed": 0,
+      "absenceHeld": null,
+      "casesWithMisleading": 0,
+      "misleadingPerCase": 0,
+      "emptyContext": 0,
+      "cleanAnswerRate": 0,
+      "abstentions": 0,
+      "errors": 0
+    },
+    "priority_table_lookup": {
+      "casesScored": 1,
+      "repositoryTop1": 100,
+      "primaryTop1": 0,
+      "primaryTop3": 0,
+      "requiredSupportPresent": 100,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "casesWithMisleading": 0,
+      "misleadingPerCase": 0,
+      "emptyContext": 0,
+      "cleanAnswerRate": 0,
+      "abstentions": 0,
+      "errors": 0
+    },
+    "project_name_reuse": {
+      "casesScored": 5,
+      "repositoryTop1": 100,
+      "primaryTop1": 0,
+      "primaryTop3": 0,
+      "requiredSupportPresent": 80,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "casesWithMisleading": 40,
+      "misleadingPerCase": 0.4,
+      "emptyContext": 0,
+      "cleanAnswerRate": 0,
+      "abstentions": 0,
+      "errors": 0
+    },
+    "registration_ordering": {
+      "casesScored": 1,
+      "repositoryTop1": 100,
+      "primaryTop1": 0,
+      "primaryTop3": 0,
+      "requiredSupportPresent": 0,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "casesWithMisleading": 0,
+      "misleadingPerCase": 0,
+      "emptyContext": 0,
+      "cleanAnswerRate": 0,
+      "abstentions": 0,
+      "errors": 0
+    },
+    "selection": {
+      "casesScored": 6,
+      "repositoryTop1": 100,
+      "primaryTop1": 16.7,
+      "primaryTop3": 16.7,
+      "requiredSupportPresent": 16.7,
+      "falsePremiseReconstructed": 0,
+      "absenceHeld": null,
+      "casesWithMisleading": 16.7,
+      "misleadingPerCase": 0.17,
+      "emptyContext": 0,
+      "cleanAnswerRate": 0,
+      "abstentions": 0,
+      "errors": 1
+    }
+  },
+  "cases": [
+    {
+      "caseId": "rq_adapter_selection",
+      "mode": "oracle",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "repo",
+      "routeOutcome": "single_repository",
+      "routeSource": "sole_member",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 5,
+      "delivered": [
+        {
+          "path": "requests/sessions.py",
+          "symbol": "get_adapter",
+          "class": "RELEVANT"
+        },
+        {
+          "path": "requests/adapters.py",
+          "symbol": "get_connection",
+          "class": "MISLEADING"
+        },
+        {
+          "path": "requests/exceptions.py",
+          "symbol": "URLRequired",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/sessions.py",
+          "symbol": "send",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/sessions.py",
+          "symbol": "Session",
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": true,
+      "primaryTop1": true,
+      "primaryTop3": true,
+      "requiredSupportPresent": false,
+      "misleadingDelivered": 1,
+      "emptyContext": false,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 231,
+      "routingBytes": 493
+    },
+    {
+      "caseId": "rq_adapter_ranking_false_premise",
+      "mode": "oracle",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "repo",
+      "routeOutcome": "single_repository",
+      "routeSource": "sole_member",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 4,
+      "delivered": [
+        {
+          "path": "requests/adapters.py",
+          "symbol": "get_connection",
+          "class": "MISLEADING"
+        },
+        {
+          "path": "requests/exceptions.py",
+          "symbol": "ConnectionError",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/adapters.py",
+          "symbol": "send",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/adapters.py",
+          "symbol": "HTTPAdapter",
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": true,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": true,
+      "misleadingDelivered": 1,
+      "emptyContext": false,
+      "falsePremiseReconstructed": false,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 147,
+      "routingBytes": 493
+    },
+    {
+      "caseId": "rq_rank_adapters_identifier",
+      "mode": "oracle",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "repo",
+      "routeOutcome": "single_repository",
+      "routeSource": "sole_member",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 6,
+      "delivered": [
+        {
+          "path": "requests/adapters.py",
+          "symbol": "HTTPAdapter",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/adapters.py",
+          "symbol": "add_headers",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/sessions.py",
+          "symbol": "__init__",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "tests/test_requests.py",
+          "symbol": "test_proxy_auth",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "tests/test_requests.py",
+          "symbol": "test_proxy_auth_empty_pass",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "tests/test_requests.py",
+          "symbol": "test_session_get_adapter_prefix_matching",
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": true,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": true,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": true,
+      "cleanAnswer": true,
+      "latencyMs": 200,
+      "routingBytes": 493
+    },
+    {
+      "caseId": "rq_setting_precedence",
+      "mode": "oracle",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "repo",
+      "routeOutcome": "single_repository",
+      "routeSource": "sole_member",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 6,
+      "delivered": [
+        {
+          "path": "requests/sessions.py",
+          "symbol": "request",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/models.py",
+          "symbol": "Response",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/sessions.py",
+          "symbol": "delete",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/sessions.py",
+          "symbol": "get",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/sessions.py",
+          "symbol": "head",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/sessions.py",
+          "symbol": "post",
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": true,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": true,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 174,
+      "routingBytes": 493
+    },
+    {
+      "caseId": "rq_encoding_fallback",
+      "mode": "oracle",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "repo",
+      "routeOutcome": "single_repository",
+      "routeSource": "sole_member",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 4,
+      "delivered": [
+        {
+          "path": "requests/models.py",
+          "symbol": "_encode_files",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/models.py",
+          "symbol": "_get_idna_encoded_host",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/models.py",
+          "symbol": "RequestEncodingMixin",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/models.py",
+          "symbol": "prepare_body",
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": true,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": false,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 160,
+      "routingBytes": 493
+    },
+    {
+      "caseId": "rq_redirect_auth_reuse",
+      "mode": "oracle",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "repo",
+      "routeOutcome": "single_repository",
+      "routeSource": "sole_member",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 4,
+      "delivered": [
+        {
+          "path": "requests/utils.py",
+          "symbol": "_parse_content_type_header",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/sessions.py",
+          "symbol": "merge_environment_settings",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/utils.py",
+          "symbol": "get_encoding_from_headers",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "tests/test_utils.py",
+          "symbol": "test__parse_content_type_header",
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": true,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": false,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 184,
+      "routingBytes": 493
+    },
+    {
+      "caseId": "fl_error_handler_dispatch",
+      "mode": "oracle",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "repo",
+      "routeOutcome": "single_repository",
+      "routeSource": "sole_member",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 4,
+      "delivered": [
+        {
+          "path": "src/flask/app.py",
+          "symbol": "handle_url_build_error",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "src/flask/scaffold.py",
+          "symbol": "register_error_handler",
+          "class": "RELEVANT"
+        },
+        {
+          "path": "src/flask/app.py",
+          "symbol": "url_for",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "src/flask/app.py",
+          "symbol": "Flask",
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": true,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": false,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 211,
+      "routingBytes": 493
+    },
+    {
+      "caseId": "fl_error_handler_scoring_false_premise",
+      "mode": "oracle",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "repo",
+      "routeOutcome": "single_repository",
+      "routeSource": "sole_member",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 4,
+      "delivered": [
+        {
+          "path": "src/flask/app.py",
+          "symbol": "handle_url_build_error",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "src/flask/cli.py",
+          "symbol": "find_best_app",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "src/flask/app.py",
+          "symbol": "url_for",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "src/flask/app.py",
+          "symbol": "Flask",
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": true,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": true,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": false,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 208,
+      "routingBytes": 493
+    },
+    {
+      "caseId": "fl_project_name_reuse",
+      "mode": "oracle",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "repo",
+      "routeOutcome": "single_repository",
+      "routeSource": "sole_member",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 4,
+      "delivered": [
+        {
+          "path": "src/flask/app.py",
+          "symbol": "handle_http_exception",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "src/flask/blueprints.py",
+          "symbol": "Blueprint",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "src/flask/app.py",
+          "symbol": "handle_user_exception",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "src/flask/app.py",
+          "symbol": "Flask",
+          "class": "MISLEADING"
+        }
+      ],
+      "repositoryCorrect": true,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": true,
+      "misleadingDelivered": 1,
+      "emptyContext": false,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 214,
+      "routingBytes": 493
+    },
+    {
+      "caseId": "fl_response_coercion",
+      "mode": "oracle",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "repo",
+      "routeOutcome": "single_repository",
+      "routeSource": "sole_member",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 5,
+      "delivered": [
+        {
+          "path": "src/flask/helpers.py",
+          "symbol": "make_response",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "src/flask/json/provider.py",
+          "symbol": "JSONProvider",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "tests/test_basic.py",
+          "symbol": "test_jsonify_mimetype",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "tests/test_basic.py",
+          "symbol": "test_make_response",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "tests/test_basic.py",
+          "symbol": "test_make_response_with_response_instance",
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": true,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": true,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 194,
+      "routingBytes": 493
+    },
+    {
+      "caseId": "fl_env_config_precedence",
+      "mode": "oracle",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "repo",
+      "routeOutcome": "single_repository",
+      "routeSource": "sole_member",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 5,
+      "delivered": [
+        {
+          "path": "src/flask/config.py",
+          "symbol": "Config",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "src/flask/app.py",
+          "symbol": "make_config",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "src/flask/app.py",
+          "symbol": "Flask",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "src/flask/app.py",
+          "symbol": "config_class",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "tests/test_config.py",
+          "symbol": "test_custom_config_class",
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": true,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": true,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 185,
+      "routingBytes": 493
+    },
+    {
+      "caseId": "pt_fixture_applicability",
+      "mode": "oracle",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "repo",
+      "routeOutcome": "single_repository",
+      "routeSource": "sole_member",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 2,
+      "delivered": [
+        {
+          "path": "src/_pytest/fixtures.py",
+          "symbol": "applymarker",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "src/_pytest/fixtures.py",
+          "symbol": "FixtureRequest",
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": true,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": false,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 321,
+      "routingBytes": 493
+    },
+    {
+      "caseId": "pt_fixture_override",
+      "mode": "oracle",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "repo",
+      "routeOutcome": "single_repository",
+      "routeSource": "sole_member",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 2,
+      "delivered": [
+        {
+          "path": "src/_pytest/fixtures.py",
+          "symbol": "fixture",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "src/_pytest/fixtures.py",
+          "symbol": "FixtureRequest",
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": true,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": true,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 330,
+      "routingBytes": 493
+    },
+    {
+      "caseId": "pt_fixture_ranking_false_premise",
+      "mode": "oracle",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "repo",
+      "routeOutcome": "single_repository",
+      "routeSource": "sole_member",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 3,
+      "delivered": [
+        {
+          "path": "src/_pytest/fixtures.py",
+          "symbol": "function",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "src/_pytest/fixtures.py",
+          "symbol": "_compute_fixture_value",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "src/_pytest/fixtures.py",
+          "symbol": "FixtureRequest",
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": true,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": true,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": false,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 262,
+      "routingBytes": 493
+    },
+    {
+      "caseId": "pt_rank_fixtures_identifier",
+      "mode": "oracle",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "repo",
+      "routeOutcome": "single_repository",
+      "routeSource": "sole_member",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 3,
+      "delivered": [
+        {
+          "path": "src/_pytest/fixtures.py",
+          "symbol": "scope2index",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "src/_pytest/fixtures.py",
+          "symbol": "node",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "src/_pytest/fixtures.py",
+          "symbol": "__init__",
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": true,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": true,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": true,
+      "cleanAnswer": true,
+      "latencyMs": 415,
+      "routingBytes": 493
+    },
+    {
+      "caseId": "pt_fixture_scope_ordering",
+      "mode": "oracle",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "repo",
+      "routeOutcome": "single_repository",
+      "routeSource": "sole_member",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 3,
+      "delivered": [
+        {
+          "path": "src/_pytest/fixtures.py",
+          "symbol": "FixtureManager",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "src/_pytest/doctest.py",
+          "symbol": "_setup_fixtures",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "src/_pytest/fixtures.py",
+          "symbol": "pytest_sessionstart",
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": true,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": true,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 923,
+      "routingBytes": 493
+    },
+    {
+      "caseId": "sp_parser_selection",
+      "mode": "oracle",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "repo",
+      "routeOutcome": "single_repository",
+      "routeSource": "sole_member",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 3,
+      "delivered": [
+        {
+          "path": "sphinx/application.py",
+          "symbol": "add_source_parser",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "sphinx/cmd/build.py",
+          "symbol": "get_parser",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "sphinx/application.py",
+          "symbol": "Sphinx",
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": true,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": false,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 532,
+      "routingBytes": 493
+    },
+    {
+      "caseId": "sp_project_name_reuse",
+      "mode": "oracle",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "repo",
+      "routeOutcome": "single_repository",
+      "routeSource": "sole_member",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 3,
+      "delivered": [
+        {
+          "path": "sphinx/application.py",
+          "symbol": "Sphinx",
+          "class": "MISLEADING"
+        },
+        {
+          "path": "sphinx/builders/html/__init__.py",
+          "symbol": "copy_translation_js",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "sphinx/setup_command.py",
+          "symbol": "run",
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": true,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": true,
+      "misleadingDelivered": 1,
+      "emptyContext": false,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 1228,
+      "routingBytes": 493
+    },
+    {
+      "caseId": "sp_xref_resolution",
+      "mode": "oracle",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "repo",
+      "routeOutcome": "single_repository",
+      "routeSource": "sole_member",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 3,
+      "delivered": [
+        {
+          "path": "sphinx/util/__init__.py",
+          "symbol": "split_full_qualified_name",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "sphinx/domains/__init__.py",
+          "symbol": "get_full_qualified_name",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "sphinx/ext/autosummary/generate.py",
+          "symbol": "generate_autosummary_content",
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": true,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": true,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 519,
+      "routingBytes": 493
+    },
+    {
+      "caseId": "sp_builder_selection",
+      "mode": "oracle",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "repo",
+      "routeOutcome": "single_repository",
+      "routeSource": "sole_member",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 3,
+      "delivered": [
+        {
+          "path": "sphinx/builders/_epub_base.py",
+          "symbol": "write_doc",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "sphinx/application.py",
+          "symbol": "require_sphinx",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "sphinx/builders/_epub_base.py",
+          "symbol": "EpubBuilder",
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": true,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": false,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 463,
+      "routingBytes": 493
+    },
+    {
+      "caseId": "sp_parser_registry_false_premise",
+      "mode": "oracle",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "repo",
+      "routeOutcome": "single_repository",
+      "routeSource": "sole_member",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 4,
+      "delivered": [
+        {
+          "path": "sphinx/parsers.py",
+          "symbol": "Parser",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "sphinx/transforms/compact_bullet_list.py",
+          "symbol": "default_priority",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "sphinx/parsers.py",
+          "symbol": "RSTParser",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "sphinx/registry.py",
+          "symbol": "create_source_parser",
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": true,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": true,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": false,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 445,
+      "routingBytes": 493
+    },
+    {
+      "caseId": "xr_backend_selection",
+      "mode": "oracle",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "repo",
+      "routeOutcome": "single_repository",
+      "routeSource": "sole_member",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 3,
+      "delivered": [
+        {
+          "path": "xarray/backends/api.py",
+          "symbol": "open_dataset",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "xarray/backends/locks.py",
+          "symbol": "acquire",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "asv_bench/benchmarks/dataset_io.py",
+          "symbol": "time_orthogonal_indexing",
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": true,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": false,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 394,
+      "routingBytes": 493
+    },
+    {
+      "caseId": "xr_backend_scoring_false_premise",
+      "mode": "oracle",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "repo",
+      "routeOutcome": "single_repository",
+      "routeSource": "sole_member",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 3,
+      "delivered": [
+        {
+          "path": "xarray/backends/api.py",
+          "symbol": "open_dataset",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "xarray/core/computation.py",
+          "symbol": "where",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "asv_bench/benchmarks/dataset_io.py",
+          "symbol": "time_orthogonal_indexing",
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": true,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": false,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": false,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 401,
+      "routingBytes": 493
+    },
+    {
+      "caseId": "xr_score_backends_identifier",
+      "mode": "oracle",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "repo",
+      "routeOutcome": "single_repository",
+      "routeSource": "sole_member",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 3,
+      "delivered": [
+        {
+          "path": "xarray/backends/api.py",
+          "symbol": "open_dataset",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "xarray/backends/zarr.py",
+          "symbol": "store",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "asv_bench/benchmarks/dataset_io.py",
+          "symbol": "time_orthogonal_indexing",
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": true,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": true,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": true,
+      "cleanAnswer": true,
+      "latencyMs": 584,
+      "routingBytes": 493
+    },
+    {
+      "caseId": "xr_backend_order",
+      "mode": "oracle",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "repo",
+      "routeOutcome": "single_repository",
+      "routeSource": "sole_member",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 3,
+      "delivered": [
+        {
+          "path": "xarray/backends/api.py",
+          "symbol": "open_dataset",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "xarray/backends/pydap_.py",
+          "symbol": "_getitem",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "asv_bench/benchmarks/dataset_io.py",
+          "symbol": "time_orthogonal_indexing",
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": true,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": false,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 368,
+      "routingBytes": 493
+    },
+    {
+      "caseId": "ap_format_identification",
+      "mode": "oracle",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "repo",
+      "routeOutcome": "single_repository",
+      "routeSource": "sole_member",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 4,
+      "delivered": [
+        {
+          "path": "astropy/time/formats.py",
+          "symbol": "to_value",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "astropy/io/fits/scripts/fitsheader.py",
+          "symbol": "TableHeaderFormatter",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "astropy/time/formats.py",
+          "symbol": "TimeDatetime",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "astropy/time/core.py",
+          "symbol": "Time",
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": true,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": false,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 1522,
+      "routingBytes": 493
+    },
+    {
+      "caseId": "ap_format_priority_tiebreak",
+      "mode": "oracle",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "repo",
+      "routeOutcome": "single_repository",
+      "routeSource": "sole_member",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 2,
+      "delivered": [
+        {
+          "path": "astropy/io/votable/connect.py",
+          "symbol": "read_table_votable",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "astropy/io/fits/scripts/fitsheader.py",
+          "symbol": "TableHeaderFormatter",
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": true,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": true,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 1076,
+      "routingBytes": 493
+    },
+    {
+      "caseId": "ap_registered_class_match",
+      "mode": "oracle",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "repo",
+      "routeOutcome": "single_repository",
+      "routeSource": "sole_member",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 3,
+      "delivered": [
+        {
+          "path": "astropy/io/registry/core.py",
+          "symbol": "register_reader",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "astropy/io/registry/core.py",
+          "symbol": "get_reader",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "astropy/io/registry/core.py",
+          "symbol": "UnifiedInputRegistry",
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": true,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": true,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 967,
+      "routingBytes": 493
+    },
+    {
+      "caseId": "ap_project_name_reuse",
+      "mode": "oracle",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "repo",
+      "routeOutcome": "single_repository",
+      "routeSource": "sole_member",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 4,
+      "delivered": [
+        {
+          "path": "astropy/io/registry/core.py",
+          "symbol": "get_reader",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "astropy/io/registry/core.py",
+          "symbol": "UnifiedIORegistry",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "astropy/io/registry/core.py",
+          "symbol": "read",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "astropy/io/registry/core.py",
+          "symbol": "UnifiedInputRegistry",
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": true,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": true,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 1020,
+      "routingBytes": 493
+    },
+    {
+      "caseId": "pl_reporter_selection",
+      "mode": "oracle",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "repo",
+      "routeOutcome": "single_repository",
+      "routeSource": "sole_member",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 4,
+      "delivered": [
+        {
+          "path": "pylint/config/arguments_manager.py",
+          "symbol": "_parse_command_line_configuration",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "pylint/extensions/redefined_loop_name.py",
+          "symbol": "RedefinedLoopNameChecker",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "pylint/config/arguments_manager.py",
+          "symbol": "_ArgumentsManager",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "pylint/pyreverse/main.py",
+          "symbol": "__init__",
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": true,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": false,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 641,
+      "routingBytes": 493
+    },
+    {
+      "caseId": "pl_checker_activation",
+      "mode": "oracle",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "repo",
+      "routeOutcome": "single_repository",
+      "routeSource": "sole_member",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 3,
+      "delivered": [
+        {
+          "path": "pylint/checkers/similar.py",
+          "symbol": "run",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "CODE_OF_CONDUCT.md",
+          "symbol": "Our Standards",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "pylint/checkers/similar.py",
+          "symbol": "Similar",
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": true,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": false,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 662,
+      "routingBytes": 493
+    },
+    {
+      "caseId": "pl_reporter_ranking_false_premise",
+      "mode": "oracle",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "repo",
+      "routeOutcome": "single_repository",
+      "routeSource": "sole_member",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 4,
+      "delivered": [
+        {
+          "path": "pylint/reporters/ureports/text_writer.py",
+          "symbol": "default_table",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "pylint/lint/pylinter.py",
+          "symbol": "register_reporter",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "pylint/reporters/ureports/text_writer.py",
+          "symbol": "visit_table",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "pylint/reporters/ureports/text_writer.py",
+          "symbol": "TextWriter",
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": true,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": true,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": false,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 607,
+      "routingBytes": 493
+    },
+    {
+      "caseId": "pl_project_name_reuse",
+      "mode": "oracle",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "repo",
+      "routeOutcome": "single_repository",
+      "routeSource": "sole_member",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 4,
+      "delivered": [
+        {
+          "path": "pylint/checkers/utils.py",
+          "symbol": "only_required_for_messages",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "pylint/checkers/logging.py",
+          "symbol": "_helper_string",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "pylint/checkers/async.py",
+          "symbol": "visit_asyncwith",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "pylint/checkers/base/basic_checker.py",
+          "symbol": "visit_assign",
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": true,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": true,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 722,
+      "routingBytes": 493
+    },
+    {
+      "caseId": "amb_plugin_loading",
+      "mode": "oracle",
+      "ok": false,
+      "errorCode": "no_oracle_repository",
+      "routedRepository": null,
+      "routeOutcome": null,
+      "routeSource": null,
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 0,
+      "delivered": [],
+      "repositoryCorrect": null,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": true,
+      "misleadingDelivered": 0,
+      "emptyContext": true,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 0,
+      "routingBytes": 0
+    },
+    {
+      "caseId": "amb_config_file_vs_cli",
+      "mode": "oracle",
+      "ok": false,
+      "errorCode": "no_oracle_repository",
+      "routedRepository": null,
+      "routeOutcome": null,
+      "routeSource": null,
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 0,
+      "delivered": [],
+      "repositoryCorrect": null,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": true,
+      "misleadingDelivered": 0,
+      "emptyContext": true,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 0,
+      "routingBytes": 0
+    }
+  ]
+}
