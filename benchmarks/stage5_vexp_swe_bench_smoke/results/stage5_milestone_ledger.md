@@ -1776,3 +1776,61 @@ default-off.
 
 - **`initRepo` is not idempotent** (M153): a second call over an existing index
   fails with `UNIQUE constraint failed: edges.id`.
+
+
+## M153-C2 continuation (commits 8d8b4195, a0000b69)
+
+Verdict unchanged: **INCOMPLETE** (A PASS · B PASS · C NOT PASS · D/E not run).
+Activation 14/33 → 19/33; calibration wrong-subject routes 1 → 0; oracle
+correct-implementation Top-1 unchanged at 1/30. Holdout unconsumed, ARC not run.
+Verification: typechecks clean, `bun test` 4659 pass / 0 fail, `git diff --check`
+clean.
+
+## M153-C2 standing findings
+
+- **Attribute the stage before fixing anything** (M153-C2): the taxonomy was
+  built before a line changed, and it earned its keep immediately — REPRESENTATION
+  rose from 6 to 9 as ACTIVATION fell from 16 to 11, which reads like a regression
+  and is the opposite. Those cases were always broken at representation and could
+  not be seen until the query reached that stage. Without the ordered attribution
+  the second fix would have looked like a consequence of the first.
+
+- **A taxonomy that never consults the outcome cannot be falsified** (M153-C2):
+  the first version attributed the last stage in the chain as a failure by
+  default, so `rq_adapter_selection` — the corpus's single oracle success — was
+  labelled a delivery failure. An instrument that can only report failure will.
+
+- **Two tables describing the same vocabulary will disagree** (M153-C2):
+  `OPERATION_VOCABULARY` declared decide/decides/decided/deciding while the cue
+  pattern matched only the first two, so one ordinary English inflection silently
+  disabled the entire behavioural chain. The bug was not in either table but in
+  their being written twice.
+
+- **A rule about NAMING applied to DESCRIBING** (M153-C2): capability-lookup
+  suppression exists for requests that name a definition, and was suppressing
+  requests that describe one — which is precisely the request M150 was built to
+  answer. The protection it appeared to provide was already supplied elsewhere,
+  and more strongly.
+
+- **Punctuation hid a mechanism** (M153-C2): `for (prefix, adapter) in ...` was
+  invisible while `for suffix, filetype in ...` was represented, so a textbook
+  first-success loop carried no fact at all. The same gap hid the ordinary JS
+  destructuring form — in a language absent from the corpus, which is what
+  distinguishes a generic defect from a corpus-shaped one.
+
+- **A subject that names the accessor names nothing** (M153-C2):
+  `self.adapters.items()` reduced to `items()`, so every fact taken from a Python
+  dict loop shared one meaningless subject and the subject discrimination M150
+  exists for could never fire on any of them.
+
+- **A correct answer reached by illegitimate evidence should still be removed**
+  (M153-C2): barring test files from routing evidence deleted a wrong route AND a
+  right one, and the headline workspace number fell from 21.2% to 18.2%. The
+  higher number was reached through another repository's test fixtures. Routing is
+  a claim about implementation ownership; being right for a reason that does not
+  generalise is not being right.
+
+- **Contamination hid a preservation property** (M153-C2): once benchmark arms
+  were isolated, the oracle arms became identical with the routing lane on and
+  off — the exact property that says routing did not disturb retrieval. Before
+  isolation six cases differed, and the noise looked like a real effect.

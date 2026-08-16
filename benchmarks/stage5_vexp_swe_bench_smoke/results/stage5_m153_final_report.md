@@ -2,6 +2,11 @@
 
 **Verdict: INCOMPLETE (A PASS · B PASS · C NOT PASS · D not run · E not run).**
 
+*Updated after the C2 continuation. The verdict is unchanged; what changed is how
+precisely the remaining failure can be named, and five structural defects are
+fixed. See `stage5_m153_c_pass_decision.md` and
+`stage5_m153_behavioral_activation_audit.md`.*
+
 M153 does not close PASS. What it does deliver is the thing the milestone was
 actually created for: a measurement, on repositories that supplied none of
 VTRACE's development pressure, of how much of the behavioural capability is real
@@ -216,3 +221,96 @@ holdout to check it on.
 
 The behavioural routing lane should be re-measured and considered for default-on
 once activation and alignment can carry it.
+
+---
+
+# M153-C2 continuation
+
+Commits `8d8b4195` (activation + representation), `a0000b69` (routing evidence +
+benchmark isolation). Verdict unchanged: **C NOT PASS, D and E not run.**
+
+## The failure taxonomy, built before any code changed
+
+| Stage | pre-C2 | after C2 |
+| --- | ---: | ---: |
+| ACTIVATION | 16 | 11 |
+| REPRESENTATION | 6 | 9 |
+| CANDIDATE | 6 | 7 |
+| SUBJECT | 2 | 2 |
+| NONE (chain worked) | 3 | 4 |
+| **activation rate** | **14/33** | **19/33** |
+
+**GROUND_TRUTH failures: 0** — every expected symbol resolves in its index,
+independently confirming the frozen corpus is sound.
+
+## Five structural defects fixed
+
+1. **Capability-lookup suppression applied to prose.** "Where is the function
+   that ranks the connection adapters?" was suppressed as a definition lookup.
+   The rule is about requests that *name* a definition; this one *describes* one,
+   which is the shape M150 exists to answer. Naming is still protected by the
+   explicit-symbol branch, and identifier queries derive nothing anyway because
+   `\b` does not match inside `rank_adapters`.
+
+2. **Cue inflections disagreed with the module's own vocabulary.**
+   `OPERATION_VOCABULARY` declares `decide/decides/decided/deciding`; the cue
+   matched only the first two, so "How does the system **decide**…" derived
+   `selection` and "How is it **decided**…" derived nothing. No new verb was
+   added — declared families were completed (§20 respected).
+
+3. **Destructured loop targets were invisible.** `Session.get_adapter`, a textbook
+   first-success loop, carried *no* mechanism fact while sphinx's structurally
+   identical `get_filetype` was represented — the only difference was that one
+   target is parenthesised. The same gap hid `for (const [k, v] of …)`, the
+   ordinary JS form, in a language **not in this corpus** — which is the evidence
+   the gap is generic. Four negative controls added (§28).
+
+4. **The loop subject was the accessor, not the collection.**
+   `self.adapters.items()` reduced to `items()`, a subject aligning with nothing.
+   *Every* fact from a Python dict loop shared it, quietly defeating the subject
+   discrimination M150 exists for.
+
+5. **Test files could decide repository routing.** astropy won a parser-ordering
+   query on two `sort_eq` helpers under `astropy/table/tests/`, aligned because
+   their operand `list1` shares a token with the query word "list". Test paths no
+   longer supply routing evidence (§51, §66), reusing the repo's existing
+   predicate rather than adding a second one.
+
+## Benchmark session isolation (§48–§52)
+
+Every arm of every case now starts from discarded session state, proven per case:
+`allArmsStartedEquivalent: true` across 35 cases. Six focused tests pin the
+invariant in both directions. The index is left alone — repository-derived
+evidence is not the mutable half.
+
+The effect is immediate and was previously hidden: **the oracle arms are now
+identical with the lane on and off**, where six flask/astropy cases differed
+before. That is the §78/§100 property saying routing did not disturb retrieval.
+
+## Why C still does not pass
+
+- **Oracle `correct implementation Top-1` is unchanged at 1/30 (3.3%).** The chain
+  reaches further but the dominant failures moved to representation and candidate
+  admission rather than disappearing. §35/§71 forbid tuning routing here.
+- **Calibration wrong-subject routes are now 0** (§44 minimum met), but with the
+  lane on, 4 routes fire and 3 are bad: two holdout cases wrong, one genuinely
+  ambiguous case forced. §45 says a safely-disabled lane is containment, not
+  capability, so the lane stays default-off and C fails.
+
+Removing test evidence dropped the headline workspace number from 21.2% to 18.2%.
+That is an honest correction, not a regression: the higher number included a route
+reached through another repository's test fixtures.
+
+## Holdout status
+
+**Unconsumed.** Holdout cases were counted by stage only; none was inspected to
+choose any rule. ARC was not run and not consulted. TCKDB was not run.
+
+## Recommended next step
+
+Unchanged in substance, sharper in target: the dominant remaining limitation is
+**mechanism representation and candidate admission**, not activation. The
+calibration taxonomy names the specific gaps — filtering/accumulating loops have
+no fact kind, and `get_filetype` carries a direct fact yet loses admission to
+`Project.path2doc`. Those are the next milestone's work, with the holdout still
+untouched to judge it.
