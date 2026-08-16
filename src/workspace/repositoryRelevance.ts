@@ -16,6 +16,14 @@
  *   1. path containment        index-free   an absolute path inside a root
  *   2. indexed path            INDEXED      suffix membership via M145
  *   3. exact symbol            INDEXED      bounded name lookup
+ *   4. behavioural mechanism   INDEXED      M153: subject + operation evidence
+ *
+ * Tier 4 is the only one that decides from what the request MEANS rather than
+ * from something the caller already knew how to name, which is exactly why it is
+ * last: a path or an identifier is authoritative, and a behavioural match may
+ * never overrule one. Within it the comparison is still over evidence KINDS —
+ * each repository is reduced to its single strongest class — so the module's
+ * refusal to compare scores across repositories survives intact.
  *
  * The split down the middle of that table is the M146-A invariant. Tiers 2 and 3
  * read state some indexer derived, so a repository whose index this runtime has
@@ -28,6 +36,16 @@
  */
 import type { Database } from "bun:sqlite";
 
+import type { BehavioralObjective } from "../retrieval/behavioralObjective";
+import { generateOperationFactCandidates } from "../retrieval/operationFactCandidates";
+import {
+  BehavioralNominationStatus,
+  classifyRepositoryEvidence,
+  nominateByEvidenceClass,
+  type BehavioralCandidateSummary,
+  type BehavioralNomination,
+  type BehavioralRepositoryEvidence,
+} from "./behavioralNomination";
 import {
   composeCoverage,
   EvidenceCapability,
@@ -70,6 +88,13 @@ export const RepositoryEvidenceKind = Object.freeze({
   PathContainment: "path_containment",
   IndexedPath: "indexed_path",
   ExactSymbol: "exact_symbol",
+  /**
+   * M153. The only lane that decides from what the request MEANS rather than
+   * from something the caller already knew how to name. Deliberately weakest:
+   * a path or an identifier is authoritative evidence, and a behavioural match
+   * may never overrule one (§56).
+   */
+  BehavioralMechanism: "behavioral_mechanism",
 });
 
 export type RepositoryEvidenceKind =
@@ -85,6 +110,7 @@ export const EVIDENCE_REQUIRES_READY_INDEX: Readonly<Record<RepositoryEvidenceKi
   [RepositoryEvidenceKind.PathContainment]: false,
   [RepositoryEvidenceKind.IndexedPath]: true,
   [RepositoryEvidenceKind.ExactSymbol]: true,
+  [RepositoryEvidenceKind.BehavioralMechanism]: true,
 });
 
 /**
@@ -97,6 +123,7 @@ const TIER_ORDER: readonly RepositoryEvidenceKind[] = [
   RepositoryEvidenceKind.PathContainment,
   RepositoryEvidenceKind.IndexedPath,
   RepositoryEvidenceKind.ExactSymbol,
+  RepositoryEvidenceKind.BehavioralMechanism,
 ];
 
 function poolForEvidence(
@@ -141,6 +168,18 @@ export interface RepositoryProbe {
    * performance it has not checked for, so the mode travels with the result.
    */
   readonly membershipAccessPath?: () => MembershipAccessPath;
+  /**
+   * M153. Bounded behavioural evidence for a derived objective, summarised to
+   * the shape nomination is allowed to see — a class and one provenance item,
+   * never a score.
+   *
+   * Absent on a probe that cannot answer it, which is an UNKNOWN rather than a
+   * negative: a repository whose probe lacks this capability has not been shown
+   * to be free of the behaviour.
+   */
+  readonly behavioralEvidence?: (
+    objective: BehavioralObjective,
+  ) => readonly BehavioralCandidateSummary[];
 }
 
 export interface RepositoryRelevanceLimits {
@@ -172,6 +211,18 @@ export interface RepositoryRelevanceLimits {
    * correctness bound.
    */
   readonly maxPathMembershipScans?: number;
+  /**
+   * Ready repositories whose index may be asked for behavioural evidence in one
+   * request. Larger than `maxDeepProbes` and smaller than the membership bounds
+   * because the costs differ in kind: a membership question is one keyed lookup,
+   * while a behavioural probe reads a bounded slice of the mechanism-fact table
+   * (400 rows, 64 owners, 3 admitted) and evaluates alignment over it.
+   *
+   * The bound is what stops workspace SIZE from setting query cost. Members
+   * beyond it are UNKNOWN, never absent, so exceeding it can only cost a route
+   * — it can never invent one (§59, §108).
+   */
+  readonly maxBehavioralProbes?: number;
 }
 
 export const DEFAULT_RELEVANCE_LIMITS: Required<RepositoryRelevanceLimits> = Object.freeze({
@@ -181,6 +232,7 @@ export const DEFAULT_RELEVANCE_LIMITS: Required<RepositoryRelevanceLimits> = Obj
   maxReportedCandidates: 4,
   maxPresenceScans: 1024,
   maxPathMembershipScans: 1024,
+  maxBehavioralProbes: 64,
 });
 
 export interface RepositoryRelevanceRequest {
@@ -206,6 +258,13 @@ export interface RepositoryRelevanceRequest {
    * way — support is additive and never changes who leads.
    */
   readonly collectSupportingEvidence?: boolean | undefined;
+  /**
+   * M153. The behavioural objective derived from the request, when one could be
+   * derived. Absent means the request described no behaviour this runtime
+   * recognises, and the behavioural lane simply does not run — which is a
+   * statement about the REQUEST, not about the workspace.
+   */
+  readonly behavioralObjective?: BehavioralObjective | null | undefined;
 }
 
 export interface RepositoryRelevanceDiagnostics {
@@ -258,6 +317,14 @@ export interface RepositoryRelevanceDiagnostics {
    * without this a consumer had no way to tell the difference.
    */
   readonly coverage: readonly EvidenceCoverage[];
+  /** M153: ready members whose index was asked for behavioural evidence. */
+  readonly reposBehaviorallyProbed: number;
+  /**
+   * M153: what the behavioural lane concluded, when it ran. `null` means it did
+   * not run — the request described no behaviour, or a stronger lane had
+   * already decided. A `no_decision` verdict is NOT an absence claim (§58).
+   */
+  readonly behavioralNomination: BehavioralNomination | null;
 }
 
 export interface RepositoryRelevance {
@@ -628,6 +695,78 @@ export function nominateRepositories(request: RepositoryRelevanceRequest): Repos
     });
   }
 
+  // ---- Tier 4: behavioural mechanism (READY MEMBERS ONLY) ------------------
+  //
+  // The last lane, and the only one that decides from what the request MEANS.
+  // It runs exactly when every stronger lane produced nothing, so a caller who
+  // named a path or an identifier can never be re-routed by it (§55, §56).
+  //
+  // Each probed member is reduced to ONE evidence class by
+  // `classifyRepositoryEvidence`, and the comparison is over classes alone. A
+  // repository with many weak facts is represented by its best weak fact, so
+  // size buys nothing (§43, §44).
+  //
+  // Members past the probe bound, and members whose probe cannot answer, are
+  // simply absent from the comparison. That can only cost a nomination; it can
+  // never manufacture one, which is the right direction for a lane that is
+  // allowed to decline.
+  let behavioralNomination: BehavioralNomination | null = null;
+  let behavioralProbed = 0;
+  if (request.probe !== undefined && request.behavioralObjective != null) {
+    const gathered: BehavioralRepositoryEvidence[] = [];
+    for (const repo of members) {
+      if (readinessByAlias.get(repo.alias)?.ready !== true) continue;
+      if (behavioralProbed >= limits.maxBehavioralProbes) break;
+      const probe = openProbe(request.probe, repo, probes);
+      if (probe?.behavioralEvidence === undefined) continue;
+      deepProbedAliases.add(repo.alias);
+      behavioralProbed += 1;
+      gathered.push(
+        classifyRepositoryEvidence(
+          repo.alias,
+          probe.behavioralEvidence(request.behavioralObjective),
+        ),
+      );
+    }
+
+    behavioralNomination = nominateByEvidenceClass(gathered);
+    if (behavioralNomination.status === BehavioralNominationStatus.Selected) {
+      const lead = behavioralNomination.lead!;
+      evidence.push({
+        kind: RepositoryEvidenceKind.BehavioralMechanism,
+        alias: lead.alias,
+        worktreeId: members.find((repo) => repo.alias === lead.alias)?.worktreeId ?? null,
+        // Provenance, never a score: the operation asked for and the definition
+        // that answered it.
+        hint: request.behavioralObjective.operation,
+        detail: lead.bestCandidate === null
+          ? lead.evidenceClass
+          : `${lead.evidenceClass} via ${lead.bestCandidate.fqName} (${lead.bestCandidate.factKind})`,
+      });
+      return decide({
+        tier: RepositoryEvidenceKind.BehavioralMechanism,
+        evidence,
+        members,
+        readinessByAlias,
+        limits,
+        // A behavioural match is NOT an exact-uniqueness claim, so it carries no
+        // presence proof. Attaching one would let a fuzzy lane strengthen a
+        // claim only an exact lane can earn (§58).
+        presenceProof: null,
+        diagnostics: baseDiagnostics(members, readyMembers, excluded, deepProbedAliases.size, {
+          presenceScanned,
+          presenceAccessPaths: accessPaths,
+          presenceProof,
+          pathMembershipScanned,
+          indexedPathProof,
+          coverage,
+          behavioralProbed,
+          behavioralNomination,
+        }),
+      });
+    }
+  }
+
   // §29: no evidence means no match. Never the highest weak score.
   //
   // "No repository carries evidence" is itself a claim about every member, so it
@@ -675,6 +814,8 @@ export function nominateRepositories(request: RepositoryRelevanceRequest): Repos
         pathMembershipScanned,
         indexedPathProof,
         coverage,
+        behavioralProbed,
+        behavioralNomination,
       }),
       decidingTier: null,
       candidatesOmitted: 0,
@@ -860,6 +1001,8 @@ interface PresenceDiagnostics {
   readonly pathMembershipScanned?: number;
   readonly indexedPathProof?: UniquenessProof | null;
   readonly coverage?: readonly EvidenceCoverage[];
+  readonly behavioralProbed?: number;
+  readonly behavioralNomination?: BehavioralNomination | null;
 }
 
 function baseDiagnostics(
@@ -886,6 +1029,8 @@ function baseDiagnostics(
     reposPathMembershipScanned: presence.pathMembershipScanned ?? 0,
     indexedPathProof: presence.indexedPathProof ?? null,
     coverage: presence.coverage ?? [],
+    reposBehaviorallyProbed: presence.behavioralProbed ?? 0,
+    behavioralNomination: presence.behavioralNomination ?? null,
   };
 }
 
@@ -1008,6 +1153,28 @@ export function createDatabaseProbe(db: Database): RepositoryProbe {
           : MembershipAccessPath.Fallback;
       }
       return accessPath;
+    },
+    // M153. Reuse M150's candidate generator rather than reimplementing subject
+    // alignment inside the router (§38). It is already the right shape for a
+    // route probe: bounded by construction (400 fact rows, 64 owners, 3
+    // admitted), keyed on the existing `(kind, symbol_id)` index, and documented
+    // as performing ZERO source reads — which is exactly the §37 requirement
+    // that nomination must not hydrate source.
+    //
+    // Only the fields nomination may look at are carried out. The generator's
+    // scores stay behind, because a router that could see one would eventually
+    // be asked to compare two across repositories that never calibrated them.
+    behavioralEvidence: (objective): readonly BehavioralCandidateSummary[] => {
+      const result = generateOperationFactCandidates(db, objective);
+      return result.candidates.map((candidate) => ({
+        fqName: candidate.symbol.fqName,
+        factKind: candidate.factKind,
+        alignment: candidate.alignment,
+        // The generator admits on DIRECT fact kinds only: a partial fact may
+        // strengthen a candidate retrieval already reached, but is never
+        // authority to pull a new definition into the pool.
+        compatibility: "direct",
+      }));
     },
   };
 }

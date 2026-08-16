@@ -28,11 +28,23 @@
 // never overridden (§73).
 //
 // Within that branch the decision belongs to `nominateRepositories`, whose tiers
-// are explicit route, path containment, indexed path and exact symbol. There is no
-// behavioural relevance lane in M146-M149 and this module does not invent one: a
-// query that names no path and no identifier carries no routing evidence, and the
-// honest outcome is the workspace's own configured authority or an abstention —
-// never the member whose name the query happened to mention (§73-§75).
+// are explicit route, path containment, indexed path, exact symbol and — since
+// M153 — behavioural mechanism.
+//
+// M151 stopped at exact symbol and said so: a query naming no path and no
+// identifier carried no routing evidence, so the honest outcome was the
+// workspace's configured authority or an abstention. Measured on the behavioural
+// corpus that meant all 35 workspace requests were answered by the configured
+// default and none by evidence.
+//
+// M153 adds the missing lane WITHOUT weakening that rule. The behavioural tier is
+// last, so a caller who named a path or an identifier is still never overridden
+// by a fuzzier match (§55, §56); it compares repositories by the strongest CLASS
+// of subject-aligned evidence each holds rather than by any score, so a large
+// repository cannot win on volume; and when it cannot pick a unique winner it
+// declines, returning control unchanged to the configured default. What it must
+// never become is the thing the original note warned against — a lane that routes
+// to the member whose NAME the query happened to mention (§33, §53, §73-§75).
 
 import { Database } from "bun:sqlite";
 
@@ -48,6 +60,11 @@ import {
   type ResolvedWorkspaceRepoConfig,
 } from "./config";
 import { evaluateWorkspaceReadiness, type WorkspaceReadiness } from "./readiness";
+import { deriveQueryIntent } from "../retrieval/querySemantics";
+import {
+  deriveBehavioralObjective,
+  hasBehavioralOperation,
+} from "../retrieval/behavioralObjective";
 import { extractQueryRouteHints } from "./queryRouteHints";
 import {
   resolveWorkspaceRegistry,
@@ -187,6 +204,26 @@ export interface ProductRouteRequest {
   readonly limits?: RepositoryRelevanceLimits | undefined;
   /** Injectable for tests and for measuring index opens. */
   readonly openProbeDatabase?: ((repository: RegisteredRepository) => Database | null) | undefined;
+  /**
+   * M153. Let a request with no path or symbol be routed by behavioural
+   * evidence. OFF by default — see `behavioralRoutingEnabled`.
+   */
+  readonly enableBehavioralRouting?: boolean | undefined;
+}
+
+/**
+ * Is the M153 behavioural lane active for this request?
+ *
+ * Off unless asked for, per request or by environment. The lane is correct by
+ * construction — bounded, structural, abstaining, additive — but its evidence is
+ * only as good as subject alignment, and on the behavioural corpus that produced
+ * 3 wrong routes in 6 fires. Until alignment can carry it, a truthful
+ * configured-default answer beats a confident wrong one, and the same
+ * default-off discipline applies here that M78/M82/M85 applied to their guards.
+ */
+export function behavioralRoutingEnabled(request: ProductRouteRequest): boolean {
+  if (request.enableBehavioralRouting !== undefined) return request.enableBehavioralRouting;
+  return process.env.VTRACE_ENABLE_BEHAVIORAL_ROUTING === "1";
 }
 
 function toMember(repository: RegisteredRepository): ProductRouteMember {
@@ -350,6 +387,26 @@ export async function resolveProductRoute(request: ProductRouteRequest): Promise
 
   // ---- Auto-routing over the workspace -------------------------------------
   const hints = extractQueryRouteHints(request.query, request.explicitPaths ?? []);
+  // M153. Derived here, once, from the SAME request text the capsule will read,
+  // so routing and retrieval can never disagree about what was asked. A request
+  // that describes no behaviour yields `null` and the behavioural lane does not
+  // run — which says something about the request, not about the workspace.
+  //
+  // DEFAULT-OFF, and the reason is a measurement rather than caution. On the
+  // behavioural corpus the lane fired 6 times and routed wrongly 3 of those: an
+  // adapter-selection question went to flask because the operand
+  // `url_build_error_handlers` happens to contain the subject token `url`, while
+  // the correct repository admitted no candidate at all. Wrong-subject
+  // nomination is an explicit M153 failure condition, so enabling this by
+  // default would trade a truthful configured-default answer for a confident
+  // wrong one. The capability ships measured and reachable; it becomes the
+  // default when subject alignment can carry it (§41, §47, §138).
+  const behavioralResult = behavioralRoutingEnabled(request)
+    ? deriveBehavioralObjective(deriveQueryIntent(request.query))
+    : null;
+  const behavioralObjective = behavioralResult !== null && hasBehavioralOperation(behavioralResult)
+    ? behavioralResult
+    : null;
   const opened: string[] = [];
   const refusedOpened: string[] = [];
   const handles: Database[] = [];
@@ -386,6 +443,7 @@ export async function resolveProductRoute(request: ProductRouteRequest): Promise
       probe,
       ...(request.limits === undefined ? {} : { limits: request.limits }),
       collectSupportingEvidence: request.includeSupporting === true,
+      behavioralObjective,
     });
 
     const diagnostics = relevance.diagnostics;
