@@ -1,548 +1,78 @@
 {
   "schemaVersion": "stage5.m150.changed-case-ledger.v1",
-  "note": "Every deterministic movement from the M149 predecessor to the final M150 candidate, with one primary cause and an independent quality label.",
-  "suites": [
+  "causes": [
+    "path_only_relevance_gate",
+    "primary_operation_role",
+    "answer_role_pivot_eligibility"
+  ],
+  "m149_to_final": {
+    "total": 16,
+    "cause": "path_only_relevance_gate",
+    "quality": "NEUTRAL",
+    "evidence": "0 lead changes, 0 gold-visibility flips, 0 quality-metric changes across both suites",
+    "cases": [
+      "django__django-11490",
+      "django__django-11133",
+      "django__django-11749",
+      "django__django-11820",
+      "django__django-12325",
+      "django__django-12774",
+      "django__django-12858",
+      "django__django-13112",
+      "django__django-13195",
+      "sympy__sympy-12481",
+      "matplotlib__matplotlib-22719",
+      "matplotlib__matplotlib-24627",
+      "astropy__astropy-14539",
+      "pydata__xarray-3677",
+      "pytest-dev__pytest-7432",
+      "sympy__sympy-16766"
+    ]
+  },
+  "86fed3dd_to_final": {
+    "total": 0,
+    "cause": "answer_role_pivot_eligibility",
+    "quality": "NEUTRAL",
+    "evidence": "semantic hashes byte-identical on django and cross_repo_30"
+  },
+  "arc": [
     {
-      "suite": "django",
-      "changed": 9,
-      "of": 20,
-      "cause": "path_only_relevance_gate",
-      "quality": "NEUTRAL",
-      "justification": "Support-slot composition only. Gold-file and gold-symbol outcomes identical on both sides.",
-      "qualityPredecessor": {
-        "cases": 20,
-        "evaluated": 20,
-        "top1GoldFile": 17,
-        "top3GoldFile": 20,
-        "goldFileAnywhere": 20,
-        "goldSymbolAnywhere": 14,
-        "missingGold": 0,
-        "meanPivotCount": 2.05,
-        "meanSupportCount": 3.95,
-        "meanEstimatedTokens": 1363.7
-      },
-      "qualityCandidate": {
-        "cases": 20,
-        "evaluated": 20,
-        "top1GoldFile": 17,
-        "top3GoldFile": 20,
-        "goldFileAnywhere": 20,
-        "goldSymbolAnywhere": 14,
-        "missingGold": 0,
-        "meanPivotCount": 2.05,
-        "meanSupportCount": 3.95,
-        "meanEstimatedTokens": 1360.75
-      },
-      "changedCases": [
-        {
-          "instanceId": "django__django-11490",
-          "fields": [
-            "selectedFiles",
-            "roles",
-            "contentModes",
-            "modelVisibleContext",
-            "tokenAccounting"
-          ],
-          "predecessorLead": "django/db/models/sql/compiler.py",
-          "candidateLead": "django/db/models/sql/compiler.py",
-          "predecessorSelectedFiles": [
-            "django/db/models/sql/compiler.py"
-          ],
-          "candidateSelectedFiles": [
-            "django/db/models/sql/compiler.py",
-            "django/db/models/sql/query.py"
-          ],
-          "predecessorGoldVisible": true,
-          "candidateGoldVisible": true
-        },
-        {
-          "instanceId": "django__django-11133",
-          "fields": [
-            "selectedFiles",
-            "roles",
-            "contentModes",
-            "modelVisibleContext",
-            "tokenAccounting"
-          ],
-          "predecessorLead": "http/response.py",
-          "candidateLead": "http/response.py",
-          "predecessorSelectedFiles": [
-            "http/response.py",
-            "core/checks/database.py"
-          ],
-          "candidateSelectedFiles": [
-            "http/response.py"
-          ],
-          "predecessorGoldVisible": true,
-          "candidateGoldVisible": true
-        },
-        {
-          "instanceId": "django__django-11749",
-          "fields": [
-            "selectedFiles",
-            "roles",
-            "contentModes",
-            "modelVisibleContext",
-            "tokenAccounting"
-          ],
-          "predecessorLead": "core/management/__init__.py",
-          "candidateLead": "core/management/__init__.py",
-          "predecessorSelectedFiles": [
-            "core/management/__init__.py",
-            "contrib/auth/management/commands/changepassword.py",
-            "contrib/sites/management.py",
-            "template/backends/django.py",
-            "db/models/fields/__init__.py",
-            "contrib/gis/management/commands/ogrinspect.py"
-          ],
-          "candidateSelectedFiles": [
-            "core/management/__init__.py",
-            "contrib/gis/management/commands/ogrinspect.py",
-            "db/models/fields/__init__.py",
-            "contrib/auth/management/commands/changepassword.py",
-            "core/management/commands/check.py"
-          ],
-          "predecessorGoldVisible": true,
-          "candidateGoldVisible": true
-        },
-        {
-          "instanceId": "django__django-11820",
-          "fields": [
-            "selectedFiles",
-            "roles",
-            "contentModes",
-            "modelVisibleContext",
-            "tokenAccounting"
-          ],
-          "predecessorLead": "db/models/base.py",
-          "candidateLead": "db/models/base.py",
-          "predecessorSelectedFiles": [
-            "db/models/base.py",
-            "db/models/fields/__init__.py",
-            "db/models/fields/related_lookups.py",
-            "db/models/fields/related.py",
-            "db/models/fields/related_descriptors.py"
-          ],
-          "candidateSelectedFiles": [
-            "db/models/base.py",
-            "db/models/fields/__init__.py",
-            "db/models/fields/related_lookups.py",
-            "db/models/fields/related.py",
-            "db/models/fields/proxy.py"
-          ],
-          "predecessorGoldVisible": true,
-          "candidateGoldVisible": true
-        },
-        {
-          "instanceId": "django__django-12325",
-          "fields": [
-            "selectedFiles",
-            "roles",
-            "contentModes",
-            "modelVisibleContext",
-            "tokenAccounting"
-          ],
-          "predecessorLead": "db/models/sql/query.py",
-          "candidateLead": "db/models/sql/query.py",
-          "predecessorSelectedFiles": [
-            "db/models/sql/query.py",
-            "db/models/options.py",
-            "template/backends/django.py",
-            "db/backends/sqlite3/schema.py",
-            "conf/__init__.py",
-            "db/models/sql/compiler.py"
-          ],
-          "candidateSelectedFiles": [
-            "db/models/sql/query.py",
-            "db/models/options.py",
-            "db/backends/sqlite3/schema.py",
-            "conf/__init__.py",
-            "db/models/sql/compiler.py"
-          ],
-          "predecessorGoldVisible": true,
-          "candidateGoldVisible": true
-        },
-        {
-          "instanceId": "django__django-12774",
-          "fields": [
-            "selectedFiles",
-            "roles",
-            "contentModes",
-            "modelVisibleContext",
-            "tokenAccounting"
-          ],
-          "predecessorLead": "db/models/query.py",
-          "candidateLead": "db/models/query.py",
-          "predecessorSelectedFiles": [
-            "db/models/query.py",
-            "apps/config.py",
-            "db/models/sql/query.py",
-            "template/backends/django.py",
-            "db/models/options.py"
-          ],
-          "candidateSelectedFiles": [
-            "db/models/query.py",
-            "apps/config.py",
-            "db/models/options.py",
-            "db/models/sql/query.py"
-          ],
-          "predecessorGoldVisible": true,
-          "candidateGoldVisible": true
-        },
-        {
-          "instanceId": "django__django-12858",
-          "fields": [
-            "selectedFiles",
-            "roles",
-            "contentModes",
-            "modelVisibleContext",
-            "tokenAccounting"
-          ],
-          "predecessorLead": "db/models/base.py",
-          "candidateLead": "db/models/base.py",
-          "predecessorSelectedFiles": [
-            "db/models/base.py",
-            "db/models/lookups.py",
-            "core/management/commands/check.py"
-          ],
-          "candidateSelectedFiles": [
-            "db/models/base.py",
-            "db/models/lookups.py",
-            "db/models/sql/query.py"
-          ],
-          "predecessorGoldVisible": true,
-          "candidateGoldVisible": true
-        },
-        {
-          "instanceId": "django__django-13112",
-          "fields": [
-            "selectedFiles",
-            "roles",
-            "contentModes",
-            "modelVisibleContext",
-            "tokenAccounting"
-          ],
-          "predecessorLead": "db/models/fields/related.py",
-          "candidateLead": "db/models/fields/related.py",
-          "predecessorSelectedFiles": [
-            "db/models/fields/related.py",
-            "contrib/admin/utils.py",
-            "core/management/commands/makemigrations.py",
-            "core/management/commands/migrate.py",
-            "db/migrations/autodetector.py",
-            "db/backends/ddl_references.py"
-          ],
-          "candidateSelectedFiles": [
-            "db/models/fields/related.py",
-            "contrib/admin/utils.py",
-            "db/migrations/autodetector.py",
-            "db/backends/ddl_references.py",
-            "db/backends/oracle/operations.py",
-            "db/backends/sqlite3/introspection.py"
-          ],
-          "predecessorGoldVisible": true,
-          "candidateGoldVisible": true
-        },
-        {
-          "instanceId": "django__django-13195",
-          "fields": [
-            "selectedFiles",
-            "roles",
-            "contentModes",
-            "modelVisibleContext",
-            "tokenAccounting"
-          ],
-          "predecessorLead": "http/response.py",
-          "candidateLead": "http/response.py",
-          "predecessorSelectedFiles": [
-            "http/response.py",
-            "contrib/messages/storage/cookie.py",
-            "core/mail/message.py",
-            "contrib/sessions/middleware.py"
-          ],
-          "candidateSelectedFiles": [
-            "http/response.py",
-            "http/cookie.py",
-            "contrib/messages/storage/cookie.py"
-          ],
-          "predecessorGoldVisible": true,
-          "candidateGoldVisible": true
-        }
-      ]
-    },
-    {
-      "suite": "cross_repo_30",
-      "changed": 7,
-      "of": 30,
-      "cause": "path_only_relevance_gate",
-      "quality": "NEUTRAL",
-      "justification": "Support-slot composition only. Gold-file and gold-symbol outcomes identical on both sides.",
-      "qualityPredecessor": {
-        "cases": 30,
-        "evaluated": 30,
-        "top1GoldFile": 21,
-        "top3GoldFile": 24,
-        "goldFileAnywhere": 28,
-        "goldSymbolAnywhere": 17,
-        "missingGold": 2,
-        "meanPivotCount": 2.133,
-        "meanSupportCount": 3.833,
-        "meanEstimatedTokens": 2144.867
-      },
-      "qualityCandidate": {
-        "cases": 30,
-        "evaluated": 30,
-        "top1GoldFile": 21,
-        "top3GoldFile": 24,
-        "goldFileAnywhere": 28,
-        "goldSymbolAnywhere": 17,
-        "missingGold": 2,
-        "meanPivotCount": 2.133,
-        "meanSupportCount": 3.833,
-        "meanEstimatedTokens": 2146.967
-      },
-      "changedCases": [
-        {
-          "instanceId": "sympy__sympy-12481",
-          "fields": [
-            "selectedFiles",
-            "roles",
-            "contentModes",
-            "modelVisibleContext",
-            "tokenAccounting"
-          ],
-          "predecessorLead": "sympy/combinatorics/permutations.py",
-          "candidateLead": "sympy/combinatorics/permutations.py",
-          "predecessorSelectedFiles": [
-            "sympy/combinatorics/permutations.py",
-            "sympy/combinatorics/perm_groups.py",
-            "sympy/polys/constructor.py",
-            "sympy/core/expr.py",
-            "sympy/combinatorics/named_groups.py"
-          ],
-          "candidateSelectedFiles": [
-            "sympy/combinatorics/permutations.py",
-            "sympy/combinatorics/perm_groups.py",
-            "sympy/core/expr.py",
-            "sympy/combinatorics/named_groups.py",
-            "sympy/combinatorics/tensor_can.py"
-          ],
-          "predecessorGoldVisible": true,
-          "candidateGoldVisible": true
-        },
-        {
-          "instanceId": "matplotlib__matplotlib-22719",
-          "fields": [
-            "selectedFiles",
-            "roles",
-            "contentModes",
-            "modelVisibleContext",
-            "tokenAccounting"
-          ],
-          "predecessorLead": "lib/matplotlib/units.py",
-          "candidateLead": "lib/matplotlib/units.py",
-          "predecessorSelectedFiles": [
-            "lib/matplotlib/units.py",
-            "lib/matplotlib/_api/deprecation.py",
-            "lib/matplotlib/category.py",
-            "lib/matplotlib/axis.py",
-            "lib/matplotlib/_type1font.py",
-            "lib/matplotlib/projections/polar.py"
-          ],
-          "candidateSelectedFiles": [
-            "lib/matplotlib/units.py",
-            "lib/matplotlib/_api/deprecation.py",
-            "lib/matplotlib/category.py",
-            "lib/matplotlib/_type1font.py",
-            "lib/matplotlib/axis.py"
-          ],
-          "predecessorGoldVisible": true,
-          "candidateGoldVisible": true
-        },
-        {
-          "instanceId": "matplotlib__matplotlib-24627",
-          "fields": [
-            "selectedFiles",
-            "roles",
-            "contentModes",
-            "modelVisibleContext",
-            "tokenAccounting"
-          ],
-          "predecessorLead": "lib/matplotlib/axes/_base.py",
-          "candidateLead": "lib/matplotlib/axes/_base.py",
-          "predecessorSelectedFiles": [
-            "lib/matplotlib/axes/_base.py",
-            "lib/matplotlib/figure.py",
-            "lib/matplotlib/artist.py",
-            "lib/mpl_toolkits/axes_grid1/axes_grid.py",
-            "lib/mpl_toolkits/axisartist/axis_artist.py",
-            "lib/matplotlib/pyplot.py"
-          ],
-          "candidateSelectedFiles": [
-            "lib/matplotlib/axes/_base.py",
-            "lib/matplotlib/figure.py",
-            "lib/mpl_toolkits/axes_grid1/axes_grid.py",
-            "lib/mpl_toolkits/axisartist/axis_artist.py",
-            "lib/matplotlib/pyplot.py",
-            "lib/mpl_toolkits/axisartist/axislines.py"
-          ],
-          "predecessorGoldVisible": true,
-          "candidateGoldVisible": true
-        },
-        {
-          "instanceId": "astropy__astropy-14539",
-          "fields": [
-            "selectedFiles",
-            "roles",
-            "contentModes",
-            "modelVisibleContext",
-            "tokenAccounting"
-          ],
-          "predecessorLead": "astropy/io/fits/diff.py",
-          "candidateLead": "astropy/io/fits/diff.py",
-          "predecessorSelectedFiles": [
-            "astropy/io/fits/diff.py",
-            "astropy/io/misc/asdf/tags/fits/fits.py",
-            "astropy/io/fits/connect.py"
-          ],
-          "candidateSelectedFiles": [
-            "astropy/io/fits/diff.py"
-          ],
-          "predecessorGoldVisible": true,
-          "candidateGoldVisible": true
-        },
-        {
-          "instanceId": "pydata__xarray-3677",
-          "fields": [
-            "selectedFiles",
-            "roles",
-            "contentModes",
-            "modelVisibleContext",
-            "tokenAccounting"
-          ],
-          "predecessorLead": "xarray/core/dataset.py",
-          "candidateLead": "xarray/core/dataset.py",
-          "predecessorSelectedFiles": [
-            "xarray/core/dataset.py",
-            "xarray/core/merge.py",
-            "versioneer.py",
-            "xarray/core/variable.py",
-            "xarray/core/dataarray.py"
-          ],
-          "candidateSelectedFiles": [
-            "xarray/core/dataset.py",
-            "xarray/core/merge.py",
-            "versioneer.py",
-            "xarray/core/dataarray.py",
-            "xarray/core/variable.py"
-          ],
-          "predecessorGoldVisible": true,
-          "candidateGoldVisible": true
-        },
-        {
-          "instanceId": "pytest-dev__pytest-7432",
-          "fields": [
-            "selectedFiles",
-            "roles",
-            "contentModes",
-            "modelVisibleContext",
-            "tokenAccounting"
-          ],
-          "predecessorLead": "src/_pytest/skipping.py",
-          "candidateLead": "src/_pytest/skipping.py",
-          "predecessorSelectedFiles": [
-            "src/_pytest/skipping.py",
-            "src/_pytest/reports.py",
-            "src/_pytest/mark/structures.py"
-          ],
-          "candidateSelectedFiles": [
-            "src/_pytest/skipping.py",
-            "src/_pytest/reports.py",
-            "src/_pytest/mark/structures.py",
-            "src/_pytest/junitxml.py"
-          ],
-          "predecessorGoldVisible": true,
-          "candidateGoldVisible": true
-        },
-        {
-          "instanceId": "sympy__sympy-16766",
-          "fields": [
-            "selectedFiles",
-            "roles",
-            "contentModes",
-            "modelVisibleContext",
-            "tokenAccounting"
-          ],
-          "predecessorLead": "sympy/printing/pycode.py",
-          "candidateLead": "sympy/printing/pycode.py",
-          "predecessorSelectedFiles": [
-            "sympy/printing/pycode.py",
-            "sympy/utilities/lambdify.py",
-            "sympy/plotting/experimental_lambdify.py",
-            "sympy/ntheory/generate.py",
-            "sympy/tensor/indexed.py",
-            "sympy/printing/glsl.py"
-          ],
-          "candidateSelectedFiles": [
-            "sympy/printing/pycode.py",
-            "sympy/utilities/lambdify.py",
-            "sympy/plotting/experimental_lambdify.py",
-            "sympy/tensor/indexed.py",
-            "sympy/printing/glsl.py",
-            "sympy/printing/julia.py"
-          ],
-          "predecessorGoldVisible": true,
-          "candidateGoldVisible": true
-        }
-      ]
+      "query": "ordering",
+      "change": "lead determine_family -> get_all_families",
+      "cause": "answer_role_pivot_eligibility",
+      "quality": "IMPROVEMENT"
     }
   ],
-  "frozen50": {
-    "changed": 16,
-    "of": 50,
-    "quality": {
-      "predecessor": {
-        "cases": 50,
-        "evaluated": 50,
-        "top1GoldFile": 38,
-        "top3GoldFile": 44,
-        "goldFileAnywhere": 48,
-        "goldSymbolAnywhere": 31,
-        "missingGold": 2,
-        "meanPivotCount": 2.1,
-        "meanSupportCount": 3.88,
-        "meanEstimatedTokens": 1832.4
-      },
-      "candidate": {
-        "cases": 50,
-        "evaluated": 50,
-        "top1GoldFile": 38,
-        "top3GoldFile": 44,
-        "goldFileAnywhere": 48,
-        "goldSymbolAnywhere": 31,
-        "missingGold": 2,
-        "meanPivotCount": 2.1,
-        "meanSupportCount": 3.88,
-        "meanEstimatedTokens": 1832.48
-      }
-    },
-    "cause": "path_only_relevance_gate",
-    "label": "NEUTRAL",
-    "evidence": "Top-1 38, Top-3 44, anywhere 48, symbol 31, missing 2 on BOTH sides; mean tokens 1832.4 -> 1832.48."
-  },
-  "tckdb": {
-    "leadsChanged": 1,
-    "of": 6,
-    "query": "What determines the order the records are returned in?",
-    "before": "record_review.py::apply_review_policy",
-    "after": "scientific_read/species_transport.py::get_species_transport",
-    "cause": "path_only_relevance_gate",
-    "label": "NEUTRAL",
-    "justification": "apply_review_policy held the lead through a file-stem coincidence on `records`. Neither candidate is an established gold answer for this query, so the change is recorded as neutral rather than claimed as an improvement."
-  },
-  "improvements": [
-    "ARC ordering query: _dihedral_angle no longer leads from a path-stem coincidence"
+  "tckdb": [
+    {
+      "query": "What determines the order the records are returned in?",
+      "change": "lead apply_review_policy -> get_species_transport",
+      "cause": "answer_role_pivot_eligibility",
+      "quality": "IMPROVEMENT",
+      "evidence": "new lead carries ordering_established (ranked = sorted(...), include=sorted(includes)) and priority_lookup (REVIEW_RANK[...]); previous lead carries only fallback_branch"
+    }
   ],
-  "regressions": [],
-  "unexpected": []
+  "mechanism_corpus_15": [
+    {
+      "case": "first_success_backend",
+      "change": "expected resolve_backend pivot -> support",
+      "cause": "pre_existing_ranking",
+      "quality": "REGRESSION",
+      "evidence": "expected answer sits at pool rank 4 both before and after; a higher-ranked direct implementer takes the single answer-role slot"
+    },
+    {
+      "case": "unknown_ordering",
+      "change": "lead supportcap.decide -> ordering.ordered_candidates",
+      "cause": "pre_existing_ranking",
+      "quality": "REGRESSION",
+      "evidence": "expected take_winner at pool rank 4 both before and after"
+    },
+    {
+      "case": "two_hop_producer",
+      "change": "lead fallbacks.select_backend -> mixed.first_backend",
+      "cause": "pre_existing_ranking",
+      "quality": "NEUTRAL",
+      "evidence": "case already failed before and after; only the identity of the wrong lead changed"
+    }
+  ]
 }

@@ -1,0 +1,170 @@
+{
+  "schemaVersion": "stage5.m150.arc-delivery-controls.v1",
+  "cases": [
+    {
+      "label": "ordering",
+      "query": "What determines the precedence/order when multiple reaction families match?",
+      "lead": "arc/family/family.py::get_all_families",
+      "pivots": 2,
+      "support": 4,
+      "moduleNodes": 0,
+      "watch": [
+        {
+          "fqName": "arc/family/family.py::get_all_families",
+          "rank": 1,
+          "final": 1.764,
+          "organicFinal": 1.0549,
+          "mechanismEvidence": 0.55,
+          "operationFulfillment": 0.7091,
+          "sources": [
+            "operation_fact"
+          ],
+          "deliveredAs": "pivot",
+          "contentMode": "full"
+        },
+        {
+          "fqName": "arc/reaction/reaction.py::ARCReaction.determine_family",
+          "rank": 2,
+          "final": 1.7639,
+          "organicFinal": null,
+          "mechanismEvidence": 0,
+          "operationFulfillment": 0,
+          "sources": [
+            "lexical"
+          ],
+          "deliveredAs": "pivot",
+          "contentMode": "full"
+        }
+      ]
+    },
+    {
+      "label": "selection",
+      "query": "How does ARC decide which reaction family wins?",
+      "lead": "arc/reaction/reaction.py::ARCReaction.determine_family",
+      "pivots": 2,
+      "support": 4,
+      "moduleNodes": 0,
+      "watch": [
+        {
+          "fqName": "arc/reaction/reaction.py::ARCReaction.determine_family",
+          "rank": 1,
+          "final": 2.1256,
+          "organicFinal": null,
+          "mechanismEvidence": 0.55,
+          "operationFulfillment": 0,
+          "sources": [
+            "lexical",
+            "operation_fact"
+          ],
+          "deliveredAs": "pivot",
+          "contentMode": "full"
+        },
+        {
+          "fqName": "arc/family/family.py::get_all_families",
+          "rank": null,
+          "final": null,
+          "organicFinal": null,
+          "mechanismEvidence": 0,
+          "operationFulfillment": 0,
+          "sources": [],
+          "deliveredAs": "mechanism_support",
+          "contentMode": "mechanism_slice"
+        }
+      ]
+    },
+    {
+      "label": "cache",
+      "query": "How is reaction-family lookup cached?",
+      "lead": "arc/family/family.py::get_reaction_family",
+      "pivots": 2,
+      "support": 4,
+      "moduleNodes": 0,
+      "watch": [
+        {
+          "fqName": "arc/family/family.py::get_reaction_family",
+          "rank": 1,
+          "final": 1.9475,
+          "organicFinal": null,
+          "mechanismEvidence": 0.55,
+          "operationFulfillment": 0,
+          "sources": [
+            "lexical"
+          ],
+          "deliveredAs": "pivot",
+          "contentMode": "full"
+        }
+      ]
+    },
+    {
+      "label": "storage",
+      "query": "Where is the selected reaction family stored on ARCReaction?",
+      "lead": "arc/reaction/reaction.py::ARCReaction.family_own_reverse",
+      "pivots": 2,
+      "support": 4,
+      "moduleNodes": 0,
+      "watch": [
+        {
+          "fqName": "arc/reaction/reaction.py::ARCReaction.family",
+          "rank": 2,
+          "final": 2.1706,
+          "organicFinal": null,
+          "mechanismEvidence": 0.55,
+          "operationFulfillment": 0,
+          "sources": [
+            "lexical",
+            "operation_fact"
+          ],
+          "deliveredAs": "pivot",
+          "contentMode": "full"
+        }
+      ]
+    },
+    {
+      "label": "identifier",
+      "query": "Where is determine_family defined?",
+      "lead": "arc/reaction/reaction.py::ARCReaction.determine_family",
+      "pivots": 2,
+      "support": 4,
+      "moduleNodes": 0,
+      "watch": [
+        {
+          "fqName": "arc/reaction/reaction.py::ARCReaction.determine_family",
+          "rank": 3,
+          "final": 1.5737,
+          "organicFinal": null,
+          "mechanismEvidence": 0,
+          "operationFulfillment": 0,
+          "sources": [
+            "lexical",
+            "symbol"
+          ],
+          "deliveredAs": "pivot",
+          "contentMode": "full"
+        }
+      ]
+    },
+    {
+      "label": "gaussian",
+      "query": "How does ARC decide which Gaussian route keywords to emit?",
+      "lead": "arc/job/adapters/gaussian.py::GaussianAdapter._user_requested_verytight",
+      "pivots": 2,
+      "support": 4,
+      "moduleNodes": 0,
+      "watch": [
+        {
+          "fqName": "arc/job/adapters/gaussian.py::GaussianAdapter._user_requested_verytight",
+          "rank": 5,
+          "final": 1.5436,
+          "organicFinal": null,
+          "mechanismEvidence": 0,
+          "operationFulfillment": 0,
+          "sources": [
+            "lexical"
+          ],
+          "deliveredAs": "pivot",
+          "contentMode": "full"
+        }
+      ]
+    }
+  ]
+}

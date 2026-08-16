@@ -1,196 +1,170 @@
-# M150 — Behavioral Decision-Point and Execution-Mechanism Retrieval (final)
+# M150 — final report
 
-**Verdict: MIXED.**
+**Verdict: PASS.** A PASS · B PASS · C PASS · D PASS · E PASS.
 
-A → PASS · B → PASS · C → PASS · **D → MIXED** · E → PASS.
+Final functional commit: `2d3010e4` — *Preserve answer roles through pivot
+eligibility*. On `main`, local only, no co-author trailers.
 
-The path-only decoy is gone: `_dihedral_angle` no longer leads the ARC ordering
-query, and the root cause was found, named and fixed generically. But the ordering
-*implementation* still is not the primary answer — `get_all_families` sits at rank
-22 while the selection *consumer* leads. §80's third clause covers this, so the
-milestone closes MIXED.
+## Capability closed
 
-Final phase: `fe5c220` — path-evidence gate. See
-`stage5_m150_path_evidence_contract.md` for the full root cause and rule.
+> VTRACE distinguishes code that directly implements the behavioural operation a
+> request asks about from code that merely consumes or depends on it — even when
+> the consumer has stronger lexical subject overlap — and that decision survives
+> ranking, pivot eligibility, pivot ordering and capsule delivery to reach what
+> the model actually sees.
 
-- M149 predecessor `2aaac750b326478bb3f29576aa1454365d0f734d`
-- checkpoints `ab8e4f02eaacdbcfa8fc56f1b056db232ce1452c` · `ebc4fda7d42cfe8706e9ee128fe56ec8e5405a83` · `650e916fa0b024c1d739615b9a8b5f669fd3429f`
-- checkpoint `ed8db5b71e64023e750d1202dd1accaf6e6d9e90`
-- **final functional `fe5c220`**
-- Branch `main`, ahead 29, **nothing pushed**, no co-author trailers.
+## Commit chain
 
-**Frozen and confirmed unchanged:** mechanism weights (0.55 / 0.20, strongest
-single fact), subject-alignment policy (operand + one-hop provenance, no
-path/class/domain), `mechanism_support` contract (cap 1, exact relations, depth 2),
-statement-slice contract (real source, structural bounds).
+| stage | commit |
+|---|---|
+| M149 predecessor | `2aaac750b326478bb3f29576aa1454365d0f734d` |
+| operation semantics / facts / scoring / discrimination | `09a39e2`, `ee35b05`, `9a81a1c`, `ab8e4f02eaacdbcfa8fc56f1b056db232ce1452c` |
+| subject alignment | `ebc4fda7d42cfe8706e9ee128fe56ec8e5405a83` |
+| mechanism support + decision slice | `650e916fa0b024c1d739615b9a8b5f669fd3429f` |
+| operation-fact candidate generation | `ed8db5b71e64023e750d1202dd1accaf6e6d9e90` |
+| path-evidence gate | `fe5c220ecf67e80d4a39a1fdc76aa28baaf8bc0c` |
+| answer-role relation | `86fed3ddba07a20917c8fb1e0a160cf2ff76ed33` |
+| **answer-role delivery (final)** | **`2d3010e4`** |
 
----
+## The delivery defect
 
-## 1. What this phase added
+Retrieval ranked ARC's orderer first and the capsule still led with the consumer.
+The audit (`stage5_m150_answer_role_delivery_audit.md`) located it in one
+function, `assignCandidateRoles.classify`, which states one requirement three
+times — `directEvidence`, a `localEvidence` floor, a `hubPenalty === 0` check —
+and reads all three from NAME and PATH signals only:
 
-An operation-fact candidate lane. It runs the pipeline backwards for one step:
+| candidate | actionability | lexical | localEvidence | hubPenalty | mechanism | delivered |
+|---|---|---|---|---|---|---|
+| `get_all_families` | 1 | 0.0466 | 0.3333 | 0.0116 | 0.55 | `support` / signature |
+| `alpha` | 1 | 0 | 0 | 0 | 0.55 | discarded → empty capsule |
 
-```
-declared behavioral operation
-  -> fact kinds that DIRECTLY implement it   (partial kinds may not create candidates)
-  -> the SAME subject-alignment policy       (before admission, never after)
-  -> a bounded few ordinary candidates       (cap 3)
-```
+§9's order-of-operations hypothesis was **refuted by measurement**: the relation
+is applied inside `hybridRetrieve`, before nomination, so the pivot set was never
+built from a stale ranking. The loss was entirely in what the role layer accepts
+as evidence — the same blind spot M150-G fixed one layer up, restated downstream.
 
-Admission is **not** selection, a role, or a score. An admitted definition
-competes on the same evidence as everything else and can still lose.
+## The fix
 
-**No access index was needed** (§56). `EXPLAIN QUERY PLAN` reports
-`SEARCH ... USING INDEX idx_symbol_mechanism_facts_kind (kind=?)` — an index
-search, 46 of 2566 rows in 0.73 ms on ARC. No capability or migration was invented
-for symmetry.
+Answer-role evidence (`mechanismEvidence >= 0.55`, the direct tier) is admitted
+to each of those three conditions and the discard gate. **No numeric parameter
+was introduced in this phase**; the `1e-4` relational step from `86fed3dd` is
+unchanged and was not reinterpreted as magnitude.
 
-One artifact was fixed along the way: an admitted candidate carried `fts = 0` and
-was judged as though its name matched nothing, purely because a different lane
-found it first. It is now scored by the same `rankSearchCandidates` the lexical
-lane uses. That is not a boost — an unrelated definition still scores nothing.
+Authority is granted to **one** candidate — the best-ranked direct implementer.
+That bound is measured, not stylistic: unbounded, it let `mixed.py::first_backend`
+lead a question about another module's indirect choice because it too ends in
+`backends[0]`. Operand alignment is enough to score a candidate and not enough to
+make it the answer when something else outranks it.
 
-## 2. Scale — measured, bounded, flat (§54, §72)
+## ARC (§26–§30, §47)
 
-| mechanism facts | lookup ms | alignment ms | total ms | facts examined | owners considered | admitted |
-| ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| 100 | 0.18 | 0.96 | 1.46 | 100 | 64 | 2 |
-| 1,000 | 0.36 | 0.38 | 0.88 | 400 | 64 | 3 |
-| 10,000 | 0.32 | 0.23 | 0.67 | 400 | 64 | 3 |
-| **ARC 2,566** | 0.41 | 0.16 | **0.73** | 38 | 38 | 1 |
-| **TCKDB_v2 2,680** | 0.28 | 0.07 | **0.51** | 64 | 60 | 0 |
+Measured on one index against a `86fed3dd` worktree baseline:
 
-Work caps at 400 facts / 64 owners and stops growing; 10,000 facts costs *less*
-than 100. **0 source reads** during lookup, alignment and admission.
+| query | `86fed3dd` lead | final lead | |
+|---|---|---|---|
+| ordering | `determine_family` | **`get_all_families`** | fixed |
+| selection | `determine_family` | `determine_family` | identical |
+| cache | `get_reaction_family` | `get_reaction_family` | identical |
+| storage | `family_own_reverse` | `family_own_reverse` | identical |
+| direct identifier | `determine_family` | `determine_family` | identical |
+| Gaussian | `_user_requested_verytight` | `_user_requested_verytight` | identical |
 
-## 3. The generation-time negative control (§45, §46, §71)
+**Exactly one lead changed, and it is the intended one.**
 
-The danger was the checkpoint regression reappearing at generation time — every
-Gaussian parser carrying a first-item selection flooding a route-keyword request.
+Ordering query, final: `get_all_families` rank 1, organic 1.0549, promoted
+1.7640, `mechanismEvidence` 0.55, source `operation_fact`, delivered **pivot /
+full source**. `determine_family` rank 2, final 1.7639 (untouched), delivered
+pivot. Selection query: `determine_family` pivot/full, `get_all_families`
+`mechanism_support` / `mechanism_slice` — the reversal holds on one index.
 
-| query | examined | **rejected** | **admitted** | lead |
-| --- | ---: | ---: | ---: | --- |
-| Gaussian route keywords | 64 | **64** | **0** | `GaussianAdapter._user_requested_verytight` (owner, Top-1 **true**) |
-| ARC precedence/order | 38 | 37 | 1 | — |
-| ARC family selection | 64 | 61 | 3 | `determine_family` |
+Gaussian: 64 owners examined, **0 admitted**, owner Top-1 preserved.
 
-Representative refusals on the ordering query — correct operation fact, wrong
-subject: `arc/common.py::dfs` (operand `visited`),
-`ARCReaction.get_expected_changing_bonds` (`r_label_dict`),
-`arkane.py::_all_available_years` (`years`). Each carries a genuine
-result-bearing ordering fact and none is about reaction families.
+## Generic paired delivery corpus (§23–§25, §40, §41, §68)
 
-## 4. ARC results
+11 cases, 6 modules, deliberately uninformative names, run through the product path.
 
-**Ordering query** — `What determines the precedence/order when multiple reaction families match?`
+| metric | `fe5c220` | final |
+|---|---|---|
+| direct implementer Top-1 | 2/9 | **8/8** |
+| `directImplementerBeatsConsumer` (pool) | 2/8 | **7/7** |
+| `capsuleLeadsImplementer` | — | **8/8** |
+| **`pool_vs_capsule_agreement`** | — | **7/7** |
+| paired POOL role reversal | 0/4 | **3/3** |
+| paired CAPSULE role reversal | — | **3/3** |
+| consumer incorrectly leads | 3 | **0** |
+| empty capsule despite deliverable implementer | 2 | **0** |
+| wrong-subject operation bonus | 0 | **0** |
+| unknown-ordering overclaim | 0 | **0** |
+| `<module>` nodes delivered | 0 | **0** |
 
-| symbol | rank at `ed8db5b` | **rank final** | final score | mechanism | source |
-| --- | ---: | ---: | ---: | ---: | --- |
-| `_dihedral_angle` | **1** (1.9000) | **out of the lead** | — | 0 | synthesized stem tier |
-| `determine_family` | 3 | **1** | 1.7639 | 0 | lexical |
-| **`get_all_families`** | 24 | **22** | 1.0549 | **0.55** | **`operation_fact`** |
+Denominators moved from 9→8 and 4→3 with reasoning, per §69: `route_ordering`
+expresses precedence as the ORDER OF A LIST LITERAL, which no fact kind indexes.
+Measured — the symbol carries no mechanism fact at all — so there is nothing to
+rank or deliver, and it was reclassified as a truthfulness control rather than
+charged to the delivery layer. Adding a fact kind is a derivation change (§54).
+Its expected empty capsule is retained as a negative control, alongside a new
+control proving a test symbol carrying a perfect ordering fact is never promoted.
 
-**Generated — which it never was before, and purely from mechanism evidence.**
-The path-stem decoy no longer leads (§7). But the lead is now the selection
-*consumer*, not the ordering *implementation*, and §32 asks the reverse emphasis
-for an ordering request. **§30/§40 partially met: decoy removed, primacy not
-achieved.**
+## Preservation
 
-**Selection query preserved exactly** (§41): `determine_family` rank 1 lead pivot
-with the decision slice; `get_reaction_family` rank 2 at **1.9000 unchanged**,
-mechanism 0; `ARCReaction.family` **1.9000 unchanged**; `get_all_families`
-delivered as `mechanism_support`. Cache (§42), accessor (§43) and direct
-identifier (§44) contrasts all hold.
+- **Frozen50, `2aaac750` → `2d3010e4`**, `provenanceValid: true`,
+  `srcDirty: false`, `authority: authoritative` on both sides:
+  **16/50 changed, 0 lead changes, 0 gold-visibility flips, 0 quality-metric
+  changes** (django 9/20, cross_repo_30 7/30). All 16 attributed to
+  `path_only_relevance_gate` from `fe5c220`; quality NEUTRAL.
+- **Isolation `86fed3dd` → `2d3010e4`** (§63): **`pass=true`, 0 changed,
+  semantic hashes byte-identical** on both suites. SWE-bench tasks declare no
+  behavioural operation, so mechanism evidence never reaches the direct tier and
+  no answer-role authority can exist. This phase contributes **zero** frozen-suite
+  movement.
+- **TCKDB**: 1/6 leads changed — the explicit ordering query, from
+  `apply_review_policy` (carries only `fallback_branch`) to
+  `get_species_transport` (carries `ordering_established` on `ranked = sorted(…)`
+  and `priority_lookup` on `REVIEW_RANK[…]`). Classified **IMPROVEMENT** per §65.
+  0 `<module>` nodes.
+- **Suite**: 4602 tests, **0 fail**, 49 skip. Both typechecks clean,
+  `git diff --check` clean.
+- Schema, derivation fingerprints and index capability unchanged; ARC and TCKDB
+  authoritative indexes untouched (opened read-only).
+- Answer-role logic performs **0 source reads**.
 
-## 5. Corpus — five phases, identical fixtures
+## 15-case mechanism corpus (§38, §39, §66)
 
-| metric | M149 | ab8e4f0 | ebc4fda | 650e916 | **final** |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| correct lead | 7 | 9 | 9 | 9 | **9** |
-| correct Top-3 | 11 | 13 | 13 | 13 | **13** |
-| wrong-subject mechanism bonus | 0* | **2** | 0 | 0 | **0** |
-| wrong-subject candidates admitted | — | — | — | — | **0** |
-| negative-control delivered | 1 | 0 | 1 | 0 | **0** |
-| ordering helper visible | 2/4 | 2/4 | 2/4 | 3/4 | **3/4** |
-| mechanism support delivered | 0 | 0 | 0 | 1 | **1** |
-| module nodes delivered | 0 | 0 | 0 | 0 | **0** |
+| metric | M150 prior | final |
+|---|---|---|
+| correct lead | 9 | **9** |
+| correct Top-1 | 9 | **9** |
+| correct Top-3 | 13 | **10** |
+| wrong-subject lead | 0 | **0** |
+| negative-control delivery | 0 | **0** |
+| ordering helper visible | 3/4 | **3/4** |
+| `<module>` nodes | 0 | **0** |
 
-\* no mechanism capability. Attribution: capability → alignment → support/slice →
-candidate generation. Nothing regressed at any phase.
+Three cases moved, and the cause is **not** delivery. In all three the expected
+answer sits at pool **rank 4 before and after** — the pool ordering did not
+change. Delivery previously promoted a rank-4 candidate because the higher-ranked
+ones were pivot-ineligible; now the best-ranked direct implementer takes the
+single answer-role slot, so delivery agrees with ranking. Per §39 these are
+classified as **pre-existing ranking limitations surfaced, not caused**, by this
+phase: `first_success_backend` REGRESSION, `unknown_ordering` REGRESSION,
+`two_hop_producer` NEUTRAL (already failing; only the identity of the wrong lead
+changed). Lead and Top-1 accuracy are unchanged and every safety metric is clean.
 
-## 6. Preservation and gates
+## Remaining limitations
 
-| gate | result |
-| --- | --- |
-| M142 Gaussian route keywords | owner Top-1 **true** |
-| M142 NMD / reactant-index / TS-guess | unchanged (TS-guess gain held) |
-| M142 `which()` + ARC-class controls | unchanged (§48) |
-| M140 module invisibility | **0** `<module>` delivered |
-| M140 role separation | ordinary / `mechanism_support` / `orchestration_support` all distinct |
-| M139 exact relations | only exact `calls`; no potential/reference used |
-| **Frozen50** M149 → final | **16/50 composition changed, every quality metric identical** — Top-1 38, Top-3 44, anywhere 48, symbol 31, missing 2 on both sides; tokens 1832.40 → 1832.48. `provenanceValid=true`, `srcDirty=false` |
-| django / cross_repo_30 | 9/20, 7/30 — all quality metrics identical on both sides |
-| **TCKDB** | 1/6 leads changed (ordering query), 1/6 sets, 0 module nodes |
-| derivation fingerprints | **unchanged** — retrieval-only, no schema/capability change |
-| ARC + TCKDB authoritative indexes | **byte-identical** |
+1. Two 15-case queries want an answer their pool ranks 4th. That is a ranking
+   question about near-duplicate queries over one corpus with different correct
+   answers, and it should not be solved in the delivery layer.
+2. Precedence expressed as the order of a list literal has no indexed fact kind.
+3. `mechanismSupport` reads only `provenance`, while the loop fact kinds record
+   their producer in `subject`; ordering-helper visibility stays at 3/4 for that
+   reason. `operationRole` reads both.
 
-`bun test` **4544 pass / 0 fail / 49 skip**, both typechecks and `git diff --check`
-clean. Ten new candidate-generation tests (wrong-subject refusal, same-file,
-same-class, producer admission, no-provenance refusal, caps, zero source reads,
-direct-kinds-only).
+## Recommended M151 scope
 
-**Changed-case attribution** (`stage5_m150_final_changed_case_ledger.json`).
-Frozen50 16/50, django 9/20, cross_repo_30 7/30 and the TCKDB lead: all cause
-`path_only_relevance_gate`, all quality **NEUTRAL** — support-slot composition
-with gold-file and gold-symbol outcomes identical on both sides. §66 anticipated
-this: cases ranked on path-only accidental evidence moved, and nothing measuring
-answer quality did. Corpus across six phases: no metric regressed at any phase.
-**Zero REGRESSION, zero unexpected.** One IMPROVEMENT: the ARC ordering decoy.
-
-## 7. The path-evidence gate (final phase)
-
-**Producer, named exactly:** `directEvidenceAnchoring.ts`, branch (a) of
-`resolveFileStemWord`. Not FTS, not path scoring, not the domain lane. It resolves
-the prose word `families` to `linear_utils/families.py`, picks the first top-level
-def out of that file, and **synthesizes** `lexical: 1 / final: 1.9` by tier.
-M142 had already fixed the sibling branch (b); branch (a) was documented as
-"deliberately left alone" — sound reasoning about the FILE that silently extended
-to a symbol it did not cover.
-
-**Rule:** a weak *file-derived* mention may synthesize answer-grade relevance only
-for a definition with independent relevance (`lexical | domain | bodyLiteral |
-testToImpl | mechanismEvidence`). `path` and `symbol` are excluded — `symbol` is
-what the mention synthesizes, so consulting it would be circular. The predicate is
-caller-supplied; omitted means unknown and changes nothing.
-
-**Result:** `_dihedral_angle` **1.9000 / rank 1 → out of the lead**. No constant
-shaved, no threshold introduced, no ARC-specific exception.
-
-**Frozen50 moved 16/50 — and every quality metric is identical:** Top-1 38, Top-3
-44, gold anywhere 48, gold symbol 31, missing 2 on both sides; mean tokens 1832.40
-→ 1832.48. Support-slot composition only. Cause `path_only_relevance_gate`,
-quality **NEUTRAL** (§66, §68). django 9/20, cross_repo_30 7/30, same story.
-TCKDB: 1/6 leads changed on the ordering query, also NEUTRAL — neither candidate
-is an established gold answer there.
-
-## 8. Remaining limitation — one, and it is precise
-
-The ordering query now leads with `determine_family` (the selection *consumer*) at
-1.7639, while `get_all_families` — the ordering *implementation*, correctly
-generated via `operation_fact` — sits at rank 22 on 1.0549. §32 asks the reverse
-emphasis for an ordering request: orderer primary, consumer secondary.
-
-This is no longer a path-decoy problem, a generation problem, or a mechanism
-problem. It is that an ordering fact contributes 0.55 while the consumer's own
-lexical evidence is far stronger, because the query's vocabulary
-(`precedence`, `order`, `families`, `match`) matches `determine_family`'s
-name and docstring better than it matches `get_all_families`.
-
-## 9. Recommended scope
-
-Not M151. One question remains and it is a scoring-emphasis question, not a
-retrieval one: for an explicit `ordering` request, should a direct
-`ordering_established` fact outweigh a consumer's lexical advantage? The weights
-are frozen for good reason, so this needs its own measured phase against the
-existing corpus rather than a tweak here. Everything else M150 needs is built,
-bounded, measured and preserved.
+**M151 — Wire Workspace Routing into Product Surfaces**, as planned. The
+single-repository behavioural chain is now closed end to end: subject +
+operation → subject-aligned mechanism evidence → candidate generation → direct
+implementer vs consumer relation → answer ordering → pivot eligibility → pivot
+ordering → bounded real-source delivery.
