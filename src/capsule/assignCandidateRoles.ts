@@ -175,8 +175,32 @@ function classify(
   const anyProximity = s.graph > 0 || s.domain > 0;
   const isGenericHub = s.inDegree >= HUB_IN_DEGREE_THRESHOLD && !directEvidence;
 
+  // M153-C5: proven direct implementation is a tie to the task, whether or not
+  // this candidate is the one that got the grant.
+  //
+  // `answerRole` above is the GRANT — deliberately awarded to one candidate so a
+  // mechanism cannot mint edit targets (§12, §57). `provenImplementer` is the
+  // EVIDENCE, which every direct-tier candidate carries. The discard gate below
+  // was reading the grant, so the second and third proven implementers of the
+  // requested operation were discarded under the reason "no relevance to the
+  // task" — a reason that is simply false about them.
+  //
+  // Measured on the frozen corpus: sphinx holds three subject-aligned direct
+  // implementers of the requested selection over `source_suffix`
+  // (`Project.path2doc`, `get_rst_suffix`, `get_filetype`). The grant went to
+  // whichever of them ordinary lexical ranking happened to place first, and the
+  // other two — including the one the request was about — were erased. The M150
+  // fixture never exposed this because it contains exactly ONE eligible
+  // candidate, so its grant is unopposed and correct by default.
+  //
+  // This changes the DISCARD boundary only. It does not touch the grant, the
+  // pivot bar or `directEvidence`, so the number of candidates that can become
+  // an edit target this way is still exactly one; the rest become support, which
+  // is what proven-but-not-selected evidence is (§21, §30).
+  const provenImplementer = hasAnswerRoleEvidence(candidate);
+
   // Nothing ties it to the task except (at most) centrality / graph reach.
-  if (s.localEvidence <= 0 && !anyProximity && !answerRole) {
+  if (s.localEvidence <= 0 && !anyProximity && !answerRole && !provenImplementer) {
     return {
       role: CandidateRole.Discard,
       why: isGenericHub
