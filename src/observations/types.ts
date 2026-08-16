@@ -177,6 +177,13 @@ export const ObservationStaleReasonKind = Object.freeze({
   FileModified: "file_modified",
   SymbolRemoved: "symbol_removed",
   SymbolModified: "symbol_modified",
+  /**
+   * M152. The index no longer holds the run this observation was derived under,
+   * so the run chain cannot be walked to say what changed. Reported instead of
+   * throwing: the two stores have independent lifecycles now, and an index
+   * rebuilt from scratch leaves surviving observations in exactly this state.
+   */
+  SourceRunUnavailable: "source_run_unavailable",
 });
 
 export type ObservationStaleReasonKind =
@@ -259,11 +266,20 @@ export interface ObservationSymbolModifiedReason extends ObservationStaleReasonB
   symbol: SymbolRunIdentitySummary;
 }
 
+/**
+ * M152. Carries no file or symbol, because the point is that the comparison
+ * could not be made: the index no longer holds the source run.
+ */
+export interface ObservationSourceRunUnavailableReason extends ObservationStaleReasonBase {
+  kind: typeof ObservationStaleReasonKind.SourceRunUnavailable;
+}
+
 export type ObservationStaleReason =
   | ObservationFileRemovedReason
   | ObservationFileModifiedReason
   | ObservationSymbolRemovedReason
-  | ObservationSymbolModifiedReason;
+  | ObservationSymbolModifiedReason
+  | ObservationSourceRunUnavailableReason;
 
 export interface ObservationStaleness {
   observationId: string;

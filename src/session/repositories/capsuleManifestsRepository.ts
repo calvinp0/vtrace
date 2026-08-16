@@ -7,6 +7,7 @@ import type {
 
 import type { Capsule, CapsuleItem } from "../../capsule/types";
 import { computeCapsuleStaleness } from "../../memory/computeCapsuleStaleness";
+import { StaleStateStatus } from "../../memory/types";
 import type {
   CapsuleManifest,
   CapsuleManifestItemRecord,
@@ -297,8 +298,43 @@ export function getCapsuleStaleness(
     return undefined;
   }
 
-  if (comparisonRunId < manifest.sourceRunId) {
-    throw new Error("comparisonRunId must be greater than or equal to sourceRunId");
+  // M152. A manifest can now outlive the index run it names: the stores have
+  // independent lifecycles, so an index deleted and rebuilt from scratch
+  // restarts run ids while the manifest survives with `source_run_id = 11`.
+  // Throwing would make `check_capsule_staleness` fail for a manifest that is
+  // simply, and answerably, stale — the exact confusion between "gone" and
+  // "not current" that removing the CASCADE was meant to end (§18, §145).
+  if (
+    comparisonRunId < manifest.sourceRunId
+    || getIndexRunById(stores.index, manifest.sourceRunId) === undefined
+  ) {
+    return {
+      capsuleId,
+      sourceRunId: manifest.sourceRunId,
+      comparisonRunId,
+      query: manifest.query,
+      status: StaleStateStatus.Stale,
+      // No per-item reasons: the run chain is what would have supplied them,
+      // and it is exactly what is missing. Saying "stale, and here is why" when
+      // the why is unknowable would be the invented detail this codebase keeps
+      // refusing to produce.
+      items: manifest.items.map((item) => ({
+        capsuleId,
+        itemOrdinal: item.itemOrdinal,
+        role: item.role,
+        contentMode: item.contentMode,
+        sourceBacked: item.sourceBacked,
+        filePath: item.filePath,
+        symbol: {
+          symbolId: item.symbolId,
+          filePath: item.filePath,
+          fqName: item.fqName,
+          kind: item.symbolKind,
+        },
+        status: StaleStateStatus.Stale,
+        reasons: [],
+      })),
+    };
   }
 
   return computeCapsuleStaleness({

@@ -76,8 +76,27 @@ export function getObservationStaleness(
     };
   }
 
-  if (comparisonRunId < sourceRunId) {
-    throw new Error("comparisonRunId must be greater than or equal to sourceRunId");
+  // M152. An observation can now outlive the index run it was derived under:
+  // the two stores have independent lifecycles, so deleting and rebuilding
+  // `index.sqlite` restarts run ids at 1 while `session.sqlite` keeps rows
+  // recording run 11. Before the split this was impossible — the observations
+  // lived in the file that was deleted.
+  //
+  // Throwing here would turn that into a failed `search_memory` for the whole
+  // repository. The truthful answer is that the observation was derived from
+  // index state this index no longer contains, which is exactly what stale
+  // means; the run chain simply cannot be walked to say WHY (§15, §29, §145).
+  if (comparisonRunId < sourceRunId || getIndexRunById(db, sourceRunId) === undefined) {
+    return {
+      observationId: observation.id,
+      sourceRunId,
+      comparisonRunId,
+      status: StaleStateStatus.Stale,
+      reasons: [{
+        kind: ObservationStaleReasonKind.SourceRunUnavailable,
+        detectedInRunId: comparisonRunId,
+      }],
+    };
   }
 
   const reasonsByKey = new Map<string, ObservationStaleReason>();
@@ -222,10 +241,14 @@ function setReason(
   reasonsByKey: Map<string, ObservationStaleReason>,
   reason: ObservationStaleReason,
 ): void {
-  const key = reason.kind === ObservationStaleReasonKind.FileRemoved
-    || reason.kind === ObservationStaleReasonKind.FileModified
-    ? `${reason.kind}:${reason.filePath}`
-    : `${reason.kind}:${reason.symbol.filePath}:${reason.symbol.fqName}:${reason.symbol.kind}`;
+  // `source_run_unavailable` names no file or symbol — the whole point is that
+  // the comparison could not be made — so it keys on its kind alone.
+  const key = reason.kind === ObservationStaleReasonKind.SourceRunUnavailable
+    ? reason.kind
+    : reason.kind === ObservationStaleReasonKind.FileRemoved
+      || reason.kind === ObservationStaleReasonKind.FileModified
+      ? `${reason.kind}:${reason.filePath}`
+      : `${reason.kind}:${reason.symbol.filePath}:${reason.symbol.fqName}:${reason.symbol.kind}`;
 
   if (!reasonsByKey.has(key)) {
     reasonsByKey.set(key, reason);

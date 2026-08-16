@@ -20,7 +20,11 @@ import path from "node:path";
 import { promisify } from "node:util";
 import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 
+import { Database } from "bun:sqlite";
+
 import { openProductIndexDatabase } from "../db/sqlite";
+import { searchMemory } from "../observations/searchMemory";
+import { resolveCurrentObservationContext } from "../observations/provenance";
 import { StaleStateStatus } from "../memory/types";
 import { getLatestIndexRun } from "../db/repositories/indexRunsRepository";
 import { resolveIndexDbPath } from "../indexer/indexMeta";
@@ -199,6 +203,56 @@ describe("M152 index and session lifecycles are independent", () => {
       );
       assert.notEqual(staleness, undefined);
       expect(staleness!.status).toBe(StaleStateStatus.Fresh);
+    } finally {
+      lease.close();
+      db.close();
+    }
+  });
+
+  test("session state outliving its index run is reported stale, not thrown", async () => {
+    // The failure mode the split CREATES, and the one M152 has to answer for.
+    // Independent lifecycles mean `index.sqlite` can be deleted and rebuilt from
+    // scratch — run ids restart at 1 — while `session.sqlite` survives holding
+    // rows that name run 11. Before the split this was impossible: the
+    // observations lived in the file that was deleted.
+    //
+    // `search_memory` and `check_capsule_staleness` used to throw on
+    // `comparisonRunId < sourceRunId`. Throwing here would take out memory for
+    // the whole repository over a condition whose honest answer is "stale".
+    const { manifestId } = seedProductState();
+
+    const sessionDb = new Database(resolveSessionDbPath(repoRoot));
+    try {
+      // Push both records beyond any run the index will ever hold.
+      sessionDb.run("UPDATE observations SET source_run_id = 9999");
+      sessionDb.run("UPDATE capsule_manifests SET source_run_id = 9999");
+    } finally {
+      sessionDb.close();
+    }
+
+    const db = openProductIndexDatabase(resolveIndexDbPath(repoRoot));
+    const lease = new ProductStoreLease(db, resolveIndexDbPath(repoRoot));
+    try {
+      const stores = lease.read;
+      const context = await resolveCurrentObservationContext(repoRoot);
+
+      const results = searchMemory(stores, {
+        query: "pick_winner returns the first sorted record",
+        maxResults: 5,
+        includeStale: true,
+        currentContext: context,
+      });
+      // The point is that it ANSWERED rather than threw.
+      assert.equal(Array.isArray(results), true);
+
+      const staleness = getCapsuleStaleness(stores, manifestId, getLatestIndexRun(db)!.id);
+      assert.notEqual(staleness, undefined, "staleness must be answerable, not fatal");
+      expect(staleness!.status).toBe(StaleStateStatus.Stale);
+      assert.equal(
+        getCapsuleManifestById(lease.read.session, manifestId) === undefined,
+        false,
+        "and the manifest is still stored",
+      );
     } finally {
       lease.close();
       db.close();
