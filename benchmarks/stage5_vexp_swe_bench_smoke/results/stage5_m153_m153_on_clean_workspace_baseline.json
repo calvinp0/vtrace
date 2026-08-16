@@ -1,0 +1,2142 @@
+{
+  "label": "m153_on_clean",
+  "mode": "workspace",
+  "implementation": "M152 72ce221c7006dc9e477dcbfa2d7e7372c136fa8c",
+  "overall": {
+    "casesScored": 30,
+    "repositoryTop1": 18.2,
+    "primaryTop1": 0,
+    "primaryTop3": 0,
+    "requiredSupportPresent": 56.7,
+    "falsePremiseReconstructed": 0,
+    "absenceHeld": 100,
+    "casesWithMisleading": 3.3,
+    "misleadingPerCase": 0.03,
+    "emptyContext": 3.3,
+    "cleanAnswerRate": 0,
+    "abstentions": 0,
+    "errors": 0
+  },
+  "calibration": {
+    "casesScored": 19,
+    "repositoryTop1": 23.8,
+    "primaryTop1": 0,
+    "primaryTop3": 0,
+    "requiredSupportPresent": 63.2,
+    "falsePremiseReconstructed": 0,
+    "absenceHeld": 100,
+    "casesWithMisleading": 5.3,
+    "misleadingPerCase": 0.05,
+    "emptyContext": 5.3,
+    "cleanAnswerRate": 0,
+    "abstentions": 0,
+    "errors": 0
+  },
+  "holdout": {
+    "casesScored": 11,
+    "repositoryTop1": 8.3,
+    "primaryTop1": 0,
+    "primaryTop3": 0,
+    "requiredSupportPresent": 45.5,
+    "falsePremiseReconstructed": 0,
+    "absenceHeld": 100,
+    "casesWithMisleading": 0,
+    "misleadingPerCase": 0,
+    "emptyContext": 0,
+    "cleanAnswerRate": 0,
+    "abstentions": 0,
+    "errors": 0
+  },
+  "byRepository": {
+    "requests": {
+      "casesScored": 5,
+      "repositoryTop1": 83.3,
+      "primaryTop1": 0,
+      "primaryTop3": 0,
+      "requiredSupportPresent": 40,
+      "falsePremiseReconstructed": 0,
+      "absenceHeld": 100,
+      "casesWithMisleading": 20,
+      "misleadingPerCase": 0.2,
+      "emptyContext": 0,
+      "cleanAnswerRate": 0,
+      "abstentions": 0,
+      "errors": 0
+    },
+    "flask": {
+      "casesScored": 5,
+      "repositoryTop1": 0,
+      "primaryTop1": 0,
+      "primaryTop3": 0,
+      "requiredSupportPresent": 80,
+      "falsePremiseReconstructed": 0,
+      "absenceHeld": null,
+      "casesWithMisleading": 0,
+      "misleadingPerCase": 0,
+      "emptyContext": 0,
+      "cleanAnswerRate": 0,
+      "abstentions": 0,
+      "errors": 0
+    },
+    "pytest": {
+      "casesScored": 4,
+      "repositoryTop1": 0,
+      "primaryTop1": 0,
+      "primaryTop3": 0,
+      "requiredSupportPresent": 75,
+      "falsePremiseReconstructed": 0,
+      "absenceHeld": 100,
+      "casesWithMisleading": 0,
+      "misleadingPerCase": 0,
+      "emptyContext": 25,
+      "cleanAnswerRate": 0,
+      "abstentions": 0,
+      "errors": 0
+    },
+    "sphinx": {
+      "casesScored": 5,
+      "repositoryTop1": 0,
+      "primaryTop1": 0,
+      "primaryTop3": 0,
+      "requiredSupportPresent": 60,
+      "falsePremiseReconstructed": 0,
+      "absenceHeld": null,
+      "casesWithMisleading": 0,
+      "misleadingPerCase": 0,
+      "emptyContext": 0,
+      "cleanAnswerRate": 0,
+      "abstentions": 0,
+      "errors": 0
+    },
+    "xarray": {
+      "casesScored": 3,
+      "repositoryTop1": 0,
+      "primaryTop1": 0,
+      "primaryTop3": 0,
+      "requiredSupportPresent": 0,
+      "falsePremiseReconstructed": 0,
+      "absenceHeld": 100,
+      "casesWithMisleading": 0,
+      "misleadingPerCase": 0,
+      "emptyContext": 0,
+      "cleanAnswerRate": 0,
+      "abstentions": 0,
+      "errors": 0
+    },
+    "astropy": {
+      "casesScored": 4,
+      "repositoryTop1": 0,
+      "primaryTop1": 0,
+      "primaryTop3": 0,
+      "requiredSupportPresent": 75,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "casesWithMisleading": 0,
+      "misleadingPerCase": 0,
+      "emptyContext": 0,
+      "cleanAnswerRate": 0,
+      "abstentions": 0,
+      "errors": 0
+    },
+    "pylint": {
+      "casesScored": 4,
+      "repositoryTop1": 25,
+      "primaryTop1": 0,
+      "primaryTop3": 0,
+      "requiredSupportPresent": 50,
+      "falsePremiseReconstructed": 0,
+      "absenceHeld": null,
+      "casesWithMisleading": 0,
+      "misleadingPerCase": 0,
+      "emptyContext": 0,
+      "cleanAnswerRate": 0,
+      "abstentions": 0,
+      "errors": 0
+    }
+  },
+  "byCategory": {
+    "backend_selection": {
+      "casesScored": 2,
+      "repositoryTop1": 0,
+      "primaryTop1": 0,
+      "primaryTop3": 0,
+      "requiredSupportPresent": 0,
+      "falsePremiseReconstructed": 0,
+      "absenceHeld": null,
+      "casesWithMisleading": 0,
+      "misleadingPerCase": 0,
+      "emptyContext": 0,
+      "cleanAnswerRate": 0,
+      "abstentions": 0,
+      "errors": 0
+    },
+    "configuration_precedence": {
+      "casesScored": 2,
+      "repositoryTop1": 50,
+      "primaryTop1": 0,
+      "primaryTop3": 0,
+      "requiredSupportPresent": 100,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "casesWithMisleading": 0,
+      "misleadingPerCase": 0,
+      "emptyContext": 0,
+      "cleanAnswerRate": 0,
+      "abstentions": 0,
+      "errors": 0
+    },
+    "dispatch": {
+      "casesScored": 3,
+      "repositoryTop1": 0,
+      "primaryTop1": 0,
+      "primaryTop3": 0,
+      "requiredSupportPresent": 66.7,
+      "falsePremiseReconstructed": 0,
+      "absenceHeld": null,
+      "casesWithMisleading": 0,
+      "misleadingPerCase": 0,
+      "emptyContext": 0,
+      "cleanAnswerRate": 0,
+      "abstentions": 0,
+      "errors": 0
+    },
+    "explicit_identifier_absence": {
+      "casesScored": 0,
+      "repositoryTop1": 33.3,
+      "primaryTop1": null,
+      "primaryTop3": null,
+      "requiredSupportPresent": null,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": 100,
+      "casesWithMisleading": null,
+      "misleadingPerCase": null,
+      "emptyContext": null,
+      "cleanAnswerRate": null,
+      "abstentions": 0,
+      "errors": 0
+    },
+    "fallback": {
+      "casesScored": 3,
+      "repositoryTop1": 33.3,
+      "primaryTop1": 0,
+      "primaryTop3": 0,
+      "requiredSupportPresent": 33.3,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "casesWithMisleading": 0,
+      "misleadingPerCase": 0,
+      "emptyContext": 0,
+      "cleanAnswerRate": 0,
+      "abstentions": 0,
+      "errors": 0
+    },
+    "ordering": {
+      "casesScored": 3,
+      "repositoryTop1": 33.3,
+      "primaryTop1": 0,
+      "primaryTop3": 0,
+      "requiredSupportPresent": 100,
+      "falsePremiseReconstructed": 0,
+      "absenceHeld": null,
+      "casesWithMisleading": 33.3,
+      "misleadingPerCase": 0.33,
+      "emptyContext": 0,
+      "cleanAnswerRate": 0,
+      "abstentions": 0,
+      "errors": 0
+    },
+    "override_resolution": {
+      "casesScored": 2,
+      "repositoryTop1": 0,
+      "primaryTop1": 0,
+      "primaryTop3": 0,
+      "requiredSupportPresent": 100,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "casesWithMisleading": 0,
+      "misleadingPerCase": 0,
+      "emptyContext": 0,
+      "cleanAnswerRate": 0,
+      "abstentions": 0,
+      "errors": 0
+    },
+    "parser_selection": {
+      "casesScored": 2,
+      "repositoryTop1": 0,
+      "primaryTop1": 0,
+      "primaryTop3": 0,
+      "requiredSupportPresent": 50,
+      "falsePremiseReconstructed": 0,
+      "absenceHeld": null,
+      "casesWithMisleading": 0,
+      "misleadingPerCase": 0,
+      "emptyContext": 0,
+      "cleanAnswerRate": 0,
+      "abstentions": 0,
+      "errors": 0
+    },
+    "priority_table_lookup": {
+      "casesScored": 1,
+      "repositoryTop1": 0,
+      "primaryTop1": 0,
+      "primaryTop3": 0,
+      "requiredSupportPresent": 100,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "casesWithMisleading": 0,
+      "misleadingPerCase": 0,
+      "emptyContext": 0,
+      "cleanAnswerRate": 0,
+      "abstentions": 0,
+      "errors": 0
+    },
+    "project_name_reuse": {
+      "casesScored": 5,
+      "repositoryTop1": 20,
+      "primaryTop1": 0,
+      "primaryTop3": 0,
+      "requiredSupportPresent": 80,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "casesWithMisleading": 0,
+      "misleadingPerCase": 0,
+      "emptyContext": 0,
+      "cleanAnswerRate": 0,
+      "abstentions": 0,
+      "errors": 0
+    },
+    "registration_ordering": {
+      "casesScored": 1,
+      "repositoryTop1": 0,
+      "primaryTop1": 0,
+      "primaryTop3": 0,
+      "requiredSupportPresent": 0,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "casesWithMisleading": 0,
+      "misleadingPerCase": 0,
+      "emptyContext": 0,
+      "cleanAnswerRate": 0,
+      "abstentions": 0,
+      "errors": 0
+    },
+    "selection": {
+      "casesScored": 6,
+      "repositoryTop1": 16.7,
+      "primaryTop1": 0,
+      "primaryTop3": 0,
+      "requiredSupportPresent": 16.7,
+      "falsePremiseReconstructed": 0,
+      "absenceHeld": null,
+      "casesWithMisleading": 0,
+      "misleadingPerCase": 0,
+      "emptyContext": 16.7,
+      "cleanAnswerRate": 0,
+      "abstentions": 0,
+      "errors": 0
+    }
+  },
+  "cases": [
+    {
+      "caseId": "rq_adapter_selection",
+      "mode": "workspace",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "flask",
+      "routeOutcome": "routed",
+      "routeSource": "behavioral_mechanism",
+      "decidingTier": "behavioral_mechanism",
+      "abstained": false,
+      "itemsDelivered": 4,
+      "delivered": [
+        {
+          "path": "src/flask/app.py",
+          "symbol": "handle_url_build_error",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "src/flask/ctx.py",
+          "symbol": "copy",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "src/flask/app.py",
+          "symbol": "url_for",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "src/flask/app.py",
+          "symbol": "Flask",
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": false,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": false,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 231,
+      "routingBytes": 505
+    },
+    {
+      "caseId": "rq_adapter_ranking_false_premise",
+      "mode": "workspace",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "requests",
+      "routeOutcome": "configured_member",
+      "routeSource": "configured_default",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 5,
+      "delivered": [
+        {
+          "path": "requests/adapters.py",
+          "symbol": "get_connection",
+          "class": "MISLEADING"
+        },
+        {
+          "path": "requests/exceptions.py",
+          "symbol": "ConnectionError",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/adapters.py",
+          "symbol": "send",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/adapters.py",
+          "symbol": "HTTPAdapter",
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": true,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": true,
+      "misleadingDelivered": 1,
+      "emptyContext": false,
+      "falsePremiseReconstructed": false,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 169,
+      "routingBytes": 525
+    },
+    {
+      "caseId": "rq_rank_adapters_identifier",
+      "mode": "workspace",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "requests",
+      "routeOutcome": "configured_member",
+      "routeSource": "configured_default",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 8,
+      "delivered": [
+        {
+          "path": "requests/adapters.py",
+          "symbol": "HTTPAdapter",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/adapters.py",
+          "symbol": "add_headers",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/sessions.py",
+          "symbol": "__init__",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "tests/test_requests.py",
+          "symbol": "test_proxy_auth",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "tests/test_requests.py",
+          "symbol": "test_proxy_auth_empty_pass",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "tests/test_requests.py",
+          "symbol": "test_session_get_adapter_prefix_matching",
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": true,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": true,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": true,
+      "cleanAnswer": true,
+      "latencyMs": 192,
+      "routingBytes": 749
+    },
+    {
+      "caseId": "rq_setting_precedence",
+      "mode": "workspace",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "requests",
+      "routeOutcome": "configured_member",
+      "routeSource": "configured_default",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 9,
+      "delivered": [
+        {
+          "path": "requests/sessions.py",
+          "symbol": "request",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/models.py",
+          "symbol": "Response",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/sessions.py",
+          "symbol": "delete",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/sessions.py",
+          "symbol": "get",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/sessions.py",
+          "symbol": "head",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/sessions.py",
+          "symbol": "post",
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": true,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": true,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 188,
+      "routingBytes": 525
+    },
+    {
+      "caseId": "rq_encoding_fallback",
+      "mode": "workspace",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "requests",
+      "routeOutcome": "configured_member",
+      "routeSource": "configured_default",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 7,
+      "delivered": [
+        {
+          "path": "requests/models.py",
+          "symbol": "_encode_files",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/models.py",
+          "symbol": "_get_idna_encoded_host",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/models.py",
+          "symbol": "RequestEncodingMixin",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/models.py",
+          "symbol": "prepare_body",
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": true,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": false,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 179,
+      "routingBytes": 525
+    },
+    {
+      "caseId": "rq_redirect_auth_reuse",
+      "mode": "workspace",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "requests",
+      "routeOutcome": "routed",
+      "routeSource": "behavioral_mechanism",
+      "decidingTier": "behavioral_mechanism",
+      "abstained": false,
+      "itemsDelivered": 7,
+      "delivered": [
+        {
+          "path": "requests/utils.py",
+          "symbol": "_parse_content_type_header",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/sessions.py",
+          "symbol": "merge_environment_settings",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/utils.py",
+          "symbol": "get_encoding_from_headers",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "tests/test_utils.py",
+          "symbol": "test__parse_content_type_header",
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": true,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": false,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 202,
+      "routingBytes": 514
+    },
+    {
+      "caseId": "fl_error_handler_dispatch",
+      "mode": "workspace",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "requests",
+      "routeOutcome": "configured_member",
+      "routeSource": "configured_default",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 7,
+      "delivered": [
+        {
+          "path": "requests/models.py",
+          "symbol": "raise_for_status",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/sessions.py",
+          "symbol": "prepare_request",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/models.py",
+          "symbol": "ok",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/models.py",
+          "symbol": "Response",
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": false,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": false,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 197,
+      "routingBytes": 525
+    },
+    {
+      "caseId": "fl_error_handler_scoring_false_premise",
+      "mode": "workspace",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "requests",
+      "routeOutcome": "configured_member",
+      "routeSource": "configured_default",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 6,
+      "delivered": [
+        {
+          "path": "requests/utils.py",
+          "symbol": "rewind_body",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/__init__.py",
+          "symbol": "_check_cryptography",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/sessions.py",
+          "symbol": "resolve_redirects",
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": false,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": true,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": false,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 196,
+      "routingBytes": 525
+    },
+    {
+      "caseId": "fl_project_name_reuse",
+      "mode": "workspace",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "requests",
+      "routeOutcome": "configured_member",
+      "routeSource": "configured_default",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 7,
+      "delivered": [
+        {
+          "path": "requests/utils.py",
+          "symbol": "prepend_scheme_if_needed",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/exceptions.py",
+          "symbol": "RequestException",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/adapters.py",
+          "symbol": "get_connection",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "tests/test_utils.py",
+          "symbol": "test_prepend_scheme_if_needed",
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": false,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": true,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 195,
+      "routingBytes": 525
+    },
+    {
+      "caseId": "fl_response_coercion",
+      "mode": "workspace",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "requests",
+      "routeOutcome": "configured_member",
+      "routeSource": "configured_default",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 5,
+      "delivered": [
+        {
+          "path": "requests/utils.py",
+          "symbol": "get_unicode_from_response",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/models.py",
+          "symbol": "Response",
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": false,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": true,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 199,
+      "routingBytes": 525
+    },
+    {
+      "caseId": "fl_env_config_precedence",
+      "mode": "workspace",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "requests",
+      "routeOutcome": "configured_member",
+      "routeSource": "configured_default",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 8,
+      "delivered": [
+        {
+          "path": "requests/utils.py",
+          "symbol": "set_environ",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/cookies.py",
+          "symbol": "cookiejar_from_dict",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/utils.py",
+          "symbol": "should_bypass_proxies",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "tests/test_utils.py",
+          "symbol": "test_set_environ",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "tests/test_utils.py",
+          "symbol": "test_set_environ_raises_exception",
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": false,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": true,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 171,
+      "routingBytes": 525
+    },
+    {
+      "caseId": "pt_fixture_applicability",
+      "mode": "workspace",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "requests",
+      "routeOutcome": "configured_member",
+      "routeSource": "configured_default",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 0,
+      "delivered": [],
+      "repositoryCorrect": false,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": false,
+      "misleadingDelivered": 0,
+      "emptyContext": true,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 197,
+      "routingBytes": 525
+    },
+    {
+      "caseId": "pt_fixture_override",
+      "mode": "workspace",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "requests",
+      "routeOutcome": "configured_member",
+      "routeSource": "configured_default",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 7,
+      "delivered": [
+        {
+          "path": "requests/structures.py",
+          "symbol": "CaseInsensitiveDict",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/models.py",
+          "symbol": "Response",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/structures.py",
+          "symbol": "copy",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/utils.py",
+          "symbol": "default_headers",
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": false,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": true,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 205,
+      "routingBytes": 525
+    },
+    {
+      "caseId": "pt_fixture_ranking_false_premise",
+      "mode": "workspace",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "requests",
+      "routeOutcome": "configured_member",
+      "routeSource": "configured_default",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 8,
+      "delivered": [
+        {
+          "path": "requests/utils.py",
+          "symbol": "requote_uri",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/cookies.py",
+          "symbol": "RequestsCookieJar",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/models.py",
+          "symbol": "prepare_url",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/sessions.py",
+          "symbol": "resolve_redirects",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "tests/test_utils.py",
+          "symbol": "test_requote_uri_with_unquoted_percents",
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": false,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": true,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": false,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 159,
+      "routingBytes": 525
+    },
+    {
+      "caseId": "pt_rank_fixtures_identifier",
+      "mode": "workspace",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "requests",
+      "routeOutcome": "configured_member",
+      "routeSource": "configured_default",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 0,
+      "delivered": [],
+      "repositoryCorrect": false,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": true,
+      "misleadingDelivered": 0,
+      "emptyContext": true,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": true,
+      "cleanAnswer": true,
+      "latencyMs": 153,
+      "routingBytes": 749
+    },
+    {
+      "caseId": "pt_fixture_scope_ordering",
+      "mode": "workspace",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "requests",
+      "routeOutcome": "configured_member",
+      "routeSource": "configured_default",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 7,
+      "delivered": [
+        {
+          "path": "requests/structures.py",
+          "symbol": "CaseInsensitiveDict",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/sessions.py",
+          "symbol": "prepare_request",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/structures.py",
+          "symbol": "copy",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/utils.py",
+          "symbol": "default_headers",
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": false,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": true,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 852,
+      "routingBytes": 525
+    },
+    {
+      "caseId": "sp_parser_selection",
+      "mode": "workspace",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "requests",
+      "routeOutcome": "configured_member",
+      "routeSource": "configured_default",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 7,
+      "delivered": [
+        {
+          "path": "requests/adapters.py",
+          "symbol": "build_response",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/cookies.py",
+          "symbol": "get_cookie_header",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/adapters.py",
+          "symbol": "send",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/adapters.py",
+          "symbol": "HTTPAdapter",
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": false,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": false,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 181,
+      "routingBytes": 525
+    },
+    {
+      "caseId": "sp_project_name_reuse",
+      "mode": "workspace",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "requests",
+      "routeOutcome": "configured_member",
+      "routeSource": "configured_default",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 7,
+      "delivered": [
+        {
+          "path": "requests/utils.py",
+          "symbol": "_parse_content_type_header",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "docs/conf.py",
+          "symbol": "source_suffix",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/utils.py",
+          "symbol": "get_encoding_from_headers",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "tests/test_utils.py",
+          "symbol": "test__parse_content_type_header",
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": false,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": true,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 819,
+      "routingBytes": 525
+    },
+    {
+      "caseId": "sp_xref_resolution",
+      "mode": "workspace",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "requests",
+      "routeOutcome": "configured_member",
+      "routeSource": "configured_default",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 6,
+      "delivered": [
+        {
+          "path": "requests/models.py",
+          "symbol": "Request",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/cookies.py",
+          "symbol": "remove_cookie_by_name",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/sessions.py",
+          "symbol": "request",
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": false,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": true,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 202,
+      "routingBytes": 525
+    },
+    {
+      "caseId": "sp_builder_selection",
+      "mode": "workspace",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "requests",
+      "routeOutcome": "configured_member",
+      "routeSource": "configured_default",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 7,
+      "delivered": [
+        {
+          "path": "requests/utils.py",
+          "symbol": "parse_dict_header",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/models.py",
+          "symbol": "prepare_auth",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/auth.py",
+          "symbol": "handle_401",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "tests/test_utils.py",
+          "symbol": "test_parse_dict_header",
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": false,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": false,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 175,
+      "routingBytes": 525
+    },
+    {
+      "caseId": "sp_parser_registry_false_premise",
+      "mode": "workspace",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "astropy",
+      "routeOutcome": "routed",
+      "routeSource": "behavioral_mechanism",
+      "decidingTier": "behavioral_mechanism",
+      "abstained": false,
+      "itemsDelivered": 3,
+      "delivered": [
+        {
+          "path": "astropy/table/meta.py",
+          "symbol": "ColumnOrderList",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "astropy/coordinates/transformations.py",
+          "symbol": "find_shortest_path",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "astropy/table/meta.py",
+          "symbol": "items",
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": false,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": true,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": false,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 727,
+      "routingBytes": 511
+    },
+    {
+      "caseId": "xr_backend_selection",
+      "mode": "workspace",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "requests",
+      "routeOutcome": "configured_member",
+      "routeSource": "configured_default",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 10,
+      "delivered": [
+        {
+          "path": "requests/api.py",
+          "symbol": "request",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/sessions.py",
+          "symbol": "prepare_request",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/api.py",
+          "symbol": "get",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/api.py",
+          "symbol": "head",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/api.py",
+          "symbol": "options",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/api.py",
+          "symbol": "patch",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/api.py",
+          "symbol": "post",
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": false,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": false,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 190,
+      "routingBytes": 525
+    },
+    {
+      "caseId": "xr_backend_scoring_false_premise",
+      "mode": "workspace",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "requests",
+      "routeOutcome": "configured_member",
+      "routeSource": "configured_default",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 10,
+      "delivered": [
+        {
+          "path": "requests/api.py",
+          "symbol": "request",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/models.py",
+          "symbol": "prepare",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/api.py",
+          "symbol": "get",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/api.py",
+          "symbol": "head",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/api.py",
+          "symbol": "options",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/api.py",
+          "symbol": "patch",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/api.py",
+          "symbol": "post",
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": false,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": false,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": false,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 186,
+      "routingBytes": 525
+    },
+    {
+      "caseId": "xr_score_backends_identifier",
+      "mode": "workspace",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "requests",
+      "routeOutcome": "configured_member",
+      "routeSource": "configured_default",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 0,
+      "delivered": [],
+      "repositoryCorrect": false,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": true,
+      "misleadingDelivered": 0,
+      "emptyContext": true,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": true,
+      "cleanAnswer": true,
+      "latencyMs": 148,
+      "routingBytes": 749
+    },
+    {
+      "caseId": "xr_backend_order",
+      "mode": "workspace",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "requests",
+      "routeOutcome": "configured_member",
+      "routeSource": "configured_default",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 6,
+      "delivered": [
+        {
+          "path": "requests/exceptions.py",
+          "symbol": "FileModeWarning",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/api.py",
+          "symbol": "get",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/utils.py",
+          "symbol": "super_len",
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": false,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": false,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 177,
+      "routingBytes": 525
+    },
+    {
+      "caseId": "ap_format_identification",
+      "mode": "workspace",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "requests",
+      "routeOutcome": "configured_member",
+      "routeSource": "configured_default",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 10,
+      "delivered": [
+        {
+          "path": "requests/cookies.py",
+          "symbol": "RequestsCookieJar",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/models.py",
+          "symbol": "Response",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/cookies.py",
+          "symbol": "cookiejar_from_dict",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/cookies.py",
+          "symbol": "copy",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/sessions.py",
+          "symbol": "prepare_request",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/cookies.py",
+          "symbol": "__contains__",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/cookies.py",
+          "symbol": "set_cookie",
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": false,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": false,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 789,
+      "routingBytes": 525
+    },
+    {
+      "caseId": "ap_format_priority_tiebreak",
+      "mode": "workspace",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "requests",
+      "routeOutcome": "configured_member",
+      "routeSource": "configured_default",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 9,
+      "delivered": [
+        {
+          "path": "requests/models.py",
+          "symbol": "iter_content",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/sessions.py",
+          "symbol": "prepare_request",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/models.py",
+          "symbol": "__iter__",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/models.py",
+          "symbol": "content",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/models.py",
+          "symbol": "iter_lines",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/models.py",
+          "symbol": "Response",
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": false,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": true,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 191,
+      "routingBytes": 525
+    },
+    {
+      "caseId": "ap_registered_class_match",
+      "mode": "workspace",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "requests",
+      "routeOutcome": "configured_member",
+      "routeSource": "configured_default",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 6,
+      "delivered": [
+        {
+          "path": "requests/models.py",
+          "symbol": "Request",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/adapters.py",
+          "symbol": "BaseAdapter",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/sessions.py",
+          "symbol": "request",
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": false,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": true,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 185,
+      "routingBytes": 525
+    },
+    {
+      "caseId": "ap_project_name_reuse",
+      "mode": "workspace",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "pytest",
+      "routeOutcome": "routed",
+      "routeSource": "behavioral_mechanism",
+      "decidingTier": "behavioral_mechanism",
+      "abstained": false,
+      "itemsDelivered": 4,
+      "delivered": [
+        {
+          "path": "src/_pytest/assertion/__init__.py",
+          "symbol": "register_assert_rewrite",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "src/_pytest/python_api.py",
+          "symbol": "approx",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "testing/test_assertion.py",
+          "symbol": "test_register_assert_rewrite_checks_types",
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": false,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": true,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 339,
+      "routingBytes": 508
+    },
+    {
+      "caseId": "pl_reporter_selection",
+      "mode": "workspace",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "requests",
+      "routeOutcome": "configured_member",
+      "routeSource": "configured_default",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 7,
+      "delivered": [
+        {
+          "path": "requests/structures.py",
+          "symbol": "CaseInsensitiveDict",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/sessions.py",
+          "symbol": "prepare_request",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/structures.py",
+          "symbol": "copy",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/utils.py",
+          "symbol": "default_headers",
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": false,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": false,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 185,
+      "routingBytes": 525
+    },
+    {
+      "caseId": "pl_checker_activation",
+      "mode": "workspace",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "requests",
+      "routeOutcome": "configured_member",
+      "routeSource": "configured_default",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 6,
+      "delivered": [
+        {
+          "path": "requests/utils.py",
+          "symbol": "check_header_validity",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": ".github/workflows/run-tests.yml",
+          "symbol": "run-tests.yml",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/models.py",
+          "symbol": "prepare_headers",
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": false,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": false,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 176,
+      "routingBytes": 525
+    },
+    {
+      "caseId": "pl_reporter_ranking_false_premise",
+      "mode": "workspace",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "pylint",
+      "routeOutcome": "routed",
+      "routeSource": "behavioral_mechanism",
+      "decidingTier": "behavioral_mechanism",
+      "abstained": false,
+      "itemsDelivered": 5,
+      "delivered": [
+        {
+          "path": "pylint/reporters/ureports/text_writer.py",
+          "symbol": "default_table",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "pylint/lint/pylinter.py",
+          "symbol": "register_reporter",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "pylint/reporters/ureports/text_writer.py",
+          "symbol": "visit_table",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "pylint/reporters/ureports/text_writer.py",
+          "symbol": "TextWriter",
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": true,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": true,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": false,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 425,
+      "routingBytes": 508
+    },
+    {
+      "caseId": "pl_project_name_reuse",
+      "mode": "workspace",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "requests",
+      "routeOutcome": "configured_member",
+      "routeSource": "configured_default",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 6,
+      "delivered": [
+        {
+          "path": "requests/utils.py",
+          "symbol": "check_header_validity",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/__init__.py",
+          "symbol": "_check_cryptography",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/models.py",
+          "symbol": "prepare_headers",
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": false,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": true,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 185,
+      "routingBytes": 525
+    },
+    {
+      "caseId": "amb_plugin_loading",
+      "mode": "workspace",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "pytest",
+      "routeOutcome": "routed",
+      "routeSource": "behavioral_mechanism",
+      "decidingTier": "behavioral_mechanism",
+      "abstained": false,
+      "itemsDelivered": 7,
+      "delivered": [
+        {
+          "path": "src/_pytest/config/findpaths.py",
+          "symbol": "load_config_dict_from_file",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "src/_pytest/cacheprovider.py",
+          "symbol": "LFPluginCollWrapper",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "testing/test_findpaths.py",
+          "symbol": "test_custom_cfg_file",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "testing/test_findpaths.py",
+          "symbol": "test_empty_pytest_ini",
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": null,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": true,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 276,
+      "routingBytes": 508
+    },
+    {
+      "caseId": "amb_config_file_vs_cli",
+      "mode": "workspace",
+      "ok": true,
+      "errorCode": null,
+      "routedRepository": "requests",
+      "routeOutcome": "configured_member",
+      "routeSource": "configured_default",
+      "decidingTier": null,
+      "abstained": false,
+      "itemsDelivered": 8,
+      "delivered": [
+        {
+          "path": "requests/sessions.py",
+          "symbol": "merge_setting",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/cookies.py",
+          "symbol": "morsel_to_cookie",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/sessions.py",
+          "symbol": "merge_hooks",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/sessions.py",
+          "symbol": "merge_environment_settings",
+          "class": "NEUTRAL"
+        },
+        {
+          "path": "requests/sessions.py",
+          "symbol": "prepare_request",
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        },
+        {
+          "class": "NEUTRAL"
+        }
+      ],
+      "repositoryCorrect": null,
+      "primaryTop1": false,
+      "primaryTop3": false,
+      "requiredSupportPresent": true,
+      "misleadingDelivered": 0,
+      "emptyContext": false,
+      "falsePremiseReconstructed": null,
+      "absenceHeld": null,
+      "cleanAnswer": false,
+      "latencyMs": 173,
+      "routingBytes": 525
+    }
+  ]
+}

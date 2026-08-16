@@ -1710,3 +1710,69 @@ file; live-run outcome history is separate (`stage5_outcome_ledger.md`).
   single test failing. It is now a declaration with an injected-failure test per
   feature, so a future session-backed feature must state its semantics rather
   than inherit whichever handler surrounds it.
+
+
+## M153 — Cross-Repository Behavioural Nomination and Generalisation Proof
+
+| Field | Value |
+| --- | --- |
+| Verdict | **INCOMPLETE** (A PASS · B PASS · C NOT PASS · D/E not run) |
+| Predecessor | `72ce221c` (M152 final functional) |
+| Commits | `5900528b` corpus · `8b10e944` audit+contract · `f700d5b6` baselines · `84dba95d` implementation |
+| Verification | typecheck clean · typecheck:benchmarks clean · `bun test` 4646 pass / 0 fail · `git diff --check` clean |
+| ARC | not run, not consulted for any decision |
+
+Built a 35-case behavioural corpus over 7 pinned non-ARC repositories, split by
+repository (calibration requests/flask/pytest/sphinx, holdout
+xarray/astropy/pylint), committed before any algorithm work, with all 81
+referenced symbols and every line span mechanically verified against source.
+Added the behavioural repository-nomination tier below exact symbol, comparing
+repositories by strongest evidence CLASS with no margin and no threshold. Shipped
+default-off.
+
+## M153 standing findings
+
+- **A benchmark written after the algorithm measures the algorithm's own
+  vocabulary** (M153): committing the corpus before the implementation was the
+  only thing that made the result falsifiable. The headline number — 1 of 30
+  correct implementations at oracle — would have been indistinguishable from a
+  badly-written benchmark if the queries had been authored afterwards by the
+  person who then went looking for why they failed.
+
+- **Generalisation failed at the activation cue, not in the machinery** (M153):
+  only 15 of 35 queries derive a behavioural operation at all, and the rest fall
+  through to lexical matching. M150's own fixture asks which backend WINS and
+  derives `selection`; the corpus asks which backend OPENS A GIVEN FILE and
+  derives nothing. Everything downstream of that cue — mechanism facts, subject
+  alignment, answer-role delivery — was built and tested against phrasings ARC
+  and the fixtures happened to use. The discriminations are sound where they run.
+
+- **A router is only as good as what the index recorded** (M153): the adapter
+  case routed to flask because `requests` admitted zero candidates — its own
+  first-prefix-match loop was never indexed as a selection fact — while flask's
+  `url_build_error_handlers` operand coincidentally contained the token `url`.
+  Routing rules cannot be evaluated independently of evidence coverage: a
+  perfectly correct comparison over sparse evidence still picks the wrong
+  repository, and it does so confidently.
+
+- **Volume is the size distractor in disguise** (M153): retaining only each
+  repository's single best evidence item removes the §44 large-repository
+  advantage without a normalisation constant. Any runner-up margin over a COUNT
+  would have put it straight back, which is why the lane has neither a margin nor
+  a threshold.
+
+- **Default-off is the honest verdict for a measured-MIXED lane** (M153): the
+  lane fired 6 times and was wrong 3 times, and wrong-subject nomination is an
+  explicit failure condition. Enabling it would have traded a truthful
+  configured-default answer for a confident wrong one. Following M78/M82/M85,
+  the capability ships reachable and measured rather than on.
+
+- **Benchmark runs contaminate each other through session state** (M153): with
+  the lane enabled, routing to a different repository made THAT repository
+  accumulate observations, which perturbed later oracle calls in the same pass.
+  M152 made product state mutable and separately owned, which is correct — and it
+  means a paired benchmark must start each arm from clean state rather than reuse
+  a prepared workspace.
+
+- **`initRepo` is not idempotent** (M153): a second call over an existing index
+  fails with `UNIQUE constraint failed: edges.id`.
