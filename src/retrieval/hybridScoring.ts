@@ -139,6 +139,13 @@ export interface HybridScoreComponents {
    */
   mechanismEvidence?: number;
   /**
+   * Bounded answer-role correction (M150). Present only when a proven producer
+   * relation placed this candidate above a consumer of its result; `organicFinal`
+   * keeps the score it earned on its own evidence.
+   */
+  operationFulfillment?: number;
+  organicFinal?: number;
+  /**
    * Weighted sum of the components above, minus `hubPenalty` and
    * `actionabilityPenalty`; the ranking key.
    */

@@ -245,7 +245,7 @@ function orderingFactOf(db: Database, symbolId: SymbolId): MechanismFact | undef
 }
 
 /** Resolve a recorded provenance name to indexed definitions. */
-function resolveByName(db: Database, name: string): SymbolRecord[] {
+export function resolveByName(db: Database, name: string): SymbolRecord[] {
   const leaf = name.split(".").at(-1) ?? name;
   const byFq = listSymbolsByFqName(db, name);
   if (byFq.length > 0) return byFq.slice(0, 4);
@@ -253,7 +253,7 @@ function resolveByName(db: Database, name: string): SymbolRecord[] {
 }
 
 /** Exact `calls` edges out of a definition. Never `references`, never potential. */
-function exactCallees(db: Database, symbolId: SymbolId): SymbolRecord[] {
+export function exactCallees(db: Database, symbolId: SymbolId): SymbolRecord[] {
   return db.query(
     `
       SELECT d.id, d.file_id, d.fq_name, d.local_name, d.kind, d.signature,

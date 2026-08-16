@@ -77,6 +77,11 @@ import {
   type BehavioralObjectiveResult,
 } from "./behavioralObjective";
 import {
+  inactiveOperationRoles,
+  resolveOperationRoles,
+  type OperationRoleDiagnostics,
+} from "./operationRole";
+import {
   evaluateMechanismEvidence,
   mechanismEvidenceReason,
   type MechanismEvidence,
@@ -248,6 +253,8 @@ export interface HybridRetrievalResult {
   conceptOwner: ConceptOwnerDiagnostics;
   /** What the operation-fact candidate lane admitted, refused, and why (M150). */
   operationFactCandidates: OperationFactResult;
+  /** How each candidate stands to the requested operation, and any corrections. */
+  operationRoles: OperationRoleDiagnostics;
   /**
    * Every rescued symbol with its ordinary rank, including the ones the output
    * cap excluded. Empty whenever the lane did not activate.
@@ -320,6 +327,7 @@ export function hybridRetrieve(
       behavioralObjective: { operation: null, suppressedBy: "no results requested", considered: [] },
       operationFactCandidates: inactiveOperationFacts("no results requested"),
       mechanismEvidenceById: new Map(),
+    operationRoles: inactiveOperationRoles("retrieval produced no candidates").diagnostics,
     };
   }
   const lexicalPoolSize = input.lexicalPoolSize
@@ -339,6 +347,9 @@ export function hybridRetrieve(
   // about what the request asked for.
   const behavioralObjective = deriveBehavioralObjective(derivedIntent);
   const mechanismEvidenceById = new Map<string, MechanismEvidence>();
+  const roleOut = {
+    diagnostics: inactiveOperationRoles("retrieval produced no candidates").diagnostics,
+  };
 
   // Retrieval is a UNION of independent candidate generators. Each emits the
   // SAME structured candidate (file/symbol identity + source + evidence) and a
@@ -419,7 +430,7 @@ export function hybridRetrieve(
   // under one normalisation, which is what keeps rescued content inside the
   // normal selection/budget path rather than beside it.
   let ranked = timed(input.profile, "candidate_processing.score_sort_cap", () =>
-    assemble(db, raw, input, derivedIntent, behavioralObjective, mechanismEvidenceById));
+    assemble(db, raw, input, derivedIntent, behavioralObjective, mechanismEvidenceById, roleOut));
   const upstreamRescue = timed(input.profile, "structural.upstream_rescue", () =>
     upstreamRescueCandidates(db, input, derivedIntent, ranked, raw));
   // Concept-owner rescue needs the RANKING too, for a different reason: "the pool
@@ -437,7 +448,7 @@ export function hybridRetrieve(
     || conceptOwner.diagnostics.candidatesAdmitted > 0
   ) {
     ranked = timed(input.profile, "candidate_processing.score_sort_cap", () =>
-      assemble(db, raw, input, derivedIntent, behavioralObjective, mechanismEvidenceById));
+      assemble(db, raw, input, derivedIntent, behavioralObjective, mechanismEvidenceById, roleOut));
   }
   count(input.profile, "upstream_rescue_seeds", upstreamRescue.diagnostics.seeds.length);
   count(input.profile, "upstream_rescue_candidates", upstreamRescue.diagnostics.rescuedCandidatesAdmitted);
@@ -492,6 +503,7 @@ export function hybridRetrieve(
     behavioralObjective,
     operationFactCandidates: operationFacts,
     mechanismEvidenceById,
+    operationRoles: roleOut.diagnostics,
   };
 }
 
@@ -975,6 +987,7 @@ function assemble(
   derivedIntent: DerivedQueryIntent,
   behavioralObjective: BehavioralObjectiveResult,
   mechanismEvidenceById: Map<string, MechanismEvidence>,
+  roleOut: { diagnostics: OperationRoleDiagnostics },
 ): HybridCandidate[] {
   const entries = [...raw.values()];
   if (entries.length === 0) {
@@ -1242,14 +1255,56 @@ function assemble(
     } satisfies HybridCandidate;
   });
 
-  candidates.sort(
+  // M150: the answer-role correction. Everything above scored each candidate on
+  // its own evidence, which cannot see that one of them produces what another
+  // consumes. This is the only step that compares two candidates to each other,
+  // and it runs last so the organic scores it reads are final.
+  const roleResult = hasBehavioralOperation(behavioralObjective)
+    ? resolveOperationRoles({
+      db,
+      operation: behavioralObjective.operation,
+      candidates: candidates.map((candidate) => ({
+        symbolId: candidate.symbolId,
+        fqName: candidate.fqName,
+        final: candidate.scores.final,
+      })),
+      evidenceById: mechanismEvidenceById,
+      factsById: mechanismFacts,
+    })
+    : inactiveOperationRoles("no behavioural operation in request");
+
+  const ranked = candidates.map((candidate) => {
+    const promoted = roleResult.promotedFinals.get(candidate.symbolId);
+    if (promoted === undefined) return candidate;
+    // The organic final stays on the scorecard as `final`'s companion so an
+    // audit can always separate what this candidate earned from where the
+    // relation placed it (§65).
+    const promotion = roleResult.diagnostics.promotions
+      .find((entry) => entry.symbolId === candidate.symbolId);
+    return {
+      ...candidate,
+      scores: {
+        ...candidate.scores,
+        organicFinal: candidate.scores.final,
+        operationFulfillment: round(promoted - candidate.scores.final),
+        final: promoted,
+      },
+      evidence: [
+        ...candidate.evidence,
+        `${promotion?.reason ?? "directly implements the requested operation"} (answer role)`,
+      ].sort(),
+    } satisfies HybridCandidate;
+  });
+
+  ranked.sort(
     (left, right) =>
       right.scores.final - left.scores.final
       || left.fqName.localeCompare(right.fqName)
       || left.symbolId.localeCompare(right.symbolId),
   );
 
-  return candidates;
+  roleOut.diagnostics = roleResult.diagnostics;
+  return ranked;
 }
 
 // ----- raw signal helpers -----------------------------------------------------

@@ -229,7 +229,23 @@ export function evaluateMechanismEvidence(input: MechanismEvidenceInput): Mechan
   }
   // Gate 3. Mechanism evidence answers "how", never "about what". A definition
   // the request is not about does not become the answer by containing a loop.
-  if (input.subjectRelevance < MECHANISM_SUBJECT_FLOOR) {
+  //
+  // The floor reads NAME and PATH evidence, which is the right test for a
+  // definition whose only claim is that it contains a mechanism — and the wrong
+  // one for a definition whose mechanism ACTS ON the subject by name. `alpha`
+  // sorts a local called `plugins`; asked what determines plugin precedence, the
+  // operand is better subject evidence than any token in `emphasis.py::alpha`,
+  // and the floor was refusing the one definition that answers the question
+  // because its author chose an uninformative name (§22).
+  //
+  // Only `direct_operand` waives it. `local_producer` is a weaker inference and
+  // `undecidable` means the request named no subject at all — neither is
+  // independent evidence that the request is about this code, and waiving on
+  // them would return the floor to a formality. The waiver cannot manufacture
+  // relevance either: the operand still has to name a subject term the request
+  // actually used, which is the same test that refused all 64 Gaussian owners.
+  const operandNamesSubject = matched.some((entry) => entry.alignment === "direct_operand");
+  if (input.subjectRelevance < MECHANISM_SUBJECT_FLOOR && !operandNamesSubject) {
     return {
       score: 0,
       matched,
@@ -261,6 +277,19 @@ export function evaluateMechanismEvidence(input: MechanismEvidenceInput): Mechan
     };
   }
   return { score: round(Math.min(MAX_MECHANISM_EVIDENCE, score)), matched };
+}
+
+/**
+ * Did this candidate earn the DIRECT tier — does it perform the operation asked
+ * about, rather than merely contribute to it?
+ *
+ * The tier is already the outcome of every proof in `strengthOf`, so asking the
+ * question this way means the answer-role lane and the scorecard can never
+ * disagree about what "directly implements" means.
+ */
+export function isDirectImplementer(evidence: MechanismEvidence): boolean {
+  return evidence.score >= DIRECT_MECHANISM_EVIDENCE
+    && evidence.matched.some((entry) => entry.compatibility === "direct");
 }
 
 /**
