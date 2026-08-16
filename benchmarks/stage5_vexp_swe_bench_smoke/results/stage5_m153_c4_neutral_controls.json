@@ -1,0 +1,53 @@
+{
+  "artifact": "M153-C4 neutral controls",
+  "suite": "src/retrieval/boundedLaneAdmission.test.ts",
+  "vocabularyPolicy": "no token, symbol name or code shape borrowed from any corpus repository (§19, §20)",
+  "fixture": {
+    "implementer": "classify_stream — first-success loop over `payload_formats`, named after nothing in the request",
+    "negativeControl": "sweep_retry_handlers — identical mechanism over `retry_handlers`, a subject the request never names",
+    "decoys": "five definitions in names.py named after every request token and implementing nothing",
+    "query": "How does the pipeline decide which encoder writes a given payload record?"
+  },
+  "controls": [
+    {
+      "kind": "positive",
+      "name": "§20 a lane-admitted implementer below the cap still reaches the pool",
+      "beforeFix": "fail",
+      "afterFix": "pass",
+      "proves": "a bounded lane's finding is no longer truncated by ordinary ranking's cap"
+    },
+    {
+      "kind": "positive",
+      "name": "§20 the implementer is admitted BESIDE the cap, evicting nothing",
+      "beforeFix": "fail",
+      "afterFix": "pass",
+      "proves": "ordinary ranking still returns its full quota; the lane adds, never substitutes (M142-C)"
+    },
+    {
+      "kind": "positive",
+      "name": "§18 admission beside the cap does not change what the candidate scored",
+      "beforeFix": "fail",
+      "afterFix": "pass",
+      "proves": "no score tuning — the candidate's final is identical at maxResults 3 and 50"
+    },
+    {
+      "kind": "negative",
+      "name": "§20 an equivalent mechanism on an unrequested subject is not carried past the cap",
+      "beforeFix": "pass",
+      "afterFix": "pass",
+      "proves": "the fix does not make structural facts bypass the cap; subject alignment still gates admission"
+    },
+    {
+      "kind": "negative",
+      "name": "§20 a request declaring no operation admits nothing beside the cap",
+      "beforeFix": "pass",
+      "afterFix": "pass",
+      "proves": "a non-behavioural request is unaffected; the pool stays at maxResults"
+    }
+  ],
+  "summary": {
+    "beforeFix": { "pass": 2, "fail": 3 },
+    "afterFix": { "pass": 5, "fail": 0 },
+    "negativeControlsInvariant": true
+  }
+}

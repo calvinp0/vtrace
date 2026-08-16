@@ -1834,3 +1834,60 @@ clean.
   were isolated, the oracle arms became identical with the routing lane on and
   off — the exact property that says routing did not disturb retrieval. Before
   isolation six cases differed, and the noise looked like a real effect.
+
+## M153-C3 continuation (commit 1c02df9f)
+
+Verdict unchanged: **INCOMPLETE** (A PASS · B PASS · C NOT PASS · D/E not run).
+Two candidate-admission defects fixed, both of which had let a content hash decide
+which definition was considered: `maxOwnersExamined` bounded the cheap alignment
+stage over `(kind, symbol_id)` hash order and discarded sphinx's `get_filetype` at
+owner 96 of 106 before it could be aligned; and equally-aligned facts tie-broke on
+`symbol_id`, so three of four indistinguishable candidates were taken by hash. A
+structural exactness class (exact token identity outranks stem approximation) now
+decides, with `symbol_id` only as the final deterministic tie-break. Oracle Top-1
+unchanged at 1/30. Holdout unconsumed, ARC not run.
+
+## M153-C4 continuation (commits 4b02ea04, <evidence>)
+
+Verdict unchanged: **INCOMPLETE** (A PASS · B PASS · C NOT PASS · D/E not run).
+C4 focused verdict **PASS**; M153-C still NOT PASS (§49). One propagation defect
+proven by paired trace and fixed: a bounded lane's admissions were being truncated
+by ordinary ranking's deliverable cap. `get_filetype` moves from absent to pool
+rank 65; `get_adapter` control byte-identical at rank 1. Oracle calibration
+unchanged — **0 substantive per-case differences across all 35 cases** — and the
+taxonomy is unchanged. Behavioural lane still default-off; workspace routing not
+rerun (§24). Verification: typechecks clean, `bun test` 4670 pass / 0 fail,
+`git diff --check` clean. Holdout unconsumed, ARC and TCKDB not run.
+
+## M153-C4 standing findings
+
+- **A contract written for a class was applied to an instance** (M153-C4): M142-C
+  established that "the cap bounds what ORDINARY RANKING returns, and a lane that
+  exists because ranking cannot see its findings does not compete for ranking's
+  slots" — then implemented it for the concept-owner lane by name. The
+  operation-fact lane satisfies that description in its own header and was still
+  routed through the cap. The defect was not in either lane but in the contract
+  being bound to a lane identity rather than to the property that defines the
+  class.
+
+- **The case that exercised the lane was the case that did not need it**
+  (M153-C4): `Session.get_adapter` is the corpus's single operation-fact success
+  and it scores `fts = 1` — a full lexical name match, rank 1 of 96 on ordinary
+  evidence alone. It would have been delivered with the lane switched off. So the
+  lane's containment was invisible for three phases: its only passing case was
+  the only case independent of it. When a lane's success set and its purpose set
+  do not intersect, the lane is untested however green it looks.
+
+- **Distinguish truncated from out-ranked before touching a score** (M153-C4):
+  `get_filetype` was present in `evaluatedById` at rank 202 of 273 and absent
+  from a pool capped at 60. Those are different defects with different fixes, and
+  only the uncapped evaluated set separates them. Reasoning from the delivered
+  output alone would have read as "ranked too low" and licensed exactly the score
+  tuning that would have been wrong.
+
+- **Removing a real defect need not move the number** (M153-C4): the fix is
+  proven by paired trace and by three controls that fail without it, and oracle
+  calibration did not change on a single case. The bottleneck moved from
+  candidate propagation to delivery selection. A milestone that only counts
+  aggregate movement would have discarded a correct fix and kept looking in the
+  stage it had just cleared.
