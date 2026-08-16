@@ -454,7 +454,10 @@ export function hybridRetrieve(
   count(input.profile, "upstream_rescue_candidates", upstreamRescue.diagnostics.rescuedCandidatesAdmitted);
   count(input.profile, "upstream_rescue_edges_examined", upstreamRescue.diagnostics.incomingEdgesExamined);
 
-  const candidates = admitConceptOwnersBesideCap(ranked, maxResults, conceptOwner);
+  const candidates = admitBoundedLanesBesideCap(ranked, maxResults, [
+    ...conceptOwner.candidates.map((admitted) => admitted.symbol.id),
+    ...operationFacts.candidates.map((admitted) => admitted.symbol.id),
+  ]);
   count(input.profile, "candidates.after_cap", candidates.length);
   count(input.profile, "literal_symbol_candidates", candidates.filter((candidate) =>
     candidate.sources.includes(HybridCandidateSource.Symbol)).length);
@@ -806,8 +809,33 @@ function graphExpandedCandidates(
 }
 
 /**
- * Keep the concept-owner lane's findings inside the returned pool without
- * inflating their scores, and without evicting anything (M142-C).
+ * Keep a BOUNDED LANE's findings inside the returned pool without inflating
+ * their scores, and without evicting anything (M142-C).
+ *
+ * M153-C4 generalised this from the concept-owner lane to every lane of its
+ * kind, because applying it to only one of them was the defect.
+ *
+ * The rule is a property of what a lane IS, not of which lane it happens to be:
+ * a lane exists because ordinary ranking cannot see its findings, so subjecting
+ * those findings to ordinary ranking's cap discards exactly what the lane was
+ * built to recover. The operation-fact lane's own header states the premise
+ * outright — the definition it admits is one that "no lexical, symbol, path or
+ * domain signal reaches" — and it was nonetheless routed through the cap.
+ *
+ * Measured, paired, on the frozen corpus:
+ *
+ *   requests  Session.get_adapter  rank   1 / 96   final 2.44   delivered
+ *   sphinx    get_filetype         rank 202 / 273  final 0.60   truncated
+ *
+ * Both were admitted by the lane; both were scored; only one survived the cut at
+ * 60. The control survived it on `fts = 1` — a full lexical name match — which
+ * means it never needed the lane at all, and the lane's containment had gone
+ * unnoticed precisely because the case that exercised it was also the case that
+ * did not depend on it.
+ *
+ * Nothing here changes a score. `get_filetype` enters the pool at the 0.60 it
+ * earned and competes for the lead on that; what it no longer does is lose its
+ * place to a cap it was structurally guaranteed to fail (§18, §19).
  *
  * A definition the request could not name is, by construction, weakly ranked —
  * that is why nothing found it. Measured on ARC: the recovered `arc/checks/nmd.py`
@@ -832,22 +860,29 @@ function graphExpandedCandidates(
  *
  * So the cap bounds what ORDINARY RANKING returns, and a lane that exists because
  * ranking cannot see its findings does not compete for ranking's slots. The pool
- * is still bounded: the lane admits at most `maxConceptOwnerCandidates`.
+ * is still bounded: each lane admits at most its own cap, so the overflow this
+ * can add is `maxConceptOwnerCandidates + OPERATION_FACT_LIMITS.maxAdmitted`.
  */
-function admitConceptOwnersBesideCap(
+function admitBoundedLanesBesideCap(
   ranked: readonly HybridCandidate[],
   maxResults: number,
-  conceptOwner: ConceptOwnerResult,
+  laneAdmittedIds: readonly SymbolId[],
 ): HybridCandidate[] {
   const capped = ranked.slice(0, maxResults);
-  if (conceptOwner.candidates.length === 0 || ranked.length <= maxResults) {
+  if (laneAdmittedIds.length === 0 || ranked.length <= maxResults) {
     return capped;
   }
+  // `present` also absorbs each addition, so a definition admitted by two lanes
+  // is carried across once rather than duplicated in the pool.
   const present = new Set(capped.map((candidate) => candidate.symbolId));
-  const missing = conceptOwner.candidates
-    .map((admitted) => ranked.find((candidate) => candidate.symbolId === admitted.symbol.id))
-    .filter((candidate): candidate is HybridCandidate =>
-      candidate !== undefined && !present.has(candidate.symbolId));
+  const missing: HybridCandidate[] = [];
+  for (const symbolId of laneAdmittedIds) {
+    if (present.has(symbolId)) continue;
+    const candidate = ranked.find((entry) => entry.symbolId === symbolId);
+    if (candidate === undefined) continue;
+    present.add(symbolId);
+    missing.push(candidate);
+  }
   if (missing.length === 0) {
     return capped;
   }
