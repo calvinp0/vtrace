@@ -1941,3 +1941,82 @@ clean. Holdout unconsumed, ARC and TCKDB not run.
   nothing ordinary retrieval could not already reach — and nothing wrong either.
   Aggregate Top-1 had been flat for three phases while the more informative
   question, "does this lane recover anything at all", went unasked.
+
+## M154 — Agent Workflow Safety and Search-Contract Hardening (commits 4975d5b2, 1f13b4f2, 051a7c55, <evidence>)
+
+Verdict **MIXED** (A PASS · B PASS · C MIXED · D PASS · E PASS). Predecessor
+e3761ab9 (M153-C5 final functional). Not a retrieval milestone: its job was to
+make vtrace safe and truthful enough to put in front of a coding agent before the
+M155 broad qualification.
+
+Three defects fixed. `.vtrace/index.sqlite` and `session.sqlite` were untracked
+and unignored, so `git add -A` swept vtrace's own state into the user's commit —
+reproduced in a plain checkout and a linked worktree, now excluded through the
+Git COMMON dir (measured: the worktree-private `info/exclude` is never read),
+idempotent, no tracked file and no global config touched, refusing loudly where a
+repository versions `.vtrace/` content. `buildInspectFirst` closed every response
+with a constant "Avoid first: Broad repository grep/find" — 17 of 19 frozen
+reuse-before-write cases, now 0 — and the installed guidance block said the same
+in the user's own AGENTS.md. `deriveQueryIntent` classified the project name as a
+project reference, refused it as an identifier, then handed it to lexical scoring
+as an ordinary content word.
+
+Product responses now carry `coverage: {selective_task_retrieval, not_observed,
+enumerationComplete: false}`, reusing the M149 negative-claim vocabulary rather
+than a parallel one; exact symbol/path absence keeps its stronger reading.
+Deterministic suites 0/50 changed, provenanceValid true, srcDirty false. Full
+suite 4698 pass / 0 fail, typechecks and `git diff --check` clean. Behavioural
+routing default-OFF, now asserted by test. Holdouts unconsumed; ARC not run.
+
+## M154 standing findings
+
+- **The most dangerous string in the product was a constant** (M154-D): the
+  advice not to grep was not a judgement about evidence, coverage or confidence —
+  it was a literal assigned on every path, including the low-confidence
+  "does this already exist?" lead where following it means writing a second copy
+  of code that exists. Anything asserted unconditionally is not a finding about
+  the case; it is a property of the code that emits it, and it should be read as
+  a claim the system is making about EVERY case before it is believed about one.
+
+- **A field that is only ever true cannot be tested by a passing suite**
+  (M154-D): `avoidFirst` was typed `string | null` and was never null. The type
+  described a decision nobody made. Three test files asserted the block contained
+  "Avoid first:", so the constant was fully covered — coverage of a constant
+  proves the constant, not the decision it stands in for.
+
+- **The protection was real and stopped one layer short** (M154-C): the project
+  name was correctly identified, correctly refused as an identifier, and then
+  passed unchanged into `positiveSearchText`, which BM25, path relevance and
+  concept-owner tokenisation all consume. A classification that does not reach
+  every consumer of the thing it classifies is a comment, not a rule. The fix was
+  not new logic; it was making the lexical bag honour a decision already made.
+
+- **Measure where Git actually reads, not where the path looks right**
+  (M154-B): a linked worktree has `$GIT_DIR` at `.git/worktrees/<name>` and
+  `$GIT_COMMON_DIR` at `.git`, and only the second is consulted for
+  `info/exclude`. An implementation using the obvious `--git-dir` passes every
+  single-checkout test and does nothing in exactly the linked-worktree workflow
+  that motivated the work. Two `git check-ignore` calls settled it in a minute.
+
+- **A zero can be the instrument reading zero** (M154-E): the first baseline
+  reported `unsupportedAntiSearchAdvice: 0` on the predecessor that emitted it
+  everywhere. Two independent measurement defects — the guidance block is built
+  downstream of `buildCapsuleV2` and was never constructed, and the detector's
+  span could not cross the newline between the "Avoid first:" heading and its
+  bullet. A zero on a metric that has never been non-zero is evidence about the
+  harness until something makes it move.
+
+- **The fixture never let the code under test run** (M154-C): `resolveProjectNameAliases`
+  reads the repository root BASENAME, and every existing suite is rooted at a
+  SWE-bench instance directory (`psf__requests-1142`). The alias could never equal
+  a project name, so project-name handling had never been exercised by any suite
+  in the repository. Measuring it required materializing copies named `requests`,
+  `flask`, `pytest`, `sphinx` — and the same fact is why the deterministic suites
+  are 0/50, which is evidence of containment rather than of inertness.
+
+- **A generic mechanism does not owe you the observed harm** (M154-C): the
+  invariant violation reproduced exactly and was fixed structurally, and the
+  outcome-level corruption ARC reported did not reproduce on four unrelated
+  repositories — zero paired regressions on BOTH sides, one improvement traded
+  for one regression. Fixing a proven rule violation is worth doing; claiming it
+  explains the original report is not, and C is MIXED for that reason.

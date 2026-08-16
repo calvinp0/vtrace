@@ -121,6 +121,28 @@ test("an unresolved response still claims nothing about absence", () => {
   assert.equal(unresolved.coverage.enumerationComplete, false);
 });
 
+// §102 and §55. M154 rewrote tool descriptions and guidance, which is exactly the
+// kind of change that can flip a default by accident. M153 closed INCOMPLETE with
+// zero unique behavioural recoveries, so the lane stays off until its evidence
+// improves — and that has to be asserted, not assumed.
+test("behavioural repository routing is still off by default", async () => {
+  const { behavioralRoutingEnabled } = await import("../workspace/productRoute");
+  const previous = process.env.VTRACE_ENABLE_BEHAVIORAL_ROUTING;
+  delete process.env.VTRACE_ENABLE_BEHAVIORAL_ROUTING;
+  try {
+    const request = { task: "does this already exist?" } as Parameters<typeof behavioralRoutingEnabled>[0];
+    assert.equal(behavioralRoutingEnabled(request), false);
+    // Explicit opt-in still works; the lane is dormant, not removed.
+    assert.equal(
+      behavioralRoutingEnabled({ ...request, enableBehavioralRouting: true }),
+      true,
+    );
+  } finally {
+    if (previous === undefined) delete process.env.VTRACE_ENABLE_BEHAVIORAL_ROUTING;
+    else process.env.VTRACE_ENABLE_BEHAVIORAL_ROUTING = previous;
+  }
+});
+
 // §78: two different axes that a shared word invites collapsing. Workspace
 // coverage answers "which repositories were accounted for"; retrieval coverage
 // answers "what evidence came back". A complete member scan says nothing about

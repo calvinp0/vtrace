@@ -1,0 +1,144 @@
+{
+  "schemaVersion": "stage5.m154-project-name-poisoning-corpus.v1",
+  "purpose": "Decide whether naming the project you are already inside distorts symbol retrieval. Every case is a PAIR over the same repository and the same underlying question: one phrasing names the project, one does not. Once repository scope is already fixed by repo_root, the two phrasings ask for the same code, so a difference between them is the project token acting as symbol evidence — which it is not.",
+  "provenance": {
+    "origin": "M154-C. ARC supplied the hypothesis; ARC supplies none of the cases and none of the acceptance (governing prompt §27, §54).",
+    "frozen": "Authored and committed before any measurement was taken on either the predecessor or the candidate implementation.",
+    "arcUsed": false,
+    "holdoutsConsumed": "none"
+  },
+  "materialization": {
+    "why": "resolveProjectNameAliases reads the repository root's BASENAME. The SWE-bench checkouts are named after their instance (`psf__requests-1142`), so the alias never equals the project name and the protection under test can never fire. Each case therefore runs against a copy of the checkout whose root basename IS the project name.",
+    "sourceRoot": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo",
+    "excludeFromCopy": [".git", ".vtrace"],
+    "sessionIsolation": "Each arm indexes into its own copy, so no session or index state is shared between arms."
+  },
+  "invariantUnderTest": {
+    "projectTokenMayEstablishRepositoryScope": true,
+    "projectTokenMayIndependentlyBoostCodeSymbols": false,
+    "exception": "An explicit code-identifier reading of the same token keeps every lane. The `explicit_identifier_control` cases below are that exception, and they must not regress."
+  },
+  "cases": [
+    {
+      "id": "requests-parse-header-links",
+      "kind": "paired_reuse_question",
+      "project": "requests",
+      "sourceWorkspace": "psf__requests-1142",
+      "named": "Does Requests already have a helper for parsing header links?",
+      "plain": "Is there already a helper for parsing header links?",
+      "expectedPrimaryEvidence": { "path": "requests/utils.py", "symbol": "parse_header_links" },
+      "knownDistractors": ["requests/__init__.py", "requests/api.py", "requests/models.py"],
+      "notes": "The project name is also the package directory name, so every file in the package carries the token in its path."
+    },
+    {
+      "id": "requests-resolve-redirects",
+      "kind": "paired_reuse_question",
+      "project": "requests",
+      "sourceWorkspace": "psf__requests-1142",
+      "named": "Does Requests already handle redirect resolution?",
+      "plain": "Is redirect resolution already handled somewhere?",
+      "expectedPrimaryEvidence": { "path": "requests/sessions.py", "symbol": "resolve_redirects" },
+      "knownDistractors": ["requests/__init__.py", "requests/api.py"]
+    },
+    {
+      "id": "requests-guess-json-utf",
+      "kind": "paired_reuse_question",
+      "project": "requests",
+      "sourceWorkspace": "psf__requests-1142",
+      "named": "Does Requests already detect the encoding of a JSON payload?",
+      "plain": "Is there already something that detects the encoding of a JSON payload?",
+      "expectedPrimaryEvidence": { "path": "requests/utils.py", "symbol": "guess_json_utf" },
+      "knownDistractors": ["requests/models.py"]
+    },
+    {
+      "id": "flask-send-from-directory",
+      "kind": "paired_reuse_question",
+      "project": "flask",
+      "sourceWorkspace": "pallets__flask-5014",
+      "named": "Does Flask already have a helper for serving a file from a directory?",
+      "plain": "Is there already a helper for serving a file from a directory?",
+      "expectedPrimaryEvidence": { "path": "src/flask/helpers.py", "symbol": "send_from_directory" },
+      "knownDistractors": ["src/flask/app.py", "src/flask/__init__.py"]
+    },
+    {
+      "id": "flask-get-root-path",
+      "kind": "paired_reuse_question",
+      "project": "flask",
+      "sourceWorkspace": "pallets__flask-5014",
+      "named": "Does Flask already resolve the root path of an imported package?",
+      "plain": "Is the root path of an imported package already resolved somewhere?",
+      "expectedPrimaryEvidence": { "path": "src/flask/helpers.py", "symbol": "get_root_path" },
+      "knownDistractors": ["src/flask/app.py", "src/flask/scaffold.py"]
+    },
+    {
+      "id": "pytest-make-numbered-dir",
+      "kind": "paired_reuse_question",
+      "project": "pytest",
+      "sourceWorkspace": "pytest-dev__pytest-5262",
+      "named": "Does pytest already create numbered temporary directories?",
+      "plain": "Is there already something that creates numbered temporary directories?",
+      "expectedPrimaryEvidence": { "path": "src/_pytest/pathlib.py", "symbol": "make_numbered_dir" },
+      "knownDistractors": ["src/_pytest/tmpdir.py", "src/_pytest/config/__init__.py"]
+    },
+    {
+      "id": "sphinx-relative-uri",
+      "kind": "paired_reuse_question",
+      "project": "sphinx",
+      "sourceWorkspace": "sphinx-doc__sphinx-7462",
+      "named": "Does Sphinx already compute a relative URI between two paths?",
+      "plain": "Is there already something that computes a relative URI between two paths?",
+      "expectedPrimaryEvidence": { "path": "sphinx/util/osutil.py", "symbol": "relative_uri" },
+      "knownDistractors": ["sphinx/application.py", "sphinx/builders/__init__.py"]
+    },
+    {
+      "id": "sphinx-copyfile",
+      "kind": "paired_reuse_question",
+      "project": "sphinx",
+      "sourceWorkspace": "sphinx-doc__sphinx-7462",
+      "named": "Does Sphinx already copy a file only when it changed?",
+      "plain": "Is there already a copy helper that only writes when the file changed?",
+      "expectedPrimaryEvidence": { "path": "sphinx/util/osutil.py", "symbol": "copyfile" },
+      "knownDistractors": ["sphinx/application.py"]
+    },
+
+    {
+      "id": "flask-explicit-class-identifier",
+      "kind": "explicit_identifier_control",
+      "project": "flask",
+      "sourceWorkspace": "pallets__flask-5014",
+      "named": "What does the Flask class do?",
+      "expectedPrimaryEvidence": { "path": "src/flask/app.py", "symbol": "Flask" },
+      "mustRemainDiscoverable": true,
+      "notes": "The token is both the project name and a real class. Nominal `X class` phrasing is explicit symbol evidence, so no suppression may apply."
+    },
+    {
+      "id": "flask-explicit-declaration",
+      "kind": "explicit_identifier_control",
+      "project": "flask",
+      "sourceWorkspace": "pallets__flask-5014",
+      "named": "Where is class Flask defined?",
+      "expectedPrimaryEvidence": { "path": "src/flask/app.py", "symbol": "Flask" },
+      "mustRemainDiscoverable": true
+    },
+    {
+      "id": "sphinx-explicit-class-identifier",
+      "kind": "explicit_identifier_control",
+      "project": "sphinx",
+      "sourceWorkspace": "sphinx-doc__sphinx-7462",
+      "named": "What does the `Sphinx` class do?",
+      "expectedPrimaryEvidence": { "path": "sphinx/application.py", "symbol": "Sphinx" },
+      "mustRemainDiscoverable": true,
+      "notes": "Backtick marking is a deliberate authoring act and is treated as explicit symbol evidence."
+    },
+    {
+      "id": "requests-explicit-path-reference",
+      "kind": "explicit_path_control",
+      "project": "requests",
+      "sourceWorkspace": "psf__requests-1142",
+      "named": "Where does requests/sessions.py resolve redirects?",
+      "expectedPrimaryEvidence": { "path": "requests/sessions.py", "symbol": "resolve_redirects" },
+      "mustRemainDiscoverable": true,
+      "notes": "The project name appears as a PATH SEGMENT. Removing it would leave `/sessions.py`, which resolves to nothing — an author naming a file is pointing at code, not at the project."
+    }
+  ]
+}

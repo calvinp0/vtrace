@@ -1,0 +1,178 @@
+{
+  "schemaVersion": "stage5.m154.full-preservation.v1",
+  "method": "Focused per-area suites plus the complete `bun test` run. No M153/ARC/TCKDB holdout was consumed.",
+  "milestones": [
+    {
+      "milestone": "M153",
+      "property": "generic behavioural fixes; routing default-off",
+      "areas": [
+        "workspace",
+        "retrieval",
+        "capsuleV2",
+        "session"
+      ],
+      "status": "pass"
+    },
+    {
+      "milestone": "M152",
+      "property": "index.sqlite immutable under product reads; session state separated",
+      "areas": [
+        "mcp",
+        "session"
+      ],
+      "status": "pass"
+    },
+    {
+      "milestone": "M151",
+      "property": "workspace route: lead repository, one full retrieval, supporters metadata only",
+      "areas": [
+        "mcp",
+        "workspace"
+      ],
+      "status": "pass"
+    },
+    {
+      "milestone": "M150",
+      "property": "behavioural retrieval bounds and answer-role authority",
+      "areas": [
+        "capsuleV2",
+        "retrieval"
+      ],
+      "status": "pass"
+    },
+    {
+      "milestone": "M149",
+      "property": "truthfulness: coverageComplete, omittedByBound, negative-claim strength",
+      "areas": [
+        "workspace"
+      ],
+      "status": "pass"
+    },
+    {
+      "milestone": "M148",
+      "property": "path lanes and additive access-path migration",
+      "areas": [
+        "workspace",
+        "setup"
+      ],
+      "status": "pass"
+    },
+    {
+      "milestone": "M147",
+      "property": "exact symbol presence proof over enabled members",
+      "areas": [
+        "workspace"
+      ],
+      "status": "pass"
+    },
+    {
+      "milestone": "M142",
+      "property": "query / identifier / path authority",
+      "areas": [
+        "retrieval",
+        "intent"
+      ],
+      "status": "pass"
+    },
+    {
+      "milestone": "M140",
+      "property": "module scope symbol owns imports; module invisibility fixed",
+      "areas": [
+        "capsuleV2",
+        "impact"
+      ],
+      "status": "pass"
+    },
+    {
+      "milestone": "M139",
+      "property": "caller truthfulness; potential callers separate from proven edges",
+      "areas": [
+        "impact"
+      ],
+      "status": "pass"
+    },
+    {
+      "milestone": "M138",
+      "property": "memory / session provenance",
+      "areas": [
+        "memory",
+        "session"
+      ],
+      "status": "pass"
+    }
+  ],
+  "areaResults": [
+    {
+      "area": "workspace",
+      "pass": 205,
+      "fail": 0
+    },
+    {
+      "area": "retrieval",
+      "pass": 305,
+      "fail": 0
+    },
+    {
+      "area": "capsuleV2",
+      "pass": 639,
+      "fail": 0
+    },
+    {
+      "area": "mcp",
+      "pass": 187,
+      "fail": 0
+    },
+    {
+      "area": "session",
+      "pass": 27,
+      "fail": 0
+    },
+    {
+      "area": "memory",
+      "pass": 15,
+      "fail": 0
+    },
+    {
+      "area": "impact",
+      "pass": 68,
+      "fail": 0
+    },
+    {
+      "area": "productContext",
+      "pass": 4,
+      "fail": 0
+    },
+    {
+      "area": "runPipeline",
+      "pass": 58,
+      "fail": 0
+    },
+    {
+      "area": "setup",
+      "pass": 17,
+      "fail": 0
+    },
+    {
+      "area": "runtime",
+      "pass": 33,
+      "fail": 0
+    },
+    {
+      "area": "intent",
+      "pass": 27,
+      "fail": 0
+    }
+  ],
+  "fullSuite": {
+    "pass": 4698,
+    "skip": 49,
+    "fail": 0,
+    "files": 295,
+    "note": "Three tests asserted the OLD contract verbatim and were updated to assert the new one plus a regression guard; a fourth new test pins behavioural routing default-OFF."
+  },
+  "typechecks": {
+    "src": "clean",
+    "benchmarks": "clean"
+  },
+  "gitDiffCheck": "clean"
+}

@@ -1,0 +1,121 @@
+{
+  "schemaVersion": "stage5.m154.m153-preservation.v1",
+  "purpose": "M153 closed INCOMPLETE, but its validated generic fixes are preserved. M154 changed none of them and demonstrated no regression that would justify reverting one.",
+  "behaviouralRoutingDefault": "OFF (unchanged; guarded by test)",
+  "holdoutsConsumed": "none \u2014 M153 non-ARC holdout, ARC behavioural holdout and TCKDB behavioural holdout are all untouched",
+  "preservedFixes": [
+    {
+      "fix": "behavioural prose vs explicit identifier distinction",
+      "suite": "src/capsuleV2 + src/retrieval",
+      "status": "pass"
+    },
+    {
+      "fix": "shared behavioural operation vocabulary / cue semantics",
+      "suite": "src/retrieval",
+      "status": "pass"
+    },
+    {
+      "fix": "generic destructuring / tuple-loop mechanism parsing",
+      "suite": "src/retrieval",
+      "status": "pass"
+    },
+    {
+      "fix": "dict .items() subject extraction",
+      "suite": "src/retrieval",
+      "status": "pass"
+    },
+    {
+      "fix": "test evidence cannot independently decide behavioural routing",
+      "suite": "src/workspace/behavioralNomination.test.ts",
+      "status": "pass"
+    },
+    {
+      "fix": "semantic alignment before bounded expensive admission",
+      "suite": "src/workspace",
+      "status": "pass"
+    },
+    {
+      "fix": "exact subject token outranks stem approximation",
+      "suite": "src/capsuleV2",
+      "status": "pass"
+    },
+    {
+      "fix": "bounded-lane carry-over beside the ordinary candidate cap",
+      "suite": "src/capsuleV2",
+      "status": "pass"
+    },
+    {
+      "fix": "answer-role evidence surviving downstream discard gates",
+      "suite": "src/capsuleV2",
+      "status": "pass"
+    },
+    {
+      "fix": "benchmark session-state isolation",
+      "suite": "src/session + benchmark harness",
+      "status": "pass"
+    }
+  ],
+  "suiteResults": [
+    {
+      "area": "workspace",
+      "pass": 205,
+      "fail": 0
+    },
+    {
+      "area": "retrieval",
+      "pass": 305,
+      "fail": 0
+    },
+    {
+      "area": "capsuleV2",
+      "pass": 639,
+      "fail": 0
+    },
+    {
+      "area": "mcp",
+      "pass": 187,
+      "fail": 0
+    },
+    {
+      "area": "session",
+      "pass": 27,
+      "fail": 0
+    },
+    {
+      "area": "memory",
+      "pass": 15,
+      "fail": 0
+    },
+    {
+      "area": "impact",
+      "pass": 68,
+      "fail": 0
+    },
+    {
+      "area": "productContext",
+      "pass": 4,
+      "fail": 0
+    },
+    {
+      "area": "runPipeline",
+      "pass": 58,
+      "fail": 0
+    },
+    {
+      "area": "setup",
+      "pass": 17,
+      "fail": 0
+    },
+    {
+      "area": "runtime",
+      "pass": 33,
+      "fail": 0
+    },
+    {
+      "area": "intent",
+      "pass": 27,
+      "fail": 0
+    }
+  ],
+  "verdict": "preserved"
+}

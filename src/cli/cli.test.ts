@@ -1276,7 +1276,9 @@ test("capsule v2 --pivot-neighborhood human output leads with an inspect-first b
     ]);
     assert.equal(v2.exitCode, 0);
     assert.ok(v2.stdout.includes("VTRACE inspect-first"), "v2 human output carries the inspect-first block");
-    assert.ok(v2.stdout.includes("guidance, not enforcement"), "block is explicitly guidance, not enforcement");
+    // M154-D: the header states the coverage contract as well as the advisory
+    // status, so a reader cannot take the block for the complete relevant set.
+    assert.ok(v2.stdout.includes("bounded, non-exhaustive selection"), "block states it is a bounded selection");
     assert.ok(v2.stdout.indexOf("VTRACE inspect-first") < v2.stdout.indexOf("intent:"), "inspect-first leads the context");
 
     // v1/default path (legacy mode, no --intent/--budget): no inspect-first block.
