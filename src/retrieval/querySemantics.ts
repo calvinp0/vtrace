@@ -335,7 +335,8 @@ export function deriveQueryIntent(task: string, options: DeriveQueryIntentOption
     comparisonIdentifiers,
     options.isRepositoryPath,
   );
-  const projectReferences = collectProjectReferences(task, options.projectNameAliases ?? new Set());
+  const projectReference = collectProjectReferences(task, options.projectNameAliases ?? new Set());
+  const projectReferences = projectReference.terms;
   const explicit = explicitSignals
     .filter((signal) => !projectReferences.some((term) => sameIdentifier(term, signal.term)) || hasExplicitProjectSymbolContext(task, signal.term))
     .map((signal) => signal.term);
@@ -349,7 +350,13 @@ export function deriveQueryIntent(task: string, options: DeriveQueryIntentOption
   const identifierSignals = classifyIdentifierSignals(task, eligibleExplicitSignals, projectReferences);
   const symbolHypotheses = identifierSignals.filter((signal) => signal.eligibleAsSymbol);
   const removals = contrastClauses.map((clause) => ({ start: clause.start, end: clause.end }));
-  const positiveSearchText = removeSpans(task, removals);
+  // The project reference leaves the searchable text for the same reason it is
+  // barred from the identifier lanes: naming the repository you are already inside
+  // states scope, not a target. A span already inside a removed contrast clause is
+  // dropped rather than removed twice, which would corrupt the surrounding offsets.
+  const projectReferenceRemovals = projectReference.spans.filter((span) =>
+    !removals.some((removal) => span.start >= removal.start && span.end <= removal.end));
+  const positiveSearchText = removeSpans(task, [...removals, ...projectReferenceRemovals]);
   const positiveTerms = contentTerms(positiveSearchText);
   const contrastTerms = unique(contrastClauses.flatMap((clause) => clause.contrastTerms));
   const contrastPhrases = unique(contrastClauses.map((clause) => clause.contrastPhrase.toLowerCase()));
@@ -681,13 +688,46 @@ function classifyIdentifierSignals(
   return dedupeSignals(out);
 }
 
-function collectProjectReferences(task: string, aliases: ReadonlySet<string>): string[] {
-  if (aliases.size === 0) return [];
-  const out: string[] = [];
+/**
+ * Where the task names the project rather than a symbol.
+ *
+ * Terms drive identifier suppression; the spans exist because suppressing a token
+ * from the SYMBOL lanes while leaving it in the lexical search text only moves the
+ * problem. `Does Requests already have a helper for redirect resolution?` yielded
+ * `projectReferences: ["Requests"]` and `positiveTerms: ["requests", …]` — correctly
+ * refused as an identifier, then handed to BM25, path relevance and concept-owner
+ * tokenisation as an ordinary content word, in the repository where it matches the
+ * package directory and everything under it (M154-C).
+ *
+ * Nothing is collected when the task shows explicit symbol evidence, so an author
+ * who really means the identifier keeps every lane.
+ */
+function collectProjectReferences(
+  task: string,
+  aliases: ReadonlySet<string>,
+): { terms: string[]; spans: Array<{ start: number; end: number }> } {
+  if (aliases.size === 0) return { terms: [], spans: [] };
+  const terms: string[] = [];
+  const spans: Array<{ start: number; end: number }> = [];
   for (const match of task.matchAll(/\b[A-Za-z][A-Za-z0-9_.-]*\b/gu)) {
-    if (aliases.has(match[0].toLowerCase()) && !hasExplicitProjectSymbolContext(task, match[0])) out.push(match[0]);
+    if (!aliases.has(match[0].toLowerCase())) continue;
+    if (hasExplicitProjectSymbolContext(task, match[0])) continue;
+    const start = match.index ?? 0;
+    // `requests/sessions.py` names a file, and the package segment is part of the
+    // name. Stripping it leaves `/sessions.py`, which resolves to nothing — the
+    // author was pointing at code, not at the project.
+    if (isPathSegmentOccurrence(task, start, start + match[0].length)) continue;
+    terms.push(match[0]);
+    spans.push({ start, end: start + match[0].length });
   }
-  return unique(out);
+  return { terms: unique(terms), spans };
+}
+
+/** True when a path separator touches the occurrence on either side. */
+function isPathSegmentOccurrence(task: string, start: number, end: number): boolean {
+  const before = start > 0 ? task[start - 1] : "";
+  const after = end < task.length ? task[end] : "";
+  return before === "/" || before === "\\" || after === "/" || after === "\\";
 }
 
 function hasExplicitProjectSymbolContext(task: string, term: string): boolean {
