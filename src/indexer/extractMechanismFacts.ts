@@ -450,6 +450,38 @@ function normalizeOperand(operand: string): string {
 }
 
 /**
+ * Iteration accessors that name HOW a collection is walked rather than WHAT is
+ * being walked. Fixed and small on purpose: these are the standard dictionary
+ * and map iteration calls in Python and JS, not a list that grows whenever a
+ * corpus case needs it.
+ */
+const ITERATION_ACCESSORS: ReadonlySet<string> = new Set([
+  "items()", "values()", "keys()", "entries()", "iteritems()", "itervalues()", "iterkeys()",
+]);
+
+/**
+ * The operand of a LOOP, which is the collection being iterated.
+ *
+ * `normalizeOperand` keeps the last dotted segment, and for an iteration that is
+ * usually the accessor: `self.adapters.items()` reduced to `items()`, which
+ * aligns with no subject any request could name. Every mechanism fact taken from
+ * a Python dict loop shared the same meaningless subject, so subject alignment —
+ * the discrimination M150 exists for — could not fire on any of them.
+ *
+ * Dropping a trailing iteration accessor recovers the real collection
+ * (`adapters`, `source_suffix`). Anything else is left alone: `x.first()` is not
+ * an iteration accessor and its subject is genuinely the call.
+ */
+function loopOperand(operand: string): string {
+  const segments = operand.replace(/^self\./u, "").split(".");
+  const last = segments.at(-1)?.toLowerCase() ?? "";
+  if (segments.length > 1 && ITERATION_ACCESSORS.has(last)) {
+    return (segments.at(-2) ?? last).toLowerCase();
+  }
+  return normalizeOperand(operand);
+}
+
+/**
  * A loop whose body returns/breaks under a condition: the FIRST candidate that
  * satisfies the predicate wins, and the iteration order decides which that is.
  *
@@ -460,7 +492,22 @@ function detectFirstSuccessReturn(
   lines: readonly string[],
 ): { subject: string; lineOffset: number } | undefined {
   for (let index = 0; index < lines.length; index += 1) {
-    const loop = /\bfor\s+(?:const\s+|let\s+|var\s+)?[A-Za-z_][A-Za-z0-9_,\s]*\s+(?:in|of)\s+(?:self\.)?([A-Za-z_][A-Za-z0-9_.()]*)/u
+    // M153. The loop TARGET may be destructured, and both ordinary spellings
+    // were being missed because the pattern required it to begin with a letter:
+    //
+    //   for (prefix, adapter) in self.adapters.items():   Python, parenthesised
+    //   for (const [key, value] of map.entries())         JS/TS, array pattern
+    //
+    // Neither is exotic. `Session.get_adapter` — a textbook first-success loop —
+    // carried no mechanism fact at all for this reason, while the structurally
+    // identical `get_filetype`, whose target happens to be unparenthesised, was
+    // represented correctly. Nothing about the MECHANISM differs between them;
+    // only the punctuation around the loop variables does.
+    //
+    // The subject and the acceptance test are unchanged, so the guards that keep
+    // logging loops, accumulating loops and `return None` bail-outs from
+    // counting as a first-success return all still apply (§28).
+    const loop = /\bfor\s+(?:const\s+|let\s+|var\s+)?\(?\s*(?:const\s+|let\s+|var\s+)?\[?\s*[A-Za-z_][A-Za-z0-9_,\s\]]*\)?\s+(?:in|of)\s+(?:self\.)?([A-Za-z_][A-Za-z0-9_.()]*)/u
       .exec(lines[index] ?? "");
     if (loop === null) continue;
     const indent = indentOf(lines[index] ?? "");
@@ -477,7 +524,7 @@ function detectFirstSuccessReturn(
       const accepts = /^\s*break\b/u.test(line)
         || (/^\s*return\s+\S/u.test(line) && !/^\s*return\s+(?:None|null|undefined|False|false)\s*$/u.test(line));
       if (sawCondition && accepts) {
-        return { subject: normalizeOperand(loop[1]!), lineOffset: scan };
+        return { subject: loopOperand(loop[1]!), lineOffset: scan };
       }
     }
   }

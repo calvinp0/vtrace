@@ -1,0 +1,1891 @@
+{
+  "label": "c2a",
+  "generatedFrom": "frozen behavioral_cross_repo corpus",
+  "totals": {
+    "cases": 33,
+    "calibration": 21,
+    "holdout": 12,
+    "activationRate": "19/33"
+  },
+  "primaryFailureAll": {
+    "ACTIVATION_FAILURE": 11,
+    "REPRESENTATION_FAILURE": 10,
+    "CANDIDATE_GENERATION_FAILURE": 7,
+    "NONE": 3,
+    "SUBJECT_ALIGNMENT_FAILURE": 2
+  },
+  "primaryFailureCalibration": {
+    "REPRESENTATION_FAILURE": 8,
+    "ACTIVATION_FAILURE": 6,
+    "CANDIDATE_GENERATION_FAILURE": 3,
+    "NONE": 2,
+    "SUBJECT_ALIGNMENT_FAILURE": 2
+  },
+  "primaryFailureHoldoutStagesOnly": {
+    "ACTIVATION_FAILURE": 5,
+    "CANDIDATE_GENERATION_FAILURE": 4,
+    "REPRESENTATION_FAILURE": 2,
+    "NONE": 1
+  },
+  "suppressionReasons": {
+    "no behavioural operation cue": 14
+  },
+  "cases": [
+    {
+      "caseId": "rq_adapter_selection",
+      "repository": "requests",
+      "split": "calibration",
+      "category": "selection",
+      "query": "How does the session decide which connection adapter handles a URL?",
+      "falsePremise": false,
+      "expectAbsence": false,
+      "operationDerived": "selection",
+      "suppressedBy": null,
+      "subjectTerms": [
+        "session",
+        "connection",
+        "adapter",
+        "handles",
+        "url"
+      ],
+      "expected": [
+        {
+          "fqName": "requests/sessions.py::Session.get_adapter",
+          "role": "PRIMARY_IMPLEMENTER",
+          "indexed": true,
+          "factKinds": [],
+          "directFactKinds": [],
+          "partialFactKinds": []
+        },
+        {
+          "fqName": "requests/sessions.py::Session.mount",
+          "role": "ORDERING_PREREQUISITE",
+          "indexed": true,
+          "factKinds": [],
+          "directFactKinds": [],
+          "partialFactKinds": []
+        }
+      ],
+      "candidatesAdmitted": 0,
+      "admittedFqNames": [],
+      "expectedAdmitted": false,
+      "rejectedForSubject": [
+        {
+          "fqName": "tests/test_utils.py::test_should_bypass_proxies_win_registry",
+          "operand": "proxyenablevalues"
+        },
+        {
+          "fqName": "requests/utils.py::_parse_content_type_header",
+          "operand": "tokens"
+        },
+        {
+          "fqName": "requests/cookies.py::RequestsCookieJar.multiple_domains",
+          "operand": "iter(self)"
+        },
+        {
+          "fqName": "requests/cookies.py::RequestsCookieJar._find",
+          "operand": "iter(self)"
+        },
+        {
+          "fqName": "requests/utils.py::should_bypass_proxies",
+          "operand": "no_proxy"
+        },
+        {
+          "fqName": "requests/utils.py::super_len",
+          "operand": "total_length"
+        }
+      ],
+      "expectedRejectedForSubject": false,
+      "generatorReason": "no indexed selection fact is about session, connection, adapter, handles, url",
+      "primaryFailure": "REPRESENTATION_FAILURE",
+      "observations": [
+        "facts present: none"
+      ]
+    },
+    {
+      "caseId": "rq_adapter_ranking_false_premise",
+      "repository": "requests",
+      "split": "calibration",
+      "category": "ordering",
+      "query": "Where is the function that ranks the connection adapters?",
+      "falsePremise": true,
+      "expectAbsence": false,
+      "operationDerived": "ordering",
+      "suppressedBy": null,
+      "subjectTerms": [
+        "ranks",
+        "connection",
+        "adapters"
+      ],
+      "expected": [
+        {
+          "fqName": "requests/sessions.py::Session.mount",
+          "role": "PRIMARY_IMPLEMENTER",
+          "indexed": true,
+          "factKinds": [],
+          "directFactKinds": [],
+          "partialFactKinds": []
+        },
+        {
+          "fqName": "requests/sessions.py::Session.get_adapter",
+          "role": "CONSUMER",
+          "indexed": true,
+          "factKinds": [],
+          "directFactKinds": [],
+          "partialFactKinds": []
+        }
+      ],
+      "candidatesAdmitted": 0,
+      "admittedFqNames": [],
+      "expectedAdmitted": false,
+      "rejectedForSubject": [],
+      "expectedRejectedForSubject": false,
+      "generatorReason": "no indexed ordering fact is about ranks, connection, adapters",
+      "primaryFailure": "REPRESENTATION_FAILURE",
+      "observations": [
+        "facts present: none"
+      ]
+    },
+    {
+      "caseId": "rq_rank_adapters_identifier",
+      "repository": "requests",
+      "split": "calibration",
+      "category": "explicit_identifier_absence",
+      "query": "Where is rank_adapters defined?",
+      "falsePremise": true,
+      "expectAbsence": true,
+      "operationDerived": null,
+      "suppressedBy": "no behavioural operation cue",
+      "subjectTerms": [],
+      "expected": [],
+      "candidatesAdmitted": 0,
+      "admittedFqNames": [],
+      "expectedAdmitted": false,
+      "rejectedForSubject": [],
+      "expectedRejectedForSubject": false,
+      "generatorReason": "not run (no objective)",
+      "primaryFailure": "NONE",
+      "observations": [
+        "absence control: no mechanism expected"
+      ]
+    },
+    {
+      "caseId": "rq_setting_precedence",
+      "repository": "requests",
+      "split": "calibration",
+      "category": "configuration_precedence",
+      "query": "When a value is set both on the session and on the individual request, which one is used?",
+      "falsePremise": false,
+      "expectAbsence": false,
+      "operationDerived": "selection",
+      "suppressedBy": null,
+      "subjectTerms": [
+        "value",
+        "set",
+        "both",
+        "session",
+        "individual",
+        "request",
+        "used"
+      ],
+      "expected": [
+        {
+          "fqName": "requests/sessions.py::merge_setting",
+          "role": "PRIMARY_IMPLEMENTER",
+          "indexed": true,
+          "factKinds": [
+            "fallback_branch"
+          ],
+          "directFactKinds": [],
+          "partialFactKinds": []
+        }
+      ],
+      "candidatesAdmitted": 0,
+      "admittedFqNames": [],
+      "expectedAdmitted": false,
+      "rejectedForSubject": [
+        {
+          "fqName": "tests/test_utils.py::test_should_bypass_proxies_win_registry",
+          "operand": "proxyenablevalues"
+        },
+        {
+          "fqName": "requests/utils.py::_parse_content_type_header",
+          "operand": "tokens"
+        },
+        {
+          "fqName": "requests/cookies.py::RequestsCookieJar.multiple_domains",
+          "operand": "iter(self)"
+        },
+        {
+          "fqName": "requests/cookies.py::RequestsCookieJar._find",
+          "operand": "iter(self)"
+        },
+        {
+          "fqName": "requests/utils.py::should_bypass_proxies",
+          "operand": "no_proxy"
+        },
+        {
+          "fqName": "requests/utils.py::super_len",
+          "operand": "total_length"
+        }
+      ],
+      "expectedRejectedForSubject": false,
+      "generatorReason": "no indexed selection fact is about value, set, both, session, individual, request, used",
+      "primaryFailure": "REPRESENTATION_FAILURE",
+      "observations": [
+        "facts present: fallback_branch"
+      ]
+    },
+    {
+      "caseId": "rq_encoding_fallback",
+      "repository": "requests",
+      "split": "calibration",
+      "category": "fallback",
+      "query": "What happens when the server does not say what character encoding the body uses?",
+      "falsePremise": false,
+      "expectAbsence": false,
+      "operationDerived": null,
+      "suppressedBy": "no behavioural operation cue",
+      "subjectTerms": [],
+      "expected": [
+        {
+          "fqName": "requests/models.py::Response.text",
+          "role": "PRIMARY_IMPLEMENTER",
+          "indexed": true,
+          "factKinds": [
+            "fallback_branch"
+          ],
+          "directFactKinds": [],
+          "partialFactKinds": []
+        },
+        {
+          "fqName": "requests/models.py::Response.apparent_encoding",
+          "role": "ORDERING_PREREQUISITE",
+          "indexed": true,
+          "factKinds": [],
+          "directFactKinds": [],
+          "partialFactKinds": []
+        }
+      ],
+      "candidatesAdmitted": 0,
+      "admittedFqNames": [],
+      "expectedAdmitted": false,
+      "rejectedForSubject": [],
+      "expectedRejectedForSubject": false,
+      "generatorReason": "not run (no objective)",
+      "primaryFailure": "ACTIVATION_FAILURE",
+      "observations": [
+        "expected implementation does carry mechanism facts"
+      ]
+    },
+    {
+      "caseId": "rq_redirect_auth_reuse",
+      "repository": "requests",
+      "split": "calibration",
+      "category": "project_name_reuse",
+      "query": "Does requests already have a helper that decides whether to drop the authorization header on a redirect?",
+      "falsePremise": false,
+      "expectAbsence": false,
+      "operationDerived": "selection",
+      "suppressedBy": null,
+      "subjectTerms": [
+        "requests",
+        "already",
+        "have",
+        "helper",
+        "whether",
+        "drop",
+        "authorization",
+        "header",
+        "redirect"
+      ],
+      "expected": [
+        {
+          "fqName": "requests/sessions.py::SessionRedirectMixin.rebuild_auth",
+          "role": "PRIMARY_IMPLEMENTER",
+          "indexed": true,
+          "factKinds": [],
+          "directFactKinds": [],
+          "partialFactKinds": []
+        },
+        {
+          "fqName": "requests/sessions.py::SessionRedirectMixin.should_strip_auth",
+          "role": "ORDERING_PREREQUISITE",
+          "indexed": true,
+          "factKinds": [],
+          "directFactKinds": [],
+          "partialFactKinds": []
+        }
+      ],
+      "candidatesAdmitted": 1,
+      "admittedFqNames": [
+        "requests/utils.py::_parse_content_type_header"
+      ],
+      "expectedAdmitted": false,
+      "rejectedForSubject": [
+        {
+          "fqName": "tests/test_utils.py::test_should_bypass_proxies_win_registry",
+          "operand": "proxyenablevalues"
+        },
+        {
+          "fqName": "requests/cookies.py::RequestsCookieJar.multiple_domains",
+          "operand": "iter(self)"
+        },
+        {
+          "fqName": "requests/cookies.py::RequestsCookieJar._find",
+          "operand": "iter(self)"
+        },
+        {
+          "fqName": "requests/utils.py::should_bypass_proxies",
+          "operand": "no_proxy"
+        },
+        {
+          "fqName": "requests/utils.py::super_len",
+          "operand": "total_length"
+        }
+      ],
+      "expectedRejectedForSubject": false,
+      "generatorReason": "admitted 1 definition(s) carrying subject-aligned selection facts",
+      "primaryFailure": "REPRESENTATION_FAILURE",
+      "observations": [
+        "facts present: none",
+        "generator admitted other owners: requests/utils.py::_parse_content_type_header"
+      ]
+    },
+    {
+      "caseId": "fl_error_handler_dispatch",
+      "repository": "flask",
+      "split": "calibration",
+      "category": "dispatch",
+      "query": "How does the application decide which error handler runs for a raised exception?",
+      "falsePremise": false,
+      "expectAbsence": false,
+      "operationDerived": "selection",
+      "suppressedBy": null,
+      "subjectTerms": [
+        "application",
+        "error",
+        "handler",
+        "runs",
+        "raised",
+        "exception"
+      ],
+      "expected": [
+        {
+          "fqName": "src/flask/app.py::Flask._find_error_handler",
+          "role": "PRIMARY_IMPLEMENTER",
+          "indexed": true,
+          "factKinds": [
+            "first_success_return"
+          ],
+          "directFactKinds": [
+            "first_success_return"
+          ],
+          "partialFactKinds": []
+        },
+        {
+          "fqName": "src/flask/scaffold.py::Scaffold._get_exc_class_and_code",
+          "role": "ORDERING_PREREQUISITE",
+          "indexed": true,
+          "factKinds": [],
+          "directFactKinds": [],
+          "partialFactKinds": []
+        },
+        {
+          "fqName": "src/flask/scaffold.py::Scaffold.register_error_handler",
+          "role": "REGISTRATION_SOURCE",
+          "indexed": true,
+          "factKinds": [],
+          "directFactKinds": [],
+          "partialFactKinds": []
+        }
+      ],
+      "candidatesAdmitted": 1,
+      "admittedFqNames": [
+        "src/flask/app.py::Flask.handle_url_build_error"
+      ],
+      "expectedAdmitted": false,
+      "rejectedForSubject": [
+        {
+          "fqName": "src/flask/cli.py::find_best_app",
+          "operand": "matches"
+        },
+        {
+          "fqName": "src/flask/helpers.py::make_response",
+          "operand": "args"
+        },
+        {
+          "fqName": "src/flask/json/provider.py::JSONProvider._prepare_response_obj",
+          "operand": "args"
+        },
+        {
+          "fqName": "src/flask/json/tag.py::TaggedJSONSerializer.tag",
+          "operand": "order"
+        },
+        {
+          "fqName": "src/flask/app.py::Flask.preprocess_request",
+          "operand": "names"
+        },
+        {
+          "fqName": "src/flask/app.py::Flask._find_error_handler",
+          "operand": "names"
+        }
+      ],
+      "expectedRejectedForSubject": true,
+      "generatorReason": "admitted 1 definition(s) carrying subject-aligned selection facts",
+      "primaryFailure": "SUBJECT_ALIGNMENT_FAILURE",
+      "observations": [
+        "generator admitted other owners: src/flask/app.py::Flask.handle_url_build_error"
+      ]
+    },
+    {
+      "caseId": "fl_error_handler_scoring_false_premise",
+      "repository": "flask",
+      "split": "calibration",
+      "category": "dispatch",
+      "query": "Where are the error handlers scored so the best match can be chosen?",
+      "falsePremise": true,
+      "expectAbsence": false,
+      "operationDerived": "selection",
+      "suppressedBy": null,
+      "subjectTerms": [
+        "error",
+        "handlers",
+        "scored",
+        "best",
+        "match",
+        "can"
+      ],
+      "expected": [
+        {
+          "fqName": "src/flask/app.py::Flask._find_error_handler",
+          "role": "PRIMARY_IMPLEMENTER",
+          "indexed": true,
+          "factKinds": [
+            "first_success_return"
+          ],
+          "directFactKinds": [
+            "first_success_return"
+          ],
+          "partialFactKinds": []
+        }
+      ],
+      "candidatesAdmitted": 2,
+      "admittedFqNames": [
+        "src/flask/cli.py::find_best_app",
+        "src/flask/app.py::Flask.handle_url_build_error"
+      ],
+      "expectedAdmitted": false,
+      "rejectedForSubject": [
+        {
+          "fqName": "src/flask/helpers.py::make_response",
+          "operand": "args"
+        },
+        {
+          "fqName": "src/flask/json/provider.py::JSONProvider._prepare_response_obj",
+          "operand": "args"
+        },
+        {
+          "fqName": "src/flask/json/tag.py::TaggedJSONSerializer.tag",
+          "operand": "order"
+        },
+        {
+          "fqName": "src/flask/app.py::Flask.preprocess_request",
+          "operand": "names"
+        },
+        {
+          "fqName": "src/flask/app.py::Flask._find_error_handler",
+          "operand": "names"
+        }
+      ],
+      "expectedRejectedForSubject": true,
+      "generatorReason": "admitted 2 definition(s) carrying subject-aligned selection facts",
+      "primaryFailure": "SUBJECT_ALIGNMENT_FAILURE",
+      "observations": [
+        "generator admitted other owners: src/flask/cli.py::find_best_app, src/flask/app.py::Flask.handle_url_build_error"
+      ]
+    },
+    {
+      "caseId": "fl_project_name_reuse",
+      "repository": "flask",
+      "split": "calibration",
+      "category": "project_name_reuse",
+      "query": "Does Flask already have a helper for finding the handler registered for an exception?",
+      "falsePremise": false,
+      "expectAbsence": false,
+      "operationDerived": null,
+      "suppressedBy": "no behavioural operation cue",
+      "subjectTerms": [],
+      "expected": [
+        {
+          "fqName": "src/flask/app.py::Flask._find_error_handler",
+          "role": "PRIMARY_IMPLEMENTER",
+          "indexed": true,
+          "factKinds": [
+            "first_success_return"
+          ],
+          "directFactKinds": [],
+          "partialFactKinds": []
+        }
+      ],
+      "candidatesAdmitted": 0,
+      "admittedFqNames": [],
+      "expectedAdmitted": false,
+      "rejectedForSubject": [],
+      "expectedRejectedForSubject": false,
+      "generatorReason": "not run (no objective)",
+      "primaryFailure": "ACTIVATION_FAILURE",
+      "observations": [
+        "expected implementation does carry mechanism facts"
+      ]
+    },
+    {
+      "caseId": "fl_response_coercion",
+      "repository": "flask",
+      "split": "calibration",
+      "category": "dispatch",
+      "query": "How is whatever a view function returns turned into an actual response?",
+      "falsePremise": false,
+      "expectAbsence": false,
+      "operationDerived": null,
+      "suppressedBy": "no behavioural operation cue",
+      "subjectTerms": [],
+      "expected": [
+        {
+          "fqName": "src/flask/app.py::Flask.make_response",
+          "role": "PRIMARY_IMPLEMENTER",
+          "indexed": true,
+          "factKinds": [],
+          "directFactKinds": [],
+          "partialFactKinds": []
+        }
+      ],
+      "candidatesAdmitted": 0,
+      "admittedFqNames": [],
+      "expectedAdmitted": false,
+      "rejectedForSubject": [],
+      "expectedRejectedForSubject": false,
+      "generatorReason": "not run (no objective)",
+      "primaryFailure": "ACTIVATION_FAILURE",
+      "observations": [
+        "expected implementation carries no mechanism facts at all"
+      ]
+    },
+    {
+      "caseId": "fl_env_config_precedence",
+      "repository": "flask",
+      "split": "calibration",
+      "category": "configuration_precedence",
+      "query": "How are configuration values picked up from the environment?",
+      "falsePremise": false,
+      "expectAbsence": false,
+      "operationDerived": "selection",
+      "suppressedBy": null,
+      "subjectTerms": [
+        "configuration",
+        "values",
+        "environment"
+      ],
+      "expected": [
+        {
+          "fqName": "src/flask/config.py::Config.from_prefixed_env",
+          "role": "PRIMARY_IMPLEMENTER",
+          "indexed": true,
+          "factKinds": [
+            "ordering_established"
+          ],
+          "directFactKinds": [],
+          "partialFactKinds": [
+            "ordering_established"
+          ]
+        }
+      ],
+      "candidatesAdmitted": 0,
+      "admittedFqNames": [],
+      "expectedAdmitted": false,
+      "rejectedForSubject": [
+        {
+          "fqName": "src/flask/cli.py::find_best_app",
+          "operand": "matches"
+        },
+        {
+          "fqName": "src/flask/helpers.py::make_response",
+          "operand": "args"
+        },
+        {
+          "fqName": "src/flask/json/provider.py::JSONProvider._prepare_response_obj",
+          "operand": "args"
+        },
+        {
+          "fqName": "src/flask/json/tag.py::TaggedJSONSerializer.tag",
+          "operand": "order"
+        },
+        {
+          "fqName": "src/flask/app.py::Flask.preprocess_request",
+          "operand": "names"
+        },
+        {
+          "fqName": "src/flask/app.py::Flask.handle_url_build_error",
+          "operand": "url_build_error_handlers"
+        },
+        {
+          "fqName": "src/flask/app.py::Flask._find_error_handler",
+          "operand": "names"
+        }
+      ],
+      "expectedRejectedForSubject": false,
+      "generatorReason": "no indexed selection fact is about configuration, values, environment",
+      "primaryFailure": "CANDIDATE_GENERATION_FAILURE",
+      "observations": []
+    },
+    {
+      "caseId": "pt_fixture_applicability",
+      "repository": "pytest",
+      "split": "calibration",
+      "category": "selection",
+      "query": "How is it decided which fixture definitions apply to a particular test?",
+      "falsePremise": false,
+      "expectAbsence": false,
+      "operationDerived": "selection",
+      "suppressedBy": null,
+      "subjectTerms": [
+        "fixture",
+        "definitions",
+        "apply",
+        "particular",
+        "test"
+      ],
+      "expected": [
+        {
+          "fqName": "src/_pytest/fixtures.py::FixtureManager.getfixturedefs",
+          "role": "PRIMARY_IMPLEMENTER",
+          "indexed": true,
+          "factKinds": [
+            "fallback_branch"
+          ],
+          "directFactKinds": [],
+          "partialFactKinds": []
+        },
+        {
+          "fqName": "src/_pytest/fixtures.py::FixtureManager._matchfactories",
+          "role": "ORDERING_PREREQUISITE",
+          "indexed": true,
+          "factKinds": [],
+          "directFactKinds": [],
+          "partialFactKinds": []
+        }
+      ],
+      "candidatesAdmitted": 0,
+      "admittedFqNames": [],
+      "expectedAdmitted": false,
+      "rejectedForSubject": [
+        {
+          "fqName": "src/_pytest/pytester.py::HookRecorder.getcall",
+          "operand": "values"
+        },
+        {
+          "fqName": "src/_pytest/assertion/util.py::_split_explanation",
+          "operand": "raw_lines"
+        },
+        {
+          "fqName": "testing/test_junitxml.py::DomNode.text",
+          "operand": "childnodes"
+        },
+        {
+          "fqName": "testing/test_junitxml.py::DomNode.get_unique_child",
+          "operand": "children"
+        },
+        {
+          "fqName": "src/_pytest/nodes.py::Collector.repr_failure",
+          "operand": "args"
+        },
+        {
+          "fqName": "testing/test_mark.py::TestKeywordSelection.test_no_match_directories_outside_the_suite",
+          "operand": "calls"
+        },
+        {
+          "fqName": "src/_pytest/skipping.py::evaluate_skip_marks",
+          "operand": "args"
+        },
+        {
+          "fqName": "src/_pytest/assertion/rewrite.py::AssertionRewriter.visit_Compare",
+          "operand": "load_names"
+        }
+      ],
+      "expectedRejectedForSubject": false,
+      "generatorReason": "no indexed selection fact is about fixture, definitions, apply, particular, test",
+      "primaryFailure": "REPRESENTATION_FAILURE",
+      "observations": [
+        "facts present: fallback_branch"
+      ]
+    },
+    {
+      "caseId": "pt_fixture_override",
+      "repository": "pytest",
+      "split": "calibration",
+      "category": "override_resolution",
+      "query": "If a fixture with the same name is defined in both a conftest and the test module, which one wins?",
+      "falsePremise": false,
+      "expectAbsence": false,
+      "operationDerived": "selection",
+      "suppressedBy": null,
+      "subjectTerms": [
+        "fixture",
+        "same",
+        "name",
+        "defined",
+        "both",
+        "conftest",
+        "test",
+        "module"
+      ],
+      "expected": [
+        {
+          "fqName": "src/_pytest/fixtures.py::FixtureRequest._getnextfixturedef",
+          "role": "PRIMARY_IMPLEMENTER",
+          "indexed": true,
+          "factKinds": [],
+          "directFactKinds": [],
+          "partialFactKinds": []
+        }
+      ],
+      "candidatesAdmitted": 3,
+      "admittedFqNames": [
+        "src/_pytest/python.py::PyCollector._matches_prefix_or_glob_option",
+        "src/_pytest/logging.py::get_option_ini",
+        "src/_pytest/python.py::_get_first_non_fixture_func"
+      ],
+      "expectedAdmitted": false,
+      "rejectedForSubject": [
+        {
+          "fqName": "src/_pytest/pytester.py::HookRecorder.getcall",
+          "operand": "values"
+        },
+        {
+          "fqName": "src/_pytest/assertion/util.py::_split_explanation",
+          "operand": "raw_lines"
+        },
+        {
+          "fqName": "testing/test_junitxml.py::DomNode.text",
+          "operand": "childnodes"
+        },
+        {
+          "fqName": "testing/test_junitxml.py::DomNode.get_unique_child",
+          "operand": "children"
+        },
+        {
+          "fqName": "src/_pytest/nodes.py::Collector.repr_failure",
+          "operand": "args"
+        },
+        {
+          "fqName": "testing/test_mark.py::TestKeywordSelection.test_no_match_directories_outside_the_suite",
+          "operand": "calls"
+        },
+        {
+          "fqName": "src/_pytest/skipping.py::evaluate_skip_marks",
+          "operand": "args"
+        },
+        {
+          "fqName": "testing/test_pytester.py::TestSysModulesSnapshot.test_preserve_modules",
+          "operand": "key"
+        }
+      ],
+      "expectedRejectedForSubject": false,
+      "generatorReason": "admitted 3 definition(s) carrying subject-aligned selection facts",
+      "primaryFailure": "REPRESENTATION_FAILURE",
+      "observations": [
+        "facts present: none",
+        "generator admitted other owners: src/_pytest/python.py::PyCollector._matches_prefix_or_glob_option, src/_pytest/logging.py::get_option_ini, src/_pytest/python.py::_get_first_non_fixture_func"
+      ]
+    },
+    {
+      "caseId": "pt_fixture_ranking_false_premise",
+      "repository": "pytest",
+      "split": "calibration",
+      "category": "ordering",
+      "query": "Where is the function that ranks fixtures by priority?",
+      "falsePremise": true,
+      "expectAbsence": false,
+      "operationDerived": "ordering",
+      "suppressedBy": null,
+      "subjectTerms": [
+        "ranks",
+        "fixtures"
+      ],
+      "expected": [
+        {
+          "fqName": "src/_pytest/fixtures.py::FixtureRequest._getnextfixturedef",
+          "role": "PRIMARY_IMPLEMENTER",
+          "indexed": true,
+          "factKinds": [],
+          "directFactKinds": [],
+          "partialFactKinds": []
+        }
+      ],
+      "candidatesAdmitted": 0,
+      "admittedFqNames": [],
+      "expectedAdmitted": false,
+      "rejectedForSubject": [
+        {
+          "fqName": "src/_pytest/python.py::Metafunc._resolve_arg_value_types",
+          "operand": ""
+        },
+        {
+          "fqName": "src/_pytest/config/argparsing.py::Argument.names",
+          "operand": "self._short_opts"
+        },
+        {
+          "fqName": "testing/test_cacheprovider.py::TestLastFailed.get_cached_last_failed",
+          "operand": "get"
+        },
+        {
+          "fqName": "src/_pytest/cacheprovider.py::NFPlugin._get_increasing_order",
+          "operand": "items"
+        },
+        {
+          "fqName": "testing/test_meta.py::_modules",
+          "operand": ""
+        }
+      ],
+      "expectedRejectedForSubject": false,
+      "generatorReason": "no indexed ordering fact is about ranks, fixtures",
+      "primaryFailure": "REPRESENTATION_FAILURE",
+      "observations": [
+        "facts present: none"
+      ]
+    },
+    {
+      "caseId": "pt_rank_fixtures_identifier",
+      "repository": "pytest",
+      "split": "calibration",
+      "category": "explicit_identifier_absence",
+      "query": "Where is rank_fixtures defined?",
+      "falsePremise": true,
+      "expectAbsence": true,
+      "operationDerived": null,
+      "suppressedBy": "no behavioural operation cue",
+      "subjectTerms": [],
+      "expected": [],
+      "candidatesAdmitted": 0,
+      "admittedFqNames": [],
+      "expectedAdmitted": false,
+      "rejectedForSubject": [],
+      "expectedRejectedForSubject": false,
+      "generatorReason": "not run (no objective)",
+      "primaryFailure": "NONE",
+      "observations": [
+        "absence control: no mechanism expected"
+      ]
+    },
+    {
+      "caseId": "pt_fixture_scope_ordering",
+      "repository": "pytest",
+      "split": "calibration",
+      "category": "ordering",
+      "query": "In what order are a test's fixtures set up?",
+      "falsePremise": false,
+      "expectAbsence": false,
+      "operationDerived": "ordering",
+      "suppressedBy": null,
+      "subjectTerms": [
+        "test",
+        "fixtures",
+        "set"
+      ],
+      "expected": [
+        {
+          "fqName": "src/_pytest/fixtures.py::FixtureManager.getfixtureclosure",
+          "role": "PRIMARY_IMPLEMENTER",
+          "indexed": true,
+          "factKinds": [
+            "ordering_established",
+            "fallback_branch"
+          ],
+          "directFactKinds": [
+            "ordering_established"
+          ],
+          "partialFactKinds": []
+        }
+      ],
+      "candidatesAdmitted": 0,
+      "admittedFqNames": [],
+      "expectedAdmitted": false,
+      "rejectedForSubject": [
+        {
+          "fqName": "src/_pytest/python.py::Metafunc._resolve_arg_value_types",
+          "operand": ""
+        },
+        {
+          "fqName": "src/_pytest/config/argparsing.py::Argument.names",
+          "operand": "self._short_opts"
+        },
+        {
+          "fqName": "testing/test_cacheprovider.py::TestLastFailed.get_cached_last_failed",
+          "operand": "get"
+        },
+        {
+          "fqName": "src/_pytest/cacheprovider.py::NFPlugin._get_increasing_order",
+          "operand": "items"
+        },
+        {
+          "fqName": "testing/test_meta.py::_modules",
+          "operand": ""
+        }
+      ],
+      "expectedRejectedForSubject": false,
+      "generatorReason": "no indexed ordering fact is about test, fixtures, set",
+      "primaryFailure": "CANDIDATE_GENERATION_FAILURE",
+      "observations": []
+    },
+    {
+      "caseId": "sp_parser_selection",
+      "repository": "sphinx",
+      "split": "calibration",
+      "category": "parser_selection",
+      "query": "How does the build decide which parser reads a given source file?",
+      "falsePremise": false,
+      "expectAbsence": false,
+      "operationDerived": "selection",
+      "suppressedBy": null,
+      "subjectTerms": [
+        "build",
+        "parser",
+        "reads",
+        "source",
+        "file"
+      ],
+      "expected": [
+        {
+          "fqName": "sphinx/util/__init__.py::get_filetype",
+          "role": "PRIMARY_IMPLEMENTER",
+          "indexed": true,
+          "factKinds": [
+            "first_success_return"
+          ],
+          "directFactKinds": [
+            "first_success_return"
+          ],
+          "partialFactKinds": []
+        },
+        {
+          "fqName": "sphinx/registry.py::SphinxComponentRegistry.get_source_parser",
+          "role": "PRIMARY_IMPLEMENTER",
+          "indexed": true,
+          "factKinds": [],
+          "directFactKinds": [],
+          "partialFactKinds": []
+        },
+        {
+          "fqName": "sphinx/registry.py::SphinxComponentRegistry.add_source_parser",
+          "role": "REGISTRATION_SOURCE",
+          "indexed": true,
+          "factKinds": [],
+          "directFactKinds": [],
+          "partialFactKinds": []
+        }
+      ],
+      "candidatesAdmitted": 1,
+      "admittedFqNames": [
+        "sphinx/project.py::Project.path2doc"
+      ],
+      "expectedAdmitted": false,
+      "rejectedForSubject": [
+        {
+          "fqName": "sphinx/pycode/ast.py::_UnparseVisitor.visit_Tuple",
+          "operand": "elts"
+        },
+        {
+          "fqName": "sphinx/environment/adapters/toctree.py::TocTree.get_toctree_for",
+          "operand": "toctrees"
+        },
+        {
+          "fqName": "sphinx/errors.py::PycodeError.__str__",
+          "operand": "args"
+        },
+        {
+          "fqName": "sphinx/domains/c.py::Symbol.find_declaration",
+          "operand": "symbols"
+        },
+        {
+          "fqName": "doc/development/tutorials/examples/recipe.py::RecipeDomain.resolve_xref",
+          "operand": "match"
+        },
+        {
+          "fqName": "sphinx/writers/text.py::Table.__str__",
+          "operand": "out"
+        },
+        {
+          "fqName": "sphinx/domains/c.py::Symbol._add_symbols",
+          "operand": "symbols"
+        },
+        {
+          "fqName": "sphinx/util/inspect.py::safe_getattr",
+          "operand": "defargs"
+        }
+      ],
+      "expectedRejectedForSubject": false,
+      "generatorReason": "admitted 1 definition(s) carrying subject-aligned selection facts",
+      "primaryFailure": "CANDIDATE_GENERATION_FAILURE",
+      "observations": [
+        "generator admitted other owners: sphinx/project.py::Project.path2doc"
+      ]
+    },
+    {
+      "caseId": "sp_project_name_reuse",
+      "repository": "sphinx",
+      "split": "calibration",
+      "category": "project_name_reuse",
+      "query": "Does Sphinx already have a helper that maps a source file's suffix to its file type?",
+      "falsePremise": false,
+      "expectAbsence": false,
+      "operationDerived": null,
+      "suppressedBy": "no behavioural operation cue",
+      "subjectTerms": [],
+      "expected": [
+        {
+          "fqName": "sphinx/util/__init__.py::get_filetype",
+          "role": "PRIMARY_IMPLEMENTER",
+          "indexed": true,
+          "factKinds": [
+            "first_success_return"
+          ],
+          "directFactKinds": [],
+          "partialFactKinds": []
+        }
+      ],
+      "candidatesAdmitted": 0,
+      "admittedFqNames": [],
+      "expectedAdmitted": false,
+      "rejectedForSubject": [],
+      "expectedRejectedForSubject": false,
+      "generatorReason": "not run (no objective)",
+      "primaryFailure": "ACTIVATION_FAILURE",
+      "observations": [
+        "expected implementation does carry mechanism facts"
+      ]
+    },
+    {
+      "caseId": "sp_xref_resolution",
+      "repository": "sphinx",
+      "split": "calibration",
+      "category": "fallback",
+      "query": "How is a cross reference matched to the object it points at when the name is not fully qualified?",
+      "falsePremise": false,
+      "expectAbsence": false,
+      "operationDerived": null,
+      "suppressedBy": "no behavioural operation cue",
+      "subjectTerms": [],
+      "expected": [
+        {
+          "fqName": "sphinx/domains/python.py::PythonDomain.find_obj",
+          "role": "PRIMARY_IMPLEMENTER",
+          "indexed": true,
+          "factKinds": [
+            "fallback_branch",
+            "conditional_choice"
+          ],
+          "directFactKinds": [],
+          "partialFactKinds": []
+        }
+      ],
+      "candidatesAdmitted": 0,
+      "admittedFqNames": [],
+      "expectedAdmitted": false,
+      "rejectedForSubject": [],
+      "expectedRejectedForSubject": false,
+      "generatorReason": "not run (no objective)",
+      "primaryFailure": "ACTIVATION_FAILURE",
+      "observations": [
+        "expected implementation does carry mechanism facts"
+      ]
+    },
+    {
+      "caseId": "sp_builder_selection",
+      "repository": "sphinx",
+      "split": "calibration",
+      "category": "selection",
+      "query": "How is the requested output builder located and instantiated?",
+      "falsePremise": false,
+      "expectAbsence": false,
+      "operationDerived": null,
+      "suppressedBy": "no behavioural operation cue",
+      "subjectTerms": [],
+      "expected": [
+        {
+          "fqName": "sphinx/registry.py::SphinxComponentRegistry.create_builder",
+          "role": "PRIMARY_IMPLEMENTER",
+          "indexed": true,
+          "factKinds": [],
+          "directFactKinds": [],
+          "partialFactKinds": []
+        },
+        {
+          "fqName": "sphinx/registry.py::SphinxComponentRegistry.preload_builder",
+          "role": "REGISTRATION_SOURCE",
+          "indexed": true,
+          "factKinds": [],
+          "directFactKinds": [],
+          "partialFactKinds": []
+        }
+      ],
+      "candidatesAdmitted": 0,
+      "admittedFqNames": [],
+      "expectedAdmitted": false,
+      "rejectedForSubject": [],
+      "expectedRejectedForSubject": false,
+      "generatorReason": "not run (no objective)",
+      "primaryFailure": "ACTIVATION_FAILURE",
+      "observations": [
+        "expected implementation carries no mechanism facts at all"
+      ]
+    },
+    {
+      "caseId": "sp_parser_registry_false_premise",
+      "repository": "sphinx",
+      "split": "calibration",
+      "category": "parser_selection",
+      "query": "Where is the list of parsers ordered by priority?",
+      "falsePremise": true,
+      "expectAbsence": false,
+      "operationDerived": "ordering",
+      "suppressedBy": null,
+      "subjectTerms": [
+        "list",
+        "parsers"
+      ],
+      "expected": [
+        {
+          "fqName": "sphinx/util/__init__.py::get_filetype",
+          "role": "PRIMARY_IMPLEMENTER",
+          "indexed": true,
+          "factKinds": [
+            "first_success_return"
+          ],
+          "directFactKinds": [],
+          "partialFactKinds": []
+        }
+      ],
+      "candidatesAdmitted": 0,
+      "admittedFqNames": [],
+      "expectedAdmitted": false,
+      "rejectedForSubject": [
+        {
+          "fqName": "sphinx/builders/html/__init__.py::get_stable_hash",
+          "operand": "get_stable_hash"
+        },
+        {
+          "fqName": "sphinx/ext/inheritance_diagram.py::InheritanceGraph._format_graph_attrs",
+          "operand": "items"
+        },
+        {
+          "fqName": "sphinx/testing/fixtures.py::app_params",
+          "operand": "keys"
+        },
+        {
+          "fqName": "tests/test_ext_apidoc.py::apidoc_params",
+          "operand": "keys"
+        },
+        {
+          "fqName": "doc/development/tutorials/examples/recipe.py::IngredientIndex.generate",
+          "operand": "items"
+        },
+        {
+          "fqName": "sphinx/ext/inheritance_diagram.py::InheritanceGraph._format_node_attrs",
+          "operand": "items"
+        },
+        {
+          "fqName": "sphinx/domains/python.py::PythonModuleIndex.generate",
+          "operand": "items"
+        },
+        {
+          "fqName": "sphinx/builders/__init__.py::Builder.read",
+          "operand": "added"
+        }
+      ],
+      "expectedRejectedForSubject": false,
+      "generatorReason": "no indexed ordering fact is about list, parsers",
+      "primaryFailure": "REPRESENTATION_FAILURE",
+      "observations": [
+        "facts present: first_success_return"
+      ]
+    },
+    {
+      "caseId": "xr_backend_selection",
+      "repository": "xarray",
+      "split": "holdout",
+      "category": "backend_selection",
+      "query": "How is it decided which backend opens a given file?",
+      "falsePremise": false,
+      "expectAbsence": false,
+      "operationDerived": "selection",
+      "suppressedBy": null,
+      "subjectTerms": [
+        "backend",
+        "opens",
+        "file"
+      ],
+      "expected": [
+        {
+          "fqName": "xarray/backends/plugins.py::guess_engine",
+          "role": "PRIMARY_IMPLEMENTER",
+          "indexed": true,
+          "factKinds": [
+            "first_success_return"
+          ],
+          "directFactKinds": [
+            "first_success_return"
+          ],
+          "partialFactKinds": []
+        },
+        {
+          "fqName": "xarray/backends/plugins.py::sort_backends",
+          "role": "ORDERING_PREREQUISITE",
+          "indexed": true,
+          "factKinds": [
+            "priority_lookup",
+            "ordering_established"
+          ],
+          "directFactKinds": [
+            "priority_lookup"
+          ],
+          "partialFactKinds": [
+            "ordering_established"
+          ]
+        }
+      ],
+      "candidatesAdmitted": 0,
+      "admittedFqNames": [],
+      "expectedAdmitted": false,
+      "rejectedForSubject": [
+        {
+          "fqName": "xarray/core/missing.py::_interpnd",
+          "operand": "new_x"
+        },
+        {
+          "fqName": "xarray/tests/test_computation.py::test_apply_input_core_dimension",
+          "operand": "args"
+        },
+        {
+          "fqName": "xarray/core/variable.py::IndexVariable.concat",
+          "operand": "variables"
+        },
+        {
+          "fqName": "xarray/coding/cftimeindex.py::_contains_datetime_timedeltas",
+          "operand": "array"
+        },
+        {
+          "fqName": "xarray/backends/rasterio_.py::RasterioArrayWrapper._get_indexer",
+          "operand": "key"
+        },
+        {
+          "fqName": "xarray/plot/plot.py::imshow",
+          "operand": "x"
+        },
+        {
+          "fqName": "xarray/core/computation.py::assert_and_return_exact_match",
+          "operand": "all_keys"
+        },
+        {
+          "fqName": "xarray/core/computation.py::apply_variable_ufunc",
+          "operand": "output"
+        }
+      ],
+      "expectedRejectedForSubject": false,
+      "generatorReason": "no indexed selection fact is about backend, opens, file",
+      "primaryFailure": "CANDIDATE_GENERATION_FAILURE",
+      "observations": []
+    },
+    {
+      "caseId": "xr_backend_scoring_false_premise",
+      "repository": "xarray",
+      "split": "holdout",
+      "category": "backend_selection",
+      "query": "Where are the backends scored so the best match for a file can be chosen?",
+      "falsePremise": true,
+      "expectAbsence": false,
+      "operationDerived": "selection",
+      "suppressedBy": null,
+      "subjectTerms": [
+        "backends",
+        "scored",
+        "best",
+        "match",
+        "file",
+        "can"
+      ],
+      "expected": [
+        {
+          "fqName": "xarray/backends/plugins.py::guess_engine",
+          "role": "PRIMARY_IMPLEMENTER",
+          "indexed": true,
+          "factKinds": [
+            "first_success_return"
+          ],
+          "directFactKinds": [
+            "first_success_return"
+          ],
+          "partialFactKinds": []
+        },
+        {
+          "fqName": "xarray/backends/plugins.py::sort_backends",
+          "role": "ORDERING_PREREQUISITE",
+          "indexed": true,
+          "factKinds": [
+            "priority_lookup",
+            "ordering_established"
+          ],
+          "directFactKinds": [
+            "priority_lookup"
+          ],
+          "partialFactKinds": [
+            "ordering_established"
+          ]
+        }
+      ],
+      "candidatesAdmitted": 0,
+      "admittedFqNames": [],
+      "expectedAdmitted": false,
+      "rejectedForSubject": [
+        {
+          "fqName": "xarray/core/missing.py::_interpnd",
+          "operand": "new_x"
+        },
+        {
+          "fqName": "xarray/tests/test_computation.py::test_apply_input_core_dimension",
+          "operand": "args"
+        },
+        {
+          "fqName": "xarray/core/variable.py::IndexVariable.concat",
+          "operand": "variables"
+        },
+        {
+          "fqName": "xarray/coding/cftimeindex.py::_contains_datetime_timedeltas",
+          "operand": "array"
+        },
+        {
+          "fqName": "xarray/backends/rasterio_.py::RasterioArrayWrapper._get_indexer",
+          "operand": "key"
+        },
+        {
+          "fqName": "xarray/plot/plot.py::imshow",
+          "operand": "x"
+        },
+        {
+          "fqName": "xarray/core/computation.py::assert_and_return_exact_match",
+          "operand": "all_keys"
+        },
+        {
+          "fqName": "xarray/core/computation.py::apply_variable_ufunc",
+          "operand": "output"
+        }
+      ],
+      "expectedRejectedForSubject": false,
+      "generatorReason": "no indexed selection fact is about backends, scored, best, match, file, can",
+      "primaryFailure": "CANDIDATE_GENERATION_FAILURE",
+      "observations": []
+    },
+    {
+      "caseId": "xr_score_backends_identifier",
+      "repository": "xarray",
+      "split": "holdout",
+      "category": "explicit_identifier_absence",
+      "query": "Where is score_backends defined?",
+      "falsePremise": true,
+      "expectAbsence": true,
+      "operationDerived": null,
+      "suppressedBy": "no behavioural operation cue",
+      "subjectTerms": [],
+      "expected": [],
+      "candidatesAdmitted": 0,
+      "admittedFqNames": [],
+      "expectedAdmitted": false,
+      "rejectedForSubject": [],
+      "expectedRejectedForSubject": false,
+      "generatorReason": "not run (no objective)",
+      "primaryFailure": "NONE",
+      "observations": [
+        "absence control: no mechanism expected"
+      ]
+    },
+    {
+      "caseId": "xr_backend_order",
+      "repository": "xarray",
+      "split": "holdout",
+      "category": "registration_ordering",
+      "query": "What determines the order the file backends are tried in?",
+      "falsePremise": false,
+      "expectAbsence": false,
+      "operationDerived": "ordering",
+      "suppressedBy": null,
+      "subjectTerms": [
+        "file",
+        "backends",
+        "tried"
+      ],
+      "expected": [
+        {
+          "fqName": "xarray/backends/plugins.py::sort_backends",
+          "role": "PRIMARY_IMPLEMENTER",
+          "indexed": true,
+          "factKinds": [
+            "priority_lookup",
+            "ordering_established"
+          ],
+          "directFactKinds": [
+            "priority_lookup",
+            "ordering_established"
+          ],
+          "partialFactKinds": []
+        },
+        {
+          "fqName": "xarray/backends/plugins.py::build_engines",
+          "role": "REGISTRATION_SOURCE",
+          "indexed": true,
+          "factKinds": [],
+          "directFactKinds": [],
+          "partialFactKinds": []
+        }
+      ],
+      "candidatesAdmitted": 0,
+      "admittedFqNames": [],
+      "expectedAdmitted": false,
+      "rejectedForSubject": [
+        {
+          "fqName": "xarray/core/combine.py::vars_as_keys",
+          "operand": "ds"
+        },
+        {
+          "fqName": "xarray/core/groupby.py::DataArrayGroupByBase._restore_dim_order",
+          "operand": "dims"
+        },
+        {
+          "fqName": "xarray/coding/frequencies.py::_unique_deltas",
+          "operand": "unique"
+        },
+        {
+          "fqName": "xarray/core/common.py::AttrAccessMixin.__dir__",
+          "operand": "dir"
+        }
+      ],
+      "expectedRejectedForSubject": false,
+      "generatorReason": "no indexed ordering fact is about file, backends, tried",
+      "primaryFailure": "CANDIDATE_GENERATION_FAILURE",
+      "observations": []
+    },
+    {
+      "caseId": "ap_format_identification",
+      "repository": "astropy",
+      "split": "holdout",
+      "category": "selection",
+      "query": "How is a file's format worked out when the caller does not say what it is?",
+      "falsePremise": false,
+      "expectAbsence": false,
+      "operationDerived": null,
+      "suppressedBy": "no behavioural operation cue",
+      "subjectTerms": [],
+      "expected": [
+        {
+          "fqName": "astropy/io/registry/base.py::_UnifiedIORegistryBase._get_valid_format",
+          "role": "PRIMARY_IMPLEMENTER",
+          "indexed": true,
+          "factKinds": [
+            "first_item_selection"
+          ],
+          "directFactKinds": [],
+          "partialFactKinds": []
+        },
+        {
+          "fqName": "astropy/io/registry/base.py::_UnifiedIORegistryBase.identify_format",
+          "role": "ORDERING_PREREQUISITE",
+          "indexed": true,
+          "factKinds": [],
+          "directFactKinds": [],
+          "partialFactKinds": []
+        }
+      ],
+      "candidatesAdmitted": 0,
+      "admittedFqNames": [],
+      "expectedAdmitted": false,
+      "rejectedForSubject": [],
+      "expectedRejectedForSubject": false,
+      "generatorReason": "not run (no objective)",
+      "primaryFailure": "ACTIVATION_FAILURE",
+      "observations": [
+        "expected implementation does carry mechanism facts"
+      ]
+    },
+    {
+      "caseId": "ap_format_priority_tiebreak",
+      "repository": "astropy",
+      "split": "holdout",
+      "category": "priority_table_lookup",
+      "query": "What happens when more than one format claims it can read the same file?",
+      "falsePremise": false,
+      "expectAbsence": false,
+      "operationDerived": null,
+      "suppressedBy": "no behavioural operation cue",
+      "subjectTerms": [],
+      "expected": [
+        {
+          "fqName": "astropy/io/registry/base.py::_UnifiedIORegistryBase._get_highest_priority_format",
+          "role": "PRIMARY_IMPLEMENTER",
+          "indexed": true,
+          "factKinds": [
+            "first_item_selection"
+          ],
+          "directFactKinds": [],
+          "partialFactKinds": []
+        }
+      ],
+      "candidatesAdmitted": 0,
+      "admittedFqNames": [],
+      "expectedAdmitted": false,
+      "rejectedForSubject": [],
+      "expectedRejectedForSubject": false,
+      "generatorReason": "not run (no objective)",
+      "primaryFailure": "ACTIVATION_FAILURE",
+      "observations": [
+        "expected implementation does carry mechanism facts"
+      ]
+    },
+    {
+      "caseId": "ap_registered_class_match",
+      "repository": "astropy",
+      "split": "holdout",
+      "category": "override_resolution",
+      "query": "When a class and its parent both register a reader, which registration is used?",
+      "falsePremise": false,
+      "expectAbsence": false,
+      "operationDerived": null,
+      "suppressedBy": "no behavioural operation cue",
+      "subjectTerms": [],
+      "expected": [
+        {
+          "fqName": "astropy/io/registry/base.py::_UnifiedIORegistryBase._is_best_match",
+          "role": "PRIMARY_IMPLEMENTER",
+          "indexed": true,
+          "factKinds": [
+            "first_success_return"
+          ],
+          "directFactKinds": [],
+          "partialFactKinds": []
+        }
+      ],
+      "candidatesAdmitted": 0,
+      "admittedFqNames": [],
+      "expectedAdmitted": false,
+      "rejectedForSubject": [],
+      "expectedRejectedForSubject": false,
+      "generatorReason": "not run (no objective)",
+      "primaryFailure": "ACTIVATION_FAILURE",
+      "observations": [
+        "expected implementation does carry mechanism facts"
+      ]
+    },
+    {
+      "caseId": "ap_project_name_reuse",
+      "repository": "astropy",
+      "split": "holdout",
+      "category": "project_name_reuse",
+      "query": "Does astropy already have a helper that decides between competing registered readers?",
+      "falsePremise": false,
+      "expectAbsence": false,
+      "operationDerived": "selection",
+      "suppressedBy": null,
+      "subjectTerms": [
+        "astropy",
+        "already",
+        "have",
+        "helper",
+        "between",
+        "competing",
+        "registered",
+        "readers"
+      ],
+      "expected": [
+        {
+          "fqName": "astropy/io/registry/base.py::_UnifiedIORegistryBase._get_highest_priority_format",
+          "role": "PRIMARY_IMPLEMENTER",
+          "indexed": true,
+          "factKinds": [
+            "first_item_selection"
+          ],
+          "directFactKinds": [
+            "first_item_selection"
+          ],
+          "partialFactKinds": []
+        }
+      ],
+      "candidatesAdmitted": 0,
+      "admittedFqNames": [],
+      "expectedAdmitted": false,
+      "rejectedForSubject": [
+        {
+          "fqName": "astropy/table/operations.py::_hstack",
+          "operand": "arrays"
+        },
+        {
+          "fqName": "astropy/extern/ply/yacc.py::LRGeneratedTable.lr0_items",
+          "operand": "productions"
+        },
+        {
+          "fqName": "astropy/modeling/physical_models.py::NFW.input_units",
+          "operand": "inputs"
+        },
+        {
+          "fqName": "astropy/modeling/core.py::_ModelMeta._format_cls_repr",
+          "operand": "parts"
+        },
+        {
+          "fqName": "astropy/modeling/functional_models.py::RickerWavelet1D.input_units",
+          "operand": "inputs"
+        },
+        {
+          "fqName": "astropy/coordinates/sky_coordinate_parsers.py::_parse_ra_dec",
+          "operand": "coord"
+        },
+        {
+          "fqName": "astropy/modeling/tabular.py::_Tabular.bounding_box",
+          "operand": "bbox"
+        },
+        {
+          "fqName": "astropy/coordinates/sky_coordinate_parsers.py::_get_representation_component_units",
+          "operand": "units"
+        }
+      ],
+      "expectedRejectedForSubject": false,
+      "generatorReason": "no indexed selection fact is about astropy, already, have, helper, between, competing, registered, readers",
+      "primaryFailure": "CANDIDATE_GENERATION_FAILURE",
+      "observations": []
+    },
+    {
+      "caseId": "pl_reporter_selection",
+      "repository": "pylint",
+      "split": "holdout",
+      "category": "fallback",
+      "query": "How does the linter turn a reporter name given on the command line into a reporter?",
+      "falsePremise": false,
+      "expectAbsence": false,
+      "operationDerived": null,
+      "suppressedBy": "no behavioural operation cue",
+      "subjectTerms": [],
+      "expected": [
+        {
+          "fqName": "pylint/lint/pylinter.py::PyLinter._load_reporter_by_name",
+          "role": "PRIMARY_IMPLEMENTER",
+          "indexed": true,
+          "factKinds": [
+            "fallback_branch"
+          ],
+          "directFactKinds": [],
+          "partialFactKinds": []
+        },
+        {
+          "fqName": "pylint/lint/pylinter.py::_load_reporter_by_class",
+          "role": "ORDERING_PREREQUISITE",
+          "indexed": true,
+          "factKinds": [],
+          "directFactKinds": [],
+          "partialFactKinds": []
+        }
+      ],
+      "candidatesAdmitted": 0,
+      "admittedFqNames": [],
+      "expectedAdmitted": false,
+      "rejectedForSubject": [],
+      "expectedRejectedForSubject": false,
+      "generatorReason": "not run (no objective)",
+      "primaryFailure": "ACTIVATION_FAILURE",
+      "observations": [
+        "expected implementation does carry mechanism facts"
+      ]
+    },
+    {
+      "caseId": "pl_checker_activation",
+      "repository": "pylint",
+      "split": "holdout",
+      "category": "selection",
+      "query": "How is it decided which checkers actually run for a given configuration?",
+      "falsePremise": false,
+      "expectAbsence": false,
+      "operationDerived": "selection",
+      "suppressedBy": null,
+      "subjectTerms": [
+        "checkers",
+        "actually",
+        "run",
+        "configuration"
+      ],
+      "expected": [
+        {
+          "fqName": "pylint/lint/pylinter.py::PyLinter.prepare_checkers",
+          "role": "PRIMARY_IMPLEMENTER",
+          "indexed": true,
+          "factKinds": [],
+          "directFactKinds": [],
+          "partialFactKinds": []
+        },
+        {
+          "fqName": "pylint/lint/pylinter.py::PyLinter.get_checkers",
+          "role": "REGISTRATION_SOURCE",
+          "indexed": true,
+          "factKinds": [
+            "ordering_established"
+          ],
+          "directFactKinds": [],
+          "partialFactKinds": [
+            "ordering_established"
+          ]
+        }
+      ],
+      "candidatesAdmitted": 0,
+      "admittedFqNames": [],
+      "expectedAdmitted": false,
+      "rejectedForSubject": [
+        {
+          "fqName": "pylint/message/message_definition_store.py::MessageDefinitionStore.get_msg_display_string",
+          "operand": "message_definitions"
+        },
+        {
+          "fqName": "pylint/checkers/refactoring/refactoring_checker.py::RefactoringChecker._and_or_ternary_arguments",
+          "operand": "values"
+        },
+        {
+          "fqName": "tests/test_self.py::MultiReporter.out",
+          "operand": "_reporters"
+        },
+        {
+          "fqName": "pylint/checkers/classes/class_checker.py::ClassChecker._is_mandatory_method_param",
+          "operand": "args"
+        },
+        {
+          "fqName": "pylint/checkers/refactoring/refactoring_checker.py::_is_part_of_with_items",
+          "operand": "items"
+        },
+        {
+          "fqName": "pylint/checkers/classes/class_checker.py::ClassChecker._check_functools_or_not",
+          "operand": "import_nodes"
+        },
+        {
+          "fqName": "pylint/checkers/refactoring/refactoring_checker.py::RefactoringChecker._simplify_boolean_operation",
+          "operand": "result"
+        },
+        {
+          "fqName": "pylint/checkers/utils.py::get_node_first_ancestor_of_type_and_its_child",
+          "operand": "node_ancestors()"
+        }
+      ],
+      "expectedRejectedForSubject": false,
+      "generatorReason": "no indexed selection fact is about checkers, actually, run, configuration",
+      "primaryFailure": "REPRESENTATION_FAILURE",
+      "observations": [
+        "facts present: none"
+      ]
+    },
+    {
+      "caseId": "pl_reporter_ranking_false_premise",
+      "repository": "pylint",
+      "split": "holdout",
+      "category": "selection",
+      "query": "Where are the available reporters ranked to pick a default?",
+      "falsePremise": true,
+      "expectAbsence": false,
+      "operationDerived": "selection",
+      "suppressedBy": null,
+      "subjectTerms": [
+        "available",
+        "reporters"
+      ],
+      "expected": [
+        {
+          "fqName": "pylint/lint/pylinter.py::PyLinter._load_reporter_by_name",
+          "role": "PRIMARY_IMPLEMENTER",
+          "indexed": true,
+          "factKinds": [
+            "fallback_branch"
+          ],
+          "directFactKinds": [],
+          "partialFactKinds": []
+        }
+      ],
+      "candidatesAdmitted": 1,
+      "admittedFqNames": [
+        "tests/test_self.py::MultiReporter.out"
+      ],
+      "expectedAdmitted": false,
+      "rejectedForSubject": [
+        {
+          "fqName": "pylint/message/message_definition_store.py::MessageDefinitionStore.get_msg_display_string",
+          "operand": "message_definitions"
+        },
+        {
+          "fqName": "pylint/checkers/refactoring/refactoring_checker.py::RefactoringChecker._and_or_ternary_arguments",
+          "operand": "values"
+        },
+        {
+          "fqName": "pylint/checkers/classes/class_checker.py::ClassChecker._is_mandatory_method_param",
+          "operand": "args"
+        },
+        {
+          "fqName": "pylint/checkers/refactoring/refactoring_checker.py::_is_part_of_with_items",
+          "operand": "items"
+        },
+        {
+          "fqName": "pylint/checkers/classes/class_checker.py::ClassChecker._check_functools_or_not",
+          "operand": "import_nodes"
+        },
+        {
+          "fqName": "pylint/checkers/refactoring/refactoring_checker.py::RefactoringChecker._simplify_boolean_operation",
+          "operand": "result"
+        },
+        {
+          "fqName": "pylint/checkers/utils.py::get_node_first_ancestor_of_type_and_its_child",
+          "operand": "node_ancestors()"
+        },
+        {
+          "fqName": "pylint/checkers/utils.py::get_argument_from_call",
+          "operand": "keywords"
+        }
+      ],
+      "expectedRejectedForSubject": false,
+      "generatorReason": "admitted 1 definition(s) carrying subject-aligned selection facts",
+      "primaryFailure": "REPRESENTATION_FAILURE",
+      "observations": [
+        "facts present: fallback_branch",
+        "generator admitted other owners: tests/test_self.py::MultiReporter.out"
+      ]
+    },
+    {
+      "caseId": "pl_project_name_reuse",
+      "repository": "pylint",
+      "split": "holdout",
+      "category": "project_name_reuse",
+      "query": "Does pylint already have a helper that filters checkers down to the ones with enabled messages?",
+      "falsePremise": false,
+      "expectAbsence": false,
+      "operationDerived": null,
+      "suppressedBy": "no behavioural operation cue",
+      "subjectTerms": [],
+      "expected": [
+        {
+          "fqName": "pylint/lint/pylinter.py::PyLinter.prepare_checkers",
+          "role": "PRIMARY_IMPLEMENTER",
+          "indexed": true,
+          "factKinds": [],
+          "directFactKinds": [],
+          "partialFactKinds": []
+        }
+      ],
+      "candidatesAdmitted": 0,
+      "admittedFqNames": [],
+      "expectedAdmitted": false,
+      "rejectedForSubject": [],
+      "expectedRejectedForSubject": false,
+      "generatorReason": "not run (no objective)",
+      "primaryFailure": "ACTIVATION_FAILURE",
+      "observations": [
+        "expected implementation carries no mechanism facts at all"
+      ]
+    }
+  ]
+}

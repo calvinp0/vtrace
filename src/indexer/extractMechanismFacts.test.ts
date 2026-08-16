@@ -140,3 +140,75 @@ test("extraction is deterministic", () => {
   const body = "def prepare(items):\n    items = sorted(items, key=priority)\n    return items[0]\n";
   expect(JSON.stringify(extractMechanismFacts(body))).toBe(JSON.stringify(extractMechanismFacts(body)));
 });
+
+// --- M153: destructured loop targets ------------------------------------------
+//
+// Both spellings below are ordinary, and both were invisible: the loop-target
+// pattern required the target to begin with a letter, so a parenthesised Python
+// tuple and a JS array pattern were skipped. `Session.get_adapter` in `requests`
+// — a textbook first-success loop — carried no mechanism fact at all for this
+// reason, while the structurally identical `get_filetype` in `sphinx` was
+// represented correctly because its target happens to be unparenthesised.
+
+test("M153 a parenthesised Python tuple target is still a first-success loop", () => {
+  const body = "def get_adapter(self, url):\n"
+    + "    for (prefix, adapter) in self.adapters.items():\n"
+    + "        if url.lower().startswith(prefix.lower()):\n"
+    + "            return adapter\n";
+  expect(kinds(body)).toContain("first_success_return");
+  expect(factOf(body, "first_success_return")?.subject).toBe("adapters");
+});
+
+test("M153 a JS array-pattern target is still a first-success loop", () => {
+  const body = "function pick(map, want) {\n"
+    + "  for (const [key, value] of map.entries()) {\n"
+    + "    if (key === want) {\n"
+    + "      return value;\n"
+    + "    }\n"
+    + "  }\n"
+    + "}\n";
+  expect(kinds(body)).toContain("first_success_return");
+});
+
+test("M153 the unparenthesised form is unchanged", () => {
+  const body = "def get_filetype(source_suffix, filename):\n"
+    + "    for suffix, filetype in source_suffix.items():\n"
+    + "        if filename.endswith(suffix):\n"
+    + "            return filetype\n";
+  expect(kinds(body)).toContain("first_success_return");
+  expect(factOf(body, "first_success_return")?.subject).toBe("source_suffix");
+});
+
+// --- §28 negative controls: a wider target must not widen what COUNTS ----------
+
+test("M153 a destructured loop that only logs is not a selection", () => {
+  const body = "def report(self):\n"
+    + "    for (name, value) in self.items.items():\n"
+    + "        logger.info(name, value)\n";
+  expect(kinds(body)).not.toContain("first_success_return");
+});
+
+test("M153 a destructured loop that accumulates every match is not a selection", () => {
+  const body = "def collect(self):\n"
+    + "    out = []\n"
+    + "    for (name, value) in self.items.items():\n"
+    + "        if value.enabled:\n"
+    + "            out.append(value)\n"
+    + "    return out\n";
+  expect(kinds(body)).not.toContain("first_success_return");
+});
+
+test("M153 a destructured loop bailing out with None is not a selection", () => {
+  const body = "def check(self):\n"
+    + "    for (name, value) in self.items.items():\n"
+    + "        if value is None:\n"
+    + "            return None\n";
+  expect(kinds(body)).not.toContain("first_success_return");
+});
+
+test("M153 a destructured loop with no condition at all is not a selection", () => {
+  const body = "def first(self):\n"
+    + "    for (name, value) in self.items.items():\n"
+    + "        return value\n";
+  expect(kinds(body)).not.toContain("first_success_return");
+});

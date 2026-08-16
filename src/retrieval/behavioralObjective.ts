@@ -163,13 +163,20 @@ const CUE_RULES: readonly CueRule[] = [
   // --- ordering ------------------------------------------------------------
   // Precedence/order nouns name the ordering itself, not the pick that follows.
   { operation: "ordering", strength: "predicate", pattern: /\b(?:precedence|priority|priorities)\b/iu },
-  { operation: "ordering", strength: "predicate", pattern: /\b(?:what|which|how)\b[^?.!;\n]*\b(?:order|ordering|ordered|sorted|sort\s+order|ranked|ranking)\b/iu },
-  { operation: "ordering", strength: "modifier", pattern: /\b(?:order|ordering|ranked|ranking|sorted)\b/iu },
+  { operation: "ordering", strength: "predicate", pattern: /\b(?:what|which|how)\b[^?.!;\n]*\b(?:order|orders|ordering|ordered|sorts|sorted|sort\s+order|ranks?|ranked|ranking)\b/iu },
+  { operation: "ordering", strength: "modifier", pattern: /\b(?:order|orders|ordering|ranks?|ranked|ranking|sorted)\b/iu },
 
   // --- selection -----------------------------------------------------------
   // Bare decision verbs are always predicates: nothing else in a request says
   // "choose". `\b` does not match across `_`, so `choose_candidate` is untouched.
-  { operation: "selection", strength: "predicate", pattern: /\b(?:decides?|choose|chooses|chose|picks?|selects?|prefers?|wins?|winning)\b/iu },
+  // M153. The inflections here must cover the same verb families that
+  // OPERATION_VOCABULARY strips from the subject terms, because the two
+  // disagreeing is a silent failure rather than a wrong answer: the vocabulary
+  // listed `decide/decides/decided/deciding` while this pattern matched only the
+  // first two, so "How does the system DECIDE which backend wins" derived
+  // selection and "How is it DECIDED which backend opens a file" derived
+  // nothing at all. Same verb, same question, ordinary English inflection.
+  { operation: "selection", strength: "predicate", pattern: /\b(?:decides?|decided|deciding|choose|chooses|chose|choosing|picks?|selects?|prefers?|wins?|winning)\b/iu },
   // Clause-final participle: "how is the preferred item selected?"
   { operation: "selection", strength: "predicate", pattern: /\b(?:selected|chosen|picked|preferred)\s*[?.!;]?\s*$/iu },
   { operation: "selection", strength: "predicate", pattern: /\bwhich\s+(?:one|of\s+\w+)\s+(?:is|are|gets?)\b/iu },
@@ -218,7 +225,23 @@ export function deriveBehavioralObjective(intent: DerivedQueryIntent): Behaviora
   if (orchestration.suppressedBy === "explicit symbol lookup command") {
     return { operation: null, suppressedBy: "explicit symbol lookup command", considered: ordered };
   }
-  if (intent.kind === "capability_lookup") {
+  // M153. `capability_lookup` used to suppress outright, and that was too wide.
+  // The rule it was enforcing is about requests that NAME a definition; it was
+  // being applied to requests that DESCRIBE one. "Where is the function that
+  // ranks the connection adapters?" is the exact shape M150 exists to answer —
+  // no such function exists, and the truthful answer reconstructs the mechanism
+  // that does the ranking. Suppressing it returned nothing at all.
+  //
+  // Naming is still protected, and by the stronger check: an explicit symbol
+  // lookup is refused above, and a request like "Where is rank_adapters
+  // defined?" derives no operation anyway because `\b` does not match inside
+  // `rank_adapters`, so the cue never fires on the identifier's own words. The
+  // discrimination that matters is therefore identifier-vs-prose, which the
+  // intent already decided, rather than capability-vs-behaviour, which it did
+  // not (§22, §68).
+  const namesAnIdentifier = intent.explicitIdentifiers.length > 0
+    || intent.symbolHypotheses.length > 0;
+  if (intent.kind === "capability_lookup" && namesAnIdentifier) {
     return {
       operation: null,
       suppressedBy: `capability lookup (${intent.intentReason ?? "definition question"})`,
