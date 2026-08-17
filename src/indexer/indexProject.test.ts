@@ -327,6 +327,16 @@ test("M156: one unparseable file does not make the repository unavailable", asyn
       // absent from `files` so path membership never claims we indexed it.
       assert.equal(getFileByPath(db, "src/script.py"), undefined);
       assert.equal(listSymbolsForFile(db, "src/script.py").length, 0);
+      // Every lane that could carry a trace of it, checked by name rather than
+      // trusted to cascade.
+      assert.deepEqual(countRowsMatchingPath(db, "src/script.py"), {
+        symbols: 0,
+        edges: 0,
+        mechanismFacts: 0,
+        bodyLiterals: 0,
+        documentChunks: 0,
+        symbolSearchFts: 0,
+      });
 
       // But it is recorded, so the index knows the file exists and failed (§15).
       const failures = listFileIndexFailures(db);
@@ -1183,6 +1193,16 @@ test("M156: a file that regresses to unparseable loses its stale evidence", asyn
       // failed rather than silently omitted.
       assert.equal(getFileByPath(db, "src/service.py"), undefined);
       assert.equal(listSymbolsForFile(db, "src/service.py").length, 0);
+      // §36: not merely absent from `files` — gone from every evidence lane, so
+      // `service` cannot still be answered from source that no longer parses.
+      assert.deepEqual(countRowsMatchingPath(db, "src/service.py"), {
+        symbols: 0,
+        edges: 0,
+        mechanismFacts: 0,
+        bodyLiterals: 0,
+        documentChunks: 0,
+        symbolSearchFts: 0,
+      });
       assert.equal(listFileIndexFailures(db).map((failure) => failure.path).join(), "src/service.py");
       assert.equal(second.coverage.complete, false);
 
@@ -1303,6 +1323,43 @@ test("M156: a full index and an equivalent incremental history agree", async () 
 
   assert.deepEqual(incrementalResult, fullResult);
 });
+
+/**
+ * M156 §14. Every table that could hold semantic evidence for a path, counted by
+ * name. Relying on `ON DELETE CASCADE` would test SQLite rather than the
+ * invariant, and the FTS tables have no foreign key at all.
+ */
+function countRowsMatchingPath(db: Database, filePath: string): Record<string, number> {
+  const scalar = (sql: string, ...params: string[]): number =>
+    (db.query(sql).get(...params) as { count: number }).count;
+  return {
+    symbols: scalar(
+      "SELECT COUNT(*) AS count FROM symbols s JOIN files f ON f.id = s.file_id WHERE f.path = ?",
+      filePath,
+    ),
+    edges: scalar(
+      "SELECT COUNT(*) AS count FROM edges e JOIN symbols s ON s.id IN (e.src_symbol_id, e.dst_symbol_id) "
+      + "JOIN files f ON f.id = s.file_id WHERE f.path = ?",
+      filePath,
+    ),
+    mechanismFacts: scalar(
+      "SELECT COUNT(*) AS count FROM symbol_mechanism_facts WHERE file_path_raw = ?",
+      filePath,
+    ),
+    bodyLiterals: scalar(
+      "SELECT COUNT(*) AS count FROM symbol_body_literals_fts WHERE file_path_raw = ?",
+      filePath,
+    ),
+    documentChunks: scalar(
+      "SELECT COUNT(*) AS count FROM document_chunks c JOIN files f ON f.id = c.file_id WHERE f.path = ?",
+      filePath,
+    ),
+    symbolSearchFts: scalar(
+      "SELECT COUNT(*) AS count FROM symbol_search_fts WHERE file_path_raw = ?",
+      filePath,
+    ),
+  };
+}
 
 function assertGraphIntegrity(db: Database): void {
   const danglingEdges = db.query(`
