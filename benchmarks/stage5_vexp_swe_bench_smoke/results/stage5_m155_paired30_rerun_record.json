@@ -1,0 +1,84 @@
+{
+  "schemaVersion": "stage5.m155.rerun-record.v1",
+  "instance_id": "django__django-11740",
+  "repo": "django/django",
+  "deterministicGoldState": "GOLD_DISCOVERED_BUT_DISCARDED",
+  "originalAttempt": {
+    "classification": "INVALID_HARNESS_ABORT",
+    "why": "The harness aborted before spawning the agent because the selected context was empty. Under --context-policy force-inject an empty-but-successful selection was excluded from the valid no-context path, so a real product outcome was surfaced as a treatment failure.",
+    "vtraceBehaviour": "deterministic and successful \u2014 index valid, retrieval completed, 33 candidates, gold file discovered, 0 pivots, 0 delivered items, final injected context 0 tokens",
+    "agentSpawned": false,
+    "tokensSpent": 0,
+    "abortMessage": "indexed-context preparation produced no vtrace context (unknown error); aborting before spawn so no tokens are spent on a non-treatment run.",
+    "indexEvidence": {
+      "vtrace_commit": "964ad3e1a3c49c5afbcfbd0400e176716be1bc3f",
+      "index_format_version": 5,
+      "indexer_fingerprint": "ce3463c2cdcd6e3b",
+      "created_at": "2026-08-17T10:09:51.903Z",
+      "parseFailures": 0,
+      "files": 2571,
+      "symbols": 41346,
+      "edges": 85914,
+      "documentChunks": 1,
+      "mechanismFacts": 2816
+    },
+    "retrievalEvidence": {
+      "candidateCount": 33,
+      "pivots": 0,
+      "support": 0,
+      "discarded": 33,
+      "estimatedTokens": 0,
+      "budgetTokens": 8000,
+      "runLevelReason": "no high-confidence edit target recovered",
+      "goldAmongDiscarded": [
+        "django/db/migrations/autodetector.py::add_operation",
+        "django/db/migrations/autodetector.py::arrange_for_graph"
+      ],
+      "discardReason": "support-only: no actionable edit target"
+    },
+    "harnessFixCommit": "157e2f5e"
+  },
+  "correctedAttempt": {
+    "classification": "VALID_DELIVERY_EMPTY",
+    "expectedTreatmentContextTokens": 0,
+    "expectedBehaviour": "same empty VTRACE payload -> treatment generation valid -> inject zero context -> spawn the agent normally -> grade normally",
+    "cleanStatePolicy": "workspace, index, session state and run artifacts from the aborted attempt are removed so the arm re-clones and re-indexes from the same base revision as every other paired arm",
+    "productBehaviourChanged": false,
+    "status": "complete",
+    "treatmentValid": true,
+    "policyAction": "skip",
+    "contextError": null,
+    "contextInjected": false,
+    "treatmentContextTokens": 0,
+    "contextChars": 0,
+    "contextItems": 0,
+    "capsuleActualMode": "no_context",
+    "capsulePivots": [],
+    "capsuleSupport": [],
+    "contextPolicyOverride": "force-inject",
+    "contextPolicyDecisionSignals": [
+      "capsule_no_context"
+    ],
+    "skipReason": "no high-confidence edit target recovered",
+    "agentSpawned": true,
+    "numTurns": 17,
+    "costUsd": 0.515363,
+    "durationMs": 61544,
+    "toolCalls": {
+      "Grep": 2,
+      "Read": 3,
+      "Edit": 1
+    },
+    "patchProduced": true,
+    "sharedToolUseDisciplineInjected": true,
+    "gradedYet": false
+  },
+  "notRerun": {
+    "TREATMENT_UNAVAILABLE_INDEX_FAILURE": [
+      "psf__requests-1142",
+      "pytest-dev__pytest-5262",
+      "pylint-dev__pylint-4551"
+    ],
+    "why": "deterministic whole-repository index aborts; rerunning the same frozen treatment cannot change the outcome, and adding quarantine/fallback to the live path mid-experiment would change the treatment"
+  }
+}
