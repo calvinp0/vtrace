@@ -1,0 +1,382 @@
+// Stage 5 M155-D/E — paired live-agent outcome, efficiency and cross-tab analysis.
+//
+// Reads what the live runs already captured — each arm's result row and its
+// post-evaluate grade — and produces the M155-D/E evidence. It computes nothing
+// from the product, so re-running it cannot move a result.
+//
+// Two rules encoded here rather than left to prose:
+//
+//   1. PASS comes from the grader. `modelPatch` existing is not success (§50), so
+//      `resolved` is read from the graded row and a run with no grade is
+//      `UNGRADED`, never a FAIL.
+//   2. Token claims are END-TO-END (§55). The injected-context size is reported
+//      separately and is never presented as a saving, because a small capsule
+//      followed by more agent turns is a cost, not a reduction.
+//
+// NO Claude, NO Docker, NO agent run, NO API calls, NO network.
+
+import { existsSync, readFileSync } from "node:fs";
+import { writeFile } from "node:fs/promises";
+import path from "node:path";
+import { glob } from "node:fs/promises";
+
+import { median, percentile, mean } from "./run_stage5_m155_latency_probe";
+
+export type Grade = "PASS" | "FAIL" | "UNGRADED";
+export type PairClass =
+  | "shared success"
+  | "VTRACE unique win"
+  | "VTRACE unique loss"
+  | "shared failure"
+  | "incomplete";
+
+export interface ArmRun {
+  readonly instanceId: string;
+  readonly arm: "baseline" | "vtrace";
+  readonly grade: Grade;
+  readonly patchProduced: boolean;
+  readonly costUsd: number | null;
+  readonly numTurns: number | null;
+  readonly durationMs: number | null;
+  readonly inputTokens: number | null;
+  readonly outputTokens: number | null;
+  readonly cacheReadTokens: number | null;
+  readonly cacheCreationTokens: number | null;
+  readonly totalTokens: number | null;
+  readonly toolCalls: Readonly<Record<string, number>>;
+  /** Capsule tokens injected into the treatment prompt. null for baseline. */
+  readonly injectedContextTokens: number | null;
+  readonly contextInjected: boolean | null;
+  readonly treatmentValid: boolean;
+  readonly treatmentInvalidReason: string | null;
+}
+
+/** End-to-end billable tokens. Cache reads/creations are real usage and are
+ *  included; omitting them would understate whichever arm caches more. */
+export function totalTokensOf(row: {
+  inputTokens?: number | null; outputTokens?: number | null;
+  cacheReadTokens?: number | null; cacheCreationTokens?: number | null;
+}): number | null {
+  const parts = [row.inputTokens, row.outputTokens, row.cacheReadTokens, row.cacheCreationTokens];
+  if (parts.every((p) => p === null || p === undefined)) return null;
+  return parts.reduce<number>((sum, p) => sum + (p ?? 0), 0);
+}
+
+export function gradeOf(resolved: unknown): Grade {
+  if (resolved === true) return "PASS";
+  if (resolved === false) return "FAIL";
+  return "UNGRADED";
+}
+
+export function classifyPair(baseline: Grade, vtrace: Grade): PairClass {
+  if (baseline === "UNGRADED" || vtrace === "UNGRADED") return "incomplete";
+  if (baseline === "PASS" && vtrace === "PASS") return "shared success";
+  if (baseline === "FAIL" && vtrace === "PASS") return "VTRACE unique win";
+  if (baseline === "PASS" && vtrace === "FAIL") return "VTRACE unique loss";
+  return "shared failure";
+}
+
+/**
+ * Two-sided exact McNemar p-value on the discordant pairs. At n=30 a normal
+ * approximation is not defensible (§52), and the discordant count is usually tiny,
+ * so the exact binomial tail is both cheap and honest.
+ */
+export function mcnemarExactP(wins: number, losses: number): number {
+  const n = wins + losses;
+  if (n === 0) return 1;
+  const logFact = (k: number): number => {
+    let s = 0;
+    for (let i = 2; i <= k; i += 1) s += Math.log(i);
+    return s;
+  };
+  const pmf = (k: number): number => Math.exp(logFact(n) - logFact(k) - logFact(n - k) - n * Math.LN2);
+  const observed = Math.min(wins, losses);
+  let tail = 0;
+  for (let k = 0; k <= observed; k += 1) tail += pmf(k);
+  return Math.min(1, 2 * tail);
+}
+
+/** Wilson score interval for a pass rate — used instead of a bare delta (§52). */
+export function wilson(successes: number, n: number, z = 1.96): { low: number; high: number } {
+  if (n === 0) return { low: 0, high: 0 };
+  const p = successes / n;
+  const d = 1 + (z * z) / n;
+  const centre = p + (z * z) / (2 * n);
+  const halfWidth = z * Math.sqrt((p * (1 - p)) / n + (z * z) / (4 * n * n));
+  return {
+    low: Math.max(0, (centre - halfWidth) / d),
+    high: Math.min(1, (centre + halfWidth) / d),
+  };
+}
+
+const round = (v: number | null, dp = 3): number | null =>
+  v === null ? null : Math.round(v * 10 ** dp) / 10 ** dp;
+
+export interface ArmAggregate {
+  readonly arm: string;
+  readonly runs: number;
+  readonly graded: number;
+  readonly pass: number;
+  readonly fail: number;
+  readonly ungraded: number;
+  readonly patchProduced: number;
+  readonly treatmentInvalid: number;
+  readonly tokensTotal: number | null;
+  readonly tokensMean: number | null;
+  readonly tokensMedian: number | null;
+  readonly tokensP90: number | null;
+  readonly costTotal: number | null;
+  readonly costMean: number | null;
+  readonly costMedian: number | null;
+  readonly costP90: number | null;
+  readonly turnsMean: number | null;
+  readonly turnsMedian: number | null;
+  readonly wallSecTotal: number | null;
+  readonly wallSecMedian: number | null;
+  readonly toolCallTotals: Readonly<Record<string, number>>;
+}
+
+export function aggregateArm(arm: string, runs: readonly ArmRun[]): ArmAggregate {
+  const nums = (pick: (r: ArmRun) => number | null): number[] =>
+    runs.map(pick).filter((v): v is number => v !== null);
+  const tokens = nums((r) => r.totalTokens);
+  const cost = nums((r) => r.costUsd);
+  const turns = nums((r) => r.numTurns);
+  const wall = nums((r) => r.durationMs).map((ms) => ms / 1000);
+  const toolTotals: Record<string, number> = {};
+  for (const r of runs) for (const [tool, n] of Object.entries(r.toolCalls)) toolTotals[tool] = (toolTotals[tool] ?? 0) + n;
+  return {
+    arm,
+    runs: runs.length,
+    graded: runs.filter((r) => r.grade !== "UNGRADED").length,
+    pass: runs.filter((r) => r.grade === "PASS").length,
+    fail: runs.filter((r) => r.grade === "FAIL").length,
+    ungraded: runs.filter((r) => r.grade === "UNGRADED").length,
+    patchProduced: runs.filter((r) => r.patchProduced).length,
+    treatmentInvalid: runs.filter((r) => !r.treatmentValid).length,
+    tokensTotal: tokens.length ? tokens.reduce((s, v) => s + v, 0) : null,
+    tokensMean: tokens.length ? Math.round(mean(tokens)!) : null,
+    tokensMedian: tokens.length ? Math.round(median(tokens)!) : null,
+    tokensP90: tokens.length ? Math.round(percentile(tokens, 0.9)!) : null,
+    costTotal: cost.length ? round(cost.reduce((s, v) => s + v, 0), 2) : null,
+    costMean: cost.length ? round(mean(cost)!, 4) : null,
+    costMedian: cost.length ? round(median(cost)!, 4) : null,
+    costP90: cost.length ? round(percentile(cost, 0.9)!, 4) : null,
+    turnsMean: turns.length ? round(mean(turns)!, 1) : null,
+    turnsMedian: turns.length ? median(turns) : null,
+    wallSecTotal: wall.length ? Math.round(wall.reduce((s, v) => s + v, 0)) : null,
+    wallSecMedian: wall.length ? Math.round(median(wall)!) : null,
+    toolCallTotals: toolTotals,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Loading captured runs
+// ---------------------------------------------------------------------------
+
+function readJson(file: string): Record<string, unknown> | null {
+  try {
+    return JSON.parse(readFileSync(file, "utf8")) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+}
+
+async function firstResultRow(dir: string): Promise<Record<string, unknown> | null> {
+  const found: string[] = [];
+  for await (const entry of glob("swebench-*.jsonl", { cwd: dir })) found.push(entry);
+  if (found.length === 0) return null;
+  const text = readFileSync(path.join(dir, found.sort()[0]!), "utf8");
+  const line = text.split("\n").find((l) => l.trim().length > 0);
+  return line === undefined ? null : (JSON.parse(line) as Record<string, unknown>);
+}
+
+export async function loadArm(
+  resultsRoot: string, instanceId: string, arm: "baseline" | "vtrace",
+): Promise<ArmRun | null> {
+  const label = `m155_${arm}_${instanceId.replace(/-/g, "_")}`;
+  const dir = path.join(resultsRoot, "runs", label, "raw", arm === "baseline" ? "baseline" : "vtrace");
+  if (!existsSync(dir)) return null;
+  const row = await firstResultRow(dir);
+  if (row === null) return null;
+  const runMeta = readJson(path.join(dir, "_run.meta.json")) ?? {};
+  const num = (v: unknown): number | null => (typeof v === "number" ? v : null);
+
+  const contextInjected = arm === "vtrace"
+    ? (typeof runMeta.vtraceContextInjected === "boolean" ? runMeta.vtraceContextInjected : null)
+    : null;
+  const injectedTokens = arm === "vtrace" ? num(runMeta.vtraceCapsuleEstimatedTokens) : null;
+
+  // A treatment arm that received no context is not an ordinary VTRACE failure — it
+  // is an arm where the treatment was not delivered, and §41 requires it to be
+  // classified rather than counted.
+  let treatmentValid = true;
+  let treatmentInvalidReason: string | null = null;
+  if (arm === "vtrace") {
+    if (contextInjected === false) {
+      treatmentValid = false; treatmentInvalidReason = "vtrace context not injected";
+    } else if (injectedTokens !== null && injectedTokens === 0) {
+      treatmentValid = false; treatmentInvalidReason = "vtrace context empty (no_context case)";
+    } else if (runMeta.vtraceCapsuleEngineFallbackReason != null) {
+      treatmentValid = false;
+      treatmentInvalidReason = `capsule engine fell back: ${String(runMeta.vtraceCapsuleEngineFallbackReason)}`;
+    }
+  }
+
+  return {
+    instanceId,
+    arm,
+    grade: gradeOf(row.resolved),
+    patchProduced: typeof row.modelPatch === "string" && row.modelPatch.trim().length > 0,
+    costUsd: num(row.costUsd),
+    numTurns: num(row.numTurns),
+    durationMs: num(row.durationMs),
+    inputTokens: num(row.inputTokens),
+    outputTokens: num(row.outputTokens),
+    cacheReadTokens: num(row.cacheReadTokens),
+    cacheCreationTokens: num(row.cacheCreationTokens),
+    totalTokens: totalTokensOf(row as never),
+    toolCalls: (row.toolCalls ?? {}) as Record<string, number>,
+    injectedContextTokens: injectedTokens,
+    contextInjected,
+    treatmentValid,
+    treatmentInvalidReason,
+  };
+}
+
+async function main(): Promise<void> {
+  const argv = process.argv.slice(2);
+  const get = (flag: string): string => {
+    const i = argv.indexOf(flag);
+    if (i < 0 || argv[i + 1] === undefined) throw new Error(`${flag} is required.`);
+    return argv[i + 1]!;
+  };
+  const resultsRoot = get("--results-root");
+  const manifest = JSON.parse(await Bun.file(get("--manifest")).text()) as {
+    manifestSha256: string;
+    cases: Array<{ order: number; instance_id: string; repo: string; difficulty: string;
+      armOrder: string[]; m154DeterministicGoldState: string }>;
+  };
+  const outDir = get("--out-dir");
+
+  const baselineRuns: ArmRun[] = [];
+  const vtraceRuns: ArmRun[] = [];
+  const pairs = [];
+
+  for (const c of manifest.cases) {
+    const b = await loadArm(resultsRoot, c.instance_id, "baseline");
+    const v = await loadArm(resultsRoot, c.instance_id, "vtrace");
+    if (b) baselineRuns.push(b);
+    if (v) vtraceRuns.push(v);
+    pairs.push({
+      order: c.order,
+      instance_id: c.instance_id,
+      repo: c.repo,
+      difficulty: c.difficulty,
+      firstArm: c.armOrder[0],
+      m154DeterministicGoldState: c.m154DeterministicGoldState,
+      baseline: b === null ? null : { grade: b.grade, patch: b.patchProduced, cost: b.costUsd, turns: b.numTurns, tokens: b.totalTokens, tools: b.toolCalls },
+      vtrace: v === null ? null : { grade: v.grade, patch: v.patchProduced, cost: v.costUsd, turns: v.numTurns, tokens: v.totalTokens, tools: v.toolCalls, injectedContextTokens: v.injectedContextTokens, treatmentValid: v.treatmentValid, treatmentInvalidReason: v.treatmentInvalidReason },
+      classification: classifyPair(b?.grade ?? "UNGRADED", v?.grade ?? "UNGRADED"),
+    });
+  }
+
+  const complete = pairs.filter((p) => p.classification !== "incomplete");
+  const counts = {
+    "shared success": complete.filter((p) => p.classification === "shared success").length,
+    "VTRACE unique win": complete.filter((p) => p.classification === "VTRACE unique win").length,
+    "VTRACE unique loss": complete.filter((p) => p.classification === "VTRACE unique loss").length,
+    "shared failure": complete.filter((p) => p.classification === "shared failure").length,
+    incomplete: pairs.length - complete.length,
+  };
+  const wins = counts["VTRACE unique win"];
+  const losses = counts["VTRACE unique loss"];
+  const basePass = complete.filter((p) => p.baseline?.grade === "PASS").length;
+  const vtPass = complete.filter((p) => p.vtrace?.grade === "PASS").length;
+
+  const outcomes = {
+    schemaVersion: "stage5.m155.paired-outcomes.v1",
+    manifestSha256: manifest.manifestSha256,
+    pairedCases: pairs.length,
+    completePairs: complete.length,
+    matrix: counts,
+    netUniqueWins: wins - losses,
+    baselinePassRate: complete.length ? round(basePass / complete.length) : null,
+    vtracePassRate: complete.length ? round(vtPass / complete.length) : null,
+    passRateDelta: complete.length ? round((vtPass - basePass) / complete.length) : null,
+    baselinePassWilson95: wilson(basePass, complete.length),
+    vtracePassWilson95: wilson(vtPass, complete.length),
+    mcnemarExactTwoSidedP: round(mcnemarExactP(wins, losses), 4),
+    uncertaintyNote:
+      `n=${complete.length} paired cases. The pass-rate delta is dominated by ${wins + losses} discordant pair(s); `
+      + "with this few discordant pairs no aggregate difference is distinguishable from noise, and the "
+      + "unique-win/unique-loss cases carry the information (§52).",
+    pairs,
+  };
+  await writeFile(path.join(outDir, "stage5_m155_paired30_outcomes.json"), `${JSON.stringify(outcomes, null, 2)}\n`);
+
+  const tokenCost = {
+    schemaVersion: "stage5.m155.token-cost.v1",
+    note:
+      "End-to-end agent usage. Injected-context tokens are reported separately and are NOT a saving: a smaller "
+      + "capsule followed by more turns is a cost (§54/§55).",
+    baseline: aggregateArm("baseline", baselineRuns),
+    vtrace: aggregateArm("vtrace", vtraceRuns),
+    injectedContextTokens: {
+      cases: vtraceRuns.filter((r) => r.injectedContextTokens !== null).length,
+      total: vtraceRuns.reduce((s, r) => s + (r.injectedContextTokens ?? 0), 0),
+      median: median(vtraceRuns.map((r) => r.injectedContextTokens).filter((v): v is number => v !== null)),
+    },
+    unavailableUnderThisProtocol: [
+      "get_code_context calls", "get_impact_graph calls", "VTRACE MCP calls",
+      "voluntary VTRACE invocation rate", "VTRACE->grep sequencing",
+    ],
+    unavailableReason:
+      "The historical Stage 5 protocol delivers VTRACE as injected context; no VTRACE tool is callable, so these "
+      + "are UNAVAILABLE rather than zero (§13/§59).",
+  };
+  await writeFile(path.join(outDir, "stage5_m155_paired30_token_cost.json"), `${JSON.stringify(tokenCost, null, 2)}\n`);
+
+  const states = ["GOLD_DELIVERED", "GOLD_DISCOVERED_BUT_DISCARDED", "GOLD_MISSING", "UNKNOWN"];
+  const crossTab = {
+    schemaVersion: "stage5.m155.gold-state-cross-tab.v1",
+    note: "Deterministic M154 gold state (annotation only) against live paired outcome (§60).",
+    rows: states.map((state) => {
+      const inState = complete.filter((p) => p.m154DeterministicGoldState === state);
+      return {
+        goldState: state,
+        cases: inState.length,
+        baselinePass: inState.filter((p) => p.baseline?.grade === "PASS").length,
+        vtracePass: inState.filter((p) => p.vtrace?.grade === "PASS").length,
+        uniqueWins: inState.filter((p) => p.classification === "VTRACE unique win").length,
+        uniqueLosses: inState.filter((p) => p.classification === "VTRACE unique loss").length,
+        instanceIds: inState.map((p) => p.instance_id),
+      };
+    }).filter((r) => r.cases > 0),
+  };
+  await writeFile(path.join(outDir, "stage5_m155_paired30_gold_state_cross_tab.json"), `${JSON.stringify(crossTab, null, 2)}\n`);
+
+  await writeFile(path.join(outDir, "stage5_m155_baseline30_runs.json"),
+    `${JSON.stringify({ schemaVersion: "stage5.m155.arm-runs.v1", arm: "baseline", runs: baselineRuns }, null, 2)}\n`);
+  await writeFile(path.join(outDir, "stage5_m155_vtrace30_runs.json"),
+    `${JSON.stringify({ schemaVersion: "stage5.m155.arm-runs.v1", arm: "vtrace", runs: vtraceRuns }, null, 2)}\n`);
+
+  process.stdout.write(
+    `pairs=${pairs.length} complete=${complete.length} `
+    + `shared_success=${counts["shared success"]} wins=${wins} losses=${losses} shared_failure=${counts["shared failure"]} `
+    + `incomplete=${counts.incomplete}\n`,
+  );
+  process.stdout.write(
+    `baseline pass=${basePass}/${complete.length} vtrace pass=${vtPass}/${complete.length} `
+    + `mcnemar_p=${outcomes.mcnemarExactTwoSidedP}\n`,
+  );
+}
+
+if (import.meta.main) {
+  try {
+    await main();
+  } catch (error) {
+    process.stderr.write(`${error instanceof Error ? error.message : String(error)}\n`);
+    process.exit(1);
+  }
+}
