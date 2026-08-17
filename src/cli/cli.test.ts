@@ -60,6 +60,16 @@ test("index --json prints a stable machine-readable summary with no progress pol
       totalPersistenceFailures: 0,
       totalSymbols: summary.totalSymbols,
       totalRelationships: summary.totalRelationships,
+      // M156: coverage travels with every index result, so a consumer never has
+      // to infer completeness from the absence of failure counts.
+      coverage: {
+        filesEligible: 3,
+        filesIndexed: 3,
+        filesFailed: 0,
+        filesSkipped: 0,
+        complete: true,
+        failedLanguages: [],
+      },
       files: [
         {
           path: "src/models.ts",
@@ -139,18 +149,50 @@ test("index reports unsupported JavaScript as a successful path-rich skip", asyn
   });
 });
 
-test("index failure summaries retain paths, languages, statuses, and multiple diagnostics", async () => {
+test("M156: index completes with per-file failures and names them without failing the command", async () => {
   await withFixture(async ({ repoRoot, dbPath }) => {
     await mkdir(path.join(repoRoot, "src"), { recursive: true });
+    await writeFile(path.join(repoRoot, "src", "ok.py"), "def ok():\n    return 1\n");
     await writeFile(path.join(repoRoot, "src", "broken.py"), "def broken(:\n");
     await writeFile(path.join(repoRoot, "src", "broken.pyx"), "cdef int broken(\n");
 
     const result = await runCli(["index", repoRoot, "--mode", "full"], { dbPath });
-    assert.equal(result.exitCode, 1);
-    assert.match(result.stderr, /Indexing failed/);
-    assert.match(result.stderr, /Failed files: 2/);
-    assert.match(result.stderr, /src\/broken\.py — python\/parse_failed — Parser failed:/);
-    assert.match(result.stderr, /src\/broken\.pyx — cython\/parse_failed — Parser failed:/);
+
+    // §44: not a fatal error for the whole repo, and not a bare "success" either.
+    assert.equal(result.exitCode, 0);
+    assert.match(result.stdout, /status: indexed with 2 failures/);
+    assert.match(result.stdout, /coverage: degraded — 2 file\(s\) could not be indexed/);
+    assert.match(result.stdout, /src\/broken\.py — python\/parse_failed — Parser failed:/);
+    assert.match(result.stdout, /src\/broken\.pyx — cython\/parse_failed — Parser failed:/);
+  });
+});
+
+test("M156: a clean repository is never reported as degraded", async () => {
+  await withFixture(async ({ repoRoot, dbPath }) => {
+    await writeFixtureRepo(repoRoot);
+
+    const result = await runCli(["index", repoRoot, "--mode", "full", "--json"], { dbPath });
+
+    assert.equal(result.exitCode, 0);
+    const parsed = JSON.parse(result.stdout) as {
+      coverage: {
+        complete: boolean;
+        filesFailed: number;
+        filesIndexed: number;
+        filesSkipped: number;
+        filesEligible: number;
+      };
+    };
+    assert.equal(parsed.coverage.complete, true);
+    assert.equal(parsed.coverage.filesFailed, 0);
+    assert.match(result.stdout, /"coverage"/);
+    // §77: the arithmetic must add up on the clean path too, or the invariant is
+    // only ever exercised where it is most likely to be wrong.
+    assert.equal(
+      parsed.coverage.filesIndexed + parsed.coverage.filesFailed + parsed.coverage.filesSkipped,
+      parsed.coverage.filesEligible,
+    );
+    assert.equal(parsed.coverage.filesIndexed > 0, true);
   });
 });
 

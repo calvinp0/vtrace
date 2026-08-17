@@ -131,6 +131,7 @@ export function formatIndexResult(result: IndexProjectResult): string {
     totalPersistenceFailures: result.totalPersistenceFailures,
     totalSymbols: result.totalSymbols,
     totalRelationships: result.totalRelationships,
+    coverage: result.coverage,
     files: result.files.map((file) => ({
       path: file.path,
       language: file.language,
@@ -163,6 +164,9 @@ export function formatIndexResultHuman(input: IndexHumanSummaryInput): string {
   const skippedFiles = indexResult.files.filter((file) => (
     file.status === "unregistered_language" || file.status === "unsupported_language"
   ));
+  const failedFiles = indexResult.files.filter((file) => (
+    file.status === "parse_failed" || file.status === "read_failed" || file.status === "persistence_failed"
+  ));
 
   const summaryStatus = filesFailed > 0
     ? `indexed with ${filesFailed} failure${filesFailed === 1 ? "" : "s"}`
@@ -178,6 +182,10 @@ export function formatIndexResultHuman(input: IndexHumanSummaryInput): string {
     phaseHeader("Parsing source files", [
       `done: ${formatCount(filesParsed)} parsed, ${formatCount(filesSkipped)} skipped, ${formatCount(filesFailed)} failed`,
       ...formatFileOutcomeLines(skippedFiles, 20),
+      // M156 §44: a run that could not index some files completes, but it must
+      // not read as an unqualified success. The failures are named here, bounded
+      // the same way skips are, so the user does not have to go to the logs.
+      ...formatFileOutcomeLines(failedFiles, 20),
     ]),
     phaseHeader("Extracting symbols and relationships", [
       `done: ${formatCount(indexResult.totalSymbols)} symbols, ${formatCount(indexResult.totalRelationships)} relationships`,
@@ -191,6 +199,11 @@ export function formatIndexResultHuman(input: IndexHumanSummaryInput): string {
       `symbols: ${formatCount(indexResult.totalSymbols)}`,
       `relationships: ${formatCount(indexResult.totalRelationships)}`,
       `status: ${summaryStatus}`,
+      // Coverage is reported as its own line, never folded into `status`: an
+      // index can be fresh and incomplete at the same time (§18, §67).
+      `coverage: ${filesFailed === 0
+        ? "complete"
+        : `degraded — ${formatCount(filesFailed)} file(s) could not be indexed`}`,
       ...(indexResult.performance === undefined ? [] : [
         `refresh mode: ${indexResult.performance.mode}`,
         `parse cache: ${formatCount(indexResult.performance.parseCacheHits)} hit(s), ${formatCount(indexResult.performance.parseCacheMisses)} miss(es)`,

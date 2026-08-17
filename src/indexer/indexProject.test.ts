@@ -16,6 +16,8 @@ import {
   listSymbolDiffsForRun,
 } from "../db/repositories/indexRunsRepository";
 import { listAllSymbols, listSymbolsForFile } from "../db/repositories/symbolsRepository";
+import { listFileIndexFailures } from "../db/repositories/fileIndexFailuresRepository";
+import { FileFailureClass } from "./fileFailureClassification";
 import { openIndexerDatabase } from "../db/sqlite";
 import { FileChangeType } from "../memory/types";
 import {
@@ -307,26 +309,46 @@ test("unregistered language files are skipped and reported when no Python parser
   });
 });
 
-test("supported parser failures abort a full rebuild before graph mutation", async () => {
+test("M156: one unparseable file does not make the repository unavailable", async () => {
   await withFixture(async (repoRoot) => {
     await writeBasicTypeScriptRepo(repoRoot);
     await writeFile(path.join(repoRoot, "src", "script.py"), "def broken(:\n    return 1\n");
     const db = openIndexerDatabase();
 
     try {
-      await assert.rejects(
-        indexProject({ repoRoot, db }),
-        /src\/script\.py \(parse_failed\): Parser failed: SyntaxError:/,
-      );
-      assert.equal(getFileByPath(db, "src/service.ts"), undefined);
+      const result = await indexProject({ repoRoot, db });
+
+      // The other files are indexed normally.
+      assert.notEqual(getFileByPath(db, "src/service.ts"), undefined);
+      assert.notEqual(getFileByPath(db, "src/models.ts"), undefined);
+      assert.equal(result.totalParseFailures, 1);
+
+      // The failed file leaves NO authoritative evidence behind (§14), and is
+      // absent from `files` so path membership never claims we indexed it.
       assert.equal(getFileByPath(db, "src/script.py"), undefined);
+      assert.equal(listSymbolsForFile(db, "src/script.py").length, 0);
+
+      // But it is recorded, so the index knows the file exists and failed (§15).
+      const failures = listFileIndexFailures(db);
+      assert.equal(failures.length, 1);
+      assert.equal(failures[0]?.path, "src/script.py");
+      assert.equal(failures[0]?.status, "parse_failed");
+      assert.equal(failures[0]?.failureClass, FileFailureClass.SyntaxError);
+
+      // Coverage is degraded, not complete, and the arithmetic holds (§76, §77).
+      assert.equal(result.coverage.complete, false);
+      assert.equal(result.coverage.filesFailed, 1);
+      assert.equal(
+        result.coverage.filesIndexed + result.coverage.filesFailed + result.coverage.filesSkipped,
+        result.coverage.filesEligible,
+      );
     } finally {
       db.close();
     }
   });
 });
 
-test("Cython parser failures remain fatal and path-rich", async () => {
+test("M156: a failed Cython file is contained exactly like a failed Python file", async () => {
   await withFixture(async (repoRoot) => {
     await mkdir(path.join(repoRoot, "src"), { recursive: true });
     await writeFile(path.join(repoRoot, "src", "service.ts"), "export function ok() { return 1; }\n");
@@ -334,12 +356,65 @@ test("Cython parser failures remain fatal and path-rich", async () => {
     const db = openIndexerDatabase();
 
     try {
-      await assert.rejects(
-        indexProject({ repoRoot, db }),
-        /src\/broken\.pyx \(parse_failed\): Parser failed: SyntaxError:/,
-      );
-      assert.equal(getFileByPath(db, "src/service.ts"), undefined);
+      const result = await indexProject({ repoRoot, db });
+
+      assert.notEqual(getFileByPath(db, "src/service.ts"), undefined);
       assert.equal(getFileByPath(db, "src/broken.pyx"), undefined);
+      assert.equal(result.totalParseFailures, 1);
+      assert.equal(listFileIndexFailures(db).map((failure) => failure.path).join(), "src/broken.pyx");
+      assert.equal(result.coverage.failedLanguages.join(), "cython");
+    } finally {
+      db.close();
+    }
+  });
+});
+
+test("M156: the repository outcome does not depend on where the bad file sorts", async () => {
+  // §12. Enumeration is alphabetical, so these three names place the failure
+  // before, between, and after the files that must survive it.
+  for (const badName of ["aaa_broken.py", "mmm_broken.py", "zzz_broken.py"]) {
+    await withFixture(async (repoRoot) => {
+      await mkdir(path.join(repoRoot, "src"), { recursive: true });
+      await writeFile(path.join(repoRoot, "src", "ccc_first.py"), "def first():\n    return 1\n");
+      await writeFile(path.join(repoRoot, "src", "ttt_last.py"), "def last():\n    return 2\n");
+      await writeFile(path.join(repoRoot, "src", badName), "def broken(:\n    return 1\n");
+      const db = openIndexerDatabase();
+
+      try {
+        const result = await indexProject({ repoRoot, db });
+
+        assert.equal(result.coverage.filesIndexed, 2, `indexed count for ${badName}`);
+        assert.equal(result.coverage.filesFailed, 1, `failed count for ${badName}`);
+        assert.notEqual(getFileByPath(db, "src/ccc_first.py"), undefined);
+        assert.notEqual(getFileByPath(db, "src/ttt_last.py"), undefined);
+        assert.equal(listFileIndexFailures(db).map((failure) => failure.path).join(), `src/${badName}`);
+      } finally {
+        db.close();
+      }
+    });
+  }
+});
+
+test("M156: a persistence failure still ends the run for the whole repository", async () => {
+  // §30/§31: containment is for malformed SOURCE. A graph the indexer cannot
+  // validate indicts the index itself and must never become a degraded success.
+  await withFixture(async (repoRoot) => {
+    await writeBasicTypeScriptRepo(repoRoot);
+    const db = openIndexerDatabase();
+
+    try {
+      await assert.rejects(
+        indexProject({
+          repoRoot,
+          db,
+          validateGraph: () => {
+            throw new Error("simulated index corruption");
+          },
+        }),
+      );
+      // Nothing was committed: the transaction rolled back in full.
+      assert.equal(getFileByPath(db, "src/service.ts"), undefined);
+      assert.equal(listFileIndexFailures(db).length, 0);
     } finally {
       db.close();
     }
@@ -1081,24 +1156,152 @@ export function readUser(): User { throw new Error("changed content"); }
   });
 });
 
-test("incremental parse failure preserves the previous valid graph", async () => {
+test("M156: a file that regresses to unparseable loses its stale evidence", async () => {
+  // §36, and a deliberate REVERSAL of the pre-M156 contract. This test used to
+  // assert that the graph was byte-identical after the failure — which is only
+  // true because the run aborted, leaving `service` indexed and authoritative
+  // from source that no longer parses. Aborting is what made the stale answer
+  // survive. Containing the failure is what removes it.
   await withFixture(async (repoRoot) => {
     await mkdir(path.join(repoRoot, "src"), { recursive: true });
     await writeFile(path.join(repoRoot, "src", "service.py"), "def service():\n    return 1\n");
+    await writeFile(path.join(repoRoot, "src", "other.py"), "def other():\n    return 2\n");
     const db = openIndexerDatabase();
     try {
-      const first = await indexProject({ repoRoot, db, parserVersion: "test-parser", parserConfigFingerprint: "test-config" });
-      const before = normalizedGraphHash(db);
+      const first = await indexProject({
+        repoRoot, db, parserVersion: "test-parser", parserConfigFingerprint: "test-config",
+      });
+      assert.equal(listSymbolsForFile(db, "src/service.py").length > 0, true);
+
       await writeFile(path.join(repoRoot, "src", "service.py"), "def broken(:\n    return 1\n");
-      await assert.rejects(
-        indexProject({ repoRoot, db, parserVersion: "test-parser", parserConfigFingerprint: "test-config", previousSnapshot: first.snapshot }),
-        /src\/service\.py \(parse_failed\): Parser failed: SyntaxError:/,
-      );
-      assert.equal(normalizedGraphHash(db), before);
+      const second = await indexProject({
+        repoRoot, db, parserVersion: "test-parser", parserConfigFingerprint: "test-config",
+        previousSnapshot: first.snapshot,
+      });
+
+      // The stale symbol is gone, transactionally, and the file is recorded as
+      // failed rather than silently omitted.
+      assert.equal(getFileByPath(db, "src/service.py"), undefined);
+      assert.equal(listSymbolsForFile(db, "src/service.py").length, 0);
+      assert.equal(listFileIndexFailures(db).map((failure) => failure.path).join(), "src/service.py");
+      assert.equal(second.coverage.complete, false);
+
+      // The unrelated file is untouched and still queryable.
+      assert.notEqual(getFileByPath(db, "src/other.py"), undefined);
+      assert.equal(listSymbolsForFile(db, "src/other.py").length > 0, true);
     } finally {
       db.close();
     }
   });
+});
+
+test("M156: repairing a failed file restores its evidence on the next run", async () => {
+  // §37: no manual full rebuild required.
+  await withFixture(async (repoRoot) => {
+    await mkdir(path.join(repoRoot, "src"), { recursive: true });
+    await writeFile(path.join(repoRoot, "src", "service.py"), "def broken(:\n    return 1\n");
+    await writeFile(path.join(repoRoot, "src", "other.py"), "def other():\n    return 2\n");
+    const db = openIndexerDatabase();
+    try {
+      const first = await indexProject({
+        repoRoot, db, parserVersion: "test-parser", parserConfigFingerprint: "test-config",
+      });
+      assert.equal(first.coverage.filesFailed, 1);
+
+      await writeFile(path.join(repoRoot, "src", "service.py"), "def service():\n    return 1\n");
+      const second = await indexProject({
+        repoRoot, db, parserVersion: "test-parser", parserConfigFingerprint: "test-config",
+        previousSnapshot: first.snapshot,
+      });
+
+      assert.equal(second.coverage.filesFailed, 0);
+      assert.equal(second.coverage.complete, true);
+      assert.equal(listFileIndexFailures(db).length, 0);
+      assert.notEqual(getFileByPath(db, "src/service.py"), undefined);
+      assert.equal(listSymbolsForFile(db, "src/service.py").length > 0, true);
+    } finally {
+      db.close();
+    }
+  });
+});
+
+test("M156: an unrelated edit still indexes while a failure persists", async () => {
+  // §35: a standing failure must not freeze incremental maintenance.
+  await withFixture(async (repoRoot) => {
+    await mkdir(path.join(repoRoot, "src"), { recursive: true });
+    await writeFile(path.join(repoRoot, "src", "broken.py"), "def broken(:\n    return 1\n");
+    await writeFile(path.join(repoRoot, "src", "other.py"), "def other():\n    return 2\n");
+    const db = openIndexerDatabase();
+    try {
+      const first = await indexProject({
+        repoRoot, db, parserVersion: "test-parser", parserConfigFingerprint: "test-config",
+      });
+
+      await writeFile(path.join(repoRoot, "src", "other.py"), "def other():\n    return 2\n\ndef added():\n    return 3\n");
+      const second = await indexProject({
+        repoRoot, db, parserVersion: "test-parser", parserConfigFingerprint: "test-config",
+        previousSnapshot: first.snapshot,
+      });
+
+      assert.equal(second.coverage.filesFailed, 1);
+      assert.equal(listFileIndexFailures(db).map((failure) => failure.path).join(), "src/broken.py");
+      assert.equal(
+        listSymbolsForFile(db, "src/other.py").some((symbol) => symbol.localName === "added"),
+        true,
+      );
+    } finally {
+      db.close();
+    }
+  });
+});
+
+test("M156: a full index and an equivalent incremental history agree", async () => {
+  // §38: the failed-file set, the successful evidence and the coverage metadata
+  // must not depend on how the index got there.
+  const build = async (repoRoot: string, incremental: boolean): Promise<{
+    graph: string; failures: string; coverage: string;
+  }> => {
+    const db = openIndexerDatabase();
+    try {
+      const first = await indexProject({
+        repoRoot, db, parserVersion: "test-parser", parserConfigFingerprint: "test-config",
+      });
+      await writeFile(path.join(repoRoot, "src", "other.py"), "def other():\n    return 9\n");
+      const second = await indexProject({
+        repoRoot,
+        db,
+        parserVersion: "test-parser",
+        parserConfigFingerprint: "test-config",
+        ...(incremental ? { previousSnapshot: first.snapshot } : {}),
+      });
+      return {
+        graph: normalizedGraphHash(db),
+        failures: JSON.stringify(listFileIndexFailures(db)),
+        coverage: JSON.stringify(second.coverage),
+      };
+    } finally {
+      db.close();
+    }
+  };
+
+  const seed = async (repoRoot: string): Promise<void> => {
+    await mkdir(path.join(repoRoot, "src"), { recursive: true });
+    await writeFile(path.join(repoRoot, "src", "broken.py"), "def broken(:\n    return 1\n");
+    await writeFile(path.join(repoRoot, "src", "other.py"), "def other():\n    return 2\n");
+  };
+
+  let incrementalResult: Awaited<ReturnType<typeof build>> | undefined;
+  let fullResult: Awaited<ReturnType<typeof build>> | undefined;
+  await withFixture(async (repoRoot) => {
+    await seed(repoRoot);
+    incrementalResult = await build(repoRoot, true);
+  });
+  await withFixture(async (repoRoot) => {
+    await seed(repoRoot);
+    fullResult = await build(repoRoot, false);
+  });
+
+  assert.deepEqual(incrementalResult, fullResult);
 });
 
 function assertGraphIntegrity(db: Database): void {

@@ -47,6 +47,7 @@ import {
   type BehavioralNomination,
   type BehavioralRepositoryEvidence,
 } from "./behavioralNomination";
+import { listFileIndexFailures } from "../db/repositories/fileIndexFailuresRepository";
 import {
   composeCoverage,
   EvidenceCapability,
@@ -156,6 +157,22 @@ export interface RepositoryNominee {
   readonly evidence: readonly RepositoryEvidence[];
 }
 
+/**
+ * M156. The gap between "what this index contains" and "what the repository
+ * contains", as far as the index itself can report it.
+ */
+export interface RepositorySemanticCoverage {
+  /** Eligible files this runtime attempted and could not index. */
+  readonly failedFiles: number;
+  /**
+   * True when at least one failed file is in a language whose parser produces
+   * SYMBOLS. A failed YAML document cannot define `Foo`, so it must not weaken a
+   * claim about `Foo` — §24's requirement that valid absence is not weakened
+   * where the failed files cannot be relevant.
+   */
+  readonly failedFilesCouldDefineSymbols: boolean;
+}
+
 export interface RepositoryProbe {
   /** Indexed relative paths. Read lazily; only ever called for ready members. */
   readonly indexedPaths: () => readonly string[];
@@ -169,6 +186,20 @@ export interface RepositoryProbe {
    * performance it has not checked for, so the mode travels with the result.
    */
   readonly membershipAccessPath?: () => MembershipAccessPath;
+  /**
+   * M156. What this member's index does NOT cover.
+   *
+   * A miss from `hasExactSymbol` is only authoritative for the files that were
+   * actually indexed. When a source file in scope failed to parse, that file
+   * could define the name, so the miss stops being a proof of absence and
+   * becomes a bounded one (§21, §22).
+   *
+   * Absent on probes that cannot report it, which is read as "no known gap"
+   * rather than as a gap: every probe VTRACE builds over a real index reports
+   * it, and inventing uncertainty for test doubles would weaken absence
+   * everywhere for no evidential reason (§24).
+   */
+  readonly semanticCoverage?: () => RepositorySemanticCoverage;
   /**
    * M153. Bounded behavioural evidence for a derived objective, summarised to
    * the shape nomination is allowed to see — a class and one provenance item,
@@ -642,10 +673,25 @@ export function nominateRepositories(request: RepositoryRelevanceRequest): Repos
       accessPaths[accessPath] += 1;
 
       const defines = symbolHints.some((name) => probe.hasExactSymbol(name));
+      // M156 §21/§22. A HIT is self-supporting — a file that failed to parse
+      // cannot retract a symbol we actually found. A MISS is a claim about
+      // everything we did not see, so it is only as strong as the coverage
+      // behind it, and a repository with an unparsed source file has not ruled
+      // the name out.
+      const coverage = probe.semanticCoverage?.();
+      const missIsAuthoritative = coverage === undefined
+        || coverage.failedFiles === 0
+        || !coverage.failedFilesCouldDefineSymbols;
       observations.push({
         alias: repo.alias,
-        state: defines ? RepositoryPresenceState.Present : RepositoryPresenceState.DefinitelyAbsent,
-        unknownReason: null,
+        state: defines
+          ? RepositoryPresenceState.Present
+          : missIsAuthoritative
+            ? RepositoryPresenceState.DefinitelyAbsent
+            : RepositoryPresenceState.Unknown,
+        unknownReason: defines || missIsAuthoritative
+          ? null
+          : PresenceUnknownReason.CoverageIncomplete,
         accessPath,
       });
       if (!defines) continue;
@@ -1126,9 +1172,13 @@ const MEMBERSHIP_SQL = "SELECT 1 AS hit FROM symbols WHERE local_name = ? OR fq_
 const NAME_ACCESS_PATH_INDEXES = ["idx_symbols_local_name", "idx_symbols_fq_name"] as const;
 
 /** Bounded read-only probe over a member's own index. Zero source reads. */
+/** Languages indexed as documents only; their parsers emit no symbols. */
+const DOCUMENT_ONLY_LANGUAGES: ReadonlySet<string> = new Set(["yaml", "toml"]);
+
 export function createDatabaseProbe(db: Database): RepositoryProbe {
   let paths: readonly string[] | null = null;
   let accessPath: MembershipAccessPath | null = null;
+  let coverage: RepositorySemanticCoverage | null = null;
   return {
     indexedPaths: (): readonly string[] => {
       if (paths === null) {
@@ -1140,6 +1190,21 @@ export function createDatabaseProbe(db: Database): RepositoryProbe {
     hasExactSymbol: (name: string): boolean => {
       const row = db.query(MEMBERSHIP_SQL).get(name, name) as { hit: number } | null;
       return row !== null;
+    },
+    semanticCoverage: (): RepositorySemanticCoverage => {
+      if (coverage === null) {
+        const failures = listFileIndexFailures(db);
+        coverage = {
+          failedFiles: failures.length,
+          // Only languages whose parsers emit symbols can hide a definition.
+          // A failed YAML or TOML document is a real coverage gap for document
+          // retrieval and no gap at all for an exact-name question (§24).
+          failedFilesCouldDefineSymbols: failures.some(
+            (failure) => !DOCUMENT_ONLY_LANGUAGES.has(failure.language),
+          ),
+        };
+      }
+      return coverage;
     },
     membershipAccessPath: (): MembershipAccessPath => {
       if (accessPath === null) {

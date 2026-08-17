@@ -81,6 +81,30 @@ export class IndexingFileFailuresError extends Error {
   }
 }
 
+/**
+ * M156: how much of the repository this index actually covers.
+ *
+ * Separate from freshness on purpose (§18). An index can correspond exactly to
+ * the current source revision and still be semantically incomplete, because a
+ * file in scope could not be parsed. Overloading `fresh` to mean `complete` is
+ * how "we indexed the repository" becomes a claim nobody checked.
+ *
+ * The arithmetic is an invariant, not a convenience (§76, §77):
+ *
+ *   filesEligible = filesIndexed + filesFailed + filesSkipped
+ */
+export interface IndexCoverageSummary {
+  /** Files enumeration considered after exclusion rules. */
+  readonly filesEligible: number;
+  readonly filesIndexed: number;
+  readonly filesFailed: number;
+  readonly filesSkipped: number;
+  /** False as soon as one eligible file failed. Derived, never asserted. */
+  readonly complete: boolean;
+  /** Distinct languages among failed files, so relevance can be judged (§24). */
+  readonly failedLanguages: readonly string[];
+}
+
 export interface IndexProjectResult {
   totalFilesScanned: number;
   totalFilesAttemptedForParse: number;
@@ -93,6 +117,7 @@ export interface IndexProjectResult {
   totalSymbols: number;
   totalRelationships: number;
   files: IndexedFileSummary[];
+  coverage: IndexCoverageSummary;
   snapshot?: IndexedFileSnapshotSet;
   performance?: IndexPerformanceDiagnostics;
   /**

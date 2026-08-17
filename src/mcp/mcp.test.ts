@@ -724,7 +724,7 @@ test("index_repo preserves structured unsupported-file diagnostics", async () =>
   });
 });
 
-test("index_repo parser failures retain structured paths and diagnostics", async () => {
+test("M156: index_repo succeeds on a parse failure and reports degraded coverage", async () => {
   await withFixture(async (repoRoot) => {
     await writeMcpFixtureRepo(repoRoot);
     const initialized = await initRepo({ repoPath: repoRoot });
@@ -738,12 +738,20 @@ test("index_repo parser failures retain structured paths and diagnostics", async
       input: { mode: "incremental" },
     });
 
-    assert.equal(response.result.ok, false);
-    assert.equal(response.result.error.details.reason, "file_index_failed");
-    assert.equal(response.result.error.details.failures[0].path, "src/script.py");
-    assert.equal(response.result.error.details.failures[0].language, "python");
-    assert.equal(response.result.error.details.failures[0].status, "parse_failed");
-    assert.match(response.result.error.details.failures[0].error.message, /Parser failed: SyntaxError:/);
+    // §45: the repository remains usable, and the consumer is told — in the same
+    // response — that its coverage is no longer complete.
+    assert.equal(response.result.ok, true);
+    assert.equal(response.result.output.indexReadiness.ready, true);
+    assert.equal(response.result.output.indexReadiness.coverageComplete, false);
+    assert.equal(response.result.output.indexReadiness.failedFiles, 1);
+
+    // The failed file keeps its structured identity in the bounded outcome view.
+    assert.equal(response.result.output.outcomes.counts.failed, 1);
+    const failure = response.result.output.fileOutcomes
+      .find((outcome: { path: string }) => outcome.path === "src/script.py");
+    assert.equal(failure.language, "python");
+    assert.equal(failure.status, "parse_failed");
+    assert.match(failure.error.message, /Parser failed: SyntaxError:/);
   });
 });
 

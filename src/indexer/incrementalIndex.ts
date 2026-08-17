@@ -2,7 +2,10 @@ import { createHash } from "node:crypto";
 
 import { Language, type FileRecord, type ParseResult } from "../domain/types";
 
-export const FILE_SNAPSHOT_SCHEMA_VERSION = 4 as const;
+// Bumped to 5 by M156: `indexOutcome` gained `failed`, so a snapshot written
+// before M156 cannot express which files the run refused. Reading one as though
+// it could would silently report a degraded repository as complete.
+export const FILE_SNAPSHOT_SCHEMA_VERSION = 5 as const;
 export const RETRIEVAL_SCHEMA_VERSION = 2 as const;
 // M118 synthetic TypeScript-100 measurements crossed at 20% (0.97x at 20%,
 // 0.96x at 30%, 0.90x at 50%). Python parsing remained strongly dominant
@@ -31,7 +34,12 @@ export interface IndexedFileSnapshot {
   readonly contentHash: string;
   readonly contentKind: "git_blob" | "working_tree_hash";
   readonly gitBlobSha?: string;
-  readonly indexOutcome: "indexed" | "skipped";
+  /**
+   * M156 adds `failed`: the file is in scope and was attempted, and semantic
+   * indexing did not succeed. Kept distinct from `skipped`, which means policy
+   * decided not to attempt it — §16 requires those to stay distinguishable.
+   */
+  readonly indexOutcome: "indexed" | "skipped" | "failed";
   readonly parserCapability: "supported" | "unregistered" | "unsupported";
   readonly parserId?: string;
   readonly parserVersion?: string;
@@ -43,6 +51,17 @@ export interface IndexedFileSnapshot {
   readonly diagnostic?: {
     readonly category: "unregistered_language" | "unsupported_language";
     readonly message: string;
+  };
+  /**
+   * Set only when `indexOutcome` is `failed`. Carries enough to re-report the
+   * failure without re-reading the file, and no more (§79): a class, a bounded
+   * message, and which parser was asked.
+   */
+  readonly failure?: {
+    readonly status: "read_failed" | "parse_failed";
+    readonly failureClass: string;
+    readonly message: string;
+    readonly attemptedParserId?: string;
   };
   readonly documentKind?: "yaml" | "toml";
   readonly documentIndexVersion?: number;
@@ -305,9 +324,12 @@ export function isValidSnapshotSet(value: unknown): value is IndexedFileSnapshot
   if (snapshot.schemaVersion !== FILE_SNAPSHOT_SCHEMA_VERSION || !Array.isArray(snapshot.files)) return false;
   if (snapshot.fileCount !== snapshot.files.length || typeof snapshot.snapshotHash !== "string" || typeof snapshot.semanticContextHash !== "string" || typeof snapshot.parserRegistryFingerprint !== "string") return false;
   if (snapshot.files.some((file) => (
-    (file.indexOutcome !== "indexed" && file.indexOutcome !== "skipped")
+    (file.indexOutcome !== "indexed" && file.indexOutcome !== "skipped" && file.indexOutcome !== "failed")
     || (file.parserCapability !== "supported" && file.parserCapability !== "unregistered" && file.parserCapability !== "unsupported")
     || (file.indexOutcome === "indexed" && (typeof file.parserId !== "string" || typeof file.parserVersion !== "string" || typeof file.parserConfigFingerprint !== "string" || typeof file.parseCacheKey !== "string"))
+    // A `failed` entry without its failure record would be a file we know we
+    // could not index and cannot say anything about — worse than not recording it.
+    || (file.indexOutcome === "failed" && (typeof file.failure?.failureClass !== "string" || typeof file.failure?.message !== "string"))
   ))) return false;
   return computeSnapshotHash(snapshot.files) === snapshot.snapshotHash;
 }

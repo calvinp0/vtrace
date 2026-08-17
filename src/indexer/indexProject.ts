@@ -36,7 +36,15 @@ import {
   type ParserRegistry,
 } from "../parsers";
 import {
+  boundFailureMessage,
+  classifyFileFailure,
+  isRecoverableFileFailure,
+  isRepositoryFatalFileFailure,
+} from "./fileFailureClassification";
+import { replaceFileIndexFailures, type FileIndexFailureRecord } from "../db/repositories/fileIndexFailuresRepository";
+import {
   IndexingFileFailuresError,
+  type IndexCoverageSummary,
   type IndexedFileSummary,
   type IndexProjectFileContent,
   type IndexProjectOptions,
@@ -133,10 +141,9 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
   }
   progress.report({ kind: "phase_end", phase: "read" });
 
-  if (files.length > 0) {
-    throw new IndexingFileFailuresError(files);
-  }
-
+  // M156: a file whose bytes could not be read is a fact about that file. The
+  // per-file bookkeeping above already recorded it; throwing here would discard
+  // that and take the other N-1 files down with it.
   const parserVersion = options.parserVersion ?? "builtin-parser-v1";
   const parserConfigFingerprint = options.parserConfigFingerprint ?? "default-parser-config-v1";
   const registry = options.createParserRegistry === undefined
@@ -185,6 +192,7 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
       totalSymbols: symbols.length,
       totalRelationships: edges.length,
       files: noopFiles,
+      coverage: summarizeCoverage(noopFiles),
       worktreeExclusions: worktreeExclusionDiagnostics,
       snapshot: options.previousSnapshot,
       performance: makePerformanceDiagnostics(
@@ -247,6 +255,15 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
       if (plan.mode === "incremental" && previous?.indexOutcome === "skipped") {
         summariesByPath.set(fileContent.file.path, summaryFromSnapshot(previous));
         unsupportedFilesCarriedForward += 1;
+        continue;
+      }
+      // M156: an unchanged file that failed last time fails again. Carrying the
+      // record forward is safe precisely because an incremental plan is only
+      // compatible when the parser registry and version are unchanged — and a
+      // REPAIRED file has different content, so it is `modified` and re-parsed
+      // rather than reaching this branch (§37).
+      if (plan.mode === "incremental" && previous?.indexOutcome === "failed") {
+        summariesByPath.set(fileContent.file.path, summaryFromSnapshot(previous));
         continue;
       }
       const cached = previous === undefined ? undefined : await readParseCacheEntry(cacheRoot, cacheInputFromSnapshot(previous));
@@ -321,10 +338,16 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
   bindingContextHash = computeBindingContextHash(successfulResults);
   const semanticContextHash = computeSemanticContextHash(successfulResults);
 
-  const fatalFileFailures = [...summariesByPath.values()].filter(isFatalFileOutcome);
-  if (fatalFileFailures.length > 0) {
-    throw new IndexingFileFailuresError(fatalFileFailures);
+  // M156 §7. This is the seam M155 measured: every read/parse failure used to be
+  // thrown here, so one unparseable file made an otherwise indexable repository
+  // unavailable. Recoverable failures are now carried as evidence about those
+  // files; only outcomes that indict the INDEX itself still end the run (§30).
+  const allFileOutcomes = [...files, ...summariesByPath.values()];
+  const repositoryFatal = allFileOutcomes.filter((summary) => isRepositoryFatalFileFailure(summary.status));
+  if (repositoryFatal.length > 0) {
+    throw new IndexingFileFailuresError(repositoryFatal);
   }
+  const containedFailures = allFileOutcomes.filter((summary) => isRecoverableFileFailure(summary.status));
 
   for (const result of successfulResults) {
     const keyInput = makeCacheKeyInput(result, parserVersion, parserConfigFingerprint, bindingContextHash, contentIdentities.get(result.file.path));
@@ -335,6 +358,20 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
       // cache must not prevent a correct isolated graph rebuild.
     }
   }
+
+  const scannedByPath = new Map(scannedFiles.map((file) => [normalizeFilePath(file.path), file]));
+  const failureRecords: FileIndexFailureRecord[] = containedFailures.map((summary) => {
+    const scanned = scannedByPath.get(summary.path);
+    return {
+      path: summary.path,
+      language: summary.language,
+      status: summary.status as FileIndexFailureRecord["status"],
+      failureClass: classifyFileFailure(summary.status, summary.error),
+      message: boundFailureMessage(summary.error?.message ?? summary.status),
+      contentHash: scanned?.contentHash ?? "",
+      sizeBytes: scanned?.sizeBytes ?? 0,
+    };
+  });
 
   const persistedResults: ParseResult[] = [];
   // Raw file content by path, so the persist loop can extract body literals
@@ -398,6 +435,11 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
       throw new GraphValidationError(error);
     }
     timings.validation = performance.now() - validationStarted;
+    // Written INSIDE the graph transaction, after validation, so the failed set
+    // and the successful set are committed together or not at all. A failed file
+    // contributes no symbols, edges, facts, chunks or FTS rows — the wholesale
+    // DELETE above already removed anything a previous run had for it (§14, §36).
+    replaceFileIndexFailures(options.db, failureRecords);
     recordIndexRunState(options.db, scannedFiles, persistedResults.flatMap((result) => result.symbols));
   });
   try {
@@ -476,7 +518,36 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
         },
       };
     });
-  const snapshotFiles = [...indexedSnapshotFiles, ...skippedSnapshotFiles]
+  // A failed file stays IN the snapshot. Dropping it would make the next run
+  // treat it as newly added, and — worse — would let the snapshot describe a
+  // repository that never contained it (§15, §35).
+  const failedSnapshotFiles: IndexedFileSnapshot[] = failureRecords.map((failure) => {
+    const scanned = scannedByPath.get(failure.path);
+    const identity = contentIdentities.get(failure.path);
+    return {
+      relativePath: failure.path,
+      language: (scanned?.language ?? failure.language) as IndexedFileSnapshot["language"],
+      contentHash: failure.contentHash,
+      contentKind: identity?.contentKind ?? "working_tree_hash",
+      ...(identity?.gitBlobSha === undefined ? {} : { gitBlobSha: identity.gitBlobSha }),
+      indexOutcome: "failed",
+      // The parser was registered and supported; it is the CONTENT that failed.
+      // Reporting `unsupported` here would blame the wrong thing (§16).
+      parserCapability: "supported",
+      parserId: parserIdForLanguage((scanned?.language ?? failure.language) as ParseResult["file"]["language"]),
+      parserVersion,
+      parserConfigFingerprint,
+      bindingContextHash,
+      sizeBytes: failure.sizeBytes,
+      failure: {
+        status: failure.status,
+        failureClass: failure.failureClass,
+        message: failure.message,
+        attemptedParserId: parserIdForLanguage((scanned?.language ?? failure.language) as ParseResult["file"]["language"]),
+      },
+    };
+  });
+  const snapshotFiles = [...indexedSnapshotFiles, ...skippedSnapshotFiles, ...failedSnapshotFiles]
     .sort((a, b) => a.relativePath.localeCompare(b.relativePath));
   const snapshot: IndexedFileSnapshotSet = {
     schemaVersion: FILE_SNAPSHOT_SCHEMA_VERSION,
@@ -515,9 +586,33 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
     totalSymbols,
     totalRelationships,
     files: allFiles,
+    coverage: summarizeCoverage(allFiles),
     worktreeExclusions: worktreeExclusionDiagnostics,
     snapshot,
     performance: performanceDiagnostics,
+  };
+}
+
+/**
+ * Coverage derived from the per-file outcomes the run actually produced.
+ *
+ * `complete` is computed, never passed in — the same discipline `composeCoverage`
+ * applies in the workspace layer, and for the same reason: a caller that merely
+ * hopes it indexed everything must not be able to say so.
+ */
+function summarizeCoverage(files: readonly IndexedFileSummary[]): IndexCoverageSummary {
+  const indexed = files.filter((file) => file.status === "indexed");
+  const failed = files.filter((file) => isRecoverableFileFailure(file.status));
+  const skipped = files.filter((file) => (
+    file.status === "unregistered_language" || file.status === "unsupported_language"
+  ));
+  return {
+    filesEligible: files.length,
+    filesIndexed: indexed.length,
+    filesFailed: failed.length,
+    filesSkipped: skipped.length,
+    complete: failed.length === 0,
+    failedLanguages: [...new Set(failed.map((file) => String(file.language)))].sort(),
   };
 }
 
@@ -747,6 +842,18 @@ function summaryFromSnapshot(snapshot: IndexedFileSnapshot): IndexedFileSummary 
       diagnostics: [],
     };
   }
+  if (snapshot.indexOutcome === "failed") {
+    return {
+      path: snapshot.relativePath,
+      language: snapshot.language,
+      status: snapshot.failure?.status ?? "parse_failed",
+      diagnostics: [],
+      error: {
+        code: snapshot.failure?.failureClass ?? "UNKNOWN",
+        message: snapshot.failure?.message ?? "Semantic indexing failed for this file",
+      },
+    };
+  }
   const status = snapshot.diagnostic?.category
     ?? (snapshot.parserCapability === "unsupported" ? "unsupported_language" : "unregistered_language");
   return {
@@ -761,10 +868,6 @@ function summaryFromSnapshot(snapshot: IndexedFileSnapshot): IndexedFileSummary 
       language: snapshot.language,
     },
   };
-}
-
-function isFatalFileOutcome(summary: IndexedFileSummary): boolean {
-  return summary.status === "read_failed" || summary.status === "parse_failed";
 }
 
 function statusForParserError(error: ParserError): IndexedFileSummary["status"] {

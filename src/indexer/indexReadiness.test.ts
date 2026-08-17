@@ -290,6 +290,10 @@ describe("M141 index readiness", () => {
 
     expect(Object.keys(summary).sort()).toEqual([
       "capabilityCompatible",
+      // M156: coverage rides alongside readiness as its own axis. Two scalars,
+      // not a list of paths — the bound is what keeps this summary compact.
+      "coverageComplete",
+      "failedFiles",
       "missingCapabilities",
       "ready",
       "reason",

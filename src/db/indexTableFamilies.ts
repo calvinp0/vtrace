@@ -31,6 +31,11 @@
 /** Tables `index_repo` derives from source. Immutable under product reads. */
 export const REPOSITORY_DERIVED_TABLES: ReadonlySet<string> = new Set([
   "files",
+  // M156 §60: which files `index_repo` could not parse is derived from the
+  // repository's own source, exactly like which symbols it defines. It is not
+  // session state, and putting it in `session.sqlite` would mean a re-index no
+  // longer fully determines the index store.
+  "file_index_failures",
   "symbols",
   "edges",
   "edge_call_sites",

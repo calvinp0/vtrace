@@ -27,6 +27,33 @@ export function initializeSchema(db: Database): void {
       size_bytes INTEGER NOT NULL CHECK (size_bytes >= 0)
     );
 
+    -- M156 per-file indexing failures. One row per eligible file whose content
+    -- could not be turned into semantic evidence, so the index can say "this
+    -- file exists and we failed on it" instead of behaving as though it were
+    -- absent (§15).
+    --
+    -- Deliberately NOT a row in "files", and deliberately no foreign key to it.
+    -- "files" is the authority M148 reads for path membership through its UNIQUE
+    -- covering index, and a failed file listed there would claim we index a path
+    -- we hold no evidence for. It is also what symbols.file_id joins against, so
+    -- a failed file with a "files" row would be indistinguishable from a file
+    -- that genuinely defines nothing.
+    --
+    -- failure_class is bounded by FileFailureClass; message is truncated at
+    -- write time (see §79) so this table cannot grow with source contents.
+    CREATE TABLE IF NOT EXISTS file_index_failures (
+      path TEXT PRIMARY KEY,
+      language TEXT NOT NULL,
+      status TEXT NOT NULL CHECK (status IN ('read_failed', 'parse_failed')),
+      failure_class TEXT NOT NULL,
+      message TEXT NOT NULL,
+      content_hash TEXT NOT NULL,
+      size_bytes INTEGER NOT NULL CHECK (size_bytes >= 0)
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_file_index_failures_class
+      ON file_index_failures(failure_class, path);
+
     CREATE TABLE IF NOT EXISTS document_chunks (
       id TEXT PRIMARY KEY,
       file_id TEXT NOT NULL,

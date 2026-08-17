@@ -16,6 +16,10 @@ import {
   type WorktreeIndexManifest,
 } from "./indexMeta";
 import {
+  countFileIndexFailures,
+  listFailedFileLanguages,
+} from "../db/repositories/fileIndexFailuresRepository";
+import {
   compareInstanceFingerprints,
   resolveWorktreeIdentity,
   type ResolvedWorktreeIdentity,
@@ -134,6 +138,8 @@ export interface IndexReadiness {
   /** Every dimension that failed, in evaluation order. Empty when ready. */
   readonly failedDimensions: readonly IndexReadinessDimension[];
   readonly capabilities: IndexCapabilityReport;
+  /** M156: repository coverage. Independent of `ready` by design. */
+  readonly coverage: IndexCoverageReport;
   readonly identity: ResolvedWorktreeIdentity;
   readonly requestedWorktree: { readonly root: string; readonly headCommit: string | null };
   readonly indexedWorktree: { readonly root: string; readonly headCommit: string | null } | null;
@@ -159,6 +165,38 @@ export interface IndexCapabilityReport {
   readonly missing: readonly IndexCapability[];
   readonly probed: boolean;
 }
+
+/**
+ * M156. How much of the repository this index actually covers.
+ *
+ * Deliberately NOT one of the five readiness dimensions, and deliberately not a
+ * term in `ready`. A degraded index is usable — refusing to serve a repository
+ * because one test fixture will not parse is the failure M156 exists to remove.
+ * Coverage is a SECOND axis reported alongside readiness (§18, §67): an index can
+ * be perfectly fresh with respect to its source revision and still be
+ * semantically incomplete, and collapsing those two into one boolean is how
+ * "fresh" quietly starts meaning "complete".
+ */
+export interface IndexCoverageReport {
+  /** null when the index was not opened (probe mode `manifest`). */
+  readonly probed: boolean;
+  /** Exact count of files this runtime attempted and could not index. */
+  readonly failedFiles: number;
+  /** False only when a failed file is known to exist. */
+  readonly complete: boolean;
+  /** Distinct languages among failed files, so relevance can be judged (§24). */
+  readonly failedLanguages: readonly string[];
+}
+
+const UNPROBED_COVERAGE: IndexCoverageReport = Object.freeze({
+  probed: false,
+  failedFiles: 0,
+  // Unprobed is not the same as proven-complete. Callers that need the
+  // distinction must read `probed`; nothing may infer completeness from a
+  // coverage report that never opened the index.
+  complete: true,
+  failedLanguages: [],
+});
 
 export interface EvaluateIndexReadinessOptions {
   /**
@@ -341,6 +379,7 @@ export async function evaluateIndexReadiness(
     worktreeCompatible,
     failedDimensions,
     capabilities,
+    coverage: integrity.coverage,
     identity,
     requestedWorktree,
     indexedWorktree,
@@ -476,6 +515,8 @@ function absent(input: {
     worktreeCompatible: false,
     failedDimensions: [input.dimension],
     capabilities: { available: null, required: input.required, missing: [...input.required], probed: false },
+    // An index we refused to read tells us nothing about its coverage.
+    coverage: UNPROBED_COVERAGE,
     identity: input.identity,
     requestedWorktree: input.requestedWorktree,
     indexedWorktree: input.indexedWorktree ?? null,
@@ -496,12 +537,20 @@ function absent(input: {
 async function probeIndexIntegrityAndCapabilities(
   worktreeRoot: string,
   options: EvaluateIndexReadinessOptions,
-): Promise<{ readable: boolean | null; capabilities: Record<IndexCapability, boolean> | null }> {
+): Promise<{
+  readable: boolean | null;
+  capabilities: Record<IndexCapability, boolean> | null;
+  coverage: IndexCoverageReport;
+}> {
   if (options.db !== undefined) {
-    return { readable: true, capabilities: readCapabilities(options.db) };
+    return {
+      readable: true,
+      capabilities: readCapabilities(options.db),
+      coverage: readCoverage(options.db),
+    };
   }
   if ((options.probe ?? "manifest") !== "full") {
-    return { readable: null, capabilities: null };
+    return { readable: null, capabilities: null, coverage: UNPROBED_COVERAGE };
   }
 
   let db: Database | undefined;
@@ -510,11 +559,30 @@ async function probeIndexIntegrityAndCapabilities(
     // Forces SQLite to parse the header and schema; a truncated or non-SQLite
     // file fails here rather than at the first product query.
     db.query("SELECT count(*) AS tables FROM sqlite_master").get();
-    return { readable: true, capabilities: readCapabilities(db) };
+    return { readable: true, capabilities: readCapabilities(db), coverage: readCoverage(db) };
   } catch {
-    return { readable: false, capabilities: null };
+    return { readable: false, capabilities: null, coverage: UNPROBED_COVERAGE };
   } finally {
     db?.close();
+  }
+}
+
+/**
+ * Read the failed-file set from the index itself. Counts only — the paths are a
+ * bounded detail that belongs to whichever surface reports them (§20, §68), not
+ * to a readiness verdict that every tool evaluates on every request.
+ */
+function readCoverage(db: Database): IndexCoverageReport {
+  try {
+    const failedFiles = countFileIndexFailures(db);
+    return {
+      probed: true,
+      failedFiles,
+      complete: failedFiles === 0,
+      failedLanguages: failedFiles === 0 ? [] : listFailedFileLanguages(db),
+    };
+  } catch {
+    return UNPROBED_COVERAGE;
   }
 }
 
@@ -595,6 +663,13 @@ export interface IndexReadinessSummary {
   readonly repositoryCompatible: boolean;
   readonly worktreeCompatible: boolean;
   readonly missingCapabilities: readonly IndexCapability[];
+  /**
+   * M156 §17/§43. A caller must be able to tell "usable and complete" from
+   * "usable but incomplete" without reading logs. `ready` answers the first
+   * half; this answers the second, and the two never collapse into one word.
+   */
+  readonly coverageComplete: boolean;
+  readonly failedFiles: number;
 }
 
 export function summarizeIndexReadiness(readiness: IndexReadiness): IndexReadinessSummary {
@@ -609,6 +684,8 @@ export function summarizeIndexReadiness(readiness: IndexReadiness): IndexReadine
     repositoryCompatible: readiness.repositoryCompatible,
     worktreeCompatible: readiness.worktreeCompatible,
     missingCapabilities: readiness.capabilities.missing,
+    coverageComplete: readiness.coverage.complete,
+    failedFiles: readiness.coverage.failedFiles,
   };
 }
 

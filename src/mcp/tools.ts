@@ -1440,6 +1440,8 @@ const INDEX_READINESS_SCHEMA = objectProperty(
     repositoryCompatible: booleanProperty("Whether the index was built for this repository."),
     worktreeCompatible: booleanProperty("Whether the index was built for this worktree."),
     missingCapabilities: arrayProperty("Required capabilities absent from the stored index.", stringProperty("Capability id.")),
+    coverageComplete: booleanProperty("M156: false when a source file in scope could not be indexed. SEPARATE from `ready` and from freshness — a usable, current index can still be semantically incomplete."),
+    failedFiles: numberProperty("M156: exact count of eligible files this runtime attempted and could not index. 0 on a complete index."),
   },
   [
     "ready",
@@ -1449,6 +1451,8 @@ const INDEX_READINESS_SCHEMA = objectProperty(
     "sourceFresh",
     "schemaCompatible",
     "capabilityCompatible",
+    "coverageComplete",
+    "failedFiles",
     "repositoryCompatible",
     "worktreeCompatible",
     "missingCapabilities",

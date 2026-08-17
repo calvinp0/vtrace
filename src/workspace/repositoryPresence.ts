@@ -58,6 +58,17 @@ export const PresenceUnknownReason = Object.freeze({
   BeyondScanBound: "beyond_scan_bound",
   /** Ready, but its index could not be opened for a membership question. */
   ProbeUnavailable: "probe_unavailable",
+  /**
+   * M156. The member answered from an index that is READABLE and FRESH but
+   * semantically incomplete: one or more source files in scope could not be
+   * parsed, and one of them could define the name being asked about.
+   *
+   * Distinct from `IndexRefused`, which means we would not read the index at
+   * all, and from `BeyondScanBound`, which is a cost bound we chose. Here we
+   * asked and got a real answer — it simply does not cover the whole repository,
+   * and the remedy is to fix the source file, not the index or the bound.
+   */
+  CoverageIncomplete: "coverage_incomplete",
 });
 
 export type PresenceUnknownReason =
