@@ -1,0 +1,982 @@
+{
+  "instanceId": "sphinx-doc__sphinx-9320",
+  "workspace": "/home/calvin/bench/vtrace-m156/targets/m156/sphinx-doc__sphinx-9320",
+  "task": "`sphinx-quickstart` with existing conf.py doesn't exit easily — **Describe the bug**",
+  "budget": 8000,
+  "actualMode": "standard",
+  "reported": {
+    "candidateCount": 25,
+    "pivotCount": 2,
+    "supportCount": 4,
+    "discardedCount": 26,
+    "estimatedTokens": 533,
+    "tier": "standard"
+  },
+  "actual": {
+    "deliveredPivots": 2,
+    "deliveredSupport": 4,
+    "supportAuthorityGranted": 0,
+    "roleDenied": 26
+  },
+  "goldFileCandidates": 19,
+  "goldSymbolCandidates": 3,
+  "candidates": [
+    {
+      "path": "sphinx/cmd/quickstart.py",
+      "symbol": "_has_custom_template",
+      "fqName": "sphinx/cmd/quickstart.py::QuickstartRenderer._has_custom_template",
+      "kind": "method",
+      "finalScore": 1.9414,
+      "scorecard": {
+        "lexical": 0.9403,
+        "symbol": 0,
+        "path": 0,
+        "test_to_impl": 0,
+        "body_literal": 0,
+        "graph_proximity": 0,
+        "centrality": 0.0141,
+        "actionability": 1,
+        "hub_penalty": 0,
+        "direct_answer": 0,
+        "mechanism_evidence": 0,
+        "final": 1.9414
+      },
+      "evidence": [
+        "strong target beyond the pivot budget — actionable method — strong lexical match; issue-domain relevance — pivot slot released by a later demotion",
+        "2 indexed symbol(s) depend on this",
+        "lexical match on docstring, fq_name, fq_name, fq_name, docstring, query_coverage, path_segment_signal"
+      ],
+      "discardReason": "",
+      "roleReason": "strong target beyond the pivot budget — actionable method — strong lexical match; issue-domain relevance — pivot slot released by a later demotion",
+      "authority": "delivered_pivot",
+      "isGoldFile": true,
+      "isGoldSymbol": false
+    },
+    {
+      "path": "sphinx/cmd/quickstart.py",
+      "symbol": "term_input",
+      "fqName": "sphinx/cmd/quickstart.py::term_input",
+      "kind": "function",
+      "finalScore": 1.9,
+      "scorecard": {
+        "lexical": 0.6241,
+        "symbol": 1,
+        "path": 0,
+        "test_to_impl": 0,
+        "body_literal": 0,
+        "graph_proximity": 0,
+        "centrality": 0.007,
+        "actionability": 1,
+        "hub_penalty": 0,
+        "direct_answer": 0,
+        "mechanism_evidence": 0,
+        "final": 1.9
+      },
+      "evidence": [
+        "strong target beyond the pivot budget — actionable function — symbol-name match; strong lexical match; issue-domain relevance — pivot slot released by a later demotion",
+        "1 indexed symbol(s) depend on this",
+        "lexical match on fq_name, fq_name, fq_name, query_coverage, path_segment_signal",
+        "task names file stem `quickstart` (direct evidence, weak)"
+      ],
+      "discardReason": "",
+      "roleReason": "strong target beyond the pivot budget — actionable function — symbol-name match; strong lexical match; issue-domain relevance — pivot slot released by a later demotion",
+      "authority": "delivered_pivot",
+      "isGoldFile": true,
+      "isGoldSymbol": false
+    },
+    {
+      "path": "sphinx/util/cfamily.py",
+      "symbol": "StringifyTransform",
+      "fqName": "StringifyTransform",
+      "kind": "module_variable",
+      "finalScore": 0.35,
+      "scorecard": {
+        "lexical": 0,
+        "symbol": 0,
+        "path": 0,
+        "test_to_impl": 0,
+        "body_literal": 0,
+        "graph_proximity": 0.5,
+        "centrality": 0,
+        "actionability": 0,
+        "hub_penalty": 0,
+        "direct_answer": 0,
+        "mechanism_evidence": 0,
+        "final": 0.35
+      },
+      "evidence": [
+        "likely co-edit sibling of a high-confidence anchor",
+        "co-edit neighbour of anchor `describe_signature` (sphinx/domains/c.py) via 218 calls/imports/references edge(s); connecting symbols match task words (describe_signature) (co-edit lane)"
+      ],
+      "discardReason": "",
+      "roleReason": "likely co-edit sibling of a high-confidence anchor",
+      "authority": "delivered_support",
+      "isGoldFile": false,
+      "isGoldSymbol": false
+    },
+    {
+      "path": "doc/conf.py",
+      "symbol": "parse_event",
+      "fqName": "doc/conf.py::parse_event",
+      "kind": "function",
+      "finalScore": 2.5,
+      "scorecard": {
+        "lexical": 1,
+        "symbol": 0,
+        "path": 1,
+        "test_to_impl": 0,
+        "body_literal": 0,
+        "graph_proximity": 0,
+        "centrality": 0,
+        "actionability": 1,
+        "hub_penalty": 0,
+        "direct_answer": 0,
+        "mechanism_evidence": 0,
+        "final": 2.5
+      },
+      "evidence": [
+        "non-source example (path under doc/) — support, not an edit target",
+        "task names file `conf.py` (direct evidence, strong)"
+      ],
+      "discardReason": "",
+      "roleReason": "non-source example (path under doc/) — support, not an edit target",
+      "authority": "delivered_support",
+      "isGoldFile": false,
+      "isGoldSymbol": false
+    },
+    {
+      "path": "doc/conf.py",
+      "symbol": "setup",
+      "fqName": "doc/conf.py::setup",
+      "kind": "function",
+      "finalScore": 2.5,
+      "scorecard": {
+        "lexical": 1,
+        "symbol": 0,
+        "path": 1,
+        "test_to_impl": 0,
+        "body_literal": 0,
+        "graph_proximity": 0,
+        "centrality": 0,
+        "actionability": 1,
+        "hub_penalty": 0,
+        "direct_answer": 0,
+        "mechanism_evidence": 0,
+        "final": 2.5
+      },
+      "evidence": [
+        "non-source example (path under doc/) — support, not an edit target",
+        "task names file `conf.py` (direct evidence, strong)"
+      ],
+      "discardReason": "",
+      "roleReason": "non-source example (path under doc/) — support, not an edit target",
+      "authority": "delivered_support",
+      "isGoldFile": false,
+      "isGoldSymbol": false
+    },
+    {
+      "path": "doc/conf.py",
+      "symbol": "epub_post_files",
+      "fqName": "doc/conf.py::epub_post_files",
+      "kind": "module_variable",
+      "finalScore": 2.1754,
+      "scorecard": {
+        "lexical": 0.8413,
+        "symbol": 0,
+        "path": 1,
+        "test_to_impl": 0,
+        "body_literal": 0,
+        "graph_proximity": 0,
+        "centrality": 0,
+        "actionability": 0,
+        "hub_penalty": 0,
+        "direct_answer": 0,
+        "mechanism_evidence": 0,
+        "final": 2.1754
+      },
+      "evidence": [
+        "in a likely edit file; strong lexical match; issue-domain relevance (not a pivot: module_variable is a low-actionability edit target)",
+        "lexical match on local_name, fq_name, fq_name, signature, query_coverage, path_segment_signal"
+      ],
+      "discardReason": "",
+      "roleReason": "in a likely edit file; strong lexical match; issue-domain relevance (not a pivot: module_variable is a low-actionability edit target)",
+      "authority": "delivered_support",
+      "isGoldFile": false,
+      "isGoldSymbol": false
+    },
+    {
+      "path": "doc/conf.py",
+      "symbol": "man_pages",
+      "fqName": "",
+      "kind": "module_variable",
+      "finalScore": 2.0345,
+      "scorecard": {
+        "lexical": 0.7132,
+        "symbol": 0,
+        "path": 1,
+        "test_to_impl": 0,
+        "body_literal": 0,
+        "graph_proximity": 0,
+        "centrality": 0,
+        "actionability": 0,
+        "hub_penalty": 0,
+        "direct_answer": 0,
+        "mechanism_evidence": 0,
+        "final": 2.0345
+      },
+      "evidence": [
+        "lexical match on fq_name, fq_name, signature, signature, query_coverage, path_segment_signal"
+      ],
+      "discardReason": "beyond standard support budget (max 4)",
+      "roleReason": "in a likely edit file; strong lexical match; issue-domain relevance (not a pivot: module_variable is a low-actionability edit target)",
+      "authority": "role_denied",
+      "isGoldFile": false,
+      "isGoldSymbol": false
+    },
+    {
+      "path": "sphinx/util/osutil.py",
+      "symbol": "__exit__",
+      "fqName": "",
+      "kind": "method",
+      "finalScore": 1.8127,
+      "scorecard": {
+        "lexical": 0.8265,
+        "symbol": 0,
+        "path": 0,
+        "test_to_impl": 0,
+        "body_literal": 0,
+        "graph_proximity": 0,
+        "centrality": 0.007,
+        "actionability": 1,
+        "hub_penalty": 0,
+        "direct_answer": 0,
+        "mechanism_evidence": 0,
+        "final": 1.8127
+      },
+      "evidence": [
+        "1 indexed symbol(s) depend on this",
+        "co-edit sibling of anchor sphinx/cmd/quickstart.py (2 cross-file edge(s), co-edit lane)",
+        "lexical match on fq_name, fq_name, fq_name, local_name, query_coverage, path_segment_signal"
+      ],
+      "discardReason": "beyond standard support budget (max 4)",
+      "roleReason": "strong target beyond the pivot budget — actionable method — strong lexical match; issue-domain relevance",
+      "authority": "role_denied",
+      "isGoldFile": false,
+      "isGoldSymbol": false
+    },
+    {
+      "path": "doc/conf.py",
+      "symbol": "latex_elements",
+      "fqName": "",
+      "kind": "module_variable",
+      "finalScore": 2.0059,
+      "scorecard": {
+        "lexical": 0.6872,
+        "symbol": 0,
+        "path": 1,
+        "test_to_impl": 0,
+        "body_literal": 0,
+        "graph_proximity": 0,
+        "centrality": 0,
+        "actionability": 0,
+        "hub_penalty": 0,
+        "direct_answer": 0,
+        "mechanism_evidence": 0,
+        "final": 2.0059
+      },
+      "evidence": [
+        "lexical match on signature, fq_name, fq_name, signature, signature, query_coverage, path_segment_signal"
+      ],
+      "discardReason": "beyond standard support budget (max 4)",
+      "roleReason": "in a likely edit file; strong lexical match; issue-domain relevance (not a pivot: module_variable is a low-actionability edit target)",
+      "authority": "role_denied",
+      "isGoldFile": false,
+      "isGoldSymbol": false
+    },
+    {
+      "path": "sphinx/cmd/quickstart.py",
+      "symbol": "EXTENSIONS",
+      "fqName": "",
+      "kind": "module_constant",
+      "finalScore": 1.7918,
+      "scorecard": {
+        "lexical": 0.8011,
+        "symbol": 0,
+        "path": 0,
+        "test_to_impl": 0,
+        "body_literal": 0,
+        "graph_proximity": 0,
+        "centrality": 0.0211,
+        "actionability": 0,
+        "hub_penalty": 0,
+        "direct_answer": 0,
+        "mechanism_evidence": 0,
+        "final": 1.7918
+      },
+      "evidence": [
+        "3 indexed symbol(s) depend on this",
+        "lexical match on signature, signature, fq_name, fq_name, fq_name, query_coverage, path_segment_signal"
+      ],
+      "discardReason": "beyond standard support budget (max 4)",
+      "roleReason": "strong lexical match; issue-domain relevance (not a pivot: module_constant is a low-actionability edit target)",
+      "authority": "role_denied",
+      "isGoldFile": true,
+      "isGoldSymbol": false
+    },
+    {
+      "path": "sphinx/cmd/quickstart.py",
+      "symbol": "ask_user",
+      "fqName": "",
+      "kind": "function",
+      "finalScore": 1.7009,
+      "scorecard": {
+        "lexical": 0.7088,
+        "symbol": 0,
+        "path": 0,
+        "test_to_impl": 0,
+        "body_literal": 0,
+        "graph_proximity": 0,
+        "centrality": 0.0423,
+        "actionability": 1,
+        "hub_penalty": 0,
+        "direct_answer": 0,
+        "mechanism_evidence": 0,
+        "final": 1.7009
+      },
+      "evidence": [
+        "6 indexed symbol(s) depend on this",
+        "lexical match on docstring, fq_name, fq_name, fq_name, query_coverage, path_segment_signal"
+      ],
+      "discardReason": "beyond standard support budget (max 4)",
+      "roleReason": "strong target beyond the pivot budget — actionable function — strong lexical match; issue-domain relevance; 6 dependents",
+      "authority": "role_denied",
+      "isGoldFile": true,
+      "isGoldSymbol": true
+    },
+    {
+      "path": "sphinx/cmd/quickstart.py",
+      "symbol": "DEFAULTS",
+      "fqName": "",
+      "kind": "module_constant",
+      "finalScore": 1.6605,
+      "scorecard": {
+        "lexical": 0.6882,
+        "symbol": 0,
+        "path": 0,
+        "test_to_impl": 0,
+        "body_literal": 0,
+        "graph_proximity": 0,
+        "centrality": 0.007,
+        "actionability": 0,
+        "hub_penalty": 0,
+        "direct_answer": 0,
+        "mechanism_evidence": 0,
+        "final": 1.6605
+      },
+      "evidence": [
+        "1 indexed symbol(s) depend on this",
+        "lexical match on signature, fq_name, fq_name, fq_name, query_coverage, path_segment_signal"
+      ],
+      "discardReason": "beyond standard support budget (max 4)",
+      "roleReason": "strong lexical match; issue-domain relevance (not a pivot: module_constant is a low-actionability edit target)",
+      "authority": "role_denied",
+      "isGoldFile": true,
+      "isGoldSymbol": false
+    },
+    {
+      "path": "sphinx/cmd/quickstart.py",
+      "symbol": "QuickstartRenderer",
+      "fqName": "",
+      "kind": "class",
+      "finalScore": 1.6527,
+      "scorecard": {
+        "lexical": 0.6811,
+        "symbol": 0,
+        "path": 0,
+        "test_to_impl": 0,
+        "body_literal": 0,
+        "graph_proximity": 0,
+        "centrality": 0.007,
+        "actionability": 1,
+        "hub_penalty": 0,
+        "direct_answer": 0,
+        "mechanism_evidence": 0,
+        "final": 1.6527
+      },
+      "evidence": [
+        "1 indexed symbol(s) depend on this",
+        "lexical match on fq_name, fq_name, local_name, query_coverage, path_segment_signal"
+      ],
+      "discardReason": "beyond standard support budget (max 4)",
+      "roleReason": "strong target beyond the pivot budget — actionable class — strong lexical match; issue-domain relevance",
+      "authority": "role_denied",
+      "isGoldFile": true,
+      "isGoldSymbol": false
+    },
+    {
+      "path": "sphinx/domains/c.py",
+      "symbol": "describe_signature",
+      "fqName": "",
+      "kind": "method",
+      "finalScore": 1.6227,
+      "scorecard": {
+        "lexical": 0.6538,
+        "symbol": 0,
+        "path": 0,
+        "test_to_impl": 0,
+        "body_literal": 0,
+        "graph_proximity": 0,
+        "centrality": 0.007,
+        "actionability": 1,
+        "hub_penalty": 0,
+        "direct_answer": 0,
+        "mechanism_evidence": 0,
+        "final": 1.6227
+      },
+      "evidence": [
+        "1 indexed symbol(s) depend on this",
+        "lexical match on fq_name, fq_name, local_name, query_coverage, path_segment_signal"
+      ],
+      "discardReason": "beyond standard support budget (max 4)",
+      "roleReason": "strong target beyond the pivot budget — actionable method — strong lexical match; issue-domain relevance",
+      "authority": "role_denied",
+      "isGoldFile": false,
+      "isGoldSymbol": false
+    },
+    {
+      "path": "sphinx/cmd/quickstart.py",
+      "symbol": "ValidationError",
+      "fqName": "",
+      "kind": "class",
+      "finalScore": 1.606,
+      "scorecard": {
+        "lexical": 0.6225,
+        "symbol": 0,
+        "path": 0,
+        "test_to_impl": 0,
+        "body_literal": 0,
+        "graph_proximity": 0,
+        "centrality": 0.0423,
+        "actionability": 1,
+        "hub_penalty": 0,
+        "direct_answer": 0,
+        "mechanism_evidence": 0,
+        "final": 1.606
+      },
+      "evidence": [
+        "6 indexed symbol(s) depend on this",
+        "lexical match on fq_name, fq_name, fq_name, query_coverage, path_segment_signal"
+      ],
+      "discardReason": "beyond standard support budget (max 4)",
+      "roleReason": "strong target beyond the pivot budget — actionable class — strong lexical match; issue-domain relevance; 6 dependents",
+      "authority": "role_denied",
+      "isGoldFile": true,
+      "isGoldSymbol": false
+    },
+    {
+      "path": "sphinx/cmd/quickstart.py",
+      "symbol": "__init__",
+      "fqName": "",
+      "kind": "method",
+      "finalScore": 1.6021,
+      "scorecard": {
+        "lexical": 0.6351,
+        "symbol": 0,
+        "path": 0,
+        "test_to_impl": 0,
+        "body_literal": 0,
+        "graph_proximity": 0,
+        "centrality": 0.007,
+        "actionability": 1,
+        "hub_penalty": 0,
+        "direct_answer": 0,
+        "mechanism_evidence": 0,
+        "final": 1.6021
+      },
+      "evidence": [
+        "1 indexed symbol(s) depend on this",
+        "lexical match on fq_name, fq_name, fq_name, query_coverage, path_segment_signal"
+      ],
+      "discardReason": "beyond standard support budget (max 4)",
+      "roleReason": "strong target beyond the pivot budget — actionable method — strong lexical match; issue-domain relevance",
+      "authority": "role_denied",
+      "isGoldFile": true,
+      "isGoldSymbol": false
+    },
+    {
+      "path": "sphinx/cmd/quickstart.py",
+      "symbol": "render",
+      "fqName": "",
+      "kind": "method",
+      "finalScore": 1.5998,
+      "scorecard": {
+        "lexical": 0.633,
+        "symbol": 0,
+        "path": 0,
+        "test_to_impl": 0,
+        "body_literal": 0,
+        "graph_proximity": 0,
+        "centrality": 0.007,
+        "actionability": 1,
+        "hub_penalty": 0,
+        "direct_answer": 0,
+        "mechanism_evidence": 0,
+        "final": 1.5998
+      },
+      "evidence": [
+        "1 indexed symbol(s) depend on this",
+        "lexical match on fq_name, fq_name, fq_name, query_coverage, path_segment_signal"
+      ],
+      "discardReason": "beyond standard support budget (max 4)",
+      "roleReason": "strong target beyond the pivot budget — actionable method — strong lexical match; issue-domain relevance",
+      "authority": "role_denied",
+      "isGoldFile": true,
+      "isGoldSymbol": false
+    },
+    {
+      "path": "sphinx/cmd/quickstart.py",
+      "symbol": "PROMPT_PREFIX",
+      "fqName": "",
+      "kind": "module_constant",
+      "finalScore": 1.5975,
+      "scorecard": {
+        "lexical": 0.6276,
+        "symbol": 0,
+        "path": 0,
+        "test_to_impl": 0,
+        "body_literal": 0,
+        "graph_proximity": 0,
+        "centrality": 0.0141,
+        "actionability": 0,
+        "hub_penalty": 0,
+        "direct_answer": 0,
+        "mechanism_evidence": 0,
+        "final": 1.5975
+      },
+      "evidence": [
+        "2 indexed symbol(s) depend on this",
+        "lexical match on fq_name, fq_name, fq_name, query_coverage, path_segment_signal"
+      ],
+      "discardReason": "beyond standard support budget (max 4)",
+      "roleReason": "strong lexical match; issue-domain relevance (not a pivot: module_constant is a low-actionability edit target)",
+      "authority": "role_denied",
+      "isGoldFile": true,
+      "isGoldSymbol": false
+    },
+    {
+      "path": "sphinx/cmd/quickstart.py",
+      "symbol": "generate",
+      "fqName": "",
+      "kind": "function",
+      "finalScore": 1.5968,
+      "scorecard": {
+        "lexical": 0.6142,
+        "symbol": 0,
+        "path": 0,
+        "test_to_impl": 0,
+        "body_literal": 0,
+        "graph_proximity": 0,
+        "centrality": 0.0423,
+        "actionability": 1,
+        "hub_penalty": 0,
+        "direct_answer": 0,
+        "mechanism_evidence": 0,
+        "final": 1.5968
+      },
+      "evidence": [
+        "6 indexed symbol(s) depend on this",
+        "lexical match on fq_name, fq_name, fq_name, query_coverage, path_segment_signal"
+      ],
+      "discardReason": "beyond standard support budget (max 4)",
+      "roleReason": "strong target beyond the pivot budget — actionable function — strong lexical match; issue-domain relevance; 6 dependents",
+      "authority": "role_denied",
+      "isGoldFile": true,
+      "isGoldSymbol": false
+    },
+    {
+      "path": "sphinx/cmd/quickstart.py",
+      "symbol": "boolean",
+      "fqName": "",
+      "kind": "function",
+      "finalScore": 1.5965,
+      "scorecard": {
+        "lexical": 0.6267,
+        "symbol": 0,
+        "path": 0,
+        "test_to_impl": 0,
+        "body_literal": 0,
+        "graph_proximity": 0,
+        "centrality": 0.0141,
+        "actionability": 1,
+        "hub_penalty": 0,
+        "direct_answer": 0,
+        "mechanism_evidence": 0,
+        "final": 1.5965
+      },
+      "evidence": [
+        "2 indexed symbol(s) depend on this",
+        "lexical match on fq_name, fq_name, fq_name, query_coverage, path_segment_signal"
+      ],
+      "discardReason": "beyond standard support budget (max 4)",
+      "roleReason": "strong target beyond the pivot budget — actionable function — strong lexical match; issue-domain relevance",
+      "authority": "role_denied",
+      "isGoldFile": true,
+      "isGoldSymbol": false
+    },
+    {
+      "path": "sphinx/cmd/quickstart.py",
+      "symbol": "suffix",
+      "fqName": "",
+      "kind": "function",
+      "finalScore": 1.5929,
+      "scorecard": {
+        "lexical": 0.6267,
+        "symbol": 0,
+        "path": 0,
+        "test_to_impl": 0,
+        "body_literal": 0,
+        "graph_proximity": 0,
+        "centrality": 0.007,
+        "actionability": 1,
+        "hub_penalty": 0,
+        "direct_answer": 0,
+        "mechanism_evidence": 0,
+        "final": 1.5929
+      },
+      "evidence": [
+        "1 indexed symbol(s) depend on this",
+        "lexical match on fq_name, fq_name, fq_name, query_coverage, path_segment_signal"
+      ],
+      "discardReason": "beyond standard support budget (max 4)",
+      "roleReason": "strong target beyond the pivot budget — actionable function — strong lexical match; issue-domain relevance",
+      "authority": "role_denied",
+      "isGoldFile": true,
+      "isGoldSymbol": false
+    },
+    {
+      "path": "sphinx/cmd/quickstart.py",
+      "symbol": "do_prompt",
+      "fqName": "",
+      "kind": "function",
+      "finalScore": 1.5913,
+      "scorecard": {
+        "lexical": 0.6156,
+        "symbol": 0,
+        "path": 0,
+        "test_to_impl": 0,
+        "body_literal": 0,
+        "graph_proximity": 0,
+        "centrality": 0.0282,
+        "actionability": 1,
+        "hub_penalty": 0,
+        "direct_answer": 0,
+        "mechanism_evidence": 0,
+        "final": 1.5913
+      },
+      "evidence": [
+        "4 indexed symbol(s) depend on this",
+        "lexical match on fq_name, fq_name, fq_name, query_coverage, path_segment_signal"
+      ],
+      "discardReason": "beyond standard support budget (max 4)",
+      "roleReason": "strong target beyond the pivot budget — actionable function — strong lexical match; issue-domain relevance",
+      "authority": "role_denied",
+      "isGoldFile": true,
+      "isGoldSymbol": false
+    },
+    {
+      "path": "sphinx/cmd/quickstart.py",
+      "symbol": "allow_empty",
+      "fqName": "",
+      "kind": "function",
+      "finalScore": 1.59,
+      "scorecard": {
+        "lexical": 0.6241,
+        "symbol": 0,
+        "path": 0,
+        "test_to_impl": 0,
+        "body_literal": 0,
+        "graph_proximity": 0,
+        "centrality": 0.007,
+        "actionability": 1,
+        "hub_penalty": 0,
+        "direct_answer": 0,
+        "mechanism_evidence": 0,
+        "final": 1.59
+      },
+      "evidence": [
+        "1 indexed symbol(s) depend on this",
+        "lexical match on fq_name, fq_name, fq_name, query_coverage, path_segment_signal"
+      ],
+      "discardReason": "beyond standard support budget (max 4)",
+      "roleReason": "strong target beyond the pivot budget — actionable function — strong lexical match; issue-domain relevance",
+      "authority": "role_denied",
+      "isGoldFile": true,
+      "isGoldSymbol": true
+    },
+    {
+      "path": "sphinx/cmd/quickstart.py",
+      "symbol": "get_parser",
+      "fqName": "",
+      "kind": "function",
+      "finalScore": 1.59,
+      "scorecard": {
+        "lexical": 0.6241,
+        "symbol": 0,
+        "path": 0,
+        "test_to_impl": 0,
+        "body_literal": 0,
+        "graph_proximity": 0,
+        "centrality": 0.007,
+        "actionability": 1,
+        "hub_penalty": 0,
+        "direct_answer": 0,
+        "mechanism_evidence": 0,
+        "final": 1.59
+      },
+      "evidence": [
+        "1 indexed symbol(s) depend on this",
+        "lexical match on fq_name, fq_name, fq_name, query_coverage, path_segment_signal"
+      ],
+      "discardReason": "beyond standard support budget (max 4)",
+      "roleReason": "strong target beyond the pivot budget — actionable function — strong lexical match; issue-domain relevance",
+      "authority": "role_denied",
+      "isGoldFile": true,
+      "isGoldSymbol": false
+    },
+    {
+      "path": "sphinx/cmd/quickstart.py",
+      "symbol": "is_path",
+      "fqName": "",
+      "kind": "function",
+      "finalScore": 1.59,
+      "scorecard": {
+        "lexical": 0.6241,
+        "symbol": 0,
+        "path": 0,
+        "test_to_impl": 0,
+        "body_literal": 0,
+        "graph_proximity": 0,
+        "centrality": 0.007,
+        "actionability": 1,
+        "hub_penalty": 0,
+        "direct_answer": 0,
+        "mechanism_evidence": 0,
+        "final": 1.59
+      },
+      "evidence": [
+        "1 indexed symbol(s) depend on this",
+        "lexical match on fq_name, fq_name, fq_name, query_coverage, path_segment_signal"
+      ],
+      "discardReason": "beyond standard support budget (max 4)",
+      "roleReason": "strong target beyond the pivot budget — actionable function — strong lexical match; issue-domain relevance",
+      "authority": "role_denied",
+      "isGoldFile": true,
+      "isGoldSymbol": true
+    },
+    {
+      "path": "sphinx/cmd/quickstart.py",
+      "symbol": "valid_dir",
+      "fqName": "",
+      "kind": "function",
+      "finalScore": 1.59,
+      "scorecard": {
+        "lexical": 0.6241,
+        "symbol": 0,
+        "path": 0,
+        "test_to_impl": 0,
+        "body_literal": 0,
+        "graph_proximity": 0,
+        "centrality": 0.007,
+        "actionability": 1,
+        "hub_penalty": 0,
+        "direct_answer": 0,
+        "mechanism_evidence": 0,
+        "final": 1.59
+      },
+      "evidence": [
+        "1 indexed symbol(s) depend on this",
+        "lexical match on fq_name, fq_name, fq_name, query_coverage, path_segment_signal"
+      ],
+      "discardReason": "beyond standard support budget (max 4)",
+      "roleReason": "strong target beyond the pivot budget — actionable function — strong lexical match; issue-domain relevance",
+      "authority": "role_denied",
+      "isGoldFile": true,
+      "isGoldSymbol": false
+    },
+    {
+      "path": "sphinx/util/template.py",
+      "symbol": "render_from_file",
+      "fqName": "",
+      "kind": "method",
+      "finalScore": 0.3,
+      "scorecard": {
+        "lexical": 0,
+        "symbol": 0,
+        "path": 0,
+        "test_to_impl": 0,
+        "body_literal": 0,
+        "graph_proximity": 0.5,
+        "centrality": 0,
+        "actionability": 1,
+        "hub_penalty": 0,
+        "direct_answer": 0,
+        "mechanism_evidence": 0,
+        "final": 0.3
+      },
+      "evidence": [
+        "near high-confidence seed `render` (sphinx/cmd/quickstart.py) via calls edge"
+      ],
+      "discardReason": "beyond standard support budget (max 4)",
+      "roleReason": "near high-confidence seed `render` (sphinx/cmd/quickstart.py) via calls edge",
+      "authority": "role_denied",
+      "isGoldFile": false,
+      "isGoldSymbol": false
+    },
+    {
+      "path": "sphinx/util/osutil.py",
+      "symbol": "FileAvoidWrite",
+      "fqName": "",
+      "kind": "class",
+      "finalScore": 0.3,
+      "scorecard": {
+        "lexical": 0,
+        "symbol": 0,
+        "path": 0,
+        "test_to_impl": 0,
+        "body_literal": 0,
+        "graph_proximity": 0.5,
+        "centrality": 0,
+        "actionability": 1,
+        "hub_penalty": 0,
+        "direct_answer": 0,
+        "mechanism_evidence": 0,
+        "final": 0.3
+      },
+      "evidence": [
+        "near high-confidence seed `__exit__` (sphinx/util/osutil.py) via contains edge"
+      ],
+      "discardReason": "beyond standard support budget (max 4)",
+      "roleReason": "near high-confidence seed `__exit__` (sphinx/util/osutil.py) via contains edge",
+      "authority": "role_denied",
+      "isGoldFile": false,
+      "isGoldSymbol": false
+    },
+    {
+      "path": "sphinx/domains/c.py",
+      "symbol": "is_anon",
+      "fqName": "",
+      "kind": "method",
+      "finalScore": 0.3,
+      "scorecard": {
+        "lexical": 0,
+        "symbol": 0,
+        "path": 0,
+        "test_to_impl": 0,
+        "body_literal": 0,
+        "graph_proximity": 0.5,
+        "centrality": 0,
+        "actionability": 1,
+        "hub_penalty": 0,
+        "direct_answer": 0,
+        "mechanism_evidence": 0,
+        "final": 0.3
+      },
+      "evidence": [
+        "near high-confidence seed `describe_signature` (sphinx/domains/c.py) via calls edge"
+      ],
+      "discardReason": "beyond standard support budget (max 4)",
+      "roleReason": "near high-confidence seed `describe_signature` (sphinx/domains/c.py) via calls edge",
+      "authority": "role_denied",
+      "isGoldFile": false,
+      "isGoldSymbol": false
+    },
+    {
+      "path": "sphinx/util/osutil.py",
+      "symbol": "close",
+      "fqName": "",
+      "kind": "method",
+      "finalScore": 0.3,
+      "scorecard": {
+        "lexical": 0,
+        "symbol": 0,
+        "path": 0,
+        "test_to_impl": 0,
+        "body_literal": 0,
+        "graph_proximity": 0.5,
+        "centrality": 0,
+        "actionability": 1,
+        "hub_penalty": 0,
+        "direct_answer": 0,
+        "mechanism_evidence": 0,
+        "final": 0.3
+      },
+      "evidence": [
+        "near high-confidence seed `__exit__` (sphinx/util/osutil.py) via calls edge"
+      ],
+      "discardReason": "beyond standard support budget (max 4)",
+      "roleReason": "near high-confidence seed `__exit__` (sphinx/util/osutil.py) via calls edge",
+      "authority": "role_denied",
+      "isGoldFile": false,
+      "isGoldSymbol": false
+    },
+    {
+      "path": "sphinx/util/template.py",
+      "symbol": "render",
+      "fqName": "",
+      "kind": "method",
+      "finalScore": 0.3,
+      "scorecard": {
+        "lexical": 0,
+        "symbol": 0,
+        "path": 0,
+        "test_to_impl": 0,
+        "body_literal": 0,
+        "graph_proximity": 0.5,
+        "centrality": 0,
+        "actionability": 1,
+        "hub_penalty": 0,
+        "direct_answer": 0,
+        "mechanism_evidence": 0,
+        "final": 0.3
+      },
+      "evidence": [
+        "near high-confidence seed `render` (sphinx/cmd/quickstart.py) via calls edge"
+      ],
+      "discardReason": "beyond standard support budget (max 4)",
+      "roleReason": "near high-confidence seed `render` (sphinx/cmd/quickstart.py) via calls edge",
+      "authority": "role_denied",
+      "isGoldFile": false,
+      "isGoldSymbol": false
+    },
+    {
+      "path": "sphinx/cmd/quickstart.py",
+      "symbol": "main",
+      "fqName": "",
+      "kind": "function",
+      "finalScore": 0.3,
+      "scorecard": {
+        "lexical": 0,
+        "symbol": 0,
+        "path": 0,
+        "test_to_impl": 0,
+        "body_literal": 0,
+        "graph_proximity": 0.5,
+        "centrality": 0,
+        "actionability": 1,
+        "hub_penalty": 0,
+        "direct_answer": 0,
+        "mechanism_evidence": 0,
+        "final": 0.3
+      },
+      "evidence": [
+        "near high-confidence seed `get_parser` (sphinx/cmd/quickstart.py) via calls edge"
+      ],
+      "discardReason": "beyond standard support budget (max 4)",
+      "roleReason": "near high-confidence seed `get_parser` (sphinx/cmd/quickstart.py) via calls edge",
+      "authority": "role_denied",
+      "isGoldFile": true,
+      "isGoldSymbol": false
+    }
+  ],
+  "noContextExplanations": []
+}

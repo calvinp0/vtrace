@@ -2258,3 +2258,97 @@ file as their LEAD. `bun test` 4806 pass / 0 fail, typechecks and
   regression until stderr was read. The probe now records the commit and
   dirtiness of the checkout that produced each side and refuses to write a report
   in which nothing indexed and nothing was reported as failed.
+
+## M157 — Answer delivery and no-pivot recovery (commits f1497fc6, fb509a44, 623fa03b, <evidence>)
+
+M157 is **MIXED** (A PASS · B NOT PASS · C NOT PASS as specified · D PASS ·
+E PASS on preservation). Product code changed; behavioural routing stays OFF;
+M156 availability, the M152 store split and M154 Git-state safety are intact.
+
+The milestone asked whether VTRACE withholds useful evidence when no candidate
+earns pivot authority. The gate is real and exactly where §15 predicted —
+`buildCapsuleV2.ts:985`, query-global, before packing — and it is **not
+candidate-local**: all 33 `django-11740` candidates had been granted support
+authority and **none** was denied it. But the state could not be measured before
+this milestone. `support_count` was written as a literal `0` on that path
+regardless of how much was withheld, and the global discard reason overwrote each
+candidate's own role decision, so "33 candidates, 0 support" meant the same thing
+for a query that found nothing and one that withheld 33 relevant candidates.
+
+The decisive number is the population. Classifying the gold file's fate across
+all 100 broad cases — a classification that independently reproduces every
+published M156 rate — puts **2 cases** in the bucket a delivery-policy change can
+move, against **9** lost to the support packing cap and 11 never retrieved. The
+no-pivot rate is 2%, the entire offline instance pool is the same 100, and the
+two cases disagree about what the right answer is: `sphinx-9320` holds seventeen
+candidates that MET the pivot bar, while `django-11740` holds none with direct
+evidence of any kind and a top-25 support list that is a lexical explosion on the
+word `Errors`. So the §34 contract was **not** implemented — the one case that
+would need it does not want it, and the other is where it would do harm.
+
+What the audit did prove is a role-classification defect: **a candidate
+disqualified from the pivot role keeps the slot it consumed**. The cap runs
+before the scoped-objective and non-source demotions and neither releases the
+slot, so on `sphinx-9320` both slots go to `doc/conf.py` candidates the
+non-source rule then disqualifies, and seventeen eligible edit targets — three of
+them gold symbols — are discarded as "no actionable edit target". The fix records
+`budgetDemotedPivot` (priced out, still pivot-worthy) against `pivotIneligible`
+(judged unfit, never promotable) and refills genuinely free slots in ranked
+order; it cannot lower the bar, invent a target, or promote a candidate any stage
+judged unfit.
+
+broad100 M156→M157: **2 changed cases, both pivot-role corrections, 0
+unexplained**. `sphinx-9320` goes `skipped_no_context` → `hit_top1_pivot` with the
+gold file leading; `xarray-6599` fills one wasted slot with a second gold-file
+definition and is neutral. Top-1 0.57→0.58, Top-3 0.73→0.74, delivered
+0.78→0.79, discarded 0.11→0.10, empty 0.02→0.01; tokens mean +10.18 with median
+(1165) and p90 (3750) unchanged. frozen50 fast gate byte-identical (0 changed).
+frozen30 **30/30 usable, 0 unavailable, 3 degraded (identical set)**; clean27
+**27/27** structurally identical; all three M156 recovered repositories retrieve
+identically. `bun test` 4820 pass / 0 fail on an idle machine, typechecks and
+`git diff --check` clean.
+
+## M157 standing findings
+
+- **The no-pivot collapse was unmeasurable, which is why it looked bigger than it
+  is** (A): two reporting defects made "0 support" ambiguous between "nothing was
+  relevant" and "33 relevant candidates were withheld". M155 read the first
+  meaning from a state that was the second. Both are fixed additively —
+  `support_authority_withheld` is absent when nothing was withheld, so true-empty
+  stays distinguishable from suppression.
+
+- **A disqualified pivot kept its slot** (C): the cap was correct; its ORDERING
+  was not. Two demotions that can invalidate a slot-holder run after the cap and
+  neither releases the slot, so a candidate that met the pivot bar stays demoted
+  behind a budget that is no longer spent. Generic, 2 of 100 cases across two
+  unrelated repositories, and the direct cause of one of the two empty capsules.
+  `capPivots` inside `refineDebugRoles` shows the correct ordering; the two blocks
+  in `buildCapsuleV2` are the exception.
+
+- **The support cap, not authority, is the bigger gold-loss mechanism** (A): 8
+  cases lose gold to `beyond standard support budget (max 4)` versus 2 to the
+  no-pivot gate. It is a packing question rather than an authority question, so
+  it was deliberately left alone — but it has four times the reach and a real
+  population (8 cases, 6 repositories) to calibrate against.
+
+- **`django-11740` was never a delivery-policy case** (B): the fixture's gold
+  symbol `generate_altered_fields` is **not in the candidate pool at all**, so no
+  delivery rule could have delivered the patched definition. Its two gold-file
+  candidates rank 29th and 30th of 33 on behaviour-ownership evidence alone — the
+  relation M143-B closed as a measured ceiling. The exposing instance is a
+  retrieval-recall case wearing a delivery case's clothes, which is exactly why
+  §12 forbids it becoming the specification.
+
+- **The no-pivot state is too rare in SWE-bench to design a policy against** (B):
+  2% of instances, and reaching the 20–30 cases §25 asks for would need roughly
+  1000–1500. Both real cases were consumed diagnostically, so no sealed holdout
+  exists either. A support-only lane is not refuted — it is unmeasurable on this
+  data, and would need a corpus built for it.
+
+- **A gold matcher that silently reports zero is worse than one that throws**
+  (B): the corpora are indexed at the package root, so fixture paths
+  (`django/db/...`) never match candidate paths (`db/...`) under naive equality.
+  The first audit run reported 0 gold candidates for both no-pivot cases and
+  looked entirely plausible. Using the scorer's own boundary-aware `fileMatches`
+  recovers 2 and 18. Caught before freezing; it would have inverted M157-A's
+  conclusion.

@@ -1,0 +1,48 @@
+{
+  "schemaVersion": "stage5.m157.preservation.v1",
+  "milestone": "M157",
+  "checkpoint": "M156 final -> M157 final",
+  "note": "M157 changes the capsule delivery layer only. Index counts are expected to be identical, and availability is expected to hold at 30/30 (§77, §78).",
+  "predecessor": {
+    "label": "after",
+    "commit": "c3fc42d2a7e1fb26180d9d51e5b793134b709058",
+    "eval": "benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_m156_frozen30_availability_after.json"
+  },
+  "candidate": {
+    "label": "m157",
+    "commit": "623fa03b5329fb39e2e7e8baec2f2116ae20a944",
+    "eval": "/tmp/claude-1000/-home-calvin-code-vtrace/7f2ffa29-aba4-4928-95b0-7db59c94f028/scratchpad/m157_frozen30_availability.json",
+    "srcDirty": false
+  },
+  "availability": {
+    "before": {
+      "usable": 30,
+      "degraded": 3,
+      "unavailable": 0,
+      "degradedInstanceIds": [
+        "psf__requests-1142",
+        "pylint-dev__pylint-4551",
+        "pytest-dev__pytest-5262"
+      ]
+    },
+    "after": {
+      "usable": 30,
+      "degraded": 3,
+      "unavailable": 0,
+      "degradedInstanceIds": [
+        "psf__requests-1142",
+        "pylint-dev__pylint-4551",
+        "pytest-dev__pytest-5262"
+      ]
+    },
+    "availabilityPreserved": true,
+    "degradedSetIdentical": true
+  },
+  "cleanSubset": {
+    "comparableCases": 27,
+    "preservedCases": 27,
+    "fullyPreserved": true
+  },
+  "changedCases": 0,
+  "changed": []
+}
