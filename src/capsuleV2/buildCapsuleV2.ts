@@ -2249,6 +2249,7 @@ function toDiscarded(entry: RefinedRoledCandidate, reason: string): CapsuleV2Dis
     scorecard: toScorecard(entry.candidate.scores),
     evidence: [...entry.candidate.evidence],
     discard_reason: reason,
+    ...(entry.roleReason === reason ? {} : { role_reason: entry.roleReason }),
     ...nonSourceFields(entry),
   };
 }
@@ -2286,6 +2287,7 @@ function noContextResult(input: NoContextInput): CapsuleV2Result {
       ...(input.compoundTaskRescueUsed ? { compound_task_rescue_used: true } : {}),
       pivot_count: 0,
       support_count: 0,
+      ...(input.supportCount > 0 ? { support_authority_withheld: input.supportCount } : {}),
       discarded_count: input.discarded.length,
       tier: CapsuleV2Mode.NoContext,
       weights: input.weights,

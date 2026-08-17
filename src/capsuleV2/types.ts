@@ -238,6 +238,14 @@ export interface CapsuleV2Discarded extends DebugRoleSignals {
   scorecard: CapsuleV2Scorecard;
   evidence: string[];
   discard_reason: string;
+  /**
+   * The CANDIDATE-LOCAL role decision, preserved independently of the reason it
+   * was ultimately discarded for. The two answer different questions: a
+   * query-global rule can discard a candidate whose own classification was
+   * "support", and `discard_reason` alone cannot tell that apart from a
+   * candidate that never earned a role at all.
+   */
+  role_reason?: string;
   /** See `CapsuleV2Item.is_non_source_example`. Present only when classified. */
   is_non_source_example?: boolean;
   non_source_reason?: string;
@@ -401,6 +409,15 @@ export interface CapsuleV2Diagnostics {
   };
   pivot_count: number;
   support_count: number;
+  /**
+   * Candidates the role layer classified as SUPPORT that were withheld because
+   * no pivot cleared the gate. `support_count` counts what was DELIVERED, so on
+   * the no-context path it is legitimately 0 — which left the product unable to
+   * distinguish "nothing was relevant" from "relevant context existed and the
+   * no-pivot rule dropped it". Present only when that rule actually withheld
+   * something.
+   */
+  support_authority_withheld?: number;
   discarded_count: number;
   /** The allocator tier (micro/standard/full) the budget mapped to. */
   tier: CapsuleV2Mode;
