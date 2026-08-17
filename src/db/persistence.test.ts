@@ -46,11 +46,26 @@ test("the index schema installs repository evidence and nothing else", () => {
     assert.equal(tableNames.has("symbols"), true);
     assert.equal(tableNames.has("symbol_mechanism_facts"), true);
     assert.equal(tableNames.has("symbol_search_fts"), true);
+    // M156 §60: which files `index_repo` could not parse is derived from the
+    // repository's own source, so it belongs here and not in `session.sqlite`.
+    assert.equal(tableNames.has("file_index_failures"), true);
+    assert.equal(classifyIndexTable("file_index_failures"), "repository_derived");
 
     const productOwned = [...tableNames].filter(
       (name) => classifyIndexTable(name) === "product_session",
     );
     assert.deepEqual(productOwned, [], "a fresh index must own no product/session table");
+
+    // The stronger closure: an UNCLASSIFIED table is not caught by the check
+    // above, because `null !== "product_session"`. A new table added to the
+    // schema and forgotten in `indexTableFamilies` would have slipped through
+    // silently — which is exactly how the boundary erodes (§9, §59).
+    // `sqlite_*` objects are the engine's own bookkeeping (AUTOINCREMENT creates
+    // `sqlite_sequence`); they are not vtrace state and have no family.
+    const unclassified = [...tableNames]
+      .filter((name) => !name.startsWith("sqlite_"))
+      .filter((name) => classifyIndexTable(name) === null);
+    assert.deepEqual(unclassified, [], "every table in a fresh index must be classified");
   } finally {
     db.close();
   }
