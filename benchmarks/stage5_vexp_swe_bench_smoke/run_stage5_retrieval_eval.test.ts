@@ -14,6 +14,7 @@ import { test } from "bun:test";
 
 import { openIndexerDatabase } from "../../src/db/sqlite";
 import { indexProject } from "../../src/indexer/indexProject";
+import { recordIndexMeta } from "../../src/indexer/indexMeta";
 import {
   aggregate,
   aggregateByLabelSource,
@@ -400,6 +401,12 @@ async function indexedWorkspace(prefix: string, files: Record<string, string>): 
   } finally {
     db.close();
   }
+  // M155-B2: record the derivation identity the same way a real index does. Without
+  // this the workspace has no index.meta.json, and the derivation gate correctly
+  // refuses to score it — an index that cannot say what produced it is not evidence.
+  // Writing it here means these tests exercise a genuinely derivation-valid index
+  // rather than bypassing the gate.
+  await recordIndexMeta(repoRoot);
   return repoRoot;
 }
 

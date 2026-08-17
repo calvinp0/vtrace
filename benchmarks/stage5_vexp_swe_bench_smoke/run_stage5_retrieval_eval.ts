@@ -39,6 +39,8 @@ import {
   type ArtifactState,
   type BenchmarkProvenance,
 } from "./benchmarkProvenance";
+import { expectedDerivation, gateIndexDerivation } from "./indexDerivationGate";
+import type { IndexFingerprint } from "../../src/indexer/indexMeta";
 
 // ---------------------------------------------------------------------------
 // Fixture
@@ -1585,6 +1587,17 @@ export interface RunRetrievalEvalDeps {
   readonly evaluateEntry?: (entry: RetrievalEvalFixtureEntry) => Promise<CapsuleSummary>;
 }
 
+/**
+ * M155-B2. Expected derivation identity of the executing implementation, computed
+ * once per process. Recomputing it per entry would re-hash the indexer for every
+ * case in the suite for an answer that cannot change mid-run.
+ */
+let expectedDerivationMemo: Promise<IndexFingerprint> | null = null;
+function expectedDerivationOnce(): Promise<IndexFingerprint> {
+  expectedDerivationMemo ??= expectedDerivation();
+  return expectedDerivationMemo;
+}
+
 // Default live evaluator: resolve the workspace + index, open it, and run Capsule
 // v2 from (task, intent, budget) alone — never the expected labels.
 export async function evaluateEntryLive(entry: RetrievalEvalFixtureEntry): Promise<CapsuleSummary> {
@@ -1595,6 +1608,14 @@ export async function evaluateEntryLive(entry: RetrievalEvalFixtureEntry): Promi
   const dbPath = path.join(workspace, INDEX_RELPATH);
   if (!(await pathExists(dbPath))) {
     throw rowError("workspace_error", `workspace not indexed (no ${INDEX_RELPATH}): ${entry.workspace}`);
+  }
+  // M155-B2: refuse stale evidence instead of migrating it on open. The committed
+  // baselines scored current code against indexes whose derivation this runtime
+  // rejects, and reported the result as authoritative. Fail closed here so no
+  // caller can inherit that silently.
+  const derivation = await gateIndexDerivation(workspace, await expectedDerivationOnce());
+  if (!derivation.valid) {
+    throw rowError("workspace_error", `index derivation invalid (${derivation.reason}): ${derivation.detail}`);
   }
   const intent = parseCapsuleIntent(entry.intent) ?? CapsuleIntent.Auto;
   const db = openIndexerDatabase(dbPath);
