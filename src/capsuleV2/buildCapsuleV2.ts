@@ -782,9 +782,16 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       if (selectedIds.has(entry.candidate.symbolId)) {
         entry.role = CandidateRole.Pivot;
         entry.roleReason = "direct subtree and task-objective evidence";
-      } else if (entry.role === CandidateRole.Pivot) {
-        entry.role = CandidateRole.Support;
-        entry.roleReason = "generic lexical match outside the explicit task subtree";
+      } else {
+        // This block CHOSE the pivots for an explicit task subtree, so anything
+        // it did not choose is unfit for a pivot slot — not merely priced out of
+        // one. Recorded for every entry, so a candidate the budget demoted
+        // earlier cannot later be promoted into a slot this block vacated.
+        entry.pivotIneligible = true;
+        if (entry.role === CandidateRole.Pivot) {
+          entry.role = CandidateRole.Support;
+          entry.roleReason = "generic lexical match outside the explicit task subtree";
+        }
       }
     }
   }
@@ -808,12 +815,49 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
     });
     if (!classification.isNonSourceExample) continue;
     entry.nonSourceExample = classification;
+    // `demote` is scoped to entries that hold the pivot role right now; pivot
+    // ELIGIBILITY is the same judgement asked of every entry, so a candidate the
+    // budget demoted earlier cannot be promoted into a docs/example slot below.
+    if (!taskAllowsNonSource && !anchorSymbolIds.has(entry.candidate.symbolId)) {
+      entry.pivotIneligible = true;
+    }
     if (demote) {
       entry.role = CandidateRole.Support;
       entry.roleReason = `non-source example (${classification.reason}) — support, not an edit target`;
       nonSourceDownranked.push({ path: entry.candidate.filePath, reason: classification.reason ?? "non-source" });
     }
   }
+
+  // Reclaim pivot slots vacated after the cap was applied.
+  //
+  // The pivot cap runs BEFORE the two demotions above, so a candidate that is
+  // subsequently disqualified from the pivot role keeps the slot it consumed.
+  // Measured on the M156 broad100 (M157-A): sphinx-9320 spends both standard
+  // slots on two `doc/conf.py` candidates, the non-source rule then disqualifies
+  // both, and the seventeen candidates that had met the pivot bar — including
+  // three gold symbols — stay demoted behind a budget that is no longer spent.
+  // The capsule returns EMPTY while holding seventeen eligible edit targets.
+  //
+  // This restores the cap's own intent rather than relaxing it: only candidates
+  // the role layer already judged pivot-worthy are eligible, only slots that are
+  // genuinely free are filled, and the ranked order is preserved, so it can
+  // neither invent an edit target nor change which target leads. A candidate any
+  // stage judged unfit (`pivotIneligible`) is never a occupant.
+  const freeSlots = allocation.maxPivots - refined.filter((e) => e.role === CandidateRole.Pivot).length;
+  const reclaimedPivotSlots: Array<{ path: string; symbol: string }> = [];
+  if (freeSlots > 0) {
+    for (const entry of refined) {
+      if (reclaimedPivotSlots.length >= freeSlots) break;
+      if (entry.role !== CandidateRole.Support) continue;
+      if (entry.budgetDemotedPivot !== true || entry.pivotIneligible === true) continue;
+      entry.role = CandidateRole.Pivot;
+      entry.roleReason = `${entry.roleReason} — pivot slot released by a later demotion`;
+      entry.budgetDemotedPivot = false;
+      reclaimedPivotSlots.push({ path: entry.candidate.filePath, symbol: entry.candidate.localName });
+    }
+  }
+  const reclaimedPivotDiagnostics: Partial<CapsuleV2Result["diagnostics"]> =
+    reclaimedPivotSlots.length > 0 ? { reclaimed_pivot_slots: reclaimedPivotSlots } : {};
   const nonSourceDiagnostics: Partial<CapsuleV2Result["diagnostics"]> =
     nonSourceDownranked.length > 0 ? { non_source_candidates_downranked: nonSourceDownranked } : {};
 
@@ -1006,6 +1050,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
         ...lineAnchorDiagnostics,
         ...bodyLiteralDiagnostics(bodyLiteralMatches),
         ...nonSourceDiagnostics,
+        ...reclaimedPivotDiagnostics,
         ...titleSymbolDiagnostics,
         ...literalAnchorDiagnostics,
         ...directEvidenceDiagnostics,
@@ -1742,6 +1787,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       ...pivotGuardDiagnostics,
       ...lineAnchorDiagnostics,
       ...nonSourceDiagnostics,
+      ...reclaimedPivotDiagnostics,
       ...titleSymbolDiagnostics,
       ...literalAnchorDiagnostics,
       ...directEvidenceDiagnostics,

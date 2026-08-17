@@ -55,6 +55,20 @@ export interface RefinedRoledCandidate {
    * task explicitly points at docs/examples, down-ranks it out of the pivot role.
    */
   nonSourceExample?: NonSourceExampleClassification;
+  /**
+   * This candidate MET the pivot bar and was demoted to support only because the
+   * pivot budget was already spent. It is therefore still pivot-worthy: if a
+   * later stage disqualifies one of the candidates holding a slot, this one can
+   * take it. Distinct from every other demotion, which are judgements about the
+   * candidate itself and are recorded by `pivotIneligible`.
+   */
+  budgetDemotedPivot?: boolean;
+  /**
+   * A later stage judged this candidate unfit to be a pivot at all (a non-source
+   * example, or outside the task's explicit subtree). It must never be promoted
+   * into a slot, however many are free.
+   */
+  pivotIneligible?: boolean;
 }
 
 /**
@@ -456,6 +470,7 @@ export function passthroughRoles(base: readonly RoledCandidate[]): RefinedRoledC
     candidate: entry.candidate,
     role: entry.role,
     roleReason: stripRolePrefix(entry.why),
+    ...(entry.budgetDemotedPivot === true ? { budgetDemotedPivot: true } : {}),
     signals: {
       is_entry_point: false,
       is_implementation_helper: false,
@@ -643,6 +658,7 @@ function capPivots(
           ...entry,
           role: CandidateRole.Support,
           roleReason: `strong target beyond the pivot budget — ${entry.roleReason}`,
+          budgetDemotedPivot: true,
         };
       }
       return entry;

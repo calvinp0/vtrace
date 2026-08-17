@@ -39,6 +39,13 @@ export interface RoledCandidate {
   role: CandidateRole;
   /** Human-readable justification for the role — the report's "why a pivot". */
   why: string;
+  /**
+   * This candidate CLEARED the pivot bar and is support only because the pivot
+   * budget was already full. Recorded structurally because it is not a judgement
+   * about the candidate: if a slot is later vacated, this candidate is still a
+   * legitimate occupant of it.
+   */
+  budgetDemotedPivot?: boolean;
 }
 
 export interface AssignRolesOptions {
@@ -85,15 +92,17 @@ export function assignCandidateRoles(
     let { role, why } = classify(candidate, isAnswerRole);
     // Enforce the pivot cap (micro emits a single pivot): a would-be pivot beyond
     // the cap is still strong context, so it demotes to support rather than away.
+    let budgetDemotedPivot = false;
     if (role === CandidateRole.Pivot) {
       if (pivotsSoFar >= maxPivots) {
         role = CandidateRole.Support;
         why = `support: strong target but beyond the pivot budget — ${why}`;
+        budgetDemotedPivot = true;
       } else {
         pivotsSoFar += 1;
       }
     }
-    return { candidate, role, why };
+    return { candidate, role, why, ...(budgetDemotedPivot ? { budgetDemotedPivot } : {}) };
   });
 }
 
