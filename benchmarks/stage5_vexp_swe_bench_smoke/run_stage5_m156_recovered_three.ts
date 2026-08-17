@@ -54,6 +54,8 @@ function classifyRow(row: RetrievalEvalRow): string {
 function readCoverage(workspace: string): {
   readonly failedFiles: number;
   readonly failedPaths: readonly string[];
+  readonly failureClasses: readonly string[];
+  readonly failedLanguages: readonly string[];
 } {
   let db: Database | undefined;
   try {
@@ -64,9 +66,13 @@ function readCoverage(workspace: string): {
       // Bounded (§79): a repository with thirteen failures reports four paths
       // and a count, not thirteen paths.
       failedPaths: failures.slice(0, 4).map((failure) => failure.path),
+      // Classes and languages are SETS, so they stay bounded by the taxonomy
+      // rather than by the number of failed files (§68).
+      failureClasses: [...new Set(failures.map((failure) => failure.failureClass))].sort(),
+      failedLanguages: [...new Set(failures.map((failure) => failure.language))].sort(),
     };
   } catch {
-    return { failedFiles: 0, failedPaths: [] };
+    return { failedFiles: 0, failedPaths: [], failureClasses: [], failedLanguages: [] };
   } finally {
     db?.close();
   }
@@ -116,6 +122,9 @@ async function main(): Promise<void> {
       coverageState: coverage.failedFiles > 0 ? "DEGRADED" : "COMPLETE",
       failedFiles: coverage.failedFiles,
       failedPathsSample: coverage.failedPaths,
+      failedPathsOmitted: Math.max(0, coverage.failedFiles - coverage.failedPaths.length),
+      failureClasses: coverage.failureClasses,
+      failedLanguages: coverage.failedLanguages,
       pivotCount: row.pivot_count,
       supportCount: row.support_count,
       discardedCount: row.discarded_count,
