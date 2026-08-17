@@ -481,15 +481,15 @@
       "m129",
       "m140",
       "m150",
-      "m152"
+      "m152",
+      "m154"
     ],
-    "deletedBytes": 39228576127,
-    "deletedGiB": 36.53,
+    "deletedBytes": 49535968866,
+    "deletedGiB": 46.13,
     "retained": {
-      "era": "m154",
-      "bytes": 10307392739,
-      "giB": 9.6,
-      "reason": "Active input to a MANDATORY M156-E gate: the broad100 M154->M156 preservation comparison needs the predecessor-era corpus indexed by M154's own binary (051a7c55). Deleting it before that gate would trade a required measurement for disk."
+      "era": null,
+      "note": "m154 was held back only for the MANDATORY M156-E broad100 preservation gate, which needed the predecessor-era corpus indexed by M154's own binary (051a7c55). That gate completed with 0/100 changed cases, so the corpus was deleted immediately afterwards. All five era corpora are now gone; every one is regenerable from the fields above.",
+      "deletedAfterGate": true
     },
     "preserved": [
       "task manifests",
