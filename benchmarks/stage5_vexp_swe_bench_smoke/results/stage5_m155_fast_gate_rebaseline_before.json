@@ -1,0 +1,479 @@
+{
+  "schemaVersion": "stage5.m155.fast-gate-rebaseline.v1",
+  "side": "before",
+  "corpus": "committed results/workspaces indexes (built 2026-06-08 / partially re-indexed 2026-08-16)",
+  "gateUsable": false,
+  "cases": 50,
+  "derivationValidCases": 5,
+  "derivationInvalidCases": 45,
+  "invalidByReason": {
+    "schema_unsupported": 41,
+    "meta_missing": 4
+  },
+  "expectedIndexerFingerprint": "ce3463c2cdcd6e3b61a7af0f99c00b4b0b99deed0b1814e9c71d70ad096fbd94",
+  "expectedFormatVersion": 5,
+  "summary": {
+    "suite": "frozen50_before",
+    "cases": 50,
+    "evaluated": 5,
+    "workspaceErrors": 45,
+    "top1": 0.6,
+    "top3": 0.6,
+    "goldDelivered": 0.8,
+    "goldDiscarded": 0.2,
+    "goldMissing": 0,
+    "meanTokens": 2579
+  },
+  "caseDetail": [
+    {
+      "instance_id": "django__django-10880",
+      "repo": "django/django",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/eval-fixed-10880/django__django-10880",
+      "derivationValid": false,
+      "derivationReason": "schema_unsupported",
+      "storedVtraceCommit": "70354295895546c06166bec6d650d23f462ab7b5",
+      "storedFormatVersion": 1
+    },
+    {
+      "instance_id": "django__django-11095",
+      "repo": "django/django",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/manual-capsule-v2/django__django-11095",
+      "derivationValid": false,
+      "derivationReason": "meta_missing",
+      "storedVtraceCommit": null,
+      "storedFormatVersion": null
+    },
+    {
+      "instance_id": "django__django-11490",
+      "repo": "django/django",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/eval-fixed-11490/django__django-11490",
+      "derivationValid": false,
+      "derivationReason": "meta_missing",
+      "storedVtraceCommit": null,
+      "storedFormatVersion": null
+    },
+    {
+      "instance_id": "django__django-11728",
+      "repo": "django/django",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/manual-capsule-v2/django__django-11728",
+      "derivationValid": false,
+      "derivationReason": "meta_missing",
+      "storedVtraceCommit": null,
+      "storedFormatVersion": null
+    },
+    {
+      "instance_id": "django__django-11740",
+      "repo": "django/django",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/eval-fixed-11740/django__django-11740",
+      "derivationValid": false,
+      "derivationReason": "meta_missing",
+      "storedVtraceCommit": null,
+      "storedFormatVersion": null
+    },
+    {
+      "instance_id": "django__django-10973",
+      "repo": "django/django",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-10973",
+      "derivationValid": false,
+      "derivationReason": "schema_unsupported",
+      "storedVtraceCommit": "70354295895546c06166bec6d650d23f462ab7b5",
+      "storedFormatVersion": 1
+    },
+    {
+      "instance_id": "django__django-11133",
+      "repo": "django/django",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-11133",
+      "derivationValid": false,
+      "derivationReason": "schema_unsupported",
+      "storedVtraceCommit": "70354295895546c06166bec6d650d23f462ab7b5",
+      "storedFormatVersion": 1
+    },
+    {
+      "instance_id": "django__django-11206",
+      "repo": "django/django",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-11206",
+      "derivationValid": false,
+      "derivationReason": "schema_unsupported",
+      "storedVtraceCommit": "70354295895546c06166bec6d650d23f462ab7b5",
+      "storedFormatVersion": 1
+    },
+    {
+      "instance_id": "django__django-11749",
+      "repo": "django/django",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-11749",
+      "derivationValid": false,
+      "derivationReason": "schema_unsupported",
+      "storedVtraceCommit": "70354295895546c06166bec6d650d23f462ab7b5",
+      "storedFormatVersion": 1
+    },
+    {
+      "instance_id": "django__django-11815",
+      "repo": "django/django",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-11815",
+      "derivationValid": false,
+      "derivationReason": "schema_unsupported",
+      "storedVtraceCommit": "70354295895546c06166bec6d650d23f462ab7b5",
+      "storedFormatVersion": 1
+    },
+    {
+      "instance_id": "django__django-11820",
+      "repo": "django/django",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-11820",
+      "derivationValid": false,
+      "derivationReason": "schema_unsupported",
+      "storedVtraceCommit": "70354295895546c06166bec6d650d23f462ab7b5",
+      "storedFormatVersion": 1
+    },
+    {
+      "instance_id": "django__django-12050",
+      "repo": "django/django",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-12050",
+      "derivationValid": false,
+      "derivationReason": "schema_unsupported",
+      "storedVtraceCommit": "70354295895546c06166bec6d650d23f462ab7b5",
+      "storedFormatVersion": 1
+    },
+    {
+      "instance_id": "django__django-12273",
+      "repo": "django/django",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-12273",
+      "derivationValid": false,
+      "derivationReason": "schema_unsupported",
+      "storedVtraceCommit": "70354295895546c06166bec6d650d23f462ab7b5",
+      "storedFormatVersion": 1
+    },
+    {
+      "instance_id": "django__django-12276",
+      "repo": "django/django",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-12276",
+      "derivationValid": false,
+      "derivationReason": "schema_unsupported",
+      "storedVtraceCommit": "70354295895546c06166bec6d650d23f462ab7b5",
+      "storedFormatVersion": 1
+    },
+    {
+      "instance_id": "django__django-12325",
+      "repo": "django/django",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-12325",
+      "derivationValid": false,
+      "derivationReason": "schema_unsupported",
+      "storedVtraceCommit": "70354295895546c06166bec6d650d23f462ab7b5",
+      "storedFormatVersion": 1
+    },
+    {
+      "instance_id": "django__django-12774",
+      "repo": "django/django",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-12774",
+      "derivationValid": false,
+      "derivationReason": "schema_unsupported",
+      "storedVtraceCommit": "70354295895546c06166bec6d650d23f462ab7b5",
+      "storedFormatVersion": 1
+    },
+    {
+      "instance_id": "django__django-12858",
+      "repo": "django/django",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-12858",
+      "derivationValid": false,
+      "derivationReason": "schema_unsupported",
+      "storedVtraceCommit": "70354295895546c06166bec6d650d23f462ab7b5",
+      "storedFormatVersion": 1
+    },
+    {
+      "instance_id": "django__django-13012",
+      "repo": "django/django",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-13012",
+      "derivationValid": false,
+      "derivationReason": "schema_unsupported",
+      "storedVtraceCommit": "70354295895546c06166bec6d650d23f462ab7b5",
+      "storedFormatVersion": 1
+    },
+    {
+      "instance_id": "django__django-13112",
+      "repo": "django/django",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-13112",
+      "derivationValid": false,
+      "derivationReason": "schema_unsupported",
+      "storedVtraceCommit": "70354295895546c06166bec6d650d23f462ab7b5",
+      "storedFormatVersion": 1
+    },
+    {
+      "instance_id": "django__django-13195",
+      "repo": "django/django",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/expanded/django__django-13195",
+      "derivationValid": false,
+      "derivationReason": "schema_unsupported",
+      "storedVtraceCommit": "70354295895546c06166bec6d650d23f462ab7b5",
+      "storedFormatVersion": 1
+    },
+    {
+      "instance_id": "sympy__sympy-12419",
+      "repo": "sympy/sympy",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/sympy__sympy-12419",
+      "derivationValid": false,
+      "derivationReason": "schema_unsupported",
+      "storedVtraceCommit": "5d112f7600f2091c1c9e8ac21eb36400fe6fb8e5",
+      "storedFormatVersion": 1
+    },
+    {
+      "instance_id": "sympy__sympy-12481",
+      "repo": "sympy/sympy",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/sympy__sympy-12481",
+      "derivationValid": false,
+      "derivationReason": "schema_unsupported",
+      "storedVtraceCommit": "5d112f7600f2091c1c9e8ac21eb36400fe6fb8e5",
+      "storedFormatVersion": 1
+    },
+    {
+      "instance_id": "sympy__sympy-13372",
+      "repo": "sympy/sympy",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/sympy__sympy-13372",
+      "derivationValid": false,
+      "derivationReason": "schema_unsupported",
+      "storedVtraceCommit": "5d112f7600f2091c1c9e8ac21eb36400fe6fb8e5",
+      "storedFormatVersion": 1
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-10844",
+      "repo": "scikit-learn/scikit-learn",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/scikit-learn__scikit-learn-10844",
+      "derivationValid": false,
+      "derivationReason": "schema_unsupported",
+      "storedVtraceCommit": "5d112f7600f2091c1c9e8ac21eb36400fe6fb8e5",
+      "storedFormatVersion": 1
+    },
+    {
+      "instance_id": "scikit-learn__scikit-learn-11578",
+      "repo": "scikit-learn/scikit-learn",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/scikit-learn__scikit-learn-11578",
+      "derivationValid": false,
+      "derivationReason": "schema_unsupported",
+      "storedVtraceCommit": "5d112f7600f2091c1c9e8ac21eb36400fe6fb8e5",
+      "storedFormatVersion": 1
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-22719",
+      "repo": "matplotlib/matplotlib",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/matplotlib__matplotlib-22719",
+      "derivationValid": false,
+      "derivationReason": "schema_unsupported",
+      "storedVtraceCommit": "5d112f7600f2091c1c9e8ac21eb36400fe6fb8e5",
+      "storedFormatVersion": 1
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-24627",
+      "repo": "matplotlib/matplotlib",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/matplotlib__matplotlib-24627",
+      "derivationValid": false,
+      "derivationReason": "schema_unsupported",
+      "storedVtraceCommit": "5d112f7600f2091c1c9e8ac21eb36400fe6fb8e5",
+      "storedFormatVersion": 1
+    },
+    {
+      "instance_id": "astropy__astropy-14365",
+      "repo": "astropy/astropy",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/astropy__astropy-14365",
+      "derivationValid": false,
+      "derivationReason": "schema_unsupported",
+      "storedVtraceCommit": "5d112f7600f2091c1c9e8ac21eb36400fe6fb8e5",
+      "storedFormatVersion": 1
+    },
+    {
+      "instance_id": "astropy__astropy-14369",
+      "repo": "astropy/astropy",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/astropy__astropy-14369",
+      "derivationValid": false,
+      "derivationReason": "schema_unsupported",
+      "storedVtraceCommit": "5d112f7600f2091c1c9e8ac21eb36400fe6fb8e5",
+      "storedFormatVersion": 1
+    },
+    {
+      "instance_id": "pytest-dev__pytest-10051",
+      "repo": "pytest-dev/pytest",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/pytest-dev__pytest-10051",
+      "derivationValid": false,
+      "derivationReason": "schema_unsupported",
+      "storedVtraceCommit": "5d112f7600f2091c1c9e8ac21eb36400fe6fb8e5",
+      "storedFormatVersion": 1
+    },
+    {
+      "instance_id": "pytest-dev__pytest-5262",
+      "repo": "pytest-dev/pytest",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/pytest-dev__pytest-5262",
+      "derivationValid": false,
+      "derivationReason": "schema_unsupported",
+      "storedVtraceCommit": "5d112f7600f2091c1c9e8ac21eb36400fe6fb8e5",
+      "storedFormatVersion": 1
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-7462",
+      "repo": "sphinx-doc/sphinx",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/sphinx-doc__sphinx-7462",
+      "derivationValid": false,
+      "derivationReason": "schema_unsupported",
+      "storedVtraceCommit": "5d112f7600f2091c1c9e8ac21eb36400fe6fb8e5",
+      "storedFormatVersion": 1
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-7748",
+      "repo": "sphinx-doc/sphinx",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/sphinx-doc__sphinx-7748",
+      "derivationValid": false,
+      "derivationReason": "schema_unsupported",
+      "storedVtraceCommit": "5d112f7600f2091c1c9e8ac21eb36400fe6fb8e5",
+      "storedFormatVersion": 1
+    },
+    {
+      "instance_id": "psf__requests-1142",
+      "repo": "psf/requests",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/psf__requests-1142",
+      "derivationValid": false,
+      "derivationReason": "schema_unsupported",
+      "storedVtraceCommit": "5d112f7600f2091c1c9e8ac21eb36400fe6fb8e5",
+      "storedFormatVersion": 1
+    },
+    {
+      "instance_id": "psf__requests-1724",
+      "repo": "psf/requests",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/psf__requests-1724",
+      "derivationValid": false,
+      "derivationReason": "schema_unsupported",
+      "storedVtraceCommit": "5d112f7600f2091c1c9e8ac21eb36400fe6fb8e5",
+      "storedFormatVersion": 1
+    },
+    {
+      "instance_id": "pallets__flask-5014",
+      "repo": "pallets/flask",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/pallets__flask-5014",
+      "derivationValid": true,
+      "derivationReason": "derivation_agrees",
+      "storedVtraceCommit": "588d55d83d4f2b534b7b972f1a4f0bb0b3828ede",
+      "storedFormatVersion": 5
+    },
+    {
+      "instance_id": "astropy__astropy-14539",
+      "repo": "astropy/astropy",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/astropy__astropy-14539",
+      "derivationValid": false,
+      "derivationReason": "schema_unsupported",
+      "storedVtraceCommit": "1cf646cf9b14c8eee6e9aaedc10ee6a06c5b1017",
+      "storedFormatVersion": 1
+    },
+    {
+      "instance_id": "astropy__astropy-14598",
+      "repo": "astropy/astropy",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/astropy__astropy-14598",
+      "derivationValid": true,
+      "derivationReason": "derivation_agrees",
+      "storedVtraceCommit": "588d55d83d4f2b534b7b972f1a4f0bb0b3828ede",
+      "storedFormatVersion": 5
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-24970",
+      "repo": "matplotlib/matplotlib",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/matplotlib__matplotlib-24970",
+      "derivationValid": false,
+      "derivationReason": "schema_unsupported",
+      "storedVtraceCommit": "1cf646cf9b14c8eee6e9aaedc10ee6a06c5b1017",
+      "storedFormatVersion": 1
+    },
+    {
+      "instance_id": "matplotlib__matplotlib-25960",
+      "repo": "matplotlib/matplotlib",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/matplotlib__matplotlib-25960",
+      "derivationValid": false,
+      "derivationReason": "schema_unsupported",
+      "storedVtraceCommit": "1cf646cf9b14c8eee6e9aaedc10ee6a06c5b1017",
+      "storedFormatVersion": 1
+    },
+    {
+      "instance_id": "mwaskom__seaborn-3187",
+      "repo": "mwaskom/seaborn",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/mwaskom__seaborn-3187",
+      "derivationValid": false,
+      "derivationReason": "schema_unsupported",
+      "storedVtraceCommit": "1cf646cf9b14c8eee6e9aaedc10ee6a06c5b1017",
+      "storedFormatVersion": 1
+    },
+    {
+      "instance_id": "psf__requests-5414",
+      "repo": "psf/requests",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/psf__requests-5414",
+      "derivationValid": true,
+      "derivationReason": "derivation_agrees",
+      "storedVtraceCommit": "588d55d83d4f2b534b7b972f1a4f0bb0b3828ede",
+      "storedFormatVersion": 5
+    },
+    {
+      "instance_id": "pydata__xarray-2905",
+      "repo": "pydata/xarray",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/pydata__xarray-2905",
+      "derivationValid": false,
+      "derivationReason": "schema_unsupported",
+      "storedVtraceCommit": "1cf646cf9b14c8eee6e9aaedc10ee6a06c5b1017",
+      "storedFormatVersion": 1
+    },
+    {
+      "instance_id": "pydata__xarray-3677",
+      "repo": "pydata/xarray",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/pydata__xarray-3677",
+      "derivationValid": false,
+      "derivationReason": "schema_unsupported",
+      "storedVtraceCommit": "1cf646cf9b14c8eee6e9aaedc10ee6a06c5b1017",
+      "storedFormatVersion": 1
+    },
+    {
+      "instance_id": "pylint-dev__pylint-8898",
+      "repo": "pylint-dev/pylint",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/pylint-dev__pylint-8898",
+      "derivationValid": true,
+      "derivationReason": "derivation_agrees",
+      "storedVtraceCommit": "588d55d83d4f2b534b7b972f1a4f0bb0b3828ede",
+      "storedFormatVersion": 5
+    },
+    {
+      "instance_id": "pytest-dev__pytest-7432",
+      "repo": "pytest-dev/pytest",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/pytest-dev__pytest-7432",
+      "derivationValid": true,
+      "derivationReason": "derivation_agrees",
+      "storedVtraceCommit": "588d55d83d4f2b534b7b972f1a4f0bb0b3828ede",
+      "storedFormatVersion": 5
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-7910",
+      "repo": "sphinx-doc/sphinx",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/sphinx-doc__sphinx-7910",
+      "derivationValid": false,
+      "derivationReason": "schema_unsupported",
+      "storedVtraceCommit": "1cf646cf9b14c8eee6e9aaedc10ee6a06c5b1017",
+      "storedFormatVersion": 1
+    },
+    {
+      "instance_id": "sphinx-doc__sphinx-9230",
+      "repo": "sphinx-doc/sphinx",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/sphinx-doc__sphinx-9230",
+      "derivationValid": false,
+      "derivationReason": "schema_unsupported",
+      "storedVtraceCommit": "1cf646cf9b14c8eee6e9aaedc10ee6a06c5b1017",
+      "storedFormatVersion": 1
+    },
+    {
+      "instance_id": "sympy__sympy-15599",
+      "repo": "sympy/sympy",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/sympy__sympy-15599",
+      "derivationValid": false,
+      "derivationReason": "schema_unsupported",
+      "storedVtraceCommit": "1cf646cf9b14c8eee6e9aaedc10ee6a06c5b1017",
+      "storedFormatVersion": 1
+    },
+    {
+      "instance_id": "sympy__sympy-16766",
+      "repo": "sympy/sympy",
+      "workspace": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/cross_repo/sympy__sympy-16766",
+      "derivationValid": false,
+      "derivationReason": "schema_unsupported",
+      "storedVtraceCommit": "1cf646cf9b14c8eee6e9aaedc10ee6a06c5b1017",
+      "storedFormatVersion": 1
+    }
+  ]
+}
