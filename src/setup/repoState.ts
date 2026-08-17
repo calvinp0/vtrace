@@ -240,10 +240,17 @@ export async function evaluateRepoReadiness(input: {
       detail: `indexed_symbols:${input.latestRunSummary?.totalSymbols ?? 0}`,
     },
     {
-      id: "index_failures_absent",
-      ok: input.indexResult.totalParseFailures === 0
-        && input.indexResult.totalReadFailures === 0
-        && input.indexResult.totalPersistenceFailures === 0,
+      // M156. This used to require ZERO parse and read failures, which made a
+      // repository holding one unparseable test fixture permanently `not_ready`
+      // — the same availability failure as the indexer abort, one layer up. It
+      // was simply unreachable before M156, because indexing threw first.
+      //
+      // What it gates on now is what actually indicts the index: a persistence
+      // failure. Per-file parse and read failures are reported in `detail` and
+      // through the coverage axis, where they weaken completeness claims without
+      // withdrawing a usable repository (§25, §45).
+      id: "index_persistence_intact",
+      ok: input.indexResult.totalPersistenceFailures === 0,
       detail: [
         `parse:${input.indexResult.totalParseFailures}`,
         `read:${input.indexResult.totalReadFailures}`,

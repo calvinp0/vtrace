@@ -117,7 +117,7 @@ test("init writes readiness metadata based on persisted indexing state", async (
         ["latest_run_present", true],
         ["indexed_files_present", true],
         ["indexed_symbols_present", true],
-        ["index_failures_absent", true],
+        ["index_persistence_intact", true],
       ],
     );
   });

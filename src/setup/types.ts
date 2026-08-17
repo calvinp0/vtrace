@@ -42,7 +42,7 @@ export interface RepoReadinessCheck {
     | "latest_run_present"
     | "indexed_files_present"
     | "indexed_symbols_present"
-    | "index_failures_absent";
+    | "index_persistence_intact";
   ok: boolean;
   detail: string;
 }
