@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "stage5.m156.fast-gate.v1",
+  "milestone": "M156",
+  "suite": "frozen50",
+  "note": "Re-baselined M155 fast gate, run on a corpus freshly prepared and indexed by the M156 candidate. No stale workspace fixtures (\u00a759).",
+  "derivationValidCases": 50,
+  "cases": 50,
+  "gateUsable": true,
+  "manifestUsable": true,
+  "summary": {
+    "suite": "frozen50",
+    "cases": 50,
+    "evaluated": 50,
+    "workspaceErrors": 0,
+    "top1": 0.76,
+    "top3": 0.86,
+    "goldDelivered": 0.9,
+    "goldDiscarded": 0.06,
+    "goldMissing": 0.04,
+    "meanTokens": 1779
+  },
+  "m155Rebaseline": {
+    "top1": 0.76,
+    "goldDelivered": 0.9,
+    "source": "stage5_m155_fast_gate_rebaseline_after.json"
+  }
+}

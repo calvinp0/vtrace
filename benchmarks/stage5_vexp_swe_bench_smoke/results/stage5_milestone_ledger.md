@@ -2161,3 +2161,100 @@ clean.
   evidence): `django__django-11740` retrieved 33 candidates including gold, marked
   every one `support-only: no actionable edit target`, and delivered nothing. The
   broad corpus calls that `gold anywhere`; the agent received an empty treatment.
+
+## M156 — Per-file parse failure containment and index availability (commits 24748cbc, d5a77cd0, 8aa76242, c3fc42d2, cc0fee91, 63036a0a, bfbb70e4, 04ed1e1f, <evidence>)
+
+M156 is **PASS** (A · B · C · D · E). Product code changed; behavioural routing
+stays OFF; the M152 store split and M154 Git-state safety are intact.
+
+One unparseable source file made an entire repository unavailable. On the frozen
+30 that cost three treatments, **two of them baseline PASSES** — the M155 prose
+names one, but `stage5_m155_paired30_outcomes.json` lists two under
+`baselinePassWithTreatmentUnavailable`. The seam was a single throw in
+`indexProject`, which already parsed every file before opening its persist
+transaction and already recorded per-file outcomes correctly. Because the throw
+preceded the transaction, the old failure left **zero rows** behind — measured,
+not assumed — so containment was a policy change rather than a data repair.
+
+Availability on the same manifest, both sides freshly indexed by their own
+binary: **27/30 → 30/30**, zero unavailable, three degraded. Preservation on the
+27 the predecessor could already index is **27/27 with zero changed cases** —
+identical indexed-file, symbol and edge counts on every one.
+
+Broad preservation at the major checkpoint is **0/100 changed cases** on freshly
+prepared corpora indexed by each side's own binary: Top-1 0.57, Top-3 0.73, gold
+anywhere 0.89, symbol anywhere 0.64, delivered 0.78, discarded 0.11, missing 0.11
+— identical on both sides, compared per instance rather than per rate. The
+frozen50 fast gate is 50/50 derivation-valid and byte-identical to M155's
+re-baseline (Top-1 0.76, delivered 0.90). All three recovered repositories
+retrieve `VALID_NONEMPTY`, and the two that were baseline PASSES deliver the gold
+file as their LEAD. `bun test` 4806 pass / 0 fail, typechecks and
+`git diff --check` clean.
+
+## M156 standing findings
+
+- **One bad file cost the whole repository, and the benchmark hid it** (A): the
+  deterministic preparer "quarantines and continues" by `rename`-ing offending
+  files OUT of the tree, indexing, and restoring them afterwards. Its index was
+  complete *for a repository that does not exist* and recorded nothing about the
+  16 files it dropped — across 4 targets, at every one of five architecture eras,
+  since M134. The product's own failure was invisible for as long as the
+  instrument was able to route around it. The mechanism was deliberately not
+  ported; under M156 the same preparer takes its first branch and quarantines
+  nothing.
+
+- **Containment was cheap because the architecture was already right** (B): parse
+  completes before the persist transaction opens, and that transaction deletes
+  every live graph table before re-inserting only successful results. So a failed
+  file contributes zero rows by construction, and a file that REGRESSES to
+  unparseable loses its stale symbols in the same commit that records its
+  failure. The test that used to prove the graph was byte-identical after such a
+  regression was asserting the bug: aborting is what kept `service` answerable
+  from source that no longer parses.
+
+- **The second seam was in a consumer, not the indexer** (D): a repo-readiness
+  check required zero parse failures and was unreachable only because indexing
+  threw first. With the abort removed it refused exactly the repositories M156
+  had just made indexable — `run_pipeline` and `get_context_capsule` both — while
+  `get_code_context` was fine. Testing one tool and generalising would have
+  missed it; the fix was found by asserting the consumers rather than the
+  primitive.
+
+- **Freshness and completeness are different questions** (C): coverage is a
+  second axis, never a term in `ready`. An index can correspond exactly to the
+  current source revision and still be semantically incomplete, and a degraded
+  index must stay usable — refusing to serve a repository because one test
+  fixture will not parse is the failure being removed, not a safe default.
+
+- **A miss is only as strong as the coverage behind it** (C): a hit is
+  self-supporting, because an unparsed file cannot retract a symbol we found. A
+  miss is a claim about everything we did not see, so an exact-symbol miss in a
+  repository with an unparsed symbol-bearing file is now `unknown /
+  coverage_incomplete`. A failed YAML document does NOT weaken it — its parser
+  emits no symbols — because weakening every claim whenever anything failed would
+  be safe-looking, useless, and quickly ignored.
+
+- **The positive control caught two bad fixtures** (A): `return *[1, 2]` is
+  accepted by CPython, so the fixture meant to reproduce pylint's
+  starred-expression failure was not failing at all. And malformed TypeScript
+  does not fail — tree-sitter recovers and returns a partial tree — so per-file
+  containment is exercised by Python and Cython only. Recorded as a named
+  limitation rather than forced, because inventing a TypeScript failure would
+  test the fixture instead of the product.
+
+- **The workaround is now dead code** (E): under M154 the deterministic preparer
+  moved 16 files out of 4 repositories to make the broad corpus indexable; under
+  M156 it takes its first branch on all 100 targets and quarantines ZERO. Broad
+  retrieval is 0/100 changed cases across that transition — including those four
+  targets, where M154 indexed a repository with files DELETED and M156 indexes
+  the same repository with those files present and recorded as failures. The
+  retrieval result is identical because a failed file contributes no evidence
+  either way; the difference is that it is no longer silently missing.
+
+- **A benchmark that measures nothing looks like a catastrophic finding** (A):
+  two availability runs were lost, one to a source tree edited while it ran and
+  one to a worktree with no dependencies installed. Both reported 27 and then 30
+  spurious unavailable repositories and both were indistinguishable from a real
+  regression until stderr was read. The probe now records the commit and
+  dirtiness of the checkout that produced each side and refuses to write a report
+  in which nothing indexed and nothing was reported as failed.

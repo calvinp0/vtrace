@@ -1,0 +1,104 @@
+{
+  "schemaVersion": "stage5.m156.recovered-three-retrieval.v1",
+  "milestone": "M156",
+  "note": "Deterministic retrieval over the three repositories M155 could not index. Classification, not grading: a delivery-empty result is a VALID product state (M155-D), not a treatment failure.",
+  "preparedFixture": "/home/calvin/bench/vtrace-m156/fixtures/m156.json",
+  "cases": 3,
+  "stillUnavailable": 0,
+  "validNonEmpty": 3,
+  "validDeliveryEmpty": 0,
+  "degraded": 3,
+  "results": [
+    {
+      "instanceId": "psf__requests-1142",
+      "repo": "psf/requests",
+      "productState": "VALID_NONEMPTY",
+      "wasUnavailableUnderM154": true,
+      "coverageState": "DEGRADED",
+      "failedFiles": 1,
+      "failedPathsSample": [
+        "requests/packages/urllib3/contrib/ntlmpool.py"
+      ],
+      "failedPathsOmitted": 0,
+      "failureClasses": [
+        "ENCODING_ERROR"
+      ],
+      "failedLanguages": [
+        "python"
+      ],
+      "pivotCount": 2,
+      "supportCount": 4,
+      "discardedCount": 27,
+      "goldFiles": [
+        "requests/models.py"
+      ],
+      "goldRole": "pivot",
+      "goldDelivered": true,
+      "goldInsideFailedFile": false,
+      "leadFile": "requests/models.py"
+    },
+    {
+      "instanceId": "pylint-dev__pylint-4551",
+      "repo": "pylint-dev/pylint",
+      "productState": "VALID_NONEMPTY",
+      "wasUnavailableUnderM154": true,
+      "coverageState": "DEGRADED",
+      "failedFiles": 13,
+      "failedPathsSample": [
+        "tests/functional/s/star/star_needs_assignment_target_py35.py",
+        "tests/functional/s/syntax_error.py",
+        "tests/functional/s/syntax_error_jython.py",
+        "tests/functional/t/tokenize_error.py"
+      ],
+      "failedPathsOmitted": 9,
+      "failureClasses": [
+        "ENCODING_ERROR",
+        "SYNTAX_ERROR"
+      ],
+      "failedLanguages": [
+        "python"
+      ],
+      "pivotCount": 2,
+      "supportCount": 4,
+      "discardedCount": 24,
+      "goldFiles": [
+        "pylint/pyreverse/diagrams.py",
+        "pylint/pyreverse/inspector.py",
+        "pylint/pyreverse/utils.py",
+        "pylint/pyreverse/writer.py"
+      ],
+      "goldRole": "missing",
+      "goldDelivered": false,
+      "goldInsideFailedFile": false,
+      "leadFile": "pylint/lint/pylinter.py"
+    },
+    {
+      "instanceId": "pytest-dev__pytest-5262",
+      "repo": "pytest-dev/pytest",
+      "productState": "VALID_NONEMPTY",
+      "wasUnavailableUnderM154": true,
+      "coverageState": "DEGRADED",
+      "failedFiles": 1,
+      "failedPathsSample": [
+        "doc/en/example/py2py3/test_py2.py"
+      ],
+      "failedPathsOmitted": 0,
+      "failureClasses": [
+        "SYNTAX_ERROR"
+      ],
+      "failedLanguages": [
+        "python"
+      ],
+      "pivotCount": 2,
+      "supportCount": 4,
+      "discardedCount": 31,
+      "goldFiles": [
+        "src/_pytest/capture.py"
+      ],
+      "goldRole": "pivot",
+      "goldDelivered": true,
+      "goldInsideFailedFile": false,
+      "leadFile": "src/_pytest/capture.py"
+    }
+  ]
+}

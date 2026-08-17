@@ -1,0 +1,50 @@
+{
+  "schemaVersion": "stage5.m156.broad100-comparison.v1",
+  "milestone": "M156",
+  "checkpoint": "M154 final -> M156 final",
+  "note": "Both sides freshly prepared and indexed by their own binary. No era-copied SQLite fixtures (M155-B2).",
+  "predecessor": {
+    "label": "M154",
+    "eval": "/home/calvin/bench/vtrace-m156/broad/broad100_m154.json",
+    "summary": {
+      "cases": 100,
+      "evaluated": 100,
+      "goldFileTop1": 0.57,
+      "goldFileTop3": 0.73,
+      "goldFileAnywhere": 0.89,
+      "goldSymbolAnywhere": 0.64,
+      "goldDelivered": 0.78,
+      "goldDiscarded": 0.11,
+      "goldMissing": 0.11
+    }
+  },
+  "candidate": {
+    "label": "M156",
+    "eval": "/home/calvin/bench/vtrace-m156/broad/broad100_m156.json",
+    "summary": {
+      "cases": 100,
+      "evaluated": 100,
+      "goldFileTop1": 0.57,
+      "goldFileTop3": 0.73,
+      "goldFileAnywhere": 0.89,
+      "goldSymbolAnywhere": 0.64,
+      "goldDelivered": 0.78,
+      "goldDiscarded": 0.11,
+      "goldMissing": 0.11
+    }
+  },
+  "delta": {
+    "cases": 0,
+    "evaluated": 0,
+    "goldFileTop1": 0,
+    "goldFileTop3": 0,
+    "goldFileAnywhere": 0,
+    "goldSymbolAnywhere": 0,
+    "goldDelivered": 0,
+    "goldDiscarded": 0,
+    "goldMissing": 0
+  },
+  "changedCases": 0,
+  "changed": [],
+  "unchangedOnCleanRepositories": true
+}

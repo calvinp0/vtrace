@@ -157,14 +157,79 @@ exercised by Python and Cython only. Recorded as a declared non-failing fixture
 and a named limitation rather than forced, because inventing a TypeScript failure
 would test the fixture instead of the product.
 
-## 8. Performance
+## 8. Preservation at scale
+
+Both sides freshly prepared and indexed by their own binary — no era-copied
+SQLite, which is the M155-B2 lesson.
+
+**broad100, M154 final → M156 final:**
+
+```
+                     M154     M156     delta
+gold file Top-1      0.57     0.57      0.00
+gold file Top-3      0.73     0.73      0.00
+gold file anywhere   0.89     0.89      0.00
+gold symbol anywhere 0.64     0.64      0.00
+gold delivered       0.78     0.78      0.00
+gold discarded       0.11     0.11      0.00
+gold missing         0.11     0.11      0.00
+
+changed cases        0 / 100
+```
+
+Not merely equal rates — **zero cases changed**, comparing Top-1, Top-3, gold
+role, symbol role, and pivot/support/discarded counts per instance.
+
+That includes the four targets M154 could only index by *deleting files from the
+tree*, and M156 indexes with those files present and recorded as failures. The
+retrieval result is identical because a file that failed to parse contributes no
+evidence either way — which is the design working: for retrieval a failed file is
+equivalent to an absent one, and the difference is that it is now recorded rather
+than silently missing.
+
+**Fast gate (frozen50), on a corpus freshly indexed by the candidate:**
+
+```
+derivation-valid   50/50      gateUsable  true
+Top-1              0.76       Top-3       0.86
+gold delivered     0.90       discarded   0.06      missing 0.04
+```
+
+Identical on every metric to M155's re-baselined gate.
+
+**The preparer no longer needs to quarantine anything.** Under M154 it moved 16
+files out of 4 repositories to make them indexable; under M156 it takes its first
+branch on all 100 targets and quarantines **0**. The workaround is now dead code
+against this product.
+
+## 9. The three recovered repositories, retrieved
+
+| instance | product state | coverage | gold role | lead |
+|---|---|---|---|---|
+| `psf__requests-1142` | VALID_NONEMPTY | DEGRADED (1) | **pivot** | `requests/models.py` — exact gold |
+| `pytest-dev__pytest-5262` | VALID_NONEMPTY | DEGRADED (1) | **pivot** | `src/_pytest/capture.py` — exact gold |
+| `pylint-dev__pylint-4551` | VALID_NONEMPTY | DEGRADED (13) | missing | `pylint/lint/pylinter.py` |
+
+None is `TREATMENT_UNAVAILABLE_INDEX_FAILURE`. Both cases that were **baseline
+PASSES** now retrieve the gold file as their lead.
+
+`pylint-4551` misses gold, and the report says so. Its gold is **not** inside a
+failed file — this is an ordinary retrieval miss, not a coverage consequence, and
+§53's "available but unanswerable" case did not arise on these three.
+
+Failure classification on real repositories discriminates as intended:
+`requests-1142` is `ENCODING_ERROR` (the truncated `\uXXXX` escape) rather than
+being lumped in with syntax; `pylint-4551` splits 12 `SYNTAX_ERROR` and 1
+`ENCODING_ERROR` (a `U+FEFF` in a Jython fixture).
+
+## 10. Performance
 
 Median index wall clock across the 27 clean repositories moved 39.1s → 33.0s.
 This is **not** a speedup claim: one sample per repository, two sides under
 different machine load. It is reported only to show there is no material
 regression from handling failures per file.
 
-## 9. Storage and derivation
+## 11. Storage and derivation
 
 `file_index_failures` is classified `repository_derived`, so it lives in
 `index.sqlite` and never in `session.sqlite` — the M152 split holds. Adding it
@@ -175,7 +240,7 @@ suppressed**: a pre-M156 snapshot cannot express which files were refused, and
 reading one as though it could would report a degraded repository as complete —
 the exact lie this milestone exists to prevent.
 
-## 10. Limitations
+## 12. Limitations
 
 - **Containment is exercised by Python and Cython.** TypeScript's parser is
   error-tolerant and produces no failures to contain; JavaScript is
@@ -189,4 +254,24 @@ the exact lie this milestone exists to prevent.
   and §53 anticipates it.
 - **No live agent arms were run.** The three recovered treatments have never
   executed end to end; deterministic availability and retrieval are what is
-  claimed here.
+  claimed here. §54 permits a small live validation and it was not spent: the
+  deterministic evidence already answers the availability question, and M155's
+  utility verdict stays frozen either way.
+
+---
+
+## Verdicts
+
+```
+M156-A  Failure model audit                  PASS
+M156-B  Per-file atomic containment          PASS
+M156-C  Truthful degraded coverage           PASS
+M156-D  Incremental and consumer integration PASS
+M156-E  Frozen30 availability + preservation PASS
+
+M156 overall                                 PASS
+```
+
+M155 is not rewritten. Its observed availability remains **27/30 (90%) under the
+M154 product**, and its utility verdict among valid pairs remains MIXED. M156
+reports a new product state on the same frozen repositories: **30/30**.
