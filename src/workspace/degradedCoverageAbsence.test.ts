@@ -20,7 +20,7 @@ import { Database } from "bun:sqlite";
 
 import { resolveIndexDbPath } from "../indexer/indexMeta";
 import { initRepo } from "../setup/initRepo";
-import { evaluateIndexReadiness } from "../indexer/indexReadiness";
+import { evaluateIndexReadiness, withRuntimeSignals } from "../indexer/indexReadiness";
 import { resolveWorkspaceConfigPath } from "./config";
 import { evaluateWorkspaceReadiness } from "./readiness";
 import { resolveWorkspaceRegistry, type RegisteredRepository } from "./registry";
@@ -81,6 +81,36 @@ describe("M156 degraded coverage and absence", () => {
     expect(readiness.coverage.complete).toBe(false);
     expect(readiness.coverage.failedFiles).toBe(1);
     expect(readiness.coverage.failedLanguages).toEqual(["python"]);
+  });
+
+  test("a repository where every file fails is not served as merely degraded", async () => {
+    // The boundary of the milestone. Containment says one bad file must not cost
+    // the repository; it does not say a repository with NO indexable evidence is
+    // usable. `indexed_files_present` still fails, so this reports as an index
+    // with nothing in it rather than as a degraded index worth querying.
+    const root = await makeWorkspaceRoot("m156-all-failed");
+    const repoRoot = await indexedRepo(root, "app", {
+      "src/one.py": BROKEN_PYTHON,
+      "src/two.py": BROKEN_PYTHON,
+    });
+
+    const readiness = await evaluateIndexReadiness(repoRoot, { probe: "full" });
+
+    expect(readiness.coverage.failedFiles).toBe(2);
+    expect(readiness.coverage.complete).toBe(false);
+
+    // The raw evaluation answers only "can this index be read and does it match
+    // the source", and both are true — the index is well-formed and current, it
+    // simply contains nothing. Emptiness is a REQUEST-TIME signal in M141's
+    // decomposition, applied by every consumer through `withRuntimeSignals`, and
+    // that is the layer that withdraws the index.
+    expect(readiness.ready).toBe(true);
+    const withEmptiness = withRuntimeSignals(readiness, { indexHasNoFiles: true });
+    expect(withEmptiness.ready).toBe(false);
+    expect(withEmptiness.state).toBe("index_missing");
+    // Coverage survives the downgrade: the reason there is nothing to serve is
+    // still that two files failed, and that must not be erased by the refusal.
+    expect(withEmptiness.coverage.failedFiles).toBe(2);
   });
 
   test("a clean repository is never marked degraded", async () => {
