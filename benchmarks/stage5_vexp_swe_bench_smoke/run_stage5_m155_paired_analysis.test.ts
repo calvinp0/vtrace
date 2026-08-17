@@ -6,6 +6,7 @@ import {
   classifyPair,
   gradeOf,
   mcnemarExactP,
+  orientation,
   totalTokensOf,
   wilson,
   type ArmRun,
@@ -18,7 +19,7 @@ function run(overrides: Partial<ArmRun> = {}): ArmRun {
     inputTokens: 100, outputTokens: 50, cacheReadTokens: 200_000, cacheCreationTokens: 50_000,
     totalTokens: 250_150, toolCalls: { Read: 3, Grep: 1 },
     injectedContextTokens: 5000, contextInjected: true,
-    treatmentValid: true, treatmentInvalidReason: null,
+    treatmentValid: true, treatmentInvalidReason: null, orientation: null,
     ...overrides,
   };
 }
@@ -144,4 +145,57 @@ test("Wilson interval brackets the point estimate and stays in [0,1]", () => {
 
 test("Wilson interval on an empty arm is degenerate rather than NaN", () => {
   assert.deepEqual(wilson(0, 0), { low: 0, high: 0 });
+});
+
+// --- orientation from the ordered tool stream (§49/§58) ---------------------
+
+test("orientation locates the first edit and the first gold touch", () => {
+  const calls = [
+    { index: 0, tool: "Grep", category: "search", path: null },
+    { index: 1, tool: "Read", category: "read", path: "/bench/django__django/django/http/response.py" },
+    { index: 2, tool: "Read", category: "read", path: "/bench/django__django/django/urls/base.py" },
+    { index: 3, tool: "Edit", category: "edit", path: "/bench/django__django/django/http/response.py" },
+  ];
+  const o = orientation(calls, ["django/http/response.py"]);
+  assert.equal(o.toolCalls, 4);
+  assert.equal(o.firstEditIndex, 3);
+  // Gold matched through samePath: repository-relative gold vs absolute bench path.
+  assert.equal(o.firstGoldTouchIndex, 1);
+  assert.equal(o.readsBeforeFirstEdit, 2);
+  assert.equal(o.searchesBeforeFirstEdit, 1);
+  assert.equal(o.goldTouchedBeforeFirstEdit, true);
+});
+
+test("orientation reports null rather than 0 when the agent never edited", () => {
+  const o = orientation([{ index: 0, tool: "Grep", category: "search", path: null }], ["a/b.py"]);
+  assert.equal(o.firstEditIndex, null);
+  assert.equal(o.readsBeforeFirstEdit, null);
+  assert.equal(o.goldTouchedBeforeFirstEdit, null);
+});
+
+test("orientation reports never-touched gold distinctly from touched-late", () => {
+  const never = orientation([
+    { index: 0, tool: "Read", category: "read", path: "/bench/x/other.py" },
+    { index: 1, tool: "Edit", category: "edit", path: "/bench/x/other.py" },
+  ], ["x/gold.py"]);
+  assert.equal(never.firstGoldTouchIndex, null);
+  assert.equal(never.goldTouchedBeforeFirstEdit, false);
+
+  const late = orientation([
+    { index: 0, tool: "Edit", category: "edit", path: "/bench/x/other.py" },
+    { index: 1, tool: "Read", category: "read", path: "/bench/x/gold.py" },
+  ], ["x/gold.py"]);
+  assert.equal(late.firstGoldTouchIndex, 1);
+  assert.equal(late.goldTouchedBeforeFirstEdit, false);
+});
+
+test("orientation is order-independent of the input array", () => {
+  const calls = [
+    { index: 2, tool: "Edit", category: "edit", path: "/bench/x/gold.py" },
+    { index: 0, tool: "Grep", category: "search", path: null },
+    { index: 1, tool: "Read", category: "read", path: "/bench/x/gold.py" },
+  ];
+  const o = orientation(calls, ["x/gold.py"]);
+  assert.equal(o.firstEditIndex, 2);
+  assert.equal(o.firstGoldTouchIndex, 1);
 });

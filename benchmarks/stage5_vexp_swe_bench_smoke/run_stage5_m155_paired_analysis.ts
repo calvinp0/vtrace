@@ -21,6 +21,52 @@ import path from "node:path";
 import { glob } from "node:fs/promises";
 
 import { median, percentile, mean } from "./run_stage5_m155_latency_probe";
+import { samePath } from "./run_stage5_m143b_ownership_evidence_audit";
+
+export interface ToolCall {
+  readonly index: number;
+  readonly tool: string;
+  readonly category: string | null;
+  readonly path: string | null;
+}
+
+export interface OrientationMetrics {
+  readonly toolCalls: number;
+  readonly firstEditIndex: number | null;
+  /** Index of the first call that touched a gold file. null = never touched one. */
+  readonly firstGoldTouchIndex: number | null;
+  readonly toolCallsBeforeFirstEdit: number | null;
+  readonly readsBeforeFirstEdit: number | null;
+  readonly searchesBeforeFirstEdit: number | null;
+  readonly goldTouchedBeforeFirstEdit: boolean | null;
+}
+
+/**
+ * Orientation from the ordered tool-call stream (§49/§50/§58). "Time" is measured in
+ * tool calls rather than seconds: the stream carries a reliable order and no
+ * per-call timestamp, and inventing a duration from run wall-clock would be a
+ * fragile metric of exactly the kind §48 warns against.
+ *
+ * Gold matching goes through `samePath` because telemetry paths are absolute inside
+ * the harness bench-repo checkout while gold paths are repository-relative.
+ */
+export function orientation(calls: readonly ToolCall[], goldFiles: readonly string[]): OrientationMetrics {
+  const ordered = [...calls].sort((a, b) => a.index - b.index);
+  const isGold = (p: string | null): boolean =>
+    p !== null && goldFiles.some((gold) => samePath(gold, p));
+  const firstEdit = ordered.findIndex((c) => c.category === "edit");
+  const firstGold = ordered.findIndex((c) => isGold(c.path));
+  const before = firstEdit < 0 ? ordered : ordered.slice(0, firstEdit);
+  return {
+    toolCalls: ordered.length,
+    firstEditIndex: firstEdit < 0 ? null : firstEdit,
+    firstGoldTouchIndex: firstGold < 0 ? null : firstGold,
+    toolCallsBeforeFirstEdit: firstEdit < 0 ? null : firstEdit,
+    readsBeforeFirstEdit: firstEdit < 0 ? null : before.filter((c) => c.category === "read").length,
+    searchesBeforeFirstEdit: firstEdit < 0 ? null : before.filter((c) => c.category === "search").length,
+    goldTouchedBeforeFirstEdit: firstEdit < 0 ? null : before.some((c) => isGold(c.path)),
+  };
+}
 
 export type Grade = "PASS" | "FAIL" | "UNGRADED";
 export type PairClass =
@@ -49,6 +95,7 @@ export interface ArmRun {
   readonly contextInjected: boolean | null;
   readonly treatmentValid: boolean;
   readonly treatmentInvalidReason: string | null;
+  readonly orientation: OrientationMetrics | null;
 }
 
 /** End-to-end billable tokens. Cache reads/creations are real usage and are
@@ -193,6 +240,7 @@ async function firstResultRow(dir: string): Promise<Record<string, unknown> | nu
 
 export async function loadArm(
   resultsRoot: string, instanceId: string, arm: "baseline" | "vtrace",
+  goldFiles: readonly string[] = [],
 ): Promise<ArmRun | null> {
   const label = `m155_${arm}_${instanceId.replace(/-/g, "_")}`;
   const dir = path.join(resultsRoot, "runs", label, "raw", arm === "baseline" ? "baseline" : "vtrace");
@@ -223,6 +271,13 @@ export async function loadArm(
     }
   }
 
+  const rawCalls = readJson(path.join(dir, "_tool_calls.json"));
+  const callList: ToolCall[] = Array.isArray(rawCalls)
+    ? (rawCalls as ToolCall[])
+    : Array.isArray((rawCalls as { calls?: unknown } | null)?.calls)
+      ? ((rawCalls as { calls: ToolCall[] }).calls)
+      : [];
+
   return {
     instanceId,
     arm,
@@ -241,6 +296,7 @@ export async function loadArm(
     contextInjected,
     treatmentValid,
     treatmentInvalidReason,
+    orientation: callList.length > 0 ? orientation(callList, goldFiles) : null,
   };
 }
 
@@ -259,13 +315,21 @@ async function main(): Promise<void> {
   };
   const outDir = get("--out-dir");
 
+  // Gold files come from the broad fixture; they are evaluation labels and are used
+  // only to locate orientation events in the tool stream, never fed to the agent.
+  const goldByInstance = new Map<string, readonly string[]>(
+    (JSON.parse(await Bun.file(get("--fixture")).text()) as Array<{ instance_id: string; expected_files: string[] }>)
+      .map((e) => [e.instance_id, e.expected_files]),
+  );
+
   const baselineRuns: ArmRun[] = [];
   const vtraceRuns: ArmRun[] = [];
   const pairs = [];
 
   for (const c of manifest.cases) {
-    const b = await loadArm(resultsRoot, c.instance_id, "baseline");
-    const v = await loadArm(resultsRoot, c.instance_id, "vtrace");
+    const gold = goldByInstance.get(c.instance_id) ?? [];
+    const b = await loadArm(resultsRoot, c.instance_id, "baseline", gold);
+    const v = await loadArm(resultsRoot, c.instance_id, "vtrace", gold);
     if (b) baselineRuns.push(b);
     if (v) vtraceRuns.push(v);
     pairs.push({
@@ -275,8 +339,8 @@ async function main(): Promise<void> {
       difficulty: c.difficulty,
       firstArm: c.armOrder[0],
       m154DeterministicGoldState: c.m154DeterministicGoldState,
-      baseline: b === null ? null : { grade: b.grade, patch: b.patchProduced, cost: b.costUsd, turns: b.numTurns, tokens: b.totalTokens, tools: b.toolCalls },
-      vtrace: v === null ? null : { grade: v.grade, patch: v.patchProduced, cost: v.costUsd, turns: v.numTurns, tokens: v.totalTokens, tools: v.toolCalls, injectedContextTokens: v.injectedContextTokens, treatmentValid: v.treatmentValid, treatmentInvalidReason: v.treatmentInvalidReason },
+      baseline: b === null ? null : { grade: b.grade, patch: b.patchProduced, cost: b.costUsd, turns: b.numTurns, tokens: b.totalTokens, tools: b.toolCalls, orientation: b.orientation },
+      vtrace: v === null ? null : { grade: v.grade, patch: v.patchProduced, cost: v.costUsd, turns: v.numTurns, tokens: v.totalTokens, tools: v.toolCalls, injectedContextTokens: v.injectedContextTokens, treatmentValid: v.treatmentValid, treatmentInvalidReason: v.treatmentInvalidReason, orientation: v.orientation },
       classification: classifyPair(b?.grade ?? "UNGRADED", v?.grade ?? "UNGRADED"),
     });
   }
@@ -315,6 +379,26 @@ async function main(): Promise<void> {
   };
   await writeFile(path.join(outDir, "stage5_m155_paired30_outcomes.json"), `${JSON.stringify(outcomes, null, 2)}\n`);
 
+  const orientationAggregate = (runs: readonly ArmRun[]) => {
+    const vals = (pick: (o: OrientationMetrics) => number | null): number[] =>
+      runs.map((r) => (r.orientation === null ? null : pick(r.orientation)))
+        .filter((v): v is number => v !== null);
+    const reads = vals((o) => o.readsBeforeFirstEdit);
+    const searches = vals((o) => o.searchesBeforeFirstEdit);
+    const beforeEdit = vals((o) => o.toolCallsBeforeFirstEdit);
+    const goldTouch = vals((o) => o.firstGoldTouchIndex);
+    const withOrientation = runs.filter((r) => r.orientation !== null);
+    return {
+      runsWithTelemetry: withOrientation.length,
+      medianToolCallsBeforeFirstEdit: median(beforeEdit),
+      medianReadsBeforeFirstEdit: median(reads),
+      medianSearchesBeforeFirstEdit: median(searches),
+      medianFirstGoldTouchIndex: median(goldTouch),
+      casesTouchingGoldBeforeFirstEdit: withOrientation.filter((r) => r.orientation!.goldTouchedBeforeFirstEdit === true).length,
+      casesNeverTouchingGold: withOrientation.filter((r) => r.orientation!.firstGoldTouchIndex === null).length,
+    };
+  };
+
   const tokenCost = {
     schemaVersion: "stage5.m155.token-cost.v1",
     note:
@@ -322,6 +406,11 @@ async function main(): Promise<void> {
       + "capsule followed by more turns is a cost (§54/§55).",
     baseline: aggregateArm("baseline", baselineRuns),
     vtrace: aggregateArm("vtrace", vtraceRuns),
+    orientation: {
+      note: "measured in tool calls, not seconds: the stream carries order but no per-call timestamp (§48/§58)",
+      baseline: orientationAggregate(baselineRuns),
+      vtrace: orientationAggregate(vtraceRuns),
+    },
     injectedContextTokens: {
       cases: vtraceRuns.filter((r) => r.injectedContextTokens !== null).length,
       total: vtraceRuns.reduce((s, r) => s + (r.injectedContextTokens ?? 0), 0),
