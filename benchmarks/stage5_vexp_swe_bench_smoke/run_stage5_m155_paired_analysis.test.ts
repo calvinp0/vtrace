@@ -8,6 +8,7 @@ import {
   mcnemarExactP,
   orientation,
   totalTokensOf,
+  treatmentAvailable,
   wilson,
   type ArmRun,
 } from "./run_stage5_m155_paired_analysis";
@@ -198,4 +199,42 @@ test("orientation is order-independent of the input array", () => {
   const o = orientation(calls, ["x/gold.py"]);
   assert.equal(o.firstEditIndex, 2);
   assert.equal(o.firstGoldTouchIndex, 1);
+});
+
+// --- treatment state taxonomy -----------------------------------------------
+// A successful retrieval that truthfully selects nothing is a VALID treatment
+// outcome, not a failure. The five states are never collapsed.
+
+test("POSITIVE CONTROL: successful retrieval with zero selected context is a valid treatment", () => {
+  const r = run({ treatmentState: "VALID_EMPTY", injectedContextTokens: 0, contextInjected: false, treatmentValid: true });
+  assert.equal(treatmentAvailable(r.treatmentState), true);
+  // The agent ran, so this arm carries an outcome — it may equal baseline, and that
+  // is the evidence D exists to collect.
+  assert.equal(aggregateArm("vtrace", [r]).treatmentInvalid, 0);
+});
+
+test("NEGATIVE CONTROL: a treatment that was never generated is not available", () => {
+  assert.equal(treatmentAvailable("TREATMENT_UNAVAILABLE_INDEX_FAILURE"), false);
+  assert.equal(treatmentAvailable("TREATMENT_GENERATION_FAILURE"), false);
+  assert.equal(treatmentAvailable("NOT_RUN"), false);
+});
+
+test("a non-empty delivered treatment is available", () => {
+  assert.equal(treatmentAvailable("VALID_NON_EMPTY"), true);
+});
+
+test("empty and unavailable are different states, not one bucket", () => {
+  // Collapsing them would either overstate agent harm (counting an availability gap
+  // as a VTRACE loss) or hide a real product limitation (calling it benchmark noise).
+  assert.notEqual("VALID_EMPTY", "TREATMENT_UNAVAILABLE_INDEX_FAILURE");
+  assert.equal(treatmentAvailable("VALID_EMPTY"), true);
+  assert.equal(treatmentAvailable("TREATMENT_UNAVAILABLE_INDEX_FAILURE"), false);
+});
+
+test("a capsule-engine fallback invalidates an arm that did run", () => {
+  // The fallback packs FAIL_TO_PASS into the retrieval query, so the arm is
+  // parity-invalid by contamination even though the agent ran.
+  const r = run({ treatmentState: "TREATMENT_GENERATION_FAILURE", treatmentValid: false, treatmentInvalidReason: "capsule engine fell back: hard_fail" });
+  assert.equal(aggregateArm("vtrace", [r]).treatmentInvalid, 1);
+  assert.equal(treatmentAvailable(r.treatmentState), false);
 });

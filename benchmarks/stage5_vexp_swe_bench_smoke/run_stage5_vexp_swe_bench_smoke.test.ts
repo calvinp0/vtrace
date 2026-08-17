@@ -6273,13 +6273,19 @@ test("force-inject injects generated context even when auto would choose no_cont
   assert.match(written, /json_script/);
 });
 
-test("force-inject still fails if no context was generated (never a valid skip)", async () => {
+// M155-D correction. These two tests previously asserted that force-inject turns a
+// successful-but-empty selection into a failure. That misclassified a real product
+// outcome as a harness fault: force-inject overrides the cost-aware GATE, and it
+// cannot manufacture context retrieval did not select. Retrieval succeeding with an
+// empty selection is a VALID empty treatment. A hard error is still a failure, and
+// the third test below is the control that keeps the two apart.
+
+test("POSITIVE CONTROL: force-inject with a successful empty selection is a valid empty treatment", async () => {
   const out = path.join(await tmpDir("force-inject-empty"), "results");
   const dataDir = await tmpDir("force-inject-empty-data");
   const dataFile = await writeSweBenchData(dataDir, [POLICY_RECORDS["django__django-10880"]]);
-  // The capsule recovered nothing actionable (a skip). Under auto this is a valid
-  // no-context policy, but force-inject must NOT degrade to a skip — there is no
-  // context to validate, so it is a failure.
+  // The capsule recovered nothing actionable — retrieval RAN and chose to inject
+  // nothing. There is no hard error, so this is a valid no-context policy.
   const { run } = scriptedRunner([{ match: "capsule", result: { stdout: skipCapsuleJson() } }]);
   const config = baseConfig({
     out,
@@ -6290,14 +6296,14 @@ test("force-inject still fails if no context was generated (never a valid skip)"
   });
   const result = await prepareIndexedContext(config, { runProcess: run });
 
-  // Not a valid skip: indexedContext false + a non-skip policy → runVtrace aborts.
   assert.equal(result.indexedContext, false);
   assert.equal(result.contextInjected, false);
-  assert.notEqual(result.policyAction, "skip");
+  assert.equal(result.policyAction, "skip");
+  assert.equal(result.contextError, null);
   assert.equal(result.contextPolicyOverride, "force-inject");
 });
 
-test("force-inject aborts runVtrace before spawn when no context was generated", async () => {
+test("POSITIVE CONTROL: a valid empty treatment spawns the agent instead of aborting", async () => {
   const vexpDir = await fakeVexpDir();
   await writeFile(path.join(vexpDir, "dist", "cli.js"), "// fake cli\n");
   const out = path.join(await tmpDir("force-inject-abort"), "results");
@@ -6310,6 +6316,37 @@ test("force-inject aborts runVtrace before spawn when no context was generated",
     const line = [command, ...args].join(" ");
     if (line.includes("dist/cli.js")) vexpSpawned = true;
     if (line.includes("capsule")) return { exitCode: 0, stdout: skipCapsuleJson(), stderr: "" };
+    return { exitCode: 0, stdout: "", stderr: "" };
+  };
+  const config = baseConfig({
+    vexpSweBenchDir: vexpDir,
+    out,
+    instances: ["django__django-10880"],
+    sweBenchDataFile: dataFile,
+    vtraceMethod: "indexed-context",
+    contextPolicyOverride: "force-inject",
+  });
+  // The agent runs, with nothing injected. It may behave exactly like baseline —
+  // that is the outcome the paired benchmark exists to observe.
+  await runVtrace(config, { runProcess: run });
+  assert.equal(vexpSpawned, true);
+});
+
+test("NEGATIVE CONTROL: a hard context-generation error still aborts before spawn", async () => {
+  const vexpDir = await fakeVexpDir();
+  await writeFile(path.join(vexpDir, "dist", "cli.js"), "// fake cli\n");
+  const out = path.join(await tmpDir("force-inject-harderr"), "results");
+  await installVtracePatch(baseConfig({ vexpSweBenchDir: vexpDir, out }));
+  const dataDir = await tmpDir("force-inject-harderr-data");
+  const dataFile = await writeSweBenchData(dataDir, [POLICY_RECORDS["django__django-10880"]]);
+
+  let vexpSpawned = false;
+  const run = async (command: string, args: readonly string[]): Promise<ProcessResult> => {
+    const line = [command, ...args].join(" ");
+    if (line.includes("dist/cli.js")) vexpSpawned = true;
+    // The capsule command FAILS. This is not an empty selection — retrieval never
+    // produced a verdict — so no treatment exists and no tokens may be spent.
+    if (line.includes("capsule")) return { exitCode: 1, stdout: "", stderr: "capsule exploded" };
     return { exitCode: 0, stdout: "", stderr: "" };
   };
   const config = baseConfig({

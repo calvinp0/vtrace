@@ -69,6 +69,32 @@ export function orientation(calls: readonly ToolCall[], goldFiles: readonly stri
 }
 
 export type Grade = "PASS" | "FAIL" | "UNGRADED";
+
+/**
+ * Treatment state for a VTRACE arm. These five states are never collapsed.
+ *
+ * A successful retrieval that truthfully selects nothing is a VALID treatment
+ * outcome, not a failure: retrieval ran, chose to inject nothing, and the agent
+ * ran normally. It may behave exactly like baseline, and that is the evidence.
+ *
+ * What is NOT valid is the treatment never being produced. Two distinct causes
+ * matter separately: the repository could not be indexed at all (an availability
+ * finding about the product), versus context generation erroring (a generation
+ * failure). Folding either into "VTRACE lost" would overstate agent harm; folding
+ * them into "harmless benchmark noise" would hide a real product limitation.
+ */
+export type TreatmentState =
+  | "VALID_NON_EMPTY"
+  | "VALID_EMPTY"
+  | "TREATMENT_UNAVAILABLE_INDEX_FAILURE"
+  | "TREATMENT_GENERATION_FAILURE"
+  | "NOT_RUN";
+
+/** A treatment state counts toward availability only when retrieval delivered a
+ *  verdict the agent could run on — empty included. */
+export function treatmentAvailable(state: TreatmentState): boolean {
+  return state === "VALID_NON_EMPTY" || state === "VALID_EMPTY";
+}
 export type PairClass =
   | "shared success"
   | "VTRACE unique win"
@@ -93,6 +119,7 @@ export interface ArmRun {
   /** Capsule tokens injected into the treatment prompt. null for baseline. */
   readonly injectedContextTokens: number | null;
   readonly contextInjected: boolean | null;
+  readonly treatmentState: TreatmentState;
   readonly treatmentValid: boolean;
   readonly treatmentInvalidReason: string | null;
   readonly orientation: OrientationMetrics | null;
@@ -255,19 +282,21 @@ export async function loadArm(
     : null;
   const injectedTokens = arm === "vtrace" ? num(runMeta.vtraceCapsuleEstimatedTokens) : null;
 
-  // A treatment arm that received no context is not an ordinary VTRACE failure — it
-  // is an arm where the treatment was not delivered, and §41 requires it to be
-  // classified rather than counted.
+  // A VTRACE arm that RAN is a valid treatment, whether or not retrieval selected
+  // anything: an empty-but-successful treatment is a product outcome to measure,
+  // not an invalid run. Only a capsule-engine fallback invalidates a run that ran,
+  // because the fallback packs FAIL_TO_PASS into the retrieval query and makes the
+  // arm parity-invalid by contamination.
+  let treatmentState: TreatmentState = arm === "vtrace" ? "VALID_NON_EMPTY" : "VALID_NON_EMPTY";
   let treatmentValid = true;
   let treatmentInvalidReason: string | null = null;
   if (arm === "vtrace") {
-    if (contextInjected === false) {
-      treatmentValid = false; treatmentInvalidReason = "vtrace context not injected";
-    } else if (injectedTokens !== null && injectedTokens === 0) {
-      treatmentValid = false; treatmentInvalidReason = "vtrace context empty (no_context case)";
-    } else if (runMeta.vtraceCapsuleEngineFallbackReason != null) {
+    if (runMeta.vtraceCapsuleEngineFallbackReason != null) {
+      treatmentState = "TREATMENT_GENERATION_FAILURE";
       treatmentValid = false;
       treatmentInvalidReason = `capsule engine fell back: ${String(runMeta.vtraceCapsuleEngineFallbackReason)}`;
+    } else if (contextInjected === false || (injectedTokens !== null && injectedTokens === 0)) {
+      treatmentState = "VALID_EMPTY";
     }
   }
 
@@ -294,10 +323,38 @@ export async function loadArm(
     toolCalls: (row.toolCalls ?? {}) as Record<string, number>,
     injectedContextTokens: injectedTokens,
     contextInjected,
+    treatmentState,
     treatmentValid,
     treatmentInvalidReason,
     orientation: callList.length > 0 ? orientation(callList, goldFiles) : null,
   };
+}
+
+/**
+ * Classify a VTRACE arm that produced no run at all, from the driver's captured
+ * stderr. The two causes are reported separately because they say different things:
+ * an aborted whole-repository index is a product availability limitation, while a
+ * context-generation error is a harness/product fault in assembling context that
+ * retrieval did produce.
+ */
+export function classifyMissingTreatment(resultsRoot: string, instanceId: string): {
+  state: TreatmentState; detail: string | null;
+} {
+  const label = `m155_vtrace_${instanceId.replace(/-/g, "_")}`;
+  const logFile = path.join(resultsRoot, "_m155_paired_logs", `${label}.stderr.log`);
+  if (!existsSync(logFile)) return { state: "NOT_RUN", detail: null };
+  const text = readFileSync(logFile, "utf8");
+  if (/vtrace index failed/.test(text)) {
+    const parse = /Parser failed: ([^\n]+)/.exec(text);
+    return {
+      state: "TREATMENT_UNAVAILABLE_INDEX_FAILURE",
+      detail: `whole-repository index aborted${parse ? `: ${parse[1]!.trim()}` : ""}`,
+    };
+  }
+  if (/produced no vtrace context/.test(text)) {
+    return { state: "TREATMENT_GENERATION_FAILURE", detail: "context generation produced nothing and reported no cause" };
+  }
+  return { state: "NOT_RUN", detail: null };
 }
 
 async function main(): Promise<void> {
@@ -330,6 +387,8 @@ async function main(): Promise<void> {
     const gold = goldByInstance.get(c.instance_id) ?? [];
     const b = await loadArm(resultsRoot, c.instance_id, "baseline", gold);
     const v = await loadArm(resultsRoot, c.instance_id, "vtrace", gold);
+    const missing = v === null ? classifyMissingTreatment(resultsRoot, c.instance_id) : null;
+    const treatmentState: TreatmentState = v?.treatmentState ?? missing!.state;
     if (b) baselineRuns.push(b);
     if (v) vtraceRuns.push(v);
     pairs.push({
@@ -339,6 +398,9 @@ async function main(): Promise<void> {
       difficulty: c.difficulty,
       firstArm: c.armOrder[0],
       m154DeterministicGoldState: c.m154DeterministicGoldState,
+      treatmentState,
+      treatmentAvailable: treatmentAvailable(treatmentState),
+      treatmentDetail: missing?.detail ?? v?.treatmentInvalidReason ?? null,
       baseline: b === null ? null : { grade: b.grade, patch: b.patchProduced, cost: b.costUsd, turns: b.numTurns, tokens: b.totalTokens, tools: b.toolCalls, orientation: b.orientation },
       vtrace: v === null ? null : { grade: v.grade, patch: v.patchProduced, cost: v.costUsd, turns: v.numTurns, tokens: v.totalTokens, tools: v.toolCalls, injectedContextTokens: v.injectedContextTokens, treatmentValid: v.treatmentValid, treatmentInvalidReason: v.treatmentInvalidReason, orientation: v.orientation },
       classification: classifyPair(b?.grade ?? "UNGRADED", v?.grade ?? "UNGRADED"),
@@ -358,9 +420,45 @@ async function main(): Promise<void> {
   const basePass = complete.filter((p) => p.baseline?.grade === "PASS").length;
   const vtPass = complete.filter((p) => p.vtrace?.grade === "PASS").length;
 
+  // Treatment availability over the ORIGINAL frozen 30 (§3/§4 of the correction).
+  // The paired matrix below is conditional on a treatment existing; this is the
+  // number that says how often it existed at all, and the two must be read together.
+  const stateCounts = pairs.reduce<Record<string, number>>((acc, p) => {
+    acc[p.treatmentState] = (acc[p.treatmentState] ?? 0) + 1;
+    return acc;
+  }, {});
+  const availableCases = pairs.filter((p) => p.treatmentAvailable);
+  const unavailable = pairs.filter((p) => !p.treatmentAvailable);
+  // A task where baseline PASSED and VTRACE could not be delivered at all is real
+  // product harm end-to-end, even though no VTRACE agent ran and it is therefore
+  // NOT an agent-behaviour unique loss. Reported, never counted in the matrix, and
+  // never assumed to have "fallen back to baseline and passed".
+  const baselinePassWithNoTreatment = unavailable
+    .filter((p) => p.baseline?.grade === "PASS")
+    .map((p) => ({ instance_id: p.instance_id, treatmentState: p.treatmentState, detail: p.treatmentDetail }));
+
+  const availability = {
+    selectedPairedTasks: pairs.length,
+    treatmentAvailable: availableCases.length,
+    treatmentUnavailable: unavailable.length,
+    availabilityRate: pairs.length ? round(availableCases.length / pairs.length) : null,
+    byState: stateCounts,
+    unavailableCases: unavailable.map((p) => ({
+      instance_id: p.instance_id, repo: p.repo,
+      treatmentState: p.treatmentState, detail: p.treatmentDetail,
+      baselineGrade: p.baseline?.grade ?? "UNGRADED",
+    })),
+    baselinePassWithTreatmentUnavailable: baselinePassWithNoTreatment,
+    note:
+      "The frozen experiment selected 30 tasks. Availability is reported over all 30; the paired outcome matrix "
+      + "is conditional on a treatment existing. 28 is not the benchmark size.",
+  };
+
   const outcomes = {
-    schemaVersion: "stage5.m155.paired-outcomes.v1",
+    schemaVersion: "stage5.m155.paired-outcomes.v2",
     manifestSha256: manifest.manifestSha256,
+    selectedPairedTasks: pairs.length,
+    treatmentAvailability: availability,
     pairedCases: pairs.length,
     completePairs: complete.length,
     matrix: counts,
@@ -371,8 +469,9 @@ async function main(): Promise<void> {
     baselinePassWilson95: wilson(basePass, complete.length),
     vtracePassWilson95: wilson(vtPass, complete.length),
     mcnemarExactTwoSidedP: round(mcnemarExactP(wins, losses), 4),
+    matrixDenominator: "VALID_PAIRED_AGENT_RUNS — both arms ran and were gradable",
     uncertaintyNote:
-      `n=${complete.length} paired cases. The pass-rate delta is dominated by ${wins + losses} discordant pair(s); `
+      `n=${complete.length} valid paired agent runs of ${pairs.length} selected tasks. The pass-rate delta is dominated by ${wins + losses} discordant pair(s); `
       + "with this few discordant pairs no aggregate difference is distinguishable from noise, and the "
       + "unique-win/unique-loss cases carry the information (§52).",
     pairs,
@@ -425,6 +524,32 @@ async function main(): Promise<void> {
       + "are UNAVAILABLE rather than zero (§13/§59).",
   };
   await writeFile(path.join(outDir, "stage5_m155_paired30_token_cost.json"), `${JSON.stringify(tokenCost, null, 2)}\n`);
+
+  // Roadmap evidence, quantified from the frozen sample only and never generalised
+  // beyond it (§5 of the correction).
+  const indexRobustness = pairs.filter((p) => p.treatmentState === "TREATMENT_UNAVAILABLE_INDEX_FAILURE");
+  const roadmap = {
+    schemaVersion: "stage5.m155.roadmap-evidence.v1",
+    scopeNote: `Counts are observed over the frozen ${pairs.length}-task paired sample. They are not extrapolated.`,
+    categories: [
+      {
+        category: "INDEX_ROBUSTNESS / PER_FILE_PARSE_FAILURE_CONTAINMENT",
+        claim:
+          "A single unsupported or unparseable source file can make otherwise usable repository context "
+          + "completely unavailable: `vtrace index` aborts the whole repository rather than containing the failure "
+          + "to that file.",
+        observed: `${indexRobustness.length}/${pairs.length} paired SWE tasks`,
+        independentOfRankingQuality: true,
+        cases: indexRobustness.map((p) => ({ instance_id: p.instance_id, repo: p.repo, detail: p.treatmentDetail })),
+        benchmarkDiscrepancy:
+          "The deterministic benchmark quarantines the offending file and continues (M134 prepare-targets retry "
+          + "loop); the historical live injection path has no such loop and aborts. The deterministic layer's "
+          + "ability to work around a product indexing failure does not prove the live treatment can.",
+        notFixedInM155: true,
+      },
+    ],
+  };
+  await writeFile(path.join(outDir, "stage5_m155_roadmap_evidence.json"), `${JSON.stringify(roadmap, null, 2)}\n`);
 
   const states = ["GOLD_DELIVERED", "GOLD_DISCOVERED_BUT_DISCARDED", "GOLD_MISSING", "UNKNOWN"];
   const crossTab = {

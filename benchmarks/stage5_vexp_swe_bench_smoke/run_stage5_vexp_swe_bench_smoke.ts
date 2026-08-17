@@ -7051,12 +7051,19 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
   // least one instance was gated to no_context, and there was no hard error to
   // fail on. A no-context decision is recorded via the existing `skip` action so
   // the run-status / treatment-validity machinery treats it as a valid policy.
-  // --context-policy force-inject NEVER degrades to a valid skip: if no context
-  // was generated it must surface as a failure (indexedContext === false drives
-  // the abort in runVtrace), not as an intentional no-context policy.
-  const forceInject = config.contextPolicyOverride === "force-inject";
-  const noContext =
-    !forceInject && !indexedContext && noContextSections.length > 0 && hardErrors.length === 0;
+  //
+  // M155-D correction. This previously excluded `--context-policy force-inject`,
+  // so a run that indexed cleanly and truthfully selected nothing was surfaced as
+  // a failure and aborted before spawn. That misclassified a real product outcome
+  // as a harness fault: force-inject overrides the cost-aware GATE, and it cannot
+  // manufacture context that retrieval did not select. Retrieval succeeding with an
+  // empty selection is a VALID empty treatment — the agent runs, it may behave
+  // exactly like baseline, and that is the evidence.
+  //
+  // A hard error still aborts. `hardErrors.length === 0` is what separates an empty
+  // treatment from a treatment-generation failure, and it is the only distinction
+  // that changed here.
+  const noContext = !indexedContext && noContextSections.length > 0 && hardErrors.length === 0;
   const policyAction: VtracePolicyAction = noContext ? "skip" : "inject";
   const contextPolicyAction: ContextPolicyAction = noContext ? "no_context" : "inject";
   const pivotCount = sumClassification(sections, (c) => c.pivotCount);
