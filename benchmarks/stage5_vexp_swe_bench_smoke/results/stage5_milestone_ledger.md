@@ -2093,3 +2093,71 @@ clean. Holdouts unconsumed; ARC and TCKDB not run; no live agent spend.
   empty `{mcpServers:{}}`. Every question about tool discovery, usage rate, call
   ordering and per-tool utility is therefore UNAVAILABLE rather than zero — and
   the product's tool surface has never been measured in front of an agent at all.
+
+## M155 continuation — B2 re-baselining + paired agent qualification (commits 87c68078, 188983e0, 964ad3e1, 157e2f5e, c529503c, 98c7c4b2, <evidence>)
+
+M155 now **PASS** on execution (A · B · C · B2 · D · E), with product utility
+**MIXED**. No product code changed; behavioural routing OFF; `src/` clean.
+
+B2 rebuilt the regression baseline architecture. The committed Frozen50 was 5/50
+derivation-valid — 41 indexes at `index_format_version: 1` against a supported set
+of `{5}`, 4 with no meta at all — and is now 50/50 on freshly derived evidence
+(Top-1 0.60→0.76, delivered 0.80→0.90, both on a collapsed vs complete denominator).
+All four capability lanes proven observable. Frozen50 retained as the fast stability
+gate, removed as the broad quality authority.
+
+D ran 30 paired tasks (60 arms, ~$28, ~3.5 h). Treatment availability 27/30 (90%):
+three cases could not be indexed at all because one unparseable file aborts the
+whole repository, and one of those was a baseline PASS. On the 27 valid pairs the
+solve rate is exactly flat (19/19, 70.4%, McNemar p=1.00, 2 wins / 2 losses) while
+VTRACE spent 41% fewer end-to-end tokens, 40% fewer turns, 25% less money and 75%
+fewer greps. Verification: 4784 pass / 0 fail, typechecks and `git diff --check`
+clean.
+
+## M155 continuation standing findings
+
+- **The regression suite could not observe the work it was policing** (B2): VTRACE
+  owns `resolveDerivationRebuildReason` and `SUPPORTED_INDEX_FORMAT_VERSIONS`, and
+  the benchmark never asked them. Opening a stale index migrates its schema and
+  leaves the new feature tables EMPTY, so the document lane had no documents,
+  mechanism facts did not exist and module import-owners were absent — in the corpus
+  used to certify that nothing had changed. The answer was one function call away
+  for months.
+
+- **An escape hatch that exists is an escape hatch that gets used** (B2): three
+  purity tests failed under the new gate because their helper indexed without
+  writing `index.meta.json`. The first fix was an opt-out flag; the better one was
+  to make the helper record derivation metadata like a real index. The flag was
+  removed rather than left in place unused, so the gate has no bypass at all.
+
+- **A field that is only ever true is a decision nobody made** (D): the harness
+  documented that `--context-policy force-inject` "NEVER degrades to a valid skip",
+  which turned a clean index plus a truthful empty selection into an abort before
+  spawn. force-inject overrides the cost-aware GATE; it cannot manufacture context
+  retrieval did not select. Two tests had locked the behaviour in. Distinguishing
+  "retrieval selected nothing" from "generation failed" was the whole fix.
+
+- **One bad file can cost the whole repository** (D/E): 3 of 30 paired tasks could
+  not receive VTRACE because a single unparseable source file aborts indexing —
+  a truncated `\uXXXX` escape, an unparenthesised `except` tuple, a starred
+  expression. All three files are among the 16 the deterministic preparer quarantines
+  and continues past. The benchmark's ability to work around a product failure had
+  been hiding the product failure. One of the three was a baseline PASS.
+
+- **Flat outcomes, much less work** (D): 19/27 both arms, p=1.00, and VTRACE used
+  41% fewer end-to-end tokens, 40% fewer turns and 75% fewer greps, reaching gold at
+  tool call 0 versus 1. Injected context is 1273 tokens median — the saving is ~160×
+  the payload, which is why this is an end-to-end claim rather than a capsule-size
+  one.
+
+- **Neither arm's discordance was about finding the code** (E): in all four
+  discordant cases the injected lead was EXACTLY the gold file and both arms reached
+  gold before their first edit. VTRACE cannot be credited with the wins or blamed
+  for the losses on evidence grounds. Of 7 wrong actionable leads, the agent reached
+  gold in 7 — false authority caused zero losses. What differs is downstream, in what
+  the agent does with evidence both arms already hold.
+
+- **A metric can improve while the agent gets less** (B, restated with live
+  evidence): `django__django-11740` retrieved 33 candidates including gold, marked
+  every one `support-only: no actionable edit target`, and delivered nothing. The
+  broad corpus calls that `gold anywhere`; the agent received an empty treatment.

@@ -1,0 +1,31 @@
+{
+  "schemaVersion": "stage5.m155.roadmap-evidence.v1",
+  "scopeNote": "Counts are observed over the frozen 30-task paired sample. They are not extrapolated.",
+  "categories": [
+    {
+      "category": "INDEX_ROBUSTNESS / PER_FILE_PARSE_FAILURE_CONTAINMENT",
+      "claim": "A single unsupported or unparseable source file can make otherwise usable repository context completely unavailable: `vtrace index` aborts the whole repository rather than containing the failure to that file.",
+      "observed": "3/30 paired SWE tasks",
+      "independentOfRankingQuality": true,
+      "cases": [
+        {
+          "instance_id": "psf__requests-1142",
+          "repo": "psf/requests",
+          "detail": "whole-repository index aborted: SyntaxError: (unicode error) 'unicodeescape' codec can't decode bytes in position 130-131: truncated \\uXXXX escape (line 34)"
+        },
+        {
+          "instance_id": "pytest-dev__pytest-5262",
+          "repo": "pytest-dev/pytest",
+          "detail": "whole-repository index aborted: SyntaxError: multiple exception types must be parenthesized (line 4)"
+        },
+        {
+          "instance_id": "pylint-dev__pylint-4551",
+          "repo": "pylint-dev/pylint",
+          "detail": "whole-repository index aborted: SyntaxError: cannot use starred expression here (line 15)"
+        }
+      ],
+      "benchmarkDiscrepancy": "The deterministic benchmark quarantines the offending file and continues (M134 prepare-targets retry loop); the historical live injection path has no such loop and aborts. The deterministic layer's ability to work around a product indexing failure does not prove the live treatment can.",
+      "notFixedInM155": true
+    }
+  ]
+}

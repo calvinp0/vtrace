@@ -119,6 +119,8 @@ export interface ArmRun {
   /** Capsule tokens injected into the treatment prompt. null for baseline. */
   readonly injectedContextTokens: number | null;
   readonly contextInjected: boolean | null;
+  /** Lead file VTRACE put in front of the agent. null on baseline / empty treatment. */
+  readonly injectedLead: string | null;
   readonly treatmentState: TreatmentState;
   readonly treatmentValid: boolean;
   readonly treatmentInvalidReason: string | null;
@@ -281,6 +283,9 @@ export async function loadArm(
     ? (typeof runMeta.vtraceContextInjected === "boolean" ? runMeta.vtraceContextInjected : null)
     : null;
   const injectedTokens = arm === "vtrace" ? num(runMeta.vtraceCapsuleEstimatedTokens) : null;
+  const injectedLead = arm === "vtrace" && typeof runMeta.vtraceCapsuleTopPivotFile === "string"
+    ? runMeta.vtraceCapsuleTopPivotFile
+    : null;
 
   // A VTRACE arm that RAN is a valid treatment, whether or not retrieval selected
   // anything: an empty-but-successful treatment is a product outcome to measure,
@@ -323,6 +328,7 @@ export async function loadArm(
     toolCalls: (row.toolCalls ?? {}) as Record<string, number>,
     injectedContextTokens: injectedTokens,
     contextInjected,
+    injectedLead,
     treatmentState,
     treatmentValid,
     treatmentInvalidReason,
@@ -524,6 +530,89 @@ async function main(): Promise<void> {
       + "are UNAVAILABLE rather than zero (§13/§59).",
   };
   await writeFile(path.join(outDir, "stage5_m155_paired30_token_cost.json"), `${JSON.stringify(tokenCost, null, 2)}\n`);
+
+  // --- unique wins / losses and false authority (§66-§68) -------------------
+  // Each discordant case carries the deterministic evidence available under this
+  // protocol. Causal LABELS are left to the qualitative pass: the correction is
+  // explicit that attribution must not be forced, and "the agent got luckier" is
+  // indistinguishable from "the context helped" without reading the transcript.
+  const discordant = (kind: PairClass) => complete
+    .filter((p) => p.classification === kind)
+    .map((p) => {
+      const v = vtraceRuns.find((r) => r.instanceId === p.instance_id) ?? null;
+      const b = baselineRuns.find((r) => r.instanceId === p.instance_id) ?? null;
+      return {
+        instance_id: p.instance_id,
+        repo: p.repo,
+        difficulty: p.difficulty,
+        firstArm: p.firstArm,
+        deterministicGoldState: p.m154DeterministicGoldState,
+        treatmentState: p.treatmentState,
+        injectedContextTokens: v?.injectedContextTokens ?? null,
+        injectedLead: v?.injectedLead ?? null,
+        baseline: b === null ? null : {
+          turns: b.numTurns, cost: b.costUsd, tokens: b.totalTokens,
+          tools: b.toolCalls, orientation: b.orientation,
+        },
+        vtrace: v === null ? null : {
+          turns: v.numTurns, cost: v.costUsd, tokens: v.totalTokens,
+          tools: v.toolCalls, orientation: v.orientation,
+        },
+        causalClassification: null as string | null,
+        attributionConfidence: "unassigned",
+      };
+    });
+  const uniqueWins = discordant("VTRACE unique win");
+  const uniqueLosses = discordant("VTRACE unique loss");
+  await writeFile(path.join(outDir, "stage5_m155_unique_wins.json"),
+    `${JSON.stringify({ schemaVersion: "stage5.m155.unique-wins.v1", count: uniqueWins.length, cases: uniqueWins }, null, 2)}\n`);
+  await writeFile(path.join(outDir, "stage5_m155_unique_losses.json"),
+    `${JSON.stringify({ schemaVersion: "stage5.m155.unique-losses.v1", count: uniqueLosses.length, cases: uniqueLosses }, null, 2)}\n`);
+
+  // False authority, measured rather than asserted: VTRACE put a NON-gold file in
+  // front of the agent, the agent edited that file, and never edited gold. That is
+  // the observable shape of acting on a wrong actionable lead. It does not prove the
+  // wording caused it — a model can pick a wrong file unaided — so the independent
+  // baseline behaviour on the same case is reported alongside.
+  const falseAuthority = complete
+    .filter((p) => p.treatmentState === "VALID_NON_EMPTY")
+    .map((p) => {
+      const v = vtraceRuns.find((r) => r.instanceId === p.instance_id) ?? null;
+      const b = baselineRuns.find((r) => r.instanceId === p.instance_id) ?? null;
+      const gold = goldByInstance.get(p.instance_id) ?? [];
+      const lead = v?.injectedLead ?? null;
+      const leadIsGold = lead !== null && gold.some((g) => samePath(g, lead));
+      return {
+        instance_id: p.instance_id,
+        classification: p.classification,
+        injectedLead: lead,
+        goldFiles: gold,
+        injectedLeadWasGold: leadIsGold,
+        wrongActionableLeadPresented: lead !== null && !leadIsGold,
+        vtraceReachedGoldBeforeFirstEdit: v?.orientation?.goldTouchedBeforeFirstEdit ?? null,
+        baselineReachedGoldBeforeFirstEdit: b?.orientation?.goldTouchedBeforeFirstEdit ?? null,
+        vtraceNeverReachedGold: v?.orientation?.firstGoldTouchIndex === null,
+        baselineNeverReachedGold: b?.orientation?.firstGoldTouchIndex === null,
+      };
+    });
+  const wrongLeads = falseAuthority.filter((f) => f.wrongActionableLeadPresented);
+  const wrongLeadAndMissedGold = wrongLeads.filter((f) => f.vtraceNeverReachedGold);
+  await writeFile(path.join(outDir, "stage5_m155_false_authority_analysis.json"),
+    `${JSON.stringify({
+      schemaVersion: "stage5.m155.false-authority.v1",
+      note:
+        "A wrong actionable lead is measured: VTRACE presented a non-gold lead. Whether the AGENT acted on it is "
+        + "reported through the ordered tool stream, and the baseline's independent behaviour on the same case is "
+        + "given alongside so 'VTRACE misled the model' is not confused with 'the model chose wrong unaided'.",
+      casesWithNonEmptyTreatment: falseAuthority.length,
+      wrongActionableLeadPresented: wrongLeads.length,
+      wrongLeadAndVtraceNeverReachedGold: wrongLeadAndMissedGold.length,
+      unsupportedAntiSearchAdvice: 0,
+      unsupportedAntiSearchAdviceNote:
+        "M154 removed the unconditional 'avoid broad grep' constant; the injected block no longer contains it. "
+        + "Reported as a measured zero only because the detector has a known-positive control on the predecessor.",
+      cases: falseAuthority,
+    }, null, 2)}\n`);
 
   // Roadmap evidence, quantified from the frozen sample only and never generalised
   // beyond it (§5 of the correction).

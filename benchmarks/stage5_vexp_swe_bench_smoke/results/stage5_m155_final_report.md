@@ -1,12 +1,11 @@
 # Stage 5 M155 — Broad SWE-bench Regression and Agent-Utility Qualification
 
-**Status: A PASS · B PASS · C PASS · D DEFERRED · E NOT RUN → M155 INCOMPLETE (at decision point).**
+**M155 execution verdict: PASS** (A PASS · B PASS · C PASS · B2 PASS · D PASS · E PASS).
+**VTRACE product utility verdict: MIXED.**
 
-M155 is an evaluation milestone. This report covers the completed deterministic
-layers. The live paired agent benchmark (D) and its causal analysis (E) were
-deferred by explicit decision after A's findings, per §65/§95, so **no VTRACE
-product-utility verdict is issued here** — that verdict requires D and would be
-unfounded without it. What *is* issued is a broad retrieval-trend verdict.
+Execution PASS means the qualification completed fairly under a valid,
+provenance-safe protocol. It does not mean VTRACE won. The two verdicts are
+independent, and this milestone is the case that shows why.
 
 ## Provenance
 
@@ -14,266 +13,307 @@ unfounded without it. What *is* issued is a broad retrieval-trend verdict.
 | --- | --- |
 | Candidate (M154 final functional) | `051a7c559efcc90848390922b8a42293fb66dba5` |
 | M154 predecessor | `e3761ab989a14aea4e233844070491084f33b2ce` |
-| Branch / push state | `main`, 17 local-only commits before this milestone, nothing pushed |
+| M155 harness commits | `2ed382d2`, `87c68078`, `188983e0`, `964ad3e1`, `157e2f5e` |
+| M155 evidence commits | `0fa1b84e`, `c529503c`, `98c7c4b2`, `<this>` |
+| Branch / push | `main`, local-only, **nothing pushed** |
+| Co-author trailers | **0** |
 | Product code changed | **NO** — `git status --porcelain src/` empty |
-| Behavioural routing default | **OFF** (asserted, `src/mcp/searchContract.test.ts:129-137`) |
-| `provenanceValid` (all 4 comparisons) | **true** |
-| `isolatedIndexes` / `sameFixtureHash` | **true** on every comparison |
-| srcDirty (all five sides) | **false** — every side is a clean detached worktree |
-| Task manifest hash | fixture `5ef1371ccaa1d941…`, order `3a1a09d196b80a05…`, gold `927308c91e811517…` |
-| Verification | `bun run typecheck` ✅ · `typecheck:benchmarks` ✅ · `bun test` **4724 pass / 0 fail** ✅ · `git diff --check` ✅ |
+| Behavioural routing | **OFF** (asserted, `src/mcp/searchContract.test.ts:129-137`) |
+| Worktrees | 13 pre-existing preserved; 5 created by M155-B/C, **removed** |
+| Verification | `bun run typecheck` ✅ · `typecheck:benchmarks` ✅ · `bun test` ✅ · `git diff --check` ✅ |
+| Prepared multi-era corpora | **retained** (53 GB, `/home/calvin/bench/vtrace-m155/`) |
+| M153 sealed holdouts | unconsumed |
 
-Worktrees: 14 pre-existing (preserved untouched); 5 created by M155 under
-`/home/calvin/bench/vtrace-m155/impl/` (removed at close — see Cleanup).
+---
 
-## Corpus
+## Part 1 — Benchmark correction (M155-B2): PASS
 
-Reused the exact historical task IDs (§11); no new selection, no VEXP list (§14).
-The frozen M103/M105–M108 pool reconstructs to **100 instances across 12
-repositories**, and clean workspaces exist for 100/100 — a 1:1 match.
+### The defect
 
-Legacy suites Frozen50 (50), django.expanded (20), cross_repo_30 (30) and
-django (5) are all **strict subsets** of this corpus, so §101 is answered by
-projection under the identical protocol rather than by a separately provenanced
-second measurement.
+The committed regression suite opened whatever `.vtrace/index.sqlite` sat beside
+each workspace. Asked properly — via VTRACE's own `resolveDerivationRebuildReason`
+and `SUPPORTED_INDEX_FORMAT_VERSIONS` — the committed Frozen50 was:
 
-## M155-A — what the audit found
+| Verdict | Cases |
+| --- | ---: |
+| derivation-valid | **5** |
+| `schema_unsupported` (`index_format_version: 1` vs supported `{5}`, built 2026-06-08 at `7035429`, 491 commits back) | 41 |
+| `meta_missing` (no `index.meta.json` at all) | 4 |
 
-Three findings, each a measurement rather than an inference. Full detail in
-`stage5_m155_protocol_audit.md`.
+**5 of 50**, across three incompatible evidence regimes, in one artifact labelled
+`artifactState: "authoritative"`. Opening a stale index migrates its schema and
+leaves the new feature tables **empty**, so in that corpus M129's document lane had
+no documents, M150's mechanism facts did not exist, and M140-A's module import
+owner was absent. VTRACE's own authority would have rejected those indexes; the
+benchmark never asked.
 
-### A1. The historical VTRACE arm has no agent-callable tools
+### Re-baseline (before → after)
 
-`--vtrace-method mcp` parses but is never dispatched anywhere; the external
-harness spawns Claude Code with `--strict-mcp-config` and an explicitly empty
-`{ mcpServers: {} }`. VTRACE reaches the agent as injected text
-(`_vtrace_instructions.md`).
-
-Consequently §38/39/40/41/74/76/77 — tool discovery, usage rate, `VTRACE → read →
-grep` ordering, per-tool utility — are recorded **UNAVAILABLE, never zero**. The
-paired question of §27 (baseline vs same agent + VTRACE) survives intact and is
-natively supported by `--protocol all`.
-
-Both arms receive the identical tool list
-(`DEFAULT_ALLOWED_TOOLS = Edit, Write, Bash, Read, Glob, Grep, TodoWrite`), so
-§36 (baseline not crippled) and §37 (VTRACE arm free to grep) already hold.
-
-### A2. The canonical deterministic suites scored current code against a 2026-06-08 index
-
-The committed `expanded` and `cross_repo_30` baselines — labelled
-`artifactState: "authoritative"` — read `.vtrace/index.sqlite` from workspaces
-whose `index_runs` table holds exactly one row, created 2026-06-08 at commit
-`7035429`, **491 commits back**. The runner contains no index build and no
-staleness assertion.
-
-Known-positive control, same instance and source, stale index vs freshly indexed
-at M154:
-
-| | stale (`7035429`) | fresh (M154) |
+| | before | after |
 | --- | ---: | ---: |
-| `document_chunks` | **0** | 6 |
-| `symbol_mechanism_facts` | **0** | 79 |
-| symbols of kind `module` | **0** | 69 |
+| derivation-valid | 5/50 | **50/50** |
+| gate usable | false | **true** |
+| cases evaluated | 5 | 50 |
+| gold file Top-1 | 0.60 *(of 5)* | **0.76** |
+| gold delivered | 0.80 *(of 5)* | **0.90** |
 
-M129's document lane, M150's mechanism facts and M140-A's module import-owner all
-contributed **nothing** in the corpus those suites measured. The tables are
-present but empty because opening a stale index migrates its schema without
-populating it. This is why M155-B/C rebuilt every index per side.
+The "after" figures independently reproduce the Frozen50 projection from the broad
+100-case run — two drivers, same prepared corpus, same answer.
 
-### A3. The committed baselines are stale relative to the candidate
+### Architecture now in force
 
-205 `src/` files changed since the baselines' `generated_at_commit` (`7b29882e`),
-so the byte-diff-against-baseline path documented in CLAUDE.md is invalid for
-M155. §101 was therefore run as a paired comparison, not a diff.
+Three gates, three questions: **fast gate** (Frozen50, stability/observability),
+**broad100** (retrieval quality at major checkpoints), **paired30/100** (agent
+utility). Indexes are derived evidence keyed on derivation fingerprints, not
+timeless fixtures; `vtrace_commit` is deliberately *not* derivation-relevant, which
+is what keeps the fast gate fast. Stale, schema-unsupported and unattributable
+indexes fail closed with no bypass. All four capability lanes — document, module
+import-owner, mechanism fact, delivery/discard — are proven **observable** across a
+known-negative and known-positive checkpoint.
 
-## Method (B/C)
+**Retrospective qualification (added once; history not rewritten):** preservation
+evidence taken on the committed workspaces shows *ranking and delivery code* did not
+change behaviour on that corpus. It does **not** show index-side invariance for any
+capability introduced after 2026-06-08.
 
-Five architecture-era anchors, each a clean detached worktree with its own
-dependencies, each indexing **its own isolated copy** of the same immutable source
-corpus with **its own `bin/vtrace`**:
+**Frozen50's standing:** retained as the fast stability gate, removed as the broad
+quality authority. It is ~19 points easier on Top-1 and 12 on delivery than the
+broad corpus, and its delivered-gold is 0.90 at **all five** architecture
+checkpoints. A gate that cannot move cannot report progress or its absence.
 
-| Anchor | Commit | Era |
-| --- | --- | --- |
-| M129 | `1678871643c3…` | document-aware retrieval |
-| M140 | `249f61feabf2…` | structural module / orchestration correctness |
-| M150 | `6117f5f2dfa4…` | behavioural decision / mechanism retrieval |
-| M152 | `bcdd962e42cf…` | repository-evidence / session-state split |
-| M154 | `051a7c559efc…` | current candidate |
+---
 
-500 repository indexes were built (5 × 100), ~100 min wall per side in parallel.
-Every side's `index.meta.json` records exactly its own anchor commit — verified,
-no contamination. Quarantined-file sets are **byte-identical across all five
-sides** (16 files, all genuinely unparseable — deliberate syntax-error fixtures in
-pylint/pytest test data plus one unicode-escape bug in vendored urllib3), and
-**zero quarantined files are gold**. All five eras therefore see an identical corpus.
+## Part 2 — Broad deterministic retrieval (M155-B/C): PASS
 
-Query shaping is the committed structured derivation from `problem_statement`;
-gold labels are evaluation-only and never enter retrieval; no per-task rewriting.
+Five architecture-era anchors, 500 freshly built indexes, one immutable 100-case
+corpus, four provenance-valid adjacent comparisons.
 
-## M155-B/C — results
+| Checkpoint | Top-1 | Top-3 | **Gold delivered** | Gold anywhere | Discarded | Missing | Symbol anywhere | Tokens | Latency med / p90 |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| M129 | 56% | 73% | **79%** | 85% | 6% | 15% | 64.0% | 1185 | 593 / 1356 ms |
+| M140 | 55% | 72% | **80%** | 84% | 4% | 16% | 64.0% | 1165 | 562 / 1249 ms |
+| M150 | 57% | 73% | **78%** | 89% | 11% | 11% | 64.0% | 1165 | 717 / 1607 ms |
+| M152 | 57% | 73% | **78%** | 89% | 11% | 11% | 64.0% | 1165 | 711 / 1620 ms |
+| M154 | 57% | 73% | **78%** | 89% | 11% | 11% | 64.0% | 1165 | 708 / 1613 ms |
 
-### Broad trend across eras (100 cases)
+| Transition | Semantic | Outcome | Improve | Regress |
+| --- | ---: | ---: | ---: | ---: |
+| M129→M140 | 57/100 | 47 | 0 | **3** (all `path authority`) |
+| M140→M150 | 76/100 | 95 | 8 | 0 |
+| M150→M152 | **0/100** | 0 | 0 | 0 |
+| M152→M154 | 2/100 | 6 | 0 | 0 |
 
-| Checkpoint | File Top-1 | File Top-3 | Gold **delivered** | Gold anywhere | Gold discarded | Symbol anywhere | Missing gold | Misleading lead | Empty | Tokens (median) | Latency median | p90 |
-| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| M129 | 56% | 73% | **79%** | 85% | 6% | 64% | 15% | 42% | 2% | 1185 | 593 ms | 1356 ms |
-| M140 | 55% | 72% | **80%** | 84% | 4% | 64% | 16% | 43% | 2% | 1165 | 562 ms | 1249 ms |
-| M150 | 57% | 73% | **78%** | 89% | 11% | 64% | 11% | 41% | 2% | 1165 | 717 ms | 1607 ms |
-| M152 | 57% | 73% | **78%** | 89% | 11% | 64% | 11% | 41% | 2% | 1165 | 711 ms | 1620 ms |
-| M154 | 57% | 73% | **78%** | 89% | 11% | 64% | 11% | 41% | 2% | 1165 | 708 ms | 1613 ms |
+Three standing conclusions, unchanged: broad quality is approximately **flat**
+(delivered gold 79% → 78%, symbol recall 64.0% at every checkpoint); the +4-point
+`gold anywhere` gain at M140→M150 is **five cases moving `missing → discarded`**
+while delivered gold fell; and M150 added **~26% median retrieval latency** that
+persists through M154. M152's store split is byte-identical (0/100); M154 is
+contained (2/100, all outcome-neutral discard-bucket movement).
 
-`Gold delivered` = gold reached the model as pivot or support. `Gold anywhere`
-additionally counts `discarded` — surfaced as a candidate and then **withheld**.
-Only the former describes evidence an agent could act on.
+**Broad retrieval verdict: NEUTRAL / MIXED.**
 
-### Adjacent transitions
+---
 
-| Transition | Semantic changes | Outcome changes | Improvement | Regression | Neutral |
+## Part 3 — Paired live agent benchmark (M155-D): PASS
+
+### Protocol
+
+30 tasks, frozen before any live outcome as a **prefix** of a deterministic
+stratified ordering over all 100 (so extension to 100 runs the next cases in an
+order already fixed). Difficulty from SWE-bench Verified's own human annotation;
+ordering consumes only instance id, repository and difficulty — a test asserts that
+attaching gold state or Top-1 changes nothing. No seed: the ordering is a pure
+function of the corpus. `manifestSha256 d143f807648a7198…`.
+
+10 repositories, difficulty 53/40/7% vs corpus 53/38/8%. Arm order **alternates**
+15/15. Model `claude-opus-4-5-20251101` both arms, 250 turns, $3/task cap,
+identical tool list (`Edit, Write, Bash, Read, Glob, Grep, TodoWrite`), mandatory
+env + shell guards, authoritative Docker grading. VTRACE reaches the agent as
+**injected context only** — no callable tools (see Limitations).
+
+### Treatment availability — over all 30 selected tasks
+
+```
+selected paired tasks              30
+VTRACE treatment available         27   (26 VALID_NON_EMPTY + 1 VALID_EMPTY)
+VTRACE treatment unavailable        3
+availability rate                90.0%
+```
+
+The three unavailable cases are `TREATMENT_UNAVAILABLE_INDEX_FAILURE`:
+`psf__requests-1142`, `pytest-dev__pytest-5262`, `pylint-dev__pylint-4551`. In each,
+**one unparseable file aborts the whole-repository index**, so no treatment context
+can be produced and the agent never spawns. All three files are among the 16 that
+the deterministic benchmark's preparer quarantines and continues past. Not rerun:
+the failure is deterministic, and adding quarantine to the live path after seeing
+them would change the treatment.
+
+**`psf__requests-1142` is baseline PASS with VTRACE unavailable.** That is real
+end-to-end product harm. It is deliberately *not* in the agent matrix, because no
+VTRACE agent ran, and no counterfactual fallback is assumed.
+
+`django__django-11740`'s first attempt was an `INVALID_HARNESS_ABORT` — VTRACE
+indexed cleanly, retrieved 33 candidates including the gold file, delivered 0, and
+the harness aborted before spawn because the selection was empty under
+`force-inject`. Traced read-only, classified **`VALID_DELIVERY_EMPTY`** (evidence
+existed; none survived delivery), harness distinction fixed, and rerun once from a
+fresh clone and index: treatment valid, 0 context tokens, agent spawned, 17 turns, a
+patch. Both attempts recorded.
+
+### Paired outcome matrix — denominator VALID_PAIRED_AGENT_RUNS (n = 27)
+
+| Baseline | VTRACE | Classification | Count |
+| --- | --- | --- | ---: |
+| PASS | PASS | shared success | **17** |
+| FAIL | PASS | VTRACE unique win | **2** |
+| PASS | FAIL | VTRACE unique loss | **2** |
+| FAIL | FAIL | shared failure | **6** |
+
+```
+net unique wins            0
+baseline pass rate    19/27 = 70.4%   CI95 [0.515, 0.841]
+VTRACE  pass rate     19/27 = 70.4%   CI95 [0.515, 0.841]
+pass-rate delta            0
+McNemar exact two-sided p  1.00
+```
+
+Solve rate is **exactly flat**. With 2 discordant pairs each way, no aggregate
+difference is distinguishable from noise; the intervals overlap almost entirely.
+
+### Efficiency — recomputed strictly on the 27 valid pairs
+
+| Metric | Baseline | VTRACE | Delta |
+| --- | ---: | ---: | ---: |
+| total end-to-end tokens | 34,794,538 | 20,510,838 | **−14.3 M (−41%)** |
+| median tokens/task | 907,914 | 705,564 | −202,350 (−22%) |
+| total cost | $16.11 | $12.07 | **−$4.04 (−25%)** |
+| median cost/task | $0.482 | $0.426 | −$0.056 (−12%) |
+| total turns | 919 | 555 | **−364 (−40%)** |
+| median turns/task | 28 | 19 | **−9 (−32%)** |
+| Grep calls | 83 | 21 | **−75%** |
+| Read calls | 103 | 56 | −46% |
+| Bash calls | 124 | 78 | −37% |
+| median tool calls before first edit | 3 | 1 | −2 |
+| median searches before first edit | 1 | 0 | −1 |
+| median first gold-touch index | 1 | 0 | −1 |
+
+Injected context is **1,273 tokens median** (45,163 total across 26 cases). The
+token reduction is therefore **end-to-end agent usage**, not a claim about capsule
+size — the saving is ~160× the payload, and §55 is satisfied on its own terms.
+
+Index preparation, reported separately: the VTRACE arm indexes each repository
+before the agent runs (~30–90 s, ~35–145 MB per repository). Agent-run-only cost is
+above; including preparation, VTRACE adds wall-clock per task and still spends less
+model budget.
+
+---
+
+## Part 4 — Utility and harm analysis (M155-E): PASS
+
+### Gold-state cross-tab (valid paired runs)
+
+| Deterministic gold state | n | baseline PASS | VTRACE PASS | wins | losses |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| M129→M140 | 57/100 | 47 | 0 | **3** | 44 |
-| M140→M150 | 76/100 | 95 | 8 | 0 | 87 |
-| M150→M152 | **0/100** | 0 | 0 | 0 | 0 |
-| M152→M154 | 2/100 | 6 | 0 | 0 | 6 |
+| `GOLD_DELIVERED` | 25 | 17 | 17 | 2 | 2 |
+| `GOLD_DISCOVERED_BUT_DISCARDED` | 2 | 2 | 2 | 0 | 0 |
 
-### The three headline results
+`GOLD_MISSING` has **no** representation among valid pairs: the corpus's one
+missing-gold case in the 30 (`pylint-dev__pylint-4551`) is also one of the three
+index failures. The cross-tab can therefore only speak to delivered gold — a
+limitation flagged before results were seen, and a consequence of correctly
+refusing to stratify on gold state.
 
-**1. Five architecture eras produced no net gain in delivered gold.**
-Across M129 → M154, gold actually delivered to the model went **79% → 78%**, with
-M140 the peak at 80%. Gold symbol anywhere is **64.0% at every single
-checkpoint** — flat to the decimal across all five eras. File Top-3 is 73% → 73%.
-File Top-1 moved +1 point. Median tokens moved −20.
+### Every discordant case, analysed
 
-**2. The reported +4-point "gold anywhere" gain is a metric artifact.**
-`gold anywhere` rose 85% → 89% at M140→M150 and stuck. But `discarded` rose 6% →
-11% over the same step, and delivered gold *fell* 80% → 78%. Five of the eight
-"improvements" are cases moving `missing → discarded` — gold became a candidate
-and was still withheld from the model. The metric improved; the agent's evidence
-did not.
+| Case | Class | Injected lead | Lead = gold? | Both arms reached gold before first edit? | Turns b→v |
+| --- | --- | --- | --- | --- | --- |
+| `django__django-10973` | win | `db/backends/postgresql/client.py` | **yes** | **yes** | 17 → 13 |
+| `django__django-11206` | win | `django/utils/numberformat.py` | **yes** | **yes** | 17 → 16 |
+| `matplotlib__matplotlib-24627` | loss | `lib/matplotlib/axes/_base.py` | **yes** | **yes** | 84 → 33 |
+| `astropy__astropy-14365` | loss | `astropy/io/ascii/qdp.py` | **yes** | **yes** | 23 → 17 |
 
-**3. M150's mechanism lane cost ~26% median latency for no delivered gain.**
-Median 562 ms (M140) → 717 ms (M150), p90 1249 ms → 1607 ms, and it persists
-unchanged through M154. Over the same step delivered gold went 80% → 78%.
+**In all four, the injected lead was exactly the gold file, and both arms reached
+gold before their first edit.** At n=27 the discordance is therefore not explained
+by evidence discovery — it sits downstream, in what the agent did with evidence both
+arms already had. Three are labelled `agent variance / unclear` with low confidence.
+The fourth carries a hypothesis, not a finding: `matplotlib-24627`'s baseline needed
+**84 turns and 15 greps** to pass, while VTRACE passed through in **33 turns with 3
+greps** and failed — consistent with less exploration yielding a shallower fix, but
+unproven.
 
-### Two clean confirmations
+### Safety and contract
 
-- **M152's store split is byte-identical for retrieval**: 0/100 semantic changes.
-  The M152 claim holds on the broad corpus, not just the small suites.
-- **M154 is contained**: 2/100 semantic changes, 6 outcome-neutral cases, every
-  one a pure `discarded_count` increase (+1 to +3) with pivots, support and
-  model-visible tokens unchanged (one case ±5 tokens). No regressions.
+| Check | Result |
+| --- | ---: |
+| false-authority losses (wrong lead caused a miss) | **0** |
+| wrong actionable lead presented | 7 / 26 |
+| …of those, agent still reached gold | **7 / 7** |
+| unsupported anti-search advice | **0** (M154's removal holds live) |
+| `.vtrace` state staged in a task patch | **0 / 31** |
+| stale / wrong-worktree responses | 0 |
+| treatment-invalid runs | 3 (all availability) + 1 corrected harness abort |
+| reruns | 1 (`django-11740`, benchmark-invalid abort) |
+| `srcDirty` | false |
 
-### The regressions (§26 attribution, not fixed — §66)
+**A real gap, quantified:** `.vtrace` is unignored in **31/31** live task repos.
+M154-B's exclusion is applied by `vtrace init` and the MCP surface (verified working)
+but **not** by the bare `vtrace index` path the harness uses. Nothing was staged, so
+§45 holds — but the hazard M154-B was built to remove is still reachable for a
+repository onboarded only through `vtrace index`. Recorded, not fixed.
 
-Three, all at M129→M140, all classified `path authority` (the lead moved and gold
-moved with it):
+---
 
-| Case | Lead M129 → M140 | Gold role |
-| --- | --- | --- |
-| `django__django-14608` | `forms/formsets.py` → `forms/boundfield.py` | pivot → pivot |
-| `sympy__sympy-12419` | `physics/quantum/identitysearch.py` → `matrices/matrices.py` | pivot → support |
-| `sympy__sympy-16792` | `solvers/ode.py` → `utilities/autowrap.py` | discarded → missing |
+## Product utility verdict: **MIXED**
 
-`sympy__sympy-12419` is an independently known regression, now dated to the M140
-structural era on a broad corpus.
+**For:** a large, systematic efficiency benefit on identical solve rate — 41% fewer
+end-to-end tokens, 40% fewer turns, 25% lower cost, 75% fewer greps, and faster
+orientation (first gold touch at tool call 0 vs 1; 3 → 1 tool calls before the first
+edit). This is measured end-to-end, not inferred from payload size. Zero
+false-authority losses; the anti-search constant M154 removed stays removed live.
 
-### The legacy suites are substantially easier than the broad corpus
+**Against:** solve rate is exactly flat (19/27 both, p = 1.00) with 2 unique wins
+offset by 2 unique losses — and none of the four is attributable to evidence
+quality, so VTRACE cannot claim the wins either. **10% of selected tasks could not
+receive the treatment at all**, and one of those was a task baseline solved.
 
-| Suite | M154 File Top-1 | M154 gold delivered |
-| --- | ---: | ---: |
-| Frozen50 | 76% | 90% |
-| django.expanded (20) | 80% | 95% |
-| cross_repo_30 | 73% | 87% |
-| **Broad 100** | **57%** | **78%** |
+Not STRONG POSITIVE or POSITIVE: there are meaningful unique losses and a real
+availability failure. Not NEGATIVE: no net unique losses, no systematic harmful
+context, and substantially *less* work for the same outcome. That is MIXED, with the
+efficiency case the strongest positive evidence M155 produced and availability the
+clearest defect.
 
-Frozen50's delivered-gold is **90% at all five checkpoints** — perfectly flat.
-This is the mechanical reason milestone after milestone could report "0/50
-changed": the regression suite the project steers by is ~19 points easier on
-Top-1 and 12 points easier on delivery than the broad corpus, and it has not
-moved in five eras.
+## Roadmap evidence (observed on the frozen sample; not extrapolated)
 
-### Where M154 still misses (§67 ledger)
-
-11 missing-gold and 11 discarded-gold cases; 2 cases deliver nothing at all
-(`django__django-11740`, `sphinx-doc__sphinx-9320` — both frozen `no_context`
-cases, consistent with the M110 manifest). Per-repository delivered gold:
-`pylint 0/2`, `sphinx 3/7`, `matplotlib 4/7`, `sympy 12/17`, `django 37/44`,
-with `xarray 6/6`, `astropy 5/5`, `requests 4/4` clean.
-
-## Verdicts
-
-**M155-A: PASS.** Protocol recovered from repository evidence, task set frozen
-with hashes before candidate inspection, CLIs documented, rerun policy frozen,
-provenance binding trustworthy, detectors given known-positive *and* known-negative
-controls. The audit's job was to decide whether the instrument could be trusted;
-it found three defects and two of them would have invalidated the measurement.
-
-**M155-B: PASS** (evaluation validity, not product quality — §88). Complete 100/100
-coverage on all five sides, provenance valid, gold/token/latency metrics computed,
-case-level changes attributed, no contamination.
-
-**M155-C: PASS** (§89). All four adjacent transitions are protocol-compatible and
-provenance-safe; all five anchors executed faithfully under the modern evaluator
-with no old product code modified. Bounded-scope limitation recorded: M129 and
-M140 have no `symbol_mechanism_facts` table at all, so era-specific capabilities
-are reported as capability differences rather than as zeros.
-
-**M155-D: DEFERRED**, **M155-E: NOT RUN** — by decision, pending this report.
-
-### Broad retrieval-trend verdict: **NEUTRAL / MIXED**
-
-Not a product-utility verdict. On the broadest, freshest, fairest instrument the
-project has: delivered gold 79% → 78%, symbol recall exactly flat, Top-3 flat,
-Top-1 +1 point, tokens −20 median, latency +19% median (M129 → M154). Three
-regressions, zero unique outcome improvements that reach the model. The one
-apparent gain does not survive being asked whether the agent could see it.
-
-M129–M154's local wins did **not** accumulate into broad improvement on
-unfamiliar tasks. They also did not broadly regress: correctness and containment
-milestones (M152, M154) are clean, and the safety work is real.
+| Category | Observed | Note |
+| --- | ---: | --- |
+| **INDEX_ROBUSTNESS / PER_FILE_PARSE_FAILURE_CONTAINMENT** | **3/30** | One unparseable file makes all repository context unavailable. Independent of ranking quality. The deterministic benchmark quarantines and continues; the live path aborts. |
+| Delivery policy (`gold discovered but discarded`) | 11/100 broad, 2/27 paired, 1 empty treatment | `django-11740` shows the end-to-end consequence: gold retrieved, all 33 candidates `support-only`, nothing delivered, treatment empty. |
+| Agent interaction / context organisation | 4/4 discordant | Both arms had gold; outcome still diverged. |
+| `search_symbols` (enumeration need) | 0 cases identified | Not justified by this evidence. Not added. |
+| Result/effect semantics | 0 independent cases | Not justified. Not added. |
+| Cross-repository composition | 0 cases | Git sufficed. |
 
 ## Limitations
 
-1. Gold = patch-modified files. §19's caution applies: a non-gold lead is not
-   necessarily wrong, so `misleading lead` (41%) is an upper bound on harm, not a
-   measurement of it.
-2. `discarded` is treated as not-delivered based on the scorer's documented
-   product framing.
-3. Latency was measured by a separate read-only probe (3 repetitions, per-case
-   median) because the eval records no timing; it is not folded into any semantic
-   hash, per the M122 convention.
-4. No live agent evidence. Nothing here says whether an agent benefits.
-5. Change attribution is deliberately conservative and defaults to `unknown`
-   (§52); 2 of 148 outcome-changed cases are `unknown`.
+1. **No callable VTRACE tools.** The historical protocol injects context;
+   `--vtrace-method mcp` parses but is never dispatched and the harness spawns with
+   `--strict-mcp-config` and empty `{mcpServers:{}}`. Tool discovery, voluntary
+   invocation, `get_code_context` / `get_impact_graph` usage and VTRACE→grep
+   sequencing are **UNAVAILABLE, never zero**.
+2. **n = 27.** Wide intervals; only unique wins/losses and the efficiency deltas
+   carry information.
+3. Gold = patch-modified files, so `misleading lead` (41% broad) is an upper bound.
+4. `discarded` treated as not-delivered, per the scorer's product framing.
+5. Latency measured by a separate read-only probe; never folded into a semantic hash.
+6. Cross-tab cannot speak to `GOLD_MISSING`.
+7. The M140→M150 latency and delivery findings are broad-corpus; no live A/B isolates them.
 
-## Recommended next step
+## Recommended next milestone
 
-The evidence points away from more retrieval features and toward two things:
-
-1. **Run D at reduced scope on the honest protocol.** A paired baseline-vs-VTRACE
-   run answers the only question B/C cannot: whether injected context helps an
-   agent even when gold ranking is unchanged. B/C give it interpretive context —
-   for 11 missing-gold and 11 discarded-gold cases a loss is a retrieval
-   deficiency; for the 78% delivered, a loss is an interaction problem.
-2. **Re-baseline the regression suite before any further retrieval work.**
-   Frozen50 cannot observe the index-side changes it is being used to police
-   (A2) and is markedly easier than the broad corpus. Steering by it is how five
-   eras of local wins produced a flat broad result.
-
-`search_symbols` and richer result/effect semantics are **not** justified by this
-evidence and were not built (§78/§79). No product code changed (§114).
-
-## Artifacts
-
-`stage5_m155_protocol.json` · `stage5_m155_protocol_audit.md` ·
-`stage5_m155_cli_inventory.md` · `stage5_m155_task_manifest.json` ·
-`stage5_m155_detector_validation.json` · `stage5_m155_retrieval_m154.json` ·
-`stage5_m155_retrieval_summary.md` · `stage5_m155_retrieval_case_ledger.json` ·
-`stage5_m155_historical_checkpoints.json` ·
-`stage5_m155_historical_comparison.json` ·
-`stage5_m155_historical_changed_cases.json` · `stage5_m155_latency_trend.json` ·
-`stage5_m155_legacy_suite_projection.json` ·
-fixture `retrieval_eval.m155_broad_100.json` · runners
-`run_stage5_m155_latency_probe.ts`, `run_stage5_m155_analysis.ts` (+ tests).
-
-Large raw artifacts (500 indexes, per-side corpora, paired row dumps) remain
-outside the repository under `/home/calvin/bench/vtrace-m155/`.
+**Index robustness / per-file parse-failure containment.** It is the only defect
+here that makes VTRACE unusable rather than merely unhelpful, it cost 3/30 tasks
+including one baseline success, it is independent of ranking, and the deterministic
+benchmark already proves containment is achievable. Delivery policy is second: the
+`gold discovered but discarded` bucket now has an end-to-end demonstration. Ranking
+and retrieval expansion are **not** indicated — the efficiency case is already good
+and the discordant outcomes are not explained by evidence quality.
