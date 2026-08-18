@@ -227,3 +227,52 @@ describe("M161 treatment state requires a run to describe (§34)", () => {
     expect(lead.goldAnywhere).toBe(false);
   });
 });
+
+describe("M161 availability: a deliberate skip is not a failure (§33/§34)", () => {
+  /**
+   * Captured verbatim from sphinx-doc__sphinx-10435 in the M161 paired sweep. The
+   * product recovered no high-confidence pivot and declined to deliver; the agent
+   * still ran 19 turns and produced a patch. Reading `vtraceIndexedContext: false`
+   * as "no index was produced" filed that good judgement as a product failure.
+   */
+  const CAPTURED_POLICY_SKIP: TreatmentMeta = {
+    vtraceContextError: null,
+    vtraceInjectionError: null,
+    vtraceTreatmentValid: true,
+    vtraceIndexedContext: false,
+    vtraceInjectionObserved: false,
+    vtracePolicyAction: "skip",
+    vtracePolicyReason: "Capsule v2 recovered no high-confidence pivot; nothing actionable to inject.",
+    vtraceCapsulePivots: [],
+    vtraceCapsuleSupport: [],
+  };
+
+  test("the captured policy skip is VALID_DELIVERY_EMPTY, not TREATMENT_UNAVAILABLE", () => {
+    const got = classifyTreatmentState(CAPTURED_POLICY_SKIP, { ran: true });
+    expect(got.state).toBe("VALID_DELIVERY_EMPTY");
+    expect(got.reason).toContain("no high-confidence pivot");
+  });
+
+  test("vtraceIndexedContext:false alone never implies unavailable", () => {
+    expect(classifyTreatmentState({ ...meta(), vtraceIndexedContext: false }, { ran: true }).state)
+      .toBe("VALID_NONEMPTY");
+  });
+
+  test("a hard context error IS unavailable (known positive)", () => {
+    const got = classifyTreatmentState(
+      { ...CAPTURED_POLICY_SKIP, vtraceContextError: "whole-repository index aborted: SyntaxError" },
+      { ran: true },
+    );
+    expect(got.state).toBe("TREATMENT_UNAVAILABLE");
+    expect(got.reason).toContain("context error");
+  });
+
+  test("the two are distinguished by the error field, not by delivery count", () => {
+    // Both deliver zero items. Only one is a product failure.
+    const empty = classifyTreatmentState(CAPTURED_POLICY_SKIP, { ran: true });
+    const failed = classifyTreatmentState({ ...CAPTURED_POLICY_SKIP, vtraceContextError: "boom" }, { ran: true });
+    expect(empty.deliveredItems).toBe(0);
+    expect(failed.deliveredItems).toBe(0);
+    expect(empty.state).not.toBe(failed.state);
+  });
+});

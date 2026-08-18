@@ -38,9 +38,23 @@ export type TreatmentState =
 export interface TreatmentMeta {
   /** Did context generation complete without a hard error? */
   readonly vtraceTreatmentValid?: unknown;
+  /**
+   * The runner's HARD-ERROR signal. Its own comment is the authority here:
+   * "A hard error still aborts. hardErrors.length === 0 is what separates an empty
+   * [delivery] from a failure." This, not `vtraceIndexedContext`, decides
+   * availability.
+   */
+  readonly vtraceContextError?: unknown;
   readonly vtraceInjectionError?: unknown;
   readonly vtraceInjectionObserved?: unknown;
+  /**
+   * Whether any section produced non-empty context — a DELIVERY signal, not index
+   * health. It is false whenever the product declines to deliver, including a
+   * deliberate policy skip, so it must never be read as a failure.
+   */
   readonly vtraceIndexedContext?: unknown;
+  readonly vtracePolicyAction?: unknown;
+  readonly vtracePolicyReason?: unknown;
   readonly vtraceCapsulePivots?: unknown;
   readonly vtraceCapsuleSupport?: unknown;
   readonly vtraceInstructionsFileSize?: unknown;
@@ -109,21 +123,38 @@ export function classifyTreatmentState(
 
   // A hard treatment failure is a PRODUCT failure and must never be laundered into
   // an empty delivery. Order matters here: an aborted index also delivers zero items.
-  const injectionError = meta.vtraceInjectionError;
-  if (typeof injectionError === "string" && injectionError.trim().length > 0) {
-    return { ...base, state: "TREATMENT_UNAVAILABLE", reason: `injection error: ${injectionError}` };
+  //
+  // The converse error is just as bad and is the one this ordering exists to
+  // prevent: `vtraceIndexedContext === false` was once read as "no index was
+  // produced" and therefore unavailable. It actually means "no section delivered
+  // non-empty context", which is exactly what a DELIBERATE policy skip produces —
+  // so a product correctly declining to deliver was being filed as a product
+  // failure, inflating the unavailability count with its own good judgement.
+  const errors = [
+    ["context error", meta.vtraceContextError],
+    ["injection error", meta.vtraceInjectionError],
+  ] as const;
+  for (const [kind, value] of errors) {
+    if (typeof value === "string" && value.trim().length > 0) {
+      return { ...base, state: "TREATMENT_UNAVAILABLE", reason: `${kind}: ${value}` };
+    }
   }
   if (meta.vtraceTreatmentValid === false) {
     return { ...base, state: "TREATMENT_UNAVAILABLE", reason: "runner reported the treatment invalid" };
-  }
-  if (meta.vtraceIndexedContext === false) {
-    return { ...base, state: "TREATMENT_UNAVAILABLE", reason: "no indexed context was produced" };
   }
 
   if (deliveredItems === 0) {
     // §33 — a legitimate product outcome. Zero VTRACE tokens are injected, the
     // agent spawns normally, and the case is graded normally.
-    return { ...base, state: "VALID_DELIVERY_EMPTY", reason: "retrieval succeeded and delivered 0 items" };
+    const action = typeof meta.vtracePolicyAction === "string" ? meta.vtracePolicyAction : null;
+    const why = typeof meta.vtracePolicyReason === "string" ? meta.vtracePolicyReason : null;
+    return {
+      ...base,
+      state: "VALID_DELIVERY_EMPTY",
+      reason: why !== null
+        ? `retrieval succeeded and delivered 0 items (policy ${action ?? "n/a"}: ${why})`
+        : "retrieval succeeded and delivered 0 items",
+    };
   }
   if (degraded) {
     return {

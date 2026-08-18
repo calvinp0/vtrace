@@ -1,0 +1,46 @@
+{
+  "schemaVersion": "stage5.m161.harness-defects.v1",
+  "milestone": "M161",
+  "rule": "§125 — benchmark infrastructure may be fixed for VALIDITY only, never product behaviour, and every fix records the invalid measurement, the root cause, the fix, a known-positive control, and any affected reruns.",
+  "productBehaviourChanged": false,
+  "defects": [
+    {
+      "id": "D1",
+      "discoveredIn": "M161-B smoke validation",
+      "title": "The VTRACE arm carried four undeclared agent-policy blocks",
+      "invalidMeasurement": "none — caught before the paired sweep ran",
+      "detail": "Reading the snapshot the first smoke run actually injected showed PIVOT_CHECK, EDIT_GUARD, PATCH_VERIFY and a trailing orientation Instruction riding the VTRACE arm alongside STAGE5_TOKEN_DISCIPLINE, which the protocol had already excluded. EDIT_GUARD and PATCH_VERIFY reference nothing from the capsule: they are generic agent-quality policy given to one arm only.",
+      "rootCause": "The treatment was declared from the one policy block that had been identified by inspection, rather than from an enumeration of the text actually delivered.",
+      "fix": "Three existing flags passed on both arms; --disable-context-instruction added (additive, default false, historical rendering byte-identical). No historical block deleted or modified.",
+      "knownPositiveControl": "results/stage5_m161_policy_block_known_positive.md — the blocks captured verbatim from a real injection, so their absence under the frozen flags is a suppression rather than a silent detector. Harness control C4 and smoke check S4 both consume it.",
+      "affectedReruns": "the first smoke pair was superseded and re-run under the corrected treatment; it never entered any M161 denominator",
+      "productBehaviourChanged": false
+    },
+    {
+      "id": "D2",
+      "discoveredIn": "M161-D analysis, at 20 of 30 pairs",
+      "title": "A deliberate no-deliver policy skip was classified as a product availability failure",
+      "invalidMeasurement": "sphinx-doc__sphinx-10435 reported as TREATMENT_UNAVAILABLE in a partial availability count. No live run was affected and no result was published.",
+      "detail": "The case has vtraceContextError null, vtraceInjectionError null, vtraceTreatmentValid true, vtracePolicyAction 'skip' with reason 'Capsule v2 recovered no high-confidence pivot; nothing actionable to inject.' The agent ran 19 turns and produced a 663-byte patch. This is §33's legitimate empty delivery.",
+      "rootCause": "The classifier read vtraceIndexedContext === false as 'no indexed context was produced'. That field is a DELIVERY signal — whether any section produced non-empty context — so it is false whenever the product declines to deliver. The runner's own comment names the correct signal: 'A hard error still aborts. hardErrors.length === 0 is what separates an empty [delivery] from a failure', surfaced as vtraceContextError.",
+      "whyItMatters": "It is the M155 misclassification inverted. M155 filed a product failure as an empty delivery; this filed the product's own good judgement as a failure — inflating the unavailability count, and firing §69's 'baseline PASS with treatment unavailable' alarm on a case where the treatment was constructed correctly and the agent ran normally.",
+      "fix": "TREATMENT_UNAVAILABLE now requires vtraceContextError, vtraceInjectionError, or vtraceTreatmentValid === false. vtraceIndexedContext no longer participates. A valid empty delivery records the policy action and reason so it explains itself.",
+      "knownPositiveControl": "Four tests in m161Treatment.test.ts driven by the CAPTURED sphinx-doc__sphinx-10435 metadata: the policy skip classifies VALID_DELIVERY_EMPTY, vtraceIndexedContext:false alone never implies unavailable, the same shape WITH a context error classifies TREATMENT_UNAVAILABLE, and the two are shown to be distinguished by the error field rather than by delivery count — both deliver zero items.",
+      "affectedReruns": "none — the defect was in offline classification, not in any live run. No agent was re-spawned and no case was replaced.",
+      "productBehaviourChanged": false
+    },
+    {
+      "id": "D3",
+      "discoveredIn": "M161-D analysis, before the sweep populated",
+      "title": "An unpopulated sweep classified as 30 valid empty deliveries",
+      "invalidMeasurement": "none — caught on a dry run against zero results",
+      "detail": "An empty metadata object satisfied every negative condition and fell through to VALID_DELIVERY_EMPTY, so 30 arms that had not run reported as 'retrieval succeeded and correctly delivered nothing'.",
+      "rootCause": "A valid empty delivery is a claim about a run, and the classifier did not require a run to point at.",
+      "fix": "NOT_RUN is a distinct state; positive evidence of an attempted treatment is required before any product verdict; the lead classifier refuses to claim gold state for it.",
+      "knownPositiveControl": "Four tests in m161Treatment.test.ts: empty metadata is NOT_RUN, ran:false overrides valid-looking metadata, ran:true with real metadata still classifies normally, and a genuine empty delivery still requires positive evidence.",
+      "affectedReruns": "none",
+      "productBehaviourChanged": false
+    }
+  ],
+  "standingLesson": "Two of these three are the same error in different directions: a signal that means 'nothing was delivered' was read as 'nothing worked'. Availability and delivery are different questions, and the field that answers one does not answer the other."
+}
