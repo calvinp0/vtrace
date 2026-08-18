@@ -1,0 +1,108 @@
+{
+  "schemaVersion": "stage5.m159.first-divergence-taxonomy.v1",
+  "corpusRoot": "/home/calvin/bench/vtrace-m156/targets/m156",
+  "residualCases": 20,
+  "localized": 20,
+  "unexplained": 0,
+  "taxonomy": [
+    {
+      "firstDivergence": "LANE_GENERATION_FAILURE",
+      "cases": 8,
+      "repos": [
+        "django/django",
+        "pylint-dev/pylint",
+        "sphinx-doc/sphinx",
+        "sympy/sympy"
+      ],
+      "repoCount": 4,
+      "instances": [
+        "django__django-14792",
+        "pylint-dev__pylint-4551",
+        "pylint-dev__pylint-8898",
+        "sphinx-doc__sphinx-9230",
+        "sympy__sympy-15875",
+        "sympy__sympy-16597",
+        "sympy__sympy-20428",
+        "sympy__sympy-20801"
+      ],
+      "byGroup": {
+        "DEEP_RANKED_OR_PREDELIVERY_LOSS": 2,
+        "NEVER_RETRIEVED_CAUSE_UNKNOWN": 6
+      }
+    },
+    {
+      "firstDivergence": "CANDIDATE_GENERATION_POOL_BOUND",
+      "cases": 6,
+      "repos": [
+        "django/django",
+        "matplotlib/matplotlib",
+        "pytest-dev/pytest",
+        "sphinx-doc/sphinx",
+        "sympy/sympy"
+      ],
+      "repoCount": 5,
+      "instances": [
+        "django__django-17084",
+        "matplotlib__matplotlib-24970",
+        "matplotlib__matplotlib-25332",
+        "pytest-dev__pytest-6197",
+        "sphinx-doc__sphinx-9698",
+        "sympy__sympy-16792"
+      ],
+      "byGroup": {
+        "DEEP_RANKED_OR_PREDELIVERY_LOSS": 4,
+        "NEVER_RETRIEVED_CAUSE_UNKNOWN": 2
+      }
+    },
+    {
+      "firstDivergence": "CANDIDATE_BOUND_EVICTION",
+      "cases": 3,
+      "repos": [
+        "django/django",
+        "matplotlib/matplotlib",
+        "sphinx-doc/sphinx"
+      ],
+      "repoCount": 3,
+      "instances": [
+        "django__django-13810",
+        "matplotlib__matplotlib-26466",
+        "sphinx-doc__sphinx-7910"
+      ],
+      "byGroup": {
+        "DEEP_RANKED_OR_PREDELIVERY_LOSS": 2,
+        "NEVER_RETRIEVED_CAUSE_UNKNOWN": 1
+      }
+    },
+    {
+      "firstDivergence": "INDEX_FILE_MISSING",
+      "cases": 2,
+      "repos": [
+        "django/django"
+      ],
+      "repoCount": 1,
+      "instances": [
+        "django__django-13590",
+        "django__django-15572"
+      ],
+      "byGroup": {
+        "DEEP_RANKED_OR_PREDELIVERY_LOSS": 0,
+        "NEVER_RETRIEVED_CAUSE_UNKNOWN": 2
+      }
+    },
+    {
+      "firstDivergence": "INDEX_SYMBOL_MISSING",
+      "cases": 1,
+      "repos": [
+        "django/django"
+      ],
+      "repoCount": 1,
+      "instances": [
+        "django__django-15037"
+      ],
+      "byGroup": {
+        "DEEP_RANKED_OR_PREDELIVERY_LOSS": 1,
+        "NEVER_RETRIEVED_CAUSE_UNKNOWN": 0
+      }
+    }
+  ]
+}

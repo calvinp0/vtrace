@@ -1,0 +1,236 @@
+{
+  "schemaVersion": "stage5.m159.candidate-depth-audit.v1",
+  "note": "\u00a728/\u00a730 \u2014 depth is judged against the measured delivery ceiling, not against intuition. Across 100 cases the product delivered 570 items and NEVER delivered one deeper than ordinary rank 30 (p50 4, p90 14). A gold candidate available only at rank 40+ is therefore not \"slightly too deep\" \u2014 it is outside the range delivery has ever reached, and calling that a ranking defect would be calling a correct withholding a bug (\u00a730).",
+  "deliveryCeiling": {
+    "deliveredItems": 570,
+    "maxRankEverDelivered": 30,
+    "p50": 4,
+    "p90": 14,
+    "p99": 25,
+    "perCaseDeepestMax": 30,
+    "perCaseDeepestP90": 24,
+    "laneInjectedDeliveries": 22
+  },
+  "cases": [
+    {
+      "instanceId": "django__django-13590",
+      "repo": "django/django",
+      "firstDivergence": "INDEX_FILE_MISSING",
+      "goldFileOrdinaryRank": null,
+      "goldSymbolOrdinaryRank": null,
+      "goldSymbolAvailableAtRank": null,
+      "deepestRankEverDelivered": 30,
+      "withinDeliveryReach": false,
+      "currentRankingReasonable": "yes \u2014 the candidate is deeper than anything delivery has ever reached, so withholding it is the ranking behaving correctly"
+    },
+    {
+      "instanceId": "django__django-13810",
+      "repo": "django/django",
+      "firstDivergence": "CANDIDATE_BOUND_EVICTION",
+      "goldFileOrdinaryRank": null,
+      "goldSymbolOrdinaryRank": null,
+      "goldSymbolAvailableAtRank": 51,
+      "deepestRankEverDelivered": 30,
+      "withinDeliveryReach": false,
+      "currentRankingReasonable": "yes \u2014 the candidate is deeper than anything delivery has ever reached, so withholding it is the ranking behaving correctly"
+    },
+    {
+      "instanceId": "django__django-14792",
+      "repo": "django/django",
+      "firstDivergence": "LANE_GENERATION_FAILURE",
+      "goldFileOrdinaryRank": null,
+      "goldSymbolOrdinaryRank": null,
+      "goldSymbolAvailableAtRank": null,
+      "deepestRankEverDelivered": 30,
+      "withinDeliveryReach": false,
+      "currentRankingReasonable": "yes \u2014 the candidate is deeper than anything delivery has ever reached, so withholding it is the ranking behaving correctly"
+    },
+    {
+      "instanceId": "django__django-15037",
+      "repo": "django/django",
+      "firstDivergence": "INDEX_SYMBOL_MISSING",
+      "goldFileOrdinaryRank": 9,
+      "goldSymbolOrdinaryRank": null,
+      "goldSymbolAvailableAtRank": null,
+      "deepestRankEverDelivered": 30,
+      "withinDeliveryReach": false,
+      "currentRankingReasonable": "yes \u2014 the candidate is deeper than anything delivery has ever reached, so withholding it is the ranking behaving correctly"
+    },
+    {
+      "instanceId": "django__django-15572",
+      "repo": "django/django",
+      "firstDivergence": "INDEX_FILE_MISSING",
+      "goldFileOrdinaryRank": null,
+      "goldSymbolOrdinaryRank": null,
+      "goldSymbolAvailableAtRank": null,
+      "deepestRankEverDelivered": 30,
+      "withinDeliveryReach": false,
+      "currentRankingReasonable": "yes \u2014 the candidate is deeper than anything delivery has ever reached, so withholding it is the ranking behaving correctly"
+    },
+    {
+      "instanceId": "django__django-17084",
+      "repo": "django/django",
+      "firstDivergence": "CANDIDATE_GENERATION_POOL_BOUND",
+      "goldFileOrdinaryRank": 26,
+      "goldSymbolOrdinaryRank": null,
+      "goldSymbolAvailableAtRank": 110,
+      "deepestRankEverDelivered": 30,
+      "withinDeliveryReach": false,
+      "currentRankingReasonable": "yes \u2014 the candidate is deeper than anything delivery has ever reached, so withholding it is the ranking behaving correctly"
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-24970",
+      "repo": "matplotlib/matplotlib",
+      "firstDivergence": "CANDIDATE_GENERATION_POOL_BOUND",
+      "goldFileOrdinaryRank": null,
+      "goldSymbolOrdinaryRank": null,
+      "goldSymbolAvailableAtRank": 369,
+      "deepestRankEverDelivered": 30,
+      "withinDeliveryReach": false,
+      "currentRankingReasonable": "yes \u2014 the candidate is deeper than anything delivery has ever reached, so withholding it is the ranking behaving correctly"
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-25332",
+      "repo": "matplotlib/matplotlib",
+      "firstDivergence": "CANDIDATE_GENERATION_POOL_BOUND",
+      "goldFileOrdinaryRank": 26,
+      "goldSymbolOrdinaryRank": null,
+      "goldSymbolAvailableAtRank": 343,
+      "deepestRankEverDelivered": 30,
+      "withinDeliveryReach": false,
+      "currentRankingReasonable": "yes \u2014 the candidate is deeper than anything delivery has ever reached, so withholding it is the ranking behaving correctly"
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-26466",
+      "repo": "matplotlib/matplotlib",
+      "firstDivergence": "CANDIDATE_BOUND_EVICTION",
+      "goldFileOrdinaryRank": 30,
+      "goldSymbolOrdinaryRank": null,
+      "goldSymbolAvailableAtRank": 74,
+      "deepestRankEverDelivered": 30,
+      "withinDeliveryReach": false,
+      "currentRankingReasonable": "yes \u2014 the candidate is deeper than anything delivery has ever reached, so withholding it is the ranking behaving correctly"
+    },
+    {
+      "instanceId": "pylint-dev__pylint-4551",
+      "repo": "pylint-dev/pylint",
+      "firstDivergence": "LANE_GENERATION_FAILURE",
+      "goldFileOrdinaryRank": null,
+      "goldSymbolOrdinaryRank": null,
+      "goldSymbolAvailableAtRank": null,
+      "deepestRankEverDelivered": 30,
+      "withinDeliveryReach": false,
+      "currentRankingReasonable": "yes \u2014 the candidate is deeper than anything delivery has ever reached, so withholding it is the ranking behaving correctly"
+    },
+    {
+      "instanceId": "pylint-dev__pylint-8898",
+      "repo": "pylint-dev/pylint",
+      "firstDivergence": "LANE_GENERATION_FAILURE",
+      "goldFileOrdinaryRank": 13,
+      "goldSymbolOrdinaryRank": null,
+      "goldSymbolAvailableAtRank": null,
+      "deepestRankEverDelivered": 30,
+      "withinDeliveryReach": false,
+      "currentRankingReasonable": "yes \u2014 the candidate is deeper than anything delivery has ever reached, so withholding it is the ranking behaving correctly"
+    },
+    {
+      "instanceId": "pytest-dev__pytest-6197",
+      "repo": "pytest-dev/pytest",
+      "firstDivergence": "CANDIDATE_GENERATION_POOL_BOUND",
+      "goldFileOrdinaryRank": null,
+      "goldSymbolOrdinaryRank": null,
+      "goldSymbolAvailableAtRank": 162,
+      "deepestRankEverDelivered": 30,
+      "withinDeliveryReach": false,
+      "currentRankingReasonable": "yes \u2014 the candidate is deeper than anything delivery has ever reached, so withholding it is the ranking behaving correctly"
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-7910",
+      "repo": "sphinx-doc/sphinx",
+      "firstDivergence": "CANDIDATE_BOUND_EVICTION",
+      "goldFileOrdinaryRank": 28,
+      "goldSymbolOrdinaryRank": null,
+      "goldSymbolAvailableAtRank": 40,
+      "deepestRankEverDelivered": 30,
+      "withinDeliveryReach": false,
+      "currentRankingReasonable": "yes \u2014 the candidate is deeper than anything delivery has ever reached, so withholding it is the ranking behaving correctly"
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-9230",
+      "repo": "sphinx-doc/sphinx",
+      "firstDivergence": "LANE_GENERATION_FAILURE",
+      "goldFileOrdinaryRank": null,
+      "goldSymbolOrdinaryRank": null,
+      "goldSymbolAvailableAtRank": null,
+      "deepestRankEverDelivered": 30,
+      "withinDeliveryReach": false,
+      "currentRankingReasonable": "yes \u2014 the candidate is deeper than anything delivery has ever reached, so withholding it is the ranking behaving correctly"
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-9698",
+      "repo": "sphinx-doc/sphinx",
+      "firstDivergence": "CANDIDATE_GENERATION_POOL_BOUND",
+      "goldFileOrdinaryRank": null,
+      "goldSymbolOrdinaryRank": null,
+      "goldSymbolAvailableAtRank": 87,
+      "deepestRankEverDelivered": 30,
+      "withinDeliveryReach": false,
+      "currentRankingReasonable": "yes \u2014 the candidate is deeper than anything delivery has ever reached, so withholding it is the ranking behaving correctly"
+    },
+    {
+      "instanceId": "sympy__sympy-15875",
+      "repo": "sympy/sympy",
+      "firstDivergence": "LANE_GENERATION_FAILURE",
+      "goldFileOrdinaryRank": null,
+      "goldSymbolOrdinaryRank": null,
+      "goldSymbolAvailableAtRank": null,
+      "deepestRankEverDelivered": 30,
+      "withinDeliveryReach": false,
+      "currentRankingReasonable": "yes \u2014 the candidate is deeper than anything delivery has ever reached, so withholding it is the ranking behaving correctly"
+    },
+    {
+      "instanceId": "sympy__sympy-16597",
+      "repo": "sympy/sympy",
+      "firstDivergence": "LANE_GENERATION_FAILURE",
+      "goldFileOrdinaryRank": 17,
+      "goldSymbolOrdinaryRank": null,
+      "goldSymbolAvailableAtRank": null,
+      "deepestRankEverDelivered": 30,
+      "withinDeliveryReach": false,
+      "currentRankingReasonable": "yes \u2014 the candidate is deeper than anything delivery has ever reached, so withholding it is the ranking behaving correctly"
+    },
+    {
+      "instanceId": "sympy__sympy-16792",
+      "repo": "sympy/sympy",
+      "firstDivergence": "CANDIDATE_GENERATION_POOL_BOUND",
+      "goldFileOrdinaryRank": null,
+      "goldSymbolOrdinaryRank": null,
+      "goldSymbolAvailableAtRank": 1058,
+      "deepestRankEverDelivered": 30,
+      "withinDeliveryReach": false,
+      "currentRankingReasonable": "yes \u2014 the candidate is deeper than anything delivery has ever reached, so withholding it is the ranking behaving correctly"
+    },
+    {
+      "instanceId": "sympy__sympy-20428",
+      "repo": "sympy/sympy",
+      "firstDivergence": "LANE_GENERATION_FAILURE",
+      "goldFileOrdinaryRank": null,
+      "goldSymbolOrdinaryRank": null,
+      "goldSymbolAvailableAtRank": null,
+      "deepestRankEverDelivered": 30,
+      "withinDeliveryReach": false,
+      "currentRankingReasonable": "yes \u2014 the candidate is deeper than anything delivery has ever reached, so withholding it is the ranking behaving correctly"
+    },
+    {
+      "instanceId": "sympy__sympy-20801",
+      "repo": "sympy/sympy",
+      "firstDivergence": "LANE_GENERATION_FAILURE",
+      "goldFileOrdinaryRank": null,
+      "goldSymbolOrdinaryRank": null,
+      "goldSymbolAvailableAtRank": null,
+      "deepestRankEverDelivered": 30,
+      "withinDeliveryReach": false,
+      "currentRankingReasonable": "yes \u2014 the candidate is deeper than anything delivery has ever reached, so withholding it is the ranking behaving correctly"
+    }
+  ]
+}

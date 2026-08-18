@@ -1,0 +1,1825 @@
+{
+  "schemaVersion": "stage5.m159.generation-reach.v1",
+  "note": "OFFLINE DIAGNOSTIC. Widened pools are evidence about generator reach, never a proposed product bound (§27/§42).",
+  "corpusRoot": "/home/calvin/bench/vtrace-m156/targets/m156",
+  "productPool": 25,
+  "rungs": [
+    25,
+    50,
+    100,
+    200,
+    400,
+    800
+  ],
+  "cases": 20,
+  "failures": [],
+  "summary": {
+    "reachableAtProductPool": [
+      "django__django-13810",
+      "matplotlib__matplotlib-26466",
+      "sphinx-doc__sphinx-7910"
+    ],
+    "reachableOnlyDeeper": [
+      "django__django-17084",
+      "matplotlib__matplotlib-24970",
+      "matplotlib__matplotlib-25332",
+      "pytest-dev__pytest-6197",
+      "sphinx-doc__sphinx-9698",
+      "sympy__sympy-16792"
+    ],
+    "unreachableByGeneration": [
+      "django__django-13590",
+      "django__django-14792",
+      "django__django-15037",
+      "django__django-15572",
+      "pylint-dev__pylint-4551",
+      "pylint-dev__pylint-8898",
+      "sphinx-doc__sphinx-9230",
+      "sympy__sympy-15875",
+      "sympy__sympy-16597",
+      "sympy__sympy-20428",
+      "sympy__sympy-20801"
+    ]
+  },
+  "records": [
+    {
+      "instanceId": "django__django-13590",
+      "repo": "django/django",
+      "rungs": [
+        {
+          "maxResults": 25,
+          "evaluatedTotal": 130,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 50,
+          "evaluatedTotal": 230,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 100,
+          "evaluatedTotal": 430,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 200,
+          "evaluatedTotal": 478,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 400,
+          "evaluatedTotal": 478,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 800,
+          "evaluatedTotal": 478,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        }
+      ],
+      "downstreamFoothold": {
+        "parentScored": false,
+        "parentFqName": null,
+        "siblingScored": false,
+        "bestSiblingRank": null,
+        "taskNamesGoldSymbol": false,
+        "taskNamesQualifiedPair": false
+      },
+      "firstReachingPool": null,
+      "rankAtFirstReach": null,
+      "scoreAtFirstReach": null,
+      "unreachable": true,
+      "verdict": "UNREACHABLE_BY_GENERATION"
+    },
+    {
+      "instanceId": "django__django-13810",
+      "repo": "django/django",
+      "rungs": [
+        {
+          "maxResults": 25,
+          "evaluatedTotal": 130,
+          "goldSymbolScored": true,
+          "goldSymbolPreCapRank": 51,
+          "goldSymbolScore": 0.7852,
+          "goldSymbolSources": [
+            "concept_owner"
+          ],
+          "goldSymbolEvidence": [
+            "1 indexed symbol(s) depend on this",
+            "centrality support capped at 0% of full: this candidate's own identifying evidence (0.00) is below its centrality (0.07)",
+            "core/handlers/base.py appears to own this behaviour (7 of 12 definitions cover 5/18 requested concepts (debug, middleware, load, context)); this definition covers middleware, load"
+          ],
+          "goldSymbolFqName": "core/handlers/base.py::BaseHandler.load_middleware"
+        },
+        {
+          "maxResults": 50,
+          "evaluatedTotal": 230,
+          "goldSymbolScored": true,
+          "goldSymbolPreCapRank": 58,
+          "goldSymbolScore": 0.8697,
+          "goldSymbolSources": [
+            "lexical"
+          ],
+          "goldSymbolEvidence": [
+            "1 indexed symbol(s) depend on this",
+            "lexical match on local_name, local_name, query_coverage"
+          ],
+          "goldSymbolFqName": "core/handlers/base.py::BaseHandler.load_middleware"
+        },
+        {
+          "maxResults": 100,
+          "evaluatedTotal": 428,
+          "goldSymbolScored": true,
+          "goldSymbolPreCapRank": 61,
+          "goldSymbolScore": 0.8712,
+          "goldSymbolSources": [
+            "lexical"
+          ],
+          "goldSymbolEvidence": [
+            "1 indexed symbol(s) depend on this",
+            "lexical match on local_name, local_name, query_coverage"
+          ],
+          "goldSymbolFqName": "core/handlers/base.py::BaseHandler.load_middleware"
+        },
+        {
+          "maxResults": 200,
+          "evaluatedTotal": 708,
+          "goldSymbolScored": true,
+          "goldSymbolPreCapRank": 61,
+          "goldSymbolScore": 0.8725,
+          "goldSymbolSources": [
+            "lexical"
+          ],
+          "goldSymbolEvidence": [
+            "1 indexed symbol(s) depend on this",
+            "lexical match on local_name, local_name, query_coverage"
+          ],
+          "goldSymbolFqName": "core/handlers/base.py::BaseHandler.load_middleware"
+        },
+        {
+          "maxResults": 400,
+          "evaluatedTotal": 707,
+          "goldSymbolScored": true,
+          "goldSymbolPreCapRank": 61,
+          "goldSymbolScore": 0.8733,
+          "goldSymbolSources": [
+            "lexical"
+          ],
+          "goldSymbolEvidence": [
+            "1 indexed symbol(s) depend on this",
+            "lexical match on local_name, local_name, query_coverage"
+          ],
+          "goldSymbolFqName": "core/handlers/base.py::BaseHandler.load_middleware"
+        },
+        {
+          "maxResults": 800,
+          "evaluatedTotal": 708,
+          "goldSymbolScored": true,
+          "goldSymbolPreCapRank": 61,
+          "goldSymbolScore": 0.8734,
+          "goldSymbolSources": [
+            "lexical"
+          ],
+          "goldSymbolEvidence": [
+            "1 indexed symbol(s) depend on this",
+            "lexical match on local_name, local_name, query_coverage"
+          ],
+          "goldSymbolFqName": "core/handlers/base.py::BaseHandler.load_middleware"
+        }
+      ],
+      "downstreamFoothold": {
+        "parentScored": false,
+        "parentFqName": null,
+        "siblingScored": true,
+        "bestSiblingRank": 61,
+        "taskNamesGoldSymbol": false,
+        "taskNamesQualifiedPair": false
+      },
+      "firstReachingPool": 25,
+      "rankAtFirstReach": 51,
+      "scoreAtFirstReach": 0.7852,
+      "unreachable": false,
+      "verdict": "REACHABLE_AT_PRODUCT_POOL"
+    },
+    {
+      "instanceId": "django__django-14792",
+      "repo": "django/django",
+      "rungs": [
+        {
+          "maxResults": 25,
+          "evaluatedTotal": 45,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 50,
+          "evaluatedTotal": 45,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 100,
+          "evaluatedTotal": 45,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 200,
+          "evaluatedTotal": 45,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 400,
+          "evaluatedTotal": 45,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 800,
+          "evaluatedTotal": 45,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        }
+      ],
+      "downstreamFoothold": {
+        "parentScored": false,
+        "parentFqName": null,
+        "siblingScored": false,
+        "bestSiblingRank": null,
+        "taskNamesGoldSymbol": false,
+        "taskNamesQualifiedPair": false
+      },
+      "firstReachingPool": null,
+      "rankAtFirstReach": null,
+      "scoreAtFirstReach": null,
+      "unreachable": true,
+      "verdict": "UNREACHABLE_BY_GENERATION"
+    },
+    {
+      "instanceId": "django__django-15037",
+      "repo": "django/django",
+      "rungs": [
+        {
+          "maxResults": 25,
+          "evaluatedTotal": 133,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 50,
+          "evaluatedTotal": 233,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 100,
+          "evaluatedTotal": 433,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 200,
+          "evaluatedTotal": 833,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 400,
+          "evaluatedTotal": 962,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 800,
+          "evaluatedTotal": 957,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        }
+      ],
+      "downstreamFoothold": {
+        "parentScored": false,
+        "parentFqName": null,
+        "siblingScored": true,
+        "bestSiblingRank": 10,
+        "taskNamesGoldSymbol": false,
+        "taskNamesQualifiedPair": false
+      },
+      "firstReachingPool": null,
+      "rankAtFirstReach": null,
+      "scoreAtFirstReach": null,
+      "unreachable": true,
+      "verdict": "UNREACHABLE_BY_GENERATION"
+    },
+    {
+      "instanceId": "django__django-15572",
+      "repo": "django/django",
+      "rungs": [
+        {
+          "maxResults": 25,
+          "evaluatedTotal": 130,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 50,
+          "evaluatedTotal": 230,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 100,
+          "evaluatedTotal": 303,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 200,
+          "evaluatedTotal": 303,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 400,
+          "evaluatedTotal": 303,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 800,
+          "evaluatedTotal": 303,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        }
+      ],
+      "downstreamFoothold": {
+        "parentScored": false,
+        "parentFqName": null,
+        "siblingScored": false,
+        "bestSiblingRank": null,
+        "taskNamesGoldSymbol": false,
+        "taskNamesQualifiedPair": false
+      },
+      "firstReachingPool": null,
+      "rankAtFirstReach": null,
+      "scoreAtFirstReach": null,
+      "unreachable": true,
+      "verdict": "UNREACHABLE_BY_GENERATION"
+    },
+    {
+      "instanceId": "django__django-17084",
+      "repo": "django/django",
+      "rungs": [
+        {
+          "maxResults": 25,
+          "evaluatedTotal": 130,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 50,
+          "evaluatedTotal": 230,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 100,
+          "evaluatedTotal": 430,
+          "goldSymbolScored": true,
+          "goldSymbolPreCapRank": 110,
+          "goldSymbolScore": 0.781,
+          "goldSymbolSources": [
+            "concept_owner"
+          ],
+          "goldSymbolEvidence": [
+            "1 indexed symbol(s) depend on this",
+            "centrality support capped at 0% of full: this candidate's own identifying evidence (0.00) is below its centrality (0.03)",
+            "db/models/sql/query.py appears to own this behaviour (12 of 110 definitions cover 6/8 requested concepts (cannot, aggregate, group, since)); this definition covers aggregate"
+          ],
+          "goldSymbolFqName": "db/models/sql/query.py::Query.get_aggregation"
+        },
+        {
+          "maxResults": 200,
+          "evaluatedTotal": 830,
+          "goldSymbolScored": true,
+          "goldSymbolPreCapRank": 118,
+          "goldSymbolScore": 0.7804,
+          "goldSymbolSources": [
+            "concept_owner"
+          ],
+          "goldSymbolEvidence": [
+            "1 indexed symbol(s) depend on this",
+            "centrality support capped at 0% of full: this candidate's own identifying evidence (0.00) is below its centrality (0.03)",
+            "db/models/sql/query.py appears to own this behaviour (12 of 110 definitions cover 6/8 requested concepts (cannot, aggregate, group, since)); this definition covers aggregate"
+          ],
+          "goldSymbolFqName": "db/models/sql/query.py::Query.get_aggregation"
+        },
+        {
+          "maxResults": 400,
+          "evaluatedTotal": 1136,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 800,
+          "evaluatedTotal": 1133,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        }
+      ],
+      "downstreamFoothold": {
+        "parentScored": false,
+        "parentFqName": null,
+        "siblingScored": true,
+        "bestSiblingRank": 245,
+        "taskNamesGoldSymbol": false,
+        "taskNamesQualifiedPair": false
+      },
+      "firstReachingPool": 100,
+      "rankAtFirstReach": 110,
+      "scoreAtFirstReach": 0.781,
+      "unreachable": false,
+      "verdict": "REACHABLE_ONLY_DEEPER"
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-24970",
+      "repo": "matplotlib/matplotlib",
+      "rungs": [
+        {
+          "maxResults": 25,
+          "evaluatedTotal": 131,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 50,
+          "evaluatedTotal": 230,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 100,
+          "evaluatedTotal": 429,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 200,
+          "evaluatedTotal": 827,
+          "goldSymbolScored": true,
+          "goldSymbolPreCapRank": 369,
+          "goldSymbolScore": 0.3217,
+          "goldSymbolSources": [
+            "lexical"
+          ],
+          "goldSymbolEvidence": [
+            "1 indexed symbol(s) depend on this",
+            "lexical match on docstring, fq_name, query_coverage"
+          ],
+          "goldSymbolFqName": "lib/matplotlib/colors.py::Colormap.__call__"
+        },
+        {
+          "maxResults": 400,
+          "evaluatedTotal": 1322,
+          "goldSymbolScored": true,
+          "goldSymbolPreCapRank": 462,
+          "goldSymbolScore": 0.3173,
+          "goldSymbolSources": [
+            "lexical"
+          ],
+          "goldSymbolEvidence": [
+            "1 indexed symbol(s) depend on this",
+            "lexical match on docstring, fq_name, query_coverage"
+          ],
+          "goldSymbolFqName": "lib/matplotlib/colors.py::Colormap.__call__"
+        },
+        {
+          "maxResults": 800,
+          "evaluatedTotal": 1322,
+          "goldSymbolScored": true,
+          "goldSymbolPreCapRank": 462,
+          "goldSymbolScore": 0.3173,
+          "goldSymbolSources": [
+            "lexical"
+          ],
+          "goldSymbolEvidence": [
+            "1 indexed symbol(s) depend on this",
+            "lexical match on docstring, fq_name, query_coverage"
+          ],
+          "goldSymbolFqName": "lib/matplotlib/colors.py::Colormap.__call__"
+        }
+      ],
+      "downstreamFoothold": {
+        "parentScored": false,
+        "parentFqName": null,
+        "siblingScored": true,
+        "bestSiblingRank": 55,
+        "taskNamesGoldSymbol": false,
+        "taskNamesQualifiedPair": false
+      },
+      "firstReachingPool": 200,
+      "rankAtFirstReach": 369,
+      "scoreAtFirstReach": 0.3217,
+      "unreachable": false,
+      "verdict": "REACHABLE_ONLY_DEEPER"
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-25332",
+      "repo": "matplotlib/matplotlib",
+      "rungs": [
+        {
+          "maxResults": 25,
+          "evaluatedTotal": 130,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 50,
+          "evaluatedTotal": 230,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 100,
+          "evaluatedTotal": 430,
+          "goldSymbolScored": true,
+          "goldSymbolPreCapRank": 343,
+          "goldSymbolScore": 0.2529,
+          "goldSymbolSources": [
+            "lexical"
+          ],
+          "goldSymbolEvidence": [
+            "1 indexed symbol(s) depend on this",
+            "lexical match on signature, signature, query_coverage"
+          ],
+          "goldSymbolFqName": "lib/matplotlib/cbook.py::CallbackRegistry.__init__"
+        },
+        {
+          "maxResults": 200,
+          "evaluatedTotal": 825,
+          "goldSymbolScored": true,
+          "goldSymbolPreCapRank": 567,
+          "goldSymbolScore": 0.2641,
+          "goldSymbolSources": [
+            "lexical"
+          ],
+          "goldSymbolEvidence": [
+            "3 indexed symbol(s) depend on this",
+            "lexical match on docstring, docstring, query_coverage"
+          ],
+          "goldSymbolFqName": "lib/matplotlib/cbook.py::Grouper"
+        },
+        {
+          "maxResults": 400,
+          "evaluatedTotal": 822,
+          "goldSymbolScored": true,
+          "goldSymbolPreCapRank": 564,
+          "goldSymbolScore": 0.2642,
+          "goldSymbolSources": [
+            "lexical"
+          ],
+          "goldSymbolEvidence": [
+            "3 indexed symbol(s) depend on this",
+            "lexical match on docstring, docstring, query_coverage"
+          ],
+          "goldSymbolFqName": "lib/matplotlib/cbook.py::Grouper"
+        },
+        {
+          "maxResults": 800,
+          "evaluatedTotal": 825,
+          "goldSymbolScored": true,
+          "goldSymbolPreCapRank": 563,
+          "goldSymbolScore": 0.2642,
+          "goldSymbolSources": [
+            "lexical"
+          ],
+          "goldSymbolEvidence": [
+            "3 indexed symbol(s) depend on this",
+            "lexical match on docstring, docstring, query_coverage"
+          ],
+          "goldSymbolFqName": "lib/matplotlib/cbook.py::Grouper"
+        }
+      ],
+      "downstreamFoothold": {
+        "parentScored": true,
+        "parentFqName": "lib/matplotlib/cbook.py::_StrongRef",
+        "siblingScored": true,
+        "bestSiblingRank": 50,
+        "taskNamesGoldSymbol": false,
+        "taskNamesQualifiedPair": false
+      },
+      "firstReachingPool": 100,
+      "rankAtFirstReach": 343,
+      "scoreAtFirstReach": 0.2529,
+      "unreachable": false,
+      "verdict": "REACHABLE_ONLY_DEEPER"
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-26466",
+      "repo": "matplotlib/matplotlib",
+      "rungs": [
+        {
+          "maxResults": 25,
+          "evaluatedTotal": 130,
+          "goldSymbolScored": true,
+          "goldSymbolPreCapRank": 74,
+          "goldSymbolScore": 0.7668,
+          "goldSymbolSources": [
+            "lexical"
+          ],
+          "goldSymbolEvidence": [
+            "1 indexed symbol(s) depend on this",
+            "lexical match on docstring, docstring, signature, docstring, docstring, query_coverage"
+          ],
+          "goldSymbolFqName": "lib/matplotlib/text.py::Annotation.__init__"
+        },
+        {
+          "maxResults": 50,
+          "evaluatedTotal": 230,
+          "goldSymbolScored": true,
+          "goldSymbolPreCapRank": 92,
+          "goldSymbolScore": 0.7669,
+          "goldSymbolSources": [
+            "lexical"
+          ],
+          "goldSymbolEvidence": [
+            "1 indexed symbol(s) depend on this",
+            "lexical match on docstring, docstring, signature, docstring, docstring, query_coverage"
+          ],
+          "goldSymbolFqName": "lib/matplotlib/text.py::Annotation.__init__"
+        },
+        {
+          "maxResults": 100,
+          "evaluatedTotal": 428,
+          "goldSymbolScored": true,
+          "goldSymbolPreCapRank": 160,
+          "goldSymbolScore": 0.745,
+          "goldSymbolSources": [
+            "lexical"
+          ],
+          "goldSymbolEvidence": [
+            "1 indexed symbol(s) depend on this",
+            "lexical match on docstring, docstring, signature, docstring, docstring, query_coverage"
+          ],
+          "goldSymbolFqName": "lib/matplotlib/text.py::Annotation.__init__"
+        },
+        {
+          "maxResults": 200,
+          "evaluatedTotal": 827,
+          "goldSymbolScored": true,
+          "goldSymbolPreCapRank": 193,
+          "goldSymbolScore": 0.6679,
+          "goldSymbolSources": [
+            "lexical"
+          ],
+          "goldSymbolEvidence": [
+            "1 indexed symbol(s) depend on this",
+            "lexical match on docstring, docstring, signature, docstring, docstring, query_coverage"
+          ],
+          "goldSymbolFqName": "lib/matplotlib/text.py::Annotation.__init__"
+        },
+        {
+          "maxResults": 400,
+          "evaluatedTotal": 1536,
+          "goldSymbolScored": true,
+          "goldSymbolPreCapRank": 211,
+          "goldSymbolScore": 0.6775,
+          "goldSymbolSources": [
+            "lexical"
+          ],
+          "goldSymbolEvidence": [
+            "1 indexed symbol(s) depend on this",
+            "lexical match on docstring, docstring, signature, docstring, docstring, query_coverage"
+          ],
+          "goldSymbolFqName": "lib/matplotlib/text.py::Annotation.__init__"
+        },
+        {
+          "maxResults": 800,
+          "evaluatedTotal": 1536,
+          "goldSymbolScored": true,
+          "goldSymbolPreCapRank": 211,
+          "goldSymbolScore": 0.6775,
+          "goldSymbolSources": [
+            "lexical"
+          ],
+          "goldSymbolEvidence": [
+            "1 indexed symbol(s) depend on this",
+            "lexical match on docstring, docstring, signature, docstring, docstring, query_coverage"
+          ],
+          "goldSymbolFqName": "lib/matplotlib/text.py::Annotation.__init__"
+        }
+      ],
+      "downstreamFoothold": {
+        "parentScored": true,
+        "parentFqName": "lib/matplotlib/text.py::Annotation",
+        "siblingScored": true,
+        "bestSiblingRank": 67,
+        "taskNamesGoldSymbol": false,
+        "taskNamesQualifiedPair": false
+      },
+      "firstReachingPool": 25,
+      "rankAtFirstReach": 74,
+      "scoreAtFirstReach": 0.7668,
+      "unreachable": false,
+      "verdict": "REACHABLE_AT_PRODUCT_POOL"
+    },
+    {
+      "instanceId": "pylint-dev__pylint-4551",
+      "repo": "pylint-dev/pylint",
+      "rungs": [
+        {
+          "maxResults": 25,
+          "evaluatedTotal": 41,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 50,
+          "evaluatedTotal": 41,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 100,
+          "evaluatedTotal": 41,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 200,
+          "evaluatedTotal": 41,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 400,
+          "evaluatedTotal": 41,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 800,
+          "evaluatedTotal": 41,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        }
+      ],
+      "downstreamFoothold": {
+        "parentScored": false,
+        "parentFqName": null,
+        "siblingScored": false,
+        "bestSiblingRank": null,
+        "taskNamesGoldSymbol": false,
+        "taskNamesQualifiedPair": false
+      },
+      "firstReachingPool": null,
+      "rankAtFirstReach": null,
+      "scoreAtFirstReach": null,
+      "unreachable": true,
+      "verdict": "UNREACHABLE_BY_GENERATION"
+    },
+    {
+      "instanceId": "pylint-dev__pylint-8898",
+      "repo": "pylint-dev/pylint",
+      "rungs": [
+        {
+          "maxResults": 25,
+          "evaluatedTotal": 39,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 50,
+          "evaluatedTotal": 39,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 100,
+          "evaluatedTotal": 39,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 200,
+          "evaluatedTotal": 39,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 400,
+          "evaluatedTotal": 39,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 800,
+          "evaluatedTotal": 39,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        }
+      ],
+      "downstreamFoothold": {
+        "parentScored": false,
+        "parentFqName": null,
+        "siblingScored": true,
+        "bestSiblingRank": 13,
+        "taskNamesGoldSymbol": false,
+        "taskNamesQualifiedPair": false
+      },
+      "firstReachingPool": null,
+      "rankAtFirstReach": null,
+      "scoreAtFirstReach": null,
+      "unreachable": true,
+      "verdict": "UNREACHABLE_BY_GENERATION"
+    },
+    {
+      "instanceId": "pytest-dev__pytest-6197",
+      "repo": "pytest-dev/pytest",
+      "rungs": [
+        {
+          "maxResults": 25,
+          "evaluatedTotal": 131,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 50,
+          "evaluatedTotal": 231,
+          "goldSymbolScored": true,
+          "goldSymbolPreCapRank": 162,
+          "goldSymbolScore": 0.9392,
+          "goldSymbolSources": [
+            "lexical"
+          ],
+          "goldSymbolEvidence": [
+            "13 indexed symbol(s) depend on this",
+            "lexical match on signature, fq_name, fq_name, signature, query_coverage, path_segment_signal"
+          ],
+          "goldSymbolFqName": "src/_pytest/python.py::Module"
+        },
+        {
+          "maxResults": 100,
+          "evaluatedTotal": 431,
+          "goldSymbolScored": true,
+          "goldSymbolPreCapRank": 312,
+          "goldSymbolScore": 0.8404,
+          "goldSymbolSources": [
+            "lexical"
+          ],
+          "goldSymbolEvidence": [
+            "13 indexed symbol(s) depend on this",
+            "lexical match on signature, fq_name, fq_name, signature, query_coverage, path_segment_signal"
+          ],
+          "goldSymbolFqName": "src/_pytest/python.py::Module"
+        },
+        {
+          "maxResults": 200,
+          "evaluatedTotal": 831,
+          "goldSymbolScored": true,
+          "goldSymbolPreCapRank": 174,
+          "goldSymbolScore": 1.1252,
+          "goldSymbolSources": [
+            "lexical"
+          ],
+          "goldSymbolEvidence": [
+            "2 indexed symbol(s) depend on this",
+            "lexical match on fq_name, fq_name, local_name, query_coverage, path_segment_signal"
+          ],
+          "goldSymbolFqName": "src/_pytest/python.py::PyCollector.collect"
+        },
+        {
+          "maxResults": 400,
+          "evaluatedTotal": 1631,
+          "goldSymbolScored": true,
+          "goldSymbolPreCapRank": 176,
+          "goldSymbolScore": 1.1469,
+          "goldSymbolSources": [
+            "lexical"
+          ],
+          "goldSymbolEvidence": [
+            "2 indexed symbol(s) depend on this",
+            "lexical match on fq_name, fq_name, local_name, query_coverage, path_segment_signal"
+          ],
+          "goldSymbolFqName": "src/_pytest/python.py::PyCollector.collect"
+        },
+        {
+          "maxResults": 800,
+          "evaluatedTotal": 2810,
+          "goldSymbolScored": true,
+          "goldSymbolPreCapRank": 173,
+          "goldSymbolScore": 1.1501,
+          "goldSymbolSources": [
+            "lexical"
+          ],
+          "goldSymbolEvidence": [
+            "2 indexed symbol(s) depend on this",
+            "lexical match on fq_name, fq_name, local_name, query_coverage, path_segment_signal"
+          ],
+          "goldSymbolFqName": "src/_pytest/python.py::PyCollector.collect"
+        }
+      ],
+      "downstreamFoothold": {
+        "parentScored": true,
+        "parentFqName": "src/_pytest/python.py::PyobjMixin",
+        "siblingScored": true,
+        "bestSiblingRank": 122,
+        "taskNamesGoldSymbol": true,
+        "taskNamesQualifiedPair": false
+      },
+      "firstReachingPool": 50,
+      "rankAtFirstReach": 162,
+      "scoreAtFirstReach": 0.9392,
+      "unreachable": false,
+      "verdict": "REACHABLE_ONLY_DEEPER"
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-7910",
+      "repo": "sphinx-doc/sphinx",
+      "rungs": [
+        {
+          "maxResults": 25,
+          "evaluatedTotal": 130,
+          "goldSymbolScored": true,
+          "goldSymbolPreCapRank": 40,
+          "goldSymbolScore": 1.2069,
+          "goldSymbolSources": [
+            "lexical"
+          ],
+          "goldSymbolEvidence": [
+            "3 indexed symbol(s) depend on this",
+            "lexical match on fq_name, docstring, docstring, local_name, docstring, query_coverage, path_segment_signal"
+          ],
+          "goldSymbolFqName": "sphinx/ext/napoleon/__init__.py::_skip_member"
+        },
+        {
+          "maxResults": 50,
+          "evaluatedTotal": 229,
+          "goldSymbolScored": true,
+          "goldSymbolPreCapRank": 40,
+          "goldSymbolScore": 1.2043,
+          "goldSymbolSources": [
+            "lexical"
+          ],
+          "goldSymbolEvidence": [
+            "23 indexed symbol(s) depend on this",
+            "lexical match on fq_name, docstring, docstring, docstring, docstring, query_coverage, path_segment_signal"
+          ],
+          "goldSymbolFqName": "sphinx/ext/napoleon/__init__.py::Config"
+        },
+        {
+          "maxResults": 100,
+          "evaluatedTotal": 426,
+          "goldSymbolScored": true,
+          "goldSymbolPreCapRank": 44,
+          "goldSymbolScore": 1.2005,
+          "goldSymbolSources": [
+            "lexical"
+          ],
+          "goldSymbolEvidence": [
+            "23 indexed symbol(s) depend on this",
+            "lexical match on fq_name, docstring, docstring, docstring, docstring, query_coverage, path_segment_signal"
+          ],
+          "goldSymbolFqName": "sphinx/ext/napoleon/__init__.py::Config"
+        },
+        {
+          "maxResults": 200,
+          "evaluatedTotal": 827,
+          "goldSymbolScored": true,
+          "goldSymbolPreCapRank": 43,
+          "goldSymbolScore": 1.2264,
+          "goldSymbolSources": [
+            "lexical"
+          ],
+          "goldSymbolEvidence": [
+            "3 indexed symbol(s) depend on this",
+            "lexical match on fq_name, docstring, docstring, local_name, docstring, query_coverage, path_segment_signal"
+          ],
+          "goldSymbolFqName": "sphinx/ext/napoleon/__init__.py::_skip_member"
+        },
+        {
+          "maxResults": 400,
+          "evaluatedTotal": 1148,
+          "goldSymbolScored": true,
+          "goldSymbolPreCapRank": 40,
+          "goldSymbolScore": 1.2577,
+          "goldSymbolSources": [
+            "lexical"
+          ],
+          "goldSymbolEvidence": [
+            "3 indexed symbol(s) depend on this",
+            "lexical match on fq_name, docstring, docstring, local_name, docstring, query_coverage, path_segment_signal"
+          ],
+          "goldSymbolFqName": "sphinx/ext/napoleon/__init__.py::_skip_member"
+        },
+        {
+          "maxResults": 800,
+          "evaluatedTotal": 1144,
+          "goldSymbolScored": true,
+          "goldSymbolPreCapRank": 40,
+          "goldSymbolScore": 1.2584,
+          "goldSymbolSources": [
+            "lexical"
+          ],
+          "goldSymbolEvidence": [
+            "3 indexed symbol(s) depend on this",
+            "lexical match on fq_name, docstring, docstring, local_name, docstring, query_coverage, path_segment_signal"
+          ],
+          "goldSymbolFqName": "sphinx/ext/napoleon/__init__.py::_skip_member"
+        }
+      ],
+      "downstreamFoothold": {
+        "parentScored": false,
+        "parentFqName": null,
+        "siblingScored": true,
+        "bestSiblingRank": 40,
+        "taskNamesGoldSymbol": false,
+        "taskNamesQualifiedPair": false
+      },
+      "firstReachingPool": 25,
+      "rankAtFirstReach": 40,
+      "scoreAtFirstReach": 1.2069,
+      "unreachable": false,
+      "verdict": "REACHABLE_AT_PRODUCT_POOL"
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-9230",
+      "repo": "sphinx-doc/sphinx",
+      "rungs": [
+        {
+          "maxResults": 25,
+          "evaluatedTotal": 136,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 50,
+          "evaluatedTotal": 236,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 100,
+          "evaluatedTotal": 435,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 200,
+          "evaluatedTotal": 832,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 400,
+          "evaluatedTotal": 1544,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 800,
+          "evaluatedTotal": 1543,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        }
+      ],
+      "downstreamFoothold": {
+        "parentScored": false,
+        "parentFqName": null,
+        "siblingScored": true,
+        "bestSiblingRank": 364,
+        "taskNamesGoldSymbol": false,
+        "taskNamesQualifiedPair": false
+      },
+      "firstReachingPool": null,
+      "rankAtFirstReach": null,
+      "scoreAtFirstReach": null,
+      "unreachable": true,
+      "verdict": "UNREACHABLE_BY_GENERATION"
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-9698",
+      "repo": "sphinx-doc/sphinx",
+      "rungs": [
+        {
+          "maxResults": 25,
+          "evaluatedTotal": 130,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 50,
+          "evaluatedTotal": 230,
+          "goldSymbolScored": true,
+          "goldSymbolPreCapRank": 87,
+          "goldSymbolScore": 1.0568,
+          "goldSymbolSources": [
+            "lexical"
+          ],
+          "goldSymbolEvidence": [
+            "1 indexed symbol(s) depend on this",
+            "lexical match on local_name, fq_name, fq_name, query_coverage"
+          ],
+          "goldSymbolFqName": "sphinx/domains/python.py::PyProperty.get_index_text"
+        },
+        {
+          "maxResults": 100,
+          "evaluatedTotal": 430,
+          "goldSymbolScored": true,
+          "goldSymbolPreCapRank": 78,
+          "goldSymbolScore": 1.0954,
+          "goldSymbolSources": [
+            "lexical"
+          ],
+          "goldSymbolEvidence": [
+            "2 indexed symbol(s) depend on this",
+            "lexical match on local_name, docstring, fq_name, query_coverage"
+          ],
+          "goldSymbolFqName": "sphinx/domains/python.py::PyObject.get_index_text"
+        },
+        {
+          "maxResults": 200,
+          "evaluatedTotal": 829,
+          "goldSymbolScored": true,
+          "goldSymbolPreCapRank": 83,
+          "goldSymbolScore": 1.0888,
+          "goldSymbolSources": [
+            "lexical"
+          ],
+          "goldSymbolEvidence": [
+            "2 indexed symbol(s) depend on this",
+            "centrality support capped at 100% of full: this candidate's own identifying evidence (0.57) is below its centrality (0.02)",
+            "lexical match on local_name, docstring, fq_name, query_coverage"
+          ],
+          "goldSymbolFqName": "sphinx/domains/python.py::PyObject.get_index_text"
+        },
+        {
+          "maxResults": 400,
+          "evaluatedTotal": 1598,
+          "goldSymbolScored": true,
+          "goldSymbolPreCapRank": 83,
+          "goldSymbolScore": 1.0902,
+          "goldSymbolSources": [
+            "lexical"
+          ],
+          "goldSymbolEvidence": [
+            "2 indexed symbol(s) depend on this",
+            "lexical match on local_name, docstring, fq_name, query_coverage"
+          ],
+          "goldSymbolFqName": "sphinx/domains/python.py::PyObject.get_index_text"
+        },
+        {
+          "maxResults": 800,
+          "evaluatedTotal": 1598,
+          "goldSymbolScored": true,
+          "goldSymbolPreCapRank": 83,
+          "goldSymbolScore": 1.0902,
+          "goldSymbolSources": [
+            "lexical"
+          ],
+          "goldSymbolEvidence": [
+            "2 indexed symbol(s) depend on this",
+            "lexical match on local_name, docstring, fq_name, query_coverage"
+          ],
+          "goldSymbolFqName": "sphinx/domains/python.py::PyObject.get_index_text"
+        }
+      ],
+      "downstreamFoothold": {
+        "parentScored": true,
+        "parentFqName": "sphinx/domains/python.py::PyMethod",
+        "siblingScored": true,
+        "bestSiblingRank": 64,
+        "taskNamesGoldSymbol": false,
+        "taskNamesQualifiedPair": false
+      },
+      "firstReachingPool": 50,
+      "rankAtFirstReach": 87,
+      "scoreAtFirstReach": 1.0568,
+      "unreachable": false,
+      "verdict": "REACHABLE_ONLY_DEEPER"
+    },
+    {
+      "instanceId": "sympy__sympy-15875",
+      "repo": "sympy/sympy",
+      "rungs": [
+        {
+          "maxResults": 25,
+          "evaluatedTotal": 145,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 50,
+          "evaluatedTotal": 245,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 100,
+          "evaluatedTotal": 444,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 200,
+          "evaluatedTotal": 843,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 400,
+          "evaluatedTotal": 1641,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 800,
+          "evaluatedTotal": 3236,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        }
+      ],
+      "downstreamFoothold": {
+        "parentScored": false,
+        "parentFqName": null,
+        "siblingScored": true,
+        "bestSiblingRank": 1567,
+        "taskNamesGoldSymbol": false,
+        "taskNamesQualifiedPair": false
+      },
+      "firstReachingPool": null,
+      "rankAtFirstReach": null,
+      "scoreAtFirstReach": null,
+      "unreachable": true,
+      "verdict": "UNREACHABLE_BY_GENERATION"
+    },
+    {
+      "instanceId": "sympy__sympy-16597",
+      "repo": "sympy/sympy",
+      "rungs": [
+        {
+          "maxResults": 25,
+          "evaluatedTotal": 142,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 50,
+          "evaluatedTotal": 242,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 100,
+          "evaluatedTotal": 439,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 200,
+          "evaluatedTotal": 842,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 400,
+          "evaluatedTotal": 926,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 800,
+          "evaluatedTotal": 927,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        }
+      ],
+      "downstreamFoothold": {
+        "parentScored": true,
+        "parentFqName": "sympy/core/power.py::Pow",
+        "siblingScored": true,
+        "bestSiblingRank": 62,
+        "taskNamesGoldSymbol": false,
+        "taskNamesQualifiedPair": false
+      },
+      "firstReachingPool": null,
+      "rankAtFirstReach": null,
+      "scoreAtFirstReach": null,
+      "unreachable": true,
+      "verdict": "UNREACHABLE_BY_GENERATION"
+    },
+    {
+      "instanceId": "sympy__sympy-16792",
+      "repo": "sympy/sympy",
+      "rungs": [
+        {
+          "maxResults": 25,
+          "evaluatedTotal": 134,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 50,
+          "evaluatedTotal": 234,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 100,
+          "evaluatedTotal": 434,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 200,
+          "evaluatedTotal": 834,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 400,
+          "evaluatedTotal": 1634,
+          "goldSymbolScored": true,
+          "goldSymbolPreCapRank": 1058,
+          "goldSymbolScore": 0.3716,
+          "goldSymbolSources": [
+            "lexical"
+          ],
+          "goldSymbolEvidence": [
+            "1 indexed symbol(s) depend on this",
+            "lexical match on signature, signature, fq_name, docstring, fq_name, query_coverage"
+          ],
+          "goldSymbolFqName": "sympy/utilities/codegen.py::CodeGen.routine"
+        },
+        {
+          "maxResults": 800,
+          "evaluatedTotal": 3233,
+          "goldSymbolScored": true,
+          "goldSymbolPreCapRank": 2177,
+          "goldSymbolScore": 0.396,
+          "goldSymbolSources": [
+            "lexical"
+          ],
+          "goldSymbolEvidence": [
+            "1 indexed symbol(s) depend on this",
+            "lexical match on signature, signature, fq_name, docstring, fq_name, query_coverage"
+          ],
+          "goldSymbolFqName": "sympy/utilities/codegen.py::CodeGen.routine"
+        }
+      ],
+      "downstreamFoothold": {
+        "parentScored": true,
+        "parentFqName": "sympy/utilities/codegen.py::CodeGen",
+        "siblingScored": true,
+        "bestSiblingRank": 81,
+        "taskNamesGoldSymbol": false,
+        "taskNamesQualifiedPair": false
+      },
+      "firstReachingPool": 400,
+      "rankAtFirstReach": 1058,
+      "scoreAtFirstReach": 0.3716,
+      "unreachable": false,
+      "verdict": "REACHABLE_ONLY_DEEPER"
+    },
+    {
+      "instanceId": "sympy__sympy-20428",
+      "repo": "sympy/sympy",
+      "rungs": [
+        {
+          "maxResults": 25,
+          "evaluatedTotal": 55,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 50,
+          "evaluatedTotal": 55,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 100,
+          "evaluatedTotal": 55,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 200,
+          "evaluatedTotal": 55,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 400,
+          "evaluatedTotal": 55,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 800,
+          "evaluatedTotal": 55,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        }
+      ],
+      "downstreamFoothold": {
+        "parentScored": false,
+        "parentFqName": null,
+        "siblingScored": false,
+        "bestSiblingRank": null,
+        "taskNamesGoldSymbol": false,
+        "taskNamesQualifiedPair": false
+      },
+      "firstReachingPool": null,
+      "rankAtFirstReach": null,
+      "scoreAtFirstReach": null,
+      "unreachable": true,
+      "verdict": "UNREACHABLE_BY_GENERATION"
+    },
+    {
+      "instanceId": "sympy__sympy-20801",
+      "repo": "sympy/sympy",
+      "rungs": [
+        {
+          "maxResults": 25,
+          "evaluatedTotal": 136,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 50,
+          "evaluatedTotal": 236,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 100,
+          "evaluatedTotal": 436,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 200,
+          "evaluatedTotal": 836,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 400,
+          "evaluatedTotal": 1636,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        },
+        {
+          "maxResults": 800,
+          "evaluatedTotal": 3234,
+          "goldSymbolScored": false,
+          "goldSymbolPreCapRank": null,
+          "goldSymbolScore": null,
+          "goldSymbolSources": [],
+          "goldSymbolEvidence": [],
+          "goldSymbolFqName": null
+        }
+      ],
+      "downstreamFoothold": {
+        "parentScored": true,
+        "parentFqName": "sympy/core/numbers.py::Float",
+        "siblingScored": true,
+        "bestSiblingRank": 139,
+        "taskNamesGoldSymbol": false,
+        "taskNamesQualifiedPair": false
+      },
+      "firstReachingPool": null,
+      "rankAtFirstReach": null,
+      "scoreAtFirstReach": null,
+      "unreachable": true,
+      "verdict": "UNREACHABLE_BY_GENERATION"
+    }
+  ]
+}

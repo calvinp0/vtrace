@@ -1,0 +1,1021 @@
+{
+  "schemaVersion": "stage5.m159.index-representation-audit.v1",
+  "note": "\u00a721/\u00a722 \u2014 file representation and symbol representation are recorded SEPARATELY. \"gold file indexed, gold symbol absent\" and \"neither indexed\" are different defects and are never collapsed into \"index miss\".",
+  "cases": [
+    {
+      "instanceId": "django__django-13590",
+      "repo": "django/django",
+      "goldFilesIndexed": "0/1",
+      "missingFiles": [
+        "django/db/models/sql/query.py"
+      ],
+      "goldSymbolsIndexed": "0/2",
+      "missingSymbols": [
+        "resolve_lookup_value",
+        "solve_lookup_type"
+      ],
+      "symbolsInGoldFiles": 0,
+      "relationsOnGoldSymbols": [],
+      "representationLevel": "FILE_MISSING"
+    },
+    {
+      "instanceId": "django__django-13810",
+      "repo": "django/django",
+      "goldFilesIndexed": "1/1",
+      "missingFiles": [],
+      "goldSymbolsIndexed": "1/1",
+      "missingSymbols": [],
+      "symbolsInGoldFiles": 18,
+      "relationsOnGoldSymbols": [
+        {
+          "fqName": "core/handlers/base.py::BaseHandler.load_middleware",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 8,
+          "mechanismFacts": 1
+        }
+      ],
+      "representationLevel": "SYMBOL_AND_RELATIONS_PRESENT"
+    },
+    {
+      "instanceId": "django__django-14792",
+      "repo": "django/django",
+      "goldFilesIndexed": "1/1",
+      "missingFiles": [],
+      "goldSymbolsIndexed": "2/2",
+      "missingSymbols": [],
+      "symbolsInGoldFiles": 27,
+      "relationsOnGoldSymbols": [
+        {
+          "fqName": "utils/timezone.py::get_current_timezone_name",
+          "kind": "function",
+          "edgesIn": 0,
+          "edgesOut": 2,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "utils/timezone.py::_get_timezone_name",
+          "kind": "function",
+          "edgesIn": 2,
+          "edgesOut": 0,
+          "mechanismFacts": 0
+        }
+      ],
+      "representationLevel": "SYMBOL_AND_RELATIONS_PRESENT"
+    },
+    {
+      "instanceId": "django__django-15037",
+      "repo": "django/django",
+      "goldFilesIndexed": "1/1",
+      "missingFiles": [],
+      "goldSymbolsIndexed": "0/1",
+      "missingSymbols": [
+        "table2model"
+      ],
+      "symbolsInGoldFiles": 12,
+      "relationsOnGoldSymbols": [],
+      "representationLevel": "SYMBOL_MISSING"
+    },
+    {
+      "instanceId": "django__django-15572",
+      "repo": "django/django",
+      "goldFilesIndexed": "0/1",
+      "missingFiles": [
+        "django/template/autoreload.py"
+      ],
+      "goldSymbolsIndexed": "0/1",
+      "missingSymbols": [
+        "get_template_directories"
+      ],
+      "symbolsInGoldFiles": 0,
+      "relationsOnGoldSymbols": [],
+      "representationLevel": "FILE_MISSING"
+    },
+    {
+      "instanceId": "django__django-17084",
+      "repo": "django/django",
+      "goldFilesIndexed": "1/1",
+      "missingFiles": [],
+      "goldSymbolsIndexed": "1/1",
+      "missingSymbols": [],
+      "symbolsInGoldFiles": 154,
+      "relationsOnGoldSymbols": [
+        {
+          "fqName": "db/models/sql/query.py::Query.get_aggregation",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 11,
+          "mechanismFacts": 1
+        }
+      ],
+      "representationLevel": "SYMBOL_AND_RELATIONS_PRESENT"
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-24970",
+      "repo": "matplotlib/matplotlib",
+      "goldFilesIndexed": "1/1",
+      "missingFiles": [],
+      "goldSymbolsIndexed": "1/1",
+      "missingSymbols": [],
+      "symbolsInGoldFiles": 147,
+      "relationsOnGoldSymbols": [
+        {
+          "fqName": "lib/matplotlib/colors.py::Colormap.__call__",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 1,
+          "mechanismFacts": 1
+        },
+        {
+          "fqName": "lib/matplotlib/colors.py::Normalize.__call__",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 2,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "lib/matplotlib/colors.py::TwoSlopeNorm.__call__",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 2,
+          "mechanismFacts": 1
+        },
+        {
+          "fqName": "lib/matplotlib/colors.py::PowerNorm.__call__",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 2,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "lib/matplotlib/colors.py::BoundaryNorm.__call__",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 1,
+          "mechanismFacts": 1
+        },
+        {
+          "fqName": "lib/matplotlib/colors.py::NoNorm.__call__",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 0,
+          "mechanismFacts": 0
+        }
+      ],
+      "representationLevel": "SYMBOL_AND_RELATIONS_PRESENT"
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-25332",
+      "repo": "matplotlib/matplotlib",
+      "goldFilesIndexed": "1/1",
+      "missingFiles": [],
+      "goldSymbolsIndexed": "9/9",
+      "missingSymbols": [],
+      "symbolsInGoldFiles": 113,
+      "relationsOnGoldSymbols": [
+        {
+          "fqName": "lib/matplotlib/cbook.py::_StrongRef.__init__",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 0,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "lib/matplotlib/cbook.py::CallbackRegistry.__init__",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 0,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "lib/matplotlib/cbook.py::CallbackRegistry.__getstate__",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 0,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "lib/matplotlib/cbook.py::CallbackRegistry.__setstate__",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 2,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "lib/matplotlib/cbook.py::silent_list.__init__",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 0,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "lib/matplotlib/cbook.py::Stack.__init__",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 1,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "lib/matplotlib/cbook.py::Grouper",
+          "kind": "class",
+          "edgesIn": 3,
+          "edgesOut": 8,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "lib/matplotlib/cbook.py::Grouper.__init__",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 0,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "lib/matplotlib/cbook.py::Grouper.__contains__",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 0,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "lib/matplotlib/cbook.py::GrouperView.__init__",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 0,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "lib/matplotlib/cbook.py::GrouperView.__contains__",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 0,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "lib/matplotlib/cbook.py::_OrderedSet.__init__",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 0,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "lib/matplotlib/cbook.py::_OrderedSet.__contains__",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 0,
+          "mechanismFacts": 0
+        }
+      ],
+      "representationLevel": "SYMBOL_AND_RELATIONS_PRESENT"
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-26466",
+      "repo": "matplotlib/matplotlib",
+      "goldFilesIndexed": "1/1",
+      "missingFiles": [],
+      "goldSymbolsIndexed": "6/6",
+      "missingSymbols": [],
+      "symbolsInGoldFiles": 112,
+      "relationsOnGoldSymbols": [
+        {
+          "fqName": "lib/matplotlib/text.py::Text.__init__",
+          "kind": "method",
+          "edgesIn": 3,
+          "edgesOut": 3,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "lib/matplotlib/text.py::OffsetFrom.__init__",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 1,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "lib/matplotlib/text.py::OffsetFrom.set_unit",
+          "kind": "method",
+          "edgesIn": 2,
+          "edgesOut": 1,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "lib/matplotlib/text.py::OffsetFrom.get_unit",
+          "kind": "method",
+          "edgesIn": 2,
+          "edgesOut": 0,
+          "mechanismFacts": 1
+        },
+        {
+          "fqName": "lib/matplotlib/text.py::OffsetFrom._get_scale",
+          "kind": "method",
+          "edgesIn": 2,
+          "edgesOut": 1,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "lib/matplotlib/text.py::OffsetFrom.__call__",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 6,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "lib/matplotlib/text.py::_AnnotationBase",
+          "kind": "class",
+          "edgesIn": 4,
+          "edgesOut": 8,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "lib/matplotlib/text.py::_AnnotationBase.__init__",
+          "kind": "method",
+          "edgesIn": 2,
+          "edgesOut": 1,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "lib/matplotlib/text.py::Annotation.__init__",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 7,
+          "mechanismFacts": 0
+        }
+      ],
+      "representationLevel": "SYMBOL_AND_RELATIONS_PRESENT"
+    },
+    {
+      "instanceId": "pylint-dev__pylint-4551",
+      "repo": "pylint-dev/pylint",
+      "goldFilesIndexed": "4/4",
+      "missingFiles": [],
+      "goldSymbolsIndexed": "6/9",
+      "missingSymbols": [
+        "get_annotation",
+        "get_annotation_label",
+        "infer_node"
+      ],
+      "symbolsInGoldFiles": 115,
+      "relationsOnGoldSymbols": [
+        {
+          "fqName": "pylint/pyreverse/diagrams.py::ClassDiagram.class_names",
+          "kind": "method",
+          "edgesIn": 2,
+          "edgesOut": 1,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "pylint/pyreverse/inspector.py::Linker.visit_assignname",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 3,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "pylint/pyreverse/inspector.py::Linker.handle_assignattr_type",
+          "kind": "method",
+          "edgesIn": 2,
+          "edgesOut": 0,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "pylint/pyreverse/inspector.py::Linker.visit_import",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 1,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "pylint/pyreverse/utils.py::ASTWalker.visit",
+          "kind": "method",
+          "edgesIn": 2,
+          "edgesOut": 1,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "pylint/pyreverse/utils.py::LocalsVisitor.visit",
+          "kind": "method",
+          "edgesIn": 3,
+          "edgesOut": 1,
+          "mechanismFacts": 1
+        },
+        {
+          "fqName": "pylint/pyreverse/writer.py::DiagramWriter.get_values",
+          "kind": "method",
+          "edgesIn": 2,
+          "edgesOut": 0,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "pylint/pyreverse/writer.py::DotWriter.get_values",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 1,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "pylint/pyreverse/writer.py::VCGWriter.get_values",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 1,
+          "mechanismFacts": 1
+        }
+      ],
+      "representationLevel": "SYMBOL_AND_RELATIONS_PRESENT"
+    },
+    {
+      "instanceId": "pylint-dev__pylint-8898",
+      "repo": "pylint-dev/pylint",
+      "goldFilesIndexed": "3/3",
+      "missingFiles": [],
+      "goldSymbolsIndexed": "4/5",
+      "missingSymbols": [
+        "_check_regexp_csv"
+      ],
+      "symbolsInGoldFiles": 65,
+      "relationsOnGoldSymbols": [
+        {
+          "fqName": "pylint/config/argument.py::_regex_transformer",
+          "kind": "function",
+          "edgesIn": 1,
+          "edgesOut": 0,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "pylint/config/argument.py::_regexp_csv_transfomer",
+          "kind": "function",
+          "edgesIn": 0,
+          "edgesOut": 2,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "pylint/utils/utils.py::_check_csv",
+          "kind": "function",
+          "edgesIn": 5,
+          "edgesOut": 1,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "pylint/utils/utils.py::_comment",
+          "kind": "function",
+          "edgesIn": 1,
+          "edgesOut": 0,
+          "mechanismFacts": 0
+        }
+      ],
+      "representationLevel": "SYMBOL_AND_RELATIONS_PRESENT"
+    },
+    {
+      "instanceId": "pytest-dev__pytest-6197",
+      "repo": "pytest-dev/pytest",
+      "goldFilesIndexed": "1/1",
+      "missingFiles": [],
+      "goldSymbolsIndexed": "14/14",
+      "missingSymbols": [],
+      "symbolsInGoldFiles": 101,
+      "relationsOnGoldSymbols": [
+        {
+          "fqName": "src/_pytest/python.py::PyobjMixin",
+          "kind": "class",
+          "edgesIn": 2,
+          "edgesOut": 8,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "src/_pytest/python.py::PyobjMixin.obj",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 0,
+          "mechanismFacts": 1
+        },
+        {
+          "fqName": "src/_pytest/python.py::PyobjMixin.obj",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 0,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "src/_pytest/python.py::PyobjMixin._mount_obj_if_needed",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 3,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "src/_pytest/python.py::PyobjMixin._getobj",
+          "kind": "method",
+          "edgesIn": 3,
+          "edgesOut": 0,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "src/_pytest/python.py::PyCollector.collect",
+          "kind": "method",
+          "edgesIn": 2,
+          "edgesOut": 1,
+          "mechanismFacts": 1
+        },
+        {
+          "fqName": "src/_pytest/python.py::PyCollector._genfunctions",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 7,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "src/_pytest/python.py::Module",
+          "kind": "class",
+          "edgesIn": 14,
+          "edgesOut": 8,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "src/_pytest/python.py::Module.__init__",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 1,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "src/_pytest/python.py::Module._getobj",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 1,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "src/_pytest/python.py::Module.collect",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 2,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "src/_pytest/python.py::Package.__init__",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 1,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "src/_pytest/python.py::Package.isinitpath",
+          "kind": "method",
+          "edgesIn": 2,
+          "edgesOut": 0,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "src/_pytest/python.py::Package.collect",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 5,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "src/_pytest/python.py::Class.collect",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 7,
+          "mechanismFacts": 1
+        },
+        {
+          "fqName": "src/_pytest/python.py::Instance._getobj",
+          "kind": "method",
+          "edgesIn": 2,
+          "edgesOut": 0,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "src/_pytest/python.py::Instance.collect",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 1,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "src/_pytest/python.py::CallSpec2.__init__",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 1,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "src/_pytest/python.py::Metafunc.__init__",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 1,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "src/_pytest/python.py::Function.__init__",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 6,
+          "mechanismFacts": 1
+        },
+        {
+          "fqName": "src/_pytest/python.py::Function._getobj",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 0,
+          "mechanismFacts": 0
+        }
+      ],
+      "representationLevel": "SYMBOL_AND_RELATIONS_PRESENT"
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-7910",
+      "repo": "sphinx-doc/sphinx",
+      "goldFilesIndexed": "1/1",
+      "missingFiles": [],
+      "goldSymbolsIndexed": "2/2",
+      "missingSymbols": [],
+      "symbolsInGoldFiles": 8,
+      "relationsOnGoldSymbols": [
+        {
+          "fqName": "sphinx/ext/napoleon/__init__.py::Config",
+          "kind": "class",
+          "edgesIn": 25,
+          "edgesOut": 2,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "sphinx/ext/napoleon/__init__.py::_skip_member",
+          "kind": "function",
+          "edgesIn": 4,
+          "edgesOut": 1,
+          "mechanismFacts": 0
+        }
+      ],
+      "representationLevel": "SYMBOL_AND_RELATIONS_PRESENT"
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-9230",
+      "repo": "sphinx-doc/sphinx",
+      "goldFilesIndexed": "1/1",
+      "missingFiles": [],
+      "goldSymbolsIndexed": "1/1",
+      "missingSymbols": [],
+      "symbolsInGoldFiles": 24,
+      "relationsOnGoldSymbols": [
+        {
+          "fqName": "sphinx/util/docfields.py::DocFieldTransformer.transform",
+          "kind": "method",
+          "edgesIn": 2,
+          "edgesOut": 4,
+          "mechanismFacts": 3
+        }
+      ],
+      "representationLevel": "SYMBOL_AND_RELATIONS_PRESENT"
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-9698",
+      "repo": "sphinx-doc/sphinx",
+      "goldFilesIndexed": "1/1",
+      "missingFiles": [],
+      "goldSymbolsIndexed": "1/1",
+      "missingSymbols": [],
+      "symbolsInGoldFiles": 129,
+      "relationsOnGoldSymbols": [
+        {
+          "fqName": "sphinx/domains/python.py::PyObject.get_index_text",
+          "kind": "method",
+          "edgesIn": 2,
+          "edgesOut": 0,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "sphinx/domains/python.py::PyFunction.get_index_text",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 0,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "sphinx/domains/python.py::PyVariable.get_index_text",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 1,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "sphinx/domains/python.py::PyClasslike.get_index_text",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 1,
+          "mechanismFacts": 3
+        },
+        {
+          "fqName": "sphinx/domains/python.py::PyMethod.get_index_text",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 1,
+          "mechanismFacts": 2
+        },
+        {
+          "fqName": "sphinx/domains/python.py::PyAttribute.get_index_text",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 1,
+          "mechanismFacts": 1
+        },
+        {
+          "fqName": "sphinx/domains/python.py::PyProperty.get_index_text",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 1,
+          "mechanismFacts": 1
+        }
+      ],
+      "representationLevel": "SYMBOL_AND_RELATIONS_PRESENT"
+    },
+    {
+      "instanceId": "sympy__sympy-15875",
+      "repo": "sympy/sympy",
+      "goldFilesIndexed": "1/1",
+      "missingFiles": [],
+      "goldSymbolsIndexed": "1/1",
+      "missingSymbols": [],
+      "symbolsInGoldFiles": 56,
+      "relationsOnGoldSymbols": [
+        {
+          "fqName": "sympy/core/add.py::Add._eval_is_zero",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 2,
+          "mechanismFacts": 1
+        }
+      ],
+      "representationLevel": "SYMBOL_AND_RELATIONS_PRESENT"
+    },
+    {
+      "instanceId": "sympy__sympy-16597",
+      "repo": "sympy/sympy",
+      "goldFilesIndexed": "6/6",
+      "missingFiles": [],
+      "goldSymbolsIndexed": "7/7",
+      "missingSymbols": [],
+      "symbolsInGoldFiles": 185,
+      "relationsOnGoldSymbols": [
+        {
+          "fqName": "sympy/assumptions/ask.py::get_known_facts",
+          "kind": "function",
+          "edgesIn": 1,
+          "edgesOut": 3,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "sympy/assumptions/ask_generated.py::get_known_facts_cnf",
+          "kind": "function",
+          "edgesIn": 4,
+          "edgesOut": 1,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "sympy/assumptions/ask_generated.py::get_known_facts_dict",
+          "kind": "function",
+          "edgesIn": 2,
+          "edgesOut": 0,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "sympy/core/power.py::Pow.__new__",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 7,
+          "mechanismFacts": 2
+        },
+        {
+          "fqName": "sympy/core/power.py::Pow._eval_is_polynomial",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 2,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "sympy/core/power.py::Pow._eval_is_rational",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 3,
+          "mechanismFacts": 2
+        },
+        {
+          "fqName": "sympy/printing/tree.py::print_tree",
+          "kind": "function",
+          "edgesIn": 1,
+          "edgesOut": 1,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "sympy/tensor/indexed.py::Indexed.__new__",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 7,
+          "mechanismFacts": 3
+        },
+        {
+          "fqName": "sympy/tensor/indexed.py::IndexedBase.__new__",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 6,
+          "mechanismFacts": 1
+        },
+        {
+          "fqName": "sympy/tensor/indexed.py::Idx.__new__",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 6,
+          "mechanismFacts": 0
+        }
+      ],
+      "representationLevel": "SYMBOL_AND_RELATIONS_PRESENT"
+    },
+    {
+      "instanceId": "sympy__sympy-16792",
+      "repo": "sympy/sympy",
+      "goldFilesIndexed": "1/1",
+      "missingFiles": [],
+      "goldSymbolsIndexed": "1/2",
+      "missingSymbols": [
+        "dimensions"
+      ],
+      "symbolsInGoldFiles": 136,
+      "relationsOnGoldSymbols": [
+        {
+          "fqName": "sympy/utilities/codegen.py::CodeGen.routine",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 19,
+          "mechanismFacts": 3
+        },
+        {
+          "fqName": "sympy/utilities/codegen.py::JuliaCodeGen.routine",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 16,
+          "mechanismFacts": 3
+        },
+        {
+          "fqName": "sympy/utilities/codegen.py::OctaveCodeGen.routine",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 15,
+          "mechanismFacts": 2
+        },
+        {
+          "fqName": "sympy/utilities/codegen.py::RustCodeGen.routine",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 16,
+          "mechanismFacts": 3
+        }
+      ],
+      "representationLevel": "SYMBOL_AND_RELATIONS_PRESENT"
+    },
+    {
+      "instanceId": "sympy__sympy-20428",
+      "repo": "sympy/sympy",
+      "goldFilesIndexed": "1/1",
+      "missingFiles": [],
+      "goldSymbolsIndexed": "1/3",
+      "missingSymbols": [
+        "__bool__",
+        "__ne__"
+      ],
+      "symbolsInGoldFiles": 32,
+      "relationsOnGoldSymbols": [
+        {
+          "fqName": "sympy/polys/domains/expressiondomain.py::ExpressionDomain.gcd",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 0,
+          "mechanismFacts": 0
+        }
+      ],
+      "representationLevel": "SYMBOL_AND_RELATIONS_PRESENT"
+    },
+    {
+      "instanceId": "sympy__sympy-20801",
+      "repo": "sympy/sympy",
+      "goldFilesIndexed": "1/1",
+      "missingFiles": [],
+      "goldSymbolsIndexed": "2/2",
+      "missingSymbols": [],
+      "symbolsInGoldFiles": 533,
+      "relationsOnGoldSymbols": [
+        {
+          "fqName": "sympy/core/numbers.py::Number.__eq__",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 0,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "sympy/core/numbers.py::Number.__ne__",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 0,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "sympy/core/numbers.py::Float.__eq__",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 3,
+          "mechanismFacts": 1
+        },
+        {
+          "fqName": "sympy/core/numbers.py::Float.__ne__",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 0,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "sympy/core/numbers.py::Rational.__eq__",
+          "kind": "method",
+          "edgesIn": 2,
+          "edgesOut": 3,
+          "mechanismFacts": 1
+        },
+        {
+          "fqName": "sympy/core/numbers.py::Rational.__ne__",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 0,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "sympy/core/numbers.py::Integer.__eq__",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 3,
+          "mechanismFacts": 1
+        },
+        {
+          "fqName": "sympy/core/numbers.py::Integer.__ne__",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 0,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "sympy/core/numbers.py::Infinity.__eq__",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 0,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "sympy/core/numbers.py::Infinity.__ne__",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 0,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "sympy/core/numbers.py::NegativeInfinity.__eq__",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 0,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "sympy/core/numbers.py::NegativeInfinity.__ne__",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 0,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "sympy/core/numbers.py::NaN.__eq__",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 0,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "sympy/core/numbers.py::NaN.__ne__",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 0,
+          "mechanismFacts": 0
+        },
+        {
+          "fqName": "sympy/core/numbers.py::NumberSymbol.__eq__",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 2,
+          "mechanismFacts": 1
+        },
+        {
+          "fqName": "sympy/core/numbers.py::NumberSymbol.__ne__",
+          "kind": "method",
+          "edgesIn": 1,
+          "edgesOut": 0,
+          "mechanismFacts": 0
+        }
+      ],
+      "representationLevel": "SYMBOL_AND_RELATIONS_PRESENT"
+    }
+  ]
+}
