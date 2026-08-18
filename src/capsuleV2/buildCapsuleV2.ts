@@ -1415,6 +1415,9 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   let fileEvidenceTokensUsed = 0;
   let fileEvidenceBudgetLimitedCount = 0;
   const renderedSupportIds = new Set<string>();
+  // M158: the canonical delivered identity of each packed support item, so a
+  // second item that would restate it can be recognised before it spends a slot.
+  const deliveredIdentities = new Map<string, CapsuleV2Item>();
 
   const supportPackingStarted = capsuleProfile === undefined ? 0 : performance.now();
   for (const entry of orderedSupport) {
@@ -1427,6 +1430,36 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       discarded.push(toDiscarded(entry, "over budget: no room for this support item"));
       continue;
     }
+    // M158: one canonical delivered identity may consume at most one support
+    // slot. Support renders signature-only, so two genuinely DISTINCT candidates
+    // -- a method overridden in four classes of one file, a flag assigned in ten
+    // -- can deliver byte-identical text. Deduping them upstream would be wrong:
+    // they are different symbols and each earned its own score. What repeats is
+    // the EVIDENCE the model is shown, and a scarce slot spent restating a line
+    // it already has buys nothing.
+    //
+    // Keyed on the rendered delivery, never on file or symbol name: two
+    // same-named entries whose bodies differ carry different facts and both
+    // stay -- `sympy-16597` delivers `is_finite` twice because the two say
+    // different things. Dropped BEFORE the slot is consumed, so the bound
+    // refills from the existing support-authorized order in its existing order;
+    // nothing here changes a score, an authority, or the item bound itself.
+    const deliveredIdentity = [
+      item.path,
+      item.content_mode,
+      item.source ?? item.signature ?? item.symbol,
+    ].join("\u0000");
+    const alreadyDelivered = deliveredIdentities.get(deliveredIdentity);
+    if (alreadyDelivered !== undefined) {
+      // Truthful exclusion (§133): this candidate was relevant AND
+      // support-authorized. It is not here because its evidence is already here.
+      discarded.push(toDiscarded(
+        entry,
+        `redundant support: identical delivered evidence to ${alreadyDelivered.path}::${alreadyDelivered.symbol}`,
+      ));
+      continue;
+    }
+    deliveredIdentities.set(deliveredIdentity, item);
     if (coeditSymbolIds.has(entry.candidate.symbolId)) {
       if (coeditTokensUsed + item.estimated_tokens > coeditTokenCeiling) {
         coeditBudgetLimitedCount += 1;
