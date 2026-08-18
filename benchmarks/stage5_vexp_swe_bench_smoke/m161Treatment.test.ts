@@ -195,3 +195,35 @@ describe("M161 prompt parity — known positives and negatives (§84)", () => {
     expect(baselineCarriesVtraceEvidence(`${SHARED}\n## Support\n- x.py`)).toEqual(["## Support"]);
   });
 });
+
+describe("M161 treatment state requires a run to describe (§34)", () => {
+  test("empty metadata is NOT_RUN, never a valid empty delivery", () => {
+    // The defect this guards: with no run present, every case classified as
+    // VALID_DELIVERY_EMPTY — "the product succeeded and delivered nothing" — which
+    // makes a sweep that never happened look like a product working as intended.
+    const got = classifyTreatmentState({});
+    expect(got.state).toBe("NOT_RUN");
+  });
+
+  test("ran:false overrides otherwise-valid-looking metadata", () => {
+    expect(classifyTreatmentState(meta(), { ran: false }).state).toBe("NOT_RUN");
+  });
+
+  test("ran:true with real metadata still classifies normally", () => {
+    expect(classifyTreatmentState(meta(), { ran: true }).state).toBe("VALID_NONEMPTY");
+  });
+
+  test("a genuine empty delivery still needs positive evidence of a run", () => {
+    const genuine = classifyTreatmentState(
+      { vtraceIndexedContext: true, vtraceTreatmentValid: true, vtraceCapsulePivots: [], vtraceCapsuleSupport: [] },
+      { ran: true },
+    );
+    expect(genuine.state).toBe("VALID_DELIVERY_EMPTY");
+  });
+
+  test("NOT_RUN never claims gold state", () => {
+    const lead = classifyLeadQuality({ state: "NOT_RUN", pivots: [PIVOT], support: [], goldFiles: ["pkg/mod.py"] });
+    expect(lead.quality).toBe("TREATMENT_UNAVAILABLE");
+    expect(lead.goldAnywhere).toBe(false);
+  });
+});

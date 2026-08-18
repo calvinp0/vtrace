@@ -32,7 +32,8 @@ export type TreatmentState =
   | "VALID_DELIVERY_EMPTY"
   | "DEGRADED_VALID"
   | "TREATMENT_UNAVAILABLE"
-  | "CORPUS_INVALID";
+  | "CORPUS_INVALID"
+  | "NOT_RUN";
 
 export interface TreatmentMeta {
   /** Did context generation complete without a hard error? */
@@ -62,12 +63,31 @@ function arrayLength(value: unknown): number {
 }
 
 /**
+ * Positive evidence that a treatment was actually attempted.
+ *
+ * Without this, an EMPTY metadata object classifies as VALID_DELIVERY_EMPTY —
+ * "retrieval succeeded and correctly delivered nothing" — which is exactly the
+ * M155 misclassification in a new costume, and worse, it is the reading that
+ * makes a sweep that never ran look like a product working as intended. A valid
+ * empty delivery is a CLAIM about a run, so it requires a run to point at.
+ */
+function treatmentWasAttempted(meta: TreatmentMeta): boolean {
+  return meta.vtraceIndexedContext !== undefined
+    || meta.vtraceInjectionObserved !== undefined
+    || meta.vtraceTreatmentValid !== undefined
+    || meta.vtraceCapsulePivots !== undefined
+    || meta.vtraceCapsuleSupport !== undefined;
+}
+
+/**
  * Classify one VTRACE arm's treatment. `corpusInvalid` short-circuits because the
- * pre-spawn integrity gate owns that verdict and no agent money was spent.
+ * pre-spawn integrity gate owns that verdict and no agent money was spent;
+ * `ran: false` short-circuits because an arm that has not run is not a product
+ * outcome of any kind.
  */
 export function classifyTreatmentState(
   meta: TreatmentMeta,
-  options: { readonly corpusInvalid?: boolean } = {},
+  options: { readonly corpusInvalid?: boolean; readonly ran?: boolean } = {},
 ): TreatmentClassification {
   const pivotCount = arrayLength(meta.vtraceCapsulePivots);
   const supportCount = arrayLength(meta.vtraceCapsuleSupport);
@@ -78,6 +98,13 @@ export function classifyTreatmentState(
 
   if (options.corpusInvalid === true) {
     return { ...base, state: "CORPUS_INVALID", reason: "source-tree integrity could not be established before spawn" };
+  }
+  if (options.ran === false || !treatmentWasAttempted(meta)) {
+    return {
+      ...base,
+      state: "NOT_RUN",
+      reason: "no treatment metadata was captured — the arm has not run, which is not a product outcome",
+    };
   }
 
   // A hard treatment failure is a PRODUCT failure and must never be laundered into
@@ -170,7 +197,7 @@ export function classifyLeadQuality(args: {
     goldDelivered: deliveredGold,
   };
 
-  if (state === "TREATMENT_UNAVAILABLE" || state === "CORPUS_INVALID") {
+  if (state === "TREATMENT_UNAVAILABLE" || state === "CORPUS_INVALID" || state === "NOT_RUN") {
     return { ...empty, quality: "TREATMENT_UNAVAILABLE", goldAnywhere: false, goldDelivered: [] };
   }
   if (state === "VALID_DELIVERY_EMPTY" || lead === null) {
