@@ -419,6 +419,11 @@ export interface CliConfig {
   readonly out: string;
   readonly nodeCommand: string;
   readonly cliEntry: string;
+  // Dataset JSONL handed to the EXTERNAL vexp CLI's `run` (its --data). null keeps
+  // the historical command byte-identical, so the harness defaults to vexp's own
+  // bundled 100-task subset. M161 sets it because its corpus is drawn from the
+  // other 400 SWE-bench Verified instances, which that subset does not contain.
+  readonly vexpRunDataFile: string | null;
   readonly vtraceMethod: VtraceMethod;
   readonly yes: boolean;
   // Stage 5B (indexed-context) configuration.
@@ -1060,6 +1065,7 @@ const DEFAULT_CONFIG: CliConfig = {
   out: "benchmarks/stage5_vexp_swe_bench_smoke/results",
   nodeCommand: "node",
   cliEntry: "dist/cli.js",
+  vexpRunDataFile: null,
   vtraceMethod: "instructions-file",
   yes: false,
   // Stage 5B: the vtrace CLI invocation; index/query subcommands are appended.
@@ -1403,6 +1409,9 @@ export function buildRunArgs(
   // --no-vexp keeps vexp disabled for the baseline and vtrace conditions. Only
   // the explicit, --allow-vexp-gated vexp condition omits it to enable vexp.
   if (!enableVexp) args.splice(4, 0, "--no-vexp");
+  // --data is appended for EVERY condition or none, so the arms keep identical
+  // commands: the dataset decides which instances exist, never which arm sees what.
+  if (config.vexpRunDataFile !== null) args.push("--data", config.vexpRunDataFile);
   return args;
 }
 
@@ -10785,6 +10794,7 @@ export function parseArgs(argv: readonly string[]): CliConfig {
       }
       case "--disable-token-discipline": config.disableTokenDiscipline = true; break;
       case "--swe-bench-data": config.sweBenchDataFile = requireValue(argv, ++index, arg); break;
+      case "--vexp-run-data": config.vexpRunDataFile = requireValue(argv, ++index, arg); break;
       case "--run-label": config.runLabel = requireValue(argv, ++index, arg); break;
       case "--run-labels":
         config.runLabels = requireValue(argv, ++index, arg).split(",").map((value) => value.trim()).filter(Boolean);
@@ -10815,6 +10825,7 @@ export function parseArgs(argv: readonly string[]): CliConfig {
     instancesFile: path.resolve(config.instancesFile),
     out: path.resolve(config.out),
     sweBenchDataFile: config.sweBenchDataFile === null ? null : path.resolve(config.sweBenchDataFile),
+    vexpRunDataFile: config.vexpRunDataFile === null ? null : path.resolve(config.vexpRunDataFile),
   };
 }
 

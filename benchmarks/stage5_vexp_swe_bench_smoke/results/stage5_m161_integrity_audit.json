@@ -1,0 +1,853 @@
+{
+  "schemaVersion": "stage5.m161.integrity-audit.v1",
+  "milestone": "M161",
+  "workstream": "A",
+  "scope": "live",
+  "contract": {
+    "serialization": "serial within a repository — a fetch repacking a shared clone while another read streams from it is what M160 caught truncating trees (§126)",
+    "gcAuto": "disabled per-invocation via -c gc.auto=0, never persisted into the shared clone",
+    "verification": "per-PATH against `git ls-tree -r`, never a spot check (§19)",
+    "retries": "4 bounded attempts with backoff 0/3000/10000/30000 ms — M160's first gate run called 16 transient fetch failures CORPUS_INVALID",
+    "goldPathUse": "benchmark integrity ONLY; the gold path is never injected into VTRACE (§20)"
+  },
+  "counts": {
+    "checked": 50,
+    "valid": 50,
+    "corpusInvalid": 0,
+    "neededRetry": 0
+  },
+  "failuresByReason": {},
+  "corpusInvalid": [],
+  "records": [
+    {
+      "instanceId": "astropy__astropy-13033",
+      "repo": "astropy/astropy",
+      "baseCommit": "298ccb478e6bf092953bca67a3d29dc6c35f6752",
+      "requiredGoldFiles": [
+        "astropy/timeseries/core.py"
+      ],
+      "status": "VALID",
+      "failure": null,
+      "detail": "1884 paths, 1 required gold file(s) present",
+      "attempts": 1,
+      "commitResolved": true,
+      "treePaths": 1884,
+      "treeHash": "b7382f222af17a583b7f5a631a034399ad664032c8eca64c4753cc65c3d30082",
+      "missingGoldFiles": []
+    },
+    {
+      "instanceId": "astropy__astropy-14182",
+      "repo": "astropy/astropy",
+      "baseCommit": "a5917978be39d13cd90b517e1de4e7a539ffaa48",
+      "requiredGoldFiles": [
+        "astropy/io/ascii/rst.py"
+      ],
+      "status": "VALID",
+      "failure": null,
+      "detail": "1877 paths, 1 required gold file(s) present",
+      "attempts": 1,
+      "commitResolved": true,
+      "treePaths": 1877,
+      "treeHash": "719fadc39f2798faae05347910068939054b89fe704f91fd2d33febfe0cfcc51",
+      "missingGoldFiles": []
+    },
+    {
+      "instanceId": "django__django-11066",
+      "repo": "django/django",
+      "baseCommit": "4b45b6c8e4d7c9701a332e80d3b1c84209dc36e2",
+      "requiredGoldFiles": [
+        "django/contrib/contenttypes/management/__init__.py"
+      ],
+      "status": "VALID",
+      "failure": null,
+      "detail": "6078 paths, 1 required gold file(s) present",
+      "attempts": 1,
+      "commitResolved": true,
+      "treePaths": 6078,
+      "treeHash": "53bb9eff7efc930dbbc657fc7af684c5242a9972b665ee92fe5b748ada39a438",
+      "missingGoldFiles": []
+    },
+    {
+      "instanceId": "django__django-11099",
+      "repo": "django/django",
+      "baseCommit": "d26b2424437dabeeca94d7900b37d2df4410da0c",
+      "requiredGoldFiles": [
+        "django/contrib/auth/validators.py"
+      ],
+      "status": "VALID",
+      "failure": null,
+      "detail": "6072 paths, 1 required gold file(s) present",
+      "attempts": 1,
+      "commitResolved": true,
+      "treePaths": 6072,
+      "treeHash": "bcc1df0ab444f5ad3c53f7087c6db1c997d49ca7c95131f40f4ef837ce0d7ebb",
+      "missingGoldFiles": []
+    },
+    {
+      "instanceId": "django__django-11477",
+      "repo": "django/django",
+      "baseCommit": "e28671187903e6aca2428374fdd504fca3032aee",
+      "requiredGoldFiles": [
+        "django/urls/resolvers.py"
+      ],
+      "status": "VALID",
+      "failure": null,
+      "detail": "6092 paths, 1 required gold file(s) present",
+      "attempts": 1,
+      "commitResolved": true,
+      "treePaths": 6092,
+      "treeHash": "8491d2dc18f16216becfcb97142b36aed1bc0743e929f672f5f5ae55e31cf3ae",
+      "missingGoldFiles": []
+    },
+    {
+      "instanceId": "django__django-12406",
+      "repo": "django/django",
+      "baseCommit": "335c9c94acf263901fb023404408880245b0c4b4",
+      "requiredGoldFiles": [
+        "django/db/models/fields/related.py",
+        "django/forms/models.py"
+      ],
+      "status": "VALID",
+      "failure": null,
+      "detail": "6187 paths, 2 required gold file(s) present",
+      "attempts": 1,
+      "commitResolved": true,
+      "treePaths": 6187,
+      "treeHash": "e5c3c4cfc0282a662baf60400844c550762089d0dc9f0b4e80524d196545bc77",
+      "missingGoldFiles": []
+    },
+    {
+      "instanceId": "django__django-13033",
+      "repo": "django/django",
+      "baseCommit": "a59de6e89e8dc1f3e71c9a5a5bbceb373ea5247e",
+      "requiredGoldFiles": [
+        "django/db/models/sql/compiler.py"
+      ],
+      "status": "VALID",
+      "failure": null,
+      "detail": "6262 paths, 1 required gold file(s) present",
+      "attempts": 1,
+      "commitResolved": true,
+      "treePaths": 6262,
+      "treeHash": "c012eb5fa10a06c7b69d117fb959988372a6f84d06f6e8f13f7cb3b70842c3cd",
+      "missingGoldFiles": []
+    },
+    {
+      "instanceId": "django__django-13837",
+      "repo": "django/django",
+      "baseCommit": "415f50298f97fb17f841a9df38d995ccf347dfcc",
+      "requiredGoldFiles": [
+        "django/utils/autoreload.py"
+      ],
+      "status": "VALID",
+      "failure": null,
+      "detail": "6429 paths, 1 required gold file(s) present",
+      "attempts": 1,
+      "commitResolved": true,
+      "treePaths": 6429,
+      "treeHash": "e503c9a19662c26c641a5a9472a38d5f837c290e864c36ba4e34d18176d390ad",
+      "missingGoldFiles": []
+    },
+    {
+      "instanceId": "django__django-16139",
+      "repo": "django/django",
+      "baseCommit": "d559cb02da30f74debbb1fc3a46de0df134d2d80",
+      "requiredGoldFiles": [
+        "django/contrib/auth/forms.py"
+      ],
+      "status": "VALID",
+      "failure": null,
+      "detail": "6650 paths, 1 required gold file(s) present",
+      "attempts": 1,
+      "commitResolved": true,
+      "treePaths": 6650,
+      "treeHash": "66930e6d7ed6dd3f9c60faf6b89b7e959205a41d14be130422814a86ee928c3f",
+      "missingGoldFiles": []
+    },
+    {
+      "instanceId": "django__django-16662",
+      "repo": "django/django",
+      "baseCommit": "0eb3e9bd754e4c9fac8b616b705178727fc8031e",
+      "requiredGoldFiles": [
+        "django/db/migrations/writer.py"
+      ],
+      "status": "VALID",
+      "failure": null,
+      "detail": "6657 paths, 1 required gold file(s) present",
+      "attempts": 1,
+      "commitResolved": true,
+      "treePaths": 6657,
+      "treeHash": "38c450d31d394495ae5aeb716b73dfb83b48eac9d3d87fb2da0fe325bbf661ba",
+      "missingGoldFiles": []
+    },
+    {
+      "instanceId": "django__django-16950",
+      "repo": "django/django",
+      "baseCommit": "f64fd47a7627ed6ffe2df2a32ded6ee528a784eb",
+      "requiredGoldFiles": [
+        "django/forms/models.py"
+      ],
+      "status": "VALID",
+      "failure": null,
+      "detail": "6713 paths, 1 required gold file(s) present",
+      "attempts": 1,
+      "commitResolved": true,
+      "treePaths": 6713,
+      "treeHash": "8759036edb6ddb0f628ffa3bcd970e4acb9a6cf839350e2134b135f60c4cc9bc",
+      "missingGoldFiles": []
+    },
+    {
+      "instanceId": "django__django-17029",
+      "repo": "django/django",
+      "baseCommit": "953f29f700a60fc09b08b2c2270c12c447490c6a",
+      "requiredGoldFiles": [
+        "django/apps/registry.py"
+      ],
+      "status": "VALID",
+      "failure": null,
+      "detail": "6712 paths, 1 required gold file(s) present",
+      "attempts": 1,
+      "commitResolved": true,
+      "treePaths": 6712,
+      "treeHash": "506143cf67a366073eb97c8e8dc14fda9e4465a0519502b56e443ec168700fde",
+      "missingGoldFiles": []
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-14623",
+      "repo": "matplotlib/matplotlib",
+      "baseCommit": "d65c9ca20ddf81ef91199e6d819f9d3506ef477c",
+      "requiredGoldFiles": [
+        "lib/matplotlib/axes/_base.py",
+        "lib/matplotlib/ticker.py",
+        "lib/mpl_toolkits/mplot3d/axes3d.py"
+      ],
+      "status": "VALID",
+      "failure": null,
+      "detail": "4278 paths, 3 required gold file(s) present",
+      "attempts": 1,
+      "commitResolved": true,
+      "treePaths": 4278,
+      "treeHash": "7852d0c0b26d16e0f5501c256dc18e9ce16ca7d0b7699e2f1ad19e74b50ce667",
+      "missingGoldFiles": []
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-20826",
+      "repo": "matplotlib/matplotlib",
+      "baseCommit": "a0d2e399729d36499a1924e5ca5bc067c8396810",
+      "requiredGoldFiles": [
+        "lib/matplotlib/axis.py"
+      ],
+      "status": "VALID",
+      "failure": null,
+      "detail": "4398 paths, 1 required gold file(s) present",
+      "attempts": 1,
+      "commitResolved": true,
+      "treePaths": 4398,
+      "treeHash": "cf46451be0956dd5610f70df730eeb4849ec0397f50e57e2c463eefeef87b5a3",
+      "missingGoldFiles": []
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-23476",
+      "repo": "matplotlib/matplotlib",
+      "baseCommit": "33a0599711d26dc2b79f851c6daed4947df7c167",
+      "requiredGoldFiles": [
+        "lib/matplotlib/figure.py"
+      ],
+      "status": "VALID",
+      "failure": null,
+      "detail": "4469 paths, 1 required gold file(s) present",
+      "attempts": 1,
+      "commitResolved": true,
+      "treePaths": 4469,
+      "treeHash": "f0591e780924f267e78a760501e6868a378bcbb71617cbc0fdf73708452f6d05",
+      "missingGoldFiles": []
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-24149",
+      "repo": "matplotlib/matplotlib",
+      "baseCommit": "af39f1edffcd828f05cfdd04f2e59506bb4a27bc",
+      "requiredGoldFiles": [
+        "lib/matplotlib/axes/_axes.py"
+      ],
+      "status": "VALID",
+      "failure": null,
+      "detail": "4367 paths, 1 required gold file(s) present",
+      "attempts": 1,
+      "commitResolved": true,
+      "treePaths": 4367,
+      "treeHash": "ae9591d130f4da869dbd0bced2c3ed14d0ebe5aec519cc7d65af6fd1e7fdfffa",
+      "missingGoldFiles": []
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-25775",
+      "repo": "matplotlib/matplotlib",
+      "baseCommit": "26224d96066b5c60882296c551f54ca7732c0af0",
+      "requiredGoldFiles": [
+        "lib/matplotlib/backends/backend_agg.py",
+        "lib/matplotlib/backends/backend_cairo.py",
+        "lib/matplotlib/text.py"
+      ],
+      "status": "VALID",
+      "failure": null,
+      "detail": "4562 paths, 3 required gold file(s) present",
+      "attempts": 1,
+      "commitResolved": true,
+      "treePaths": 4562,
+      "treeHash": "b4c9d8573920e686524d815598fc04ddd5951ae620d5e2f7c8757d52dbb67c78",
+      "missingGoldFiles": []
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-26208",
+      "repo": "matplotlib/matplotlib",
+      "baseCommit": "f0f133943d3e4f1e2e665291fe1c8f658a84cc09",
+      "requiredGoldFiles": [
+        "lib/matplotlib/axes/_base.py"
+      ],
+      "status": "VALID",
+      "failure": null,
+      "detail": "4498 paths, 1 required gold file(s) present",
+      "attempts": 1,
+      "commitResolved": true,
+      "treePaths": 4498,
+      "treeHash": "5561bf15935f852b5d2848a482e88a9fc316d02baffd5e94c025197a979f105d",
+      "missingGoldFiles": []
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-26342",
+      "repo": "matplotlib/matplotlib",
+      "baseCommit": "2aee6ccd7c7e1f8d282c1e7579f4ee546b838542",
+      "requiredGoldFiles": [
+        "lib/matplotlib/collections.py"
+      ],
+      "status": "VALID",
+      "failure": null,
+      "detail": "4519 paths, 1 required gold file(s) present",
+      "attempts": 1,
+      "commitResolved": true,
+      "treePaths": 4519,
+      "treeHash": "5f9350e7ad32d7c389f3c6ff78eae3aed7398bf12ba2f52946b16c0e504b2b53",
+      "missingGoldFiles": []
+    },
+    {
+      "instanceId": "pydata__xarray-3305",
+      "repo": "pydata/xarray",
+      "baseCommit": "69c7e01e5167a3137c285cb50d1978252bb8bcbf",
+      "requiredGoldFiles": [
+        "xarray/core/dataset.py",
+        "xarray/core/variable.py"
+      ],
+      "status": "VALID",
+      "failure": null,
+      "detail": "229 paths, 2 required gold file(s) present",
+      "attempts": 1,
+      "commitResolved": true,
+      "treePaths": 229,
+      "treeHash": "022ca8fc74e6abe726507475871f74253f8a00e92c4dc5cd69998099afd4ac3f",
+      "missingGoldFiles": []
+    },
+    {
+      "instanceId": "pydata__xarray-4356",
+      "repo": "pydata/xarray",
+      "baseCommit": "e05fddea852d08fc0845f954b79deb9e9f9ff883",
+      "requiredGoldFiles": [
+        "xarray/core/nanops.py"
+      ],
+      "status": "VALID",
+      "failure": null,
+      "detail": "260 paths, 1 required gold file(s) present",
+      "attempts": 1,
+      "commitResolved": true,
+      "treePaths": 260,
+      "treeHash": "b98b231bdc5c604668299541e9e3988a93d72198dbf21b6460a2c3a2e5a14452",
+      "missingGoldFiles": []
+    },
+    {
+      "instanceId": "pydata__xarray-7393",
+      "repo": "pydata/xarray",
+      "baseCommit": "41fef6f1352be994cd90056d47440fe9aa4c068f",
+      "requiredGoldFiles": [
+        "xarray/core/indexing.py"
+      ],
+      "status": "VALID",
+      "failure": null,
+      "detail": "322 paths, 1 required gold file(s) present",
+      "attempts": 1,
+      "commitResolved": true,
+      "treePaths": 322,
+      "treeHash": "1eedf8b7be359cce268cfe08e5e03065d71c609c4d1eedfcc2561d8a89aadb4d",
+      "missingGoldFiles": []
+    },
+    {
+      "instanceId": "pytest-dev__pytest-5631",
+      "repo": "pytest-dev/pytest",
+      "baseCommit": "cb828ebe70b4fa35cd5f9a7ee024272237eab351",
+      "requiredGoldFiles": [
+        "src/_pytest/compat.py"
+      ],
+      "status": "VALID",
+      "failure": null,
+      "detail": "436 paths, 1 required gold file(s) present",
+      "attempts": 1,
+      "commitResolved": true,
+      "treePaths": 436,
+      "treeHash": "f15b25700654284b76066b6e299e70ed31e7a40fa2d40b762959776ddf2a4448",
+      "missingGoldFiles": []
+    },
+    {
+      "instanceId": "pytest-dev__pytest-5809",
+      "repo": "pytest-dev/pytest",
+      "baseCommit": "8aba863a634f40560e25055d179220f0eefabe9a",
+      "requiredGoldFiles": [
+        "src/_pytest/pastebin.py"
+      ],
+      "status": "VALID",
+      "failure": null,
+      "detail": "423 paths, 1 required gold file(s) present",
+      "attempts": 1,
+      "commitResolved": true,
+      "treePaths": 423,
+      "treeHash": "1c7a2f19766c90b3fdb22b9086ffa2d775d2212ef7a3e805d4399d97431d90ac",
+      "missingGoldFiles": []
+    },
+    {
+      "instanceId": "scikit-learn__scikit-learn-12585",
+      "repo": "scikit-learn/scikit-learn",
+      "baseCommit": "bfc4a566423e036fbdc9fb02765fd893e4860c85",
+      "requiredGoldFiles": [
+        "sklearn/base.py"
+      ],
+      "status": "VALID",
+      "failure": null,
+      "detail": "1220 paths, 1 required gold file(s) present",
+      "attempts": 1,
+      "commitResolved": true,
+      "treePaths": 1220,
+      "treeHash": "d5f60efc71e9e44ab6cc1c91793fda5f3ab55da56c2400fb6d6e8b49e002e38d",
+      "missingGoldFiles": []
+    },
+    {
+      "instanceId": "scikit-learn__scikit-learn-12682",
+      "repo": "scikit-learn/scikit-learn",
+      "baseCommit": "d360ffa7c5896a91ae498b3fb9cf464464ce8f34",
+      "requiredGoldFiles": [
+        "examples/decomposition/plot_sparse_coding.py",
+        "sklearn/decomposition/dict_learning.py"
+      ],
+      "status": "VALID",
+      "failure": null,
+      "detail": "1194 paths, 2 required gold file(s) present",
+      "attempts": 1,
+      "commitResolved": true,
+      "treePaths": 1194,
+      "treeHash": "07e6a1c3913238ea9fd9983be805da34da289f929c60bdd4068b57fd006ceff3",
+      "missingGoldFiles": []
+    },
+    {
+      "instanceId": "scikit-learn__scikit-learn-13124",
+      "repo": "scikit-learn/scikit-learn",
+      "baseCommit": "9f0b959a8c9195d1b6e203f08b698e052b426ca9",
+      "requiredGoldFiles": [
+        "sklearn/model_selection/_split.py"
+      ],
+      "status": "VALID",
+      "failure": null,
+      "detail": "1228 paths, 1 required gold file(s) present",
+      "attempts": 1,
+      "commitResolved": true,
+      "treePaths": 1228,
+      "treeHash": "2cc6552b448b565e27f5720eafdc1d019f6394f485d79156fcf8891836b6a70f",
+      "missingGoldFiles": []
+    },
+    {
+      "instanceId": "scikit-learn__scikit-learn-13439",
+      "repo": "scikit-learn/scikit-learn",
+      "baseCommit": "a62775e99f2a5ea3d51db7160fad783f6cd8a4c5",
+      "requiredGoldFiles": [
+        "sklearn/pipeline.py"
+      ],
+      "status": "VALID",
+      "failure": null,
+      "detail": "1202 paths, 1 required gold file(s) present",
+      "attempts": 1,
+      "commitResolved": true,
+      "treePaths": 1202,
+      "treeHash": "1fa7a18f12c4e40083504780c7bcc8791cd3111956605d6fded499369aade8b4",
+      "missingGoldFiles": []
+    },
+    {
+      "instanceId": "scikit-learn__scikit-learn-25973",
+      "repo": "scikit-learn/scikit-learn",
+      "baseCommit": "10dbc142bd17ccf7bd38eec2ac04b52ce0d1009e",
+      "requiredGoldFiles": [
+        "sklearn/feature_selection/_sequential.py"
+      ],
+      "status": "VALID",
+      "failure": null,
+      "detail": "1534 paths, 1 required gold file(s) present",
+      "attempts": 1,
+      "commitResolved": true,
+      "treePaths": 1534,
+      "treeHash": "6d5a51b47b5a706caf965eff91f70f3d36742dc2d8356daeb683585f8ccc58dd",
+      "missingGoldFiles": []
+    },
+    {
+      "instanceId": "scikit-learn__scikit-learn-26323",
+      "repo": "scikit-learn/scikit-learn",
+      "baseCommit": "586f4318ffcdfbd9a1093f35ad43e81983740b66",
+      "requiredGoldFiles": [
+        "sklearn/compose/_column_transformer.py"
+      ],
+      "status": "VALID",
+      "failure": null,
+      "detail": "1559 paths, 1 required gold file(s) present",
+      "attempts": 1,
+      "commitResolved": true,
+      "treePaths": 1559,
+      "treeHash": "8019d0f9f0b1e7fc8a0c9c892c566c72539cd632b7adacb604e9d9fa9b69e1c0",
+      "missingGoldFiles": []
+    },
+    {
+      "instanceId": "scikit-learn__scikit-learn-9288",
+      "repo": "scikit-learn/scikit-learn",
+      "baseCommit": "3eacf948e0f95ef957862568d87ce082f378e186",
+      "requiredGoldFiles": [
+        "sklearn/cluster/k_means_.py"
+      ],
+      "status": "VALID",
+      "failure": null,
+      "detail": "1209 paths, 1 required gold file(s) present",
+      "attempts": 1,
+      "commitResolved": true,
+      "treePaths": 1209,
+      "treeHash": "46dbb9b7ff1838c1c5c0a26fa2cb0f6bea57a1f89c3748e5904e8b55feb167e9",
+      "missingGoldFiles": []
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-10323",
+      "repo": "sphinx-doc/sphinx",
+      "baseCommit": "31eba1a76dd485dc633cae48227b46879eda5df4",
+      "requiredGoldFiles": [
+        "sphinx/directives/code.py"
+      ],
+      "status": "VALID",
+      "failure": null,
+      "detail": "1591 paths, 1 required gold file(s) present",
+      "attempts": 1,
+      "commitResolved": true,
+      "treePaths": 1591,
+      "treeHash": "64c0094c6f9f481d7e0967c41b9cda6a54e870c0b6673d5a4b24d155fedb7e63",
+      "missingGoldFiles": []
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-10435",
+      "repo": "sphinx-doc/sphinx",
+      "baseCommit": "f1061c012e214f16fd8790dec3c283d787e3daa8",
+      "requiredGoldFiles": [
+        "sphinx/writers/latex.py"
+      ],
+      "status": "VALID",
+      "failure": null,
+      "detail": "1596 paths, 1 required gold file(s) present",
+      "attempts": 1,
+      "commitResolved": true,
+      "treePaths": 1596,
+      "treeHash": "1089495cca77b2eaf84a5222bf7d5ae40ea70a472266ac0f3c1a7d1afc7307a2",
+      "missingGoldFiles": []
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-10614",
+      "repo": "sphinx-doc/sphinx",
+      "baseCommit": "ac2b7599d212af7d04649959ce6926c63c3133fa",
+      "requiredGoldFiles": [
+        "sphinx/ext/inheritance_diagram.py"
+      ],
+      "status": "VALID",
+      "failure": null,
+      "detail": "1660 paths, 1 required gold file(s) present",
+      "attempts": 1,
+      "commitResolved": true,
+      "treePaths": 1660,
+      "treeHash": "804eac26dab53e8fc99bbee6cd169803e38bc28b2887d946a58613136b1ea218",
+      "missingGoldFiles": []
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-10673",
+      "repo": "sphinx-doc/sphinx",
+      "baseCommit": "f35d2a6cc726f97d0e859ca7a0e1729f7da8a6c8",
+      "requiredGoldFiles": [
+        "sphinx/directives/other.py",
+        "sphinx/environment/adapters/toctree.py",
+        "sphinx/environment/collectors/toctree.py"
+      ],
+      "status": "VALID",
+      "failure": null,
+      "detail": "1602 paths, 3 required gold file(s) present",
+      "attempts": 1,
+      "commitResolved": true,
+      "treePaths": 1602,
+      "treeHash": "087aa6f736ebe58f8ce5ad3fb6f356de77278c49292749b54d53912b585c9e33",
+      "missingGoldFiles": []
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-8593",
+      "repo": "sphinx-doc/sphinx",
+      "baseCommit": "07983a5a8704ad91ae855218ecbda1c8598200ca",
+      "requiredGoldFiles": [
+        "sphinx/ext/autodoc/__init__.py",
+        "sphinx/ext/autodoc/importer.py"
+      ],
+      "status": "VALID",
+      "failure": null,
+      "detail": "1463 paths, 2 required gold file(s) present",
+      "attempts": 1,
+      "commitResolved": true,
+      "treePaths": 1463,
+      "treeHash": "b2eb853cfa6b72405df0d359604b68c442907d022fa568a31aaa6833d24347a3",
+      "missingGoldFiles": []
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-9229",
+      "repo": "sphinx-doc/sphinx",
+      "baseCommit": "876fa81e0a038cda466925b85ccf6c5452e0f685",
+      "requiredGoldFiles": [
+        "sphinx/ext/autodoc/__init__.py"
+      ],
+      "status": "VALID",
+      "failure": null,
+      "detail": "1518 paths, 1 required gold file(s) present",
+      "attempts": 1,
+      "commitResolved": true,
+      "treePaths": 1518,
+      "treeHash": "295762895e6f9b4b89668846ad0e4001c2ad8aca29a0a51148d4f83b0cd9e726",
+      "missingGoldFiles": []
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-9367",
+      "repo": "sphinx-doc/sphinx",
+      "baseCommit": "6918e69600810a4664e53653d6ff0290c3c4a788",
+      "requiredGoldFiles": [
+        "sphinx/pycode/ast.py"
+      ],
+      "status": "VALID",
+      "failure": null,
+      "detail": "1528 paths, 1 required gold file(s) present",
+      "attempts": 1,
+      "commitResolved": true,
+      "treePaths": 1528,
+      "treeHash": "8ac590228b743d69e65a967949f4a18a7676df8ba38c666d5987fa6ca29bf8cf",
+      "missingGoldFiles": []
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-9591",
+      "repo": "sphinx-doc/sphinx",
+      "baseCommit": "9ed054279aeffd5b1d0642e2d24a8800389de29f",
+      "requiredGoldFiles": [
+        "sphinx/domains/python.py"
+      ],
+      "status": "VALID",
+      "failure": null,
+      "detail": "1566 paths, 1 required gold file(s) present",
+      "attempts": 1,
+      "commitResolved": true,
+      "treePaths": 1566,
+      "treeHash": "8f1cf90ae870b0f647e27146e3cbdf37cb30715b6b917b546877c126c3b2c479",
+      "missingGoldFiles": []
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-9673",
+      "repo": "sphinx-doc/sphinx",
+      "baseCommit": "5fb51fb1467dc5eea7505402c3c5d9b378d3b441",
+      "requiredGoldFiles": [
+        "sphinx/ext/autodoc/typehints.py"
+      ],
+      "status": "VALID",
+      "failure": null,
+      "detail": "1570 paths, 1 required gold file(s) present",
+      "attempts": 1,
+      "commitResolved": true,
+      "treePaths": 1570,
+      "treeHash": "ad258e4f76e4eb21c65e5c5dbd2060c65ac46c8dac31db8dbf7f8eaf1cd95e27",
+      "missingGoldFiles": []
+    },
+    {
+      "instanceId": "sympy__sympy-12096",
+      "repo": "sympy/sympy",
+      "baseCommit": "d7c3045115693e887bcd03599b7ca4650ac5f2cb",
+      "requiredGoldFiles": [
+        "sympy/core/function.py"
+      ],
+      "status": "VALID",
+      "failure": null,
+      "detail": "1422 paths, 1 required gold file(s) present",
+      "attempts": 1,
+      "commitResolved": true,
+      "treePaths": 1422,
+      "treeHash": "1fd8ddde2ebe1906064ac59aac4323fbf55e5c9886afe93db975775ee20da7c1",
+      "missingGoldFiles": []
+    },
+    {
+      "instanceId": "sympy__sympy-12489",
+      "repo": "sympy/sympy",
+      "baseCommit": "aa9780761ad8c3c0f68beeef3a0ce5caac9e100b",
+      "requiredGoldFiles": [
+        "sympy/combinatorics/permutations.py"
+      ],
+      "status": "VALID",
+      "failure": null,
+      "detail": "1429 paths, 1 required gold file(s) present",
+      "attempts": 1,
+      "commitResolved": true,
+      "treePaths": 1429,
+      "treeHash": "6f4908467134fefb5f2e298909c1e9f4c40f045d88fb646ab5323dad8ea6dfa1",
+      "missingGoldFiles": []
+    },
+    {
+      "instanceId": "sympy__sympy-13091",
+      "repo": "sympy/sympy",
+      "baseCommit": "d1320814eda6549996190618a21eaf212cfd4d1e",
+      "requiredGoldFiles": [
+        "sympy/core/basic.py",
+        "sympy/core/exprtools.py",
+        "sympy/core/numbers.py",
+        "sympy/geometry/entity.py",
+        "sympy/physics/optics/medium.py",
+        "sympy/physics/vector/dyadic.py",
+        "sympy/physics/vector/frame.py",
+        "sympy/physics/vector/vector.py",
+        "sympy/polys/agca/modules.py",
+        "sympy/polys/domains/domain.py",
+        "sympy/polys/domains/expressiondomain.py",
+        "sympy/polys/domains/pythonrational.py",
+        "sympy/polys/domains/quotientring.py",
+        "sympy/polys/fields.py",
+        "sympy/polys/monomials.py",
+        "sympy/polys/polyclasses.py",
+        "sympy/polys/polytools.py",
+        "sympy/polys/rings.py",
+        "sympy/polys/rootoftools.py",
+        "sympy/tensor/array/ndim_array.py",
+        "sympy/utilities/enumerative.py"
+      ],
+      "status": "VALID",
+      "failure": null,
+      "detail": "1459 paths, 21 required gold file(s) present",
+      "attempts": 1,
+      "commitResolved": true,
+      "treePaths": 1459,
+      "treeHash": "81f193a79e0bd49eca2449aba1842442d7e5c16071bd364549f723667c886ceb",
+      "missingGoldFiles": []
+    },
+    {
+      "instanceId": "sympy__sympy-13615",
+      "repo": "sympy/sympy",
+      "baseCommit": "50d8a102f0735da8e165a0369bbb994c7d0592a6",
+      "requiredGoldFiles": [
+        "sympy/sets/sets.py"
+      ],
+      "status": "VALID",
+      "failure": null,
+      "detail": "1506 paths, 1 required gold file(s) present",
+      "attempts": 1,
+      "commitResolved": true,
+      "treePaths": 1506,
+      "treeHash": "af4195fcf7c53eb145a7f343590532cb134e14914f7e561881c260994f8a0842",
+      "missingGoldFiles": []
+    },
+    {
+      "instanceId": "sympy__sympy-13757",
+      "repo": "sympy/sympy",
+      "baseCommit": "a5e6a101869e027e7930e694f8b1cfb082603453",
+      "requiredGoldFiles": [
+        "sympy/polys/polytools.py"
+      ],
+      "status": "VALID",
+      "failure": null,
+      "detail": "1507 paths, 1 required gold file(s) present",
+      "attempts": 1,
+      "commitResolved": true,
+      "treePaths": 1507,
+      "treeHash": "e4f9ce0b82a225fe6cc503b1be41169bc284258ac7ae6f09e79cc7970d451d76",
+      "missingGoldFiles": []
+    },
+    {
+      "instanceId": "sympy__sympy-15809",
+      "repo": "sympy/sympy",
+      "baseCommit": "28d913d3cead6c5646307ffa6540b21d65059dfd",
+      "requiredGoldFiles": [
+        "sympy/functions/elementary/miscellaneous.py"
+      ],
+      "status": "VALID",
+      "failure": null,
+      "detail": "1657 paths, 1 required gold file(s) present",
+      "attempts": 1,
+      "commitResolved": true,
+      "treePaths": 1657,
+      "treeHash": "6bcf247886558f53f003b6ee3227b5e916ae38ca31b61fb08f2d05e579e13f62",
+      "missingGoldFiles": []
+    },
+    {
+      "instanceId": "sympy__sympy-23534",
+      "repo": "sympy/sympy",
+      "baseCommit": "832c24fec1046eaa544a4cab4c69e3af3e651759",
+      "requiredGoldFiles": [
+        "sympy/core/symbol.py"
+      ],
+      "status": "VALID",
+      "failure": null,
+      "detail": "1968 paths, 1 required gold file(s) present",
+      "attempts": 1,
+      "commitResolved": true,
+      "treePaths": 1968,
+      "treeHash": "c9fd62b27bc75ea4874915b763fa45fe9f329017c3aad1b0eac46c79875273bd",
+      "missingGoldFiles": []
+    },
+    {
+      "instanceId": "sympy__sympy-23950",
+      "repo": "sympy/sympy",
+      "baseCommit": "88664e6e0b781d0a8b5347896af74b555e92891e",
+      "requiredGoldFiles": [
+        "sympy/sets/contains.py"
+      ],
+      "status": "VALID",
+      "failure": null,
+      "detail": "1975 paths, 1 required gold file(s) present",
+      "attempts": 1,
+      "commitResolved": true,
+      "treePaths": 1975,
+      "treeHash": "f87d8e19d746208ec000ae2a245219ba0e8d60223e0097540c36c422e6ab2ea0",
+      "missingGoldFiles": []
+    },
+    {
+      "instanceId": "sympy__sympy-24066",
+      "repo": "sympy/sympy",
+      "baseCommit": "514579c655bf22e2af14f0743376ae1d7befe345",
+      "requiredGoldFiles": [
+        "sympy/physics/units/unitsystem.py"
+      ],
+      "status": "VALID",
+      "failure": null,
+      "detail": "1988 paths, 1 required gold file(s) present",
+      "attempts": 1,
+      "commitResolved": true,
+      "treePaths": 1988,
+      "treeHash": "60e61c93d3d4ff9001b67c5ea75f2f805d96b6934a04102712f55ffef810db02",
+      "missingGoldFiles": []
+    },
+    {
+      "instanceId": "sympy__sympy-24661",
+      "repo": "sympy/sympy",
+      "baseCommit": "a36caf5c74fe654cedc488e8a8a05fad388f8406",
+      "requiredGoldFiles": [
+        "sympy/parsing/sympy_parser.py"
+      ],
+      "status": "VALID",
+      "failure": null,
+      "detail": "1950 paths, 1 required gold file(s) present",
+      "attempts": 1,
+      "commitResolved": true,
+      "treePaths": 1950,
+      "treeHash": "2ea9cb73e835dcac01a96739d5d708a34df6217001d31ea301a610e52dbd3138",
+      "missingGoldFiles": []
+    }
+  ]
+}

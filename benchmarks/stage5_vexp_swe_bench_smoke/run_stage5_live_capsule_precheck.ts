@@ -631,6 +631,7 @@ export function buildPrecheckConfig(opts: {
     out: path.join(opts.resultsDir, "precheck"),
     nodeCommand: "node",
     cliEntry: "dist/cli.js",
+    vexpRunDataFile: null,
     vtraceMethod: "indexed-context",
     yes: true,
     vtraceCommand: "bun src/cli/index.ts",
