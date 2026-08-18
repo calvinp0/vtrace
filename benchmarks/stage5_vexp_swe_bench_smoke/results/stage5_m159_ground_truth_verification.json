@@ -1,0 +1,407 @@
+{
+  "schemaVersion": "stage5.m159.ground-truth-verification.v1",
+  "note": "§18 — these labels are BENCHMARK annotations. No product code reads them.",
+  "residualCases": 20,
+  "counts": {
+    "USEFUL_PRIMARY": 13,
+    "USEFUL_SUPPORT": 1,
+    "PATCH_GOLD_BUT_NOT_USEFUL_CONTEXT": 1,
+    "AMBIGUOUS": 3,
+    "GROUND_TRUTH_ERROR": 2
+  },
+  "byLabel": {
+    "USEFUL_PRIMARY": [
+      "django__django-13810",
+      "django__django-14792",
+      "django__django-15037",
+      "django__django-17084",
+      "matplotlib__matplotlib-24970",
+      "matplotlib__matplotlib-25332",
+      "pylint-dev__pylint-8898",
+      "sphinx-doc__sphinx-7910",
+      "sphinx-doc__sphinx-9230",
+      "sphinx-doc__sphinx-9698",
+      "sympy__sympy-15875",
+      "sympy__sympy-16792",
+      "sympy__sympy-20801"
+    ],
+    "USEFUL_SUPPORT": [
+      "sympy__sympy-20428"
+    ],
+    "PATCH_GOLD_BUT_NOT_USEFUL_CONTEXT": [
+      "sympy__sympy-16597"
+    ],
+    "AMBIGUOUS": [
+      "matplotlib__matplotlib-26466",
+      "pylint-dev__pylint-4551",
+      "pytest-dev__pytest-6197"
+    ],
+    "GROUND_TRUTH_ERROR": [
+      "django__django-13590",
+      "django__django-15572"
+    ]
+  },
+  "rows": [
+    {
+      "instanceId": "django__django-13590",
+      "repo": "django/django",
+      "expectedFiles": [
+        "django/db/models/sql/query.py"
+      ],
+      "expectedSymbols": [
+        "resolve_lookup_value",
+        "solve_lookup_type"
+      ],
+      "goldFileOnDisk": false,
+      "goldFileSymbolsIndexed": 0,
+      "goldSymbolsIndexed": 0,
+      "usefulness": "GROUND_TRUTH_ERROR",
+      "why": "The gold file is absent from the checked-out workspace, so the instance cannot be scored against retrieval at all. Invalid benchmark instance, not a retrieval failure."
+    },
+    {
+      "instanceId": "django__django-13810",
+      "repo": "django/django",
+      "expectedFiles": [
+        "django/core/handlers/base.py"
+      ],
+      "expectedSymbols": [
+        "load_middleware"
+      ],
+      "goldFileOnDisk": true,
+      "goldFileSymbolsIndexed": 18,
+      "goldSymbolsIndexed": 1,
+      "usefulness": "USEFUL_PRIMARY",
+      "why": "`load_middleware` is exactly where MiddlewareNotUsed leaves the partially-built chain; reading it is how the bug is understood."
+    },
+    {
+      "instanceId": "django__django-14792",
+      "repo": "django/django",
+      "expectedFiles": [
+        "django/utils/timezone.py"
+      ],
+      "expectedSymbols": [
+        "_get_timezone_name",
+        "get_current_timezone_name"
+      ],
+      "goldFileOnDisk": true,
+      "goldFileSymbolsIndexed": 27,
+      "goldSymbolsIndexed": 2,
+      "usefulness": "USEFUL_PRIMARY",
+      "why": "`_get_timezone_name` is the helper whose return shape changed; the Trunc/Extract symptom is two layers downstream of it."
+    },
+    {
+      "instanceId": "django__django-15037",
+      "repo": "django/django",
+      "expectedFiles": [
+        "django/core/management/commands/inspectdb.py"
+      ],
+      "expectedSymbols": [
+        "table2model"
+      ],
+      "goldFileOnDisk": true,
+      "goldFileSymbolsIndexed": 12,
+      "goldSymbolsIndexed": 0,
+      "usefulness": "USEFUL_PRIMARY",
+      "why": "`table2model` is the definition the patch edits, but it is a NESTED function inside the command handler and is not represented as an indexed symbol."
+    },
+    {
+      "instanceId": "django__django-15572",
+      "repo": "django/django",
+      "expectedFiles": [
+        "django/template/autoreload.py"
+      ],
+      "expectedSymbols": [
+        "get_template_directories"
+      ],
+      "goldFileOnDisk": false,
+      "goldFileSymbolsIndexed": 0,
+      "goldSymbolsIndexed": 0,
+      "usefulness": "GROUND_TRUTH_ERROR",
+      "why": "Same corpus defect: `django/template/autoreload.py` was never checked out into this workspace."
+    },
+    {
+      "instanceId": "django__django-17084",
+      "repo": "django/django",
+      "expectedFiles": [
+        "django/db/models/sql/query.py"
+      ],
+      "expectedSymbols": [
+        "get_aggregation"
+      ],
+      "goldFileOnDisk": true,
+      "goldFileSymbolsIndexed": 154,
+      "goldSymbolsIndexed": 1,
+      "usefulness": "USEFUL_PRIMARY",
+      "why": "`get_aggregation` builds the aggregate-over-window query that fails."
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-24970",
+      "repo": "matplotlib/matplotlib",
+      "expectedFiles": [
+        "lib/matplotlib/colors.py"
+      ],
+      "expectedSymbols": [
+        "__call__"
+      ],
+      "goldFileOnDisk": true,
+      "goldFileSymbolsIndexed": 147,
+      "goldSymbolsIndexed": 6,
+      "usefulness": "USEFUL_PRIMARY",
+      "why": "`Colormap.__call__` holds the out-of-bounds integer assignments NumPy 1.24 deprecates."
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-25332",
+      "repo": "matplotlib/matplotlib",
+      "expectedFiles": [
+        "lib/matplotlib/cbook.py"
+      ],
+      "expectedSymbols": [
+        "Grouper",
+        "Grouper.__contains__",
+        "Grouper.__getstate__",
+        "Grouper.__init__",
+        "Grouper.__setstate__",
+        "__contains__",
+        "__getstate__",
+        "__init__",
+        "__setstate__"
+      ],
+      "goldFileOnDisk": true,
+      "goldFileSymbolsIndexed": 113,
+      "goldSymbolsIndexed": 13,
+      "usefulness": "USEFUL_PRIMARY",
+      "why": "`Grouper` holds the weakrefs that make the figure unpicklable; the __getstate__/__setstate__ pair is the fix site."
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-26466",
+      "repo": "matplotlib/matplotlib",
+      "expectedFiles": [
+        "lib/matplotlib/text.py"
+      ],
+      "expectedSymbols": [
+        "_AnnotationBase",
+        "__call__",
+        "__init__",
+        "_get_scale",
+        "get_unit",
+        "set_unit"
+      ],
+      "goldFileOnDisk": true,
+      "goldFileSymbolsIndexed": 112,
+      "goldSymbolsIndexed": 9,
+      "usefulness": "AMBIGUOUS",
+      "why": "The auto-derived symbol list mixes the real fix site (`_AnnotationBase.__init__`, which stores xy by reference) with unrelated hunks (`get_unit`, `set_unit`, `_get_scale`). M158 read the file-level label as not useful; at symbol level part of it is."
+    },
+    {
+      "instanceId": "pylint-dev__pylint-4551",
+      "repo": "pylint-dev/pylint",
+      "expectedFiles": [
+        "pylint/pyreverse/diagrams.py",
+        "pylint/pyreverse/inspector.py",
+        "pylint/pyreverse/utils.py",
+        "pylint/pyreverse/writer.py"
+      ],
+      "expectedSymbols": [
+        "class_names",
+        "get_annotation",
+        "get_annotation_label",
+        "get_values",
+        "handle_assignattr_type",
+        "infer_node",
+        "visit",
+        "visit_assignname",
+        "visit_import"
+      ],
+      "goldFileOnDisk": true,
+      "goldFileSymbolsIndexed": 115,
+      "goldSymbolsIndexed": 9,
+      "usefulness": "AMBIGUOUS",
+      "why": "A FEATURE request spanning 4 files and 9 symbols, several of them new. There is no single pre-existing definition to retrieve, so 'the gold symbol' is partly a thing the patch creates."
+    },
+    {
+      "instanceId": "pylint-dev__pylint-8898",
+      "repo": "pylint-dev/pylint",
+      "expectedFiles": [
+        "pylint/config/argument.py",
+        "pylint/utils/__init__.py",
+        "pylint/utils/utils.py"
+      ],
+      "expectedSymbols": [
+        "_check_csv",
+        "_check_regexp_csv",
+        "_comment",
+        "_regex_transformer",
+        "_regexp_csv_transfomer"
+      ],
+      "goldFileOnDisk": true,
+      "goldFileSymbolsIndexed": 65,
+      "goldSymbolsIndexed": 4,
+      "usefulness": "USEFUL_PRIMARY",
+      "why": "`_regexp_csv_transfomer` (misspelled in source) is the splitter that breaks regexes on commas."
+    },
+    {
+      "instanceId": "pytest-dev__pytest-6197",
+      "repo": "pytest-dev/pytest",
+      "expectedFiles": [
+        "src/_pytest/python.py"
+      ],
+      "expectedSymbols": [
+        "Module",
+        "Module.__init__",
+        "Module._getobj",
+        "PyobjMixin",
+        "PyobjMixin._getobj",
+        "PyobjMixin._mount_obj_if_needed",
+        "PyobjMixin.obj",
+        "__init__",
+        "_genfunctions",
+        "_getobj",
+        "_mount_obj_if_needed",
+        "collect",
+        "isinitpath",
+        "obj"
+      ],
+      "goldFileOnDisk": true,
+      "goldFileSymbolsIndexed": 101,
+      "goldSymbolsIndexed": 21,
+      "usefulness": "AMBIGUOUS",
+      "why": "Real fix site is the `Module`/`PyobjMixin` collection path, but the auto-derived list carries 14 symbols including generic `obj`, `collect`, `__init__` that are patch context rather than evidence."
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-7910",
+      "repo": "sphinx-doc/sphinx",
+      "expectedFiles": [
+        "sphinx/ext/napoleon/__init__.py"
+      ],
+      "expectedSymbols": [
+        "Config",
+        "_skip_member"
+      ],
+      "goldFileOnDisk": true,
+      "goldFileSymbolsIndexed": 8,
+      "goldSymbolsIndexed": 2,
+      "usefulness": "USEFUL_PRIMARY",
+      "why": "`_skip_member` decides whether a decorated __init__ is documented."
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-9230",
+      "repo": "sphinx-doc/sphinx",
+      "expectedFiles": [
+        "sphinx/util/docfields.py"
+      ],
+      "expectedSymbols": [
+        "transform"
+      ],
+      "goldFileOnDisk": true,
+      "goldFileSymbolsIndexed": 24,
+      "goldSymbolsIndexed": 1,
+      "usefulness": "USEFUL_PRIMARY",
+      "why": "`docfields.py::transform` is where the `dict(str,str)` param type is mis-rendered."
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-9698",
+      "repo": "sphinx-doc/sphinx",
+      "expectedFiles": [
+        "sphinx/domains/python.py"
+      ],
+      "expectedSymbols": [
+        "get_index_text"
+      ],
+      "goldFileOnDisk": true,
+      "goldFileSymbolsIndexed": 129,
+      "goldSymbolsIndexed": 7,
+      "usefulness": "USEFUL_PRIMARY",
+      "why": "`get_index_text` builds the parenthesised index entry the bug reports."
+    },
+    {
+      "instanceId": "sympy__sympy-15875",
+      "repo": "sympy/sympy",
+      "expectedFiles": [
+        "sympy/core/add.py"
+      ],
+      "expectedSymbols": [
+        "_eval_is_zero"
+      ],
+      "goldFileOnDisk": true,
+      "goldFileSymbolsIndexed": 56,
+      "goldSymbolsIndexed": 1,
+      "usefulness": "USEFUL_PRIMARY",
+      "why": "`Add._eval_is_zero` is the definition returning the wrong answer for complex integers."
+    },
+    {
+      "instanceId": "sympy__sympy-16597",
+      "repo": "sympy/sympy",
+      "expectedFiles": [
+        "sympy/assumptions/ask.py",
+        "sympy/assumptions/ask_generated.py",
+        "sympy/core/assumptions.py",
+        "sympy/core/power.py",
+        "sympy/printing/tree.py",
+        "sympy/tensor/indexed.py"
+      ],
+      "expectedSymbols": [
+        "__new__",
+        "_eval_is_polynomial",
+        "_eval_is_rational",
+        "get_known_facts",
+        "get_known_facts_cnf",
+        "get_known_facts_dict",
+        "print_tree"
+      ],
+      "goldFileOnDisk": true,
+      "goldFileSymbolsIndexed": 185,
+      "goldSymbolsIndexed": 10,
+      "usefulness": "PATCH_GOLD_BUT_NOT_USEFUL_CONTEXT",
+      "why": "The patch spans 6 files, and two of its symbols (`get_known_facts_cnf`, `get_known_facts_dict` in `ask_generated.py`) are MACHINE-GENERATED fact tables. Nobody orients by reading a generated CNF table; retrieving it would be a wasted slot."
+    },
+    {
+      "instanceId": "sympy__sympy-16792",
+      "repo": "sympy/sympy",
+      "expectedFiles": [
+        "sympy/utilities/codegen.py"
+      ],
+      "expectedSymbols": [
+        "dimensions",
+        "routine"
+      ],
+      "goldFileOnDisk": true,
+      "goldFileSymbolsIndexed": 136,
+      "goldSymbolsIndexed": 4,
+      "usefulness": "USEFUL_PRIMARY",
+      "why": "`CodeGen.routine` decides argument dimensions for array args absent from the expression."
+    },
+    {
+      "instanceId": "sympy__sympy-20428",
+      "repo": "sympy/sympy",
+      "expectedFiles": [
+        "sympy/polys/domains/expressiondomain.py"
+      ],
+      "expectedSymbols": [
+        "__bool__",
+        "__ne__",
+        "gcd"
+      ],
+      "goldFileOnDisk": true,
+      "goldFileSymbolsIndexed": 32,
+      "goldSymbolsIndexed": 1,
+      "usefulness": "USEFUL_SUPPORT",
+      "why": "The reported traceback runs through `polytools`/`polyclasses`/`densebasic`; the gold `expressiondomain.py` dunders are the fix site but not where a reader starts."
+    },
+    {
+      "instanceId": "sympy__sympy-20801",
+      "repo": "sympy/sympy",
+      "expectedFiles": [
+        "sympy/core/numbers.py"
+      ],
+      "expectedSymbols": [
+        "__eq__",
+        "__ne__"
+      ],
+      "goldFileOnDisk": true,
+      "goldFileSymbolsIndexed": 533,
+      "goldSymbolsIndexed": 16,
+      "usefulness": "USEFUL_PRIMARY",
+      "why": "`Float.__eq__`/`__ne__` are exactly what makes `S(0.0) == S.false` true."
+    }
+  ]
+}
