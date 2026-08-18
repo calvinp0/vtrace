@@ -1,0 +1,1657 @@
+{
+  "schemaVersion": "stage5.m160.broad100b-manifest.v1",
+  "milestone": "M160",
+  "kind": "FROZEN independent broad retrieval corpus (§27)",
+  "frozenBeforeAnyRetrieval": true,
+  "family": "princeton-nlp/SWE-bench_Verified",
+  "vexpEquivalenceClaimed": false,
+  "vexpNote": "§15 — this reproduces neither VEXP's task list, sampling, model, budget nor agent protocol. It is VTRACE-internal generalization evidence and is never described as a VEXP comparison.",
+  "caseCount": 100,
+  "target": 100,
+  "selection": {
+    "algorithm": "balanced repository water-fill bounded by pool availability, then difficulty-proportional strata within each repository by largest remainder, then a fixed hash permutation within each stratum",
+    "salt": "VTRACE-M160-Broad100-B-v1",
+    "seedForm": "sha256(salt + ':' + instance_id) ascending — a fixed permutation, not a PRNG state",
+    "strata": [
+      "repo",
+      "difficulty"
+    ],
+    "strataSource": "SWE-bench Verified published metadata; nothing VTRACE produces (§13)",
+    "independentOfVtraceOutcomes": true
+  },
+  "population": {
+    "verifiedRows": 500,
+    "excludedInBroad100A": 100,
+    "metadataIneligible": 0,
+    "candidatePool": 400,
+    "integrityFailures": 0,
+    "eligibleAfterIntegrityGate": 400,
+    "selected": 100
+  },
+  "disjointness": {
+    "broad100aCases": 100,
+    "broad100bCases": 100,
+    "overlap": 0,
+    "disjoint": true,
+    "broad100aManifestHash": "7c6324757d021c9232551d486bc8ae6203213eb30bbe241b5f0c4f46103303a0",
+    "assertedMechanically": true
+  },
+  "repositories": {
+    "astropy/astropy": 11,
+    "django/django": 11,
+    "matplotlib/matplotlib": 11,
+    "pydata/xarray": 11,
+    "pytest-dev/pytest": 11,
+    "scikit-learn/scikit-learn": 11,
+    "sphinx-doc/sphinx": 11,
+    "sympy/sympy": 10,
+    "pylint-dev/pylint": 8,
+    "psf/requests": 4,
+    "mwaskom/seaborn": 1
+  },
+  "difficulties": {
+    "15 min - 1 hour": 56,
+    "<15 min fix": 37,
+    "1-4 hours": 7
+  },
+  "repositoryByDifficulty": {
+    "astropy/astropy": {
+      "15 min - 1 hour": 8,
+      "1-4 hours": 1,
+      "<15 min fix": 2
+    },
+    "django/django": {
+      "<15 min fix": 5,
+      "15 min - 1 hour": 5,
+      "1-4 hours": 1
+    },
+    "matplotlib/matplotlib": {
+      "<15 min fix": 5,
+      "15 min - 1 hour": 6
+    },
+    "mwaskom/seaborn": {
+      "15 min - 1 hour": 1
+    },
+    "psf/requests": {
+      "<15 min fix": 2,
+      "15 min - 1 hour": 2
+    },
+    "pydata/xarray": {
+      "15 min - 1 hour": 7,
+      "1-4 hours": 1,
+      "<15 min fix": 3
+    },
+    "pylint-dev/pylint": {
+      "15 min - 1 hour": 5,
+      "<15 min fix": 3
+    },
+    "pytest-dev/pytest": {
+      "<15 min fix": 4,
+      "1-4 hours": 2,
+      "15 min - 1 hour": 5
+    },
+    "scikit-learn/scikit-learn": {
+      "15 min - 1 hour": 6,
+      "<15 min fix": 5
+    },
+    "sphinx-doc/sphinx": {
+      "<15 min fix": 5,
+      "15 min - 1 hour": 5,
+      "1-4 hours": 1
+    },
+    "sympy/sympy": {
+      "15 min - 1 hour": 6,
+      "1-4 hours": 1,
+      "<15 min fix": 3
+    }
+  },
+  "quotaByRepo": {
+    "astropy/astropy": 11,
+    "django/django": 11,
+    "matplotlib/matplotlib": 11,
+    "mwaskom/seaborn": 1,
+    "psf/requests": 4,
+    "pydata/xarray": 11,
+    "pylint-dev/pylint": 8,
+    "pytest-dev/pytest": 11,
+    "scikit-learn/scikit-learn": 11,
+    "sphinx-doc/sphinx": 11,
+    "sympy/sympy": 10
+  },
+  "quotaByStratum": {
+    "astropy/astropy|1-4 hours": 1,
+    "astropy/astropy|15 min - 1 hour": 8,
+    "astropy/astropy|<15 min fix": 2,
+    "django/django|1-4 hours": 1,
+    "django/django|15 min - 1 hour": 5,
+    "django/django|<15 min fix": 5,
+    "matplotlib/matplotlib|15 min - 1 hour": 6,
+    "matplotlib/matplotlib|<15 min fix": 5,
+    "mwaskom/seaborn|15 min - 1 hour": 1,
+    "psf/requests|15 min - 1 hour": 2,
+    "psf/requests|<15 min fix": 2,
+    "pydata/xarray|1-4 hours": 1,
+    "pydata/xarray|15 min - 1 hour": 7,
+    "pydata/xarray|<15 min fix": 3,
+    "pylint-dev/pylint|15 min - 1 hour": 5,
+    "pylint-dev/pylint|<15 min fix": 3,
+    "pytest-dev/pytest|1-4 hours": 2,
+    "pytest-dev/pytest|15 min - 1 hour": 5,
+    "pytest-dev/pytest|<15 min fix": 4,
+    "scikit-learn/scikit-learn|15 min - 1 hour": 6,
+    "scikit-learn/scikit-learn|<15 min fix": 5,
+    "sphinx-doc/sphinx|1-4 hours": 1,
+    "sphinx-doc/sphinx|15 min - 1 hour": 5,
+    "sphinx-doc/sphinx|<15 min fix": 5,
+    "sympy/sympy|1-4 hours": 1,
+    "sympy/sympy|15 min - 1 hour": 6,
+    "sympy/sympy|<15 min fix": 3
+  },
+  "manifestHash": "68854de565119a1497904b11edf1d4cb7268fc239fd8ec5bdaca8aefd6897cff",
+  "goldLabelHash": "90a304c970c40877f901281ce32512e777c7932f7c27e12d46ea62fdb00ba825",
+  "cases": [
+    {
+      "instanceId": "astropy__astropy-12907",
+      "repo": "astropy/astropy",
+      "baseCommit": "d16bfe05a744909de4b27f5875fe0d4ed41ce607",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "astropy/modeling/separable.py"
+      ],
+      "expectedSymbols": [
+        "_cstack"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "astropy__astropy-13236",
+      "repo": "astropy/astropy",
+      "baseCommit": "6ed769d58d89380ebaa1ef52b300691eefda8928",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "astropy/table/table.py"
+      ],
+      "expectedSymbols": [
+        "_convert_data_to_col"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "astropy__astropy-13398",
+      "repo": "astropy/astropy",
+      "baseCommit": "6500928dc0e57be8f06d1162eacc3ba5e2eff692",
+      "difficulty": "1-4 hours",
+      "expectedFiles": [
+        "astropy/coordinates/builtin_frames/__init__.py",
+        "astropy/coordinates/builtin_frames/intermediate_rotation_transforms.py",
+        "astropy/coordinates/builtin_frames/itrs.py",
+        "astropy/coordinates/builtin_frames/itrs_observed_transforms.py"
+      ],
+      "expectedSymbols": [
+        "CELMIN",
+        "ITRS",
+        "ITRS.earth_location",
+        "NORTH_POLE",
+        "SELMIN",
+        "add_refraction",
+        "altaz_to_hadec_mat",
+        "cirs_to_gcrs",
+        "cirs_to_itrs",
+        "doc_footer",
+        "earth_location",
+        "itrs_to_altaz_mat",
+        "itrs_to_cirs",
+        "itrs_to_hadec_mat",
+        "itrs_to_observed",
+        "itrs_to_tete",
+        "observed_to_itrs",
+        "remove_refraction",
+        "tete_to_gcrs",
+        "tete_to_itrs",
+        "tete_to_itrs_mat"
+      ],
+      "goldFilesCreatedByPatch": [
+        "astropy/coordinates/builtin_frames/itrs_observed_transforms.py"
+      ]
+    },
+    {
+      "instanceId": "astropy__astropy-13453",
+      "repo": "astropy/astropy",
+      "baseCommit": "19cc80471739bcb67b7e8099246b391c355023ee",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "astropy/io/ascii/html.py"
+      ],
+      "expectedSymbols": [
+        "write"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "astropy__astropy-14508",
+      "repo": "astropy/astropy",
+      "baseCommit": "a3f4ae6cd24d5ecdf49f213d77b3513dd509a06c",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "astropy/io/fits/card.py"
+      ],
+      "expectedSymbols": [
+        "_format_float",
+        "_format_value"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "astropy__astropy-14995",
+      "repo": "astropy/astropy",
+      "baseCommit": "b16c7d12ccbc7b2d20364b89fb44285bcbfede54",
+      "difficulty": "<15 min fix",
+      "expectedFiles": [
+        "astropy/nddata/mixins/ndarithmetic.py"
+      ],
+      "expectedSymbols": [
+        "_arithmetic_mask",
+        "_arithmetic_wcs"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "astropy__astropy-7336",
+      "repo": "astropy/astropy",
+      "baseCommit": "732d89c2940156bdc0e200bb36dc38b5e424bcba",
+      "difficulty": "<15 min fix",
+      "expectedFiles": [
+        "astropy/units/decorators.py"
+      ],
+      "expectedSymbols": [
+        "wrapper"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "astropy__astropy-7606",
+      "repo": "astropy/astropy",
+      "baseCommit": "3cedd79e6c121910220f8e6df77c54a0b344ea94",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "astropy/units/core.py"
+      ],
+      "expectedSymbols": [
+        "__eq__",
+        "__ne__",
+        "_unrecognized_operator"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "astropy__astropy-7671",
+      "repo": "astropy/astropy",
+      "baseCommit": "a7141cd90019b62688d507ae056298507678c058",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "astropy/utils/introspection.py"
+      ],
+      "expectedSymbols": [
+        "minversion"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "astropy__astropy-8707",
+      "repo": "astropy/astropy",
+      "baseCommit": "a85a0747c54bac75e9c3b2fe436b105ea029d6cf",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "astropy/io/fits/card.py",
+        "astropy/io/fits/header.py"
+      ],
+      "expectedSymbols": [
+        "Header",
+        "__doctest_skip__",
+        "fromstring"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "astropy__astropy-8872",
+      "repo": "astropy/astropy",
+      "baseCommit": "b750a0e6ee76fb6b8a099a4d16ec51977be46bf6",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "astropy/units/quantity.py"
+      ],
+      "expectedSymbols": [
+        "Quantity",
+        "__new__"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "django__django-11603",
+      "repo": "django/django",
+      "baseCommit": "f618e033acd37d59b536d6e6126e6c5be18037f6",
+      "difficulty": "<15 min fix",
+      "expectedFiles": [
+        "django/db/models/aggregates.py"
+      ],
+      "expectedSymbols": [
+        "Avg",
+        "Count",
+        "Sum",
+        "Variance",
+        "_get_repr_options"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "django__django-11880",
+      "repo": "django/django",
+      "baseCommit": "06909fe084f87a65459a83bd69d7cdbe4fce9a7c",
+      "difficulty": "<15 min fix",
+      "expectedFiles": [
+        "django/forms/fields.py"
+      ],
+      "expectedSymbols": [
+        "__deepcopy__"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "django__django-12741",
+      "repo": "django/django",
+      "baseCommit": "537d422942b53bc0a2b6a51968f379c0de07793c",
+      "difficulty": "<15 min fix",
+      "expectedFiles": [
+        "django/core/management/commands/flush.py",
+        "django/db/backends/base/operations.py"
+      ],
+      "expectedSymbols": [
+        "execute_sql_flush",
+        "handle",
+        "sql_flush"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "django__django-14500",
+      "repo": "django/django",
+      "baseCommit": "8c3bd0b708b488a1f6e8bd8cc6b96569904605be",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "django/db/migrations/executor.py"
+      ],
+      "expectedSymbols": [
+        "unapply_migration"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "django__django-14559",
+      "repo": "django/django",
+      "baseCommit": "d79be3ed39b76d3e34431873eec16f6dd354ab17",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "django/db/models/query.py"
+      ],
+      "expectedSymbols": [
+        "bulk_update",
+        "get_or_create"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "django__django-15022",
+      "repo": "django/django",
+      "baseCommit": "e1d673c373a7d032060872b690a92fc95496612e",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "django/contrib/admin/options.py"
+      ],
+      "expectedSymbols": [
+        "construct_search"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "django__django-15252",
+      "repo": "django/django",
+      "baseCommit": "361bb8f786f112ee275be136795c0b1ecefff928",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "django/db/migrations/executor.py"
+      ],
+      "expectedSymbols": [
+        "migrate"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "django__django-15375",
+      "repo": "django/django",
+      "baseCommit": "beb7ddbcee03270e833b2f74927ccfc8027aa693",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "django/db/models/aggregates.py"
+      ],
+      "expectedSymbols": [
+        "default_alias",
+        "resolve_expression"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "django__django-15569",
+      "repo": "django/django",
+      "baseCommit": "884b4c27f506b3c29d58509fc83a35c30ea10d94",
+      "difficulty": "<15 min fix",
+      "expectedFiles": [
+        "django/db/models/query_utils.py"
+      ],
+      "expectedSymbols": [
+        "_unregister_lookup",
+        "select_related_descend"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "django__django-15629",
+      "repo": "django/django",
+      "baseCommit": "694cf458f16b8d340a3195244196980b2dec34fd",
+      "difficulty": "1-4 hours",
+      "expectedFiles": [
+        "django/db/backends/base/schema.py",
+        "django/db/backends/oracle/features.py",
+        "django/db/backends/sqlite3/schema.py",
+        "django/db/models/fields/related.py"
+      ],
+      "expectedSymbols": [
+        "DatabaseFeatures",
+        "_alter_field",
+        "convert_empty_strings",
+        "db_parameters",
+        "db_type"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "django__django-16100",
+      "repo": "django/django",
+      "baseCommit": "c6350d594c359151ee17b0c4f354bb44f28ff69e",
+      "difficulty": "<15 min fix",
+      "expectedFiles": [
+        "django/contrib/admin/options.py"
+      ],
+      "expectedSymbols": [
+        "changelist_view"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-13989",
+      "repo": "matplotlib/matplotlib",
+      "baseCommit": "a3e2897bfaf9eaac1d6649da535c4e721c89fa69",
+      "difficulty": "<15 min fix",
+      "expectedFiles": [
+        "lib/matplotlib/axes/_axes.py"
+      ],
+      "expectedSymbols": [
+        "hist"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-20488",
+      "repo": "matplotlib/matplotlib",
+      "baseCommit": "b7ce415c15eb39b026a097a2865da73fbcf15c9c",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "lib/matplotlib/image.py"
+      ],
+      "expectedSymbols": [
+        "_make_image"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-20676",
+      "repo": "matplotlib/matplotlib",
+      "baseCommit": "6786f437df54ca7780a047203cbcfaa1db8dc542",
+      "difficulty": "<15 min fix",
+      "expectedFiles": [
+        "lib/matplotlib/widgets.py"
+      ],
+      "expectedSymbols": [
+        "_setup_edge_handle",
+        "new_axes"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-20859",
+      "repo": "matplotlib/matplotlib",
+      "baseCommit": "64619e53e9d0ed417daba287ac0d3a06943a54d5",
+      "difficulty": "<15 min fix",
+      "expectedFiles": [
+        "lib/matplotlib/legend.py"
+      ],
+      "expectedSymbols": [
+        "__init__"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-21568",
+      "repo": "matplotlib/matplotlib",
+      "baseCommit": "f0632c0fc7339f68e992ed63ae4cfac76cd41aad",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "lib/matplotlib/dates.py"
+      ],
+      "expectedSymbols": [
+        "_wrap_in_tex"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-22871",
+      "repo": "matplotlib/matplotlib",
+      "baseCommit": "a7b7260bf06c20d408215d95ce20a1a01c12e5b1",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "lib/matplotlib/dates.py"
+      ],
+      "expectedSymbols": [
+        "format_ticks"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-23314",
+      "repo": "matplotlib/matplotlib",
+      "baseCommit": "97fc1154992f64cfb2f86321155a7404efeb2d8a",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "lib/mpl_toolkits/mplot3d/axes3d.py"
+      ],
+      "expectedSymbols": [
+        "apply_aspect",
+        "draw"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-23412",
+      "repo": "matplotlib/matplotlib",
+      "baseCommit": "f06c2c3abdaf4b90285ce5ca7fedbb8ace715911",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "lib/matplotlib/patches.py"
+      ],
+      "expectedSymbols": [
+        "draw"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-25311",
+      "repo": "matplotlib/matplotlib",
+      "baseCommit": "430fb1db88843300fb4baae3edc499bbfe073b0c",
+      "difficulty": "<15 min fix",
+      "expectedFiles": [
+        "lib/matplotlib/offsetbox.py"
+      ],
+      "expectedSymbols": [
+        "__init__",
+        "on_motion"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-25479",
+      "repo": "matplotlib/matplotlib",
+      "baseCommit": "7fdf772201e4c9bafbc16dfac23b5472d6a53fa2",
+      "difficulty": "<15 min fix",
+      "expectedFiles": [
+        "lib/matplotlib/cm.py",
+        "lib/matplotlib/colors.py"
+      ],
+      "expectedSymbols": [
+        "__copy__",
+        "__eq__",
+        "register",
+        "unregister"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-26291",
+      "repo": "matplotlib/matplotlib",
+      "baseCommit": "fa68f46289adf4a8a4bc7ba97ded8258ec9d079c",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "lib/mpl_toolkits/axes_grid1/inset_locator.py"
+      ],
+      "expectedSymbols": [
+        "__call__",
+        "draw"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "mwaskom__seaborn-3069",
+      "repo": "mwaskom/seaborn",
+      "baseCommit": "54cab15bdacfaa05a88fbc5502a5b322d99f148e",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "seaborn/_core/plot.py"
+      ],
+      "expectedSymbols": [
+        "_finalize_figure",
+        "_setup_scales"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "psf__requests-1766",
+      "repo": "psf/requests",
+      "baseCommit": "847735553aeda6e6633f2b32e14ba14ba86887a4",
+      "difficulty": "<15 min fix",
+      "expectedFiles": [
+        "requests/auth.py"
+      ],
+      "expectedSymbols": [
+        "sha_utf8"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "psf__requests-2317",
+      "repo": "psf/requests",
+      "baseCommit": "091991be0da19de9108dbe5e3752917fea3d7fdc",
+      "difficulty": "<15 min fix",
+      "expectedFiles": [
+        "requests/sessions.py"
+      ],
+      "expectedSymbols": [
+        "request"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "psf__requests-2931",
+      "repo": "psf/requests",
+      "baseCommit": "5f7a3a74aab1625c2bb65f643197ee885e3da576",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "requests/models.py"
+      ],
+      "expectedSymbols": [
+        "_encode_params",
+        "prepare_url"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "psf__requests-6028",
+      "repo": "psf/requests",
+      "baseCommit": "0192aac24123735b3eaf9b08df46429bb770c283",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "requests/utils.py"
+      ],
+      "expectedSymbols": [
+        "prepend_scheme_if_needed"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "pydata__xarray-3095",
+      "repo": "pydata/xarray",
+      "baseCommit": "1757dffac2fa493d7b9a074b84cf8c830a706688",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "xarray/core/indexing.py",
+        "xarray/core/variable.py"
+      ],
+      "expectedSymbols": [
+        "PandasIndexAdapter",
+        "PandasIndexAdapter.__init__",
+        "__array__",
+        "__getitem__",
+        "__init__",
+        "__repr__",
+        "copy",
+        "dtype",
+        "shape",
+        "transpose"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "pydata__xarray-3151",
+      "repo": "pydata/xarray",
+      "baseCommit": "118f4d996e7711c9aced916e6049af9f28d5ec66",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "xarray/core/combine.py"
+      ],
+      "expectedSymbols": [
+        "combine_by_coords"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "pydata__xarray-3993",
+      "repo": "pydata/xarray",
+      "baseCommit": "8cc34cb412ba89ebca12fc84f76a9e452628f1bc",
+      "difficulty": "1-4 hours",
+      "expectedFiles": [
+        "xarray/core/dataarray.py",
+        "xarray/core/dataset.py"
+      ],
+      "expectedSymbols": [
+        "differentiate",
+        "integrate",
+        "unify_chunks"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "pydata__xarray-4075",
+      "repo": "pydata/xarray",
+      "baseCommit": "19b088636eb7d3f65ab7a1046ac672e0689371d8",
+      "difficulty": "<15 min fix",
+      "expectedFiles": [
+        "xarray/core/weighted.py"
+      ],
+      "expectedSymbols": [
+        "_sum_of_weights"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "pydata__xarray-4094",
+      "repo": "pydata/xarray",
+      "baseCommit": "a64cf2d5476e7bbda099b34c40b7be1880dbd39a",
+      "difficulty": "<15 min fix",
+      "expectedFiles": [
+        "xarray/core/dataarray.py"
+      ],
+      "expectedSymbols": [
+        "to_unstacked_dataset"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "pydata__xarray-4629",
+      "repo": "pydata/xarray",
+      "baseCommit": "a41edc7bf5302f2ea327943c0c48c532b12009bc",
+      "difficulty": "<15 min fix",
+      "expectedFiles": [
+        "xarray/core/merge.py"
+      ],
+      "expectedSymbols": [
+        "merge_attrs"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "pydata__xarray-4687",
+      "repo": "pydata/xarray",
+      "baseCommit": "d3b6aa6d8b997df115a53c001d00222a0f92f63a",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "xarray/core/computation.py"
+      ],
+      "expectedSymbols": [
+        "dot",
+        "where"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "pydata__xarray-6721",
+      "repo": "pydata/xarray",
+      "baseCommit": "cc183652bf6e1273e985e1c4b3cba79c896c1193",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "xarray/core/common.py"
+      ],
+      "expectedSymbols": [
+        "get_chunksizes"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "pydata__xarray-6744",
+      "repo": "pydata/xarray",
+      "baseCommit": "7cc6cc991e586a6158bb656b8001234ccda25407",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "xarray/core/rolling.py"
+      ],
+      "expectedSymbols": [
+        "__init__",
+        "__iter__"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "pydata__xarray-7229",
+      "repo": "pydata/xarray",
+      "baseCommit": "3aa75c8d00a4a2d4acf10d80f76b937cadb666b7",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "xarray/core/computation.py"
+      ],
+      "expectedSymbols": [
+        "polyval",
+        "where"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "pydata__xarray-7233",
+      "repo": "pydata/xarray",
+      "baseCommit": "51d37d1be95547059251076b3fadaa317750aab3",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "xarray/core/rolling.py"
+      ],
+      "expectedSymbols": [
+        "construct"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "pylint-dev__pylint-4604",
+      "repo": "pylint-dev/pylint",
+      "baseCommit": "1e55ae64624d28c5fe8b63ad7979880ee2e6ef3f",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "pylint/checkers/variables.py",
+        "pylint/constants.py"
+      ],
+      "expectedSymbols": [
+        "IS_PYPY",
+        "_store_type_annotation_node"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "pylint-dev__pylint-4661",
+      "repo": "pylint-dev/pylint",
+      "baseCommit": "1d1619ef913b99b06647d2030bddff4800abdf63",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "pylint/config/__init__.py",
+        "setup.cfg"
+      ],
+      "expectedSymbols": [
+        "_get_pdata_path",
+        "ignore_missing_imports",
+        "known_third_party"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "pylint-dev__pylint-4970",
+      "repo": "pylint-dev/pylint",
+      "baseCommit": "40cc2ffd7887959157aaf469e09585ec2be7f528",
+      "difficulty": "<15 min fix",
+      "expectedFiles": [
+        "pylint/checkers/similar.py"
+      ],
+      "expectedSymbols": [
+        "_compute_sims",
+        "append_stream",
+        "run"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "pylint-dev__pylint-6386",
+      "repo": "pylint-dev/pylint",
+      "baseCommit": "754b487f4d892e3d4872b6fc7468a71db4e31c13",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "pylint/config/argument.py",
+        "pylint/config/arguments_manager.py",
+        "pylint/config/utils.py",
+        "pylint/lint/base_options.py"
+      ],
+      "expectedSymbols": [
+        "__init__",
+        "_add_parser_option",
+        "_convert_option_to_argument",
+        "_enable_all_extensions",
+        "_make_run_options",
+        "_preprocess_options"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "pylint-dev__pylint-6528",
+      "repo": "pylint-dev/pylint",
+      "baseCommit": "273a8b25620467c1e5686aa8d2a1dbb8c02c78d0",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "pylint/lint/expand_modules.py",
+        "pylint/lint/pylinter.py"
+      ],
+      "expectedSymbols": [
+        "_discover_files",
+        "_is_ignored_file",
+        "_is_in_ignore_list_re",
+        "expand_modules",
+        "initialize"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "pylint-dev__pylint-6903",
+      "repo": "pylint-dev/pylint",
+      "baseCommit": "ca80f03a43bc39e4cc2c67dc99817b3c9f13b8a6",
+      "difficulty": "<15 min fix",
+      "expectedFiles": [
+        "pylint/lint/run.py"
+      ],
+      "expectedSymbols": [
+        "_query_cpu"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "pylint-dev__pylint-7080",
+      "repo": "pylint-dev/pylint",
+      "baseCommit": "3c5eca2ded3dd2b59ebaf23eb289453b5d2930f0",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "pylint/lint/expand_modules.py"
+      ],
+      "expectedSymbols": [
+        "_is_ignored_file"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "pylint-dev__pylint-7277",
+      "repo": "pylint-dev/pylint",
+      "baseCommit": "684a1d6aa0a6791e20078bc524f97c8906332390",
+      "difficulty": "<15 min fix",
+      "expectedFiles": [
+        "pylint/__init__.py"
+      ],
+      "expectedSymbols": [
+        "modify_sys_path"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "pytest-dev__pytest-10081",
+      "repo": "pytest-dev/pytest",
+      "baseCommit": "da9a2b584eb7a6c7e924b2621ed0ddaeca0a7bea",
+      "difficulty": "<15 min fix",
+      "expectedFiles": [
+        "src/_pytest/unittest.py"
+      ],
+      "expectedSymbols": [
+        "runtest"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "pytest-dev__pytest-10356",
+      "repo": "pytest-dev/pytest",
+      "baseCommit": "3c1534944cbd34e8a41bc9e76818018fadefc9a1",
+      "difficulty": "1-4 hours",
+      "expectedFiles": [
+        "src/_pytest/mark/structures.py"
+      ],
+      "expectedSymbols": [
+        "__call__",
+        "get_unpacked_marks",
+        "normalize_mark_list",
+        "store_mark"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "pytest-dev__pytest-5787",
+      "repo": "pytest-dev/pytest",
+      "baseCommit": "955e54221008aba577ecbaefa15679f6777d3bf8",
+      "difficulty": "1-4 hours",
+      "expectedFiles": [
+        "src/_pytest/reports.py"
+      ],
+      "expectedSymbols": [
+        "_from_json",
+        "_report_kwargs_from_json",
+        "_report_to_json",
+        "_report_unserialization_failure",
+        "_to_json",
+        "deserialize_repr_crash",
+        "deserialize_repr_entry",
+        "deserialize_repr_traceback",
+        "disassembled_report",
+        "pytest_report_from_serializable",
+        "serialize_longrepr",
+        "serialize_repr_crash",
+        "serialize_repr_entry",
+        "serialize_repr_traceback"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "pytest-dev__pytest-5840",
+      "repo": "pytest-dev/pytest",
+      "baseCommit": "73c5b7f4b11a81e971f7d1bb18072e06a87060f4",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "src/_pytest/config/__init__.py",
+        "src/_pytest/pathlib.py"
+      ],
+      "expectedSymbols": [
+        "_getconftestmodules",
+        "_importconftest",
+        "_rget_with_confmod",
+        "_set_initial_conftests",
+        "fnmatch_ex",
+        "parts",
+        "unique_path"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "pytest-dev__pytest-6202",
+      "repo": "pytest-dev/pytest",
+      "baseCommit": "3a668ea6ff24b0c8f00498c3144c63bac561d925",
+      "difficulty": "<15 min fix",
+      "expectedFiles": [
+        "src/_pytest/python.py"
+      ],
+      "expectedSymbols": [
+        "getmodpath",
+        "reportinfo"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "pytest-dev__pytest-7205",
+      "repo": "pytest-dev/pytest",
+      "baseCommit": "5e7f1ab4bf58e473e5d7f878eb2b499d7deabd29",
+      "difficulty": "<15 min fix",
+      "expectedFiles": [
+        "src/_pytest/setuponly.py"
+      ],
+      "expectedSymbols": [
+        "_show_fixture_action",
+        "pytest_addoption"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "pytest-dev__pytest-7236",
+      "repo": "pytest-dev/pytest",
+      "baseCommit": "c98bc4cd3d687fe9b392d8eecd905627191d4f06",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "src/_pytest/unittest.py"
+      ],
+      "expectedSymbols": [
+        "_is_skipped",
+        "_make_xunit_fixture",
+        "check_testcase_implements_trial_reporter",
+        "collect",
+        "fixture",
+        "runtest"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "pytest-dev__pytest-7324",
+      "repo": "pytest-dev/pytest",
+      "baseCommit": "19ad5889353c7f5f2b65cc2acd346b7a9e95dfcd",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "src/_pytest/mark/expression.py"
+      ],
+      "expectedSymbols": [
+        "IDENT_PREFIX",
+        "__getitem__",
+        "__init__",
+        "__iter__",
+        "expression",
+        "not_expr",
+        "reject"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "pytest-dev__pytest-7490",
+      "repo": "pytest-dev/pytest",
+      "baseCommit": "7f7a36478abe7dd1fa993b115d22606aa0e35e88",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "src/_pytest/skipping.py"
+      ],
+      "expectedSymbols": [
+        "evaluate_xfail_marks",
+        "pytest_runtest_call",
+        "pytest_runtest_makereport",
+        "pytest_runtest_setup"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "pytest-dev__pytest-7521",
+      "repo": "pytest-dev/pytest",
+      "baseCommit": "41d211c24a6781843b174379d6d6538f5c17adb9",
+      "difficulty": "<15 min fix",
+      "expectedFiles": [
+        "src/_pytest/capture.py"
+      ],
+      "expectedSymbols": [
+        "__init__"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "pytest-dev__pytest-7571",
+      "repo": "pytest-dev/pytest",
+      "baseCommit": "422685d0bdc110547535036c1ff398b5e1c44145",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "src/_pytest/logging.py"
+      ],
+      "expectedSymbols": [
+        "__init__",
+        "_finalize",
+        "set_level"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "scikit-learn__scikit-learn-10297",
+      "repo": "scikit-learn/scikit-learn",
+      "baseCommit": "b90661d6a46aa3619d3eec94d5281f5888add501",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "sklearn/linear_model/ridge.py"
+      ],
+      "expectedSymbols": [
+        "RidgeCV",
+        "RidgeClassifierCV",
+        "RidgeClassifierCV.__init__",
+        "RidgeClassifierCV.fit",
+        "__init__",
+        "fit"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "scikit-learn__scikit-learn-10908",
+      "repo": "scikit-learn/scikit-learn",
+      "baseCommit": "67d06b18c68ee4452768f8a1e868565dd4354abf",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "sklearn/feature_extraction/text.py"
+      ],
+      "expectedSymbols": [
+        "get_feature_names",
+        "inverse_transform"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "scikit-learn__scikit-learn-11310",
+      "repo": "scikit-learn/scikit-learn",
+      "baseCommit": "553b5fb8f84ba05c8397f26dd079deece2b05029",
+      "difficulty": "<15 min fix",
+      "expectedFiles": [
+        "sklearn/model_selection/_search.py"
+      ],
+      "expectedSymbols": [
+        "GridSearchCV",
+        "RandomizedSearchCV",
+        "_store"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "scikit-learn__scikit-learn-12973",
+      "repo": "scikit-learn/scikit-learn",
+      "baseCommit": "a7b8b9e9e16d4e15fabda5ae615086c2e1c47d8a",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "sklearn/linear_model/least_angle.py"
+      ],
+      "expectedSymbols": [
+        "__init__",
+        "fit"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "scikit-learn__scikit-learn-13135",
+      "repo": "scikit-learn/scikit-learn",
+      "baseCommit": "a061ada48efccf0845acae17009553e01764452b",
+      "difficulty": "<15 min fix",
+      "expectedFiles": [
+        "sklearn/preprocessing/_discretization.py"
+      ],
+      "expectedSymbols": [
+        "fit"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "scikit-learn__scikit-learn-13142",
+      "repo": "scikit-learn/scikit-learn",
+      "baseCommit": "1c8668b0a021832386470ddf740d834e02c66f69",
+      "difficulty": "<15 min fix",
+      "expectedFiles": [
+        "sklearn/mixture/base.py"
+      ],
+      "expectedSymbols": [
+        "_e_step",
+        "fit_predict"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "scikit-learn__scikit-learn-13328",
+      "repo": "scikit-learn/scikit-learn",
+      "baseCommit": "37b0e66c871e8fb032a9c7086b2a1d5419838154",
+      "difficulty": "<15 min fix",
+      "expectedFiles": [
+        "sklearn/linear_model/huber.py"
+      ],
+      "expectedSymbols": [
+        "fit"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "scikit-learn__scikit-learn-13779",
+      "repo": "scikit-learn/scikit-learn",
+      "baseCommit": "b34751b7ed02b2cfcc36037fb729d4360480a299",
+      "difficulty": "<15 min fix",
+      "expectedFiles": [
+        "sklearn/ensemble/voting.py"
+      ],
+      "expectedSymbols": [
+        "fit"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "scikit-learn__scikit-learn-14053",
+      "repo": "scikit-learn/scikit-learn",
+      "baseCommit": "6ab8c86c383dd847a1be7103ad115f174fe23ffd",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "sklearn/tree/export.py"
+      ],
+      "expectedSymbols": [
+        "export_text"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "scikit-learn__scikit-learn-14894",
+      "repo": "scikit-learn/scikit-learn",
+      "baseCommit": "fdbaa58acbead5a254f2e6d597dc1ab3b947f4c6",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "sklearn/svm/base.py"
+      ],
+      "expectedSymbols": [
+        "_sparse_fit",
+        "predict"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "scikit-learn__scikit-learn-26194",
+      "repo": "scikit-learn/scikit-learn",
+      "baseCommit": "e886ce4e1444c61b865e7839c9cff5464ee20ace",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "sklearn/metrics/_ranking.py"
+      ],
+      "expectedSymbols": [
+        "roc_curve"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-10449",
+      "repo": "sphinx-doc/sphinx",
+      "baseCommit": "36367765fe780f962bba861bf368a765380bbc68",
+      "difficulty": "<15 min fix",
+      "expectedFiles": [
+        "sphinx/ext/autodoc/typehints.py"
+      ],
+      "expectedSymbols": [
+        "insert_field_list",
+        "merge_typehints",
+        "modify_field_list"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-10466",
+      "repo": "sphinx-doc/sphinx",
+      "baseCommit": "cab2d93076d0cca7c53fac885f927dde3e2a5fec",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "sphinx/builders/gettext.py"
+      ],
+      "expectedSymbols": [
+        "__iter__",
+        "add"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-7454",
+      "repo": "sphinx-doc/sphinx",
+      "baseCommit": "aca3f825f2e4a8817190f3c885a242a285aa0dba",
+      "difficulty": "<15 min fix",
+      "expectedFiles": [
+        "sphinx/domains/python.py"
+      ],
+      "expectedSymbols": [
+        "_parse_annotation",
+        "make_xref",
+        "unparse"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-7757",
+      "repo": "sphinx-doc/sphinx",
+      "baseCommit": "212fd67b9f0b4fae6a7c3501fdf1a9a5b2801329",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "sphinx/util/inspect.py"
+      ],
+      "expectedSymbols": [
+        "signature_from_str"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-7985",
+      "repo": "sphinx-doc/sphinx",
+      "baseCommit": "f30284ef926ebaf04b176f21b421e2dffc679792",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "sphinx/builders/linkcheck.py"
+      ],
+      "expectedSymbols": [
+        "check",
+        "check_uri",
+        "uri_re"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-8459",
+      "repo": "sphinx-doc/sphinx",
+      "baseCommit": "68aa4fb29e7dfe521749e1e14f750d7afabb3481",
+      "difficulty": "<15 min fix",
+      "expectedFiles": [
+        "sphinx/ext/autodoc/typehints.py"
+      ],
+      "expectedSymbols": [
+        "record_typehints"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-8548",
+      "repo": "sphinx-doc/sphinx",
+      "baseCommit": "dd1615c59dc6fff633e27dbb3861f2d27e1fb976",
+      "difficulty": "1-4 hours",
+      "expectedFiles": [
+        "sphinx/ext/autodoc/__init__.py",
+        "sphinx/ext/autodoc/importer.py"
+      ],
+      "expectedSymbols": [
+        "__init__",
+        "add_directive_header",
+        "get_class_members",
+        "get_object_members"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-8595",
+      "repo": "sphinx-doc/sphinx",
+      "baseCommit": "b19bce971e82f2497d67fdacdeca8db08ae0ba56",
+      "difficulty": "<15 min fix",
+      "expectedFiles": [
+        "sphinx/ext/autodoc/__init__.py"
+      ],
+      "expectedSymbols": [
+        "get_module_members",
+        "get_object_members"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-9258",
+      "repo": "sphinx-doc/sphinx",
+      "baseCommit": "06107f838c28ab6ca6bfc2cc208e15997fcb2146",
+      "difficulty": "<15 min fix",
+      "expectedFiles": [
+        "sphinx/domains/python.py"
+      ],
+      "expectedSymbols": [
+        "make_xref",
+        "make_xrefs"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-9602",
+      "repo": "sphinx-doc/sphinx",
+      "baseCommit": "6c38f68dae221e8cfc70c137974b8b88bd3baaab",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "sphinx/domains/python.py"
+      ],
+      "expectedSymbols": [
+        "unparse"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-9658",
+      "repo": "sphinx-doc/sphinx",
+      "baseCommit": "232dbe41c5250eb7d559d40438c4743483e95f15",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "sphinx/ext/autodoc/mock.py"
+      ],
+      "expectedSymbols": [
+        "_MockObject",
+        "__init__",
+        "__len__",
+        "__new__",
+        "_make_subclass"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "sympy__sympy-13031",
+      "repo": "sympy/sympy",
+      "baseCommit": "2dfa7457f20ee187fbb09b5b6a1631da4458388c",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "sympy/matrices/sparse.py"
+      ],
+      "expectedSymbols": [
+        "col_join",
+        "row_join"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "sympy__sympy-13551",
+      "repo": "sympy/sympy",
+      "baseCommit": "9476425b9e34363c2d9ac38e9f04aa75ae54a775",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "sympy/concrete/products.py"
+      ],
+      "expectedSymbols": [
+        "_eval_product"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "sympy__sympy-13852",
+      "repo": "sympy/sympy",
+      "baseCommit": "c935e1d106743efd5bf0705fbeedbd18fadff4dc",
+      "difficulty": "1-4 hours",
+      "expectedFiles": [
+        "sympy/functions/special/zeta_functions.py"
+      ],
+      "expectedSymbols": [
+        "_eval_expand_func",
+        "eval",
+        "fdiff",
+        "polylog"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "sympy__sympy-14531",
+      "repo": "sympy/sympy",
+      "baseCommit": "205da797006360fc629110937e39a19c9561313e",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "sympy/printing/str.py"
+      ],
+      "expectedSymbols": [
+        "_print_AppliedPredicate",
+        "_print_Basic",
+        "_print_Exp1",
+        "_print_ExprCondPair",
+        "_print_FiniteSet",
+        "_print_FracField",
+        "_print_FreeGroupElement",
+        "_print_Inverse",
+        "_print_Lambda",
+        "_print_LatticeOp",
+        "_print_Limit",
+        "_print_MatrixBase",
+        "_print_MatrixElement",
+        "_print_MatrixSlice",
+        "_print_NegativeInfinity",
+        "_print_Normal",
+        "_print_Or",
+        "_print_Order",
+        "_print_PDF",
+        "_print_Permutation",
+        "_print_PermutationGroup",
+        "_print_Pi",
+        "_print_PolyRing",
+        "_print_Relational",
+        "_print_TensAdd",
+        "_print_Transpose",
+        "_print_Uniform",
+        "_print_Union",
+        "_print_list",
+        "strslice"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "sympy__sympy-15345",
+      "repo": "sympy/sympy",
+      "baseCommit": "9ef28fba5b4d6d0168237c9c005a550e6dc27d81",
+      "difficulty": "<15 min fix",
+      "expectedFiles": [
+        "sympy/printing/mathematica.py"
+      ],
+      "expectedSymbols": [
+        "_print_Function",
+        "_print_Integral"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "sympy__sympy-15976",
+      "repo": "sympy/sympy",
+      "baseCommit": "701441853569d370506514083b995d11f9a130bd",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "sympy/printing/mathml.py"
+      ],
+      "expectedSymbols": [
+        "_print_MatrixSymbol",
+        "_print_Sum",
+        "_print_Symbol",
+        "join",
+        "translate"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "sympy__sympy-16450",
+      "repo": "sympy/sympy",
+      "baseCommit": "aefdd023dc4f73c441953ed51f5f05a076f0862f",
+      "difficulty": "<15 min fix",
+      "expectedFiles": [
+        "sympy/simplify/simplify.py"
+      ],
+      "expectedSymbols": [
+        "posify"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "sympy__sympy-16886",
+      "repo": "sympy/sympy",
+      "baseCommit": "c50643a49811e9fe2f4851adff4313ad46f7325e",
+      "difficulty": "<15 min fix",
+      "expectedFiles": [
+        "sympy/crypto/crypto.py"
+      ],
+      "expectedSymbols": [
+        "decipher_kid_rsa"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "sympy__sympy-18698",
+      "repo": "sympy/sympy",
+      "baseCommit": "3dff1b98a78f28c953ae2140b69356b8391e399c",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "sympy/polys/polytools.py"
+      ],
+      "expectedSymbols": [
+        "_symbolic_factor_list"
+      ],
+      "goldFilesCreatedByPatch": []
+    },
+    {
+      "instanceId": "sympy__sympy-23824",
+      "repo": "sympy/sympy",
+      "baseCommit": "39de9a2698ad4bb90681c0fdb70b30a78233145f",
+      "difficulty": "15 min - 1 hour",
+      "expectedFiles": [
+        "sympy/physics/hep/gamma_matrices.py"
+      ],
+      "expectedSymbols": [
+        "kahane_simplify"
+      ],
+      "goldFilesCreatedByPatch": []
+    }
+  ]
+}
