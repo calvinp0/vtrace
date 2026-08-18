@@ -1,0 +1,226 @@
+{
+  "schemaVersion": "stage5.m160.intervention-simulations.v1",
+  "milestone": "M160",
+  "kind": "cross-corpus intervention simulation (§58-§60)",
+  "rule": "§59 — an intervention is recommendable only if it can help BOTH corpora. Recovery on Broad100-A alone is a fit to evidence five milestones have already read.",
+  "deliveryCeiling": {
+    "broad100a": {
+      "deliveredItems": 570,
+      "maxRankEverDelivered": 30,
+      "p50": 4,
+      "p90": 14,
+      "p99": 25,
+      "perCaseDeepestMax": 30,
+      "perCaseDeepestP90": 24,
+      "laneInjectedDeliveries": 22
+    },
+    "broad100b": {
+      "deliveredItems": 547,
+      "maxRankEverDelivered": 30,
+      "p50": 5,
+      "p90": 16,
+      "p99": 27,
+      "perCaseDeepestMax": 30,
+      "perCaseDeepestP90": 24,
+      "laneInjectedDeliveries": 44
+    },
+    "note": "Reported per corpus, never averaged. If nothing beyond ordinary rank R is ever delivered, admitting gold at R+k recovers nothing however large the pool becomes — this measurement refutes the entire bound-widening family at once (M159 standing finding)."
+  },
+  "interventions": [
+    {
+      "intervention": "CORPUS_REPAIR",
+      "scope": "INDEX_FILE_MISSING",
+      "describe": "benchmark-side: check out the complete package tree for the affected instances",
+      "broad100a": {
+        "targets": 2,
+        "recovered": 2,
+        "recoveredInstances": [
+          "django__django-13590",
+          "django__django-15572"
+        ],
+        "blockedByDeliveryCeiling": [],
+        "repoCount": 1,
+        "verdict": "CANDIDATE"
+      },
+      "broad100b": {
+        "targets": 0,
+        "recovered": 0,
+        "recoveredInstances": [],
+        "blockedByDeliveryCeiling": [],
+        "repoCount": 0,
+        "verdict": "REJECTED_ZERO_RECOVERY"
+      },
+      "crossCorpusVerdict": "REJECTED_CORPUS_SPECIFIC",
+      "rationale": "recovers 2/2 on the corpus it was derived from and 0 of 0 on the independent one — §59 calls this a fit, not generalization",
+      "recommend": false
+    },
+    {
+      "intervention": "GENERATION_POOL_WIDENING",
+      "scope": "CANDIDATE_GENERATION_POOL_BOUND",
+      "describe": "widen the lexical generation pool so the gold symbol is scored at all",
+      "broad100a": {
+        "targets": 6,
+        "recovered": 0,
+        "recoveredInstances": [],
+        "blockedByDeliveryCeiling": [
+          "django__django-17084",
+          "matplotlib__matplotlib-24970",
+          "matplotlib__matplotlib-25332",
+          "pytest-dev__pytest-6197",
+          "sphinx-doc__sphinx-9698",
+          "sympy__sympy-16792"
+        ],
+        "repoCount": 5,
+        "verdict": "REJECTED_ZERO_RECOVERY"
+      },
+      "broad100b": {
+        "targets": 8,
+        "recovered": 2,
+        "recoveredInstances": [
+          "pytest-dev__pytest-10356",
+          "sympy__sympy-18698"
+        ],
+        "blockedByDeliveryCeiling": [
+          "astropy__astropy-13236",
+          "mwaskom__seaborn-3069",
+          "pydata__xarray-4687",
+          "pydata__xarray-6721",
+          "pylint-dev__pylint-6903",
+          "sympy__sympy-13031"
+        ],
+        "repoCount": 6,
+        "verdict": "CANDIDATE"
+      },
+      "crossCorpusVerdict": "NEW_ON_B_ONLY",
+      "rationale": "recovers 2/8 on Broad100-B but nothing on Broad100-A; needs its own independent confirmation",
+      "recommend": false
+    },
+    {
+      "intervention": "INDEX_NESTED_FUNCTIONS",
+      "scope": "INDEX_SYMBOL_MISSING",
+      "describe": "represent nested function definitions as indexed symbols",
+      "broad100a": {
+        "targets": 1,
+        "recovered": 1,
+        "recoveredInstances": [
+          "django__django-15037"
+        ],
+        "blockedByDeliveryCeiling": [],
+        "repoCount": 1,
+        "verdict": "CANDIDATE"
+      },
+      "broad100b": {
+        "targets": 1,
+        "recovered": 1,
+        "recoveredInstances": [
+          "sphinx-doc__sphinx-9602"
+        ],
+        "blockedByDeliveryCeiling": [],
+        "repoCount": 1,
+        "verdict": "CANDIDATE"
+      },
+      "crossCorpusVerdict": "RECOVERS_BOTH_CORPORA",
+      "rationale": "recovers 1/1 on Broad100-A and 1/1 on Broad100-B",
+      "recommend": true
+    },
+    {
+      "intervention": "NO_CHANGE",
+      "scope": "baseline",
+      "describe": "the current product",
+      "broad100a": {
+        "targets": 0,
+        "recovered": 0,
+        "recoveredInstances": [],
+        "blockedByDeliveryCeiling": [],
+        "repoCount": 0,
+        "verdict": "BASELINE"
+      },
+      "broad100b": {
+        "targets": 0,
+        "recovered": 0,
+        "recoveredInstances": [],
+        "blockedByDeliveryCeiling": [],
+        "repoCount": 0,
+        "verdict": "BASELINE"
+      },
+      "crossCorpusVerdict": "NO_POPULATION",
+      "rationale": "neither corpus contains a case this intervention could act on",
+      "recommend": false
+    },
+    {
+      "intervention": "POOL_CAP_25_TO_100",
+      "scope": "CANDIDATE_BOUND_EVICTION",
+      "describe": "quadruple the ordinary candidate pool",
+      "broad100a": {
+        "targets": 3,
+        "recovered": 0,
+        "recoveredInstances": [],
+        "blockedByDeliveryCeiling": [
+          "django__django-13810",
+          "matplotlib__matplotlib-26466",
+          "sphinx-doc__sphinx-7910"
+        ],
+        "repoCount": 3,
+        "verdict": "REJECTED_ZERO_RECOVERY"
+      },
+      "broad100b": {
+        "targets": 6,
+        "recovered": 1,
+        "recoveredInstances": [
+          "django__django-15629"
+        ],
+        "blockedByDeliveryCeiling": [
+          "django__django-15252",
+          "matplotlib__matplotlib-25479",
+          "psf__requests-2931",
+          "pytest-dev__pytest-7490",
+          "sphinx-doc__sphinx-9658"
+        ],
+        "repoCount": 5,
+        "verdict": "CANDIDATE"
+      },
+      "crossCorpusVerdict": "NEW_ON_B_ONLY",
+      "rationale": "recovers 1/6 on Broad100-B but nothing on Broad100-A; needs its own independent confirmation",
+      "recommend": false
+    },
+    {
+      "intervention": "POOL_CAP_25_TO_50",
+      "scope": "CANDIDATE_BOUND_EVICTION",
+      "describe": "double the ordinary candidate pool so gold scored past 25 is admitted",
+      "broad100a": {
+        "targets": 3,
+        "recovered": 0,
+        "recoveredInstances": [],
+        "blockedByDeliveryCeiling": [
+          "django__django-13810",
+          "matplotlib__matplotlib-26466",
+          "sphinx-doc__sphinx-7910"
+        ],
+        "repoCount": 3,
+        "verdict": "REJECTED_ZERO_RECOVERY"
+      },
+      "broad100b": {
+        "targets": 6,
+        "recovered": 1,
+        "recoveredInstances": [
+          "django__django-15629"
+        ],
+        "blockedByDeliveryCeiling": [
+          "django__django-15252",
+          "matplotlib__matplotlib-25479",
+          "psf__requests-2931",
+          "pytest-dev__pytest-7490",
+          "sphinx-doc__sphinx-9658"
+        ],
+        "repoCount": 5,
+        "verdict": "CANDIDATE"
+      },
+      "crossCorpusVerdict": "NEW_ON_B_ONLY",
+      "rationale": "recovers 1/6 on Broad100-B but nothing on Broad100-A; needs its own independent confirmation",
+      "recommend": false
+    }
+  ],
+  "recommended": [
+    "INDEX_NESTED_FUNCTIONS"
+  ]
+}

@@ -28,7 +28,7 @@
 
 import { spawn } from "node:child_process";
 import { execFile } from "node:child_process";
-import { mkdir, readFile, writeFile } from "node:fs/promises";
+import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import { promisify } from "node:util";
@@ -45,6 +45,24 @@ const DEFAULT_BENCH_REPOS_ROOT = "/home/calvin/code/vexp-swe-bench/.bench-repos"
 const VTRACE_BIN = path.join(REPO_ROOT, "bin", "vtrace");
 const INDEX_RELPATH = path.join(".vtrace", "index.sqlite");
 
+/**
+ * Attempts before an extraction is called broken.
+ *
+ * The first full preparation run lost 14 of 100 workspaces, 13 to
+ * `tar: Unexpected EOF in archive` and one — django-12741 — to a SILENT
+ * truncation: 1902 of 3381 paths on disk, tar exit 0, gold files in the missing
+ * 44%. The cause is concurrency against a shared bench clone: one worker's
+ * `git fetch` repacks the object store while another worker is streaming
+ * `git archive` out of it.
+ *
+ * That is, in all likelihood, exactly how django-13590 and django-15572 entered
+ * Broad100-A, where they then counted as VTRACE retrieval failures for two
+ * milestones. So the fix is two-layered and neither layer is optional:
+ * work is now SERIAL WITHIN A REPOSITORY (parallel across repositories), and a
+ * workspace that still comes out incomplete is retried rather than measured.
+ */
+const ARCHIVE_ATTEMPTS = 3;
+
 /** §33 — the product's own availability vocabulary, never collapsed into pass/fail. */
 export type Availability = "VALID" | "DEGRADED_VALID" | "UNAVAILABLE" | "PREPARATION_INVALID";
 
@@ -59,6 +77,8 @@ export interface PreparedWorkspace {
   readonly sourceFilesOnDisk: number;
   readonly archiveOmissions: number;
   readonly missingGoldFiles: readonly string[];
+  /** Extraction attempts spent; >1 means an incomplete archive was survived. */
+  readonly archiveAttempts: number;
   readonly index: {
     readonly filesScanned: number;
     readonly filesIndexed: number;
@@ -140,21 +160,29 @@ export function expectedWorkspacePaths(treeOutput: string, repo: string): string
 
 async function runIndex(workspace: string): Promise<{ report: IndexReport | null; ms: number; error: string }> {
   const started = Date.now();
-  return exec(VTRACE_BIN, ["index", workspace, "--json"], {
-    cwd: REPO_ROOT,
-    maxBuffer: 512 * 1024 * 1024,
-  })
-    .then(({ stdout }) => ({ report: JSON.parse(stdout) as IndexReport, ms: Date.now() - started, error: "" }))
-    .catch((error: { stdout?: string; stderr?: string }) => {
-      // A repository-fatal index failure is an availability fact, not a crash.
-      try {
-        if (error.stdout && error.stdout.trim().startsWith("{")) {
-          return { report: JSON.parse(error.stdout) as IndexReport, ms: Date.now() - started, error: "" };
-        }
-      } catch {
-        /* fall through to the error path */
+  // `vtrace index` reports a repository-fatal failure as a human message on
+  // stderr and exits 0, so an empty stdout is the availability signal — parsing
+  // it and reporting the parse error would blame the harness for the product's
+  // own truthful refusal.
+  const finish = (report: IndexReport | null, error: string) => ({ report, ms: Date.now() - started, error });
+  return exec(VTRACE_BIN, ["index", workspace, "--json"], { cwd: REPO_ROOT, maxBuffer: 512 * 1024 * 1024 })
+    .then(({ stdout, stderr }) => {
+      const trimmed = stdout.trim();
+      if (!trimmed.startsWith("{")) {
+        return finish(null, (stderr || "index produced no JSON report").trim().slice(0, 400));
       }
-      return { report: null, ms: Date.now() - started, error: (error.stderr ?? String(error)).slice(0, 400) };
+      return finish(JSON.parse(trimmed) as IndexReport, "");
+    })
+    .catch((error: { stdout?: string; stderr?: string }) => {
+      const stdout = (error.stdout ?? "").trim();
+      if (stdout.startsWith("{")) {
+        try {
+          return finish(JSON.parse(stdout) as IndexReport, "");
+        } catch {
+          /* fall through */
+        }
+      }
+      return finish(null, (error.stderr ?? String(error)).trim().slice(0, 400));
     });
 }
 
@@ -181,6 +209,7 @@ async function prepareOne(
     sourceFilesOnDisk: 0,
     archiveOmissions: 0,
     missingGoldFiles: [],
+    archiveAttempts: 0,
     index: null,
     indexMs: 0,
     ...extra,
@@ -192,7 +221,11 @@ async function prepareOne(
 
   const present = await git(clone, ["cat-file", "-e", `${kase.baseCommit}^{commit}`]);
   if (!present.ok) {
-    const fetch = await git(clone, ["fetch", "--depth", "1", "--quiet", "origin", kase.baseCommit]);
+    // `gc.auto=0`: a fetch can leave git repacking the object store in the
+    // BACKGROUND, and that repack races the next `git archive` out of the same
+    // clone even when this runner's own work is serialized per repository. It is
+    // the residual half of the truncation mechanism.
+    const fetch = await git(clone, ["-c", "gc.auto=0", "fetch", "--depth", "1", "--quiet", "origin", kase.baseCommit]);
     if (!fetch.ok) return fail("PREPARATION_INVALID", `fetch failed: ${fetch.stderr.trim().slice(0, 200)}`);
   }
 
@@ -200,33 +233,51 @@ async function prepareOne(
   if (!tree.ok) return fail("PREPARATION_INVALID", `ls-tree failed: ${tree.stderr.trim().slice(0, 200)}`);
   const expected = expectedWorkspacePaths(tree.stdout, kase.repo);
 
-  await mkdir(workspace, { recursive: true });
-  try {
-    await archiveExtract(archiveFrom, kase.baseCommit, workspace);
-  } catch (error) {
-    return fail("PREPARATION_INVALID", `archive/extract failed: ${error instanceof Error ? error.message : String(error)}`);
-  }
-
-  // THE COMPLETENESS GATE. `git archive` legitimately drops paths marked
-  // `export-ignore`, so a plain count mismatch is informational — but a MISSING
-  // GOLD FILE is fatal, because that is precisely the django-13590 shape.
-  const onDisk = expected.filter((relative) => existsSync(path.join(workspace, relative)));
-  const omissions = expected.length - onDisk.length;
   const goldInScope = kase.expectedFiles.filter(
     (file) => withinArchiveSubtree(kase.repo, file) && !kase.goldFilesCreatedByPatch.includes(file),
   );
-  const missingGold = goldInScope.filter(
-    (file) => !existsSync(path.join(workspace, goldPathInWorkspace(kase.repo, file))),
-  );
-  if (missingGold.length > 0) {
+
+  // THE COMPLETENESS GATE, inside a retry loop. `git archive` legitimately drops
+  // paths marked `export-ignore`, so a plain count mismatch is informational —
+  // but a MISSING GOLD FILE is the django-13590 shape and is never accepted.
+  let onDisk: string[] = [];
+  let omissions = 0;
+  let missingGold: string[] = [];
+  let attempts = 0;
+  let lastError = "";
+  let complete = false;
+  for (let attempt = 0; attempt < ARCHIVE_ATTEMPTS; attempt += 1) {
+    attempts += 1;
+    await rm(workspace, { recursive: true, force: true });
+    await mkdir(workspace, { recursive: true });
+    try {
+      await archiveExtract(archiveFrom, kase.baseCommit, workspace);
+    } catch (error) {
+      lastError = error instanceof Error ? error.message : String(error);
+      continue;
+    }
+    onDisk = expected.filter((relative) => existsSync(path.join(workspace, relative)));
+    omissions = expected.length - onDisk.length;
+    missingGold = goldInScope.filter(
+      (file) => !existsSync(path.join(workspace, goldPathInWorkspace(kase.repo, file))),
+    );
+    if (missingGold.length === 0) {
+      complete = true;
+      break;
+    }
+    lastError = `workspace missing gold file(s) present at the base commit: ${missingGold.join(", ")} ` +
+      `(${onDisk.length}/${expected.length} paths extracted)`;
+  }
+  if (!complete) {
     return fail(
       "PREPARATION_INVALID",
-      `workspace is missing gold file(s) that exist at the base commit: ${missingGold.join(", ")}`,
+      `extraction incomplete after ${attempts} attempts: ${lastError}`,
       {
         sourceFilesExpected: expected.length,
         sourceFilesOnDisk: onDisk.length,
         archiveOmissions: omissions,
         missingGoldFiles: missingGold,
+        archiveAttempts: attempts,
       },
     );
   }
@@ -240,6 +291,7 @@ async function prepareOne(
     sourceFilesOnDisk: onDisk.length,
     archiveOmissions: omissions,
     missingGoldFiles: [] as string[],
+    archiveAttempts: attempts,
   };
   if (report === null || !existsSync(path.join(workspace, INDEX_RELPATH))) {
     return fail("UNAVAILABLE", `vtrace index failed: ${error || "no index produced"}`, { ...shared, indexMs: ms });
@@ -247,7 +299,7 @@ async function prepareOne(
 
   const parseFailures = report.totalParseFailures ?? 0;
   const readFailures = report.totalReadFailures ?? 0;
-  const complete = report.coverage?.complete ?? true;
+  const coverageComplete = report.coverage?.complete ?? true;
   const index = {
     filesScanned: report.totalFilesScanned ?? 0,
     filesIndexed: report.totalFilesSuccessfullyIndexed ?? 0,
@@ -255,12 +307,12 @@ async function prepareOne(
     readFailures,
     symbols: report.totalSymbols ?? 0,
     relationships: report.totalRelationships ?? 0,
-    coverageComplete: complete,
+    coverageComplete,
     failedLanguages: report.coverage?.failedLanguages ?? [],
   };
   // §32 — contained per-file parse failures leave the repository usable and
   // degraded. They are NEVER promoted to unavailable.
-  const availability: Availability = parseFailures + readFailures > 0 || !complete ? "DEGRADED_VALID" : "VALID";
+  const availability: Availability = parseFailures + readFailures > 0 || !coverageComplete ? "DEGRADED_VALID" : "VALID";
   return {
     ...base,
     availability,
@@ -281,6 +333,7 @@ interface Config {
   readonly out: string;
   readonly concurrency: number;
   readonly limit: number | null;
+  readonly instances: readonly string[] | null;
 }
 
 export function parseArgs(argv: readonly string[]): Config {
@@ -290,6 +343,7 @@ export function parseArgs(argv: readonly string[]): Config {
   let out = RESULTS;
   let concurrency = 5;
   let limit: number | null = null;
+  let instances: string[] | null = null;
   for (let i = 0; i < argv.length; i += 1) {
     const arg = argv[i]!;
     const value = (): string => {
@@ -303,37 +357,80 @@ export function parseArgs(argv: readonly string[]): Config {
     else if (arg === "--out") out = value();
     else if (arg === "--concurrency") concurrency = Number(value());
     else if (arg === "--limit") limit = Number(value());
+    else if (arg === "--instances") instances = value().split(",").map((s) => s.trim()).filter(Boolean);
     else throw new Error(`Unknown argument ${arg}`);
   }
-  return { manifest, outRoot, benchReposRoot, out, concurrency, limit };
+  return { manifest, outRoot, benchReposRoot, out, concurrency, limit, instances };
 }
 
 async function main(config: Config): Promise<void> {
   const manifest = JSON.parse(await readFile(config.manifest, "utf8")) as { cases: PoolCandidate[] };
-  const cases = config.limit === null ? manifest.cases : manifest.cases.slice(0, config.limit);
+  const selected = config.instances === null
+    ? manifest.cases
+    : manifest.cases.filter((kase) => config.instances!.includes(kase.instanceId));
+  const cases = config.limit === null ? selected : selected.slice(0, config.limit);
   await mkdir(config.outRoot, { recursive: true });
+
+  // Serial WITHIN a repository, parallel ACROSS repositories. Two workers on one
+  // bench clone corrupt each other's archives: a fetch repacks the object store
+  // out from under a running `git archive`, and the resulting half-tree indexes
+  // without complaint. This scheduling is the primary fix; the retry loop is the
+  // backstop.
+  const byRepo = new Map<string, PoolCandidate[]>();
+  for (const kase of cases) {
+    const bucket = byRepo.get(kase.repo) ?? [];
+    bucket.push(kase);
+    byRepo.set(kase.repo, bucket);
+  }
+  const queues = [...byRepo.entries()].sort((a, b) => b[1].length - a[1].length).map(([, bucket]) => bucket);
 
   const results: PreparedWorkspace[] = [];
   const started = Date.now();
-  let cursor = 0;
+  let queueCursor = 0;
   let done = 0;
   await Promise.all(
-    Array.from({ length: Math.max(1, config.concurrency) }, async () => {
+    Array.from({ length: Math.max(1, Math.min(config.concurrency, queues.length)) }, async () => {
       for (;;) {
-        const index = cursor;
-        cursor += 1;
-        const kase = cases[index];
-        if (kase === undefined) return;
-        const prepared = await prepareOne(kase, config.benchReposRoot, config.outRoot);
-        results.push(prepared);
-        done += 1;
-        console.log(
-          `[${done}/${cases.length}] ${prepared.availability} ${kase.instanceId} ` +
-            `(${prepared.index?.filesIndexed ?? 0} files, ${Math.round(prepared.indexMs / 1000)}s)`,
-        );
+        const index = queueCursor;
+        queueCursor += 1;
+        const queue = queues[index];
+        if (queue === undefined) return;
+        for (const kase of queue) {
+          const prepared = await prepareOne(kase, config.benchReposRoot, config.outRoot);
+          results.push(prepared);
+          done += 1;
+          console.log(
+            `[${done}/${cases.length}] ${prepared.availability} ${kase.instanceId} ` +
+              `(${prepared.index?.filesIndexed ?? 0} files, ${Math.round(prepared.indexMs / 1000)}s` +
+              `${prepared.archiveAttempts > 1 ? `, ${prepared.archiveAttempts} archive attempts` : ""})`,
+          );
+        }
       }
     }),
   );
+  // THE SERIAL REPAIR PASS. Serializing per repository and disabling auto-gc
+  // reduced the truncation rate but did not reach zero, and the cases that still
+  // fail are DIFFERENT ones on every run — the signature of contention, not of a
+  // bad instance. Each of them succeeds when retried alone. So the last thing the
+  // run does is retry every refusal with nothing else in flight; a workspace that
+  // fails even then is a genuine fact about the instance rather than about how
+  // busy the machine was.
+  const refusedAfterMainPass = results.filter((row) => row.availability === "PREPARATION_INVALID");
+  if (refusedAfterMainPass.length > 0) {
+    console.log(`\nserial repair pass over ${refusedAfterMainPass.length} refused workspace(s)`);
+    for (const refused of refusedAfterMainPass) {
+      const kase = cases.find((entry) => entry.instanceId === refused.instanceId);
+      if (kase === undefined) continue;
+      const repaired = await prepareOne(kase, config.benchReposRoot, config.outRoot);
+      const index = results.findIndex((row) => row.instanceId === refused.instanceId);
+      if (index >= 0) results[index] = repaired;
+      console.log(
+        `  repair ${repaired.availability} ${kase.instanceId} ` +
+          `(${repaired.index?.filesIndexed ?? 0} files, ${Math.round(repaired.indexMs / 1000)}s)`,
+      );
+    }
+  }
+
   results.sort((a, b) => (a.instanceId < b.instanceId ? -1 : 1));
 
   const counts = new Map<string, number>();
@@ -346,7 +443,8 @@ async function main(config: Config): Promise<void> {
     protocol: {
       archiveSubtreeByRepo: "django from its package directory; every other repository from its root (inherited from Broad100-A)",
       historyIncluded: false,
-      completenessGate: "every base-commit path checked on disk; a missing in-scope gold file refuses the workspace",
+      completenessGate: "every base-commit path checked on disk; a missing in-scope gold file retries, then refuses the workspace",
+      concurrency: "serial within a repository, parallel across repositories, then a SERIAL repair pass over any refusal — concurrent access to one bench clone silently truncates archives",
       indexMode: "fresh full index per workspace, from the frozen product build",
       quarantine: "none — M156 removed benchmark quarantine and M160 does not resurrect it (§31)",
     },

@@ -1,0 +1,121 @@
+{
+  "schemaVersion": "stage5.m159.first-divergence-taxonomy.v1",
+  "corpusRoot": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m160_broad_b",
+  "residualCases": 27,
+  "localized": 27,
+  "unexplained": 0,
+  "taxonomy": [
+    {
+      "firstDivergence": "CANDIDATE_GENERATION_POOL_BOUND",
+      "cases": 8,
+      "repos": [
+        "astropy/astropy",
+        "mwaskom/seaborn",
+        "pydata/xarray",
+        "pylint-dev/pylint",
+        "pytest-dev/pytest",
+        "sympy/sympy"
+      ],
+      "repoCount": 6,
+      "instances": [
+        "astropy__astropy-13236",
+        "mwaskom__seaborn-3069",
+        "pydata__xarray-4687",
+        "pydata__xarray-6721",
+        "pylint-dev__pylint-6903",
+        "pytest-dev__pytest-10356",
+        "sympy__sympy-13031",
+        "sympy__sympy-18698"
+      ],
+      "byGroup": {
+        "DEEP_RANKED_OR_PREDELIVERY_LOSS": 4,
+        "NEVER_RETRIEVED_CAUSE_UNKNOWN": 4
+      }
+    },
+    {
+      "firstDivergence": "LANE_GENERATION_FAILURE",
+      "cases": 8,
+      "repos": [
+        "django/django",
+        "matplotlib/matplotlib",
+        "pytest-dev/pytest",
+        "scikit-learn/scikit-learn",
+        "sphinx-doc/sphinx"
+      ],
+      "repoCount": 5,
+      "instances": [
+        "django__django-14500",
+        "matplotlib__matplotlib-20859",
+        "matplotlib__matplotlib-21568",
+        "matplotlib__matplotlib-23314",
+        "pytest-dev__pytest-7324",
+        "scikit-learn__scikit-learn-13142",
+        "sphinx-doc__sphinx-7454",
+        "sphinx-doc__sphinx-7757"
+      ],
+      "byGroup": {
+        "DEEP_RANKED_OR_PREDELIVERY_LOSS": 3,
+        "NEVER_RETRIEVED_CAUSE_UNKNOWN": 5
+      }
+    },
+    {
+      "firstDivergence": "CANDIDATE_BOUND_EVICTION",
+      "cases": 6,
+      "repos": [
+        "django/django",
+        "matplotlib/matplotlib",
+        "psf/requests",
+        "pytest-dev/pytest",
+        "sphinx-doc/sphinx"
+      ],
+      "repoCount": 5,
+      "instances": [
+        "django__django-15252",
+        "django__django-15629",
+        "matplotlib__matplotlib-25479",
+        "psf__requests-2931",
+        "pytest-dev__pytest-7490",
+        "sphinx-doc__sphinx-9658"
+      ],
+      "byGroup": {
+        "DEEP_RANKED_OR_PREDELIVERY_LOSS": 3,
+        "NEVER_RETRIEVED_CAUSE_UNKNOWN": 3
+      }
+    },
+    {
+      "firstDivergence": "SUPPORT_PACKING",
+      "cases": 4,
+      "repos": [
+        "astropy/astropy",
+        "pylint-dev/pylint",
+        "sympy/sympy"
+      ],
+      "repoCount": 3,
+      "instances": [
+        "astropy__astropy-14995",
+        "pylint-dev__pylint-4661",
+        "pylint-dev__pylint-6528",
+        "sympy__sympy-16450"
+      ],
+      "byGroup": {
+        "DEEP_RANKED_OR_PREDELIVERY_LOSS": 4,
+        "NEVER_RETRIEVED_CAUSE_UNKNOWN": 0
+      }
+    },
+    {
+      "firstDivergence": "INDEX_SYMBOL_MISSING",
+      "cases": 1,
+      "repos": [
+        "sphinx-doc/sphinx"
+      ],
+      "repoCount": 1,
+      "instances": [
+        "sphinx-doc__sphinx-9602"
+      ],
+      "byGroup": {
+        "DEEP_RANKED_OR_PREDELIVERY_LOSS": 0,
+        "NEVER_RETRIEVED_CAUSE_UNKNOWN": 1
+      }
+    }
+  ]
+}

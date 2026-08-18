@@ -2546,3 +2546,97 @@ byte-identical to M158's candidate (0 duplicate slots, 380 support slots, 79 gol
   M153's evidence was sphinx-weighted, so §68 forbids building on it here. It needs
   a corpus **built to measure it** — that, not another broad100 pass, is the next
   milestone.
+
+## M160 — Independent broad retrieval generalization (commits 227b6fbe, 867c9b58)
+
+M160 is **PASS** as a replication milestone. **A · B · C · D · E all PASS.** No
+product code changed; `git status --porcelain src/` was empty throughout. A clean
+falsification is a PASS (§96), and that is what this is.
+
+The question was whether M159's causal picture describes VTRACE or describes a
+hundred tasks that five milestones had read. Reconstructing Broad100-A's identity
+mechanically produced the fact the milestone turned on: **Broad100-A is exactly
+the vexp harness's `swe-bench-100.jsonl`**, so the unconsumed population it must be
+disjoint from is empty in that file. It exists only because Broad100-A is a strict
+subset of SWE-bench Verified, leaving 400 instances in the same benchmark family.
+**Broad100-B**: 100 cases, 11 repositories, max 11 per repo (against A's 44 django),
+sympy at 10%, **0 overlap** asserted mechanically, manifest hash
+`68854de5…`, frozen before any retrieval ran.
+
+**The class replicates; the mechanism does not.** `LANE_GENERATION_FAILURE` 8 cases
+/ 5 repos (8.0%) against A's 8 / 4 (8.2%); `CANDIDATE_GENERATION_POOL_BOUND` 8 / 6
+against 6 / 5; `CANDIDATE_BOUND_EVICTION` 6 / 5 against 3 / 3; **`SUPPORT_PACKING`
+4 / 3, a population A did not have**; `INDEX_FILE_MISSING` 0 (A's 2 were the corpus
+defects, and B's integrity gate stopped their equivalents entering).
+`RELEVANCE_RANKING` and `QUERY_INTERPRETATION` are **zero on both corpora**. 27/27
+residuals localized, **0 unexplained**.
+
+But inside the largest class the subtypes invert: A is 6-of-8 subject-owner/
+result-effect with **5 of those 6 sympy**; B is 3-of-8 across matplotlib and
+scikit-learn with **zero sympy**, and B's dominant subtype is *the query naming no
+identifier the index represents* — 5 cases / 4 repos, nothing to bridge **from**.
+The simulation settles it: the subject→owner bridge in its most favourable form
+(class members plus inherited members, recovery credited at any rank) recovers
+**0 of 6 on Broad100-A** — five of those six queries name no class at all — and
+1 of 3 on B at 45 injected candidates against a pool of 25. Decision:
+**NO_SINGLE_DOMINANT_CEILING**; §69 **NOT REPLICATED — do not build**; recommended
+next step is a **fresh paired live agent-utility qualification** on the post-M159
+product, which needs authorization and was not started.
+
+Quality: Top-1 0.41 (A 0.58), Top-3 0.64 (0.74), gold anywhere 0.87 (0.89), gold
+delivered 0.71 (0.79), empty 0.01, median tokens 1497, median latency 588 ms.
+Reweighting B to A's repository mix moves Top-1 only to 0.44 — B is genuinely
+harder. Availability 89 usable / 11 usable-degraded / **0 unavailable** with 81
+contained parse failures. Preservation measured: `sphinx-9320`, `django-11740`,
+`xarray-6599` byte-identical; duplicate support 0 on both with negative controls
+6 and 7; `<module>` deliveries 0; index writes 0; routing OFF. Detector controls
+14/14. `bun test` 4895 pass · 49 skip · 0 fail; typechecks and `git diff --check`
+clean.
+
+## M160 standing findings
+
+- **A causal distribution can replicate while its mechanism does not.** All three
+  of Broad100-A's largest first-divergence classes reappear on unfamiliar tasks at
+  comparable rates and slightly wider repository spread — and the story M159 told
+  about the largest of them survives none of it. Class-level replication is cheap
+  and reassuring; mechanism-level replication is what a feature actually needs.
+  Only subtyping BOTH corpora tells them apart, and the two answers here point in
+  opposite directions.
+
+- **The corpus that produced a theory is the worst place to test its cure.** The
+  subject→owner bridge recovers **0 of 6** on Broad100-A, because five of those six
+  queries name no class the index represents — the bridge has no starting point on
+  the cases that inspired it. The theory was built from evidence it structurally
+  cannot address, and nothing short of simulating the actual intervention over the
+  actual population would have shown that. M158's lesson, one level up.
+
+- **Benchmark preparation is a measurement instrument, and it fails like one.**
+  M159 found two Broad100-A instances half-extracted; M160 reproduced the failure
+  live — `django-12741` at **1902 of 3381 paths with `tar` exiting 0**, plus 13
+  more workspaces lost outright. The cause is a `git fetch` repacking a bench clone
+  while a `git archive` streams out of it. An index over a half-tree builds
+  perfectly well, so nothing downstream can notice. A per-path check against
+  `git ls-tree` costs milliseconds and is the only thing between that and a silent
+  "retrieval failure".
+
+- **One attempt is not a measurement.** The integrity gate's first run declared 16
+  instances `CORPUS_INVALID` across 8 unrelated repositories; every one fetched on
+  a manual retry seconds later. Twice now a transient error has nearly become a
+  permanent claim — M159's was a broken fixture blamed on the product, M160's was
+  a flaky network blamed on the benchmark. Retries belong in any probe whose
+  failure mode is indistinguishable from a finding.
+
+- **Naming a symbol is not naming its owner.** `fit_predict` has **nine** indexed
+  definitions in scikit-learn and the class the task names *inherits* it rather
+  than defining it. The first subtype classifier treated a mentioned identifier as
+  an owner handle and hid a real bridging failure behind it. Any detector — or
+  product lane — that makes that assumption will be wrong exactly where
+  inheritance does the work.
+
+- **The remaining gap is in delivery, not discovery.** `gold anywhere` barely moves
+  between corpora (89% → 87%) while Top-1 falls 58% → 41% and delivery 79% → 71%,
+  and repository-mix reweighting explains about 3 of those 17 points. On unfamiliar
+  tasks the product finds the right file at nearly the same rate and leads with the
+  wrong one far more often — a failure none of the six first-divergence classes
+  names, and one that no bound, pool or ranking change in this milestone's
+  simulation set addresses.

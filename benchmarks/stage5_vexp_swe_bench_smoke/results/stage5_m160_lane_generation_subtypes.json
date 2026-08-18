@@ -1,0 +1,993 @@
+{
+  "schemaVersion": "stage5.m160.lane-generation-subtypes.v1",
+  "milestone": "M160",
+  "kind": "structural subtyping of LANE_GENERATION_FAILURE on both corpora (§48-§57)",
+  "method": {
+    "default": "a subtype must be earned, not inferred from gold's absence (§50, §51)",
+    "detectorCorrection": "§44 — the first classifier short-circuited any task that mentioned a gold symbol. scikit-learn-13142 falsified it: the task says `fit_predict`, which has NINE indexed definitions, and the class the task names does not define it at all. Naming an ambiguous method conveys no owner information. A name now counts as naming an owner only when the index says it is nearly unique, and dunder names never count. Audit detector only; no product behaviour changed.",
+    "unambiguousDefinitionLimit": 2,
+    "bridgeDepth": 2,
+    "bridgeTest": "resolve the query's own identifiers to indexed symbols and walk the relation graph outward; if gold is reachable, the subject→owner bridge exists and the loss is elsewhere",
+    "resultEffectTest": "two or more distinct indexed owners carry the query's subject",
+    "taskLanguage": "evaluator analysis only; no query heuristic is added to the product (§57)"
+  },
+  "broad100a": {
+    "cases": 8,
+    "bySubtype": {
+      "SUBJECT_OWNER + RESULT_EFFECT": {
+        "cases": 3,
+        "repoCount": 2,
+        "repos": [
+          "django/django",
+          "sympy/sympy"
+        ],
+        "instances": [
+          "django__django-14792",
+          "sympy__sympy-20428",
+          "sympy__sympy-20801"
+        ],
+        "largestRepo": "sympy/sympy",
+        "largestRepoShare": 0.667,
+        "sympyShare": 0.667,
+        "taskLanguage": {
+          "BEHAVIOR_DRIVEN": 1,
+          "IDENTIFIER_DRIVEN": 1,
+          "RESULT_EFFECT_DRIVEN": 1
+        }
+      },
+      "SUBJECT_UNREPRESENTED": {
+        "cases": 2,
+        "repoCount": 2,
+        "repos": [
+          "pylint-dev/pylint",
+          "sphinx-doc/sphinx"
+        ],
+        "instances": [
+          "pylint-dev__pylint-4551",
+          "sphinx-doc__sphinx-9230"
+        ],
+        "largestRepo": "pylint-dev/pylint",
+        "largestRepoShare": 0.5,
+        "sympyShare": 0,
+        "taskLanguage": {
+          "IDENTIFIER_DRIVEN": 1,
+          "BEHAVIOR_DRIVEN": 1
+        }
+      },
+      "RESULT_EFFECT": {
+        "cases": 2,
+        "repoCount": 1,
+        "repos": [
+          "sympy/sympy"
+        ],
+        "instances": [
+          "sympy__sympy-15875",
+          "sympy__sympy-16597"
+        ],
+        "largestRepo": "sympy/sympy",
+        "largestRepoShare": 1,
+        "sympyShare": 1,
+        "taskLanguage": {
+          "IDENTIFIER_DRIVEN": 2
+        }
+      },
+      "SUBJECT_OWNER": {
+        "cases": 1,
+        "repoCount": 1,
+        "repos": [
+          "pylint-dev/pylint"
+        ],
+        "instances": [
+          "pylint-dev__pylint-8898"
+        ],
+        "largestRepo": "pylint-dev/pylint",
+        "largestRepoShare": 1,
+        "sympyShare": 0,
+        "taskLanguage": {
+          "IDENTIFIER_DRIVEN": 1
+        }
+      }
+    },
+    "failures": [],
+    "evidence": [
+      {
+        "instanceId": "django__django-14792",
+        "repo": "django/django",
+        "goldSymbols": [
+          "_get_timezone_name",
+          "get_current_timezone_name"
+        ],
+        "queryIdentifiers": [
+          "Trunc",
+          "tzinfo",
+          "Extract"
+        ],
+        "identifiersIndexed": [
+          "Trunc",
+          "tzinfo",
+          "Extract"
+        ],
+        "identifiersUnrepresented": [],
+        "goldReachableFromQuery": false,
+        "bridgeDepth": null,
+        "sameSubjectOwners": 2,
+        "sameSubjectOwnerPaths": [
+          "db/models/functions/datetime.py",
+          "utils/archive.py"
+        ],
+        "taskLanguage": {
+          "primary": "BEHAVIOR_DRIVEN",
+          "flags": {
+            "identifierDriven": false,
+            "pathDriven": false,
+            "errorMessageDriven": false,
+            "testFailureDriven": false,
+            "apiDriven": false,
+            "configurationDriven": false,
+            "resultEffectDriven": false,
+            "behaviorDriven": false
+          },
+          "namesGoldSymbol": false,
+          "namesGoldFileStem": false
+        },
+        "namedGoldSymbols": [],
+        "goldNameDefinitionCounts": {
+          "_get_timezone_name": 1,
+          "get_current_timezone_name": 1
+        },
+        "namesOwnerUnambiguously": false,
+        "subtype": "SUBJECT_OWNER + RESULT_EFFECT",
+        "rationale": "the query's subject is indexed but no relation reaches gold within 2 hops, and 2 indexed owners share the subject so it cannot be disambiguated by subject alone"
+      },
+      {
+        "instanceId": "pylint-dev__pylint-4551",
+        "repo": "pylint-dev/pylint",
+        "goldSymbols": [
+          "class_names",
+          "get_annotation",
+          "get_annotation_label",
+          "get_values",
+          "handle_assignattr_type",
+          "infer_node",
+          "visit",
+          "visit_assignname",
+          "visit_import"
+        ],
+        "queryIdentifiers": [
+          "None",
+          "Python",
+          "hints",
+          "www.python.org"
+        ],
+        "identifiersIndexed": [],
+        "identifiersUnrepresented": [
+          "None",
+          "Python",
+          "hints",
+          "www.python.org"
+        ],
+        "goldReachableFromQuery": false,
+        "bridgeDepth": null,
+        "sameSubjectOwners": 0,
+        "sameSubjectOwnerPaths": [],
+        "taskLanguage": {
+          "primary": "IDENTIFIER_DRIVEN",
+          "flags": {
+            "identifierDriven": true,
+            "pathDriven": false,
+            "errorMessageDriven": false,
+            "testFailureDriven": false,
+            "apiDriven": false,
+            "configurationDriven": false,
+            "resultEffectDriven": false,
+            "behaviorDriven": true
+          },
+          "namesGoldSymbol": false,
+          "namesGoldFileStem": false
+        },
+        "namedGoldSymbols": [],
+        "goldNameDefinitionCounts": {
+          "class_names": 1,
+          "get_annotation": 0,
+          "get_annotation_label": 0,
+          "get_values": 3,
+          "handle_assignattr_type": 1,
+          "infer_node": 0,
+          "visit": 3,
+          "visit_assignname": 3,
+          "visit_import": 6
+        },
+        "namesOwnerUnambiguously": false,
+        "subtype": "SUBJECT_UNREPRESENTED",
+        "rationale": "the query named no identifier that the index represents at all — there is nothing to bridge FROM"
+      },
+      {
+        "instanceId": "pylint-dev__pylint-8898",
+        "repo": "pylint-dev/pylint",
+        "goldSymbols": [
+          "_check_csv",
+          "_check_regexp_csv",
+          "_comment",
+          "_regex_transformer",
+          "_regexp_csv_transfomer"
+        ],
+        "queryIdentifiers": [
+          "run_pylint",
+          "config_initialization",
+          "sre_compile",
+          "sre_parse"
+        ],
+        "identifiersIndexed": [
+          "run_pylint"
+        ],
+        "identifiersUnrepresented": [
+          "config_initialization",
+          "sre_compile",
+          "sre_parse"
+        ],
+        "goldReachableFromQuery": false,
+        "bridgeDepth": null,
+        "sameSubjectOwners": 1,
+        "sameSubjectOwnerPaths": [
+          "pylint/__init__.py"
+        ],
+        "taskLanguage": {
+          "primary": "IDENTIFIER_DRIVEN",
+          "flags": {
+            "identifierDriven": true,
+            "pathDriven": true,
+            "errorMessageDriven": true,
+            "testFailureDriven": false,
+            "apiDriven": false,
+            "configurationDriven": true,
+            "resultEffectDriven": false,
+            "behaviorDriven": false
+          },
+          "namesGoldSymbol": false,
+          "namesGoldFileStem": true
+        },
+        "namedGoldSymbols": [],
+        "goldNameDefinitionCounts": {
+          "_check_csv": 1,
+          "_check_regexp_csv": 0,
+          "_comment": 1,
+          "_regex_transformer": 1,
+          "_regexp_csv_transfomer": 1
+        },
+        "namesOwnerUnambiguously": false,
+        "subtype": "SUBJECT_OWNER",
+        "rationale": "the query's subject is indexed but no relation reaches gold within 2 hops"
+      },
+      {
+        "instanceId": "sphinx-doc__sphinx-9230",
+        "repo": "sphinx-doc/sphinx",
+        "goldSymbols": [
+          "transform"
+        ],
+        "queryIdentifiers": [
+          "dict"
+        ],
+        "identifiersIndexed": [],
+        "identifiersUnrepresented": [
+          "dict"
+        ],
+        "goldReachableFromQuery": false,
+        "bridgeDepth": null,
+        "sameSubjectOwners": 0,
+        "sameSubjectOwnerPaths": [],
+        "taskLanguage": {
+          "primary": "BEHAVIOR_DRIVEN",
+          "flags": {
+            "identifierDriven": false,
+            "pathDriven": false,
+            "errorMessageDriven": false,
+            "testFailureDriven": false,
+            "apiDriven": false,
+            "configurationDriven": false,
+            "resultEffectDriven": false,
+            "behaviorDriven": false
+          },
+          "namesGoldSymbol": false,
+          "namesGoldFileStem": false
+        },
+        "namedGoldSymbols": [],
+        "goldNameDefinitionCounts": {
+          "transform": 1
+        },
+        "namesOwnerUnambiguously": false,
+        "subtype": "SUBJECT_UNREPRESENTED",
+        "rationale": "the query named no identifier that the index represents at all — there is nothing to bridge FROM"
+      },
+      {
+        "instanceId": "sympy__sympy-15875",
+        "repo": "sympy/sympy",
+        "goldSymbols": [
+          "_eval_is_zero"
+        ],
+        "queryIdentifiers": [
+          "is_zero",
+          "None"
+        ],
+        "identifiersIndexed": [
+          "is_zero",
+          "None"
+        ],
+        "identifiersUnrepresented": [],
+        "goldReachableFromQuery": true,
+        "bridgeDepth": 2,
+        "sameSubjectOwners": 13,
+        "sameSubjectOwnerPaths": [
+          "sympy/codegen/ast.py",
+          "sympy/core/exprtools.py",
+          "sympy/core/numbers.py",
+          "sympy/geometry/point.py",
+          "sympy/matrices/common.py",
+          "sympy/polys/agca/homomorphisms.py",
+          "sympy/polys/agca/ideals.py",
+          "sympy/polys/agca/modules.py"
+        ],
+        "taskLanguage": {
+          "primary": "IDENTIFIER_DRIVEN",
+          "flags": {
+            "identifierDriven": true,
+            "pathDriven": false,
+            "errorMessageDriven": false,
+            "testFailureDriven": false,
+            "apiDriven": false,
+            "configurationDriven": false,
+            "resultEffectDriven": true,
+            "behaviorDriven": true
+          },
+          "namesGoldSymbol": false,
+          "namesGoldFileStem": false
+        },
+        "namedGoldSymbols": [],
+        "goldNameDefinitionCounts": {
+          "_eval_is_zero": 18
+        },
+        "namesOwnerUnambiguously": false,
+        "subtype": "RESULT_EFFECT",
+        "rationale": "13 indexed owners share the query's subject; gold is reachable but indistinguishable by subject"
+      },
+      {
+        "instanceId": "sympy__sympy-16597",
+        "repo": "sympy/sympy",
+        "goldSymbols": [
+          "__new__",
+          "_eval_is_polynomial",
+          "_eval_is_rational",
+          "get_known_facts",
+          "get_known_facts_cnf",
+          "get_known_facts_dict",
+          "print_tree"
+        ],
+        "queryIdentifiers": [
+          "is_even",
+          "is_finite"
+        ],
+        "identifiersIndexed": [
+          "is_even",
+          "is_finite"
+        ],
+        "identifiersUnrepresented": [],
+        "goldReachableFromQuery": true,
+        "bridgeDepth": 2,
+        "sameSubjectOwners": 5,
+        "sameSubjectOwnerPaths": [
+          "sympy/combinatorics/permutations.py",
+          "sympy/core/numbers.py",
+          "sympy/functions/elementary/complexes.py",
+          "sympy/stats/rv.py",
+          "sympy/tensor/indexed.py"
+        ],
+        "taskLanguage": {
+          "primary": "IDENTIFIER_DRIVEN",
+          "flags": {
+            "identifierDriven": true,
+            "pathDriven": false,
+            "errorMessageDriven": false,
+            "testFailureDriven": false,
+            "apiDriven": false,
+            "configurationDriven": false,
+            "resultEffectDriven": false,
+            "behaviorDriven": true
+          },
+          "namesGoldSymbol": false,
+          "namesGoldFileStem": false
+        },
+        "namedGoldSymbols": [],
+        "goldNameDefinitionCounts": {
+          "__new__": 339,
+          "_eval_is_polynomial": 5,
+          "_eval_is_rational": 12,
+          "get_known_facts": 1,
+          "get_known_facts_cnf": 1,
+          "get_known_facts_dict": 1,
+          "print_tree": 2
+        },
+        "namesOwnerUnambiguously": false,
+        "subtype": "RESULT_EFFECT",
+        "rationale": "5 indexed owners share the query's subject; gold is reachable but indistinguishable by subject"
+      },
+      {
+        "instanceId": "sympy__sympy-20428",
+        "repo": "sympy/sympy",
+        "goldSymbols": [
+          "__bool__",
+          "__ne__",
+          "gcd"
+        ],
+        "queryIdentifiers": [
+          "clear_denoms",
+          "wierdly",
+          "ZeroDivisionError",
+          "IndexError",
+          "terms_gcd",
+          "dmp_terms_gcd",
+          "dmp_ground_primitive",
+          "dup_primitive",
+          "dup_quo_ground"
+        ],
+        "identifiersIndexed": [
+          "clear_denoms",
+          "terms_gcd",
+          "dmp_terms_gcd",
+          "dmp_ground_primitive",
+          "dup_primitive",
+          "dup_quo_ground"
+        ],
+        "identifiersUnrepresented": [
+          "wierdly",
+          "ZeroDivisionError",
+          "IndexError"
+        ],
+        "goldReachableFromQuery": false,
+        "bridgeDepth": null,
+        "sameSubjectOwners": 7,
+        "sameSubjectOwnerPaths": [
+          "sympy/polys/compatibility.py",
+          "sympy/polys/densearith.py",
+          "sympy/polys/densebasic.py",
+          "sympy/polys/densetools.py",
+          "sympy/polys/polyclasses.py",
+          "sympy/polys/polytools.py",
+          "sympy/polys/rings.py"
+        ],
+        "taskLanguage": {
+          "primary": "IDENTIFIER_DRIVEN",
+          "flags": {
+            "identifierDriven": true,
+            "pathDriven": true,
+            "errorMessageDriven": true,
+            "testFailureDriven": false,
+            "apiDriven": false,
+            "configurationDriven": false,
+            "resultEffectDriven": true,
+            "behaviorDriven": false
+          },
+          "namesGoldSymbol": false,
+          "namesGoldFileStem": false
+        },
+        "namedGoldSymbols": [],
+        "goldNameDefinitionCounts": {
+          "__bool__": 16,
+          "__ne__": 50,
+          "gcd": 21
+        },
+        "namesOwnerUnambiguously": false,
+        "subtype": "SUBJECT_OWNER + RESULT_EFFECT",
+        "rationale": "the query's subject is indexed but no relation reaches gold within 2 hops, and 7 indexed owners share the subject so it cannot be disambiguated by subject alone"
+      },
+      {
+        "instanceId": "sympy__sympy-20801",
+        "repo": "sympy/sympy",
+        "goldSymbols": [
+          "__eq__",
+          "__ne__"
+        ],
+        "queryIdentifiers": [
+          "S"
+        ],
+        "identifiersIndexed": [
+          "S"
+        ],
+        "identifiersUnrepresented": [],
+        "goldReachableFromQuery": false,
+        "bridgeDepth": null,
+        "sameSubjectOwners": 6,
+        "sameSubjectOwnerPaths": [
+          "sympy/core/singleton.py",
+          "sympy/functions/special/tests/test_zeta_functions.py",
+          "sympy/parsing/autolev/test-examples/ruletest4.py",
+          "sympy/solvers/benchmarks/bench_solvers.py",
+          "sympy/this.py",
+          "sympy/vector/tests/test_printing.py"
+        ],
+        "taskLanguage": {
+          "primary": "RESULT_EFFECT_DRIVEN",
+          "flags": {
+            "identifierDriven": false,
+            "pathDriven": false,
+            "errorMessageDriven": false,
+            "testFailureDriven": false,
+            "apiDriven": false,
+            "configurationDriven": false,
+            "resultEffectDriven": true,
+            "behaviorDriven": false
+          },
+          "namesGoldSymbol": false,
+          "namesGoldFileStem": false
+        },
+        "namedGoldSymbols": [],
+        "goldNameDefinitionCounts": {
+          "__eq__": 99,
+          "__ne__": 50
+        },
+        "namesOwnerUnambiguously": false,
+        "subtype": "SUBJECT_OWNER + RESULT_EFFECT",
+        "rationale": "the query's subject is indexed but no relation reaches gold within 2 hops, and 6 indexed owners share the subject so it cannot be disambiguated by subject alone"
+      }
+    ]
+  },
+  "broad100b": {
+    "cases": 8,
+    "bySubtype": {
+      "SUBJECT_UNREPRESENTED": {
+        "cases": 5,
+        "repoCount": 4,
+        "repos": [
+          "django/django",
+          "matplotlib/matplotlib",
+          "pytest-dev/pytest",
+          "sphinx-doc/sphinx"
+        ],
+        "instances": [
+          "django__django-14500",
+          "matplotlib__matplotlib-21568",
+          "pytest-dev__pytest-7324",
+          "sphinx-doc__sphinx-7454",
+          "sphinx-doc__sphinx-7757"
+        ],
+        "largestRepo": "sphinx-doc/sphinx",
+        "largestRepoShare": 0.4,
+        "sympyShare": 0,
+        "taskLanguage": {
+          "BEHAVIOR_DRIVEN": 3,
+          "IDENTIFIER_DRIVEN": 2
+        }
+      },
+      "SUBJECT_OWNER": {
+        "cases": 1,
+        "repoCount": 1,
+        "repos": [
+          "matplotlib/matplotlib"
+        ],
+        "instances": [
+          "matplotlib__matplotlib-20859"
+        ],
+        "largestRepo": "matplotlib/matplotlib",
+        "largestRepoShare": 1,
+        "sympyShare": 0,
+        "taskLanguage": {
+          "IDENTIFIER_DRIVEN": 1
+        }
+      },
+      "SUBJECT_OWNER + RESULT_EFFECT": {
+        "cases": 1,
+        "repoCount": 1,
+        "repos": [
+          "matplotlib/matplotlib"
+        ],
+        "instances": [
+          "matplotlib__matplotlib-23314"
+        ],
+        "largestRepo": "matplotlib/matplotlib",
+        "largestRepoShare": 1,
+        "sympyShare": 0,
+        "taskLanguage": {
+          "IDENTIFIER_DRIVEN": 1
+        }
+      },
+      "RESULT_EFFECT": {
+        "cases": 1,
+        "repoCount": 1,
+        "repos": [
+          "scikit-learn/scikit-learn"
+        ],
+        "instances": [
+          "scikit-learn__scikit-learn-13142"
+        ],
+        "largestRepo": "scikit-learn/scikit-learn",
+        "largestRepoShare": 1,
+        "sympyShare": 0,
+        "taskLanguage": {
+          "IDENTIFIER_DRIVEN": 1
+        }
+      }
+    },
+    "failures": [],
+    "evidence": [
+      {
+        "instanceId": "django__django-14500",
+        "repo": "django/django",
+        "goldSymbols": [
+          "unapply_migration"
+        ],
+        "queryIdentifiers": [],
+        "identifiersIndexed": [],
+        "identifiersUnrepresented": [],
+        "goldReachableFromQuery": false,
+        "bridgeDepth": null,
+        "sameSubjectOwners": 0,
+        "sameSubjectOwnerPaths": [],
+        "taskLanguage": {
+          "primary": "BEHAVIOR_DRIVEN",
+          "flags": {
+            "identifierDriven": false,
+            "pathDriven": false,
+            "errorMessageDriven": false,
+            "testFailureDriven": false,
+            "apiDriven": false,
+            "configurationDriven": false,
+            "resultEffectDriven": false,
+            "behaviorDriven": false
+          },
+          "namesGoldSymbol": false,
+          "namesGoldFileStem": false
+        },
+        "namedGoldSymbols": [],
+        "goldNameDefinitionCounts": {
+          "unapply_migration": 1
+        },
+        "namesOwnerUnambiguously": false,
+        "subtype": "SUBJECT_UNREPRESENTED",
+        "rationale": "the query named no identifier that the index represents at all — there is nothing to bridge FROM"
+      },
+      {
+        "instanceId": "matplotlib__matplotlib-20859",
+        "repo": "matplotlib/matplotlib",
+        "goldSymbols": [
+          "__init__"
+        ],
+        "queryIdentifiers": [
+          "SubFigure",
+          "bug_test.py",
+          "TypeError",
+          "bug_test"
+        ],
+        "identifiersIndexed": [
+          "SubFigure"
+        ],
+        "identifiersUnrepresented": [
+          "bug_test.py",
+          "TypeError",
+          "bug_test"
+        ],
+        "goldReachableFromQuery": false,
+        "bridgeDepth": null,
+        "sameSubjectOwners": 1,
+        "sameSubjectOwnerPaths": [
+          "lib/matplotlib/figure.py"
+        ],
+        "taskLanguage": {
+          "primary": "IDENTIFIER_DRIVEN",
+          "flags": {
+            "identifierDriven": true,
+            "pathDriven": true,
+            "errorMessageDriven": true,
+            "testFailureDriven": false,
+            "apiDriven": false,
+            "configurationDriven": false,
+            "resultEffectDriven": false,
+            "behaviorDriven": true
+          },
+          "namesGoldSymbol": true,
+          "namesGoldFileStem": true
+        },
+        "namedGoldSymbols": [
+          "__init__"
+        ],
+        "goldNameDefinitionCounts": {
+          "__init__": 616
+        },
+        "namesOwnerUnambiguously": false,
+        "subtype": "SUBJECT_OWNER",
+        "rationale": "the query's subject is indexed but no relation reaches gold within 2 hops"
+      },
+      {
+        "instanceId": "matplotlib__matplotlib-21568",
+        "repo": "matplotlib/matplotlib",
+        "goldSymbols": [
+          "_wrap_in_tex"
+        ],
+        "queryIdentifiers": [],
+        "identifiersIndexed": [],
+        "identifiersUnrepresented": [],
+        "goldReachableFromQuery": false,
+        "bridgeDepth": null,
+        "sameSubjectOwners": 0,
+        "sameSubjectOwnerPaths": [],
+        "taskLanguage": {
+          "primary": "BEHAVIOR_DRIVEN",
+          "flags": {
+            "identifierDriven": false,
+            "pathDriven": false,
+            "errorMessageDriven": false,
+            "testFailureDriven": false,
+            "apiDriven": false,
+            "configurationDriven": false,
+            "resultEffectDriven": false,
+            "behaviorDriven": false
+          },
+          "namesGoldSymbol": false,
+          "namesGoldFileStem": false
+        },
+        "namedGoldSymbols": [],
+        "goldNameDefinitionCounts": {
+          "_wrap_in_tex": 1
+        },
+        "namesOwnerUnambiguously": false,
+        "subtype": "SUBJECT_UNREPRESENTED",
+        "rationale": "the query named no identifier that the index represents at all — there is nothing to bridge FROM"
+      },
+      {
+        "instanceId": "matplotlib__matplotlib-23314",
+        "repo": "matplotlib/matplotlib",
+        "goldSymbols": [
+          "apply_aspect",
+          "draw"
+        ],
+        "queryIdentifiers": [
+          "set_visible"
+        ],
+        "identifiersIndexed": [
+          "set_visible"
+        ],
+        "identifiersUnrepresented": [],
+        "goldReachableFromQuery": false,
+        "bridgeDepth": null,
+        "sameSubjectOwners": 3,
+        "sameSubjectOwnerPaths": [
+          "lib/matplotlib/artist.py",
+          "lib/matplotlib/widgets.py",
+          "lib/mpl_toolkits/axes_grid1/mpl_axes.py"
+        ],
+        "taskLanguage": {
+          "primary": "IDENTIFIER_DRIVEN",
+          "flags": {
+            "identifierDriven": true,
+            "pathDriven": false,
+            "errorMessageDriven": false,
+            "testFailureDriven": false,
+            "apiDriven": false,
+            "configurationDriven": false,
+            "resultEffectDriven": false,
+            "behaviorDriven": false
+          },
+          "namesGoldSymbol": false,
+          "namesGoldFileStem": false
+        },
+        "namedGoldSymbols": [],
+        "goldNameDefinitionCounts": {
+          "apply_aspect": 4,
+          "draw": 82
+        },
+        "namesOwnerUnambiguously": false,
+        "subtype": "SUBJECT_OWNER + RESULT_EFFECT",
+        "rationale": "the query's subject is indexed but no relation reaches gold within 2 hops, and 3 indexed owners share the subject so it cannot be disambiguated by subject alone"
+      },
+      {
+        "instanceId": "pytest-dev__pytest-7324",
+        "repo": "pytest-dev/pytest",
+        "goldSymbols": [
+          "IDENT_PREFIX",
+          "__getitem__",
+          "__init__",
+          "__iter__",
+          "expression",
+          "not_expr",
+          "reject"
+        ],
+        "queryIdentifiers": [
+          "None",
+          "True",
+          "False",
+          "_PyUnicode_EqualToASCIIString",
+          "compiler_nameop"
+        ],
+        "identifiersIndexed": [],
+        "identifiersUnrepresented": [
+          "None",
+          "True",
+          "False",
+          "_PyUnicode_EqualToASCIIString",
+          "compiler_nameop"
+        ],
+        "goldReachableFromQuery": false,
+        "bridgeDepth": null,
+        "sameSubjectOwners": 0,
+        "sameSubjectOwnerPaths": [],
+        "taskLanguage": {
+          "primary": "IDENTIFIER_DRIVEN",
+          "flags": {
+            "identifierDriven": true,
+            "pathDriven": false,
+            "errorMessageDriven": false,
+            "testFailureDriven": false,
+            "apiDriven": false,
+            "configurationDriven": false,
+            "resultEffectDriven": false,
+            "behaviorDriven": false
+          },
+          "namesGoldSymbol": false,
+          "namesGoldFileStem": false
+        },
+        "namedGoldSymbols": [],
+        "goldNameDefinitionCounts": {
+          "IDENT_PREFIX": 0,
+          "__getitem__": 11,
+          "__init__": 100,
+          "__iter__": 5,
+          "expression": 2,
+          "not_expr": 1,
+          "reject": 1
+        },
+        "namesOwnerUnambiguously": false,
+        "subtype": "SUBJECT_UNREPRESENTED",
+        "rationale": "the query named no identifier that the index represents at all — there is nothing to bridge FROM"
+      },
+      {
+        "instanceId": "scikit-learn__scikit-learn-13142",
+        "repo": "scikit-learn/scikit-learn",
+        "goldSymbols": [
+          "_e_step",
+          "fit_predict"
+        ],
+        "queryIdentifiers": [
+          "n_init",
+          "test_gm.py",
+          "fit_predict",
+          "predict",
+          "GaussianMixture",
+          "AssertionError",
+          "test_gaussian_mixture_fit_predict",
+          "test_gm",
+          "assert_array_equal",
+          "assert_array_compare"
+        ],
+        "identifiersIndexed": [
+          "fit_predict",
+          "predict",
+          "GaussianMixture",
+          "test_gaussian_mixture_fit_predict"
+        ],
+        "identifiersUnrepresented": [
+          "n_init",
+          "test_gm.py",
+          "AssertionError",
+          "test_gm",
+          "assert_array_equal",
+          "assert_array_compare"
+        ],
+        "goldReachableFromQuery": true,
+        "bridgeDepth": 0,
+        "sameSubjectOwners": 63,
+        "sameSubjectOwnerPaths": [
+          "examples/cluster/plot_inductive_clustering.py",
+          "sklearn/base.py",
+          "sklearn/calibration.py",
+          "sklearn/cluster/affinity_propagation_.py",
+          "sklearn/cluster/birch.py",
+          "sklearn/cluster/dbscan_.py",
+          "sklearn/cluster/hierarchical.py",
+          "sklearn/cluster/k_means_.py"
+        ],
+        "taskLanguage": {
+          "primary": "IDENTIFIER_DRIVEN",
+          "flags": {
+            "identifierDriven": true,
+            "pathDriven": true,
+            "errorMessageDriven": true,
+            "testFailureDriven": true,
+            "apiDriven": false,
+            "configurationDriven": false,
+            "resultEffectDriven": false,
+            "behaviorDriven": false
+          },
+          "namesGoldSymbol": true,
+          "namesGoldFileStem": false
+        },
+        "namedGoldSymbols": [
+          "fit_predict"
+        ],
+        "goldNameDefinitionCounts": {
+          "_e_step": 2,
+          "fit_predict": 9
+        },
+        "namesOwnerUnambiguously": false,
+        "subtype": "RESULT_EFFECT",
+        "rationale": "63 indexed owners share the query's subject; gold is reachable but indistinguishable by subject"
+      },
+      {
+        "instanceId": "sphinx-doc__sphinx-7454",
+        "repo": "sphinx-doc/sphinx",
+        "goldSymbols": [
+          "_parse_annotation",
+          "make_xref",
+          "unparse"
+        ],
+        "queryIdentifiers": [
+          "autodoc_typehints"
+        ],
+        "identifiersIndexed": [],
+        "identifiersUnrepresented": [
+          "autodoc_typehints"
+        ],
+        "goldReachableFromQuery": false,
+        "bridgeDepth": null,
+        "sameSubjectOwners": 0,
+        "sameSubjectOwnerPaths": [],
+        "taskLanguage": {
+          "primary": "IDENTIFIER_DRIVEN",
+          "flags": {
+            "identifierDriven": true,
+            "pathDriven": false,
+            "errorMessageDriven": false,
+            "testFailureDriven": false,
+            "apiDriven": false,
+            "configurationDriven": false,
+            "resultEffectDriven": false,
+            "behaviorDriven": false
+          },
+          "namesGoldSymbol": false,
+          "namesGoldFileStem": false
+        },
+        "namedGoldSymbols": [],
+        "goldNameDefinitionCounts": {
+          "_parse_annotation": 1,
+          "make_xref": 4,
+          "unparse": 1
+        },
+        "namesOwnerUnambiguously": false,
+        "subtype": "SUBJECT_UNREPRESENTED",
+        "rationale": "the query named no identifier that the index represents at all — there is nothing to bridge FROM"
+      },
+      {
+        "instanceId": "sphinx-doc__sphinx-7757",
+        "repo": "sphinx-doc/sphinx",
+        "goldSymbols": [
+          "signature_from_str"
+        ],
+        "queryIdentifiers": [],
+        "identifiersIndexed": [],
+        "identifiersUnrepresented": [],
+        "goldReachableFromQuery": false,
+        "bridgeDepth": null,
+        "sameSubjectOwners": 0,
+        "sameSubjectOwnerPaths": [],
+        "taskLanguage": {
+          "primary": "BEHAVIOR_DRIVEN",
+          "flags": {
+            "identifierDriven": false,
+            "pathDriven": false,
+            "errorMessageDriven": false,
+            "testFailureDriven": false,
+            "apiDriven": false,
+            "configurationDriven": false,
+            "resultEffectDriven": false,
+            "behaviorDriven": false
+          },
+          "namesGoldSymbol": false,
+          "namesGoldFileStem": false
+        },
+        "namedGoldSymbols": [],
+        "goldNameDefinitionCounts": {
+          "signature_from_str": 1
+        },
+        "namesOwnerUnambiguously": false,
+        "subtype": "SUBJECT_UNREPRESENTED",
+        "rationale": "the query named no identifier that the index represents at all — there is nothing to bridge FROM"
+      }
+    ]
+  }
+}

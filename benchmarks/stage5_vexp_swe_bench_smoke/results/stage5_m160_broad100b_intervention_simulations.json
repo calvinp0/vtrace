@@ -1,0 +1,1914 @@
+{
+  "schemaVersion": "stage5.m159.intervention-simulations.v1",
+  "corpusRoot": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m160_broad_b",
+  "cases": 100,
+  "failures": [],
+  "deliveryCeiling": {
+    "deliveredItems": 547,
+    "maxRankEverDelivered": 30,
+    "p50": 5,
+    "p90": 16,
+    "p99": 27,
+    "perCaseDeepestMax": 30,
+    "perCaseDeepestP90": 24,
+    "laneInjectedDeliveries": 44
+  },
+  "interventions": [
+    {
+      "id": "NO_CHANGE",
+      "scope": "baseline",
+      "targets": [],
+      "describe": "the current product",
+      "targetsAffected": 0,
+      "recovered": 0,
+      "recoveredInstances": [],
+      "blockedByDeliveryCeiling": [],
+      "existingGoldLost": "0 (baseline)",
+      "nonTargetCasesChanged": "0 (baseline)",
+      "misleadingPromotions": "0 (baseline)",
+      "repoCount": 0,
+      "verdict": "BASELINE",
+      "note": "delivery ceiling: no item beyond ordinary rank 30 is ever delivered in 100 cases"
+    },
+    {
+      "id": "POOL_CAP_25_TO_50",
+      "scope": "CANDIDATE_BOUND_EVICTION",
+      "targets": [
+        "django__django-15252",
+        "django__django-15629",
+        "matplotlib__matplotlib-25479",
+        "psf__requests-2931",
+        "pytest-dev__pytest-7490",
+        "sphinx-doc__sphinx-9658"
+      ],
+      "describe": "double the ordinary candidate pool so gold scored past 25 is admitted",
+      "targetsAffected": 6,
+      "recovered": 1,
+      "recoveredInstances": [
+        "django__django-15629"
+      ],
+      "blockedByDeliveryCeiling": [
+        "django__django-15252",
+        "matplotlib__matplotlib-25479",
+        "psf__requests-2931",
+        "pytest-dev__pytest-7490",
+        "sphinx-doc__sphinx-9658"
+      ],
+      "existingGoldLost": "NOT MEASURED: intervention not selected for implementation",
+      "nonTargetCasesChanged": "NOT MEASURED: intervention not selected for implementation",
+      "misleadingPromotions": "NOT MEASURED: intervention not selected for implementation",
+      "repoCount": 5,
+      "verdict": "CANDIDATE",
+      "note": "deepest rank ever delivered = 30; targets become available at ranks 35, 28, 45, 35, 53, 81"
+    },
+    {
+      "id": "POOL_CAP_25_TO_100",
+      "scope": "CANDIDATE_BOUND_EVICTION",
+      "targets": [
+        "django__django-15252",
+        "django__django-15629",
+        "matplotlib__matplotlib-25479",
+        "psf__requests-2931",
+        "pytest-dev__pytest-7490",
+        "sphinx-doc__sphinx-9658"
+      ],
+      "describe": "quadruple the ordinary candidate pool",
+      "targetsAffected": 6,
+      "recovered": 1,
+      "recoveredInstances": [
+        "django__django-15629"
+      ],
+      "blockedByDeliveryCeiling": [
+        "django__django-15252",
+        "matplotlib__matplotlib-25479",
+        "psf__requests-2931",
+        "pytest-dev__pytest-7490",
+        "sphinx-doc__sphinx-9658"
+      ],
+      "existingGoldLost": "NOT MEASURED: intervention not selected for implementation",
+      "nonTargetCasesChanged": "NOT MEASURED: intervention not selected for implementation",
+      "misleadingPromotions": "NOT MEASURED: intervention not selected for implementation",
+      "repoCount": 5,
+      "verdict": "CANDIDATE",
+      "note": "deepest rank ever delivered = 30; targets become available at ranks 35, 28, 45, 35, 53, 81"
+    },
+    {
+      "id": "GENERATION_POOL_WIDENING",
+      "scope": "CANDIDATE_GENERATION_POOL_BOUND",
+      "targets": [
+        "astropy__astropy-13236",
+        "mwaskom__seaborn-3069",
+        "pydata__xarray-4687",
+        "pydata__xarray-6721",
+        "pylint-dev__pylint-6903",
+        "pytest-dev__pytest-10356",
+        "sympy__sympy-13031",
+        "sympy__sympy-18698"
+      ],
+      "describe": "widen the lexical generation pool so the gold symbol is scored at all",
+      "targetsAffected": 8,
+      "recovered": 2,
+      "recoveredInstances": [
+        "pytest-dev__pytest-10356",
+        "sympy__sympy-18698"
+      ],
+      "blockedByDeliveryCeiling": [
+        "astropy__astropy-13236",
+        "mwaskom__seaborn-3069",
+        "pydata__xarray-4687",
+        "pydata__xarray-6721",
+        "pylint-dev__pylint-6903",
+        "sympy__sympy-13031"
+      ],
+      "existingGoldLost": "NOT MEASURED: intervention not selected for implementation",
+      "nonTargetCasesChanged": "NOT MEASURED: intervention not selected for implementation",
+      "misleadingPromotions": "NOT MEASURED: intervention not selected for implementation",
+      "repoCount": 6,
+      "verdict": "CANDIDATE",
+      "note": "deepest rank ever delivered = 30; targets become available at ranks 550, 85, 292, 397, 111, 14, 63, 21"
+    },
+    {
+      "id": "INDEX_NESTED_FUNCTIONS",
+      "scope": "INDEX_SYMBOL_MISSING",
+      "targets": [
+        "sphinx-doc__sphinx-9602"
+      ],
+      "describe": "represent nested function definitions as indexed symbols",
+      "targetsAffected": 1,
+      "recovered": 1,
+      "recoveredInstances": [
+        "sphinx-doc__sphinx-9602"
+      ],
+      "blockedByDeliveryCeiling": [],
+      "existingGoldLost": "NOT MEASURED: intervention not selected for implementation",
+      "nonTargetCasesChanged": "NOT MEASURED: intervention not selected for implementation",
+      "misleadingPromotions": "NOT MEASURED: intervention not selected for implementation",
+      "repoCount": 1,
+      "verdict": "CANDIDATE",
+      "note": "not a bound intervention; recovery is not ceiling-limited"
+    },
+    {
+      "id": "CORPUS_REPAIR",
+      "scope": "INDEX_FILE_MISSING",
+      "targets": [],
+      "describe": "benchmark-side: check out the complete package tree for the affected instances",
+      "targetsAffected": 0,
+      "recovered": 0,
+      "recoveredInstances": [],
+      "blockedByDeliveryCeiling": [],
+      "existingGoldLost": "moot: 0 recovery refutes the intervention before harm matters (§93)",
+      "nonTargetCasesChanged": "moot: intervention rejected on recovery",
+      "misleadingPromotions": "moot: intervention rejected on recovery",
+      "repoCount": 0,
+      "verdict": "REJECTED_ZERO_RECOVERY",
+      "note": "not a bound intervention; recovery is not ceiling-limited"
+    }
+  ],
+  "deliveredRankRows": [
+    {
+      "instanceId": "astropy__astropy-12907",
+      "repo": "astropy/astropy",
+      "poolSize": 31,
+      "pivotRanks": [
+        1,
+        2
+      ],
+      "supportRanks": [
+        7,
+        6,
+        8
+      ],
+      "deepestDeliveredRank": 8,
+      "laneInjectedDeliveries": 1,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "astropy__astropy-13236",
+      "repo": "astropy/astropy",
+      "poolSize": 31,
+      "pivotRanks": [
+        2,
+        4
+      ],
+      "supportRanks": [
+        1,
+        12,
+        5
+      ],
+      "deepestDeliveredRank": 12,
+      "laneInjectedDeliveries": 1,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "astropy__astropy-13398",
+      "repo": "astropy/astropy",
+      "poolSize": 30,
+      "pivotRanks": [
+        9,
+        13,
+        23
+      ],
+      "supportRanks": [
+        5,
+        7,
+        8
+      ],
+      "deepestDeliveredRank": 23,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": true
+    },
+    {
+      "instanceId": "astropy__astropy-13453",
+      "repo": "astropy/astropy",
+      "poolSize": 31,
+      "pivotRanks": [
+        6,
+        4,
+        8
+      ],
+      "supportRanks": [
+        1,
+        5
+      ],
+      "deepestDeliveredRank": 8,
+      "laneInjectedDeliveries": 1,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "astropy__astropy-14508",
+      "repo": "astropy/astropy",
+      "poolSize": 25,
+      "pivotRanks": [
+        1,
+        2
+      ],
+      "supportRanks": [
+        3,
+        15,
+        20,
+        4
+      ],
+      "deepestDeliveredRank": 20,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": true
+    },
+    {
+      "instanceId": "astropy__astropy-14995",
+      "repo": "astropy/astropy",
+      "poolSize": 25,
+      "pivotRanks": [
+        1,
+        2,
+        3
+      ],
+      "supportRanks": [
+        4,
+        5,
+        6
+      ],
+      "deepestDeliveredRank": 6,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "astropy__astropy-7336",
+      "repo": "astropy/astropy",
+      "poolSize": 25,
+      "pivotRanks": [
+        1,
+        2
+      ],
+      "supportRanks": [
+        3,
+        4,
+        6
+      ],
+      "deepestDeliveredRank": 6,
+      "laneInjectedDeliveries": 1,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "astropy__astropy-7606",
+      "repo": "astropy/astropy",
+      "poolSize": 25,
+      "pivotRanks": [
+        2,
+        1,
+        5
+      ],
+      "supportRanks": [
+        3,
+        4
+      ],
+      "deepestDeliveredRank": 5,
+      "laneInjectedDeliveries": 1,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "astropy__astropy-7671",
+      "repo": "astropy/astropy",
+      "poolSize": 25,
+      "pivotRanks": [
+        1,
+        2,
+        3
+      ],
+      "supportRanks": [
+        4,
+        5,
+        6
+      ],
+      "deepestDeliveredRank": 6,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": true
+    },
+    {
+      "instanceId": "astropy__astropy-8707",
+      "repo": "astropy/astropy",
+      "poolSize": 25,
+      "pivotRanks": [
+        1,
+        6,
+        2
+      ],
+      "supportRanks": [
+        3,
+        13,
+        25
+      ],
+      "deepestDeliveredRank": 25,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": true
+    },
+    {
+      "instanceId": "astropy__astropy-8872",
+      "repo": "astropy/astropy",
+      "poolSize": 31,
+      "pivotRanks": [
+        1,
+        2,
+        9
+      ],
+      "supportRanks": [
+        3,
+        4
+      ],
+      "deepestDeliveredRank": 9,
+      "laneInjectedDeliveries": 1,
+      "goldSymbolDelivered": true
+    },
+    {
+      "instanceId": "django__django-11603",
+      "repo": "django/django",
+      "poolSize": 25,
+      "pivotRanks": [
+        3,
+        9
+      ],
+      "supportRanks": [
+        1,
+        2,
+        7,
+        12
+      ],
+      "deepestDeliveredRank": 12,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": true
+    },
+    {
+      "instanceId": "django__django-11880",
+      "repo": "django/django",
+      "poolSize": 25,
+      "pivotRanks": [
+        1,
+        3,
+        7
+      ],
+      "supportRanks": [
+        4,
+        5,
+        6
+      ],
+      "deepestDeliveredRank": 7,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": true
+    },
+    {
+      "instanceId": "django__django-12741",
+      "repo": "django/django",
+      "poolSize": 31,
+      "pivotRanks": [
+        8,
+        9,
+        1
+      ],
+      "supportRanks": [
+        7,
+        10,
+        11
+      ],
+      "deepestDeliveredRank": 11,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": true
+    },
+    {
+      "instanceId": "django__django-14500",
+      "repo": "django/django",
+      "poolSize": 31,
+      "pivotRanks": [
+        1,
+        3
+      ],
+      "supportRanks": [
+        7,
+        11,
+        12,
+        14
+      ],
+      "deepestDeliveredRank": 14,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "django__django-14559",
+      "repo": "django/django",
+      "poolSize": 30,
+      "pivotRanks": [
+        1,
+        2
+      ],
+      "supportRanks": [
+        10,
+        3,
+        4,
+        5
+      ],
+      "deepestDeliveredRank": 10,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": true
+    },
+    {
+      "instanceId": "django__django-15022",
+      "repo": "django/django",
+      "poolSize": 31,
+      "pivotRanks": [
+        9,
+        7
+      ],
+      "supportRanks": [
+        10,
+        12,
+        19,
+        20
+      ],
+      "deepestDeliveredRank": 20,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "django__django-15252",
+      "repo": "django/django",
+      "poolSize": 31,
+      "pivotRanks": [
+        2,
+        1,
+        4
+      ],
+      "supportRanks": [
+        3,
+        5,
+        6
+      ],
+      "deepestDeliveredRank": 6,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "django__django-15375",
+      "repo": "django/django",
+      "poolSize": 25,
+      "pivotRanks": [
+        2,
+        3
+      ],
+      "supportRanks": [
+        12,
+        23,
+        1,
+        4
+      ],
+      "deepestDeliveredRank": 23,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "django__django-15569",
+      "repo": "django/django",
+      "poolSize": 31,
+      "pivotRanks": [
+        1,
+        2
+      ],
+      "supportRanks": [
+        24,
+        3,
+        4
+      ],
+      "deepestDeliveredRank": 24,
+      "laneInjectedDeliveries": 1,
+      "goldSymbolDelivered": true
+    },
+    {
+      "instanceId": "django__django-15629",
+      "repo": "django/django",
+      "poolSize": 29,
+      "pivotRanks": [
+        1,
+        3
+      ],
+      "supportRanks": [
+        2,
+        5,
+        10,
+        14
+      ],
+      "deepestDeliveredRank": 14,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "django__django-16100",
+      "repo": "django/django",
+      "poolSize": 28,
+      "pivotRanks": [
+        2,
+        3
+      ],
+      "supportRanks": [
+        4,
+        8,
+        12,
+        22
+      ],
+      "deepestDeliveredRank": 22,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-13989",
+      "repo": "matplotlib/matplotlib",
+      "poolSize": 29,
+      "pivotRanks": [
+        1,
+        2
+      ],
+      "supportRanks": [
+        3,
+        4,
+        5,
+        6
+      ],
+      "deepestDeliveredRank": 6,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": true
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-20488",
+      "repo": "matplotlib/matplotlib",
+      "poolSize": 31,
+      "pivotRanks": [
+        2,
+        3
+      ],
+      "supportRanks": [
+        4,
+        5,
+        28,
+        26
+      ],
+      "deepestDeliveredRank": 28,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-20676",
+      "repo": "matplotlib/matplotlib",
+      "poolSize": 31,
+      "pivotRanks": [
+        2,
+        4
+      ],
+      "supportRanks": [
+        3,
+        5,
+        6,
+        7
+      ],
+      "deepestDeliveredRank": 7,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": true
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-20859",
+      "repo": "matplotlib/matplotlib",
+      "poolSize": 25,
+      "pivotRanks": [
+        1,
+        2,
+        3
+      ],
+      "supportRanks": [
+        19,
+        16,
+        11
+      ],
+      "deepestDeliveredRank": 19,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-21568",
+      "repo": "matplotlib/matplotlib",
+      "poolSize": 29,
+      "pivotRanks": [
+        7,
+        1
+      ],
+      "supportRanks": [
+        16,
+        17,
+        18
+      ],
+      "deepestDeliveredRank": 18,
+      "laneInjectedDeliveries": 1,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-22871",
+      "repo": "matplotlib/matplotlib",
+      "poolSize": 31,
+      "pivotRanks": [
+        1,
+        11
+      ],
+      "supportRanks": [
+        2,
+        3,
+        4,
+        5
+      ],
+      "deepestDeliveredRank": 11,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-23314",
+      "repo": "matplotlib/matplotlib",
+      "poolSize": 31,
+      "pivotRanks": [
+        1,
+        2
+      ],
+      "supportRanks": [
+        5,
+        3,
+        4
+      ],
+      "deepestDeliveredRank": 5,
+      "laneInjectedDeliveries": 1,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-23412",
+      "repo": "matplotlib/matplotlib",
+      "poolSize": 31,
+      "pivotRanks": [
+        3,
+        8
+      ],
+      "supportRanks": [
+        2,
+        28,
+        14
+      ],
+      "deepestDeliveredRank": 28,
+      "laneInjectedDeliveries": 1,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-25311",
+      "repo": "matplotlib/matplotlib",
+      "poolSize": 31,
+      "pivotRanks": [
+        2,
+        4
+      ],
+      "supportRanks": [
+        1,
+        10,
+        5
+      ],
+      "deepestDeliveredRank": 10,
+      "laneInjectedDeliveries": 1,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-25479",
+      "repo": "matplotlib/matplotlib",
+      "poolSize": 25,
+      "pivotRanks": [
+        1,
+        2,
+        3
+      ],
+      "supportRanks": [
+        5,
+        4
+      ],
+      "deepestDeliveredRank": 5,
+      "laneInjectedDeliveries": 1,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-26291",
+      "repo": "matplotlib/matplotlib",
+      "poolSize": 25,
+      "pivotRanks": [
+        1,
+        2,
+        3
+      ],
+      "supportRanks": [
+        5,
+        6
+      ],
+      "deepestDeliveredRank": 6,
+      "laneInjectedDeliveries": 1,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "mwaskom__seaborn-3069",
+      "repo": "mwaskom/seaborn",
+      "poolSize": 25,
+      "pivotRanks": [
+        3,
+        2
+      ],
+      "supportRanks": [
+        5,
+        1,
+        6,
+        7
+      ],
+      "deepestDeliveredRank": 7,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "psf__requests-1766",
+      "repo": "psf/requests",
+      "poolSize": 22,
+      "pivotRanks": [
+        1
+      ],
+      "supportRanks": [
+        2,
+        7,
+        8
+      ],
+      "deepestDeliveredRank": 8,
+      "laneInjectedDeliveries": 1,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "psf__requests-2317",
+      "repo": "psf/requests",
+      "poolSize": 31,
+      "pivotRanks": [
+        2,
+        1
+      ],
+      "supportRanks": [
+        17,
+        4,
+        3,
+        8
+      ],
+      "deepestDeliveredRank": 17,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "psf__requests-2931",
+      "repo": "psf/requests",
+      "poolSize": 28,
+      "pivotRanks": [
+        1,
+        5
+      ],
+      "supportRanks": [
+        13,
+        15,
+        17,
+        18
+      ],
+      "deepestDeliveredRank": 18,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "psf__requests-6028",
+      "repo": "psf/requests",
+      "poolSize": 15,
+      "pivotRanks": [
+        1
+      ],
+      "supportRanks": [
+        4,
+        2,
+        3,
+        5
+      ],
+      "deepestDeliveredRank": 5,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "pydata__xarray-3095",
+      "repo": "pydata/xarray",
+      "poolSize": 31,
+      "pivotRanks": [
+        4,
+        5
+      ],
+      "supportRanks": [
+        2,
+        7,
+        27,
+        1
+      ],
+      "deepestDeliveredRank": 27,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": true
+    },
+    {
+      "instanceId": "pydata__xarray-3151",
+      "repo": "pydata/xarray",
+      "poolSize": 29,
+      "pivotRanks": [
+        1,
+        2
+      ],
+      "supportRanks": [
+        6,
+        7,
+        11,
+        17
+      ],
+      "deepestDeliveredRank": 17,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": true
+    },
+    {
+      "instanceId": "pydata__xarray-3993",
+      "repo": "pydata/xarray",
+      "poolSize": 25,
+      "pivotRanks": [
+        5,
+        8,
+        17
+      ],
+      "supportRanks": [
+        1,
+        3,
+        4
+      ],
+      "deepestDeliveredRank": 17,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": true
+    },
+    {
+      "instanceId": "pydata__xarray-4075",
+      "repo": "pydata/xarray",
+      "poolSize": 31,
+      "pivotRanks": [
+        4,
+        1
+      ],
+      "supportRanks": [
+        10,
+        20,
+        3,
+        7
+      ],
+      "deepestDeliveredRank": 20,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": true
+    },
+    {
+      "instanceId": "pydata__xarray-4094",
+      "repo": "pydata/xarray",
+      "poolSize": 29,
+      "pivotRanks": [
+        1,
+        2,
+        8
+      ],
+      "supportRanks": [
+        5,
+        27,
+        22
+      ],
+      "deepestDeliveredRank": 27,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": true
+    },
+    {
+      "instanceId": "pydata__xarray-4629",
+      "repo": "pydata/xarray",
+      "poolSize": 25,
+      "pivotRanks": [
+        3,
+        1,
+        4
+      ],
+      "supportRanks": [
+        7,
+        9,
+        12
+      ],
+      "deepestDeliveredRank": 12,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "pydata__xarray-4687",
+      "repo": "pydata/xarray",
+      "poolSize": 29,
+      "pivotRanks": [
+        6,
+        8
+      ],
+      "supportRanks": [
+        2,
+        4,
+        7,
+        16
+      ],
+      "deepestDeliveredRank": 16,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "pydata__xarray-6721",
+      "repo": "pydata/xarray",
+      "poolSize": 25,
+      "pivotRanks": [
+        3,
+        4
+      ],
+      "supportRanks": [
+        1,
+        5,
+        2,
+        6
+      ],
+      "deepestDeliveredRank": 6,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "pydata__xarray-6744",
+      "repo": "pydata/xarray",
+      "poolSize": 25,
+      "pivotRanks": [
+        3,
+        18
+      ],
+      "supportRanks": [
+        2,
+        5,
+        1
+      ],
+      "deepestDeliveredRank": 18,
+      "laneInjectedDeliveries": 1,
+      "goldSymbolDelivered": true
+    },
+    {
+      "instanceId": "pydata__xarray-7229",
+      "repo": "pydata/xarray",
+      "poolSize": 30,
+      "pivotRanks": [
+        6,
+        9
+      ],
+      "supportRanks": [
+        15,
+        2,
+        3
+      ],
+      "deepestDeliveredRank": 15,
+      "laneInjectedDeliveries": 1,
+      "goldSymbolDelivered": true
+    },
+    {
+      "instanceId": "pydata__xarray-7233",
+      "repo": "pydata/xarray",
+      "poolSize": 30,
+      "pivotRanks": [
+        5,
+        1
+      ],
+      "supportRanks": [
+        7,
+        11,
+        2,
+        4
+      ],
+      "deepestDeliveredRank": 11,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": true
+    },
+    {
+      "instanceId": "pylint-dev__pylint-4604",
+      "repo": "pylint-dev/pylint",
+      "poolSize": 31,
+      "pivotRanks": [
+        5,
+        26
+      ],
+      "supportRanks": [
+        3,
+        15,
+        27,
+        30
+      ],
+      "deepestDeliveredRank": 30,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "pylint-dev__pylint-4661",
+      "repo": "pylint-dev/pylint",
+      "poolSize": 28,
+      "pivotRanks": [
+        1,
+        2
+      ],
+      "supportRanks": [
+        8,
+        3,
+        9,
+        11
+      ],
+      "deepestDeliveredRank": 11,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "pylint-dev__pylint-4970",
+      "repo": "pylint-dev/pylint",
+      "poolSize": 31,
+      "pivotRanks": [
+        3,
+        1
+      ],
+      "supportRanks": [
+        2,
+        4,
+        5,
+        6
+      ],
+      "deepestDeliveredRank": 6,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "pylint-dev__pylint-6386",
+      "repo": "pylint-dev/pylint",
+      "poolSize": 31,
+      "pivotRanks": [
+        1,
+        2
+      ],
+      "supportRanks": [
+        5,
+        11,
+        15,
+        19
+      ],
+      "deepestDeliveredRank": 19,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": true
+    },
+    {
+      "instanceId": "pylint-dev__pylint-6528",
+      "repo": "pylint-dev/pylint",
+      "poolSize": 28,
+      "pivotRanks": [
+        1,
+        3
+      ],
+      "supportRanks": [
+        5,
+        7,
+        4
+      ],
+      "deepestDeliveredRank": 7,
+      "laneInjectedDeliveries": 1,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "pylint-dev__pylint-6903",
+      "repo": "pylint-dev/pylint",
+      "poolSize": 31,
+      "pivotRanks": [
+        1,
+        4
+      ],
+      "supportRanks": [
+        2,
+        5,
+        6,
+        7
+      ],
+      "deepestDeliveredRank": 7,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "pylint-dev__pylint-7080",
+      "repo": "pylint-dev/pylint",
+      "poolSize": 29,
+      "pivotRanks": [
+        9,
+        12
+      ],
+      "supportRanks": [
+        13,
+        14,
+        20,
+        22
+      ],
+      "deepestDeliveredRank": 22,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": true
+    },
+    {
+      "instanceId": "pylint-dev__pylint-7277",
+      "repo": "pylint-dev/pylint",
+      "poolSize": 25,
+      "pivotRanks": [
+        2,
+        1,
+        3
+      ],
+      "supportRanks": [
+        11,
+        5,
+        4
+      ],
+      "deepestDeliveredRank": 11,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": true
+    },
+    {
+      "instanceId": "pytest-dev__pytest-10081",
+      "repo": "pytest-dev/pytest",
+      "poolSize": 25,
+      "pivotRanks": [
+        2,
+        19
+      ],
+      "supportRanks": [
+        16,
+        20
+      ],
+      "deepestDeliveredRank": 20,
+      "laneInjectedDeliveries": 2,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "pytest-dev__pytest-10356",
+      "repo": "pytest-dev/pytest",
+      "poolSize": 29,
+      "pivotRanks": [
+        3,
+        1
+      ],
+      "supportRanks": [
+        4,
+        6
+      ],
+      "deepestDeliveredRank": 6,
+      "laneInjectedDeliveries": 2,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "pytest-dev__pytest-5787",
+      "repo": "pytest-dev/pytest",
+      "poolSize": 28,
+      "pivotRanks": [
+        2,
+        16
+      ],
+      "supportRanks": [
+        27,
+        28,
+        6
+      ],
+      "deepestDeliveredRank": 28,
+      "laneInjectedDeliveries": 1,
+      "goldSymbolDelivered": true
+    },
+    {
+      "instanceId": "pytest-dev__pytest-5840",
+      "repo": "pytest-dev/pytest",
+      "poolSize": 25,
+      "pivotRanks": [
+        1,
+        4
+      ],
+      "supportRanks": [
+        8,
+        2
+      ],
+      "deepestDeliveredRank": 8,
+      "laneInjectedDeliveries": 1,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "pytest-dev__pytest-6202",
+      "repo": "pytest-dev/pytest",
+      "poolSize": 25,
+      "pivotRanks": [
+        2,
+        6
+      ],
+      "supportRanks": [
+        3,
+        12,
+        4,
+        7
+      ],
+      "deepestDeliveredRank": 12,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "pytest-dev__pytest-7205",
+      "repo": "pytest-dev/pytest",
+      "poolSize": 25,
+      "pivotRanks": [
+        1,
+        2,
+        3
+      ],
+      "supportRanks": [
+        14
+      ],
+      "deepestDeliveredRank": 14,
+      "laneInjectedDeliveries": 2,
+      "goldSymbolDelivered": true
+    },
+    {
+      "instanceId": "pytest-dev__pytest-7236",
+      "repo": "pytest-dev/pytest",
+      "poolSize": 25,
+      "pivotRanks": [
+        1,
+        8
+      ],
+      "supportRanks": [
+        10,
+        16,
+        9,
+        13
+      ],
+      "deepestDeliveredRank": 16,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": true
+    },
+    {
+      "instanceId": "pytest-dev__pytest-7324",
+      "repo": "pytest-dev/pytest",
+      "poolSize": 28,
+      "pivotRanks": [
+        6,
+        16
+      ],
+      "supportRanks": [
+        9,
+        10
+      ],
+      "deepestDeliveredRank": 16,
+      "laneInjectedDeliveries": 2,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "pytest-dev__pytest-7490",
+      "repo": "pytest-dev/pytest",
+      "poolSize": 31,
+      "pivotRanks": [
+        7,
+        15
+      ],
+      "supportRanks": [
+        17,
+        25
+      ],
+      "deepestDeliveredRank": 25,
+      "laneInjectedDeliveries": 2,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "pytest-dev__pytest-7521",
+      "repo": "pytest-dev/pytest",
+      "poolSize": 25,
+      "pivotRanks": [
+        1,
+        2
+      ],
+      "supportRanks": [
+        3,
+        4
+      ],
+      "deepestDeliveredRank": 4,
+      "laneInjectedDeliveries": 2,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "pytest-dev__pytest-7571",
+      "repo": "pytest-dev/pytest",
+      "poolSize": 28,
+      "pivotRanks": [
+        2,
+        3
+      ],
+      "supportRanks": [
+        9,
+        10
+      ],
+      "deepestDeliveredRank": 10,
+      "laneInjectedDeliveries": 2,
+      "goldSymbolDelivered": true
+    },
+    {
+      "instanceId": "scikit-learn__scikit-learn-10297",
+      "repo": "scikit-learn/scikit-learn",
+      "poolSize": 25,
+      "pivotRanks": [
+        4,
+        9
+      ],
+      "supportRanks": [
+        5,
+        1,
+        2
+      ],
+      "deepestDeliveredRank": 9,
+      "laneInjectedDeliveries": 1,
+      "goldSymbolDelivered": true
+    },
+    {
+      "instanceId": "scikit-learn__scikit-learn-10908",
+      "repo": "scikit-learn/scikit-learn",
+      "poolSize": 25,
+      "pivotRanks": [
+        1,
+        2,
+        13
+      ],
+      "supportRanks": [
+        12,
+        14
+      ],
+      "deepestDeliveredRank": 14,
+      "laneInjectedDeliveries": 1,
+      "goldSymbolDelivered": true
+    },
+    {
+      "instanceId": "scikit-learn__scikit-learn-11310",
+      "repo": "scikit-learn/scikit-learn",
+      "poolSize": 31,
+      "pivotRanks": [
+        1,
+        2
+      ],
+      "supportRanks": [
+        3,
+        5,
+        8
+      ],
+      "deepestDeliveredRank": 8,
+      "laneInjectedDeliveries": 1,
+      "goldSymbolDelivered": true
+    },
+    {
+      "instanceId": "scikit-learn__scikit-learn-12973",
+      "repo": "scikit-learn/scikit-learn",
+      "poolSize": 25,
+      "pivotRanks": [
+        1,
+        2,
+        3
+      ],
+      "supportRanks": [
+        5,
+        6
+      ],
+      "deepestDeliveredRank": 6,
+      "laneInjectedDeliveries": 1,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "scikit-learn__scikit-learn-13135",
+      "repo": "scikit-learn/scikit-learn",
+      "poolSize": 30,
+      "pivotRanks": [
+        1,
+        7
+      ],
+      "supportRanks": [
+        6,
+        8,
+        12
+      ],
+      "deepestDeliveredRank": 12,
+      "laneInjectedDeliveries": 1,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "scikit-learn__scikit-learn-13142",
+      "repo": "scikit-learn/scikit-learn",
+      "poolSize": 25,
+      "pivotRanks": [
+        1,
+        2,
+        4
+      ],
+      "supportRanks": [
+        7,
+        8
+      ],
+      "deepestDeliveredRank": 8,
+      "laneInjectedDeliveries": 1,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "scikit-learn__scikit-learn-13328",
+      "repo": "scikit-learn/scikit-learn",
+      "poolSize": 31,
+      "pivotRanks": [
+        1,
+        2
+      ],
+      "supportRanks": [
+        3,
+        15,
+        16
+      ],
+      "deepestDeliveredRank": 16,
+      "laneInjectedDeliveries": 1,
+      "goldSymbolDelivered": true
+    },
+    {
+      "instanceId": "scikit-learn__scikit-learn-13779",
+      "repo": "scikit-learn/scikit-learn",
+      "poolSize": 25,
+      "pivotRanks": [
+        1,
+        3,
+        5
+      ],
+      "supportRanks": [
+        4,
+        10,
+        16
+      ],
+      "deepestDeliveredRank": 16,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": true
+    },
+    {
+      "instanceId": "scikit-learn__scikit-learn-14053",
+      "repo": "scikit-learn/scikit-learn",
+      "poolSize": 31,
+      "pivotRanks": [
+        1,
+        2,
+        3
+      ],
+      "supportRanks": [
+        19,
+        23
+      ],
+      "deepestDeliveredRank": 23,
+      "laneInjectedDeliveries": 1,
+      "goldSymbolDelivered": true
+    },
+    {
+      "instanceId": "scikit-learn__scikit-learn-14894",
+      "repo": "scikit-learn/scikit-learn",
+      "poolSize": 30,
+      "pivotRanks": [
+        1,
+        3
+      ],
+      "supportRanks": [
+        2,
+        4,
+        5,
+        6
+      ],
+      "deepestDeliveredRank": 6,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": true
+    },
+    {
+      "instanceId": "scikit-learn__scikit-learn-26194",
+      "repo": "scikit-learn/scikit-learn",
+      "poolSize": 30,
+      "pivotRanks": [
+        1,
+        4
+      ],
+      "supportRanks": [
+        2,
+        6,
+        14
+      ],
+      "deepestDeliveredRank": 14,
+      "laneInjectedDeliveries": 1,
+      "goldSymbolDelivered": true
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-10449",
+      "repo": "sphinx-doc/sphinx",
+      "poolSize": 31,
+      "pivotRanks": [
+        10,
+        14
+      ],
+      "supportRanks": [
+        9,
+        21,
+        23,
+        15
+      ],
+      "deepestDeliveredRank": 23,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": true
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-10466",
+      "repo": "sphinx-doc/sphinx",
+      "poolSize": 25,
+      "pivotRanks": [
+        10,
+        22
+      ],
+      "supportRanks": [
+        1,
+        4,
+        5,
+        2
+      ],
+      "deepestDeliveredRank": 22,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-7454",
+      "repo": "sphinx-doc/sphinx",
+      "poolSize": 31,
+      "pivotRanks": [
+        5,
+        6
+      ],
+      "supportRanks": [
+        9,
+        8,
+        4
+      ],
+      "deepestDeliveredRank": 9,
+      "laneInjectedDeliveries": 1,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-7757",
+      "repo": "sphinx-doc/sphinx",
+      "poolSize": 25,
+      "pivotRanks": [
+        1,
+        5
+      ],
+      "supportRanks": [
+        8,
+        12,
+        18,
+        23
+      ],
+      "deepestDeliveredRank": 23,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-7985",
+      "repo": "sphinx-doc/sphinx",
+      "poolSize": 31,
+      "pivotRanks": [
+        3,
+        2
+      ],
+      "supportRanks": [
+        8,
+        10,
+        17,
+        1
+      ],
+      "deepestDeliveredRank": 17,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-8459",
+      "repo": "sphinx-doc/sphinx",
+      "poolSize": 30,
+      "pivotRanks": [
+        4,
+        5
+      ],
+      "supportRanks": [
+        11,
+        3,
+        6,
+        12
+      ],
+      "deepestDeliveredRank": 12,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-8548",
+      "repo": "sphinx-doc/sphinx",
+      "poolSize": 31,
+      "pivotRanks": [
+        1,
+        9
+      ],
+      "supportRanks": [
+        2,
+        6,
+        7,
+        10
+      ],
+      "deepestDeliveredRank": 10,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-8595",
+      "repo": "sphinx-doc/sphinx",
+      "poolSize": 32,
+      "pivotRanks": [
+        3,
+        1
+      ],
+      "supportRanks": [
+        6,
+        17,
+        18,
+        2
+      ],
+      "deepestDeliveredRank": 18,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-9258",
+      "repo": "sphinx-doc/sphinx",
+      "poolSize": 33,
+      "pivotRanks": [],
+      "supportRanks": [],
+      "deepestDeliveredRank": null,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-9602",
+      "repo": "sphinx-doc/sphinx",
+      "poolSize": 31,
+      "pivotRanks": [
+        6,
+        4
+      ],
+      "supportRanks": [
+        7,
+        9,
+        10,
+        14
+      ],
+      "deepestDeliveredRank": 14,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-9658",
+      "repo": "sphinx-doc/sphinx",
+      "poolSize": 30,
+      "pivotRanks": [
+        1,
+        2
+      ],
+      "supportRanks": [
+        16,
+        4,
+        5,
+        6
+      ],
+      "deepestDeliveredRank": 16,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "sympy__sympy-13031",
+      "repo": "sympy/sympy",
+      "poolSize": 31,
+      "pivotRanks": [
+        1,
+        2
+      ],
+      "supportRanks": [
+        3,
+        7,
+        17,
+        5
+      ],
+      "deepestDeliveredRank": 17,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "sympy__sympy-13551",
+      "repo": "sympy/sympy",
+      "poolSize": 25,
+      "pivotRanks": [
+        2,
+        1
+      ],
+      "supportRanks": [
+        3,
+        6,
+        7,
+        8
+      ],
+      "deepestDeliveredRank": 8,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "sympy__sympy-13852",
+      "repo": "sympy/sympy",
+      "poolSize": 29,
+      "pivotRanks": [
+        1,
+        2
+      ],
+      "supportRanks": [
+        3,
+        4,
+        5,
+        7
+      ],
+      "deepestDeliveredRank": 7,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": true
+    },
+    {
+      "instanceId": "sympy__sympy-14531",
+      "repo": "sympy/sympy",
+      "poolSize": 31,
+      "pivotRanks": [
+        9,
+        7
+      ],
+      "supportRanks": [
+        1,
+        2,
+        3,
+        4
+      ],
+      "deepestDeliveredRank": 9,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": true
+    },
+    {
+      "instanceId": "sympy__sympy-15345",
+      "repo": "sympy/sympy",
+      "poolSize": 30,
+      "pivotRanks": [
+        1,
+        2
+      ],
+      "supportRanks": [
+        4,
+        5,
+        6,
+        8
+      ],
+      "deepestDeliveredRank": 8,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "sympy__sympy-15976",
+      "repo": "sympy/sympy",
+      "poolSize": 29,
+      "pivotRanks": [
+        1,
+        3
+      ],
+      "supportRanks": [
+        2,
+        4,
+        5
+      ],
+      "deepestDeliveredRank": 5,
+      "laneInjectedDeliveries": 1,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "sympy__sympy-16450",
+      "repo": "sympy/sympy",
+      "poolSize": 25,
+      "pivotRanks": [
+        6,
+        7
+      ],
+      "supportRanks": [
+        1,
+        4,
+        9,
+        2
+      ],
+      "deepestDeliveredRank": 9,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "sympy__sympy-16886",
+      "repo": "sympy/sympy",
+      "poolSize": 31,
+      "pivotRanks": [
+        1,
+        3
+      ],
+      "supportRanks": [
+        17,
+        25,
+        5,
+        6
+      ],
+      "deepestDeliveredRank": 25,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "sympy__sympy-18698",
+      "repo": "sympy/sympy",
+      "poolSize": 27,
+      "pivotRanks": [
+        1,
+        2
+      ],
+      "supportRanks": [
+        24,
+        11,
+        7,
+        20
+      ],
+      "deepestDeliveredRank": 24,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": false
+    },
+    {
+      "instanceId": "sympy__sympy-23824",
+      "repo": "sympy/sympy",
+      "poolSize": 25,
+      "pivotRanks": [
+        1,
+        7
+      ],
+      "supportRanks": [
+        3,
+        4,
+        5,
+        6
+      ],
+      "deepestDeliveredRank": 7,
+      "laneInjectedDeliveries": 0,
+      "goldSymbolDelivered": true
+    }
+  ]
+}

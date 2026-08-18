@@ -1,0 +1,82 @@
+{
+  "schemaVersion": "stage5.m160.preservation.v1",
+  "milestone": "M160",
+  "kind": "invariants earlier milestones bought, re-measured under M160's build (§115)",
+  "productChanged": false,
+  "namedControls": {
+    "corpus": "Broad100-A pinned corpus — the corpus these controls were established on",
+    "results": [
+      {
+        "instance": "sphinx-doc__sphinx-9320",
+        "section": "§83 pivot refill",
+        "preserved": true,
+        "detail": "byte-identical capsule shape"
+      },
+      {
+        "instance": "django__django-11740",
+        "section": "§84 no-pivot diagnostic",
+        "preserved": true,
+        "detail": "byte-identical capsule shape"
+      },
+      {
+        "instance": "pydata__xarray-6599",
+        "section": "§115 support composition",
+        "preserved": true,
+        "detail": "byte-identical capsule shape"
+      }
+    ],
+    "allPreserved": true
+  },
+  "duplicateSupport": {
+    "section": "§85",
+    "broad100a": {
+      "casesWithDuplicateSlots": 0,
+      "duplicateSlotsWasted": 0,
+      "matchesM158Candidate": true
+    },
+    "broad100b": {
+      "casesWithDuplicateSlots": 0,
+      "duplicateSlotsWasted": 0
+    },
+    "note": "The negative control matters as much as the invariant: distinct same-name support items must still be delivered, or 'zero duplicates' would just mean 'we stopped delivering support'.",
+    "negativeControlsA": 6,
+    "negativeControlsB": 7
+  },
+  "moduleDeliveries": {
+    "section": "§86",
+    "broad100a": 0,
+    "broad100b": 0,
+    "invariantHolds": true
+  },
+  "indexWrites": {
+    "section": "§89",
+    "broad100a": 0,
+    "broad100b": 0,
+    "invariantHolds": true
+  },
+  "behavioralRouting": {
+    "section": "§87",
+    "default": "OFF",
+    "envVarSet": false,
+    "enabledDuringM160": false,
+    "source": "src/workspace/productRoute.ts behavioralRoutingEnabled — env-gated, default false"
+  },
+  "sessionIsolation": {
+    "section": "§88",
+    "note": "M152 separation preserved: repository evidence in index.sqlite, mutable product state in session.sqlite",
+    "m160WroteToAnyIndex": false
+  },
+  "repositoryHygiene": {
+    "section": "§90",
+    "trackedVtraceFiles": 0,
+    "stagedVtraceFiles": 0,
+    "trackedIgnoreChanges": 0,
+    "globalGitConfigMutations": 0,
+    "srcDirtyFiles": 0,
+    "workspacesTracked": false
+  },
+  "runnerSafety": {
+    "section": "§91",
+    "note": "Every M160 runner writes an explicitly named stage5_m160_* destination. No M160 runner writes to an M155-M159 artifact path."
+  }
+}

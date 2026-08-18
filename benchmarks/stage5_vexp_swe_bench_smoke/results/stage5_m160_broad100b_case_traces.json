@@ -1,0 +1,3841 @@
+{
+  "schemaVersion": "stage5.m159.case-traces.v1",
+  "corpusRoot": "benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m160_broad_b",
+  "fixture": "benchmarks/stage5_vexp_swe_bench_smoke/retrieval_eval.m160_broad_b.json",
+  "manifest": "benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_m160_broad100b_residual_manifest.json",
+  "cases": 27,
+  "failures": [],
+  "unvalidatedReplications": [
+    "astropy__astropy-14995",
+    "matplotlib__matplotlib-20859",
+    "matplotlib__matplotlib-25479",
+    "scikit-learn__scikit-learn-13142"
+  ],
+  "traces": [
+    {
+      "instanceId": "astropy__astropy-13236",
+      "repo": "astropy/astropy",
+      "group": "DEEP_RANKED_OR_PREDELIVERY_LOSS",
+      "goldFate": "support_packed_out",
+      "expectedFiles": [
+        "astropy/table/table.py"
+      ],
+      "expectedSymbols": [
+        "_convert_data_to_col"
+      ],
+      "representation": {
+        "goldFilesExpected": 1,
+        "goldFilesIndexed": 1,
+        "missingFiles": [],
+        "goldFileSymbolCount": 150,
+        "goldSymbolsExpected": 1,
+        "goldSymbolsIndexed": 1,
+        "missingSymbols": [],
+        "indexedGoldSymbols": [
+          {
+            "fqName": "astropy/table/table.py::Table._convert_data_to_col",
+            "localName": "_convert_data_to_col",
+            "kind": "method",
+            "path": "astropy/table/table.py",
+            "edgesIn": 4,
+            "edgesOut": 10,
+            "mechanismFacts": 3
+          }
+        ]
+      },
+      "query": {
+        "shapedQuery": "issue: Consider removing auto-transform of structured column into NdarrayMixin — <!-- This comments are hidden when you submit the issue, Errors: FutureWarning",
+        "identifiers": [
+          "NdarrayMixin",
+          "FutureWarning"
+        ],
+        "pathClues": [],
+        "likelySymbols": [],
+        "asksByIdentifier": true,
+        "asksByPath": false,
+        "asksByError": true,
+        "asksByTest": false
+      },
+      "preCap": {
+        "evaluatedTotal": 131,
+        "poolCap": 25,
+        "goldSymbolScored": [],
+        "goldFileScored": [
+          {
+            "fqName": "astropy/table/table.py::Table",
+            "path": "astropy/table/table.py",
+            "preCapRank": 65,
+            "finalScore": 0.8821,
+            "sources": [
+              "concept_owner"
+            ]
+          },
+          {
+            "fqName": "astropy/table/table.py::Table.as_array",
+            "path": "astropy/table/table.py",
+            "preCapRank": 112,
+            "finalScore": 0.6687,
+            "sources": [
+              "concept_owner"
+            ]
+          },
+          {
+            "fqName": "astropy/table/table.py::Table.to_pandas",
+            "path": "astropy/table/table.py",
+            "preCapRank": 122,
+            "finalScore": 0.6229,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "astropy/table/table.py::Table.MaskedColumn",
+            "path": "astropy/table/table.py",
+            "preCapRank": 131,
+            "finalScore": 0,
+            "sources": [
+              "graph"
+            ]
+          }
+        ],
+        "replicationValid": true,
+        "replicationNote": "31/31 capsule pool entries present in the scored set"
+      },
+      "postCap": {
+        "candidateCount": 31,
+        "goldFileOrdinaryRank": 28,
+        "goldSymbolOrdinaryRank": null
+      },
+      "delivery": {
+        "mode": "standard",
+        "deliveredPivots": 2,
+        "deliveredSupport": 4,
+        "goldFileDelivered": false,
+        "goldSymbolDelivered": false,
+        "goldDiscardReasons": [
+          "beyond standard support budget (max 4)"
+        ]
+      },
+      "firstDivergence": "CANDIDATE_GENERATION_POOL_BOUND",
+      "firstDivergenceDetail": "gold symbol unscored at the product pool of 25; the generators reach it only at pool 200, where it scores 0.465 at pre-cap rank 550",
+      "secondaryContributors": [
+        "a non-gold symbol from the gold file WAS scored at pre-cap rank 65"
+      ],
+      "confidence": "high"
+    },
+    {
+      "instanceId": "astropy__astropy-14995",
+      "repo": "astropy/astropy",
+      "group": "DEEP_RANKED_OR_PREDELIVERY_LOSS",
+      "goldFate": "support_packed_out",
+      "expectedFiles": [
+        "astropy/nddata/mixins/ndarithmetic.py"
+      ],
+      "expectedSymbols": [
+        "_arithmetic_mask",
+        "_arithmetic_wcs"
+      ],
+      "representation": {
+        "goldFilesExpected": 1,
+        "goldFilesIndexed": 1,
+        "missingFiles": [],
+        "goldFileSymbolCount": 19,
+        "goldSymbolsExpected": 2,
+        "goldSymbolsIndexed": 2,
+        "missingSymbols": [],
+        "indexedGoldSymbols": [
+          {
+            "fqName": "astropy/nddata/mixins/ndarithmetic.py::NDArithmeticMixin._arithmetic_mask",
+            "localName": "_arithmetic_mask",
+            "kind": "method",
+            "path": "astropy/nddata/mixins/ndarithmetic.py",
+            "edgesIn": 2,
+            "edgesOut": 0,
+            "mechanismFacts": 1
+          },
+          {
+            "fqName": "astropy/nddata/mixins/ndarithmetic.py::NDArithmeticMixin._arithmetic_wcs",
+            "localName": "_arithmetic_wcs",
+            "kind": "method",
+            "path": "astropy/nddata/mixins/ndarithmetic.py",
+            "edgesIn": 2,
+            "edgesOut": 0,
+            "mechanismFacts": 0
+          }
+        ]
+      },
+      "query": {
+        "shapedQuery": "symbols: type\nissue: In v5.3, NDDataRef mask propagation fails when one of the operand does not have a mask — This applies to v5.3.",
+        "identifiers": [
+          "type",
+          "TypeError",
+          "NoneType"
+        ],
+        "pathClues": [],
+        "likelySymbols": [
+          "type"
+        ],
+        "asksByIdentifier": true,
+        "asksByPath": false,
+        "asksByError": true,
+        "asksByTest": false
+      },
+      "preCap": {
+        "evaluatedTotal": 140,
+        "poolCap": 25,
+        "goldSymbolScored": [
+          {
+            "fqName": "astropy/nddata/mixins/ndarithmetic.py::NDArithmeticMixin._arithmetic_mask",
+            "path": "astropy/nddata/mixins/ndarithmetic.py",
+            "preCapRank": 12,
+            "finalScore": 1.4285,
+            "sources": [
+              "lexical"
+            ],
+            "evidence": [
+              "2 indexed symbol(s) depend on this",
+              "lexical match on docstring, fq_name, local_name, signature, signature, docstring, docstring, query_coverage, path_segment_signal"
+            ]
+          },
+          {
+            "fqName": "astropy/nddata/mixins/ndarithmetic.py::NDArithmeticMixin._arithmetic_wcs",
+            "path": "astropy/nddata/mixins/ndarithmetic.py",
+            "preCapRank": 68,
+            "finalScore": 0.7349,
+            "sources": [
+              "lexical"
+            ],
+            "evidence": [
+              "2 indexed symbol(s) depend on this",
+              "lexical match on docstring, fq_name, signature, docstring, docstring, query_coverage, path_segment_signal"
+            ]
+          }
+        ],
+        "goldFileScored": [
+          {
+            "fqName": "astropy/nddata/mixins/ndarithmetic.py::NDArithmeticMixin._arithmetic_mask",
+            "path": "astropy/nddata/mixins/ndarithmetic.py",
+            "preCapRank": 12,
+            "finalScore": 1.4285,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "astropy/nddata/mixins/ndarithmetic.py::NDArithmeticMixin",
+            "path": "astropy/nddata/mixins/ndarithmetic.py",
+            "preCapRank": 21,
+            "finalScore": 1.0829,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "astropy/nddata/mixins/ndarithmetic.py::_arit_doc",
+            "path": "astropy/nddata/mixins/ndarithmetic.py",
+            "preCapRank": 23,
+            "finalScore": 1.0548,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "astropy/nddata/mixins/ndarithmetic.py::NDArithmeticMixin._arithmetic",
+            "path": "astropy/nddata/mixins/ndarithmetic.py",
+            "preCapRank": 27,
+            "finalScore": 0.9693,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "astropy/nddata/mixins/ndarithmetic.py::NDArithmeticMixin._prepare_then_do_arithmetic",
+            "path": "astropy/nddata/mixins/ndarithmetic.py",
+            "preCapRank": 53,
+            "finalScore": 0.8311,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "astropy/nddata/mixins/ndarithmetic.py::NDArithmeticMixin._arithmetic_wcs",
+            "path": "astropy/nddata/mixins/ndarithmetic.py",
+            "preCapRank": 68,
+            "finalScore": 0.7349,
+            "sources": [
+              "lexical"
+            ]
+          }
+        ],
+        "replicationValid": false,
+        "replicationNote": "22/25 capsule pool entries present in the scored set; uncovered: astropy/io/ascii/core.py::BaseData, astropy/io/ascii/core.py::BaseHeader, astropy/io/votable/converters.py::Int"
+      },
+      "postCap": {
+        "candidateCount": 25,
+        "goldFileOrdinaryRank": 16,
+        "goldSymbolOrdinaryRank": 16
+      },
+      "delivery": {
+        "mode": "standard",
+        "deliveredPivots": 3,
+        "deliveredSupport": 3,
+        "goldFileDelivered": false,
+        "goldSymbolDelivered": false,
+        "goldDiscardReasons": [
+          "beyond standard support budget (max 3)"
+        ]
+      },
+      "firstDivergence": "SUPPORT_PACKING",
+      "firstDivergenceDetail": "gold symbol admitted at ordinary rank 16 and lost a support slot",
+      "secondaryContributors": [],
+      "confidence": "low"
+    },
+    {
+      "instanceId": "django__django-14500",
+      "repo": "django/django",
+      "group": "DEEP_RANKED_OR_PREDELIVERY_LOSS",
+      "goldFate": "support_packed_out",
+      "expectedFiles": [
+        "django/db/migrations/executor.py"
+      ],
+      "expectedSymbols": [
+        "unapply_migration"
+      ],
+      "representation": {
+        "goldFilesExpected": 1,
+        "goldFilesIndexed": 1,
+        "missingFiles": [],
+        "goldFileSymbolCount": 13,
+        "goldSymbolsExpected": 1,
+        "goldSymbolsIndexed": 1,
+        "missingSymbols": [],
+        "indexedGoldSymbols": [
+          {
+            "fqName": "db/migrations/executor.py::MigrationExecutor.unapply_migration",
+            "localName": "unapply_migration",
+            "kind": "method",
+            "path": "db/migrations/executor.py",
+            "edgesIn": 2,
+            "edgesOut": 0,
+            "mechanismFacts": 0
+          }
+        ]
+      },
+      "query": {
+        "shapedQuery": "issue: Squashed migration is not marked as unapplied — (last modified by Markus Holtermann)",
+        "identifiers": [],
+        "pathClues": [],
+        "likelySymbols": [],
+        "asksByIdentifier": false,
+        "asksByPath": false,
+        "asksByError": false,
+        "asksByTest": false
+      },
+      "preCap": {
+        "evaluatedTotal": 130,
+        "poolCap": 25,
+        "goldSymbolScored": [],
+        "goldFileScored": [
+          {
+            "fqName": "db/migrations/executor.py::MigrationExecutor.check_replacements",
+            "path": "db/migrations/executor.py",
+            "preCapRank": 19,
+            "finalScore": 1.4337,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "db/migrations/executor.py::MigrationExecutor.detect_soft_applied",
+            "path": "db/migrations/executor.py",
+            "preCapRank": 37,
+            "finalScore": 1.1696,
+            "sources": [
+              "concept_owner"
+            ]
+          },
+          {
+            "fqName": "db/migrations/executor.py::MigrationExecutor.record_migration",
+            "path": "db/migrations/executor.py",
+            "preCapRank": 38,
+            "finalScore": 1.1626,
+            "sources": [
+              "graph"
+            ]
+          },
+          {
+            "fqName": "db/migrations/executor.py::MigrationExecutor.migration_plan",
+            "path": "db/migrations/executor.py",
+            "preCapRank": 39,
+            "finalScore": 1.1614,
+            "sources": [
+              "graph"
+            ]
+          },
+          {
+            "fqName": "db/migrations/executor.py::MigrationExecutor._migrate_all_backwards",
+            "path": "db/migrations/executor.py",
+            "preCapRank": 42,
+            "finalScore": 1.1555,
+            "sources": [
+              "graph"
+            ]
+          },
+          {
+            "fqName": "db/migrations/executor.py::MigrationExecutor._create_project_state",
+            "path": "db/migrations/executor.py",
+            "preCapRank": 50,
+            "finalScore": 1.1453,
+            "sources": [
+              "graph"
+            ]
+          },
+          {
+            "fqName": "db/migrations/executor.py::MigrationExecutor.apply_migration",
+            "path": "db/migrations/executor.py",
+            "preCapRank": 73,
+            "finalScore": 1.0103,
+            "sources": [
+              "concept_owner"
+            ]
+          },
+          {
+            "fqName": "db/migrations/executor.py::MigrationExecutor",
+            "path": "db/migrations/executor.py",
+            "preCapRank": 118,
+            "finalScore": 0.8918,
+            "sources": [
+              "lexical"
+            ]
+          }
+        ],
+        "replicationValid": true,
+        "replicationNote": "31/31 capsule pool entries present in the scored set"
+      },
+      "postCap": {
+        "candidateCount": 31,
+        "goldFileOrdinaryRank": 19,
+        "goldSymbolOrdinaryRank": null
+      },
+      "delivery": {
+        "mode": "standard",
+        "deliveredPivots": 2,
+        "deliveredSupport": 4,
+        "goldFileDelivered": false,
+        "goldSymbolDelivered": false,
+        "goldDiscardReasons": [
+          "beyond standard support budget (max 4)"
+        ]
+      },
+      "firstDivergence": "LANE_GENERATION_FAILURE",
+      "firstDivergenceDetail": "gold symbol indexed (db/migrations/executor.py::MigrationExecutor.unapply_migration) but NO generator lane scored it at any probed pool up to 32x the product's; 130 candidates were scored",
+      "secondaryContributors": [
+        "a non-gold symbol from the gold file WAS scored at pre-cap rank 19"
+      ],
+      "confidence": "high"
+    },
+    {
+      "instanceId": "django__django-15252",
+      "repo": "django/django",
+      "group": "DEEP_RANKED_OR_PREDELIVERY_LOSS",
+      "goldFate": "support_packed_out",
+      "expectedFiles": [
+        "django/db/migrations/executor.py"
+      ],
+      "expectedSymbols": [
+        "migrate"
+      ],
+      "representation": {
+        "goldFilesExpected": 1,
+        "goldFilesIndexed": 1,
+        "missingFiles": [],
+        "goldFileSymbolCount": 13,
+        "goldSymbolsExpected": 1,
+        "goldSymbolsIndexed": 1,
+        "missingSymbols": [],
+        "indexedGoldSymbols": [
+          {
+            "fqName": "db/migrations/executor.py::MigrationExecutor.migrate",
+            "localName": "migrate",
+            "kind": "method",
+            "path": "db/migrations/executor.py",
+            "edgesIn": 1,
+            "edgesOut": 6,
+            "mechanismFacts": 1
+          }
+        ]
+      },
+      "query": {
+        "shapedQuery": "issue: MigrationRecorder does not obey db_router allow_migrate rules — We have a multi-db setup.",
+        "identifiers": [
+          "MigrationRecorder",
+          "db_router",
+          "allow_migrate"
+        ],
+        "pathClues": [],
+        "likelySymbols": [],
+        "asksByIdentifier": true,
+        "asksByPath": false,
+        "asksByError": false,
+        "asksByTest": false
+      },
+      "preCap": {
+        "evaluatedTotal": 130,
+        "poolCap": 25,
+        "goldSymbolScored": [
+          {
+            "fqName": "db/migrations/executor.py::MigrationExecutor.migrate",
+            "path": "db/migrations/executor.py",
+            "preCapRank": 35,
+            "finalScore": 1.2722,
+            "sources": [
+              "lexical"
+            ],
+            "evidence": [
+              "1 indexed symbol(s) depend on this",
+              "lexical match on local_name, fq_name, local_name, query_coverage, path_segment_signal"
+            ]
+          }
+        ],
+        "goldFileScored": [
+          {
+            "fqName": "db/migrations/executor.py::MigrationExecutor._migrate_all_backwards",
+            "path": "db/migrations/executor.py",
+            "preCapRank": 32,
+            "finalScore": 1.2838,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "db/migrations/executor.py::MigrationExecutor._migrate_all_forwards",
+            "path": "db/migrations/executor.py",
+            "preCapRank": 33,
+            "finalScore": 1.2821,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "db/migrations/executor.py::MigrationExecutor.migrate",
+            "path": "db/migrations/executor.py",
+            "preCapRank": 35,
+            "finalScore": 1.2722,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "db/migrations/executor.py::MigrationExecutor.check_replacements",
+            "path": "db/migrations/executor.py",
+            "preCapRank": 64,
+            "finalScore": 1.2092,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "db/migrations/executor.py::MigrationExecutor.migration_plan",
+            "path": "db/migrations/executor.py",
+            "preCapRank": 93,
+            "finalScore": 1.148,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "db/migrations/executor.py::MigrationExecutor",
+            "path": "db/migrations/executor.py",
+            "preCapRank": 105,
+            "finalScore": 1.0618,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "db/migrations/executor.py::MigrationExecutor.apply_migration",
+            "path": "db/migrations/executor.py",
+            "preCapRank": 110,
+            "finalScore": 0.9647,
+            "sources": [
+              "concept_owner"
+            ]
+          },
+          {
+            "fqName": "db/migrations/executor.py::MigrationExecutor.detect_soft_applied",
+            "path": "db/migrations/executor.py",
+            "preCapRank": 111,
+            "finalScore": 0.9468,
+            "sources": [
+              "concept_owner"
+            ]
+          }
+        ],
+        "replicationValid": true,
+        "replicationNote": "31/31 capsule pool entries present in the scored set"
+      },
+      "postCap": {
+        "candidateCount": 31,
+        "goldFileOrdinaryRank": 29,
+        "goldSymbolOrdinaryRank": null
+      },
+      "delivery": {
+        "mode": "standard",
+        "deliveredPivots": 3,
+        "deliveredSupport": 3,
+        "goldFileDelivered": false,
+        "goldSymbolDelivered": false,
+        "goldDiscardReasons": [
+          "beyond standard support budget (max 3)"
+        ]
+      },
+      "firstDivergence": "CANDIDATE_BOUND_EVICTION",
+      "firstDivergenceDetail": "gold symbol scored 1.272 at pre-cap rank 35, dropped by the pool cap of 25",
+      "secondaryContributors": [],
+      "confidence": "high"
+    },
+    {
+      "instanceId": "django__django-15629",
+      "repo": "django/django",
+      "group": "DEEP_RANKED_OR_PREDELIVERY_LOSS",
+      "goldFate": "support_packed_out",
+      "expectedFiles": [
+        "django/db/backends/base/schema.py",
+        "django/db/backends/oracle/features.py",
+        "django/db/backends/sqlite3/schema.py",
+        "django/db/models/fields/related.py"
+      ],
+      "expectedSymbols": [
+        "DatabaseFeatures",
+        "_alter_field",
+        "convert_empty_strings",
+        "db_parameters",
+        "db_type"
+      ],
+      "representation": {
+        "goldFilesExpected": 4,
+        "goldFilesIndexed": 4,
+        "missingFiles": [],
+        "goldFileSymbolCount": 329,
+        "goldSymbolsExpected": 5,
+        "goldSymbolsIndexed": 5,
+        "missingSymbols": [],
+        "indexedGoldSymbols": [
+          {
+            "fqName": "db/backends/base/schema.py::BaseDatabaseSchemaEditor._alter_field",
+            "localName": "_alter_field",
+            "kind": "method",
+            "path": "db/backends/base/schema.py",
+            "edgesIn": 2,
+            "edgesOut": 26,
+            "mechanismFacts": 0
+          },
+          {
+            "fqName": "db/backends/oracle/features.py::DatabaseFeatures",
+            "localName": "DatabaseFeatures",
+            "kind": "class",
+            "path": "db/backends/oracle/features.py",
+            "edgesIn": 3,
+            "edgesOut": 50,
+            "mechanismFacts": 0
+          },
+          {
+            "fqName": "db/backends/sqlite3/schema.py::DatabaseSchemaEditor._alter_field",
+            "localName": "_alter_field",
+            "kind": "method",
+            "path": "db/backends/sqlite3/schema.py",
+            "edgesIn": 1,
+            "edgesOut": 1,
+            "mechanismFacts": 0
+          },
+          {
+            "fqName": "db/models/fields/related.py::RelatedField.db_type",
+            "localName": "db_type",
+            "kind": "method",
+            "path": "db/models/fields/related.py",
+            "edgesIn": 1,
+            "edgesOut": 0,
+            "mechanismFacts": 0
+          },
+          {
+            "fqName": "db/models/fields/related.py::ForeignKey.db_type",
+            "localName": "db_type",
+            "kind": "method",
+            "path": "db/models/fields/related.py",
+            "edgesIn": 2,
+            "edgesOut": 1,
+            "mechanismFacts": 0
+          },
+          {
+            "fqName": "db/models/fields/related.py::ForeignKey.db_parameters",
+            "localName": "db_parameters",
+            "kind": "method",
+            "path": "db/models/fields/related.py",
+            "edgesIn": 1,
+            "edgesOut": 2,
+            "mechanismFacts": 0
+          },
+          {
+            "fqName": "db/models/fields/related.py::ForeignKey.convert_empty_strings",
+            "localName": "convert_empty_strings",
+            "kind": "method",
+            "path": "db/models/fields/related.py",
+            "edgesIn": 2,
+            "edgesOut": 0,
+            "mechanismFacts": 0
+          },
+          {
+            "fqName": "db/models/fields/related.py::ManyToManyField.db_type",
+            "localName": "db_type",
+            "kind": "method",
+            "path": "db/models/fields/related.py",
+            "edgesIn": 1,
+            "edgesOut": 0,
+            "mechanismFacts": 0
+          },
+          {
+            "fqName": "db/models/fields/related.py::ManyToManyField.db_parameters",
+            "localName": "db_parameters",
+            "kind": "method",
+            "path": "db/models/fields/related.py",
+            "edgesIn": 1,
+            "edgesOut": 0,
+            "mechanismFacts": 0
+          }
+        ]
+      },
+      "query": {
+        "shapedQuery": "issue: Errors with db_collation – no propagation to foreignkeys — (last modified by typonaut)",
+        "identifiers": [
+          "db_collation"
+        ],
+        "pathClues": [],
+        "likelySymbols": [],
+        "asksByIdentifier": true,
+        "asksByPath": false,
+        "asksByError": true,
+        "asksByTest": false
+      },
+      "preCap": {
+        "evaluatedTotal": 132,
+        "poolCap": 25,
+        "goldSymbolScored": [
+          {
+            "fqName": "db/backends/base/schema.py::BaseDatabaseSchemaEditor._alter_field",
+            "path": "db/backends/base/schema.py",
+            "preCapRank": 28,
+            "finalScore": 1.0028,
+            "sources": [
+              "graph"
+            ],
+            "evidence": [
+              "2 indexed symbol(s) depend on this",
+              "centrality support capped at 0% of full: this candidate's own identifying evidence (0.00) is below its centrality (0.15)",
+              "graph calls to alter_field"
+            ]
+          }
+        ],
+        "goldFileScored": [
+          {
+            "fqName": "db/models/fields/related.py::ForeignKey",
+            "path": "db/models/fields/related.py",
+            "preCapRank": 4,
+            "finalScore": 1.7102,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "db/models/fields/related.py::ForeignKey.default_error_messages",
+            "path": "db/models/fields/related.py",
+            "preCapRank": 6,
+            "finalScore": 1.6503,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "db/models/fields/related.py::ForeignObject",
+            "path": "db/models/fields/related.py",
+            "preCapRank": 7,
+            "finalScore": 1.5236,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "db/backends/base/schema.py::BaseDatabaseSchemaEditor._alter_column_collation_sql",
+            "path": "db/backends/base/schema.py",
+            "preCapRank": 8,
+            "finalScore": 1.5099,
+            "sources": [
+              "concept_owner"
+            ]
+          },
+          {
+            "fqName": "db/backends/base/schema.py::BaseDatabaseSchemaEditor._collate_sql",
+            "path": "db/backends/base/schema.py",
+            "preCapRank": 9,
+            "finalScore": 1.438,
+            "sources": [
+              "concept_owner"
+            ]
+          },
+          {
+            "fqName": "db/models/fields/related.py::ForeignObject.get_extra_descriptor_filter",
+            "path": "db/models/fields/related.py",
+            "preCapRank": 25,
+            "finalScore": 1.007,
+            "sources": [
+              "graph"
+            ]
+          },
+          {
+            "fqName": "db/backends/base/schema.py::BaseDatabaseSchemaEditor._alter_field",
+            "path": "db/backends/base/schema.py",
+            "preCapRank": 28,
+            "finalScore": 1.0028,
+            "sources": [
+              "graph"
+            ]
+          },
+          {
+            "fqName": "db/models/fields/related.py::ForeignKey.get_attname",
+            "path": "db/models/fields/related.py",
+            "preCapRank": 32,
+            "finalScore": 0.9623,
+            "sources": [
+              "graph"
+            ]
+          },
+          {
+            "fqName": "db/backends/base/schema.py::BaseDatabaseSchemaEditor.alter_field",
+            "path": "db/backends/base/schema.py",
+            "preCapRank": 39,
+            "finalScore": 0.9022,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "db/backends/oracle/features.py::DatabaseFeatures.django_test_skips",
+            "path": "db/backends/oracle/features.py",
+            "preCapRank": 55,
+            "finalScore": 0.7217,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "db/models/fields/related.py::ForeignKey.__init__",
+            "path": "db/models/fields/related.py",
+            "preCapRank": 70,
+            "finalScore": 0.661,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "db/backends/oracle/features.py::DatabaseFeatures.django_test_expected_failures",
+            "path": "db/backends/oracle/features.py",
+            "preCapRank": 72,
+            "finalScore": 0.6524,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "db/models/fields/related.py::OneToOneField",
+            "path": "db/models/fields/related.py",
+            "preCapRank": 75,
+            "finalScore": 0.6381,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "db/models/fields/related.py::ForeignKey.get_reverse_path_info",
+            "path": "db/models/fields/related.py",
+            "preCapRank": 83,
+            "finalScore": 0.596,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "db/models/fields/related.py::ForeignKey.formfield",
+            "path": "db/models/fields/related.py",
+            "preCapRank": 84,
+            "finalScore": 0.593,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "db/models/fields/related.py::ForeignKey.get_col",
+            "path": "db/models/fields/related.py",
+            "preCapRank": 95,
+            "finalScore": 0.5542,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "db/models/fields/related.py::OneToOneField.one_to_one",
+            "path": "db/models/fields/related.py",
+            "preCapRank": 130,
+            "finalScore": 0.0914,
+            "sources": [
+              "graph"
+            ]
+          }
+        ],
+        "replicationValid": true,
+        "replicationNote": "29/29 capsule pool entries present in the scored set"
+      },
+      "postCap": {
+        "candidateCount": 29,
+        "goldFileOrdinaryRank": 4,
+        "goldSymbolOrdinaryRank": null
+      },
+      "delivery": {
+        "mode": "standard",
+        "deliveredPivots": 2,
+        "deliveredSupport": 4,
+        "goldFileDelivered": false,
+        "goldSymbolDelivered": false,
+        "goldDiscardReasons": [
+          "beyond standard support budget (max 4)"
+        ]
+      },
+      "firstDivergence": "CANDIDATE_BOUND_EVICTION",
+      "firstDivergenceDetail": "gold symbol scored 1.003 at pre-cap rank 28, dropped by the pool cap of 25",
+      "secondaryContributors": [],
+      "confidence": "high"
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-20859",
+      "repo": "matplotlib/matplotlib",
+      "group": "NEVER_RETRIEVED_CAUSE_UNKNOWN",
+      "goldFate": "never_retrieved",
+      "expectedFiles": [
+        "lib/matplotlib/legend.py"
+      ],
+      "expectedSymbols": [
+        "__init__"
+      ],
+      "representation": {
+        "goldFilesExpected": 1,
+        "goldFilesIndexed": 1,
+        "missingFiles": [],
+        "goldFileSymbolCount": 47,
+        "goldSymbolsExpected": 1,
+        "goldSymbolsIndexed": 1,
+        "missingSymbols": [],
+        "indexedGoldSymbols": [
+          {
+            "fqName": "lib/matplotlib/legend.py::DraggableLegend.__init__",
+            "localName": "__init__",
+            "kind": "method",
+            "path": "lib/matplotlib/legend.py",
+            "edgesIn": 1,
+            "edgesOut": 2,
+            "mechanismFacts": 0
+          },
+          {
+            "fqName": "lib/matplotlib/legend.py::Legend.__init__",
+            "localName": "__init__",
+            "kind": "method",
+            "path": "lib/matplotlib/legend.py",
+            "edgesIn": 1,
+            "edgesOut": 15,
+            "mechanismFacts": 1
+          }
+        ]
+      },
+      "query": {
+        "shapedQuery": "files: bug_test.py matplotlib/lib/matplotlib/figure.py matplotlib/lib/matplotlib/legend.py\nsymbols: SubFigure bug_test.py\nissue: Adding a legend to a `SubFigure` doesn't work — <!--To help us understand and resolve your issue, please fill out the form to the best of your ability.--> Errors: TypeError Traceback: File \"bug_test.py\", line 5, in <module> | File \"/.../matplotlib/lib/matplotlib/figure.py\", line…",
+        "identifiers": [
+          "SubFigure",
+          "bug_test.py",
+          "TypeError",
+          "bug_test"
+        ],
+        "pathClues": [],
+        "likelySymbols": [
+          "SubFigure",
+          "bug_test.py"
+        ],
+        "asksByIdentifier": true,
+        "asksByPath": false,
+        "asksByError": true,
+        "asksByTest": false
+      },
+      "preCap": {
+        "evaluatedTotal": 33,
+        "poolCap": 25,
+        "goldSymbolScored": [],
+        "goldFileScored": [],
+        "replicationValid": false,
+        "replicationNote": "20/25 capsule pool entries present in the scored set; uncovered: lib/matplotlib/patches.py::ConnectionPatch, lib/matplotlib/patches.py::ConnectionPatch.__init__, lib/matplotlib/axes/_axes.py::Axes, lib/matplotlib/figure.py::Figure, lib/mpl_toolkits/axes_grid1/mpl_axes.py::Axes"
+      },
+      "postCap": {
+        "candidateCount": 25,
+        "goldFileOrdinaryRank": null,
+        "goldSymbolOrdinaryRank": null
+      },
+      "delivery": {
+        "mode": "standard",
+        "deliveredPivots": 3,
+        "deliveredSupport": 3,
+        "goldFileDelivered": false,
+        "goldSymbolDelivered": false,
+        "goldDiscardReasons": []
+      },
+      "firstDivergence": "LANE_GENERATION_FAILURE",
+      "firstDivergenceDetail": "gold symbol indexed (lib/matplotlib/legend.py::DraggableLegend.__init__, lib/matplotlib/legend.py::Legend.__init__) but NO generator lane scored it at any probed pool up to 32x the product's; 33 candidates were scored",
+      "secondaryContributors": [
+        "task names the gold symbol verbatim: the class-method expansion lane has a foothold this probe does not model"
+      ],
+      "confidence": "low"
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-21568",
+      "repo": "matplotlib/matplotlib",
+      "group": "DEEP_RANKED_OR_PREDELIVERY_LOSS",
+      "goldFate": "support_packed_out",
+      "expectedFiles": [
+        "lib/matplotlib/dates.py"
+      ],
+      "expectedSymbols": [
+        "_wrap_in_tex"
+      ],
+      "representation": {
+        "goldFilesExpected": 1,
+        "goldFilesIndexed": 1,
+        "missingFiles": [],
+        "goldFileSymbolCount": 124,
+        "goldSymbolsExpected": 1,
+        "goldSymbolsIndexed": 1,
+        "missingSymbols": [],
+        "indexedGoldSymbols": [
+          {
+            "fqName": "lib/matplotlib/dates.py::_wrap_in_tex",
+            "localName": "_wrap_in_tex",
+            "kind": "function",
+            "path": "lib/matplotlib/dates.py",
+            "edgesIn": 2,
+            "edgesOut": 0,
+            "mechanismFacts": 0
+          }
+        ]
+      },
+      "query": {
+        "shapedQuery": "issue: [Bug]: Datetime axis with usetex is unclear — ### Bug summary",
+        "identifiers": [],
+        "pathClues": [],
+        "likelySymbols": [],
+        "asksByIdentifier": false,
+        "asksByPath": false,
+        "asksByError": false,
+        "asksByTest": false
+      },
+      "preCap": {
+        "evaluatedTotal": 129,
+        "poolCap": 25,
+        "goldSymbolScored": [],
+        "goldFileScored": [
+          {
+            "fqName": "lib/matplotlib/dates.py::ConciseDateFormatter.__init__",
+            "path": "lib/matplotlib/dates.py",
+            "preCapRank": 9,
+            "finalScore": 0.9946,
+            "sources": [
+              "graph"
+            ]
+          },
+          {
+            "fqName": "lib/matplotlib/dates.py::ConciseDateFormatter",
+            "path": "lib/matplotlib/dates.py",
+            "preCapRank": 10,
+            "finalScore": 0.9448,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "lib/matplotlib/dates.py::AutoDateFormatter",
+            "path": "lib/matplotlib/dates.py",
+            "preCapRank": 15,
+            "finalScore": 0.8824,
+            "sources": [
+              "graph"
+            ]
+          },
+          {
+            "fqName": "lib/matplotlib/dates.py::_get_rc_timezone",
+            "path": "lib/matplotlib/dates.py",
+            "preCapRank": 37,
+            "finalScore": 0.76,
+            "sources": [
+              "graph"
+            ]
+          },
+          {
+            "fqName": "lib/matplotlib/dates.py::ConciseDateFormatter.format_ticks",
+            "path": "lib/matplotlib/dates.py",
+            "preCapRank": 38,
+            "finalScore": 0.76,
+            "sources": [
+              "graph"
+            ]
+          },
+          {
+            "fqName": "lib/matplotlib/dates.py::DateFormatter.__init__",
+            "path": "lib/matplotlib/dates.py",
+            "preCapRank": 42,
+            "finalScore": 0.7551,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "lib/matplotlib/dates.py::AutoDateFormatter.__init__",
+            "path": "lib/matplotlib/dates.py",
+            "preCapRank": 44,
+            "finalScore": 0.6915,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "lib/matplotlib/dates.py::DateLocator.datalim_to_dt",
+            "path": "lib/matplotlib/dates.py",
+            "preCapRank": 49,
+            "finalScore": 0.5287,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "lib/matplotlib/dates.py::AutoDateLocator.__init__",
+            "path": "lib/matplotlib/dates.py",
+            "preCapRank": 50,
+            "finalScore": 0.5198,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "lib/matplotlib/dates.py::DAYS_PER_MONTH",
+            "path": "lib/matplotlib/dates.py",
+            "preCapRank": 122,
+            "finalScore": 0,
+            "sources": [
+              "graph"
+            ]
+          },
+          {
+            "fqName": "lib/matplotlib/dates.py::HOURS_PER_DAY",
+            "path": "lib/matplotlib/dates.py",
+            "preCapRank": 123,
+            "finalScore": 0,
+            "sources": [
+              "graph"
+            ]
+          },
+          {
+            "fqName": "lib/matplotlib/dates.py::MINUTES_PER_DAY",
+            "path": "lib/matplotlib/dates.py",
+            "preCapRank": 124,
+            "finalScore": 0,
+            "sources": [
+              "graph"
+            ]
+          },
+          {
+            "fqName": "lib/matplotlib/dates.py::SEC_PER_DAY",
+            "path": "lib/matplotlib/dates.py",
+            "preCapRank": 125,
+            "finalScore": 0,
+            "sources": [
+              "graph"
+            ]
+          }
+        ],
+        "replicationValid": true,
+        "replicationNote": "29/29 capsule pool entries present in the scored set"
+      },
+      "postCap": {
+        "candidateCount": 29,
+        "goldFileOrdinaryRank": 9,
+        "goldSymbolOrdinaryRank": null
+      },
+      "delivery": {
+        "mode": "standard",
+        "deliveredPivots": 2,
+        "deliveredSupport": 4,
+        "goldFileDelivered": false,
+        "goldSymbolDelivered": false,
+        "goldDiscardReasons": [
+          "beyond standard support budget (max 4)"
+        ]
+      },
+      "firstDivergence": "LANE_GENERATION_FAILURE",
+      "firstDivergenceDetail": "gold symbol indexed (lib/matplotlib/dates.py::_wrap_in_tex) but NO generator lane scored it at any probed pool up to 32x the product's; 129 candidates were scored",
+      "secondaryContributors": [
+        "a non-gold symbol from the gold file WAS scored at pre-cap rank 9"
+      ],
+      "confidence": "high"
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-23314",
+      "repo": "matplotlib/matplotlib",
+      "group": "DEEP_RANKED_OR_PREDELIVERY_LOSS",
+      "goldFate": "support_packed_out",
+      "expectedFiles": [
+        "lib/mpl_toolkits/mplot3d/axes3d.py"
+      ],
+      "expectedSymbols": [
+        "apply_aspect",
+        "draw"
+      ],
+      "representation": {
+        "goldFilesExpected": 1,
+        "goldFilesIndexed": 1,
+        "missingFiles": [],
+        "goldFileSymbolCount": 114,
+        "goldSymbolsExpected": 2,
+        "goldSymbolsIndexed": 2,
+        "missingSymbols": [],
+        "indexedGoldSymbols": [
+          {
+            "fqName": "lib/mpl_toolkits/mplot3d/axes3d.py::Axes3D.apply_aspect",
+            "localName": "apply_aspect",
+            "kind": "method",
+            "path": "lib/mpl_toolkits/mplot3d/axes3d.py",
+            "edgesIn": 2,
+            "edgesOut": 1,
+            "mechanismFacts": 1
+          },
+          {
+            "fqName": "lib/mpl_toolkits/mplot3d/axes3d.py::Axes3D.draw",
+            "localName": "draw",
+            "kind": "method",
+            "path": "lib/mpl_toolkits/mplot3d/axes3d.py",
+            "edgesIn": 1,
+            "edgesOut": 5,
+            "mechanismFacts": 2
+          }
+        ]
+      },
+      "query": {
+        "shapedQuery": "symbols: set_visible\nissue: [Bug]: set_visible() not working for 3d projection — ### Bug summary",
+        "identifiers": [
+          "set_visible"
+        ],
+        "pathClues": [],
+        "likelySymbols": [
+          "set_visible"
+        ],
+        "asksByIdentifier": true,
+        "asksByPath": false,
+        "asksByError": false,
+        "asksByTest": false
+      },
+      "preCap": {
+        "evaluatedTotal": 135,
+        "poolCap": 25,
+        "goldSymbolScored": [],
+        "goldFileScored": [
+          {
+            "fqName": "lib/mpl_toolkits/mplot3d/axes3d.py::Axes3D.tricontourf",
+            "path": "lib/mpl_toolkits/mplot3d/axes3d.py",
+            "preCapRank": 62,
+            "finalScore": 0.8637,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "lib/mpl_toolkits/mplot3d/axes3d.py::Axes3D.tricontour",
+            "path": "lib/mpl_toolkits/mplot3d/axes3d.py",
+            "preCapRank": 63,
+            "finalScore": 0.8627,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "lib/mpl_toolkits/mplot3d/axes3d.py::Axes3D.grid",
+            "path": "lib/mpl_toolkits/mplot3d/axes3d.py",
+            "preCapRank": 67,
+            "finalScore": 0.7353,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "lib/mpl_toolkits/mplot3d/axes3d.py::Axes3D.set_axis_on",
+            "path": "lib/mpl_toolkits/mplot3d/axes3d.py",
+            "preCapRank": 73,
+            "finalScore": 0.6993,
+            "sources": [
+              "graph"
+            ]
+          },
+          {
+            "fqName": "lib/mpl_toolkits/mplot3d/axes3d.py::Axes3D.set_proj_type",
+            "path": "lib/mpl_toolkits/mplot3d/axes3d.py",
+            "preCapRank": 74,
+            "finalScore": 0.6939,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "lib/mpl_toolkits/mplot3d/axes3d.py::Axes3D._button_press",
+            "path": "lib/mpl_toolkits/mplot3d/axes3d.py",
+            "preCapRank": 83,
+            "finalScore": 0.6786,
+            "sources": [
+              "graph"
+            ]
+          },
+          {
+            "fqName": "lib/mpl_toolkits/mplot3d/axes3d.py::Axes3D.add_collection3d",
+            "path": "lib/mpl_toolkits/mplot3d/axes3d.py",
+            "preCapRank": 84,
+            "finalScore": 0.6786,
+            "sources": [
+              "graph"
+            ]
+          },
+          {
+            "fqName": "lib/mpl_toolkits/mplot3d/axes3d.py::Axes3D.__init__",
+            "path": "lib/mpl_toolkits/mplot3d/axes3d.py",
+            "preCapRank": 85,
+            "finalScore": 0.6759,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "lib/mpl_toolkits/mplot3d/axes3d.py::Axes3D.set_aspect",
+            "path": "lib/mpl_toolkits/mplot3d/axes3d.py",
+            "preCapRank": 86,
+            "finalScore": 0.6625,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "lib/mpl_toolkits/mplot3d/axes3d.py::Axes3D.errorbar",
+            "path": "lib/mpl_toolkits/mplot3d/axes3d.py",
+            "preCapRank": 90,
+            "finalScore": 0.6525,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "lib/mpl_toolkits/mplot3d/axes3d.py::Axes3D.set_box_aspect",
+            "path": "lib/mpl_toolkits/mplot3d/axes3d.py",
+            "preCapRank": 91,
+            "finalScore": 0.6469,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "lib/mpl_toolkits/mplot3d/axes3d.py::Axes3D.set_zbound",
+            "path": "lib/mpl_toolkits/mplot3d/axes3d.py",
+            "preCapRank": 95,
+            "finalScore": 0.6346,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "lib/mpl_toolkits/mplot3d/axes3d.py::Axes3D.contour",
+            "path": "lib/mpl_toolkits/mplot3d/axes3d.py",
+            "preCapRank": 101,
+            "finalScore": 0.5834,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "lib/mpl_toolkits/mplot3d/axes3d.py::Axes3D.contourf",
+            "path": "lib/mpl_toolkits/mplot3d/axes3d.py",
+            "preCapRank": 103,
+            "finalScore": 0.5783,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "lib/mpl_toolkits/mplot3d/axes3d.py::Axes3D.voxels",
+            "path": "lib/mpl_toolkits/mplot3d/axes3d.py",
+            "preCapRank": 106,
+            "finalScore": 0.5612,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "lib/mpl_toolkits/mplot3d/axes3d.py::Axes3D.view_init",
+            "path": "lib/mpl_toolkits/mplot3d/axes3d.py",
+            "preCapRank": 110,
+            "finalScore": 0.5441,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "lib/mpl_toolkits/mplot3d/axes3d.py::Axes3D.tick_params",
+            "path": "lib/mpl_toolkits/mplot3d/axes3d.py",
+            "preCapRank": 113,
+            "finalScore": 0.5296,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "lib/mpl_toolkits/mplot3d/axes3d.py::Axes3D.plot_wireframe",
+            "path": "lib/mpl_toolkits/mplot3d/axes3d.py",
+            "preCapRank": 117,
+            "finalScore": 0.521,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "lib/mpl_toolkits/mplot3d/axes3d.py::Axes3D.plot_surface",
+            "path": "lib/mpl_toolkits/mplot3d/axes3d.py",
+            "preCapRank": 120,
+            "finalScore": 0.5133,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "lib/mpl_toolkits/mplot3d/axes3d.py::Axes3D.get_proj",
+            "path": "lib/mpl_toolkits/mplot3d/axes3d.py",
+            "preCapRank": 121,
+            "finalScore": 0.5107,
+            "sources": [
+              "concept_owner"
+            ]
+          },
+          {
+            "fqName": "lib/mpl_toolkits/mplot3d/axes3d.py::Axes3D.add_contour_set",
+            "path": "lib/mpl_toolkits/mplot3d/axes3d.py",
+            "preCapRank": 126,
+            "finalScore": 0.4298,
+            "sources": [
+              "concept_owner"
+            ]
+          },
+          {
+            "fqName": "lib/mpl_toolkits/mplot3d/axes3d.py::Axes3D.name",
+            "path": "lib/mpl_toolkits/mplot3d/axes3d.py",
+            "preCapRank": 128,
+            "finalScore": 0.1377,
+            "sources": [
+              "same_module"
+            ]
+          },
+          {
+            "fqName": "lib/mpl_toolkits/mplot3d/axes3d.py::Axes3D.dist",
+            "path": "lib/mpl_toolkits/mplot3d/axes3d.py",
+            "preCapRank": 135,
+            "finalScore": 0,
+            "sources": [
+              "same_module"
+            ]
+          }
+        ],
+        "replicationValid": true,
+        "replicationNote": "31/31 capsule pool entries present in the scored set"
+      },
+      "postCap": {
+        "candidateCount": 31,
+        "goldFileOrdinaryRank": 29,
+        "goldSymbolOrdinaryRank": null
+      },
+      "delivery": {
+        "mode": "standard",
+        "deliveredPivots": 2,
+        "deliveredSupport": 4,
+        "goldFileDelivered": false,
+        "goldSymbolDelivered": false,
+        "goldDiscardReasons": [
+          "beyond standard support budget (max 4)"
+        ]
+      },
+      "firstDivergence": "LANE_GENERATION_FAILURE",
+      "firstDivergenceDetail": "gold symbol indexed (lib/mpl_toolkits/mplot3d/axes3d.py::Axes3D.apply_aspect, lib/mpl_toolkits/mplot3d/axes3d.py::Axes3D.draw) but NO generator lane scored it at any probed pool up to 32x the product's; 135 candidates were scored",
+      "secondaryContributors": [
+        "a non-gold symbol from the gold file WAS scored at pre-cap rank 62"
+      ],
+      "confidence": "high"
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-25479",
+      "repo": "matplotlib/matplotlib",
+      "group": "NEVER_RETRIEVED_CAUSE_UNKNOWN",
+      "goldFate": "never_retrieved",
+      "expectedFiles": [
+        "lib/matplotlib/cm.py",
+        "lib/matplotlib/colors.py"
+      ],
+      "expectedSymbols": [
+        "__copy__",
+        "__eq__",
+        "register",
+        "unregister"
+      ],
+      "representation": {
+        "goldFilesExpected": 2,
+        "goldFilesIndexed": 2,
+        "missingFiles": [],
+        "goldFileSymbolCount": 184,
+        "goldSymbolsExpected": 4,
+        "goldSymbolsIndexed": 4,
+        "missingSymbols": [],
+        "indexedGoldSymbols": [
+          {
+            "fqName": "lib/matplotlib/cm.py::ColormapRegistry.register",
+            "localName": "register",
+            "kind": "method",
+            "path": "lib/matplotlib/cm.py",
+            "edgesIn": 1,
+            "edgesOut": 3,
+            "mechanismFacts": 0
+          },
+          {
+            "fqName": "lib/matplotlib/cm.py::ColormapRegistry.unregister",
+            "localName": "unregister",
+            "kind": "method",
+            "path": "lib/matplotlib/cm.py",
+            "edgesIn": 1,
+            "edgesOut": 0,
+            "mechanismFacts": 0
+          },
+          {
+            "fqName": "lib/matplotlib/colors.py::ColorSequenceRegistry.register",
+            "localName": "register",
+            "kind": "method",
+            "path": "lib/matplotlib/colors.py",
+            "edgesIn": 1,
+            "edgesOut": 2,
+            "mechanismFacts": 0
+          },
+          {
+            "fqName": "lib/matplotlib/colors.py::ColorSequenceRegistry.unregister",
+            "localName": "unregister",
+            "kind": "method",
+            "path": "lib/matplotlib/colors.py",
+            "edgesIn": 1,
+            "edgesOut": 1,
+            "mechanismFacts": 0
+          },
+          {
+            "fqName": "lib/matplotlib/colors.py::Colormap.__copy__",
+            "localName": "__copy__",
+            "kind": "method",
+            "path": "lib/matplotlib/colors.py",
+            "edgesIn": 2,
+            "edgesOut": 0,
+            "mechanismFacts": 0
+          },
+          {
+            "fqName": "lib/matplotlib/colors.py::Colormap.__eq__",
+            "localName": "__eq__",
+            "kind": "method",
+            "path": "lib/matplotlib/colors.py",
+            "edgesIn": 1,
+            "edgesOut": 2,
+            "mechanismFacts": 0
+          }
+        ]
+      },
+      "query": {
+        "shapedQuery": "symbols: pyplot Confusing\nissue: Confusing (broken?) colormap name handling — Consider the following example in which one creates and registers a new colormap and attempt to use it with the `pyplot` interface.",
+        "identifiers": [
+          "pyplot",
+          "Confusing",
+          "ValueError",
+          "some_cmap_name",
+          "gnuplot_r",
+          "gist_rainbow",
+          "gist_ncar_r",
+          "gist_gray_r"
+        ],
+        "pathClues": [],
+        "likelySymbols": [
+          "pyplot",
+          "Confusing"
+        ],
+        "asksByIdentifier": true,
+        "asksByPath": false,
+        "asksByError": true,
+        "asksByTest": false
+      },
+      "preCap": {
+        "evaluatedTotal": 139,
+        "poolCap": 25,
+        "goldSymbolScored": [
+          {
+            "fqName": "lib/matplotlib/cm.py::ColormapRegistry.register",
+            "path": "lib/matplotlib/cm.py",
+            "preCapRank": 45,
+            "finalScore": 1.1608,
+            "sources": [
+              "lexical"
+            ],
+            "evidence": [
+              "1 indexed symbol(s) depend on this",
+              "lexical match on docstring, fq_name, signature, signature, local_name, docstring, docstring, query_coverage"
+            ]
+          }
+        ],
+        "goldFileScored": [
+          {
+            "fqName": "lib/matplotlib/cm.py::ColormapRegistry.register",
+            "path": "lib/matplotlib/cm.py",
+            "preCapRank": 45,
+            "finalScore": 1.1608,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "lib/matplotlib/colors.py::ColorSequenceRegistry",
+            "path": "lib/matplotlib/colors.py",
+            "preCapRank": 79,
+            "finalScore": 1.0887,
+            "sources": [
+              "concept_owner"
+            ]
+          },
+          {
+            "fqName": "lib/matplotlib/cm.py::register_cmap",
+            "path": "lib/matplotlib/cm.py",
+            "preCapRank": 105,
+            "finalScore": 0.9902,
+            "sources": [
+              "concept_owner"
+            ]
+          },
+          {
+            "fqName": "lib/matplotlib/colors.py::LightSource.shade",
+            "path": "lib/matplotlib/colors.py",
+            "preCapRank": 107,
+            "finalScore": 0.8736,
+            "sources": [
+              "concept_owner"
+            ]
+          },
+          {
+            "fqName": "lib/matplotlib/cm.py::unregister_cmap",
+            "path": "lib/matplotlib/cm.py",
+            "preCapRank": 120,
+            "finalScore": 0.7011,
+            "sources": [
+              "concept_owner"
+            ]
+          }
+        ],
+        "replicationValid": false,
+        "replicationNote": "23/25 capsule pool entries present in the scored set; uncovered: lib/matplotlib/_pylab_helpers.py::Gcf, lib/matplotlib/_pylab_helpers.py::Gcf._set_new_active_manager"
+      },
+      "postCap": {
+        "candidateCount": 25,
+        "goldFileOrdinaryRank": null,
+        "goldSymbolOrdinaryRank": null
+      },
+      "delivery": {
+        "mode": "standard",
+        "deliveredPivots": 3,
+        "deliveredSupport": 3,
+        "goldFileDelivered": false,
+        "goldSymbolDelivered": false,
+        "goldDiscardReasons": []
+      },
+      "firstDivergence": "CANDIDATE_BOUND_EVICTION",
+      "firstDivergenceDetail": "gold symbol scored 1.161 at pre-cap rank 45, dropped by the pool cap of 25",
+      "secondaryContributors": [],
+      "confidence": "low"
+    },
+    {
+      "instanceId": "mwaskom__seaborn-3069",
+      "repo": "mwaskom/seaborn",
+      "group": "DEEP_RANKED_OR_PREDELIVERY_LOSS",
+      "goldFate": "support_packed_out",
+      "expectedFiles": [
+        "seaborn/_core/plot.py"
+      ],
+      "expectedSymbols": [
+        "_finalize_figure",
+        "_setup_scales"
+      ],
+      "representation": {
+        "goldFilesExpected": 1,
+        "goldFilesIndexed": 1,
+        "missingFiles": [],
+        "goldFileSymbolCount": 80,
+        "goldSymbolsExpected": 2,
+        "goldSymbolsIndexed": 2,
+        "missingSymbols": [],
+        "indexedGoldSymbols": [
+          {
+            "fqName": "seaborn/_core/plot.py::Plotter._setup_scales",
+            "localName": "_setup_scales",
+            "kind": "method",
+            "path": "seaborn/_core/plot.py",
+            "edgesIn": 1,
+            "edgesOut": 10,
+            "mechanismFacts": 0
+          },
+          {
+            "fqName": "seaborn/_core/plot.py::Plotter._finalize_figure",
+            "localName": "_finalize_figure",
+            "kind": "method",
+            "path": "seaborn/_core/plot.py",
+            "edgesIn": 1,
+            "edgesOut": 3,
+            "mechanismFacts": 0
+          }
+        ]
+      },
+      "query": {
+        "shapedQuery": "issue: Nominal scale should be drawn the same way as categorical scales — Three distinctive things happen on the categorical axis in seaborn's categorical plots:",
+        "identifiers": [],
+        "pathClues": [],
+        "likelySymbols": [],
+        "asksByIdentifier": false,
+        "asksByPath": false,
+        "asksByError": false,
+        "asksByTest": false
+      },
+      "preCap": {
+        "evaluatedTotal": 130,
+        "poolCap": 25,
+        "goldSymbolScored": [],
+        "goldFileScored": [
+          {
+            "fqName": "seaborn/_core/plot.py::Plot.scale",
+            "path": "seaborn/_core/plot.py",
+            "preCapRank": 16,
+            "finalScore": 1.4824,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "seaborn/_core/plot.py::Plot.theme",
+            "path": "seaborn/_core/plot.py",
+            "preCapRank": 19,
+            "finalScore": 1.4516,
+            "sources": [
+              "graph"
+            ]
+          },
+          {
+            "fqName": "seaborn/_core/plot.py::Plot",
+            "path": "seaborn/_core/plot.py",
+            "preCapRank": 25,
+            "finalScore": 1.3581,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "seaborn/_core/plot.py::Plot.add",
+            "path": "seaborn/_core/plot.py",
+            "preCapRank": 85,
+            "finalScore": 1.0018,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "seaborn/_core/plot.py::Plot.label",
+            "path": "seaborn/_core/plot.py",
+            "preCapRank": 108,
+            "finalScore": 0.8215,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "seaborn/_core/plot.py::Plotter._update_legend_contents",
+            "path": "seaborn/_core/plot.py",
+            "preCapRank": 110,
+            "finalScore": 0.7889,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "seaborn/_core/plot.py::Plotter._repr_png_",
+            "path": "seaborn/_core/plot.py",
+            "preCapRank": 113,
+            "finalScore": 0.7674,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "seaborn/_core/plot.py::Plotter._unscale_coords",
+            "path": "seaborn/_core/plot.py",
+            "preCapRank": 120,
+            "finalScore": 0.7538,
+            "sources": [
+              "lexical"
+            ]
+          }
+        ],
+        "replicationValid": true,
+        "replicationNote": "25/25 capsule pool entries present in the scored set"
+      },
+      "postCap": {
+        "candidateCount": 25,
+        "goldFileOrdinaryRank": 17,
+        "goldSymbolOrdinaryRank": null
+      },
+      "delivery": {
+        "mode": "standard",
+        "deliveredPivots": 2,
+        "deliveredSupport": 4,
+        "goldFileDelivered": false,
+        "goldSymbolDelivered": false,
+        "goldDiscardReasons": [
+          "beyond standard support budget (max 4)"
+        ]
+      },
+      "firstDivergence": "CANDIDATE_GENERATION_POOL_BOUND",
+      "firstDivergenceDetail": "gold symbol unscored at the product pool of 25; the generators reach it only at pool 50, where it scores 1.132 at pre-cap rank 85",
+      "secondaryContributors": [
+        "a non-gold symbol from the gold file WAS scored at pre-cap rank 16"
+      ],
+      "confidence": "high"
+    },
+    {
+      "instanceId": "psf__requests-2931",
+      "repo": "psf/requests",
+      "group": "DEEP_RANKED_OR_PREDELIVERY_LOSS",
+      "goldFate": "support_packed_out",
+      "expectedFiles": [
+        "requests/models.py"
+      ],
+      "expectedSymbols": [
+        "_encode_params",
+        "prepare_url"
+      ],
+      "representation": {
+        "goldFilesExpected": 1,
+        "goldFilesIndexed": 1,
+        "missingFiles": [],
+        "goldFileSymbolCount": 50,
+        "goldSymbolsExpected": 2,
+        "goldSymbolsIndexed": 2,
+        "missingSymbols": [],
+        "indexedGoldSymbols": [
+          {
+            "fqName": "requests/models.py::RequestEncodingMixin._encode_params",
+            "localName": "_encode_params",
+            "kind": "method",
+            "path": "requests/models.py",
+            "edgesIn": 3,
+            "edgesOut": 2,
+            "mechanismFacts": 1
+          },
+          {
+            "fqName": "requests/models.py::PreparedRequest.prepare_url",
+            "localName": "prepare_url",
+            "kind": "method",
+            "path": "requests/models.py",
+            "edgesIn": 2,
+            "edgesOut": 8,
+            "mechanismFacts": 1
+          }
+        ]
+      },
+      "query": {
+        "shapedQuery": "issue: Request with binary payload fails due to calling to_native_string — Introduced with https://github.com/kennethreitz/requests/issues/2844",
+        "identifiers": [
+          "to_native_string"
+        ],
+        "pathClues": [],
+        "likelySymbols": [],
+        "asksByIdentifier": true,
+        "asksByPath": false,
+        "asksByError": false,
+        "asksByTest": false
+      },
+      "preCap": {
+        "evaluatedTotal": 127,
+        "poolCap": 25,
+        "goldSymbolScored": [
+          {
+            "fqName": "requests/models.py::RequestEncodingMixin._encode_params",
+            "path": "requests/models.py",
+            "preCapRank": 35,
+            "finalScore": 1.147,
+            "sources": [
+              "graph"
+            ],
+            "evidence": [
+              "3 indexed symbol(s) depend on this",
+              "centrality support capped at 0% of full: this candidate's own identifying evidence (0.00) is below its centrality (0.08)",
+              "graph calls from to_native_string"
+            ]
+          }
+        ],
+        "goldFileScored": [
+          {
+            "fqName": "requests/models.py::RequestEncodingMixin._encode_params",
+            "path": "requests/models.py",
+            "preCapRank": 35,
+            "finalScore": 1.147,
+            "sources": [
+              "graph"
+            ]
+          }
+        ],
+        "replicationValid": true,
+        "replicationNote": "28/28 capsule pool entries present in the scored set (compound-task rescue path)"
+      },
+      "postCap": {
+        "candidateCount": 28,
+        "goldFileOrdinaryRank": null,
+        "goldSymbolOrdinaryRank": null
+      },
+      "delivery": {
+        "mode": "standard",
+        "deliveredPivots": 2,
+        "deliveredSupport": 4,
+        "goldFileDelivered": false,
+        "goldSymbolDelivered": false,
+        "goldDiscardReasons": [
+          "beyond standard support budget (max 4)"
+        ]
+      },
+      "firstDivergence": "CANDIDATE_BOUND_EVICTION",
+      "firstDivergenceDetail": "gold symbol scored 1.147 at pre-cap rank 35, dropped by the pool cap of 25",
+      "secondaryContributors": [],
+      "confidence": "high"
+    },
+    {
+      "instanceId": "pydata__xarray-4687",
+      "repo": "pydata/xarray",
+      "group": "DEEP_RANKED_OR_PREDELIVERY_LOSS",
+      "goldFate": "support_packed_out",
+      "expectedFiles": [
+        "xarray/core/computation.py"
+      ],
+      "expectedSymbols": [
+        "dot",
+        "where"
+      ],
+      "representation": {
+        "goldFilesExpected": 1,
+        "goldFilesIndexed": 1,
+        "missingFiles": [],
+        "goldFileSymbolCount": 53,
+        "goldSymbolsExpected": 2,
+        "goldSymbolsIndexed": 2,
+        "missingSymbols": [],
+        "indexedGoldSymbols": [
+          {
+            "fqName": "xarray/core/computation.py::dot",
+            "localName": "dot",
+            "kind": "function",
+            "path": "xarray/core/computation.py",
+            "edgesIn": 8,
+            "edgesOut": 3,
+            "mechanismFacts": 1
+          },
+          {
+            "fqName": "xarray/core/computation.py::where",
+            "localName": "where",
+            "kind": "function",
+            "path": "xarray/core/computation.py",
+            "edgesIn": 7,
+            "edgesOut": 2,
+            "mechanismFacts": 0
+          }
+        ]
+      },
+      "query": {
+        "shapedQuery": "issue: xr.where not preserving attributes — <!-- Please include a self-contained copy-pastable example that generates the issue if possible.",
+        "identifiers": [],
+        "pathClues": [],
+        "likelySymbols": [],
+        "asksByIdentifier": false,
+        "asksByPath": false,
+        "asksByError": false,
+        "asksByTest": false
+      },
+      "preCap": {
+        "evaluatedTotal": 130,
+        "poolCap": 25,
+        "goldSymbolScored": [],
+        "goldFileScored": [
+          {
+            "fqName": "xarray/core/computation.py::apply_ufunc",
+            "path": "xarray/core/computation.py",
+            "preCapRank": 9,
+            "finalScore": 0.9454,
+            "sources": [
+              "lexical"
+            ]
+          }
+        ],
+        "replicationValid": true,
+        "replicationNote": "29/29 capsule pool entries present in the scored set"
+      },
+      "postCap": {
+        "candidateCount": 29,
+        "goldFileOrdinaryRank": 9,
+        "goldSymbolOrdinaryRank": null
+      },
+      "delivery": {
+        "mode": "standard",
+        "deliveredPivots": 2,
+        "deliveredSupport": 4,
+        "goldFileDelivered": false,
+        "goldSymbolDelivered": false,
+        "goldDiscardReasons": [
+          "beyond standard support budget (max 4)"
+        ]
+      },
+      "firstDivergence": "CANDIDATE_GENERATION_POOL_BOUND",
+      "firstDivergenceDetail": "gold symbol unscored at the product pool of 25; the generators reach it only at pool 100, where it scores 0.461 at pre-cap rank 292",
+      "secondaryContributors": [
+        "a non-gold symbol from the gold file WAS scored at pre-cap rank 9"
+      ],
+      "confidence": "high"
+    },
+    {
+      "instanceId": "pydata__xarray-6721",
+      "repo": "pydata/xarray",
+      "group": "NEVER_RETRIEVED_CAUSE_UNKNOWN",
+      "goldFate": "never_retrieved",
+      "expectedFiles": [
+        "xarray/core/common.py"
+      ],
+      "expectedSymbols": [
+        "get_chunksizes"
+      ],
+      "representation": {
+        "goldFilesExpected": 1,
+        "goldFilesIndexed": 1,
+        "missingFiles": [],
+        "goldFileSymbolCount": 94,
+        "goldSymbolsExpected": 1,
+        "goldSymbolsIndexed": 1,
+        "missingSymbols": [],
+        "indexedGoldSymbols": [
+          {
+            "fqName": "xarray/core/common.py::get_chunksizes",
+            "localName": "get_chunksizes",
+            "kind": "function",
+            "path": "xarray/core/common.py",
+            "edgesIn": 5,
+            "edgesOut": 1,
+            "mechanismFacts": 0
+          }
+        ]
+      },
+      "query": {
+        "shapedQuery": "issue: Accessing chunks on zarr backed xarray seems to load entire array into memory — ### What happened?",
+        "identifiers": [],
+        "pathClues": [],
+        "likelySymbols": [],
+        "asksByIdentifier": false,
+        "asksByPath": false,
+        "asksByError": false,
+        "asksByTest": false
+      },
+      "preCap": {
+        "evaluatedTotal": 130,
+        "poolCap": 25,
+        "goldSymbolScored": [],
+        "goldFileScored": [],
+        "replicationValid": true,
+        "replicationNote": "25/25 capsule pool entries present in the scored set"
+      },
+      "postCap": {
+        "candidateCount": 25,
+        "goldFileOrdinaryRank": null,
+        "goldSymbolOrdinaryRank": null
+      },
+      "delivery": {
+        "mode": "standard",
+        "deliveredPivots": 2,
+        "deliveredSupport": 4,
+        "goldFileDelivered": false,
+        "goldSymbolDelivered": false,
+        "goldDiscardReasons": []
+      },
+      "firstDivergence": "CANDIDATE_GENERATION_POOL_BOUND",
+      "firstDivergenceDetail": "gold symbol unscored at the product pool of 25; the generators reach it only at pool 200, where it scores 0.833 at pre-cap rank 397",
+      "secondaryContributors": [],
+      "confidence": "high"
+    },
+    {
+      "instanceId": "pylint-dev__pylint-4661",
+      "repo": "pylint-dev/pylint",
+      "group": "DEEP_RANKED_OR_PREDELIVERY_LOSS",
+      "goldFate": "support_packed_out",
+      "expectedFiles": [
+        "pylint/config/__init__.py",
+        "setup.cfg"
+      ],
+      "expectedSymbols": [
+        "_get_pdata_path",
+        "ignore_missing_imports",
+        "known_third_party"
+      ],
+      "representation": {
+        "goldFilesExpected": 2,
+        "goldFilesIndexed": 1,
+        "missingFiles": [
+          "setup.cfg"
+        ],
+        "goldFileSymbolCount": 9,
+        "goldSymbolsExpected": 3,
+        "goldSymbolsIndexed": 1,
+        "missingSymbols": [
+          "ignore_missing_imports",
+          "known_third_party"
+        ],
+        "indexedGoldSymbols": [
+          {
+            "fqName": "pylint/config/__init__.py::_get_pdata_path",
+            "localName": "_get_pdata_path",
+            "kind": "function",
+            "path": "pylint/config/__init__.py",
+            "edgesIn": 2,
+            "edgesOut": 0,
+            "mechanismFacts": 0
+          }
+        ]
+      },
+      "query": {
+        "shapedQuery": "issue: Make pylint XDG Base Directory Specification compliant — I have this really annoying `.pylint.d` directory in my home folder.",
+        "identifiers": [],
+        "pathClues": [],
+        "likelySymbols": [],
+        "asksByIdentifier": false,
+        "asksByPath": false,
+        "asksByError": false,
+        "asksByTest": false
+      },
+      "preCap": {
+        "evaluatedTotal": 127,
+        "poolCap": 25,
+        "goldSymbolScored": [
+          {
+            "fqName": "pylint/config/__init__.py::_get_pdata_path",
+            "path": "pylint/config/__init__.py",
+            "preCapRank": 115,
+            "finalScore": 0.6806,
+            "sources": [
+              "concept_owner"
+            ],
+            "evidence": [
+              "2 indexed symbol(s) depend on this",
+              "centrality support capped at 0% of full: this candidate's own identifying evidence (0.00) is below its centrality (0.01)",
+              "pylint/config/__init__.py appears to own this behaviour (4 of 4 definitions cover 2/9 requested concepts (base, pylint)); this definition covers base"
+            ]
+          }
+        ],
+        "goldFileScored": [
+          {
+            "fqName": "pylint/config/__init__.py::ENV_HELP",
+            "path": "pylint/config/__init__.py",
+            "preCapRank": 56,
+            "finalScore": 1.3843,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "pylint/config/__init__.py::load_results",
+            "path": "pylint/config/__init__.py",
+            "preCapRank": 113,
+            "finalScore": 0.6823,
+            "sources": [
+              "concept_owner"
+            ]
+          },
+          {
+            "fqName": "pylint/config/__init__.py::save_results",
+            "path": "pylint/config/__init__.py",
+            "preCapRank": 114,
+            "finalScore": 0.6822,
+            "sources": [
+              "concept_owner"
+            ]
+          },
+          {
+            "fqName": "pylint/config/__init__.py::_get_pdata_path",
+            "path": "pylint/config/__init__.py",
+            "preCapRank": 115,
+            "finalScore": 0.6806,
+            "sources": [
+              "concept_owner"
+            ]
+          }
+        ],
+        "replicationValid": true,
+        "replicationNote": "28/28 capsule pool entries present in the scored set"
+      },
+      "postCap": {
+        "candidateCount": 28,
+        "goldFileOrdinaryRank": 26,
+        "goldSymbolOrdinaryRank": 28
+      },
+      "delivery": {
+        "mode": "standard",
+        "deliveredPivots": 2,
+        "deliveredSupport": 4,
+        "goldFileDelivered": false,
+        "goldSymbolDelivered": false,
+        "goldDiscardReasons": [
+          "beyond standard support budget (max 4)"
+        ]
+      },
+      "firstDivergence": "SUPPORT_PACKING",
+      "firstDivergenceDetail": "gold symbol admitted at ordinary rank 28 and lost a support slot",
+      "secondaryContributors": [],
+      "confidence": "high"
+    },
+    {
+      "instanceId": "pylint-dev__pylint-6528",
+      "repo": "pylint-dev/pylint",
+      "group": "DEEP_RANKED_OR_PREDELIVERY_LOSS",
+      "goldFate": "support_packed_out",
+      "expectedFiles": [
+        "pylint/lint/expand_modules.py",
+        "pylint/lint/pylinter.py"
+      ],
+      "expectedSymbols": [
+        "_discover_files",
+        "_is_ignored_file",
+        "_is_in_ignore_list_re",
+        "expand_modules",
+        "initialize"
+      ],
+      "representation": {
+        "goldFilesExpected": 2,
+        "goldFilesIndexed": 2,
+        "missingFiles": [],
+        "goldFileSymbolCount": 58,
+        "goldSymbolsExpected": 5,
+        "goldSymbolsIndexed": 4,
+        "missingSymbols": [
+          "_is_ignored_file"
+        ],
+        "indexedGoldSymbols": [
+          {
+            "fqName": "pylint/lint/expand_modules.py::_is_in_ignore_list_re",
+            "localName": "_is_in_ignore_list_re",
+            "kind": "function",
+            "path": "pylint/lint/expand_modules.py",
+            "edgesIn": 3,
+            "edgesOut": 0,
+            "mechanismFacts": 0
+          },
+          {
+            "fqName": "pylint/lint/expand_modules.py::expand_modules",
+            "localName": "expand_modules",
+            "kind": "function",
+            "path": "pylint/lint/expand_modules.py",
+            "edgesIn": 5,
+            "edgesOut": 5,
+            "mechanismFacts": 1
+          },
+          {
+            "fqName": "pylint/lint/pylinter.py::PyLinter.initialize",
+            "localName": "initialize",
+            "kind": "method",
+            "path": "pylint/lint/pylinter.py",
+            "edgesIn": 2,
+            "edgesOut": 0,
+            "mechanismFacts": 0
+          },
+          {
+            "fqName": "pylint/lint/pylinter.py::PyLinter._discover_files",
+            "localName": "_discover_files",
+            "kind": "method",
+            "path": "pylint/lint/pylinter.py",
+            "edgesIn": 2,
+            "edgesOut": 0,
+            "mechanismFacts": 0
+          }
+        ]
+      },
+      "query": {
+        "shapedQuery": "issue: Pylint does not respect ignores in `--recursive=y` mode — ### Bug description",
+        "identifiers": [],
+        "pathClues": [],
+        "likelySymbols": [],
+        "asksByIdentifier": false,
+        "asksByPath": false,
+        "asksByError": false,
+        "asksByTest": false
+      },
+      "preCap": {
+        "evaluatedTotal": 127,
+        "poolCap": 25,
+        "goldSymbolScored": [
+          {
+            "fqName": "pylint/lint/expand_modules.py::_is_in_ignore_list_re",
+            "path": "pylint/lint/expand_modules.py",
+            "preCapRank": 18,
+            "finalScore": 1.4841,
+            "sources": [
+              "lexical"
+            ],
+            "evidence": [
+              "2 indexed symbol(s) depend on this",
+              "lexical match on fq_name, local_name, query_coverage, path_segment_signal"
+            ]
+          },
+          {
+            "fqName": "pylint/lint/expand_modules.py::expand_modules",
+            "path": "pylint/lint/expand_modules.py",
+            "preCapRank": 36,
+            "finalScore": 1.3259,
+            "sources": [
+              "lexical"
+            ],
+            "evidence": [
+              "3 indexed symbol(s) depend on this",
+              "lexical match on fq_name, signature, signature, query_coverage, path_segment_signal"
+            ]
+          }
+        ],
+        "goldFileScored": [
+          {
+            "fqName": "pylint/lint/pylinter.py::PyLinter.add_ignored_message",
+            "path": "pylint/lint/pylinter.py",
+            "preCapRank": 8,
+            "finalScore": 1.6613,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "pylint/lint/pylinter.py::PyLinter._parse_error_mode",
+            "path": "pylint/lint/pylinter.py",
+            "preCapRank": 12,
+            "finalScore": 1.5876,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "pylint/lint/expand_modules.py::_is_in_ignore_list_re",
+            "path": "pylint/lint/expand_modules.py",
+            "preCapRank": 18,
+            "finalScore": 1.4841,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "pylint/lint/expand_modules.py::expand_modules",
+            "path": "pylint/lint/expand_modules.py",
+            "preCapRank": 36,
+            "finalScore": 1.3259,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "pylint/lint/pylinter.py::PyLinter.should_analyze_file",
+            "path": "pylint/lint/pylinter.py",
+            "preCapRank": 37,
+            "finalScore": 1.321,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "pylint/lint/pylinter.py::MSGS",
+            "path": "pylint/lint/pylinter.py",
+            "preCapRank": 59,
+            "finalScore": 1.167,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "pylint/lint/pylinter.py::PyLinter._check_astroid_module",
+            "path": "pylint/lint/pylinter.py",
+            "preCapRank": 88,
+            "finalScore": 1.0861,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "pylint/lint/pylinter.py::PyLinter._expand_files",
+            "path": "pylint/lint/pylinter.py",
+            "preCapRank": 95,
+            "finalScore": 1.0568,
+            "sources": [
+              "concept_owner"
+            ]
+          },
+          {
+            "fqName": "pylint/lint/pylinter.py::PyLinter.any_fail_on_issues",
+            "path": "pylint/lint/pylinter.py",
+            "preCapRank": 113,
+            "finalScore": 0.9206,
+            "sources": [
+              "lexical"
+            ]
+          }
+        ],
+        "replicationValid": true,
+        "replicationNote": "28/28 capsule pool entries present in the scored set"
+      },
+      "postCap": {
+        "candidateCount": 28,
+        "goldFileOrdinaryRank": 8,
+        "goldSymbolOrdinaryRank": 18
+      },
+      "delivery": {
+        "mode": "standard",
+        "deliveredPivots": 2,
+        "deliveredSupport": 4,
+        "goldFileDelivered": false,
+        "goldSymbolDelivered": false,
+        "goldDiscardReasons": [
+          "beyond standard support budget (max 4)"
+        ]
+      },
+      "firstDivergence": "SUPPORT_PACKING",
+      "firstDivergenceDetail": "gold symbol admitted at ordinary rank 18 and lost a support slot",
+      "secondaryContributors": [],
+      "confidence": "high"
+    },
+    {
+      "instanceId": "pylint-dev__pylint-6903",
+      "repo": "pylint-dev/pylint",
+      "group": "NEVER_RETRIEVED_CAUSE_UNKNOWN",
+      "goldFate": "never_retrieved",
+      "expectedFiles": [
+        "pylint/lint/run.py"
+      ],
+      "expectedSymbols": [
+        "_query_cpu"
+      ],
+      "representation": {
+        "goldFilesExpected": 1,
+        "goldFilesIndexed": 1,
+        "missingFiles": [],
+        "goldFileSymbolCount": 11,
+        "goldSymbolsExpected": 1,
+        "goldSymbolsIndexed": 1,
+        "missingSymbols": [],
+        "indexedGoldSymbols": [
+          {
+            "fqName": "pylint/lint/run.py::_query_cpu",
+            "localName": "_query_cpu",
+            "kind": "function",
+            "path": "pylint/lint/run.py",
+            "edgesIn": 1,
+            "edgesOut": 0,
+            "mechanismFacts": 0
+          }
+        ]
+      },
+      "query": {
+        "shapedQuery": "issue: Running pylint in Kubernetes Pod with --jobs=0 fails — ### Bug description Errors: ValueError",
+        "identifiers": [
+          "ValueError"
+        ],
+        "pathClues": [],
+        "likelySymbols": [],
+        "asksByIdentifier": true,
+        "asksByPath": false,
+        "asksByError": true,
+        "asksByTest": false
+      },
+      "preCap": {
+        "evaluatedTotal": 130,
+        "poolCap": 25,
+        "goldSymbolScored": [],
+        "goldFileScored": [],
+        "replicationValid": true,
+        "replicationNote": "31/31 capsule pool entries present in the scored set"
+      },
+      "postCap": {
+        "candidateCount": 31,
+        "goldFileOrdinaryRank": null,
+        "goldSymbolOrdinaryRank": null
+      },
+      "delivery": {
+        "mode": "standard",
+        "deliveredPivots": 2,
+        "deliveredSupport": 4,
+        "goldFileDelivered": false,
+        "goldSymbolDelivered": false,
+        "goldDiscardReasons": []
+      },
+      "firstDivergence": "CANDIDATE_GENERATION_POOL_BOUND",
+      "firstDivergenceDetail": "gold symbol unscored at the product pool of 25; the generators reach it only at pool 50, where it scores 0.856 at pre-cap rank 111",
+      "secondaryContributors": [],
+      "confidence": "high"
+    },
+    {
+      "instanceId": "pytest-dev__pytest-10356",
+      "repo": "pytest-dev/pytest",
+      "group": "NEVER_RETRIEVED_CAUSE_UNKNOWN",
+      "goldFate": "never_retrieved",
+      "expectedFiles": [
+        "src/_pytest/mark/structures.py"
+      ],
+      "expectedSymbols": [
+        "__call__",
+        "get_unpacked_marks",
+        "normalize_mark_list",
+        "store_mark"
+      ],
+      "representation": {
+        "goldFilesExpected": 1,
+        "goldFilesIndexed": 1,
+        "missingFiles": [],
+        "goldFileSymbolCount": 52,
+        "goldSymbolsExpected": 4,
+        "goldSymbolsIndexed": 4,
+        "missingSymbols": [],
+        "indexedGoldSymbols": [
+          {
+            "fqName": "src/_pytest/mark/structures.py::MarkDecorator.__call__",
+            "localName": "__call__",
+            "kind": "method",
+            "path": "src/_pytest/mark/structures.py",
+            "edgesIn": 1,
+            "edgesOut": 0,
+            "mechanismFacts": 0
+          },
+          {
+            "fqName": "src/_pytest/mark/structures.py::MarkDecorator.__call__",
+            "localName": "__call__",
+            "kind": "method",
+            "path": "src/_pytest/mark/structures.py",
+            "edgesIn": 1,
+            "edgesOut": 0,
+            "mechanismFacts": 0
+          },
+          {
+            "fqName": "src/_pytest/mark/structures.py::MarkDecorator.__call__",
+            "localName": "__call__",
+            "kind": "method",
+            "path": "src/_pytest/mark/structures.py",
+            "edgesIn": 1,
+            "edgesOut": 0,
+            "mechanismFacts": 1
+          },
+          {
+            "fqName": "src/_pytest/mark/structures.py::get_unpacked_marks",
+            "localName": "get_unpacked_marks",
+            "kind": "function",
+            "path": "src/_pytest/mark/structures.py",
+            "edgesIn": 3,
+            "edgesOut": 1,
+            "mechanismFacts": 0
+          },
+          {
+            "fqName": "src/_pytest/mark/structures.py::normalize_mark_list",
+            "localName": "normalize_mark_list",
+            "kind": "function",
+            "path": "src/_pytest/mark/structures.py",
+            "edgesIn": 3,
+            "edgesOut": 1,
+            "mechanismFacts": 0
+          },
+          {
+            "fqName": "src/_pytest/mark/structures.py::store_mark",
+            "localName": "store_mark",
+            "kind": "function",
+            "path": "src/_pytest/mark/structures.py",
+            "edgesIn": 0,
+            "edgesOut": 2,
+            "mechanismFacts": 0
+          }
+        ]
+      },
+      "query": {
+        "shapedQuery": "symbols: Foo Bar\nissue: Consider MRO when obtaining marks for classes — When using pytest markers in two baseclasses `Foo` and `Bar`, inheriting from both of those baseclasses will lose the markers of one of those classes.",
+        "identifiers": [
+          "Foo",
+          "Bar",
+          "test_dings"
+        ],
+        "pathClues": [],
+        "likelySymbols": [
+          "Foo",
+          "Bar"
+        ],
+        "asksByIdentifier": true,
+        "asksByPath": false,
+        "asksByError": false,
+        "asksByTest": false
+      },
+      "preCap": {
+        "evaluatedTotal": 138,
+        "poolCap": 25,
+        "goldSymbolScored": [],
+        "goldFileScored": [
+          {
+            "fqName": "src/_pytest/mark/structures.py::MarkDecorator",
+            "path": "src/_pytest/mark/structures.py",
+            "preCapRank": 36,
+            "finalScore": 1.2613,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "src/_pytest/mark/structures.py::MarkGenerator",
+            "path": "src/_pytest/mark/structures.py",
+            "preCapRank": 103,
+            "finalScore": 0.9242,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "src/_pytest/mark/structures.py::MARK_GEN",
+            "path": "src/_pytest/mark/structures.py",
+            "preCapRank": 138,
+            "finalScore": 0,
+            "sources": [
+              "graph"
+            ]
+          }
+        ],
+        "replicationValid": true,
+        "replicationNote": "29/29 capsule pool entries present in the scored set"
+      },
+      "postCap": {
+        "candidateCount": 29,
+        "goldFileOrdinaryRank": null,
+        "goldSymbolOrdinaryRank": null
+      },
+      "delivery": {
+        "mode": "standard",
+        "deliveredPivots": 2,
+        "deliveredSupport": 4,
+        "goldFileDelivered": false,
+        "goldSymbolDelivered": false,
+        "goldDiscardReasons": []
+      },
+      "firstDivergence": "CANDIDATE_GENERATION_POOL_BOUND",
+      "firstDivergenceDetail": "gold symbol unscored at the product pool of 25; the generators reach it only at pool 50, where it scores 1.496 at pre-cap rank 14",
+      "secondaryContributors": [
+        "a non-gold symbol from the gold file WAS scored at pre-cap rank 36"
+      ],
+      "confidence": "high"
+    },
+    {
+      "instanceId": "pytest-dev__pytest-7324",
+      "repo": "pytest-dev/pytest",
+      "group": "NEVER_RETRIEVED_CAUSE_UNKNOWN",
+      "goldFate": "never_retrieved",
+      "expectedFiles": [
+        "src/_pytest/mark/expression.py"
+      ],
+      "expectedSymbols": [
+        "IDENT_PREFIX",
+        "__getitem__",
+        "__init__",
+        "__iter__",
+        "expression",
+        "not_expr",
+        "reject"
+      ],
+      "representation": {
+        "goldFilesExpected": 1,
+        "goldFilesIndexed": 1,
+        "missingFiles": [],
+        "goldFileSymbolCount": 37,
+        "goldSymbolsExpected": 7,
+        "goldSymbolsIndexed": 6,
+        "missingSymbols": [
+          "IDENT_PREFIX"
+        ],
+        "indexedGoldSymbols": [
+          {
+            "fqName": "src/_pytest/mark/expression.py::ParseError.__init__",
+            "localName": "__init__",
+            "kind": "method",
+            "path": "src/_pytest/mark/expression.py",
+            "edgesIn": 1,
+            "edgesOut": 0,
+            "mechanismFacts": 0
+          },
+          {
+            "fqName": "src/_pytest/mark/expression.py::Scanner.__init__",
+            "localName": "__init__",
+            "kind": "method",
+            "path": "src/_pytest/mark/expression.py",
+            "edgesIn": 1,
+            "edgesOut": 1,
+            "mechanismFacts": 0
+          },
+          {
+            "fqName": "src/_pytest/mark/expression.py::Scanner.reject",
+            "localName": "reject",
+            "kind": "method",
+            "path": "src/_pytest/mark/expression.py",
+            "edgesIn": 2,
+            "edgesOut": 1,
+            "mechanismFacts": 0
+          },
+          {
+            "fqName": "src/_pytest/mark/expression.py::expression",
+            "localName": "expression",
+            "kind": "function",
+            "path": "src/_pytest/mark/expression.py",
+            "edgesIn": 1,
+            "edgesOut": 3,
+            "mechanismFacts": 0
+          },
+          {
+            "fqName": "src/_pytest/mark/expression.py::not_expr",
+            "localName": "not_expr",
+            "kind": "function",
+            "path": "src/_pytest/mark/expression.py",
+            "edgesIn": 1,
+            "edgesOut": 6,
+            "mechanismFacts": 0
+          },
+          {
+            "fqName": "src/_pytest/mark/expression.py::MatcherAdapter.__init__",
+            "localName": "__init__",
+            "kind": "method",
+            "path": "src/_pytest/mark/expression.py",
+            "edgesIn": 1,
+            "edgesOut": 0,
+            "mechanismFacts": 0
+          },
+          {
+            "fqName": "src/_pytest/mark/expression.py::MatcherAdapter.__getitem__",
+            "localName": "__getitem__",
+            "kind": "method",
+            "path": "src/_pytest/mark/expression.py",
+            "edgesIn": 1,
+            "edgesOut": 0,
+            "mechanismFacts": 0
+          },
+          {
+            "fqName": "src/_pytest/mark/expression.py::MatcherAdapter.__iter__",
+            "localName": "__iter__",
+            "kind": "method",
+            "path": "src/_pytest/mark/expression.py",
+            "edgesIn": 1,
+            "edgesOut": 0,
+            "mechanismFacts": 0
+          },
+          {
+            "fqName": "src/_pytest/mark/expression.py::Expression.__init__",
+            "localName": "__init__",
+            "kind": "method",
+            "path": "src/_pytest/mark/expression.py",
+            "edgesIn": 1,
+            "edgesOut": 0,
+            "mechanismFacts": 0
+          }
+        ]
+      },
+      "query": {
+        "shapedQuery": "files: Python/compile.c\nsymbols: None True False _PyUnicode_EqualToASCIIString\nissue: Pytest crashes the interpreter on debug build for 3.8+ — python: Python/compile.c:3559: compiler_nameop: Assertion `!_PyUnicode_EqualToASCIIString(name, \"None\") && !_PyUnicode_EqualToASCIIString(name, \"True\") && !_PyUnicode_EqualToASCIIString(name, \"False\")' failed.",
+        "identifiers": [
+          "None",
+          "True",
+          "False",
+          "_PyUnicode_EqualToASCIIString",
+          "compiler_nameop"
+        ],
+        "pathClues": [],
+        "likelySymbols": [
+          "None",
+          "True",
+          "False",
+          "_PyUnicode_EqualToASCIIString"
+        ],
+        "asksByIdentifier": true,
+        "asksByPath": false,
+        "asksByError": false,
+        "asksByTest": false
+      },
+      "preCap": {
+        "evaluatedTotal": 43,
+        "poolCap": 25,
+        "goldSymbolScored": [],
+        "goldFileScored": [],
+        "replicationValid": true,
+        "replicationNote": "28/28 capsule pool entries present in the scored set"
+      },
+      "postCap": {
+        "candidateCount": 28,
+        "goldFileOrdinaryRank": null,
+        "goldSymbolOrdinaryRank": null
+      },
+      "delivery": {
+        "mode": "standard",
+        "deliveredPivots": 2,
+        "deliveredSupport": 4,
+        "goldFileDelivered": false,
+        "goldSymbolDelivered": false,
+        "goldDiscardReasons": []
+      },
+      "firstDivergence": "LANE_GENERATION_FAILURE",
+      "firstDivergenceDetail": "gold symbol indexed (src/_pytest/mark/expression.py::ParseError.__init__, src/_pytest/mark/expression.py::Scanner.__init__, src/_pytest/mark/expression.py::Scanner.reject, src/_pytest/mark/expression.py::expression, src/_pytest/mark/expression.py::not_expr, src/_pytest/mark/expression.py::MatcherAdapter.__init__, src/_pytest/mark/expression.py::MatcherAdapter.__getitem__, src/_pytest/mark/expression.py::MatcherAdapter.__iter__, src/_pytest/mark/expression.py::Expression.__init__) but NO generator lane scored it at any probed pool up to 32x the product's; 43 candidates were scored",
+      "secondaryContributors": [],
+      "confidence": "high"
+    },
+    {
+      "instanceId": "pytest-dev__pytest-7490",
+      "repo": "pytest-dev/pytest",
+      "group": "NEVER_RETRIEVED_CAUSE_UNKNOWN",
+      "goldFate": "never_retrieved",
+      "expectedFiles": [
+        "src/_pytest/skipping.py"
+      ],
+      "expectedSymbols": [
+        "evaluate_xfail_marks",
+        "pytest_runtest_call",
+        "pytest_runtest_makereport",
+        "pytest_runtest_setup"
+      ],
+      "representation": {
+        "goldFilesExpected": 1,
+        "goldFilesIndexed": 1,
+        "missingFiles": [],
+        "goldFileSymbolCount": 20,
+        "goldSymbolsExpected": 4,
+        "goldSymbolsIndexed": 4,
+        "missingSymbols": [],
+        "indexedGoldSymbols": [
+          {
+            "fqName": "src/_pytest/skipping.py::evaluate_xfail_marks",
+            "localName": "evaluate_xfail_marks",
+            "kind": "function",
+            "path": "src/_pytest/skipping.py",
+            "edgesIn": 4,
+            "edgesOut": 3,
+            "mechanismFacts": 2
+          },
+          {
+            "fqName": "src/_pytest/skipping.py::pytest_runtest_setup",
+            "localName": "pytest_runtest_setup",
+            "kind": "function",
+            "path": "src/_pytest/skipping.py",
+            "edgesIn": 3,
+            "edgesOut": 8,
+            "mechanismFacts": 0
+          },
+          {
+            "fqName": "src/_pytest/skipping.py::pytest_runtest_call",
+            "localName": "pytest_runtest_call",
+            "kind": "function",
+            "path": "src/_pytest/skipping.py",
+            "edgesIn": 0,
+            "edgesOut": 5,
+            "mechanismFacts": 0
+          },
+          {
+            "fqName": "src/_pytest/skipping.py::pytest_runtest_makereport",
+            "localName": "pytest_runtest_makereport",
+            "kind": "function",
+            "path": "src/_pytest/skipping.py",
+            "edgesIn": 0,
+            "edgesOut": 5,
+            "mechanismFacts": 0
+          }
+        ]
+      },
+      "query": {
+        "shapedQuery": "failing tests: test_foo.py::test_xfail_test\nfiles: test_foo.py\nsymbols: test_xfail_test\nissue: Pytest 6: Dynamically adding xfail marker in test no longer ignores failure — Thanks for submitting an issue!",
+        "identifiers": [
+          "test_xfail_test",
+          "AssertionError",
+          "test_foo"
+        ],
+        "pathClues": [],
+        "likelySymbols": [
+          "test_xfail_test"
+        ],
+        "asksByIdentifier": true,
+        "asksByPath": false,
+        "asksByError": true,
+        "asksByTest": true
+      },
+      "preCap": {
+        "evaluatedTotal": 132,
+        "poolCap": 25,
+        "goldSymbolScored": [
+          {
+            "fqName": "src/_pytest/skipping.py::pytest_runtest_setup",
+            "path": "src/_pytest/skipping.py",
+            "preCapRank": 53,
+            "finalScore": 1.0983,
+            "sources": [
+              "graph"
+            ],
+            "evidence": [
+              "2 indexed symbol(s) depend on this",
+              "centrality support capped at 0% of full: this candidate's own identifying evidence (0.00) is below its centrality (0.11)",
+              "graph calls from xfail"
+            ]
+          },
+          {
+            "fqName": "src/_pytest/skipping.py::pytest_runtest_call",
+            "path": "src/_pytest/skipping.py",
+            "preCapRank": 54,
+            "finalScore": 1.0978,
+            "sources": [
+              "graph"
+            ],
+            "evidence": [
+              "graph calls from xfail"
+            ]
+          }
+        ],
+        "goldFileScored": [
+          {
+            "fqName": "src/_pytest/skipping.py::pytest_runtest_setup",
+            "path": "src/_pytest/skipping.py",
+            "preCapRank": 53,
+            "finalScore": 1.0983,
+            "sources": [
+              "graph"
+            ]
+          },
+          {
+            "fqName": "src/_pytest/skipping.py::pytest_runtest_call",
+            "path": "src/_pytest/skipping.py",
+            "preCapRank": 54,
+            "finalScore": 1.0978,
+            "sources": [
+              "graph"
+            ]
+          }
+        ],
+        "replicationValid": true,
+        "replicationNote": "31/31 capsule pool entries present in the scored set"
+      },
+      "postCap": {
+        "candidateCount": 31,
+        "goldFileOrdinaryRank": null,
+        "goldSymbolOrdinaryRank": null
+      },
+      "delivery": {
+        "mode": "standard",
+        "deliveredPivots": 2,
+        "deliveredSupport": 4,
+        "goldFileDelivered": false,
+        "goldSymbolDelivered": false,
+        "goldDiscardReasons": []
+      },
+      "firstDivergence": "CANDIDATE_BOUND_EVICTION",
+      "firstDivergenceDetail": "gold symbol scored 1.098 at pre-cap rank 53, dropped by the pool cap of 25",
+      "secondaryContributors": [],
+      "confidence": "high"
+    },
+    {
+      "instanceId": "scikit-learn__scikit-learn-13142",
+      "repo": "scikit-learn/scikit-learn",
+      "group": "NEVER_RETRIEVED_CAUSE_UNKNOWN",
+      "goldFate": "never_retrieved",
+      "expectedFiles": [
+        "sklearn/mixture/base.py"
+      ],
+      "expectedSymbols": [
+        "_e_step",
+        "fit_predict"
+      ],
+      "representation": {
+        "goldFilesExpected": 1,
+        "goldFilesIndexed": 1,
+        "missingFiles": [],
+        "goldFileSymbolCount": 28,
+        "goldSymbolsExpected": 2,
+        "goldSymbolsIndexed": 2,
+        "missingSymbols": [],
+        "indexedGoldSymbols": [
+          {
+            "fqName": "sklearn/mixture/base.py::BaseMixture.fit_predict",
+            "localName": "fit_predict",
+            "kind": "method",
+            "path": "sklearn/mixture/base.py",
+            "edgesIn": 2,
+            "edgesOut": 12,
+            "mechanismFacts": 1
+          },
+          {
+            "fqName": "sklearn/mixture/base.py::BaseMixture._e_step",
+            "localName": "_e_step",
+            "kind": "method",
+            "path": "sklearn/mixture/base.py",
+            "edgesIn": 2,
+            "edgesOut": 1,
+            "mechanismFacts": 0
+          }
+        ]
+      },
+      "query": {
+        "shapedQuery": "files: test_gm.py home/scott/.local/lib/python2.7/site-packages/numpy/testing/_private/utils.py\nsymbols: n_init test_gm.py fit_predict predict\nissue: GaussianMixture predict and fit_predict disagree when n_init>1 — When `n_init` is specified in GaussianMixture, the results of fit_predict(X) and predict(X) are often different.",
+        "identifiers": [
+          "n_init",
+          "test_gm.py",
+          "fit_predict",
+          "predict",
+          "GaussianMixture",
+          "AssertionError",
+          "test_gaussian_mixture_fit_predict",
+          "test_gm",
+          "assert_array_equal",
+          "assert_array_compare"
+        ],
+        "pathClues": [],
+        "likelySymbols": [
+          "n_init",
+          "test_gm.py",
+          "fit_predict",
+          "predict"
+        ],
+        "asksByIdentifier": true,
+        "asksByPath": false,
+        "asksByError": true,
+        "asksByTest": false
+      },
+      "preCap": {
+        "evaluatedTotal": 47,
+        "poolCap": 25,
+        "goldSymbolScored": [],
+        "goldFileScored": [
+          {
+            "fqName": "sklearn/mixture/base.py::_check_X",
+            "path": "sklearn/mixture/base.py",
+            "preCapRank": 32,
+            "finalScore": 1.2238,
+            "sources": [
+              "same_module"
+            ]
+          }
+        ],
+        "replicationValid": false,
+        "replicationNote": "21/25 capsule pool entries present in the scored set; uncovered: benchmarks/bench_plot_nmf.py::run_bench, sklearn/base.py::BaseEstimator, sklearn/base.py::BaseEstimator._get_param_names, sklearn/svm/libsvm.pyx::predict"
+      },
+      "postCap": {
+        "candidateCount": 25,
+        "goldFileOrdinaryRank": null,
+        "goldSymbolOrdinaryRank": null
+      },
+      "delivery": {
+        "mode": "standard",
+        "deliveredPivots": 3,
+        "deliveredSupport": 3,
+        "goldFileDelivered": false,
+        "goldSymbolDelivered": false,
+        "goldDiscardReasons": []
+      },
+      "firstDivergence": "LANE_GENERATION_FAILURE",
+      "firstDivergenceDetail": "gold symbol indexed (sklearn/mixture/base.py::BaseMixture.fit_predict, sklearn/mixture/base.py::BaseMixture._e_step) but NO generator lane scored it at any probed pool up to 32x the product's; 47 candidates were scored",
+      "secondaryContributors": [
+        "a non-gold symbol from the gold file WAS scored at pre-cap rank 32",
+        "task names the gold symbol verbatim: the class-method expansion lane has a foothold this probe does not model"
+      ],
+      "confidence": "low"
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-7454",
+      "repo": "sphinx-doc/sphinx",
+      "group": "NEVER_RETRIEVED_CAUSE_UNKNOWN",
+      "goldFate": "never_retrieved",
+      "expectedFiles": [
+        "sphinx/domains/python.py"
+      ],
+      "expectedSymbols": [
+        "_parse_annotation",
+        "make_xref",
+        "unparse"
+      ],
+      "representation": {
+        "goldFilesExpected": 1,
+        "goldFilesIndexed": 1,
+        "missingFiles": [],
+        "goldFileSymbolCount": 120,
+        "goldSymbolsExpected": 3,
+        "goldSymbolsIndexed": 2,
+        "missingSymbols": [
+          "unparse"
+        ],
+        "indexedGoldSymbols": [
+          {
+            "fqName": "sphinx/domains/python.py::_parse_annotation",
+            "localName": "_parse_annotation",
+            "kind": "function",
+            "path": "sphinx/domains/python.py",
+            "edgesIn": 4,
+            "edgesOut": 3,
+            "mechanismFacts": 2
+          },
+          {
+            "fqName": "sphinx/domains/python.py::PyXrefMixin.make_xref",
+            "localName": "make_xref",
+            "kind": "method",
+            "path": "sphinx/domains/python.py",
+            "edgesIn": 2,
+            "edgesOut": 1,
+            "mechanismFacts": 0
+          },
+          {
+            "fqName": "sphinx/domains/python.py::PyField.make_xref",
+            "localName": "make_xref",
+            "kind": "method",
+            "path": "sphinx/domains/python.py",
+            "edgesIn": 1,
+            "edgesOut": 1,
+            "mechanismFacts": 0
+          },
+          {
+            "fqName": "sphinx/domains/python.py::PyTypedField.make_xref",
+            "localName": "make_xref",
+            "kind": "method",
+            "path": "sphinx/domains/python.py",
+            "edgesIn": 1,
+            "edgesOut": 1,
+            "mechanismFacts": 0
+          }
+        ]
+      },
+      "query": {
+        "shapedQuery": "symbols: autodoc_typehints\nissue: Inconsistent handling of None by `autodoc_typehints` — **Describe the bug**",
+        "identifiers": [
+          "autodoc_typehints"
+        ],
+        "pathClues": [],
+        "likelySymbols": [
+          "autodoc_typehints"
+        ],
+        "asksByIdentifier": true,
+        "asksByPath": false,
+        "asksByError": false,
+        "asksByTest": false
+      },
+      "preCap": {
+        "evaluatedTotal": 133,
+        "poolCap": 25,
+        "goldSymbolScored": [],
+        "goldFileScored": [],
+        "replicationValid": true,
+        "replicationNote": "31/31 capsule pool entries present in the scored set"
+      },
+      "postCap": {
+        "candidateCount": 31,
+        "goldFileOrdinaryRank": null,
+        "goldSymbolOrdinaryRank": null
+      },
+      "delivery": {
+        "mode": "standard",
+        "deliveredPivots": 2,
+        "deliveredSupport": 4,
+        "goldFileDelivered": false,
+        "goldSymbolDelivered": false,
+        "goldDiscardReasons": []
+      },
+      "firstDivergence": "LANE_GENERATION_FAILURE",
+      "firstDivergenceDetail": "gold symbol indexed (sphinx/domains/python.py::_parse_annotation, sphinx/domains/python.py::PyXrefMixin.make_xref, sphinx/domains/python.py::PyField.make_xref, sphinx/domains/python.py::PyTypedField.make_xref) but NO generator lane scored it at any probed pool up to 32x the product's; 133 candidates were scored",
+      "secondaryContributors": [],
+      "confidence": "high"
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-7757",
+      "repo": "sphinx-doc/sphinx",
+      "group": "NEVER_RETRIEVED_CAUSE_UNKNOWN",
+      "goldFate": "never_retrieved",
+      "expectedFiles": [
+        "sphinx/util/inspect.py"
+      ],
+      "expectedSymbols": [
+        "signature_from_str"
+      ],
+      "representation": {
+        "goldFilesExpected": 1,
+        "goldFilesIndexed": 1,
+        "missingFiles": [],
+        "goldFileSymbolCount": 40,
+        "goldSymbolsExpected": 1,
+        "goldSymbolsIndexed": 1,
+        "missingSymbols": [],
+        "indexedGoldSymbols": [
+          {
+            "fqName": "sphinx/util/inspect.py::signature_from_str",
+            "localName": "signature_from_str",
+            "kind": "function",
+            "path": "sphinx/util/inspect.py",
+            "edgesIn": 9,
+            "edgesOut": 1,
+            "mechanismFacts": 1
+          }
+        ]
+      },
+      "query": {
+        "shapedQuery": "issue: The default value for positional only argument has vanished — **Describe the bug**",
+        "identifiers": [],
+        "pathClues": [],
+        "likelySymbols": [],
+        "asksByIdentifier": false,
+        "asksByPath": false,
+        "asksByError": false,
+        "asksByTest": false
+      },
+      "preCap": {
+        "evaluatedTotal": 129,
+        "poolCap": 25,
+        "goldSymbolScored": [],
+        "goldFileScored": [],
+        "replicationValid": true,
+        "replicationNote": "25/25 capsule pool entries present in the scored set"
+      },
+      "postCap": {
+        "candidateCount": 25,
+        "goldFileOrdinaryRank": null,
+        "goldSymbolOrdinaryRank": null
+      },
+      "delivery": {
+        "mode": "standard",
+        "deliveredPivots": 2,
+        "deliveredSupport": 4,
+        "goldFileDelivered": false,
+        "goldSymbolDelivered": false,
+        "goldDiscardReasons": []
+      },
+      "firstDivergence": "LANE_GENERATION_FAILURE",
+      "firstDivergenceDetail": "gold symbol indexed (sphinx/util/inspect.py::signature_from_str) but NO generator lane scored it at any probed pool up to 32x the product's; 129 candidates were scored",
+      "secondaryContributors": [],
+      "confidence": "high"
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-9602",
+      "repo": "sphinx-doc/sphinx",
+      "group": "NEVER_RETRIEVED_CAUSE_UNKNOWN",
+      "goldFate": "never_retrieved",
+      "expectedFiles": [
+        "sphinx/domains/python.py"
+      ],
+      "expectedSymbols": [
+        "unparse"
+      ],
+      "representation": {
+        "goldFilesExpected": 1,
+        "goldFilesIndexed": 1,
+        "missingFiles": [],
+        "goldFileSymbolCount": 129,
+        "goldSymbolsExpected": 1,
+        "goldSymbolsIndexed": 0,
+        "missingSymbols": [
+          "unparse"
+        ],
+        "indexedGoldSymbols": []
+      },
+      "query": {
+        "shapedQuery": "issue: Nitpick flags Literal annotation values as missing py:class — ### Describe the bug",
+        "identifiers": [],
+        "pathClues": [],
+        "likelySymbols": [],
+        "asksByIdentifier": false,
+        "asksByPath": false,
+        "asksByError": false,
+        "asksByTest": false
+      },
+      "preCap": {
+        "evaluatedTotal": 130,
+        "poolCap": 25,
+        "goldSymbolScored": [],
+        "goldFileScored": [
+          {
+            "fqName": "sphinx/domains/python.py::py_sig_re",
+            "path": "sphinx/domains/python.py",
+            "preCapRank": 85,
+            "finalScore": 0.841,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "sphinx/domains/python.py::_pseudo_parse_arglist",
+            "path": "sphinx/domains/python.py",
+            "preCapRank": 101,
+            "finalScore": 0.6829,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "sphinx/domains/python.py::PyObject.doc_field_types",
+            "path": "sphinx/domains/python.py",
+            "preCapRank": 111,
+            "finalScore": 0.6477,
+            "sources": [
+              "lexical"
+            ]
+          }
+        ],
+        "replicationValid": true,
+        "replicationNote": "31/31 capsule pool entries present in the scored set"
+      },
+      "postCap": {
+        "candidateCount": 31,
+        "goldFileOrdinaryRank": null,
+        "goldSymbolOrdinaryRank": null
+      },
+      "delivery": {
+        "mode": "standard",
+        "deliveredPivots": 2,
+        "deliveredSupport": 4,
+        "goldFileDelivered": false,
+        "goldSymbolDelivered": false,
+        "goldDiscardReasons": []
+      },
+      "firstDivergence": "INDEX_SYMBOL_MISSING",
+      "firstDivergenceDetail": "gold file indexed with 129 symbols, but no gold symbol among them (unparse)",
+      "secondaryContributors": [],
+      "confidence": "high"
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-9658",
+      "repo": "sphinx-doc/sphinx",
+      "group": "NEVER_RETRIEVED_CAUSE_UNKNOWN",
+      "goldFate": "never_retrieved",
+      "expectedFiles": [
+        "sphinx/ext/autodoc/mock.py"
+      ],
+      "expectedSymbols": [
+        "_MockObject",
+        "__init__",
+        "__len__",
+        "__new__",
+        "_make_subclass"
+      ],
+      "representation": {
+        "goldFilesExpected": 1,
+        "goldFilesIndexed": 1,
+        "missingFiles": [],
+        "goldFileSymbolCount": 34,
+        "goldSymbolsExpected": 5,
+        "goldSymbolsIndexed": 5,
+        "missingSymbols": [],
+        "indexedGoldSymbols": [
+          {
+            "fqName": "sphinx/ext/autodoc/mock.py::_MockObject",
+            "localName": "_MockObject",
+            "kind": "class",
+            "path": "sphinx/ext/autodoc/mock.py",
+            "edgesIn": 8,
+            "edgesOut": 13,
+            "mechanismFacts": 0
+          },
+          {
+            "fqName": "sphinx/ext/autodoc/mock.py::_MockObject.__new__",
+            "localName": "__new__",
+            "kind": "method",
+            "path": "sphinx/ext/autodoc/mock.py",
+            "edgesIn": 1,
+            "edgesOut": 1,
+            "mechanismFacts": 1
+          },
+          {
+            "fqName": "sphinx/ext/autodoc/mock.py::_MockObject.__init__",
+            "localName": "__init__",
+            "kind": "method",
+            "path": "sphinx/ext/autodoc/mock.py",
+            "edgesIn": 1,
+            "edgesOut": 0,
+            "mechanismFacts": 0
+          },
+          {
+            "fqName": "sphinx/ext/autodoc/mock.py::_MockObject.__len__",
+            "localName": "__len__",
+            "kind": "method",
+            "path": "sphinx/ext/autodoc/mock.py",
+            "edgesIn": 1,
+            "edgesOut": 0,
+            "mechanismFacts": 0
+          },
+          {
+            "fqName": "sphinx/ext/autodoc/mock.py::_make_subclass",
+            "localName": "_make_subclass",
+            "kind": "function",
+            "path": "sphinx/ext/autodoc/mock.py",
+            "edgesIn": 4,
+            "edgesOut": 0,
+            "mechanismFacts": 0
+          },
+          {
+            "fqName": "sphinx/ext/autodoc/mock.py::_MockModule.__init__",
+            "localName": "__init__",
+            "kind": "method",
+            "path": "sphinx/ext/autodoc/mock.py",
+            "edgesIn": 1,
+            "edgesOut": 0,
+            "mechanismFacts": 0
+          },
+          {
+            "fqName": "sphinx/ext/autodoc/mock.py::MockLoader.__init__",
+            "localName": "__init__",
+            "kind": "method",
+            "path": "sphinx/ext/autodoc/mock.py",
+            "edgesIn": 1,
+            "edgesOut": 0,
+            "mechanismFacts": 0
+          },
+          {
+            "fqName": "sphinx/ext/autodoc/mock.py::MockFinder.__init__",
+            "localName": "__init__",
+            "kind": "method",
+            "path": "sphinx/ext/autodoc/mock.py",
+            "edgesIn": 1,
+            "edgesOut": 1,
+            "mechanismFacts": 0
+          }
+        ]
+      },
+      "query": {
+        "shapedQuery": "issue: Inherited classes not correctly documented when mocked — ### Describe the bug",
+        "identifiers": [],
+        "pathClues": [],
+        "likelySymbols": [],
+        "asksByIdentifier": false,
+        "asksByPath": false,
+        "asksByError": false,
+        "asksByTest": false
+      },
+      "preCap": {
+        "evaluatedTotal": 129,
+        "poolCap": 25,
+        "goldSymbolScored": [
+          {
+            "fqName": "sphinx/ext/autodoc/mock.py::_make_subclass",
+            "path": "sphinx/ext/autodoc/mock.py",
+            "preCapRank": 81,
+            "finalScore": 0.6169,
+            "sources": [
+              "lexical"
+            ],
+            "evidence": [
+              "4 indexed symbol(s) depend on this",
+              "lexical match on local_name, fq_name, query_coverage, path_segment_signal"
+            ]
+          },
+          {
+            "fqName": "sphinx/ext/autodoc/mock.py::_MockObject",
+            "path": "sphinx/ext/autodoc/mock.py",
+            "preCapRank": 82,
+            "finalScore": 0.6147,
+            "sources": [
+              "lexical"
+            ],
+            "evidence": [
+              "7 indexed symbol(s) depend on this",
+              "lexical match on signature, local_name, query_coverage, path_segment_signal"
+            ]
+          }
+        ],
+        "goldFileScored": [
+          {
+            "fqName": "sphinx/ext/autodoc/mock.py::undecorate",
+            "path": "sphinx/ext/autodoc/mock.py",
+            "preCapRank": 32,
+            "finalScore": 0.909,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "sphinx/ext/autodoc/mock.py::MockFinder",
+            "path": "sphinx/ext/autodoc/mock.py",
+            "preCapRank": 75,
+            "finalScore": 0.6394,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "sphinx/ext/autodoc/mock.py::MockLoader",
+            "path": "sphinx/ext/autodoc/mock.py",
+            "preCapRank": 76,
+            "finalScore": 0.6394,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "sphinx/ext/autodoc/mock.py::_make_subclass",
+            "path": "sphinx/ext/autodoc/mock.py",
+            "preCapRank": 81,
+            "finalScore": 0.6169,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "sphinx/ext/autodoc/mock.py::_MockObject",
+            "path": "sphinx/ext/autodoc/mock.py",
+            "preCapRank": 82,
+            "finalScore": 0.6147,
+            "sources": [
+              "lexical"
+            ]
+          },
+          {
+            "fqName": "sphinx/ext/autodoc/mock.py::_MockObject.__iter__",
+            "path": "sphinx/ext/autodoc/mock.py",
+            "preCapRank": 85,
+            "finalScore": 0.6129,
+            "sources": [
+              "graph"
+            ]
+          },
+          {
+            "fqName": "sphinx/ext/autodoc/mock.py::_MockModule",
+            "path": "sphinx/ext/autodoc/mock.py",
+            "preCapRank": 96,
+            "finalScore": 0.5964,
+            "sources": [
+              "lexical"
+            ]
+          }
+        ],
+        "replicationValid": true,
+        "replicationNote": "30/30 capsule pool entries present in the scored set"
+      },
+      "postCap": {
+        "candidateCount": 30,
+        "goldFileOrdinaryRank": null,
+        "goldSymbolOrdinaryRank": null
+      },
+      "delivery": {
+        "mode": "standard",
+        "deliveredPivots": 2,
+        "deliveredSupport": 4,
+        "goldFileDelivered": false,
+        "goldSymbolDelivered": false,
+        "goldDiscardReasons": []
+      },
+      "firstDivergence": "CANDIDATE_BOUND_EVICTION",
+      "firstDivergenceDetail": "gold symbol scored 0.617 at pre-cap rank 81, dropped by the pool cap of 25",
+      "secondaryContributors": [],
+      "confidence": "high"
+    },
+    {
+      "instanceId": "sympy__sympy-13031",
+      "repo": "sympy/sympy",
+      "group": "NEVER_RETRIEVED_CAUSE_UNKNOWN",
+      "goldFate": "never_retrieved",
+      "expectedFiles": [
+        "sympy/matrices/sparse.py"
+      ],
+      "expectedSymbols": [
+        "col_join",
+        "row_join"
+      ],
+      "representation": {
+        "goldFilesExpected": 1,
+        "goldFilesIndexed": 1,
+        "missingFiles": [],
+        "goldFileSymbolCount": 64,
+        "goldSymbolsExpected": 2,
+        "goldSymbolsIndexed": 2,
+        "missingSymbols": [],
+        "indexedGoldSymbols": [
+          {
+            "fqName": "sympy/matrices/sparse.py::MutableSparseMatrix.col_join",
+            "localName": "col_join",
+            "kind": "method",
+            "path": "sympy/matrices/sparse.py",
+            "edgesIn": 1,
+            "edgesOut": 2,
+            "mechanismFacts": 1
+          },
+          {
+            "fqName": "sympy/matrices/sparse.py::MutableSparseMatrix.row_join",
+            "localName": "row_join",
+            "kind": "method",
+            "path": "sympy/matrices/sparse.py",
+            "edgesIn": 1,
+            "edgesOut": 2,
+            "mechanismFacts": 1
+          }
+        ]
+      },
+      "query": {
+        "shapedQuery": "issue: Behavior of Matrix hstack and vstack changed in sympy 1.1 — In sympy 1.0:",
+        "identifiers": [],
+        "pathClues": [],
+        "likelySymbols": [],
+        "asksByIdentifier": false,
+        "asksByPath": false,
+        "asksByError": false,
+        "asksByTest": false
+      },
+      "preCap": {
+        "evaluatedTotal": 130,
+        "poolCap": 25,
+        "goldSymbolScored": [],
+        "goldFileScored": [],
+        "replicationValid": true,
+        "replicationNote": "31/31 capsule pool entries present in the scored set"
+      },
+      "postCap": {
+        "candidateCount": 31,
+        "goldFileOrdinaryRank": null,
+        "goldSymbolOrdinaryRank": null
+      },
+      "delivery": {
+        "mode": "standard",
+        "deliveredPivots": 2,
+        "deliveredSupport": 4,
+        "goldFileDelivered": false,
+        "goldSymbolDelivered": false,
+        "goldDiscardReasons": []
+      },
+      "firstDivergence": "CANDIDATE_GENERATION_POOL_BOUND",
+      "firstDivergenceDetail": "gold symbol unscored at the product pool of 25; the generators reach it only at pool 200, where it scores 1.280 at pre-cap rank 63",
+      "secondaryContributors": [],
+      "confidence": "high"
+    },
+    {
+      "instanceId": "sympy__sympy-16450",
+      "repo": "sympy/sympy",
+      "group": "DEEP_RANKED_OR_PREDELIVERY_LOSS",
+      "goldFate": "support_packed_out",
+      "expectedFiles": [
+        "sympy/simplify/simplify.py"
+      ],
+      "expectedSymbols": [
+        "posify"
+      ],
+      "representation": {
+        "goldFilesExpected": 1,
+        "goldFilesIndexed": 1,
+        "missingFiles": [],
+        "goldFileSymbolCount": 27,
+        "goldSymbolsExpected": 1,
+        "goldSymbolsIndexed": 1,
+        "missingSymbols": [],
+        "indexedGoldSymbols": [
+          {
+            "fqName": "sympy/simplify/simplify.py::posify",
+            "localName": "posify",
+            "kind": "function",
+            "path": "sympy/simplify/simplify.py",
+            "edgesIn": 11,
+            "edgesOut": 4,
+            "mechanismFacts": 0
+          }
+        ]
+      },
+      "query": {
+        "shapedQuery": "issue: Posify ignores is_finite assmptions — Posify removes a finite assumption from a symbol:",
+        "identifiers": [
+          "is_finite"
+        ],
+        "pathClues": [],
+        "likelySymbols": [],
+        "asksByIdentifier": true,
+        "asksByPath": false,
+        "asksByError": false,
+        "asksByTest": false
+      },
+      "preCap": {
+        "evaluatedTotal": 136,
+        "poolCap": 25,
+        "goldSymbolScored": [
+          {
+            "fqName": "sympy/simplify/simplify.py::posify",
+            "path": "sympy/simplify/simplify.py",
+            "preCapRank": 10,
+            "finalScore": 1.2596,
+            "sources": [
+              "concept_owner"
+            ],
+            "evidence": [
+              "7 indexed symbol(s) depend on this",
+              "sympy/simplify/simplify.py appears to own this behaviour (9 of 26 definitions cover 4/7 requested concepts (posify, remove, assumption, symbol)); this definition covers posify, symbol"
+            ]
+          }
+        ],
+        "goldFileScored": [
+          {
+            "fqName": "sympy/simplify/simplify.py::posify",
+            "path": "sympy/simplify/simplify.py",
+            "preCapRank": 10,
+            "finalScore": 1.2596,
+            "sources": [
+              "concept_owner"
+            ]
+          },
+          {
+            "fqName": "sympy/simplify/simplify.py::logcombine",
+            "path": "sympy/simplify/simplify.py",
+            "preCapRank": 92,
+            "finalScore": 0.723,
+            "sources": [
+              "concept_owner"
+            ]
+          },
+          {
+            "fqName": "sympy/simplify/simplify.py::clear_coefficients",
+            "path": "sympy/simplify/simplify.py",
+            "preCapRank": 127,
+            "finalScore": 0.5084,
+            "sources": [
+              "concept_owner"
+            ]
+          }
+        ],
+        "replicationValid": true,
+        "replicationNote": "25/25 capsule pool entries present in the scored set"
+      },
+      "postCap": {
+        "candidateCount": 25,
+        "goldFileOrdinaryRank": 15,
+        "goldSymbolOrdinaryRank": 15
+      },
+      "delivery": {
+        "mode": "standard",
+        "deliveredPivots": 2,
+        "deliveredSupport": 4,
+        "goldFileDelivered": false,
+        "goldSymbolDelivered": false,
+        "goldDiscardReasons": [
+          "beyond standard support budget (max 4)"
+        ]
+      },
+      "firstDivergence": "SUPPORT_PACKING",
+      "firstDivergenceDetail": "gold symbol admitted at ordinary rank 15 and lost a support slot",
+      "secondaryContributors": [],
+      "confidence": "high"
+    },
+    {
+      "instanceId": "sympy__sympy-18698",
+      "repo": "sympy/sympy",
+      "group": "DEEP_RANKED_OR_PREDELIVERY_LOSS",
+      "goldFate": "support_packed_out",
+      "expectedFiles": [
+        "sympy/polys/polytools.py"
+      ],
+      "expectedSymbols": [
+        "_symbolic_factor_list"
+      ],
+      "representation": {
+        "goldFilesExpected": 1,
+        "goldFilesIndexed": 1,
+        "missingFiles": [],
+        "goldFileSymbolCount": 279,
+        "goldSymbolsExpected": 1,
+        "goldSymbolsIndexed": 1,
+        "missingSymbols": [],
+        "indexedGoldSymbols": [
+          {
+            "fqName": "sympy/polys/polytools.py::_symbolic_factor_list",
+            "localName": "_symbolic_factor_list",
+            "kind": "function",
+            "path": "sympy/polys/polytools.py",
+            "edgesIn": 2,
+            "edgesOut": 5,
+            "mechanismFacts": 1
+          }
+        ]
+      },
+      "query": {
+        "shapedQuery": "symbols: have\nissue: sqf and sqf_list output is not consistant — The example below is wrong in the sense that we should have (x*_2 - 5_x + 6, 3) and not 2 factors of multiplicity 3.",
+        "identifiers": [
+          "have",
+          "sqf_list"
+        ],
+        "pathClues": [],
+        "likelySymbols": [
+          "have"
+        ],
+        "asksByIdentifier": true,
+        "asksByPath": false,
+        "asksByError": false,
+        "asksByTest": false
+      },
+      "preCap": {
+        "evaluatedTotal": 137,
+        "poolCap": 25,
+        "goldSymbolScored": [],
+        "goldFileScored": [
+          {
+            "fqName": "sympy/polys/polytools.py::Poly.sqf_list_include",
+            "path": "sympy/polys/polytools.py",
+            "preCapRank": 10,
+            "finalScore": 1.2542,
+            "sources": [
+              "symbol"
+            ]
+          },
+          {
+            "fqName": "sympy/polys/polytools.py::sqf_list",
+            "path": "sympy/polys/polytools.py",
+            "preCapRank": 14,
+            "finalScore": 1.2092,
+            "sources": [
+              "symbol"
+            ]
+          },
+          {
+            "fqName": "sympy/polys/polytools.py::Poly.sqf_list",
+            "path": "sympy/polys/polytools.py",
+            "preCapRank": 16,
+            "finalScore": 1.2015,
+            "sources": [
+              "symbol"
+            ]
+          }
+        ],
+        "replicationValid": true,
+        "replicationNote": "27/27 capsule pool entries present in the scored set"
+      },
+      "postCap": {
+        "candidateCount": 27,
+        "goldFileOrdinaryRank": 10,
+        "goldSymbolOrdinaryRank": null
+      },
+      "delivery": {
+        "mode": "standard",
+        "deliveredPivots": 2,
+        "deliveredSupport": 4,
+        "goldFileDelivered": false,
+        "goldSymbolDelivered": false,
+        "goldDiscardReasons": [
+          "beyond standard support budget (max 4)"
+        ]
+      },
+      "firstDivergence": "CANDIDATE_GENERATION_POOL_BOUND",
+      "firstDivergenceDetail": "gold symbol unscored at the product pool of 25; the generators reach it only at pool 200, where it scores 1.230 at pre-cap rank 21",
+      "secondaryContributors": [
+        "a non-gold symbol from the gold file WAS scored at pre-cap rank 10"
+      ],
+      "confidence": "high"
+    }
+  ]
+}
