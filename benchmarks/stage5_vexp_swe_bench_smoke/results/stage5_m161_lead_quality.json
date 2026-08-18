@@ -1,0 +1,533 @@
+{
+  "schemaVersion": "stage5.m161.lead-quality.v1",
+  "goldUse": "gold paths are EVALUATION ONLY and were never fed to retrieval (§20)",
+  "rows": [
+    {
+      "instanceId": "sympy__sympy-13091",
+      "repo": "sympy/sympy",
+      "goldFiles": [
+        "sympy/core/basic.py",
+        "sympy/core/exprtools.py",
+        "sympy/core/numbers.py",
+        "sympy/geometry/entity.py",
+        "sympy/physics/optics/medium.py",
+        "sympy/physics/vector/dyadic.py",
+        "sympy/physics/vector/frame.py",
+        "sympy/physics/vector/vector.py",
+        "sympy/polys/agca/modules.py",
+        "sympy/polys/domains/domain.py",
+        "sympy/polys/domains/expressiondomain.py",
+        "sympy/polys/domains/pythonrational.py",
+        "sympy/polys/domains/quotientring.py",
+        "sympy/polys/fields.py",
+        "sympy/polys/monomials.py",
+        "sympy/polys/polyclasses.py",
+        "sympy/polys/polytools.py",
+        "sympy/polys/rings.py",
+        "sympy/polys/rootoftools.py",
+        "sympy/tensor/array/ndim_array.py",
+        "sympy/utilities/enumerative.py"
+      ],
+      "treatmentState": "VALID_NONEMPTY",
+      "quality": "LEAD_WRONG_NO_GOLD",
+      "leadFile": "sympy/tensor/index_methods.py",
+      "leadSymbol": "get_contraction_structure",
+      "top1Gold": false,
+      "top3Gold": false,
+      "goldAnywhere": false,
+      "goldDelivered": []
+    },
+    {
+      "instanceId": "django__django-11477",
+      "repo": "django/django",
+      "goldFiles": [
+        "django/urls/resolvers.py"
+      ],
+      "treatmentState": "VALID_NONEMPTY",
+      "quality": "LEAD_WRONG_GOLD_ELSEWHERE",
+      "leadFile": "django/urls/base.py",
+      "leadSymbol": "translate_url",
+      "top1Gold": false,
+      "top3Gold": false,
+      "goldAnywhere": true,
+      "goldDelivered": [
+        "django/urls/resolvers.py"
+      ]
+    },
+    {
+      "instanceId": "django__django-11066",
+      "repo": "django/django",
+      "goldFiles": [
+        "django/contrib/contenttypes/management/__init__.py"
+      ],
+      "treatmentState": "VALID_NONEMPTY",
+      "quality": "LEAD_GOLD",
+      "leadFile": "django/contrib/contenttypes/management/__init__.py",
+      "leadSymbol": "_rename",
+      "top1Gold": true,
+      "top3Gold": true,
+      "goldAnywhere": true,
+      "goldDelivered": [
+        "django/contrib/contenttypes/management/__init__.py"
+      ]
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-10323",
+      "repo": "sphinx-doc/sphinx",
+      "goldFiles": [
+        "sphinx/directives/code.py"
+      ],
+      "treatmentState": "VALID_NONEMPTY",
+      "quality": "LEAD_GOLD",
+      "leadFile": "sphinx/directives/code.py",
+      "leadSymbol": "prepend_filter",
+      "top1Gold": true,
+      "top3Gold": true,
+      "goldAnywhere": true,
+      "goldDelivered": [
+        "sphinx/directives/code.py"
+      ]
+    },
+    {
+      "instanceId": "scikit-learn__scikit-learn-12682",
+      "repo": "scikit-learn/scikit-learn",
+      "goldFiles": [
+        "examples/decomposition/plot_sparse_coding.py",
+        "sklearn/decomposition/dict_learning.py"
+      ],
+      "treatmentState": "VALID_NONEMPTY",
+      "quality": "LEAD_GOLD",
+      "leadFile": "sklearn/decomposition/dict_learning.py",
+      "leadSymbol": "SparseCoder",
+      "top1Gold": true,
+      "top3Gold": true,
+      "goldAnywhere": true,
+      "goldDelivered": [
+        "sklearn/decomposition/dict_learning.py"
+      ]
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-10614",
+      "repo": "sphinx-doc/sphinx",
+      "goldFiles": [
+        "sphinx/ext/inheritance_diagram.py"
+      ],
+      "treatmentState": "VALID_NONEMPTY",
+      "quality": "LEAD_GOLD",
+      "leadFile": "sphinx/ext/inheritance_diagram.py",
+      "leadSymbol": "html_visit_inheritance_diagram",
+      "top1Gold": true,
+      "top3Gold": true,
+      "goldAnywhere": true,
+      "goldDelivered": [
+        "sphinx/ext/inheritance_diagram.py"
+      ]
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-23476",
+      "repo": "matplotlib/matplotlib",
+      "goldFiles": [
+        "lib/matplotlib/figure.py"
+      ],
+      "treatmentState": "VALID_NONEMPTY",
+      "quality": "LEAD_WRONG_NO_GOLD",
+      "leadFile": "lib/matplotlib/backend_bases.py",
+      "leadSymbol": "_Backend",
+      "top1Gold": false,
+      "top3Gold": false,
+      "goldAnywhere": false,
+      "goldDelivered": []
+    },
+    {
+      "instanceId": "scikit-learn__scikit-learn-12585",
+      "repo": "scikit-learn/scikit-learn",
+      "goldFiles": [
+        "sklearn/base.py"
+      ],
+      "treatmentState": "VALID_NONEMPTY",
+      "quality": "LEAD_GOLD",
+      "leadFile": "sklearn/base.py",
+      "leadSymbol": "clone",
+      "top1Gold": true,
+      "top3Gold": true,
+      "goldAnywhere": true,
+      "goldDelivered": [
+        "sklearn/base.py"
+      ]
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-14623",
+      "repo": "matplotlib/matplotlib",
+      "goldFiles": [
+        "lib/matplotlib/axes/_base.py",
+        "lib/matplotlib/ticker.py",
+        "lib/mpl_toolkits/mplot3d/axes3d.py"
+      ],
+      "treatmentState": "VALID_NONEMPTY",
+      "quality": "LEAD_WRONG_NO_GOLD",
+      "leadFile": "lib/matplotlib/scale.py",
+      "leadSymbol": "InvertedLogTransformBase",
+      "top1Gold": false,
+      "top3Gold": false,
+      "goldAnywhere": false,
+      "goldDelivered": []
+    },
+    {
+      "instanceId": "sympy__sympy-12096",
+      "repo": "sympy/sympy",
+      "goldFiles": [
+        "sympy/core/function.py"
+      ],
+      "treatmentState": "VALID_NONEMPTY",
+      "quality": "LEAD_WRONG_GOLD_ELSEWHERE",
+      "leadFile": "sympy/functions/special/hyper.py",
+      "leadSymbol": "_eval_evalf",
+      "top1Gold": false,
+      "top3Gold": true,
+      "goldAnywhere": true,
+      "goldDelivered": [
+        "sympy/core/function.py"
+      ]
+    },
+    {
+      "instanceId": "astropy__astropy-13033",
+      "repo": "astropy/astropy",
+      "goldFiles": [
+        "astropy/timeseries/core.py"
+      ],
+      "treatmentState": "VALID_NONEMPTY",
+      "quality": "LEAD_GOLD",
+      "leadFile": "astropy/timeseries/core.py",
+      "leadSymbol": "_check_required_columns",
+      "top1Gold": true,
+      "top3Gold": true,
+      "goldAnywhere": true,
+      "goldDelivered": [
+        "astropy/timeseries/core.py"
+      ]
+    },
+    {
+      "instanceId": "sympy__sympy-13615",
+      "repo": "sympy/sympy",
+      "goldFiles": [
+        "sympy/sets/sets.py"
+      ],
+      "treatmentState": "VALID_NONEMPTY",
+      "quality": "LEAD_WRONG_NO_GOLD",
+      "leadFile": "sympy/stats/rv.py",
+      "leadSymbol": "expectation",
+      "top1Gold": false,
+      "top3Gold": false,
+      "goldAnywhere": false,
+      "goldDelivered": []
+    },
+    {
+      "instanceId": "pydata__xarray-3305",
+      "repo": "pydata/xarray",
+      "goldFiles": [
+        "xarray/core/dataset.py",
+        "xarray/core/variable.py"
+      ],
+      "treatmentState": "VALID_NONEMPTY",
+      "quality": "LEAD_WRONG_GOLD_ELSEWHERE",
+      "leadFile": "xarray/core/dataarray.py",
+      "leadSymbol": "quantile",
+      "top1Gold": false,
+      "top3Gold": true,
+      "goldAnywhere": true,
+      "goldDelivered": [
+        "xarray/core/dataset.py",
+        "xarray/core/variable.py"
+      ]
+    },
+    {
+      "instanceId": "django__django-12406",
+      "repo": "django/django",
+      "goldFiles": [
+        "django/db/models/fields/related.py",
+        "django/forms/models.py"
+      ],
+      "treatmentState": "VALID_NONEMPTY",
+      "quality": "LEAD_GOLD",
+      "leadFile": "django/forms/models.py",
+      "leadSymbol": "ModelForm",
+      "top1Gold": true,
+      "top3Gold": true,
+      "goldAnywhere": true,
+      "goldDelivered": [
+        "django/forms/models.py"
+      ]
+    },
+    {
+      "instanceId": "pydata__xarray-4356",
+      "repo": "pydata/xarray",
+      "goldFiles": [
+        "xarray/core/nanops.py"
+      ],
+      "treatmentState": "VALID_NONEMPTY",
+      "quality": "LEAD_WRONG_NO_GOLD",
+      "leadFile": "xarray/core/pdcompat.py",
+      "leadSymbol": "count_not_none",
+      "top1Gold": false,
+      "top3Gold": false,
+      "goldAnywhere": false,
+      "goldDelivered": []
+    },
+    {
+      "instanceId": "django__django-11099",
+      "repo": "django/django",
+      "goldFiles": [
+        "django/contrib/auth/validators.py"
+      ],
+      "treatmentState": "VALID_NONEMPTY",
+      "quality": "LEAD_GOLD",
+      "leadFile": "django/contrib/auth/validators.py",
+      "leadSymbol": "ASCIIUsernameValidator",
+      "top1Gold": true,
+      "top3Gold": true,
+      "goldAnywhere": true,
+      "goldDelivered": [
+        "django/contrib/auth/validators.py"
+      ]
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-10435",
+      "repo": "sphinx-doc/sphinx",
+      "goldFiles": [
+        "sphinx/writers/latex.py"
+      ],
+      "treatmentState": "VALID_DELIVERY_EMPTY",
+      "leadFile": null,
+      "leadSymbol": null,
+      "top1Gold": false,
+      "top3Gold": false,
+      "goldAnywhere": false,
+      "goldDelivered": [],
+      "quality": "VALID_EMPTY"
+    },
+    {
+      "instanceId": "scikit-learn__scikit-learn-13124",
+      "repo": "scikit-learn/scikit-learn",
+      "goldFiles": [
+        "sklearn/model_selection/_split.py"
+      ],
+      "treatmentState": "VALID_NONEMPTY",
+      "quality": "LEAD_GOLD",
+      "leadFile": "sklearn/model_selection/_split.py",
+      "leadSymbol": "StratifiedKFold",
+      "top1Gold": true,
+      "top3Gold": true,
+      "goldAnywhere": true,
+      "goldDelivered": [
+        "sklearn/model_selection/_split.py"
+      ]
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-10673",
+      "repo": "sphinx-doc/sphinx",
+      "goldFiles": [
+        "sphinx/directives/other.py",
+        "sphinx/environment/adapters/toctree.py",
+        "sphinx/environment/collectors/toctree.py"
+      ],
+      "treatmentState": "VALID_NONEMPTY",
+      "quality": "LEAD_WRONG_GOLD_ELSEWHERE",
+      "leadFile": "sphinx/builders/_epub_base.py",
+      "leadSymbol": "EpubBuilder",
+      "top1Gold": false,
+      "top3Gold": false,
+      "goldAnywhere": true,
+      "goldDelivered": [
+        "sphinx/environment/adapters/toctree.py",
+        "sphinx/environment/collectors/toctree.py"
+      ]
+    },
+    {
+      "instanceId": "pytest-dev__pytest-5809",
+      "repo": "pytest-dev/pytest",
+      "goldFiles": [
+        "src/_pytest/pastebin.py"
+      ],
+      "treatmentState": "VALID_NONEMPTY",
+      "quality": "LEAD_GOLD",
+      "leadFile": "src/_pytest/pastebin.py",
+      "leadSymbol": "create_new_paste",
+      "top1Gold": true,
+      "top3Gold": true,
+      "goldAnywhere": true,
+      "goldDelivered": [
+        "src/_pytest/pastebin.py"
+      ]
+    },
+    {
+      "instanceId": "sympy__sympy-13757",
+      "repo": "sympy/sympy",
+      "goldFiles": [
+        "sympy/polys/polytools.py"
+      ],
+      "treatmentState": "VALID_NONEMPTY",
+      "quality": "LEAD_WRONG_GOLD_ELSEWHERE",
+      "leadFile": "sympy/core/sympify.py",
+      "leadSymbol": "sympify",
+      "top1Gold": false,
+      "top3Gold": true,
+      "goldAnywhere": true,
+      "goldDelivered": [
+        "sympy/polys/polytools.py"
+      ]
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-24149",
+      "repo": "matplotlib/matplotlib",
+      "goldFiles": [
+        "lib/matplotlib/axes/_axes.py"
+      ],
+      "treatmentState": "VALID_NONEMPTY",
+      "quality": "LEAD_GOLD",
+      "leadFile": "lib/matplotlib/axes/_axes.py",
+      "leadSymbol": "errorbar",
+      "top1Gold": true,
+      "top3Gold": true,
+      "goldAnywhere": true,
+      "goldDelivered": [
+        "lib/matplotlib/axes/_axes.py"
+      ]
+    },
+    {
+      "instanceId": "scikit-learn__scikit-learn-13439",
+      "repo": "scikit-learn/scikit-learn",
+      "goldFiles": [
+        "sklearn/pipeline.py"
+      ],
+      "treatmentState": "VALID_NONEMPTY",
+      "quality": "LEAD_WRONG_GOLD_ELSEWHERE",
+      "leadFile": "sklearn/ensemble/base.py",
+      "leadSymbol": "__len__",
+      "top1Gold": false,
+      "top3Gold": true,
+      "goldAnywhere": true,
+      "goldDelivered": [
+        "sklearn/pipeline.py"
+      ]
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-20826",
+      "repo": "matplotlib/matplotlib",
+      "goldFiles": [
+        "lib/matplotlib/axis.py"
+      ],
+      "treatmentState": "VALID_NONEMPTY",
+      "quality": "LEAD_GOLD",
+      "leadFile": "lib/matplotlib/axis.py",
+      "leadSymbol": "clear",
+      "top1Gold": true,
+      "top3Gold": true,
+      "goldAnywhere": true,
+      "goldDelivered": [
+        "lib/matplotlib/axis.py"
+      ]
+    },
+    {
+      "instanceId": "django__django-13033",
+      "repo": "django/django",
+      "goldFiles": [
+        "django/db/models/sql/compiler.py"
+      ],
+      "treatmentState": "VALID_NONEMPTY",
+      "quality": "LEAD_WRONG_NO_GOLD",
+      "leadFile": "django/contrib/contenttypes/fields.py",
+      "leadSymbol": "_check_object_id_field",
+      "top1Gold": false,
+      "top3Gold": false,
+      "goldAnywhere": false,
+      "goldDelivered": []
+    },
+    {
+      "instanceId": "sympy__sympy-15809",
+      "repo": "sympy/sympy",
+      "goldFiles": [
+        "sympy/functions/elementary/miscellaneous.py"
+      ],
+      "treatmentState": "VALID_NONEMPTY",
+      "quality": "LEAD_GOLD",
+      "leadFile": "sympy/functions/elementary/miscellaneous.py",
+      "leadSymbol": "Max",
+      "top1Gold": true,
+      "top3Gold": true,
+      "goldAnywhere": true,
+      "goldDelivered": [
+        "sympy/functions/elementary/miscellaneous.py"
+      ]
+    },
+    {
+      "instanceId": "pytest-dev__pytest-5631",
+      "repo": "pytest-dev/pytest",
+      "goldFiles": [
+        "src/_pytest/compat.py"
+      ],
+      "treatmentState": "VALID_NONEMPTY",
+      "quality": "LEAD_WRONG_NO_GOLD",
+      "leadFile": "src/_pytest/_code/code.py",
+      "leadSymbol": "value",
+      "top1Gold": false,
+      "top3Gold": false,
+      "goldAnywhere": false,
+      "goldDelivered": []
+    },
+    {
+      "instanceId": "django__django-13837",
+      "repo": "django/django",
+      "goldFiles": [
+        "django/utils/autoreload.py"
+      ],
+      "treatmentState": "VALID_NONEMPTY",
+      "quality": "LEAD_WRONG_GOLD_ELSEWHERE",
+      "leadFile": "django/views/decorators/http.py",
+      "leadSymbol": "last_modified",
+      "top1Gold": false,
+      "top3Gold": true,
+      "goldAnywhere": true,
+      "goldDelivered": [
+        "django/utils/autoreload.py"
+      ]
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-9229",
+      "repo": "sphinx-doc/sphinx",
+      "goldFiles": [
+        "sphinx/ext/autodoc/__init__.py"
+      ],
+      "treatmentState": "VALID_NONEMPTY",
+      "quality": "LEAD_WRONG_NO_GOLD",
+      "leadFile": "sphinx/application.py",
+      "leadSymbol": "add_object_type",
+      "top1Gold": false,
+      "top3Gold": false,
+      "goldAnywhere": false,
+      "goldDelivered": []
+    },
+    {
+      "instanceId": "sympy__sympy-12489",
+      "repo": "sympy/sympy",
+      "goldFiles": [
+        "sympy/combinatorics/permutations.py"
+      ],
+      "treatmentState": "VALID_NONEMPTY",
+      "quality": "LEAD_GOLD",
+      "leadFile": "sympy/combinatorics/permutations.py",
+      "leadSymbol": "Permutation",
+      "top1Gold": true,
+      "top3Gold": true,
+      "goldAnywhere": true,
+      "goldDelivered": [
+        "sympy/combinatorics/permutations.py"
+      ]
+    }
+  ],
+  "distribution": {
+    "LEAD_WRONG_NO_GOLD": 8,
+    "LEAD_WRONG_GOLD_ELSEWHERE": 7,
+    "LEAD_GOLD": 14,
+    "VALID_EMPTY": 1
+  }
+}

@@ -1,0 +1,69 @@
+{
+  "schemaVersion": "stage5.m161.unique-losses.v1",
+  "count": 1,
+  "note": "§73 — do not defend VTRACE. The loss is examined for anchoring first and the anchoring hypothesis is reported as falsified by the file-selection evidence, not waved away.",
+  "losses": [
+    {
+      "instanceId": "sphinx-doc__sphinx-10673",
+      "repo": "sphinx-doc/sphinx",
+      "deltas": {
+        "turns": 25,
+        "tokens": 1354353,
+        "searches": 0,
+        "firstEdit": 9
+      },
+      "goldFiles": [
+        "sphinx/directives/other.py",
+        "sphinx/environment/adapters/toctree.py",
+        "sphinx/environment/collectors/toctree.py"
+      ],
+      "leadFile": "sphinx/builders/_epub_base.py",
+      "leadQuality": "LEAD_WRONG_GOLD_ELSEWHERE",
+      "goldDelivered": [
+        "sphinx/environment/adapters/toctree.py",
+        "sphinx/environment/collectors/toctree.py"
+      ],
+      "baseline": {
+        "toolCalls": 25,
+        "edits": [
+          "sphinx/directives/other.py",
+          "sphinx/environment/adapters/toctree.py",
+          "sphinx/environment/adapters/toctree.py"
+        ],
+        "patchFiles": [
+          "sphinx/directives/other.py",
+          "sphinx/environment/adapters/toctree.py"
+        ],
+        "editedVtraceLead": false
+      },
+      "vtrace": {
+        "toolCalls": 34,
+        "edits": [
+          "sphinx/directives/other.py",
+          "sphinx/environment/adapters/toctree.py",
+          "sphinx/environment/adapters/toctree.py",
+          "sphinx/directives/other.py",
+          "sphinx/environment/adapters/toctree.py"
+        ],
+        "patchFiles": [
+          "sphinx/directives/other.py",
+          "sphinx/environment/adapters/toctree.py"
+        ],
+        "editedVtraceLead": false
+      },
+      "sameFilesEdited": true,
+      "wrongLead": true,
+      "goldElsewhere": true,
+      "goldAbsent": false,
+      "misleadingSupport": false,
+      "prematureFixation": false,
+      "searchTermination": false,
+      "contextDisplacement": false,
+      "agentVariance": true,
+      "likelyCause": "agent variance in EDIT CONTENT, not in file selection",
+      "reasoning": "The lead was wrong (sphinx/builders/_epub_base.py) and 2 of the 3 gold files were delivered, which makes this look like an anchoring case. It is not. Both arms edited the SAME two files (sphinx/directives/other.py and sphinx/environment/adapters/toctree.py) and both missed the same third gold file, and both touched gold at tool call 1 before any edit. Search counts are identical at 7. The VTRACE arm simply wrote a worse patch on the same targets, revising twice more (5 edits vs 3) and finishing wrong. Nothing about file selection differed, so nothing about retrieval can be the cause.",
+      "causalConfidence": "MEDIUM — the file-selection evidence is decisive, but why one patch is correct and the other is not is not recoverable from tool-call telemetry",
+      "wouldOverturn": "a reading of both patches showing the VTRACE arm's edit follows the injected evidence into a wrong change the baseline had no reason to make"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "schemaVersion": "stage5.m161.treatment-availability.v1",
+  "denominatorRule": "Availability is reported over the ORIGINAL frozen 30 (§35). The paired agent matrix is conditional on both arms having run and being gradable (§36) and is a DIFFERENT denominator. Neither is silently shrunk.",
+  "selectedTasks": 30,
+  "byState": {
+    "VALID_NONEMPTY": 29,
+    "VALID_DELIVERY_EMPTY": 1
+  },
+  "validTreatmentRate": 1,
+  "baselinePassWithTreatmentUnavailable": []
+}

@@ -1,0 +1,48 @@
+{
+  "schemaVersion": "stage5.m161.unique-wins.v1",
+  "count": 1,
+  "note": "§72 asks for a CONSERVATIVE contribution estimate. The one win here is attributed to agent self-harm in the baseline arm, not to retrieval.",
+  "wins": [
+    {
+      "instanceId": "sympy__sympy-13615",
+      "repo": "sympy/sympy",
+      "deltas": {
+        "turns": -52,
+        "tokens": -2117702,
+        "searches": 2
+      },
+      "goldFiles": [
+        "sympy/sets/sets.py"
+      ],
+      "leadFile": "sympy/stats/rv.py",
+      "leadQuality": "LEAD_WRONG_NO_GOLD",
+      "goldDelivered": [],
+      "baseline": {
+        "toolCalls": 47,
+        "edits": [
+          "sympy/sets/sets.py",
+          "sympy/sets/sets.py"
+        ],
+        "patchFiles": [],
+        "editedVtraceLead": false
+      },
+      "vtrace": {
+        "toolCalls": 23,
+        "edits": [
+          "sympy/sets/sets.py"
+        ],
+        "patchFiles": [
+          "sympy/sets/sets.py"
+        ],
+        "editedVtraceLead": false
+      },
+      "sameFilesEdited": false,
+      "whatBaselineDid": "Ran 111 turns under budget, located the gold file at tool call 2, edited it twice, then made `git stash && pytest` its FINAL action (call 46 of 47) to compare against a clean tree and never popped the stash. The captured patch was empty.",
+      "whatVtraceDid": "Resolved in 59 turns with a 981-byte patch.",
+      "likelyContribution": "NONE — this is not a context win.",
+      "reasoning": "VTRACE's treatment on this case was LEAD_WRONG_NO_GOLD: it led with sympy/stats/rv.py and delivered no gold file at all. The baseline had already found the correct file unaided and destroyed its own fix with a stash it never restored. Attributing this win to retrieval quality would be attributing it to context that did not contain the answer.",
+      "causalConfidence": "HIGH that VTRACE context did NOT cause it; the win is agent self-harm in the baseline arm",
+      "wouldOverturn": "evidence that the stash was caused by the harness rather than by the agent's own final tool call"
+    }
+  ]
+}

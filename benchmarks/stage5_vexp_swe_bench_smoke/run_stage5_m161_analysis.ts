@@ -19,6 +19,7 @@ import {
   computeOrientation,
   crossTab,
   discordantExactP,
+  gradeArm,
   pairedDelta,
   stats,
   type CrossTabCase,
@@ -96,7 +97,8 @@ async function loadArm(
   // §51 — patch produced, agent claim and grader verdict are kept separate; only
   // the grader decides. A run with no _eval.meta.json is UNGRADED, never a FAIL.
   const evaluationRan = evalMeta?.evaluationRan === true;
-  const grade: Grade = !evaluationRan || row === null ? "UNGRADED" : row.resolved === true ? "PASS" : "FAIL";
+  const patchProduced = typeof row?.modelPatch === "string" && (row.modelPatch as string).length > 0;
+  const grade: Grade = gradeArm({ ran: row !== null, evaluationRan, resolved: row?.resolved, patchProduced });
 
   const tokenParts = [row?.inputTokens, row?.outputTokens, row?.cacheReadTokens, row?.cacheCreationTokens].map(num);
   const treatment = arm === "vtrace" ? classifyTreatmentState(meta, { ran: row !== null }) : null;
@@ -106,7 +108,7 @@ async function loadArm(
     instanceId, repo, arm, label,
     ran: row !== null,
     grade,
-    patchProduced: typeof row?.modelPatch === "string" && (row.modelPatch as string).length > 0,
+    patchProduced,
     model: typeof row?.model === "string" ? row.model : null,
     costUsd: num(row?.costUsd),
     numTurns: num(row?.numTurns),

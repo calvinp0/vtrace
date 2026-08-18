@@ -81,6 +81,33 @@ export type PairClass =
   | "shared failure"
   | "incomplete";
 
+/**
+ * Grade one arm from what the run actually produced (§51).
+ *
+ * The grader is the authority, with one entailed exception: a run that COMPLETED
+ * and produced an EMPTY patch is a FAIL. The SWE-bench grader refuses to evaluate
+ * an empty patch at all, so leaving it UNGRADED would silently drop a real agent
+ * failure out of the denominator — and dropping it is not neutral, because the
+ * paired arm's outcome decides which way the omission points.
+ *
+ * This is entailment, not judgement: FAIL_TO_PASS tests fail at the base commit by
+ * definition — that is what makes them FAIL_TO_PASS — and an empty patch leaves the
+ * tree at the base commit. Resolution is impossible, not merely unlikely.
+ *
+ * It applies only to a run that finished normally. A crash, an infrastructure
+ * failure or a cap hit is not covered here and is handled by the rerun policy.
+ */
+export function gradeArm(input: {
+  readonly ran: boolean;
+  readonly evaluationRan: boolean;
+  readonly resolved: unknown;
+  readonly patchProduced: boolean;
+}): Grade {
+  if (!input.ran) return "UNGRADED";
+  if (input.evaluationRan) return input.resolved === true ? "PASS" : "FAIL";
+  return input.patchProduced ? "UNGRADED" : "FAIL";
+}
+
 export function classifyPair(baseline: Grade, vtrace: Grade): PairClass {
   if (baseline === "UNGRADED" || vtrace === "UNGRADED") return "incomplete";
   if (baseline === "PASS" && vtrace === "PASS") return "shared success";

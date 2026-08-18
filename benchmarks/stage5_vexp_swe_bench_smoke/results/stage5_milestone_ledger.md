@@ -2646,3 +2646,94 @@ reproducible rather than resident.
   wrong one far more often — a failure none of the six first-divergence classes
   names, and one that no bound, pool or ranking change in this milestone's
   simulation set addresses.
+
+## M161 — Fresh paired coding-agent utility qualification (commits 3af6057a, 3eb9daa0, 1a47ac75, b6bc98fa)
+
+M161 is **PASS** as an execution milestone. **A · B · C · D · E all PASS.** No
+product code changed; `git status --porcelain src/` was empty throughout. The
+product utility verdict is **POSITIVE, scoped to orientation efficiency**, the
+strategic gate is `UTILITY_POSITIVE`, and the extension decision is
+**`DO_NOT_EXTEND`**.
+
+Four milestones improved, ruled out, or failed to replicate a retrieval mechanism
+without anyone measuring whether the retrieval helps a coding agent. M161 measured
+it. Fresh corpus: SWE-bench Verified minus Broad100-A and Broad100-B, reconstructed
+mechanically — **300 eligible, 0 metadata drops**, 120 drawn as a 100-case extension
+set plus a 20-case predeclared reserve, `paired30` a strict prefix, **0 overlap**
+asserted, 8 repositories at **20.0% max share** against Broad100-A's 44% django.
+Integrity gate **50/50 VALID, 0 retries**. 60 live arms, **0 failures, 0 infra
+retries, 0 reruns**, $41.07, ~3h07m.
+
+**The headline is a non-result and a result.** Resolution **19/30 in both arms**;
+2 discordant pairs; exact two-sided p = **1.0**. But agent work falls reliably:
+median tool calls **15 → 10**, searches **4.5 → 3**, turns **38 → 26**, first-edit
+position **6 → 4**, gold reached before first edit **29/30 → 30/30**. Tokens and
+dollars do **not** follow — 14 pairs cheaper against 16 dearer, median cost delta
+**+$0.017** — because the capsule is re-read every turn through the cache. VTRACE
+additionally costs a median **42 s** of index build.
+
+**Treatment availability 30/30** (29 `VALID_NONEMPTY` + 1 `VALID_DELIVERY_EMPTY`,
+**0 unavailable**) against M155's 27/30: M156's parse-failure containment
+generalized to unfamiliar repositories rather than being specific to the corpus it
+was built against.
+
+**The §107 answer is clean.** Conditional on a correct lead the agent spent a median
+**164k fewer tokens and 4.5 fewer turns** on the same task; conditional on a wrong
+lead, ~71k more. Yet `LEAD_GOLD` resolved **9/14 in both arms**. Top-1 is an
+efficiency lever and not a solve-rate lever. Lead quality: 14 `LEAD_GOLD`, 7
+`LEAD_WRONG_GOLD_ELSEWHERE`, 8 `LEAD_WRONG_NO_GOLD`, 1 `VALID_EMPTY` — Top-1 48%,
+between M160's two corpora.
+
+Treatment deliberately **not historical-treatment identical**: five
+benchmark-authored policy blocks (`STAGE5_TOKEN_DISCIPLINE`, `PIVOT_CHECK`,
+`EDIT_GUARD`, `PATCH_VERIFY`, trailing orientation `Instruction`) were disabled in
+both arms, so M161's absolute numbers are **not comparable to M155's paired-30**.
+Nothing was deleted; the milestone declined to inject. Three harness defects found
+and fixed (D1 undeclared policy blocks, D2 valid-empty misclassified as
+unavailable, D3 unpopulated sweep reading as valid-empty); none touched product
+behaviour. `bun test` 4943 pass / 49 skip / 0 fail; typechecks and `git diff --check`
+clean.
+
+## M161 standing findings
+
+- **A wrong lead is almost entirely harmless, and that is measured rather than
+  assumed.** Agents **ignored** the wrong VTRACE lead in **13 of 15** cases and
+  edited gold instead; **11 of 15** wrong-lead cases resolved anyway. The 2 that did
+  edit the wrong lead were **shared failures** — the baseline failed independently
+  on different wrong files. Unique harm from anchoring: **0**. False absence: **0**,
+  with the detector shown to fire on a synthetic positive. §146's precondition for a
+  lead-selection milestone does not hold, and neither does §147's for abstention.
+
+- **Optimising Top-1 optimises the wrong outcome.** It buys a large, paired,
+  within-task efficiency gain and buys **no additional solutions** — `LEAD_GOLD`
+  resolved 9/14 in both arms. Five milestones of ranking work were aimed at a metric
+  that moves cost, not capability. Anything downstream that treats Top-1 as a proxy
+  for utility is measuring the wrong thing.
+
+- **Fewer turns is not fewer tokens.** Turns fell in 18 pairs against 8, yet tokens
+  were a coin flip (14 vs 16) and cost median rose $0.017. The injected capsule is
+  re-read on every turn through the cache, so a shorter run over a larger prefix
+  cancels. Any future efficiency claim must be made on total workflow tokens (§57),
+  never on turn counts or on the size of the injected block.
+
+- **Read what the treatment actually delivered, not what the flags say it
+  delivered.** The VTRACE arm carried **2516 bytes of agent policy against 12249
+  bytes of evidence** — patch-first, do-not-grep, write-an-edit-plan,
+  verify-your-patch, orient-before-searching. One block was known; the other four
+  were found only by reading the snapshot the first smoke run injected. Two of them
+  reference nothing from the capsule at all, so every historical Stage 5 arm
+  comparison was measuring evidence *plus* prompt engineering.
+
+- **A signal meaning "nothing was delivered" is not a signal meaning "nothing
+  worked."** Two of three harness defects were that same confusion in opposite
+  directions: M155 filed a product failure as an empty delivery; M161 initially
+  filed the product's own correct refusal to deliver as a product failure. Delivery
+  and availability are different questions and the field that answers one does not
+  answer the other.
+
+- **Both discordant pairs were agent self-harm, not retrieval.** The one "win" is
+  the baseline stashing its own correct fix as its final tool call, on a task where
+  VTRACE delivered no gold at all. The one loss is a worse patch written on the
+  *identical* two files, with identical search counts. A 1-1 split reads as "a wash"
+  and would have been reported as one; only opening both transcripts showed neither
+  had anything to do with context.

@@ -7,6 +7,7 @@ import {
   computeOrientation,
   crossTab,
   discordantExactP,
+  gradeArm,
   pairedDelta,
   stats,
   touchesGold,
@@ -188,5 +189,34 @@ describe("M161 lead-quality cross-tab (§135)", () => {
 
   test("every case lands in exactly one row", () => {
     expect(crossTab(cases).reduce((sum, r) => sum + r.cases, 0)).toBe(cases.length);
+  });
+});
+
+describe("M161 arm grading (§51)", () => {
+  const base = { ran: true, evaluationRan: true, resolved: true, patchProduced: true };
+
+  test("the grader decides when it ran", () => {
+    expect(gradeArm(base)).toBe("PASS");
+    expect(gradeArm({ ...base, resolved: false })).toBe("FAIL");
+    expect(gradeArm({ ...base, resolved: null })).toBe("FAIL");
+  });
+
+  test("an arm that never ran is UNGRADED", () => {
+    expect(gradeArm({ ...base, ran: false, evaluationRan: false })).toBe("UNGRADED");
+  });
+
+  test("a completed run with an EMPTY patch is FAIL, not UNGRADED", () => {
+    // sympy__sympy-13615: the agent ran 111 turns under budget, edited the gold
+    // file twice, then made `git stash` its final action and never popped it. The
+    // SWE-bench grader refuses to evaluate an empty patch, so UNGRADED would drop a
+    // real agent failure out of the denominator — and that omission is not neutral,
+    // because the paired arm's outcome decides which way it points.
+    expect(gradeArm({ ran: true, evaluationRan: false, resolved: null, patchProduced: false })).toBe("FAIL");
+  });
+
+  test("a completed run WITH a patch but no grader run stays UNGRADED", () => {
+    // Here the outcome is genuinely unknown: a patch exists and only the grader can
+    // say whether it resolves. Nothing is entailed, so nothing is assumed.
+    expect(gradeArm({ ran: true, evaluationRan: false, resolved: null, patchProduced: true })).toBe("UNGRADED");
   });
 });
