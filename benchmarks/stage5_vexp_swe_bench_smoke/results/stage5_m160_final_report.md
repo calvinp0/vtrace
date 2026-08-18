@@ -31,7 +31,7 @@ result — not a disappointment to be worked around.
 | M159 commits | `2d90280a753b19c60827ba8038398781332ab8d7`, `ed6c6d8bb439499b9d31931e4516af13878d1698`, `5cd15b81f005d1a448d80f3757569d61f3db2828`, `f15b274d8f86dceed9154c4528c719da9e1b3f1e` |
 | M158 final functional | `b7ba0381850174ccf55844edc96f3dc8d7c1de0c` |
 | M160 corpus commit | `227b6fbebf` — *Freeze an independent broad retrieval corpus* |
-| M160 evidence commit | `867c9b58` — *Test the residual retrieval theory on an unfamiliar corpus* |
+| M160 evidence commit | `3c3c14d3` — *Test the residual retrieval theory on an unfamiliar corpus* |
 | branch / ahead / behind | `main` / 52 / 0 |
 | pushed | NO |
 | co-author trailers | NONE |

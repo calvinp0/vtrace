@@ -2547,7 +2547,7 @@ byte-identical to M158's candidate (0 duplicate slots, 380 support slots, 79 gol
   a corpus **built to measure it** — that, not another broad100 pass, is the next
   milestone.
 
-## M160 — Independent broad retrieval generalization (commits 227b6fbe, 867c9b58)
+## M160 — Independent broad retrieval generalization (commits 227b6fbe, 3c3c14d3)
 
 M160 is **PASS** as a replication milestone. **A · B · C · D · E all PASS.** No
 product code changed; `git status --porcelain src/` was empty throughout. A clean
