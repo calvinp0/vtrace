@@ -2444,3 +2444,105 @@ clean27 **27/27** structurally identical; `sphinx-9320`, `django-11740` and
   silently replaced committed evidence with a different comparison. Both now fail
   closed on another milestone's artifact. Found by M157, fixed here, and kept in
   its own commit so benchmark hygiene stays out of product attribution.
+
+## M159 — Retrieval loss localization and candidate-depth audit (commits <audit>, <evidence>)
+
+M159 is **PASS** as an audit milestone. **A · B · C · E PASS; D NOT RUN — correct
+stop.** No product code changed; the `src` tree hash is identical at M158's product
+commit and the M159 working tree (`60f9ee2b…`), which is a stronger preservation
+proof than any re-run.
+
+The milestone asked where the retrieval pipeline first loses the evidence behind
+the 20 residual broad100 failures. All 20 localize, **0 unexplained**, and the
+answer contradicts both inherited bucket names. `LANE_GENERATION_FAILURE` 8 cases /
+4 repos; `CANDIDATE_GENERATION_POOL_BOUND` 6 / 5; `CANDIDATE_BOUND_EVICTION` 3 / 3;
+`INDEX_FILE_MISSING` 2 / 1; `INDEX_SYMBOL_MISSING` 1 / 1. Every other §106 class —
+query interpretation, lane eligibility, relevance ranking, role authority, the
+no-pivot gate, support packing, serialization — is **empty as a first divergence**.
+
+The decisive measurement is the **delivery ceiling**: across 100 cases the product
+delivers 570 items and has **never delivered one deeper than ordinary rank 30**
+(p50 4, p90 14, p99 25). The nine bound-population targets become available at
+ranks 40, 51, 74, 87, 110, 162, 343, 369 and 1058. Every simulated bound
+intervention — pool cap 25→50, 25→100, generation-pool widening — therefore
+recovers **0**, and the whole family is refuted at once rather than one rung at a
+time. §42 stops being a policy and becomes a measurement. Decision:
+**MULTIPLE_SMALL_POPULATIONS**, no functional work.
+
+Three structural hypotheses were each shown the delivered cases as a control and
+all three were rejected: task-never-names-the-gold-symbol 19/20 vs **50/79**,
+private/dunder gold 11/20 vs 32/79, degenerate task body 13/20 vs 32/79. Two
+benchmark corrections: `django-13590` and `django-15572` are **invalid instances**
+(gold file never checked out; 442/477 indexed files against a peer range of
+827–869), recorded and deliberately **not** repaired mid-audit; and the residual
+ground truth splits 13 `USEFUL_PRIMARY` / 1 `USEFUL_SUPPORT` / 1
+`PATCH_GOLD_BUT_NOT_USEFUL_CONTEXT` / 3 `AMBIGUOUS` / 2 `GROUND_TRUTH_ERROR`.
+
+Preservation measured, not asserted: `sphinx-9320`, `django-11740` and
+`xarray-6599` byte-identical; M158 duplicate-support manifest hash `326abc25…`
+byte-identical to M158's candidate (0 duplicate slots, 380 support slots, 79 gold);
+`<module>` deliveries 0; index writes 0; routing OFF. `bun test` 4832 pass · 49 skip
+· 0 fail; typechecks and `git diff --check` clean.
+
+## M159 standing findings
+
+- **The nine "deep-ranked" cases never had the gold symbol in the pool at all**
+  (A): `goldSymbolCandidates = 0` in **all 20** residual cases, a number no prior
+  milestone printed. The candidate sitting at packed position 22 is a *different
+  symbol from the same file*, so recovering that slot would deliver a sibling
+  definition rather than the patched one. M158 re-read the nine as "ranking depth";
+  they are not a ranking population either. `django-15037` is the clearest case —
+  its gold `table2model` is a **nested function** that is not an indexed symbol,
+  while its gold-*file* candidate sits at rank 9, comfortably inside every bound.
+  That mismatch is how it wore a packing failure's clothes for two milestones.
+
+- **The delivery ceiling refutes bound interventions in one measurement** (C):
+  before widening any bound, ask what the delivery layer has ever actually
+  reached. 570 delivered items, nothing past rank 30. Any candidate available only
+  at rank 40+ is not "slightly too deep" — it is outside the range delivery has
+  ever used, so admitting it changes nothing. This generalises past M159: it is the
+  cheapest available refutation of any future pool/cap proposal, and it should be
+  re-measured rather than re-argued.
+
+- **A hypothesis that never meets its control is the most expensive thing an audit
+  can leave behind** (C): the degenerate-task-body theory is compelling on
+  inspection — 13 of 20 residual tasks collapse to `### Bug summary` or
+  `(last modified by Tim Graham)`. Then the same measurement finds the identical
+  degeneracy in **32 of the 79 cases that succeeded**. Same for the sharpest fact
+  found, the missing lexical handle: 19/20 residual, and **50/79 delivered**.
+  Necessary, not sufficient. A rule built on it fires on 50 healthy cases to reach
+  19 sick ones.
+
+- **`UNREACHABLE_BY_GENERATION` means unreachable by HYBRID generation, never by
+  the product** (B): the reach detector's positive control failed 42/43 on
+  `sympy-13480`, which delivers `cosh.eval` while no hybrid generator scores it —
+  the product reaches it through `computeClassMethodExpansion`, a post-hybrid lane,
+  exactly as `evaluatedById`'s own contract warns. The hole was measured rather
+  than papered over: the footholds that lane needs (`parentScored`,
+  `taskNamesGoldSymbol`) were checked on every residual case, and
+  `taskNamesGoldSymbol` is **false in all 11** unreachable ones. Real hole, zero
+  effect on any residual verdict.
+
+- **Two broad100 instances are not benchmark instances** (A/§102): `django-13590`
+  and `django-15572` were checked out without the package subtree holding their
+  gold file, and have counted as retrieval failures since M157. The known-positive
+  control bounds it — the same on-disk probe finds the gold file present in 98 of
+  100. Deliberately **not** repaired: the M156 corpus is the immutable baseline
+  every M156–M159 comparison rests on, so the historical 79/100 is reported
+  unchanged with the qualified 79/98 stated beside it, never substituted for it.
+
+- **Patch gold and useful evidence diverge often enough to qualify the metric**
+  (A/§95): 16 of 20 residual failures are genuine useful-context misses; 2 are
+  corpus defects and `sympy-16597`'s gold includes `ask_generated.py`'s
+  **machine-generated CNF fact tables**, which no reader would orient by. Broad
+  retrieval quality is modestly better than raw gold fate implies — a
+  qualification on the metric, never a replacement for it.
+
+- **The remaining headroom is a measured ceiling, not an unfixed defect** (C): the
+  largest population (8 cases / 4 repos) fails because the task offers only a
+  behavioural description and the link to the implementing definition does not
+  exist in the index. That is M143-B's subject→owner ceiling and M153's
+  result/effect ceiling meeting on one corpus. It is sympy-weighted exactly as
+  M153's evidence was sphinx-weighted, so §68 forbids building on it here. It needs
+  a corpus **built to measure it** — that, not another broad100 pass, is the next
+  milestone.
