@@ -1,0 +1,208 @@
+{
+  "schemaVersion": "stage5.m161.smoke-gate.v1",
+  "milestone": "M161",
+  "workstream": "B",
+  "smokeInstance": "sphinx-doc__sphinx-9281",
+  "excludedFrom": [
+    "M161 utility denominators",
+    "unique win/loss counts",
+    "the frozen paired30",
+    "the extension set"
+  ],
+  "counts": {
+    "total": 8,
+    "passed": 8
+  },
+  "allPassed": true,
+  "checks": [
+    {
+      "id": "S1",
+      "section": "§11 dataset passthrough reaches a fresh-corpus instance",
+      "claim": "both arms produced a result row for the intended instance, which does not exist in the harness's bundled subset",
+      "passed": true,
+      "evidence": {
+        "requested": "sphinx-doc__sphinx-9281",
+        "baseline": "sphinx-doc__sphinx-9281",
+        "vtrace": "sphinx-doc__sphinx-9281"
+      }
+    },
+    {
+      "id": "S2",
+      "section": "§82/§83 known-positive injection and baseline isolation",
+      "claim": "the VTRACE arm's adapter reports the capsule injected; the baseline's reports no injection at all; the shared discipline block reaches both",
+      "passed": true,
+      "evidence": {
+        "vtraceInjected": true,
+        "vtraceSkipped": false,
+        "baselineInjected": false,
+        "disciplineBaseline": true,
+        "disciplineVtrace": true,
+        "vtraceInjectionObservedMeta": true,
+        "vtraceTreatmentValidMeta": true
+      }
+    },
+    {
+      "id": "S3",
+      "section": "§84 prompt parity",
+      "claim": "removing the injected evidence block from the VTRACE prompt leaves exactly the baseline prompt",
+      "passed": true,
+      "evidence": {
+        "identicalAfterEvidenceRemoval": true,
+        "baselineVtraceByteCount": 80,
+        "vtraceEvidenceBytes": 12294,
+        "residualDifferences": [],
+        "tokenDisciplinePresent": {
+          "baseline": false,
+          "vtrace": false
+        },
+        "capsuleBytes": 12249,
+        "capsuleSha256": "94c7e04ebe46a074dbdd3fe639744ba61910ba136b201e055f1d9795a530ccbf",
+        "snapshotPath": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/runs/m161_vtrace_sphinx_doc__sphinx_9281/_vtrace_instructions.snapshot.md",
+        "note": "the task prompt and shared discipline block are identical by construction — the same builder, the same file, asserted end-to-end by S2"
+      }
+    },
+    {
+      "id": "S4",
+      "section": "§30/§85 treatment definition — evidence only",
+      "claim": "the text actually injected into the agent carries the capsule evidence and none of the benchmark-authored policy blocks",
+      "passed": true,
+      "evidence": {
+        "markerState": [
+          {
+            "marker": "## STAGE5_TOKEN_DISCIPLINE",
+            "inInjectedCapsule": false,
+            "demonstratedRenderable": true
+          },
+          {
+            "marker": "## PIVOT_CHECK",
+            "inInjectedCapsule": false,
+            "demonstratedRenderable": true
+          },
+          {
+            "marker": "## EDIT_GUARD",
+            "inInjectedCapsule": false,
+            "demonstratedRenderable": true
+          },
+          {
+            "marker": "## PATCH_VERIFY",
+            "inInjectedCapsule": false,
+            "demonstratedRenderable": true
+          },
+          {
+            "marker": "## Instruction",
+            "inInjectedCapsule": false,
+            "demonstratedRenderable": true
+          }
+        ],
+        "productDeliveryRetained": true,
+        "capsuleBytes": 12249,
+        "knownPositive": "results/stage5_m161_policy_block_known_positive.md — the same markers, captured from a real injection before the treatment was narrowed"
+      }
+    },
+    {
+      "id": "S5",
+      "section": "§32/§62-§63 treatment-state and lead-quality detectors",
+      "claim": "the captured VTRACE arm classifies into a treatment state and a lead-quality label on real metadata",
+      "passed": true,
+      "evidence": {
+        "state": {
+          "deliveredItems": 6,
+          "pivotCount": 2,
+          "supportCount": 4,
+          "degraded": false,
+          "state": "VALID_NONEMPTY",
+          "reason": "2 pivot(s) + 4 support item(s) delivered"
+        },
+        "lead": {
+          "quality": "LEAD_WRONG_NO_GOLD",
+          "leadFile": "sphinx/directives/__init__.py",
+          "leadSymbol": "get_signatures",
+          "top1Gold": false,
+          "top3Gold": false,
+          "goldAnywhere": false,
+          "goldDelivered": []
+        },
+        "goldFiles": [
+          "sphinx/util/inspect.py"
+        ]
+      }
+    },
+    {
+      "id": "S6",
+      "section": "§39-§41 workspace and session isolation",
+      "claim": "the arms wrote to disjoint run directories and the VTRACE index lives under its own run label",
+      "passed": true,
+      "evidence": {
+        "baselineDir": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/runs/m161_baseline_sphinx_doc__sphinx_9281/raw/baseline",
+        "vtraceDir": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/runs/m161_vtrace_sphinx_doc__sphinx_9281/raw/vtrace",
+        "vtraceWorkspace": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m161_vtrace_sphinx_doc__sphinx_9281/sphinx-doc__sphinx-9281",
+        "baselineWorkspace": ""
+      }
+    },
+    {
+      "id": "S7",
+      "section": "§27/§55/§60 telemetry and model parity",
+      "claim": "both arms captured turn, cost, all four token components and tool-call telemetry, under the same model",
+      "passed": true,
+      "evidence": {
+        "sameModel": true,
+        "baseline": {
+          "toolCalls": {
+            "Grep": 3,
+            "Read": 3,
+            "Edit": 1,
+            "Bash": 4
+          },
+          "orderedToolLog": true,
+          "model": "claude-opus-4-5-20251101",
+          "inputTokens": 244,
+          "outputTokens": 30,
+          "cacheReadTokens": 902627,
+          "cacheCreationTokens": 13659,
+          "totalTokens": 916560,
+          "costUsd": 0.297603,
+          "numTurns": 30,
+          "durationMs": 65646
+        },
+        "vtrace": {
+          "toolCalls": {
+            "Grep": 8,
+            "Read": 4,
+            "Edit": 1,
+            "Bash": 3
+          },
+          "orderedToolLog": true,
+          "model": "claude-opus-4-5-20251101",
+          "inputTokens": 316,
+          "outputTokens": 41,
+          "cacheReadTokens": 1366152,
+          "cacheCreationTokens": 58471,
+          "totalTokens": 1424980,
+          "costUsd": 0.5442944999999999,
+          "numTurns": 39,
+          "durationMs": 100695
+        }
+      }
+    },
+    {
+      "id": "S8",
+      "section": "§51/§87 grading",
+      "claim": "the authoritative docker grader ran for both arms and recorded an outcome (the outcome itself is NOT a gate)",
+      "passed": true,
+      "evidence": {
+        "baseline": {
+          "evaluationRan": true,
+          "resolved": true,
+          "patchProduced": true
+        },
+        "vtrace": {
+          "evaluationRan": true,
+          "resolved": true,
+          "patchProduced": true
+        },
+        "note": "agent PASS/FAIL on the smoke case is irrelevant to this gate and must not modify the protocol"
+      }
+    }
+  ],
+  "checksHash": "5cc2d1cae9e582cb1645eb76bd4a5b48e740bf9a58d333bd61f90a75ee854d54"
+}

@@ -98,9 +98,33 @@ run_arm() {
     # M161: the external vexp CLI's own --data, so it can resolve an instance that
     # is not in its bundled 100-task subset. Identical for both arms.
     --vexp-run-data "$DATASET"
-    # M161 treatment definition: capsule evidence only, no search/edit policy.
-    # Passed on BOTH arms so the parity control asserts its absence symmetrically.
+    # M161 treatment definition: capsule EVIDENCE only, no agent policy.
+    #
+    # All five suppressed blocks are authored in THIS benchmark runner, not in src/ —
+    # the same layer as STAGE5_TOKEN_DISCIPLINE, and by the same test they are
+    # benchmark scaffolding rather than the product under qualification:
+    #
+    #   TOKEN_DISCIPLINE  "patch first, do not grep; at most N searches before the first edit"
+    #   PIVOT_CHECK       "directly inspect every pivot; Search/Grep does NOT count"
+    #   EDIT_GUARD        generic edit plan (SCOPE / FAILING BEHAVIOR / MINIMAL FIX / RULED OUT)
+    #   PATCH_VERIFY      generic pre-finalize checklist
+    #   Instruction       "use the vtrace context above to orient before broad search"
+    #
+    # EDIT_GUARD and PATCH_VERIFY reference nothing from the capsule at all: they are
+    # generic agent-quality policy handed to ONE arm, so a pass-rate delta could be
+    # explained entirely by "the VTRACE arm was told to plan its edit and verify it".
+    # PIVOT_CHECK and the orientation line are capsule-shaped but are still policy, and
+    # they are exactly what would manufacture the anchoring §64/§66 exist to observe.
+    #
+    # KEPT: the Capsule v2 digest decision contract (src/capsuleV2/digestDecisionContract.ts).
+    # That one IS product delivery, shipped default-ON in M112.
+    #
+    # Passed on BOTH arms so the parity control asserts their absence symmetrically.
     --disable-token-discipline
+    --disable-pivot-check
+    --disable-edit-guard
+    --disable-patch-verify
+    --disable-context-instruction
     # M89 MANDATORY env guard — a live run fails closed before agent spawn without these.
     --stage5-env-guard
     --stage5-env-drift-check

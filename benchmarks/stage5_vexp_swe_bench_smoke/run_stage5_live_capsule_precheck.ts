@@ -632,6 +632,7 @@ export function buildPrecheckConfig(opts: {
     nodeCommand: "node",
     cliEntry: "dist/cli.js",
     vexpRunDataFile: null,
+    disableContextInstruction: false,
     vtraceMethod: "indexed-context",
     yes: true,
     vtraceCommand: "bun src/cli/index.ts",

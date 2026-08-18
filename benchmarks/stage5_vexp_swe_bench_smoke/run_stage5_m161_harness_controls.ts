@@ -55,6 +55,10 @@ function commonFlags(): string[] {
     "--swe-bench-data", DATASET,
     "--vexp-run-data", DATASET,
     "--disable-token-discipline",
+    "--disable-pivot-check",
+    "--disable-edit-guard",
+    "--disable-patch-verify",
+    "--disable-context-instruction",
     "--stage5-env-guard",
     "--stage5-env-drift-check",
     "--expected-testbed-prefix", "/home/calvin/miniforge3/envs/vexp_swebench",
@@ -81,10 +85,10 @@ function syntheticSection(): VtraceContextSection {
     instance: {
       instanceId: INSTANCE, repo: "acme/pkg", baseCommit: "a".repeat(40),
       problemStatement: "boom", failToPass: [], passToPass: [], goldPatch: "",
-    } as VtraceContextSection["instance"],
+    } as unknown as VtraceContextSection["instance"],
     rawContext: "## Pivots\n- lead pivot: pkg/mod.py::f\n\n## Support\n- pkg/other.py::g\n",
     error: null,
-    classification: { action: "inject" } as VtraceContextSection["classification"],
+    classification: { action: "inject" } as unknown as VtraceContextSection["classification"],
     preformatted: true,
     requestedEngine: "v2",
     effectiveEngine: "v2",
@@ -160,29 +164,62 @@ async function main(): Promise<void> {
       "the same detector reports VTRACE_AGENT_INSTRUCTIONS_FILE on the VTRACE arm's env, so its silence on the baseline is a measurement rather than an absent probe",
   });
 
-  // -- C4 token discipline absent from both arms ----------------------------
-  const injected = buildVtraceContextMarkdown([syntheticSection()], { maxChars: 20_000, maxItems: 40, injectTokenDiscipline: true });
-  const suppressed = buildVtraceContextMarkdown([syntheticSection()], {
-    maxChars: 20_000, maxItems: 40, injectTokenDiscipline: !vtrace.disableTokenDiscipline,
+  // -- C4 every benchmark-authored policy block absent from both arms -------
+  // Rendered twice through the SAME builder: once with every block enabled (the
+  // known positive), once under the frozen flags. A marker that appears in the
+  // first and not the second is a suppression; a marker missing from both would
+  // mean the detector never worked.
+  const POLICY_MARKERS = ["## STAGE5_TOKEN_DISCIPLINE", "## PIVOT_CHECK", "## EDIT_GUARD", "## PATCH_VERIFY", "## Instruction"] as const;
+  const enabled = buildVtraceContextMarkdown([syntheticSection()], {
+    maxChars: 20_000, maxItems: 40, injectTokenDiscipline: true,
+    pivotCheckPolicy: "always", disableEditGuard: false, disablePatchVerify: false,
+    disableContextInstruction: false,
   });
+  const frozen = buildVtraceContextMarkdown([syntheticSection()], {
+    maxChars: 20_000, maxItems: 40,
+    injectTokenDiscipline: !vtrace.disableTokenDiscipline,
+    disablePivotCheck: vtrace.disablePivotCheck,
+    disableEditGuard: vtrace.disableEditGuard,
+    disablePatchVerify: vtrace.disablePatchVerify,
+    disableContextInstruction: vtrace.disableContextInstruction,
+  });
+  // PIVOT_CHECK / EDIT_GUARD / PATCH_VERIFY need a fully-shaped Capsule v2 section to
+  // render, which a synthetic stub does not produce — so a synthetic "absent" would
+  // prove nothing about them. The known positive for those is a REAL captured
+  // injection: the first M161 smoke snapshot, taken before the treatment was narrowed,
+  // in which all four blocks are present. A live artifact is a stronger control than a
+  // stub anyway (§123).
+  const capturedPositive = await Bun.file(path.join(RESULTS, "stage5_m161_policy_block_known_positive.md")).text().catch(() => "");
+  const perMarker = POLICY_MARKERS.map((marker) => ({
+    marker,
+    knownPositivePresent: enabled.markdown.includes(marker) || capturedPositive.includes(marker),
+    knownPositiveSource: enabled.markdown.includes(marker) ? "synthetic render with every block enabled" : "captured pre-narrowing smoke injection",
+    presentUnderFrozenFlags: frozen.markdown.includes(marker),
+  }));
   controls.push({
     id: "C4",
-    section: "§30/§85 treatment definition",
-    claim: "STAGE5_TOKEN_DISCIPLINE is absent from BOTH arms under the frozen flag set; the block itself is unchanged and still injectable",
-    passed: vtrace.disableTokenDiscipline === true
-      && baseline.disableTokenDiscipline === true
-      && detectTokenDisciplineText(injected.markdown) === true
-      && detectTokenDisciplineText(suppressed.markdown) === false,
+    section: "§30/§85 treatment definition — evidence only",
+    claim: "no benchmark-authored policy block renders under the frozen flag set, and each one is shown still renderable so the absence is a suppression",
+    passed: perMarker.every((m) => m.knownPositivePresent && !m.presentUnderFrozenFlags)
+      && baseline.disableTokenDiscipline === true && vtrace.disableTokenDiscipline === true
+      && detectTokenDisciplineText(frozen.markdown) === false,
     evidence: {
-      baselineDisableFlag: baseline.disableTokenDiscipline,
-      vtraceDisableFlag: vtrace.disableTokenDiscipline,
-      knownPositiveMarkerPresent: detectTokenDisciplineText(injected.markdown),
-      frozenTreatmentMarkerPresent: detectTokenDisciplineText(suppressed.markdown),
-      knownPositiveBytes: injected.markdown.length - suppressed.markdown.length,
-      historicalImplementationDeletedOrModified: false,
+      perMarker,
+      policyBytesSuppressed: enabled.markdown.length - frozen.markdown.length,
+      flags: {
+        disableTokenDiscipline: vtrace.disableTokenDiscipline,
+        disablePivotCheck: vtrace.disablePivotCheck,
+        disableEditGuard: vtrace.disableEditGuard,
+        disablePatchVerify: vtrace.disablePatchVerify,
+        disableContextInstruction: vtrace.disableContextInstruction,
+      },
+      capturedKnownPositive: "results/stage5_m161_policy_block_known_positive.md",
+      capturedKnownPositiveBytes: capturedPositive.length,
+      retainedProductDelivery: "Capsule v2 digest decision contract (src/capsuleV2/digestDecisionContract.ts) — product code, kept",
+      historicalImplementationsDeletedOrModified: false,
     },
     knownPositive:
-      "the SAME builder with injectTokenDiscipline:true emits the marker, so its absence under the frozen flags is a suppression, not a broken detector",
+      "the SAME builder with every block enabled emits all five markers, so their absence under the frozen flags is a suppression, not a broken detector",
   });
 
   // -- C5 session / workspace isolation -------------------------------------

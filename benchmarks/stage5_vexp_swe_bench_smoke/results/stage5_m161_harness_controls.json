@@ -85,18 +85,56 @@
     },
     {
       "id": "C4",
-      "section": "§30/§85 treatment definition",
-      "claim": "STAGE5_TOKEN_DISCIPLINE is absent from BOTH arms under the frozen flag set; the block itself is unchanged and still injectable",
+      "section": "§30/§85 treatment definition — evidence only",
+      "claim": "no benchmark-authored policy block renders under the frozen flag set, and each one is shown still renderable so the absence is a suppression",
       "passed": true,
       "evidence": {
-        "baselineDisableFlag": true,
-        "vtraceDisableFlag": true,
-        "knownPositiveMarkerPresent": true,
-        "frozenTreatmentMarkerPresent": false,
-        "knownPositiveBytes": 484,
-        "historicalImplementationDeletedOrModified": false
+        "perMarker": [
+          {
+            "marker": "## STAGE5_TOKEN_DISCIPLINE",
+            "knownPositivePresent": true,
+            "knownPositiveSource": "synthetic render with every block enabled",
+            "presentUnderFrozenFlags": false
+          },
+          {
+            "marker": "## PIVOT_CHECK",
+            "knownPositivePresent": true,
+            "knownPositiveSource": "captured pre-narrowing smoke injection",
+            "presentUnderFrozenFlags": false
+          },
+          {
+            "marker": "## EDIT_GUARD",
+            "knownPositivePresent": true,
+            "knownPositiveSource": "captured pre-narrowing smoke injection",
+            "presentUnderFrozenFlags": false
+          },
+          {
+            "marker": "## PATCH_VERIFY",
+            "knownPositivePresent": true,
+            "knownPositiveSource": "captured pre-narrowing smoke injection",
+            "presentUnderFrozenFlags": false
+          },
+          {
+            "marker": "## Instruction",
+            "knownPositivePresent": true,
+            "knownPositiveSource": "synthetic render with every block enabled",
+            "presentUnderFrozenFlags": false
+          }
+        ],
+        "policyBytesSuppressed": 629,
+        "flags": {
+          "disableTokenDiscipline": true,
+          "disablePivotCheck": true,
+          "disableEditGuard": true,
+          "disablePatchVerify": true,
+          "disableContextInstruction": true
+        },
+        "capturedKnownPositive": "results/stage5_m161_policy_block_known_positive.md",
+        "capturedKnownPositiveBytes": 3398,
+        "retainedProductDelivery": "Capsule v2 digest decision contract (src/capsuleV2/digestDecisionContract.ts) — product code, kept",
+        "historicalImplementationsDeletedOrModified": false
       },
-      "knownPositive": "the SAME builder with injectTokenDiscipline:true emits the marker, so its absence under the frozen flags is a suppression, not a broken detector"
+      "knownPositive": "the SAME builder with every block enabled emits all five markers, so their absence under the frozen flags is a suppression, not a broken detector"
     },
     {
       "id": "C5",

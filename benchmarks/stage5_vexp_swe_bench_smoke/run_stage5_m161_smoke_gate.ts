@@ -132,15 +132,30 @@ async function main(): Promise<void> {
     },
   });
 
-  // -- S4 token discipline absent from both --------------------------------
+  // -- S4 no benchmark-authored policy block reached the agent --------------
+  // The first M161 smoke run injected all four of these alongside the evidence.
+  // Checking the text the agent ACTUALLY received is the only way to know they are
+  // gone, and the captured pre-narrowing snapshot is what makes each absence a
+  // suppression rather than a silent detector.
+  const POLICY_MARKERS = ["## STAGE5_TOKEN_DISCIPLINE", "## PIVOT_CHECK", "## EDIT_GUARD", "## PATCH_VERIFY", "## Instruction"] as const;
+  const capturedPositive = await Bun.file(path.join(RESULTS, "stage5_m161_policy_block_known_positive.md")).text().catch(() => "");
+  const markerState = POLICY_MARKERS.map((marker) => ({
+    marker,
+    inInjectedCapsule: capsule.includes(marker),
+    demonstratedRenderable: capturedPositive.includes(marker) || marker === "## STAGE5_TOKEN_DISCIPLINE",
+  }));
   checks.push({
     id: "S4",
-    section: "§30/§85 treatment definition",
-    claim: "neither arm's injected text carries the STAGE5_TOKEN_DISCIPLINE block",
-    passed: !detectTokenDisciplineText(capsule) && !detectTokenDisciplineText(baseline.stderr),
+    section: "§30/§85 treatment definition — evidence only",
+    claim: "the text actually injected into the agent carries the capsule evidence and none of the benchmark-authored policy blocks",
+    passed: markerState.every((m) => !m.inInjectedCapsule && m.demonstratedRenderable)
+      && !detectTokenDisciplineText(capsule)
+      && capsule.includes("VTRACE_DIGEST_DECISION_CONTRACT"),
     evidence: {
-      capsuleCarriesTokenDiscipline: detectTokenDisciplineText(capsule),
-      knownPositive: "m161Treatment.test.ts and harness control C4 both show the same detector firing on a block that IS present",
+      markerState,
+      productDeliveryRetained: capsule.includes("VTRACE_DIGEST_DECISION_CONTRACT"),
+      capsuleBytes: capsule.length,
+      knownPositive: "results/stage5_m161_policy_block_known_positive.md — the same markers, captured from a real injection before the treatment was narrowed",
     },
   });
 
@@ -172,21 +187,38 @@ async function main(): Promise<void> {
   });
 
   // -- S7 telemetry captured ------------------------------------------------
+  // The harness records token COMPONENTS, not a total. Cache reads dominate by
+  // three orders of magnitude here, so a "tokens" comparison that silently omitted
+  // them would measure almost nothing (§55 asks for all four).
+  const totalTokens = (arm: Arm): number | null => {
+    const parts = ["inputTokens", "outputTokens", "cacheReadTokens", "cacheCreationTokens"]
+      .map((key) => arm.row?.[key]);
+    if (!parts.every((p) => typeof p === "number")) return null;
+    return (parts as number[]).reduce((sum, n) => sum + n, 0);
+  };
   const telemetry = (arm: Arm): Record<string, unknown> => ({
-    toolCalls: arm.meta.vtraceToolCallCount ?? null,
-    orderedLog: arm.meta.vtraceToolLogOrdered ?? null,
-    totalTokens: arm.row?.totalTokens ?? null,
+    toolCalls: arm.row?.toolCalls ?? null,
+    orderedToolLog: arm.meta.vtraceToolLogOrdered ?? null,
+    model: arm.row?.model ?? null,
+    inputTokens: arm.row?.inputTokens ?? null,
+    outputTokens: arm.row?.outputTokens ?? null,
+    cacheReadTokens: arm.row?.cacheReadTokens ?? null,
+    cacheCreationTokens: arm.row?.cacheCreationTokens ?? null,
+    totalTokens: totalTokens(arm),
     costUsd: arm.row?.costUsd ?? null,
     numTurns: arm.row?.numTurns ?? null,
+    durationMs: arm.row?.durationMs ?? null,
   });
   const hasTelemetry = (arm: Arm): boolean =>
-    typeof arm.row?.numTurns === "number" && typeof arm.row?.costUsd === "number";
+    typeof arm.row?.numTurns === "number" && typeof arm.row?.costUsd === "number"
+    && totalTokens(arm) !== null && arm.row?.toolCalls !== undefined;
+  const sameModel = baseline.row?.model === vtrace.row?.model;
   checks.push({
     id: "S7",
-    section: "§55/§60 telemetry",
-    claim: "both arms captured turn, cost and tool-call telemetry",
-    passed: hasTelemetry(baseline) && hasTelemetry(vtrace),
-    evidence: { baseline: telemetry(baseline), vtrace: telemetry(vtrace) },
+    section: "§27/§55/§60 telemetry and model parity",
+    claim: "both arms captured turn, cost, all four token components and tool-call telemetry, under the same model",
+    passed: hasTelemetry(baseline) && hasTelemetry(vtrace) && sameModel,
+    evidence: { sameModel, baseline: telemetry(baseline), vtrace: telemetry(vtrace) },
   });
 
   // -- S8 grader executed and recorded an outcome --------------------------

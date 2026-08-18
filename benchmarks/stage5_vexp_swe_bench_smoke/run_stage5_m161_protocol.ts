@@ -130,27 +130,57 @@ async function main(): Promise<void> {
       // The decision this protocol turns on. See stage5_m161_plan.md §Treatment.
       historicalTreatmentDivergence: {
         m161IsHistoricalTreatmentIdentical: false,
-        historicalStage5Treatment: "capsule evidence + STAGE5_TOKEN_DISCIPLINE search/edit policy",
-        m161Treatment: "capsule evidence only",
+        historicalStage5Treatment:
+          "capsule evidence + five benchmark-authored agent-policy blocks " +
+          "(STAGE5_TOKEN_DISCIPLINE, PIVOT_CHECK, EDIT_GUARD, PATCH_VERIFY, trailing orientation Instruction)",
+        m161Treatment: "capsule evidence only, plus the product's own Capsule v2 digest decision contract",
         reason: "isolate evidence utility from search/edit policy",
-        disabledBlock: {
-          name: "STAGE5_TOKEN_DISCIPLINE",
-          flag: "--disable-token-discipline",
-          appliedTo: "BOTH arms (the block is vtrace-only by construction; the flag is passed on both invocations so the parity control can assert its absence symmetrically)",
-          whatItSaid: [
-            "patch first; do not rediscover it with grep",
-            "at most N search/grep/read calls before the first edit",
-            "do not run broad recursive grep after the capsule already names a pivot file",
+        disabledBlocks: {
+          appliedTo: "BOTH arms (these blocks are vtrace-only by construction; the flags are passed on both invocations so the parity control asserts their absence symmetrically)",
+          allAuthoredIn:
+            "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts — the BENCHMARK RUNNER, not src/. " +
+            "This is the test that decides membership: the runner documents its own discipline text as \"NOT a user-facing " +
+            "product mode\", so none of it is part of the product M161 qualifies.",
+          discoveryNote:
+            "STAGE5_TOKEN_DISCIPLINE was identified before the first smoke run; the other four were found by INSPECTING " +
+            "the snapshot that smoke run actually injected. Enumerating the injected text, rather than trusting the " +
+            "block that was already known about, is what caught them.",
+          blocks: [
+            {
+              name: "STAGE5_TOKEN_DISCIPLINE", flag: "--disable-token-discipline", capsuleDependent: true,
+              whatItSaid: ["patch first; do not rediscover it with grep", "at most N search/grep/read calls before the first edit", "do not run broad recursive grep after the capsule already names a pivot file"],
+            },
+            {
+              name: "PIVOT_CHECK", flag: "--disable-pivot-check", capsuleDependent: true,
+              whatItSaid: ["directly inspect every pivot path listed below", "Search/Grep does NOT count as inspection", "you may rule out a pivot only after directly inspecting it"],
+            },
+            {
+              name: "EDIT_GUARD", flag: "--disable-edit-guard", capsuleDependent: false,
+              whatItSaid: ["write a short edit plan: SCOPE / FAILING BEHAVIOR / MINIMAL FIX / RULED OUT"],
+              note: "references NOTHING from the capsule — generic agent-quality policy handed to one arm only",
+            },
+            {
+              name: "PATCH_VERIFY", flag: "--disable-patch-verify", capsuleDependent: false,
+              whatItSaid: ["before finalizing: SCOPE LANDED / FAILING BEHAVIOR HANDLED / MINIMALITY / CHECK RUN / RISK"],
+              note: "references NOTHING from the capsule — generic agent-quality policy handed to one arm only",
+            },
+            {
+              name: "Instruction (trailing orientation line)", flag: "--disable-context-instruction", capsuleDependent: false,
+              whatItSaid: ["use the vtrace context above to orient before broad search"],
+              note: "§85 names this exact instruction as one the treatment must not add; the flag is NEW and additive, default false, so historical rendering is byte-identical",
+            },
           ],
           whyDisabled:
-            "§30 forbids instructing the VTRACE arm to avoid broad search, and §26 defines M161's subject as the " +
-            "utility of the CONTEXT. The block is benchmark-runner text the runner itself documents as \"NOT a " +
-            "user-facing product mode\", so it is not part of the product being qualified. Left ON, every §64/§66/§70 " +
-            "anchoring finding and every §113 efficiency delta would be attributable to an explicit instruction " +
-            "rather than to the evidence.",
-          implementationUnchanged: "the historical block is NOT deleted or modified; M161 only declines to inject it",
-          cost: "M161's absolute numbers are NOT directly comparable to M155's paired-30, which carried the block",
-          followUp: "a token-discipline policy ablation is a SEPARATE experiment, considered only after the capsule-only utility result (§ user directive)",
+            "§26 defines M161's subject as the utility of the CONTEXT and §30 forbids instructing the VTRACE arm to " +
+            "avoid broad search. EDIT_GUARD and PATCH_VERIFY are the sharpest confound of the five: they reference " +
+            "nothing from the capsule, would help the baseline equally, and left on could explain a pass-rate delta " +
+            "entirely as \"the VTRACE arm was told to plan its edit and verify it\". PIVOT_CHECK and the orientation " +
+            "line would manufacture exactly the anchoring §64/§66 exist to observe.",
+          implementationUnchanged: "no historical block is deleted or modified; M161 only declines to inject them",
+          measuredShare: "on the captured pre-narrowing smoke injection: 12249 bytes evidence (83%) vs 2516 bytes policy (17%)",
+          cost: "M161's absolute numbers are NOT directly comparable to M155's paired-30, which carried this policy text",
+          followUp: "a policy ablation is a SEPARATE experiment, considered only after the capsule-only utility result (user directive)",
+          knownPositive: "results/stage5_m161_policy_block_known_positive.md — the blocks captured verbatim from a real injection, so their absence is a suppression",
         },
         retainedProductText: {
           name: "Capsule v2 digest decision contract (M112)",

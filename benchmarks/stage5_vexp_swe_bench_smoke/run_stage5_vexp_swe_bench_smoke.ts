@@ -424,6 +424,11 @@ export interface CliConfig {
   // bundled 100-task subset. M161 sets it because its corpus is drawn from the
   // other 400 SWE-bench Verified instances, which that subset does not contain.
   readonly vexpRunDataFile: string | null;
+  // Benchmark/dev-only suppression of the trailing "## Instruction" orientation line
+  // on the vtrace context path. Default false (the line is rendered), so historical
+  // runs and snapshots are unchanged. Like the other discipline flags this is a
+  // benchmark override, NOT a product mode: it changes only appended advice text.
+  readonly disableContextInstruction: boolean;
   readonly vtraceMethod: VtraceMethod;
   readonly yes: boolean;
   // Stage 5B (indexed-context) configuration.
@@ -1066,6 +1071,7 @@ const DEFAULT_CONFIG: CliConfig = {
   nodeCommand: "node",
   cliEntry: "dist/cli.js",
   vexpRunDataFile: null,
+  disableContextInstruction: false,
   vtraceMethod: "instructions-file",
   yes: false,
   // Stage 5B: the vtrace CLI invocation; index/query subcommands are appended.
@@ -6381,6 +6387,8 @@ export function buildVtraceContextMarkdown(
     // the live Stage 5 run path opts in. Budgets default to DEFAULT_TOKEN_DISCIPLINE_BUDGETS.
     injectTokenDiscipline?: boolean;
     tokenDisciplineBudgets?: TokenDisciplineBudgets;
+    // When true, omit the trailing "## Instruction" orientation line. Default false.
+    disableContextInstruction?: boolean;
   },
 ): {
   markdown: string;
@@ -6574,12 +6582,18 @@ export function buildVtraceContextMarkdown(
         }
       }
     }
-    lines.push(
-      "## Instruction",
-      "",
-      "Use the vtrace context above to orient before broad search. It may be incomplete; verify with local files/tests before editing.",
-      "",
-    );
+    // The trailing orientation instruction is ADVICE, not evidence: "use the vtrace
+    // context above to orient before broad search" is exactly the extra instruction a
+    // context-utility experiment must not hand to one arm only. Opt-out, default OFF,
+    // so every existing caller and captured snapshot is byte-identical.
+    if (!limits.disableContextInstruction) {
+      lines.push(
+        "## Instruction",
+        "",
+        "Use the vtrace context above to orient before broad search. It may be incomplete; verify with local files/tests before editing.",
+        "",
+      );
+    }
   }
   // The representative decision for run metadata: the injecting section's decision
   // when one qualified, else the first Capsule v2 section's (its reason explains the
@@ -7048,6 +7062,7 @@ export async function prepareIndexedContext(config: CliConfig, deps: RunDeps = {
     // Active turn-count reduction policy: inject STAGE5_TOKEN_DISCIPLINE on the
     // live vtrace path (vtrace-only; conditional on per-section capsule confidence).
     injectTokenDiscipline: !config.disableTokenDiscipline,
+    disableContextInstruction: config.disableContextInstruction,
   });
   await writeFile(contextFile, assembled.markdown);
 
@@ -10795,6 +10810,7 @@ export function parseArgs(argv: readonly string[]): CliConfig {
       case "--disable-token-discipline": config.disableTokenDiscipline = true; break;
       case "--swe-bench-data": config.sweBenchDataFile = requireValue(argv, ++index, arg); break;
       case "--vexp-run-data": config.vexpRunDataFile = requireValue(argv, ++index, arg); break;
+      case "--disable-context-instruction": config.disableContextInstruction = true; break;
       case "--run-label": config.runLabel = requireValue(argv, ++index, arg); break;
       case "--run-labels":
         config.runLabels = requireValue(argv, ++index, arg).split(",").map((value) => value.trim()).filter(Boolean);

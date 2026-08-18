@@ -32,30 +32,48 @@ answerable from a retrieval metric (§8).
 
 ## Treatment definition — and where M161 departs from history
 
-The historical Stage 5 treatment was **capsule evidence + a `STAGE5_TOKEN_DISCIPLINE`
-search/edit policy**. That block is vtrace-only, default-ON, and tells the agent to
-*patch first, not rediscover with grep*, to spend *at most N searches before the
-first edit*, and *not to run broad recursive grep once the capsule names a pivot*.
+The historical Stage 5 treatment shipped the capsule wrapped in **five
+benchmark-authored agent-policy blocks**. M161's treatment is the **evidence
+only**. All five are disabled in both arms.
 
-M161's treatment is **capsule evidence only**. The block is disabled in both arms.
+| block | capsule-dependent? | what it told the agent |
+| --- | --- | --- |
+| `STAGE5_TOKEN_DISCIPLINE` | yes | patch first, do not rediscover with grep; at most N searches before the first edit |
+| `PIVOT_CHECK` | yes | directly inspect every pivot listed; **Search/Grep does NOT count as inspection** |
+| `EDIT_GUARD` | **no** | write an edit plan: SCOPE / FAILING BEHAVIOR / MINIMAL FIX / RULED OUT |
+| `PATCH_VERIFY` | **no** | before finalizing: SCOPE LANDED / BEHAVIOR HANDLED / MINIMALITY / CHECK RUN / RISK |
+| trailing `## Instruction` | no | "use the vtrace context above to orient before broad search" |
 
-- **Why.** §26 defines M161's subject as the utility of the injected *context*, and
-  §30 forbids instructing the VTRACE arm to avoid broad search. The runner's own
-  comment calls the block "NOT a user-facing product mode" — it is benchmark
-  scaffolding, not the product being qualified. Left on, every §64/§66/§70 anchoring
-  finding and every §113 efficiency delta would be attributable to an explicit
-  instruction rather than to the evidence, and §109's "a lead-selection milestone is
-  now justified" conclusion would rest on a confound.
-- **What is NOT done.** The historical implementation is not deleted or modified.
-  M161 declines to inject it and records the divergence.
+Every one of them is authored in
+`benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_vexp_swe_bench_smoke.ts` — the
+**benchmark runner**, not `src/`. That is the test that decides membership: the
+runner documents its own discipline text as "NOT a user-facing product mode", so
+none of it is part of the product M161 qualifies. On the captured injection they
+were **2516 bytes of policy against 12249 bytes of evidence — 17%**.
+
+- **Why.** §26 defines M161's subject as the utility of the *context*, and §30
+  forbids instructing the VTRACE arm to avoid broad search. `EDIT_GUARD` and
+  `PATCH_VERIFY` are the sharpest confound of the five: they reference nothing from
+  the capsule, would help the baseline equally, and left on could explain a
+  pass-rate delta entirely as "the VTRACE arm was told to plan its edit and verify
+  it". `PIVOT_CHECK` and the orientation line would manufacture exactly the
+  anchoring §64/§66 exist to observe.
+- **How they were found.** `STAGE5_TOKEN_DISCIPLINE` was identified before the first
+  smoke run. The other four were found by **reading the snapshot that smoke run
+  actually injected**. Enumerating the delivered text, rather than trusting the one
+  block already known about, is what caught them — and the pre-narrowing snapshot is
+  now the committed known positive that makes their absence a suppression.
+- **What is NOT done.** No historical block is deleted or modified. M161 declines to
+  inject them. `--disable-context-instruction` is new and additive, default false, so
+  historical rendering stays byte-identical.
 - **What it costs.** M161's absolute numbers are **not directly comparable** to
-  M155's paired-30, which carried the block.
-- **What stays.** The Capsule v2 digest decision contract (M112) is retained: it is
-  product delivery, shipped default-ON, and it does not suppress search — it says
-  "a Search/Grep hit is not enough; inspect/read the file" and "inspect optional
-  context and search as needed".
-- **Follow-up.** A token-discipline policy ablation is a separate experiment, to be
-  considered only after the capsule-only utility result.
+  M155's paired-30, which carried this policy text.
+- **What stays.** The Capsule v2 digest decision contract (M112,
+  `src/capsuleV2/digestDecisionContract.ts`) — product code, shipped default-ON, and
+  it does not suppress search: it says "a Search/Grep hit is not enough; inspect/read
+  the file" and "inspect optional context and search as needed".
+- **Follow-up.** A policy ablation is a separate experiment, to be considered only
+  after the capsule-only utility result.
 
 So:
 
