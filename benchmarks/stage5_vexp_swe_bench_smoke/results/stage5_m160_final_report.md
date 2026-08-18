@@ -345,6 +345,44 @@ coding agent does.
 
 ---
 
+## 10a. Corpus lifecycle — Broad100-B is reproducible, not resident
+
+The derived Broad100-B state was **deleted after closure** (§93). Removed:
+
+```
+benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m160_broad_b
+100 workspaces · 8.9 GB reclaimed
+```
+
+Nothing tracked lived under it — the path is gitignored and carried zero tracked
+files. Broad100-A's pinned corpus is at a separate path and is untouched.
+
+What remains committed is everything the corpus IS, as opposed to everything it
+produced: the frozen manifest with all **100 base commits** (40-char, verified
+complete), the integrity audit, the exclusion ledger, the corpus and manifest
+hashes, the preparation protocol and its runner, the fixture, and every result —
+metrics, gold fate, case traces, first divergence, subtypes, simulations. The raw
+Verified corpus file (7.8 MB) is kept as well, since re-extracting it needs
+`pyarrow`.
+
+Rebuild:
+
+```bash
+R=benchmarks/stage5_vexp_swe_bench_smoke
+# only if results/_m160_corpus/swe_bench_verified.jsonl is missing:
+uv run --with pyarrow python $R/m160_extract_swe_bench_verified.py \
+  --out $R/results/_m160_corpus/swe_bench_verified.jsonl
+bun $R/run_stage5_m160_prepare_workspaces.ts --concurrency 6   # ~25 min, network
+```
+
+The manifest is the input, so membership cannot drift on a rebuild. **Verified
+after deletion** rather than assumed: rebuilding `psf__requests-1766` and
+`django__django-11603` from the committed manifest alone reproduced their
+committed records exactly — 76 files / 1022 symbols and 828 files / 14538 symbols
+respectively, with identical availability and expected-path counts.
+
+---
+
 ## 11. Standing findings
 
 - **A causal distribution can replicate while its mechanism does not.** All three

@@ -2593,6 +2593,12 @@ contained parse failures. Preservation measured: `sphinx-9320`, `django-11740`,
 14/14. `bun test` 4895 pass · 49 skip · 0 fail; typechecks and `git diff --check`
 clean.
 
+Corpus lifecycle: the 100 derived Broad100-B workspaces (**8.9 GB**) were deleted
+after closure. The manifest's 100 base commits, integrity records, hashes,
+protocol, fixture and all results stay committed, and a post-deletion rebuild of
+two cases reproduced their committed index records exactly — so Broad100-B is
+reproducible rather than resident.
+
 ## M160 standing findings
 
 - **A causal distribution can replicate while its mechanism does not.** All three
