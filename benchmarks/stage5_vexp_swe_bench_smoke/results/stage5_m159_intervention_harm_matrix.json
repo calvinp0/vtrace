@@ -1,0 +1,152 @@
+{
+  "schemaVersion": "stage5.m159.intervention-harm-matrix.v1",
+  "note": "§41 — recovery and harm together. A '0 recovered' row is refuted before harm is reached (§93); a row never selected for implementation reports its harm as NOT MEASURED rather than as 0.",
+  "deliveryCeiling": {
+    "deliveredItems": 570,
+    "maxRankEverDelivered": 30,
+    "p50": 4,
+    "p90": 14,
+    "p99": 25,
+    "perCaseDeepestMax": 30,
+    "perCaseDeepestP90": 24,
+    "laneInjectedDeliveries": 22
+  },
+  "rows": [
+    {
+      "id": "NO_CHANGE",
+      "scope": "baseline",
+      "targets": [],
+      "describe": "the current product",
+      "targetsAffected": 0,
+      "recovered": 0,
+      "recoveredInstances": [],
+      "blockedByDeliveryCeiling": [],
+      "existingGoldLost": "0 (baseline)",
+      "nonTargetCasesChanged": "0 (baseline)",
+      "misleadingPromotions": "0 (baseline)",
+      "repoCount": 0,
+      "verdict": "BASELINE",
+      "note": "delivery ceiling: no item beyond ordinary rank 30 is ever delivered in 100 cases"
+    },
+    {
+      "id": "POOL_CAP_25_TO_50",
+      "scope": "CANDIDATE_BOUND_EVICTION",
+      "targets": [
+        "django__django-13810",
+        "matplotlib__matplotlib-26466",
+        "sphinx-doc__sphinx-7910"
+      ],
+      "describe": "double the ordinary candidate pool so gold scored past 25 is admitted",
+      "targetsAffected": 3,
+      "recovered": 0,
+      "recoveredInstances": [],
+      "blockedByDeliveryCeiling": [
+        "django__django-13810",
+        "matplotlib__matplotlib-26466",
+        "sphinx-doc__sphinx-7910"
+      ],
+      "existingGoldLost": "moot: 0 recovery refutes the intervention before harm matters (§93)",
+      "nonTargetCasesChanged": "moot: intervention rejected on recovery",
+      "misleadingPromotions": "moot: intervention rejected on recovery",
+      "repoCount": 3,
+      "verdict": "REJECTED_ZERO_RECOVERY",
+      "note": "deepest rank ever delivered = 30; targets become available at ranks 51, 74, 40"
+    },
+    {
+      "id": "POOL_CAP_25_TO_100",
+      "scope": "CANDIDATE_BOUND_EVICTION",
+      "targets": [
+        "django__django-13810",
+        "matplotlib__matplotlib-26466",
+        "sphinx-doc__sphinx-7910"
+      ],
+      "describe": "quadruple the ordinary candidate pool",
+      "targetsAffected": 3,
+      "recovered": 0,
+      "recoveredInstances": [],
+      "blockedByDeliveryCeiling": [
+        "django__django-13810",
+        "matplotlib__matplotlib-26466",
+        "sphinx-doc__sphinx-7910"
+      ],
+      "existingGoldLost": "moot: 0 recovery refutes the intervention before harm matters (§93)",
+      "nonTargetCasesChanged": "moot: intervention rejected on recovery",
+      "misleadingPromotions": "moot: intervention rejected on recovery",
+      "repoCount": 3,
+      "verdict": "REJECTED_ZERO_RECOVERY",
+      "note": "deepest rank ever delivered = 30; targets become available at ranks 51, 74, 40"
+    },
+    {
+      "id": "GENERATION_POOL_WIDENING",
+      "scope": "CANDIDATE_GENERATION_POOL_BOUND",
+      "targets": [
+        "django__django-17084",
+        "matplotlib__matplotlib-24970",
+        "matplotlib__matplotlib-25332",
+        "pytest-dev__pytest-6197",
+        "sphinx-doc__sphinx-9698",
+        "sympy__sympy-16792"
+      ],
+      "describe": "widen the lexical generation pool so the gold symbol is scored at all",
+      "targetsAffected": 6,
+      "recovered": 0,
+      "recoveredInstances": [],
+      "blockedByDeliveryCeiling": [
+        "django__django-17084",
+        "matplotlib__matplotlib-24970",
+        "matplotlib__matplotlib-25332",
+        "pytest-dev__pytest-6197",
+        "sphinx-doc__sphinx-9698",
+        "sympy__sympy-16792"
+      ],
+      "existingGoldLost": "moot: 0 recovery refutes the intervention before harm matters (§93)",
+      "nonTargetCasesChanged": "moot: intervention rejected on recovery",
+      "misleadingPromotions": "moot: intervention rejected on recovery",
+      "repoCount": 5,
+      "verdict": "REJECTED_ZERO_RECOVERY",
+      "note": "deepest rank ever delivered = 30; targets become available at ranks 110, 369, 343, 162, 87, 1058"
+    },
+    {
+      "id": "INDEX_NESTED_FUNCTIONS",
+      "scope": "INDEX_SYMBOL_MISSING",
+      "targets": [
+        "django__django-15037"
+      ],
+      "describe": "represent nested function definitions as indexed symbols",
+      "targetsAffected": 1,
+      "recovered": 1,
+      "recoveredInstances": [
+        "django__django-15037"
+      ],
+      "blockedByDeliveryCeiling": [],
+      "existingGoldLost": "NOT MEASURED: intervention not selected for implementation",
+      "nonTargetCasesChanged": "NOT MEASURED: intervention not selected for implementation",
+      "misleadingPromotions": "NOT MEASURED: intervention not selected for implementation",
+      "repoCount": 1,
+      "verdict": "CANDIDATE",
+      "note": "not a bound intervention; recovery is not ceiling-limited"
+    },
+    {
+      "id": "CORPUS_REPAIR",
+      "scope": "INDEX_FILE_MISSING",
+      "targets": [
+        "django__django-13590",
+        "django__django-15572"
+      ],
+      "describe": "benchmark-side: check out the complete package tree for the affected instances",
+      "targetsAffected": 2,
+      "recovered": 2,
+      "recoveredInstances": [
+        "django__django-13590",
+        "django__django-15572"
+      ],
+      "blockedByDeliveryCeiling": [],
+      "existingGoldLost": "NOT MEASURED: intervention not selected for implementation",
+      "nonTargetCasesChanged": "NOT MEASURED: intervention not selected for implementation",
+      "misleadingPromotions": "NOT MEASURED: intervention not selected for implementation",
+      "repoCount": 1,
+      "verdict": "CANDIDATE",
+      "note": "not a bound intervention; recovery is not ceiling-limited"
+    }
+  ]
+}
