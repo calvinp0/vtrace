@@ -16,6 +16,7 @@
  */
 
 import { readFile, writeFile } from "node:fs/promises";
+import { existsSync } from "node:fs";
 import path from "node:path";
 
 interface Probe {
@@ -64,8 +65,30 @@ async function main(): Promise<void> {
     return argv[index + 1]!;
   };
 
+  const optional = (flag: string, fallback: string): string => {
+    const index = argv.indexOf(flag);
+    return index < 0 || argv[index + 1] === undefined ? fallback : argv[index + 1]!;
+  };
   const beforePath = get("--before");
   const afterPath = get("--after");
+  // M158 §80-§82: the destination used to be hardcoded, so reusing this runner
+  // for a later checkpoint overwrote the earlier milestone's committed evidence.
+  const milestone = optional("--milestone", "M157");
+  const checkpoint = optional("--checkpoint", "M156 final -> M157 final");
+  const out = optional(
+    "--out",
+    path.join(RESULTS, `stage5_${milestone.toLowerCase()}_frozen30_availability.json`),
+  );
+  if (existsSync(out) && !argv.includes("--allow-overwrite")) {
+    const existing = JSON.parse(await readFile(out, "utf8")) as { milestone?: string };
+    if (existing.milestone !== undefined && existing.milestone !== milestone) {
+      throw new Error(
+        `refusing to overwrite ${existing.milestone} evidence at ${out} with a ${milestone} run. `
+        + "Pass --out to name this milestone's own destination "
+        + "(or --allow-overwrite if replacing it really is the intent).",
+      );
+    }
+  }
   const before = JSON.parse(await readFile(beforePath, "utf8")) as AvailabilityReport;
   const after = JSON.parse(await readFile(afterPath, "utf8")) as AvailabilityReport;
 
@@ -103,8 +126,8 @@ async function main(): Promise<void> {
 
   const report = {
     schemaVersion: "stage5.m157.preservation.v1",
-    milestone: "M157",
-    checkpoint: "M156 final -> M157 final",
+    milestone,
+    checkpoint,
     note: "M157 changes the capsule delivery layer only. Index counts are expected to be "
       + "identical, and availability is expected to hold at 30/30 (§77, §78).",
     predecessor: { label: before.label, commit: before.vtraceCommit, eval: beforePath },
@@ -138,11 +161,10 @@ async function main(): Promise<void> {
     changed,
   };
 
-  const out = path.join(RESULTS, "stage5_m157_frozen30_availability.json");
   await writeFile(out, `${JSON.stringify(report, null, 2)}\n`);
   // eslint-disable-next-line no-console
   console.error(
-    `M156->M157: usable ${before.usableIndexes}->${after.usableIndexes}, `
+    `${checkpoint}: usable ${before.usableIndexes}->${after.usableIndexes}, `
     + `unavailable ${before.unavailableIndexes}->${after.unavailableIndexes}, `
     + `degraded ${before.degradedIndexes}->${after.degradedIndexes}, `
     + `clean ${cleanPreserved}/${cleanComparable} structurally identical, `

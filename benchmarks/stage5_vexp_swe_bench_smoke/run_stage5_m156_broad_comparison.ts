@@ -20,6 +20,7 @@
  */
 
 import { readFile, writeFile } from "node:fs/promises";
+import { existsSync } from "node:fs";
 import path from "node:path";
 
 import type { RetrievalEvalRow } from "./run_stage5_retrieval_eval";
@@ -76,8 +77,35 @@ async function main(): Promise<void> {
     if (index < 0 || argv[index + 1] === undefined) throw new Error(`${flag} is required.`);
     return argv[index + 1]!;
   };
+  const optional = (flag: string, fallback: string): string => {
+    const index = argv.indexOf(flag);
+    return index < 0 || argv[index + 1] === undefined ? fallback : argv[index + 1]!;
+  };
   const beforePath = get("--before");
   const afterPath = get("--after");
+  // M158 §80-§82: this runner used to write one hardcoded destination, so
+  // reusing it for a later checkpoint silently overwrote M156's COMMITTED
+  // evidence with a different comparison. The destination is now explicit, and
+  // overwriting another milestone's artifact fails closed rather than
+  // succeeding quietly.
+  const milestone = optional("--milestone", "M156");
+  const checkpoint = optional("--checkpoint", "M154 final -> M156 final");
+  const predecessorLabel = optional("--predecessor-label", "M154");
+  const candidateLabel = optional("--candidate-label", "M156");
+  const out = optional(
+    "--out",
+    path.join(RESULTS, `stage5_${milestone.toLowerCase()}_broad100_comparison.json`),
+  );
+  if (existsSync(out) && !argv.includes("--allow-overwrite")) {
+    const existing = JSON.parse(await readFile(out, "utf8")) as { milestone?: string };
+    if (existing.milestone !== undefined && existing.milestone !== milestone) {
+      throw new Error(
+        `refusing to overwrite ${existing.milestone} evidence at ${out} with a ${milestone} run. `
+        + "Pass --out to name this milestone's own destination "
+        + "(or --allow-overwrite if replacing it really is the intent).",
+      );
+    }
+  }
 
   const before = JSON.parse(await readFile(beforePath, "utf8")) as EvalArtifact;
   const after = JSON.parse(await readFile(afterPath, "utf8")) as EvalArtifact;
@@ -111,12 +139,12 @@ async function main(): Promise<void> {
 
   const report = {
     schemaVersion: "stage5.m156.broad100-comparison.v1",
-    milestone: "M156",
-    checkpoint: "M154 final -> M156 final",
+    milestone,
+    checkpoint,
     note: "Both sides freshly prepared and indexed by their own binary. No era-copied "
       + "SQLite fixtures (M155-B2).",
-    predecessor: { label: "M154", eval: beforePath, summary: beforeSummary },
-    candidate: { label: "M156", eval: afterPath, summary: afterSummary },
+    predecessor: { label: predecessorLabel, eval: beforePath, summary: beforeSummary },
+    candidate: { label: candidateLabel, eval: afterPath, summary: afterSummary },
     delta,
     changedCases: changed.length,
     changed,
@@ -124,11 +152,10 @@ async function main(): Promise<void> {
     unchangedOnCleanRepositories: changed.length === 0,
   };
 
-  const out = path.join(RESULTS, "stage5_m156_broad100_comparison.json");
   await writeFile(out, `${JSON.stringify(report, null, 2)}\n`);
   // eslint-disable-next-line no-console
   console.error(
-    `broad100 M154->M156: top1 ${beforeSummary.goldFileTop1} -> ${afterSummary.goldFileTop1}, `
+    `broad100 ${predecessorLabel}->${candidateLabel}: top1 ${beforeSummary.goldFileTop1} -> ${afterSummary.goldFileTop1}, `
     + `delivered ${beforeSummary.goldDelivered} -> ${afterSummary.goldDelivered}, `
     + `symbolAnywhere ${beforeSummary.goldSymbolAnywhere} -> ${afterSummary.goldSymbolAnywhere}, `
     + `changedCases=${changed.length} -> ${out}`,
