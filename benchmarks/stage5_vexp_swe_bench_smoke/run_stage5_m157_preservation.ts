@@ -75,6 +75,11 @@ async function main(): Promise<void> {
   // for a later checkpoint overwrote the earlier milestone's committed evidence.
   const milestone = optional("--milestone", "M157");
   const checkpoint = optional("--checkpoint", "M156 final -> M157 final");
+  const note = optional(
+    "--note",
+    "M157 changes the capsule delivery layer only. Index counts are expected to be "
+    + "identical, and availability is expected to hold at 30/30 (§77, §78).",
+  );
   const out = optional(
     "--out",
     path.join(RESULTS, `stage5_${milestone.toLowerCase()}_frozen30_availability.json`),
@@ -128,8 +133,7 @@ async function main(): Promise<void> {
     schemaVersion: "stage5.m157.preservation.v1",
     milestone,
     checkpoint,
-    note: "M157 changes the capsule delivery layer only. Index counts are expected to be "
-      + "identical, and availability is expected to hold at 30/30 (§77, §78).",
+    note,
     predecessor: { label: before.label, commit: before.vtraceCommit, eval: beforePath },
     candidate: { label: after.label, commit: after.vtraceCommit, eval: afterPath, srcDirty: after.srcDirty },
     availability: {

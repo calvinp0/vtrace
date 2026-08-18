@@ -2352,3 +2352,95 @@ identically. `bun test` 4820 pass / 0 fail on an idle machine, typechecks and
   looked entirely plausible. Using the scorer's own boundary-aware `fileMatches`
   recovers 2 and 18. Caught before freezing; it would have inverted M157-A's
   conclusion.
+
+## M158 — Support packing and bounded evidence selection (commits 348be41a, 99d578ad, f51b9609, <evidence>)
+
+M158 is **MIXED** (A · B · C · D · E all PASS, but A passes by *rejecting* the
+milestone's own hypothesis). Product code changed; behavioural routing stays OFF;
+M156 availability, the M152 store split and M154 Git-state safety are intact.
+
+The milestone asked whether a fixed rank-first `max 4` support cap lets redundant
+evidence crowd out independently useful support. **It does not.** Gold that loses
+a slot sits at packed positions 6, 9, 9, 11, 22, 22, 24, 26 and 28 — one case
+adjacent to the bound, a median of 22. Every conservative packing rule simulated
+over the product's own ordered support list recovers **zero** of the nine, and
+three of them cause harm (pure score order loses gold in 6 cases). Only the bound
+moves anything: 4→5 recovers 0, 4→6 recovers 1, 4→12 recovers 4 — a number read
+off the gold ranks, which is the fitting §56 forbids. So no diversity packing, no
+role balancing, no token-aware packing and no larger bound was built.
+
+Three inherited numbers were wrong and are corrected: the population is **9 cases
+across 5 repositories** (not 8 across 6 — the ninth, `matplotlib-26466`, is a
+genuine packing loss whose gold is not useful evidence); the **item count is the
+only bound that ever binds** (support was rejected for tokens 0 times in 100
+cases, costing 87–156 tokens against 403–7614 of headroom); and 5 repositories
+carrying 9 positives cannot support §30's repo-level split, reported before
+implementing.
+
+What the audit surfaced instead is unrelated to gold rank. Support renders
+signature-only, so two genuinely DISTINCT candidates can deliver byte-identical
+text — a method overridden in four classes of one file, a flag assigned in ten.
+**10 of 99 cases spend a scarce slot restating evidence the same capsule already
+delivered**; `django-16819` spends three of four on the literal text
+`def reduce(self, operation, app_label):`. One canonical delivered identity (path
++ content mode + rendered text) may now consume at most one slot, dropped BEFORE
+the bound is consumed so the freed slot refills from the existing
+support-authorized order. Zero free parameters, so there is nothing to calibrate
+and nothing a holdout could catch being overfitted; the split is replaced by a
+whole-corpus measurement plus frozen negative controls.
+
+Duplicate slots 12 → **0**; support slots filled **380 → 380** (the capsule did
+not shrink); gold delivered **79 → 79**; envelope 100/100. broad100 M157→M158:
+Top-1 0.58→0.58, Top-3 0.74→0.74, delivered 0.79→0.79, empty 0.01→0.01, tokens
+mean 1658.15→1659.10. **3 scorer-visible changed cases, all
+REDUNDANT_SUPPORT_REDUCTION / IMPROVEMENT, 0 unexplained, 0 regressions** — each
+gained a distinct file in top-3. Gold fate is byte-identical in every bucket, and
+M157's combined `role-denied / support-budget-evicted` bucket is finally split:
+`role_denied` is **empty**. frozen50 50/50 derivation-valid and identical on every
+rate; frozen30 **30/30 usable, 0 unavailable, 3 degraded (identical set)**;
+clean27 **27/27** structurally identical; `sphinx-9320`, `django-11740` and
+`xarray-6599` byte-identical; `<module>` deliveries 0; index writes 0. `bun test`
+4832 pass / 0 fail on an idle machine, typechecks and `git diff --check` clean.
+
+## M158 standing findings
+
+- **The diagnosed cause and the recoverable cause are not the same thing** (A):
+  the §8 taxonomy is real — 3 cases do rank a placeholder-scored lane entry
+  (final 0.350) above earned support scoring 1.2–1.5, and 2 do spend slots on
+  near-identical evidence. Fixing either recovers nothing, because the gold sits
+  at position 9, 11, 22 and 24. A taxonomy that explains a failure is not yet
+  evidence that fixing it helps; only the simulation over the product's own
+  ordering could tell those apart, and it was worth building before any code.
+
+- **The support-packed-out nine are a ranking population in delivery clothes**
+  (A): for every one of them the first stage at which useful evidence stops being
+  deliverable is ranking, not packing. `django-15037`'s gold symbol is a nested
+  function that never enters the pool; `matplotlib-25332`'s gold class is not in
+  the pool at all; `sympy-16792`'s gold file enters only as a 0.300 graph rescue.
+  This is the same mistake M157 caught with `django-11740`, one layer down — and
+  the reason §152's reclassification rule exists.
+
+- **`sphinx-9698` argues against the fix it looks like it needs** (A): it is the
+  only near-cut case, and its gold candidate at position 6 is ITSELF a
+  placeholder-scored co-edit entry. Ranking placeholder lanes last — the tidiest
+  ordering fix the audit suggested — would push it further out, not closer.
+
+- **Distinct candidates can be identical evidence** (C): candidate dedupe is
+  correct and untouched; what repeats is the rendered delivery. Keying on
+  `(file, symbol)` instead would have looked identical on all 10 positives and
+  silently destroyed 5 controls, including `sympy-16597`, which delivers
+  `is_finite` twice because the two say different things. The narrow key is not
+  conservatism — it is the only one that is right.
+
+- **The benchmark cannot see its own improvement** (E): the broad100 scorer
+  measures the gold file's fate, so it registers 3 of the 10 changed cases. The
+  delivery instrument registers all 10. Reporting only the first understates the
+  change; reporting only the second overstates its benchmark effect, so both are
+  in the ledger with `useful_support_recovery = 0` stated plainly rather than
+  dressed up as a retrieval gain.
+
+- **A hardcoded output path is a delayed evidence loss** (D): two checkpoint
+  runners wrote one fixed destination, so reusing either for a later milestone
+  silently replaced committed evidence with a different comparison. Both now fail
+  closed on another milestone's artifact. Found by M157, fixed here, and kept in
+  its own commit so benchmark hygiene stays out of product attribution.

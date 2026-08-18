@@ -1,0 +1,38 @@
+{
+  "schemaVersion": "stage5.m158.runner-safety.v1",
+  "defect": "run_stage5_m156_broad_comparison.ts wrote one hardcoded destination, so reusing it for a later checkpoint silently overwrote M156's committed evidence (M157 finding, M158 \u00a780).",
+  "fix": "Destination is now explicit (--out), defaults to a milestone-derived filename, and a write whose target already holds a DIFFERENT milestone's artifact fails closed unless --allow-overwrite.",
+  "runnersHardened": [
+    "run_stage5_m156_broad_comparison.ts",
+    "run_stage5_m158_broad_comparison.ts"
+  ],
+  "controls": [
+    {
+      "name": "negative \u2014 M158 run aimed at committed M156 evidence",
+      "expected": "refuse",
+      "observed": "refused",
+      "detail": "threw: refusing to overwrite M156 evidence ... with a M158 run",
+      "passed": true
+    },
+    {
+      "name": "negative \u2014 M156 runner reused for M158 against M156 evidence",
+      "expected": "refuse",
+      "observed": "refused",
+      "passed": true
+    },
+    {
+      "name": "positive \u2014 M158 run at its own destination",
+      "expected": "write",
+      "observed": "written",
+      "passed": true
+    },
+    {
+      "name": "positive \u2014 committed M156 artifact byte-unchanged after both attempts",
+      "expected": "unchanged",
+      "observed": "unchanged",
+      "passed": true
+    }
+  ],
+  "allControlsPassed": true,
+  "note": "A same-milestone rewrite is deliberately still allowed: re-running your own checkpoint is normal, and only another milestone's evidence is protected."
+}

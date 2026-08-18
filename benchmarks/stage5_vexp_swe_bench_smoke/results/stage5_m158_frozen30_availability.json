@@ -1,0 +1,48 @@
+{
+  "schemaVersion": "stage5.m157.preservation.v1",
+  "milestone": "M158",
+  "checkpoint": "M157 final -> M158 final",
+  "note": "M158 changes only which candidates occupy the bounded support slots, and touches no indexer code. Index counts are expected to be identical and availability to hold at 30/30 — measured rather than asserted, because that is exactly the claim a stray import would quietly break.",
+  "predecessor": {
+    "label": "after",
+    "commit": "c3fc42d2a7e1fb26180d9d51e5b793134b709058",
+    "eval": "benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_m156_frozen30_availability_after.json"
+  },
+  "candidate": {
+    "label": "m158",
+    "commit": "f51b9609398ddf584f7f64dc4a90a09a55251780",
+    "eval": "/tmp/claude-1000/-home-calvin-code-vtrace/e5a6d2c8-c7fe-4c33-9e54-43e9cd39f3c6/scratchpad/m158_frozen30_clean.json",
+    "srcDirty": false
+  },
+  "availability": {
+    "before": {
+      "usable": 30,
+      "degraded": 3,
+      "unavailable": 0,
+      "degradedInstanceIds": [
+        "psf__requests-1142",
+        "pylint-dev__pylint-4551",
+        "pytest-dev__pytest-5262"
+      ]
+    },
+    "after": {
+      "usable": 30,
+      "degraded": 3,
+      "unavailable": 0,
+      "degradedInstanceIds": [
+        "psf__requests-1142",
+        "pylint-dev__pylint-4551",
+        "pytest-dev__pytest-5262"
+      ]
+    },
+    "availabilityPreserved": true,
+    "degradedSetIdentical": true
+  },
+  "cleanSubset": {
+    "comparableCases": 27,
+    "preservedCases": 27,
+    "fullyPreserved": true
+  },
+  "changedCases": 0,
+  "changed": []
+}

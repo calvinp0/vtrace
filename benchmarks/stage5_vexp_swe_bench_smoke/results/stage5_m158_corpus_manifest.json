@@ -1,0 +1,229 @@
+{
+  "schemaVersion": "stage5.m158.corpus-manifest.v1",
+  "frozenAt": "M157 final (pre-implementation baseline)",
+  "corpusRoot": "/home/calvin/bench/vtrace-m156/targets/m156",
+  "fixture": "benchmarks/stage5_vexp_swe_bench_smoke/retrieval_eval.m155_broad_100.json",
+  "cases": 100,
+  "manifestHash": "0e71ac5cd4c79a63443ddd8b7e8e7fb8957090ecc6115b11843636b972383740",
+  "populationDefinition": "A support slot whose DELIVERED evidence (path + content mode + rendered text) is identical to a support item the same capsule already delivered.",
+  "splitPolicy": "No calibration/holdout split is declared, and the reason is structural rather than convenient: the rule has ZERO free parameters. It is an identity comparison on the delivered evidence, with no threshold, weight, bound or ranking input to fit, so there is nothing a calibration set could tune and nothing a holdout could catch being overfitted. What replaces the split is a whole-corpus measurement on all 100 cases plus frozen negative controls that a looser rule would visibly destroy. The original M158 hypothesis DID need a repo-level split; it was rejected in M158-A before any implementation, and this population is a different, parameter-free defect.",
+  "positives": {
+    "cases": 10,
+    "repos": [
+      "django/django",
+      "matplotlib/matplotlib",
+      "sphinx-doc/sphinx"
+    ],
+    "instances": [
+      {
+        "instanceId": "django__django-11133",
+        "repo": "django/django",
+        "duplicateSlots": [
+          "http/response.py::writelines"
+        ]
+      },
+      {
+        "instanceId": "django__django-12325",
+        "repo": "django/django",
+        "duplicateSlots": [
+          "db/models/sql/compiler.py::pre_sql_setup"
+        ]
+      },
+      {
+        "instanceId": "django__django-13590",
+        "repo": "django/django",
+        "duplicateSlots": [
+          "contrib/postgres/fields/ranges.py::db_type"
+        ]
+      },
+      {
+        "instanceId": "django__django-14608",
+        "repo": "django/django",
+        "duplicateSlots": [
+          "contrib/admin/forms.py::required_css_class"
+        ]
+      },
+      {
+        "instanceId": "django__django-14792",
+        "repo": "django/django",
+        "duplicateSlots": [
+          "db/models/functions/datetime.py::tzinfo"
+        ]
+      },
+      {
+        "instanceId": "django__django-16667",
+        "repo": "django/django",
+        "duplicateSlots": [
+          "forms/widgets.py::value_from_datadict",
+          "contrib/admin/widgets.py::value_from_datadict"
+        ]
+      },
+      {
+        "instanceId": "django__django-16819",
+        "repo": "django/django",
+        "duplicateSlots": [
+          "db/migrations/operations/fields.py::reduce",
+          "db/migrations/operations/fields.py::reduce"
+        ]
+      },
+      {
+        "instanceId": "matplotlib__matplotlib-22719",
+        "repo": "matplotlib/matplotlib",
+        "duplicateSlots": [
+          "lib/matplotlib/_type1font.py::value"
+        ]
+      },
+      {
+        "instanceId": "matplotlib__matplotlib-25960",
+        "repo": "matplotlib/matplotlib",
+        "duplicateSlots": [
+          "galleries/examples/subplots_axes_and_figures/subfigures.py::subfigs"
+        ]
+      },
+      {
+        "instanceId": "sphinx-doc__sphinx-7748",
+        "repo": "sphinx-doc/sphinx",
+        "duplicateSlots": [
+          "sphinx/ext/autodoc/__init__.py::format_signature"
+        ]
+      }
+    ]
+  },
+  "negativeControls": {
+    "sameFileSameNameDistinctEvidence": {
+      "rationale": "Same file AND same symbol name, DIFFERENT delivered text. A `(file, symbol)` dedupe would collapse these and destroy real evidence; the delivered-identity rule must keep both slots.",
+      "cases": 5,
+      "instances": [
+        {
+          "instanceId": "astropy__astropy-14539",
+          "repo": "astropy/astropy",
+          "slots": [
+            "astropy/io/fits/diff.py::__init__"
+          ]
+        },
+        {
+          "instanceId": "django__django-11490",
+          "repo": "django/django",
+          "slots": [
+            "db/models/sql/compiler.py::execute_sql"
+          ]
+        },
+        {
+          "instanceId": "django__django-13195",
+          "repo": "django/django",
+          "slots": [
+            "http/response.py::__init__"
+          ]
+        },
+        {
+          "instanceId": "pydata__xarray-6599",
+          "repo": "pydata/xarray",
+          "slots": [
+            "xarray/core/computation.py::polyval"
+          ]
+        },
+        {
+          "instanceId": "sympy__sympy-16597",
+          "repo": "sympy/sympy",
+          "slots": [
+            "sympy/core/numbers.py::is_finite"
+          ]
+        }
+      ]
+    },
+    "sameFileDistinctEvidence": {
+      "rationale": "\u00a734/\u00a745: same file is never sufficient redundancy. Any one-slot-per-file rule would thin these; the delivered-identity rule must not touch them.",
+      "cases": 60,
+      "instances": [
+        "astropy__astropy-14365",
+        "astropy__astropy-14539",
+        "astropy__astropy-7166",
+        "django__django-10973",
+        "django__django-11095",
+        "django__django-11133",
+        "django__django-11206",
+        "django__django-11490",
+        "django__django-11815",
+        "django__django-12050",
+        "django__django-12273",
+        "django__django-12276",
+        "django__django-12325",
+        "django__django-12858",
+        "django__django-13012",
+        "django__django-13195",
+        "django__django-13363",
+        "django__django-13512",
+        "django__django-13513",
+        "django__django-13551",
+        "django__django-13590",
+        "django__django-13810",
+        "django__django-13820",
+        "django__django-14608",
+        "django__django-14792",
+        "django__django-15503",
+        "django__django-15695",
+        "django__django-15731",
+        "django__django-16263",
+        "django__django-16667",
+        "django__django-16819",
+        "django__django-16877",
+        "django__django-16938",
+        "django__django-17084",
+        "matplotlib__matplotlib-22719",
+        "matplotlib__matplotlib-24970",
+        "matplotlib__matplotlib-25960",
+        "psf__requests-1142",
+        "psf__requests-1724",
+        "psf__requests-5414",
+        "pydata__xarray-2905",
+        "pydata__xarray-6599",
+        "pydata__xarray-6938",
+        "pylint-dev__pylint-4551",
+        "pytest-dev__pytest-10051",
+        "pytest-dev__pytest-5262",
+        "scikit-learn__scikit-learn-11578",
+        "sphinx-doc__sphinx-7462",
+        "sphinx-doc__sphinx-7748",
+        "sphinx-doc__sphinx-9320",
+        "sphinx-doc__sphinx-9711",
+        "sympy__sympy-12481",
+        "sympy__sympy-13372",
+        "sympy__sympy-15599",
+        "sympy__sympy-16597",
+        "sympy__sympy-16792",
+        "sympy__sympy-18189",
+        "sympy__sympy-19637",
+        "sympy__sympy-23413",
+        "sympy__sympy-24213"
+      ]
+    },
+    "namedStatePreservation": {
+      "rationale": "States earlier milestones established, re-measured rather than assumed.",
+      "instances": [
+        "sphinx-doc__sphinx-9320",
+        "django__django-11740",
+        "pydata__xarray-6599"
+      ]
+    },
+    "wholeCorpusNoLoss": {
+      "rationale": "Gold delivery over all 100 cases must not fall. A rule that recovers nothing is acceptable; a rule that loses anything is not.",
+      "goldDeliveredBaseline": 79
+    }
+  },
+  "measuredOutcome": {
+    "duplicateSlotsBefore": 12,
+    "duplicateSlotsAfter": 0,
+    "casesWithDuplicatesBefore": 10,
+    "casesWithDuplicatesAfter": 0,
+    "goldDeliveredBefore": 79,
+    "goldDeliveredAfter": 79,
+    "supportSlotsFilledBefore": 380,
+    "supportSlotsFilledAfter": 380,
+    "supportTokensBefore": 15540,
+    "supportTokensAfter": 15635,
+    "withinEnvelopeBefore": 100,
+    "withinEnvelopeAfter": 100,
+    "sameFileSameNameControlsPreserved": true,
+    "redundantDiscardsRecorded": 15
+  }
+}

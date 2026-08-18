@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "stage5.m158.gold-fate.v1",
+  "checkpoint": "M157 final -> M158 final",
+  "corpusRoot": "/home/calvin/bench/vtrace-m156/targets/m156",
+  "cases": 100,
+  "note": "M157 could only report one combined `role-denied / support-budget-evicted` bucket. M158's trace distinguishes them: every case in that bucket is support-packed-out, and `role_denied` is empty \u2014 the gold in all nine earned support authority and lost a slot.",
+  "before": {
+    "delivered_pivot": 68,
+    "delivered_support": 11,
+    "never_retrieved": 11,
+    "no_pivot_withheld": 1,
+    "support_packed_out": 9
+  },
+  "after": {
+    "delivered_pivot": 68,
+    "delivered_support": 11,
+    "never_retrieved": 11,
+    "no_pivot_withheld": 1,
+    "support_packed_out": 9
+  },
+  "delta": {
+    "delivered_pivot": 0,
+    "delivered_support": 0,
+    "never_retrieved": 0,
+    "no_pivot_withheld": 0,
+    "support_packed_out": 0
+  },
+  "movedCases": []
+}

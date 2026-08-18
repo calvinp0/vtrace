@@ -1,0 +1,136 @@
+{
+  "schemaVersion": "stage5.m158.preservation-controls.v1",
+  "checkpoint": "M157 final -> M158 final",
+  "corpusRoot": "/home/calvin/bench/vtrace-m156/targets/m156",
+  "cases": 100,
+  "moduleDeliveries": {
+    "before": {
+      "count": 0,
+      "instances": []
+    },
+    "after": {
+      "count": 0,
+      "instances": []
+    }
+  },
+  "indexWritesDuringRetrieval": {
+    "before": {
+      "count": 0,
+      "instances": []
+    },
+    "after": {
+      "count": 0,
+      "instances": []
+    }
+  },
+  "namedControls": {
+    "django__django-11740": {
+      "unchanged": true,
+      "before": {
+        "repo": "django/django",
+        "mode": "no_context",
+        "tier": "no_context",
+        "candidateCount": 33,
+        "pivotCount": 0,
+        "supportCount": 0,
+        "discardedCount": 33,
+        "estimatedTokens": 0,
+        "withinEnvelope": true,
+        "leadPivot": null,
+        "supportIdentities": []
+      },
+      "after": {
+        "repo": "django/django",
+        "mode": "no_context",
+        "tier": "no_context",
+        "candidateCount": 33,
+        "pivotCount": 0,
+        "supportCount": 0,
+        "discardedCount": 33,
+        "estimatedTokens": 0,
+        "withinEnvelope": true,
+        "leadPivot": null,
+        "supportIdentities": []
+      }
+    },
+    "pydata__xarray-6599": {
+      "unchanged": true,
+      "before": {
+        "repo": "pydata/xarray",
+        "mode": "standard",
+        "tier": "standard",
+        "candidateCount": 31,
+        "pivotCount": 2,
+        "supportCount": 4,
+        "discardedCount": 27,
+        "estimatedTokens": 684,
+        "withinEnvelope": true,
+        "leadPivot": "xarray/core/computation.py::polyval",
+        "supportIdentities": [
+          "asv_bench/benchmarks/polyfit.py::Polyval",
+          "xarray/core/computation.py::polyval",
+          "xarray/core/computation.py::polyval",
+          "xarray/core/computation.py::polyval"
+        ]
+      },
+      "after": {
+        "repo": "pydata/xarray",
+        "mode": "standard",
+        "tier": "standard",
+        "candidateCount": 31,
+        "pivotCount": 2,
+        "supportCount": 4,
+        "discardedCount": 27,
+        "estimatedTokens": 684,
+        "withinEnvelope": true,
+        "leadPivot": "xarray/core/computation.py::polyval",
+        "supportIdentities": [
+          "asv_bench/benchmarks/polyfit.py::Polyval",
+          "xarray/core/computation.py::polyval",
+          "xarray/core/computation.py::polyval",
+          "xarray/core/computation.py::polyval"
+        ]
+      }
+    },
+    "sphinx-doc__sphinx-9320": {
+      "unchanged": true,
+      "before": {
+        "repo": "sphinx-doc/sphinx",
+        "mode": "standard",
+        "tier": "standard",
+        "candidateCount": 25,
+        "pivotCount": 2,
+        "supportCount": 4,
+        "discardedCount": 26,
+        "estimatedTokens": 533,
+        "withinEnvelope": true,
+        "leadPivot": "sphinx/cmd/quickstart.py::_has_custom_template",
+        "supportIdentities": [
+          "sphinx/util/cfamily.py::StringifyTransform",
+          "doc/conf.py::parse_event",
+          "doc/conf.py::setup",
+          "doc/conf.py::epub_post_files"
+        ]
+      },
+      "after": {
+        "repo": "sphinx-doc/sphinx",
+        "mode": "standard",
+        "tier": "standard",
+        "candidateCount": 25,
+        "pivotCount": 2,
+        "supportCount": 4,
+        "discardedCount": 26,
+        "estimatedTokens": 533,
+        "withinEnvelope": true,
+        "leadPivot": "sphinx/cmd/quickstart.py::_has_custom_template",
+        "supportIdentities": [
+          "sphinx/util/cfamily.py::StringifyTransform",
+          "doc/conf.py::parse_event",
+          "doc/conf.py::setup",
+          "doc/conf.py::epub_post_files"
+        ]
+      }
+    }
+  },
+  "allNamedControlsUnchanged": true
+}
