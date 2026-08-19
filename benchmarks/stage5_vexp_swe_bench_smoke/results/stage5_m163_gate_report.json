@@ -1,0 +1,93 @@
+{
+  "schemaVersion": 1,
+  "milestone": "M163",
+  "workstream": "B",
+  "title": "M163-B gate report (paid controls complete, sweep not started)",
+  "gates": {
+    "gate1": {
+      "status": "PASS",
+      "attempts": 1,
+      "costUsd": 0.30488499999999996,
+      "durationMs": 34439,
+      "failedAssertions": [],
+      "policyReachedRuntime": true,
+      "compositionCopiedVerbatim": true,
+      "indexWrites": 0
+    },
+    "triggerSmoke": {
+      "status": "PASS",
+      "attempts": 1,
+      "costUsd": 0.861216,
+      "durationMs": 231508,
+      "compliance": "TRIGGER_COMPLIED",
+      "firstVtraceCallIsContextTool": true,
+      "ordinaryActionsBeforeRequiredCall": 0,
+      "runtimeActionsBeforeRequiredCall": [
+        "ToolSearch"
+      ],
+      "ordinaryToolCallsAfterwards": 12,
+      "indexWritesUnchanged": true,
+      "limitations": [
+        "One task, one run. It qualifies delivery, not effect size.",
+        "The control task text is far shorter than a SWE-bench problem statement, so the trigger sits at higher relative salience here than it will in the sweep. Compliance in the sweep is measured, not assumed from this.",
+        "Run through a direct `claude` invocation rather than the external harness, so the runtime tool inventory differs from the sweep's. The VTRACE inventory, MCP config and trigger bytes are the sweep's."
+      ]
+    }
+  },
+  "runtimeToolInventory": {
+    "expected": [
+      "mcp__vtrace__get_code_context",
+      "mcp__vtrace__get_impact_graph"
+    ],
+    "observedGate1": [
+      "mcp__vtrace__get_code_context",
+      "mcp__vtrace__get_impact_graph"
+    ],
+    "observedSmoke": [
+      "mcp__vtrace__get_code_context",
+      "mcp__vtrace__get_impact_graph"
+    ],
+    "matchesInBothControls": true,
+    "serverStatusGate1": [
+      {
+        "name": "vtrace",
+        "status": "connected"
+      }
+    ],
+    "serverConnectedSmoke": true
+  },
+  "policyHashes": {
+    "neutralPolicySha256": "6b7fc159f93dc6298958c86ceafa0db222aa0c2192a189000bd6d09144daec8c",
+    "neutralPolicyMatchesM162": true,
+    "taskTriggerSha256": "99375ef39091d6caea17e2562c7f00d52359b88aea636bf0e6d7ac84964b69f4",
+    "smokePromptSha256": "350cee8b7f00f612a242ac992da1ab4ca095a280fa4e33de3ed800507bef8e28",
+    "manifestHash": "8c8b2ad8e1fe8a972c34dd36bdc1170f6daa3d1e4c367d4f6d36f7a4bdc159bf",
+    "scheduleHash": "487f81faa27197143576ebfe293fac6616cb2fd560ba414144863fbbf1141a3b"
+  },
+  "sessionIsolation": {
+    "sessionIsolationValid": true,
+    "basis": [
+      "One stdio MCP server process per run, bound to one workspace path at startup and torn down with the run.",
+      "The workspace path is a pure function of the run label; every task x arm has a distinct label, so no two arms share a binding.",
+      "The driver creates a fresh workspace per label; --reuse-workspace is not used.",
+      "Gate 1 ran in a COPY of M162's fixture, re-initialized and re-indexed, so it could not inherit M162 index or session state.",
+      "The trigger smoke wrote its config and stream under its own subdirectory of the control root.",
+      "Neither control wrote to index.sqlite: sha256 unchanged across both runs."
+    ],
+    "inheritedControl": "stage5_m162_session_isolation.json (betaSawAlphaIdentity=false)"
+  },
+  "freeControls": {
+    "status": "PASS",
+    "failures": [],
+    "protocolProbesPerArm": 3,
+    "analyzerKnownPositives": 8
+  },
+  "spendToDate": {
+    "gate1Usd": 0.30488499999999996,
+    "triggerSmokeUsd": 0.861216,
+    "totalUsd": 1.166101,
+    "sweepUsd": 0.0,
+    "note": "One earlier Gate 1 invocation aborted before spawning the agent (missing control workspace) and spent nothing."
+  },
+  "sweepStatus": "NOT STARTED - awaiting authorization for the 36 live arms and Docker grading"
+}
