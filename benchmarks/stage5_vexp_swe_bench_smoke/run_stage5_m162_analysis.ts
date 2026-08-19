@@ -110,14 +110,24 @@ function main(): void {
       });
 
       const resolvedRaw = row?.resolved ?? evalMeta?.resolvedCount ?? null;
-      const resolved = typeof resolvedRaw === "boolean"
+      let resolved = typeof resolvedRaw === "boolean"
         ? resolvedRaw
         : typeof resolvedRaw === "number" ? resolvedRaw > 0 : null;
+
+      // An empty patch is unresolvable by definition, and the grader declines to
+      // run on one ("JSONL found but contains no patch/model output"), leaving
+      // `resolved` null. Recording that as ungraded would drop the task from the
+      // denominator; recording it as false is what it means. The rule is applied
+      // per arm on the same condition, so it cannot favour one.
+      const emptyPatch = row !== null
+        && (typeof row.modelPatch !== "string" || row.modelPatch.trim().length === 0);
+      if (resolved === null && emptyPatch) resolved = false;
 
       outcomes.push({
         arm,
         instanceId: entry.instanceId,
         hasRun: row !== null,
+        emptyPatch,
         resolved,
         costUsd: num(row?.costUsd),
         numTurns: num(row?.numTurns),

@@ -22,6 +22,8 @@ export interface ArmOutcome {
    * like an efficient one.
    */
   readonly hasRun: boolean;
+  /** The agent finished without producing any patch — unresolvable by definition. */
+  readonly emptyPatch: boolean;
   readonly resolved: boolean | null;
   readonly costUsd: number | null;
   readonly numTurns: number | null;

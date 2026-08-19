@@ -2915,3 +2915,84 @@ and all comparison artifacts identical after timing normalization.
   never when the agent opens the implementation it was pointed at. A looser
   rule would have manufactured evidence that VTRACE fails to substitute for
   investigation, in a milestone whose central question is exactly that.
+
+## M162-D/E — Three-arm callable architecture pilot (commits 865489f0…, pending)
+
+**Gate 1 PASS. D PASS (execution). E verdict: CALLABLE_NEUTRAL, low-adoption branch.**
+M162 overall **MIXED**: the architecture was built, proved callable, and measured;
+it was then never used by the agent it was built for.
+
+**Gate 1** — one real-agent known-positive, 2 attempts, $0.565. The live runtime
+loads the server, exposes exactly `mcp__vtrace__get_code_context` and
+`mcp__vtrace__get_impact_graph`, permits both, routes to the task workspace, and
+the agent chained context → impact using a canonical method identity copied
+byte-for-byte. Index writes 0. Attempt 1's two failures were both evaluator
+bugs: the live runtime wraps results in the MCP server envelope (so a correct
+composition scored as failed), and server instructions never appear in
+stream-json (so scanning the transcript for the policy could not work either
+way). The agent quoted the policy verbatim once asked.
+
+**Pilot** — 12 tasks × 3 arms, 36/36 completed, **0 failures, 0 infra retries,
+0 reruns**, $23.94, ~80 min agent wall time.
+
+```text
+              BASELINE   STATIC   CALLABLE
+resolved         7/12     8/12      8/12
+median cost     $0.473   $0.557    $0.514
+median turns       30      31.5      30.5
+median searches   2.5        2       2.5
+VTRACE calls        —        —       0/12
+```
+
+**Zero adoption, and provably not a broken arm.** 12/12 MCP config markers
+fired, 0 missing, 12/12 runs report `vtrace` connected with exactly 2 tools
+visible in their own init event, 12/12 permitted, per-task workspaces correctly
+bound. Across all twelve runs the agents' visible reasoning contains **zero
+mentions** of vtrace or either tool: they did not weigh the tools and decline
+them, they never considered them.
+
+The single discordant task (`sympy__sympy-14976`, VTRACE_BOTH_WIN) is variance,
+not evidence: CALLABLE made no VTRACE calls and got no capsule, so its treatment
+content was identical to BASELINE's. CALLABLE 8/12 vs BASELINE 7/12 is one task
+on an identical information diet.
+
+**Economics:** CALLABLE carried a **larger** fixed prefix than STATIC's capsule
+(2,065 vs 1,937 tokens) and fetched 0 dynamic tokens with it — schema tax paid,
+no evidence bought. STATIC did not reproduce M161's orientation-efficiency
+effect on this corpus (turns/searches/tool-calls flat, cost slightly higher).
+
+Three arms produced empty patches on `matplotlib-24177` after 75–81 turns and
+~$2 each; the grader declines to run on an empty patch, so the analyzer scores
+it unresolved by rule, applied per arm on the same condition.
+
+## M162-D/E standing findings
+
+- **Availability is a measurement, not an assumption, and the pilot proved why
+  on its own first arm.** That run was untooled because of a patcher defect and
+  was indistinguishable from zero adoption in every results field. Only the
+  run's own init event separated them. Any future tool-adoption claim that does
+  not carry a per-run availability record is unfalsifiable.
+
+- **A capable agent does not spontaneously reach for an unfamiliar
+  repository-intelligence server.** Connected, permitted, described, and
+  accompanied by a workflow policy stating when each tool applies, adoption was
+  0/12 and the tools were never mentioned in reasoning. The static-versus-
+  callable question was never actually put to the test, because the callable
+  half never ran.
+
+- **Callable delivery is not automatically cheaper, and on this corpus it was
+  strictly worse.** Tool schemas are a per-turn prefix exactly like an injected
+  capsule; here the schema plus policy cost MORE than the capsule it replaced
+  and returned nothing. The tempting comparison — small fixed prefix beats large
+  capsule — was wrong on both its terms.
+
+- **Two milestones have now measured VTRACE without an agent ever consulting it
+  on its own initiative.** M161 injected context the agent largely ignored;
+  M162 offered tools the agent never called. The unexamined variable in both is
+  the same one: whether the agent is told the capability exists at the moment it
+  is deciding what to do. That is a prompt-policy question, and it is now the
+  only informative next experiment.
+
+- **Do not run a larger callable qualification.** Observing zero adoption more
+  precisely buys nothing. §92's precondition for a retrieval milestone — right
+  question, wrong evidence — did not occur, because no questions were asked.
