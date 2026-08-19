@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "milestone": "M162",
+  "productSha": "78ca90b82663d3f78cadf3f580c65491d81cb023",
+  "purpose": "Infrastructure qualification only. Not an M162-D data point.",
+  "excludedFrom": [
+    "capability outcome counts",
+    "token comparison",
+    "unique win/loss analysis",
+    "the 12-task pilot"
+  ],
+  "outcomeIndependence": "Whether the synthetic task is solved is irrelevant; only the exchange is asserted.",
+  "mayInstructExplicitly": true,
+  "instructionRationale": "Natural adoption is an M162-D question. Here the agent may be told to make the two calls, because the control tests wiring rather than behaviour, and a zero-call run would leave the wiring unproven.",
+  "fixture": "The M162-A pricing fixture: a tiny indexed repo whose method pivot has a known canonical identity.",
+  "requiredSequence": [
+    "receive exactly the frozen VTRACE tools",
+    "call get_code_context on the controlled task",
+    "obtain a method item's canonical items[].fqName",
+    "pass that exact fqName to get_impact_graph, unrepaired",
+    "receive a resolved impact result"
+  ],
+  "assertions": [
+    "--data passthrough selects the intended instance",
+    "the claude process starts under --strict-mcp-config",
+    "visible VTRACE tool set equals the frozen two, exactly",
+    "both tools appear in --allowedTools and neither call is denied",
+    "the model-visible names are the expected mcp__vtrace__* names",
+    "VTRACE_TOOL_SUITE_POLICY reaches the model-facing runtime",
+    "the server receives a real get_code_context request",
+    "the correct workspace and index answered it",
+    "the response is bounded",
+    "a canonical method fqName is visible in the response",
+    "get_impact_graph is called with that exact string",
+    "the impact call resolves",
+    "ordered telemetry records both calls in the correct order",
+    "result tokens and latency are captured"
+  ],
+  "failurePolicy": {
+    "onFailure": "DO NOT START M162-D",
+    "mayFix": [
+      "harness",
+      "MCP wiring",
+      "allowedTools",
+      "policy delivery",
+      "telemetry",
+      "workspace routing"
+    ],
+    "mayNotFix": [
+      "retrieval, to make the control pass"
+    ]
+  },
+  "estimatedUsd": 0.7
+}

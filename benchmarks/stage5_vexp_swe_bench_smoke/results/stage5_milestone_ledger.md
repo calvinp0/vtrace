@@ -2821,3 +2821,97 @@ clean. Frozen `toolSetSha256=b5c871e9…`.
   answering. Fail-closed behaved correctly, but it means every pilot task must
   rebuild its index at the frozen product SHA; reusing archived indexes would
   yield `repo_not_ready`, not evidence.
+
+## M162-B/C — Callable MCP wiring, live-path qualification, and telemetry (commits 78ca90b8, pending)
+
+**B: PASS OFFLINE / LIVE CONTROL PENDING. C: PASS.** M162 overall still IN
+PROGRESS (D gated, E open). Predecessor `1962ccb0`.
+
+M162-A showed that having two tools is not the same as being able to chain
+them. B/C establish the same at the next level up, and the chain has five links
+that do not imply each other: implemented, discoverable, allowed, correctly
+routed, composable, observable.
+
+**Three independent defects, each individually fatal to the arm.** The MCP
+server exposed all 14 tools (~5,518 schema tokens per turn, recreating the tax
+M162 exists to test); the external harness launches every agent with
+`--strict-mcp-config` against `{"mcpServers":{}}`, which is why M155's agents
+never had VTRACE tools at all; and the orchestrator's `--allowedTools` names no
+MCP tool, so a correctly configured server would still have been
+visible-but-unusable. `mcp-serve --tools` now restricts the served surface at
+the source; the adapter patch sets the adapter's OWN `mcpConfigPath` and
+`allowedTools` before argument assembly, so the harness keeps owning the flags
+and one live path survives. Both env vars fail closed.
+
+**The decisive control asserts on a recorded command line**, not on code shape:
+it copies the real adapter, patches it with the real patcher, and runs it
+against a fake `claude` that dumps its argv. BASELINE/STATIC get
+`{"mcpServers":{}}` and no `mcp__` permission; CALLABLE gets the VTRACE server,
+exactly one `--mcp-config`, and exactly the two frozen names.
+
+Direct-MCP controls against real indexed fixtures: served `tools/list` equals
+the frozen set **exactly**; two disjoint workspaces show no routing
+cross-contamination; all four result states demonstrated and distinct;
+composition holds under the tight budget that triggers compaction; impact
+responses bounded (1,239 tokens default, 14,421 at documented maxima) and
+over-limit requests refused at 59 tokens; **0 index writes**;
+`sessionIsolationValid: true`.
+
+**Economics finding:** CALLABLE's turn-0 fixed overhead is **2,065 tokens**
+(1,937 schema + 128 policy) against a 5,518-token full-surface counterfactual —
+but a single `get_code_context` call with no `max_tokens` returns **5,337
+tokens**, about 1.7× M161's entire injected capsule. CALLABLE is not cheaper by
+construction.
+
+C builds ordered telemetry on the existing seam (dumb adapter patch, smart
+harness parser) covering sequence, args, result state, tokens, latency,
+returned paths and identities, composition, utilization, redundant lookups, and
+navigation components. 27 controls with known positives AND negatives;
+first-call timing precedence frozen before execution.
+
+12-task pilot frozen from M161's untouched pre-frozen population (70 unconsumed
+of 100, 0 overlap with graded), 8 repositories, max share 16.7%.
+`manifestHash 8c8b2ad8…`, `scheduleHash ad1ed3f5…`. Estimated $25.33 for 36
+arms plus one ~$0.70 control, ~17 min index build, ~1.9 h wall clock.
+
+`bun test` 5045 pass / 49 skip / 0 fail; typechecks and `git diff --check`
+clean. Retrieval compared against the **pre-M162 predecessor**: all 50 case rows
+and all comparison artifacts identical after timing normalization.
+
+## M162-B/C standing findings
+
+- **An empty finding from a detector that has never fired is not evidence.**
+  The historical-policy scanner passed the suite policy and all tool
+  descriptions — and also silently failed to reject `PIVOT_CHECK`, whose
+  wording is "do not rediscover with grep what VTRACE already named" and which
+  contains no "do not use grep". Only the known-positive probe exposed it.
+  Every detector shipped in B/C therefore carries both polarities.
+
+- **A treatment can be configured correctly and still be inert.** Three
+  independent layers had to agree — server visibility, MCP configuration, and
+  the tool allow-list — and each was individually capable of producing an arm
+  that looked configured, started cleanly, and offered the agent nothing.
+  Asserting on the spawned process's argv is the only check that spans all
+  three; every earlier layer of testing would have passed.
+
+- **On-demand retrieval is not cheaper by construction.** One default
+  `get_code_context` call costs ~1.7× M161's whole injected capsule, and the
+  tool schemas themselves are a per-turn prefix cost like the capsule was.
+  Callable delivery only wins if the agent calls sparingly with bounded
+  budgets. Fixed and dynamic tokens are therefore accounted separately, because
+  which of the two dominates IS the hypothesis.
+
+- **The product is hard to degrade on purpose, which is mostly good news and
+  one small honesty gap.** Neither a syntactically invalid Python file nor
+  invalid UTF-8 produced a recorded index failure — tree-sitter returns an
+  ERROR-node tree and bad bytes decode lossily — so both repositories indexed
+  and answered. The unparseable file is simply absent from the index while
+  coverage reports complete. The response-level epistemic guard holds
+  regardless (`absenceClaim: not_observed`), so the agent is never told the
+  missing file does not exist.
+
+- **Reading after orientation is not rediscovery.** The redundant-lookup
+  detector fires only when a search IS an already-returned identifier or path,
+  never when the agent opens the implementation it was pointed at. A looser
+  rule would have manufactured evidence that VTRACE fails to substitute for
+  investigation, in a milestone whose central question is exactly that.

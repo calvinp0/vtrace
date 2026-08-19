@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "milestone": "M162",
+  "productSha": "78ca90b82663d3f78cadf3f580c65491d81cb023",
+  "toolDescriptionFindings": [
+    {
+      "tool": "get_code_context",
+      "flags": []
+    },
+    {
+      "tool": "get_impact_graph",
+      "flags": []
+    }
+  ],
+  "toolDescriptionsClean": true,
+  "suitePolicyFindings": [],
+  "suitePolicyClean": true,
+  "historicalBlockProbes": [
+    {
+      "block": "STAGE5_TOKEN_DISCIPLINE",
+      "rejected": true,
+      "flags": [
+        "coercive:at most two searches"
+      ]
+    },
+    {
+      "block": "PIVOT_CHECK",
+      "rejected": true,
+      "flags": [
+        "coercive:do not rediscover",
+        "coercive:do not rediscover with grep"
+      ]
+    },
+    {
+      "block": "EDIT_GUARD",
+      "rejected": true,
+      "flags": [
+        "coercive:patch immediately"
+      ]
+    },
+    {
+      "block": "PATCH_VERIFY",
+      "rejected": true,
+      "flags": [
+        "coercive:must use"
+      ]
+    },
+    {
+      "block": "ORIENTATION_INSTRUCTION",
+      "rejected": true,
+      "flags": [
+        "coercive:do not use grep",
+        "coercive:do not use grep",
+        "coercive:always call"
+      ]
+    }
+  ],
+  "detectorProvenOnKnownPositives": true,
+  "note": "Routing guidance is permitted on the suite surface and forbidden in individual tool descriptions; investigation constraints are forbidden everywhere."
+}

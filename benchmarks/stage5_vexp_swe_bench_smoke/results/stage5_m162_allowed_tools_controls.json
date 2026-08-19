@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "milestone": "M162",
+  "productSha": "78ca90b82663d3f78cadf3f580c65491d81cb023",
+  "harnessDefaultAllowedTools": [
+    "Edit",
+    "Write",
+    "Bash",
+    "Read",
+    "Glob",
+    "Grep",
+    "TodoWrite"
+  ],
+  "callableAllowedTools": [
+    "Edit",
+    "Write",
+    "Bash",
+    "Read",
+    "Glob",
+    "Grep",
+    "TodoWrite",
+    "mcp__vtrace__get_code_context",
+    "mcp__vtrace__get_impact_graph"
+  ],
+  "vtraceToolNames": [
+    "mcp__vtrace__get_code_context",
+    "mcp__vtrace__get_impact_graph"
+  ],
+  "perArm": [
+    {
+      "arm": "baseline",
+      "allowedTools": [
+        "Edit",
+        "Write",
+        "Bash",
+        "Read",
+        "Glob",
+        "Grep",
+        "TodoWrite"
+      ],
+      "vtraceToolNames": [],
+      "mcpServersConfigured": [],
+      "strictMcpConfig": true
+    },
+    {
+      "arm": "static",
+      "allowedTools": [
+        "Edit",
+        "Write",
+        "Bash",
+        "Read",
+        "Glob",
+        "Grep",
+        "TodoWrite"
+      ],
+      "vtraceToolNames": [],
+      "mcpServersConfigured": [],
+      "strictMcpConfig": true
+    },
+    {
+      "arm": "callable",
+      "allowedTools": [
+        "Edit",
+        "Write",
+        "Bash",
+        "Read",
+        "Glob",
+        "Grep",
+        "TodoWrite",
+        "mcp__vtrace__get_code_context",
+        "mcp__vtrace__get_impact_graph"
+      ],
+      "vtraceToolNames": [
+        "mcp__vtrace__get_code_context",
+        "mcp__vtrace__get_impact_graph"
+      ],
+      "mcpServersConfigured": [
+        "vtrace"
+      ],
+      "strictMcpConfig": true
+    }
+  ],
+  "parityOk": true,
+  "parityIssues": [],
+  "blockerRepaired": "The orchestrator's hardcoded --allowedTools names no MCP tool, so before M162 a correctly configured VTRACE server would still have been visible-but-unusable. The two frozen names are added narrowly; no wildcard is used."
+}

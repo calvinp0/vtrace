@@ -69,6 +69,12 @@ export interface M162ToolAudit {
 /** Forbidden everywhere: suppresses or dictates the agent's own investigation. */
 const COERCIVE_PATTERNS: readonly RegExp[] = [
   /\bdo not use (?:grep|glob|bash|read|cat)\b/i,
+  // The historical PIVOT_CHECK block phrases suppression as "do not rediscover
+  // with grep what VTRACE already named" — no "do not use grep" anywhere in it.
+  // Matching the concept rather than one wording is what makes the known-positive
+  // control meaningful instead of decorative.
+  /\bdo not rediscover\b/i,
+  /\b(?:do not|don'?t|never)\b[^.]{0,40}\bgrep\b/i,
   /\bavoid reading files\b/i,
   /\binstead of (?:grep|glob|searching)\b/i,
   /\blimit yourself to\b/i,

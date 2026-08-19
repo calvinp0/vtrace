@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "milestone": "M162",
+  "workstream": "D",
+  "basis": "M161 actuals: 60 live arms, $41.07, ~3h07m wall clock, on the same agent, model, and turn caps.",
+  "perArmUsd": 0.685,
+  "knownPositiveControl": {
+    "arms": 1,
+    "estimatedUsd": 0.685,
+    "note": "A single short synthetic task on a tiny fixture; expected well below the M161 average."
+  },
+  "pilot": {
+    "tasks": 12,
+    "arms": 36,
+    "estimatedUsd": 24.64,
+    "range": {
+      "low": 17.25,
+      "high": 36.96,
+      "why": "CALLABLE's cost is the open question: tool results add context the agent would otherwise have gathered itself, and it is not yet known whether that nets out cheaper or dearer. The high end assumes CALLABLE runs materially dearer than M161's static arm."
+    }
+  },
+  "localIndexBuild": {
+    "armsNeedingAnIndex": 24,
+    "medianSecondsPerIndex": 42,
+    "estimatedMinutes": 17,
+    "note": "STATIC and CALLABLE both need a fresh index at the frozen product SHA; stored indexes fail closed as schema_incompatible. BASELINE needs none."
+  },
+  "wallClock": {
+    "estimatedHours": 1.9,
+    "note": "Live runs are sequential — they share results/_agent_stream.jsonl and must not overlap."
+  },
+  "totalEstimatedUsd": 25.33
+}

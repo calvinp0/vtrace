@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "milestone": "M162",
+  "productSha": "78ca90b82663d3f78cadf3f580c65491d81cb023",
+  "servedOn": "initialize.result.instructions",
+  "policyPresent": true,
+  "policyOccurrences": 1,
+  "policyMatchesAuthority": true,
+  "policySha256": "6b7fc159f93dc6298958c86ceafa0db222aa0c2192a189000bd6d09144daec8c",
+  "policyChars": 509,
+  "policyEstimatedTokens": 128,
+  "armExposure": {
+    "baseline": {
+      "policyServed": false,
+      "why": "no MCP server is configured, so no server instructions exist"
+    },
+    "static": {
+      "policyServed": false,
+      "why": "no MCP server is configured; STATIC reproduces M161's clean capsule arm exactly"
+    },
+    "callable": {
+      "policyServed": true,
+      "occurrences": 1
+    }
+  },
+  "liveDeliveryUnproven": "That the server SERVES the policy is proved here. That the Claude runtime SURFACES server instructions to the model cannot be proved without a real spawn, and is therefore an assertion of the gated known-positive control rather than a claim made now."
+}

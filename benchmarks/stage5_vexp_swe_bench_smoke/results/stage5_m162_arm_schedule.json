@@ -1,0 +1,124 @@
+{
+  "schemaVersion": 1,
+  "milestone": "M162",
+  "workstream": "D",
+  "title": "M162 three-arm execution schedule",
+  "rule": "Arm order rotates with task position; each arm leads exactly a third of the tasks.",
+  "armLeadCounts": {
+    "baseline": 4,
+    "static": 4,
+    "callable": 4
+  },
+  "totalArms": 36,
+  "schedule": [
+    {
+      "order": 1,
+      "instanceId": "sympy__sympy-13798",
+      "armOrder": [
+        "baseline",
+        "static",
+        "callable"
+      ]
+    },
+    {
+      "order": 2,
+      "instanceId": "django__django-11451",
+      "armOrder": [
+        "static",
+        "callable",
+        "baseline"
+      ]
+    },
+    {
+      "order": 3,
+      "instanceId": "sphinx-doc__sphinx-7440",
+      "armOrder": [
+        "callable",
+        "baseline",
+        "static"
+      ]
+    },
+    {
+      "order": 4,
+      "instanceId": "scikit-learn__scikit-learn-14087",
+      "armOrder": [
+        "baseline",
+        "static",
+        "callable"
+      ]
+    },
+    {
+      "order": 5,
+      "instanceId": "sphinx-doc__sphinx-11445",
+      "armOrder": [
+        "static",
+        "callable",
+        "baseline"
+      ]
+    },
+    {
+      "order": 6,
+      "instanceId": "django__django-13343",
+      "armOrder": [
+        "callable",
+        "baseline",
+        "static"
+      ]
+    },
+    {
+      "order": 7,
+      "instanceId": "matplotlib__matplotlib-24177",
+      "armOrder": [
+        "baseline",
+        "static",
+        "callable"
+      ]
+    },
+    {
+      "order": 8,
+      "instanceId": "scikit-learn__scikit-learn-13496",
+      "armOrder": [
+        "static",
+        "callable",
+        "baseline"
+      ]
+    },
+    {
+      "order": 9,
+      "instanceId": "sympy__sympy-14976",
+      "armOrder": [
+        "callable",
+        "baseline",
+        "static"
+      ]
+    },
+    {
+      "order": 10,
+      "instanceId": "astropy__astropy-13977",
+      "armOrder": [
+        "baseline",
+        "static",
+        "callable"
+      ]
+    },
+    {
+      "order": 11,
+      "instanceId": "pydata__xarray-4966",
+      "armOrder": [
+        "static",
+        "callable",
+        "baseline"
+      ]
+    },
+    {
+      "order": 12,
+      "instanceId": "pytest-dev__pytest-7982",
+      "armOrder": [
+        "callable",
+        "baseline",
+        "static"
+      ]
+    }
+  ],
+  "scheduleHash": "ad1ed3f5fbd6ea9171739bd0157e46eb80663e25e6e852a7f10e21381a3956a5"
+}

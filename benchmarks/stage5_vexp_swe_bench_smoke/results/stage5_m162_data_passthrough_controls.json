@@ -1,0 +1,24 @@
+{
+  "schemaVersion": 1,
+  "milestone": "M162",
+  "productSha": "78ca90b82663d3f78cadf3f580c65491d81cb023",
+  "flag": "--vexp-run-data",
+  "forwardedAs": "--data",
+  "selectedFileReachesCli": true,
+  "distinguishableFilesProduceDistinguishableCommands": true,
+  "secondFileReachesCli": true,
+  "absentWhenUnset": true,
+  "identicalAcrossArms": true,
+  "note": "Already present since M161 rather than newly repaired; the gap was the absence of a control, not the absence of the flag. The dataset decides which instances exist, never which arm sees what.",
+  "exampleCommand": [
+    "/vexp/dist/index.js",
+    "run",
+    "--instances",
+    "astropy__astropy-1",
+    "--no-vexp",
+    "--output",
+    "/out/a",
+    "--data",
+    "/data/m162-pilot.jsonl"
+  ]
+}
