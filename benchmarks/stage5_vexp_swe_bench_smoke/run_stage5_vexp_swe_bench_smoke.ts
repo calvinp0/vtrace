@@ -1289,6 +1289,24 @@ export const STAGE5_VTRACE_DISALLOWED_TOOLS_MARKER = "STAGE5_VTRACE_DISALLOWED_T
 // Stderr line the patched adapter logs when it denies the Phase-1 mutation tools.
 export const STAGE5_VTRACE_DISALLOWED_TOOLS_LOG = "Stage5 vtrace phase-1 read-only: --disallowedTools";
 
+// Marker for the SIXTH patch block (M162): it routes the CALLABLE arm's VTRACE
+// MCP server into the agent by setting the adapter's OWN `opts.mcpConfigPath`
+// and extending `opts.allowedTools`, both BEFORE the adapter assembles its
+// `claude` arguments. Setting the adapter's own inputs rather than pushing
+// duplicate flags keeps ONE authoritative live path: the harness still owns
+// `--mcp-config`/`--strict-mcp-config`/`--allowedTools` exactly as it always
+// did. FAIL-CLOSED: with the env vars unset, baseline and static runs are
+// byte-identical to their pre-M162 commands.
+export const STAGE5_VTRACE_MCP_MARKER = "STAGE5_VTRACE_MCP_PATCH";
+
+// Stderr line the patched adapter logs when it routes the VTRACE MCP server in.
+export const STAGE5_VTRACE_MCP_LOG = "Stage5 vtrace callable MCP config:";
+
+// Stderr line logged when the env var is set but the config file is absent. The
+// run must NOT silently continue as an un-tooled arm: a CALLABLE run without
+// tools is a treatment failure, not a zero-adoption data point.
+export const STAGE5_VTRACE_MCP_MISSING = "Stage5 vtrace callable MCP config MISSING";
+
 // Marker for the FIFTH patch block (M76): it pushes `--settings <file>` into the
 // `claude` invocation when VTRACE_TOOL_LOOP_GUARD_HOOK_SETTINGS points at an
 // EXISTING settings file, registering the runtime tool-loop-guard PostToolUse hook
@@ -8915,6 +8933,49 @@ export function buildToolLoopGuardHookPatchBlock(): string {
   ].join("\n");
 }
 
+// The SIXTH inserted block (M162): route the CALLABLE arm's VTRACE MCP server
+// and tool permissions into the adapter's own inputs before it builds `args`.
+//
+// Two env vars, both fail-closed:
+//   VTRACE_MCP_CONFIG        -> becomes opts.mcpConfigPath (the adapter then
+//                               passes it with --strict-mcp-config itself)
+//   VTRACE_MCP_ALLOWED_TOOLS -> appended to opts.allowedTools
+//
+// The allow-list matters as much as the config: the orchestrator's hardcoded
+// --allowedTools does not name any MCP tool, so a correctly configured server
+// would still hand the agent two tools it is not permitted to call.
+export function buildVtraceMcpPatchBlock(): string {
+  return [
+    `        // ${STAGE5_VTRACE_MCP_MARKER} begin — local Stage 5 smoke patch (M162 callable arm:`,
+    "        // route the VTRACE MCP server + tool permissions into the adapter's own inputs).",
+    "        if (process.env.VTRACE_MCP_CONFIG) {",
+    "            const __stage5McpConfig = process.env.VTRACE_MCP_CONFIG;",
+    "            try {",
+    '                const { existsSync: __stage5McpExists } = await import("node:fs");',
+    "                if (__stage5McpExists(__stage5McpConfig)) {",
+    "                    opts.mcpConfigPath = __stage5McpConfig;",
+    `                    console.error(\`${STAGE5_VTRACE_MCP_LOG} \${__stage5McpConfig}\`);`,
+    "                } else {",
+    `                    console.error(\`${STAGE5_VTRACE_MCP_MISSING}: \${__stage5McpConfig}\`);`,
+    "                }",
+    "            } catch (__stage5McpErr) {",
+    `                console.error(\`${STAGE5_VTRACE_MCP_MISSING}: \${__stage5McpErr instanceof Error ? __stage5McpErr.message : String(__stage5McpErr)}\`);`,
+    "            }",
+    "        }",
+    "        if (process.env.VTRACE_MCP_ALLOWED_TOOLS) {",
+    '            const __stage5Extra = process.env.VTRACE_MCP_ALLOWED_TOOLS.split(",").map((t) => t.trim()).filter(Boolean);',
+    "            const __stage5Base = Array.isArray(opts.allowedTools) ? opts.allowedTools : [];",
+    "            opts.allowedTools = [...__stage5Base, ...__stage5Extra.filter((t) => !__stage5Base.includes(t))];",
+    "        }",
+    `        // ${STAGE5_VTRACE_MCP_MARKER} end`,
+    "",
+  ].join("\n");
+}
+
+export function hasVtraceMcpPatch(content: string): boolean {
+  return content.includes(STAGE5_VTRACE_MCP_MARKER);
+}
+
 // Independent per-block presence checks. A given adapter may carry the
 // instructions patch but not the (later-introduced) stream patch — these let the
 // patcher migrate one without re-installing the other.
@@ -8999,6 +9060,13 @@ export function applyVtracePatch(content: string): { content: string; changed: b
   // (both push onto the assembled `args` array) and is skipped if that anchor is
   // absent (fail-closed — the runtime hook is then simply unavailable, which the
   // harness records honestly). Own marker, so an already-patched adapter migrates it.
+  // M162 callable block goes at the TOP of run() (before the args array and
+  // before the adapter's own MCP branch) so it can set opts.* rather than
+  // append duplicate flags.
+  if (!hasVtraceMcpPatch(next) && next.indexOf(VTRACE_PATCH_ANCHOR) !== -1) {
+    next = insertAfterAnchor(next, VTRACE_PATCH_ANCHOR, buildVtraceMcpPatchBlock());
+  }
+
   if (!hasToolLoopGuardHookPatch(next) && next.indexOf(VTRACE_DISALLOWED_TOOLS_ANCHOR) !== -1) {
     next = insertAfterAnchor(next, VTRACE_DISALLOWED_TOOLS_ANCHOR, buildToolLoopGuardHookPatchBlock());
     changed = true;
@@ -9197,6 +9265,9 @@ async function migrateOptionalPatchesIfMissing(target: string, content: string):
     if (!hasStreamPatch(content) && hasStreamPatch(patched)) migrated.push(STAGE5_VTRACE_STREAM_MARKER);
     if (!hasDisallowedToolsPatch(content) && hasDisallowedToolsPatch(patched)) {
       migrated.push(STAGE5_VTRACE_DISALLOWED_TOOLS_MARKER);
+    }
+    if (!hasVtraceMcpPatch(content) && hasVtraceMcpPatch(patched)) {
+      migrated.push(STAGE5_VTRACE_MCP_MARKER);
     }
     if (!hasToolLoopGuardHookPatch(content) && hasToolLoopGuardHookPatch(patched)) {
       migrated.push(STAGE5_TOOL_LOOP_GUARD_HOOK_MARKER);

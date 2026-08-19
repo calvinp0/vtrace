@@ -223,7 +223,7 @@ import {
 } from "../workspace/productRoute";
 import { MAX_REPORTED_COVERAGE_EXAMPLES } from "../workspace/evidenceClaims";
 import { mergeRepositoryContributions } from "../workspace/workspaceProductContext";
-import { createMcpToolRegistry } from "./registry";
+import { createMcpToolRegistry, type McpToolRegistry } from "./registry";
 import {
   McpErrorCode,
   McpToolAvailability,
@@ -10507,6 +10507,66 @@ export const RESERVED_MCP_TOOL_DEFINITIONS = Object.freeze(
 export const RESERVED_MCP_TOOL_METADATA = Object.freeze(
   RESERVED_MCP_TOOL_DEFINITIONS.map((tool) => tool.metadata),
 );
+
+/**
+ * Every registered tool definition, deduplicated by tool id.
+ *
+ * RESERVED wins over LEGACY where both define an id: that is the same
+ * precedence `defaultMcpToolRegistry` encodes by filtering the five promoted
+ * ids out of its hidden list, expressed once so a restricted registry cannot
+ * drift from it.
+ */
+function allMcpToolDefinitions(): readonly McpToolDefinition[] {
+  const byId = new Map<McpToolId, McpToolDefinition>();
+  for (const tool of [...RESERVED_MCP_TOOL_DEFINITIONS, ...LEGACY_MCP_TOOL_DEFINITIONS]) {
+    if (!byId.has(tool.metadata.toolId)) byId.set(tool.metadata.toolId, tool);
+  }
+  return [...byId.values()];
+}
+
+/**
+ * A registry whose MODEL-VISIBLE surface is exactly `visibleToolIds`.
+ *
+ * Restricting visibility is a real capability, not a benchmark affordance: a
+ * tool's name, description, and input schema sit in the agent's prompt prefix
+ * and are re-read every turn, so the full surface costs thousands of tokens
+ * whether or not the agent ever calls any of it. A caller that wants two tools
+ * should pay for two.
+ *
+ * Unlisted tools become HIDDEN rather than unregistered, which is the same
+ * state `search_symbols` already occupies: absent from `tools/list`, still
+ * resolvable by exact id. Nothing is removed from the product.
+ *
+ * Throws on an unknown id rather than silently serving a smaller surface than
+ * the caller asked for — a typo here would otherwise look like a tool the model
+ * simply chose not to use.
+ */
+export function createRestrictedMcpToolRegistry(
+  visibleToolIds: readonly McpToolId[],
+): McpToolRegistry {
+  const all = allMcpToolDefinitions();
+  const byId = new Map(all.map((tool) => [tool.metadata.toolId, tool] as const));
+
+  const visible: McpToolDefinition[] = [];
+  const seen = new Set<McpToolId>();
+  for (const toolId of visibleToolIds) {
+    const tool = byId.get(toolId);
+    if (tool === undefined) {
+      throw new Error(
+        `Unknown MCP tool id in visible tool set: ${toolId}. `
+        + `Known ids: ${all.map((candidate) => candidate.metadata.toolId).sort().join(", ")}`,
+      );
+    }
+    if (seen.has(toolId)) continue;
+    seen.add(toolId);
+    visible.push(tool);
+  }
+
+  return createMcpToolRegistry({
+    tools: visible,
+    hiddenTools: all.filter((tool) => !seen.has(tool.metadata.toolId)),
+  });
+}
 
 export const defaultMcpToolRegistry = createMcpToolRegistry({
   tools: RESERVED_MCP_TOOL_DEFINITIONS,

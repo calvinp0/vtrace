@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "milestone": "M162",
+  "workstream": "B",
+  "productSha": "1962ccb0ba406309dddac6303b0afd77dc11c944",
+  "workspaceA": {
+    "requested": "/tmp/m162-controls-TeZuxH/workspace-a",
+    "deliveredPaths": [
+      "pkg/core.py",
+      "pkg/core.py",
+      "pkg/api.py",
+      "pkg/core.py",
+      "pkg/core.py"
+    ],
+    "repository": {
+      "root": "/tmp/m162-controls-TeZuxH/workspace-a",
+      "repositoryId": "0d531a8f83cca458f38b7e3c",
+      "worktreeId": "96904d3f8ff1157bcd7e97e7",
+      "headCommit": "0959db963f29a1a0e51bb42529294ccae954d3d2",
+      "branch": "main",
+      "detached": false,
+      "indexRunId": 2,
+      "indexMode": "noop",
+      "routingSource": "process_default"
+    },
+    "resultState": "VALID_NONEMPTY"
+  },
+  "workspaceB": {
+    "requested": "/tmp/m162-controls-TeZuxH/workspace-b",
+    "deliveredPaths": [
+      "shipping/router.py",
+      "shipping/router.py",
+      "shipping/router.py"
+    ],
+    "repository": {
+      "root": "/tmp/m162-controls-TeZuxH/workspace-b",
+      "repositoryId": "8c2f6b15669833e6f606dca9",
+      "worktreeId": "4e1b1305e351cfcf98793f9b",
+      "headCommit": "3f502d70aa87acfd76bc35faf446c80d6d6559a2",
+      "branch": "main",
+      "detached": false,
+      "indexRunId": 2,
+      "indexMode": "noop",
+      "routingSource": "process_default"
+    },
+    "resultState": "VALID_NONEMPTY"
+  },
+  "aOnlyOwnSymbols": true,
+  "bOnlyOwnSymbols": true,
+  "noCrossContamination": true,
+  "note": "Two simultaneously existing, deliberately disjoint workspaces. A shared or stale index would surface the other package's paths."
+}

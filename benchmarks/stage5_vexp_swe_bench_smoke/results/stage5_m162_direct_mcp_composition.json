@@ -1,0 +1,19 @@
+{
+  "schemaVersion": 1,
+  "milestone": "M162",
+  "workstream": "B",
+  "productSha": "1962ccb0ba406309dddac6303b0afd77dc11c944",
+  "maxTokens": 8000,
+  "contextResultState": "VALID_NONEMPTY",
+  "compactionTriggered": false,
+  "omittedItemCount": 0,
+  "deliveredItemCount": 6,
+  "leadPivot": "pkg/core.py::PriceEngine.apply_discount",
+  "identifierCopiedVerbatim": "pkg/core.py::PriceEngine.apply_discount",
+  "identifierIsMethod": true,
+  "impactResultState": "VALID_NONEMPTY",
+  "impactResolved": true,
+  "impactTokens": 1965,
+  "contextSemanticHash": "83d73c1d597553191abbf0ec7f153601ca0f0a0bedde026a1a3c70a4907a54c1",
+  "composed": true
+}

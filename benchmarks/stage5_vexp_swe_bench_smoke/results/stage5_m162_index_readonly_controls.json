@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "milestone": "M162",
+  "workstream": "B",
+  "productSha": "1962ccb0ba406309dddac6303b0afd77dc11c944",
+  "indexBefore": {
+    "present": true,
+    "size": 212992,
+    "mtimeMs": 1787126930237.3213,
+    "sha256": "fa4bbecbfce5d503c82aeb4ecbd5206fdfb246e4437463586a7937870d9d46ac"
+  },
+  "indexAfter": {
+    "present": true,
+    "size": 212992,
+    "mtimeMs": 1787126930237.3213,
+    "sha256": "fa4bbecbfce5d503c82aeb4ecbd5206fdfb246e4437463586a7937870d9d46ac"
+  },
+  "indexUnchanged": true,
+  "indexWritesObserved": 0,
+  "sessionBefore": {
+    "present": true,
+    "size": 225280,
+    "mtimeMs": 1787126956466.2612,
+    "sha256": "a549dcfdfa8070be482765b4448420648cdb1a60e5a87321b1e8cfa63c3fecc6"
+  },
+  "sessionAfter": {
+    "present": true,
+    "size": 233472,
+    "mtimeMs": 1787126976511.26,
+    "sha256": "197dd53d76fea364eb9a1f3cc2d91d237d6fa7b3ce7404bb1f91818764363511"
+  },
+  "note": "Repository evidence and product/session state are separate stores; retrieval reads the first and must not write it."
+}

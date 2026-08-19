@@ -1,0 +1,20 @@
+{
+  "schemaVersion": 1,
+  "milestone": "M162",
+  "workstream": "B",
+  "productSha": "1962ccb0ba406309dddac6303b0afd77dc11c944",
+  "servedToolNames": [
+    "get_code_context",
+    "get_impact_graph"
+  ],
+  "expectedToolNames": [
+    "get_code_context",
+    "get_impact_graph"
+  ],
+  "exactMatch": true,
+  "modelVisibleMcpNames": [
+    "mcp__vtrace__get_code_context",
+    "mcp__vtrace__get_impact_graph"
+  ],
+  "instructionsServed": "Repo-bound vtrace MCP server for /tmp/m162-controls-TeZuxH/workspace-a. Use tools/list to inspect available tools.\n\nRepository-intelligence workflow:\n\n- Use get_code_context as the initial repository-orientation tool for\n  coding/debugging/refactoring tasks.\n\n- Use get_impact_graph when considering a specific symbol change and\n  caller/dependent/blast-radius evidence would help. Pass the canonical\n  identity returned as get_code_context items[].fqName.\n\n- VTRACE results are selective evidence, not proof that omitted code\n  does not exist. Ordinary repository tools remain available and should\n  be used whenever useful."
+}

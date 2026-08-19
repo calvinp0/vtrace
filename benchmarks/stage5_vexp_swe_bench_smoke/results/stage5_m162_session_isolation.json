@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "milestone": "M162",
+  "workstream": "B",
+  "productSha": "1962ccb0ba406309dddac6303b0afd77dc11c944",
+  "alphaSession": "m162-session-alpha",
+  "betaSession": "m162-session-beta",
+  "betaSawAlphaIdentity": false,
+  "sessionIsolationValid": true,
+  "serverLifetime": "one stdio process per session, bound to one workspace at startup and torn down with it",
+  "note": "No server outlives the workspace it was bound to, so no task or arm can inherit another's binding."
+}

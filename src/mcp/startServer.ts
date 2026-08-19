@@ -17,6 +17,7 @@ import type {
   RepoRootMarker,
 } from "../setup/types";
 import { createMcpServer, createMcpServerContext } from "./server";
+import { createRestrictedMcpToolRegistry } from "./tools";
 import {
   MCP_SERVER_ID,
   MCP_SERVER_SCHEMA,
@@ -27,12 +28,13 @@ import {
 const JSON_RPC_VERSION = "2.0" as const;
 const MCP_PROTOCOL_VERSION = "2024-11-05" as const;
 const MCP_SERVER_USAGE = [
-  "Usage: vtrace mcp-serve --repo <repo>",
+  "Usage: vtrace mcp-serve --repo <repo> [--tools <id,id>]",
   "",
   "Starts a local stdio MCP server bound to a repo root.",
   "Engine-backed tools require repo-local state and a ready index.",
   "Setup and status tools work before init.",
   "Visible tool surface: setup/status tools, capsule wrappers, observation/session tools, and a few reserved placeholders.",
+  "--tools restricts the MODEL-VISIBLE surface to the listed ids; unlisted tools stay registered but hidden.",
   "Docs: docs/getting_started.md and docs/mcp_tools.md",
   "",
 ].join("\n");
@@ -130,6 +132,11 @@ export interface RepoBoundMcpServer {
 export interface CreateRepoBoundMcpServerOptions {
   readonly repoPath: string;
   readonly cwd?: string;
+  /**
+   * Restrict the MODEL-VISIBLE tool surface to exactly these ids, in this order.
+   * Omitted (the default) serves the full visible surface unchanged.
+   */
+  readonly visibleToolIds?: readonly string[];
 }
 
 export interface StartMcpServerOptions extends CreateRepoBoundMcpServerOptions {
@@ -150,6 +157,9 @@ export async function createRepoBoundMcpServer(
   const initialized = config?.initialized === true && state?.initialized === true;
 
   const server = createMcpServer({
+    ...(options.visibleToolIds === undefined
+      ? {}
+      : { registry: createRestrictedMcpToolRegistry(options.visibleToolIds) }),
     context: createMcpServerContext({
       repoRoot: detection.repoRoot,
       dbPath,
@@ -212,6 +222,7 @@ export async function runMcpServerCli(
 
     await startMcpServer({
       repoPath: parsed.repoPath,
+      ...(parsed.visibleToolIds === undefined ? {} : { visibleToolIds: parsed.visibleToolIds }),
       stdin: io.stdin ?? process.stdin,
       stdout,
       stderr,
@@ -226,10 +237,12 @@ export async function runMcpServerCli(
 
 function parseMcpServerArgs(
   argv: readonly string[],
-): { help: true } | { help: false; repoPath: string } {
+): { help: true } | { help: false; repoPath: string; visibleToolIds?: readonly string[] } {
   if (argv.length === 0 || argv.includes("--help") || argv.includes("-h")) {
     return { help: true };
   }
+
+  const visibleToolIds = parseToolsFlag(argv);
 
   for (let index = 0; index < argv.length; index += 1) {
     const argument = argv[index];
@@ -244,6 +257,7 @@ function parseMcpServerArgs(
       return {
         help: false,
         repoPath,
+        ...(visibleToolIds === undefined ? {} : { visibleToolIds }),
       };
     }
 
@@ -257,11 +271,38 @@ function parseMcpServerArgs(
       return {
         help: false,
         repoPath,
+        ...(visibleToolIds === undefined ? {} : { visibleToolIds }),
       };
     }
   }
 
   throw new Error(MCP_SERVER_USAGE.trimEnd());
+}
+
+/**
+ * `--tools a,b` restricts the model-visible surface. Absent means "serve the
+ * full visible surface", which keeps every existing invocation byte-identical;
+ * an empty or whitespace-only value is an error rather than a silent no-op,
+ * because a server exposing nothing looks exactly like a server the model
+ * ignored.
+ */
+function parseToolsFlag(argv: readonly string[]): readonly string[] | undefined {
+  for (let index = 0; index < argv.length; index += 1) {
+    const argument = argv[index];
+    const raw = argument === "--tools"
+      ? argv[index + 1]
+      : argument?.startsWith("--tools=") === true
+        ? argument.slice("--tools=".length)
+        : undefined;
+    if (raw === undefined) continue;
+
+    const ids = raw.split(",").map((id) => id.trim()).filter((id) => id.length > 0);
+    if (ids.length === 0) {
+      throw new Error("--tools requires at least one tool id, e.g. --tools get_code_context,get_impact_graph");
+    }
+    return ids;
+  }
+  return undefined;
 }
 
 async function serveMcpStdioSession(
