@@ -4,7 +4,13 @@ import os from "node:os";
 import path from "node:path";
 import { test } from "bun:test";
 
-import { applyVtracePatch, hasVtraceMcpPatch } from "./run_stage5_vexp_swe_bench_smoke";
+import {
+  applyVtracePatch,
+  hasDisallowedToolsPatch,
+  hasStreamPatch,
+  hasToolLoopGuardHookPatch,
+  hasVtraceMcpPatch,
+} from "./run_stage5_vexp_swe_bench_smoke";
 import {
   buildCallableAllowedTools,
   buildVtraceMcpConfig,
@@ -194,4 +200,24 @@ test("M162-B: a missing callable config fails loudly instead of silently running
     const config = JSON.parse(await readFile(harness.configCapturePath, "utf8"));
     assert.deepEqual(config, { mcpServers: {} });
   });
+});
+
+test("M162-B: the migration gate accounts for every optional patch block", async () => {
+  // Regression for the defect that invalidated the pilot's first CALLABLE arm:
+  // an adapter already carrying the older optional blocks returned early from
+  // migration, so the MCP block was never installed and the arm ran untooled.
+  // A treatment failure of that shape is indistinguishable from zero adoption
+  // in the results, which is why the gate is asserted rather than trusted.
+  const original = await readFile(path.join(VEXP_SRC, ADAPTER_RELATIVE), "utf8");
+  const withOlderBlocksOnly = applyVtracePatch(original).content
+    .replace(/\s*\/\/ STAGE5_VTRACE_MCP_PATCH begin[\s\S]*?\/\/ STAGE5_VTRACE_MCP_PATCH end\n/, "\n");
+
+  assert.equal(hasVtraceMcpPatch(withOlderBlocksOnly), false, "fixture must lack the MCP block");
+  assert.ok(hasStreamPatch(withOlderBlocksOnly), "fixture must carry the older blocks");
+  assert.ok(hasDisallowedToolsPatch(withOlderBlocksOnly));
+  assert.ok(hasToolLoopGuardHookPatch(withOlderBlocksOnly));
+
+  const remigrated = applyVtracePatch(withOlderBlocksOnly);
+  assert.ok(remigrated.changed, "an adapter missing only the MCP block must still be re-patched");
+  assert.ok(hasVtraceMcpPatch(remigrated.content), "the MCP block must be migrated in");
 });

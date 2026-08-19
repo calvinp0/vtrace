@@ -9065,6 +9065,7 @@ export function applyVtracePatch(content: string): { content: string; changed: b
   // append duplicate flags.
   if (!hasVtraceMcpPatch(next) && next.indexOf(VTRACE_PATCH_ANCHOR) !== -1) {
     next = insertAfterAnchor(next, VTRACE_PATCH_ANCHOR, buildVtraceMcpPatchBlock());
+    changed = true;
   }
 
   if (!hasToolLoopGuardHookPatch(next) && next.indexOf(VTRACE_DISALLOWED_TOOLS_ANCHOR) !== -1) {
@@ -9248,7 +9249,16 @@ async function assertVtracePatchInstalled(config: CliConfig): Promise<void> {
 // pristine original from the instructions install is preserved). Never throws —
 // telemetry / read-only enforcement must not fail the Stage 5 run.
 async function migrateOptionalPatchesIfMissing(target: string, content: string): Promise<void> {
-  if (hasStreamPatch(content) && hasDisallowedToolsPatch(content) && hasToolLoopGuardHookPatch(content)) return;
+  // EVERY optional block must be listed here. An adapter carrying the older
+  // three returned early before M162, so the callable MCP block was never
+  // migrated in and the CALLABLE arm silently ran with no tools at all — a
+  // treatment failure that looks exactly like zero tool adoption.
+  if (
+    hasStreamPatch(content)
+    && hasDisallowedToolsPatch(content)
+    && hasToolLoopGuardHookPatch(content)
+    && hasVtraceMcpPatch(content)
+  ) return;
   try {
     const { content: patched, changed } = applyVtracePatch(content);
     if (!changed) {
