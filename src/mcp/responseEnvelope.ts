@@ -514,6 +514,11 @@ function compactMandatoryProductMetadata(
       stableId: strongest.stableId ?? null,
       path: strongest.path ?? null,
       symbol: strongest.symbol ?? null,
+      // Canonical indexed identity survives even the last-resort compaction: it
+      // is the only field in this projection that is directly usable as a
+      // follow-up tool argument, so dropping it would leave a compacted response
+      // describing a symbol the agent can no longer ask about.
+      fqName: strongest.fqName ?? null,
       roles: strongest.roles ?? [],
       contentMode: strongest.contentMode ?? null,
       estimatedTokens: strongest.estimatedTokens ?? 0,

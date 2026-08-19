@@ -2737,3 +2737,87 @@ clean.
   *identical* two files, with identical search counts. A 1-1 split reads as "a wash"
   and would have been reported as one; only opening both transcripts showed neither
   had anything to do with context.
+
+## M162-A — Callable agent surface audit and composition repair (commit pending)
+
+Verdict **PASS** for workstream A; M162 overall **IN PROGRESS** (B/C/D/E open).
+
+M161 left one question: was the flat pass-rate a limit of VTRACE's repository
+intelligence, or of the static-injection architecture that delivered it? M162
+tests the second by exposing VTRACE as callable tools. A audits what is
+actually callable and freezes the set.
+
+**Frozen set: `get_code_context` + `get_impact_graph`.** Read out of the live
+registry in-process and probed over real JSON-RPC against `vtrace mcp-serve` —
+14 tools visible, 7 hidden, all `wired`/`engine_delegate`. Every exclusion has a
+stated capability reason: `run_pipeline` and `get_context_capsule` are the same
+capsule pipeline behind different doors, `search_logic_flow` and `get_skeleton`
+are deferred, index/setup tools are infrastructure, session/memory tools are
+state (one of them a write surface), and `search_symbols` stays hidden.
+
+**CALLABLE does not start at zero VTRACE tokens.** The full visible surface
+costs ~5,521 schema tokens, carried in the prompt prefix every turn — the same
+mechanism that cancelled M161's efficiency gains. The frozen set costs 1,937,
+plus 128 for the routing policy: **2,065 tokens is CALLABLE's turn-0 cost**, and
+the figure STATIC's capsule must be compared against.
+
+**The two tools did not compose, and that was nearly invisible.**
+`get_impact_graph` resolves `path/file.py::Class.method`; nothing
+`get_code_context` showed an agent was a valid argument. Headers rendered
+`path::localName`, `leadPivot` emitted a doubly path-prefixed string that
+resolved nowhere, and the canonical value reached the response only nested under
+`metadata`. Module-level functions and classes masked it because their local
+name equals their qualified name — it bit **methods**, which is what SWE-bench
+tasks edit. Repaired under the wiring-defect exception as one canonical identity
+path sourced from the existing `fqName` authority, never synthesized at
+serialization time. Retrieval proved unchanged: all 50 evaluator case rows and
+every comparison artifact byte-identical after stripping wall-clock timing
+(`stage5_m162_retrieval_no_change_proof.json`).
+
+**Routing moved out of an adjective into one authoritative policy.**
+`get_code_context` shipped as the "default first-pass" tool; routing hidden in a
+tool's adjectives is neither reviewable nor removable. `VTRACE_TOOL_SUITE_POLICY`
+is now served on `initialize`, hashed into the freeze, and holds one line: it may
+say when a capability applies, and may not constrain the agent's own
+investigation. The five historical Stage 5 policy blocks stay excluded, and the
+scanner has a known-positive test proving it fires on the historical VEXP
+scaffold.
+
+`bun test` 5001 pass / 49 skip / 0 fail; both typechecks and `git diff --check`
+clean. Frozen `toolSetSha256=b5c871e9…`.
+
+## M162-A standing findings
+
+- **Tool schemas are a static context tax, not free.** Every exposed tool's
+  name, description, and schema sits in the prompt prefix and is re-read each
+  turn, exactly like an injected capsule. A "callable" arm that exposes a full
+  tool surface has not removed the static-context tax M161 identified — it has
+  renamed it. Any future efficiency claim must count schema and policy tokens
+  alongside tool-result tokens.
+
+- **An identifier that looks valid is worse than one that is obviously
+  wrong.** The capsule's most copyable string was a well-formed FQN that
+  resolved nowhere, and the failure was confined to nested symbols, so the two
+  shapes anyone would test by hand — a module-level function and a class — both
+  worked. Composition between tools needs its own control; testing each tool
+  alone would never have found this.
+
+- **A defect at a seam can silently make a null result uninterpretable.** Had
+  the pilot run against the broken contract and returned NEUTRAL, "interaction
+  architecture does not help" would have been indistinguishable from "the agent
+  could not ask the second question." Verifying that composition works is a
+  precondition for the experiment meaning anything, not a polish step.
+
+- **Routing guidance and investigation constraints are different things and
+  must be stored in different places.** The historical scaffolds conflated them,
+  which is why every prior Stage 5 arm measured evidence plus prompt
+  engineering. Stating when a capability applies is discoverability; telling an
+  agent not to grep or to patch first is coercion. Keeping routing in one
+  hashed, reviewable policy makes the distinction auditable instead of a
+  judgement call spread across fourteen descriptions.
+
+- **Stored indexes do not survive product evolution.** An M155-era workspace
+  index failed closed as `schema_incompatible` / `full_rebuild` rather than
+  answering. Fail-closed behaved correctly, but it means every pilot task must
+  rebuild its index at the frozen product SHA; reusing archived indexes would
+  yield `repo_not_ready`, not evidence.

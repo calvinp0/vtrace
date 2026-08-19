@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "milestone": "M162",
+  "workstream": "A",
+  "title": "Frozen M162 callable tool-schema manifest",
+  "productSha": "54e380ed6587b5dd91b969cc1495c5c5edc5ffbb",
+  "treeClean": false,
+  "toolSetSha256": "b5c871e92e9ed51fd1a38cd4430c6e973df2a872d2995b8c6eebb2983a240db3",
+  "tools": [
+    {
+      "toolId": "get_code_context",
+      "descriptionSha256": "f5c0b328fee9f0ac7ecf2c9cee7be9e680b5a656c50bdec514e1cf06948c4540",
+      "inputSchemaSha256": "c120d05d7cd1e5c7d05422ca8511c1efe0cedbc7b8485a35e97d766b6ee5eee4",
+      "listedToolSha256": "cdbc7c4adc2dfc635749722d4a7c3d4891ebfc89b5f251c80add4a52c4f674a9",
+      "schemaChars": 4692
+    },
+    {
+      "toolId": "get_impact_graph",
+      "descriptionSha256": "8b5b301da6b43c645320d49cf69d2053e9db62bf7675ab086c1111f8f7f1e987",
+      "inputSchemaSha256": "5684301accfdc5a8feca62a6c2f733379bfd6839cc3f9ac6ceef12ccec5ef0c5",
+      "listedToolSha256": "e10f12e5d448215c5b2d6d922d3d9aba42cb3b9ff744872739a29dc850ca999d",
+      "schemaChars": 3055
+    }
+  ],
+  "suitePolicy": {
+    "sha256": "6b7fc159f93dc6298958c86ceafa0db222aa0c2192a189000bd6d09144daec8c",
+    "chars": 509,
+    "estimatedTokens": 128,
+    "policyFlags": [],
+    "text": "Repository-intelligence workflow:\n\n- Use get_code_context as the initial repository-orientation tool for\n  coding/debugging/refactoring tasks.\n\n- Use get_impact_graph when considering a specific symbol change and\n  caller/dependent/blast-radius evidence would help. Pass the canonical\n  identity returned as get_code_context items[].fqName.\n\n- VTRACE results are selective evidence, not proof that omitted code\n  does not exist. Ordinary repository tools remain available and should\n  be used whenever useful.",
+    "servedOn": "initialize.result.instructions"
+  },
+  "totalSchemaTokens": 1937,
+  "totalStaticTokens": 2065,
+  "mcpServer": {
+    "transport": "stdio",
+    "command": "vtrace mcp-serve --repo <task-workspace>",
+    "protocolVersion": "2024-11-05",
+    "serverId": "vtrace_rc1_mcp",
+    "note": "The server is repo-bound at startup; repo_root additionally selects a linked worktree per call. Both are recorded per invocation so routing is provable rather than assumed."
+  }
+}

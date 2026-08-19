@@ -28,6 +28,18 @@ export interface ProductContextItem {
   stableId: string;
   path?: string;
   symbol?: string;
+  /**
+   * Canonical indexed symbol identity, e.g. `pkg/core.py::PriceEngine.apply_discount`.
+   *
+   * This is the SAME string the index stores and the same string
+   * `get_impact_graph`/`search_logic_flow` resolve, so a non-null value here is
+   * directly usable as those tools' symbol argument. It is absent — truthfully —
+   * for document, memory, and rule items, which are not indexed code symbols.
+   *
+   * `symbol` remains the bare local name (`apply_discount`) and is NOT a valid
+   * lookup key for a nested symbol; prefer this field when composing tool calls.
+   */
+  fqName?: string;
   roles: ProductContextRole[];
   contentMode: ProductContextContentMode;
   lineSpan?: { start: number; end: number };

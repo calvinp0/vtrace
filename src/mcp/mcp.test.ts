@@ -40,7 +40,7 @@ import { REPO_LOCAL_STATE_DIRNAME } from "../setup/types";
 import { resolveWorkspaceConfigPath } from "../workspace/config";
 import { createMcpToolRegistry } from "./registry";
 import { createMcpServer, createMcpServerContext } from "./server";
-import { createRepoBoundMcpServer, startMcpServer } from "./startServer";
+import { createRepoBoundMcpServer, startMcpServer, VTRACE_TOOL_SUITE_POLICY } from "./startServer";
 import {
   LEGACY_MCP_TOOL_DEFINITIONS,
   RESERVED_MCP_TOOL_DEFINITIONS,
@@ -204,8 +204,34 @@ test("MCP tool vocabulary and metadata are explicit and stable", () => {
   const getCodeContext = RESERVED_MCP_TOOL_METADATA.find((tool) => tool.toolId === McpToolId.GetCodeContext);
   assert.notEqual(getCodeContext, undefined);
   const description = getCodeContext!.description.toLowerCase();
-  for (const word of ["code", "context", "default", "broad", "debugging", "refactor"]) {
+
+  // Capability vocabulary: the description must still say what the tool is for.
+  // Neutral is not the same as vague, and a description an agent cannot route on
+  // would depress adoption for a reason that has nothing to do with retrieval.
+  for (const word of ["code", "context", "orientation", "evidence", "debugging", "refactor"]) {
     assert.match(description, new RegExp(`\\b${word}\\b`));
+  }
+
+  // M162: routing lives in the authoritative tool-suite policy served on
+  // `initialize`, not in an individual tool's adjectives. Individual descriptions
+  // must not rank themselves against the agent's other tools, and must never
+  // constrain the agent's own investigation.
+  for (const phrase of [
+    "default first-pass",
+    "first-pass",
+    "use this first",
+    "start with",
+    "before grep",
+    "primary tool",
+    "do not use grep",
+    "must use",
+    "patch immediately",
+    "mandatory",
+  ]) {
+    assert.ok(
+      !description.includes(phrase),
+      `get_code_context description must not carry usage-priority/coercive language: "${phrase}"`,
+    );
   }
 });
 
@@ -410,7 +436,9 @@ test("local MCP server process starts for an initialized repo and exposes wired 
           name: "vtrace_rc1_mcp",
           version: "1.0.0",
         },
-        instructions: `Repo-bound vtrace MCP server for ${repoRoot}. Use tools/list to inspect available tools.`,
+        // M162: the authoritative agent-facing routing policy is served here, in
+        // one reviewable place, rather than distributed across tool adjectives.
+        instructions: `Repo-bound vtrace MCP server for ${repoRoot}. Use tools/list to inspect available tools.\n\n${VTRACE_TOOL_SUITE_POLICY}`,
       },
     });
     assert.deepEqual(

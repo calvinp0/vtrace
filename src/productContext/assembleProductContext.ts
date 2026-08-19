@@ -392,6 +392,7 @@ function sourceDraft(db: Database, item: CapsuleV2ProductItem, roles: ProductCon
     roleOrder,
     path: item.path,
     symbol: item.symbol,
+    ...(item.fqName ? { fqName: item.fqName } : {}),
     roles,
     contentMode,
     ...(symbol
@@ -498,10 +499,11 @@ function addImpactEvidence(db: Database, repoRoot: string, pivots: readonly Caps
       const content = `${relationEvidence.kind.toUpperCase()} ${node.fqName}${sourceLine === undefined ? "" : ` at ${node.filePath}:${sourceLine}`} [${relationEvidence.strength}]`;
       if (impactCharacters + content.length > MAX_TOTAL_IMPACT_CHARS) return;
       drafts.push({
-        identity: `${node.filePath}::${node.fqName}`,
+        identity: itemIdentity({ path: node.filePath, symbol: node.localName, fqName: node.fqName }),
         roleOrder: nextOrder(),
         path: node.filePath,
         symbol: node.localName,
+        ...(node.fqName ? { fqName: node.fqName } : {}),
         roles: ["impact"],
         contentMode: "summary",
         ...(symbol ? { lineSpan: { start: symbol.startLine, end: symbol.endLine } } : {}),
@@ -659,11 +661,30 @@ function assignDisplayIds(items: Array<DraftItem & { stableId: string; estimated
   });
 }
 
+/**
+ * The identifier shown in an item's rendered header.
+ *
+ * Headers are the strings an agent copies when it wants to ask a follow-up
+ * question about a symbol, so they must be the canonical indexed identity when
+ * one exists. Rendering `path::localName` instead was silently wrong for every
+ * nested symbol: `pkg/core.py::apply_discount` looks like a valid FQN but
+ * resolves nowhere, because the indexed identity is
+ * `pkg/core.py::PriceEngine.apply_discount`.
+ *
+ * Non-symbol items keep their previous path/type header — there is no canonical
+ * symbol identity to show and none is invented.
+ */
+function itemHeaderIdentifier(item: Pick<ProductContextItem, "path" | "symbol" | "fqName" | "metadata">): string {
+  if (item.fqName) return item.fqName;
+  const base = item.path ?? (typeof item.metadata?.type === "string" ? item.metadata.type : "context");
+  return item.symbol ? `${base}::${item.symbol}` : base;
+}
+
 function renderModelVisibleContext(task: string, worktreeId: string, intent: string, mode: string, items: ProductContextItem[]): string {
   if (items.length === 0) return "";
   const lines = ["# VTRACE product context", `task: ${task}`, `intent: ${intent}`, `worktree: ${worktreeId}`, `capsule_mode: ${mode}`];
   for (const item of items) {
-    lines.push("", `## [${item.id}] ${item.path ?? item.metadata?.type ?? "context"}${item.symbol ? `::${item.symbol}` : ""}`);
+    lines.push("", `## [${item.id}] ${itemHeaderIdentifier(item)}`);
     lines.push(`roles: ${item.roles.join(", ")}`, `mode: ${item.contentMode}`);
     if (item.lineSpan) lines.push(`lines: ${item.lineSpan.start}-${item.lineSpan.end}`);
     for (const reason of item.selectionReasons) lines.push(`why: ${reason}`);
@@ -735,7 +756,25 @@ function isDocumentationPath(filePath: string): boolean {
   return /(^|\/)(docs?|documentation|examples?)(\/|$)|\.(md|mdx|rst)$/iu.test(filePath);
 }
 
-function itemIdentity(item: CapsuleV2ProductItem): string { return `${item.path}::${item.fqName || item.symbol}`; }
+/**
+ * The one canonical identity for an assembled item.
+ *
+ * `fqName` as produced by the indexer ALREADY embeds the file path
+ * (`pkg/core.py::PriceEngine.apply_discount`) and is the key
+ * `listSymbolsByFqName` resolves against, so it is used verbatim. The previous
+ * implementation prefixed the path onto it a second time, yielding
+ * `pkg/core.py::pkg/core.py::PriceEngine.apply_discount` — a string that
+ * resolved nowhere and that leaked out as `leadPivot`.
+ *
+ * The `path::symbol` fallback is retained for items that genuinely have no
+ * indexed symbol identity (documents, memory, rules). Nothing is synthesized:
+ * when canonical identity exists it is used, and when it does not, no FQN is
+ * invented for it.
+ */
+function itemIdentity(item: Pick<CapsuleV2ProductItem, "path" | "symbol" | "fqName">): string {
+  if (item.fqName) return item.fqName;
+  return item.symbol ? `${item.path}::${item.symbol}` : item.path;
+}
 function compact(value: string, max: number): string { const text = value.replace(/\s+/gu, " ").trim(); return text.length > max ? `${text.slice(0, max - 1)}…` : text; }
 function hash(value: string): string { return createHash("sha256").update(value).digest("hex"); }
 function unique<T>(values: readonly T[]): T[] { return [...new Set(values)]; }

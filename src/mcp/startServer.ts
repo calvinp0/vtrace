@@ -76,6 +76,39 @@ interface HeaderTerminator {
   readonly length: number;
 }
 
+/**
+ * The one authoritative agent-facing routing policy for the vtrace tool suite.
+ *
+ * Routing semantics belong here, stated once and visibly, rather than smuggled
+ * into an individual tool's adjectives ("the default first-pass tool") where
+ * they are neither reviewable nor measurable. Two rules govern its content:
+ *
+ *  - It may say WHEN a capability is applicable, because a suite of specialized
+ *    tools is not discoverable without that.
+ *  - It may NOT constrain the agent's own investigation. No "do not grep", no
+ *    "patch immediately", no search budgets. Those suppress the ordinary work we
+ *    need to keep measurable, and they are what made historical scaffolds
+ *    measure prompt engineering rather than repository intelligence.
+ *
+ * The closing sentence is load-bearing in the other direction: it states that
+ * ordinary repository tools remain available, so the policy cannot be read as
+ * discouraging them.
+ */
+export const VTRACE_TOOL_SUITE_POLICY = [
+  "Repository-intelligence workflow:",
+  "",
+  "- Use get_code_context as the initial repository-orientation tool for",
+  "  coding/debugging/refactoring tasks.",
+  "",
+  "- Use get_impact_graph when considering a specific symbol change and",
+  "  caller/dependent/blast-radius evidence would help. Pass the canonical",
+  "  identity returned as get_code_context items[].fqName.",
+  "",
+  "- VTRACE results are selective evidence, not proof that omitted code",
+  "  does not exist. Ordinary repository tools remain available and should",
+  "  be used whenever useful.",
+].join("\n");
+
 export interface RepoBoundMcpServerStartup {
   readonly requestedPath: string;
   readonly repoRoot: string;
@@ -397,7 +430,7 @@ async function handleJsonRpcMessage(
               name: MCP_SERVER_ID,
               version: MCP_SERVER_SCHEMA.version,
             },
-            instructions: `Repo-bound vtrace MCP server for ${bound.startup.repoRoot}. Use tools/list to inspect available tools.`,
+            instructions: `Repo-bound vtrace MCP server for ${bound.startup.repoRoot}. Use tools/list to inspect available tools.\n\n${VTRACE_TOOL_SUITE_POLICY}`,
           },
         };
     case "notifications/initialized":

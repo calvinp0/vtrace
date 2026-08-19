@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "milestone": "M162",
+  "workstream": "A",
+  "title": "Retrieval no-change proof for the M162 canonical-identity repair",
+  "predecessorSha": "54e380ed6587b5dd91b969cc1495c5c5edc5ffbb",
+  "predecessorState": "HEAD with all M162 working-tree changes stashed (git stash --include-untracked)",
+  "candidateState": "HEAD plus the M162 canonical-identity repair and description changes, uncommitted",
+  "method": "The same product retrieval evaluator was run twice over the same immutable fixtures. Wall-clock timing fields are excluded from the comparison because they are non-deterministic; every other field is compared byte-for-byte after canonical JSON serialization.",
+  "whatThisProves": "Retrieval scoring, candidate generation, ranking, caps, and role selection are unchanged. The repair is confined to which identifier string is emitted and rendered for an already-selected item.",
+  "whatThisDoesNotProve": "Rendered model-visible text is INTENTIONALLY different: item headers now carry the canonical indexed identity instead of path::localName. That is the repair, and it is delivery, not retrieval.",
+  "comparisons": [
+    {
+      "artifact": "stage5_m122_product_retrieval_evaluation.json",
+      "identicalAfterTimingStrip": true,
+      "predecessorSha256": "9baeea417277823a59c58ba70d2fb2c0583742c35ffa2e43b39fb75bdd474ba4",
+      "candidateSha256": "9baeea417277823a59c58ba70d2fb2c0583742c35ffa2e43b39fb75bdd474ba4"
+    },
+    {
+      "artifact": "stage5_m122_product_legacy_comparison.json",
+      "identicalAfterTimingStrip": true,
+      "predecessorSha256": "8efc6c90ea1f2e4a5764ff9fbb2404fb0b963428d5b4671a565ce5413781636a",
+      "candidateSha256": "8efc6c90ea1f2e4a5764ff9fbb2404fb0b963428d5b4671a565ce5413781636a"
+    },
+    {
+      "artifact": "stage5_m122_compound_query_metamorphic.json",
+      "identicalAfterTimingStrip": true,
+      "predecessorSha256": "c1acdcd07224d654db7f75b3b073a38ab8adb74cb5db033b9586c204f924ecb1",
+      "candidateSha256": "c1acdcd07224d654db7f75b3b073a38ab8adb74cb5db033b9586c204f924ecb1"
+    },
+    {
+      "artifact": "stage5_m122_next_action_queue.json",
+      "identicalAfterTimingStrip": true,
+      "predecessorSha256": "77a89582a13ff700a6508725bc0d45b5149221192b723201ef71d49657a41011",
+      "candidateSha256": "77a89582a13ff700a6508725bc0d45b5149221192b723201ef71d49657a41011"
+    }
+  ],
+  "allIdenticalAfterTimingStrip": true,
+  "caseRowsCompared": 50,
+  "qualityMetricsUnchanged": true,
+  "decisionUnchanged": true,
+  "classificationsUnchanged": true,
+  "onlyDifferencesObserved": [
+    "wall-clock retrieval latency (median/p90), product and legacy lanes"
+  ],
+  "runnerDefectObserved": {
+    "defect": "run_stage5_m122_product_retrieval_eval.ts crashes in renderReport on `artifact.performance.all50` when the full 50-case performance block is absent for this invocation",
+    "blameless": true,
+    "evidence": "Reproduced identically on the predecessor tree with every M162 change stashed; the JSON artifacts are written before the crash, so the comparison above is unaffected.",
+    "action": "Recorded, not fixed: fixing it is outside the M162 scope and it does not affect the proof."
+  }
+}

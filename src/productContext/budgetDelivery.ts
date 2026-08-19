@@ -361,6 +361,19 @@ function materialize(item: MutableItem): JsonRecord {
   };
 }
 
+/**
+ * Mirror of the assembly-layer header rule: prefer the canonical indexed
+ * identity so the header is a valid `get_impact_graph` argument. This path
+ * re-renders after budget compaction, so it must agree with the assembly layer
+ * or a compacted response would disagree with an uncompacted one.
+ */
+function headerIdentifier(item: MutableItem): string {
+  const fqName = typeof item.original.fqName === "string" ? item.original.fqName : undefined;
+  if (fqName) return fqName;
+  const base = item.path ?? "context";
+  return item.symbol ? `${base}::${item.symbol}` : base;
+}
+
 function render(product: JsonRecord, items: MutableItem[]): string {
   if (items.length === 0) return "";
   const repository = asRecord(product.repository);
@@ -370,7 +383,7 @@ function render(product: JsonRecord, items: MutableItem[]): string {
   const mode = typeof product.capsuleMode === "string" ? product.capsuleMode : "standard";
   const lines = ["# VTRACE product context", `task: ${task}`, `intent: ${intent}`, `worktree: ${worktree}`, `capsule_mode: ${mode}`];
   for (const item of items) {
-    lines.push("", `## [${item.id}] ${item.path ?? "context"}${item.symbol ? `::${item.symbol}` : ""}`);
+    lines.push("", `## [${item.id}] ${headerIdentifier(item)}`);
     lines.push(`roles: ${item.roles.join(", ")}`, `mode: ${item.contentMode}`);
     if (item.lineSpan !== undefined) lines.push(`lines: ${item.lineSpan.start}-${item.lineSpan.end}`);
     for (const reason of item.selectionReasons) lines.push(`why: ${reason}`);
