@@ -1327,6 +1327,29 @@ export const STAGE5_TOOL_LOOP_GUARD_HOOK_SKIPPED = "Stage5 tool-loop-guard runti
 // block at runtime. Purely observational (not load-bearing for treatment validity).
 export const STAGE5_TOOL_USE_DISCIPLINE_LOG = "Stage5 tool-use-discipline injected from";
 
+// Marker for the SEVENTH patch block (M163): it appends the task-level VTRACE
+// orientation trigger to the prompt when VTRACE_TASK_TRIGGER_FILE points at an
+// existing file. It is anchored on the INSTRUCTIONS block's end marker rather
+// than the shared anchor, because insert-after-anchor puts each new block ahead
+// of the previous one and the trigger has to be the LAST thing appended to the
+// prompt — an instruction about what to do first is worth little buried above
+// two other blocks.
+export const STAGE5_M163_TASK_TRIGGER_MARKER = "STAGE5_M163_TASK_TRIGGER_PATCH";
+
+// Stderr line the patched adapter logs when the trigger reaches the prompt.
+export const STAGE5_M163_TASK_TRIGGER_LOG = "Stage5 M163 task trigger injected from";
+
+// Stderr line logged when the env var is set but the file is unreadable. This is
+// the M162 lesson applied to the trigger: an arm whose treatment silently failed
+// to arrive is INDISTINGUISHABLE from an arm the agent ignored, and here it
+// would degrade TOOLS_TASK_TRIGGER into TOOLS_NEUTRAL_POLICY without any field
+// in the result row changing. The analyzer treats this line as invalidating.
+export const STAGE5_M163_TASK_TRIGGER_MISSING = "Stage5 M163 task trigger MISSING";
+
+// The prompt heading the trigger is appended under. Fixed text, so prompt-parity
+// diffing between the NEUTRAL and TRIGGER arms sees exactly one added section.
+export const STAGE5_M163_TASK_TRIGGER_HEADING = "## Repository-context orientation step";
+
 const VTRACE_PATCH_MANIFEST_FILENAME = "vtrace_patch_manifest.json";
 const VTRACE_PATCH_BACKUP_SUFFIX = ".stage5-vtrace-backup";
 
@@ -8371,6 +8394,15 @@ async function runCondition(
     stage5ToolUseDisciplineVersion: disciplineInjected ? STAGE5_TOOL_USE_DISCIPLINE_VERSION : null,
     stage5ToolUseDisciplineDisabledByFlag: config.disableToolUseDiscipline === true,
   };
+  // M163 task-trigger metadata, recorded for EVERY condition. The two arms that
+  // must NOT carry the trigger are then provably clean from their own artifacts
+  // rather than from the driver's intent, and a configured-but-unreadable trigger
+  // is visible as a treatment failure instead of masquerading as non-compliance.
+  const m163TriggerMeta = {
+    stage5M163TriggerFile: process.env.VTRACE_TASK_TRIGGER_FILE ?? null,
+    stage5M163TriggerInjected: result.stderr.includes(STAGE5_M163_TASK_TRIGGER_LOG),
+    stage5M163TriggerMissing: result.stderr.includes(STAGE5_M163_TASK_TRIGGER_MISSING),
+  };
   const meta = {
     condition,
     command: spec.command,
@@ -8380,6 +8412,7 @@ async function runCondition(
     instances,
     vtraceMethod: condition === "vtrace" ? config.vtraceMethod : null,
     ...toolUseDisciplineMeta,
+    ...m163TriggerMeta,
     ...vtraceMeta,
     ...toolLoopGuardMetaFields,
     ...costGuardMetaFields,
@@ -8972,6 +9005,39 @@ export function buildVtraceMcpPatchBlock(): string {
   ].join("\n");
 }
 
+// The SEVENTH inserted block (M163): append the task-level VTRACE orientation
+// trigger when VTRACE_TASK_TRIGGER_FILE names an existing file.
+//
+// A separate channel from VTRACE_AGENT_INSTRUCTIONS_FILE on purpose. That one is
+// bound to the capsule/context-policy path and is unset whenever context is not
+// injected — which is the configuration EVERY M163 arm runs under — so reusing it
+// would have coupled "did the trigger arrive" to "was a capsule injected". Its own
+// env var, marker and log line keep the trigger independently configurable,
+// independently verifiable, and fail-closed for the two arms that must NOT get it.
+export function buildM163TaskTriggerPatchBlock(): string {
+  return [
+    `        // ${STAGE5_M163_TASK_TRIGGER_MARKER} begin — local Stage 5 smoke patch (M163 trigger arm:`,
+    "        // append the task-level VTRACE orientation instruction as the LAST prompt section).",
+    "        if (process.env.VTRACE_TASK_TRIGGER_FILE) {",
+    "            const __stage5TriggerFile = process.env.VTRACE_TASK_TRIGGER_FILE;",
+    "            try {",
+    '                const { readFile: __stage5ReadTrigger } = await import("node:fs/promises");',
+    '                const __stage5TriggerText = await __stage5ReadTrigger(__stage5TriggerFile, "utf8");',
+    `                opts.prompt = \`\${opts.prompt}\\n\\n${STAGE5_M163_TASK_TRIGGER_HEADING}\\n\\n\${__stage5TriggerText}\`;`,
+    `                console.error(\`${STAGE5_M163_TASK_TRIGGER_LOG} \${__stage5TriggerFile}\`);`,
+    "            } catch (__stage5TriggerErr) {",
+    `                console.error(\`${STAGE5_M163_TASK_TRIGGER_MISSING}: \${__stage5TriggerErr instanceof Error ? __stage5TriggerErr.message : String(__stage5TriggerErr)}\`);`,
+    "            }",
+    "        }",
+    `        // ${STAGE5_M163_TASK_TRIGGER_MARKER} end`,
+    "",
+  ].join("\n");
+}
+
+export function hasM163TaskTriggerPatch(content: string): boolean {
+  return content.includes(STAGE5_M163_TASK_TRIGGER_MARKER);
+}
+
 export function hasVtraceMcpPatch(content: string): boolean {
   return content.includes(STAGE5_VTRACE_MCP_MARKER);
 }
@@ -9073,6 +9139,17 @@ export function applyVtracePatch(content: string): { content: string; changed: b
     changed = true;
   }
 
+  // M163 trigger block, anchored on the instructions block's END marker so it is
+  // appended to the prompt AFTER both the capsule slot and the shared anti-loop
+  // block. Every other block shares the `startMs` anchor and therefore stacks in
+  // reverse install order; this one must be last in execution, so it anchors on
+  // something that is by construction already below them.
+  const m163TriggerAnchor = `// ${STAGE5_VTRACE_PATCH_MARKER} end`;
+  if (!hasM163TaskTriggerPatch(next) && next.indexOf(m163TriggerAnchor) !== -1) {
+    next = insertAfterAnchor(next, m163TriggerAnchor, buildM163TaskTriggerPatchBlock());
+    changed = true;
+  }
+
   return { content: next, changed };
 }
 
@@ -9114,6 +9191,7 @@ export async function installVtracePatch(config: CliConfig): Promise<VtracePatch
   const hadInstructions = hasInstructionsPatch(original);
   const hadStream = hasStreamPatch(original);
   const hadDiscipline = hasToolUseDisciplinePatch(original);
+  const hadTrigger = hasM163TaskTriggerPatch(original);
   const { content: patched, changed } = applyVtracePatch(original);
   if (!changed) {
     notes.push("All patch blocks already present; left the file untouched (idempotent).");
@@ -9137,6 +9215,13 @@ export async function installVtracePatch(config: CliConfig): Promise<VtracePatch
     }
     if (!hadStream && !hasStreamPatch(patched)) {
       notes.push(`Stream-telemetry anchor ("${VTRACE_STREAM_ANCHOR}") not found; stream patch skipped.`);
+    }
+    if (!hadTrigger && hasM163TaskTriggerPatch(patched)) {
+      notes.push(
+        hadInstructions
+          ? `Migrated: added M163 task-trigger patch (${STAGE5_M163_TASK_TRIGGER_MARKER}) to an already-instructions-patched adapter.`
+          : `Installed M163 task-trigger patch (${STAGE5_M163_TASK_TRIGGER_MARKER}).`,
+      );
     }
     if (!hadDiscipline && hasToolUseDisciplinePatch(patched)) {
       notes.push(

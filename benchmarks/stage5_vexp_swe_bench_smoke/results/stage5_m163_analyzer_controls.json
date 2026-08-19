@@ -1,0 +1,103 @@
+{
+  "schemaVersion": 1,
+  "milestone": "M163",
+  "workstream": "B",
+  "title": "M163 free controls: protocol, delivery, analyzer",
+  "spend": "none — no live agent, no Docker",
+  "protocolControl": {
+    "fixture": "temporary two-symbol Python repo, initialized and indexed, removed afterwards",
+    "probes": [
+      {
+        "arm": "tools_only",
+        "exitCode": 0,
+        "toolNames": [
+          "get_code_context",
+          "get_impact_graph"
+        ],
+        "suitePolicyServed": false,
+        "instructionsChars": 101,
+        "instructionsSha256": "68c04ee89c1a91294005ed4a35ff06e15b2f6eead3cc31e6fe94cb66e4b77574"
+      },
+      {
+        "arm": "tools_neutral_policy",
+        "exitCode": 0,
+        "toolNames": [
+          "get_code_context",
+          "get_impact_graph"
+        ],
+        "suitePolicyServed": true,
+        "instructionsChars": 612,
+        "instructionsSha256": "3a3727671533f05699661642f320fd8bfeff0f79dcea1a089ea01d90f2a991a5"
+      },
+      {
+        "arm": "tools_task_trigger",
+        "exitCode": 0,
+        "toolNames": [
+          "get_code_context",
+          "get_impact_graph"
+        ],
+        "suitePolicyServed": true,
+        "instructionsChars": 612,
+        "instructionsSha256": "3a3727671533f05699661642f320fd8bfeff0f79dcea1a089ea01d90f2a991a5"
+      }
+    ],
+    "neutralAndTriggerServeIdenticalInstructions": true,
+    "toolsOnlyDiffersFromNeutral": true
+  },
+  "deliveryControl": {
+    "adapter": "/home/calvin/code/vexp-swe-bench/dist/agents/claude-code.js",
+    "triggerBlockPresent": true,
+    "triggerBlockIsLastPromptSection": true,
+    "blockOrder": [
+      "STAGE5_TOOL_USE_DISCIPLINE_PATCH",
+      "STAGE5_VTRACE_INSTRUCTIONS_PATCH",
+      "STAGE5_M163_TASK_TRIGGER_PATCH"
+    ],
+    "triggerFileMatchesFrozenText": true,
+    "triggerFileSha256": "99375ef39091d6caea17e2562c7f00d52359b88aea636bf0e6d7ac84964b69f4"
+  },
+  "analyzerControls": [
+    {
+      "id": "missing_arm_not_zero",
+      "defect": "M162 counted arms that had not run as 0 turns / 0 cost, pulling every median toward zero.",
+      "pass": true
+    },
+    {
+      "id": "not_run_is_not_available_unused",
+      "defect": "M162 labelled an arm that never executed AVAILABLE_UNUSED — the exact claim the milestone makes.",
+      "pass": true
+    },
+    {
+      "id": "unproven_availability_is_invalid",
+      "defect": "Zero calls without runtime evidence is unfalsifiable, so it may not be scored as non-adoption.",
+      "pass": true
+    },
+    {
+      "id": "adoption_denominator_excludes_non_runs",
+      "defect": "An adoption rate over all 12 tasks rather than over available runs understates adoption.",
+      "pass": true
+    },
+    {
+      "id": "empty_denominator_is_null_not_zero",
+      "defect": "A 0/0 adoption rate rendered as 0% reads as 'nobody adopted' when nothing was measured.",
+      "pass": true
+    },
+    {
+      "id": "cache_reads_inside_total_traffic",
+      "defect": "M162 found uncached tokens in the hundreds against ~1e6 cache reads; omitting them hides the term.",
+      "pass": true
+    },
+    {
+      "id": "trigger_noncompliance_is_measured_not_erased",
+      "defect": "A trigger-arm run that investigated first must be recorded, not treated as an unusable run.",
+      "pass": true
+    },
+    {
+      "id": "compliance_undefined_without_a_run",
+      "defect": "Compliance computed over an arm that did not run would invent a denominator.",
+      "pass": true
+    }
+  ],
+  "failures": [],
+  "status": "PASS"
+}

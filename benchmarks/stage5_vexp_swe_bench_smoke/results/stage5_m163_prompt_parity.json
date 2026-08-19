@@ -1,0 +1,64 @@
+{
+  "schemaVersion": 1,
+  "milestone": "M163",
+  "workstream": "A",
+  "title": "M163 prompt and policy parity controls",
+  "heldIdentical": [
+    "task prompt (SWE-bench problem statement)",
+    "external harness system prompt",
+    "agent version",
+    "model",
+    "ordinary tool inventory",
+    "VTRACE tool inventory (all three arms)",
+    "tool permissions",
+    "turn cap / cost cap / timeout",
+    "grader",
+    "dataset",
+    "environment and env guards",
+    "shared anti-loop tool-use-discipline block"
+  ],
+  "heldOff": [
+    "STAGE5_TOKEN_DISCIPLINE",
+    "PIVOT_CHECK",
+    "EDIT_GUARD",
+    "PATCH_VERIFY",
+    "context instruction block",
+    "static capsule injection (context policy: force-no-context on every arm)"
+  ],
+  "sharedAntiLoopBlockCaveat": "The shared tool-use-discipline block is injected identically into all three arms, exactly as in M162's three arms. It cancels in every A/B/C contrast. It is disclosed because it does contain mild anti-thrash wording, so 'no policy discourages search' is true of the DIFFERENCE between arms, not of the absolute prompt.",
+  "deltas": {
+    "TOOLS_ONLY -> TOOLS_NEUTRAL_POLICY": {
+      "added": [
+        "suite_policy"
+      ],
+      "removed": [],
+      "addedEstimatedTokens": 128
+    },
+    "TOOLS_NEUTRAL_POLICY -> TOOLS_TASK_TRIGGER": {
+      "added": [
+        "task_trigger"
+      ],
+      "removed": [],
+      "addedEstimatedTokens": 75
+    }
+  },
+  "toolInventoryIdenticalAcrossArms": true,
+  "allowListIdenticalAcrossArms": true,
+  "vtraceToolNames": [
+    "mcp__vtrace__get_code_context",
+    "mcp__vtrace__get_impact_graph"
+  ],
+  "ordinaryTools": [
+    "Edit",
+    "Write",
+    "Bash",
+    "Read",
+    "Glob",
+    "Grep",
+    "TodoWrite"
+  ],
+  "ladder": {
+    "ok": true,
+    "issues": []
+  }
+}

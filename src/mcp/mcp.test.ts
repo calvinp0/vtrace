@@ -40,7 +40,12 @@ import { REPO_LOCAL_STATE_DIRNAME } from "../setup/types";
 import { resolveWorkspaceConfigPath } from "../workspace/config";
 import { createMcpToolRegistry } from "./registry";
 import { createMcpServer, createMcpServerContext } from "./server";
-import { createRepoBoundMcpServer, startMcpServer, VTRACE_TOOL_SUITE_POLICY } from "./startServer";
+import {
+  buildMcpServerInstructions,
+  createRepoBoundMcpServer,
+  startMcpServer,
+  VTRACE_TOOL_SUITE_POLICY,
+} from "./startServer";
 import {
   LEGACY_MCP_TOOL_DEFINITIONS,
   RESERVED_MCP_TOOL_DEFINITIONS,
@@ -462,6 +467,86 @@ test("local MCP server process starts for an initialized repo and exposes wired 
         },
       ],
     );
+  });
+});
+
+// M163 apparatus: the policy ablation needs a condition in which the tools carry
+// nothing but their own schemas. These three tests pin the only two states the
+// flag can produce and, more importantly, pin that its ABSENCE changes nothing —
+// every existing invocation must stay byte-identical or M162's CALLABLE arm and
+// M163's NEUTRAL arm would not be the same treatment.
+test("initialize instructions default to identification plus the suite policy", () => {
+  const repoRoot = "/tmp/example-repo";
+
+  assert.equal(
+    buildMcpServerInstructions(repoRoot),
+    `Repo-bound vtrace MCP server for ${repoRoot}. Use tools/list to inspect available tools.\n\n${VTRACE_TOOL_SUITE_POLICY}`,
+  );
+  assert.equal(
+    buildMcpServerInstructions(repoRoot, { suitePolicy: true }),
+    buildMcpServerInstructions(repoRoot),
+  );
+});
+
+test("suitePolicy:false drops the policy and keeps the server identification", () => {
+  const repoRoot = "/tmp/example-repo";
+  const suppressed = buildMcpServerInstructions(repoRoot, { suitePolicy: false });
+
+  assert.equal(
+    suppressed,
+    `Repo-bound vtrace MCP server for ${repoRoot}. Use tools/list to inspect available tools.`,
+  );
+  // The model must still be able to tell WHICH repository answers, or the
+  // tools-only arm would be missing information the other arms have for a
+  // reason unrelated to policy.
+  assert.ok(suppressed.includes(repoRoot));
+  assert.ok(!suppressed.includes(VTRACE_TOOL_SUITE_POLICY));
+  assert.ok(!suppressed.includes("Repository-intelligence workflow"));
+});
+
+test("--no-suite-policy suppresses the served policy without changing the tool surface", async () => {
+  await withFixture(async (repoRoot) => {
+    await writeMcpFixtureRepo(repoRoot);
+    await initRepo({ repoPath: repoRoot });
+
+    const messages = [
+      {
+        jsonrpc: "2.0",
+        id: 1,
+        method: "initialize",
+        params: {
+          protocolVersion: "2024-11-05",
+          capabilities: {},
+          clientInfo: { name: "mcp-test", version: "1.0.0" },
+        },
+      },
+      { jsonrpc: "2.0", method: "notifications/initialized" },
+      { jsonrpc: "2.0", id: 2, method: "tools/list", params: {} },
+    ];
+    const args = ["--tools", "get_code_context,get_impact_graph"];
+
+    const withPolicy = runMcpServerProcessWithMessages(repoRoot, messages, args);
+    const withoutPolicy = runMcpServerProcessWithMessages(repoRoot, messages, [
+      ...args,
+      "--no-suite-policy",
+    ]);
+
+    const instructionsOf = (result: { responses: Record<string, unknown>[] }): string =>
+      ((result.responses[0]?.result ?? {}) as { instructions?: string }).instructions ?? "";
+    const toolNamesOf = (result: { responses: Record<string, unknown>[] }): string[] =>
+      (((result.responses[1]?.result ?? {}) as { tools?: Array<{ name: string }> }).tools ?? [])
+        .map((tool) => tool.name);
+
+    assert.equal(withPolicy.exitCode, 0);
+    assert.equal(withoutPolicy.exitCode, 0);
+    assert.ok(instructionsOf(withPolicy).includes(VTRACE_TOOL_SUITE_POLICY));
+    assert.ok(!instructionsOf(withoutPolicy).includes(VTRACE_TOOL_SUITE_POLICY));
+
+    // The whole point of the arm: identical callable surface, different policy.
+    // If the flag also changed which tools were served, A-vs-B would be
+    // measuring availability again instead of policy.
+    assert.deepEqual(toolNamesOf(withoutPolicy), ["get_code_context", "get_impact_graph"]);
+    assert.deepEqual(toolNamesOf(withoutPolicy), toolNamesOf(withPolicy));
   });
 });
 
@@ -5479,13 +5564,14 @@ function encodeLineJson(
 function runMcpServerProcessWithMessages(
   repoRoot: string,
   messages: readonly Record<string, unknown>[],
+  extraArgs: readonly string[] = [],
 ): {
   exitCode: number | null;
   stderr: string;
   responses: Record<string, unknown>[];
 } {
   const input = Buffer.concat(messages.map(encodeLineJson));
-  const child = spawnSync(process.execPath, ["src/mcp/server.ts", "--repo", repoRoot], {
+  const child = spawnSync(process.execPath, ["src/mcp/server.ts", "--repo", repoRoot, ...extraArgs], {
     cwd: process.cwd(),
     input,
     stdio: ["pipe", "pipe", "pipe"],

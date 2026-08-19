@@ -35,6 +35,8 @@ const MCP_SERVER_USAGE = [
   "Setup and status tools work before init.",
   "Visible tool surface: setup/status tools, capsule wrappers, observation/session tools, and a few reserved placeholders.",
   "--tools restricts the MODEL-VISIBLE surface to the listed ids; unlisted tools stay registered but hidden.",
+  "--no-suite-policy omits the routing policy from the initialize instructions, leaving only server identification.",
+  "  Experimental apparatus for policy ablations. Absent (the default) serves the policy exactly as always.",
   "Docs: docs/getting_started.md and docs/mcp_tools.md",
   "",
 ].join("\n");
@@ -111,6 +113,30 @@ export const VTRACE_TOOL_SUITE_POLICY = [
   "  be used whenever useful.",
 ].join("\n");
 
+/**
+ * The `initialize` result's `instructions` string.
+ *
+ * Two parts with different jobs. The first sentence IDENTIFIES the server and
+ * is not policy: without it the model cannot tell which repository the tools
+ * answer about. The second part is VTRACE_TOOL_SUITE_POLICY, which tells the
+ * model WHEN each capability applies.
+ *
+ * `suitePolicy: false` drops only the second part. It exists because a policy
+ * ablation needs a condition where the tools carry nothing but their own
+ * schemas, and there is no other way to reach that state — the policy is served
+ * on initialize, not on any tool. It is apparatus, not a product mode: the
+ * default is unchanged and byte-identical, which the tests assert directly.
+ */
+export function buildMcpServerInstructions(
+  repoRoot: string,
+  options: { readonly suitePolicy?: boolean } = {},
+): string {
+  const identification = `Repo-bound vtrace MCP server for ${repoRoot}. Use tools/list to inspect available tools.`;
+  return options.suitePolicy === false
+    ? identification
+    : `${identification}\n\n${VTRACE_TOOL_SUITE_POLICY}`;
+}
+
 export interface RepoBoundMcpServerStartup {
   readonly requestedPath: string;
   readonly repoRoot: string;
@@ -122,6 +148,8 @@ export interface RepoBoundMcpServerStartup {
   readonly dbPath: string;
   readonly readiness: RepoReadiness | null;
   readonly toolIds: readonly string[];
+  /** Whether this server serves VTRACE_TOOL_SUITE_POLICY on initialize. */
+  readonly suitePolicyServed: boolean;
 }
 
 export interface RepoBoundMcpServer {
@@ -137,6 +165,12 @@ export interface CreateRepoBoundMcpServerOptions {
    * Omitted (the default) serves the full visible surface unchanged.
    */
   readonly visibleToolIds?: readonly string[];
+  /**
+   * Serve VTRACE_TOOL_SUITE_POLICY in the initialize instructions. Omitted or
+   * true (the default) is the unchanged behaviour; false leaves the server
+   * identification only. See buildMcpServerInstructions.
+   */
+  readonly serveSuitePolicy?: boolean;
 }
 
 export interface StartMcpServerOptions extends CreateRepoBoundMcpServerOptions {
@@ -184,6 +218,7 @@ export async function createRepoBoundMcpServer(
       dbPath,
       readiness: state === undefined ? null : structuredClone(state.readiness),
       toolIds: server.listTools().map((tool) => tool.toolId),
+      suitePolicyServed: options.serveSuitePolicy !== false,
     },
   };
 }
@@ -223,6 +258,7 @@ export async function runMcpServerCli(
     await startMcpServer({
       repoPath: parsed.repoPath,
       ...(parsed.visibleToolIds === undefined ? {} : { visibleToolIds: parsed.visibleToolIds }),
+      ...(parsed.serveSuitePolicy === false ? { serveSuitePolicy: false } : {}),
       stdin: io.stdin ?? process.stdin,
       stdout,
       stderr,
@@ -237,12 +273,21 @@ export async function runMcpServerCli(
 
 function parseMcpServerArgs(
   argv: readonly string[],
-): { help: true } | { help: false; repoPath: string; visibleToolIds?: readonly string[] } {
+): { help: true } | {
+  help: false;
+  repoPath: string;
+  visibleToolIds?: readonly string[];
+  serveSuitePolicy?: boolean;
+} {
   if (argv.length === 0 || argv.includes("--help") || argv.includes("-h")) {
     return { help: true };
   }
 
   const visibleToolIds = parseToolsFlag(argv);
+  // Present-means-off. A value-taking flag would let `--suite-policy off` and
+  // `--suite-policy=off` disagree with each other silently, and a silently
+  // wrong policy condition is the one defect a policy ablation cannot survive.
+  const serveSuitePolicy = argv.includes("--no-suite-policy") ? false : undefined;
 
   for (let index = 0; index < argv.length; index += 1) {
     const argument = argv[index];
@@ -258,6 +303,7 @@ function parseMcpServerArgs(
         help: false,
         repoPath,
         ...(visibleToolIds === undefined ? {} : { visibleToolIds }),
+        ...(serveSuitePolicy === undefined ? {} : { serveSuitePolicy }),
       };
     }
 
@@ -272,6 +318,7 @@ function parseMcpServerArgs(
         help: false,
         repoPath,
         ...(visibleToolIds === undefined ? {} : { visibleToolIds }),
+        ...(serveSuitePolicy === undefined ? {} : { serveSuitePolicy }),
       };
     }
   }
@@ -471,7 +518,9 @@ async function handleJsonRpcMessage(
               name: MCP_SERVER_ID,
               version: MCP_SERVER_SCHEMA.version,
             },
-            instructions: `Repo-bound vtrace MCP server for ${bound.startup.repoRoot}. Use tools/list to inspect available tools.\n\n${VTRACE_TOOL_SUITE_POLICY}`,
+            instructions: buildMcpServerInstructions(bound.startup.repoRoot, {
+              suitePolicy: bound.startup.suitePolicyServed,
+            }),
           },
         };
     case "notifications/initialized":

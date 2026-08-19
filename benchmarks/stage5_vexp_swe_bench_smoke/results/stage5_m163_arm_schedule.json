@@ -1,0 +1,124 @@
+{
+  "schemaVersion": 1,
+  "milestone": "M163",
+  "workstream": "A",
+  "title": "M163 three-arm execution schedule",
+  "rule": "Arm order rotates with task position; each arm leads exactly a third of the tasks.",
+  "armLeadCounts": {
+    "TOOLS_ONLY": 4,
+    "TOOLS_NEUTRAL_POLICY": 4,
+    "TOOLS_TASK_TRIGGER": 4
+  },
+  "totalArms": 36,
+  "schedule": [
+    {
+      "order": 1,
+      "instanceId": "sympy__sympy-13798",
+      "armOrder": [
+        "TOOLS_ONLY",
+        "TOOLS_NEUTRAL_POLICY",
+        "TOOLS_TASK_TRIGGER"
+      ]
+    },
+    {
+      "order": 2,
+      "instanceId": "django__django-11451",
+      "armOrder": [
+        "TOOLS_NEUTRAL_POLICY",
+        "TOOLS_TASK_TRIGGER",
+        "TOOLS_ONLY"
+      ]
+    },
+    {
+      "order": 3,
+      "instanceId": "sphinx-doc__sphinx-7440",
+      "armOrder": [
+        "TOOLS_TASK_TRIGGER",
+        "TOOLS_ONLY",
+        "TOOLS_NEUTRAL_POLICY"
+      ]
+    },
+    {
+      "order": 4,
+      "instanceId": "scikit-learn__scikit-learn-14087",
+      "armOrder": [
+        "TOOLS_ONLY",
+        "TOOLS_NEUTRAL_POLICY",
+        "TOOLS_TASK_TRIGGER"
+      ]
+    },
+    {
+      "order": 5,
+      "instanceId": "sphinx-doc__sphinx-11445",
+      "armOrder": [
+        "TOOLS_NEUTRAL_POLICY",
+        "TOOLS_TASK_TRIGGER",
+        "TOOLS_ONLY"
+      ]
+    },
+    {
+      "order": 6,
+      "instanceId": "django__django-13343",
+      "armOrder": [
+        "TOOLS_TASK_TRIGGER",
+        "TOOLS_ONLY",
+        "TOOLS_NEUTRAL_POLICY"
+      ]
+    },
+    {
+      "order": 7,
+      "instanceId": "matplotlib__matplotlib-24177",
+      "armOrder": [
+        "TOOLS_ONLY",
+        "TOOLS_NEUTRAL_POLICY",
+        "TOOLS_TASK_TRIGGER"
+      ]
+    },
+    {
+      "order": 8,
+      "instanceId": "scikit-learn__scikit-learn-13496",
+      "armOrder": [
+        "TOOLS_NEUTRAL_POLICY",
+        "TOOLS_TASK_TRIGGER",
+        "TOOLS_ONLY"
+      ]
+    },
+    {
+      "order": 9,
+      "instanceId": "sympy__sympy-14976",
+      "armOrder": [
+        "TOOLS_TASK_TRIGGER",
+        "TOOLS_ONLY",
+        "TOOLS_NEUTRAL_POLICY"
+      ]
+    },
+    {
+      "order": 10,
+      "instanceId": "astropy__astropy-13977",
+      "armOrder": [
+        "TOOLS_ONLY",
+        "TOOLS_NEUTRAL_POLICY",
+        "TOOLS_TASK_TRIGGER"
+      ]
+    },
+    {
+      "order": 11,
+      "instanceId": "pydata__xarray-4966",
+      "armOrder": [
+        "TOOLS_NEUTRAL_POLICY",
+        "TOOLS_TASK_TRIGGER",
+        "TOOLS_ONLY"
+      ]
+    },
+    {
+      "order": 12,
+      "instanceId": "pytest-dev__pytest-7982",
+      "armOrder": [
+        "TOOLS_TASK_TRIGGER",
+        "TOOLS_ONLY",
+        "TOOLS_NEUTRAL_POLICY"
+      ]
+    }
+  ],
+  "scheduleHash": "487f81faa27197143576ebfe293fac6616cb2fd560ba414144863fbbf1141a3b"
+}

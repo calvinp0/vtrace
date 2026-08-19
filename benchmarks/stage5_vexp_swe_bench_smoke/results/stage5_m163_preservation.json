@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "milestone": "M163",
+  "workstream": "B",
+  "title": "M163 product preservation evidence",
+  "claim": "M163 makes no retrieval change. The single product edit is an apparatus flag on the MCP initialize instructions.",
+  "productFilesChanged": [
+    "src/mcp/startServer.ts",
+    "src/mcp/mcp.test.ts"
+  ],
+  "productSurfacesUnchanged": [
+    "indexing",
+    "retrieval",
+    "ranking",
+    "query interpretation",
+    "context selection",
+    "candidate generation",
+    "candidate bounds",
+    "support selection",
+    "tool result rendering",
+    "tool schemas",
+    "tool descriptions"
+  ],
+  "structuralEvidence": {
+    "srcDiffScope": "Only src/mcp/startServer.ts (and its test). No file under src/retrieval, src/capsuleV2, src/indexer, src/runPipeline, src/graph or src/mcp/tools.ts is touched.",
+    "defaultByteIdentical": "src/mcp/mcp.test.ts already asserted the exact default initialize.instructions string before M163. That assertion is unmodified and still passes, so every invocation that does not pass --no-suite-policy serves byte-identical instructions.",
+    "toolSurfaceUnchangedUnderTheFlag": "The M163-B protocol control started a REAL mcp-serve process per arm and observed the identical two-tool inventory in all three, with the policy present in two and absent in one. Recorded in stage5_m163_analyzer_controls.json.",
+    "neutralPolicyHashMatchesM162": "The neutral policy sha256 is 6b7fc159f93dc6298958c86ceafa0db222aa0c2192a189000bd6d09144daec8c, identical to the value M162 recorded in stage5_m162_tool_suite_policy_controls.json, so arm B's treatment is M162's CALLABLE treatment byte-for-byte."
+  },
+  "pairedRetrievalProofNotRun": {
+    "decision": "not run",
+    "why": "The provenance-aware paired evaluator exists for changes that could move retrieval. This change cannot: it alters one string in the MCP initialize response, behind a parameter whose default is asserted byte-identical. Running it would also not have produced usable evidence in this environment - see observedHarnessDefects.",
+    "whatWouldChangeThis": "Any edit under src/retrieval, src/capsuleV2, src/graph, src/indexer, src/runPipeline or src/mcp/tools.ts."
+  },
+  "observedHarnessDefects": [
+    {
+      "id": "m122_full_path_crash",
+      "where": "benchmarks/.../run_stage5_m122_product_retrieval_eval.ts renderReport",
+      "symptom": "TypeError: undefined is not an object (evaluating 'artifact.performance.all50')",
+      "cause": "The full evaluation path builds an artifact with no `performance` key; only --product-timings-only populates it, and renderReport dereferences it unconditionally.",
+      "effect": "The full path writes NOTHING: renderReport is evaluated while constructing the Promise.all argument list, so it throws before any file is written.",
+      "preExisting": true,
+      "actionTaken": "recorded, not fixed - M163 does not modify product or unrelated harness mid-milestone"
+    },
+    {
+      "id": "retrieval_eval_workspace_error",
+      "where": "run_stage5_retrieval_eval.ts with retrieval_eval.django.expanded.json",
+      "symptom": "0/20 evaluated; every row result=workspace_error",
+      "cause": "The fixture's referenced workspaces are not materialized in this checkout.",
+      "effect": "The canonical retrieval suites cannot serve as preservation evidence until their workspaces are rebuilt.",
+      "preExisting": true,
+      "actionTaken": "recorded, not fixed",
+      "relatedStandingFinding": "M155: the regression suite was index-blind since 2026-06-08"
+    }
+  ],
+  "provenance": {
+    "head": "536083103e1102c1c584729a8bcfc4571e874cbb",
+    "branch": "main"
+  }
+}
