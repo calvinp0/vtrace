@@ -175,6 +175,10 @@ function main(): void {
   const resultsDir = path.resolve("benchmarks/stage5_vexp_swe_bench_smoke/results");
   mkdirSync(resultsDir, { recursive: true });
   const streamPath = path.join(controlRoot, "gate1_stream.jsonl");
+  const nameIndex = argv.indexOf("--out-name");
+  const outputName = nameIndex !== -1 && argv[nameIndex + 1] !== undefined
+    ? argv[nameIndex + 1]!
+    : "stage5_m162_gate1_control.json";
 
   const indexPath = path.join(workspace, ".vtrace", "index.sqlite");
   const indexBefore = fingerprint(indexPath);
@@ -349,7 +353,10 @@ function main(): void {
     };
 
     writeFileSync(
-      path.join(resultsDir, "stage5_m162_gate1_control.json"),
+      // M163: the output name is a flag because rerunning this control at a later
+      // HEAD used to overwrite the earlier milestone's evidence in place, and a
+      // control that silently destroys its own predecessor cannot be compared to it.
+      path.join(resultsDir, outputName),
       `${JSON.stringify(artifact, null, 2)}\n`,
     );
 
