@@ -71,6 +71,26 @@ describe("result-state parsing", () => {
     expect(parseVtraceResponse("").state).toBe("TOOL_ERROR");
   });
 
+  test("unwraps the MCP envelope the LIVE runtime delivers", () => {
+    // Gate 1 attempt 1 scored a correct composition as failed because it read
+    // the tool result at the wrong depth: the live runtime records the server
+    // envelope, a direct stdio client does not.
+    const live = JSON.stringify({
+      schema: { name: "vtrace_rc1_mcp" },
+      requestId: "jsonrpc:1:get_code_context",
+      toolId: "get_code_context",
+      result: { ok: true, output: { productContext: { items: [{ path: "pkg/core.py", fqName: "pkg/core.py::PriceEngine.apply_discount" }] } } },
+    });
+    const parsed = parseVtraceResponse(live);
+    expect(parsed.state).toBe("VALID_NONEMPTY");
+    expect(parsed.fqNames).toEqual(["pkg/core.py::PriceEngine.apply_discount"]);
+  });
+
+  test("still parses the unwrapped shape a direct stdio client receives", () => {
+    const direct = contextOutput([{ path: "pkg/core.py", fqName: "pkg/core.py::A.b" }]);
+    expect(parseVtraceResponse(direct).fqNames).toEqual(["pkg/core.py::A.b"]);
+  });
+
   test("impact responses expose the resolved symbol", () => {
     const output = JSON.stringify({
       resolvedSymbol: { filePath: "pkg/core.py", fqName: "pkg/core.py::A.b" },

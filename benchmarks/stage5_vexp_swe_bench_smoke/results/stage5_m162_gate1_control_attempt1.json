@@ -1,0 +1,221 @@
+{
+  "schemaVersion": 1,
+  "milestone": "M162",
+  "gate": 1,
+  "title": "Real-agent known-positive control",
+  "purpose": "Infrastructure qualification only. Excluded from every M162-D denominator.",
+  "productSha": "95a737f05de5a65840855d68c78ab50b0d019cba",
+  "model": "claude-opus-4-5-20251101",
+  "workspace": "/home/calvin/bench/tmp/m162_gate1/repo",
+  "workspaceCommit": "066284c1bc9a41cdfa889bb8dca6eac9bf2518a7",
+  "mcpConfig": {
+    "mcpServers": {
+      "vtrace": {
+        "command": "bun",
+        "args": [
+          "/home/calvin/code/vtrace/src/cli/index.ts",
+          "mcp-serve",
+          "--repo",
+          "/home/calvin/bench/tmp/m162_gate1/repo",
+          "--tools",
+          "get_code_context,get_impact_graph"
+        ]
+      }
+    }
+  },
+  "allowedToolsPassed": [
+    "Edit",
+    "Write",
+    "Bash",
+    "Read",
+    "Glob",
+    "Grep",
+    "TodoWrite",
+    "mcp__vtrace__get_code_context",
+    "mcp__vtrace__get_impact_graph"
+  ],
+  "expectedVtraceToolNames": [
+    "mcp__vtrace__get_code_context",
+    "mcp__vtrace__get_impact_graph"
+  ],
+  "discovery": {
+    "note": "Runtime-reported names are the AUTHORITY; expectations are compared against them, never substituted for them.",
+    "runtimeToolCount": 34,
+    "runtimeTools": [
+      "Task",
+      "Bash",
+      "CronCreate",
+      "CronDelete",
+      "CronList",
+      "DesignSync",
+      "Edit",
+      "EnterWorktree",
+      "ExitWorktree",
+      "Glob",
+      "Grep",
+      "ListAgents",
+      "Monitor",
+      "NotebookEdit",
+      "PushNotification",
+      "Read",
+      "RemoteTrigger",
+      "ReportFindings",
+      "ScheduleWakeup",
+      "SendMessage",
+      "Skill",
+      "TaskCreate",
+      "TaskGet",
+      "TaskList",
+      "TaskOutput",
+      "TaskStop",
+      "TaskUpdate",
+      "ToolSearch",
+      "WebFetch",
+      "WebSearch",
+      "Workflow",
+      "Write",
+      "mcp__vtrace__get_code_context",
+      "mcp__vtrace__get_impact_graph"
+    ],
+    "runtimeMcpServers": [
+      {
+        "name": "vtrace",
+        "status": "connected"
+      }
+    ],
+    "discoveredVtraceTools": [
+      "mcp__vtrace__get_code_context",
+      "mcp__vtrace__get_impact_graph"
+    ]
+  },
+  "exchanges": [
+    {
+      "order": 1,
+      "name": "mcp__vtrace__get_code_context",
+      "input": {
+        "task": "gold tier discount is wrong when computing the order total"
+      },
+      "isError": false,
+      "responseChars": 21852,
+      "responseEstimatedTokens": 5463,
+      "responseHash": "b003b7df1bb9c23b6334971aa900b2dbca67ffc969160fa6715b98a5d88fe3ea"
+    },
+    {
+      "order": 2,
+      "name": "mcp__vtrace__get_impact_graph",
+      "input": {
+        "symbol_fqn": "pkg/core.py::PriceEngine.apply_discount"
+      },
+      "isError": false,
+      "responseChars": 8016,
+      "responseEstimatedTokens": 2004,
+      "responseHash": "14cc830aa7fe9deff04454f6f4de56f093d884fbbc7fca49171cec44b91ca362"
+    }
+  ],
+  "ordinaryToolCalls": [
+    {
+      "order": 0,
+      "name": "ToolSearch"
+    }
+  ],
+  "composition": {
+    "attempted": true,
+    "returnedFqNames": [],
+    "usedIdentifier": "pkg/core.py::PriceEngine.apply_discount",
+    "copiedVerbatimFromReturnedFqName": false,
+    "identifierIsMethod": true,
+    "impactResolved": true,
+    "contextBeforeImpact": true
+  },
+  "indexReadOnly": {
+    "before": {
+      "present": true,
+      "size": 212992,
+      "mtimeMs": 1787128366905.1816,
+      "sha256": "c1a06baf9b7f15c6e97f2b9b161956fd94f36ff571ce04be48a35056ea11c816"
+    },
+    "after": {
+      "present": true,
+      "size": 212992,
+      "mtimeMs": 1787128366905.1816,
+      "sha256": "c1a06baf9b7f15c6e97f2b9b161956fd94f36ff571ce04be48a35056ea11c816"
+    },
+    "writes": 0
+  },
+  "sessionIsolation": {
+    "serverLifetime": "one stdio process for this run, bound to this workspace at startup",
+    "sharedStateWithOtherRuns": false,
+    "sessionIsolationValid": true
+  },
+  "economics": {
+    "durationMs": 26034,
+    "costUsd": 0.29541799999999996,
+    "numTurns": 4,
+    "usage": {
+      "input_tokens": 36,
+      "cache_creation_input_tokens": 21245,
+      "cache_read_input_tokens": 114776,
+      "output_tokens": 1016,
+      "output_tokens_details": {
+        "thinking_tokens": 491
+      },
+      "server_tool_use": {
+        "web_search_requests": 0,
+        "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 21245,
+        "ephemeral_5m_input_tokens": 0
+      },
+      "inference_geo": "not_available",
+      "iterations": [
+        {
+          "input_tokens": 8,
+          "output_tokens": 270,
+          "cache_read_input_tokens": 37257,
+          "cache_creation_input_tokens": 3362,
+          "cache_creation": {
+            "ephemeral_5m_input_tokens": 0,
+            "ephemeral_1h_input_tokens": 3362
+          },
+          "type": "message"
+        }
+      ],
+      "speed": "standard"
+    }
+  },
+  "streamArtifact": {
+    "path": "/home/calvin/bench/tmp/m162_gate1/gate1_stream.jsonl",
+    "sha256": "ae2202146b18347c61d89127a0f67b9bf78aa34ccb56e0e5527e96fe93b19dbd",
+    "tracked": false
+  },
+  "assertions": {
+    "liveProcessStarted": true,
+    "exitedCleanly": true,
+    "mcpServerLoaded": true,
+    "vtraceToolsDiscovered": true,
+    "exactlyTwoVtraceTools": true,
+    "noOtherVtraceToolsLeaked": true,
+    "discoveredNamesMatchExpectation": true,
+    "allowedToolsPermittedBoth": true,
+    "agentCalledGetCodeContext": true,
+    "contextReturnedEvidence": true,
+    "agentCalledGetImpactGraph": true,
+    "identifierCopiedVerbatim": false,
+    "identifierWasAMethod": true,
+    "impactResolved": true,
+    "correctWorkspaceSelected": true,
+    "suitePolicyReachedRuntime": false,
+    "orderedTelemetryCapturedBothCalls": true,
+    "resultStatesCaptured": true,
+    "indexWritesZero": true
+  },
+  "allAssertionsPassed": false,
+  "failedAssertions": [
+    "identifierCopiedVerbatim",
+    "suitePolicyReachedRuntime"
+  ],
+  "exitCode": 0,
+  "stderrTail": ""
+}

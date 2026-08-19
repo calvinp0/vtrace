@@ -143,6 +143,31 @@ function hasDegradationSignal(value: unknown): boolean {
   return Object.values(record).some(hasDegradationSignal);
 }
 
+/**
+ * Unwrap the MCP response envelope the LIVE runtime delivers.
+ *
+ * A direct stdio JSON-RPC client receives the tool's own result, but the Claude
+ * runtime records the server envelope around it:
+ *
+ *   { schema, requestId, toolId, result: { ok, output: { productContext, ... } } }
+ *
+ * Gate 1 found this: the agent had correctly copied a canonical `fqName`, the
+ * impact call resolved, and the evaluator still scored the composition as
+ * failed because it read the wrong depth. Peeling defensively means the same
+ * parser serves offline probes and live transcripts, so a control can never
+ * again pass offline and silently misread production.
+ */
+function unwrapMcpEnvelope(parsed: Record<string, unknown>): Record<string, unknown> {
+  let current = parsed;
+  for (let depth = 0; depth < 4; depth += 1) {
+    if (current.productContext !== undefined || current.resolvedSymbol !== undefined) return current;
+    const next = (current.output ?? current.result) as Record<string, unknown> | undefined;
+    if (next === null || typeof next !== "object") return current;
+    current = next;
+  }
+  return current;
+}
+
 export interface ParsedVtraceResponse {
   readonly state: VtraceResultState;
   readonly itemCount: number;
@@ -176,23 +201,24 @@ export function parseVtraceResponse(output: unknown): ParsedVtraceResponse {
     return { state: "TOOL_ERROR", itemCount: 0, paths: [], fqNames: [] };
   }
 
-  const productContext = parsed.productContext as Record<string, unknown> | undefined;
+  const unwrapped = unwrapMcpEnvelope(parsed);
+  const productContext = unwrapped.productContext as Record<string, unknown> | undefined;
   const items = (productContext?.items ?? []) as Array<Record<string, unknown>>;
   const paths = items.map((item) => item.path).filter((value): value is string => typeof value === "string");
   const fqNames = items
     .map((item) => item.fqName)
     .filter((value): value is string => typeof value === "string" && value.length > 0);
 
-  const resolvedSymbol = parsed.resolvedSymbol as Record<string, unknown> | undefined;
-  const nodes = (parsed.nodes ?? []) as unknown[];
+  const resolvedSymbol = unwrapped.resolvedSymbol as Record<string, unknown> | undefined;
+  const nodes = (unwrapped.nodes ?? []) as unknown[];
   if (resolvedSymbol !== undefined) {
     const symbolPath = typeof resolvedSymbol.filePath === "string" ? [resolvedSymbol.filePath] : [];
     const symbolFq = typeof resolvedSymbol.fqName === "string" ? [resolvedSymbol.fqName] : [];
-    const state: VtraceResultState = hasDegradationSignal(parsed) ? "DEGRADED_VALID" : "VALID_NONEMPTY";
+    const state: VtraceResultState = hasDegradationSignal(unwrapped) ? "DEGRADED_VALID" : "VALID_NONEMPTY";
     return { state, itemCount: nodes.length, paths: symbolPath, fqNames: symbolFq };
   }
 
-  const degraded = hasDegradationSignal(parsed);
+  const degraded = hasDegradationSignal(unwrapped);
   if (items.length === 0) {
     return { state: degraded ? "DEGRADED_VALID" : "VALID_EMPTY", itemCount: 0, paths: [], fqNames: [] };
   }

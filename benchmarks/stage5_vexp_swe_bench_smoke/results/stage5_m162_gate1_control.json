@@ -1,0 +1,234 @@
+{
+  "schemaVersion": 1,
+  "milestone": "M162",
+  "gate": 1,
+  "title": "Real-agent known-positive control",
+  "purpose": "Infrastructure qualification only. Excluded from every M162-D denominator.",
+  "productSha": "95a737f05de5a65840855d68c78ab50b0d019cba",
+  "model": "claude-opus-4-5-20251101",
+  "workspace": "/home/calvin/bench/tmp/m162_gate1/repo",
+  "workspaceCommit": "066284c1bc9a41cdfa889bb8dca6eac9bf2518a7",
+  "mcpConfig": {
+    "mcpServers": {
+      "vtrace": {
+        "command": "bun",
+        "args": [
+          "/home/calvin/code/vtrace/src/cli/index.ts",
+          "mcp-serve",
+          "--repo",
+          "/home/calvin/bench/tmp/m162_gate1/repo",
+          "--tools",
+          "get_code_context,get_impact_graph"
+        ]
+      }
+    }
+  },
+  "allowedToolsPassed": [
+    "Edit",
+    "Write",
+    "Bash",
+    "Read",
+    "Glob",
+    "Grep",
+    "TodoWrite",
+    "mcp__vtrace__get_code_context",
+    "mcp__vtrace__get_impact_graph"
+  ],
+  "expectedVtraceToolNames": [
+    "mcp__vtrace__get_code_context",
+    "mcp__vtrace__get_impact_graph"
+  ],
+  "discovery": {
+    "note": "Runtime-reported names are the AUTHORITY; expectations are compared against them, never substituted for them.",
+    "runtimeToolCount": 34,
+    "runtimeTools": [
+      "Task",
+      "Bash",
+      "CronCreate",
+      "CronDelete",
+      "CronList",
+      "DesignSync",
+      "Edit",
+      "EnterWorktree",
+      "ExitWorktree",
+      "Glob",
+      "Grep",
+      "ListAgents",
+      "Monitor",
+      "NotebookEdit",
+      "PushNotification",
+      "Read",
+      "RemoteTrigger",
+      "ReportFindings",
+      "ScheduleWakeup",
+      "SendMessage",
+      "Skill",
+      "TaskCreate",
+      "TaskGet",
+      "TaskList",
+      "TaskOutput",
+      "TaskStop",
+      "TaskUpdate",
+      "ToolSearch",
+      "WebFetch",
+      "WebSearch",
+      "Workflow",
+      "Write",
+      "mcp__vtrace__get_code_context",
+      "mcp__vtrace__get_impact_graph"
+    ],
+    "runtimeMcpServers": [
+      {
+        "name": "vtrace",
+        "status": "connected"
+      }
+    ],
+    "discoveredVtraceTools": [
+      "mcp__vtrace__get_code_context",
+      "mcp__vtrace__get_impact_graph"
+    ]
+  },
+  "exchanges": [
+    {
+      "order": 1,
+      "name": "mcp__vtrace__get_code_context",
+      "input": {
+        "task": "gold tier discount is wrong when computing the order total"
+      },
+      "isError": false,
+      "responseChars": 22432,
+      "responseEstimatedTokens": 5608,
+      "responseHash": "756a5db144f3b3778b1e321e06fd14a7f979626068c39e810e6982ba5d4d8fe2"
+    },
+    {
+      "order": 2,
+      "name": "mcp__vtrace__get_impact_graph",
+      "input": {
+        "symbol_fqn": "pkg/core.py::PriceEngine.apply_discount"
+      },
+      "isError": false,
+      "responseChars": 8017,
+      "responseEstimatedTokens": 2005,
+      "responseHash": "aac1e35972663585e26fe32897500e61ff19f57eea0eabe481e18b9fc86e255c"
+    }
+  ],
+  "ordinaryToolCalls": [
+    {
+      "order": 0,
+      "name": "ToolSearch"
+    }
+  ],
+  "composition": {
+    "attempted": true,
+    "returnedFqNames": [
+      "pkg/core.py::PriceEngine.apply_discount",
+      "pkg/core.py::PriceEngine.total",
+      "pkg/core.py::PriceEngine"
+    ],
+    "usedIdentifier": "pkg/core.py::PriceEngine.apply_discount",
+    "copiedVerbatimFromReturnedFqName": true,
+    "identifierIsMethod": true,
+    "impactResolved": true,
+    "contextBeforeImpact": true
+  },
+  "suitePolicyDelivery": {
+    "method": "agent self-report; server instructions are not echoed in stream-json, so transcript absence is not evidence of absence",
+    "markersMatched": [
+      "Repository-intelligence workflow",
+      "initial repository-orientation",
+      "selective evidence",
+      "Ordinary repository tools remain available"
+    ],
+    "agentDeclaredNoServerInstructions": false,
+    "reachedRuntime": true,
+    "reportExcerpt": "al` (method)\n\n**Step 3:** Called `get_impact_graph` with the exact fqName:\n- **fqName used:** `pkg/core.py::PriceEngine.apply_discount`\n\n**Step 4:** The impact call **resolved successfully**. The response shows:\n- `resolvedSymbol.symbolId` is populated\n- `result.ok: true`\n- Found 3 dependent symbols across 2 files\n- Direct callers: `PriceEngine.total` calls this method\n- The class `PriceEngine` contains it\n- `pkg/api.py::checkout` is an indirect dependent (calls `PriceEngine`)\n\n**Step 5:** Server-level instructions from the vtrace MCP server:\n\nPOLICY_BEGIN\nRepo-bound vtrace MCP server for /home/calvin/bench/tmp/m162_gate1/repo. Use tools/list to inspect available tools.\n\nRepository-intelligence workflow:\n\n- Use get_code_context as the initial repository-orientation tool for\n  coding/debugging/refactoring tasks.\n\n- Use get_impact_graph when considering a specific symbol change and\n  caller/dependent/blast-radius evidence would help. Pass the canonical\n  identity returned as get_code_context items[].fqName.\n\n- VTRACE results are selective evidence, not proof that omitted code\n  does not exist. Ordinary repository tools remain available and should\n  be used whenever useful.\nPOLICY_END"
+  },
+  "indexReadOnly": {
+    "before": {
+      "present": true,
+      "size": 212992,
+      "mtimeMs": 1787128366905.1816,
+      "sha256": "c1a06baf9b7f15c6e97f2b9b161956fd94f36ff571ce04be48a35056ea11c816"
+    },
+    "after": {
+      "present": true,
+      "size": 212992,
+      "mtimeMs": 1787128366905.1816,
+      "sha256": "c1a06baf9b7f15c6e97f2b9b161956fd94f36ff571ce04be48a35056ea11c816"
+    },
+    "writes": 0
+  },
+  "sessionIsolation": {
+    "serverLifetime": "one stdio process for this run, bound to this workspace at startup",
+    "sharedStateWithOtherRuns": false,
+    "sessionIsolationValid": true
+  },
+  "economics": {
+    "durationMs": 36906,
+    "costUsd": 0.2701095,
+    "numTurns": 4,
+    "usage": {
+      "input_tokens": 36,
+      "cache_creation_input_tokens": 17402,
+      "cache_read_input_tokens": 119469,
+      "output_tokens": 1447,
+      "output_tokens_details": {
+        "thinking_tokens": 646
+      },
+      "server_tool_use": {
+        "web_search_requests": 0,
+        "web_fetch_requests": 0
+      },
+      "service_tier": "standard",
+      "cache_creation": {
+        "ephemeral_1h_input_tokens": 17402,
+        "ephemeral_5m_input_tokens": 0
+      },
+      "inference_geo": "not_available",
+      "iterations": [
+        {
+          "input_tokens": 8,
+          "output_tokens": 654,
+          "cache_read_input_tokens": 37572,
+          "cache_creation_input_tokens": 3388,
+          "cache_creation": {
+            "ephemeral_5m_input_tokens": 0,
+            "ephemeral_1h_input_tokens": 3388
+          },
+          "type": "message"
+        }
+      ],
+      "speed": "standard"
+    }
+  },
+  "streamArtifact": {
+    "path": "/home/calvin/bench/tmp/m162_gate1/gate1_stream.jsonl",
+    "sha256": "8c69d6b44ca3e60e80ceb49b6e49e364c9373051c3840a0ae9f29bac28d58110",
+    "tracked": false
+  },
+  "assertions": {
+    "liveProcessStarted": true,
+    "exitedCleanly": true,
+    "mcpServerLoaded": true,
+    "vtraceToolsDiscovered": true,
+    "exactlyTwoVtraceTools": true,
+    "noOtherVtraceToolsLeaked": true,
+    "discoveredNamesMatchExpectation": true,
+    "allowedToolsPermittedBoth": true,
+    "agentCalledGetCodeContext": true,
+    "contextReturnedEvidence": true,
+    "agentCalledGetImpactGraph": true,
+    "identifierCopiedVerbatim": true,
+    "identifierWasAMethod": true,
+    "impactResolved": true,
+    "correctWorkspaceSelected": true,
+    "suitePolicyReachedRuntime": true,
+    "orderedTelemetryCapturedBothCalls": true,
+    "resultStatesCaptured": true,
+    "indexWritesZero": true
+  },
+  "allAssertionsPassed": true,
+  "failedAssertions": [],
+  "exitCode": 0,
+  "stderrTail": ""
+}
