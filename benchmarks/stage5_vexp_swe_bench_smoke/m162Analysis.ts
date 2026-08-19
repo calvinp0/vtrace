@@ -13,6 +13,15 @@ export type Arm = "baseline" | "static" | "callable";
 export interface ArmOutcome {
   readonly arm: Arm;
   readonly instanceId: string;
+  /**
+   * Whether a result row exists at all.
+   *
+   * A run that never happened must be EXCLUDED from every summary, not folded
+   * in as a zero: counting an absent arm as "0 searches, 0 reads" silently
+   * drags medians toward zero and would make a partially-executed sweep look
+   * like an efficient one.
+   */
+  readonly hasRun: boolean;
   readonly resolved: boolean | null;
   readonly costUsd: number | null;
   readonly numTurns: number | null;
@@ -80,6 +89,7 @@ export function classifyDiscordance(
  * collapsing them would make the verdict unactionable.
  */
 export type CallableBehaviour =
+  | "NO_RUN"
   | "TOOLS_UNAVAILABLE"
   | "AVAILABLE_UNUSED"
   | "USED_EFFECTIVELY"
@@ -88,6 +98,7 @@ export type CallableBehaviour =
   | "USED_LATE_ADAPTIVE";
 
 export interface CallableBehaviourInput {
+  readonly hasRun: boolean;
   readonly toolsAvailable: boolean | null;
   readonly vtraceCalls: number;
   readonly resultUsedCount: number;
@@ -99,6 +110,9 @@ export interface CallableBehaviourInput {
 }
 
 export function classifyCallableBehaviour(input: CallableBehaviourInput): CallableBehaviour {
+  // No run means nothing to classify. Reporting it as "available but unused"
+  // would invent an adoption datum out of a missing arm.
+  if (input.hasRun === false) return "NO_RUN";
   if (input.toolsAvailable === false) return "TOOLS_UNAVAILABLE";
   if (input.vtraceCalls === 0) return "AVAILABLE_UNUSED";
 

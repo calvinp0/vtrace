@@ -28,9 +28,13 @@ describe("discordance", () => {
 
 describe("callable behaviour", () => {
   const base = {
-    toolsAvailable: true, vtraceCalls: 1, resultUsedCount: 0, redundantLookupCount: 0,
+    hasRun: true, toolsAvailable: true, vtraceCalls: 1, resultUsedCount: 0, redundantLookupCount: 0,
     callsAfterFirstEdit: 0, resolved: true, baselineResolved: true, staticResolved: true,
   };
+
+  test("a missing run is never counted as an adoption datum", () => {
+    expect(classifyCallableBehaviour({ ...base, hasRun: false, vtraceCalls: 0 })).toBe("NO_RUN");
+  });
 
   test("unavailable tools are never reported as unused", () => {
     // A treatment failure and a declined affordance look identical in a call

@@ -117,6 +117,7 @@ function main(): void {
       outcomes.push({
         arm,
         instanceId: entry.instanceId,
+        hasRun: row !== null,
         resolved,
         costUsd: num(row?.costUsd),
         numTurns: num(row?.numTurns),
@@ -136,7 +137,9 @@ function main(): void {
         indexBuildMs: num(meta?.vtraceIndexBuildMs ?? meta?.vtraceIndexDurationMs),
       });
 
-      if (arm === "callable") {
+      // Telemetry is recorded only for arms that actually ran, so adoption and
+      // timing distributions are never padded with tasks that never executed.
+      if (arm === "callable" && row !== null) {
         telemetryByTask[entry.instanceId] = {
           toolsAvailable,
           adoption: telemetry.adoption,
@@ -162,7 +165,8 @@ function main(): void {
     }
   }
 
-  const byArm = (arm: Arm): ArmOutcome[] => outcomes.filter((entry) => entry.arm === arm);
+  // Only executed arms enter any summary.
+  const byArm = (arm: Arm): ArmOutcome[] => outcomes.filter((entry) => entry.arm === arm && entry.hasRun);
   const armSummary = (arm: Arm) => {
     const rows = byArm(arm);
     const graded = rows.filter((row) => row.resolved !== null);
@@ -172,8 +176,14 @@ function main(): void {
       graded: graded.length,
       resolved: graded.filter((row) => row.resolved === true).length,
       medianCostUsd: median(rows.map((r) => r.costUsd ?? NaN)),
-      medianTotalTokens: median(rows.map((r) => (r.inputTokens ?? 0) + (r.outputTokens ?? 0) || NaN)),
+      // Uncached input+output is a small number when almost everything is a
+      // cache hit, so it is reported alongside — never instead of — the total
+      // context the model actually processed each turn.
+      medianUncachedTokens: median(rows.map((r) => ((r.inputTokens ?? 0) + (r.outputTokens ?? 0)) || NaN)),
       medianCacheReadTokens: median(rows.map((r) => r.cacheReadTokens ?? NaN)),
+      medianTotalProcessedTokens: median(rows.map((r) => (
+        (r.inputTokens ?? 0) + (r.outputTokens ?? 0) + (r.cacheReadTokens ?? 0) + (r.cacheCreationTokens ?? 0)
+      ) || NaN)),
       medianTurns: median(rows.map((r) => r.numTurns ?? NaN)),
       medianOrdinaryToolCalls: median(rows.map((r) => r.totalOrdinaryToolCalls)),
       medianSearches: median(rows.map((r) => r.ordinarySearches)),
@@ -198,6 +208,7 @@ function main(): void {
       resolved: { baseline: baseline.resolved, static: staticArm.resolved, callable: callable.resolved },
       pattern: classifyDiscordance(baseline.resolved, staticArm.resolved, callable.resolved),
       callableBehaviour: classifyCallableBehaviour({
+        hasRun: callable.hasRun,
         toolsAvailable: callable.toolsAvailable,
         vtraceCalls: callable.vtraceCalls,
         resultUsedCount: utilization.filter((u) => u.used).length,
@@ -230,7 +241,8 @@ function main(): void {
 
   const callableRows = byArm("callable");
   const adoption = {
-    callableTasks: callableRows.length,
+    callableTasksExecuted: callableRows.length,
+    callableTasksPlanned: cases.length,
     toolsAvailable: callableRows.filter((r) => r.toolsAvailable === true).length,
     toolsUnavailable: callableRows.filter((r) => r.toolsAvailable === false).length,
     tasksWithZeroCalls: callableRows.filter((r) => r.vtraceCalls === 0).length,
