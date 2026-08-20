@@ -1,0 +1,111 @@
+{
+  "schemaVersion": 1,
+  "milestone": "M164",
+  "workstream": "C",
+  "title": "Paired execution order, frozen before the sweep",
+  "rule": "Both arms run for every task; the leading arm alternates with task position so neither arm systematically owns the first attempt.",
+  "armLeadCounts": {
+    "TOOLS_NEUTRAL_POLICY": 6,
+    "TOOLS_TASK_TRIGGER": 6
+  },
+  "totalArms": 24,
+  "schedule": [
+    {
+      "order": 1,
+      "instanceId": "sympy__sympy-13798",
+      "armOrder": [
+        "TOOLS_NEUTRAL_POLICY",
+        "TOOLS_TASK_TRIGGER"
+      ]
+    },
+    {
+      "order": 2,
+      "instanceId": "django__django-11451",
+      "armOrder": [
+        "TOOLS_TASK_TRIGGER",
+        "TOOLS_NEUTRAL_POLICY"
+      ]
+    },
+    {
+      "order": 3,
+      "instanceId": "sphinx-doc__sphinx-7440",
+      "armOrder": [
+        "TOOLS_NEUTRAL_POLICY",
+        "TOOLS_TASK_TRIGGER"
+      ]
+    },
+    {
+      "order": 4,
+      "instanceId": "scikit-learn__scikit-learn-14087",
+      "armOrder": [
+        "TOOLS_TASK_TRIGGER",
+        "TOOLS_NEUTRAL_POLICY"
+      ]
+    },
+    {
+      "order": 5,
+      "instanceId": "sphinx-doc__sphinx-11445",
+      "armOrder": [
+        "TOOLS_NEUTRAL_POLICY",
+        "TOOLS_TASK_TRIGGER"
+      ]
+    },
+    {
+      "order": 6,
+      "instanceId": "django__django-13343",
+      "armOrder": [
+        "TOOLS_TASK_TRIGGER",
+        "TOOLS_NEUTRAL_POLICY"
+      ]
+    },
+    {
+      "order": 7,
+      "instanceId": "matplotlib__matplotlib-24177",
+      "armOrder": [
+        "TOOLS_NEUTRAL_POLICY",
+        "TOOLS_TASK_TRIGGER"
+      ]
+    },
+    {
+      "order": 8,
+      "instanceId": "scikit-learn__scikit-learn-13496",
+      "armOrder": [
+        "TOOLS_TASK_TRIGGER",
+        "TOOLS_NEUTRAL_POLICY"
+      ]
+    },
+    {
+      "order": 9,
+      "instanceId": "sympy__sympy-14976",
+      "armOrder": [
+        "TOOLS_NEUTRAL_POLICY",
+        "TOOLS_TASK_TRIGGER"
+      ]
+    },
+    {
+      "order": 10,
+      "instanceId": "astropy__astropy-13977",
+      "armOrder": [
+        "TOOLS_TASK_TRIGGER",
+        "TOOLS_NEUTRAL_POLICY"
+      ]
+    },
+    {
+      "order": 11,
+      "instanceId": "pydata__xarray-4966",
+      "armOrder": [
+        "TOOLS_NEUTRAL_POLICY",
+        "TOOLS_TASK_TRIGGER"
+      ]
+    },
+    {
+      "order": 12,
+      "instanceId": "pytest-dev__pytest-7982",
+      "armOrder": [
+        "TOOLS_TASK_TRIGGER",
+        "TOOLS_NEUTRAL_POLICY"
+      ]
+    }
+  ],
+  "scheduleHash": "154434c61a42800a8c5fd54bab832290ab409b5668d39df5b4f652cac6e2fa57"
+}
