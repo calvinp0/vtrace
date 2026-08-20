@@ -193,4 +193,7 @@ function main(): void {
   }
 }
 
-main();
+// Guarded: the schedule and arm types are imported by the analysis, and an
+// import must never silently re-freeze a protocol that a sweep is running
+// against.
+if (import.meta.main) main();
