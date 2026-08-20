@@ -2996,3 +2996,91 @@ it unresolved by rule, applied per arm on the same condition.
 - **Do not run a larger callable qualification.** Observing zero adoption more
   precisely buys nothing. §92's precondition for a retrieval milestone — right
   question, wrong evidence — did not occur, because no questions were asked.
+
+## M163 — Callable tool adoption policy ablation (commits b5cd8f59…, pending)
+
+**A PASS · B PASS · C PASS · D MIXED · E PASS. M163 overall MIXED.**
+The policy→adoption question was answered decisively; the adoption→utility
+question could not be asked, because every call the experiment finally produced
+was refused by the product.
+
+```text
+architecture verdict:  HARNESS_INVALID   (scope: utility transition only)
+adoption verdict:      ADOPTION_CAUSALLY_INCREASED
+utility verdict:       UTILITY_NOT_MEASURABLE
+extension decision:    DO NOT EXTEND
+```
+
+Three arms over M162's exact twelve tasks, holding the callable architecture
+fixed and varying only policy: tool schemas alone (`--no-suite-policy`), plus
+M162's byte-identical neutral suite policy, plus one required first-action
+orientation call. 36/36 arms, **0 failures, 0 infra retries, 0 reruns**, $26.21
+sweep + $1.17 gates = **$27.38** against a $30 authorization.
+
+```text
+                    TOOLS_ONLY  NEUTRAL  TRIGGER
+adoption                 0/12     0/12    12/12
+trigger compliance          —        —    12/12
+resolved                  7/12     8/12     8/12
+median turns              36.5     40.5     39.5
+median cost             $0.563   $0.665   $0.637
+dynamic VTRACE tokens        0        0     1370  (all refusal text)
+evidence delivered           —        —     0/12
+```
+
+**Adoption is unambiguous.** Availability was proven 36/36 from each run's own
+init event. NEUTRAL ↔ TRIGGER paired: 8 shared success, 4 shared failure, 0
+unique wins either way — identical on all twelve, which under zero exposure is
+the expected result and carries no information about retrieval.
+
+**Why utility is unmeasurable.** All 14 VTRACE calls were refused. The runner
+prepares workspaces with `vtrace index` and never `vtrace init`, so
+`config.json`/`state.json` are absent and the MCP server's
+`config.initialized && state.initialized` gate returns `repo_not_ready` — while
+the same responses report `ready: true`, `fresh`, `coverageComplete: true`, and
+an indexed worktree identical to the requested one down to the head commit.
+Isolated offline in `stage5_m163_delivery_defect.json`. Recorded, not fixed.
+
+Three read-side analyzer defects were found and corrected during D with five new
+positive controls; raw run data preserved and the affected metrics named exactly
+in `stage5_m163_final_report.md`.
+
+## M163 standing findings
+
+- **A trigger in the task prompt causes adoption; the same guidance served on the
+  MCP initialize channel does not.** 0/12 against 12/12, same tool surface, same
+  execution window. The neutral policy names `get_code_context` as the initial
+  orientation tool in so many words; twelve agents were served that sentence and
+  called it zero times. M162 showed availability is not consideration. M163
+  narrows it: the server's instruction channel is close to inert for routing
+  decisions, the task prompt is not, and the gap is mechanically closable.
+
+- **A correctly routed tool is not a tool that can answer.** M162 ended at
+  "implemented ≠ discoverable ≠ allowed ≠ correctly routed". This is the next
+  link and it is the one that broke. The readiness gate and the benchmark's
+  workspace preparation disagree about what "initialized" means, and every layer
+  of testing between them passed.
+
+- **A positive control built differently from the thing it qualifies validates
+  the wrong path.** Gate 1 and the trigger smoke both PASSED on fixtures prepared
+  with `init` + `index`; the sweep used `index` alone. They proved the runtime
+  end to end and could not have caught this, because they never ran against a
+  workspace shaped like the ones under test. A control's SETUP must match the
+  subject's setup, not merely its runtime.
+
+- **Degenerate labels are the default failure mode of an empty result set.** With
+  no returned paths, "ignored what it returned" and "edited somewhere it did not
+  name" are true by construction and fired on 12 and 8 runs. Any classifier over
+  tool results needs an explicit evidence-delivered gate, or it will report facts
+  about the emptiness as findings about the agent.
+
+- **Forcing exposure is measurably safe even when it is useless.** Twelve
+  mandated turn-zero calls, all refused, cost a median of 0 extra turns and
+  −$0.011 with no unique losses. Whatever the risk of proactive routing is, the
+  interruption itself is not it.
+
+- **Three milestones have now measured VTRACE without an agent consuming it.**
+  M161 injected context largely ignored, M162 offered tools never called, M163
+  forced calls the product refused. No retrieval, ranking or candidate-generation
+  work is licensed by any of them. Next informative step: repair the readiness
+  seam, then re-run NEUTRAL vs TRIGGER with evidence actually delivered.
