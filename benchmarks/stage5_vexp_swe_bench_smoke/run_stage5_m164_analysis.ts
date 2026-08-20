@@ -277,9 +277,21 @@ function main(): void {
       if (resolved === null && emptyPatch) resolved = false;
 
       // THE GATE. Nothing below runs on a refusal.
-      const eligible = firstCall.evidenceDelivered && first !== undefined;
-      const quality = eligible ? classifyEvidenceQuality(first!, goldFiles, { productDeclined: false }) : null;
-      const queryText = queryOf(firstRawCall, first);
+      //
+      // But "the first call was refused" is not the same as "no evidence ever
+      // reached this agent". One live run opened with an empty query, was
+      // correctly rejected, retried, and got a full capsule back. Judging its
+      // reaction on the refusal would describe the rejection rather than the
+      // agent, and excluding the run outright would drop a task that DID receive
+      // repository evidence. So answerability is reported on the FIRST call, and
+      // the quality analysis runs on the call that actually delivered.
+      const deliveringIndex = allStatuses.findIndex((status) => status === "VALID_NONEMPTY");
+      const deliveringRawCall = deliveringIndex === -1 ? undefined : vtraceCalls[deliveringIndex];
+      const deliveringRecord = deliveringIndex === -1 ? undefined : telemetry.calls[deliveringIndex];
+      const evidenceEverDelivered = deliveringIndex !== -1;
+      const eligible = evidenceEverDelivered && deliveringRecord !== undefined;
+      const quality = eligible ? classifyEvidenceQuality(deliveringRecord!, goldFiles, { productDeclined: false }) : null;
+      const queryText = queryOf(deliveringRawCall ?? firstRawCall, deliveringRecord ?? first);
       const queryAlignment = eligible && quality !== null ? classifyQueryEvidence(queryText, taskText, quality) : null;
       const reaction = eligible && quality !== null ? classifyAgentReaction(calls as never, telemetry.calls, resolved, quality) : null;
       const falseAuthority = reaction !== null && quality !== null ? detectFalseAuthority(reaction, quality) : null;
@@ -322,6 +334,8 @@ function main(): void {
           queryChars: queryText.length,
         },
         vtraceCalls: { total: vtraceCalls.length, statuses: allStatuses, ...callSplit },
+        evidenceEverDelivered,
+        deliveredOnCallIndex: deliveringIndex === -1 ? null : deliveringIndex + 1,
         analyzerEligible: eligible,
         evidenceQuality: quality,
         queryAlignment,
@@ -403,7 +417,8 @@ function main(): void {
     runtimeValidArms: executedRecords.filter((r) => r.availability !== null && (r.availability as { toolsAvailable: boolean | null }).toolsAvailable === true && !r.treatmentFailure).length,
     gradablePairs: [...byInstance.values()].filter((p) => p.tools_neutral_policy?.resolved !== null && p.tools_neutral_policy?.resolved !== undefined && p.tools_task_trigger?.resolved !== null && p.tools_task_trigger?.resolved !== undefined).length,
     triggerArmsCompleted: triggerRecords.length,
-    evidenceDeliveredCalls: triggerRecords.filter((r) => (r.firstCall as { evidenceDelivered: boolean }).evidenceDelivered).length,
+    firstCallEvidenceDelivered: triggerRecords.filter((r) => (r.firstCall as { evidenceDelivered: boolean }).evidenceDelivered).length,
+    evidenceEverDelivered: triggerRecords.filter((r) => r.evidenceEverDelivered === true).length,
   };
 
   const report = {
@@ -433,6 +448,8 @@ function main(): void {
       REPO_NOT_READY: statusCount(triggerRecords, "REPO_NOT_READY"),
       TOOL_ERROR: statusCount(triggerRecords, "TOOL_ERROR"),
       TRIGGER_NOT_COMPLIED: statusCount(triggerRecords, "TRIGGER_NOT_COMPLIED"),
+      evidenceEverDelivered: triggerRecords.filter((r) => r.evidenceEverDelivered === true).length,
+      firstCallVsEverDelivered: "Answerability is reported on the FIRST call. evidenceEverDelivered counts runs where a capsule reached the agent at all, including after the agent repaired its own malformed call.",
       repositoryEvidenceCharacters: triggerRecords.reduce((total, r) => total + (r.firstCall as { evidenceCharacters: number }).evidenceCharacters, 0),
       refusalOrErrorCharacters: triggerRecords.reduce((total, r) => total + (r.firstCall as { refusalCharacters: number }).refusalCharacters, 0),
       accountingRule: "The last two are never summed. M163 reported 1370 dynamic VTRACE tokens that were entirely refusal text.",
