@@ -1,0 +1,102 @@
+{
+  "schemaVersion": 1,
+  "milestone": "M164",
+  "workstream": "A",
+  "title": "Who decides a repository is readable, and what each decider actually knows",
+  "question": "Does read-only get_code_context semantically require mutable initialization/session state, or only a derivation-valid repository index plus repository identity?",
+  "answer": "Only the index and identity. Traced by consumer, not inferred from benchmark behaviour: across src/mcp/tools.ts the read path reads repo-local CONFIG for exactly one thing (a database-path override) and repo-local STATE for exactly one thing (watcher-derived signals that refine a freshness verdict). Neither establishes readiness, and the CLI serves the identical evidence without either.",
+
+  "lifecycleWriters": {
+    "vtrace init": {
+      "entry": "src/setup/initRepo.ts initRepo",
+      "writes": [
+        { "artifact": ".vtrace/config.json", "classification": "LEGACY_LIFECYCLE_MARKER + USER_CONFIGURATION_REQUIRED", "detail": "buildRepoLocalConfig records repo-local paths and a dbPath. The read path consumes only dbPath; `initialized` is a marker." },
+        { "artifact": ".vtrace/state.json", "classification": "CONVENIENCE_DEFAULT + LEGACY_LIFECYCLE_MARKER", "detail": "A readiness verdict SNAPSHOTTED at index time, plus latestRunId, lastIndexSnapshot and fileWatcher state. The snapshot is strictly less current than evaluateIndexReadiness." },
+        { "artifact": ".vtrace/index.sqlite + index.meta.json", "classification": "REPOSITORY_EVIDENCE_REQUIRED", "detail": "The actual repository evidence and its identity/derivation manifest." },
+        { "artifact": "gitignore entry for .vtrace", "classification": "CONVENIENCE_DEFAULT", "detail": "ensureGeneratedStateExcluded. Repository hygiene; unrelated to read readiness." }
+      ]
+    },
+    "vtrace index": {
+      "entry": "src/cli/commands/indexCommand.ts -> src/runtime/reindexRepo.ts reindexRepoAndRefreshState",
+      "writes": [
+        { "artifact": ".vtrace/index.sqlite + index.meta.json", "classification": "REPOSITORY_EVIDENCE_REQUIRED", "detail": "Full repository evidence, identity, worktree binding, derivation fingerprints, coverage." }
+      ],
+      "deliberatelyDoesNotWrite": {
+        "artifacts": [".vtrace/config.json", ".vtrace/state.json"],
+        "guard": "refreshRepoLocalStateAfterIndex returns null when `usesDbPathOverride || (!configPresent && !statePresent)`",
+        "origin": "5ef21df4 feat(index): add optional auto-reindex watcher mode",
+        "reading": "A do-not-litter rule: indexing a repository that has no vtrace workspace must not conjure one. It is intentional, and it is what produces the M163 shape."
+      },
+      "establishesAfterSuccess": ["repository identity", "worktree identity", "source revision + dirty fingerprint", "derivation validity", "schema compatibility", "coverage claim"]
+    }
+  },
+
+  "readinessAuthorities": [
+    {
+      "name": "evaluateIndexReadiness",
+      "file": "src/indexer/indexReadiness.ts",
+      "kind": "live, index-derived",
+      "reads": ["index.sqlite", "index.meta.json", "worktree identity", "runtime fingerprints"],
+      "readsLifecycleFiles": false,
+      "verdict": "ready = repositoryCompatible AND worktreeCompatible AND schemaCompatible AND capabilityCompatible AND sourceFresh",
+      "note": "M141's single evaluator. Coverage is REPORTED beside the verdict, not folded into it, which is what keeps an M156 degraded-but-usable index usable."
+    },
+    {
+      "name": "state.readiness",
+      "file": "src/setup/repoState.ts evaluateRepoReadiness, persisted into .vtrace/state.json",
+      "kind": "stored snapshot, written at init/index time",
+      "readsLifecycleFiles": true,
+      "note": "Cannot see anything that happened after it was written. Strictly dominated by the live evaluator."
+    },
+    {
+      "name": "resolveReadyRepoBinding",
+      "file": "src/mcp/tools.ts",
+      "kind": "MCP gate",
+      "preM164Verdict": "config.initialized === true AND state.initialized === true AND state.readiness.status === 'ready' AND db exists AND no worktree mismatch",
+      "defect": "The first three conjuncts ask the lifecycle files a question the index already answers, and answer 'no' when the files are simply absent."
+    },
+    {
+      "name": "resolveRepoCommandPaths",
+      "file": "src/cli/commands/helpers.ts",
+      "kind": "CLI binding",
+      "verdict": "Falls back to repo-local default paths when config is unreadable and proceeds with configPresent:false.",
+      "note": "This is why `vtrace capsule` has always served index-only workspaces, and why every Stage 5 retrieval eval since M103 has worked."
+    }
+  ],
+
+  "readPathConsumers": {
+    "config": [
+      { "site": "resolveReadyRepoBinding", "field": "config.dbPath", "use": "database location", "requiredForReadOnlyRetrieval": false, "why": "The repo-local default is the same path `vtrace index` writes." },
+      { "site": "resolveReadyRepoBinding", "field": "config.initialized", "use": "gate only", "requiredForReadOnlyRetrieval": false }
+    ],
+    "state": [
+      { "site": "run_pipeline handler (tools.ts)", "field": "state.lastIndexSnapshot / observedFileChanges / fileWatcher", "use": "optional inputs to inspectIndexFreshness", "requiredForReadOnlyRetrieval": false, "why": "All three are optional in inspectIndexFreshness's own signature; absent means no watcher observed anything, which is true." },
+      { "site": "checkIndexForGetCodeContext", "field": "state.observedFileChanges", "use": "one boolean runtime signal", "requiredForReadOnlyRetrieval": false },
+      { "site": "resolveReadyRepoBinding", "field": "state.initialized / state.readiness", "use": "gate only", "requiredForReadOnlyRetrieval": false }
+    ],
+    "conclusion": "binding.config is never read downstream of the gate at all. binding.state is read at exactly two sites, both for optional freshness refinement."
+  },
+
+  "measuredAsymmetry": {
+    "fixture": "one source tree, two workspaces, differing only in whether `vtrace init` ran",
+    "evidenceIdentical": true,
+    "comparedOn": ["file/symbol/edge counts", "indexer fingerprint", "parser fingerprint", "schema version", "config hash"],
+    "surfaces": {
+      "evaluateIndexReadiness": { "init_index": "ready", "index_only": "ready" },
+      "cli vtrace capsule": { "init_index": "serves", "index_only": "serves" },
+      "mcp get_code_context (pre-M164)": { "init_index": "serves", "index_only": "repo_not_ready" },
+      "mcp index_status.readiness (pre-M164)": { "init_index": "ready", "index_only": "null" },
+      "mcp index_status.indexReadiness": { "init_index": "ready", "index_only": "ready" }
+    },
+    "reading": "One product, one body of evidence, two answers. index_status carried BOTH answers in a single response: a null stored readiness beside a live verdict of ready."
+  },
+
+  "selfHealNote": {
+    "guidance": "src/runtime/agentGuidance.ts tells the agent that repo_not_ready is fixed by calling index_repo and retrying.",
+    "mechanism": "The index_repo handler does handle it — it calls initRepo when config or state is missing — so the documented recovery is real.",
+    "whyItDidNotHelpM163": "The sweep exposed exactly two tools, get_code_context and get_impact_graph. index_repo was never visible, so the only documented escape from the refusal was unreachable by construction."
+  },
+
+  "verdict": "SERVER_READINESS_DEFECT",
+  "verdictReasoning": "The runner's preparation is a legitimate product-produced shape: `vtrace index <repo>` is a documented command that succeeds, writes into .vtrace/, and leaves a workspace the CLI reads happily. A user reaches the identical state without a benchmark anywhere in sight. The defect is that one read surface treats the absence of two lifecycle files as evidence about the index, while holding a live verdict about that index in the same call."
+}

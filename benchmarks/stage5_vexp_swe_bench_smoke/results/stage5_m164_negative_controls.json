@@ -1,0 +1,196 @@
+{
+  "schemaVersion": 1,
+  "milestone": "M164",
+  "workstream": "A/B",
+  "generatedFrom": "run_stage5_m164_readiness_controls.ts",
+  "equivalence": {
+    "evidenceEquivalent": true,
+    "comparedFields": [
+      "counts",
+      "indexerFingerprint",
+      "parserFingerprint",
+      "schemaVersion",
+      "configHash"
+    ],
+    "evidence": {
+      "init_index": {
+        "vtraceFiles": [
+          "config.json",
+          "index.meta.json",
+          "index.sqlite",
+          "session.sqlite",
+          "state.json"
+        ],
+        "counts": "2|9|8",
+        "indexerFingerprint": "e4841a232e914b7d82e4d81b23538ccaf228c0b3b03be541b16d56449e5651a1",
+        "parserFingerprint": "e633009f0a91e53a54703dee3321497365873d1e47f63c855013b487b217f46c",
+        "schemaVersion": "1.0.0+35b8285a7964",
+        "configHash": "4b003f2216cc9f0a1eb6b43e4c949ca7d730784e4a4ce2b54b1aaef3550e7de5",
+        "indexedWorktreeRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m164_controls/shape_init_index",
+        "indexedHeadCommit": "fe6b68d088ed6d7e71e25febacae895de73ef984"
+      },
+      "index_only": {
+        "vtraceFiles": [
+          "index.meta.json",
+          "index.sqlite",
+          "session.sqlite"
+        ],
+        "counts": "2|9|8",
+        "indexerFingerprint": "e4841a232e914b7d82e4d81b23538ccaf228c0b3b03be541b16d56449e5651a1",
+        "parserFingerprint": "e633009f0a91e53a54703dee3321497365873d1e47f63c855013b487b217f46c",
+        "schemaVersion": "1.0.0+35b8285a7964",
+        "configHash": "4b003f2216cc9f0a1eb6b43e4c949ca7d730784e4a4ce2b54b1aaef3550e7de5",
+        "indexedWorktreeRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m164_controls/shape_index_only",
+        "indexedHeadCommit": "7e9f0a84f0c19c46c15484e94f4d4b42703f90ff"
+      }
+    }
+  },
+  "positive": {
+    "shapes": {
+      "init_index": {
+        "readinessReady": true,
+        "context": {
+          "served": true,
+          "reason": null,
+          "message": null,
+          "pivotCount": 1,
+          "supportCount": null,
+          "indexWrites": 0
+        }
+      },
+      "index_only": {
+        "readinessReady": true,
+        "context": {
+          "served": true,
+          "reason": null,
+          "message": null,
+          "pivotCount": 1,
+          "supportCount": null,
+          "indexWrites": 0
+        }
+      }
+    },
+    "initializedShapeUnchanged": true,
+    "note": "Both shapes answer with a capsule carrying the same pivot and support counts over identical evidence."
+  },
+  "dbPathOverrideWithoutInit": {
+    "served": false,
+    "expectation": "REFUSES",
+    "pass": true,
+    "why": "The index-derived verdict describes the repo-local index, so it cannot license reading a different database."
+  },
+  "negativeControls": [
+    {
+      "id": "valid_index_only",
+      "expectation": "SERVES",
+      "why": "The M163 shape: a fresh, identity-matched index and no lifecycle files.",
+      "served": true,
+      "reason": null,
+      "message": null,
+      "pivotCount": 1,
+      "indexWrites": 0,
+      "pass": true
+    },
+    {
+      "id": "no_index",
+      "expectation": "REFUSES",
+      "why": "Nothing to read. Absence of an index is not a readiness question.",
+      "served": false,
+      "reason": "missing_index",
+      "message": "Vtrace index is missing. Call index_repo, then retry get_code_context.",
+      "pivotCount": null,
+      "indexWrites": 0,
+      "pass": true
+    },
+    {
+      "id": "stale_index_source_changed",
+      "expectation": "REFUSES",
+      "why": "Source moved after indexing, so the index no longer describes the tree.",
+      "served": false,
+      "reason": "repo_not_ready",
+      "message": "Vtrace repository is not ready. Call index_repo, then retry get_code_context.",
+      "pivotCount": null,
+      "indexWrites": 0,
+      "pass": true
+    },
+    {
+      "id": "wrong_revision",
+      "expectation": "REFUSES",
+      "why": "A committed change past the indexed head. The index answers about a revision nobody asked about.",
+      "served": false,
+      "reason": "repo_not_ready",
+      "message": "Vtrace repository is not ready. Call index_repo, then retry get_code_context.",
+      "pivotCount": null,
+      "indexWrites": 0,
+      "pass": true
+    },
+    {
+      "id": "wrong_worktree",
+      "expectation": "REFUSES",
+      "why": "An index built for a different directory. M132's fail-closed rule: serving it answers the wrong repository.",
+      "served": false,
+      "reason": "repo_not_ready",
+      "message": "Vtrace repository is not ready. Call index_repo, then retry get_code_context.",
+      "pivotCount": null,
+      "indexWrites": 0,
+      "pass": true
+    },
+    {
+      "id": "incompatible_schema",
+      "expectation": "REFUSES",
+      "why": "A stored representation this runtime cannot read. Rebuild, do not reinterpret.",
+      "served": false,
+      "reason": "repo_not_ready",
+      "message": "Vtrace repository is not ready. Call index_repo, then retry get_code_context.",
+      "pivotCount": null,
+      "indexWrites": 0,
+      "pass": true
+    },
+    {
+      "id": "stale_derivation",
+      "expectation": "REFUSES",
+      "why": "The semantics that filled the index changed, so its contents are not what this runtime would derive.",
+      "served": false,
+      "reason": "repo_not_ready",
+      "message": "Vtrace repository is not ready. Call index_repo, then retry get_code_context.",
+      "pivotCount": null,
+      "indexWrites": 0,
+      "pass": true
+    },
+    {
+      "id": "corrupt_index",
+      "expectation": "REFUSES",
+      "why": "An unreadable database must refuse rather than surface a partial read as evidence.",
+      "served": false,
+      "reason": null,
+      "message": "MCP tool get_code_context handler failed.",
+      "pivotCount": null,
+      "indexWrites": 0,
+      "pass": true
+    },
+    {
+      "id": "missing_manifest",
+      "expectation": "REFUSES",
+      "why": "Without the manifest there is no identity or derivation record to check the index against.",
+      "served": false,
+      "reason": "repo_not_ready",
+      "message": "Vtrace repository is not ready. Call index_repo, then retry get_code_context.",
+      "pivotCount": null,
+      "indexWrites": 0,
+      "pass": true
+    },
+    {
+      "id": "degraded_but_usable",
+      "expectation": "SERVES",
+      "why": "M156. A file that failed to parse leaves a usable repository; one bad file may not take the whole index offline.",
+      "served": true,
+      "reason": null,
+      "message": null,
+      "pivotCount": 1,
+      "indexWrites": 0,
+      "pass": true
+    }
+  ],
+  "indexWritesDuringReads": 0,
+  "verdict": "PASS"
+}

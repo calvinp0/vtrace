@@ -34,6 +34,8 @@ import {
   generateProjectRuleCandidates,
 } from "../projectRules/projectRules";
 import { recordObservedFileChanges } from "../runtime/fileWatcher";
+import { reindexRepoAndRefreshState } from "../runtime/reindexRepo";
+import { resolveRepoLocalPaths } from "../setup/repoState";
 import type { GraphSearchResult } from "../retrieval/types";
 import { initRepo } from "../setup/initRepo";
 import { REPO_LOCAL_STATE_DIRNAME } from "../setup/types";
@@ -5720,6 +5722,112 @@ function gitOk(cwd: string, ...args: string[]): void {
   const result = spawnSync("git", args, { cwd, encoding: "utf8" });
   assert.equal(result.status, 0, result.stderr || result.stdout);
 }
+
+// M164. `vtrace index` on a never-initialized repository writes an index and
+// deliberately no lifecycle files, and until M164 the MCP read path read that
+// absence as "not ready" — about an index its own diagnostics reported fresh,
+// coverage-complete and bound to exactly the requested worktree. The CLI served
+// the same evidence the whole time. These three tests pin the repaired seam: the
+// index-only shape answers, the states that should refuse still refuse, and an
+// initialized repository is still judged on its own recorded readiness.
+
+/** The shape `vtrace index <repo>` leaves on a repository that was never initialized. */
+async function indexOnly(repoRoot: string): Promise<void> {
+  const paths = resolveRepoLocalPaths(repoRoot);
+  const state = await reindexRepoAndRefreshState({
+    repoRoot,
+    dbPath: paths.dbPath,
+    statePath: paths.statePath,
+    configPresent: false,
+    statePresent: false,
+    usesDbPathOverride: false,
+    refreshMode: "auto",
+  });
+  // The precondition the whole milestone rests on: no lifecycle record was written.
+  assert.equal(state.state, null);
+}
+
+test("M164: an indexed but never-initialized repo answers get_code_context from index authority", async () => {
+  await withFixture(async (repoRoot) => {
+    await writeMcpFixtureRepo(repoRoot);
+    await indexOnly(repoRoot);
+
+    const bound = await createRepoBoundMcpServer({ repoPath: repoRoot });
+    assert.equal(bound.startup.initialized, false, "the fixture must have no lifecycle record");
+
+    const response = await bound.server.handleRequest({
+      schema: bound.server.schema,
+      requestId: "m164-index-only",
+      toolId: McpToolId.GetCodeContext,
+      input: { query: "read a user session" },
+    });
+
+    const output = response.result?.output as Record<string, unknown> | undefined;
+    assert.equal(response.result?.ok, true);
+    assert.notEqual(output?.["reason"], "repo_not_ready");
+    assert.notEqual(output?.["resolved"], false);
+    assert.notEqual(output?.["capsuleResult"], undefined, "a served read must carry a capsule, not a refusal");
+  });
+});
+
+test("M164: index authority still refuses a stale index on a never-initialized repo", async () => {
+  await withFixture(async (repoRoot) => {
+    // Source freshness is evaluated against the worktree's committed and dirty
+    // state, so the fixture has to be a real repository for the question to mean
+    // anything.
+    const git = (...args: string[]): void => {
+      const result = spawnSync("git", ["-C", repoRoot, ...args], { encoding: "utf8" });
+      assert.equal(result.status, 0, result.stderr);
+    };
+    await writeMcpFixtureRepo(repoRoot);
+    git("init", "-q");
+    git("add", "-A");
+    git("-c", "user.email=m164@vtrace", "-c", "user.name=m164", "commit", "-qm", "base");
+    await indexOnly(repoRoot);
+    // Source moves past the index. Nothing about the missing lifecycle files
+    // changed; the index simply stopped describing the tree.
+    await writeFile(path.join(repoRoot, "src", "service.ts"), "export const REWRITTEN = 1;\n");
+
+    const bound = await createRepoBoundMcpServer({ repoPath: repoRoot });
+    const response = await bound.server.handleRequest({
+      schema: bound.server.schema,
+      requestId: "m164-index-only-stale",
+      toolId: McpToolId.GetCodeContext,
+      input: { query: "read a user session" },
+    });
+
+    const output = response.result?.output as Record<string, unknown> | undefined;
+    assert.equal(output?.["capsuleResult"], undefined, "a stale index must not answer");
+    assert.equal(output?.["resolved"], false);
+  });
+});
+
+test("M164: an initialized repo is still judged on its own recorded readiness", async () => {
+  await withFixture(async (repoRoot) => {
+    await writeMcpFixtureRepo(repoRoot);
+    await initRepo({ repoPath: repoRoot });
+
+    // A repository that DID record its lifecycle keeps the pre-M164 gate. Index
+    // authority is the fallback for repositories with no record, never an
+    // override of one that says it is not ready.
+    const paths = resolveRepoLocalPaths(repoRoot);
+    const state = JSON.parse(await readFile(paths.statePath, "utf8")) as Record<string, unknown>;
+    state["readiness"] = { status: "failed", summary: "M164 control", checks: [] };
+    await writeFile(paths.statePath, JSON.stringify(state, null, 2));
+
+    const bound = await createRepoBoundMcpServer({ repoPath: repoRoot });
+    const response = await bound.server.handleRequest({
+      schema: bound.server.schema,
+      requestId: "m164-initialized-not-ready",
+      toolId: McpToolId.GetCodeContext,
+      input: { query: "read a user session" },
+    });
+
+    const output = response.result?.output as Record<string, unknown> | undefined;
+    assert.equal(output?.["capsuleResult"], undefined);
+    assert.equal(output?.["reason"], "repo_not_ready");
+  });
+});
 
 async function writeMcpFixtureRepo(repoRoot: string): Promise<void> {
   await mkdir(path.join(repoRoot, "src"), { recursive: true });

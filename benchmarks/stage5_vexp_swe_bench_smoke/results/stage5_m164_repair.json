@@ -1,0 +1,90 @@
+{
+  "schemaVersion": 1,
+  "milestone": "M164",
+  "workstream": "B",
+  "title": "The readiness repair, its scope, and what it was not allowed to touch",
+  "rootCauseClassification": "SERVER_READINESS_DEFECT",
+
+  "change": {
+    "file": "src/mcp/tools.ts",
+    "function": "resolveReadyRepoBinding",
+    "shape": "additive",
+    "summary": "A repository with a recorded lifecycle keeps the pre-M164 gate unchanged. A repository with no lifecycle record takes its read authority from the index, evaluated live by evaluateIndexReadiness — the same M141 evaluator index_status and the CLI already use.",
+    "supportingEdits": [
+      "ReadyRepoBinding.config and .state made optional, because a binding whose authority came from the index has neither.",
+      "The two freshness-signal consumers (run_pipeline handler, checkIndexForGetCodeContext) made optional-safe. Both pass fields that inspectIndexFreshness already declares optional."
+    ],
+    "guards": [
+      {
+        "guard": "index absent -> pre-M164 refusal preserved verbatim",
+        "why": "A repository with neither a lifecycle record nor an index has nothing for index authority to speak about, and 'not initialized' remains accurate and actionable. Keeps the existing repo-not-ready contract test passing on its exact payload."
+      },
+      {
+        "guard": "dbPath != repo-local dbPath -> refuse (db_path_override_without_init)",
+        "why": "The evaluator's verdict describes the repo-local index. It cannot be spent licensing a read of a different database."
+      }
+    ]
+  },
+
+  "notChanged": {
+    "runner": "The Stage 5 runner still prepares workspaces with `vtrace index` and no `init`. Changing it would have made the M164-B control stop testing the subject path — the exact M163 mistake.",
+    "product": [
+      "retrieval scoring", "ranking", "candidate generation", "candidate limits",
+      "query shaping", "support packing", "pivot logic",
+      "tool schemas", "tool descriptions", "behavioural routing",
+      "new retrieval lanes", "result/effect semantics", "subject->owner semantics",
+      "vtrace init", "vtrace index", "the refreshRepoLocalStateAfterIndex do-not-litter guard"
+    ],
+    "policy": "The M163 --no-suite-policy control and the default neutral instructions are untouched."
+  },
+
+  "versioningPolicy": {
+    "newVersionedPaths": 0,
+    "note": "No readinessV2 / initV2 / serverV2 / workspaceV2. The existing authority was evolved in place; evaluateIndexReadiness remains the single readiness evaluator."
+  },
+
+  "forbiddenShortcutsAvoided": {
+    "fakeInitializedMarkers": false,
+    "benchmarkOnlyBypass": false,
+    "forceReadyFlag": false,
+    "deletedReadinessChecks": false,
+    "note": "No state was written to make a refusal stop. The refusal was replaced by a truthful verdict computed from repository evidence."
+  },
+
+  "preserved": {
+    "M156 degraded availability": "verified — a workspace with an unparseable file still serves; coverage is reported beside the verdict, not folded into it",
+    "M152 repository/session separation": "verified — index digests byte-identical across every read; only session state moves",
+    "M147/M156 readiness truthfulness": "verified — 9 negative states still refuse",
+    "M132 worktree fail-closed routing": "verified — wrong-worktree index refuses; detectIndexWorktreeMismatch runs on both paths",
+    "M157 pivot refill / M158 support dedupe / M154 anti-search guidance / M140 module delivery": "untouched; no retrieval code changed",
+    "M163 policy bytes and trigger instrumentation": "untouched"
+  },
+
+  "verification": {
+    "negativeControls": { "artifact": "stage5_m164_negative_controls.json", "verdict": "PASS", "controls": 10, "passed": 10 },
+    "sweepShapedSmoke": { "artifact": "stage5_m164_sweep_shaped_smoke.json", "verdict": "PASS", "cases": 12, "validNonEmpty": 12, "repoNotReady": 0, "indexWrites": 0 },
+    "unitTests": [
+      "M164: an indexed but never-initialized repo answers get_code_context from index authority",
+      "M164: index authority still refuses a stale index on a never-initialized repo",
+      "M164: an initialized repo is still judged on its own recorded readiness"
+    ],
+    "typecheck": "pass",
+    "typecheckBenchmarks": "pass",
+    "bunTest": "5143 pass, 49 skip, 0 fail",
+    "gitDiffCheck": "clean"
+  },
+
+  "inheritedLimitations": [
+    "M122 evaluator renderReport crashes on a missing performance key. Pre-existing, not touched, does not block M164 evidence.",
+    "The canonical retrieval suites return workspace_error because their fixtures are not materialized. Pre-existing since before M163; preservation was qualified structurally and by runtime controls instead.",
+    "Source staleness is detected from git head, dirty fingerprint and config hash. A non-git directory therefore cannot report a stale index — a pre-existing blind spot shared identically by the initialized path, not introduced here."
+  ],
+
+  "residualAsymmetry": {
+    "statement": "An initialized repository whose stored state.readiness says 'not ready' is still refused, even when the live evaluator would call its index ready. An index-only repository with the same index is served.",
+    "deliberate": true,
+    "why": "Conservative in the safe direction and keeps the initialized path byte-identical, which is what lets M164 claim it changed exactly one thing. Routing both paths through the live evaluator is a defensible follow-up and is not required to answer M164's question."
+  },
+
+  "spendSoFar": { "liveAgentRuns": 0, "dockerEvaluations": 0, "usd": 0.0 }
+}

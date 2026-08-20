@@ -3084,3 +3084,88 @@ in `stage5_m163_final_report.md`.
   forced calls the product refused. No retrieval, ranking or candidate-generation
   work is licensed by any of them. Next informative step: repair the readiness
   seam, then re-run NEUTRAL vs TRIGGER with evidence actually delivered.
+
+## M164-A/B — Callable readiness repair (commit pending, live half not yet run)
+
+**A PASS · B PASS. C/D/E not started — held for live authorization.**
+M163's refusals were traced to their authority, the authority was repaired, and
+evidence delivery was proved through the sweep's own preparation path. No live
+agent ran and nothing was spent.
+
+```text
+root cause:        SERVER_READINESS_DEFECT
+answerability:     ANSWERABILITY_REPAIRED (product half; agent half unproven)
+utility:           not yet asked
+product changed:   YES — src/mcp/tools.ts resolveReadyRepoBinding only
+retrieval changed: NO
+```
+
+`vtrace index` on a never-initialized repository deliberately writes no
+`config.json`/`state.json` (a do-not-litter guard dating to `5ef21df4`), and the
+Stage 5 runner prepares every workspace that way. The MCP gate required
+`config.initialized && state.initialized && state.readiness.status === "ready"`
+and read their absence as a statement about the index.
+
+It was the server that was wrong, and the evidence is by consumer, not by taste:
+after the gate, `binding.config` is never read again and `binding.state` is read
+at exactly two sites, both passing fields `inspectIndexFreshness` already declares
+optional. `get_code_context` had already called `evaluateIndexReadiness` — M141's
+single evaluator, which answers from the index and never reads a lifecycle file —
+and discarded its `ready` verdict in favour of a snapshot written at index time.
+`index_status` carried both answers in one response: `readiness: null` beside
+`indexReadiness: ready`. The CLI has served the identical evidence all along,
+which is why every retrieval eval in this benchmark works.
+
+The repair is additive. An initialized repository keeps the old gate exactly; a
+repository with no lifecycle record takes read authority from the index. An
+absent index keeps the old refusal verbatim, and a database-path override with no
+lifecycle record still refuses.
+
+```text
+                        M163        M164
+VALID_NONEMPTY           0/12       12/12
+REPO_NOT_READY          12/12        0/12
+negative controls         —         10/10 refuse-or-serve as specified
+index writes on read      0           0
+spend                  $27.38       $0.00
+```
+
+The 12/12 was measured on the twelve trees the M163 trigger arm actually ran
+against, restored to base commit, re-prepared with the runner's own index step,
+asserted to carry an index and no lifecycle files, and asked through a real
+`mcp-serve` process started from the sweep's own config builder.
+
+## M164 standing findings
+
+- **The seam was a false coupling, and the product was already contradicting
+  itself about it.** One `index_status` response reported a null stored readiness
+  beside a live verdict of `ready` for the same index. A contradiction visible
+  inside a single response is not a subtle defect; it went unnoticed because no
+  consumer compared the two fields until an agent was finally forced to call one.
+
+- **A control must reproduce the subject's PREPARATION, not just its runtime.**
+  M163's gates passed on `init` + `index` fixtures while its sweep used `index`
+  alone. M164's control uses the subject workspaces themselves and asserts the
+  shape (`index.sqlite` present, `config.json`/`state.json` absent) before
+  measuring anything, so it fails loudly if it ever drifts back onto the wrong
+  specimen. This is now a standing benchmark rule.
+
+- **Repairing readiness is not the same as loosening it.** Ten negative controls
+  were written before the repair was trusted: missing, stale, wrong revision,
+  wrong worktree, incompatible schema, stale derivation, corrupt, missing
+  manifest, and a database-path override — all still refuse, and an M156
+  degraded-but-usable index still serves. Coverage stays reported beside the
+  verdict rather than folded into it, which is what keeps one unparseable file
+  from taking a repository offline.
+
+- **`AVAILABLE ≠ ADOPTED ≠ ABLE TO ANSWER`, and the third link is now closed on
+  the product side only.** The product answers a sweep-shaped workspace with
+  repository evidence. Whether an agent complies with the trigger and whether the
+  evidence helps are live questions, unasked and unclaimed.
+
+- **The documented self-heal was unreachable by construction.** `agentGuidance`
+  tells the agent that `repo_not_ready` is fixed by calling `index_repo`, and
+  `index_repo` genuinely calls `initRepo` when the lifecycle files are missing. The
+  sweep exposed exactly two tools and `index_repo` was not one of them, so the
+  only documented escape from the refusal could never be taken. Guidance that
+  names a tool the surface does not expose is guidance that cannot be followed.

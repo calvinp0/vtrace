@@ -432,8 +432,15 @@ interface ReadyRepoBinding {
   readonly dbPath: string;
   readonly configPath: string;
   readonly statePath: string;
-  readonly config: RepoLocalConfig;
-  readonly state: RepoLocalState;
+  /**
+   * M164. Absent on a repository that was indexed without ever being
+   * initialized. Repo-local config carries a database-path override and nothing
+   * else the read path consumes; repo-local state carries watcher-derived
+   * freshness signals that refine, but do not establish, readiness. A binding
+   * without them is a binding whose authority came from the index itself.
+   */
+  readonly config?: RepoLocalConfig;
+  readonly state?: RepoLocalState;
 }
 
 interface WorkspaceRepoStatus {
@@ -4061,53 +4068,135 @@ async function resolveReadyRepoBinding(
   const state = (await safeReadState(statePath)) ?? (usesBoundContext ? context.state : null) ?? undefined;
   const dbPath = (usesBoundContext ? context.dbPath : null) ?? config?.dbPath ?? state?.dbPath ?? paths.dbPath;
 
-  if (config === undefined || state === undefined) {
-    return {
-      ok: false,
-      result: repoNotReady(
-        toolId,
-        `Repository is not initialized for MCP use: ${repoRoot}`,
-        {
-          repoRoot,
-          configPath,
-          statePath,
-          configPresent: config !== undefined,
-          statePresent: state !== undefined,
-        },
-      ),
-    };
-  }
+  // M164. Two ways a repository can hold read authority, and only one of them
+  // involves `vtrace init`.
+  //
+  // A repository that WAS initialized keeps its pre-M164 gate exactly: the
+  // lifecycle files exist, so the state they persist is the thing to check, and
+  // an initialized-but-not-ready workspace is still refused on its own record.
+  //
+  // A repository that was only ever INDEXED has no such record to consult, and
+  // before M164 that absence was read as "not ready" — a false statement about a
+  // valid index, and one the CLI never made about the same evidence. Its
+  // authority is the index itself, evaluated live by the same M141 evaluator
+  // every other surface already uses: repository identity, worktree identity,
+  // schema/derivation compatibility, required capabilities, and source freshness.
+  // That verdict is strictly more current than a stored one, and it is what makes
+  // the negative states (stale, wrong revision, wrong worktree, incompatible
+  // schema, corrupt, missing) keep refusing here. Coverage stays out of it, so an
+  // M156 degraded-but-usable index remains usable.
+  const lifecycleRecorded = config !== undefined || state !== undefined;
 
-  if (config.initialized !== true || state.initialized !== true) {
-    return {
-      ok: false,
-      result: repoNotReady(
-        toolId,
-        `Repository is not initialized for MCP use: ${repoRoot}`,
-        {
-          repoRoot,
-          configPath,
-          statePath,
-          configInitialized: config.initialized,
-          stateInitialized: state.initialized,
-        },
-      ),
-    };
-  }
+  if (lifecycleRecorded) {
+    if (config === undefined || state === undefined) {
+      return {
+        ok: false,
+        result: repoNotReady(
+          toolId,
+          `Repository is not initialized for MCP use: ${repoRoot}`,
+          {
+            repoRoot,
+            configPath,
+            statePath,
+            configPresent: config !== undefined,
+            statePresent: state !== undefined,
+          },
+        ),
+      };
+    }
 
-  if (state.readiness.status !== "ready") {
-    return {
-      ok: false,
-      result: repoNotReady(
-        toolId,
-        `Repository is not ready for MCP use: ${repoRoot}`,
-        {
-          repoRoot,
-          readiness: state.readiness,
-          latestRunId: state.latestRunId,
-        },
-      ),
-    };
+    if (config.initialized !== true || state.initialized !== true) {
+      return {
+        ok: false,
+        result: repoNotReady(
+          toolId,
+          `Repository is not initialized for MCP use: ${repoRoot}`,
+          {
+            repoRoot,
+            configPath,
+            statePath,
+            configInitialized: config.initialized,
+            stateInitialized: state.initialized,
+          },
+        ),
+      };
+    }
+
+    if (state.readiness.status !== "ready") {
+      return {
+        ok: false,
+        result: repoNotReady(
+          toolId,
+          `Repository is not ready for MCP use: ${repoRoot}`,
+          {
+            repoRoot,
+            readiness: state.readiness,
+            latestRunId: state.latestRunId,
+          },
+        ),
+      };
+    }
+  } else {
+    // The evaluator's verdict is about the repo-local index. If some other
+    // database was routed here, that verdict does not describe the file this
+    // binding would open, so the pre-M164 refusal stands rather than a readiness
+    // claim borrowed from a different index.
+    if (dbPath !== paths.dbPath) {
+      return {
+        ok: false,
+        result: repoNotReady(
+          toolId,
+          `Repository is not initialized for MCP use: ${repoRoot}`,
+          {
+            repoRoot,
+            configPath,
+            statePath,
+            dbPath,
+            repoLocalDbPath: paths.dbPath,
+            reason: "db_path_override_without_init",
+          },
+        ),
+      };
+    }
+
+    const indexReadiness = await evaluateIndexReadiness(repoRoot);
+    // A repository with neither a lifecycle record nor an index has nothing for
+    // index authority to speak about, and "not initialized" remains the accurate
+    // and actionable thing to say about it. M164 changes what happens to
+    // repositories that DO carry an index, and only those.
+    if (indexReadiness.state === "index_missing") {
+      return {
+        ok: false,
+        result: repoNotReady(
+          toolId,
+          `Repository is not initialized for MCP use: ${repoRoot}`,
+          {
+            repoRoot,
+            configPath,
+            statePath,
+            configPresent: config !== undefined,
+            statePresent: state !== undefined,
+          },
+        ),
+      };
+    }
+    if (!indexReadiness.ready) {
+      return {
+        ok: false,
+        result: repoNotReady(
+          toolId,
+          `Repository index is not ready for MCP use: ${repoRoot}`,
+          {
+            repoRoot,
+            readiness: summarizeIndexReadiness(indexReadiness),
+            state: indexReadiness.state,
+            reason: indexReadiness.reason,
+            recommendedAction: indexReadiness.recommendedAction,
+            failedDimensions: indexReadiness.failedDimensions,
+          },
+        ),
+      };
+    }
   }
 
   if (!await pathExists(dbPath)) {
@@ -9016,12 +9105,15 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
           const output = formatRunPipelineOrchestrationOutput(orchestration);
           const freshness = await inspectIndexFreshness({
             repoRoot: binding.repoRoot,
-            lastIndexSnapshot: binding.state.lastIndexSnapshot,
-            observedFileChanges: binding.state.observedFileChanges,
-            fileWatcher: binding.state.fileWatcher,
+            // M164. Watcher-derived signals REFINE freshness; they never
+            // establish it. An index-only binding has none, and absent is the
+            // truthful reading — no watcher observed anything — not unknown.
+            ...(binding.state?.lastIndexSnapshot === undefined ? {} : { lastIndexSnapshot: binding.state.lastIndexSnapshot }),
+            ...(binding.state?.observedFileChanges === undefined ? {} : { observedFileChanges: binding.state.observedFileChanges }),
+            ...(binding.state?.fileWatcher === undefined ? {} : { fileWatcher: binding.state.fileWatcher }),
             readiness: summarizeIndexReadiness(withRuntimeSignals(
               await evaluateIndexReadiness(binding.repoRoot, { db }),
-              { observedSourceChanges: binding.state.observedFileChanges !== undefined },
+              { observedSourceChanges: binding.state?.observedFileChanges !== undefined },
             )),
           });
           const nudge = evaluateObservationNudge(stores.read.session, {
@@ -9360,7 +9452,7 @@ async function checkIndexForGetCodeContext(
   db.close();
   readiness = withRuntimeSignals(readiness, {
     indexHasNoFiles: indexMissing,
-    observedSourceChanges: resolved.binding.state.observedFileChanges !== undefined,
+    observedSourceChanges: resolved.binding.state?.observedFileChanges !== undefined,
   });
   precise = readiness.freshness;
 
