@@ -1,0 +1,69 @@
+{
+  "schemaVersion": 1,
+  "milestone": "M163",
+  "workstream": "D",
+  "title": "M163 callable delivery defect: every VTRACE call was declined by the product",
+  "severity": "invalidates the conditional-utility half of M163; the adoption half is unaffected",
+  "discoveredBy": "the M163-C trigger arm. It is the first experiment in which any agent actually called the tools.",
+  "observation": {
+    "vtraceCallsAcrossAllArms": 14,
+    "callsReturningRepositoryEvidence": 0,
+    "firstCallTier": {
+      "PRODUCT_DECLINED": 10,
+      "ERROR": 2
+    },
+    "productDeclinedMessage": "Vtrace repository is not ready. Call index_repo, then retry get_code_context.",
+    "selfContradiction": "The SAME response carried diagnostics reading indexFreshness.status=fresh, readiness.ready=true, readiness.state=ready, coverageComplete=true, failedFiles=0, and an indexedWorktree identical to the requestedWorktree including headCommit. The response says not ready; its own diagnostics say ready."
+  },
+  "rootCause": {
+    "mechanism": "createRepoBoundMcpServer computes `initialized = config?.initialized === true && state?.initialized === true` from .vtrace/config.json and .vtrace/state.json. The Stage 5 runner prepares each workspace with `vtrace index <workspace>` and never runs `vtrace init`, so those two files are absent and every engine-backed MCP tool answers repo_not_ready regardless of how complete the index is.",
+    "isolatedProof": {
+      "method": "minimal git repo, offline, no agent",
+      "indexOnly": {
+        "files": [
+          "index.meta.json",
+          "index.sqlite",
+          "session.sqlite"
+        ],
+        "getCodeContext": "resolved=false reason=repo_not_ready"
+      },
+      "initThenIndex": {
+        "files": [
+          "config.json",
+          "index.meta.json",
+          "index.sqlite",
+          "session.sqlite",
+          "state.json"
+        ],
+        "getCodeContext": "passes the readiness gate"
+      }
+    },
+    "workspaceEvidence": "All 12 trigger-arm workspaces contain index.sqlite and index.meta.json; none contains config.json or state.json."
+  },
+  "whyEarlierMilestonesMissedIt": [
+    "M162's callable arm had 0/12 adoption, so no agent ever invoked a tool that would have refused.",
+    "M162 Gate 1 and the M163 trigger smoke both PASSED because their fixture workspaces were prepared with `vtrace init` followed by `vtrace index`. The positive control exercised a preparation path the sweep never used, so it validated the runtime while leaving the seam it depended on untested."
+  ],
+  "whatThisDoesNotInvalidate": [
+    "Adoption. Availability was proven per run from each run's own init event, and the measurement is of whether the agent CALLED the tool, not of what the tool returned.",
+    "Trigger compliance. The required call was the first repository action in 12/12 runs.",
+    "The A/B zero-adoption replication. Those agents never called the tool at all, so nothing the tool would have returned could have influenced them."
+  ],
+  "whatThisInvalidates": [
+    "Every conditional-utility question. No VTRACE evidence reached any agent, so B->C outcome and efficiency differences cannot be attributed to repository intelligence.",
+    "First-call evidence quality, right-question/wrong-evidence, agent reaction, false authority and false absence: all require delivered evidence and are reported as NOT_MEASURABLE rather than as null results."
+  ],
+  "secondaryFinding": {
+    "malformedQueryArgument": [
+      "sphinx-doc__sphinx-7440",
+      "scikit-learn__scikit-learn-14087"
+    ],
+    "detail": "Two runs first called get_code_context with an argument the product rejected as `invalid_request: MCP tool get_code_context requires a non-empty string query`, then retried. Taken from the product's own error rather than from an empty captured query, because the harness records MCP inputs unreliably (7/12 captured).",
+    "note": "Both retries then hit repo_not_ready, so the two 'voluntary follow-up' calls are error retries and are NOT evidence of perceived utility."
+  },
+  "actionTaken": "Recorded. NOT fixed. The frozen protocol forbids product changes during the milestone, and the authorization forbids post-M163 product changes derived from these results.",
+  "provenance": {
+    "head": "4e97c478f22ef9eeebe3420ea7d1d479cd22b968",
+    "analysisArtifact": "stage5_m163_runs.json"
+  }
+}

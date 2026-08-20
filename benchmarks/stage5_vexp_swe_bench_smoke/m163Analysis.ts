@@ -35,6 +35,13 @@ const READ_TOOLS = new Set(["read"]);
  */
 export type EvidenceTier =
   | "ERROR"
+  /**
+   * The product was reached and declined to answer (e.g. `repo_not_ready`).
+   * Distinct from EMPTY on purpose: EMPTY means retrieval ran and found nothing,
+   * which is a retrieval result. This means retrieval never ran, which is not.
+   * Collapsing them would let a delivery failure be reported as weak evidence.
+   */
+  | "PRODUCT_DECLINED"
   | "EMPTY"
   | "GOLD_LED"
   | "GOLD_PRESENT"
@@ -51,6 +58,8 @@ export interface EvidenceQuality {
   readonly leadPath: string | null;
   readonly itemCount: number;
   readonly responseEstimatedTokens: number;
+  /** Did any repository evidence actually reach the agent? Gates every downstream label. */
+  readonly evidenceDelivered: boolean;
   readonly caveat: string;
 }
 
@@ -64,6 +73,7 @@ function pathMatches(returned: string, gold: string): boolean {
 export function classifyEvidenceQuality(
   record: VtraceCallRecord,
   goldFiles: readonly string[],
+  options: { readonly productDeclined?: boolean } = {},
 ): EvidenceQuality {
   const returned = record.returnedPaths;
   const lead = returned[0] ?? null;
@@ -74,9 +84,12 @@ export function classifyEvidenceQuality(
 
   const tier: EvidenceTier = record.resultState === "TOOL_ERROR"
     ? "ERROR"
-    : record.itemCount === 0
-      ? "EMPTY"
-      : goldRelation === "TOP_1" ? "GOLD_LED" : goldRelation === "ANYWHERE" ? "GOLD_PRESENT" : "GOLD_ABSENT";
+    : options.productDeclined === true
+      ? "PRODUCT_DECLINED"
+      : record.itemCount === 0
+        ? "EMPTY"
+        : goldRelation === "TOP_1" ? "GOLD_LED" : goldRelation === "ANYWHERE" ? "GOLD_PRESENT" : "GOLD_ABSENT";
+  const evidenceDelivered = tier === "GOLD_LED" || tier === "GOLD_PRESENT" || tier === "GOLD_ABSENT";
 
   return {
     tier,
@@ -87,6 +100,7 @@ export function classifyEvidenceQuality(
     leadPath: lead,
     itemCount: record.itemCount,
     responseEstimatedTokens: record.responseEstimatedTokens,
+    evidenceDelivered,
     caveat:
       "Gold-relative only. Evidence can omit the patch gold and still orient usefully, and evidence containing "
       + "the gold can still mislead. See agentReaction for what the agent did with it.",
@@ -135,6 +149,23 @@ export function classifyQueryEvidence(
   taskText: string,
   quality: EvidenceQuality,
 ): QueryAlignment {
+  // Order matters. The evidence gate comes FIRST: when nothing was delivered the
+  // query cannot be judged against evidence at all, and an uncaptured query is
+  // not a misaligned one. Checking emptiness first scored three runs whose query
+  // the harness simply did not record as the agent's own misalignment.
+  if (!quality.evidenceDelivered) {
+    // The question may have been perfectly good; there is simply no evidence to
+    // hold it against. Scoring this as WRONG_EVIDENCE would blame retrieval for
+    // a call that never reached retrieval.
+    const tokens = contentTokens(query);
+    const shared = [...tokens].filter((token) => contentTokens(taskText).has(token)).length;
+    return {
+      classification: "NOT_APPLICABLE",
+      overlap: tokens.size === 0 ? 0 : shared / tokens.size,
+      queryChars: query.length,
+      needsInspection: false,
+    };
+  }
   if (query.trim().length === 0) {
     return { classification: "QUERY_ITSELF_MISALIGNED", overlap: 0, queryChars: 0, needsInspection: true };
   }
@@ -164,7 +195,9 @@ export type AgentReaction =
   | "IGNORED"
   | "DISAGREED_AND_RECOVERED"
   | "ANCHORED_INCORRECTLY"
-  | "REQUESTED_FOLLOWUP_VTRACE";
+  | "REQUESTED_FOLLOWUP_VTRACE"
+  /** No evidence reached the agent, so there is nothing it could have reacted to. */
+  | "NO_EVIDENCE_DELIVERED";
 
 export interface ReactionAnalysis {
   readonly labels: readonly AgentReaction[];
@@ -208,6 +241,20 @@ export function classifyAgentReaction(
   const followUpVtraceCalls = Math.max(0, records.length - 1);
 
   const labels = new Set<AgentReaction>();
+
+  // With no returned paths, "ignored what it returned" and "edited somewhere it
+  // did not name" are both trivially true of every run, and would be reported as
+  // findings about the agent. They are facts about the empty result instead.
+  if (!quality.evidenceDelivered) {
+    labels.add("NO_EVIDENCE_DELIVERED");
+    if (followUpVtraceCalls > 0) labels.add("REQUESTED_FOLLOWUP_VTRACE");
+    return {
+      labels: Object.freeze([...labels]),
+      openedReturnedPath, editedReturnedPath, editedNonReturnedPath,
+      ordinaryCallsAfterFirstVtrace, searchesBetweenCallAndFirstEdit, followUpVtraceCalls,
+    };
+  }
+
   if (openedReturnedPath || editedReturnedPath) labels.add("USED_AS_ORIENTATION");
   if (searchesBetweenCallAndFirstEdit > 0) labels.add("VERIFIED_WITH_NORMAL_TOOLS");
   if (!openedReturnedPath && !editedReturnedPath) labels.add("IGNORED");
@@ -259,7 +306,8 @@ export function detectFalseAuthority(
   reaction: ReactionAnalysis,
   quality: EvidenceQuality,
 ): FalseAuthorityFinding {
-  const evidenceMissedGold = quality.goldRelation === "ABSENT";
+  // False authority is only definable against evidence the agent actually saw.
+  const evidenceMissedGold = quality.evidenceDelivered && quality.goldRelation === "ABSENT";
   const editedOnlyReturnedPaths = reaction.editedReturnedPath && !reaction.editedNonReturnedPath;
   const detected = evidenceMissedGold
     && editedOnlyReturnedPaths

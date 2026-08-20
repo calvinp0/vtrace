@@ -141,6 +141,60 @@ function readOrderedCalls(dir: string): RawToolCall[] {
   return [];
 }
 
+/**
+ * Did the product decline to answer rather than answer emptily?
+ *
+ * `repo_not_ready` / `resolved:false` means retrieval never ran. Read from the
+ * raw response because the shared telemetry parser reports only item counts, and
+ * a declined call and an empty search are identical in an item count.
+ */
+function productDeclined(output: unknown): boolean {
+  const text = typeof output === "string" ? output : JSON.stringify(output ?? "");
+  if (text.length === 0) return false;
+  try {
+    const parsed = JSON.parse(text) as Record<string, unknown>;
+    const result = (parsed.result ?? {}) as Record<string, unknown>;
+    const out = (result.output ?? {}) as Record<string, unknown>;
+    if (out.resolved === false) return true;
+    return typeof out.reason === "string" && out.reason.length > 0;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * The query the agent actually sent.
+ *
+ * The harness records MCP tool inputs in its own `query` field and leaves `args`
+ * null, so reading args alone scored every query as empty and therefore
+ * misaligned — a finding about the capture format, not about the agent.
+ */
+function queryOf(call: RawToolCall | undefined, record: VtraceCallRecord | undefined): string {
+  const fromArgs = String(record?.args.task ?? record?.args.query ?? record?.args.symbol_fqn ?? "");
+  if (fromArgs.length > 0) return fromArgs;
+  const raw = (call as unknown as { query?: unknown } | undefined)?.query;
+  return typeof raw === "string" && raw !== "None" ? raw : "";
+}
+
+/**
+ * Did the product reject the call because the agent sent a malformed argument?
+ *
+ * Taken from the product's own `invalid_request` error rather than from an empty
+ * captured query: the harness does not record MCP inputs reliably, so a blank
+ * capture is silence, while this is the product saying what it received.
+ */
+function malformedQueryArgument(output: unknown): boolean {
+  const text = typeof output === "string" ? output : JSON.stringify(output ?? "");
+  try {
+    const parsed = JSON.parse(text) as Record<string, unknown>;
+    return parsed.code === "invalid_request"
+      && typeof parsed.message === "string"
+      && /non-empty string query/i.test(parsed.message);
+  } catch {
+    return false;
+  }
+}
+
 function num(value: unknown): number | null {
   return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
@@ -229,10 +283,14 @@ function main(): void {
       if (resolved === null && emptyPatch) resolved = false;
 
       const first: VtraceCallRecord | undefined = telemetry.calls[0];
-      const quality = first === undefined ? null : classifyEvidenceQuality(first, goldFiles);
+      const firstRawCall = calls.find((call) => /vtrace/i.test(String(call.tool ?? "")));
+      const declined = first === undefined ? false : productDeclined(firstRawCall?.output);
+      const quality = first === undefined
+        ? null
+        : classifyEvidenceQuality(first, goldFiles, { productDeclined: declined });
       const queryAlignment = first === undefined || quality === null
         ? null
-        : classifyQueryEvidence(String(first.args.task ?? first.args.query ?? ""), taskText, quality);
+        : classifyQueryEvidence(queryOf(firstRawCall, first), taskText, quality);
       const reaction = first === undefined || quality === null
         ? null
         : classifyAgentReaction(calls, telemetry.calls, resolved, quality);
@@ -284,6 +342,9 @@ function main(): void {
         composition: telemetry.composition,
         utilization: telemetry.utilization,
         firstCallEvidence: quality,
+        firstCallQuery: queryOf(firstRawCall, first),
+        productDeclined: declined,
+        malformedQueryArgument: malformedQueryArgument(firstRawCall?.output),
         queryAlignment,
         agentReaction: reaction,
         falseAuthority,
@@ -444,14 +505,20 @@ function main(): void {
     evidenceUse: {
       requiredFirstCalls: byArm("tools_task_trigger")
         .filter((record) => record.triggerState === "TRIGGER_COMPLIED").length,
-      byTier: Object.fromEntries(["GOLD_LED", "GOLD_PRESENT", "GOLD_ABSENT", "EMPTY", "ERROR"].map((tier) => [
+      malformedQueryArgument: byArm("tools_task_trigger")
+        .filter((record) => record.malformedQueryArgument === true).map((record) => record.instanceId),
+      queryCapturedByHarness: byArm("tools_task_trigger")
+        .filter((record) => String(record.firstCallQuery ?? "").trim().length > 0).length,
+      evidenceActuallyDelivered: byArm("tools_task_trigger")
+        .filter((record) => (record.firstCallEvidence as { evidenceDelivered?: boolean } | null)?.evidenceDelivered === true).length,
+      byTier: Object.fromEntries(["GOLD_LED", "GOLD_PRESENT", "GOLD_ABSENT", "EMPTY", "PRODUCT_DECLINED", "ERROR"].map((tier) => [
         tier,
         byArm("tools_task_trigger")
           .filter((record) => (record.firstCallEvidence as { tier?: string } | null)?.tier === tier).length,
       ])),
       byQueryClass: Object.fromEntries([
         "RIGHT_QUERY_RIGHT_EVIDENCE", "RIGHT_QUERY_PARTIAL_EVIDENCE",
-        "RIGHT_QUERY_WRONG_EVIDENCE", "QUERY_ITSELF_MISALIGNED",
+        "RIGHT_QUERY_WRONG_EVIDENCE", "QUERY_ITSELF_MISALIGNED", "NOT_APPLICABLE",
       ].map((cls) => [
         cls,
         byArm("tools_task_trigger")
@@ -460,6 +527,7 @@ function main(): void {
       byReaction: Object.fromEntries([
         "USED_AS_ORIENTATION", "VERIFIED_WITH_NORMAL_TOOLS", "IGNORED",
         "DISAGREED_AND_RECOVERED", "ANCHORED_INCORRECTLY", "REQUESTED_FOLLOWUP_VTRACE",
+        "NO_EVIDENCE_DELIVERED",
       ].map((label) => [
         label,
         byArm("tools_task_trigger")

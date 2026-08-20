@@ -209,3 +209,56 @@ describe("paired outcomes", () => {
     expect(classifyPairedOutcome(true, null)).toBe("NOT_COMPARABLE");
   });
 });
+
+// Positive controls for the M163-D analyzer correction. The sweep found that
+// every VTRACE call was declined by the product (`repo_not_ready`), which made
+// three labels fire on all twelve runs for reasons that had nothing to do with
+// the agent. These pin the corrected behaviour in both directions.
+describe("undelivered evidence gates every downstream label", () => {
+  const declined = () => classifyEvidenceQuality(
+    record({ itemCount: 0, returnedPaths: [], returnedFqNames: [] }),
+    ["pkg/core.py"],
+    { productDeclined: true },
+  );
+
+  test("a declined answer is its own tier, not weak retrieval", () => {
+    // EMPTY means retrieval ran and found nothing. This means it never ran.
+    expect(declined().tier).toBe("PRODUCT_DECLINED");
+    expect(declined().evidenceDelivered).toBe(false);
+    expect(classifyEvidenceQuality(record({ itemCount: 0, returnedPaths: [] }), ["pkg/core.py"]).tier).toBe("EMPTY");
+  });
+
+  test("IGNORED and DISAGREED_AND_RECOVERED do not fire on an empty result", () => {
+    // Before the correction both fired on every run: with no returned paths,
+    // "touched nothing it returned" and "edited somewhere it did not name" are
+    // true by construction, and were being reported as agent behaviour.
+    const reaction = classifyAgentReaction(
+      [call("mcp__vtrace__get_code_context"), call("Grep"), call("Edit", "pkg/core.py")],
+      [record()], true, declined());
+    expect(reaction.labels).toEqual(["NO_EVIDENCE_DELIVERED"]);
+    expect(reaction.labels).not.toContain("IGNORED");
+    expect(reaction.labels).not.toContain("DISAGREED_AND_RECOVERED");
+  });
+
+  test("a retry after a declined answer is still recorded as a follow-up call", () => {
+    const reaction = classifyAgentReaction(
+      [call("mcp__vtrace__get_code_context"), call("mcp__vtrace__get_code_context")],
+      [record(), record({ sequence: 1 })], null, declined());
+    expect(reaction.labels).toContain("REQUESTED_FOLLOWUP_VTRACE");
+    expect(reaction.labels).toContain("NO_EVIDENCE_DELIVERED");
+  });
+
+  test("false authority cannot be detected against evidence nobody saw", () => {
+    const reaction = classifyAgentReaction(
+      [call("mcp__vtrace__get_code_context"), call("Edit", "pkg/core.py")], [record()], false, declined());
+    expect(detectFalseAuthority(reaction, declined()).detected).toBe(false);
+  });
+
+  test("query alignment is NOT_APPLICABLE, so retrieval is not blamed for a call it never saw", () => {
+    const task = "gold tier discount is wrong when computing the order total";
+    expect(classifyQueryEvidence(task, task, declined()).classification).toBe("NOT_APPLICABLE");
+    // ...and a genuinely delivered result still classifies normally.
+    expect(classifyQueryEvidence(task, task, classifyEvidenceQuality(record(), ["pkg/core.py"])).classification)
+      .toBe("RIGHT_QUERY_RIGHT_EVIDENCE");
+  });
+});
