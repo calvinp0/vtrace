@@ -3135,6 +3135,39 @@ against, restored to base commit, re-prepared with the runner's own index step,
 asserted to carry an index and no lifecycle files, and asked through a real
 `mcp-serve` process started from the sweep's own config builder.
 
+## M164-C/D/E — Paired conditional utility (commits pending)
+
+**C PASS · D PASS · E PASS. M164 overall PASS.**
+
+```text
+answerability:      ANSWERABILITY_REPAIRED
+utility:            UTILITY_NEUTRAL
+architecture:       TRIGGERED_CALLABLE_NEUTRAL
+extension decision: DO NOT BUILD PROACTIVE ROUTING
+```
+
+24/24 arms, 0 reruns, 0 infrastructure failures, $19.18 of a $22 cap. Neutral
+policy and trigger hashes recomputed from live source and preserved; the same
+twelve tasks; availability proven per run from its own init event.
+
+```text
+                    NEUTRAL   TRIGGER
+adoption               0/12     12/12
+first-call delivery       —     11/12   (evidence ever delivered 12/12)
+REPO_NOT_READY            —      0/12   (was 12/12 in M163)
+resolved               8/12      8/12
+unique wins               0         0
+cost                  $9.42     $9.76
+```
+
+Same eight tasks solved, task for task. Gold relation TOP_1 8/12 — three of the
+four misses are siblings of gold. Every agent verified independently (12/12);
+none over-trusted (false authority 0); **not one made a voluntary second call**.
+
+Localization was not the binding constraint. The eight TOP_1 runs got the gold
+file at turn zero and converted it into no advantage; the neutral arm found the
+same files itself within a few ordinary searches.
+
 ## M164 standing findings
 
 - **The seam was a false coupling, and the product was already contradicting
@@ -3169,3 +3202,39 @@ asserted to carry an index and no lifecycle files, and asked through a real
   sweep exposed exactly two tools and `index_repo` was not one of them, so the
   only documented escape from the refusal could never be taken. Guidance that
   names a tool the surface does not expose is guidance that cannot be followed.
+
+- **Forced exposure to CORRECT evidence changed nothing.** M163 saw 8/12 on both
+  arms with zero unique wins and it meant nothing, because no evidence was
+  delivered. M164 reproduces the identical outcome under real exposure, with the
+  gold file leading two thirds of the results. For this agent on these tasks,
+  being handed the right file early is worth approximately nothing — finding the
+  right file was never the expensive part. Four of the eight gold-led runs still
+  failed, for reasons downstream of localization.
+
+- **Zero voluntary follow-up calls, 0/12.** Twelve agents were made to call a
+  free, already-connected tool; eight got back exactly the file they needed; not
+  one asked it anything else for the rest of the task. This is the strongest
+  single signal in the milestone and it is about perceived value, not access.
+
+- **A classifier written against a parsed envelope fails OPEN.** The harness
+  truncates large tool outputs, so `JSON.parse` fails on nearly every real
+  response. Four separate M163 readers each produced a confident uniform wrong
+  answer rather than an absent one: empty queries, `gold=ABSENT` 12/12,
+  `WRONG_EVIDENCE` 12/12, `NO_EVIDENCE_DELIVERED` 12/12. The gold one would have
+  inverted the headline and licensed retrieval work on evidence saying the
+  opposite. A uniform label across a whole sweep is a broken classifier, not a
+  finding — check it before believing it, in whichever direction it points.
+
+- **§84's licence for retrieval work is still not granted, and now for the
+  opposite reason.** M162/M163 could not grant it because no question was ever
+  asked or answered. M164 cannot grant it because the questions were right, the
+  evidence was delivered, and it led with gold on 8/12 — returned evidence is not
+  systematically poor. Neither is result framing implicated: false authority 0,
+  independent verification 12/12.
+
+- **The untested variable is the task population, not the product.** SWE-bench
+  Verified issues name their failure well enough for grep to find it, so ordinary
+  search is cheap and a localization tool has little room to pay for itself.
+  Nothing in M161–M164 has tested a corpus where localization is genuinely hard.
+  That, not a better tool or a better prompt, is the informative next experiment
+  if this line continues.
