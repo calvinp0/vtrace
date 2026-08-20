@@ -156,7 +156,18 @@ export function queryOf(call: RawToolCall | undefined, record: VtraceCallRecord 
       const parsed = JSON.parse(text) as Record<string, any>;
       const echoed = parsed?.["result"]?.output?.request?.query ?? parsed?.["result"]?.output?.request?.task;
       if (typeof echoed === "string" && echoed.length > 0) return echoed;
-    } catch { /* fall through to the captured fields */ }
+    } catch {
+      // The harness TRUNCATES large tool outputs, so the envelope is often not
+      // parseable JSON at all — 8182 characters ending mid-string is the common
+      // shape. The echoed query sits near the front of the payload and survives
+      // the truncation, so it is recovered textually. Without this the query
+      // reads as empty on every large result, which would be reported as the
+      // agent asking nothing.
+      const match = /"request"\s*:\s*\{\s*"query"\s*:\s*"((?:[^"\\]|\\.)*)"/.exec(text);
+      if (match?.[1] !== undefined) {
+        try { return JSON.parse(`"${match[1]}"`) as string; } catch { return match[1]; }
+      }
+    }
   }
   const fromArgs = String((record?.args as Record<string, unknown> | undefined)?.["task"]
     ?? (record?.args as Record<string, unknown> | undefined)?.["query"] ?? "");

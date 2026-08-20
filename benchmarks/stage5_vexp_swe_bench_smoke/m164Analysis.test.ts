@@ -125,13 +125,28 @@ test("the paired solve matrix keeps an incomplete pair out of every cell", () =>
   assert.equal(classifySolve(null, true), "INCOMPLETE");
 });
 
+test("a retry of a rejected required call is not voluntary reuse", () => {
+  // The live M164 shape: the opening call was malformed and the agent retried it.
+  // Scoring that second call as a voluntary return to VTRACE would invert the
+  // finding — it is the agent repairing its own call, not choosing to come back.
+  const repaired = splitCalls(["INVALID_REQUEST", "VALID_NONEMPTY"]);
+  assert.equal(repaired.required, 1);
+  assert.equal(repaired.errorRetries, 1);
+  assert.equal(repaired.voluntaryFollowup, 0);
+
+  // Never answered at all: every call was an attempt at the required one.
+  const neverAnswered = splitCalls(["INVALID_REQUEST", "INVALID_REQUEST"]);
+  assert.equal(neverAnswered.voluntaryFollowup, 0);
+  assert.equal(neverAnswered.errorRetries, 1);
+});
+
 test("an error retry is not counted as voluntary reuse", () => {
   // §71. A malformed call the agent immediately retried is not a signal that it
   // found the first answer worth returning to.
   const withRetry = splitCalls(["INVALID_REQUEST", "INVALID_REQUEST", "VALID_NONEMPTY"]);
   assert.equal(withRetry.required, 1);
-  assert.equal(withRetry.errorRetries, 1);
-  assert.equal(withRetry.voluntaryFollowup, 1);
+  assert.equal(withRetry.errorRetries, 2);
+  assert.equal(withRetry.voluntaryFollowup, 0);
 
   const genuine = splitCalls(["VALID_NONEMPTY", "VALID_NONEMPTY"]);
   assert.equal(genuine.voluntaryFollowup, 1);

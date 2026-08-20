@@ -217,7 +217,18 @@ export interface CallSplit {
 
 export function splitCalls(statuses: readonly FirstCallStatus[]): CallSplit {
   if (statuses.length === 0) return { required: 0, voluntaryFollowup: 0, errorRetries: 0 };
-  const [, ...rest] = statuses;
-  const errorRetries = rest.filter((status) => status === "INVALID_REQUEST" || status === "TOOL_ERROR").length;
-  return { required: 1, voluntaryFollowup: rest.length - errorRetries, errorRetries };
+
+  // The required call is satisfied by the first call that actually got an ANSWER,
+  // empty or not. Everything before it is the agent retrying a call the product
+  // rejected, and everything after it is a genuine choice to come back.
+  //
+  // Counting positionally instead — "the first call is required, the rest are
+  // voluntary" — inverts exactly the case that matters: an agent whose opening
+  // call was malformed and who immediately retried would be scored as having
+  // voluntarily returned to VTRACE, which is the opposite of what happened.
+  const answered = statuses.findIndex((status) => status === "VALID_NONEMPTY" || status === "VALID_EMPTY");
+  if (answered === -1) {
+    return { required: 1, voluntaryFollowup: 0, errorRetries: statuses.length - 1 };
+  }
+  return { required: 1, voluntaryFollowup: statuses.length - answered - 1, errorRetries: answered };
 }
