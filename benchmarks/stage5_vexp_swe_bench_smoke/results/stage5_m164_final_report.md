@@ -314,7 +314,7 @@ The discrepancy is the record of why the correction exists.
 ```text
 bun run typecheck              pass
 bun run typecheck:benchmarks   pass
-bun test                       see stage5_m164_verification (run idle, post-sweep)
+bun test                       5158 pass, 49 skip, 0 fail (330 files, run idle)
 git diff --check               clean
 ```
 
