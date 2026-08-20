@@ -303,9 +303,37 @@ function main(): void {
       const goldDiagnostic = eligible ? classifyGoldRelation(capsuleItems, goldFiles) : null;
       const quality = eligible ? classifyEvidenceQuality(deliveringRecord!, goldFiles, { productDeclined: false }) : null;
       const queryText = queryOf(deliveringRawCall ?? firstRawCall, deliveringRecord ?? first);
-      const queryAlignment = eligible && quality !== null ? classifyQueryEvidence(queryText, taskText, quality) : null;
-      const reaction = eligible && quality !== null ? classifyAgentReaction(calls as never, telemetry.calls, resolved, quality) : null;
-      const falseAuthority = reaction !== null && quality !== null ? detectFalseAuthority(reaction, quality) : null;
+      // M163's reaction and false-authority LOGIC is sound and reused unchanged.
+      // What it was being fed was not: it reads returned paths off the telemetry
+      // record and `evidenceDelivered`/`goldRelation` off the quality object,
+      // and the truncation artefact empties both. Given those inputs it reported
+      // NO_EVIDENCE_DELIVERED for all twelve runs — a fact about the parser.
+      // Corrected inputs are substituted; the classifier is untouched.
+      const correctedQuality = goldDiagnostic === null || quality === null ? null : {
+        ...quality,
+        evidenceDelivered: true,
+        // The tier must move with the gold relation. Leaving the stale "ERROR"
+        // in place short-circuits classifyQueryEvidence to WRONG_EVIDENCE, which
+        // it duly reported for all twelve runs — including the eight whose lead
+        // pivot was the gold file.
+        tier: goldDiagnostic.relation === "TOP_1"
+          ? "GOLD_LED"
+          : goldDiagnostic.relation === "ANYWHERE" ? "GOLD_PRESENT" : "GOLD_ABSENT",
+        goldRelation: goldDiagnostic.relation,
+        goldFilesReturned: goldDiagnostic.goldFilesReturned,
+        leadPath: goldDiagnostic.leadPath,
+        returnedPathCount: capsuleItems.length,
+        itemCount: capsuleItems.length,
+      };
+      // Records from the DELIVERING call onward, carrying the structurally
+      // recovered paths, so "followUpVtraceCalls" counts calls after evidence
+      // arrived rather than after the agent's own rejected attempt.
+      const correctedRecords = eligible
+        ? [{ ...deliveringRecord!, returnedPaths: capsuleItems.map((item) => item.path) }, ...telemetry.calls.slice(deliveringIndex + 1)]
+        : telemetry.calls;
+      const queryAlignment = eligible && correctedQuality !== null ? classifyQueryEvidence(queryText, taskText, correctedQuality as never) : null;
+      const reaction = eligible && correctedQuality !== null ? classifyAgentReaction(calls as never, correctedRecords as never, resolved, correctedQuality as never) : null;
+      const falseAuthority = reaction !== null && correctedQuality !== null ? detectFalseAuthority(reaction, correctedQuality as never) : null;
       const falseAbsence = eligible ? findFalseAbsenceCandidates(readAssistantText(dir)) : [];
 
       const traffic = tokenTraffic({
