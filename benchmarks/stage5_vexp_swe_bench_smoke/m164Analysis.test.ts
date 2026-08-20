@@ -4,6 +4,8 @@ import { test } from "bun:test";
 import {
   analyzerEligible,
   classifyFirstCall,
+  classifyGoldRelation,
+  extractCapsuleItems,
   classifySolve,
   extractReturnedPaths,
   pairedDelta,
@@ -153,4 +155,40 @@ test("an error retry is not counted as voluntary reuse", () => {
   assert.equal(genuine.errorRetries, 0);
 
   assert.deepEqual(splitCalls([]), { required: 0, voluntaryFollowup: 0, errorRetries: 0 });
+});
+
+// The capture artefact that would have inverted the headline result: a parser
+// fed a truncated payload reports zero items, and a gold classifier fed zero
+// items reports ABSENT for every run in the sweep.
+const TRUNCATED = '{"result":{"output":{"capsuleResult":{"pivots":[{"role":"pivot","path":"sympy/printing/latex.py","symbol":"latex","kind":"function"}],"support":[{"role":"support","path":"sympy/printing/pretty/pretty.py"},{"role":"support","path":"sympy/printing/tests/test_lat';
+
+test("known-positive: capsule items survive a truncated payload", () => {
+  assert.throws(() => JSON.parse(TRUNCATED) as unknown, "the fixture must actually be unparseable");
+
+  const items = extractCapsuleItems(TRUNCATED);
+  assert.deepEqual(items, [
+    { role: "pivot", path: "sympy/printing/latex.py" },
+    { role: "support", path: "sympy/printing/pretty/pretty.py" },
+  ]);
+});
+
+test("known-positive: the gold relation distinguishes TOP_1 from ANYWHERE from ABSENT", () => {
+  const items = extractCapsuleItems(TRUNCATED);
+
+  // The real sympy-13798 case: the lead pivot IS the gold file. The pre-fix
+  // reader called this ABSENT.
+  const top1 = classifyGoldRelation(items, ["sympy/printing/latex.py"]);
+  assert.equal(top1.relation, "TOP_1");
+  assert.equal(top1.leadPath, "sympy/printing/latex.py");
+  assert.deepEqual(top1.goldFilesReturned, ["sympy/printing/latex.py"]);
+
+  const anywhere = classifyGoldRelation(items, ["sympy/printing/pretty/pretty.py"]);
+  assert.equal(anywhere.relation, "ANYWHERE");
+
+  const absent = classifyGoldRelation(items, ["sympy/core/numbers.py"]);
+  assert.equal(absent.relation, "ABSENT");
+  assert.deepEqual(absent.goldFilesReturned, []);
+
+  // No items recovered must not read as "gold absent from good evidence".
+  assert.equal(classifyGoldRelation([], ["anything.py"]).leadPath, null);
 });

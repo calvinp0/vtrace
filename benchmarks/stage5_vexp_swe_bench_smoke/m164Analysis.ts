@@ -232,3 +232,76 @@ export function splitCalls(statuses: readonly FirstCallStatus[]): CallSplit {
   }
   return { required: 1, voluntaryFollowup: statuses.length - answered - 1, errorRetries: answered };
 }
+
+/**
+ * Capsule items recovered from a possibly-TRUNCATED response payload.
+ *
+ * This exists because the alternative produced a uniform wrong answer. The
+ * harness truncates large tool outputs, so `JSON.parse` fails on most real
+ * responses, and a parser-based reader reports zero items for every run. Fed
+ * that, M163's gold-relation classifier labelled all twelve M164 runs
+ * `gold=ABSENT` — while the lead pivot on the very first run was
+ * `sympy/printing/latex.py`, which is that task's gold file exactly.
+ *
+ * A uniform label across every run is the signature of a broken classifier, not
+ * a finding, and publishing this one would have inverted the headline result.
+ * So items are recovered structurally: role and path, in payload order, from
+ * whatever prefix of the envelope survived truncation.
+ */
+export interface CapsuleItem {
+  readonly role: "pivot" | "support";
+  readonly path: string;
+}
+
+const CAPSULE_ITEM = /"role":"(pivot|support)"(?:(?!"role")[\s\S])*?"path":"([^"]+)"/g;
+
+export function extractCapsuleItems(text: string): CapsuleItem[] {
+  return [...text.matchAll(CAPSULE_ITEM)].map((match) => ({
+    role: match[1] as "pivot" | "support",
+    path: match[2]!,
+  }));
+}
+
+export type GoldRelation = "TOP_1" | "ANYWHERE" | "ABSENT";
+
+export interface GoldDiagnostic {
+  readonly relation: GoldRelation;
+  readonly leadPath: string | null;
+  readonly pivotPaths: readonly string[];
+  readonly supportPaths: readonly string[];
+  readonly goldFilesExpected: readonly string[];
+  readonly goldFilesReturned: readonly string[];
+  /** Kept verbatim from M163: gold presence is not usefulness. */
+  readonly caveat: string;
+}
+
+/**
+ * Where the benchmark's gold files sit in what VTRACE returned.
+ *
+ * Diagnostic only. Evidence can omit the patch gold and still orient an agent
+ * usefully, and evidence containing the gold can still mislead — which is why
+ * this never decides utility on its own and the agent-reaction analysis is
+ * reported beside it.
+ */
+export function classifyGoldRelation(
+  items: readonly CapsuleItem[],
+  goldFiles: readonly string[],
+): GoldDiagnostic {
+  const pivotPaths = items.filter((item) => item.role === "pivot").map((item) => item.path);
+  const supportPaths = items.filter((item) => item.role === "support").map((item) => item.path);
+  const leadPath = pivotPaths[0] ?? null;
+  const gold = new Set(goldFiles);
+  const returned = items.map((item) => item.path).filter((path) => gold.has(path));
+  const relation: GoldRelation = leadPath !== null && gold.has(leadPath)
+    ? "TOP_1"
+    : returned.length > 0 ? "ANYWHERE" : "ABSENT";
+  return {
+    relation,
+    leadPath,
+    pivotPaths,
+    supportPaths,
+    goldFilesExpected: goldFiles,
+    goldFilesReturned: [...new Set(returned)],
+    caveat: "Gold-relative only. Evidence can omit the patch gold and still orient usefully, and evidence containing the gold can still mislead.",
+  };
+}

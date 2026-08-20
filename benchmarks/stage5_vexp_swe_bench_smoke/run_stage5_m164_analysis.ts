@@ -35,7 +35,9 @@ import {
 } from "./m163Analysis";
 import {
   classifyFirstCall,
+  classifyGoldRelation,
   classifySolve,
+  extractCapsuleItems,
   pairedDelta,
   splitCalls,
   summarizeDeltas,
@@ -290,6 +292,15 @@ function main(): void {
       const deliveringRecord = deliveringIndex === -1 ? undefined : telemetry.calls[deliveringIndex];
       const evidenceEverDelivered = deliveringIndex !== -1;
       const eligible = evidenceEverDelivered && deliveringRecord !== undefined;
+      // Recovered structurally from the delivering call's payload rather than
+      // through the telemetry record: the harness truncates large outputs, the
+      // record's parser yields zero items on nearly every real response, and a
+      // gold classifier fed zero items reports ABSENT for the whole sweep.
+      const deliveredText = typeof deliveringRawCall?.output === "string"
+        ? deliveringRawCall.output
+        : JSON.stringify(deliveringRawCall?.output ?? "");
+      const capsuleItems = eligible ? extractCapsuleItems(deliveredText) : [];
+      const goldDiagnostic = eligible ? classifyGoldRelation(capsuleItems, goldFiles) : null;
       const quality = eligible ? classifyEvidenceQuality(deliveringRecord!, goldFiles, { productDeclined: false }) : null;
       const queryText = queryOf(deliveringRawCall ?? firstRawCall, deliveringRecord ?? first);
       const queryAlignment = eligible && quality !== null ? classifyQueryEvidence(queryText, taskText, quality) : null;
@@ -337,7 +348,11 @@ function main(): void {
         evidenceEverDelivered,
         deliveredOnCallIndex: deliveringIndex === -1 ? null : deliveringIndex + 1,
         analyzerEligible: eligible,
-        evidenceQuality: quality,
+        capsuleItems,
+        goldDiagnostic,
+        // Kept for continuity with M163, but NOT authoritative here: its reader
+        // cannot parse a truncated payload. goldDiagnostic is the corrected view.
+        evidenceQualityM163Reader: quality,
         queryAlignment,
         agentReaction: reaction,
         falseAuthority,
