@@ -1,0 +1,60 @@
+{
+ "schemaVersion": 1,
+ "milestone": "M167",
+ "workstream": "B",
+ "title": "Restatement decomposition",
+ "question": "§21 — where do M166's 21.8% restatements come from?",
+ "acrossChannels": {
+  "characters": 33005,
+  "modelVisibleCost": 0,
+  "reading": "the text channel restates the entire output, but the client discards it; this restatement is paid in wire bytes and server CPU, never in model tokens"
+ },
+ "withinDeliveredRepresentation": {
+  "surfaceCharacters": {
+   "productContext.modelVisibleContext": 3983,
+   "productContext.items": 3126,
+   "capsuleResult.digest": 1136,
+   "pivotNeighborhood": 913,
+   "context": 786,
+   "inspectFirst": 459,
+   "capsule": 149,
+   "impact": 220,
+   "diagnostics": 1147
+  },
+  "medianFacts": 10,
+  "medianMultiSurfaceFacts": 9,
+  "topPairs": [
+   {
+    "a": "productContext.modelVisibleContext",
+    "b": "productContext.items",
+    "sharedFacts": 6
+   },
+   {
+    "a": "productContext.modelVisibleContext",
+    "b": "capsuleResult.digest",
+    "sharedFacts": 6
+   },
+   {
+    "a": "productContext.items",
+    "b": "capsuleResult.digest",
+    "sharedFacts": 6
+   },
+   {
+    "a": "productContext.modelVisibleContext",
+    "b": "inspectFirst",
+    "sharedFacts": 3
+   },
+   {
+    "a": "productContext.items",
+    "b": "inspectFirst",
+    "sharedFacts": 3
+   },
+   {
+    "a": "capsuleResult.digest",
+    "b": "inspectFirst",
+    "sharedFacts": 3
+   }
+  ],
+  "reading": "the restatement that reaches the model is the one inside the delivered channel — the same repository fact rendered by the prose context, the structured item list and the capsule digest"
+ }
+}

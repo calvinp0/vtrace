@@ -1,0 +1,69 @@
+{
+ "schemaVersion": 1,
+ "milestone": "M167",
+ "workstream": "A",
+ "title": "Consumer matrix",
+ "method": "repository and runtime evidence only; a consumer whose behaviour is neither observed nor pinned by code is UNKNOWN",
+ "consumers": [
+  {
+   "consumer": "Claude Code (the M164/M165 agent client)",
+   "readsStructuredContent": "YES",
+   "readsContentText": "NO",
+   "requiresBoth": "NO",
+   "fallback": "not exercised — structuredContent was present on every observed call",
+   "evidence": "12/12 M164 model-visible tool results begin with the envelope wrapper `{\"schema\":{\"name\":\"vtrace.mcp_server\"`, which content[0].text cannot produce",
+   "authority": "PROVEN",
+   "tested": "M166-A boundary matrix, replayed here"
+  },
+  {
+   "consumer": "Codex",
+   "readsStructuredContent": "UNKNOWN",
+   "readsContentText": "UNKNOWN",
+   "requiresBoth": "UNKNOWN",
+   "fallback": "unknown",
+   "evidence": "README advertises the server for Codex and src/runtime/codexConfig.ts installs its MCP config, but no Codex result-handling code or transcript exists in this repository",
+   "authority": "UNKNOWN",
+   "tested": "config installation only"
+  },
+  {
+   "consumer": "Stage 5 / benchmark harnesses",
+   "readsStructuredContent": "YES",
+   "readsContentText": "YES",
+   "requiresBoth": "NO — either channel carries the output; harnesses use both for different purposes",
+   "fallback": "n/a",
+   "evidence": "run_stage5_m166_acceptance.ts parses content[0].text for the semantic profile and measures structuredContent for width",
+   "authority": "SUPPORTED_BY_CODE",
+   "tested": "yes"
+  },
+  {
+   "consumer": "MCP transport tests",
+   "readsStructuredContent": "YES",
+   "readsContentText": "YES",
+   "requiresBoth": "YES — both are asserted, and the text block is asserted to equal JSON.stringify(output)",
+   "fallback": "n/a",
+   "evidence": "src/mcp/mcp.test.ts asserts callResult.structuredContent and callResult.content in the same test",
+   "authority": "PROVEN",
+   "tested": "yes"
+  },
+  {
+   "consumer": "VTRACE CLI",
+   "readsStructuredContent": "N/A",
+   "readsContentText": "N/A",
+   "requiresBoth": "NO",
+   "fallback": "n/a",
+   "evidence": "src/cli/commands/runPipelineCommand.ts invokes the tool handler in-process and serializes the result itself; it never crosses the MCP transport",
+   "authority": "PROVEN",
+   "tested": "yes"
+  },
+  {
+   "consumer": "Generic MCP client at the advertised revision",
+   "readsStructuredContent": "NO",
+   "readsContentText": "YES",
+   "requiresBoth": "NO — content[] is the only result channel the advertised revision defines",
+   "fallback": "would see an empty result if content[] were removed",
+   "evidence": "VTRACE advertises 2024-11-05 and declares no outputSchema; a client written to that revision has no reason to look at structuredContent",
+   "authority": "SUPPORTED_BY_CODE — inferred from what VTRACE advertises, not from an observed generic client",
+   "tested": "no"
+  }
+ ]
+}

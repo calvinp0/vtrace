@@ -1,0 +1,55 @@
+{
+ "schemaVersion": 1,
+ "milestone": "M167",
+ "title": "Start state recorded before any M167 work",
+ "provenance": {
+  "m166Predecessor": "506dbb500e6695bd8dfbd160d163c7fab1922786",
+  "m166ProductChange": "749434eec6569eecca0abce65372e5ec8b4526f9",
+  "m166FinalEvidenceReport": "749434eec6569eecca0abce65372e5ec8b4526f9",
+  "note": "M166 shipped the product change and its evidence in one commit, so the two SHAs are the same value, verified rather than assumed",
+  "headAtMilestoneStart": "749434eec6569eecca0abce65372e5ec8b4526f9",
+  "currentHead": "749434eec6569eecca0abce65372e5ec8b4526f9",
+  "originMain": "bcdd962e42cfdfccbce89e14885a90f405ba3490",
+  "aheadOfOrigin": 85,
+  "behindOrigin": 0
+ },
+ "branch": "main",
+ "policy": {
+  "push": "NO",
+  "coAuthorTrailers": "NONE",
+  "branchesCreated": "NONE"
+ },
+ "dirtyState": {
+  "trackedModified": [
+   "M benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_outcome_ledger.json",
+   " M benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_outcome_ledger.md"
+  ],
+  "untrackedEntryCount": 189,
+  "preExistingDirtNotToStage": [
+   "benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_outcome_ledger.json",
+   "benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_outcome_ledger.md"
+  ]
+ },
+ "worktrees": [
+  "/home/calvin/code/vtrace                      749434ee [main]",
+  "/home/calvin/bench/vtrace-m140/impl/m136base  f48f8c11 (detached HEAD)",
+  "/home/calvin/bench/vtrace-m140/impl/m139      340fd9c6 (detached HEAD)",
+  "/home/calvin/bench/vtrace-m140/impl/m140a     c7934682 (detached HEAD)",
+  "/home/calvin/bench/vtrace-m140/impl/m140a2    828af6ef (detached HEAD)",
+  "/home/calvin/bench/vtrace-m140/impl/m140a3    f3517160 (detached HEAD)",
+  "/home/calvin/bench/vtrace-m140/impl/m140a4    c995d17a (detached HEAD)",
+  "/home/calvin/bench/vtrace-m140/impl/m140a5    9afecd78 (detached HEAD)",
+  "/home/calvin/bench/vtrace-m140/impl/m140a6    6a6e922a (detached HEAD)",
+  "/home/calvin/bench/vtrace-m142/bisect-0e4edc7 0e4edc78 (detached HEAD)",
+  "/home/calvin/bench/vtrace-m142/bisect-321f9a3 321f9a37 (detached HEAD)",
+  "/home/calvin/bench/vtrace-m142/bisect-69826d3 69826d35 (detached HEAD)",
+  "/home/calvin/bench/vtrace-m142/iso-head       ce473ab2 (detached HEAD)",
+  "/home/calvin/bench/vtrace-m142/pred           562cff6a (detached HEAD)"
+ ],
+ "liveSpend": {
+  "authorized": false,
+  "spentUsd": 0,
+  "agentsSpawned": 0,
+  "dockerEvaluations": 0
+ }
+}

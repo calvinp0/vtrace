@@ -1,0 +1,817 @@
+{
+ "schemaVersion": 1,
+ "milestone": "M167",
+ "workstream": "B",
+ "title": "How the text channel stands to the structured channel, per task",
+ "verdictsObserved": [
+  "SUBSET"
+ ],
+ "cases": [
+  {
+   "instanceId": "astropy__astropy-13977",
+   "call": "get_code_context.standard",
+   "relation": "SUBSET",
+   "detail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value"
+  },
+  {
+   "instanceId": "astropy__astropy-13977",
+   "call": "get_code_context.debug",
+   "relation": "SUBSET",
+   "detail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value"
+  },
+  {
+   "instanceId": "astropy__astropy-13977",
+   "call": "run_pipeline.standard",
+   "relation": "SUBSET",
+   "detail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value"
+  },
+  {
+   "instanceId": "django__django-11451",
+   "call": "get_code_context.standard",
+   "relation": "SUBSET",
+   "detail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value"
+  },
+  {
+   "instanceId": "django__django-11451",
+   "call": "get_code_context.debug",
+   "relation": "SUBSET",
+   "detail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value"
+  },
+  {
+   "instanceId": "django__django-11451",
+   "call": "run_pipeline.standard",
+   "relation": "SUBSET",
+   "detail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value"
+  },
+  {
+   "instanceId": "django__django-13343",
+   "call": "get_code_context.standard",
+   "relation": "SUBSET",
+   "detail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value"
+  },
+  {
+   "instanceId": "django__django-13343",
+   "call": "get_code_context.debug",
+   "relation": "SUBSET",
+   "detail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value"
+  },
+  {
+   "instanceId": "django__django-13343",
+   "call": "run_pipeline.standard",
+   "relation": "SUBSET",
+   "detail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value"
+  },
+  {
+   "instanceId": "matplotlib__matplotlib-24177",
+   "call": "get_code_context.standard",
+   "relation": "SUBSET",
+   "detail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value"
+  },
+  {
+   "instanceId": "matplotlib__matplotlib-24177",
+   "call": "get_code_context.debug",
+   "relation": "SUBSET",
+   "detail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value"
+  },
+  {
+   "instanceId": "matplotlib__matplotlib-24177",
+   "call": "run_pipeline.standard",
+   "relation": "SUBSET",
+   "detail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value"
+  },
+  {
+   "instanceId": "pydata__xarray-4966",
+   "call": "get_code_context.standard",
+   "relation": "SUBSET",
+   "detail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value"
+  },
+  {
+   "instanceId": "pydata__xarray-4966",
+   "call": "get_code_context.debug",
+   "relation": "SUBSET",
+   "detail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value"
+  },
+  {
+   "instanceId": "pydata__xarray-4966",
+   "call": "run_pipeline.standard",
+   "relation": "SUBSET",
+   "detail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value"
+  },
+  {
+   "instanceId": "pytest-dev__pytest-7982",
+   "call": "get_code_context.standard",
+   "relation": "SUBSET",
+   "detail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value"
+  },
+  {
+   "instanceId": "pytest-dev__pytest-7982",
+   "call": "get_code_context.debug",
+   "relation": "SUBSET",
+   "detail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value"
+  },
+  {
+   "instanceId": "pytest-dev__pytest-7982",
+   "call": "run_pipeline.standard",
+   "relation": "SUBSET",
+   "detail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value"
+  },
+  {
+   "instanceId": "scikit-learn__scikit-learn-13496",
+   "call": "get_code_context.standard",
+   "relation": "SUBSET",
+   "detail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value"
+  },
+  {
+   "instanceId": "scikit-learn__scikit-learn-13496",
+   "call": "get_code_context.debug",
+   "relation": "SUBSET",
+   "detail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value"
+  },
+  {
+   "instanceId": "scikit-learn__scikit-learn-13496",
+   "call": "run_pipeline.standard",
+   "relation": "SUBSET",
+   "detail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value"
+  },
+  {
+   "instanceId": "scikit-learn__scikit-learn-14087",
+   "call": "get_code_context.standard",
+   "relation": "SUBSET",
+   "detail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value"
+  },
+  {
+   "instanceId": "scikit-learn__scikit-learn-14087",
+   "call": "get_code_context.debug",
+   "relation": "SUBSET",
+   "detail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value"
+  },
+  {
+   "instanceId": "scikit-learn__scikit-learn-14087",
+   "call": "run_pipeline.standard",
+   "relation": "SUBSET",
+   "detail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value"
+  },
+  {
+   "instanceId": "sphinx-doc__sphinx-11445",
+   "call": "get_code_context.standard",
+   "relation": "SUBSET",
+   "detail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value"
+  },
+  {
+   "instanceId": "sphinx-doc__sphinx-11445",
+   "call": "get_code_context.debug",
+   "relation": "SUBSET",
+   "detail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value"
+  },
+  {
+   "instanceId": "sphinx-doc__sphinx-11445",
+   "call": "run_pipeline.standard",
+   "relation": "SUBSET",
+   "detail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value"
+  },
+  {
+   "instanceId": "sphinx-doc__sphinx-7440",
+   "call": "get_code_context.standard",
+   "relation": "SUBSET",
+   "detail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value"
+  },
+  {
+   "instanceId": "sphinx-doc__sphinx-7440",
+   "call": "get_code_context.debug",
+   "relation": "SUBSET",
+   "detail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value"
+  },
+  {
+   "instanceId": "sphinx-doc__sphinx-7440",
+   "call": "run_pipeline.standard",
+   "relation": "SUBSET",
+   "detail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value"
+  },
+  {
+   "instanceId": "sympy__sympy-13798",
+   "call": "get_code_context.standard",
+   "relation": "SUBSET",
+   "detail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value"
+  },
+  {
+   "instanceId": "sympy__sympy-13798",
+   "call": "get_code_context.debug",
+   "relation": "SUBSET",
+   "detail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value"
+  },
+  {
+   "instanceId": "sympy__sympy-13798",
+   "call": "run_pipeline.standard",
+   "relation": "SUBSET",
+   "detail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value"
+  },
+  {
+   "instanceId": "sympy__sympy-14976",
+   "call": "get_code_context.standard",
+   "relation": "SUBSET",
+   "detail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value"
+  },
+  {
+   "instanceId": "sympy__sympy-14976",
+   "call": "get_code_context.debug",
+   "relation": "SUBSET",
+   "detail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value"
+  },
+  {
+   "instanceId": "sympy__sympy-14976",
+   "call": "run_pipeline.standard",
+   "relation": "SUBSET",
+   "detail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value"
+  }
+ ],
+ "categoryChannels": [
+  {
+   "instanceId": "astropy__astropy-13977",
+   "channels": [
+    {
+     "category": "primary evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "support evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "impact",
+     "channel": "BOTH"
+    },
+    {
+     "category": "structural context",
+     "channel": "BOTH"
+    },
+    {
+     "category": "memory",
+     "channel": "BOTH"
+    },
+    {
+     "category": "readiness",
+     "channel": "BOTH"
+    },
+    {
+     "category": "absence/control state",
+     "channel": "BOTH"
+    },
+    {
+     "category": "provenance",
+     "channel": "BOTH"
+    },
+    {
+     "category": "diagnostics",
+     "channel": "BOTH"
+    },
+    {
+     "category": "component status",
+     "channel": "BOTH"
+    },
+    {
+     "category": "token accounting",
+     "channel": "BOTH"
+    }
+   ]
+  },
+  {
+   "instanceId": "django__django-11451",
+   "channels": [
+    {
+     "category": "primary evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "support evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "impact",
+     "channel": "BOTH"
+    },
+    {
+     "category": "structural context",
+     "channel": "BOTH"
+    },
+    {
+     "category": "memory",
+     "channel": "BOTH"
+    },
+    {
+     "category": "readiness",
+     "channel": "BOTH"
+    },
+    {
+     "category": "absence/control state",
+     "channel": "BOTH"
+    },
+    {
+     "category": "provenance",
+     "channel": "BOTH"
+    },
+    {
+     "category": "diagnostics",
+     "channel": "BOTH"
+    },
+    {
+     "category": "component status",
+     "channel": "BOTH"
+    },
+    {
+     "category": "token accounting",
+     "channel": "BOTH"
+    }
+   ]
+  },
+  {
+   "instanceId": "django__django-13343",
+   "channels": [
+    {
+     "category": "primary evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "support evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "impact",
+     "channel": "BOTH"
+    },
+    {
+     "category": "structural context",
+     "channel": "BOTH"
+    },
+    {
+     "category": "memory",
+     "channel": "BOTH"
+    },
+    {
+     "category": "readiness",
+     "channel": "BOTH"
+    },
+    {
+     "category": "absence/control state",
+     "channel": "BOTH"
+    },
+    {
+     "category": "provenance",
+     "channel": "BOTH"
+    },
+    {
+     "category": "diagnostics",
+     "channel": "BOTH"
+    },
+    {
+     "category": "component status",
+     "channel": "BOTH"
+    },
+    {
+     "category": "token accounting",
+     "channel": "BOTH"
+    }
+   ]
+  },
+  {
+   "instanceId": "matplotlib__matplotlib-24177",
+   "channels": [
+    {
+     "category": "primary evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "support evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "impact",
+     "channel": "BOTH"
+    },
+    {
+     "category": "structural context",
+     "channel": "BOTH"
+    },
+    {
+     "category": "memory",
+     "channel": "BOTH"
+    },
+    {
+     "category": "readiness",
+     "channel": "BOTH"
+    },
+    {
+     "category": "absence/control state",
+     "channel": "BOTH"
+    },
+    {
+     "category": "provenance",
+     "channel": "BOTH"
+    },
+    {
+     "category": "diagnostics",
+     "channel": "BOTH"
+    },
+    {
+     "category": "component status",
+     "channel": "BOTH"
+    },
+    {
+     "category": "token accounting",
+     "channel": "BOTH"
+    }
+   ]
+  },
+  {
+   "instanceId": "pydata__xarray-4966",
+   "channels": [
+    {
+     "category": "primary evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "support evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "impact",
+     "channel": "BOTH"
+    },
+    {
+     "category": "structural context",
+     "channel": "BOTH"
+    },
+    {
+     "category": "memory",
+     "channel": "BOTH"
+    },
+    {
+     "category": "readiness",
+     "channel": "BOTH"
+    },
+    {
+     "category": "absence/control state",
+     "channel": "BOTH"
+    },
+    {
+     "category": "provenance",
+     "channel": "BOTH"
+    },
+    {
+     "category": "diagnostics",
+     "channel": "BOTH"
+    },
+    {
+     "category": "component status",
+     "channel": "BOTH"
+    },
+    {
+     "category": "token accounting",
+     "channel": "BOTH"
+    }
+   ]
+  },
+  {
+   "instanceId": "pytest-dev__pytest-7982",
+   "channels": [
+    {
+     "category": "primary evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "support evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "impact",
+     "channel": "BOTH"
+    },
+    {
+     "category": "structural context",
+     "channel": "BOTH"
+    },
+    {
+     "category": "memory",
+     "channel": "BOTH"
+    },
+    {
+     "category": "readiness",
+     "channel": "BOTH"
+    },
+    {
+     "category": "absence/control state",
+     "channel": "BOTH"
+    },
+    {
+     "category": "provenance",
+     "channel": "BOTH"
+    },
+    {
+     "category": "diagnostics",
+     "channel": "BOTH"
+    },
+    {
+     "category": "component status",
+     "channel": "BOTH"
+    },
+    {
+     "category": "token accounting",
+     "channel": "BOTH"
+    }
+   ]
+  },
+  {
+   "instanceId": "scikit-learn__scikit-learn-13496",
+   "channels": [
+    {
+     "category": "primary evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "support evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "impact",
+     "channel": "BOTH"
+    },
+    {
+     "category": "structural context",
+     "channel": "BOTH"
+    },
+    {
+     "category": "memory",
+     "channel": "BOTH"
+    },
+    {
+     "category": "readiness",
+     "channel": "BOTH"
+    },
+    {
+     "category": "absence/control state",
+     "channel": "BOTH"
+    },
+    {
+     "category": "provenance",
+     "channel": "BOTH"
+    },
+    {
+     "category": "diagnostics",
+     "channel": "BOTH"
+    },
+    {
+     "category": "component status",
+     "channel": "BOTH"
+    },
+    {
+     "category": "token accounting",
+     "channel": "BOTH"
+    }
+   ]
+  },
+  {
+   "instanceId": "scikit-learn__scikit-learn-14087",
+   "channels": [
+    {
+     "category": "primary evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "support evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "impact",
+     "channel": "BOTH"
+    },
+    {
+     "category": "structural context",
+     "channel": "BOTH"
+    },
+    {
+     "category": "memory",
+     "channel": "BOTH"
+    },
+    {
+     "category": "readiness",
+     "channel": "BOTH"
+    },
+    {
+     "category": "absence/control state",
+     "channel": "BOTH"
+    },
+    {
+     "category": "provenance",
+     "channel": "BOTH"
+    },
+    {
+     "category": "diagnostics",
+     "channel": "BOTH"
+    },
+    {
+     "category": "component status",
+     "channel": "BOTH"
+    },
+    {
+     "category": "token accounting",
+     "channel": "BOTH"
+    }
+   ]
+  },
+  {
+   "instanceId": "sphinx-doc__sphinx-11445",
+   "channels": [
+    {
+     "category": "primary evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "support evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "impact",
+     "channel": "BOTH"
+    },
+    {
+     "category": "structural context",
+     "channel": "BOTH"
+    },
+    {
+     "category": "memory",
+     "channel": "BOTH"
+    },
+    {
+     "category": "readiness",
+     "channel": "BOTH"
+    },
+    {
+     "category": "absence/control state",
+     "channel": "BOTH"
+    },
+    {
+     "category": "provenance",
+     "channel": "BOTH"
+    },
+    {
+     "category": "diagnostics",
+     "channel": "BOTH"
+    },
+    {
+     "category": "component status",
+     "channel": "BOTH"
+    },
+    {
+     "category": "token accounting",
+     "channel": "BOTH"
+    }
+   ]
+  },
+  {
+   "instanceId": "sphinx-doc__sphinx-7440",
+   "channels": [
+    {
+     "category": "primary evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "support evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "impact",
+     "channel": "BOTH"
+    },
+    {
+     "category": "structural context",
+     "channel": "BOTH"
+    },
+    {
+     "category": "memory",
+     "channel": "BOTH"
+    },
+    {
+     "category": "readiness",
+     "channel": "BOTH"
+    },
+    {
+     "category": "absence/control state",
+     "channel": "BOTH"
+    },
+    {
+     "category": "provenance",
+     "channel": "BOTH"
+    },
+    {
+     "category": "diagnostics",
+     "channel": "BOTH"
+    },
+    {
+     "category": "component status",
+     "channel": "BOTH"
+    },
+    {
+     "category": "token accounting",
+     "channel": "BOTH"
+    }
+   ]
+  },
+  {
+   "instanceId": "sympy__sympy-13798",
+   "channels": [
+    {
+     "category": "primary evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "support evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "impact",
+     "channel": "BOTH"
+    },
+    {
+     "category": "structural context",
+     "channel": "BOTH"
+    },
+    {
+     "category": "memory",
+     "channel": "BOTH"
+    },
+    {
+     "category": "readiness",
+     "channel": "BOTH"
+    },
+    {
+     "category": "absence/control state",
+     "channel": "BOTH"
+    },
+    {
+     "category": "provenance",
+     "channel": "BOTH"
+    },
+    {
+     "category": "diagnostics",
+     "channel": "BOTH"
+    },
+    {
+     "category": "component status",
+     "channel": "BOTH"
+    },
+    {
+     "category": "token accounting",
+     "channel": "BOTH"
+    }
+   ]
+  },
+  {
+   "instanceId": "sympy__sympy-14976",
+   "channels": [
+    {
+     "category": "primary evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "support evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "impact",
+     "channel": "BOTH"
+    },
+    {
+     "category": "structural context",
+     "channel": "BOTH"
+    },
+    {
+     "category": "memory",
+     "channel": "BOTH"
+    },
+    {
+     "category": "readiness",
+     "channel": "BOTH"
+    },
+    {
+     "category": "absence/control state",
+     "channel": "BOTH"
+    },
+    {
+     "category": "provenance",
+     "channel": "BOTH"
+    },
+    {
+     "category": "diagnostics",
+     "channel": "BOTH"
+    },
+    {
+     "category": "component status",
+     "channel": "BOTH"
+    },
+    {
+     "category": "token accounting",
+     "channel": "BOTH"
+    }
+   ]
+  }
+ ]
+}

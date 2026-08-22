@@ -1,0 +1,14 @@
+{
+ "schemaVersion": 1,
+ "milestone": "M167",
+ "workstream": "B",
+ "title": "Cache amplification of a first-call result",
+ "identity": "cache_read[n+1] == cache_read[n] + cache_creation[n]",
+ "heldTurns": "358/363",
+ "firstCallMedianTokens": 10526,
+ "m166ObservedFirstCallBilledMedian": 8944,
+ "m166ObservedRereadMedian": 120950,
+ "rereadMultiple": 13.5,
+ "reading": "a first-call result is re-read on every later turn as cache, so a character removed from the delivered channel is removed roughly 14 times over a run — and a character removed from the DISCARDED channel is removed zero times",
+ "billingCaveat": "cache reads are billed at a different rate from cache creation; token traffic is reported here and monetary cost is not derived from it"
+}

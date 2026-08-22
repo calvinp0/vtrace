@@ -1,0 +1,534 @@
+{
+ "schemaVersion": 1,
+ "milestone": "M167",
+ "workstream": "B",
+ "title": "Token attribution — what each representation costs the model",
+ "estimator": "DERIVED_FROM_PROVIDER_REPORTED — least squares over 363 turns, 3.15 chars/token, R^2 0.926",
+ "estimatorAuthority": "DERIVED_FROM_PROVIDER_REPORTED",
+ "standard": {
+  "medianModelVisibleTokens": 10526,
+  "p90ModelVisibleTokens": 11694,
+  "minModelVisibleTokens": 8239,
+  "maxModelVisibleTokens": 11713,
+  "medianSecondChannelTokensOnWire": 11199,
+  "medianSecondChannelTokensToModel": 0,
+  "medianWholeWireLineTokens": 21729,
+  "categoryTokenMedians": {
+   "REPOSITORY_EVIDENCE": 1966,
+   "AGENT_USEFUL_CONTROL": 681,
+   "MACHINE_DIAGNOSTIC": 887,
+   "PROVENANCE": 344,
+   "DUPLICATE": 3647,
+   "TRANSPORT_STRUCTURE": 2689,
+   "OTHER": 22
+  }
+ },
+ "sessionSchemaTax": {
+  "note": "§47 — advertised once per session, not per call; reported separately and never added to per-call cost",
+  "medianToolsListCharacters": 8141,
+  "medianToolsListTokens": 2584,
+  "declaresOutputSchema": false
+ },
+ "controls": [
+  {
+   "control": "facts carried by exactly one surface are detected",
+   "passed": true,
+   "detail": "3/12 cases carry at least one single-surface fact"
+  },
+  {
+   "control": "facts carried by more than one surface are detected",
+   "passed": true,
+   "detail": "12/12 cases carry at least one multi-surface fact"
+  },
+  {
+   "control": "the two channels are compared, and the comparison returns a definite relation",
+   "passed": true,
+   "detail": "36/36 calls classified"
+  },
+  {
+   "control": "no category is silently lost by the channel probe",
+   "passed": true,
+   "detail": "categories absent from both channels: none"
+  },
+  {
+   "control": "short repeated enum labels are never treated as facts",
+   "passed": true,
+   "detail": "every located fact is an identity-bearing path, fully-qualified name or excerpt span of at least 12 characters"
+  },
+  {
+   "control": "the delivered representation is re-derived, not assumed",
+   "passed": true,
+   "detail": "model-visible width is bound to structuredContent because M166-A proved the client delivers it; the binding is stated, not hidden"
+  }
+ ],
+ "cases": [
+  {
+   "instanceId": "astropy__astropy-13977",
+   "call": "get_code_context.standard",
+   "tokens": {
+    "internalSemanticOutput": 10602,
+    "contentTextRaw": 10602,
+    "structuredContent": 10652,
+    "modelVisible": 10652,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 22075
+   },
+   "relation": "SUBSET"
+  },
+  {
+   "instanceId": "astropy__astropy-13977",
+   "call": "get_code_context.debug",
+   "tokens": {
+    "internalSemanticOutput": 11037,
+    "contentTextRaw": 11037,
+    "structuredContent": 11087,
+    "modelVisible": 11087,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 22980
+   },
+   "relation": "SUBSET"
+  },
+  {
+   "instanceId": "astropy__astropy-13977",
+   "call": "run_pipeline.standard",
+   "tokens": {
+    "internalSemanticOutput": 10539,
+    "contentTextRaw": 10539,
+    "structuredContent": 10586,
+    "modelVisible": 10586,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 21936
+   },
+   "relation": "SUBSET"
+  },
+  {
+   "instanceId": "django__django-11451",
+   "call": "get_code_context.standard",
+   "tokens": {
+    "internalSemanticOutput": 10205,
+    "contentTextRaw": 10205,
+    "structuredContent": 10255,
+    "modelVisible": 10255,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 21299
+   },
+   "relation": "SUBSET"
+  },
+  {
+   "instanceId": "django__django-11451",
+   "call": "get_code_context.debug",
+   "tokens": {
+    "internalSemanticOutput": 11177,
+    "contentTextRaw": 11177,
+    "structuredContent": 11227,
+    "modelVisible": 11227,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 23327
+   },
+   "relation": "SUBSET"
+  },
+  {
+   "instanceId": "django__django-11451",
+   "call": "run_pipeline.standard",
+   "tokens": {
+    "internalSemanticOutput": 10132,
+    "contentTextRaw": 10132,
+    "structuredContent": 10179,
+    "modelVisible": 10179,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 21138
+   },
+   "relation": "SUBSET"
+  },
+  {
+   "instanceId": "django__django-13343",
+   "call": "get_code_context.standard",
+   "tokens": {
+    "internalSemanticOutput": 10350,
+    "contentTextRaw": 10350,
+    "structuredContent": 10399,
+    "modelVisible": 10399,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 21383
+   },
+   "relation": "SUBSET"
+  },
+  {
+   "instanceId": "django__django-13343",
+   "call": "get_code_context.debug",
+   "tokens": {
+    "internalSemanticOutput": 10832,
+    "contentTextRaw": 10832,
+    "structuredContent": 10882,
+    "modelVisible": 10882,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 22383
+   },
+   "relation": "SUBSET"
+  },
+  {
+   "instanceId": "django__django-13343",
+   "call": "run_pipeline.standard",
+   "tokens": {
+    "internalSemanticOutput": 10264,
+    "contentTextRaw": 10264,
+    "structuredContent": 10311,
+    "modelVisible": 10311,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 21198
+   },
+   "relation": "SUBSET"
+  },
+  {
+   "instanceId": "matplotlib__matplotlib-24177",
+   "call": "get_code_context.standard",
+   "tokens": {
+    "internalSemanticOutput": 11582,
+    "contentTextRaw": 11582,
+    "structuredContent": 11632,
+    "modelVisible": 11632,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 24040
+   },
+   "relation": "SUBSET"
+  },
+  {
+   "instanceId": "matplotlib__matplotlib-24177",
+   "call": "get_code_context.debug",
+   "tokens": {
+    "internalSemanticOutput": 10547,
+    "contentTextRaw": 10547,
+    "structuredContent": 10597,
+    "modelVisible": 10597,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 21970
+   },
+   "relation": "SUBSET"
+  },
+  {
+   "instanceId": "matplotlib__matplotlib-24177",
+   "call": "run_pipeline.standard",
+   "tokens": {
+    "internalSemanticOutput": 11501,
+    "contentTextRaw": 11501,
+    "structuredContent": 11548,
+    "modelVisible": 11548,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 23864
+   },
+   "relation": "SUBSET"
+  },
+  {
+   "instanceId": "pydata__xarray-4966",
+   "call": "get_code_context.standard",
+   "tokens": {
+    "internalSemanticOutput": 11663,
+    "contentTextRaw": 11663,
+    "structuredContent": 11713,
+    "modelVisible": 11713,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 24136
+   },
+   "relation": "SUBSET"
+  },
+  {
+   "instanceId": "pydata__xarray-4966",
+   "call": "get_code_context.debug",
+   "tokens": {
+    "internalSemanticOutput": 11511,
+    "contentTextRaw": 11511,
+    "structuredContent": 11561,
+    "modelVisible": 11561,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 23816
+   },
+   "relation": "SUBSET"
+  },
+  {
+   "instanceId": "pydata__xarray-4966",
+   "call": "run_pipeline.standard",
+   "tokens": {
+    "internalSemanticOutput": 11671,
+    "contentTextRaw": 11671,
+    "structuredContent": 11718,
+    "modelVisible": 11718,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 24147
+   },
+   "relation": "SUBSET"
+  },
+  {
+   "instanceId": "pytest-dev__pytest-7982",
+   "call": "get_code_context.standard",
+   "tokens": {
+    "internalSemanticOutput": 8442,
+    "contentTextRaw": 8442,
+    "structuredContent": 8492,
+    "modelVisible": 8492,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 17637
+   },
+   "relation": "SUBSET"
+  },
+  {
+   "instanceId": "pytest-dev__pytest-7982",
+   "call": "get_code_context.debug",
+   "tokens": {
+    "internalSemanticOutput": 8913,
+    "contentTextRaw": 8913,
+    "structuredContent": 8963,
+    "modelVisible": 8963,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 18614
+   },
+   "relation": "SUBSET"
+  },
+  {
+   "instanceId": "pytest-dev__pytest-7982",
+   "call": "run_pipeline.standard",
+   "tokens": {
+    "internalSemanticOutput": 8361,
+    "contentTextRaw": 8361,
+    "structuredContent": 8408,
+    "modelVisible": 8408,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 17461
+   },
+   "relation": "SUBSET"
+  },
+  {
+   "instanceId": "scikit-learn__scikit-learn-13496",
+   "call": "get_code_context.standard",
+   "tokens": {
+    "internalSemanticOutput": 10764,
+    "contentTextRaw": 10764,
+    "structuredContent": 10814,
+    "modelVisible": 10814,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 22247
+   },
+   "relation": "SUBSET"
+  },
+  {
+   "instanceId": "scikit-learn__scikit-learn-13496",
+   "call": "get_code_context.debug",
+   "tokens": {
+    "internalSemanticOutput": 11293,
+    "contentTextRaw": 11293,
+    "structuredContent": 11343,
+    "modelVisible": 11343,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 23340
+   },
+   "relation": "SUBSET"
+  },
+  {
+   "instanceId": "scikit-learn__scikit-learn-13496",
+   "call": "run_pipeline.standard",
+   "tokens": {
+    "internalSemanticOutput": 10683,
+    "contentTextRaw": 10683,
+    "structuredContent": 10731,
+    "modelVisible": 10731,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 22072
+   },
+   "relation": "SUBSET"
+  },
+  {
+   "instanceId": "scikit-learn__scikit-learn-14087",
+   "call": "get_code_context.standard",
+   "tokens": {
+    "internalSemanticOutput": 11644,
+    "contentTextRaw": 11644,
+    "structuredContent": 11694,
+    "modelVisible": 11694,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 24136
+   },
+   "relation": "SUBSET"
+  },
+  {
+   "instanceId": "scikit-learn__scikit-learn-14087",
+   "call": "get_code_context.debug",
+   "tokens": {
+    "internalSemanticOutput": 10548,
+    "contentTextRaw": 10548,
+    "structuredContent": 10598,
+    "modelVisible": 10598,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 21939
+   },
+   "relation": "SUBSET"
+  },
+  {
+   "instanceId": "scikit-learn__scikit-learn-14087",
+   "call": "run_pipeline.standard",
+   "tokens": {
+    "internalSemanticOutput": 11652,
+    "contentTextRaw": 11652,
+    "structuredContent": 11699,
+    "modelVisible": 11699,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 24139
+   },
+   "relation": "SUBSET"
+  },
+  {
+   "instanceId": "sphinx-doc__sphinx-11445",
+   "call": "get_code_context.standard",
+   "tokens": {
+    "internalSemanticOutput": 10788,
+    "contentTextRaw": 10788,
+    "structuredContent": 10838,
+    "modelVisible": 10838,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 22585
+   },
+   "relation": "SUBSET"
+  },
+  {
+   "instanceId": "sphinx-doc__sphinx-11445",
+   "call": "get_code_context.debug",
+   "tokens": {
+    "internalSemanticOutput": 11330,
+    "contentTextRaw": 11330,
+    "structuredContent": 11380,
+    "modelVisible": 11380,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 23701
+   },
+   "relation": "SUBSET"
+  },
+  {
+   "instanceId": "sphinx-doc__sphinx-11445",
+   "call": "run_pipeline.standard",
+   "tokens": {
+    "internalSemanticOutput": 10708,
+    "contentTextRaw": 10708,
+    "structuredContent": 10755,
+    "modelVisible": 10755,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 22410
+   },
+   "relation": "SUBSET"
+  },
+  {
+   "instanceId": "sphinx-doc__sphinx-7440",
+   "call": "get_code_context.standard",
+   "tokens": {
+    "internalSemanticOutput": 9637,
+    "contentTextRaw": 9637,
+    "structuredContent": 9687,
+    "modelVisible": 9687,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 20130
+   },
+   "relation": "SUBSET"
+  },
+  {
+   "instanceId": "sphinx-doc__sphinx-7440",
+   "call": "get_code_context.debug",
+   "tokens": {
+    "internalSemanticOutput": 9976,
+    "contentTextRaw": 9976,
+    "structuredContent": 10026,
+    "modelVisible": 10026,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 20847
+   },
+   "relation": "SUBSET"
+  },
+  {
+   "instanceId": "sphinx-doc__sphinx-7440",
+   "call": "run_pipeline.standard",
+   "tokens": {
+    "internalSemanticOutput": 9553,
+    "contentTextRaw": 9553,
+    "structuredContent": 9600,
+    "modelVisible": 9600,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 19949
+   },
+   "relation": "SUBSET"
+  },
+  {
+   "instanceId": "sympy__sympy-13798",
+   "call": "get_code_context.standard",
+   "tokens": {
+    "internalSemanticOutput": 8189,
+    "contentTextRaw": 8189,
+    "structuredContent": 8239,
+    "modelVisible": 8239,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 17059
+   },
+   "relation": "SUBSET"
+  },
+  {
+   "instanceId": "sympy__sympy-13798",
+   "call": "get_code_context.debug",
+   "tokens": {
+    "internalSemanticOutput": 9705,
+    "contentTextRaw": 9705,
+    "structuredContent": 9755,
+    "modelVisible": 9755,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 20217
+   },
+   "relation": "SUBSET"
+  },
+  {
+   "instanceId": "sympy__sympy-13798",
+   "call": "run_pipeline.standard",
+   "tokens": {
+    "internalSemanticOutput": 8105,
+    "contentTextRaw": 8105,
+    "structuredContent": 8152,
+    "modelVisible": 8152,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 16877
+   },
+   "relation": "SUBSET"
+  },
+  {
+   "instanceId": "sympy__sympy-14976",
+   "call": "get_code_context.standard",
+   "tokens": {
+    "internalSemanticOutput": 8858,
+    "contentTextRaw": 8858,
+    "structuredContent": 8908,
+    "modelVisible": 8908,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 18520
+   },
+   "relation": "SUBSET"
+  },
+  {
+   "instanceId": "sympy__sympy-14976",
+   "call": "get_code_context.debug",
+   "tokens": {
+    "internalSemanticOutput": 9432,
+    "contentTextRaw": 9432,
+    "structuredContent": 9482,
+    "modelVisible": 9482,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 19704
+   },
+   "relation": "SUBSET"
+  },
+  {
+   "instanceId": "sympy__sympy-14976",
+   "call": "run_pipeline.standard",
+   "tokens": {
+    "internalSemanticOutput": 8775,
+    "contentTextRaw": 8775,
+    "structuredContent": 8822,
+    "modelVisible": 8822,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 18339
+   },
+   "relation": "SUBSET"
+  }
+ ]
+}

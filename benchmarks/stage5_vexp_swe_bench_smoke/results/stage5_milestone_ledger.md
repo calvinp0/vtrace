@@ -3437,3 +3437,111 @@ neighborhood excerpts           8 ->     28
   about cost. The untested variable remains the task population. No live experiment is
   licensed; §61's threshold fails on materiality, since the shipped change moved the
   median call by ~330 tokens.
+
+## M167 — MCP result transport and single-representation audit (commit pending)
+
+**A PASS · B PASS · C PASS · D NOT RUN (correct stop) · E PASS.
+M167 overall PASS.** No product change, no live agent, $0.00 spent.
+
+```text
+transport verdict:    TRANSPORT_TAX_REQUIRED_FOR_COMPATIBILITY
+compression verdict:  COMPRESSION_NOT_MATERIAL
+product changed:      NO
+retrieval changed:    NO
+live extension:       NOT AUTHORIZED, NOT RECOMMENDED
+next milestone:       NONE LICENSED
+```
+
+M166 noticed that `content[0].text` and `structuredContent` both carry the payload and
+did not price it. M167 priced it. **The duplication is total and it costs the model
+nothing.** On 36/36 captured calls the relation is `SUBSET`: the text channel is
+byte-identical to `structuredContent.result.output`, and the structured channel adds
+only a 157-character envelope wrapper. All eleven semantic categories are in both. And
+the agent client delivers the structured channel and discards the text one — re-derived,
+not cited: 12/12 M164 model-visible payloads open with a prefix the text channel cannot
+produce.
+
+```text
+internal semantic output      median 33,005 chars
+content[0].text raw           median 33,005 chars   (identical)
+content[0].text on the wire   median 35,284 chars   (escaped, +6.9%)
+structuredContent             median 33,162 chars
+JSON-RPC line                 median 68,459 chars
+model-visible                 median 33,162 chars = 10,526 tokens
+second channel, to the model                     0 tokens
+```
+
+Four contracts simulated, each priced once per client read rule:
+
+```text
+                          wire        model    text-only client recovers
+CURRENT                 68,459       10,526    12/12
+STRUCTURED_ONLY         -51.4%         0.0%     0/12  (empty result, silently)
+TEXT_ONLY               -48.3%        -0.5%    12/12  (removes the proven channel)
+STRUCTURED+SUMMARY      -51.2%         0.0%     0/12  (53 tokens of plausible counts)
+```
+
+D fails two independent bars. **Materiality:** the best candidate saves 0.5% against a
+20% gate — a factor of forty. **Contract:** VTRACE advertises protocol `2024-11-05`,
+which does not define `structuredContent`, and declares no `outputSchema`; `content[]`
+is the only channel a conformant client reads, and Codex is advertised in the README
+with its behaviour UNKNOWN.
+
+E controls, all on unchanged code: `src/` byte-identical to `749434ee`; selection
+identical to M166's independent capture of the same twelve tasks 12/12; readiness and
+served-state present 12/12; both channels returned 12/12; debug diagnostics 10/12 full
+and 2/12 disclosed-omitted, 0 silent; index writes 0.
+
+## M167 standing findings
+
+- **A representation the client discards costs the model nothing, and the wire is not
+  the model.** VTRACE serializes its result twice on every call and 51.5% of the
+  JSON-RPC line is the copy nobody reads. Removing it is a 51% wire saving and a 0%
+  model saving. Any future proposal that quotes a payload-size reduction must say which
+  boundary it is measuring at, or it is not a token claim. This is the M166 invariant
+  `SERIALIZED TOKENS != MODEL-CONTEXT TOKENS until directly measured` meeting its first
+  real case.
+
+- **The channel the proven client reads is the unsupported one.** `structuredContent`
+  is served under a revision that does not define it and is announced by no
+  `outputSchema`; a client that reads it does so by leniency. `content[]` — the channel
+  the observed agent discards — is the only one VTRACE may assume any consumer reads.
+  The naive reading of the evidence ("the text channel is dead, delete it") is exactly
+  backwards. If the revision is ever upgraded the contract bar lifts, but the
+  materiality bar does not: the saving was never there.
+
+- **Removing a channel is not a semantics-preserving act for the clients you cannot
+  see.** `STRUCTURED_ONLY` hands a conformant client an empty result with no error.
+  `STRUCTURED_PLUS_SUMMARY` is worse, because it hands back something that reads like a
+  result: "1 primary target, 2 support items, 0 impact edges" is 53 tokens of plausible
+  counts where evidence was expected. Preservation was therefore scored per read rule,
+  never once per candidate.
+
+- **The model-visible restatement is inside the delivered channel, not across the
+  channels.** 114 of 122 repository facts (93.4%) are rendered on more than one surface
+  of the same response — prose context, structured item list, capsule digest, legacy
+  context — and DUPLICATE is 34.6% of model tokens, now the largest single category.
+  Reported, not proposed: it needs the authority-preservation audit, and M166 already
+  proved an envelope-bound response converts removals into evidence rather than savings.
+
+- **A classifier must be validated against the milestone it is reinterpreting.** Run
+  over M166's own population this classifier returns M166's numbers (41.0 / 22.2 / 13.7
+  against a reported 41.9 / 21.8 / 14.2, the residual being median versus mean), so
+  M167's different mix is caused by what changed and not by how it is counted. The
+  shift decomposes into payload population (M164 real runs versus local replay) and the
+  M166-D change; M166's percentages are correct for what they described and are not a
+  baseline anything here can be subtracted from.
+
+- **The uniform-label smell fired on the analysis, again.** The first candidate scoring
+  returned `0/12` preservation for every candidate including the unchanged status quo,
+  which is impossible. Cause was mine — the preservation check was handed the prose
+  section where it expects the whole model-facing payload. The M164/M166 rule earned its
+  place a third time: a classifier returning one confident label for nearly every case
+  is a detector smell until a known-positive discriminates.
+
+- **`detail=debug` is not an unconditional guarantee of full diagnostics.** On 2/12
+  reference tasks the debug response exceeds the envelope ceiling and the escalation
+  ladder drops the machine diagnostics, disclosing it through
+  `diagnostics.sectionDecisionsOmitted`. Pre-existing behaviour, unchanged here — but
+  the level a maintainer switches to in order to see everything can still, truthfully,
+  hold things back.

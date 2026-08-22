@@ -1,0 +1,22 @@
+{
+ "schemaVersion": 1,
+ "milestone": "M167",
+ "workstream": "A",
+ "title": "The single semantic authority and its derivations",
+ "authoritativeValue": "the McpToolExecutionResult.output returned by the run_pipeline handler after compactProductResponse",
+ "constructedAt": "src/mcp/tools.ts — RUN_PIPELINE_TOOL_DEFINITION.handler",
+ "derivedRepresentations": [
+  {
+   "name": "content[0].text",
+   "derivation": "JSON.stringify(toolResponse.result.output)",
+   "constructedAt": "src/mcp/startServer.ts"
+  },
+  {
+   "name": "structuredContent",
+   "derivation": "toolResponse — the authority under its envelope wrapper",
+   "constructedAt": "src/mcp/startServer.ts"
+  }
+ ],
+ "driftRisk": "NONE — both are expressions over the same `toolResponse` binding in a single return statement, so they cannot diverge",
+ "shapeVerdict": "AUTHORITY_THEN_TWO_DERIVATIONS — the structure §13 asks for is already in place; the representations are not independently constructed"
+}

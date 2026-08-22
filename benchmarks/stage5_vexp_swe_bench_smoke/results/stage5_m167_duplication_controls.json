@@ -1,0 +1,40 @@
+{
+ "schemaVersion": 1,
+ "milestone": "M167",
+ "workstream": "B",
+ "title": "Known-positive controls for the duplication detector",
+ "unitControls": "benchmarks/stage5_vexp_swe_bench_smoke/m167Transport.test.ts",
+ "dataControls": [
+  {
+   "control": "facts carried by exactly one surface are detected",
+   "passed": true,
+   "detail": "3/12 cases carry at least one single-surface fact"
+  },
+  {
+   "control": "facts carried by more than one surface are detected",
+   "passed": true,
+   "detail": "12/12 cases carry at least one multi-surface fact"
+  },
+  {
+   "control": "the two channels are compared, and the comparison returns a definite relation",
+   "passed": true,
+   "detail": "36/36 calls classified"
+  },
+  {
+   "control": "no category is silently lost by the channel probe",
+   "passed": true,
+   "detail": "categories absent from both channels: none"
+  },
+  {
+   "control": "short repeated enum labels are never treated as facts",
+   "passed": true,
+   "detail": "every located fact is an identity-bearing path, fully-qualified name or excerpt span of at least 12 characters"
+  },
+  {
+   "control": "the delivered representation is re-derived, not assumed",
+   "passed": true,
+   "detail": "model-visible width is bound to structuredContent because M166-A proved the client delivers it; the binding is stated, not hidden"
+  }
+ ],
+ "allPassed": true
+}

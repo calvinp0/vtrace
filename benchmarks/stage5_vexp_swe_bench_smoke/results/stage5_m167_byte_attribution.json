@@ -1,0 +1,5613 @@
+{
+ "schemaVersion": 1,
+ "milestone": "M167",
+ "workstream": "B",
+ "title": "Byte attribution across internal, wire and model-visible boundaries",
+ "estimator": "DERIVED_FROM_PROVIDER_REPORTED — least squares over 363 turns, 3.15 chars/token, R^2 0.926",
+ "medians": {
+  "standard": {
+   "internalSemanticOutput": 33005,
+   "envelopeWrapper": 157,
+   "contentTextRaw": 33005,
+   "contentTextOnWire": 35284,
+   "structuredContent": 33162,
+   "jsonRpcLine": 68459,
+   "jsonRpcScaffolding": 108,
+   "modelVisible": 33162
+  },
+  "debug": {
+   "internalSemanticOutput": 33681,
+   "envelopeWrapper": 157,
+   "contentTextRaw": 33681,
+   "contentTextOnWire": 35925,
+   "structuredContent": 33838,
+   "jsonRpcLine": 69869,
+   "jsonRpcScaffolding": 108,
+   "modelVisible": 33838
+  }
+ },
+ "cases": [
+  {
+   "instanceId": "astropy__astropy-13977",
+   "call": "get_code_context.standard",
+   "widths": {
+    "internalSemanticOutput": 33403,
+    "envelopeWrapper": 157,
+    "contentTextRaw": 33403,
+    "contentTextOnWire": 35881,
+    "structuredContent": 33560,
+    "jsonRpcLine": 69549,
+    "jsonRpcScaffolding": 108,
+    "modelVisible": 33560
+   },
+   "tokens": {
+    "internalSemanticOutput": 10602,
+    "contentTextRaw": 10602,
+    "structuredContent": 10652,
+    "modelVisible": 10652,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 22075
+   },
+   "relation": "SUBSET",
+   "relationDetail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value",
+   "channels": [
+    {
+     "category": "primary evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "support evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "impact",
+     "channel": "BOTH"
+    },
+    {
+     "category": "structural context",
+     "channel": "BOTH"
+    },
+    {
+     "category": "memory",
+     "channel": "BOTH"
+    },
+    {
+     "category": "readiness",
+     "channel": "BOTH"
+    },
+    {
+     "category": "absence/control state",
+     "channel": "BOTH"
+    },
+    {
+     "category": "provenance",
+     "channel": "BOTH"
+    },
+    {
+     "category": "diagnostics",
+     "channel": "BOTH"
+    },
+    {
+     "category": "component status",
+     "channel": "BOTH"
+    },
+    {
+     "category": "token accounting",
+     "channel": "BOTH"
+    }
+   ],
+   "surfaces": {
+    "factCount": 6,
+    "multiSurfaceFactCount": 6,
+    "bySurface": {
+     "productContext.modelVisibleContext": 6,
+     "productContext.items": 6,
+     "capsuleResult.digest": 6,
+     "pivotNeighborhood": 0,
+     "context": 0,
+     "inspectFirst": 3,
+     "capsule": 0,
+     "impact": 0,
+     "diagnostics": 0
+    },
+    "surfaceCharacters": {
+     "productContext.modelVisibleContext": 5845,
+     "productContext.items": 1996,
+     "capsuleResult.digest": 1398,
+     "pivotNeighborhood": 2,
+     "context": 324,
+     "inspectFirst": 568,
+     "capsule": 149,
+     "impact": 220,
+     "diagnostics": 805
+    },
+    "pairs": [
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "productContext.items",
+      "sharedFacts": 6
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 6
+     },
+     {
+      "a": "productContext.items",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 6
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "inspectFirst",
+      "sharedFacts": 3
+     },
+     {
+      "a": "productContext.items",
+      "b": "inspectFirst",
+      "sharedFacts": 3
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "inspectFirst",
+      "sharedFacts": 3
+     }
+    ]
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 2458,
+    "AGENT_USEFUL_CONTROL": 608,
+    "MACHINE_DIAGNOSTIC": 976,
+    "PROVENANCE": 302,
+    "DUPLICATE": 3909,
+    "TRANSPORT_STRUCTURE": 2349,
+    "OTHER": 0
+   }
+  },
+  {
+   "instanceId": "astropy__astropy-13977",
+   "call": "get_code_context.debug",
+   "widths": {
+    "internalSemanticOutput": 34774,
+    "envelopeWrapper": 157,
+    "contentTextRaw": 34774,
+    "contentTextOnWire": 37362,
+    "structuredContent": 34931,
+    "jsonRpcLine": 72401,
+    "jsonRpcScaffolding": 108,
+    "modelVisible": 34931
+   },
+   "tokens": {
+    "internalSemanticOutput": 11037,
+    "contentTextRaw": 11037,
+    "structuredContent": 11087,
+    "modelVisible": 11087,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 22980
+   },
+   "relation": "SUBSET",
+   "relationDetail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value",
+   "channels": [
+    {
+     "category": "primary evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "support evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "impact",
+     "channel": "BOTH"
+    },
+    {
+     "category": "structural context",
+     "channel": "BOTH"
+    },
+    {
+     "category": "memory",
+     "channel": "BOTH"
+    },
+    {
+     "category": "readiness",
+     "channel": "BOTH"
+    },
+    {
+     "category": "absence/control state",
+     "channel": "BOTH"
+    },
+    {
+     "category": "provenance",
+     "channel": "BOTH"
+    },
+    {
+     "category": "diagnostics",
+     "channel": "BOTH"
+    },
+    {
+     "category": "component status",
+     "channel": "BOTH"
+    },
+    {
+     "category": "token accounting",
+     "channel": "BOTH"
+    }
+   ],
+   "surfaces": {
+    "factCount": 6,
+    "multiSurfaceFactCount": 6,
+    "bySurface": {
+     "productContext.modelVisibleContext": 6,
+     "productContext.items": 6,
+     "capsuleResult.digest": 6,
+     "pivotNeighborhood": 0,
+     "context": 0,
+     "inspectFirst": 3,
+     "capsule": 0,
+     "impact": 0,
+     "diagnostics": 0
+    },
+    "surfaceCharacters": {
+     "productContext.modelVisibleContext": 5845,
+     "productContext.items": 1996,
+     "capsuleResult.digest": 1398,
+     "pivotNeighborhood": 2,
+     "context": 324,
+     "inspectFirst": 568,
+     "capsule": 149,
+     "impact": 220,
+     "diagnostics": 2195
+    },
+    "pairs": [
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "productContext.items",
+      "sharedFacts": 6
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 6
+     },
+     {
+      "a": "productContext.items",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 6
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "inspectFirst",
+      "sharedFacts": 3
+     },
+     {
+      "a": "productContext.items",
+      "b": "inspectFirst",
+      "sharedFacts": 3
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "inspectFirst",
+      "sharedFacts": 3
+     }
+    ]
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 2458,
+    "AGENT_USEFUL_CONTROL": 606,
+    "MACHINE_DIAGNOSTIC": 1008,
+    "PROVENANCE": 304,
+    "DUPLICATE": 4109,
+    "TRANSPORT_STRUCTURE": 2552,
+    "OTHER": 0
+   }
+  },
+  {
+   "instanceId": "astropy__astropy-13977",
+   "call": "run_pipeline.standard",
+   "widths": {
+    "internalSemanticOutput": 33204,
+    "envelopeWrapper": 149,
+    "contentTextRaw": 33204,
+    "contentTextOnWire": 35650,
+    "structuredContent": 33353,
+    "jsonRpcLine": 69111,
+    "jsonRpcScaffolding": 108,
+    "modelVisible": 33353
+   },
+   "tokens": {
+    "internalSemanticOutput": 10539,
+    "contentTextRaw": 10539,
+    "structuredContent": 10586,
+    "modelVisible": 10586,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 21936
+   },
+   "relation": "SUBSET",
+   "relationDetail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value",
+   "channels": [
+    {
+     "category": "primary evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "support evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "impact",
+     "channel": "BOTH"
+    },
+    {
+     "category": "structural context",
+     "channel": "BOTH"
+    },
+    {
+     "category": "memory",
+     "channel": "BOTH"
+    },
+    {
+     "category": "readiness",
+     "channel": "BOTH"
+    },
+    {
+     "category": "absence/control state",
+     "channel": "BOTH"
+    },
+    {
+     "category": "provenance",
+     "channel": "BOTH"
+    },
+    {
+     "category": "diagnostics",
+     "channel": "BOTH"
+    },
+    {
+     "category": "component status",
+     "channel": "BOTH"
+    },
+    {
+     "category": "token accounting",
+     "channel": "BOTH"
+    }
+   ],
+   "surfaces": {
+    "factCount": 6,
+    "multiSurfaceFactCount": 6,
+    "bySurface": {
+     "productContext.modelVisibleContext": 6,
+     "productContext.items": 6,
+     "capsuleResult.digest": 6,
+     "pivotNeighborhood": 0,
+     "context": 0,
+     "inspectFirst": 3,
+     "capsule": 0,
+     "impact": 0,
+     "diagnostics": 0
+    },
+    "surfaceCharacters": {
+     "productContext.modelVisibleContext": 5845,
+     "productContext.items": 1996,
+     "capsuleResult.digest": 1398,
+     "pivotNeighborhood": 2,
+     "context": 324,
+     "inspectFirst": 568,
+     "capsule": 149,
+     "impact": 220,
+     "diagnostics": 595
+    },
+    "pairs": [
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "productContext.items",
+      "sharedFacts": 6
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 6
+     },
+     {
+      "a": "productContext.items",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 6
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "inspectFirst",
+      "sharedFacts": 3
+     },
+     {
+      "a": "productContext.items",
+      "b": "inspectFirst",
+      "sharedFacts": 3
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "inspectFirst",
+      "sharedFacts": 3
+     }
+    ]
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 2458,
+    "AGENT_USEFUL_CONTROL": 605,
+    "MACHINE_DIAGNOSTIC": 973,
+    "PROVENANCE": 302,
+    "DUPLICATE": 3909,
+    "TRANSPORT_STRUCTURE": 2291,
+    "OTHER": 0
+   }
+  },
+  {
+   "instanceId": "django__django-11451",
+   "call": "get_code_context.standard",
+   "widths": {
+    "internalSemanticOutput": 32153,
+    "envelopeWrapper": 157,
+    "contentTextRaw": 32153,
+    "contentTextOnWire": 34686,
+    "structuredContent": 32310,
+    "jsonRpcLine": 67104,
+    "jsonRpcScaffolding": 108,
+    "modelVisible": 32310
+   },
+   "tokens": {
+    "internalSemanticOutput": 10205,
+    "contentTextRaw": 10205,
+    "structuredContent": 10255,
+    "modelVisible": 10255,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 21299
+   },
+   "relation": "SUBSET",
+   "relationDetail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value",
+   "channels": [
+    {
+     "category": "primary evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "support evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "impact",
+     "channel": "BOTH"
+    },
+    {
+     "category": "structural context",
+     "channel": "BOTH"
+    },
+    {
+     "category": "memory",
+     "channel": "BOTH"
+    },
+    {
+     "category": "readiness",
+     "channel": "BOTH"
+    },
+    {
+     "category": "absence/control state",
+     "channel": "BOTH"
+    },
+    {
+     "category": "provenance",
+     "channel": "BOTH"
+    },
+    {
+     "category": "diagnostics",
+     "channel": "BOTH"
+    },
+    {
+     "category": "component status",
+     "channel": "BOTH"
+    },
+    {
+     "category": "token accounting",
+     "channel": "BOTH"
+    }
+   ],
+   "surfaces": {
+    "factCount": 4,
+    "multiSurfaceFactCount": 4,
+    "bySurface": {
+     "productContext.modelVisibleContext": 4,
+     "productContext.items": 4,
+     "capsuleResult.digest": 4,
+     "pivotNeighborhood": 0,
+     "context": 0,
+     "inspectFirst": 1,
+     "capsule": 0,
+     "impact": 0,
+     "diagnostics": 0
+    },
+    "surfaceCharacters": {
+     "productContext.modelVisibleContext": 4910,
+     "productContext.items": 2638,
+     "capsuleResult.digest": 1374,
+     "pivotNeighborhood": 2,
+     "context": 324,
+     "inspectFirst": 245,
+     "capsule": 149,
+     "impact": 220,
+     "diagnostics": 1147
+    },
+    "pairs": [
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "productContext.items",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.items",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "inspectFirst",
+      "sharedFacts": 1
+     },
+     {
+      "a": "productContext.items",
+      "b": "inspectFirst",
+      "sharedFacts": 1
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "inspectFirst",
+      "sharedFacts": 1
+     }
+    ]
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 2154,
+    "AGENT_USEFUL_CONTROL": 665,
+    "MACHINE_DIAGNOSTIC": 658,
+    "PROVENANCE": 340,
+    "DUPLICATE": 3744,
+    "TRANSPORT_STRUCTURE": 2520,
+    "OTHER": 123
+   }
+  },
+  {
+   "instanceId": "django__django-11451",
+   "call": "get_code_context.debug",
+   "widths": {
+    "internalSemanticOutput": 35215,
+    "envelopeWrapper": 157,
+    "contentTextRaw": 35215,
+    "contentTextOnWire": 38012,
+    "structuredContent": 35372,
+    "jsonRpcLine": 73492,
+    "jsonRpcScaffolding": 108,
+    "modelVisible": 35372
+   },
+   "tokens": {
+    "internalSemanticOutput": 11177,
+    "contentTextRaw": 11177,
+    "structuredContent": 11227,
+    "modelVisible": 11227,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 23327
+   },
+   "relation": "SUBSET",
+   "relationDetail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value",
+   "channels": [
+    {
+     "category": "primary evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "support evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "impact",
+     "channel": "BOTH"
+    },
+    {
+     "category": "structural context",
+     "channel": "BOTH"
+    },
+    {
+     "category": "memory",
+     "channel": "BOTH"
+    },
+    {
+     "category": "readiness",
+     "channel": "BOTH"
+    },
+    {
+     "category": "absence/control state",
+     "channel": "BOTH"
+    },
+    {
+     "category": "provenance",
+     "channel": "BOTH"
+    },
+    {
+     "category": "diagnostics",
+     "channel": "BOTH"
+    },
+    {
+     "category": "component status",
+     "channel": "BOTH"
+    },
+    {
+     "category": "token accounting",
+     "channel": "BOTH"
+    }
+   ],
+   "surfaces": {
+    "factCount": 4,
+    "multiSurfaceFactCount": 4,
+    "bySurface": {
+     "productContext.modelVisibleContext": 4,
+     "productContext.items": 4,
+     "capsuleResult.digest": 4,
+     "pivotNeighborhood": 0,
+     "context": 0,
+     "inspectFirst": 1,
+     "capsule": 0,
+     "impact": 0,
+     "diagnostics": 0
+    },
+    "surfaceCharacters": {
+     "productContext.modelVisibleContext": 4910,
+     "productContext.items": 2638,
+     "capsuleResult.digest": 1374,
+     "pivotNeighborhood": 2,
+     "context": 324,
+     "inspectFirst": 245,
+     "capsule": 149,
+     "impact": 220,
+     "diagnostics": 3954
+    },
+    "pairs": [
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "productContext.items",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.items",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "inspectFirst",
+      "sharedFacts": 1
+     },
+     {
+      "a": "productContext.items",
+      "b": "inspectFirst",
+      "sharedFacts": 1
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "inspectFirst",
+      "sharedFacts": 1
+     }
+    ]
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 2153,
+    "AGENT_USEFUL_CONTROL": 659,
+    "MACHINE_DIAGNOSTIC": 724,
+    "PROVENANCE": 347,
+    "DUPLICATE": 4077,
+    "TRANSPORT_STRUCTURE": 3094,
+    "OTHER": 123
+   }
+  },
+  {
+   "instanceId": "django__django-11451",
+   "call": "run_pipeline.standard",
+   "widths": {
+    "internalSemanticOutput": 31921,
+    "envelopeWrapper": 149,
+    "contentTextRaw": 31921,
+    "contentTextOnWire": 34420,
+    "structuredContent": 32070,
+    "jsonRpcLine": 66598,
+    "jsonRpcScaffolding": 108,
+    "modelVisible": 32070
+   },
+   "tokens": {
+    "internalSemanticOutput": 10132,
+    "contentTextRaw": 10132,
+    "structuredContent": 10179,
+    "modelVisible": 10179,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 21138
+   },
+   "relation": "SUBSET",
+   "relationDetail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value",
+   "channels": [
+    {
+     "category": "primary evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "support evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "impact",
+     "channel": "BOTH"
+    },
+    {
+     "category": "structural context",
+     "channel": "BOTH"
+    },
+    {
+     "category": "memory",
+     "channel": "BOTH"
+    },
+    {
+     "category": "readiness",
+     "channel": "BOTH"
+    },
+    {
+     "category": "absence/control state",
+     "channel": "BOTH"
+    },
+    {
+     "category": "provenance",
+     "channel": "BOTH"
+    },
+    {
+     "category": "diagnostics",
+     "channel": "BOTH"
+    },
+    {
+     "category": "component status",
+     "channel": "BOTH"
+    },
+    {
+     "category": "token accounting",
+     "channel": "BOTH"
+    }
+   ],
+   "surfaces": {
+    "factCount": 4,
+    "multiSurfaceFactCount": 4,
+    "bySurface": {
+     "productContext.modelVisibleContext": 4,
+     "productContext.items": 4,
+     "capsuleResult.digest": 4,
+     "pivotNeighborhood": 0,
+     "context": 0,
+     "inspectFirst": 1,
+     "capsule": 0,
+     "impact": 0,
+     "diagnostics": 0
+    },
+    "surfaceCharacters": {
+     "productContext.modelVisibleContext": 4910,
+     "productContext.items": 2638,
+     "capsuleResult.digest": 1374,
+     "pivotNeighborhood": 2,
+     "context": 324,
+     "inspectFirst": 245,
+     "capsule": 149,
+     "impact": 220,
+     "diagnostics": 908
+    },
+    "pairs": [
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "productContext.items",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.items",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "inspectFirst",
+      "sharedFacts": 1
+     },
+     {
+      "a": "productContext.items",
+      "b": "inspectFirst",
+      "sharedFacts": 1
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "inspectFirst",
+      "sharedFacts": 1
+     }
+    ]
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 2154,
+    "AGENT_USEFUL_CONTROL": 664,
+    "MACHINE_DIAGNOSTIC": 651,
+    "PROVENANCE": 340,
+    "DUPLICATE": 3743,
+    "TRANSPORT_STRUCTURE": 2456,
+    "OTHER": 123
+   }
+  },
+  {
+   "instanceId": "django__django-13343",
+   "call": "get_code_context.standard",
+   "widths": {
+    "internalSemanticOutput": 32607,
+    "envelopeWrapper": 157,
+    "contentTextRaw": 32607,
+    "contentTextOnWire": 34497,
+    "structuredContent": 32764,
+    "jsonRpcLine": 67369,
+    "jsonRpcScaffolding": 108,
+    "modelVisible": 32764
+   },
+   "tokens": {
+    "internalSemanticOutput": 10350,
+    "contentTextRaw": 10350,
+    "structuredContent": 10399,
+    "modelVisible": 10399,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 21383
+   },
+   "relation": "SUBSET",
+   "relationDetail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value",
+   "channels": [
+    {
+     "category": "primary evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "support evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "impact",
+     "channel": "BOTH"
+    },
+    {
+     "category": "structural context",
+     "channel": "BOTH"
+    },
+    {
+     "category": "memory",
+     "channel": "BOTH"
+    },
+    {
+     "category": "readiness",
+     "channel": "BOTH"
+    },
+    {
+     "category": "absence/control state",
+     "channel": "BOTH"
+    },
+    {
+     "category": "provenance",
+     "channel": "BOTH"
+    },
+    {
+     "category": "diagnostics",
+     "channel": "BOTH"
+    },
+    {
+     "category": "component status",
+     "channel": "BOTH"
+    },
+    {
+     "category": "token accounting",
+     "channel": "BOTH"
+    }
+   ],
+   "surfaces": {
+    "factCount": 10,
+    "multiSurfaceFactCount": 10,
+    "bySurface": {
+     "productContext.modelVisibleContext": 10,
+     "productContext.items": 10,
+     "capsuleResult.digest": 9,
+     "pivotNeighborhood": 10,
+     "context": 9,
+     "inspectFirst": 6,
+     "capsule": 0,
+     "impact": 0,
+     "diagnostics": 0
+    },
+    "surfaceCharacters": {
+     "productContext.modelVisibleContext": 3198,
+     "productContext.items": 3327,
+     "capsuleResult.digest": 1270,
+     "pivotNeighborhood": 1018,
+     "context": 882,
+     "inspectFirst": 490,
+     "capsule": 149,
+     "impact": 220,
+     "diagnostics": 1147
+    },
+    "pairs": [
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "productContext.items",
+      "sharedFacts": 10
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "pivotNeighborhood",
+      "sharedFacts": 10
+     },
+     {
+      "a": "productContext.items",
+      "b": "pivotNeighborhood",
+      "sharedFacts": 10
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 9
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "context",
+      "sharedFacts": 9
+     },
+     {
+      "a": "productContext.items",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 9
+     },
+     {
+      "a": "productContext.items",
+      "b": "context",
+      "sharedFacts": 9
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "pivotNeighborhood",
+      "sharedFacts": 9
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "context",
+      "sharedFacts": 9
+     },
+     {
+      "a": "pivotNeighborhood",
+      "b": "context",
+      "sharedFacts": 9
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "inspectFirst",
+      "sharedFacts": 6
+     },
+     {
+      "a": "productContext.items",
+      "b": "inspectFirst",
+      "sharedFacts": 6
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "inspectFirst",
+      "sharedFacts": 6
+     },
+     {
+      "a": "pivotNeighborhood",
+      "b": "inspectFirst",
+      "sharedFacts": 6
+     },
+     {
+      "a": "context",
+      "b": "inspectFirst",
+      "sharedFacts": 6
+     }
+    ]
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 1891,
+    "AGENT_USEFUL_CONTROL": 690,
+    "MACHINE_DIAGNOSTIC": 881,
+    "PROVENANCE": 381,
+    "DUPLICATE": 3581,
+    "TRANSPORT_STRUCTURE": 2915,
+    "OTHER": 11
+   }
+  },
+  {
+   "instanceId": "django__django-13343",
+   "call": "get_code_context.debug",
+   "widths": {
+    "internalSemanticOutput": 34128,
+    "envelopeWrapper": 157,
+    "contentTextRaw": 34128,
+    "contentTextOnWire": 36126,
+    "structuredContent": 34285,
+    "jsonRpcLine": 70519,
+    "jsonRpcScaffolding": 108,
+    "modelVisible": 34285
+   },
+   "tokens": {
+    "internalSemanticOutput": 10832,
+    "contentTextRaw": 10832,
+    "structuredContent": 10882,
+    "modelVisible": 10882,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 22383
+   },
+   "relation": "SUBSET",
+   "relationDetail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value",
+   "channels": [
+    {
+     "category": "primary evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "support evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "impact",
+     "channel": "BOTH"
+    },
+    {
+     "category": "structural context",
+     "channel": "BOTH"
+    },
+    {
+     "category": "memory",
+     "channel": "BOTH"
+    },
+    {
+     "category": "readiness",
+     "channel": "BOTH"
+    },
+    {
+     "category": "absence/control state",
+     "channel": "BOTH"
+    },
+    {
+     "category": "provenance",
+     "channel": "BOTH"
+    },
+    {
+     "category": "diagnostics",
+     "channel": "BOTH"
+    },
+    {
+     "category": "component status",
+     "channel": "BOTH"
+    },
+    {
+     "category": "token accounting",
+     "channel": "BOTH"
+    }
+   ],
+   "surfaces": {
+    "factCount": 6,
+    "multiSurfaceFactCount": 6,
+    "bySurface": {
+     "productContext.modelVisibleContext": 6,
+     "productContext.items": 6,
+     "capsuleResult.digest": 5,
+     "pivotNeighborhood": 0,
+     "context": 0,
+     "inspectFirst": 2,
+     "capsule": 0,
+     "impact": 0,
+     "diagnostics": 0
+    },
+    "surfaceCharacters": {
+     "productContext.modelVisibleContext": 3198,
+     "productContext.items": 3327,
+     "capsuleResult.digest": 1270,
+     "pivotNeighborhood": 2,
+     "context": 324,
+     "inspectFirst": 490,
+     "capsule": 149,
+     "impact": 220,
+     "diagnostics": 3975
+    },
+    "pairs": [
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "productContext.items",
+      "sharedFacts": 6
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 5
+     },
+     {
+      "a": "productContext.items",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 5
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     },
+     {
+      "a": "productContext.items",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     }
+    ]
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 1796,
+    "AGENT_USEFUL_CONTROL": 671,
+    "MACHINE_DIAGNOSTIC": 938,
+    "PROVENANCE": 380,
+    "DUPLICATE": 3759,
+    "TRANSPORT_STRUCTURE": 3277,
+    "OTHER": 11
+   }
+  },
+  {
+   "instanceId": "django__django-13343",
+   "call": "run_pipeline.standard",
+   "widths": {
+    "internalSemanticOutput": 32338,
+    "envelopeWrapper": 149,
+    "contentTextRaw": 32338,
+    "contentTextOnWire": 34192,
+    "structuredContent": 32487,
+    "jsonRpcLine": 66787,
+    "jsonRpcScaffolding": 108,
+    "modelVisible": 32487
+   },
+   "tokens": {
+    "internalSemanticOutput": 10264,
+    "contentTextRaw": 10264,
+    "structuredContent": 10311,
+    "modelVisible": 10311,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 21198
+   },
+   "relation": "SUBSET",
+   "relationDetail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value",
+   "channels": [
+    {
+     "category": "primary evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "support evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "impact",
+     "channel": "BOTH"
+    },
+    {
+     "category": "structural context",
+     "channel": "BOTH"
+    },
+    {
+     "category": "memory",
+     "channel": "BOTH"
+    },
+    {
+     "category": "readiness",
+     "channel": "BOTH"
+    },
+    {
+     "category": "absence/control state",
+     "channel": "BOTH"
+    },
+    {
+     "category": "provenance",
+     "channel": "BOTH"
+    },
+    {
+     "category": "diagnostics",
+     "channel": "BOTH"
+    },
+    {
+     "category": "component status",
+     "channel": "BOTH"
+    },
+    {
+     "category": "token accounting",
+     "channel": "BOTH"
+    }
+   ],
+   "surfaces": {
+    "factCount": 10,
+    "multiSurfaceFactCount": 10,
+    "bySurface": {
+     "productContext.modelVisibleContext": 10,
+     "productContext.items": 10,
+     "capsuleResult.digest": 9,
+     "pivotNeighborhood": 10,
+     "context": 9,
+     "inspectFirst": 6,
+     "capsule": 0,
+     "impact": 0,
+     "diagnostics": 0
+    },
+    "surfaceCharacters": {
+     "productContext.modelVisibleContext": 3198,
+     "productContext.items": 3327,
+     "capsuleResult.digest": 1270,
+     "pivotNeighborhood": 1018,
+     "context": 882,
+     "inspectFirst": 490,
+     "capsule": 149,
+     "impact": 220,
+     "diagnostics": 908
+    },
+    "pairs": [
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "productContext.items",
+      "sharedFacts": 10
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "pivotNeighborhood",
+      "sharedFacts": 10
+     },
+     {
+      "a": "productContext.items",
+      "b": "pivotNeighborhood",
+      "sharedFacts": 10
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 9
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "context",
+      "sharedFacts": 9
+     },
+     {
+      "a": "productContext.items",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 9
+     },
+     {
+      "a": "productContext.items",
+      "b": "context",
+      "sharedFacts": 9
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "pivotNeighborhood",
+      "sharedFacts": 9
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "context",
+      "sharedFacts": 9
+     },
+     {
+      "a": "pivotNeighborhood",
+      "b": "context",
+      "sharedFacts": 9
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "inspectFirst",
+      "sharedFacts": 6
+     },
+     {
+      "a": "productContext.items",
+      "b": "inspectFirst",
+      "sharedFacts": 6
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "inspectFirst",
+      "sharedFacts": 6
+     },
+     {
+      "a": "pivotNeighborhood",
+      "b": "inspectFirst",
+      "sharedFacts": 6
+     },
+     {
+      "a": "context",
+      "b": "inspectFirst",
+      "sharedFacts": 6
+     }
+    ]
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 1891,
+    "AGENT_USEFUL_CONTROL": 689,
+    "MACHINE_DIAGNOSTIC": 874,
+    "PROVENANCE": 381,
+    "DUPLICATE": 3579,
+    "TRANSPORT_STRUCTURE": 2840,
+    "OTHER": 11
+   }
+  },
+  {
+   "instanceId": "matplotlib__matplotlib-24177",
+   "call": "get_code_context.standard",
+   "widths": {
+    "internalSemanticOutput": 36490,
+    "envelopeWrapper": 157,
+    "contentTextRaw": 36490,
+    "contentTextOnWire": 38984,
+    "structuredContent": 36647,
+    "jsonRpcLine": 75739,
+    "jsonRpcScaffolding": 108,
+    "modelVisible": 36647
+   },
+   "tokens": {
+    "internalSemanticOutput": 11582,
+    "contentTextRaw": 11582,
+    "structuredContent": 11632,
+    "modelVisible": 11632,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 24040
+   },
+   "relation": "SUBSET",
+   "relationDetail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value",
+   "channels": [
+    {
+     "category": "primary evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "support evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "impact",
+     "channel": "BOTH"
+    },
+    {
+     "category": "structural context",
+     "channel": "BOTH"
+    },
+    {
+     "category": "memory",
+     "channel": "BOTH"
+    },
+    {
+     "category": "readiness",
+     "channel": "BOTH"
+    },
+    {
+     "category": "absence/control state",
+     "channel": "BOTH"
+    },
+    {
+     "category": "provenance",
+     "channel": "BOTH"
+    },
+    {
+     "category": "diagnostics",
+     "channel": "BOTH"
+    },
+    {
+     "category": "component status",
+     "channel": "BOTH"
+    },
+    {
+     "category": "token accounting",
+     "channel": "BOTH"
+    }
+   ],
+   "surfaces": {
+    "factCount": 7,
+    "multiSurfaceFactCount": 7,
+    "bySurface": {
+     "productContext.modelVisibleContext": 7,
+     "productContext.items": 7,
+     "capsuleResult.digest": 7,
+     "pivotNeighborhood": 0,
+     "context": 0,
+     "inspectFirst": 3,
+     "capsule": 0,
+     "impact": 0,
+     "diagnostics": 0
+    },
+    "surfaceCharacters": {
+     "productContext.modelVisibleContext": 4430,
+     "productContext.items": 3393,
+     "capsuleResult.digest": 1331,
+     "pivotNeighborhood": 2,
+     "context": 324,
+     "inspectFirst": 566,
+     "capsule": 149,
+     "impact": 239,
+     "diagnostics": 1147
+    },
+    "pairs": [
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "productContext.items",
+      "sharedFacts": 7
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 7
+     },
+     {
+      "a": "productContext.items",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 7
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "inspectFirst",
+      "sharedFacts": 3
+     },
+     {
+      "a": "productContext.items",
+      "b": "inspectFirst",
+      "sharedFacts": 3
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "inspectFirst",
+      "sharedFacts": 3
+     }
+    ]
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 2087,
+    "AGENT_USEFUL_CONTROL": 683,
+    "MACHINE_DIAGNOSTIC": 1420,
+    "PROVENANCE": 334,
+    "DUPLICATE": 4381,
+    "TRANSPORT_STRUCTURE": 2598,
+    "OTHER": 79
+   }
+  },
+  {
+   "instanceId": "matplotlib__matplotlib-24177",
+   "call": "get_code_context.debug",
+   "widths": {
+    "internalSemanticOutput": 33230,
+    "envelopeWrapper": 157,
+    "contentTextRaw": 33230,
+    "contentTextOnWire": 35724,
+    "structuredContent": 33387,
+    "jsonRpcLine": 69219,
+    "jsonRpcScaffolding": 108,
+    "modelVisible": 33387
+   },
+   "tokens": {
+    "internalSemanticOutput": 10547,
+    "contentTextRaw": 10547,
+    "structuredContent": 10597,
+    "modelVisible": 10597,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 21970
+   },
+   "relation": "SUBSET",
+   "relationDetail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value",
+   "channels": [
+    {
+     "category": "primary evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "support evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "impact",
+     "channel": "BOTH"
+    },
+    {
+     "category": "structural context",
+     "channel": "BOTH"
+    },
+    {
+     "category": "memory",
+     "channel": "BOTH"
+    },
+    {
+     "category": "readiness",
+     "channel": "BOTH"
+    },
+    {
+     "category": "absence/control state",
+     "channel": "BOTH"
+    },
+    {
+     "category": "provenance",
+     "channel": "BOTH"
+    },
+    {
+     "category": "diagnostics",
+     "channel": "BOTH"
+    },
+    {
+     "category": "component status",
+     "channel": "BOTH"
+    },
+    {
+     "category": "token accounting",
+     "channel": "BOTH"
+    }
+   ],
+   "surfaces": {
+    "factCount": 7,
+    "multiSurfaceFactCount": 7,
+    "bySurface": {
+     "productContext.modelVisibleContext": 7,
+     "productContext.items": 7,
+     "capsuleResult.digest": 7,
+     "pivotNeighborhood": 0,
+     "context": 0,
+     "inspectFirst": 3,
+     "capsule": 0,
+     "impact": 0,
+     "diagnostics": 0
+    },
+    "surfaceCharacters": {
+     "productContext.modelVisibleContext": 4430,
+     "productContext.items": 2902,
+     "capsuleResult.digest": 1331,
+     "pivotNeighborhood": 2,
+     "context": 324,
+     "inspectFirst": 566,
+     "capsule": 149,
+     "impact": 239,
+     "diagnostics": 4028
+    },
+    "pairs": [
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "productContext.items",
+      "sharedFacts": 7
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 7
+     },
+     {
+      "a": "productContext.items",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 7
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "inspectFirst",
+      "sharedFacts": 3
+     },
+     {
+      "a": "productContext.items",
+      "b": "inspectFirst",
+      "sharedFacts": 3
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "inspectFirst",
+      "sharedFacts": 3
+     }
+    ]
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 2000,
+    "AGENT_USEFUL_CONTROL": 677,
+    "MACHINE_DIAGNOSTIC": 773,
+    "PROVENANCE": 341,
+    "DUPLICATE": 3507,
+    "TRANSPORT_STRUCTURE": 3170,
+    "OTHER": 79
+   }
+  },
+  {
+   "instanceId": "matplotlib__matplotlib-24177",
+   "call": "run_pipeline.standard",
+   "widths": {
+    "internalSemanticOutput": 36235,
+    "envelopeWrapper": 149,
+    "contentTextRaw": 36235,
+    "contentTextOnWire": 38693,
+    "structuredContent": 36384,
+    "jsonRpcLine": 75185,
+    "jsonRpcScaffolding": 108,
+    "modelVisible": 36384
+   },
+   "tokens": {
+    "internalSemanticOutput": 11501,
+    "contentTextRaw": 11501,
+    "structuredContent": 11548,
+    "modelVisible": 11548,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 23864
+   },
+   "relation": "SUBSET",
+   "relationDetail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value",
+   "channels": [
+    {
+     "category": "primary evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "support evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "impact",
+     "channel": "BOTH"
+    },
+    {
+     "category": "structural context",
+     "channel": "BOTH"
+    },
+    {
+     "category": "memory",
+     "channel": "BOTH"
+    },
+    {
+     "category": "readiness",
+     "channel": "BOTH"
+    },
+    {
+     "category": "absence/control state",
+     "channel": "BOTH"
+    },
+    {
+     "category": "provenance",
+     "channel": "BOTH"
+    },
+    {
+     "category": "diagnostics",
+     "channel": "BOTH"
+    },
+    {
+     "category": "component status",
+     "channel": "BOTH"
+    },
+    {
+     "category": "token accounting",
+     "channel": "BOTH"
+    }
+   ],
+   "surfaces": {
+    "factCount": 7,
+    "multiSurfaceFactCount": 7,
+    "bySurface": {
+     "productContext.modelVisibleContext": 7,
+     "productContext.items": 7,
+     "capsuleResult.digest": 7,
+     "pivotNeighborhood": 0,
+     "context": 0,
+     "inspectFirst": 3,
+     "capsule": 0,
+     "impact": 0,
+     "diagnostics": 0
+    },
+    "surfaceCharacters": {
+     "productContext.modelVisibleContext": 4430,
+     "productContext.items": 3393,
+     "capsuleResult.digest": 1331,
+     "pivotNeighborhood": 2,
+     "context": 324,
+     "inspectFirst": 566,
+     "capsule": 149,
+     "impact": 239,
+     "diagnostics": 908
+    },
+    "pairs": [
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "productContext.items",
+      "sharedFacts": 7
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 7
+     },
+     {
+      "a": "productContext.items",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 7
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "inspectFirst",
+      "sharedFacts": 3
+     },
+     {
+      "a": "productContext.items",
+      "b": "inspectFirst",
+      "sharedFacts": 3
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "inspectFirst",
+      "sharedFacts": 3
+     }
+    ]
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 2087,
+    "AGENT_USEFUL_CONTROL": 682,
+    "MACHINE_DIAGNOSTIC": 1417,
+    "PROVENANCE": 334,
+    "DUPLICATE": 4379,
+    "TRANSPORT_STRUCTURE": 2523,
+    "OTHER": 79
+   }
+  },
+  {
+   "instanceId": "pydata__xarray-4966",
+   "call": "get_code_context.standard",
+   "widths": {
+    "internalSemanticOutput": 36746,
+    "envelopeWrapper": 157,
+    "contentTextRaw": 36746,
+    "contentTextOnWire": 39031,
+    "structuredContent": 36903,
+    "jsonRpcLine": 76042,
+    "jsonRpcScaffolding": 108,
+    "modelVisible": 36903
+   },
+   "tokens": {
+    "internalSemanticOutput": 11663,
+    "contentTextRaw": 11663,
+    "structuredContent": 11713,
+    "modelVisible": 11713,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 24136
+   },
+   "relation": "SUBSET",
+   "relationDetail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value",
+   "channels": [
+    {
+     "category": "primary evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "support evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "impact",
+     "channel": "BOTH"
+    },
+    {
+     "category": "structural context",
+     "channel": "BOTH"
+    },
+    {
+     "category": "memory",
+     "channel": "BOTH"
+    },
+    {
+     "category": "readiness",
+     "channel": "BOTH"
+    },
+    {
+     "category": "absence/control state",
+     "channel": "BOTH"
+    },
+    {
+     "category": "provenance",
+     "channel": "BOTH"
+    },
+    {
+     "category": "diagnostics",
+     "channel": "BOTH"
+    },
+    {
+     "category": "component status",
+     "channel": "BOTH"
+    },
+    {
+     "category": "token accounting",
+     "channel": "BOTH"
+    }
+   ],
+   "surfaces": {
+    "factCount": 13,
+    "multiSurfaceFactCount": 13,
+    "bySurface": {
+     "productContext.modelVisibleContext": 13,
+     "productContext.items": 13,
+     "capsuleResult.digest": 0,
+     "pivotNeighborhood": 0,
+     "context": 0,
+     "inspectFirst": 2,
+     "capsule": 0,
+     "impact": 0,
+     "diagnostics": 0
+    },
+    "surfaceCharacters": {
+     "productContext.modelVisibleContext": 7952,
+     "productContext.items": 3769,
+     "capsuleResult.digest": 0,
+     "pivotNeighborhood": 2,
+     "context": 324,
+     "inspectFirst": 488,
+     "capsule": 149,
+     "impact": 220,
+     "diagnostics": 557
+    },
+    "pairs": [
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "productContext.items",
+      "sharedFacts": 13
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     },
+     {
+      "a": "productContext.items",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     }
+    ]
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 2783,
+    "AGENT_USEFUL_CONTROL": 606,
+    "MACHINE_DIAGNOSTIC": 715,
+    "PROVENANCE": 364,
+    "DUPLICATE": 4660,
+    "TRANSPORT_STRUCTURE": 2534,
+    "OTHER": 0
+   }
+  },
+  {
+   "instanceId": "pydata__xarray-4966",
+   "call": "get_code_context.debug",
+   "widths": {
+    "internalSemanticOutput": 36266,
+    "envelopeWrapper": 157,
+    "contentTextRaw": 36266,
+    "contentTextOnWire": 38503,
+    "structuredContent": 36423,
+    "jsonRpcLine": 75034,
+    "jsonRpcScaffolding": 108,
+    "modelVisible": 36423
+   },
+   "tokens": {
+    "internalSemanticOutput": 11511,
+    "contentTextRaw": 11511,
+    "structuredContent": 11561,
+    "modelVisible": 11561,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 23816
+   },
+   "relation": "SUBSET",
+   "relationDetail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value",
+   "channels": [
+    {
+     "category": "primary evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "support evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "impact",
+     "channel": "BOTH"
+    },
+    {
+     "category": "structural context",
+     "channel": "BOTH"
+    },
+    {
+     "category": "memory",
+     "channel": "BOTH"
+    },
+    {
+     "category": "readiness",
+     "channel": "BOTH"
+    },
+    {
+     "category": "absence/control state",
+     "channel": "BOTH"
+    },
+    {
+     "category": "provenance",
+     "channel": "BOTH"
+    },
+    {
+     "category": "diagnostics",
+     "channel": "BOTH"
+    },
+    {
+     "category": "component status",
+     "channel": "BOTH"
+    },
+    {
+     "category": "token accounting",
+     "channel": "BOTH"
+    }
+   ],
+   "surfaces": {
+    "factCount": 13,
+    "multiSurfaceFactCount": 13,
+    "bySurface": {
+     "productContext.modelVisibleContext": 13,
+     "productContext.items": 13,
+     "capsuleResult.digest": 0,
+     "pivotNeighborhood": 0,
+     "context": 0,
+     "inspectFirst": 2,
+     "capsule": 0,
+     "impact": 0,
+     "diagnostics": 0
+    },
+    "surfaceCharacters": {
+     "productContext.modelVisibleContext": 7952,
+     "productContext.items": 3769,
+     "capsuleResult.digest": 0,
+     "pivotNeighborhood": 2,
+     "context": 324,
+     "inspectFirst": 488,
+     "capsule": 149,
+     "impact": 220,
+     "diagnostics": 978
+    },
+    "pairs": [
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "productContext.items",
+      "sharedFacts": 13
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     },
+     {
+      "a": "productContext.items",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     }
+    ]
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 2766,
+    "AGENT_USEFUL_CONTROL": 573,
+    "MACHINE_DIAGNOSTIC": 653,
+    "PROVENANCE": 366,
+    "DUPLICATE": 4624,
+    "TRANSPORT_STRUCTURE": 2530,
+    "OTHER": 0
+   }
+  },
+  {
+   "instanceId": "pydata__xarray-4966",
+   "call": "run_pipeline.standard",
+   "widths": {
+    "internalSemanticOutput": 36769,
+    "envelopeWrapper": 149,
+    "contentTextRaw": 36769,
+    "contentTextOnWire": 39050,
+    "structuredContent": 36918,
+    "jsonRpcLine": 76076,
+    "jsonRpcScaffolding": 108,
+    "modelVisible": 36918
+   },
+   "tokens": {
+    "internalSemanticOutput": 11671,
+    "contentTextRaw": 11671,
+    "structuredContent": 11718,
+    "modelVisible": 11718,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 24147
+   },
+   "relation": "SUBSET",
+   "relationDetail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value",
+   "channels": [
+    {
+     "category": "primary evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "support evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "impact",
+     "channel": "BOTH"
+    },
+    {
+     "category": "structural context",
+     "channel": "BOTH"
+    },
+    {
+     "category": "memory",
+     "channel": "BOTH"
+    },
+    {
+     "category": "readiness",
+     "channel": "BOTH"
+    },
+    {
+     "category": "absence/control state",
+     "channel": "BOTH"
+    },
+    {
+     "category": "provenance",
+     "channel": "BOTH"
+    },
+    {
+     "category": "diagnostics",
+     "channel": "BOTH"
+    },
+    {
+     "category": "component status",
+     "channel": "BOTH"
+    },
+    {
+     "category": "token accounting",
+     "channel": "BOTH"
+    }
+   ],
+   "surfaces": {
+    "factCount": 13,
+    "multiSurfaceFactCount": 13,
+    "bySurface": {
+     "productContext.modelVisibleContext": 13,
+     "productContext.items": 13,
+     "capsuleResult.digest": 0,
+     "pivotNeighborhood": 0,
+     "context": 0,
+     "inspectFirst": 2,
+     "capsule": 0,
+     "impact": 0,
+     "diagnostics": 0
+    },
+    "surfaceCharacters": {
+     "productContext.modelVisibleContext": 7952,
+     "productContext.items": 3769,
+     "capsuleResult.digest": 0,
+     "pivotNeighborhood": 2,
+     "context": 324,
+     "inspectFirst": 488,
+     "capsule": 149,
+     "impact": 220,
+     "diagnostics": 595
+    },
+    "pairs": [
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "productContext.items",
+      "sharedFacts": 13
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     },
+     {
+      "a": "productContext.items",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     }
+    ]
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 2783,
+    "AGENT_USEFUL_CONTROL": 619,
+    "MACHINE_DIAGNOSTIC": 712,
+    "PROVENANCE": 364,
+    "DUPLICATE": 4660,
+    "TRANSPORT_STRUCTURE": 2532,
+    "OTHER": 0
+   }
+  },
+  {
+   "instanceId": "pytest-dev__pytest-7982",
+   "call": "get_code_context.standard",
+   "widths": {
+    "internalSemanticOutput": 26597,
+    "envelopeWrapper": 157,
+    "contentTextRaw": 26597,
+    "contentTextOnWire": 28703,
+    "structuredContent": 26754,
+    "jsonRpcLine": 55565,
+    "jsonRpcScaffolding": 108,
+    "modelVisible": 26754
+   },
+   "tokens": {
+    "internalSemanticOutput": 8442,
+    "contentTextRaw": 8442,
+    "structuredContent": 8492,
+    "modelVisible": 8492,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 17637
+   },
+   "relation": "SUBSET",
+   "relationDetail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value",
+   "channels": [
+    {
+     "category": "primary evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "support evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "impact",
+     "channel": "BOTH"
+    },
+    {
+     "category": "structural context",
+     "channel": "BOTH"
+    },
+    {
+     "category": "memory",
+     "channel": "BOTH"
+    },
+    {
+     "category": "readiness",
+     "channel": "BOTH"
+    },
+    {
+     "category": "absence/control state",
+     "channel": "BOTH"
+    },
+    {
+     "category": "provenance",
+     "channel": "BOTH"
+    },
+    {
+     "category": "diagnostics",
+     "channel": "BOTH"
+    },
+    {
+     "category": "component status",
+     "channel": "BOTH"
+    },
+    {
+     "category": "token accounting",
+     "channel": "BOTH"
+    }
+   ],
+   "surfaces": {
+    "factCount": 17,
+    "multiSurfaceFactCount": 17,
+    "bySurface": {
+     "productContext.modelVisibleContext": 17,
+     "productContext.items": 17,
+     "capsuleResult.digest": 4,
+     "pivotNeighborhood": 12,
+     "context": 4,
+     "inspectFirst": 2,
+     "capsule": 0,
+     "impact": 0,
+     "diagnostics": 0
+    },
+    "surfaceCharacters": {
+     "productContext.modelVisibleContext": 3440,
+     "productContext.items": 5814,
+     "capsuleResult.digest": 751,
+     "pivotNeighborhood": 1069,
+     "context": 805,
+     "inspectFirst": 345,
+     "capsule": 149,
+     "impact": 220,
+     "diagnostics": 1147
+    },
+    "pairs": [
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "productContext.items",
+      "sharedFacts": 17
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "pivotNeighborhood",
+      "sharedFacts": 12
+     },
+     {
+      "a": "productContext.items",
+      "b": "pivotNeighborhood",
+      "sharedFacts": 12
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "context",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.items",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.items",
+      "b": "context",
+      "sharedFacts": 4
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "context",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     },
+     {
+      "a": "productContext.items",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "pivotNeighborhood",
+      "sharedFacts": 2
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     },
+     {
+      "a": "pivotNeighborhood",
+      "b": "context",
+      "sharedFacts": 2
+     },
+     {
+      "a": "context",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     },
+     {
+      "a": "pivotNeighborhood",
+      "b": "inspectFirst",
+      "sharedFacts": 1
+     }
+    ]
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 1484,
+    "AGENT_USEFUL_CONTROL": 676,
+    "MACHINE_DIAGNOSTIC": 611,
+    "PROVENANCE": 413,
+    "DUPLICATE": 2055,
+    "TRANSPORT_STRUCTURE": 3198,
+    "OTHER": 6
+   }
+  },
+  {
+   "instanceId": "pytest-dev__pytest-7982",
+   "call": "get_code_context.debug",
+   "widths": {
+    "internalSemanticOutput": 28081,
+    "envelopeWrapper": 157,
+    "contentTextRaw": 28081,
+    "contentTextOnWire": 30299,
+    "structuredContent": 28238,
+    "jsonRpcLine": 58645,
+    "jsonRpcScaffolding": 108,
+    "modelVisible": 28238
+   },
+   "tokens": {
+    "internalSemanticOutput": 8913,
+    "contentTextRaw": 8913,
+    "structuredContent": 8963,
+    "modelVisible": 8963,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 18614
+   },
+   "relation": "SUBSET",
+   "relationDetail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value",
+   "channels": [
+    {
+     "category": "primary evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "support evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "impact",
+     "channel": "BOTH"
+    },
+    {
+     "category": "structural context",
+     "channel": "BOTH"
+    },
+    {
+     "category": "memory",
+     "channel": "BOTH"
+    },
+    {
+     "category": "readiness",
+     "channel": "BOTH"
+    },
+    {
+     "category": "absence/control state",
+     "channel": "BOTH"
+    },
+    {
+     "category": "provenance",
+     "channel": "BOTH"
+    },
+    {
+     "category": "diagnostics",
+     "channel": "BOTH"
+    },
+    {
+     "category": "component status",
+     "channel": "BOTH"
+    },
+    {
+     "category": "token accounting",
+     "channel": "BOTH"
+    }
+   ],
+   "surfaces": {
+    "factCount": 13,
+    "multiSurfaceFactCount": 13,
+    "bySurface": {
+     "productContext.modelVisibleContext": 13,
+     "productContext.items": 13,
+     "capsuleResult.digest": 4,
+     "pivotNeighborhood": 0,
+     "context": 0,
+     "inspectFirst": 2,
+     "capsule": 0,
+     "impact": 0,
+     "diagnostics": 0
+    },
+    "surfaceCharacters": {
+     "productContext.modelVisibleContext": 3440,
+     "productContext.items": 5814,
+     "capsuleResult.digest": 751,
+     "pivotNeighborhood": 2,
+     "context": 324,
+     "inspectFirst": 345,
+     "capsule": 149,
+     "impact": 220,
+     "diagnostics": 3987
+    },
+    "pairs": [
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "productContext.items",
+      "sharedFacts": 13
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.items",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     },
+     {
+      "a": "productContext.items",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     }
+    ]
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 1447,
+    "AGENT_USEFUL_CONTROL": 656,
+    "MACHINE_DIAGNOSTIC": 671,
+    "PROVENANCE": 417,
+    "DUPLICATE": 2155,
+    "TRANSPORT_STRUCTURE": 3562,
+    "OTHER": 6
+   }
+  },
+  {
+   "instanceId": "pytest-dev__pytest-7982",
+   "call": "run_pipeline.standard",
+   "widths": {
+    "internalSemanticOutput": 26342,
+    "envelopeWrapper": 149,
+    "contentTextRaw": 26342,
+    "contentTextOnWire": 28412,
+    "structuredContent": 26491,
+    "jsonRpcLine": 55011,
+    "jsonRpcScaffolding": 108,
+    "modelVisible": 26491
+   },
+   "tokens": {
+    "internalSemanticOutput": 8361,
+    "contentTextRaw": 8361,
+    "structuredContent": 8408,
+    "modelVisible": 8408,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 17461
+   },
+   "relation": "SUBSET",
+   "relationDetail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value",
+   "channels": [
+    {
+     "category": "primary evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "support evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "impact",
+     "channel": "BOTH"
+    },
+    {
+     "category": "structural context",
+     "channel": "BOTH"
+    },
+    {
+     "category": "memory",
+     "channel": "BOTH"
+    },
+    {
+     "category": "readiness",
+     "channel": "BOTH"
+    },
+    {
+     "category": "absence/control state",
+     "channel": "BOTH"
+    },
+    {
+     "category": "provenance",
+     "channel": "BOTH"
+    },
+    {
+     "category": "diagnostics",
+     "channel": "BOTH"
+    },
+    {
+     "category": "component status",
+     "channel": "BOTH"
+    },
+    {
+     "category": "token accounting",
+     "channel": "BOTH"
+    }
+   ],
+   "surfaces": {
+    "factCount": 17,
+    "multiSurfaceFactCount": 17,
+    "bySurface": {
+     "productContext.modelVisibleContext": 17,
+     "productContext.items": 17,
+     "capsuleResult.digest": 4,
+     "pivotNeighborhood": 12,
+     "context": 4,
+     "inspectFirst": 2,
+     "capsule": 0,
+     "impact": 0,
+     "diagnostics": 0
+    },
+    "surfaceCharacters": {
+     "productContext.modelVisibleContext": 3440,
+     "productContext.items": 5814,
+     "capsuleResult.digest": 751,
+     "pivotNeighborhood": 1069,
+     "context": 805,
+     "inspectFirst": 345,
+     "capsule": 149,
+     "impact": 220,
+     "diagnostics": 908
+    },
+    "pairs": [
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "productContext.items",
+      "sharedFacts": 17
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "pivotNeighborhood",
+      "sharedFacts": 12
+     },
+     {
+      "a": "productContext.items",
+      "b": "pivotNeighborhood",
+      "sharedFacts": 12
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "context",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.items",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.items",
+      "b": "context",
+      "sharedFacts": 4
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "context",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     },
+     {
+      "a": "productContext.items",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "pivotNeighborhood",
+      "sharedFacts": 2
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     },
+     {
+      "a": "pivotNeighborhood",
+      "b": "context",
+      "sharedFacts": 2
+     },
+     {
+      "a": "context",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     },
+     {
+      "a": "pivotNeighborhood",
+      "b": "inspectFirst",
+      "sharedFacts": 1
+     }
+    ]
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 1484,
+    "AGENT_USEFUL_CONTROL": 674,
+    "MACHINE_DIAGNOSTIC": 608,
+    "PROVENANCE": 413,
+    "DUPLICATE": 2053,
+    "TRANSPORT_STRUCTURE": 3124,
+    "OTHER": 6
+   }
+  },
+  {
+   "instanceId": "scikit-learn__scikit-learn-13496",
+   "call": "get_code_context.standard",
+   "widths": {
+    "internalSemanticOutput": 33913,
+    "envelopeWrapper": 157,
+    "contentTextRaw": 33913,
+    "contentTextOnWire": 35913,
+    "structuredContent": 34070,
+    "jsonRpcLine": 70091,
+    "jsonRpcScaffolding": 108,
+    "modelVisible": 34070
+   },
+   "tokens": {
+    "internalSemanticOutput": 10764,
+    "contentTextRaw": 10764,
+    "structuredContent": 10814,
+    "modelVisible": 10814,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 22247
+   },
+   "relation": "SUBSET",
+   "relationDetail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value",
+   "channels": [
+    {
+     "category": "primary evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "support evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "impact",
+     "channel": "BOTH"
+    },
+    {
+     "category": "structural context",
+     "channel": "BOTH"
+    },
+    {
+     "category": "memory",
+     "channel": "BOTH"
+    },
+    {
+     "category": "readiness",
+     "channel": "BOTH"
+    },
+    {
+     "category": "absence/control state",
+     "channel": "BOTH"
+    },
+    {
+     "category": "provenance",
+     "channel": "BOTH"
+    },
+    {
+     "category": "diagnostics",
+     "channel": "BOTH"
+    },
+    {
+     "category": "component status",
+     "channel": "BOTH"
+    },
+    {
+     "category": "token accounting",
+     "channel": "BOTH"
+    }
+   ],
+   "surfaces": {
+    "factCount": 12,
+    "multiSurfaceFactCount": 12,
+    "bySurface": {
+     "productContext.modelVisibleContext": 12,
+     "productContext.items": 12,
+     "capsuleResult.digest": 5,
+     "pivotNeighborhood": 10,
+     "context": 5,
+     "inspectFirst": 3,
+     "capsule": 0,
+     "impact": 0,
+     "diagnostics": 0
+    },
+    "surfaceCharacters": {
+     "productContext.modelVisibleContext": 5440,
+     "productContext.items": 3688,
+     "capsuleResult.digest": 1226,
+     "pivotNeighborhood": 1029,
+     "context": 853,
+     "inspectFirst": 504,
+     "capsule": 150,
+     "impact": 220,
+     "diagnostics": 1147
+    },
+    "pairs": [
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "productContext.items",
+      "sharedFacts": 12
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "pivotNeighborhood",
+      "sharedFacts": 10
+     },
+     {
+      "a": "productContext.items",
+      "b": "pivotNeighborhood",
+      "sharedFacts": 10
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 5
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "context",
+      "sharedFacts": 5
+     },
+     {
+      "a": "productContext.items",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 5
+     },
+     {
+      "a": "productContext.items",
+      "b": "context",
+      "sharedFacts": 5
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "pivotNeighborhood",
+      "sharedFacts": 5
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "context",
+      "sharedFacts": 5
+     },
+     {
+      "a": "pivotNeighborhood",
+      "b": "context",
+      "sharedFacts": 5
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "inspectFirst",
+      "sharedFacts": 3
+     },
+     {
+      "a": "productContext.items",
+      "b": "inspectFirst",
+      "sharedFacts": 3
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "inspectFirst",
+      "sharedFacts": 3
+     },
+     {
+      "a": "pivotNeighborhood",
+      "b": "inspectFirst",
+      "sharedFacts": 3
+     },
+     {
+      "a": "context",
+      "b": "inspectFirst",
+      "sharedFacts": 3
+     }
+    ]
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 2510,
+    "AGENT_USEFUL_CONTROL": 680,
+    "MACHINE_DIAGNOSTIC": 929,
+    "PROVENANCE": 351,
+    "DUPLICATE": 3522,
+    "TRANSPORT_STRUCTURE": 2754,
+    "OTHER": 18
+   }
+  },
+  {
+   "instanceId": "scikit-learn__scikit-learn-13496",
+   "call": "get_code_context.debug",
+   "widths": {
+    "internalSemanticOutput": 35579,
+    "envelopeWrapper": 157,
+    "contentTextRaw": 35579,
+    "contentTextOnWire": 37689,
+    "structuredContent": 35736,
+    "jsonRpcLine": 73533,
+    "jsonRpcScaffolding": 108,
+    "modelVisible": 35736
+   },
+   "tokens": {
+    "internalSemanticOutput": 11293,
+    "contentTextRaw": 11293,
+    "structuredContent": 11343,
+    "modelVisible": 11343,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 23340
+   },
+   "relation": "SUBSET",
+   "relationDetail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value",
+   "channels": [
+    {
+     "category": "primary evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "support evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "impact",
+     "channel": "BOTH"
+    },
+    {
+     "category": "structural context",
+     "channel": "BOTH"
+    },
+    {
+     "category": "memory",
+     "channel": "BOTH"
+    },
+    {
+     "category": "readiness",
+     "channel": "BOTH"
+    },
+    {
+     "category": "absence/control state",
+     "channel": "BOTH"
+    },
+    {
+     "category": "provenance",
+     "channel": "BOTH"
+    },
+    {
+     "category": "diagnostics",
+     "channel": "BOTH"
+    },
+    {
+     "category": "component status",
+     "channel": "BOTH"
+    },
+    {
+     "category": "token accounting",
+     "channel": "BOTH"
+    }
+   ],
+   "surfaces": {
+    "factCount": 8,
+    "multiSurfaceFactCount": 8,
+    "bySurface": {
+     "productContext.modelVisibleContext": 8,
+     "productContext.items": 8,
+     "capsuleResult.digest": 4,
+     "pivotNeighborhood": 0,
+     "context": 0,
+     "inspectFirst": 2,
+     "capsule": 0,
+     "impact": 0,
+     "diagnostics": 0
+    },
+    "surfaceCharacters": {
+     "productContext.modelVisibleContext": 5440,
+     "productContext.items": 3688,
+     "capsuleResult.digest": 1226,
+     "pivotNeighborhood": 2,
+     "context": 324,
+     "inspectFirst": 504,
+     "capsule": 150,
+     "impact": 220,
+     "diagnostics": 4033
+    },
+    "pairs": [
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "productContext.items",
+      "sharedFacts": 8
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.items",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     },
+     {
+      "a": "productContext.items",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     }
+    ]
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 2422,
+    "AGENT_USEFUL_CONTROL": 656,
+    "MACHINE_DIAGNOSTIC": 989,
+    "PROVENANCE": 350,
+    "DUPLICATE": 3740,
+    "TRANSPORT_STRUCTURE": 3117,
+    "OTHER": 18
+   }
+  },
+  {
+   "instanceId": "scikit-learn__scikit-learn-13496",
+   "call": "run_pipeline.standard",
+   "widths": {
+    "internalSemanticOutput": 33659,
+    "envelopeWrapper": 149,
+    "contentTextRaw": 33659,
+    "contentTextOnWire": 35623,
+    "structuredContent": 33808,
+    "jsonRpcLine": 69539,
+    "jsonRpcScaffolding": 108,
+    "modelVisible": 33808
+   },
+   "tokens": {
+    "internalSemanticOutput": 10683,
+    "contentTextRaw": 10683,
+    "structuredContent": 10731,
+    "modelVisible": 10731,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 22072
+   },
+   "relation": "SUBSET",
+   "relationDetail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value",
+   "channels": [
+    {
+     "category": "primary evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "support evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "impact",
+     "channel": "BOTH"
+    },
+    {
+     "category": "structural context",
+     "channel": "BOTH"
+    },
+    {
+     "category": "memory",
+     "channel": "BOTH"
+    },
+    {
+     "category": "readiness",
+     "channel": "BOTH"
+    },
+    {
+     "category": "absence/control state",
+     "channel": "BOTH"
+    },
+    {
+     "category": "provenance",
+     "channel": "BOTH"
+    },
+    {
+     "category": "diagnostics",
+     "channel": "BOTH"
+    },
+    {
+     "category": "component status",
+     "channel": "BOTH"
+    },
+    {
+     "category": "token accounting",
+     "channel": "BOTH"
+    }
+   ],
+   "surfaces": {
+    "factCount": 12,
+    "multiSurfaceFactCount": 12,
+    "bySurface": {
+     "productContext.modelVisibleContext": 12,
+     "productContext.items": 12,
+     "capsuleResult.digest": 5,
+     "pivotNeighborhood": 10,
+     "context": 5,
+     "inspectFirst": 3,
+     "capsule": 0,
+     "impact": 0,
+     "diagnostics": 0
+    },
+    "surfaceCharacters": {
+     "productContext.modelVisibleContext": 5440,
+     "productContext.items": 3688,
+     "capsuleResult.digest": 1226,
+     "pivotNeighborhood": 1029,
+     "context": 853,
+     "inspectFirst": 504,
+     "capsule": 150,
+     "impact": 220,
+     "diagnostics": 908
+    },
+    "pairs": [
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "productContext.items",
+      "sharedFacts": 12
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "pivotNeighborhood",
+      "sharedFacts": 10
+     },
+     {
+      "a": "productContext.items",
+      "b": "pivotNeighborhood",
+      "sharedFacts": 10
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 5
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "context",
+      "sharedFacts": 5
+     },
+     {
+      "a": "productContext.items",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 5
+     },
+     {
+      "a": "productContext.items",
+      "b": "context",
+      "sharedFacts": 5
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "pivotNeighborhood",
+      "sharedFacts": 5
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "context",
+      "sharedFacts": 5
+     },
+     {
+      "a": "pivotNeighborhood",
+      "b": "context",
+      "sharedFacts": 5
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "inspectFirst",
+      "sharedFacts": 3
+     },
+     {
+      "a": "productContext.items",
+      "b": "inspectFirst",
+      "sharedFacts": 3
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "inspectFirst",
+      "sharedFacts": 3
+     },
+     {
+      "a": "pivotNeighborhood",
+      "b": "inspectFirst",
+      "sharedFacts": 3
+     },
+     {
+      "a": "context",
+      "b": "inspectFirst",
+      "sharedFacts": 3
+     }
+    ]
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 2510,
+    "AGENT_USEFUL_CONTROL": 678,
+    "MACHINE_DIAGNOSTIC": 927,
+    "PROVENANCE": 351,
+    "DUPLICATE": 3520,
+    "TRANSPORT_STRUCTURE": 2679,
+    "OTHER": 18
+   }
+  },
+  {
+   "instanceId": "scikit-learn__scikit-learn-14087",
+   "call": "get_code_context.standard",
+   "widths": {
+    "internalSemanticOutput": 36685,
+    "envelopeWrapper": 157,
+    "contentTextRaw": 36685,
+    "contentTextOnWire": 39093,
+    "structuredContent": 36842,
+    "jsonRpcLine": 76043,
+    "jsonRpcScaffolding": 108,
+    "modelVisible": 36842
+   },
+   "tokens": {
+    "internalSemanticOutput": 11644,
+    "contentTextRaw": 11644,
+    "structuredContent": 11694,
+    "modelVisible": 11694,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 24136
+   },
+   "relation": "SUBSET",
+   "relationDetail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value",
+   "channels": [
+    {
+     "category": "primary evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "support evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "impact",
+     "channel": "BOTH"
+    },
+    {
+     "category": "structural context",
+     "channel": "BOTH"
+    },
+    {
+     "category": "memory",
+     "channel": "BOTH"
+    },
+    {
+     "category": "readiness",
+     "channel": "BOTH"
+    },
+    {
+     "category": "absence/control state",
+     "channel": "BOTH"
+    },
+    {
+     "category": "provenance",
+     "channel": "BOTH"
+    },
+    {
+     "category": "diagnostics",
+     "channel": "BOTH"
+    },
+    {
+     "category": "component status",
+     "channel": "BOTH"
+    },
+    {
+     "category": "token accounting",
+     "channel": "BOTH"
+    }
+   ],
+   "surfaces": {
+    "factCount": 5,
+    "multiSurfaceFactCount": 5,
+    "bySurface": {
+     "productContext.modelVisibleContext": 4,
+     "productContext.items": 5,
+     "capsuleResult.digest": 2,
+     "pivotNeighborhood": 0,
+     "context": 0,
+     "inspectFirst": 2,
+     "capsule": 0,
+     "impact": 0,
+     "diagnostics": 0
+    },
+    "surfaceCharacters": {
+     "productContext.modelVisibleContext": 4730,
+     "productContext.items": 2135,
+     "capsuleResult.digest": 1094,
+     "pivotNeighborhood": 2,
+     "context": 324,
+     "inspectFirst": 420,
+     "capsule": 149,
+     "impact": 220,
+     "diagnostics": 1147
+    },
+    "pairs": [
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "productContext.items",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 2
+     },
+     {
+      "a": "productContext.items",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 2
+     },
+     {
+      "a": "productContext.items",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "inspectFirst",
+      "sharedFacts": 1
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "inspectFirst",
+      "sharedFacts": 1
+     }
+    ]
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 2041,
+    "AGENT_USEFUL_CONTROL": 670,
+    "MACHINE_DIAGNOSTIC": 1469,
+    "PROVENANCE": 329,
+    "DUPLICATE": 4619,
+    "TRANSPORT_STRUCTURE": 2420,
+    "OTHER": 97
+   }
+  },
+  {
+   "instanceId": "scikit-learn__scikit-learn-14087",
+   "call": "get_code_context.debug",
+   "widths": {
+    "internalSemanticOutput": 33233,
+    "envelopeWrapper": 157,
+    "contentTextRaw": 33233,
+    "contentTextOnWire": 35623,
+    "structuredContent": 33390,
+    "jsonRpcLine": 69121,
+    "jsonRpcScaffolding": 108,
+    "modelVisible": 33390
+   },
+   "tokens": {
+    "internalSemanticOutput": 10548,
+    "contentTextRaw": 10548,
+    "structuredContent": 10598,
+    "modelVisible": 10598,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 21939
+   },
+   "relation": "SUBSET",
+   "relationDetail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value",
+   "channels": [
+    {
+     "category": "primary evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "support evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "impact",
+     "channel": "BOTH"
+    },
+    {
+     "category": "structural context",
+     "channel": "BOTH"
+    },
+    {
+     "category": "memory",
+     "channel": "BOTH"
+    },
+    {
+     "category": "readiness",
+     "channel": "BOTH"
+    },
+    {
+     "category": "absence/control state",
+     "channel": "BOTH"
+    },
+    {
+     "category": "provenance",
+     "channel": "BOTH"
+    },
+    {
+     "category": "diagnostics",
+     "channel": "BOTH"
+    },
+    {
+     "category": "component status",
+     "channel": "BOTH"
+    },
+    {
+     "category": "token accounting",
+     "channel": "BOTH"
+    }
+   ],
+   "surfaces": {
+    "factCount": 5,
+    "multiSurfaceFactCount": 5,
+    "bySurface": {
+     "productContext.modelVisibleContext": 4,
+     "productContext.items": 5,
+     "capsuleResult.digest": 2,
+     "pivotNeighborhood": 0,
+     "context": 0,
+     "inspectFirst": 2,
+     "capsule": 0,
+     "impact": 0,
+     "diagnostics": 0
+    },
+    "surfaceCharacters": {
+     "productContext.modelVisibleContext": 4730,
+     "productContext.items": 2135,
+     "capsuleResult.digest": 1094,
+     "pivotNeighborhood": 2,
+     "context": 324,
+     "inspectFirst": 420,
+     "capsule": 149,
+     "impact": 220,
+     "diagnostics": 4032
+    },
+    "pairs": [
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "productContext.items",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 2
+     },
+     {
+      "a": "productContext.items",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 2
+     },
+     {
+      "a": "productContext.items",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "inspectFirst",
+      "sharedFacts": 1
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "inspectFirst",
+      "sharedFacts": 1
+     }
+    ]
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 2039,
+    "AGENT_USEFUL_CONTROL": 663,
+    "MACHINE_DIAGNOSTIC": 812,
+    "PROVENANCE": 335,
+    "DUPLICATE": 3616,
+    "TRANSPORT_STRUCTURE": 2985,
+    "OTHER": 97
+   }
+  },
+  {
+   "instanceId": "scikit-learn__scikit-learn-14087",
+   "call": "run_pipeline.standard",
+   "widths": {
+    "internalSemanticOutput": 36709,
+    "envelopeWrapper": 149,
+    "contentTextRaw": 36709,
+    "contentTextOnWire": 39085,
+    "structuredContent": 36858,
+    "jsonRpcLine": 76051,
+    "jsonRpcScaffolding": 108,
+    "modelVisible": 36858
+   },
+   "tokens": {
+    "internalSemanticOutput": 11652,
+    "contentTextRaw": 11652,
+    "structuredContent": 11699,
+    "modelVisible": 11699,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 24139
+   },
+   "relation": "SUBSET",
+   "relationDetail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value",
+   "channels": [
+    {
+     "category": "primary evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "support evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "impact",
+     "channel": "BOTH"
+    },
+    {
+     "category": "structural context",
+     "channel": "BOTH"
+    },
+    {
+     "category": "memory",
+     "channel": "BOTH"
+    },
+    {
+     "category": "readiness",
+     "channel": "BOTH"
+    },
+    {
+     "category": "absence/control state",
+     "channel": "BOTH"
+    },
+    {
+     "category": "provenance",
+     "channel": "BOTH"
+    },
+    {
+     "category": "diagnostics",
+     "channel": "BOTH"
+    },
+    {
+     "category": "component status",
+     "channel": "BOTH"
+    },
+    {
+     "category": "token accounting",
+     "channel": "BOTH"
+    }
+   ],
+   "surfaces": {
+    "factCount": 5,
+    "multiSurfaceFactCount": 5,
+    "bySurface": {
+     "productContext.modelVisibleContext": 4,
+     "productContext.items": 5,
+     "capsuleResult.digest": 2,
+     "pivotNeighborhood": 0,
+     "context": 0,
+     "inspectFirst": 2,
+     "capsule": 0,
+     "impact": 0,
+     "diagnostics": 0
+    },
+    "surfaceCharacters": {
+     "productContext.modelVisibleContext": 4730,
+     "productContext.items": 2427,
+     "capsuleResult.digest": 1094,
+     "pivotNeighborhood": 2,
+     "context": 324,
+     "inspectFirst": 420,
+     "capsule": 149,
+     "impact": 220,
+     "diagnostics": 908
+    },
+    "pairs": [
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "productContext.items",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 2
+     },
+     {
+      "a": "productContext.items",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 2
+     },
+     {
+      "a": "productContext.items",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "inspectFirst",
+      "sharedFacts": 1
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "inspectFirst",
+      "sharedFacts": 1
+     }
+    ]
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 2106,
+    "AGENT_USEFUL_CONTROL": 668,
+    "MACHINE_DIAGNOSTIC": 1462,
+    "PROVENANCE": 329,
+    "DUPLICATE": 4652,
+    "TRANSPORT_STRUCTURE": 2337,
+    "OTHER": 97
+   }
+  },
+  {
+   "instanceId": "sphinx-doc__sphinx-11445",
+   "call": "get_code_context.standard",
+   "widths": {
+    "internalSemanticOutput": 33988,
+    "envelopeWrapper": 157,
+    "contentTextRaw": 33988,
+    "contentTextOnWire": 36901,
+    "structuredContent": 34145,
+    "jsonRpcLine": 71154,
+    "jsonRpcScaffolding": 108,
+    "modelVisible": 34145
+   },
+   "tokens": {
+    "internalSemanticOutput": 10788,
+    "contentTextRaw": 10788,
+    "structuredContent": 10838,
+    "modelVisible": 10838,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 22585
+   },
+   "relation": "SUBSET",
+   "relationDetail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value",
+   "channels": [
+    {
+     "category": "primary evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "support evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "impact",
+     "channel": "BOTH"
+    },
+    {
+     "category": "structural context",
+     "channel": "BOTH"
+    },
+    {
+     "category": "memory",
+     "channel": "BOTH"
+    },
+    {
+     "category": "readiness",
+     "channel": "BOTH"
+    },
+    {
+     "category": "absence/control state",
+     "channel": "BOTH"
+    },
+    {
+     "category": "provenance",
+     "channel": "BOTH"
+    },
+    {
+     "category": "diagnostics",
+     "channel": "BOTH"
+    },
+    {
+     "category": "component status",
+     "channel": "BOTH"
+    },
+    {
+     "category": "token accounting",
+     "channel": "BOTH"
+    }
+   ],
+   "surfaces": {
+    "factCount": 12,
+    "multiSurfaceFactCount": 12,
+    "bySurface": {
+     "productContext.modelVisibleContext": 12,
+     "productContext.items": 12,
+     "capsuleResult.digest": 7,
+     "pivotNeighborhood": 8,
+     "context": 7,
+     "inspectFirst": 5,
+     "capsule": 0,
+     "impact": 0,
+     "diagnostics": 0
+    },
+    "surfaceCharacters": {
+     "productContext.modelVisibleContext": 3535,
+     "productContext.items": 2924,
+     "capsuleResult.digest": 1128,
+     "pivotNeighborhood": 884,
+     "context": 795,
+     "inspectFirst": 404,
+     "capsule": 149,
+     "impact": 220,
+     "diagnostics": 1147
+    },
+    "pairs": [
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "productContext.items",
+      "sharedFacts": 12
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "pivotNeighborhood",
+      "sharedFacts": 8
+     },
+     {
+      "a": "productContext.items",
+      "b": "pivotNeighborhood",
+      "sharedFacts": 8
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 7
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "context",
+      "sharedFacts": 7
+     },
+     {
+      "a": "productContext.items",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 7
+     },
+     {
+      "a": "productContext.items",
+      "b": "context",
+      "sharedFacts": 7
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "context",
+      "sharedFacts": 7
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "inspectFirst",
+      "sharedFacts": 5
+     },
+     {
+      "a": "productContext.items",
+      "b": "inspectFirst",
+      "sharedFacts": 5
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "pivotNeighborhood",
+      "sharedFacts": 5
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "inspectFirst",
+      "sharedFacts": 5
+     },
+     {
+      "a": "pivotNeighborhood",
+      "b": "context",
+      "sharedFacts": 5
+     },
+     {
+      "a": "context",
+      "b": "inspectFirst",
+      "sharedFacts": 5
+     },
+     {
+      "a": "pivotNeighborhood",
+      "b": "inspectFirst",
+      "sharedFacts": 4
+     }
+    ]
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 1745,
+    "AGENT_USEFUL_CONTROL": 687,
+    "MACHINE_DIAGNOSTIC": 1429,
+    "PROVENANCE": 348,
+    "DUPLICATE": 3712,
+    "TRANSPORT_STRUCTURE": 2760,
+    "OTHER": 108
+   }
+  },
+  {
+   "instanceId": "sphinx-doc__sphinx-11445",
+   "call": "get_code_context.debug",
+   "widths": {
+    "internalSemanticOutput": 35697,
+    "envelopeWrapper": 157,
+    "contentTextRaw": 35697,
+    "contentTextOnWire": 38710,
+    "structuredContent": 35854,
+    "jsonRpcLine": 74672,
+    "jsonRpcScaffolding": 108,
+    "modelVisible": 35854
+   },
+   "tokens": {
+    "internalSemanticOutput": 11330,
+    "contentTextRaw": 11330,
+    "structuredContent": 11380,
+    "modelVisible": 11380,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 23701
+   },
+   "relation": "SUBSET",
+   "relationDetail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value",
+   "channels": [
+    {
+     "category": "primary evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "support evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "impact",
+     "channel": "BOTH"
+    },
+    {
+     "category": "structural context",
+     "channel": "BOTH"
+    },
+    {
+     "category": "memory",
+     "channel": "BOTH"
+    },
+    {
+     "category": "readiness",
+     "channel": "BOTH"
+    },
+    {
+     "category": "absence/control state",
+     "channel": "BOTH"
+    },
+    {
+     "category": "provenance",
+     "channel": "BOTH"
+    },
+    {
+     "category": "diagnostics",
+     "channel": "BOTH"
+    },
+    {
+     "category": "component status",
+     "channel": "BOTH"
+    },
+    {
+     "category": "token accounting",
+     "channel": "BOTH"
+    }
+   ],
+   "surfaces": {
+    "factCount": 8,
+    "multiSurfaceFactCount": 8,
+    "bySurface": {
+     "productContext.modelVisibleContext": 8,
+     "productContext.items": 8,
+     "capsuleResult.digest": 4,
+     "pivotNeighborhood": 0,
+     "context": 0,
+     "inspectFirst": 2,
+     "capsule": 0,
+     "impact": 0,
+     "diagnostics": 0
+    },
+    "surfaceCharacters": {
+     "productContext.modelVisibleContext": 3535,
+     "productContext.items": 2924,
+     "capsuleResult.digest": 1128,
+     "pivotNeighborhood": 2,
+     "context": 324,
+     "inspectFirst": 404,
+     "capsule": 149,
+     "impact": 220,
+     "diagnostics": 3986
+    },
+    "pairs": [
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "productContext.items",
+      "sharedFacts": 8
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.items",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     },
+     {
+      "a": "productContext.items",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     }
+    ]
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 1670,
+    "AGENT_USEFUL_CONTROL": 650,
+    "MACHINE_DIAGNOSTIC": 1494,
+    "PROVENANCE": 347,
+    "DUPLICATE": 3949,
+    "TRANSPORT_STRUCTURE": 3113,
+    "OTHER": 108
+   }
+  },
+  {
+   "instanceId": "sphinx-doc__sphinx-11445",
+   "call": "run_pipeline.standard",
+   "widths": {
+    "internalSemanticOutput": 33735,
+    "envelopeWrapper": 149,
+    "contentTextRaw": 33735,
+    "contentTextOnWire": 36612,
+    "structuredContent": 33884,
+    "jsonRpcLine": 70604,
+    "jsonRpcScaffolding": 108,
+    "modelVisible": 33884
+   },
+   "tokens": {
+    "internalSemanticOutput": 10708,
+    "contentTextRaw": 10708,
+    "structuredContent": 10755,
+    "modelVisible": 10755,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 22410
+   },
+   "relation": "SUBSET",
+   "relationDetail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value",
+   "channels": [
+    {
+     "category": "primary evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "support evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "impact",
+     "channel": "BOTH"
+    },
+    {
+     "category": "structural context",
+     "channel": "BOTH"
+    },
+    {
+     "category": "memory",
+     "channel": "BOTH"
+    },
+    {
+     "category": "readiness",
+     "channel": "BOTH"
+    },
+    {
+     "category": "absence/control state",
+     "channel": "BOTH"
+    },
+    {
+     "category": "provenance",
+     "channel": "BOTH"
+    },
+    {
+     "category": "diagnostics",
+     "channel": "BOTH"
+    },
+    {
+     "category": "component status",
+     "channel": "BOTH"
+    },
+    {
+     "category": "token accounting",
+     "channel": "BOTH"
+    }
+   ],
+   "surfaces": {
+    "factCount": 12,
+    "multiSurfaceFactCount": 12,
+    "bySurface": {
+     "productContext.modelVisibleContext": 12,
+     "productContext.items": 12,
+     "capsuleResult.digest": 7,
+     "pivotNeighborhood": 8,
+     "context": 7,
+     "inspectFirst": 5,
+     "capsule": 0,
+     "impact": 0,
+     "diagnostics": 0
+    },
+    "surfaceCharacters": {
+     "productContext.modelVisibleContext": 3535,
+     "productContext.items": 2924,
+     "capsuleResult.digest": 1128,
+     "pivotNeighborhood": 884,
+     "context": 795,
+     "inspectFirst": 404,
+     "capsule": 149,
+     "impact": 220,
+     "diagnostics": 908
+    },
+    "pairs": [
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "productContext.items",
+      "sharedFacts": 12
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "pivotNeighborhood",
+      "sharedFacts": 8
+     },
+     {
+      "a": "productContext.items",
+      "b": "pivotNeighborhood",
+      "sharedFacts": 8
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 7
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "context",
+      "sharedFacts": 7
+     },
+     {
+      "a": "productContext.items",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 7
+     },
+     {
+      "a": "productContext.items",
+      "b": "context",
+      "sharedFacts": 7
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "context",
+      "sharedFacts": 7
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "inspectFirst",
+      "sharedFacts": 5
+     },
+     {
+      "a": "productContext.items",
+      "b": "inspectFirst",
+      "sharedFacts": 5
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "pivotNeighborhood",
+      "sharedFacts": 5
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "inspectFirst",
+      "sharedFacts": 5
+     },
+     {
+      "a": "pivotNeighborhood",
+      "b": "context",
+      "sharedFacts": 5
+     },
+     {
+      "a": "context",
+      "b": "inspectFirst",
+      "sharedFacts": 5
+     },
+     {
+      "a": "pivotNeighborhood",
+      "b": "inspectFirst",
+      "sharedFacts": 4
+     }
+    ]
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 1745,
+    "AGENT_USEFUL_CONTROL": 685,
+    "MACHINE_DIAGNOSTIC": 1427,
+    "PROVENANCE": 348,
+    "DUPLICATE": 3710,
+    "TRANSPORT_STRUCTURE": 2686,
+    "OTHER": 108
+   }
+  },
+  {
+   "instanceId": "sphinx-doc__sphinx-7440",
+   "call": "get_code_context.standard",
+   "widths": {
+    "internalSemanticOutput": 30362,
+    "envelopeWrapper": 157,
+    "contentTextRaw": 30362,
+    "contentTextOnWire": 32795,
+    "structuredContent": 30519,
+    "jsonRpcLine": 63422,
+    "jsonRpcScaffolding": 108,
+    "modelVisible": 30519
+   },
+   "tokens": {
+    "internalSemanticOutput": 9637,
+    "contentTextRaw": 9637,
+    "structuredContent": 9687,
+    "modelVisible": 9687,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 20130
+   },
+   "relation": "SUBSET",
+   "relationDetail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value",
+   "channels": [
+    {
+     "category": "primary evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "support evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "impact",
+     "channel": "BOTH"
+    },
+    {
+     "category": "structural context",
+     "channel": "BOTH"
+    },
+    {
+     "category": "memory",
+     "channel": "BOTH"
+    },
+    {
+     "category": "readiness",
+     "channel": "BOTH"
+    },
+    {
+     "category": "absence/control state",
+     "channel": "BOTH"
+    },
+    {
+     "category": "provenance",
+     "channel": "BOTH"
+    },
+    {
+     "category": "diagnostics",
+     "channel": "BOTH"
+    },
+    {
+     "category": "component status",
+     "channel": "BOTH"
+    },
+    {
+     "category": "token accounting",
+     "channel": "BOTH"
+    }
+   ],
+   "surfaces": {
+    "factCount": 8,
+    "multiSurfaceFactCount": 4,
+    "bySurface": {
+     "productContext.modelVisibleContext": 4,
+     "productContext.items": 4,
+     "capsuleResult.digest": 4,
+     "pivotNeighborhood": 6,
+     "context": 4,
+     "inspectFirst": 2,
+     "capsule": 0,
+     "impact": 0,
+     "diagnostics": 0
+    },
+    "surfaceCharacters": {
+     "productContext.modelVisibleContext": 3147,
+     "productContext.items": 1471,
+     "capsuleResult.digest": 1048,
+     "pivotNeighborhood": 5810,
+     "context": 776,
+     "inspectFirst": 322,
+     "capsule": 149,
+     "impact": 220,
+     "diagnostics": 1147
+    },
+    "pairs": [
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "productContext.items",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "context",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.items",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.items",
+      "b": "context",
+      "sharedFacts": 4
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "context",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "pivotNeighborhood",
+      "sharedFacts": 2
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     },
+     {
+      "a": "productContext.items",
+      "b": "pivotNeighborhood",
+      "sharedFacts": 2
+     },
+     {
+      "a": "productContext.items",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "pivotNeighborhood",
+      "sharedFacts": 2
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     },
+     {
+      "a": "pivotNeighborhood",
+      "b": "context",
+      "sharedFacts": 2
+     },
+     {
+      "a": "context",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     },
+     {
+      "a": "pivotNeighborhood",
+      "b": "inspectFirst",
+      "sharedFacts": 1
+     }
+    ]
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 1608,
+    "AGENT_USEFUL_CONTROL": 1460,
+    "MACHINE_DIAGNOSTIC": 892,
+    "PROVENANCE": 307,
+    "DUPLICATE": 2355,
+    "TRANSPORT_STRUCTURE": 2966,
+    "OTHER": 50
+   }
+  },
+  {
+   "instanceId": "sphinx-doc__sphinx-7440",
+   "call": "get_code_context.debug",
+   "widths": {
+    "internalSemanticOutput": 31431,
+    "envelopeWrapper": 157,
+    "contentTextRaw": 31431,
+    "contentTextOnWire": 33983,
+    "structuredContent": 31588,
+    "jsonRpcLine": 65679,
+    "jsonRpcScaffolding": 108,
+    "modelVisible": 31588
+   },
+   "tokens": {
+    "internalSemanticOutput": 9976,
+    "contentTextRaw": 9976,
+    "structuredContent": 10026,
+    "modelVisible": 10026,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 20847
+   },
+   "relation": "SUBSET",
+   "relationDetail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value",
+   "channels": [
+    {
+     "category": "primary evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "support evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "impact",
+     "channel": "BOTH"
+    },
+    {
+     "category": "structural context",
+     "channel": "BOTH"
+    },
+    {
+     "category": "memory",
+     "channel": "BOTH"
+    },
+    {
+     "category": "readiness",
+     "channel": "BOTH"
+    },
+    {
+     "category": "absence/control state",
+     "channel": "BOTH"
+    },
+    {
+     "category": "provenance",
+     "channel": "BOTH"
+    },
+    {
+     "category": "diagnostics",
+     "channel": "BOTH"
+    },
+    {
+     "category": "component status",
+     "channel": "BOTH"
+    },
+    {
+     "category": "token accounting",
+     "channel": "BOTH"
+    }
+   ],
+   "surfaces": {
+    "factCount": 4,
+    "multiSurfaceFactCount": 4,
+    "bySurface": {
+     "productContext.modelVisibleContext": 4,
+     "productContext.items": 4,
+     "capsuleResult.digest": 4,
+     "pivotNeighborhood": 0,
+     "context": 4,
+     "inspectFirst": 2,
+     "capsule": 0,
+     "impact": 0,
+     "diagnostics": 0
+    },
+    "surfaceCharacters": {
+     "productContext.modelVisibleContext": 3147,
+     "productContext.items": 1471,
+     "capsuleResult.digest": 1048,
+     "pivotNeighborhood": 2,
+     "context": 776,
+     "inspectFirst": 322,
+     "capsule": 149,
+     "impact": 220,
+     "diagnostics": 7957
+    },
+    "pairs": [
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "productContext.items",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "context",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.items",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.items",
+      "b": "context",
+      "sharedFacts": 4
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "context",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     },
+     {
+      "a": "productContext.items",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     },
+     {
+      "a": "context",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     }
+    ]
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 1482,
+    "AGENT_USEFUL_CONTROL": 680,
+    "MACHINE_DIAGNOSTIC": 1523,
+    "PROVENANCE": 314,
+    "DUPLICATE": 2577,
+    "TRANSPORT_STRUCTURE": 3350,
+    "OTHER": 50
+   }
+  },
+  {
+   "instanceId": "sphinx-doc__sphinx-7440",
+   "call": "run_pipeline.standard",
+   "widths": {
+    "internalSemanticOutput": 30098,
+    "envelopeWrapper": 149,
+    "contentTextRaw": 30098,
+    "contentTextOnWire": 32495,
+    "structuredContent": 30247,
+    "jsonRpcLine": 62850,
+    "jsonRpcScaffolding": 108,
+    "modelVisible": 30247
+   },
+   "tokens": {
+    "internalSemanticOutput": 9553,
+    "contentTextRaw": 9553,
+    "structuredContent": 9600,
+    "modelVisible": 9600,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 19949
+   },
+   "relation": "SUBSET",
+   "relationDetail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value",
+   "channels": [
+    {
+     "category": "primary evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "support evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "impact",
+     "channel": "BOTH"
+    },
+    {
+     "category": "structural context",
+     "channel": "BOTH"
+    },
+    {
+     "category": "memory",
+     "channel": "BOTH"
+    },
+    {
+     "category": "readiness",
+     "channel": "BOTH"
+    },
+    {
+     "category": "absence/control state",
+     "channel": "BOTH"
+    },
+    {
+     "category": "provenance",
+     "channel": "BOTH"
+    },
+    {
+     "category": "diagnostics",
+     "channel": "BOTH"
+    },
+    {
+     "category": "component status",
+     "channel": "BOTH"
+    },
+    {
+     "category": "token accounting",
+     "channel": "BOTH"
+    }
+   ],
+   "surfaces": {
+    "factCount": 8,
+    "multiSurfaceFactCount": 4,
+    "bySurface": {
+     "productContext.modelVisibleContext": 4,
+     "productContext.items": 4,
+     "capsuleResult.digest": 4,
+     "pivotNeighborhood": 6,
+     "context": 4,
+     "inspectFirst": 2,
+     "capsule": 0,
+     "impact": 0,
+     "diagnostics": 0
+    },
+    "surfaceCharacters": {
+     "productContext.modelVisibleContext": 3147,
+     "productContext.items": 1471,
+     "capsuleResult.digest": 1048,
+     "pivotNeighborhood": 5810,
+     "context": 776,
+     "inspectFirst": 322,
+     "capsule": 149,
+     "impact": 220,
+     "diagnostics": 908
+    },
+    "pairs": [
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "productContext.items",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "context",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.items",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.items",
+      "b": "context",
+      "sharedFacts": 4
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "context",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "pivotNeighborhood",
+      "sharedFacts": 2
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     },
+     {
+      "a": "productContext.items",
+      "b": "pivotNeighborhood",
+      "sharedFacts": 2
+     },
+     {
+      "a": "productContext.items",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "pivotNeighborhood",
+      "sharedFacts": 2
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     },
+     {
+      "a": "pivotNeighborhood",
+      "b": "context",
+      "sharedFacts": 2
+     },
+     {
+      "a": "context",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     },
+     {
+      "a": "pivotNeighborhood",
+      "b": "inspectFirst",
+      "sharedFacts": 1
+     }
+    ]
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 1608,
+    "AGENT_USEFUL_CONTROL": 1458,
+    "MACHINE_DIAGNOSTIC": 887,
+    "PROVENANCE": 307,
+    "DUPLICATE": 2353,
+    "TRANSPORT_STRUCTURE": 2891,
+    "OTHER": 50
+   }
+  },
+  {
+   "instanceId": "sympy__sympy-13798",
+   "call": "get_code_context.standard",
+   "widths": {
+    "internalSemanticOutput": 25799,
+    "envelopeWrapper": 157,
+    "contentTextRaw": 25799,
+    "contentTextOnWire": 27681,
+    "structuredContent": 25956,
+    "jsonRpcLine": 53745,
+    "jsonRpcScaffolding": 108,
+    "modelVisible": 25956
+   },
+   "tokens": {
+    "internalSemanticOutput": 8189,
+    "contentTextRaw": 8189,
+    "structuredContent": 8239,
+    "modelVisible": 8239,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 17059
+   },
+   "relation": "SUBSET",
+   "relationDetail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value",
+   "channels": [
+    {
+     "category": "primary evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "support evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "impact",
+     "channel": "BOTH"
+    },
+    {
+     "category": "structural context",
+     "channel": "BOTH"
+    },
+    {
+     "category": "memory",
+     "channel": "BOTH"
+    },
+    {
+     "category": "readiness",
+     "channel": "BOTH"
+    },
+    {
+     "category": "absence/control state",
+     "channel": "BOTH"
+    },
+    {
+     "category": "provenance",
+     "channel": "BOTH"
+    },
+    {
+     "category": "diagnostics",
+     "channel": "BOTH"
+    },
+    {
+     "category": "component status",
+     "channel": "BOTH"
+    },
+    {
+     "category": "token accounting",
+     "channel": "BOTH"
+    }
+   ],
+   "surfaces": {
+    "factCount": 10,
+    "multiSurfaceFactCount": 7,
+    "bySurface": {
+     "productContext.modelVisibleContext": 7,
+     "productContext.items": 7,
+     "capsuleResult.digest": 4,
+     "pivotNeighborhood": 8,
+     "context": 4,
+     "inspectFirst": 2,
+     "capsule": 0,
+     "impact": 0,
+     "diagnostics": 0
+    },
+    "surfaceCharacters": {
+     "productContext.modelVisibleContext": 2834,
+     "productContext.items": 2316,
+     "capsuleResult.digest": 1143,
+     "pivotNeighborhood": 988,
+     "context": 801,
+     "inspectFirst": 429,
+     "capsule": 150,
+     "impact": 220,
+     "diagnostics": 1147
+    },
+    "pairs": [
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "productContext.items",
+      "sharedFacts": 7
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "pivotNeighborhood",
+      "sharedFacts": 5
+     },
+     {
+      "a": "productContext.items",
+      "b": "pivotNeighborhood",
+      "sharedFacts": 5
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "context",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.items",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.items",
+      "b": "context",
+      "sharedFacts": 4
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "context",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     },
+     {
+      "a": "productContext.items",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "pivotNeighborhood",
+      "sharedFacts": 2
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     },
+     {
+      "a": "pivotNeighborhood",
+      "b": "context",
+      "sharedFacts": 2
+     },
+     {
+      "a": "context",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     },
+     {
+      "a": "pivotNeighborhood",
+      "b": "inspectFirst",
+      "sharedFacts": 1
+     }
+    ]
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 1537,
+    "AGENT_USEFUL_CONTROL": 686,
+    "MACHINE_DIAGNOSTIC": 781,
+    "PROVENANCE": 323,
+    "DUPLICATE": 2219,
+    "TRANSPORT_STRUCTURE": 2623,
+    "OTHER": 20
+   }
+  },
+  {
+   "instanceId": "sympy__sympy-13798",
+   "call": "get_code_context.debug",
+   "widths": {
+    "internalSemanticOutput": 30576,
+    "envelopeWrapper": 157,
+    "contentTextRaw": 30576,
+    "contentTextOnWire": 32855,
+    "structuredContent": 30733,
+    "jsonRpcLine": 63696,
+    "jsonRpcScaffolding": 108,
+    "modelVisible": 30733
+   },
+   "tokens": {
+    "internalSemanticOutput": 9705,
+    "contentTextRaw": 9705,
+    "structuredContent": 9755,
+    "modelVisible": 9755,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 20217
+   },
+   "relation": "SUBSET",
+   "relationDetail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value",
+   "channels": [
+    {
+     "category": "primary evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "support evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "impact",
+     "channel": "BOTH"
+    },
+    {
+     "category": "structural context",
+     "channel": "BOTH"
+    },
+    {
+     "category": "memory",
+     "channel": "BOTH"
+    },
+    {
+     "category": "readiness",
+     "channel": "BOTH"
+    },
+    {
+     "category": "absence/control state",
+     "channel": "BOTH"
+    },
+    {
+     "category": "provenance",
+     "channel": "BOTH"
+    },
+    {
+     "category": "diagnostics",
+     "channel": "BOTH"
+    },
+    {
+     "category": "component status",
+     "channel": "BOTH"
+    },
+    {
+     "category": "token accounting",
+     "channel": "BOTH"
+    }
+   ],
+   "surfaces": {
+    "factCount": 10,
+    "multiSurfaceFactCount": 7,
+    "bySurface": {
+     "productContext.modelVisibleContext": 7,
+     "productContext.items": 7,
+     "capsuleResult.digest": 4,
+     "pivotNeighborhood": 8,
+     "context": 4,
+     "inspectFirst": 2,
+     "capsule": 0,
+     "impact": 0,
+     "diagnostics": 0
+    },
+    "surfaceCharacters": {
+     "productContext.modelVisibleContext": 2834,
+     "productContext.items": 2316,
+     "capsuleResult.digest": 1143,
+     "pivotNeighborhood": 988,
+     "context": 801,
+     "inspectFirst": 429,
+     "capsule": 150,
+     "impact": 220,
+     "diagnostics": 5650
+    },
+    "pairs": [
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "productContext.items",
+      "sharedFacts": 7
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "pivotNeighborhood",
+      "sharedFacts": 5
+     },
+     {
+      "a": "productContext.items",
+      "b": "pivotNeighborhood",
+      "sharedFacts": 5
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "context",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.items",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.items",
+      "b": "context",
+      "sharedFacts": 4
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "context",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     },
+     {
+      "a": "productContext.items",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "pivotNeighborhood",
+      "sharedFacts": 2
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     },
+     {
+      "a": "pivotNeighborhood",
+      "b": "context",
+      "sharedFacts": 2
+     },
+     {
+      "a": "context",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     },
+     {
+      "a": "pivotNeighborhood",
+      "b": "inspectFirst",
+      "sharedFacts": 1
+     }
+    ]
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 1536,
+    "AGENT_USEFUL_CONTROL": 691,
+    "MACHINE_DIAGNOSTIC": 1126,
+    "PROVENANCE": 330,
+    "DUPLICATE": 2577,
+    "TRANSPORT_STRUCTURE": 3426,
+    "OTHER": 20
+   }
+  },
+  {
+   "instanceId": "sympy__sympy-13798",
+   "call": "run_pipeline.standard",
+   "widths": {
+    "internalSemanticOutput": 25534,
+    "envelopeWrapper": 149,
+    "contentTextRaw": 25534,
+    "contentTextOnWire": 27380,
+    "structuredContent": 25683,
+    "jsonRpcLine": 53171,
+    "jsonRpcScaffolding": 108,
+    "modelVisible": 25683
+   },
+   "tokens": {
+    "internalSemanticOutput": 8105,
+    "contentTextRaw": 8105,
+    "structuredContent": 8152,
+    "modelVisible": 8152,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 16877
+   },
+   "relation": "SUBSET",
+   "relationDetail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value",
+   "channels": [
+    {
+     "category": "primary evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "support evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "impact",
+     "channel": "BOTH"
+    },
+    {
+     "category": "structural context",
+     "channel": "BOTH"
+    },
+    {
+     "category": "memory",
+     "channel": "BOTH"
+    },
+    {
+     "category": "readiness",
+     "channel": "BOTH"
+    },
+    {
+     "category": "absence/control state",
+     "channel": "BOTH"
+    },
+    {
+     "category": "provenance",
+     "channel": "BOTH"
+    },
+    {
+     "category": "diagnostics",
+     "channel": "BOTH"
+    },
+    {
+     "category": "component status",
+     "channel": "BOTH"
+    },
+    {
+     "category": "token accounting",
+     "channel": "BOTH"
+    }
+   ],
+   "surfaces": {
+    "factCount": 10,
+    "multiSurfaceFactCount": 7,
+    "bySurface": {
+     "productContext.modelVisibleContext": 7,
+     "productContext.items": 7,
+     "capsuleResult.digest": 4,
+     "pivotNeighborhood": 8,
+     "context": 4,
+     "inspectFirst": 2,
+     "capsule": 0,
+     "impact": 0,
+     "diagnostics": 0
+    },
+    "surfaceCharacters": {
+     "productContext.modelVisibleContext": 2834,
+     "productContext.items": 2316,
+     "capsuleResult.digest": 1143,
+     "pivotNeighborhood": 988,
+     "context": 801,
+     "inspectFirst": 429,
+     "capsule": 150,
+     "impact": 220,
+     "diagnostics": 908
+    },
+    "pairs": [
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "productContext.items",
+      "sharedFacts": 7
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "pivotNeighborhood",
+      "sharedFacts": 5
+     },
+     {
+      "a": "productContext.items",
+      "b": "pivotNeighborhood",
+      "sharedFacts": 5
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "context",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.items",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.items",
+      "b": "context",
+      "sharedFacts": 4
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "context",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     },
+     {
+      "a": "productContext.items",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "pivotNeighborhood",
+      "sharedFacts": 2
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     },
+     {
+      "a": "pivotNeighborhood",
+      "b": "context",
+      "sharedFacts": 2
+     },
+     {
+      "a": "context",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     },
+     {
+      "a": "pivotNeighborhood",
+      "b": "inspectFirst",
+      "sharedFacts": 1
+     }
+    ]
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 1537,
+    "AGENT_USEFUL_CONTROL": 685,
+    "MACHINE_DIAGNOSTIC": 775,
+    "PROVENANCE": 323,
+    "DUPLICATE": 2217,
+    "TRANSPORT_STRUCTURE": 2548,
+    "OTHER": 20
+   }
+  },
+  {
+   "instanceId": "sympy__sympy-14976",
+   "call": "get_code_context.standard",
+   "widths": {
+    "internalSemanticOutput": 27908,
+    "envelopeWrapper": 157,
+    "contentTextRaw": 27908,
+    "contentTextOnWire": 30175,
+    "structuredContent": 28065,
+    "jsonRpcLine": 58348,
+    "jsonRpcScaffolding": 108,
+    "modelVisible": 28065
+   },
+   "tokens": {
+    "internalSemanticOutput": 8858,
+    "contentTextRaw": 8858,
+    "structuredContent": 8908,
+    "modelVisible": 8908,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 18520
+   },
+   "relation": "SUBSET",
+   "relationDetail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value",
+   "channels": [
+    {
+     "category": "primary evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "support evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "impact",
+     "channel": "BOTH"
+    },
+    {
+     "category": "structural context",
+     "channel": "BOTH"
+    },
+    {
+     "category": "memory",
+     "channel": "BOTH"
+    },
+    {
+     "category": "readiness",
+     "channel": "BOTH"
+    },
+    {
+     "category": "absence/control state",
+     "channel": "BOTH"
+    },
+    {
+     "category": "provenance",
+     "channel": "BOTH"
+    },
+    {
+     "category": "diagnostics",
+     "channel": "BOTH"
+    },
+    {
+     "category": "component status",
+     "channel": "BOTH"
+    },
+    {
+     "category": "token accounting",
+     "channel": "BOTH"
+    }
+   ],
+   "surfaces": {
+    "factCount": 18,
+    "multiSurfaceFactCount": 17,
+    "bySurface": {
+     "productContext.modelVisibleContext": 17,
+     "productContext.items": 17,
+     "capsuleResult.digest": 4,
+     "pivotNeighborhood": 12,
+     "context": 4,
+     "inspectFirst": 2,
+     "capsule": 0,
+     "impact": 0,
+     "diagnostics": 0
+    },
+    "surfaceCharacters": {
+     "productContext.modelVisibleContext": 3214,
+     "productContext.items": 5106,
+     "capsuleResult.digest": 1117,
+     "pivotNeighborhood": 941,
+     "context": 854,
+     "inspectFirst": 497,
+     "capsule": 149,
+     "impact": 220,
+     "diagnostics": 1147
+    },
+    "pairs": [
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "productContext.items",
+      "sharedFacts": 17
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "pivotNeighborhood",
+      "sharedFacts": 11
+     },
+     {
+      "a": "productContext.items",
+      "b": "pivotNeighborhood",
+      "sharedFacts": 11
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "context",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.items",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.items",
+      "b": "context",
+      "sharedFacts": 4
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "context",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     },
+     {
+      "a": "productContext.items",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "pivotNeighborhood",
+      "sharedFacts": 2
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     },
+     {
+      "a": "pivotNeighborhood",
+      "b": "context",
+      "sharedFacts": 2
+     },
+     {
+      "a": "context",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     },
+     {
+      "a": "pivotNeighborhood",
+      "b": "inspectFirst",
+      "sharedFacts": 1
+     }
+    ]
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 1520,
+    "AGENT_USEFUL_CONTROL": 681,
+    "MACHINE_DIAGNOSTIC": 756,
+    "PROVENANCE": 399,
+    "DUPLICATE": 2378,
+    "TRANSPORT_STRUCTURE": 3101,
+    "OTHER": 23
+   }
+  },
+  {
+   "instanceId": "sympy__sympy-14976",
+   "call": "get_code_context.debug",
+   "widths": {
+    "internalSemanticOutput": 29716,
+    "envelopeWrapper": 157,
+    "contentTextRaw": 29716,
+    "contentTextOnWire": 32099,
+    "structuredContent": 29873,
+    "jsonRpcLine": 62080,
+    "jsonRpcScaffolding": 108,
+    "modelVisible": 29873
+   },
+   "tokens": {
+    "internalSemanticOutput": 9432,
+    "contentTextRaw": 9432,
+    "structuredContent": 9482,
+    "modelVisible": 9482,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 19704
+   },
+   "relation": "SUBSET",
+   "relationDetail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value",
+   "channels": [
+    {
+     "category": "primary evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "support evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "impact",
+     "channel": "BOTH"
+    },
+    {
+     "category": "structural context",
+     "channel": "BOTH"
+    },
+    {
+     "category": "memory",
+     "channel": "BOTH"
+    },
+    {
+     "category": "readiness",
+     "channel": "BOTH"
+    },
+    {
+     "category": "absence/control state",
+     "channel": "BOTH"
+    },
+    {
+     "category": "provenance",
+     "channel": "BOTH"
+    },
+    {
+     "category": "diagnostics",
+     "channel": "BOTH"
+    },
+    {
+     "category": "component status",
+     "channel": "BOTH"
+    },
+    {
+     "category": "token accounting",
+     "channel": "BOTH"
+    }
+   ],
+   "surfaces": {
+    "factCount": 14,
+    "multiSurfaceFactCount": 14,
+    "bySurface": {
+     "productContext.modelVisibleContext": 14,
+     "productContext.items": 14,
+     "capsuleResult.digest": 4,
+     "pivotNeighborhood": 0,
+     "context": 0,
+     "inspectFirst": 2,
+     "capsule": 0,
+     "impact": 0,
+     "diagnostics": 0
+    },
+    "surfaceCharacters": {
+     "productContext.modelVisibleContext": 3214,
+     "productContext.items": 5106,
+     "capsuleResult.digest": 1117,
+     "pivotNeighborhood": 2,
+     "context": 324,
+     "inspectFirst": 497,
+     "capsule": 149,
+     "impact": 220,
+     "diagnostics": 3952
+    },
+    "pairs": [
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "productContext.items",
+      "sharedFacts": 14
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.items",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     },
+     {
+      "a": "productContext.items",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     }
+    ]
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 1458,
+    "AGENT_USEFUL_CONTROL": 661,
+    "MACHINE_DIAGNOSTIC": 816,
+    "PROVENANCE": 398,
+    "DUPLICATE": 2611,
+    "TRANSPORT_STRUCTURE": 3465,
+    "OTHER": 23
+   }
+  },
+  {
+   "instanceId": "sympy__sympy-14976",
+   "call": "run_pipeline.standard",
+   "widths": {
+    "internalSemanticOutput": 27645,
+    "envelopeWrapper": 149,
+    "contentTextRaw": 27645,
+    "contentTextOnWire": 29876,
+    "structuredContent": 27794,
+    "jsonRpcLine": 57778,
+    "jsonRpcScaffolding": 108,
+    "modelVisible": 27794
+   },
+   "tokens": {
+    "internalSemanticOutput": 8775,
+    "contentTextRaw": 8775,
+    "structuredContent": 8822,
+    "modelVisible": 8822,
+    "secondChannelModelCost": 0,
+    "wholeWireLine": 18339
+   },
+   "relation": "SUBSET",
+   "relationDetail": "the text channel carries the tool output verbatim; structuredContent adds the envelope wrapper (schema, requestId, toolId) around the same value",
+   "channels": [
+    {
+     "category": "primary evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "support evidence",
+     "channel": "BOTH"
+    },
+    {
+     "category": "impact",
+     "channel": "BOTH"
+    },
+    {
+     "category": "structural context",
+     "channel": "BOTH"
+    },
+    {
+     "category": "memory",
+     "channel": "BOTH"
+    },
+    {
+     "category": "readiness",
+     "channel": "BOTH"
+    },
+    {
+     "category": "absence/control state",
+     "channel": "BOTH"
+    },
+    {
+     "category": "provenance",
+     "channel": "BOTH"
+    },
+    {
+     "category": "diagnostics",
+     "channel": "BOTH"
+    },
+    {
+     "category": "component status",
+     "channel": "BOTH"
+    },
+    {
+     "category": "token accounting",
+     "channel": "BOTH"
+    }
+   ],
+   "surfaces": {
+    "factCount": 18,
+    "multiSurfaceFactCount": 17,
+    "bySurface": {
+     "productContext.modelVisibleContext": 17,
+     "productContext.items": 17,
+     "capsuleResult.digest": 4,
+     "pivotNeighborhood": 12,
+     "context": 4,
+     "inspectFirst": 2,
+     "capsule": 0,
+     "impact": 0,
+     "diagnostics": 0
+    },
+    "surfaceCharacters": {
+     "productContext.modelVisibleContext": 3214,
+     "productContext.items": 5106,
+     "capsuleResult.digest": 1117,
+     "pivotNeighborhood": 941,
+     "context": 854,
+     "inspectFirst": 497,
+     "capsule": 149,
+     "impact": 220,
+     "diagnostics": 908
+    },
+    "pairs": [
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "productContext.items",
+      "sharedFacts": 17
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "pivotNeighborhood",
+      "sharedFacts": 11
+     },
+     {
+      "a": "productContext.items",
+      "b": "pivotNeighborhood",
+      "sharedFacts": 11
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "context",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.items",
+      "b": "capsuleResult.digest",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.items",
+      "b": "context",
+      "sharedFacts": 4
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "context",
+      "sharedFacts": 4
+     },
+     {
+      "a": "productContext.modelVisibleContext",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     },
+     {
+      "a": "productContext.items",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "pivotNeighborhood",
+      "sharedFacts": 2
+     },
+     {
+      "a": "capsuleResult.digest",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     },
+     {
+      "a": "pivotNeighborhood",
+      "b": "context",
+      "sharedFacts": 2
+     },
+     {
+      "a": "context",
+      "b": "inspectFirst",
+      "sharedFacts": 2
+     },
+     {
+      "a": "pivotNeighborhood",
+      "b": "inspectFirst",
+      "sharedFacts": 1
+     }
+    ]
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 1520,
+    "AGENT_USEFUL_CONTROL": 679,
+    "MACHINE_DIAGNOSTIC": 751,
+    "PROVENANCE": 399,
+    "DUPLICATE": 2376,
+    "TRANSPORT_STRUCTURE": 3026,
+    "OTHER": 23
+   }
+  }
+ ]
+}

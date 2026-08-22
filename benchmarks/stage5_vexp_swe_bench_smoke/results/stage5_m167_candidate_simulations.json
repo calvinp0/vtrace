@@ -1,0 +1,176 @@
+{
+ "schemaVersion": 1,
+ "milestone": "M167",
+ "workstream": "C",
+ "title": "Four result contracts, priced at the wire and at the model",
+ "estimator": "DERIVED_FROM_PROVIDER_REPORTED — 3.15 chars/token",
+ "agentVisibility": {
+  "method": "the M164 model-visible tool results are read directly and their leading bytes compared with the envelope wrapper that only structuredContent can produce",
+  "cases": 12,
+  "deliveredStructuredContent": 12,
+  "deliveredContentText": 0,
+  "verdict": "PROVEN — the agent client delivers structuredContent to the model and discards content[0].text",
+  "perCase": [
+   {
+    "instanceId": "astropy__astropy-13977",
+    "startsWithEnvelope": true
+   },
+   {
+    "instanceId": "django__django-11451",
+    "startsWithEnvelope": true
+   },
+   {
+    "instanceId": "django__django-13343",
+    "startsWithEnvelope": true
+   },
+   {
+    "instanceId": "matplotlib__matplotlib-24177",
+    "startsWithEnvelope": true
+   },
+   {
+    "instanceId": "pydata__xarray-4966",
+    "startsWithEnvelope": true
+   },
+   {
+    "instanceId": "pytest-dev__pytest-7982",
+    "startsWithEnvelope": true
+   },
+   {
+    "instanceId": "scikit-learn__scikit-learn-13496",
+    "startsWithEnvelope": true
+   },
+   {
+    "instanceId": "scikit-learn__scikit-learn-14087",
+    "startsWithEnvelope": true
+   },
+   {
+    "instanceId": "sphinx-doc__sphinx-11445",
+    "startsWithEnvelope": true
+   },
+   {
+    "instanceId": "sphinx-doc__sphinx-7440",
+    "startsWithEnvelope": true
+   },
+   {
+    "instanceId": "sympy__sympy-13798",
+    "startsWithEnvelope": true
+   },
+   {
+    "instanceId": "sympy__sympy-14976",
+    "startsWithEnvelope": true
+   }
+  ]
+ },
+ "summaryExamples": [
+  "VTRACE pipeline: 1 primary target, 2 support items, 0 impact edges. Index readiness: fresh. Result state: resolved. The full structured result is in structuredContent.",
+  "VTRACE pipeline: 1 primary target, 3 support items, 0 impact edges. Index readiness: fresh. Result state: resolved. The full structured result is in structuredContent."
+ ],
+ "withinRepresentationDuplication": {
+  "note": "measured inside the DELIVERED channel, which is where model tokens are actually spent",
+  "totalFacts": 122,
+  "factsRenderedOnMoreThanOneSurface": 114,
+  "share": 93.4
+ },
+ "candidates": [
+  {
+   "candidate": "CURRENT",
+   "rationale": "both channels carry the whole output",
+   "semanticPreservation": {
+    "structuredPreferringClient": "12/12",
+    "textOnlyClient": "12/12"
+   },
+   "clientCompatibility": {
+    "claudeCode": "PRESERVED (proven reader of structuredContent)",
+    "codex": "PRESERVED",
+    "genericAtAdvertisedRevision": "PRESERVED",
+    "benchmarkHarnesses": "PRESERVED",
+    "mcpTransportTests": "PRESERVED"
+   },
+   "agentVisibility": "PROVEN — the observed agent client delivers structuredContent",
+   "wireCharacters": 68459,
+   "wireDeltaPercent": 0,
+   "modelVisibleTokens": {
+    "structuredPreferringClient": 10526,
+    "textOnlyClient": 10476
+   },
+   "modelVisibleDeltaPercent": 0,
+   "cacheAmplifiedTrafficDeltaPercent": 0,
+   "risk": "none — status quo"
+  },
+  {
+   "candidate": "STRUCTURED_ONLY",
+   "rationale": "drop the text channel entirely",
+   "semanticPreservation": {
+    "structuredPreferringClient": "12/12",
+    "textOnlyClient": "0/12"
+   },
+   "clientCompatibility": {
+    "claudeCode": "PRESERVED (proven reader of structuredContent)",
+    "codex": "AT RISK — behaviour UNKNOWN and the only channel its advertised revision defines is removed",
+    "genericAtAdvertisedRevision": "BROKEN — an empty result",
+    "benchmarkHarnesses": "REQUIRES CHANGE — they parse content[0].text for the semantic profile",
+    "mcpTransportTests": "REQUIRES CHANGE — both channels are asserted"
+   },
+   "agentVisibility": "PROVEN — the observed agent client delivers structuredContent",
+   "wireCharacters": 33247,
+   "wireDeltaPercent": -51.4,
+   "modelVisibleTokens": {
+    "structuredPreferringClient": 10526,
+    "textOnlyClient": 0
+   },
+   "modelVisibleDeltaPercent": 0,
+   "cacheAmplifiedTrafficDeltaPercent": 0,
+   "risk": "HIGH — removes the only channel the advertised protocol revision defines"
+  },
+  {
+   "candidate": "TEXT_ONLY",
+   "rationale": "drop the structured channel entirely",
+   "semanticPreservation": {
+    "structuredPreferringClient": "12/12",
+    "textOnlyClient": "12/12"
+   },
+   "clientCompatibility": {
+    "claudeCode": "UNPROVEN — would have to fall back to a channel it has never been observed to read",
+    "codex": "PRESERVED",
+    "genericAtAdvertisedRevision": "PRESERVED",
+    "benchmarkHarnesses": "PRESERVED",
+    "mcpTransportTests": "REQUIRES CHANGE — both channels are asserted"
+   },
+   "agentVisibility": "UNPROVEN — depends on a fallback no transcript exercises",
+   "wireCharacters": 35371,
+   "wireDeltaPercent": -48.3,
+   "modelVisibleTokens": {
+    "structuredPreferringClient": 10476,
+    "textOnlyClient": 10476
+   },
+   "modelVisibleDeltaPercent": -0.5,
+   "cacheAmplifiedTrafficDeltaPercent": -0.5,
+   "risk": "HIGH — removes the only channel the proven client is observed to read"
+  },
+  {
+   "candidate": "STRUCTURED_PLUS_SUMMARY",
+   "rationale": "structured authority plus a bounded compatibility note",
+   "semanticPreservation": {
+    "structuredPreferringClient": "12/12",
+    "textOnlyClient": "0/12"
+   },
+   "clientCompatibility": {
+    "claudeCode": "PRESERVED (proven reader of structuredContent)",
+    "codex": "AT RISK — behaviour UNKNOWN; if it reads content[] it receives counts instead of evidence",
+    "genericAtAdvertisedRevision": "DEGRADED — receives a summary with no repository evidence",
+    "benchmarkHarnesses": "REQUIRES CHANGE — they parse content[0].text for the semantic profile",
+    "mcpTransportTests": "REQUIRES CHANGE — both channels are asserted"
+   },
+   "agentVisibility": "PROVEN — the observed agent client delivers structuredContent",
+   "wireCharacters": 33439,
+   "wireDeltaPercent": -51.2,
+   "modelVisibleTokens": {
+    "structuredPreferringClient": 10526,
+    "textOnlyClient": 53
+   },
+   "modelVisibleDeltaPercent": 0,
+   "cacheAmplifiedTrafficDeltaPercent": 0,
+   "risk": "HIGH — a client reading content[] silently receives counts where it expects evidence"
+  }
+ ]
+}

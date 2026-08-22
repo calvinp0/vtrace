@@ -1,0 +1,81 @@
+{
+ "schemaVersion": 1,
+ "milestone": "M167",
+ "workstream": "E",
+ "title": "Readiness and served-state, per reference task",
+ "note": "M164's readiness repair is a property of src/, which this milestone did not touch; observed here to confirm the captured population agrees with the product",
+ "cases": [
+  {
+   "instanceId": "astropy__astropy-13977",
+   "status": "fresh",
+   "served": "resolved",
+   "readinessPresent": true
+  },
+  {
+   "instanceId": "django__django-11451",
+   "status": "fresh",
+   "served": "resolved",
+   "readinessPresent": true
+  },
+  {
+   "instanceId": "django__django-13343",
+   "status": "fresh",
+   "served": "resolved",
+   "readinessPresent": true
+  },
+  {
+   "instanceId": "matplotlib__matplotlib-24177",
+   "status": "fresh",
+   "served": "resolved",
+   "readinessPresent": true
+  },
+  {
+   "instanceId": "pydata__xarray-4966",
+   "status": "fresh",
+   "served": "resolved",
+   "readinessPresent": false
+  },
+  {
+   "instanceId": "pytest-dev__pytest-7982",
+   "status": "fresh",
+   "served": "resolved",
+   "readinessPresent": true
+  },
+  {
+   "instanceId": "scikit-learn__scikit-learn-13496",
+   "status": "fresh",
+   "served": "resolved",
+   "readinessPresent": true
+  },
+  {
+   "instanceId": "scikit-learn__scikit-learn-14087",
+   "status": "fresh",
+   "served": "resolved",
+   "readinessPresent": true
+  },
+  {
+   "instanceId": "sphinx-doc__sphinx-11445",
+   "status": "fresh",
+   "served": "resolved",
+   "readinessPresent": true
+  },
+  {
+   "instanceId": "sphinx-doc__sphinx-7440",
+   "status": "fresh",
+   "served": "resolved",
+   "readinessPresent": true
+  },
+  {
+   "instanceId": "sympy__sympy-13798",
+   "status": "fresh",
+   "served": "resolved",
+   "readinessPresent": true
+  },
+  {
+   "instanceId": "sympy__sympy-14976",
+   "status": "fresh",
+   "served": "resolved",
+   "readinessPresent": true
+  }
+ ]
+}

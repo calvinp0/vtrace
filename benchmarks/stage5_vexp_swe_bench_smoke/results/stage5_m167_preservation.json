@@ -1,0 +1,74 @@
+{
+ "schemaVersion": 1,
+ "milestone": "M167",
+ "workstream": "E",
+ "title": "Standard verification",
+ "productChanged": false,
+ "commands": [
+  {
+   "command": "bun run typecheck",
+   "result": "clean",
+   "exitCode": 0
+  },
+  {
+   "command": "bun run typecheck:benchmarks",
+   "result": "clean",
+   "exitCode": 0
+  },
+  {
+   "command": "TMPDIR=<disk-backed> bun test",
+   "pass": 5191,
+   "skip": 49,
+   "fail": 4,
+   "tests": 5244,
+   "files": 336,
+   "seconds": 338.98
+  },
+  {
+   "command": "git diff --check",
+   "result": "clean",
+   "exitCode": 0
+  }
+ ],
+ "failuresAttributed": {
+  "statement": "the suite did not reach zero failures in a single run under this machine's current load; every failure was reproduced clean in isolation and attributed, and none is a defect in the code under test",
+  "cases": [
+   {
+    "test": "M141 benchmark output contract > workspace root precedence is explicit > configured > TMPDIR > os default",
+    "cause": "CAUSED_BY_THE_WORKAROUND \u2014 the test asserts TMPDIR precedence under a clean environment, and the disk-backed TMPDIR set to avoid tmpfs inode exhaustion leaks into it",
+    "isolated": "benchmarks/stage5_vexp_swe_bench_smoke/lib/runnerPaths.test.ts without the override: 11 pass, 0 fail"
+   },
+   {
+    "test": "auto-reindex opt-in runs after watcher records source changes and clears stale state",
+    "cause": "LOAD \u2014 5,197ms against a 5s limit on a watcher-timing test",
+    "isolated": "src/runtime/fileWatcher.test.ts: 10 pass, 0 fail, 2.54s"
+   },
+   {
+    "test": "auto-reindex debounced burst triggers one reindex",
+    "cause": "LOAD \u2014 5,181ms against a 5s limit on a watcher-timing test",
+    "isolated": "src/runtime/fileWatcher.test.ts: 10 pass, 0 fail, 2.54s"
+   },
+   {
+    "test": "MCP hides the old selector from schemas, accepts deprecated aliases, and rejects v1",
+    "cause": "LOAD \u2014 5,232ms against a 5s limit; the same file's runtime varied 11.2s to 37.4s across isolated runs on this machine",
+    "isolated": "src/mcp/mcp.test.ts: 83 pass, 24 skip, 0 fail"
+   }
+  ]
+ },
+ "operationalFinding": {
+  "statement": "an earlier full run on the default temp root reported 606 failures, all SQLITE_CANTOPEN",
+  "cause": "/tmp is a 32G tmpfs at 89% INODE use (932,044 of 1,048,576); the suite creates a temp workspace per fixture and exhausts inodes long before it exhausts space",
+  "resolution": "point TMPDIR at disk-backed storage; nothing in /tmp was deleted",
+  "carryForward": "a mass SQLITE_CANTOPEN in this suite is an inode symptom, not a database defect. Check `df -i /tmp` before diagnosing."
+ },
+ "invariantsPreserved": {
+  "method": "M167 changed no product code, so every \u00a757 invariant is discharged by showing src/ is byte-identical to the M166 commit rather than by re-running suites that could not have been affected",
+  "evidence": "stage5_m167_regression_checks.json"
+ },
+ "unrelatedDirtPreserved": [
+  "benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_outcome_ledger.json",
+  "benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_outcome_ledger.md"
+ ],
+ "worktreesPreserved": 14,
+ "liveSpendUsd": 0
+}
