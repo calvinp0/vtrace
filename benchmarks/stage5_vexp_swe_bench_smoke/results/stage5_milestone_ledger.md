@@ -4126,7 +4126,7 @@ unsupported claims / false absence              0 / 0 over 96 audited packets
   and hold Broad100-B back as the clean check. No live spend is licensed: there
   is no shipped treatment to requalify.
 
-## M172 — the bound that was never wired (commit pending)
+## M172 — the bound that was never wired (b173df2d)
 
 **PASS. Offline design and qualification; $0.00 live. The default disclosure of
 `run_pipeline` is now a bounded orientation; the authoritative result is
