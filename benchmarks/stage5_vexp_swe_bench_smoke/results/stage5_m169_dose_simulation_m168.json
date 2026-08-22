@@ -1,0 +1,2255 @@
+{
+  "schemaVersion": "stage5.m169.dose-simulation.v1",
+  "milestone": "M169",
+  "workstream": "M169-D",
+  "corpus": "m168",
+  "ladder": [
+    "DEFAULT",
+    8000,
+    6000,
+    4000,
+    2640,
+    2000
+  ],
+  "referenceRung": "DEFAULT",
+  "knob": "max_tokens — the argument the tool schema documents as the caller's model-visible context budget",
+  "knobCorrection": "The plan named capsule_budget_tokens. An identity control rejected it: at 8000 it also raises the v1 capsule character budget from its own default of 2000 to 32000, so it cannot reproduce the default call. Recorded rather than silently swapped.",
+  "repeatControl": {
+    "definition": "the no-argument call, repeated after every rung, must return the same delivered evidence and truthfulness surface",
+    "identical": 12,
+    "diverged": 0,
+    "notObserved": 0,
+    "notComparable": 0
+  },
+  "ladderProvenance": "frozen in stage5_m169_plan.md before any dose result existed (§24)",
+  "invariants": [
+    "same task string, same index, same retrieval population, same ranking, same component routing",
+    "only capsule_budget_tokens differs between rungs",
+    "no hand-crafted truncation: every reduction is the shipped packer's own decision"
+  ],
+  "casesDiscovered": 12,
+  "casesRun": 12,
+  "perBudget": [
+    {
+      "budget": "DEFAULT",
+      "cases": 12,
+      "parsed": 12,
+      "comparable": 12,
+      "medianDeliveredCharacters": 21854,
+      "p90DeliveredCharacters": 24525,
+      "medianEvidenceCharacters": 4237,
+      "medianControlCharacters": 2166,
+      "medianTransportCharacters": 8486,
+      "medianDuplicateCharacters": 3803,
+      "medianModelVisibleContextCharacters": 2427,
+      "retention": {
+        "SEMANTICALLY_EQUIVALENT": 12
+      },
+      "primaryPreservedPercent": 100,
+      "truthfulnessPreservedPercent": 100,
+      "supportPreservedPercent": 100,
+      "compactionAppliedCases": 0,
+      "withinEnvelopeCases": 12,
+      "removedMaterial": {}
+    },
+    {
+      "budget": 8000,
+      "cases": 12,
+      "parsed": 12,
+      "comparable": 12,
+      "medianDeliveredCharacters": 35755,
+      "p90DeliveredCharacters": 36581,
+      "medianEvidenceCharacters": 12287,
+      "medianControlCharacters": 2138,
+      "medianTransportCharacters": 10761,
+      "medianDuplicateCharacters": 6204,
+      "medianModelVisibleContextCharacters": 9692,
+      "retention": {
+        "TRUTHFULNESS_LOSS": 1,
+        "PRIMARY_EVIDENCE_PRESERVED": 8,
+        "MATERIAL_SUPPORT_LOSS": 2,
+        "MATERIAL_PRIMARY_LOSS": 1
+      },
+      "primaryPreservedPercent": 83.3,
+      "truthfulnessPreservedPercent": 91.7,
+      "supportPreservedPercent": 75,
+      "compactionAppliedCases": 6,
+      "withinEnvelopeCases": 12,
+      "removedMaterial": {
+        "REDUNDANT": 4,
+        "LOW_VALUE_SUPPORT": 3
+      }
+    },
+    {
+      "budget": 6000,
+      "cases": 12,
+      "parsed": 12,
+      "comparable": 12,
+      "medianDeliveredCharacters": 27863,
+      "p90DeliveredCharacters": 28104,
+      "medianEvidenceCharacters": 8768,
+      "medianControlCharacters": 1940,
+      "medianTransportCharacters": 8602,
+      "medianDuplicateCharacters": 2730,
+      "medianModelVisibleContextCharacters": 6891,
+      "retention": {
+        "TRUTHFULNESS_LOSS": 3,
+        "MATERIAL_SUPPORT_LOSS": 2,
+        "PRIMARY_EVIDENCE_PRESERVED": 6,
+        "MATERIAL_PRIMARY_LOSS": 1
+      },
+      "primaryPreservedPercent": 66.7,
+      "truthfulnessPreservedPercent": 75,
+      "supportPreservedPercent": 58.3,
+      "compactionAppliedCases": 12,
+      "withinEnvelopeCases": 12,
+      "removedMaterial": {
+        "REDUNDANT": 6,
+        "LOW_VALUE_SUPPORT": 6,
+        "USEFUL_DISTINCT": 2
+      }
+    },
+    {
+      "budget": 4000,
+      "cases": 12,
+      "parsed": 12,
+      "comparable": 12,
+      "medianDeliveredCharacters": 19626,
+      "p90DeliveredCharacters": 20007,
+      "medianEvidenceCharacters": 7181,
+      "medianControlCharacters": 1156,
+      "medianTransportCharacters": 5107,
+      "medianDuplicateCharacters": 1094,
+      "medianModelVisibleContextCharacters": 6638,
+      "retention": {
+        "MATERIAL_SUPPORT_LOSS": 3,
+        "TRUTHFULNESS_LOSS": 4,
+        "PRIMARY_EVIDENCE_PRESERVED": 4,
+        "MATERIAL_PRIMARY_LOSS": 1
+      },
+      "primaryPreservedPercent": 58.3,
+      "truthfulnessPreservedPercent": 66.7,
+      "supportPreservedPercent": 41.7,
+      "compactionAppliedCases": 12,
+      "withinEnvelopeCases": 12,
+      "removedMaterial": {
+        "REDUNDANT": 7,
+        "LOW_VALUE_SUPPORT": 10,
+        "USEFUL_DISTINCT": 2
+      }
+    },
+    {
+      "budget": 2640,
+      "cases": 12,
+      "parsed": 12,
+      "comparable": 12,
+      "medianDeliveredCharacters": 14051,
+      "p90DeliveredCharacters": 14608,
+      "medianEvidenceCharacters": 6216,
+      "medianControlCharacters": 832,
+      "medianTransportCharacters": 2932,
+      "medianDuplicateCharacters": 402,
+      "medianModelVisibleContextCharacters": 5923,
+      "retention": {
+        "TRUTHFULNESS_LOSS": 10,
+        "MATERIAL_SUPPORT_LOSS": 2
+      },
+      "primaryPreservedPercent": 16.7,
+      "truthfulnessPreservedPercent": 16.7,
+      "supportPreservedPercent": 0,
+      "compactionAppliedCases": 12,
+      "withinEnvelopeCases": 12,
+      "removedMaterial": {
+        "USEFUL_DISTINCT": 4,
+        "LOW_VALUE_SUPPORT": 10,
+        "REDUNDANT": 16
+      }
+    },
+    {
+      "budget": 2000,
+      "cases": 12,
+      "parsed": 12,
+      "comparable": 12,
+      "medianDeliveredCharacters": 11365,
+      "p90DeliveredCharacters": 11675,
+      "medianEvidenceCharacters": 3893,
+      "medianControlCharacters": 821,
+      "medianTransportCharacters": 2833,
+      "medianDuplicateCharacters": 345,
+      "medianModelVisibleContextCharacters": 3703,
+      "retention": {
+        "TRUTHFULNESS_LOSS": 12
+      },
+      "primaryPreservedPercent": 0,
+      "truthfulnessPreservedPercent": 0,
+      "supportPreservedPercent": 0,
+      "compactionAppliedCases": 12,
+      "withinEnvelopeCases": 12,
+      "removedMaterial": {
+        "USEFUL_DISTINCT": 5,
+        "LOW_VALUE_SUPPORT": 12,
+        "REDUNDANT": 16
+      }
+    }
+  ],
+  "perCase": [
+    {
+      "instanceId": "astropy__astropy-14369",
+      "rungs": [
+        {
+          "budget": "DEFAULT",
+          "status": "PARSED",
+          "deliveredCharacters": 27075,
+          "modelVisibleContextCharacters": 3668,
+          "evidenceCharacters": 5596,
+          "controlCharacters": 2175,
+          "duplicateCharacters": 5350,
+          "transportCharacters": 10242,
+          "diagnosticCharacters": 2210,
+          "provenanceCharacters": 1320,
+          "pivots": 1,
+          "support": 4,
+          "neighborhoodExcerpts": 4,
+          "withinEnvelope": true,
+          "compactionApplied": false,
+          "compactedFieldCount": 10,
+          "retention": "SEMANTICALLY_EQUIVALENT",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [],
+          "lostTruthfulnessFields": [],
+          "removedMaterial": {}
+        },
+        {
+          "budget": 8000,
+          "status": "PARSED",
+          "deliveredCharacters": 36686,
+          "modelVisibleContextCharacters": 30827,
+          "evidenceCharacters": 32100,
+          "controlCharacters": 527,
+          "duplicateCharacters": 351,
+          "transportCharacters": 2660,
+          "diagnosticCharacters": 591,
+          "provenanceCharacters": 282,
+          "pivots": 1,
+          "support": 0,
+          "neighborhoodExcerpts": 0,
+          "withinEnvelope": true,
+          "compactionApplied": true,
+          "compactedFieldCount": 3,
+          "retention": "TRUTHFULNESS_LOSS",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [
+            "astropy/units/format/cds_lextab.py",
+            "astropy/units/tests/test_format.py",
+            "astropy/io/ascii/tests/test_cds_header_from_readme.py",
+            "undefined"
+          ],
+          "lostTruthfulnessFields": [
+            "claimBoundary"
+          ],
+          "removedMaterial": {
+            "REDUNDANT": 3,
+            "LOW_VALUE_SUPPORT": 1
+          }
+        },
+        {
+          "budget": 6000,
+          "status": "PARSED",
+          "deliveredCharacters": 27840,
+          "modelVisibleContextCharacters": 21842,
+          "evidenceCharacters": 22594,
+          "controlCharacters": 844,
+          "duplicateCharacters": 351,
+          "transportCharacters": 2938,
+          "diagnosticCharacters": 656,
+          "provenanceCharacters": 282,
+          "pivots": 1,
+          "support": 0,
+          "neighborhoodExcerpts": 0,
+          "withinEnvelope": true,
+          "compactionApplied": true,
+          "compactedFieldCount": 10,
+          "retention": "TRUTHFULNESS_LOSS",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [
+            "astropy/units/format/cds_lextab.py",
+            "astropy/units/tests/test_format.py",
+            "astropy/io/ascii/tests/test_cds_header_from_readme.py",
+            "undefined"
+          ],
+          "lostTruthfulnessFields": [
+            "claimBoundary"
+          ],
+          "removedMaterial": {
+            "REDUNDANT": 3,
+            "LOW_VALUE_SUPPORT": 1
+          }
+        },
+        {
+          "budget": 4000,
+          "status": "PARSED",
+          "deliveredCharacters": 20007,
+          "modelVisibleContextCharacters": 10136,
+          "evidenceCharacters": 10627,
+          "controlCharacters": 1156,
+          "duplicateCharacters": 884,
+          "transportCharacters": 5064,
+          "diagnosticCharacters": 1246,
+          "provenanceCharacters": 839,
+          "pivots": 2,
+          "support": 0,
+          "neighborhoodExcerpts": 0,
+          "withinEnvelope": true,
+          "compactionApplied": true,
+          "compactedFieldCount": 10,
+          "retention": "MATERIAL_SUPPORT_LOSS",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [
+            "astropy/units/format/cds_lextab.py",
+            "astropy/units/tests/test_format.py",
+            "astropy/io/ascii/tests/test_cds_header_from_readme.py",
+            "undefined"
+          ],
+          "lostTruthfulnessFields": [],
+          "removedMaterial": {
+            "REDUNDANT": 2,
+            "LOW_VALUE_SUPPORT": 2
+          }
+        },
+        {
+          "budget": 2640,
+          "status": "PARSED",
+          "deliveredCharacters": 5420,
+          "modelVisibleContextCharacters": 186,
+          "evidenceCharacters": 249,
+          "controlCharacters": 832,
+          "duplicateCharacters": 272,
+          "transportCharacters": 2832,
+          "diagnosticCharacters": 780,
+          "provenanceCharacters": 286,
+          "pivots": 0,
+          "support": 0,
+          "neighborhoodExcerpts": 0,
+          "withinEnvelope": true,
+          "compactionApplied": true,
+          "compactedFieldCount": 10,
+          "retention": "TRUTHFULNESS_LOSS",
+          "lostPivotPaths": [
+            "astropy/io/ascii/cds.py"
+          ],
+          "lostSupportPaths": [
+            "astropy/units/format/cds_lextab.py",
+            "astropy/units/tests/test_format.py",
+            "astropy/io/ascii/tests/test_cds_header_from_readme.py",
+            "undefined"
+          ],
+          "lostTruthfulnessFields": [
+            "claimBoundary"
+          ],
+          "removedMaterial": {
+            "USEFUL_DISTINCT": 1,
+            "LOW_VALUE_SUPPORT": 4
+          }
+        },
+        {
+          "budget": 2000,
+          "status": "PARSED",
+          "deliveredCharacters": 5444,
+          "modelVisibleContextCharacters": 186,
+          "evidenceCharacters": 249,
+          "controlCharacters": 831,
+          "duplicateCharacters": 272,
+          "transportCharacters": 2833,
+          "diagnosticCharacters": 804,
+          "provenanceCharacters": 286,
+          "pivots": 0,
+          "support": 0,
+          "neighborhoodExcerpts": 0,
+          "withinEnvelope": true,
+          "compactionApplied": true,
+          "compactedFieldCount": 10,
+          "retention": "TRUTHFULNESS_LOSS",
+          "lostPivotPaths": [
+            "astropy/io/ascii/cds.py"
+          ],
+          "lostSupportPaths": [
+            "astropy/units/format/cds_lextab.py",
+            "astropy/units/tests/test_format.py",
+            "astropy/io/ascii/tests/test_cds_header_from_readme.py",
+            "undefined"
+          ],
+          "lostTruthfulnessFields": [
+            "claimBoundary"
+          ],
+          "removedMaterial": {
+            "USEFUL_DISTINCT": 1,
+            "LOW_VALUE_SUPPORT": 4
+          }
+        }
+      ],
+      "repeatControl": "IDENTICAL_DELIVERY",
+      "error": null
+    },
+    {
+      "instanceId": "django__django-13658",
+      "rungs": [
+        {
+          "budget": "DEFAULT",
+          "status": "PARSED",
+          "deliveredCharacters": 25092,
+          "modelVisibleContextCharacters": 2161,
+          "evidenceCharacters": 5186,
+          "controlCharacters": 2311,
+          "duplicateCharacters": 4520,
+          "transportCharacters": 9577,
+          "diagnosticCharacters": 2042,
+          "provenanceCharacters": 1298,
+          "pivots": 1,
+          "support": 4,
+          "neighborhoodExcerpts": 4,
+          "withinEnvelope": true,
+          "compactionApplied": false,
+          "compactedFieldCount": 10,
+          "retention": "SEMANTICALLY_EQUIVALENT",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [],
+          "lostTruthfulnessFields": [],
+          "removedMaterial": {}
+        },
+        {
+          "budget": 8000,
+          "status": "PARSED",
+          "deliveredCharacters": 36227,
+          "modelVisibleContextCharacters": 15965,
+          "evidenceCharacters": 17634,
+          "controlCharacters": 1901,
+          "duplicateCharacters": 4112,
+          "transportCharacters": 9584,
+          "diagnosticCharacters": 1373,
+          "provenanceCharacters": 1472,
+          "pivots": 2,
+          "support": 9,
+          "neighborhoodExcerpts": 0,
+          "withinEnvelope": true,
+          "compactionApplied": true,
+          "compactedFieldCount": 10,
+          "retention": "PRIMARY_EVIDENCE_PRESERVED",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [],
+          "lostTruthfulnessFields": [],
+          "removedMaterial": {}
+        },
+        {
+          "budget": 6000,
+          "status": "PARSED",
+          "deliveredCharacters": 27928,
+          "modelVisibleContextCharacters": 15965,
+          "evidenceCharacters": 16729,
+          "controlCharacters": 1299,
+          "duplicateCharacters": 1485,
+          "transportCharacters": 6071,
+          "diagnosticCharacters": 1121,
+          "provenanceCharacters": 1048,
+          "pivots": 2,
+          "support": 1,
+          "neighborhoodExcerpts": 0,
+          "withinEnvelope": true,
+          "compactionApplied": true,
+          "compactedFieldCount": 10,
+          "retention": "MATERIAL_SUPPORT_LOSS",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [
+            "django/core/management/commands/testserver.py",
+            "django/core/management/__init__.py",
+            "tests/bash_completion/tests.py",
+            "tests/user_commands/tests.py"
+          ],
+          "lostTruthfulnessFields": [],
+          "removedMaterial": {
+            "LOW_VALUE_SUPPORT": 1,
+            "REDUNDANT": 3
+          }
+        },
+        {
+          "budget": 4000,
+          "status": "PARSED",
+          "deliveredCharacters": 6007,
+          "modelVisibleContextCharacters": 186,
+          "evidenceCharacters": 583,
+          "controlCharacters": 819,
+          "duplicateCharacters": 339,
+          "transportCharacters": 3060,
+          "diagnosticCharacters": 643,
+          "provenanceCharacters": 394,
+          "pivots": 0,
+          "support": 0,
+          "neighborhoodExcerpts": 0,
+          "withinEnvelope": true,
+          "compactionApplied": true,
+          "compactedFieldCount": 10,
+          "retention": "TRUTHFULNESS_LOSS",
+          "lostPivotPaths": [
+            "django/core/management/__init__.py"
+          ],
+          "lostSupportPaths": [
+            "django/core/management/commands/testserver.py",
+            "django/core/management/__init__.py",
+            "tests/bash_completion/tests.py",
+            "tests/user_commands/tests.py"
+          ],
+          "lostTruthfulnessFields": [
+            "claimBoundary"
+          ],
+          "removedMaterial": {
+            "USEFUL_DISTINCT": 1,
+            "LOW_VALUE_SUPPORT": 3,
+            "REDUNDANT": 1
+          }
+        },
+        {
+          "budget": 2640,
+          "status": "PARSED",
+          "deliveredCharacters": 14608,
+          "modelVisibleContextCharacters": 5996,
+          "evidenceCharacters": 6382,
+          "controlCharacters": 1056,
+          "duplicateCharacters": 839,
+          "transportCharacters": 4304,
+          "diagnosticCharacters": 985,
+          "provenanceCharacters": 841,
+          "pivots": 1,
+          "support": 0,
+          "neighborhoodExcerpts": 0,
+          "withinEnvelope": true,
+          "compactionApplied": true,
+          "compactedFieldCount": 10,
+          "retention": "TRUTHFULNESS_LOSS",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [
+            "django/core/management/commands/testserver.py",
+            "django/core/management/__init__.py",
+            "tests/bash_completion/tests.py",
+            "tests/user_commands/tests.py"
+          ],
+          "lostTruthfulnessFields": [
+            "claimBoundary"
+          ],
+          "removedMaterial": {
+            "LOW_VALUE_SUPPORT": 1,
+            "REDUNDANT": 3
+          }
+        },
+        {
+          "budget": 2000,
+          "status": "PARSED",
+          "deliveredCharacters": 11510,
+          "modelVisibleContextCharacters": 5996,
+          "evidenceCharacters": 6371,
+          "controlCharacters": 500,
+          "duplicateCharacters": 606,
+          "transportCharacters": 2891,
+          "diagnosticCharacters": 577,
+          "provenanceCharacters": 390,
+          "pivots": 1,
+          "support": 0,
+          "neighborhoodExcerpts": 0,
+          "withinEnvelope": true,
+          "compactionApplied": true,
+          "compactedFieldCount": 3,
+          "retention": "TRUTHFULNESS_LOSS",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [
+            "django/core/management/commands/testserver.py",
+            "django/core/management/__init__.py",
+            "tests/bash_completion/tests.py",
+            "tests/user_commands/tests.py"
+          ],
+          "lostTruthfulnessFields": [
+            "claimBoundary"
+          ],
+          "removedMaterial": {
+            "LOW_VALUE_SUPPORT": 1,
+            "REDUNDANT": 3
+          }
+        }
+      ],
+      "repeatControl": "IDENTICAL_DELIVERY",
+      "error": null
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-22719",
+      "rungs": [
+        {
+          "budget": "DEFAULT",
+          "status": "PARSED",
+          "deliveredCharacters": 21854,
+          "modelVisibleContextCharacters": 2190,
+          "evidenceCharacters": 3875,
+          "controlCharacters": 2166,
+          "duplicateCharacters": 4221,
+          "transportCharacters": 8080,
+          "diagnosticCharacters": 2311,
+          "provenanceCharacters": 1040,
+          "pivots": 1,
+          "support": 1,
+          "neighborhoodExcerpts": 4,
+          "withinEnvelope": true,
+          "compactionApplied": false,
+          "compactedFieldCount": 10,
+          "retention": "SEMANTICALLY_EQUIVALENT",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [],
+          "lostTruthfulnessFields": [],
+          "removedMaterial": {}
+        },
+        {
+          "budget": 8000,
+          "status": "PARSED",
+          "deliveredCharacters": 36581,
+          "modelVisibleContextCharacters": 9692,
+          "evidenceCharacters": 12287,
+          "controlCharacters": 2137,
+          "duplicateCharacters": 7464,
+          "transportCharacters": 10815,
+          "diagnosticCharacters": 2394,
+          "provenanceCharacters": 1322,
+          "pivots": 1,
+          "support": 5,
+          "neighborhoodExcerpts": 0,
+          "withinEnvelope": true,
+          "compactionApplied": true,
+          "compactedFieldCount": 10,
+          "retention": "PRIMARY_EVIDENCE_PRESERVED",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [],
+          "lostTruthfulnessFields": [],
+          "removedMaterial": {}
+        },
+        {
+          "budget": 6000,
+          "status": "PARSED",
+          "deliveredCharacters": 27802,
+          "modelVisibleContextCharacters": 9692,
+          "evidenceCharacters": 11022,
+          "controlCharacters": 1944,
+          "duplicateCharacters": 2842,
+          "transportCharacters": 8972,
+          "diagnosticCharacters": 1682,
+          "provenanceCharacters": 1189,
+          "pivots": 1,
+          "support": 5,
+          "neighborhoodExcerpts": 0,
+          "withinEnvelope": true,
+          "compactionApplied": true,
+          "compactedFieldCount": 10,
+          "retention": "PRIMARY_EVIDENCE_PRESERVED",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [],
+          "lostTruthfulnessFields": [],
+          "removedMaterial": {}
+        },
+        {
+          "budget": 4000,
+          "status": "PARSED",
+          "deliveredCharacters": 19979,
+          "modelVisibleContextCharacters": 9692,
+          "evidenceCharacters": 10135,
+          "controlCharacters": 1137,
+          "duplicateCharacters": 1324,
+          "transportCharacters": 5107,
+          "diagnosticCharacters": 1233,
+          "provenanceCharacters": 852,
+          "pivots": 1,
+          "support": 1,
+          "neighborhoodExcerpts": 0,
+          "withinEnvelope": true,
+          "compactionApplied": true,
+          "compactedFieldCount": 10,
+          "retention": "MATERIAL_SUPPORT_LOSS",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [
+            "lib/matplotlib/category.py"
+          ],
+          "lostTruthfulnessFields": [],
+          "removedMaterial": {
+            "REDUNDANT": 1
+          }
+        },
+        {
+          "budget": 2640,
+          "status": "PARSED",
+          "deliveredCharacters": 5538,
+          "modelVisibleContextCharacters": 186,
+          "evidenceCharacters": 277,
+          "controlCharacters": 814,
+          "duplicateCharacters": 402,
+          "transportCharacters": 2828,
+          "diagnosticCharacters": 762,
+          "provenanceCharacters": 286,
+          "pivots": 0,
+          "support": 0,
+          "neighborhoodExcerpts": 0,
+          "withinEnvelope": true,
+          "compactionApplied": true,
+          "compactedFieldCount": 10,
+          "retention": "TRUTHFULNESS_LOSS",
+          "lostPivotPaths": [
+            "lib/matplotlib/category.py"
+          ],
+          "lostSupportPaths": [
+            "lib/matplotlib/category.py"
+          ],
+          "lostTruthfulnessFields": [
+            "claimBoundary"
+          ],
+          "removedMaterial": {
+            "USEFUL_DISTINCT": 1,
+            "REDUNDANT": 1
+          }
+        },
+        {
+          "budget": 2000,
+          "status": "PARSED",
+          "deliveredCharacters": 5584,
+          "modelVisibleContextCharacters": 186,
+          "evidenceCharacters": 277,
+          "controlCharacters": 814,
+          "duplicateCharacters": 402,
+          "transportCharacters": 2829,
+          "diagnosticCharacters": 807,
+          "provenanceCharacters": 286,
+          "pivots": 0,
+          "support": 0,
+          "neighborhoodExcerpts": 0,
+          "withinEnvelope": true,
+          "compactionApplied": true,
+          "compactedFieldCount": 10,
+          "retention": "TRUTHFULNESS_LOSS",
+          "lostPivotPaths": [
+            "lib/matplotlib/category.py"
+          ],
+          "lostSupportPaths": [
+            "lib/matplotlib/category.py"
+          ],
+          "lostTruthfulnessFields": [
+            "claimBoundary"
+          ],
+          "removedMaterial": {
+            "USEFUL_DISTINCT": 1,
+            "REDUNDANT": 1
+          }
+        }
+      ],
+      "repeatControl": "IDENTICAL_DELIVERY",
+      "error": null
+    },
+    {
+      "instanceId": "mwaskom__seaborn-3187",
+      "rungs": [
+        {
+          "budget": "DEFAULT",
+          "status": "PARSED",
+          "deliveredCharacters": 19996,
+          "modelVisibleContextCharacters": 1831,
+          "evidenceCharacters": 3249,
+          "controlCharacters": 2174,
+          "duplicateCharacters": 3009,
+          "transportCharacters": 8486,
+          "diagnosticCharacters": 1798,
+          "provenanceCharacters": 1100,
+          "pivots": 1,
+          "support": 3,
+          "neighborhoodExcerpts": 4,
+          "withinEnvelope": true,
+          "compactionApplied": false,
+          "compactedFieldCount": 10,
+          "retention": "SEMANTICALLY_EQUIVALENT",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [],
+          "lostTruthfulnessFields": [],
+          "removedMaterial": {}
+        },
+        {
+          "budget": 8000,
+          "status": "PARSED",
+          "deliveredCharacters": 36524,
+          "modelVisibleContextCharacters": 11751,
+          "evidenceCharacters": 14003,
+          "controlCharacters": 2752,
+          "duplicateCharacters": 5623,
+          "transportCharacters": 10761,
+          "diagnosticCharacters": 1884,
+          "provenanceCharacters": 1320,
+          "pivots": 1,
+          "support": 4,
+          "neighborhoodExcerpts": 0,
+          "withinEnvelope": true,
+          "compactionApplied": true,
+          "compactedFieldCount": 10,
+          "retention": "PRIMARY_EVIDENCE_PRESERVED",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [],
+          "lostTruthfulnessFields": [],
+          "removedMaterial": {}
+        },
+        {
+          "budget": 6000,
+          "status": "PARSED",
+          "deliveredCharacters": 28104,
+          "modelVisibleContextCharacters": 11751,
+          "evidenceCharacters": 12889,
+          "controlCharacters": 2108,
+          "duplicateCharacters": 2091,
+          "transportCharacters": 8511,
+          "diagnosticCharacters": 1120,
+          "provenanceCharacters": 1234,
+          "pivots": 1,
+          "support": 4,
+          "neighborhoodExcerpts": 0,
+          "withinEnvelope": true,
+          "compactionApplied": true,
+          "compactedFieldCount": 10,
+          "retention": "PRIMARY_EVIDENCE_PRESERVED",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [],
+          "lostTruthfulnessFields": [],
+          "removedMaterial": {}
+        },
+        {
+          "budget": 4000,
+          "status": "PARSED",
+          "deliveredCharacters": 19617,
+          "modelVisibleContextCharacters": 11751,
+          "evidenceCharacters": 12187,
+          "controlCharacters": 1071,
+          "duplicateCharacters": 586,
+          "transportCharacters": 4066,
+          "diagnosticCharacters": 769,
+          "provenanceCharacters": 737,
+          "pivots": 1,
+          "support": 0,
+          "neighborhoodExcerpts": 0,
+          "withinEnvelope": true,
+          "compactionApplied": true,
+          "compactedFieldCount": 10,
+          "retention": "TRUTHFULNESS_LOSS",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [
+            "seaborn/_core/plot.py",
+            "seaborn/_core/properties.py",
+            "undefined"
+          ],
+          "lostTruthfulnessFields": [
+            "claimBoundary"
+          ],
+          "removedMaterial": {
+            "LOW_VALUE_SUPPORT": 2,
+            "REDUNDANT": 1
+          }
+        },
+        {
+          "budget": 2640,
+          "status": "PARSED",
+          "deliveredCharacters": 5179,
+          "modelVisibleContextCharacters": 186,
+          "evidenceCharacters": 253,
+          "controlCharacters": 832,
+          "duplicateCharacters": 195,
+          "transportCharacters": 2829,
+          "diagnosticCharacters": 615,
+          "provenanceCharacters": 286,
+          "pivots": 0,
+          "support": 0,
+          "neighborhoodExcerpts": 0,
+          "withinEnvelope": true,
+          "compactionApplied": true,
+          "compactedFieldCount": 10,
+          "retention": "TRUTHFULNESS_LOSS",
+          "lostPivotPaths": [
+            "seaborn/_core/scales.py"
+          ],
+          "lostSupportPaths": [
+            "seaborn/_core/plot.py",
+            "seaborn/_core/properties.py",
+            "undefined"
+          ],
+          "lostTruthfulnessFields": [
+            "claimBoundary"
+          ],
+          "removedMaterial": {
+            "USEFUL_DISTINCT": 1,
+            "LOW_VALUE_SUPPORT": 3
+          }
+        },
+        {
+          "budget": 2000,
+          "status": "PARSED",
+          "deliveredCharacters": 5177,
+          "modelVisibleContextCharacters": 186,
+          "evidenceCharacters": 253,
+          "controlCharacters": 831,
+          "duplicateCharacters": 195,
+          "transportCharacters": 2829,
+          "diagnosticCharacters": 614,
+          "provenanceCharacters": 286,
+          "pivots": 0,
+          "support": 0,
+          "neighborhoodExcerpts": 0,
+          "withinEnvelope": true,
+          "compactionApplied": true,
+          "compactedFieldCount": 10,
+          "retention": "TRUTHFULNESS_LOSS",
+          "lostPivotPaths": [
+            "seaborn/_core/scales.py"
+          ],
+          "lostSupportPaths": [
+            "seaborn/_core/plot.py",
+            "seaborn/_core/properties.py",
+            "undefined"
+          ],
+          "lostTruthfulnessFields": [
+            "claimBoundary"
+          ],
+          "removedMaterial": {
+            "USEFUL_DISTINCT": 1,
+            "LOW_VALUE_SUPPORT": 3
+          }
+        }
+      ],
+      "repeatControl": "IDENTICAL_DELIVERY",
+      "error": null
+    },
+    {
+      "instanceId": "pallets__flask-5014",
+      "rungs": [
+        {
+          "budget": "DEFAULT",
+          "status": "PARSED",
+          "deliveredCharacters": 19818,
+          "modelVisibleContextCharacters": 3217,
+          "evidenceCharacters": 4618,
+          "controlCharacters": 2166,
+          "duplicateCharacters": 2274,
+          "transportCharacters": 7927,
+          "diagnosticCharacters": 1682,
+          "provenanceCharacters": 996,
+          "pivots": 1,
+          "support": 1,
+          "neighborhoodExcerpts": 4,
+          "withinEnvelope": true,
+          "compactionApplied": false,
+          "compactedFieldCount": 10,
+          "retention": "SEMANTICALLY_EQUIVALENT",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [],
+          "lostTruthfulnessFields": [],
+          "removedMaterial": {}
+        },
+        {
+          "budget": 8000,
+          "status": "PARSED",
+          "deliveredCharacters": 35755,
+          "modelVisibleContextCharacters": 24517,
+          "evidenceCharacters": 25540,
+          "controlCharacters": 1305,
+          "duplicateCharacters": 979,
+          "transportCharacters": 5916,
+          "diagnosticCharacters": 902,
+          "provenanceCharacters": 938,
+          "pivots": 1,
+          "support": 1,
+          "neighborhoodExcerpts": 0,
+          "withinEnvelope": true,
+          "compactionApplied": true,
+          "compactedFieldCount": 10,
+          "retention": "PRIMARY_EVIDENCE_PRESERVED",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [],
+          "lostTruthfulnessFields": [],
+          "removedMaterial": {}
+        },
+        {
+          "budget": 6000,
+          "status": "PARSED",
+          "deliveredCharacters": 5022,
+          "modelVisibleContextCharacters": 186,
+          "evidenceCharacters": 255,
+          "controlCharacters": 826,
+          "duplicateCharacters": 128,
+          "transportCharacters": 2828,
+          "diagnosticCharacters": 530,
+          "provenanceCharacters": 286,
+          "pivots": 0,
+          "support": 0,
+          "neighborhoodExcerpts": 0,
+          "withinEnvelope": true,
+          "compactionApplied": true,
+          "compactedFieldCount": 10,
+          "retention": "TRUTHFULNESS_LOSS",
+          "lostPivotPaths": [
+            "src/flask/blueprints.py"
+          ],
+          "lostSupportPaths": [
+            "src/flask/app.py"
+          ],
+          "lostTruthfulnessFields": [
+            "claimBoundary"
+          ],
+          "removedMaterial": {
+            "USEFUL_DISTINCT": 1,
+            "LOW_VALUE_SUPPORT": 1
+          }
+        },
+        {
+          "budget": 4000,
+          "status": "PARSED",
+          "deliveredCharacters": 19653,
+          "modelVisibleContextCharacters": 6414,
+          "evidenceCharacters": 6980,
+          "controlCharacters": 1513,
+          "duplicateCharacters": 1955,
+          "transportCharacters": 7044,
+          "diagnosticCharacters": 951,
+          "provenanceCharacters": 1058,
+          "pivots": 1,
+          "support": 3,
+          "neighborhoodExcerpts": 0,
+          "withinEnvelope": true,
+          "compactionApplied": true,
+          "compactedFieldCount": 10,
+          "retention": "PRIMARY_EVIDENCE_PRESERVED",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [],
+          "lostTruthfulnessFields": [],
+          "removedMaterial": {}
+        },
+        {
+          "budget": 2640,
+          "status": "PARSED",
+          "deliveredCharacters": 13852,
+          "modelVisibleContextCharacters": 6414,
+          "evidenceCharacters": 6653,
+          "controlCharacters": 1063,
+          "duplicateCharacters": 367,
+          "transportCharacters": 4067,
+          "diagnosticCharacters": 770,
+          "provenanceCharacters": 731,
+          "pivots": 1,
+          "support": 0,
+          "neighborhoodExcerpts": 0,
+          "withinEnvelope": true,
+          "compactionApplied": true,
+          "compactedFieldCount": 10,
+          "retention": "TRUTHFULNESS_LOSS",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [
+            "src/flask/app.py"
+          ],
+          "lostTruthfulnessFields": [
+            "claimBoundary"
+          ],
+          "removedMaterial": {
+            "REDUNDANT": 1
+          }
+        },
+        {
+          "budget": 2000,
+          "status": "PARSED",
+          "deliveredCharacters": 11563,
+          "modelVisibleContextCharacters": 6414,
+          "evidenceCharacters": 6642,
+          "controlCharacters": 834,
+          "duplicateCharacters": 271,
+          "transportCharacters": 2933,
+          "diagnosticCharacters": 426,
+          "provenanceCharacters": 282,
+          "pivots": 1,
+          "support": 0,
+          "neighborhoodExcerpts": 0,
+          "withinEnvelope": true,
+          "compactionApplied": true,
+          "compactedFieldCount": 10,
+          "retention": "TRUTHFULNESS_LOSS",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [
+            "src/flask/app.py"
+          ],
+          "lostTruthfulnessFields": [
+            "claimBoundary"
+          ],
+          "removedMaterial": {
+            "REDUNDANT": 1
+          }
+        }
+      ],
+      "repeatControl": "IDENTICAL_DELIVERY",
+      "error": null
+    },
+    {
+      "instanceId": "psf__requests-1724",
+      "rungs": [
+        {
+          "budget": "DEFAULT",
+          "status": "PARSED",
+          "deliveredCharacters": 24525,
+          "modelVisibleContextCharacters": 3171,
+          "evidenceCharacters": 4711,
+          "controlCharacters": 2131,
+          "duplicateCharacters": 4314,
+          "transportCharacters": 9779,
+          "diagnosticCharacters": 2141,
+          "provenanceCharacters": 1292,
+          "pivots": 1,
+          "support": 2,
+          "neighborhoodExcerpts": 4,
+          "withinEnvelope": true,
+          "compactionApplied": false,
+          "compactedFieldCount": 10,
+          "retention": "SEMANTICALLY_EQUIVALENT",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [],
+          "lostTruthfulnessFields": [],
+          "removedMaterial": {}
+        },
+        {
+          "budget": 8000,
+          "status": "PARSED",
+          "deliveredCharacters": 34700,
+          "modelVisibleContextCharacters": 5923,
+          "evidenceCharacters": 8523,
+          "controlCharacters": 2138,
+          "duplicateCharacters": 7400,
+          "transportCharacters": 12757,
+          "diagnosticCharacters": 2212,
+          "provenanceCharacters": 1512,
+          "pivots": 2,
+          "support": 6,
+          "neighborhoodExcerpts": 8,
+          "withinEnvelope": true,
+          "compactionApplied": false,
+          "compactedFieldCount": 10,
+          "retention": "PRIMARY_EVIDENCE_PRESERVED",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [],
+          "lostTruthfulnessFields": [],
+          "removedMaterial": {}
+        },
+        {
+          "budget": 6000,
+          "status": "PARSED",
+          "deliveredCharacters": 27972,
+          "modelVisibleContextCharacters": 5923,
+          "evidenceCharacters": 7936,
+          "controlCharacters": 1940,
+          "duplicateCharacters": 4857,
+          "transportCharacters": 10132,
+          "diagnosticCharacters": 1603,
+          "provenanceCharacters": 1346,
+          "pivots": 2,
+          "support": 6,
+          "neighborhoodExcerpts": 0,
+          "withinEnvelope": true,
+          "compactionApplied": true,
+          "compactedFieldCount": 10,
+          "retention": "PRIMARY_EVIDENCE_PRESERVED",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [],
+          "lostTruthfulnessFields": [],
+          "removedMaterial": {}
+        },
+        {
+          "budget": 4000,
+          "status": "PARSED",
+          "deliveredCharacters": 20127,
+          "modelVisibleContextCharacters": 5923,
+          "evidenceCharacters": 6518,
+          "controlCharacters": 1294,
+          "duplicateCharacters": 2077,
+          "transportCharacters": 7587,
+          "diagnosticCharacters": 1181,
+          "provenanceCharacters": 1296,
+          "pivots": 2,
+          "support": 6,
+          "neighborhoodExcerpts": 0,
+          "withinEnvelope": true,
+          "compactionApplied": true,
+          "compactedFieldCount": 10,
+          "retention": "PRIMARY_EVIDENCE_PRESERVED",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [],
+          "lostTruthfulnessFields": [],
+          "removedMaterial": {}
+        },
+        {
+          "budget": 2640,
+          "status": "PARSED",
+          "deliveredCharacters": 14696,
+          "modelVisibleContextCharacters": 5923,
+          "evidenceCharacters": 6216,
+          "controlCharacters": 799,
+          "duplicateCharacters": 939,
+          "transportCharacters": 4656,
+          "diagnosticCharacters": 1064,
+          "provenanceCharacters": 827,
+          "pivots": 2,
+          "support": 1,
+          "neighborhoodExcerpts": 0,
+          "withinEnvelope": true,
+          "compactionApplied": true,
+          "compactedFieldCount": 3,
+          "retention": "MATERIAL_SUPPORT_LOSS",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [
+            "test_requests.py"
+          ],
+          "lostTruthfulnessFields": [],
+          "removedMaterial": {
+            "REDUNDANT": 1
+          }
+        },
+        {
+          "budget": 2000,
+          "status": "PARSED",
+          "deliveredCharacters": 11365,
+          "modelVisibleContextCharacters": 5923,
+          "evidenceCharacters": 6137,
+          "controlCharacters": 825,
+          "duplicateCharacters": 345,
+          "transportCharacters": 2932,
+          "diagnosticCharacters": 669,
+          "provenanceCharacters": 282,
+          "pivots": 1,
+          "support": 0,
+          "neighborhoodExcerpts": 0,
+          "withinEnvelope": true,
+          "compactionApplied": true,
+          "compactedFieldCount": 10,
+          "retention": "TRUTHFULNESS_LOSS",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [
+            "requests/cookies.py",
+            "test_requests.py"
+          ],
+          "lostTruthfulnessFields": [
+            "claimBoundary"
+          ],
+          "removedMaterial": {
+            "REDUNDANT": 2
+          }
+        }
+      ],
+      "repeatControl": "IDENTICAL_DELIVERY",
+      "error": null
+    },
+    {
+      "instanceId": "pydata__xarray-6599",
+      "rungs": [
+        {
+          "budget": "DEFAULT",
+          "status": "PARSED",
+          "deliveredCharacters": 21901,
+          "modelVisibleContextCharacters": 2712,
+          "evidenceCharacters": 4242,
+          "controlCharacters": 2175,
+          "duplicateCharacters": 3879,
+          "transportCharacters": 8310,
+          "diagnosticCharacters": 2083,
+          "provenanceCharacters": 1055,
+          "pivots": 1,
+          "support": 2,
+          "neighborhoodExcerpts": 4,
+          "withinEnvelope": true,
+          "compactionApplied": false,
+          "compactedFieldCount": 10,
+          "retention": "SEMANTICALLY_EQUIVALENT",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [],
+          "lostTruthfulnessFields": [],
+          "removedMaterial": {}
+        },
+        {
+          "budget": 8000,
+          "status": "PARSED",
+          "deliveredCharacters": 36596,
+          "modelVisibleContextCharacters": 24485,
+          "evidenceCharacters": 25502,
+          "controlCharacters": 1304,
+          "duplicateCharacters": 1418,
+          "transportCharacters": 6080,
+          "diagnosticCharacters": 1138,
+          "provenanceCharacters": 979,
+          "pivots": 2,
+          "support": 2,
+          "neighborhoodExcerpts": 0,
+          "withinEnvelope": true,
+          "compactionApplied": true,
+          "compactedFieldCount": 10,
+          "retention": "MATERIAL_SUPPORT_LOSS",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [
+            "xarray/core/dataset.py",
+            "xarray/tests/test_combine.py"
+          ],
+          "lostTruthfulnessFields": [],
+          "removedMaterial": {
+            "LOW_VALUE_SUPPORT": 1,
+            "REDUNDANT": 1
+          }
+        },
+        {
+          "budget": 6000,
+          "status": "PARSED",
+          "deliveredCharacters": 5346,
+          "modelVisibleContextCharacters": 186,
+          "evidenceCharacters": 262,
+          "controlCharacters": 825,
+          "duplicateCharacters": 290,
+          "transportCharacters": 2828,
+          "diagnosticCharacters": 686,
+          "provenanceCharacters": 286,
+          "pivots": 0,
+          "support": 0,
+          "neighborhoodExcerpts": 0,
+          "withinEnvelope": true,
+          "compactionApplied": true,
+          "compactedFieldCount": 10,
+          "retention": "TRUTHFULNESS_LOSS",
+          "lostPivotPaths": [
+            "xarray/core/combine.py"
+          ],
+          "lostSupportPaths": [
+            "xarray/core/dataset.py",
+            "xarray/tests/test_combine.py"
+          ],
+          "lostTruthfulnessFields": [
+            "claimBoundary"
+          ],
+          "removedMaterial": {
+            "USEFUL_DISTINCT": 1,
+            "LOW_VALUE_SUPPORT": 2
+          }
+        },
+        {
+          "budget": 4000,
+          "status": "PARSED",
+          "deliveredCharacters": 5418,
+          "modelVisibleContextCharacters": 186,
+          "evidenceCharacters": 262,
+          "controlCharacters": 825,
+          "duplicateCharacters": 290,
+          "transportCharacters": 2831,
+          "diagnosticCharacters": 755,
+          "provenanceCharacters": 286,
+          "pivots": 0,
+          "support": 0,
+          "neighborhoodExcerpts": 0,
+          "withinEnvelope": true,
+          "compactionApplied": true,
+          "compactedFieldCount": 10,
+          "retention": "TRUTHFULNESS_LOSS",
+          "lostPivotPaths": [
+            "xarray/core/combine.py"
+          ],
+          "lostSupportPaths": [
+            "xarray/core/dataset.py",
+            "xarray/tests/test_combine.py"
+          ],
+          "lostTruthfulnessFields": [
+            "claimBoundary"
+          ],
+          "removedMaterial": {
+            "USEFUL_DISTINCT": 1,
+            "LOW_VALUE_SUPPORT": 2
+          }
+        },
+        {
+          "budget": 2640,
+          "status": "PARSED",
+          "deliveredCharacters": 14571,
+          "modelVisibleContextCharacters": 9584,
+          "evidenceCharacters": 9942,
+          "controlCharacters": 508,
+          "duplicateCharacters": 384,
+          "transportCharacters": 2659,
+          "diagnosticCharacters": 621,
+          "provenanceCharacters": 282,
+          "pivots": 1,
+          "support": 0,
+          "neighborhoodExcerpts": 0,
+          "withinEnvelope": true,
+          "compactionApplied": true,
+          "compactedFieldCount": 3,
+          "retention": "TRUTHFULNESS_LOSS",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [
+            "xarray/core/dataset.py",
+            "xarray/tests/test_combine.py"
+          ],
+          "lostTruthfulnessFields": [
+            "claimBoundary"
+          ],
+          "removedMaterial": {
+            "LOW_VALUE_SUPPORT": 1,
+            "REDUNDANT": 1
+          }
+        },
+        {
+          "budget": 2000,
+          "status": "PARSED",
+          "deliveredCharacters": 11675,
+          "modelVisibleContextCharacters": 3703,
+          "evidenceCharacters": 3893,
+          "controlCharacters": 1063,
+          "duplicateCharacters": 635,
+          "transportCharacters": 4074,
+          "diagnosticCharacters": 1077,
+          "provenanceCharacters": 732,
+          "pivots": 1,
+          "support": 0,
+          "neighborhoodExcerpts": 0,
+          "withinEnvelope": true,
+          "compactionApplied": true,
+          "compactedFieldCount": 10,
+          "retention": "TRUTHFULNESS_LOSS",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [
+            "xarray/core/dataset.py",
+            "xarray/tests/test_combine.py"
+          ],
+          "lostTruthfulnessFields": [
+            "claimBoundary"
+          ],
+          "removedMaterial": {
+            "LOW_VALUE_SUPPORT": 1,
+            "REDUNDANT": 1
+          }
+        }
+      ],
+      "repeatControl": "IDENTICAL_DELIVERY",
+      "error": null
+    },
+    {
+      "instanceId": "pylint-dev__pylint-4551",
+      "rungs": [
+        {
+          "budget": "DEFAULT",
+          "status": "PARSED",
+          "deliveredCharacters": 21438,
+          "modelVisibleContextCharacters": 1931,
+          "evidenceCharacters": 3453,
+          "controlCharacters": 2140,
+          "duplicateCharacters": 3803,
+          "transportCharacters": 8685,
+          "diagnosticCharacters": 2078,
+          "provenanceCharacters": 1122,
+          "pivots": 1,
+          "support": 3,
+          "neighborhoodExcerpts": 4,
+          "withinEnvelope": true,
+          "compactionApplied": false,
+          "compactedFieldCount": 10,
+          "retention": "SEMANTICALLY_EQUIVALENT",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [],
+          "lostTruthfulnessFields": [],
+          "removedMaterial": {}
+        },
+        {
+          "budget": 8000,
+          "status": "PARSED",
+          "deliveredCharacters": 31967,
+          "modelVisibleContextCharacters": 4455,
+          "evidenceCharacters": 6878,
+          "controlCharacters": 2148,
+          "duplicateCharacters": 7537,
+          "transportCharacters": 11745,
+          "diagnosticCharacters": 2159,
+          "provenanceCharacters": 1342,
+          "pivots": 2,
+          "support": 5,
+          "neighborhoodExcerpts": 8,
+          "withinEnvelope": true,
+          "compactionApplied": false,
+          "compactedFieldCount": 10,
+          "retention": "PRIMARY_EVIDENCE_PRESERVED",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [],
+          "lostTruthfulnessFields": [],
+          "removedMaterial": {}
+        },
+        {
+          "budget": 6000,
+          "status": "PARSED",
+          "deliveredCharacters": 27863,
+          "modelVisibleContextCharacters": 4455,
+          "evidenceCharacters": 6671,
+          "controlCharacters": 2108,
+          "duplicateCharacters": 5407,
+          "transportCharacters": 10384,
+          "diagnosticCharacters": 1813,
+          "provenanceCharacters": 1322,
+          "pivots": 2,
+          "support": 5,
+          "neighborhoodExcerpts": 0,
+          "withinEnvelope": true,
+          "compactionApplied": true,
+          "compactedFieldCount": 10,
+          "retention": "PRIMARY_EVIDENCE_PRESERVED",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [],
+          "lostTruthfulnessFields": [],
+          "removedMaterial": {}
+        },
+        {
+          "budget": 4000,
+          "status": "PARSED",
+          "deliveredCharacters": 20114,
+          "modelVisibleContextCharacters": 4455,
+          "evidenceCharacters": 5274,
+          "controlCharacters": 1869,
+          "duplicateCharacters": 2401,
+          "transportCharacters": 7866,
+          "diagnosticCharacters": 1317,
+          "provenanceCharacters": 1236,
+          "pivots": 2,
+          "support": 5,
+          "neighborhoodExcerpts": 0,
+          "withinEnvelope": true,
+          "compactionApplied": true,
+          "compactedFieldCount": 10,
+          "retention": "PRIMARY_EVIDENCE_PRESERVED",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [],
+          "lostTruthfulnessFields": [],
+          "removedMaterial": {}
+        },
+        {
+          "budget": 2640,
+          "status": "PARSED",
+          "deliveredCharacters": 14586,
+          "modelVisibleContextCharacters": 4455,
+          "evidenceCharacters": 4794,
+          "controlCharacters": 1144,
+          "duplicateCharacters": 1247,
+          "transportCharacters": 5257,
+          "diagnosticCharacters": 1116,
+          "provenanceCharacters": 841,
+          "pivots": 2,
+          "support": 1,
+          "neighborhoodExcerpts": 0,
+          "withinEnvelope": true,
+          "compactionApplied": true,
+          "compactedFieldCount": 10,
+          "retention": "MATERIAL_SUPPORT_LOSS",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [
+            "pylint/pyreverse/utils.py",
+            "pylint/pyreverse/diadefslib.py"
+          ],
+          "lostTruthfulnessFields": [],
+          "removedMaterial": {
+            "REDUNDANT": 2
+          }
+        },
+        {
+          "budget": 2000,
+          "status": "PARSED",
+          "deliveredCharacters": 11770,
+          "modelVisibleContextCharacters": 4455,
+          "evidenceCharacters": 4654,
+          "controlCharacters": 736,
+          "duplicateCharacters": 690,
+          "transportCharacters": 3819,
+          "diagnosticCharacters": 931,
+          "provenanceCharacters": 739,
+          "pivots": 1,
+          "support": 0,
+          "neighborhoodExcerpts": 0,
+          "withinEnvelope": true,
+          "compactionApplied": true,
+          "compactedFieldCount": 3,
+          "retention": "TRUTHFULNESS_LOSS",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [
+            "pylint/pyreverse/writer.py",
+            "pylint/pyreverse/utils.py",
+            "pylint/pyreverse/diadefslib.py"
+          ],
+          "lostTruthfulnessFields": [
+            "claimBoundary"
+          ],
+          "removedMaterial": {
+            "REDUNDANT": 3
+          }
+        }
+      ],
+      "repeatControl": "IDENTICAL_DELIVERY",
+      "error": null
+    },
+    {
+      "instanceId": "pytest-dev__pytest-7432",
+      "rungs": [
+        {
+          "budget": "DEFAULT",
+          "status": "PARSED",
+          "deliveredCharacters": 18973,
+          "modelVisibleContextCharacters": 1761,
+          "evidenceCharacters": 3034,
+          "controlCharacters": 2206,
+          "duplicateCharacters": 3151,
+          "transportCharacters": 7649,
+          "diagnosticCharacters": 1837,
+          "provenanceCharacters": 940,
+          "pivots": 1,
+          "support": 1,
+          "neighborhoodExcerpts": 4,
+          "withinEnvelope": true,
+          "compactionApplied": false,
+          "compactedFieldCount": 10,
+          "retention": "SEMANTICALLY_EQUIVALENT",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [],
+          "lostTruthfulnessFields": [],
+          "removedMaterial": {}
+        },
+        {
+          "budget": 8000,
+          "status": "PARSED",
+          "deliveredCharacters": 35781,
+          "modelVisibleContextCharacters": 10955,
+          "evidenceCharacters": 13496,
+          "controlCharacters": 2215,
+          "duplicateCharacters": 6204,
+          "transportCharacters": 10611,
+          "diagnosticCharacters": 1936,
+          "provenanceCharacters": 1126,
+          "pivots": 3,
+          "support": 3,
+          "neighborhoodExcerpts": 8,
+          "withinEnvelope": true,
+          "compactionApplied": false,
+          "compactedFieldCount": 10,
+          "retention": "MATERIAL_SUPPORT_LOSS",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [
+            "CODE_OF_CONDUCT.md"
+          ],
+          "lostTruthfulnessFields": [],
+          "removedMaterial": {
+            "LOW_VALUE_SUPPORT": 1
+          }
+        },
+        {
+          "budget": 6000,
+          "status": "PARSED",
+          "deliveredCharacters": 28025,
+          "modelVisibleContextCharacters": 10955,
+          "evidenceCharacters": 12106,
+          "controlCharacters": 1877,
+          "duplicateCharacters": 2730,
+          "transportCharacters": 8602,
+          "diagnosticCharacters": 1455,
+          "provenanceCharacters": 1080,
+          "pivots": 3,
+          "support": 3,
+          "neighborhoodExcerpts": 0,
+          "withinEnvelope": true,
+          "compactionApplied": true,
+          "compactedFieldCount": 10,
+          "retention": "MATERIAL_SUPPORT_LOSS",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [
+            "CODE_OF_CONDUCT.md"
+          ],
+          "lostTruthfulnessFields": [],
+          "removedMaterial": {
+            "LOW_VALUE_SUPPORT": 1
+          }
+        },
+        {
+          "budget": 4000,
+          "status": "PARSED",
+          "deliveredCharacters": 19331,
+          "modelVisibleContextCharacters": 10955,
+          "evidenceCharacters": 11468,
+          "controlCharacters": 1061,
+          "duplicateCharacters": 760,
+          "transportCharacters": 4057,
+          "diagnosticCharacters": 1045,
+          "provenanceCharacters": 739,
+          "pivots": 1,
+          "support": 0,
+          "neighborhoodExcerpts": 0,
+          "withinEnvelope": true,
+          "compactionApplied": true,
+          "compactedFieldCount": 10,
+          "retention": "TRUTHFULNESS_LOSS",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [
+            "CODE_OF_CONDUCT.md"
+          ],
+          "lostTruthfulnessFields": [
+            "claimBoundary"
+          ],
+          "removedMaterial": {
+            "LOW_VALUE_SUPPORT": 1
+          }
+        },
+        {
+          "budget": 2640,
+          "status": "PARSED",
+          "deliveredCharacters": 5444,
+          "modelVisibleContextCharacters": 186,
+          "evidenceCharacters": 271,
+          "controlCharacters": 821,
+          "duplicateCharacters": 340,
+          "transportCharacters": 2828,
+          "diagnosticCharacters": 729,
+          "provenanceCharacters": 286,
+          "pivots": 0,
+          "support": 0,
+          "neighborhoodExcerpts": 0,
+          "withinEnvelope": true,
+          "compactionApplied": true,
+          "compactedFieldCount": 10,
+          "retention": "TRUTHFULNESS_LOSS",
+          "lostPivotPaths": [
+            "src/_pytest/hookspec.py"
+          ],
+          "lostSupportPaths": [
+            "CODE_OF_CONDUCT.md"
+          ],
+          "lostTruthfulnessFields": [
+            "claimBoundary"
+          ],
+          "removedMaterial": {
+            "USEFUL_DISTINCT": 1,
+            "LOW_VALUE_SUPPORT": 1
+          }
+        },
+        {
+          "budget": 2000,
+          "status": "PARSED",
+          "deliveredCharacters": 5414,
+          "modelVisibleContextCharacters": 186,
+          "evidenceCharacters": 271,
+          "controlCharacters": 821,
+          "duplicateCharacters": 340,
+          "transportCharacters": 2828,
+          "diagnosticCharacters": 699,
+          "provenanceCharacters": 286,
+          "pivots": 0,
+          "support": 0,
+          "neighborhoodExcerpts": 0,
+          "withinEnvelope": true,
+          "compactionApplied": true,
+          "compactedFieldCount": 10,
+          "retention": "TRUTHFULNESS_LOSS",
+          "lostPivotPaths": [
+            "src/_pytest/hookspec.py"
+          ],
+          "lostSupportPaths": [
+            "CODE_OF_CONDUCT.md"
+          ],
+          "lostTruthfulnessFields": [
+            "claimBoundary"
+          ],
+          "removedMaterial": {
+            "USEFUL_DISTINCT": 1,
+            "LOW_VALUE_SUPPORT": 1
+          }
+        }
+      ],
+      "repeatControl": "IDENTICAL_DELIVERY",
+      "error": null
+    },
+    {
+      "instanceId": "scikit-learn__scikit-learn-10844",
+      "rungs": [
+        {
+          "budget": "DEFAULT",
+          "status": "PARSED",
+          "deliveredCharacters": 23857,
+          "modelVisibleContextCharacters": 2797,
+          "evidenceCharacters": 4237,
+          "controlCharacters": 2174,
+          "duplicateCharacters": 4841,
+          "transportCharacters": 9404,
+          "diagnosticCharacters": 1786,
+          "provenanceCharacters": 1260,
+          "pivots": 1,
+          "support": 2,
+          "neighborhoodExcerpts": 4,
+          "withinEnvelope": true,
+          "compactionApplied": false,
+          "compactedFieldCount": 10,
+          "retention": "SEMANTICALLY_EQUIVALENT",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [],
+          "lostTruthfulnessFields": [],
+          "removedMaterial": {}
+        },
+        {
+          "budget": 8000,
+          "status": "PARSED",
+          "deliveredCharacters": 35124,
+          "modelVisibleContextCharacters": 6891,
+          "evidenceCharacters": 9206,
+          "controlCharacters": 2215,
+          "duplicateCharacters": 8441,
+          "transportCharacters": 11877,
+          "diagnosticCharacters": 1849,
+          "provenanceCharacters": 1380,
+          "pivots": 1,
+          "support": 3,
+          "neighborhoodExcerpts": 8,
+          "withinEnvelope": true,
+          "compactionApplied": false,
+          "compactedFieldCount": 10,
+          "retention": "MATERIAL_PRIMARY_LOSS",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [],
+          "lostTruthfulnessFields": [],
+          "removedMaterial": {}
+        },
+        {
+          "budget": 6000,
+          "status": "PARSED",
+          "deliveredCharacters": 28137,
+          "modelVisibleContextCharacters": 6891,
+          "evidenceCharacters": 8768,
+          "controlCharacters": 1948,
+          "duplicateCharacters": 5188,
+          "transportCharacters": 9482,
+          "diagnosticCharacters": 1341,
+          "provenanceCharacters": 1254,
+          "pivots": 1,
+          "support": 3,
+          "neighborhoodExcerpts": 0,
+          "withinEnvelope": true,
+          "compactionApplied": true,
+          "compactedFieldCount": 10,
+          "retention": "MATERIAL_PRIMARY_LOSS",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [],
+          "lostTruthfulnessFields": [],
+          "removedMaterial": {}
+        },
+        {
+          "budget": 4000,
+          "status": "PARSED",
+          "deliveredCharacters": 19991,
+          "modelVisibleContextCharacters": 6891,
+          "evidenceCharacters": 7400,
+          "controlCharacters": 1302,
+          "duplicateCharacters": 2048,
+          "transportCharacters": 6936,
+          "diagnosticCharacters": 927,
+          "provenanceCharacters": 1204,
+          "pivots": 1,
+          "support": 3,
+          "neighborhoodExcerpts": 0,
+          "withinEnvelope": true,
+          "compactionApplied": true,
+          "compactedFieldCount": 10,
+          "retention": "MATERIAL_PRIMARY_LOSS",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [],
+          "lostTruthfulnessFields": [],
+          "removedMaterial": {}
+        },
+        {
+          "budget": 2640,
+          "status": "PARSED",
+          "deliveredCharacters": 14626,
+          "modelVisibleContextCharacters": 6891,
+          "evidenceCharacters": 7124,
+          "controlCharacters": 1062,
+          "duplicateCharacters": 639,
+          "transportCharacters": 4072,
+          "diagnosticCharacters": 771,
+          "provenanceCharacters": 757,
+          "pivots": 1,
+          "support": 0,
+          "neighborhoodExcerpts": 0,
+          "withinEnvelope": true,
+          "compactionApplied": true,
+          "compactedFieldCount": 10,
+          "retention": "TRUTHFULNESS_LOSS",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [
+            "sklearn/metrics/scorer.py",
+            "sklearn/metrics/cluster/supervised.py"
+          ],
+          "lostTruthfulnessFields": [
+            "claimBoundary"
+          ],
+          "removedMaterial": {
+            "REDUNDANT": 2
+          }
+        },
+        {
+          "budget": 2000,
+          "status": "PARSED",
+          "deliveredCharacters": 11565,
+          "modelVisibleContextCharacters": 6891,
+          "evidenceCharacters": 7113,
+          "controlCharacters": 507,
+          "duplicateCharacters": 469,
+          "transportCharacters": 2659,
+          "diagnosticCharacters": 360,
+          "provenanceCharacters": 282,
+          "pivots": 1,
+          "support": 0,
+          "neighborhoodExcerpts": 0,
+          "withinEnvelope": true,
+          "compactionApplied": true,
+          "compactedFieldCount": 3,
+          "retention": "TRUTHFULNESS_LOSS",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [
+            "sklearn/metrics/scorer.py",
+            "sklearn/metrics/cluster/supervised.py"
+          ],
+          "lostTruthfulnessFields": [
+            "claimBoundary"
+          ],
+          "removedMaterial": {
+            "REDUNDANT": 2
+          }
+        }
+      ],
+      "repeatControl": "IDENTICAL_DELIVERY",
+      "error": null
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-7462",
+      "rungs": [
+        {
+          "budget": "DEFAULT",
+          "status": "PARSED",
+          "deliveredCharacters": 21865,
+          "modelVisibleContextCharacters": 2427,
+          "evidenceCharacters": 3751,
+          "controlCharacters": 2165,
+          "duplicateCharacters": 3795,
+          "transportCharacters": 9056,
+          "diagnosticCharacters": 1759,
+          "provenanceCharacters": 1184,
+          "pivots": 1,
+          "support": 3,
+          "neighborhoodExcerpts": 4,
+          "withinEnvelope": true,
+          "compactionApplied": false,
+          "compactedFieldCount": 10,
+          "retention": "SEMANTICALLY_EQUIVALENT",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [],
+          "lostTruthfulnessFields": [],
+          "removedMaterial": {}
+        },
+        {
+          "budget": 8000,
+          "status": "PARSED",
+          "deliveredCharacters": 34565,
+          "modelVisibleContextCharacters": 8700,
+          "evidenceCharacters": 10994,
+          "controlCharacters": 2138,
+          "duplicateCharacters": 6705,
+          "transportCharacters": 11439,
+          "diagnosticCharacters": 1829,
+          "provenanceCharacters": 1304,
+          "pivots": 1,
+          "support": 4,
+          "neighborhoodExcerpts": 8,
+          "withinEnvelope": true,
+          "compactionApplied": false,
+          "compactedFieldCount": 10,
+          "retention": "PRIMARY_EVIDENCE_PRESERVED",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [],
+          "lostTruthfulnessFields": [],
+          "removedMaterial": {}
+        },
+        {
+          "budget": 6000,
+          "status": "PARSED",
+          "deliveredCharacters": 26824,
+          "modelVisibleContextCharacters": 8700,
+          "evidenceCharacters": 9855,
+          "controlCharacters": 1944,
+          "duplicateCharacters": 3217,
+          "transportCharacters": 9146,
+          "diagnosticCharacters": 1313,
+          "provenanceCharacters": 1198,
+          "pivots": 1,
+          "support": 4,
+          "neighborhoodExcerpts": 0,
+          "withinEnvelope": true,
+          "compactionApplied": true,
+          "compactedFieldCount": 10,
+          "retention": "PRIMARY_EVIDENCE_PRESERVED",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [],
+          "lostTruthfulnessFields": [],
+          "removedMaterial": {}
+        },
+        {
+          "budget": 4000,
+          "status": "PARSED",
+          "deliveredCharacters": 19626,
+          "modelVisibleContextCharacters": 8700,
+          "evidenceCharacters": 9170,
+          "controlCharacters": 1294,
+          "duplicateCharacters": 1094,
+          "transportCharacters": 5999,
+          "diagnosticCharacters": 906,
+          "provenanceCharacters": 988,
+          "pivots": 1,
+          "support": 2,
+          "neighborhoodExcerpts": 0,
+          "withinEnvelope": true,
+          "compactionApplied": true,
+          "compactedFieldCount": 10,
+          "retention": "MATERIAL_SUPPORT_LOSS",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [
+            "sphinx/domains/python.py",
+            "tests/test_domain_py.py"
+          ],
+          "lostTruthfulnessFields": [],
+          "removedMaterial": {
+            "REDUNDANT": 2
+          }
+        },
+        {
+          "budget": 2640,
+          "status": "PARSED",
+          "deliveredCharacters": 14051,
+          "modelVisibleContextCharacters": 8700,
+          "evidenceCharacters": 8966,
+          "controlCharacters": 825,
+          "duplicateCharacters": 443,
+          "transportCharacters": 2932,
+          "diagnosticCharacters": 428,
+          "provenanceCharacters": 282,
+          "pivots": 1,
+          "support": 0,
+          "neighborhoodExcerpts": 0,
+          "withinEnvelope": true,
+          "compactionApplied": true,
+          "compactedFieldCount": 10,
+          "retention": "TRUTHFULNESS_LOSS",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [
+            "sphinx/domains/__init__.py",
+            "sphinx/domains/python.py",
+            "tests/test_domain_py.py"
+          ],
+          "lostTruthfulnessFields": [
+            "claimBoundary"
+          ],
+          "removedMaterial": {
+            "REDUNDANT": 3
+          }
+        },
+        {
+          "budget": 2000,
+          "status": "PARSED",
+          "deliveredCharacters": 5146,
+          "modelVisibleContextCharacters": 186,
+          "evidenceCharacters": 264,
+          "controlCharacters": 814,
+          "duplicateCharacters": 196,
+          "transportCharacters": 2828,
+          "diagnosticCharacters": 589,
+          "provenanceCharacters": 286,
+          "pivots": 0,
+          "support": 0,
+          "neighborhoodExcerpts": 0,
+          "withinEnvelope": true,
+          "compactionApplied": true,
+          "compactedFieldCount": 10,
+          "retention": "TRUTHFULNESS_LOSS",
+          "lostPivotPaths": [
+            "sphinx/domains/python.py"
+          ],
+          "lostSupportPaths": [
+            "sphinx/domains/__init__.py",
+            "sphinx/domains/python.py",
+            "tests/test_domain_py.py"
+          ],
+          "lostTruthfulnessFields": [
+            "claimBoundary"
+          ],
+          "removedMaterial": {
+            "USEFUL_DISTINCT": 1,
+            "LOW_VALUE_SUPPORT": 2,
+            "REDUNDANT": 1
+          }
+        }
+      ],
+      "repeatControl": "IDENTICAL_DELIVERY",
+      "error": null
+    },
+    {
+      "instanceId": "sympy__sympy-13480",
+      "rungs": [
+        {
+          "budget": "DEFAULT",
+          "status": "PARSED",
+          "deliveredCharacters": 21528,
+          "modelVisibleContextCharacters": 3434,
+          "evidenceCharacters": 4863,
+          "controlCharacters": 2133,
+          "duplicateCharacters": 3319,
+          "transportCharacters": 8274,
+          "diagnosticCharacters": 1730,
+          "provenanceCharacters": 1054,
+          "pivots": 1,
+          "support": 2,
+          "neighborhoodExcerpts": 4,
+          "withinEnvelope": true,
+          "compactionApplied": false,
+          "compactedFieldCount": 10,
+          "retention": "SEMANTICALLY_EQUIVALENT",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [],
+          "lostTruthfulnessFields": [],
+          "removedMaterial": {}
+        },
+        {
+          "budget": 8000,
+          "status": "PARSED",
+          "deliveredCharacters": 33206,
+          "modelVisibleContextCharacters": 6638,
+          "evidenceCharacters": 8867,
+          "controlCharacters": 2139,
+          "duplicateCharacters": 7780,
+          "transportCharacters": 11189,
+          "diagnosticCharacters": 1801,
+          "provenanceCharacters": 1274,
+          "pivots": 1,
+          "support": 2,
+          "neighborhoodExcerpts": 8,
+          "withinEnvelope": true,
+          "compactionApplied": false,
+          "compactedFieldCount": 10,
+          "retention": "PRIMARY_EVIDENCE_PRESERVED",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [],
+          "lostTruthfulnessFields": [],
+          "removedMaterial": {}
+        },
+        {
+          "budget": 6000,
+          "status": "PARSED",
+          "deliveredCharacters": 28126,
+          "modelVisibleContextCharacters": 6638,
+          "evidenceCharacters": 8695,
+          "controlCharacters": 1941,
+          "duplicateCharacters": 5014,
+          "transportCharacters": 9741,
+          "diagnosticCharacters": 1325,
+          "provenanceCharacters": 1254,
+          "pivots": 1,
+          "support": 2,
+          "neighborhoodExcerpts": 0,
+          "withinEnvelope": true,
+          "compactionApplied": true,
+          "compactedFieldCount": 10,
+          "retention": "PRIMARY_EVIDENCE_PRESERVED",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [],
+          "lostTruthfulnessFields": [],
+          "removedMaterial": {}
+        },
+        {
+          "budget": 4000,
+          "status": "PARSED",
+          "deliveredCharacters": 19585,
+          "modelVisibleContextCharacters": 6638,
+          "evidenceCharacters": 7181,
+          "controlCharacters": 1295,
+          "duplicateCharacters": 2041,
+          "transportCharacters": 6843,
+          "diagnosticCharacters": 913,
+          "provenanceCharacters": 1138,
+          "pivots": 1,
+          "support": 2,
+          "neighborhoodExcerpts": 0,
+          "withinEnvelope": true,
+          "compactionApplied": true,
+          "compactedFieldCount": 10,
+          "retention": "PRIMARY_EVIDENCE_PRESERVED",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [],
+          "lostTruthfulnessFields": [],
+          "removedMaterial": {}
+        },
+        {
+          "budget": 2640,
+          "status": "PARSED",
+          "deliveredCharacters": 14327,
+          "modelVisibleContextCharacters": 6638,
+          "evidenceCharacters": 6892,
+          "controlCharacters": 1054,
+          "duplicateCharacters": 595,
+          "transportCharacters": 4081,
+          "diagnosticCharacters": 773,
+          "provenanceCharacters": 731,
+          "pivots": 1,
+          "support": 0,
+          "neighborhoodExcerpts": 0,
+          "withinEnvelope": true,
+          "compactionApplied": true,
+          "compactedFieldCount": 10,
+          "retention": "TRUTHFULNESS_LOSS",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [
+            "sympy/functions/elementary/exponential.py",
+            "sympy/functions/elementary/hyperbolic.py"
+          ],
+          "lostTruthfulnessFields": [
+            "claimBoundary"
+          ],
+          "removedMaterial": {
+            "REDUNDANT": 2
+          }
+        },
+        {
+          "budget": 2000,
+          "status": "PARSED",
+          "deliveredCharacters": 12000,
+          "modelVisibleContextCharacters": 6638,
+          "evidenceCharacters": 6881,
+          "controlCharacters": 825,
+          "duplicateCharacters": 463,
+          "transportCharacters": 2946,
+          "diagnosticCharacters": 428,
+          "provenanceCharacters": 282,
+          "pivots": 1,
+          "support": 0,
+          "neighborhoodExcerpts": 0,
+          "withinEnvelope": true,
+          "compactionApplied": true,
+          "compactedFieldCount": 10,
+          "retention": "TRUTHFULNESS_LOSS",
+          "lostPivotPaths": [],
+          "lostSupportPaths": [
+            "sympy/functions/elementary/exponential.py",
+            "sympy/functions/elementary/hyperbolic.py"
+          ],
+          "lostTruthfulnessFields": [
+            "claimBoundary"
+          ],
+          "removedMaterial": {
+            "REDUNDANT": 2
+          }
+        }
+      ],
+      "repeatControl": "IDENTICAL_DELIVERY",
+      "error": null
+    }
+  ]
+}

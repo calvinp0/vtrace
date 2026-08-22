@@ -1,0 +1,70 @@
+{
+  "schemaVersion": "stage5.m169.preservation.v1",
+  "milestone": "M169",
+  "provenance": {
+    "M167": {
+      "sha": "de7bfe48b5bbadd50ff7ab7c85621f15f1dd3a37",
+      "committedAt": "2026-08-22T12:48:37+03:00",
+      "subject": "Price the second copy of every result, and find the model never sees it"
+    },
+    "M168_authority": {
+      "sha": "aaa334d90ad7498f213cd6ba5486d4c4908716e1",
+      "committedAt": "2026-08-22T13:37:47+03:00",
+      "subject": "Freeze the competitor's benchmark, and find its result cannot say what produced it"
+    },
+    "M168_protocol_freeze": {
+      "sha": "55e1f0bba2a7a62fd0a79dfcfb631bcd313e316e",
+      "committedAt": "2026-08-22T14:02:23+03:00",
+      "subject": "Freeze twelve tasks and three arms that differ by 191 characters and one hook"
+    },
+    "M168_harness_corrections": [
+      {
+        "sha": "85cbabc5635e223131f3bf08830c474e5ddf4233",
+        "committedAt": "2026-08-22T14:34:06+03:00",
+        "subject": "Turn off the harness's own anti-search nudge, and stop reading one arm's results in another arm's folder"
+      },
+      {
+        "sha": "546ce88b6d6a4e403d75f42d8a07236d14a4804b",
+        "committedAt": "2026-08-22T14:55:02+03:00",
+        "subject": "Stop scoring an unobservable as an absence in my own parity control"
+      },
+      {
+        "sha": "8b4ba43708b217d41efb8d23fd3089071ece2e1e",
+        "committedAt": "2026-08-22T15:00:36+03:00",
+        "subject": "Separate a guard that was not needed from a guard that did not work"
+      }
+    ],
+    "M168_live_evidence": {
+      "sha": "413093e032dd9d31b37d4c16f5f80452df8d083c",
+      "committedAt": "2026-08-22T17:08:07+03:00",
+      "subject": "Block the agent's searches, and watch it lose five tasks out of five"
+    },
+    "HEAD": {
+      "sha": "413093e032dd9d31b37d4c16f5f80452df8d083c",
+      "committedAt": "2026-08-22T17:08:07+03:00",
+      "subject": "Block the agent's searches, and watch it lose five tasks out of five"
+    },
+    "originMain": {
+      "sha": "bcdd962e42cfdfccbce89e14885a90f405ba3490",
+      "committedAt": "2026-08-16T16:46:49+03:00",
+      "subject": "Record the M152 store-separation evidence"
+    }
+  },
+  "productFreeze": {
+    "subtree": "src",
+    "frozenAt": "de7bfe48b5bbadd50ff7ab7c85621f15f1dd3a37",
+    "frozenTreeHash": "f970e24c46d5aa7a6d190389911722e12e8787b9",
+    "headTreeHash": "f970e24c46d5aa7a6d190389911722e12e8787b9",
+    "identical": true,
+    "workingTreeDirty": false,
+    "claim": "src/ is byte-identical to M167 across the whole of M168 and M169. Every M169 change lives under benchmarks/."
+  },
+  "expectations": {
+    "productBehaviour": "unchanged",
+    "retrieval": "unchanged",
+    "ranking": "unchanged",
+    "runPipelineDefaultBudget": "unchanged",
+    "searchPolicy": "unchanged",
+    "liveSpendUsd": 0
+  }
+}

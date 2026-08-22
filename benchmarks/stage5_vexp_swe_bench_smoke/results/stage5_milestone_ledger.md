@@ -3825,3 +3825,122 @@ clean arm exactly. Every task in B's deficit is a task where the hook fired.
   envelope-bound, so it needs a different lever than compression. `sphinx-7462`
   failed on all three arms exactly as the standing finding predicts, which is a
   useful check that the grader discriminates.
+
+## M169 — pipeline economic break-even and evidence-dose audit (commit pending)
+
+**PASS. Offline audit; $0.00 live; `src/` byte-identical to M167 at tree
+`f970e24c` throughout. 11 uncensored economic pairs from M168's 12.**
+
+M168 left one open fact — VTRACE displaces search and costs more anyway — and
+two candidate explanations: the payload is too big, or it is invoked on the
+wrong tasks. Both turn out to be true and neither turns out to matter, because
+the prior question answers them together.
+
+```text
+pipeline attributable cost      $0.0985 / task
+investigation displaced         $0.0026 / task   (pre-edit, paired)
+whole-run investigation         -$0.0070          treatment did MORE
+aggregate economic ratio        38x
+
+economic classes   10 LOSS   1 ROUGH_BREAK_EVEN   0 WIN   1 NOT_MEASURABLE
+```
+
+```text
+economic diagnosis     PIPELINE_ECONOMICS_MULTI_FACTOR
+evidence dose          LOWER_EVIDENCE_DOSE_PLAUSIBLE
+selective invocation   SELECTIVE_INVOCATION_NOT_SUPPORTED
+next lever             NO_FURTHER_PROACTIVE_PIPELINE_WORK
+```
+
+## M169 standing findings
+
+- **A skipped search is not a saved search.** M168 showed a *blocked* search
+  displaces investigation into Bash and Read. M169 shows the mandate does the
+  same thing without any coercion at all: search counts fell, and on six of
+  eleven tasks the treatment arm's pre-edit investigation traffic was HIGHER
+  than the baseline's — xarray by $0.106, requests by $0.039. Over whole runs
+  the treatment arm investigated $0.0070 MORE than the baseline. The
+  displacement M168 measured in tool counts does not exist in dollars, and every
+  denominator built on it has to be discarded rather than merely discounted.
+
+- **The canonical result row's token counts are arithmetic artifacts, and one of
+  them decided a kill.** Claude Code streams one `assistant` event per content
+  block, each repeating the whole request's usage; the external harness sums them
+  without deduplicating on `message.id`. Cache reads inflate ~2.65x, cache
+  creation ~2.9x, and `outputTokens` counts streaming placeholders (43 for a run
+  that emitted 17,724). `costUsd` survives for completed runs because it comes
+  from `total_cost_usd` — but the ONE run with no `result` event, the censored
+  `pylint-4551` baseline, falls back to the harness's own arithmetic at the wrong
+  cache-write rate. Its recorded $3.0384 is not a provider endpoint and is not on
+  the same basis as the other eleven. Deduplicating on message id reproduces the
+  provider exactly, and the billing identity (input $5 / 1h-write $10 / read
+  $0.50 / output $25 per Mtok) then reproduces `total_cost_usd` to 1e-16 on
+  35/35 uncensored runs — which is what licenses pricing a counterfactual at all.
+
+- **Under a fifth of what the model is billed for is repository evidence.**
+  Through M166's frozen rule table, averaged over 12 clean runs: 40.4% transport
+  structure, 18.9% repository evidence, 17.4% duplicate, 10.2% agent-useful
+  control, 7.9% machine diagnostic, 5.2% provenance. The product's own envelope
+  accounting says the same thing out loud — `estimated_model_visible_tokens: 871`
+  against `estimated_metadata_tokens: 5372`, `within_envelope: true` — because
+  the ceiling is derived from a *context* budget of 8,000 and then spent on
+  things that are not context. The shape generalises: evidence is 18.6% of the
+  default payload across Broad100-B's 97 cases.
+
+- **The first call is not the tax; the run length is.** Amplification — the
+  payload re-read as cache by every later request — is 9% of the payload's cost
+  on the shortest run and 56% on the longest. A payload's price is set as much by
+  how long the run turns out to be as by its own size, which means a fixed
+  payload is a variable cost and cannot be reasoned about per-call.
+
+- **No shipped argument varies the evidence dose while holding retrieval fixed,
+  and the one that comes closest is not monotone.** The plan named
+  `capsule_budget_tokens`; an identity control rejected it on contact, because at
+  8,000 it also raises the v1 capsule's character budget from its own default of
+  2,000 to 32,000 — the product ships two different default budgets for one
+  response and no argument sets both to their defaults. Re-cut on `max_tokens`,
+  the ladder moves the delivered item set too, and not in order: django-13658
+  delivers zero pivots at 4,000 and one at 2,640. Every reduced rung also sheds
+  `claimBoundary` under compaction, which §28 forbids scoring as an improvement.
+  Controls held throughout: the default rung reproduces itself 12/12 on M168 and
+  97/97 on Broad100-B, and repeats clean after every rung.
+
+- **Nothing available before invocation predicts where the pipeline pays for
+  itself.** Fourteen of fifteen candidate features across the four pre-frozen
+  families are NULL against the displaced/not-displaced split. The single
+  non-null signal is PRE_DELIVERY — it needs retrieval to have run, which is most
+  of the work a router would exist to avoid. The cross-corpus distribution
+  confirms the twelve are not a peculiar sample.
+
+- **The dose lever is real and is not an economics fix.** 70% of the payload is
+  removable without touching evidence or truthfulness, worth $0.069 of a $0.217
+  per-task premium. But on 9 of 11 tasks the MINIMUM useful payload — evidence
+  plus every truthfulness field — still costs more than the entire investigation
+  it replaced. Shrinking the response is worth doing on its own terms; selling it
+  as a route to break-even would be false.
+
+- **A control that certified two identical errors as an identical delivery.**
+  M169's repeat control compares the default response before and after the whole
+  ladder, to prove the rungs leave no residue. As first written it compared
+  fields and found them equal — including when both responses were the same
+  `repo_not_ready` error, which is how it reported a clean 100/100 on a corpus
+  where 93 of 100 cases delivered nothing. Non-delivery is now `NOT_COMPARABLE`.
+  Fourth instance of the same defect shape since M167, and the third caught by a
+  number that looked too good rather than by a test.
+
+- **Next-step recommendation: stop making the pipeline mandatory, and do not
+  spend live budget looking for a smaller mandatory pipeline.** The
+  first-action-on-every-task pipeline is economically inappropriate for this task
+  population, where the baseline localises for a median of $0.048. Two pieces of
+  work are licensed and neither is an economics bet: the response diet (40%
+  transport, 17% restatement) as a product-correctness fix, and reconciling the
+  two default budgets. What would change the conclusion is a population where
+  baseline localisation is expensive, or an on-demand arm — and no arm from M162
+  to M169 has ever measured VTRACE being called when the agent wanted it.
+
+- **Incidental, outside the argument:** the Broad100-A workspaces under
+  `results/workspaces/cross_repo/` are `index_corrupt / index_unreadable` to the
+  current build — 93 of 100 answer `repo_not_ready`. Evidence that depends on
+  re-running against them is not reproducible without a rebuild. M169
+  re-materialised both broad corpora under fresh roots and left the originals
+  untouched.

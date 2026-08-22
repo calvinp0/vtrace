@@ -1,0 +1,1575 @@
+{
+  "schemaVersion": "stage5.m169.payload-composition.v1",
+  "milestone": "M169",
+  "workstream": "M169-B",
+  "classifier": "M166-B frozen rule table, reused verbatim (§31). M169 re-adjudicates no category.",
+  "source": "the model-visible tool_result in the stream, NOT the harness's 8k-truncated tool-call log",
+  "detectorControls": [
+    {
+      "category": "REPOSITORY_EVIDENCE",
+      "tasksWhereNonZero": 24,
+      "tasks": 24,
+      "distinctValues": 24,
+      "uniformAcrossTasks": false,
+      "suspicious": false
+    },
+    {
+      "category": "AGENT_USEFUL_CONTROL",
+      "tasksWhereNonZero": 24,
+      "tasks": 24,
+      "distinctValues": 14,
+      "uniformAcrossTasks": false,
+      "suspicious": false
+    },
+    {
+      "category": "MACHINE_DIAGNOSTIC",
+      "tasksWhereNonZero": 24,
+      "tasks": 24,
+      "distinctValues": 23,
+      "uniformAcrossTasks": false,
+      "suspicious": false
+    },
+    {
+      "category": "PROVENANCE",
+      "tasksWhereNonZero": 24,
+      "tasks": 24,
+      "distinctValues": 21,
+      "uniformAcrossTasks": false,
+      "suspicious": false
+    },
+    {
+      "category": "DUPLICATE",
+      "tasksWhereNonZero": 24,
+      "tasks": 24,
+      "distinctValues": 24,
+      "uniformAcrossTasks": false,
+      "suspicious": false
+    },
+    {
+      "category": "TRANSPORT_STRUCTURE",
+      "tasksWhereNonZero": 24,
+      "tasks": 24,
+      "distinctValues": 19,
+      "uniformAcrossTasks": false,
+      "suspicious": false
+    },
+    {
+      "category": "OTHER",
+      "tasksWhereNonZero": 24,
+      "tasks": 24,
+      "distinctValues": 6,
+      "uniformAcrossTasks": false,
+      "suspicious": false
+    }
+  ],
+  "perRun": [
+    {
+      "label": "m168_vtrace_clean_astropy__astropy_14369",
+      "arm": "vtrace_clean",
+      "instanceId": "astropy__astropy-14369",
+      "parseStatus": "PARSED",
+      "deliveredCharacters": 25119,
+      "decomposedCharacters": 24970,
+      "byCategory": {
+        "REPOSITORY_EVIDENCE": 5072,
+        "AGENT_USEFUL_CONTROL": 2149,
+        "DUPLICATE": 4981,
+        "MACHINE_DIAGNOSTIC": 1797,
+        "PROVENANCE": 1246,
+        "TRANSPORT_STRUCTURE": 9720,
+        "OTHER": 5
+      },
+      "evidenceShare": 0.2031,
+      "envelopeShare": 0.7969,
+      "topGroups": [
+        {
+          "group": "productContext.modelVisibleContext",
+          "characters": 3572,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "productContext.items[]",
+          "characters": 889,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "capsuleResult.digest",
+          "characters": 468,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "productContext.diagnostics",
+          "characters": 439,
+          "category": "AGENT_USEFUL_CONTROL"
+        },
+        {
+          "group": "productContext.accounting",
+          "characters": 314,
+          "category": "MACHINE_DIAGNOSTIC"
+        },
+        {
+          "group": "diagnostics.freshness",
+          "characters": 308,
+          "category": "AGENT_USEFUL_CONTROL"
+        },
+        {
+          "group": "responseBudget.compacted_fields[]",
+          "characters": 273,
+          "category": "AGENT_USEFUL_CONTROL"
+        },
+        {
+          "group": "productContext.repository",
+          "characters": 259,
+          "category": "PROVENANCE"
+        }
+      ]
+    },
+    {
+      "label": "m168_vtrace_clean_django__django_13658",
+      "arm": "vtrace_clean",
+      "instanceId": "django__django-13658",
+      "parseStatus": "PARSED",
+      "deliveredCharacters": 23999,
+      "decomposedCharacters": 23850,
+      "byCategory": {
+        "REPOSITORY_EVIDENCE": 4948,
+        "AGENT_USEFUL_CONTROL": 2285,
+        "DUPLICATE": 4292,
+        "MACHINE_DIAGNOSTIC": 1735,
+        "PROVENANCE": 1264,
+        "TRANSPORT_STRUCTURE": 9320,
+        "OTHER": 6
+      },
+      "evidenceShare": 0.2075,
+      "envelopeShare": 0.7925,
+      "topGroups": [
+        {
+          "group": "productContext.modelVisibleContext",
+          "characters": 2216,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "flow.paths[]",
+          "characters": 1200,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "productContext.items[]",
+          "characters": 677,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "productContext.diagnostics",
+          "characters": 439,
+          "category": "AGENT_USEFUL_CONTROL"
+        },
+        {
+          "group": "capsuleResult.digest",
+          "characters": 353,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "deferred.items[]",
+          "characters": 315,
+          "category": "PROVENANCE"
+        },
+        {
+          "group": "productContext.accounting",
+          "characters": 314,
+          "category": "MACHINE_DIAGNOSTIC"
+        },
+        {
+          "group": "diagnostics.freshness",
+          "characters": 308,
+          "category": "AGENT_USEFUL_CONTROL"
+        }
+      ]
+    },
+    {
+      "label": "m168_vtrace_clean_matplotlib__matplotlib_22719",
+      "arm": "vtrace_clean",
+      "instanceId": "matplotlib__matplotlib-22719",
+      "parseStatus": "PARSED",
+      "deliveredCharacters": 20641,
+      "decomposedCharacters": 20492,
+      "byCategory": {
+        "REPOSITORY_EVIDENCE": 3637,
+        "AGENT_USEFUL_CONTROL": 2140,
+        "DUPLICATE": 3878,
+        "MACHINE_DIAGNOSTIC": 2001,
+        "PROVENANCE": 1006,
+        "TRANSPORT_STRUCTURE": 7823,
+        "OTHER": 7
+      },
+      "evidenceShare": 0.1775,
+      "envelopeShare": 0.8225,
+      "topGroups": [
+        {
+          "group": "productContext.modelVisibleContext",
+          "characters": 2234,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "capsuleResult.digest",
+          "characters": 519,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "productContext.diagnostics",
+          "characters": 439,
+          "category": "AGENT_USEFUL_CONTROL"
+        },
+        {
+          "group": "productContext.items[]",
+          "characters": 367,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "pivotNeighborhood[].excerpts[]",
+          "characters": 354,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "request.query",
+          "characters": 329,
+          "category": "MACHINE_DIAGNOSTIC"
+        },
+        {
+          "group": "taskSummary.normalizedQuery",
+          "characters": 320,
+          "category": "MACHINE_DIAGNOSTIC"
+        },
+        {
+          "group": "productContext.accounting",
+          "characters": 314,
+          "category": "MACHINE_DIAGNOSTIC"
+        }
+      ]
+    },
+    {
+      "label": "m168_vtrace_clean_mwaskom__seaborn_3187",
+      "arm": "vtrace_clean",
+      "instanceId": "mwaskom__seaborn-3187",
+      "parseStatus": "PARSED",
+      "deliveredCharacters": 19407,
+      "decomposedCharacters": 19258,
+      "byCategory": {
+        "REPOSITORY_EVIDENCE": 3172,
+        "AGENT_USEFUL_CONTROL": 2174,
+        "DUPLICATE": 2871,
+        "MACHINE_DIAGNOSTIC": 1556,
+        "PROVENANCE": 1102,
+        "TRANSPORT_STRUCTURE": 8354,
+        "OTHER": 29
+      },
+      "evidenceShare": 0.1647,
+      "envelopeShare": 0.8353,
+      "topGroups": [
+        {
+          "group": "productContext.modelVisibleContext",
+          "characters": 1886,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "productContext.items[]",
+          "characters": 511,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "productContext.diagnostics",
+          "characters": 439,
+          "category": "AGENT_USEFUL_CONTROL"
+        },
+        {
+          "group": "capsuleResult.digest",
+          "characters": 380,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "productContext.accounting",
+          "characters": 314,
+          "category": "MACHINE_DIAGNOSTIC"
+        },
+        {
+          "group": "diagnostics.freshness",
+          "characters": 308,
+          "category": "AGENT_USEFUL_CONTROL"
+        },
+        {
+          "group": "deferred.items[]",
+          "characters": 299,
+          "category": "PROVENANCE"
+        },
+        {
+          "group": "responseBudget.compacted_fields[]",
+          "characters": 273,
+          "category": "AGENT_USEFUL_CONTROL"
+        }
+      ]
+    },
+    {
+      "label": "m168_vtrace_clean_pallets__flask_5014",
+      "arm": "vtrace_clean",
+      "instanceId": "pallets__flask-5014",
+      "parseStatus": "PARSED",
+      "deliveredCharacters": 18866,
+      "decomposedCharacters": 18717,
+      "byCategory": {
+        "REPOSITORY_EVIDENCE": 4380,
+        "AGENT_USEFUL_CONTROL": 2140,
+        "DUPLICATE": 2183,
+        "MACHINE_DIAGNOSTIC": 1378,
+        "PROVENANCE": 962,
+        "TRANSPORT_STRUCTURE": 7670,
+        "OTHER": 4
+      },
+      "evidenceShare": 0.234,
+      "envelopeShare": 0.766,
+      "topGroups": [
+        {
+          "group": "productContext.modelVisibleContext",
+          "characters": 3296,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "productContext.diagnostics",
+          "characters": 439,
+          "category": "AGENT_USEFUL_CONTROL"
+        },
+        {
+          "group": "pivotNeighborhood[].excerpts[]",
+          "characters": 341,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "productContext.items[]",
+          "characters": 316,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "productContext.accounting",
+          "characters": 314,
+          "category": "MACHINE_DIAGNOSTIC"
+        },
+        {
+          "group": "diagnostics.freshness",
+          "characters": 308,
+          "category": "AGENT_USEFUL_CONTROL"
+        },
+        {
+          "group": "responseBudget.compacted_fields[]",
+          "characters": 273,
+          "category": "AGENT_USEFUL_CONTROL"
+        },
+        {
+          "group": "productContext.repository",
+          "characters": 253,
+          "category": "PROVENANCE"
+        }
+      ]
+    },
+    {
+      "label": "m168_vtrace_clean_psf__requests_1724",
+      "arm": "vtrace_clean",
+      "instanceId": "psf__requests-1724",
+      "parseStatus": "PARSED",
+      "deliveredCharacters": 23395,
+      "decomposedCharacters": 23246,
+      "byCategory": {
+        "REPOSITORY_EVIDENCE": 4473,
+        "AGENT_USEFUL_CONTROL": 2105,
+        "DUPLICATE": 4057,
+        "MACHINE_DIAGNOSTIC": 1826,
+        "PROVENANCE": 1258,
+        "TRANSPORT_STRUCTURE": 9522,
+        "OTHER": 5
+      },
+      "evidenceShare": 0.1924,
+      "envelopeShare": 0.8076,
+      "topGroups": [
+        {
+          "group": "productContext.modelVisibleContext",
+          "characters": 3258,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "productContext.items[]",
+          "characters": 913,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "productContext.diagnostics",
+          "characters": 439,
+          "category": "AGENT_USEFUL_CONTROL"
+        },
+        {
+          "group": "capsuleResult.digest",
+          "characters": 383,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "productContext.accounting",
+          "characters": 314,
+          "category": "MACHINE_DIAGNOSTIC"
+        },
+        {
+          "group": "diagnostics.freshness",
+          "characters": 308,
+          "category": "AGENT_USEFUL_CONTROL"
+        },
+        {
+          "group": "responseBudget.compacted_fields[]",
+          "characters": 273,
+          "category": "AGENT_USEFUL_CONTROL"
+        },
+        {
+          "group": "productContext.repository",
+          "characters": 251,
+          "category": "PROVENANCE"
+        }
+      ]
+    },
+    {
+      "label": "m168_vtrace_clean_pydata__xarray_6599",
+      "arm": "vtrace_clean",
+      "instanceId": "pydata__xarray-6599",
+      "parseStatus": "PARSED",
+      "deliveredCharacters": 20790,
+      "decomposedCharacters": 20641,
+      "byCategory": {
+        "REPOSITORY_EVIDENCE": 4004,
+        "AGENT_USEFUL_CONTROL": 2149,
+        "DUPLICATE": 3633,
+        "MACHINE_DIAGNOSTIC": 1776,
+        "PROVENANCE": 1021,
+        "TRANSPORT_STRUCTURE": 8053,
+        "OTHER": 5
+      },
+      "evidenceShare": 0.194,
+      "envelopeShare": 0.806,
+      "topGroups": [
+        {
+          "group": "productContext.modelVisibleContext",
+          "characters": 2778,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "productContext.items[]",
+          "characters": 443,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "productContext.diagnostics",
+          "characters": 439,
+          "category": "AGENT_USEFUL_CONTROL"
+        },
+        {
+          "group": "capsuleResult.digest",
+          "characters": 399,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "productContext.accounting",
+          "characters": 314,
+          "category": "MACHINE_DIAGNOSTIC"
+        },
+        {
+          "group": "diagnostics.freshness",
+          "characters": 308,
+          "category": "AGENT_USEFUL_CONTROL"
+        },
+        {
+          "group": "responseBudget.compacted_fields[]",
+          "characters": 273,
+          "category": "AGENT_USEFUL_CONTROL"
+        },
+        {
+          "group": "pivotNeighborhood[].excerpts[]",
+          "characters": 261,
+          "category": "REPOSITORY_EVIDENCE"
+        }
+      ]
+    },
+    {
+      "label": "m168_vtrace_clean_pylint_dev__pylint_4551",
+      "arm": "vtrace_clean",
+      "instanceId": "pylint-dev__pylint-4551",
+      "parseStatus": "PARSED",
+      "deliveredCharacters": 20331,
+      "decomposedCharacters": 20182,
+      "byCategory": {
+        "REPOSITORY_EVIDENCE": 3215,
+        "AGENT_USEFUL_CONTROL": 2114,
+        "DUPLICATE": 3563,
+        "MACHINE_DIAGNOSTIC": 1769,
+        "PROVENANCE": 1088,
+        "TRANSPORT_STRUCTURE": 8428,
+        "OTHER": 5
+      },
+      "evidenceShare": 0.1593,
+      "envelopeShare": 0.8407,
+      "topGroups": [
+        {
+          "group": "productContext.modelVisibleContext",
+          "characters": 1979,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "productContext.items[]",
+          "characters": 556,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "productContext.diagnostics",
+          "characters": 439,
+          "category": "AGENT_USEFUL_CONTROL"
+        },
+        {
+          "group": "capsuleResult.digest",
+          "characters": 398,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "productContext.accounting",
+          "characters": 312,
+          "category": "MACHINE_DIAGNOSTIC"
+        },
+        {
+          "group": "diagnostics.freshness",
+          "characters": 310,
+          "category": "AGENT_USEFUL_CONTROL"
+        },
+        {
+          "group": "responseBudget.compacted_fields[]",
+          "characters": 273,
+          "category": "AGENT_USEFUL_CONTROL"
+        },
+        {
+          "group": "productContext.repository",
+          "characters": 261,
+          "category": "PROVENANCE"
+        }
+      ]
+    },
+    {
+      "label": "m168_vtrace_clean_pytest_dev__pytest_7432",
+      "arm": "vtrace_clean",
+      "instanceId": "pytest-dev__pytest-7432",
+      "parseStatus": "PARSED",
+      "deliveredCharacters": 18984,
+      "decomposedCharacters": 18835,
+      "byCategory": {
+        "REPOSITORY_EVIDENCE": 3034,
+        "AGENT_USEFUL_CONTROL": 2206,
+        "DUPLICATE": 3151,
+        "MACHINE_DIAGNOSTIC": 1848,
+        "PROVENANCE": 942,
+        "TRANSPORT_STRUCTURE": 7649,
+        "OTHER": 5
+      },
+      "evidenceShare": 0.1611,
+      "envelopeShare": 0.8389,
+      "topGroups": [
+        {
+          "group": "productContext.modelVisibleContext",
+          "characters": 1813,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "productContext.diagnostics",
+          "characters": 439,
+          "category": "AGENT_USEFUL_CONTROL"
+        },
+        {
+          "group": "capsuleResult.digest",
+          "characters": 432,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "productContext.accounting",
+          "characters": 312,
+          "category": "MACHINE_DIAGNOSTIC"
+        },
+        {
+          "group": "diagnostics.freshness",
+          "characters": 308,
+          "category": "AGENT_USEFUL_CONTROL"
+        },
+        {
+          "group": "pivotNeighborhood[].excerpts[]",
+          "characters": 300,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "responseBudget.compacted_fields[]",
+          "characters": 273,
+          "category": "AGENT_USEFUL_CONTROL"
+        },
+        {
+          "group": "request.query",
+          "characters": 271,
+          "category": "MACHINE_DIAGNOSTIC"
+        }
+      ]
+    },
+    {
+      "label": "m168_vtrace_clean_scikit_learn__scikit_learn_10844",
+      "arm": "vtrace_clean",
+      "instanceId": "scikit-learn__scikit-learn-10844",
+      "parseStatus": "PARSED",
+      "deliveredCharacters": 22818,
+      "decomposedCharacters": 22669,
+      "byCategory": {
+        "REPOSITORY_EVIDENCE": 3999,
+        "AGENT_USEFUL_CONTROL": 2148,
+        "DUPLICATE": 4676,
+        "MACHINE_DIAGNOSTIC": 1469,
+        "PROVENANCE": 1226,
+        "TRANSPORT_STRUCTURE": 9147,
+        "OTHER": 4
+      },
+      "evidenceShare": 0.1764,
+      "envelopeShare": 0.8236,
+      "topGroups": [
+        {
+          "group": "productContext.modelVisibleContext",
+          "characters": 2861,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "productContext.items[]",
+          "characters": 774,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "productContext.diagnostics",
+          "characters": 439,
+          "category": "AGENT_USEFUL_CONTROL"
+        },
+        {
+          "group": "capsuleResult.digest",
+          "characters": 337,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "productContext.accounting",
+          "characters": 313,
+          "category": "MACHINE_DIAGNOSTIC"
+        },
+        {
+          "group": "diagnostics.freshness",
+          "characters": 308,
+          "category": "AGENT_USEFUL_CONTROL"
+        },
+        {
+          "group": "productContext.repository",
+          "characters": 279,
+          "category": "PROVENANCE"
+        },
+        {
+          "group": "responseBudget.compacted_fields[]",
+          "characters": 273,
+          "category": "AGENT_USEFUL_CONTROL"
+        }
+      ]
+    },
+    {
+      "label": "m168_vtrace_clean_sphinx_doc__sphinx_7462",
+      "arm": "vtrace_clean",
+      "instanceId": "sphinx-doc__sphinx-7462",
+      "parseStatus": "PARSED",
+      "deliveredCharacters": 20843,
+      "decomposedCharacters": 20694,
+      "byCategory": {
+        "REPOSITORY_EVIDENCE": 3513,
+        "AGENT_USEFUL_CONTROL": 2139,
+        "DUPLICATE": 3645,
+        "MACHINE_DIAGNOSTIC": 1444,
+        "PROVENANCE": 1150,
+        "TRANSPORT_STRUCTURE": 8799,
+        "OTHER": 4
+      },
+      "evidenceShare": 0.1698,
+      "envelopeShare": 0.8302,
+      "topGroups": [
+        {
+          "group": "productContext.modelVisibleContext",
+          "characters": 2490,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "productContext.items[]",
+          "characters": 674,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "productContext.diagnostics",
+          "characters": 439,
+          "category": "AGENT_USEFUL_CONTROL"
+        },
+        {
+          "group": "productContext.accounting",
+          "characters": 314,
+          "category": "MACHINE_DIAGNOSTIC"
+        },
+        {
+          "group": "diagnostics.freshness",
+          "characters": 308,
+          "category": "AGENT_USEFUL_CONTROL"
+        },
+        {
+          "group": "capsuleResult.digest",
+          "characters": 292,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "responseBudget.compacted_fields[]",
+          "characters": 273,
+          "category": "AGENT_USEFUL_CONTROL"
+        },
+        {
+          "group": "productContext.repository",
+          "characters": 263,
+          "category": "PROVENANCE"
+        }
+      ]
+    },
+    {
+      "label": "m168_vtrace_clean_sympy__sympy_13480",
+      "arm": "vtrace_clean",
+      "instanceId": "sympy__sympy-13480",
+      "parseStatus": "PARSED",
+      "deliveredCharacters": 20532,
+      "decomposedCharacters": 20383,
+      "byCategory": {
+        "REPOSITORY_EVIDENCE": 4625,
+        "AGENT_USEFUL_CONTROL": 2107,
+        "DUPLICATE": 3192,
+        "MACHINE_DIAGNOSTIC": 1418,
+        "PROVENANCE": 1020,
+        "TRANSPORT_STRUCTURE": 8017,
+        "OTHER": 4
+      },
+      "evidenceShare": 0.2269,
+      "envelopeShare": 0.7731,
+      "topGroups": [
+        {
+          "group": "productContext.modelVisibleContext",
+          "characters": 3531,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "productContext.diagnostics",
+          "characters": 439,
+          "category": "AGENT_USEFUL_CONTROL"
+        },
+        {
+          "group": "productContext.items[]",
+          "characters": 432,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "productContext.accounting",
+          "characters": 313,
+          "category": "MACHINE_DIAGNOSTIC"
+        },
+        {
+          "group": "diagnostics.freshness",
+          "characters": 308,
+          "category": "AGENT_USEFUL_CONTROL"
+        },
+        {
+          "group": "capsuleResult.digest",
+          "characters": 288,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "responseBudget.compacted_fields[]",
+          "characters": 273,
+          "category": "AGENT_USEFUL_CONTROL"
+        },
+        {
+          "group": "productContext.repository",
+          "characters": 253,
+          "category": "PROVENANCE"
+        }
+      ]
+    },
+    {
+      "label": "m168_vtrace_strict_astropy__astropy_14369",
+      "arm": "vtrace_strict",
+      "instanceId": "astropy__astropy-14369",
+      "parseStatus": "PARSED",
+      "deliveredCharacters": 27305,
+      "decomposedCharacters": 27156,
+      "byCategory": {
+        "REPOSITORY_EVIDENCE": 5900,
+        "AGENT_USEFUL_CONTROL": 2177,
+        "DUPLICATE": 5628,
+        "MACHINE_DIAGNOSTIC": 1904,
+        "PROVENANCE": 1341,
+        "TRANSPORT_STRUCTURE": 10200,
+        "OTHER": 6
+      },
+      "evidenceShare": 0.2173,
+      "envelopeShare": 0.7827,
+      "topGroups": [
+        {
+          "group": "productContext.modelVisibleContext",
+          "characters": 3677,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "productContext.items[]",
+          "characters": 889,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "capsuleResult.digest",
+          "characters": 521,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "productContext.diagnostics",
+          "characters": 439,
+          "category": "AGENT_USEFUL_CONTROL"
+        },
+        {
+          "group": "flow.paths[]",
+          "characters": 329,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "deferred.items[]",
+          "characters": 315,
+          "category": "PROVENANCE"
+        },
+        {
+          "group": "productContext.accounting",
+          "characters": 314,
+          "category": "MACHINE_DIAGNOSTIC"
+        },
+        {
+          "group": "diagnostics.freshness",
+          "characters": 308,
+          "category": "AGENT_USEFUL_CONTROL"
+        }
+      ]
+    },
+    {
+      "label": "m168_vtrace_strict_django__django_13658",
+      "arm": "vtrace_strict",
+      "instanceId": "django__django-13658",
+      "parseStatus": "PARSED",
+      "deliveredCharacters": 23178,
+      "decomposedCharacters": 23029,
+      "byCategory": {
+        "REPOSITORY_EVIDENCE": 4766,
+        "AGENT_USEFUL_CONTROL": 2285,
+        "DUPLICATE": 3963,
+        "MACHINE_DIAGNOSTIC": 1425,
+        "PROVENANCE": 1265,
+        "TRANSPORT_STRUCTURE": 9320,
+        "OTHER": 5
+      },
+      "evidenceShare": 0.207,
+      "envelopeShare": 0.793,
+      "topGroups": [
+        {
+          "group": "productContext.modelVisibleContext",
+          "characters": 2125,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "flow.paths[]",
+          "characters": 1200,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "productContext.items[]",
+          "characters": 677,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "productContext.diagnostics",
+          "characters": 439,
+          "category": "AGENT_USEFUL_CONTROL"
+        },
+        {
+          "group": "deferred.items[]",
+          "characters": 314,
+          "category": "PROVENANCE"
+        },
+        {
+          "group": "productContext.accounting",
+          "characters": 314,
+          "category": "MACHINE_DIAGNOSTIC"
+        },
+        {
+          "group": "diagnostics.freshness",
+          "characters": 308,
+          "category": "AGENT_USEFUL_CONTROL"
+        },
+        {
+          "group": "responseBudget.compacted_fields[]",
+          "characters": 273,
+          "category": "AGENT_USEFUL_CONTROL"
+        }
+      ]
+    },
+    {
+      "label": "m168_vtrace_strict_matplotlib__matplotlib_22719",
+      "arm": "vtrace_strict",
+      "instanceId": "matplotlib__matplotlib-22719",
+      "parseStatus": "PARSED",
+      "deliveredCharacters": 20813,
+      "decomposedCharacters": 20664,
+      "byCategory": {
+        "REPOSITORY_EVIDENCE": 3691,
+        "AGENT_USEFUL_CONTROL": 2140,
+        "DUPLICATE": 3986,
+        "MACHINE_DIAGNOSTIC": 2010,
+        "PROVENANCE": 1007,
+        "TRANSPORT_STRUCTURE": 7823,
+        "OTHER": 7
+      },
+      "evidenceShare": 0.1786,
+      "envelopeShare": 0.8214,
+      "topGroups": [
+        {
+          "group": "productContext.modelVisibleContext",
+          "characters": 2270,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "capsuleResult.digest",
+          "characters": 537,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "productContext.diagnostics",
+          "characters": 439,
+          "category": "AGENT_USEFUL_CONTROL"
+        },
+        {
+          "group": "productContext.items[]",
+          "characters": 367,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "pivotNeighborhood[].excerpts[]",
+          "characters": 354,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "request.query",
+          "characters": 347,
+          "category": "MACHINE_DIAGNOSTIC"
+        },
+        {
+          "group": "taskSummary.normalizedQuery",
+          "characters": 327,
+          "category": "MACHINE_DIAGNOSTIC"
+        },
+        {
+          "group": "productContext.accounting",
+          "characters": 314,
+          "category": "MACHINE_DIAGNOSTIC"
+        }
+      ]
+    },
+    {
+      "label": "m168_vtrace_strict_mwaskom__seaborn_3187",
+      "arm": "vtrace_strict",
+      "instanceId": "mwaskom__seaborn-3187",
+      "parseStatus": "PARSED",
+      "deliveredCharacters": 19742,
+      "decomposedCharacters": 19593,
+      "byCategory": {
+        "REPOSITORY_EVIDENCE": 3453,
+        "AGENT_USEFUL_CONTROL": 2121,
+        "DUPLICATE": 3146,
+        "MACHINE_DIAGNOSTIC": 1893,
+        "PROVENANCE": 1007,
+        "TRANSPORT_STRUCTURE": 7968,
+        "OTHER": 5
+      },
+      "evidenceShare": 0.1762,
+      "envelopeShare": 0.8238,
+      "topGroups": [
+        {
+          "group": "productContext.modelVisibleContext",
+          "characters": 2165,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "productContext.diagnostics",
+          "characters": 439,
+          "category": "AGENT_USEFUL_CONTROL"
+        },
+        {
+          "group": "capsuleResult.digest",
+          "characters": 419,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "productContext.items[]",
+          "characters": 398,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "productContext.accounting",
+          "characters": 314,
+          "category": "MACHINE_DIAGNOSTIC"
+        },
+        {
+          "group": "diagnostics.freshness",
+          "characters": 308,
+          "category": "AGENT_USEFUL_CONTROL"
+        },
+        {
+          "group": "pivotNeighborhood[].excerpts[]",
+          "characters": 303,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "request.query",
+          "characters": 288,
+          "category": "MACHINE_DIAGNOSTIC"
+        }
+      ]
+    },
+    {
+      "label": "m168_vtrace_strict_pallets__flask_5014",
+      "arm": "vtrace_strict",
+      "instanceId": "pallets__flask-5014",
+      "parseStatus": "PARSED",
+      "deliveredCharacters": 20115,
+      "decomposedCharacters": 19966,
+      "byCategory": {
+        "REPOSITORY_EVIDENCE": 4654,
+        "AGENT_USEFUL_CONTROL": 2141,
+        "DUPLICATE": 3043,
+        "MACHINE_DIAGNOSTIC": 1493,
+        "PROVENANCE": 961,
+        "TRANSPORT_STRUCTURE": 7670,
+        "OTHER": 4
+      },
+      "evidenceShare": 0.2331,
+      "envelopeShare": 0.7669,
+      "topGroups": [
+        {
+          "group": "productContext.modelVisibleContext",
+          "characters": 3454,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "productContext.diagnostics",
+          "characters": 439,
+          "category": "AGENT_USEFUL_CONTROL"
+        },
+        {
+          "group": "capsuleResult.digest",
+          "characters": 357,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "pivotNeighborhood[].excerpts[]",
+          "characters": 335,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "productContext.items[]",
+          "characters": 313,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "productContext.accounting",
+          "characters": 311,
+          "category": "MACHINE_DIAGNOSTIC"
+        },
+        {
+          "group": "diagnostics.freshness",
+          "characters": 308,
+          "category": "AGENT_USEFUL_CONTROL"
+        },
+        {
+          "group": "responseBudget.compacted_fields[]",
+          "characters": 273,
+          "category": "AGENT_USEFUL_CONTROL"
+        }
+      ]
+    },
+    {
+      "label": "m168_vtrace_strict_psf__requests_1724",
+      "arm": "vtrace_strict",
+      "instanceId": "psf__requests-1724",
+      "parseStatus": "PARSED",
+      "deliveredCharacters": 22497,
+      "decomposedCharacters": 22348,
+      "byCategory": {
+        "REPOSITORY_EVIDENCE": 4448,
+        "AGENT_USEFUL_CONTROL": 2140,
+        "DUPLICATE": 4033,
+        "MACHINE_DIAGNOSTIC": 2009,
+        "PROVENANCE": 1100,
+        "TRANSPORT_STRUCTURE": 8613,
+        "OTHER": 5
+      },
+      "evidenceShare": 0.199,
+      "envelopeShare": 0.801,
+      "topGroups": [
+        {
+          "group": "productContext.modelVisibleContext",
+          "characters": 3017,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "productContext.items[]",
+          "characters": 628,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "capsuleResult.digest",
+          "characters": 485,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "productContext.diagnostics",
+          "characters": 439,
+          "category": "AGENT_USEFUL_CONTROL"
+        },
+        {
+          "group": "request.query",
+          "characters": 338,
+          "category": "MACHINE_DIAGNOSTIC"
+        },
+        {
+          "group": "taskSummary.normalizedQuery",
+          "characters": 327,
+          "category": "MACHINE_DIAGNOSTIC"
+        },
+        {
+          "group": "productContext.accounting",
+          "characters": 316,
+          "category": "MACHINE_DIAGNOSTIC"
+        },
+        {
+          "group": "diagnostics.freshness",
+          "characters": 308,
+          "category": "AGENT_USEFUL_CONTROL"
+        }
+      ]
+    },
+    {
+      "label": "m168_vtrace_strict_pydata__xarray_6599",
+      "arm": "vtrace_strict",
+      "instanceId": "pydata__xarray-6599",
+      "parseStatus": "PARSED",
+      "deliveredCharacters": 20484,
+      "decomposedCharacters": 20335,
+      "byCategory": {
+        "REPOSITORY_EVIDENCE": 3755,
+        "AGENT_USEFUL_CONTROL": 2148,
+        "DUPLICATE": 3591,
+        "MACHINE_DIAGNOSTIC": 1770,
+        "PROVENANCE": 1021,
+        "TRANSPORT_STRUCTURE": 8045,
+        "OTHER": 5
+      },
+      "evidenceShare": 0.1847,
+      "envelopeShare": 0.8153,
+      "topGroups": [
+        {
+          "group": "productContext.modelVisibleContext",
+          "characters": 2435,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "productContext.diagnostics",
+          "characters": 439,
+          "category": "AGENT_USEFUL_CONTROL"
+        },
+        {
+          "group": "productContext.items[]",
+          "characters": 413,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "pivotNeighborhood[].excerpts[]",
+          "characters": 412,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "capsuleResult.digest",
+          "characters": 404,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "productContext.accounting",
+          "characters": 314,
+          "category": "MACHINE_DIAGNOSTIC"
+        },
+        {
+          "group": "diagnostics.freshness",
+          "characters": 308,
+          "category": "AGENT_USEFUL_CONTROL"
+        },
+        {
+          "group": "responseBudget.compacted_fields[]",
+          "characters": 273,
+          "category": "AGENT_USEFUL_CONTROL"
+        }
+      ]
+    },
+    {
+      "label": "m168_vtrace_strict_pylint_dev__pylint_4551",
+      "arm": "vtrace_strict",
+      "instanceId": "pylint-dev__pylint-4551",
+      "parseStatus": "PARSED",
+      "deliveredCharacters": 20341,
+      "decomposedCharacters": 20192,
+      "byCategory": {
+        "REPOSITORY_EVIDENCE": 3120,
+        "AGENT_USEFUL_CONTROL": 2114,
+        "DUPLICATE": 3693,
+        "MACHINE_DIAGNOSTIC": 1800,
+        "PROVENANCE": 1089,
+        "TRANSPORT_STRUCTURE": 8371,
+        "OTHER": 5
+      },
+      "evidenceShare": 0.1545,
+      "envelopeShare": 0.8455,
+      "topGroups": [
+        {
+          "group": "productContext.modelVisibleContext",
+          "characters": 1857,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "productContext.items[]",
+          "characters": 553,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "productContext.diagnostics",
+          "characters": 439,
+          "category": "AGENT_USEFUL_CONTROL"
+        },
+        {
+          "group": "capsuleResult.digest",
+          "characters": 425,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "productContext.accounting",
+          "characters": 311,
+          "category": "MACHINE_DIAGNOSTIC"
+        },
+        {
+          "group": "diagnostics.freshness",
+          "characters": 310,
+          "category": "AGENT_USEFUL_CONTROL"
+        },
+        {
+          "group": "responseBudget.compacted_fields[]",
+          "characters": 273,
+          "category": "AGENT_USEFUL_CONTROL"
+        },
+        {
+          "group": "productContext.repository",
+          "characters": 262,
+          "category": "PROVENANCE"
+        }
+      ]
+    },
+    {
+      "label": "m168_vtrace_strict_pytest_dev__pytest_7432",
+      "arm": "vtrace_strict",
+      "instanceId": "pytest-dev__pytest-7432",
+      "parseStatus": "PARSED",
+      "deliveredCharacters": 17848,
+      "decomposedCharacters": 17699,
+      "byCategory": {
+        "REPOSITORY_EVIDENCE": 2769,
+        "AGENT_USEFUL_CONTROL": 2206,
+        "DUPLICATE": 2550,
+        "MACHINE_DIAGNOSTIC": 1420,
+        "PROVENANCE": 943,
+        "TRANSPORT_STRUCTURE": 7783,
+        "OTHER": 28
+      },
+      "evidenceShare": 0.1564,
+      "envelopeShare": 0.8436,
+      "topGroups": [
+        {
+          "group": "productContext.modelVisibleContext",
+          "characters": 1720,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "productContext.diagnostics",
+          "characters": 439,
+          "category": "AGENT_USEFUL_CONTROL"
+        },
+        {
+          "group": "productContext.accounting",
+          "characters": 312,
+          "category": "MACHINE_DIAGNOSTIC"
+        },
+        {
+          "group": "diagnostics.freshness",
+          "characters": 308,
+          "category": "AGENT_USEFUL_CONTROL"
+        },
+        {
+          "group": "pivotNeighborhood[].excerpts[]",
+          "characters": 300,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "capsuleResult.digest",
+          "characters": 289,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "responseBudget.compacted_fields[]",
+          "characters": 273,
+          "category": "AGENT_USEFUL_CONTROL"
+        },
+        {
+          "group": "productContext.repository",
+          "characters": 262,
+          "category": "PROVENANCE"
+        }
+      ]
+    },
+    {
+      "label": "m168_vtrace_strict_scikit_learn__scikit_learn_10844",
+      "arm": "vtrace_strict",
+      "instanceId": "scikit-learn__scikit-learn-10844",
+      "parseStatus": "PARSED",
+      "deliveredCharacters": 20812,
+      "decomposedCharacters": 20663,
+      "byCategory": {
+        "REPOSITORY_EVIDENCE": 3468,
+        "AGENT_USEFUL_CONTROL": 2133,
+        "DUPLICATE": 4089,
+        "MACHINE_DIAGNOSTIC": 1490,
+        "PROVENANCE": 1112,
+        "TRANSPORT_STRUCTURE": 8367,
+        "OTHER": 4
+      },
+      "evidenceShare": 0.1678,
+      "envelopeShare": 0.8322,
+      "topGroups": [
+        {
+          "group": "productContext.modelVisibleContext",
+          "characters": 2273,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "productContext.items[]",
+          "characters": 543,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "productContext.diagnostics",
+          "characters": 439,
+          "category": "AGENT_USEFUL_CONTROL"
+        },
+        {
+          "group": "capsuleResult.digest",
+          "characters": 341,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "productContext.accounting",
+          "characters": 314,
+          "category": "MACHINE_DIAGNOSTIC"
+        },
+        {
+          "group": "diagnostics.freshness",
+          "characters": 308,
+          "category": "AGENT_USEFUL_CONTROL"
+        },
+        {
+          "group": "productContext.repository",
+          "characters": 280,
+          "category": "PROVENANCE"
+        },
+        {
+          "group": "responseBudget.compacted_fields[]",
+          "characters": 273,
+          "category": "AGENT_USEFUL_CONTROL"
+        }
+      ]
+    },
+    {
+      "label": "m168_vtrace_strict_sphinx_doc__sphinx_7462",
+      "arm": "vtrace_strict",
+      "instanceId": "sphinx-doc__sphinx-7462",
+      "parseStatus": "PARSED",
+      "deliveredCharacters": 20733,
+      "decomposedCharacters": 20584,
+      "byCategory": {
+        "REPOSITORY_EVIDENCE": 3488,
+        "AGENT_USEFUL_CONTROL": 2139,
+        "DUPLICATE": 3570,
+        "MACHINE_DIAGNOSTIC": 1433,
+        "PROVENANCE": 1151,
+        "TRANSPORT_STRUCTURE": 8799,
+        "OTHER": 4
+      },
+      "evidenceShare": 0.1695,
+      "envelopeShare": 0.8305,
+      "topGroups": [
+        {
+          "group": "productContext.modelVisibleContext",
+          "characters": 2473,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "productContext.items[]",
+          "characters": 674,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "productContext.diagnostics",
+          "characters": 439,
+          "category": "AGENT_USEFUL_CONTROL"
+        },
+        {
+          "group": "productContext.accounting",
+          "characters": 314,
+          "category": "MACHINE_DIAGNOSTIC"
+        },
+        {
+          "group": "diagnostics.freshness",
+          "characters": 308,
+          "category": "AGENT_USEFUL_CONTROL"
+        },
+        {
+          "group": "capsuleResult.digest",
+          "characters": 286,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "responseBudget.compacted_fields[]",
+          "characters": 273,
+          "category": "AGENT_USEFUL_CONTROL"
+        },
+        {
+          "group": "productContext.repository",
+          "characters": 264,
+          "category": "PROVENANCE"
+        }
+      ]
+    },
+    {
+      "label": "m168_vtrace_strict_sympy__sympy_13480",
+      "arm": "vtrace_strict",
+      "instanceId": "sympy__sympy-13480",
+      "parseStatus": "PARSED",
+      "deliveredCharacters": 20525,
+      "decomposedCharacters": 20376,
+      "byCategory": {
+        "REPOSITORY_EVIDENCE": 4623,
+        "AGENT_USEFUL_CONTROL": 2107,
+        "DUPLICATE": 3186,
+        "MACHINE_DIAGNOSTIC": 1418,
+        "PROVENANCE": 1021,
+        "TRANSPORT_STRUCTURE": 8017,
+        "OTHER": 4
+      },
+      "evidenceShare": 0.2269,
+      "envelopeShare": 0.7731,
+      "topGroups": [
+        {
+          "group": "productContext.modelVisibleContext",
+          "characters": 3530,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "productContext.diagnostics",
+          "characters": 439,
+          "category": "AGENT_USEFUL_CONTROL"
+        },
+        {
+          "group": "productContext.items[]",
+          "characters": 432,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "productContext.accounting",
+          "characters": 313,
+          "category": "MACHINE_DIAGNOSTIC"
+        },
+        {
+          "group": "diagnostics.freshness",
+          "characters": 308,
+          "category": "AGENT_USEFUL_CONTROL"
+        },
+        {
+          "group": "capsuleResult.digest",
+          "characters": 287,
+          "category": "REPOSITORY_EVIDENCE"
+        },
+        {
+          "group": "responseBudget.compacted_fields[]",
+          "characters": 273,
+          "category": "AGENT_USEFUL_CONTROL"
+        },
+        {
+          "group": "productContext.repository",
+          "characters": 254,
+          "category": "PROVENANCE"
+        }
+      ]
+    }
+  ],
+  "cleanArmCategoryCost": {
+    "REPOSITORY_EVIDENCE": {
+      "characters": 48072,
+      "tokens": 14862,
+      "costUsd": 0.227517
+    },
+    "AGENT_USEFUL_CONTROL": {
+      "characters": 25856,
+      "tokens": 7994,
+      "costUsd": 0.124498
+    },
+    "DUPLICATE": {
+      "characters": 44122,
+      "tokens": 13641,
+      "costUsd": 0.21179
+    },
+    "MACHINE_DIAGNOSTIC": {
+      "characters": 20017,
+      "tokens": 6189,
+      "costUsd": 0.097151
+    },
+    "PROVENANCE": {
+      "characters": 13285,
+      "tokens": 4107,
+      "costUsd": 0.063805
+    },
+    "TRANSPORT_STRUCTURE": {
+      "characters": 102502,
+      "tokens": 31691,
+      "costUsd": 0.492821
+    },
+    "OTHER": {
+      "characters": 83,
+      "tokens": 26,
+      "costUsd": 0.000452
+    }
+  },
+  "pricing": {
+    "inputPerMTok": 5,
+    "cacheWrite1hPerMTok": 10,
+    "cacheWrite5mPerMTok": 6.25,
+    "cacheReadPerMTok": 0.5,
+    "outputPerMTok": 25
+  }
+}

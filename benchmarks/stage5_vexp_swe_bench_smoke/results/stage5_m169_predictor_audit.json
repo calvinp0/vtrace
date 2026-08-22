@@ -1,0 +1,754 @@
+{
+  "schemaVersion": "stage5.m169.predictor-audit.v1",
+  "milestone": "M169",
+  "workstream": "M169-E",
+  "familyFreeze": {
+    "families": [
+      "TASK_EXPLICITNESS",
+      "REPOSITORY_SCALE",
+      "RETRIEVAL_AMBIGUITY",
+      "EXPECTED_IMPACT_BREADTH"
+    ],
+    "tiers": {
+      "TASK_EXPLICITNESS": "PRE_INVOCATION",
+      "REPOSITORY_SCALE": "PRE_INVOCATION",
+      "RETRIEVAL_AMBIGUITY": "PRE_DELIVERY",
+      "EXPECTED_IMPACT_BREADTH": "PRE_DELIVERY"
+    },
+    "provenance": "frozen in stage5_m169_plan.md before any economic class existed (§46)",
+    "forbiddenInputs": [
+      "grader outcome",
+      "gold file or symbol",
+      "historical CLEAN success",
+      "observed BASELINE searches or cost",
+      "any post-treatment agent behaviour",
+      "the task string the agent itself composed"
+    ]
+  },
+  "grouping": {
+    "definition": "DISPLACED_SOMETHING = the paired pre-edit investigation reduction exceeded $0.005",
+    "reason": "Under the primary denominator ten of eleven tasks share one economic class; a split with one member on a side cannot separate anything. The binary is the question a router would face.",
+    "displaced": [
+      "astropy__astropy-14369",
+      "django__django-13658",
+      "matplotlib__matplotlib-22719",
+      "mwaskom__seaborn-3187",
+      "pallets__flask-5014"
+    ],
+    "notDisplaced": [
+      "psf__requests-1724",
+      "pydata__xarray-6599",
+      "pytest-dev__pytest-7432",
+      "scikit-learn__scikit-learn-10844",
+      "sphinx-doc__sphinx-7462",
+      "sympy__sympy-13480"
+    ]
+  },
+  "candidatesTested": [
+    "taskCharacters",
+    "explicitFilePaths",
+    "distinctExplicitFilePaths",
+    "codeIdentifiers",
+    "tracebackPresent",
+    "namedDefinitionPresent",
+    "codeFencePresent",
+    "indexedFiles",
+    "indexedSymbols",
+    "rankingCandidates",
+    "scoreMargin",
+    "nearTopCandidates",
+    "distinctFilesInTopTen",
+    "deliveredPivots",
+    "deliveredDistinctFiles"
+  ],
+  "separations": [
+    {
+      "feature": "taskCharacters",
+      "family": "TASK_EXPLICITNESS",
+      "tier": "PRE_INVOCATION",
+      "groupA": "DISPLACED_SOMETHING",
+      "groupB": "DISPLACED_NOTHING",
+      "nA": 5,
+      "nB": 6,
+      "medianA": 1438,
+      "medianB": 1784,
+      "cleanlySeparated": false,
+      "rankOverlapStatistic": 0.5333,
+      "verdict": "NULL"
+    },
+    {
+      "feature": "explicitFilePaths",
+      "family": "TASK_EXPLICITNESS",
+      "tier": "PRE_INVOCATION",
+      "groupA": "DISPLACED_SOMETHING",
+      "groupB": "DISPLACED_NOTHING",
+      "nA": 5,
+      "nB": 6,
+      "medianA": 1,
+      "medianB": 2,
+      "cleanlySeparated": false,
+      "rankOverlapStatistic": 0.3833,
+      "verdict": "NULL"
+    },
+    {
+      "feature": "distinctExplicitFilePaths",
+      "family": "TASK_EXPLICITNESS",
+      "tier": "PRE_INVOCATION",
+      "groupA": "DISPLACED_SOMETHING",
+      "groupB": "DISPLACED_NOTHING",
+      "nA": 5,
+      "nB": 6,
+      "medianA": 1,
+      "medianB": 2,
+      "cleanlySeparated": false,
+      "rankOverlapStatistic": 0.3667,
+      "verdict": "NULL"
+    },
+    {
+      "feature": "codeIdentifiers",
+      "family": "TASK_EXPLICITNESS",
+      "tier": "PRE_INVOCATION",
+      "groupA": "DISPLACED_SOMETHING",
+      "groupB": "DISPLACED_NOTHING",
+      "nA": 5,
+      "nB": 6,
+      "medianA": 20,
+      "medianB": 16.5,
+      "cleanlySeparated": false,
+      "rankOverlapStatistic": 0.5333,
+      "verdict": "NULL"
+    },
+    {
+      "feature": "tracebackPresent",
+      "family": "TASK_EXPLICITNESS",
+      "tier": "PRE_INVOCATION",
+      "groupA": "DISPLACED_SOMETHING",
+      "groupB": "DISPLACED_NOTHING",
+      "nA": 5,
+      "nB": 6,
+      "medianA": 0,
+      "medianB": 0,
+      "cleanlySeparated": false,
+      "rankOverlapStatistic": 0.5167,
+      "verdict": "NULL"
+    },
+    {
+      "feature": "namedDefinitionPresent",
+      "family": "TASK_EXPLICITNESS",
+      "tier": "PRE_INVOCATION",
+      "groupA": "DISPLACED_SOMETHING",
+      "groupB": "DISPLACED_NOTHING",
+      "nA": 5,
+      "nB": 6,
+      "medianA": 0,
+      "medianB": 0,
+      "cleanlySeparated": false,
+      "rankOverlapStatistic": 0.5333,
+      "verdict": "NULL"
+    },
+    {
+      "feature": "codeFencePresent",
+      "family": "TASK_EXPLICITNESS",
+      "tier": "PRE_INVOCATION",
+      "groupA": "DISPLACED_SOMETHING",
+      "groupB": "DISPLACED_NOTHING",
+      "nA": 5,
+      "nB": 6,
+      "medianA": 1,
+      "medianB": 1,
+      "cleanlySeparated": false,
+      "rankOverlapStatistic": 0.3833,
+      "verdict": "NULL"
+    },
+    {
+      "feature": "indexedFiles",
+      "family": "REPOSITORY_SCALE",
+      "tier": "PRE_INVOCATION",
+      "groupA": "DISPLACED_SOMETHING",
+      "groupB": "DISPLACED_NOTHING",
+      "nA": 5,
+      "nB": 6,
+      "medianA": 927,
+      "medianB": 344.5,
+      "cleanlySeparated": false,
+      "rankOverlapStatistic": 0.6,
+      "verdict": "NULL"
+    },
+    {
+      "feature": "indexedSymbols",
+      "family": "REPOSITORY_SCALE",
+      "tier": "PRE_INVOCATION",
+      "groupA": "DISPLACED_SOMETHING",
+      "groupB": "DISPLACED_NOTHING",
+      "nA": 5,
+      "nB": 6,
+      "medianA": 15700,
+      "medianB": 7345,
+      "cleanlySeparated": false,
+      "rankOverlapStatistic": 0.6,
+      "verdict": "NULL"
+    },
+    {
+      "feature": "rankingCandidates",
+      "family": "RETRIEVAL_AMBIGUITY",
+      "tier": "PRE_DELIVERY",
+      "groupA": "DISPLACED_SOMETHING",
+      "groupB": "DISPLACED_NOTHING",
+      "nA": 5,
+      "nB": 6,
+      "medianA": 2,
+      "medianB": 2,
+      "cleanlySeparated": false,
+      "rankOverlapStatistic": 0.6167,
+      "verdict": "NULL"
+    },
+    {
+      "feature": "scoreMargin",
+      "family": "RETRIEVAL_AMBIGUITY",
+      "tier": "PRE_DELIVERY",
+      "groupA": "DISPLACED_SOMETHING",
+      "groupB": "DISPLACED_NOTHING",
+      "nA": 5,
+      "nB": 6,
+      "medianA": 0.278,
+      "medianB": 0.192,
+      "cleanlySeparated": false,
+      "rankOverlapStatistic": 0.5667,
+      "verdict": "NULL"
+    },
+    {
+      "feature": "nearTopCandidates",
+      "family": "RETRIEVAL_AMBIGUITY",
+      "tier": "PRE_DELIVERY",
+      "groupA": "DISPLACED_SOMETHING",
+      "groupB": "DISPLACED_NOTHING",
+      "nA": 5,
+      "nB": 6,
+      "medianA": 2,
+      "medianB": 2,
+      "cleanlySeparated": false,
+      "rankOverlapStatistic": 0.5333,
+      "verdict": "NULL"
+    },
+    {
+      "feature": "distinctFilesInTopTen",
+      "family": "RETRIEVAL_AMBIGUITY",
+      "tier": "PRE_DELIVERY",
+      "groupA": "DISPLACED_SOMETHING",
+      "groupB": "DISPLACED_NOTHING",
+      "nA": 5,
+      "nB": 6,
+      "medianA": 2,
+      "medianB": 1,
+      "cleanlySeparated": false,
+      "rankOverlapStatistic": 0.8667,
+      "verdict": "WEAK"
+    },
+    {
+      "feature": "deliveredPivots",
+      "family": "EXPECTED_IMPACT_BREADTH",
+      "tier": "PRE_DELIVERY",
+      "groupA": "DISPLACED_SOMETHING",
+      "groupB": "DISPLACED_NOTHING",
+      "nA": 5,
+      "nB": 6,
+      "medianA": 1,
+      "medianB": 1,
+      "cleanlySeparated": false,
+      "rankOverlapStatistic": 0.5,
+      "verdict": "NULL"
+    },
+    {
+      "feature": "deliveredDistinctFiles",
+      "family": "EXPECTED_IMPACT_BREADTH",
+      "tier": "PRE_DELIVERY",
+      "groupA": "DISPLACED_SOMETHING",
+      "groupB": "DISPLACED_NOTHING",
+      "nA": 5,
+      "nB": 6,
+      "medianA": 4,
+      "medianB": 3,
+      "cleanlySeparated": false,
+      "rankOverlapStatistic": 0.6167,
+      "verdict": "NULL"
+    }
+  ],
+  "crossCorpusDistribution": [
+    {
+      "corpus": "M168-12",
+      "cases": 12,
+      "taskCharacters": {
+        "p10": 430,
+        "median": 1237,
+        "p90": 4310
+      },
+      "distinctExplicitFilePaths": {
+        "p10": 0,
+        "median": 1,
+        "p90": 2
+      },
+      "codeIdentifiers": {
+        "p10": 4,
+        "median": 14,
+        "p90": 41
+      },
+      "tracebackPresentPercent": 16.7,
+      "namedDefinitionPresentPercent": 41.7,
+      "noExplicitFilePathPercent": 16.7
+    },
+    {
+      "corpus": "Broad100-A",
+      "cases": 100,
+      "taskCharacters": {
+        "p10": 357,
+        "median": 1141,
+        "p90": 2749
+      },
+      "distinctExplicitFilePaths": {
+        "p10": 0,
+        "median": 0,
+        "p90": 3
+      },
+      "codeIdentifiers": {
+        "p10": 3,
+        "median": 12,
+        "p90": 41
+      },
+      "tracebackPresentPercent": 11,
+      "namedDefinitionPresentPercent": 33,
+      "noExplicitFilePathPercent": 53
+    },
+    {
+      "corpus": "Broad100-B",
+      "cases": 100,
+      "taskCharacters": {
+        "p10": 459,
+        "median": 1575,
+        "p90": 4267
+      },
+      "distinctExplicitFilePaths": {
+        "p10": 0,
+        "median": 0,
+        "p90": 3
+      },
+      "codeIdentifiers": {
+        "p10": 2,
+        "median": 16,
+        "p90": 56
+      },
+      "tracebackPresentPercent": 12,
+      "namedDefinitionPresentPercent": 34,
+      "noExplicitFilePathPercent": 50
+    }
+  ],
+  "perTask": [
+    {
+      "instanceId": "astropy__astropy-14369",
+      "measurable": true,
+      "economicClass": "PIPELINE_ECONOMIC_LOSS",
+      "economicClassGenerous": "ROUGH_BREAK_EVEN",
+      "displacedUsd": 0.011197,
+      "displacedAnything": true,
+      "problemStatementAvailable": true,
+      "taskExplicitness": {
+        "characters": 2597,
+        "explicitFilePaths": 2,
+        "distinctExplicitFilePaths": 1,
+        "codeIdentifiers": 14,
+        "tracebackPresent": false,
+        "namedDefinitionPresent": false,
+        "codeFencePresent": true
+      },
+      "repositoryScale": {
+        "indexedFiles": 993,
+        "indexedSymbols": 22338
+      },
+      "retrievalAmbiguity": {
+        "candidates": 3,
+        "topScore": 2.7,
+        "secondScore": 2.68,
+        "scoreMargin": 0.02,
+        "nearTopCandidates": 3,
+        "distinctFilesInTopTen": 2
+      },
+      "expectedImpactBreadth": {
+        "deliveredPivots": 1,
+        "deliveredDistinctFiles": 5
+      }
+    },
+    {
+      "instanceId": "django__django-13658",
+      "measurable": true,
+      "economicClass": "PIPELINE_ECONOMIC_LOSS",
+      "economicClassGenerous": "PIPELINE_ECONOMIC_LOSS",
+      "displacedUsd": 0.054457,
+      "displacedAnything": true,
+      "problemStatementAvailable": true,
+      "taskExplicitness": {
+        "characters": 1237,
+        "explicitFilePaths": 1,
+        "distinctExplicitFilePaths": 1,
+        "codeIdentifiers": 26,
+        "tracebackPresent": false,
+        "namedDefinitionPresent": true,
+        "codeFencePresent": false
+      },
+      "repositoryScale": {
+        "indexedFiles": 2686,
+        "indexedSymbols": 43598
+      },
+      "retrievalAmbiguity": {
+        "candidates": 3,
+        "topScore": 2.44,
+        "secondScore": 1.726,
+        "scoreMargin": 0.714,
+        "nearTopCandidates": 1,
+        "distinctFilesInTopTen": 3
+      },
+      "expectedImpactBreadth": {
+        "deliveredPivots": 1,
+        "deliveredDistinctFiles": 5
+      }
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-22719",
+      "measurable": true,
+      "economicClass": "PIPELINE_ECONOMIC_LOSS",
+      "economicClassGenerous": "PIPELINE_ECONOMIC_LOSS",
+      "displacedUsd": 0.014506,
+      "displacedAnything": true,
+      "problemStatementAvailable": true,
+      "taskExplicitness": {
+        "characters": 10176,
+        "explicitFilePaths": 22,
+        "distinctExplicitFilePaths": 10,
+        "codeIdentifiers": 128,
+        "tracebackPresent": true,
+        "namedDefinitionPresent": true,
+        "codeFencePresent": true
+      },
+      "repositoryScale": {
+        "indexedFiles": 927,
+        "indexedSymbols": 15700
+      },
+      "retrievalAmbiguity": {
+        "candidates": 2,
+        "topScore": 2.1,
+        "secondScore": 1.46,
+        "scoreMargin": 0.64,
+        "nearTopCandidates": 1,
+        "distinctFilesInTopTen": 2
+      },
+      "expectedImpactBreadth": {
+        "deliveredPivots": 1,
+        "deliveredDistinctFiles": 2
+      }
+    },
+    {
+      "instanceId": "mwaskom__seaborn-3187",
+      "measurable": true,
+      "economicClass": "PIPELINE_ECONOMIC_LOSS",
+      "economicClassGenerous": "ROUGH_BREAK_EVEN",
+      "displacedUsd": 0.030769,
+      "displacedAnything": true,
+      "problemStatementAvailable": true,
+      "taskExplicitness": {
+        "characters": 1438,
+        "explicitFilePaths": 1,
+        "distinctExplicitFilePaths": 1,
+        "codeIdentifiers": 20,
+        "tracebackPresent": false,
+        "namedDefinitionPresent": false,
+        "codeFencePresent": true
+      },
+      "repositoryScale": {
+        "indexedFiles": 157,
+        "indexedSymbols": 3316
+      },
+      "retrievalAmbiguity": {
+        "candidates": 2,
+        "topScore": 1.485,
+        "secondScore": 1.429,
+        "scoreMargin": 0.056,
+        "nearTopCandidates": 2,
+        "distinctFilesInTopTen": 2
+      },
+      "expectedImpactBreadth": {
+        "deliveredPivots": 1,
+        "deliveredDistinctFiles": 4
+      }
+    },
+    {
+      "instanceId": "pallets__flask-5014",
+      "measurable": true,
+      "economicClass": "ROUGH_BREAK_EVEN",
+      "economicClassGenerous": "PIPELINE_ECONOMIC_WIN",
+      "displacedUsd": 0.074117,
+      "displacedAnything": true,
+      "problemStatementAvailable": true,
+      "taskExplicitness": {
+        "characters": 195,
+        "explicitFilePaths": 0,
+        "distinctExplicitFilePaths": 0,
+        "codeIdentifiers": 2,
+        "tracebackPresent": false,
+        "namedDefinitionPresent": false,
+        "codeFencePresent": false
+      },
+      "repositoryScale": {
+        "indexedFiles": 91,
+        "indexedSymbols": 1165
+      },
+      "retrievalAmbiguity": {
+        "candidates": 2,
+        "topScore": 2.1,
+        "secondScore": 1.822,
+        "scoreMargin": 0.278,
+        "nearTopCandidates": 2,
+        "distinctFilesInTopTen": 2
+      },
+      "expectedImpactBreadth": {
+        "deliveredPivots": 1,
+        "deliveredDistinctFiles": 2
+      }
+    },
+    {
+      "instanceId": "psf__requests-1724",
+      "measurable": true,
+      "economicClass": "PIPELINE_ECONOMIC_LOSS",
+      "economicClassGenerous": "PIPELINE_ECONOMIC_LOSS",
+      "displacedUsd": 0,
+      "displacedAnything": false,
+      "problemStatementAvailable": true,
+      "taskExplicitness": {
+        "characters": 7476,
+        "explicitFilePaths": 36,
+        "distinctExplicitFilePaths": 7,
+        "codeIdentifiers": 114,
+        "tracebackPresent": true,
+        "namedDefinitionPresent": false,
+        "codeFencePresent": true
+      },
+      "repositoryScale": {
+        "indexedFiles": 75,
+        "indexedSymbols": 1013
+      },
+      "retrievalAmbiguity": {
+        "candidates": 2,
+        "topScore": 3.16,
+        "secondScore": 2.429,
+        "scoreMargin": 0.731,
+        "nearTopCandidates": 1,
+        "distinctFilesInTopTen": 1
+      },
+      "expectedImpactBreadth": {
+        "deliveredPivots": 1,
+        "deliveredDistinctFiles": 3
+      }
+    },
+    {
+      "instanceId": "pydata__xarray-6599",
+      "measurable": true,
+      "economicClass": "PIPELINE_ECONOMIC_LOSS",
+      "economicClassGenerous": "PIPELINE_ECONOMIC_LOSS",
+      "displacedUsd": 0,
+      "displacedAnything": false,
+      "problemStatementAvailable": true,
+      "taskExplicitness": {
+        "characters": 4310,
+        "explicitFilePaths": 0,
+        "distinctExplicitFilePaths": 0,
+        "codeIdentifiers": 23,
+        "tracebackPresent": false,
+        "namedDefinitionPresent": false,
+        "codeFencePresent": true
+      },
+      "repositoryScale": {
+        "indexedFiles": 190,
+        "indexedSymbols": 6691
+      },
+      "retrievalAmbiguity": {
+        "candidates": 2,
+        "topScore": 2.432,
+        "secondScore": 2.43,
+        "scoreMargin": 0.002,
+        "nearTopCandidates": 2,
+        "distinctFilesInTopTen": 1
+      },
+      "expectedImpactBreadth": {
+        "deliveredPivots": 1,
+        "deliveredDistinctFiles": 3
+      }
+    },
+    {
+      "instanceId": "pylint-dev__pylint-4551",
+      "measurable": false,
+      "economicClass": "NOT_MEASURABLE",
+      "economicClassGenerous": "NOT_MEASURABLE",
+      "displacedUsd": 0.173094,
+      "displacedAnything": true,
+      "problemStatementAvailable": true,
+      "taskExplicitness": {
+        "characters": 777,
+        "explicitFilePaths": 1,
+        "distinctExplicitFilePaths": 1,
+        "codeIdentifiers": 6,
+        "tracebackPresent": false,
+        "namedDefinitionPresent": true,
+        "codeFencePresent": true
+      },
+      "repositoryScale": {
+        "indexedFiles": 814,
+        "indexedSymbols": 8639
+      },
+      "retrievalAmbiguity": {
+        "candidates": 2,
+        "topScore": 1.921,
+        "secondScore": 1.789,
+        "scoreMargin": 0.132,
+        "nearTopCandidates": 2,
+        "distinctFilesInTopTen": 2
+      },
+      "expectedImpactBreadth": {
+        "deliveredPivots": 1,
+        "deliveredDistinctFiles": 4
+      }
+    },
+    {
+      "instanceId": "pytest-dev__pytest-7432",
+      "measurable": true,
+      "economicClass": "PIPELINE_ECONOMIC_LOSS",
+      "economicClassGenerous": "PIPELINE_ECONOMIC_LOSS",
+      "displacedUsd": 0,
+      "displacedAnything": false,
+      "problemStatementAvailable": true,
+      "taskExplicitness": {
+        "characters": 773,
+        "explicitFilePaths": 3,
+        "distinctExplicitFilePaths": 2,
+        "codeIdentifiers": 8,
+        "tracebackPresent": false,
+        "namedDefinitionPresent": true,
+        "codeFencePresent": true
+      },
+      "repositoryScale": {
+        "indexedFiles": 224,
+        "indexedSymbols": 4950
+      },
+      "retrievalAmbiguity": {
+        "candidates": 2,
+        "topScore": 1.93,
+        "secondScore": 1.658,
+        "scoreMargin": 0.272,
+        "nearTopCandidates": 2,
+        "distinctFilesInTopTen": 1
+      },
+      "expectedImpactBreadth": {
+        "deliveredPivots": 1,
+        "deliveredDistinctFiles": 2
+      }
+    },
+    {
+      "instanceId": "scikit-learn__scikit-learn-10844",
+      "measurable": true,
+      "economicClass": "PIPELINE_ECONOMIC_LOSS",
+      "economicClassGenerous": "PIPELINE_ECONOMIC_LOSS",
+      "displacedUsd": 0,
+      "displacedAnything": false,
+      "problemStatementAvailable": true,
+      "taskExplicitness": {
+        "characters": 2399,
+        "explicitFilePaths": 2,
+        "distinctExplicitFilePaths": 2,
+        "codeIdentifiers": 41,
+        "tracebackPresent": false,
+        "namedDefinitionPresent": false,
+        "codeFencePresent": true
+      },
+      "repositoryScale": {
+        "indexedFiles": 755,
+        "indexedSymbols": 11840
+      },
+      "retrievalAmbiguity": {
+        "candidates": 2,
+        "topScore": 1.801,
+        "secondScore": 1.133,
+        "scoreMargin": 0.668,
+        "nearTopCandidates": 1,
+        "distinctFilesInTopTen": 2
+      },
+      "expectedImpactBreadth": {
+        "deliveredPivots": 1,
+        "deliveredDistinctFiles": 3
+      }
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-7462",
+      "measurable": true,
+      "economicClass": "PIPELINE_ECONOMIC_LOSS",
+      "economicClassGenerous": "PIPELINE_ECONOMIC_LOSS",
+      "displacedUsd": 0.000674,
+      "displacedAnything": false,
+      "problemStatementAvailable": true,
+      "taskExplicitness": {
+        "characters": 1169,
+        "explicitFilePaths": 2,
+        "distinctExplicitFilePaths": 2,
+        "codeIdentifiers": 10,
+        "tracebackPresent": false,
+        "namedDefinitionPresent": true,
+        "codeFencePresent": true
+      },
+      "repositoryScale": {
+        "indexedFiles": 465,
+        "indexedSymbols": 7999
+      },
+      "retrievalAmbiguity": {
+        "candidates": 2,
+        "topScore": 2.68,
+        "secondScore": 2.68,
+        "scoreMargin": 0,
+        "nearTopCandidates": 2,
+        "distinctFilesInTopTen": 1
+      },
+      "expectedImpactBreadth": {
+        "deliveredPivots": 1,
+        "deliveredDistinctFiles": 4
+      }
+    },
+    {
+      "instanceId": "sympy__sympy-13480",
+      "measurable": true,
+      "economicClass": "PIPELINE_ECONOMIC_LOSS",
+      "economicClassGenerous": "PIPELINE_ECONOMIC_LOSS",
+      "displacedUsd": 0.001433,
+      "displacedAnything": false,
+      "problemStatementAvailable": true,
+      "taskExplicitness": {
+        "characters": 430,
+        "explicitFilePaths": 1,
+        "distinctExplicitFilePaths": 1,
+        "codeIdentifiers": 4,
+        "tracebackPresent": false,
+        "namedDefinitionPresent": false,
+        "codeFencePresent": false
+      },
+      "repositoryScale": {
+        "indexedFiles": 1182,
+        "indexedSymbols": 28026
+      },
+      "retrievalAmbiguity": {
+        "candidates": 3,
+        "topScore": 3.481,
+        "secondScore": 3.369,
+        "scoreMargin": 0.112,
+        "nearTopCandidates": 2,
+        "distinctFilesInTopTen": 2
+      },
+      "expectedImpactBreadth": {
+        "deliveredPivots": 1,
+        "deliveredDistinctFiles": 3
+      }
+    }
+  ]
+}
