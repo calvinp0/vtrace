@@ -3733,3 +3733,95 @@ shape — the thing a search-suppression policy should interact with — is not.
   an overrun.
 
 - **Next step:** awaiting authorisation. Nothing live runs until it is given.
+
+## M168-E — three-arm VTRACE policy ablation, LIVE (commit pending)
+
+**36/36 runs, 36/36 graded, $24.8734 of a $60 cap. Parity 36/36. Guard 5
+guarded / 7 unexercised / 0 degraded / 0 fault. `src/` byte-identical to
+`de7bfe48` throughout.**
+
+```text
+A  BASELINE       7/12       task only
+C  VTRACE_CLEAN   8/12       + run_pipeline mandate
+B  VTRACE_STRICT  6/12       + VEXP prohibition text + Grep|Glob denial hook
+
+B vs C   VTRACE_STRICT_NEGATIVE          0 unique wins, 2 unique losses
+C vs A   VTRACE_CLEAN_INCONCLUSIVE       +1 task, 3 wins / 2 losses, +$0.134
+B vs A   VTRACE_STRICT_NEGATIVE          -1 task, more expensive
+
+causal attribution   AGENT_POLICY_GAP — behavioural mechanism CONFIRMED,
+                     economic and outcome benefit REFUTED
+```
+
+**The finding is in the decomposition, not the totals.** The hook only fires
+when the agent reaches for Grep/Glob, so splitting the twelve tasks by whether
+it ever denied anything separates a policy that bound from one that merely sat
+there:
+
+```text
+guard denied a real attempt (n=5)    A 2/5   C 2/5   B 0/5
+agent never attempted a search (n=7) A 5/7   C 6/7   B 6/7
+```
+
+Where the coercion bound it went 0 for 5; where it never bound it matched the
+clean arm exactly. Every task in B's deficit is a task where the hook fired.
+
+## M168-E standing findings
+
+- **A blocked search is not a saved search.** Denial displaced investigation
+  into the channels the hook does not cover. On seaborn-3187 the blocked arm did
+  2.5× the Bash work, 25% more reads and 32% more turns than the arm allowed to
+  search — and still failed where that arm succeeded. This is the
+  stated-versus-enforced gap M168-A recorded, now measured: the published policy
+  forbids grep, glob, Bash, Read and cat in prose and enforces only Grep and
+  Glob. Any claim that search suppression reduces tool calls or tokens must
+  measure the substitution, because the agent obeys the wall it can feel and
+  walks around it.
+
+- **The mandate does the search reduction; the coercion does not.** B is never
+  higher than C on search attempts, but 7 of 12 pairs tie — mostly both at zero,
+  because the clean arm already stopped searching without being forbidden.
+  Against baseline both VTRACE arms cut searching (B lower on 8/12, higher on
+  none). The hook's marginal contribution to the behaviour it exists to produce
+  is approximately nil, and its marginal contribution to outcomes is negative.
+
+- **Reduced searching did not reduce cost.** Both VTRACE arms cost more than
+  baseline on 10 of 12 tasks, a ~$0.134 median premium for the clean arm and
+  ~$0.095 for the strict one, with cache creation up on 11 of 12. The delivered
+  context is more expensive than the searching it displaces. Combined with
+  M166/M167 this closes a long arc: the payload is envelope-bound, the duplicate
+  channel is free, and now the evidence itself is priced against the alternative
+  it replaces — and it is not cheaper.
+
+- **Adoption is solved and was never the problem.** `run_pipeline` was the first
+  action on 12/12 runs in both treatment arms. M162 and M163 spent themselves on
+  getting the tool called; it is called, every time, and the utility still does
+  not appear.
+
+- **Two apparatus defects were caught before they billed, both invisible in a
+  green log.** The runner injects a shared anti-loop discipline block into every
+  arm by default — investigation-policy text in an experiment manipulating
+  investigation policy, which would have made arm A a baseline already told not
+  to search. And `--protocol baseline` files artifacts under `raw/baseline`
+  while the treatment arms use `raw/vtrace`, so every successful baseline run
+  would have read as a failure and burned three retries. Neither would have
+  surfaced as an error; the first announced itself only in a log line read for
+  another reason.
+
+- **Three classifiers of mine failed the M167 rule in one milestone.** The
+  parity check scanned the transcript for prompt text the transcript cannot
+  carry — two signals that could never fail and one false failure. The guard
+  classifier pooled "armed but never needed" with "ran and let searches
+  through". Each was caught by a case that looked wrong, not by a test. The rule
+  earns its place again: a control that cannot discriminate the unchanged case
+  is not a control, and an unobservable must be recorded as unobservable rather
+  than scored as an absence.
+
+- **Next-step recommendation: no coercive-policy work is licensed, and no
+  retrieval work is licensed by this milestone either.** The one open question
+  M168 leaves is the clean arm's cost premium — VTRACE delivers evidence that
+  reliably displaces search but costs more than the search it displaces. That is
+  a payload-economics question, and M166 already showed the response is
+  envelope-bound, so it needs a different lever than compression. `sphinx-7462`
+  failed on all three arms exactly as the standing finding predicts, which is a
+  useful check that the grader discriminates.

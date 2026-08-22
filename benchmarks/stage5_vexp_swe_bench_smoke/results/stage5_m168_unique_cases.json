@@ -1,0 +1,470 @@
+{
+  "milestone": "M168-E",
+  "purpose": "evidence for every grader disagreement, so attribution is inspected rather than inferred",
+  "gradedRuns": 36,
+  "totalRuns": 36,
+  "disagreements": 10,
+  "note": "each case carries both arms' investigation evidence; causal assessment is not auto-filled",
+  "cases": [
+    {
+      "comparison": "vtrace_strict vs vtrace_clean",
+      "instanceId": "mwaskom__seaborn-3187",
+      "winner": "vtrace_clean",
+      "loser": "vtrace_strict",
+      "kind": "vtrace_clean_unique_win",
+      "winnerEvidence": {
+        "pipelineCalls": 1,
+        "firstActionWasPipeline": true,
+        "firstPipelinePayload": {
+          "found": true,
+          "chars": 8182,
+          "leadPreview": "{\"schema\":{\"name\":\"vtrace.mcp_server\",\"version\":\"1.0.0\"},\"requestId\":\"jsonrpc:2:run_pipeline\",\"toolId\":\"run_pipeline\",\"result\":{\"ok\":true,\"output\":{\"schemaVersion\":\"run_pipeline.vnext/1\",\"request\":{\"query\":\"Fix wrong legend values for large ranges - ScalarFormatter offset not being applied to legend labels in seaborn scales.py around line 377-382\",\"maxResults\":6,\"maxBudgetCharacters\":2000,\"intentR"
+        },
+        "searchAttempts": 5,
+        "guardStatus": "NO_GUARD",
+        "guardDenials": 0,
+        "reads": 12,
+        "bashCalls": 6,
+        "edits": 2,
+        "callsBeforeFirstEdit": 13,
+        "costUsd": 1.2349890000000001,
+        "numTurns": 66
+      },
+      "loserEvidence": {
+        "pipelineCalls": 1,
+        "firstActionWasPipeline": true,
+        "firstPipelinePayload": {
+          "found": true,
+          "chars": 8184,
+          "leadPreview": "{\"schema\":{\"name\":\"vtrace.mcp_server\",\"version\":\"1.0.0\"},\"requestId\":\"jsonrpc:2:run_pipeline\",\"toolId\":\"run_pipeline\",\"result\":{\"ok\":true,\"output\":{\"schemaVersion\":\"run_pipeline.vnext/1\",\"request\":{\"query\":\"Fix legend values showing wrong values for large ranges when using ScalarFormatter with offset. The issue is in seaborn/_core/scales.py around line 377-382 where tick labels are generated but t"
+        },
+        "searchAttempts": 3,
+        "guardStatus": "GUARDED",
+        "guardDenials": 3,
+        "reads": 15,
+        "bashCalls": 15,
+        "edits": 4,
+        "callsBeforeFirstEdit": 17,
+        "costUsd": 1.4881944999999999,
+        "numTurns": 87,
+        "patchEmpty": false
+      },
+      "causalAssessment": "UNASSESSED — requires transcript inspection",
+      "blockedSearchImplicated": true
+    },
+    {
+      "comparison": "vtrace_strict vs vtrace_clean",
+      "instanceId": "psf__requests-1724",
+      "winner": "vtrace_clean",
+      "loser": "vtrace_strict",
+      "kind": "vtrace_clean_unique_win",
+      "winnerEvidence": {
+        "pipelineCalls": 1,
+        "firstActionWasPipeline": true,
+        "firstPipelinePayload": {
+          "found": true,
+          "chars": 8184,
+          "leadPreview": "{\"schema\":{\"name\":\"vtrace.mcp_server\",\"version\":\"1.0.0\"},\"requestId\":\"jsonrpc:2:run_pipeline\",\"toolId\":\"run_pipeline\",\"result\":{\"ok\":true,\"output\":{\"schemaVersion\":\"run_pipeline.vnext/1\",\"request\":{\"query\":\"Fix UnicodeDecodeError caused by unicode method names (u'POST') in Python 2.7. The issue is that method.upper() preserves unicode type which infects HTTP headers. Need to find where method is s"
+        },
+        "searchAttempts": 3,
+        "guardStatus": "NO_GUARD",
+        "guardDenials": 0,
+        "reads": 4,
+        "bashCalls": 0,
+        "edits": 1,
+        "callsBeforeFirstEdit": 6,
+        "costUsd": 0.45036000000000004,
+        "numTurns": 27
+      },
+      "loserEvidence": {
+        "pipelineCalls": 1,
+        "firstActionWasPipeline": true,
+        "firstPipelinePayload": {
+          "found": true,
+          "chars": 8178,
+          "leadPreview": "{\"schema\":{\"name\":\"vtrace.mcp_server\",\"version\":\"1.0.0\"},\"requestId\":\"jsonrpc:2:run_pipeline\",\"toolId\":\"run_pipeline\",\"result\":{\"ok\":true,\"output\":{\"schemaVersion\":\"run_pipeline.vnext/1\",\"request\":{\"query\":\"Fix UnicodeDecodeError when method=u'POST' (Unicode string) is passed to requests.request() in Python 2.7. The issue is that the Unicode method string infects the HTTP headers, causing problems"
+        },
+        "searchAttempts": 1,
+        "guardStatus": "GUARDED",
+        "guardDenials": 1,
+        "reads": 5,
+        "bashCalls": 0,
+        "edits": 1,
+        "callsBeforeFirstEdit": 7,
+        "costUsd": 0.46565599999999996,
+        "numTurns": 23,
+        "patchEmpty": false
+      },
+      "causalAssessment": "UNASSESSED — requires transcript inspection",
+      "blockedSearchImplicated": true
+    },
+    {
+      "comparison": "vtrace_clean vs baseline",
+      "instanceId": "astropy__astropy-14369",
+      "winner": "baseline",
+      "loser": "vtrace_clean",
+      "kind": "baseline_unique_win",
+      "winnerEvidence": {
+        "pipelineCalls": 0,
+        "firstActionWasPipeline": false,
+        "firstPipelinePayload": {
+          "found": false,
+          "chars": 0,
+          "leadPreview": ""
+        },
+        "searchAttempts": 8,
+        "guardStatus": "NO_GUARD",
+        "guardDenials": 0,
+        "reads": 4,
+        "bashCalls": 7,
+        "edits": 2,
+        "callsBeforeFirstEdit": 3,
+        "costUsd": 0.9408434999999999,
+        "numTurns": 55
+      },
+      "loserEvidence": {
+        "pipelineCalls": 1,
+        "firstActionWasPipeline": true,
+        "firstPipelinePayload": {
+          "found": true,
+          "chars": 8182,
+          "leadPreview": "{\"schema\":{\"name\":\"vtrace.mcp_server\",\"version\":\"1.0.0\"},\"requestId\":\"jsonrpc:2:run_pipeline\",\"toolId\":\"run_pipeline\",\"result\":{\"ok\":true,\"output\":{\"schemaVersion\":\"run_pipeline.vnext/1\",\"request\":{\"query\":\"Fix incorrect unit parsing in ascii.cds format reader. Units like `10+3J/m/s/kpc2` are being parsed incorrectly - the division order gets jumbled. Need to find where CDS units are parsed and fi"
+        },
+        "searchAttempts": 2,
+        "guardStatus": "NO_GUARD",
+        "guardDenials": 0,
+        "reads": 4,
+        "bashCalls": 7,
+        "edits": 1,
+        "callsBeforeFirstEdit": 2,
+        "costUsd": 1.2544285,
+        "numTurns": 43,
+        "patchEmpty": false
+      },
+      "causalAssessment": "UNASSESSED — requires transcript inspection",
+      "blockedSearchImplicated": false
+    },
+    {
+      "comparison": "vtrace_clean vs baseline",
+      "instanceId": "mwaskom__seaborn-3187",
+      "winner": "vtrace_clean",
+      "loser": "baseline",
+      "kind": "vtrace_clean_unique_win",
+      "winnerEvidence": {
+        "pipelineCalls": 1,
+        "firstActionWasPipeline": true,
+        "firstPipelinePayload": {
+          "found": true,
+          "chars": 8182,
+          "leadPreview": "{\"schema\":{\"name\":\"vtrace.mcp_server\",\"version\":\"1.0.0\"},\"requestId\":\"jsonrpc:2:run_pipeline\",\"toolId\":\"run_pipeline\",\"result\":{\"ok\":true,\"output\":{\"schemaVersion\":\"run_pipeline.vnext/1\",\"request\":{\"query\":\"Fix wrong legend values for large ranges - ScalarFormatter offset not being applied to legend labels in seaborn scales.py around line 377-382\",\"maxResults\":6,\"maxBudgetCharacters\":2000,\"intentR"
+        },
+        "searchAttempts": 5,
+        "guardStatus": "NO_GUARD",
+        "guardDenials": 0,
+        "reads": 12,
+        "bashCalls": 6,
+        "edits": 2,
+        "callsBeforeFirstEdit": 13,
+        "costUsd": 1.2349890000000001,
+        "numTurns": 66
+      },
+      "loserEvidence": {
+        "pipelineCalls": 0,
+        "firstActionWasPipeline": false,
+        "firstPipelinePayload": {
+          "found": false,
+          "chars": 0,
+          "leadPreview": ""
+        },
+        "searchAttempts": 3,
+        "guardStatus": "NO_GUARD",
+        "guardDenials": 0,
+        "reads": 10,
+        "bashCalls": 3,
+        "edits": 2,
+        "callsBeforeFirstEdit": 12,
+        "costUsd": 0.8100134999999999,
+        "numTurns": 53,
+        "patchEmpty": false
+      },
+      "causalAssessment": "UNASSESSED — requires transcript inspection",
+      "blockedSearchImplicated": false
+    },
+    {
+      "comparison": "vtrace_clean vs baseline",
+      "instanceId": "pallets__flask-5014",
+      "winner": "vtrace_clean",
+      "loser": "baseline",
+      "kind": "vtrace_clean_unique_win",
+      "winnerEvidence": {
+        "pipelineCalls": 1,
+        "firstActionWasPipeline": true,
+        "firstPipelinePayload": {
+          "found": true,
+          "chars": 8178,
+          "leadPreview": "{\"schema\":{\"name\":\"vtrace.mcp_server\",\"version\":\"1.0.0\"},\"requestId\":\"jsonrpc:2:run_pipeline\",\"toolId\":\"run_pipeline\",\"result\":{\"ok\":true,\"output\":{\"schemaVersion\":\"run_pipeline.vnext/1\",\"request\":{\"query\":\"Add validation to raise ValueError when Blueprint is given an empty name\",\"maxResults\":6,\"maxBudgetCharacters\":2000,\"intentRequested\":\"auto\",\"sessionId\":null,\"includeTests\":true,\"includeFileCon"
+        },
+        "searchAttempts": 0,
+        "guardStatus": "NO_GUARD",
+        "guardDenials": 0,
+        "reads": 1,
+        "bashCalls": 0,
+        "edits": 1,
+        "callsBeforeFirstEdit": 2,
+        "costUsd": 0.24827000000000002,
+        "numTurns": 11
+      },
+      "loserEvidence": {
+        "pipelineCalls": 0,
+        "firstActionWasPipeline": false,
+        "firstPipelinePayload": {
+          "found": false,
+          "chars": 0,
+          "leadPreview": ""
+        },
+        "searchAttempts": 1,
+        "guardStatus": "NO_GUARD",
+        "guardDenials": 0,
+        "reads": 1,
+        "bashCalls": 0,
+        "edits": 1,
+        "callsBeforeFirstEdit": 2,
+        "costUsd": 0.210901,
+        "numTurns": 10,
+        "patchEmpty": false
+      },
+      "causalAssessment": "UNASSESSED — requires transcript inspection",
+      "blockedSearchImplicated": false
+    },
+    {
+      "comparison": "vtrace_clean vs baseline",
+      "instanceId": "psf__requests-1724",
+      "winner": "vtrace_clean",
+      "loser": "baseline",
+      "kind": "vtrace_clean_unique_win",
+      "winnerEvidence": {
+        "pipelineCalls": 1,
+        "firstActionWasPipeline": true,
+        "firstPipelinePayload": {
+          "found": true,
+          "chars": 8184,
+          "leadPreview": "{\"schema\":{\"name\":\"vtrace.mcp_server\",\"version\":\"1.0.0\"},\"requestId\":\"jsonrpc:2:run_pipeline\",\"toolId\":\"run_pipeline\",\"result\":{\"ok\":true,\"output\":{\"schemaVersion\":\"run_pipeline.vnext/1\",\"request\":{\"query\":\"Fix UnicodeDecodeError caused by unicode method names (u'POST') in Python 2.7. The issue is that method.upper() preserves unicode type which infects HTTP headers. Need to find where method is s"
+        },
+        "searchAttempts": 3,
+        "guardStatus": "NO_GUARD",
+        "guardDenials": 0,
+        "reads": 4,
+        "bashCalls": 0,
+        "edits": 1,
+        "callsBeforeFirstEdit": 6,
+        "costUsd": 0.45036000000000004,
+        "numTurns": 27
+      },
+      "loserEvidence": {
+        "pipelineCalls": 0,
+        "firstActionWasPipeline": false,
+        "firstPipelinePayload": {
+          "found": false,
+          "chars": 0,
+          "leadPreview": ""
+        },
+        "searchAttempts": 3,
+        "guardStatus": "NO_GUARD",
+        "guardDenials": 0,
+        "reads": 1,
+        "bashCalls": 0,
+        "edits": 1,
+        "callsBeforeFirstEdit": 4,
+        "costUsd": 0.19789649999999998,
+        "numTurns": 14,
+        "patchEmpty": false
+      },
+      "causalAssessment": "UNASSESSED — requires transcript inspection",
+      "blockedSearchImplicated": false
+    },
+    {
+      "comparison": "vtrace_clean vs baseline",
+      "instanceId": "pydata__xarray-6599",
+      "winner": "baseline",
+      "loser": "vtrace_clean",
+      "kind": "baseline_unique_win",
+      "winnerEvidence": {
+        "pipelineCalls": 0,
+        "firstActionWasPipeline": false,
+        "firstPipelinePayload": {
+          "found": false,
+          "chars": 0,
+          "leadPreview": ""
+        },
+        "searchAttempts": 11,
+        "guardStatus": "NO_GUARD",
+        "guardDenials": 0,
+        "reads": 3,
+        "bashCalls": 8,
+        "edits": 2,
+        "callsBeforeFirstEdit": 11,
+        "costUsd": 0.9577225,
+        "numTurns": 59
+      },
+      "loserEvidence": {
+        "pipelineCalls": 1,
+        "firstActionWasPipeline": true,
+        "firstPipelinePayload": {
+          "found": true,
+          "chars": 8172,
+          "leadPreview": "{\"schema\":{\"name\":\"vtrace.mcp_server\",\"version\":\"1.0.0\"},\"requestId\":\"jsonrpc:2:run_pipeline\",\"toolId\":\"run_pipeline\",\"result\":{\"ok\":true,\"output\":{\"schemaVersion\":\"run_pipeline.vnext/1\",\"request\":{\"query\":\"Fix polyval with timedelta64 coordinates producing wrong results - the function is returning incorrect values when using timedelta64 coordinates, with results being extremely large (1e30) inste"
+        },
+        "searchAttempts": 5,
+        "guardStatus": "NO_GUARD",
+        "guardDenials": 0,
+        "reads": 5,
+        "bashCalls": 13,
+        "edits": 2,
+        "callsBeforeFirstEdit": 7,
+        "costUsd": 1.6373949999999997,
+        "numTurns": 70,
+        "patchEmpty": false
+      },
+      "causalAssessment": "UNASSESSED — requires transcript inspection",
+      "blockedSearchImplicated": false
+    },
+    {
+      "comparison": "vtrace_strict vs baseline",
+      "instanceId": "astropy__astropy-14369",
+      "winner": "baseline",
+      "loser": "vtrace_strict",
+      "kind": "baseline_unique_win",
+      "winnerEvidence": {
+        "pipelineCalls": 0,
+        "firstActionWasPipeline": false,
+        "firstPipelinePayload": {
+          "found": false,
+          "chars": 0,
+          "leadPreview": ""
+        },
+        "searchAttempts": 8,
+        "guardStatus": "NO_GUARD",
+        "guardDenials": 0,
+        "reads": 4,
+        "bashCalls": 7,
+        "edits": 2,
+        "callsBeforeFirstEdit": 3,
+        "costUsd": 0.9408434999999999,
+        "numTurns": 55
+      },
+      "loserEvidence": {
+        "pipelineCalls": 1,
+        "firstActionWasPipeline": true,
+        "firstPipelinePayload": {
+          "found": true,
+          "chars": 8182,
+          "leadPreview": "{\"schema\":{\"name\":\"vtrace.mcp_server\",\"version\":\"1.0.0\"},\"requestId\":\"jsonrpc:2:run_pipeline\",\"toolId\":\"run_pipeline\",\"result\":{\"ok\":true,\"output\":{\"schemaVersion\":\"run_pipeline.vnext/1\",\"request\":{\"query\":\"Fix incorrect units read from MRT (CDS format) files with astropy.table. When reading ascii.cds format, composite units like 10+3J/m/s/kpc2 are parsed incorrectly - the order of division is jum"
+        },
+        "searchAttempts": 2,
+        "guardStatus": "GUARDED",
+        "guardDenials": 2,
+        "reads": 9,
+        "bashCalls": 14,
+        "edits": 1,
+        "callsBeforeFirstEdit": 3,
+        "costUsd": 1.6273560000000002,
+        "numTurns": 70,
+        "patchEmpty": false
+      },
+      "causalAssessment": "UNASSESSED — requires transcript inspection",
+      "blockedSearchImplicated": true
+    },
+    {
+      "comparison": "vtrace_strict vs baseline",
+      "instanceId": "pallets__flask-5014",
+      "winner": "vtrace_strict",
+      "loser": "baseline",
+      "kind": "vtrace_strict_unique_win",
+      "winnerEvidence": {
+        "pipelineCalls": 1,
+        "firstActionWasPipeline": true,
+        "firstPipelinePayload": {
+          "found": true,
+          "chars": 8178,
+          "leadPreview": "{\"schema\":{\"name\":\"vtrace.mcp_server\",\"version\":\"1.0.0\"},\"requestId\":\"jsonrpc:2:run_pipeline\",\"toolId\":\"run_pipeline\",\"result\":{\"ok\":true,\"output\":{\"schemaVersion\":\"run_pipeline.vnext/1\",\"request\":{\"query\":\"Fix issue: Require a non-empty name for Blueprints. Need to raise ValueError when Blueprint is given an empty name. Find where Blueprint is initialized and where name validation should be added"
+        },
+        "searchAttempts": 0,
+        "guardStatus": "GUARD_UNEXERCISED",
+        "guardDenials": 0,
+        "reads": 1,
+        "bashCalls": 0,
+        "edits": 1,
+        "callsBeforeFirstEdit": 2,
+        "costUsd": 0.2197375,
+        "numTurns": 11
+      },
+      "loserEvidence": {
+        "pipelineCalls": 0,
+        "firstActionWasPipeline": false,
+        "firstPipelinePayload": {
+          "found": false,
+          "chars": 0,
+          "leadPreview": ""
+        },
+        "searchAttempts": 1,
+        "guardStatus": "NO_GUARD",
+        "guardDenials": 0,
+        "reads": 1,
+        "bashCalls": 0,
+        "edits": 1,
+        "callsBeforeFirstEdit": 2,
+        "costUsd": 0.210901,
+        "numTurns": 10,
+        "patchEmpty": false
+      },
+      "causalAssessment": "UNASSESSED — requires transcript inspection",
+      "blockedSearchImplicated": false
+    },
+    {
+      "comparison": "vtrace_strict vs baseline",
+      "instanceId": "pydata__xarray-6599",
+      "winner": "baseline",
+      "loser": "vtrace_strict",
+      "kind": "baseline_unique_win",
+      "winnerEvidence": {
+        "pipelineCalls": 0,
+        "firstActionWasPipeline": false,
+        "firstPipelinePayload": {
+          "found": false,
+          "chars": 0,
+          "leadPreview": ""
+        },
+        "searchAttempts": 11,
+        "guardStatus": "NO_GUARD",
+        "guardDenials": 0,
+        "reads": 3,
+        "bashCalls": 8,
+        "edits": 2,
+        "callsBeforeFirstEdit": 11,
+        "costUsd": 0.9577225,
+        "numTurns": 59
+      },
+      "loserEvidence": {
+        "pipelineCalls": 4,
+        "firstActionWasPipeline": true,
+        "firstPipelinePayload": {
+          "found": true,
+          "chars": 8184,
+          "leadPreview": "{\"schema\":{\"name\":\"vtrace.mcp_server\",\"version\":\"1.0.0\"},\"requestId\":\"jsonrpc:2:run_pipeline\",\"toolId\":\"run_pipeline\",\"result\":{\"ok\":true,\"output\":{\"schemaVersion\":\"run_pipeline.vnext/1\",\"request\":{\"query\":\"Fix polyval with timedelta64 coordinates producing wrong results - the function returns incorrect values when used with timedelta64 coordinates, showing results like 1.59620685e+30 instead of e"
+        },
+        "searchAttempts": 2,
+        "guardStatus": "GUARDED",
+        "guardDenials": 2,
+        "reads": 6,
+        "bashCalls": 0,
+        "edits": 1,
+        "callsBeforeFirstEdit": 11,
+        "costUsd": 0.8537060000000001,
+        "numTurns": 37,
+        "patchEmpty": false
+      },
+      "causalAssessment": "UNASSESSED — requires transcript inspection",
+      "blockedSearchImplicated": true
+    }
+  ]
+}
