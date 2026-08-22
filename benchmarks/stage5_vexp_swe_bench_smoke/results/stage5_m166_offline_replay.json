@@ -1,0 +1,338 @@
+{
+ "schemaVersion": 1,
+ "milestone": "M166",
+ "workstream": "E",
+ "title": "Twelve-task offline replay across the product change",
+ "method": {
+  "workspaces": "preserved m163_tools_task_trigger_* checkouts, the same ones M164 ran against",
+  "taskText": "the SWE-bench Verified problem statements, unchanged",
+  "transport": "real mcp-serve child process over stdio JSON-RPC on each side",
+  "pairing": "the candidate side ran at working-tree HEAD; the predecessor side ran with the two product files stashed, everything else identical",
+  "paidAgents": 0,
+  "docker": false
+ },
+ "perTask": [
+  {
+   "instanceId": "sympy__sympy-13798",
+   "sameLead": true,
+   "sameItemPaths": true,
+   "sameSymbols": true,
+   "sameRoleCounts": true,
+   "sameReadinessStatus": true,
+   "sameAbsenceSemantics": true,
+   "currentModelVisibleTokens": 10073,
+   "newModelVisibleTokens": 8237,
+   "deltaTokens": -1836,
+   "neighborhoodExcerpts": {
+    "before": 4,
+    "after": 4
+   },
+   "diagnosticsSectionCharacters": {
+    "before": 5650,
+    "after": 1147
+   }
+  },
+  {
+   "instanceId": "django__django-11451",
+   "sameLead": true,
+   "sameItemPaths": true,
+   "sameSymbols": true,
+   "sameRoleCounts": true,
+   "sameReadinessStatus": true,
+   "sameAbsenceSemantics": true,
+   "currentModelVisibleTokens": 10575,
+   "newModelVisibleTokens": 11578,
+   "deltaTokens": 1003,
+   "neighborhoodExcerpts": {
+    "before": 0,
+    "after": 0
+   },
+   "diagnosticsSectionCharacters": {
+    "before": 3963,
+    "after": 1147
+   }
+  },
+  {
+   "instanceId": "sphinx-doc__sphinx-7440",
+   "sameLead": true,
+   "sameItemPaths": true,
+   "sameSymbols": true,
+   "sameRoleCounts": true,
+   "sameReadinessStatus": true,
+   "sameAbsenceSemantics": true,
+   "currentModelVisibleTokens": 10007,
+   "newModelVisibleTokens": 9681,
+   "deltaTokens": -326,
+   "neighborhoodExcerpts": {
+    "before": 0,
+    "after": 4
+   },
+   "diagnosticsSectionCharacters": {
+    "before": 6694,
+    "after": 1147
+   }
+  },
+  {
+   "instanceId": "scikit-learn__scikit-learn-14087",
+   "sameLead": true,
+   "sameItemPaths": true,
+   "sameSymbols": true,
+   "sameRoleCounts": true,
+   "sameReadinessStatus": true,
+   "sameAbsenceSemantics": true,
+   "currentModelVisibleTokens": 10937,
+   "newModelVisibleTokens": 11695,
+   "deltaTokens": 758,
+   "neighborhoodExcerpts": {
+    "before": 0,
+    "after": 0
+   },
+   "diagnosticsSectionCharacters": {
+    "before": 4032,
+    "after": 1147
+   }
+  },
+  {
+   "instanceId": "sphinx-doc__sphinx-11445",
+   "sameLead": true,
+   "sameItemPaths": true,
+   "sameSymbols": true,
+   "sameRoleCounts": true,
+   "sameReadinessStatus": true,
+   "sameAbsenceSemantics": true,
+   "currentModelVisibleTokens": 11719,
+   "newModelVisibleTokens": 10843,
+   "deltaTokens": -876,
+   "neighborhoodExcerpts": {
+    "before": 0,
+    "after": 4
+   },
+   "diagnosticsSectionCharacters": {
+    "before": 3986,
+    "after": 1147
+   }
+  },
+  {
+   "instanceId": "django__django-13343",
+   "sameLead": true,
+   "sameItemPaths": true,
+   "sameSymbols": true,
+   "sameRoleCounts": true,
+   "sameReadinessStatus": true,
+   "sameAbsenceSemantics": true,
+   "currentModelVisibleTokens": 11197,
+   "newModelVisibleTokens": 10400,
+   "deltaTokens": -797,
+   "neighborhoodExcerpts": {
+    "before": 0,
+    "after": 4
+   },
+   "diagnosticsSectionCharacters": {
+    "before": 3975,
+    "after": 1147
+   }
+  },
+  {
+   "instanceId": "matplotlib__matplotlib-24177",
+   "sameLead": true,
+   "sameItemPaths": true,
+   "sameSymbols": true,
+   "sameRoleCounts": true,
+   "sameReadinessStatus": true,
+   "sameAbsenceSemantics": true,
+   "currentModelVisibleTokens": 10882,
+   "newModelVisibleTokens": 11632,
+   "deltaTokens": 750,
+   "neighborhoodExcerpts": {
+    "before": 0,
+    "after": 0
+   },
+   "diagnosticsSectionCharacters": {
+    "before": 4028,
+    "after": 1147
+   }
+  },
+  {
+   "instanceId": "scikit-learn__scikit-learn-13496",
+   "sameLead": true,
+   "sameItemPaths": true,
+   "sameSymbols": true,
+   "sameRoleCounts": true,
+   "sameReadinessStatus": true,
+   "sameAbsenceSemantics": true,
+   "currentModelVisibleTokens": 11661,
+   "newModelVisibleTokens": 10816,
+   "deltaTokens": -845,
+   "neighborhoodExcerpts": {
+    "before": 0,
+    "after": 4
+   },
+   "diagnosticsSectionCharacters": {
+    "before": 4033,
+    "after": 1147
+   }
+  },
+  {
+   "instanceId": "sympy__sympy-14976",
+   "sameLead": true,
+   "sameItemPaths": true,
+   "sameSymbols": true,
+   "sameRoleCounts": true,
+   "sameReadinessStatus": true,
+   "sameAbsenceSemantics": true,
+   "currentModelVisibleTokens": 9730,
+   "newModelVisibleTokens": 8906,
+   "deltaTokens": -824,
+   "neighborhoodExcerpts": {
+    "before": 0,
+    "after": 4
+   },
+   "diagnosticsSectionCharacters": {
+    "before": 3952,
+    "after": 1147
+   }
+  },
+  {
+   "instanceId": "astropy__astropy-13977",
+   "sameLead": true,
+   "sameItemPaths": true,
+   "sameSymbols": true,
+   "sameRoleCounts": true,
+   "sameReadinessStatus": true,
+   "sameAbsenceSemantics": true,
+   "currentModelVisibleTokens": 11499,
+   "newModelVisibleTokens": 10652,
+   "deltaTokens": -847,
+   "neighborhoodExcerpts": {
+    "before": 0,
+    "after": 0
+   },
+   "diagnosticsSectionCharacters": {
+    "before": 2195,
+    "after": 805
+   }
+  },
+  {
+   "instanceId": "pydata__xarray-4966",
+   "sameLead": true,
+   "sameItemPaths": true,
+   "sameSymbols": true,
+   "sameRoleCounts": true,
+   "sameReadinessStatus": true,
+   "sameAbsenceSemantics": true,
+   "currentModelVisibleTokens": 11715,
+   "newModelVisibleTokens": 11718,
+   "deltaTokens": 3,
+   "neighborhoodExcerpts": {
+    "before": 0,
+    "after": 0
+   },
+   "diagnosticsSectionCharacters": {
+    "before": 978,
+    "after": 557
+   }
+  },
+  {
+   "instanceId": "pytest-dev__pytest-7982",
+   "sameLead": true,
+   "sameItemPaths": true,
+   "sameSymbols": true,
+   "sameRoleCounts": true,
+   "sameReadinessStatus": true,
+   "sameAbsenceSemantics": true,
+   "currentModelVisibleTokens": 11261,
+   "newModelVisibleTokens": 8494,
+   "deltaTokens": -2767,
+   "neighborhoodExcerpts": {
+    "before": 4,
+    "after": 4
+   },
+   "diagnosticsSectionCharacters": {
+    "before": 8564,
+    "after": 1147
+   }
+  }
+ ],
+ "totals": {
+  "cases": 12,
+  "sameLead": "12/12",
+  "sameItemPaths": "12/12",
+  "sameEvidenceTextWhereRetained": "12/12",
+  "sameRoleCounts": "12/12",
+  "sameImpactFacts": "12/12",
+  "sameSkeletonFacts": "12/12",
+  "sameMemoryAndFlowStatuses": "12/12",
+  "sameReadinessStatus": "12/12"
+ },
+ "economics": {
+  "standardTokens": {
+   "before": {
+    "median": 11067,
+    "p90": 11715,
+    "mean": 10938,
+    "min": 9730,
+    "max": 11719
+   },
+   "after": {
+    "median": 10734,
+    "p90": 11695,
+    "mean": 10388,
+    "min": 8237,
+    "max": 11718
+   }
+  },
+  "medianReductionPercent": 3,
+  "evidenceTokens": {
+   "before": {
+    "median": 1900,
+    "p90": 2458,
+    "mean": 1928,
+    "min": 1459,
+    "max": 2740
+   },
+   "after": {
+    "median": 1966,
+    "p90": 2510,
+    "mean": 1976,
+    "min": 1484,
+    "max": 2783
+   }
+  },
+  "diagnosticTokens": {
+   "before": {
+    "median": 957,
+    "p90": 1388,
+    "mean": 996,
+    "min": 655,
+    "max": 1482
+   },
+   "after": {
+    "median": 910,
+    "p90": 1434,
+    "mean": 1020,
+    "min": 614,
+    "max": 1470
+   }
+  },
+  "debugTokens": {
+   "before": {
+    "median": 11023,
+    "p90": 11704,
+    "mean": 10863,
+    "min": 9375,
+    "max": 11727
+   },
+   "after": {
+    "median": 10600,
+    "p90": 11380,
+    "mean": 10495,
+    "min": 8964,
+    "max": 11563
+   }
+  }
+ },
+ "indexWrites": {
+  "before": 0,
+  "after": 0
+ }
+}

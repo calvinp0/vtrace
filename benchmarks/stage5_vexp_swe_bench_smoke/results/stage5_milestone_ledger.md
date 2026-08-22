@@ -3333,3 +3333,107 @@ flow 0/12. §102's meaningful-composition gate is met by the tool that shipped.
   remaining alternative explanation — that the first call was too thin — so a
   hard-localization corpus is the informative next experiment. No retrieval,
   ranking, candidate-generation or index-schema change is licensed by M165.
+
+## M166 — MCP response tax and model-visible compression audit (commit pending)
+
+**A PASS · B PASS · C PASS · D RUN (scoped as directed) · E PASS.
+M166 overall PASS.** One product change, no live agent, $0.00 spent.
+
+```text
+token-tax verdict:    MODEL_VISIBLE_METADATA_TAX_CONFIRMED
+compression verdict:  MODEL_VISIBLE_TAX_DOMINATED_BY_TRANSPORT
+                      (secondary: DOMINATED_BY_DUPLICATION)
+implementation:       MODEL_RENDERER_COMPACTED
+product changed:      YES  machine diagnostics held for detail=debug
+retrieval changed:    NO
+live extension:       NOT AUTHORIZED, NOT RECOMMENDED
+```
+
+M165 observed a median ~7,407 metadata tokens against ~996 evidence tokens and asked
+whether those metadata tokens were real. They are. Of the 7,407: **0 internal-only,
+6,415 transmitted (twice), 6,415 model-visible, ~8,145 in model request traffic and
+billed.** M165's figure was right; its label was a domain term — `responseBudget`'s
+"model visible" names the rendered context section, not the set of tokens the model
+receives. The model receives all of it, complete and untruncated, 12/12.
+
+```text
+model-visible characters      median 28,178   p90 34,519
+billed first-call tokens      median  8,944   bounded [8,721 , 8,975]
+cache-read amplification      median 120,950  re-read across the run
+share of total run traffic    median 21%
+VTRACE largest tool result    12/12
+
+cache identity held           358/363 turns
+calibration                   3.15 chars/token, R2 0.926, n=363
+known-positive control        PASS across four size buckets (79 -> 25,895 chars)
+```
+
+Composition of one model-visible response: transport structure 41.9%, duplicate 21.8%,
+repository evidence 14.2%, machine diagnostics 11.3%, agent-useful control 7.7%,
+provenance 3.9%. Measured non-evidence-to-evidence ratio 6.1 : 1.
+
+The product change holds the machine-facing diagnostics for `detail=debug`. Acceptance
+over the same twelve workspaces, paired against a stashed predecessor through a real
+`mcp-serve` process: repository evidence never lost 12/12, rendered evidence identical
+12/12, control semantics identical 12/12, readiness and absence semantics 12/12,
+default diagnostics removed 12/12, debug diagnostics retained 12/12, selection
+unchanged 12/12, index writes 0.
+
+```text
+median standard tokens     11,067 -> 10,734  (-3.0%)
+diagnostics section chars   4,007 ->  1,147  (-71.4%)
+evidence tokens             1,900 ->  1,966
+neighborhood excerpts           8 ->     28
+```
+
+## M166 standing findings
+
+- **The client reads the copy VTRACE did not design as agent-facing.** The server
+  returns both `content[0].text` and `structuredContent` with the same payload on
+  every call, and `formatListedToolDescriptor` advertises no `outputSchema`. All 12/12
+  M164 tool results begin `{"schema":{"name":"vtrace.mcp_server"…` — the
+  envelope-wrapped `structuredContent`. `content[0].text` is produced, serialized,
+  transmitted and discarded. Any future attempt to deliver a compact agent-facing
+  rendering must reckon with this: shrinking `content[0].text` alone buys nothing.
+
+- **The response is envelope-bound, so removing metadata buys evidence, not tokens.**
+  `responseTokenCeiling(requested_context_tokens)` caps the response at 9,200
+  product-tokens and the progressive packer fills the cap; 6/12 responses sat within
+  500 tokens of it, three within 54. The −53.6% the simulation projected did not
+  arrive because the simulation modelled a response as a fixed set of fields rather
+  than as a budget. What arrived instead was pivot-neighborhood evidence restored on
+  5/12 tasks. **Any future compression projection must model the ceiling or it will
+  overstate its saving.**
+
+- **Duplicate accounting and duplicate removal are different operations.** Two
+  components can legitimately carry the identical skip reason; removing the second as
+  a restatement collapses `NO_RELEVANT_EVIDENCE` into `NOT_OBSERVED`. Short enumerated
+  labels — role names, statuses, modes — are per-item semantics, not restatements.
+  Removal now requires an identity-bearing value; accounting still counts from 12
+  characters. Both rules are asserted by test, and both were found by the epistemic
+  safety suite firing on the analysis itself, not on the product.
+
+- **`responseBudget` understates its own cost by 1.27x.** Tool-result JSON bills at
+  3.15 characters per token against the `chars_div_4` the envelope assumes. Every
+  in-product token figure is an estimate at the wrong rate; treat `estimate_method`
+  as a disclosure rather than a detail.
+
+- **The shipping `detail` lever did not address the tax.** `compact` saves 1.4% and
+  drops pivot-neighborhood excerpts on 2/12 — it trims explanatory prose and spends
+  the saving on evidence, while diagnostics, duplication and transport scaffolding
+  survive at every level. M165's smell (`run_pipeline` cheaper than its own wrapper by
+  613 tokens) is now root-caused: `get_code_context` restored, after compaction, the
+  freshness detail the envelope had just held back, twice over.
+
+- **Transport structure is the largest single category, and it is not directly
+  removable.** JSON keys and punctuation are 41.9% of the model-visible payload, and
+  76% of sections such as `memory` and `workspaceRouting`, whose entire content is a
+  few nulls and booleans in long key names. It falls only when the fields it wraps
+  fall; a "render as text" variant measured *worse* than pruned JSON.
+
+- **Response tax is eliminated as an explanation for M164's null — mechanism present,
+  operation unproven.** The interaction-cost hypothesis (`PLAUSIBLE_BUT_UNPROVEN`) now
+  has a measured mechanism but no evidence it operated: no M164 transcript reasons
+  about cost. The untested variable remains the task population. No live experiment is
+  licensed; §61's threshold fails on materiality, since the shipped change moved the
+  median call by ~330 tokens.

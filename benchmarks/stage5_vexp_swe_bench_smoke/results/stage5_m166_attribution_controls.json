@@ -1,0 +1,51 @@
+{
+ "schemaVersion": 1,
+ "milestone": "M166",
+ "workstream": "A",
+ "title": "Known-positive attribution controls",
+ "method": "real M164 tool results across both arms, bucketed by size; no synthetic fixture and no paid model call",
+ "buckets": [
+  {
+   "name": "tiny",
+   "min": 0,
+   "max": 200,
+   "samples": 142,
+   "medianResultCharacters": 79,
+   "medianMeasuredCacheCreationTokens": 393
+  },
+  {
+   "name": "small",
+   "min": 200,
+   "max": 2000,
+   "samples": 117,
+   "medianResultCharacters": 803,
+   "medianMeasuredCacheCreationTokens": 700
+  },
+  {
+   "name": "medium",
+   "min": 2000,
+   "max": 10000,
+   "samples": 80,
+   "medianResultCharacters": 3146,
+   "medianMeasuredCacheCreationTokens": 1410
+  },
+  {
+   "name": "large",
+   "min": 10000,
+   "max": 100000,
+   "samples": 24,
+   "medianResultCharacters": 25895,
+   "medianMeasuredCacheCreationTokens": 8319
+  }
+ ],
+ "monotoneInPayloadSize": true,
+ "fitQuality": {
+  "rSquared": 0.9263,
+  "samples": 363
+ },
+ "negativeControl": {
+  "statement": "a stream carrying no usage figures must yield no derived attribution",
+  "covered": "m166Boundary.test.ts — checkCacheIdentity reports checked=0 and holdsEverywhere=false"
+ },
+ "verdict": "PASS — billed traffic moves with model-visible payload size, and the fit is strong enough to attribute"
+}

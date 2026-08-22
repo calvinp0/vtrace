@@ -1,0 +1,271 @@
+{
+ "schemaVersion": 1,
+ "milestone": "M166",
+ "workstream": "A",
+ "title": "Every representation of one get_code_context call, measured independently",
+ "callPath": [
+  {
+   "stage": "task/query",
+   "producer": "agent tool call arguments { task, repo_root }",
+   "representation": "JSON-RPC params"
+  },
+  {
+   "stage": "tool dispatch",
+   "producer": "src/mcp/startServer.ts tools/call branch",
+   "representation": "McpToolRequest"
+  },
+  {
+   "stage": "get_code_context handler",
+   "producer": "src/mcp/tools.ts",
+   "representation": "index-freshness gate, then RUN_PIPELINE_TOOL_DEFINITION.handler verbatim (M165)"
+  },
+  {
+   "stage": "run_pipeline handler",
+   "producer": "src/mcp/tools.ts",
+   "representation": "internal structured result object"
+  },
+  {
+   "stage": "response envelope",
+   "producer": "src/mcp/responseEnvelope.ts",
+   "representation": "bounded/compacted result.output + responseBudget accounting"
+  },
+  {
+   "stage": "MCP serialization",
+   "producer": "src/mcp/startServer.ts",
+   "representation": "content[0].text = JSON.stringify(output) AND structuredContent = whole tool envelope"
+  },
+  {
+   "stage": "Claude Code runtime",
+   "producer": "MCP client",
+   "representation": "one tool_result content string"
+  },
+  {
+   "stage": "model request",
+   "producer": "provider",
+   "representation": "cached input tokens"
+  },
+  {
+   "stage": "accounting",
+   "producer": "provider usage",
+   "representation": "cache_creation / cache_read"
+  }
+ ],
+ "transport": {
+  "mode": "real mcp-serve child process over stdio JSON-RPC",
+  "handBuiltFixture": false
+ },
+ "indexWrites": 0,
+ "deliveredRepresentation": {
+  "values": [
+   "MCP_STRUCTURED_CONTENT"
+  ],
+  "unanimous": true,
+  "reading": "the runtime handed the model structuredContent — the whole tool envelope — not content[0].text"
+ },
+ "cases": [
+  {
+   "instanceId": "sympy__sympy-13798",
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m163_tools_task_trigger_sympy__sympy_13798/sympy__sympy-13798",
+   "taskCharacters": 861,
+   "representations": {
+    "internalOutputCharacters": 31578,
+    "transportContentTextCharacters": 31578,
+    "transportStructuredContentCharacters": 31735,
+    "transportJsonRpcLineCharacters": 65802,
+    "modelVisibleCharacters": 33808
+   },
+   "transportDuplicationFactor": 1.005,
+   "deliveredRepresentation": "MCP_STRUCTURED_CONTENT",
+   "modelVisibleMatchesStructuredContentExactly": false,
+   "toolsListCharacters": 7750,
+   "toolsListedCount": 2
+  },
+  {
+   "instanceId": "django__django-11451",
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m163_tools_task_trigger_django__django_11451/django__django-11451",
+   "taskCharacters": 2067,
+   "representations": {
+    "internalOutputCharacters": 33153,
+    "transportContentTextCharacters": 33153,
+    "transportStructuredContentCharacters": 33310,
+    "transportJsonRpcLineCharacters": 69214,
+    "modelVisibleCharacters": 24291
+   },
+   "transportDuplicationFactor": 1.005,
+   "deliveredRepresentation": "MCP_STRUCTURED_CONTENT",
+   "modelVisibleMatchesStructuredContentExactly": false,
+   "toolsListCharacters": 7750,
+   "toolsListedCount": 2
+  },
+  {
+   "instanceId": "sphinx-doc__sphinx-7440",
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m163_tools_task_trigger_sphinx_doc__sphinx_7440/sphinx-doc__sphinx-7440",
+   "taskCharacters": 905,
+   "representations": {
+    "internalOutputCharacters": 31368,
+    "transportContentTextCharacters": 31368,
+    "transportStructuredContentCharacters": 31525,
+    "transportJsonRpcLineCharacters": 65455,
+    "modelVisibleCharacters": 26124
+   },
+   "transportDuplicationFactor": 1.005,
+   "deliveredRepresentation": "MCP_STRUCTURED_CONTENT",
+   "modelVisibleMatchesStructuredContentExactly": false,
+   "toolsListCharacters": 7750,
+   "toolsListedCount": 2
+  },
+  {
+   "instanceId": "scikit-learn__scikit-learn-14087",
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m163_tools_task_trigger_scikit_learn__scikit_learn_14087/scikit-learn__scikit-learn-14087",
+   "taskCharacters": 2320,
+   "representations": {
+    "internalOutputCharacters": 34299,
+    "transportContentTextCharacters": 34299,
+    "transportStructuredContentCharacters": 34456,
+    "transportJsonRpcLineCharacters": 71353,
+    "modelVisibleCharacters": 31521
+   },
+   "transportDuplicationFactor": 1.005,
+   "deliveredRepresentation": "MCP_STRUCTURED_CONTENT",
+   "modelVisibleMatchesStructuredContentExactly": false,
+   "toolsListCharacters": 7750,
+   "toolsListedCount": 2
+  },
+  {
+   "instanceId": "sphinx-doc__sphinx-11445",
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m163_tools_task_trigger_sphinx_doc__sphinx_11445/sphinx-doc__sphinx-11445",
+   "taskCharacters": 1791,
+   "representations": {
+    "internalOutputCharacters": 36765,
+    "transportContentTextCharacters": 36765,
+    "transportStructuredContentCharacters": 36922,
+    "transportJsonRpcLineCharacters": 76908,
+    "modelVisibleCharacters": 27873
+   },
+   "transportDuplicationFactor": 1.004,
+   "deliveredRepresentation": "MCP_STRUCTURED_CONTENT",
+   "modelVisibleMatchesStructuredContentExactly": false,
+   "toolsListCharacters": 7750,
+   "toolsListedCount": 2
+  },
+  {
+   "instanceId": "django__django-13343",
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m163_tools_task_trigger_django__django_13343/django__django-13343",
+   "taskCharacters": 1260,
+   "representations": {
+    "internalOutputCharacters": 35130,
+    "transportContentTextCharacters": 35130,
+    "transportStructuredContentCharacters": 35287,
+    "transportJsonRpcLineCharacters": 72627,
+    "modelVisibleCharacters": 25665
+   },
+   "transportDuplicationFactor": 1.004,
+   "deliveredRepresentation": "MCP_STRUCTURED_CONTENT",
+   "modelVisibleMatchesStructuredContentExactly": false,
+   "toolsListCharacters": 7750,
+   "toolsListedCount": 2
+  },
+  {
+   "instanceId": "matplotlib__matplotlib-24177",
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m163_tools_task_trigger_matplotlib__matplotlib_24177/matplotlib__matplotlib-24177",
+   "taskCharacters": 2031,
+   "representations": {
+    "internalOutputCharacters": 34120,
+    "transportContentTextCharacters": 34120,
+    "transportStructuredContentCharacters": 34277,
+    "transportJsonRpcLineCharacters": 71097,
+    "modelVisibleCharacters": 27163
+   },
+   "transportDuplicationFactor": 1.005,
+   "deliveredRepresentation": "MCP_STRUCTURED_CONTENT",
+   "modelVisibleMatchesStructuredContentExactly": false,
+   "toolsListCharacters": 7750,
+   "toolsListedCount": 2
+  },
+  {
+   "instanceId": "scikit-learn__scikit-learn-13496",
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m163_tools_task_trigger_scikit_learn__scikit_learn_13496/scikit-learn__scikit-learn-13496",
+   "taskCharacters": 1371,
+   "representations": {
+    "internalOutputCharacters": 36581,
+    "transportContentTextCharacters": 36581,
+    "transportStructuredContentCharacters": 36738,
+    "transportJsonRpcLineCharacters": 75637,
+    "modelVisibleCharacters": 34519
+   },
+   "transportDuplicationFactor": 1.004,
+   "deliveredRepresentation": "MCP_STRUCTURED_CONTENT",
+   "modelVisibleMatchesStructuredContentExactly": false,
+   "toolsListCharacters": 7750,
+   "toolsListedCount": 2
+  },
+  {
+   "instanceId": "sympy__sympy-14976",
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m163_tools_task_trigger_sympy__sympy_14976/sympy__sympy-14976",
+   "taskCharacters": 680,
+   "representations": {
+    "internalOutputCharacters": 30491,
+    "transportContentTextCharacters": 30491,
+    "transportStructuredContentCharacters": 30648,
+    "transportJsonRpcLineCharacters": 63724,
+    "modelVisibleCharacters": 36481
+   },
+   "transportDuplicationFactor": 1.005,
+   "deliveredRepresentation": "MCP_STRUCTURED_CONTENT",
+   "modelVisibleMatchesStructuredContentExactly": false,
+   "toolsListCharacters": 7750,
+   "toolsListedCount": 2
+  },
+  {
+   "instanceId": "astropy__astropy-13977",
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m163_tools_task_trigger_astropy__astropy_13977/astropy__astropy-13977",
+   "taskCharacters": 3762,
+   "representations": {
+    "internalOutputCharacters": 36077,
+    "transportContentTextCharacters": 36077,
+    "transportStructuredContentCharacters": 36234,
+    "transportJsonRpcLineCharacters": 75113,
+    "modelVisibleCharacters": 30389
+   },
+   "transportDuplicationFactor": 1.004,
+   "deliveredRepresentation": "MCP_STRUCTURED_CONTENT",
+   "modelVisibleMatchesStructuredContentExactly": false,
+   "toolsListCharacters": 7750,
+   "toolsListedCount": 2
+  },
+  {
+   "instanceId": "pydata__xarray-4966",
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m163_tools_task_trigger_pydata__xarray_4966/pydata__xarray-4966",
+   "taskCharacters": 4384,
+   "representations": {
+    "internalOutputCharacters": 36742,
+    "transportContentTextCharacters": 36742,
+    "transportStructuredContentCharacters": 36899,
+    "transportJsonRpcLineCharacters": 76032,
+    "modelVisibleCharacters": 26662
+   },
+   "transportDuplicationFactor": 1.004,
+   "deliveredRepresentation": "MCP_STRUCTURED_CONTENT",
+   "modelVisibleMatchesStructuredContentExactly": false,
+   "toolsListCharacters": 7750,
+   "toolsListedCount": 2
+  },
+  {
+   "instanceId": "pytest-dev__pytest-7982",
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m163_tools_task_trigger_pytest_dev__pytest_7982/pytest-dev__pytest-7982",
+   "taskCharacters": 451,
+   "representations": {
+    "internalOutputCharacters": 35321,
+    "transportContentTextCharacters": 35321,
+    "transportStructuredContentCharacters": 35478,
+    "transportJsonRpcLineCharacters": 73694,
+    "modelVisibleCharacters": 28483
+   },
+   "transportDuplicationFactor": 1.004,
+   "deliveredRepresentation": "MCP_STRUCTURED_CONTENT",
+   "modelVisibleMatchesStructuredContentExactly": false,
+   "toolsListCharacters": 7750,
+   "toolsListedCount": 2
+  }
+ ]
+}

@@ -1,0 +1,257 @@
+{
+ "schemaVersion": 1,
+ "milestone": "M166",
+ "workstream": "C",
+ "title": "What each counterfactual preserves (§34)",
+ "dimensions": [
+  "primary context",
+  "item paths",
+  "symbols",
+  "roles",
+  "source text",
+  "impact evidence",
+  "skeletons",
+  "neighborhood excerpts",
+  "memory and flow statuses",
+  "provenance for external consumers"
+ ],
+ "byVariant": [
+  {
+   "variant": "FULL_CURRENT",
+   "tasksWithPreservationFailure": 0,
+   "failureKinds": []
+  },
+  {
+   "variant": "NO_DUPLICATES",
+   "tasksWithPreservationFailure": 0,
+   "failureKinds": []
+  },
+  {
+   "variant": "NO_MACHINE_DIAGNOSTICS",
+   "tasksWithPreservationFailure": 0,
+   "failureKinds": []
+  },
+  {
+   "variant": "COMPACT_PROVENANCE",
+   "tasksWithPreservationFailure": 0,
+   "failureKinds": []
+  },
+  {
+   "variant": "AGENT_MINIMAL_SAFE",
+   "tasksWithPreservationFailure": 0,
+   "failureKinds": []
+  },
+  {
+   "variant": "EVIDENCE_ONLY",
+   "tasksWithPreservationFailure": 12,
+   "failureKinds": [
+    "roles",
+    "skeletons",
+    "neighborhood excerpts",
+    "provenance for external consumers",
+    "memory and flow statuses",
+    "item paths"
+   ]
+  }
+ ],
+ "cases": [
+  {
+   "instanceId": "astropy__astropy-13977",
+   "variants": {
+    "FULL_CURRENT": [],
+    "NO_DUPLICATES": [],
+    "NO_MACHINE_DIAGNOSTICS": [],
+    "COMPACT_PROVENANCE": [],
+    "AGENT_MINIMAL_SAFE": [],
+    "EVIDENCE_ONLY": [
+     "roles: 0/5 distinct",
+     "skeletons: 0/2",
+     "neighborhood excerpts: 0/4",
+     "provenance for external consumers: 4/12 identifiers still resolvable from the model-facing text"
+    ]
+   }
+  },
+  {
+   "instanceId": "django__django-11451",
+   "variants": {
+    "FULL_CURRENT": [],
+    "NO_DUPLICATES": [],
+    "NO_MACHINE_DIAGNOSTICS": [],
+    "COMPACT_PROVENANCE": [],
+    "AGENT_MINIMAL_SAFE": [],
+    "EVIDENCE_ONLY": [
+     "roles: 0/5 distinct",
+     "skeletons: 0/2",
+     "neighborhood excerpts: 0/4",
+     "memory and flow statuses: memory NOT_OBSERVED, flow NOT_OBSERVED",
+     "provenance for external consumers: 4/12 identifiers still resolvable from the model-facing text"
+    ]
+   }
+  },
+  {
+   "instanceId": "django__django-13343",
+   "variants": {
+    "FULL_CURRENT": [],
+    "NO_DUPLICATES": [],
+    "NO_MACHINE_DIAGNOSTICS": [],
+    "COMPACT_PROVENANCE": [],
+    "AGENT_MINIMAL_SAFE": [],
+    "EVIDENCE_ONLY": [
+     "roles: 0/5 distinct",
+     "skeletons: 0/2",
+     "neighborhood excerpts: 0/4",
+     "memory and flow statuses: memory NOT_OBSERVED, flow NOT_OBSERVED",
+     "provenance for external consumers: 3/12 identifiers still resolvable from the model-facing text"
+    ]
+   }
+  },
+  {
+   "instanceId": "matplotlib__matplotlib-24177",
+   "variants": {
+    "FULL_CURRENT": [],
+    "NO_DUPLICATES": [],
+    "NO_MACHINE_DIAGNOSTICS": [],
+    "COMPACT_PROVENANCE": [],
+    "AGENT_MINIMAL_SAFE": [],
+    "EVIDENCE_ONLY": [
+     "roles: 0/5 distinct",
+     "skeletons: 0/2",
+     "neighborhood excerpts: 0/4",
+     "memory and flow statuses: memory NOT_OBSERVED, flow NOT_OBSERVED",
+     "provenance for external consumers: 4/12 identifiers still resolvable from the model-facing text"
+    ]
+   }
+  },
+  {
+   "instanceId": "pydata__xarray-4966",
+   "variants": {
+    "FULL_CURRENT": [],
+    "NO_DUPLICATES": [],
+    "NO_MACHINE_DIAGNOSTICS": [],
+    "COMPACT_PROVENANCE": [],
+    "AGENT_MINIMAL_SAFE": [],
+    "EVIDENCE_ONLY": [
+     "roles: 0/5 distinct",
+     "skeletons: 0/2",
+     "neighborhood excerpts: 0/4",
+     "provenance for external consumers: 4/12 identifiers still resolvable from the model-facing text"
+    ]
+   }
+  },
+  {
+   "instanceId": "pytest-dev__pytest-7982",
+   "variants": {
+    "FULL_CURRENT": [],
+    "NO_DUPLICATES": [],
+    "NO_MACHINE_DIAGNOSTICS": [],
+    "COMPACT_PROVENANCE": [],
+    "AGENT_MINIMAL_SAFE": [],
+    "EVIDENCE_ONLY": [
+     "roles: 0/5 distinct",
+     "skeletons: 0/1",
+     "neighborhood excerpts: 0/4",
+     "provenance for external consumers: 4/12 identifiers still resolvable from the model-facing text"
+    ]
+   }
+  },
+  {
+   "instanceId": "scikit-learn__scikit-learn-13496",
+   "variants": {
+    "FULL_CURRENT": [],
+    "NO_DUPLICATES": [],
+    "NO_MACHINE_DIAGNOSTICS": [],
+    "COMPACT_PROVENANCE": [],
+    "AGENT_MINIMAL_SAFE": [],
+    "EVIDENCE_ONLY": [
+     "roles: 0/5 distinct",
+     "skeletons: 0/1",
+     "neighborhood excerpts: 0/4",
+     "provenance for external consumers: 4/12 identifiers still resolvable from the model-facing text"
+    ]
+   }
+  },
+  {
+   "instanceId": "scikit-learn__scikit-learn-14087",
+   "variants": {
+    "FULL_CURRENT": [],
+    "NO_DUPLICATES": [],
+    "NO_MACHINE_DIAGNOSTICS": [],
+    "COMPACT_PROVENANCE": [],
+    "AGENT_MINIMAL_SAFE": [],
+    "EVIDENCE_ONLY": [
+     "item paths: 4/5 present in the model-facing text",
+     "roles: 0/5 distinct",
+     "skeletons: 0/1",
+     "neighborhood excerpts: 0/4",
+     "provenance for external consumers: 3/12 identifiers still resolvable from the model-facing text"
+    ]
+   }
+  },
+  {
+   "instanceId": "sphinx-doc__sphinx-11445",
+   "variants": {
+    "FULL_CURRENT": [],
+    "NO_DUPLICATES": [],
+    "NO_MACHINE_DIAGNOSTICS": [],
+    "COMPACT_PROVENANCE": [],
+    "AGENT_MINIMAL_SAFE": [],
+    "EVIDENCE_ONLY": [
+     "roles: 0/5 distinct",
+     "skeletons: 0/1",
+     "neighborhood excerpts: 0/4",
+     "memory and flow statuses: memory NOT_OBSERVED, flow NOT_OBSERVED",
+     "provenance for external consumers: 3/12 identifiers still resolvable from the model-facing text"
+    ]
+   }
+  },
+  {
+   "instanceId": "sphinx-doc__sphinx-7440",
+   "variants": {
+    "FULL_CURRENT": [],
+    "NO_DUPLICATES": [],
+    "NO_MACHINE_DIAGNOSTICS": [],
+    "COMPACT_PROVENANCE": [],
+    "AGENT_MINIMAL_SAFE": [],
+    "EVIDENCE_ONLY": [
+     "roles: 0/5 distinct",
+     "skeletons: 0/2",
+     "neighborhood excerpts: 0/4",
+     "provenance for external consumers: 3/12 identifiers still resolvable from the model-facing text"
+    ]
+   }
+  },
+  {
+   "instanceId": "sympy__sympy-13798",
+   "variants": {
+    "FULL_CURRENT": [],
+    "NO_DUPLICATES": [],
+    "NO_MACHINE_DIAGNOSTICS": [],
+    "COMPACT_PROVENANCE": [],
+    "AGENT_MINIMAL_SAFE": [],
+    "EVIDENCE_ONLY": [
+     "roles: 0/5 distinct",
+     "skeletons: 0/2",
+     "neighborhood excerpts: 0/4",
+     "provenance for external consumers: 3/12 identifiers still resolvable from the model-facing text"
+    ]
+   }
+  },
+  {
+   "instanceId": "sympy__sympy-14976",
+   "variants": {
+    "FULL_CURRENT": [],
+    "NO_DUPLICATES": [],
+    "NO_MACHINE_DIAGNOSTICS": [],
+    "COMPACT_PROVENANCE": [],
+    "AGENT_MINIMAL_SAFE": [],
+    "EVIDENCE_ONLY": [
+     "roles: 0/4 distinct",
+     "skeletons: 0/3",
+     "neighborhood excerpts: 0/4",
+     "memory and flow statuses: memory NOT_OBSERVED, flow NOT_OBSERVED",
+     "provenance for external consumers: 2/12 identifiers still resolvable from the model-facing text"
+    ]
+   }
+  }
+ ]
+}

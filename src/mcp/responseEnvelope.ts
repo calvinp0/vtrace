@@ -245,6 +245,11 @@ export function compactProductResponse<T>(
   // 3. Reduce verbose diagnostics to summary counts and warning codes.
   compactDiagnostics(draft, { detail, compactedFields, omitted, expansion });
 
+  // 3b. Hold the machine-facing diagnostics for `detail=debug`. The model is billed
+  // for every character of this response (M166-A); the parts removed here are the
+  // ones M166-B found no consumer for outside a maintainer's debugging session.
+  reduceDiagnosticsToAgentFacing(draft, { detail, compactedFields, omitted, expansion });
+
   // 5. Bound pivot-neighborhood metadata.
   compactPivotNeighborhood(draft, { detail, compactedFields, omitted });
 
@@ -965,6 +970,138 @@ function compactDiagnostics(
     options.compactedFields.push("productContext.freshness.refreshDiagnostics");
   }
 
+}
+
+/**
+ * The readiness truth an agent needs, without the machine detail behind it.
+ *
+ * Status, reason, action and the readiness predicates are what distinguish ready
+ * from degraded from stale from wrong-worktree, so they survive at every detail
+ * level. Snapshot fingerprints, run ids, head comparisons, refresh bookkeeping and
+ * performance timings answer "why did the indexer decide that", which is a question
+ * for a maintainer at `detail=debug`, not for the model solving the task.
+ */
+export function agentFacingIndexFreshness(freshness: unknown): JsonRecord | null {
+  const record = asRecord(freshness);
+  if (record === undefined) {
+    return freshness === null ? null : (freshness as JsonRecord | null) ?? null;
+  }
+  const core: JsonRecord = {};
+  for (const key of AGENT_FACING_INDEX_FRESHNESS_KEYS) {
+    if (record[key] !== undefined) core[key] = record[key];
+  }
+  return core;
+}
+
+/** Index-freshness fields that carry readiness truth rather than indexer bookkeeping. */
+const AGENT_FACING_INDEX_FRESHNESS_KEYS = Object.freeze([
+  "status",
+  "reason",
+  "action",
+  "readiness",
+]);
+
+/** `diagnostics.freshness` fields that say what the state means and what to do. */
+const AGENT_FACING_FRESHNESS_KEYS = Object.freeze([
+  "state",
+  "isStale",
+  "summary",
+  "whyItMatters",
+  "recommendedAction",
+  "reasons",
+  "readiness",
+]);
+
+/**
+ * Machine-facing `diagnostics` members. They answer how the answer was computed —
+ * lane candidate matrices, scorer counts, budget arithmetic, per-stage timings —
+ * and M166 measured them as model-visible and billed on every call while no
+ * product code and no agent behaviour consumed them.
+ */
+const MACHINE_FACING_DIAGNOSTIC_MEMBERS = Object.freeze([
+  "retrieval",
+  "budget",
+  "nudge",
+  "intent",
+  "memory",
+  "rules",
+  "impact",
+  "flow",
+  "deferredCount",
+  "omittedSectionCount",
+]);
+
+/** Said where the removal happened, so a reduced block never reads as a complete one. */
+const MACHINE_DIAGNOSTICS_AT_DEBUG_NOTE =
+  "Machine-facing retrieval, budget, intent, memory, rules, impact, flow and index-internal diagnostics are returned in full at detail=debug.";
+
+/**
+ * Keep the diagnostics an agent can act on; hold the rest for `detail=debug`.
+ *
+ * M166-A measured what one call costs the model: the runtime hands it the entire
+ * tool envelope, uncompacted, and the provider bills it once as cache-creation and
+ * again on every later request in the run. M166-B found the diagnostics blocks
+ * model-visible, billed, and — for the parts removed here — consumed by nothing.
+ *
+ * What survives is everything that stops a bounded answer reading as an
+ * authoritative one: readiness status and its predicates, the component skip
+ * reasons (which live in their own top-level sections, not here), and the omission
+ * disclosures the envelope records. `detail=debug` is unchanged.
+ */
+function reduceDiagnosticsToAgentFacing(
+  draft: JsonRecord,
+  options: {
+    detail: McpResponseDetail;
+    compactedFields: string[];
+    omitted: Record<string, number>;
+    expansion: Record<string, string>;
+  },
+): void {
+  if (options.detail === McpResponseDetail.Debug) {
+    return;
+  }
+  const diagnostics = asRecord(draft.diagnostics);
+  if (diagnostics === undefined) {
+    return;
+  }
+
+  let removedCharacters = 0;
+  for (const member of MACHINE_FACING_DIAGNOSTIC_MEMBERS) {
+    if (diagnostics[member] === undefined) continue;
+    removedCharacters += serialize(diagnostics[member]).length;
+    delete diagnostics[member];
+  }
+
+  const freshness = asRecord(diagnostics.freshness);
+  if (freshness !== undefined) {
+    const before = serialize(freshness).length;
+    const core: JsonRecord = {};
+    for (const key of AGENT_FACING_FRESHNESS_KEYS) {
+      if (freshness[key] !== undefined) core[key] = freshness[key];
+    }
+    diagnostics.freshness = core;
+    removedCharacters += Math.max(0, before - serialize(core).length);
+  }
+
+  const indexFreshness = asRecord(diagnostics.indexFreshness);
+  if (indexFreshness !== undefined) {
+    const before = serialize(indexFreshness).length;
+    const core = agentFacingIndexFreshness(indexFreshness) ?? {};
+    diagnostics.indexFreshness = core;
+    removedCharacters += Math.max(0, before - serialize(core).length);
+  }
+
+  if (removedCharacters > 0) {
+    options.compactedFields.push("diagnostics");
+    options.omitted.machineFacingDiagnosticCharacters = removedCharacters;
+    // The envelope's `expansion_available` list is bounded and alphabetically
+    // ordered, so a note placed only there can be truncated out of the response.
+    // The disclosure belongs where the removal happened: a reader of `diagnostics`
+    // must be able to tell "reduced" from "this is all there was" without
+    // cross-referencing another block (§77).
+    diagnostics.omittedForDetail = MACHINE_DIAGNOSTICS_AT_DEBUG_NOTE;
+    options.expansion.diagnostics = MACHINE_DIAGNOSTICS_AT_DEBUG_NOTE;
+  }
 }
 
 /**

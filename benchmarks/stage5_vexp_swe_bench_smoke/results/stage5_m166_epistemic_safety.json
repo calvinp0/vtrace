@@ -1,0 +1,73 @@
+{
+ "schemaVersion": 1,
+ "milestone": "M166",
+ "workstream": "C",
+ "title": "Whether each counterfactual could let a bounded result read as an authoritative one (§36/§37/§38)",
+ "checks": [
+  "component statuses distinguishable",
+  "readiness truth",
+  "degraded/result state",
+  "absence semantics",
+  "authority limitations",
+  "material omission disclosed",
+  "roles retained"
+ ],
+ "controlThatMustFail": {
+  "variant": "EVIDENCE_ONLY",
+  "why": "a safety suite that never fails is not evidence that the other variants are safe",
+  "failed": [
+   "component statuses distinguishable (not_applicable vs no_relevant_evidence vs not_observed)",
+   "readiness truth retained (ready vs degraded vs stale)",
+   "degraded/result state retained",
+   "absence semantics retained (bounded absence must not read as authoritative absence)",
+   "authority limitations retained (support must not read as ownership, static must not read as dynamic)",
+   "material omission disclosed (partial coverage must not read as complete)",
+   "roles retained (support must remain distinguishable from pivot)"
+  ]
+ },
+ "standingDefectFound": {
+  "what": "duplicate ACCOUNTING and duplicate REMOVAL are different operations",
+  "detail": "memory.durable.skipReason and memory.capsuleSurfaced.skipReason can carry the identical string; removing the second as a duplicate collapses NO_RELEVANT_EVIDENCE into NOT_OBSERVED",
+  "consequence": "control leaves are exempt from duplicate removal in every variant; the exemption is asserted by m166Compression.test.ts"
+ },
+ "byVariant": [
+  {
+   "variant": "FULL_CURRENT",
+   "tasksWithSafetyFailure": 0,
+   "failureKinds": []
+  },
+  {
+   "variant": "NO_DUPLICATES",
+   "tasksWithSafetyFailure": 0,
+   "failureKinds": []
+  },
+  {
+   "variant": "NO_MACHINE_DIAGNOSTICS",
+   "tasksWithSafetyFailure": 0,
+   "failureKinds": []
+  },
+  {
+   "variant": "COMPACT_PROVENANCE",
+   "tasksWithSafetyFailure": 0,
+   "failureKinds": []
+  },
+  {
+   "variant": "AGENT_MINIMAL_SAFE",
+   "tasksWithSafetyFailure": 0,
+   "failureKinds": []
+  },
+  {
+   "variant": "EVIDENCE_ONLY",
+   "tasksWithSafetyFailure": 12,
+   "failureKinds": [
+    "component statuses distinguishable (not_applicable vs no_relevant_evidence vs not_observed)",
+    "readiness truth retained (ready vs degraded vs stale)",
+    "degraded/result state retained",
+    "absence semantics retained (bounded absence must not read as authoritative absence)",
+    "authority limitations retained (support must not read as ownership, static must not read as dynamic)",
+    "material omission disclosed (partial coverage must not read as complete)",
+    "roles retained (support must remain distinguishable from pivot)"
+   ]
+  }
+ ]
+}

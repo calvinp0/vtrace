@@ -1,0 +1,1675 @@
+{
+ "schemaVersion": 1,
+ "milestone": "M166",
+ "workstream": "B",
+ "title": "What the twelve model-facing responses were actually made of",
+ "inputs": {
+  "source": "tool_result strings recovered from the M164 trigger-arm transcripts",
+  "cases": 12,
+  "whyNotAReplay": "these are the payloads whose billed cost M166-A measured; a fresh replay would be a different response against a different index"
+ },
+ "tokenConversion": {
+  "charactersPerToken": 3.151,
+  "derivedFrom": "M166-A calibration against provider-reported cache-creation, R^2 0.926",
+  "productAssumption": 4,
+  "authority": "DERIVED_FROM_PROVIDER_REPORTED"
+ },
+ "aggregate": {
+  "modelVisibleTokens": {
+   "median": 8944,
+   "p90": 10956,
+   "mean": 9337,
+   "min": 7710,
+   "max": 11579
+  },
+  "evidenceTokens": {
+   "median": 1266,
+   "p90": 1428,
+   "mean": 1262,
+   "min": 938,
+   "max": 1827
+  },
+  "nonEvidenceTokens": {
+   "median": 7750,
+   "p90": 9528,
+   "mean": 8075,
+   "min": 6772,
+   "max": 10267
+  },
+  "metadataToEvidenceRatio": {
+   "median": 7,
+   "p90": 7.76,
+   "mean": 7,
+   "min": 3.72,
+   "max": 7.83
+  },
+  "duplicateFractionPercent": {
+   "median": 22,
+   "p90": 25.7,
+   "mean": 22,
+   "min": 17.4,
+   "max": 26.8
+  },
+  "transportFractionPercent": {
+   "median": 40,
+   "p90": 45.9,
+   "mean": 41,
+   "min": 32.7,
+   "max": 47
+  },
+  "byCategory": {
+   "REPOSITORY_EVIDENCE": {
+    "characters": {
+     "median": 3987,
+     "p90": 4500,
+     "mean": 3976,
+     "min": 2956,
+     "max": 5757
+    },
+    "tokens": {
+     "median": 1266,
+     "p90": 1428,
+     "mean": 1262,
+     "min": 938,
+     "max": 1827
+    },
+    "shareOfModelVisiblePercent": {
+     "median": 13,
+     "p90": 16.3
+    }
+   },
+   "AGENT_USEFUL_CONTROL": {
+    "characters": {
+     "median": 2173,
+     "p90": 2185,
+     "mean": 2166,
+     "min": 2119,
+     "max": 2207
+    },
+    "tokens": {
+     "median": 690,
+     "p90": 694,
+     "mean": 688,
+     "min": 673,
+     "max": 701
+    },
+    "shareOfModelVisiblePercent": {
+     "median": 8,
+     "p90": 8.5
+    }
+   },
+   "MACHINE_DIAGNOSTIC": {
+    "characters": {
+     "median": 3184,
+     "p90": 5548,
+     "mean": 3573,
+     "min": 1660,
+     "max": 7246
+    },
+    "tokens": {
+     "median": 1010,
+     "p90": 1761,
+     "mean": 1134,
+     "min": 527,
+     "max": 2300
+    },
+    "shareOfModelVisiblePercent": {
+     "median": 11,
+     "p90": 16.1
+    }
+   },
+   "PROVENANCE": {
+    "characters": {
+     "median": 1101,
+     "p90": 1168,
+     "mean": 1102,
+     "min": 975,
+     "max": 1245
+    },
+    "tokens": {
+     "median": 350,
+     "p90": 371,
+     "mean": 350,
+     "min": 309,
+     "max": 395
+    },
+    "shareOfModelVisiblePercent": {
+     "median": 4,
+     "p90": 4.3
+    }
+   },
+   "DUPLICATE": {
+    "characters": {
+     "median": 6149,
+     "p90": 8877,
+     "mean": 6596,
+     "min": 4584,
+     "max": 9791
+    },
+    "tokens": {
+     "median": 1952,
+     "p90": 2818,
+     "mean": 2094,
+     "min": 1455,
+     "max": 3108
+    },
+    "shareOfModelVisiblePercent": {
+     "median": 22,
+     "p90": 25.7
+    }
+   },
+   "TRANSPORT_STRUCTURE": {
+    "characters": {
+     "median": 11798,
+     "p90": 12197,
+     "mean": 11840,
+     "min": 11090,
+     "max": 12607
+    },
+    "tokens": {
+     "median": 3745,
+     "p90": 3871,
+     "mean": 3758,
+     "min": 3520,
+     "max": 4002
+    },
+    "shareOfModelVisiblePercent": {
+     "median": 40,
+     "p90": 45.9
+    }
+   },
+   "OTHER": {
+    "characters": {
+     "median": 5,
+     "p90": 7,
+     "mean": 5,
+     "min": 4,
+     "max": 11
+    },
+    "tokens": {
+     "median": 2,
+     "p90": 2,
+     "mean": 2,
+     "min": 1,
+     "max": 3
+    },
+    "shareOfModelVisiblePercent": {
+     "median": 0,
+     "p90": 0
+    }
+   }
+  }
+ },
+ "topOffenderGroups": [
+  {
+   "group": "productContext.modelVisibleContext",
+   "category": "REPOSITORY_EVIDENCE",
+   "tasksPresent": 12,
+   "medianTokens": 850
+  },
+  {
+   "group": "diagnostics.retrieval",
+   "category": "MACHINE_DIAGNOSTIC",
+   "tasksPresent": 11,
+   "medianTokens": 612
+  },
+  {
+   "group": "productContext.items[]",
+   "category": "REPOSITORY_EVIDENCE",
+   "tasksPresent": 12,
+   "medianTokens": 162
+  },
+  {
+   "group": "productContext.diagnostics",
+   "category": "AGENT_USEFUL_CONTROL",
+   "tasksPresent": 12,
+   "medianTokens": 139
+  },
+  {
+   "group": "capsuleResult.digest",
+   "category": "REPOSITORY_EVIDENCE",
+   "tasksPresent": 12,
+   "medianTokens": 122
+  },
+  {
+   "group": "diagnostics.freshness",
+   "category": "AGENT_USEFUL_CONTROL",
+   "tasksPresent": 12,
+   "medianTokens": 117
+  },
+  {
+   "group": "pivotNeighborhood[].excerpts[]",
+   "category": "REPOSITORY_EVIDENCE",
+   "tasksPresent": 9,
+   "medianTokens": 105
+  },
+  {
+   "group": "productContext.accounting",
+   "category": "MACHINE_DIAGNOSTIC",
+   "tasksPresent": 12,
+   "medianTokens": 100
+  },
+  {
+   "group": "responseBudget.compacted_fields[]",
+   "category": "AGENT_USEFUL_CONTROL",
+   "tasksPresent": 12,
+   "medianTokens": 93
+  },
+  {
+   "group": "diagnostics.indexFreshness",
+   "category": "AGENT_USEFUL_CONTROL",
+   "tasksPresent": 12,
+   "medianTokens": 87
+  },
+  {
+   "group": "taskSummary.normalizedQuery",
+   "category": "MACHINE_DIAGNOSTIC",
+   "tasksPresent": 4,
+   "medianTokens": 84
+  },
+  {
+   "group": "request.query",
+   "category": "MACHINE_DIAGNOSTIC",
+   "tasksPresent": 6,
+   "medianTokens": 83
+  },
+  {
+   "group": "deferred.notes[]",
+   "category": "AGENT_USEFUL_CONTROL",
+   "tasksPresent": 11,
+   "medianTokens": 76
+  },
+  {
+   "group": "deferred.items[]",
+   "category": "PROVENANCE",
+   "tasksPresent": 6,
+   "medianTokens": 55
+  },
+  {
+   "group": "responseBudget.notes[]",
+   "category": "MACHINE_DIAGNOSTIC",
+   "tasksPresent": 1,
+   "medianTokens": 51
+  }
+ ],
+ "detectorControls": [
+  {
+   "category": "REPOSITORY_EVIDENCE",
+   "tasksWhereNonZero": 12,
+   "tasks": 12,
+   "distinctValues": 12,
+   "uniformAcrossTasks": false,
+   "suspicious": false
+  },
+  {
+   "category": "AGENT_USEFUL_CONTROL",
+   "tasksWhereNonZero": 12,
+   "tasks": 12,
+   "distinctValues": 12,
+   "uniformAcrossTasks": false,
+   "suspicious": false
+  },
+  {
+   "category": "MACHINE_DIAGNOSTIC",
+   "tasksWhereNonZero": 12,
+   "tasks": 12,
+   "distinctValues": 12,
+   "uniformAcrossTasks": false,
+   "suspicious": false
+  },
+  {
+   "category": "PROVENANCE",
+   "tasksWhereNonZero": 12,
+   "tasks": 12,
+   "distinctValues": 12,
+   "uniformAcrossTasks": false,
+   "suspicious": false
+  },
+  {
+   "category": "DUPLICATE",
+   "tasksWhereNonZero": 12,
+   "tasks": 12,
+   "distinctValues": 12,
+   "uniformAcrossTasks": false,
+   "suspicious": false
+  },
+  {
+   "category": "TRANSPORT_STRUCTURE",
+   "tasksWhereNonZero": 12,
+   "tasks": 12,
+   "distinctValues": 12,
+   "uniformAcrossTasks": false,
+   "suspicious": false
+  },
+  {
+   "category": "OTHER",
+   "tasksWhereNonZero": 12,
+   "tasks": 12,
+   "distinctValues": 5,
+   "uniformAcrossTasks": false,
+   "suspicious": false
+  }
+ ],
+ "cases": [
+  {
+   "instanceId": "astropy__astropy-13977",
+   "modelVisibleCharacters": 30389,
+   "outputCharacters": 30232,
+   "envelopeWrapperCharacters": 157,
+   "modelVisibleTokens": 9646,
+   "authority": "DERIVED_FROM_PROVIDER_REPORTED (chars converted at the M166-A calibrated rate)",
+   "categoryCharacters": {
+    "REPOSITORY_EVIDENCE": 3468,
+    "AGENT_USEFUL_CONTROL": 2160,
+    "MACHINE_DIAGNOSTIC": 4109,
+    "PROVENANCE": 1076,
+    "DUPLICATE": 7669,
+    "TRANSPORT_STRUCTURE": 11746,
+    "OTHER": 4
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 1101,
+    "AGENT_USEFUL_CONTROL": 686,
+    "MACHINE_DIAGNOSTIC": 1304,
+    "PROVENANCE": 342,
+    "DUPLICATE": 2434,
+    "TRANSPORT_STRUCTURE": 3728,
+    "OTHER": 1
+   },
+   "evidenceSharePercent": 11.4,
+   "nonEvidenceTokens": 8545,
+   "metadataToEvidenceRatio": 7.76,
+   "productSelfReport": {
+    "estimated_model_visible_tokens": 544,
+    "estimated_metadata_tokens": 7014,
+    "estimated_total_response_tokens": 7558,
+    "estimate_method": "chars_div_4",
+    "note": "the product's 'model visible' means the rendered context field only; the runtime gave the model the whole payload"
+   },
+   "topGroups": [
+    {
+     "group": "diagnostics.retrieval",
+     "characters": 2482,
+     "category": "MACHINE_DIAGNOSTIC",
+     "tokens": 788
+    },
+    {
+     "group": "productContext.modelVisibleContext",
+     "characters": 2223,
+     "category": "REPOSITORY_EVIDENCE",
+     "tokens": 706
+    },
+    {
+     "group": "productContext.items[]",
+     "characters": 499,
+     "category": "REPOSITORY_EVIDENCE",
+     "tokens": 158
+    },
+    {
+     "group": "productContext.diagnostics",
+     "characters": 439,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 139
+    },
+    {
+     "group": "capsuleResult.digest",
+     "characters": 383,
+     "category": "REPOSITORY_EVIDENCE",
+     "tokens": 122
+    },
+    {
+     "group": "diagnostics.freshness",
+     "characters": 368,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 117
+    },
+    {
+     "group": "productContext.accounting",
+     "characters": 317,
+     "category": "MACHINE_DIAGNOSTIC",
+     "tokens": 101
+    },
+    {
+     "group": "responseBudget.compacted_fields[]",
+     "characters": 290,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 92
+    },
+    {
+     "group": "pivotNeighborhood[].excerpts[]",
+     "characters": 287,
+     "category": "REPOSITORY_EVIDENCE",
+     "tokens": 91
+    },
+    {
+     "group": "diagnostics.indexFreshness",
+     "characters": 272,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 86
+    },
+    {
+     "group": "deferred.notes[]",
+     "characters": 241,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 76
+    },
+    {
+     "group": "deferred.items[]",
+     "characters": 173,
+     "category": "PROVENANCE",
+     "tokens": 55
+    }
+   ]
+  },
+  {
+   "instanceId": "django__django-11451",
+   "modelVisibleCharacters": 24291,
+   "outputCharacters": 24134,
+   "envelopeWrapperCharacters": 157,
+   "modelVisibleTokens": 7710,
+   "authority": "DERIVED_FROM_PROVIDER_REPORTED (chars converted at the M166-A calibrated rate)",
+   "categoryCharacters": {
+    "REPOSITORY_EVIDENCE": 2956,
+    "AGENT_USEFUL_CONTROL": 2184,
+    "MACHINE_DIAGNOSTIC": 1753,
+    "PROVENANCE": 1056,
+    "DUPLICATE": 4774,
+    "TRANSPORT_STRUCTURE": 11407,
+    "OTHER": 4
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 938,
+    "AGENT_USEFUL_CONTROL": 693,
+    "MACHINE_DIAGNOSTIC": 556,
+    "PROVENANCE": 335,
+    "DUPLICATE": 1515,
+    "TRANSPORT_STRUCTURE": 3621,
+    "OTHER": 1
+   },
+   "evidenceSharePercent": 12.2,
+   "nonEvidenceTokens": 6772,
+   "metadataToEvidenceRatio": 7.22,
+   "productSelfReport": {
+    "estimated_model_visible_tokens": 439,
+    "estimated_metadata_tokens": 5595,
+    "estimated_total_response_tokens": 6034,
+    "estimate_method": "chars_div_4",
+    "note": "the product's 'model visible' means the rendered context field only; the runtime gave the model the whole payload"
+   },
+   "topGroups": [
+    {
+     "group": "productContext.modelVisibleContext",
+     "characters": 1797,
+     "category": "REPOSITORY_EVIDENCE",
+     "tokens": 570
+    },
+    {
+     "group": "productContext.diagnostics",
+     "characters": 439,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 139
+    },
+    {
+     "group": "productContext.items[]",
+     "characters": 423,
+     "category": "REPOSITORY_EVIDENCE",
+     "tokens": 134
+    },
+    {
+     "group": "diagnostics.freshness",
+     "characters": 368,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 117
+    },
+    {
+     "group": "pivotNeighborhood[].excerpts[]",
+     "characters": 323,
+     "category": "REPOSITORY_EVIDENCE",
+     "tokens": 103
+    },
+    {
+     "group": "capsuleResult.digest",
+     "characters": 320,
+     "category": "REPOSITORY_EVIDENCE",
+     "tokens": 102
+    },
+    {
+     "group": "productContext.accounting",
+     "characters": 312,
+     "category": "MACHINE_DIAGNOSTIC",
+     "tokens": 99
+    },
+    {
+     "group": "responseBudget.compacted_fields[]",
+     "characters": 297,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 94
+    },
+    {
+     "group": "diagnostics.indexFreshness",
+     "characters": 268,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 85
+    },
+    {
+     "group": "deferred.notes[]",
+     "characters": 241,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 76
+    },
+    {
+     "group": "diagnostics.retrieval",
+     "characters": 205,
+     "category": "MACHINE_DIAGNOSTIC",
+     "tokens": 65
+    },
+    {
+     "group": "deferred.items[]",
+     "characters": 173,
+     "category": "PROVENANCE",
+     "tokens": 55
+    }
+   ]
+  },
+  {
+   "instanceId": "django__django-13343",
+   "modelVisibleCharacters": 25665,
+   "outputCharacters": 25508,
+   "envelopeWrapperCharacters": 157,
+   "modelVisibleTokens": 8146,
+   "authority": "DERIVED_FROM_PROVIDER_REPORTED (chars converted at the M166-A calibrated rate)",
+   "categoryCharacters": {
+    "REPOSITORY_EVIDENCE": 4185,
+    "AGENT_USEFUL_CONTROL": 2185,
+    "MACHINE_DIAGNOSTIC": 1660,
+    "PROVENANCE": 1116,
+    "DUPLICATE": 4584,
+    "TRANSPORT_STRUCTURE": 11774,
+    "OTHER": 4
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 1328,
+    "AGENT_USEFUL_CONTROL": 694,
+    "MACHINE_DIAGNOSTIC": 527,
+    "PROVENANCE": 354,
+    "DUPLICATE": 1455,
+    "TRANSPORT_STRUCTURE": 3737,
+    "OTHER": 1
+   },
+   "evidenceSharePercent": 16.3,
+   "nonEvidenceTokens": 6818,
+   "metadataToEvidenceRatio": 5.13,
+   "productSelfReport": {
+    "estimated_model_visible_tokens": 673,
+    "estimated_metadata_tokens": 5704,
+    "estimated_total_response_tokens": 6377,
+    "estimate_method": "chars_div_4",
+    "note": "the product's 'model visible' means the rendered context field only; the runtime gave the model the whole payload"
+   },
+   "topGroups": [
+    {
+     "group": "productContext.modelVisibleContext",
+     "characters": 2761,
+     "category": "REPOSITORY_EVIDENCE",
+     "tokens": 876
+    },
+    {
+     "group": "productContext.items[]",
+     "characters": 572,
+     "category": "REPOSITORY_EVIDENCE",
+     "tokens": 182
+    },
+    {
+     "group": "pivotNeighborhood[].excerpts[]",
+     "characters": 503,
+     "category": "REPOSITORY_EVIDENCE",
+     "tokens": 160
+    },
+    {
+     "group": "productContext.diagnostics",
+     "characters": 439,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 139
+    },
+    {
+     "group": "diagnostics.freshness",
+     "characters": 368,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 117
+    },
+    {
+     "group": "productContext.accounting",
+     "characters": 314,
+     "category": "MACHINE_DIAGNOSTIC",
+     "tokens": 100
+    },
+    {
+     "group": "responseBudget.compacted_fields[]",
+     "characters": 297,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 94
+    },
+    {
+     "group": "diagnostics.indexFreshness",
+     "characters": 268,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 85
+    },
+    {
+     "group": "capsuleResult.digest",
+     "characters": 263,
+     "category": "REPOSITORY_EVIDENCE",
+     "tokens": 83
+    },
+    {
+     "group": "deferred.notes[]",
+     "characters": 241,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 76
+    },
+    {
+     "group": "deferred.items[]",
+     "characters": 173,
+     "category": "PROVENANCE",
+     "tokens": 55
+    },
+    {
+     "group": "responseBudget.notes[]",
+     "characters": 162,
+     "category": "MACHINE_DIAGNOSTIC",
+     "tokens": 51
+    }
+   ]
+  },
+  {
+   "instanceId": "matplotlib__matplotlib-24177",
+   "modelVisibleCharacters": 27163,
+   "outputCharacters": 27006,
+   "envelopeWrapperCharacters": 157,
+   "modelVisibleTokens": 8622,
+   "authority": "DERIVED_FROM_PROVIDER_REPORTED (chars converted at the M166-A calibrated rate)",
+   "categoryCharacters": {
+    "REPOSITORY_EVIDENCE": 5757,
+    "AGENT_USEFUL_CONTROL": 2177,
+    "MACHINE_DIAGNOSTIC": 1898,
+    "PROVENANCE": 1071,
+    "DUPLICATE": 4716,
+    "TRANSPORT_STRUCTURE": 11383,
+    "OTHER": 4
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 1827,
+    "AGENT_USEFUL_CONTROL": 691,
+    "MACHINE_DIAGNOSTIC": 602,
+    "PROVENANCE": 340,
+    "DUPLICATE": 1497,
+    "TRANSPORT_STRUCTURE": 3613,
+    "OTHER": 1
+   },
+   "evidenceSharePercent": 21.2,
+   "nonEvidenceTokens": 6795,
+   "metadataToEvidenceRatio": 3.72,
+   "productSelfReport": {
+    "estimated_model_visible_tokens": 1073,
+    "estimated_metadata_tokens": 5679,
+    "estimated_total_response_tokens": 6752,
+    "estimate_method": "chars_div_4",
+    "note": "the product's 'model visible' means the rendered context field only; the runtime gave the model the whole payload"
+   },
+   "topGroups": [
+    {
+     "group": "productContext.modelVisibleContext",
+     "characters": 4544,
+     "category": "REPOSITORY_EVIDENCE",
+     "tokens": 1442
+    },
+    {
+     "group": "productContext.diagnostics",
+     "characters": 439,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 139
+    },
+    {
+     "group": "productContext.items[]",
+     "characters": 430,
+     "category": "REPOSITORY_EVIDENCE",
+     "tokens": 136
+    },
+    {
+     "group": "diagnostics.freshness",
+     "characters": 368,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 117
+    },
+    {
+     "group": "pivotNeighborhood[].excerpts[]",
+     "characters": 347,
+     "category": "REPOSITORY_EVIDENCE",
+     "tokens": 110
+    },
+    {
+     "group": "capsuleResult.digest",
+     "characters": 322,
+     "category": "REPOSITORY_EVIDENCE",
+     "tokens": 102
+    },
+    {
+     "group": "productContext.accounting",
+     "characters": 315,
+     "category": "MACHINE_DIAGNOSTIC",
+     "tokens": 100
+    },
+    {
+     "group": "diagnostics.retrieval",
+     "characters": 292,
+     "category": "MACHINE_DIAGNOSTIC",
+     "tokens": 93
+    },
+    {
+     "group": "responseBudget.compacted_fields[]",
+     "characters": 290,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 92
+    },
+    {
+     "group": "diagnostics.indexFreshness",
+     "characters": 284,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 90
+    },
+    {
+     "group": "deferred.notes[]",
+     "characters": 241,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 76
+    },
+    {
+     "group": "deferred.items[]",
+     "characters": 173,
+     "category": "PROVENANCE",
+     "tokens": 55
+    }
+   ]
+  },
+  {
+   "instanceId": "pydata__xarray-4966",
+   "modelVisibleCharacters": 26662,
+   "outputCharacters": 26505,
+   "envelopeWrapperCharacters": 157,
+   "modelVisibleTokens": 8463,
+   "authority": "DERIVED_FROM_PROVIDER_REPORTED (chars converted at the M166-A calibrated rate)",
+   "categoryCharacters": {
+    "REPOSITORY_EVIDENCE": 3273,
+    "AGENT_USEFUL_CONTROL": 2173,
+    "MACHINE_DIAGNOSTIC": 2418,
+    "PROVENANCE": 1109,
+    "DUPLICATE": 5705,
+    "TRANSPORT_STRUCTURE": 11822,
+    "OTHER": 5
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 1039,
+    "AGENT_USEFUL_CONTROL": 690,
+    "MACHINE_DIAGNOSTIC": 767,
+    "PROVENANCE": 352,
+    "DUPLICATE": 1811,
+    "TRANSPORT_STRUCTURE": 3752,
+    "OTHER": 2
+   },
+   "evidenceSharePercent": 12.3,
+   "nonEvidenceTokens": 7424,
+   "metadataToEvidenceRatio": 7.15,
+   "productSelfReport": {
+    "estimated_model_visible_tokens": 517,
+    "estimated_metadata_tokens": 6110,
+    "estimated_total_response_tokens": 6627,
+    "estimate_method": "chars_div_4",
+    "note": "the product's 'model visible' means the rendered context field only; the runtime gave the model the whole payload"
+   },
+   "topGroups": [
+    {
+     "group": "productContext.modelVisibleContext",
+     "characters": 2122,
+     "category": "REPOSITORY_EVIDENCE",
+     "tokens": 674
+    },
+    {
+     "group": "productContext.items[]",
+     "characters": 545,
+     "category": "REPOSITORY_EVIDENCE",
+     "tokens": 173
+    },
+    {
+     "group": "capsuleResult.digest",
+     "characters": 459,
+     "category": "REPOSITORY_EVIDENCE",
+     "tokens": 146
+    },
+    {
+     "group": "productContext.diagnostics",
+     "characters": 439,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 139
+    },
+    {
+     "group": "diagnostics.retrieval",
+     "characters": 376,
+     "category": "MACHINE_DIAGNOSTIC",
+     "tokens": 119
+    },
+    {
+     "group": "diagnostics.freshness",
+     "characters": 368,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 117
+    },
+    {
+     "group": "productContext.accounting",
+     "characters": 314,
+     "category": "MACHINE_DIAGNOSTIC",
+     "tokens": 100
+    },
+    {
+     "group": "responseBudget.compacted_fields[]",
+     "characters": 297,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 94
+    },
+    {
+     "group": "request.query",
+     "characters": 286,
+     "category": "MACHINE_DIAGNOSTIC",
+     "tokens": 91
+    },
+    {
+     "group": "taskSummary.normalizedQuery",
+     "characters": 279,
+     "category": "MACHINE_DIAGNOSTIC",
+     "tokens": 89
+    },
+    {
+     "group": "diagnostics.indexFreshness",
+     "characters": 266,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 84
+    },
+    {
+     "group": "deferred.notes[]",
+     "characters": 241,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 76
+    }
+   ]
+  },
+  {
+   "instanceId": "pytest-dev__pytest-7982",
+   "modelVisibleCharacters": 28483,
+   "outputCharacters": 28326,
+   "envelopeWrapperCharacters": 157,
+   "modelVisibleTokens": 9041,
+   "authority": "DERIVED_FROM_PROVIDER_REPORTED (chars converted at the M166-A calibrated rate)",
+   "categoryCharacters": {
+    "REPOSITORY_EVIDENCE": 3840,
+    "AGENT_USEFUL_CONTROL": 2172,
+    "MACHINE_DIAGNOSTIC": 3949,
+    "PROVENANCE": 975,
+    "DUPLICATE": 6295,
+    "TRANSPORT_STRUCTURE": 11090,
+    "OTHER": 5
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 1219,
+    "AGENT_USEFUL_CONTROL": 689,
+    "MACHINE_DIAGNOSTIC": 1253,
+    "PROVENANCE": 309,
+    "DUPLICATE": 1998,
+    "TRANSPORT_STRUCTURE": 3520,
+    "OTHER": 2
+   },
+   "evidenceSharePercent": 13.5,
+   "nonEvidenceTokens": 7822,
+   "metadataToEvidenceRatio": 6.42,
+   "productSelfReport": {
+    "estimated_model_visible_tokens": 640,
+    "estimated_metadata_tokens": 6442,
+    "estimated_total_response_tokens": 7082,
+    "estimate_method": "chars_div_4",
+    "note": "the product's 'model visible' means the rendered context field only; the runtime gave the model the whole payload"
+   },
+   "topGroups": [
+    {
+     "group": "productContext.modelVisibleContext",
+     "characters": 2626,
+     "category": "REPOSITORY_EVIDENCE",
+     "tokens": 834
+    },
+    {
+     "group": "diagnostics.retrieval",
+     "characters": 1939,
+     "category": "MACHINE_DIAGNOSTIC",
+     "tokens": 615
+    },
+    {
+     "group": "productContext.diagnostics",
+     "characters": 439,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 139
+    },
+    {
+     "group": "capsuleResult.digest",
+     "characters": 425,
+     "category": "REPOSITORY_EVIDENCE",
+     "tokens": 135
+    },
+    {
+     "group": "diagnostics.freshness",
+     "characters": 368,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 117
+    },
+    {
+     "group": "productContext.accounting",
+     "characters": 312,
+     "category": "MACHINE_DIAGNOSTIC",
+     "tokens": 99
+    },
+    {
+     "group": "pivotNeighborhood[].excerpts[]",
+     "characters": 300,
+     "category": "REPOSITORY_EVIDENCE",
+     "tokens": 95
+    },
+    {
+     "group": "responseBudget.compacted_fields[]",
+     "characters": 290,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 92
+    },
+    {
+     "group": "diagnostics.indexFreshness",
+     "characters": 274,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 87
+    },
+    {
+     "group": "request.query",
+     "characters": 272,
+     "category": "MACHINE_DIAGNOSTIC",
+     "tokens": 86
+    },
+    {
+     "group": "taskSummary.normalizedQuery",
+     "characters": 270,
+     "category": "MACHINE_DIAGNOSTIC",
+     "tokens": 86
+    },
+    {
+     "group": "productContext.items[]",
+     "characters": 258,
+     "category": "REPOSITORY_EVIDENCE",
+     "tokens": 82
+    }
+   ]
+  },
+  {
+   "instanceId": "scikit-learn__scikit-learn-13496",
+   "modelVisibleCharacters": 34519,
+   "outputCharacters": 34362,
+   "envelopeWrapperCharacters": 157,
+   "modelVisibleTokens": 10956,
+   "authority": "DERIVED_FROM_PROVIDER_REPORTED (chars converted at the M166-A calibrated rate)",
+   "categoryCharacters": {
+    "REPOSITORY_EVIDENCE": 4500,
+    "AGENT_USEFUL_CONTROL": 2119,
+    "MACHINE_DIAGNOSTIC": 5548,
+    "PROVENANCE": 1161,
+    "DUPLICATE": 8877,
+    "TRANSPORT_STRUCTURE": 12152,
+    "OTHER": 5
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 1428,
+    "AGENT_USEFUL_CONTROL": 673,
+    "MACHINE_DIAGNOSTIC": 1761,
+    "PROVENANCE": 369,
+    "DUPLICATE": 2818,
+    "TRANSPORT_STRUCTURE": 3857,
+    "OTHER": 2
+   },
+   "evidenceSharePercent": 13,
+   "nonEvidenceTokens": 9528,
+   "metadataToEvidenceRatio": 6.67,
+   "productSelfReport": {
+    "estimated_model_visible_tokens": 784,
+    "estimated_metadata_tokens": 7807,
+    "estimated_total_response_tokens": 8591,
+    "estimate_method": "chars_div_4",
+    "note": "the product's 'model visible' means the rendered context field only; the runtime gave the model the whole payload"
+   },
+   "topGroups": [
+    {
+     "group": "diagnostics.retrieval",
+     "characters": 3630,
+     "category": "MACHINE_DIAGNOSTIC",
+     "tokens": 1152
+    },
+    {
+     "group": "productContext.modelVisibleContext",
+     "characters": 3211,
+     "category": "REPOSITORY_EVIDENCE",
+     "tokens": 1019
+    },
+    {
+     "group": "productContext.items[]",
+     "characters": 616,
+     "category": "REPOSITORY_EVIDENCE",
+     "tokens": 196
+    },
+    {
+     "group": "productContext.diagnostics",
+     "characters": 439,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 139
+    },
+    {
+     "group": "capsuleResult.digest",
+     "characters": 400,
+     "category": "REPOSITORY_EVIDENCE",
+     "tokens": 127
+    },
+    {
+     "group": "diagnostics.freshness",
+     "characters": 368,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 117
+    },
+    {
+     "group": "productContext.accounting",
+     "characters": 317,
+     "category": "MACHINE_DIAGNOSTIC",
+     "tokens": 101
+    },
+    {
+     "group": "diagnostics.indexFreshness",
+     "characters": 292,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 93
+    },
+    {
+     "group": "responseBudget.compacted_fields[]",
+     "characters": 290,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 92
+    },
+    {
+     "group": "deferred.notes[]",
+     "characters": 241,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 76
+    },
+    {
+     "group": "pivotNeighborhood[].excerpts[]",
+     "characters": 228,
+     "category": "REPOSITORY_EVIDENCE",
+     "tokens": 72
+    },
+    {
+     "group": "request.query",
+     "characters": 206,
+     "category": "MACHINE_DIAGNOSTIC",
+     "tokens": 65
+    }
+   ]
+  },
+  {
+   "instanceId": "scikit-learn__scikit-learn-14087",
+   "modelVisibleCharacters": 31521,
+   "outputCharacters": 31364,
+   "envelopeWrapperCharacters": 157,
+   "modelVisibleTokens": 10005,
+   "authority": "DERIVED_FROM_PROVIDER_REPORTED (chars converted at the M166-A calibrated rate)",
+   "categoryCharacters": {
+    "REPOSITORY_EVIDENCE": 4373,
+    "AGENT_USEFUL_CONTROL": 2121,
+    "MACHINE_DIAGNOSTIC": 4570,
+    "PROVENANCE": 1168,
+    "DUPLICATE": 6928,
+    "TRANSPORT_STRUCTURE": 12197,
+    "OTHER": 7
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 1388,
+    "AGENT_USEFUL_CONTROL": 673,
+    "MACHINE_DIAGNOSTIC": 1451,
+    "PROVENANCE": 371,
+    "DUPLICATE": 2199,
+    "TRANSPORT_STRUCTURE": 3871,
+    "OTHER": 2
+   },
+   "evidenceSharePercent": 13.9,
+   "nonEvidenceTokens": 8617,
+   "metadataToEvidenceRatio": 6.21,
+   "productSelfReport": {
+    "estimated_model_visible_tokens": 748,
+    "estimated_metadata_tokens": 7093,
+    "estimated_total_response_tokens": 7841,
+    "estimate_method": "chars_div_4",
+    "note": "the product's 'model visible' means the rendered context field only; the runtime gave the model the whole payload"
+   },
+   "topGroups": [
+    {
+     "group": "productContext.modelVisibleContext",
+     "characters": 3086,
+     "category": "REPOSITORY_EVIDENCE",
+     "tokens": 980
+    },
+    {
+     "group": "diagnostics.retrieval",
+     "characters": 2499,
+     "category": "MACHINE_DIAGNOSTIC",
+     "tokens": 793
+    },
+    {
+     "group": "productContext.items[]",
+     "characters": 655,
+     "category": "REPOSITORY_EVIDENCE",
+     "tokens": 208
+    },
+    {
+     "group": "productContext.diagnostics",
+     "characters": 439,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 139
+    },
+    {
+     "group": "capsuleResult.digest",
+     "characters": 424,
+     "category": "REPOSITORY_EVIDENCE",
+     "tokens": 135
+    },
+    {
+     "group": "diagnostics.freshness",
+     "characters": 368,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 117
+    },
+    {
+     "group": "productContext.accounting",
+     "characters": 314,
+     "category": "MACHINE_DIAGNOSTIC",
+     "tokens": 100
+    },
+    {
+     "group": "diagnostics.indexFreshness",
+     "characters": 292,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 93
+    },
+    {
+     "group": "responseBudget.compacted_fields[]",
+     "characters": 290,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 92
+    },
+    {
+     "group": "request.query",
+     "characters": 285,
+     "category": "MACHINE_DIAGNOSTIC",
+     "tokens": 90
+    },
+    {
+     "group": "taskSummary.normalizedQuery",
+     "characters": 257,
+     "category": "MACHINE_DIAGNOSTIC",
+     "tokens": 82
+    },
+    {
+     "group": "deferred.notes[]",
+     "characters": 241,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 76
+    }
+   ]
+  },
+  {
+   "instanceId": "sphinx-doc__sphinx-11445",
+   "modelVisibleCharacters": 27873,
+   "outputCharacters": 27716,
+   "envelopeWrapperCharacters": 157,
+   "modelVisibleTokens": 8847,
+   "authority": "DERIVED_FROM_PROVIDER_REPORTED (chars converted at the M166-A calibrated rate)",
+   "categoryCharacters": {
+    "REPOSITORY_EVIDENCE": 3685,
+    "AGENT_USEFUL_CONTROL": 2207,
+    "MACHINE_DIAGNOSTIC": 1965,
+    "PROVENANCE": 1245,
+    "DUPLICATE": 6003,
+    "TRANSPORT_STRUCTURE": 12607,
+    "OTHER": 4
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 1170,
+    "AGENT_USEFUL_CONTROL": 701,
+    "MACHINE_DIAGNOSTIC": 624,
+    "PROVENANCE": 395,
+    "DUPLICATE": 1905,
+    "TRANSPORT_STRUCTURE": 4002,
+    "OTHER": 1
+   },
+   "evidenceSharePercent": 13.2,
+   "nonEvidenceTokens": 7677,
+   "metadataToEvidenceRatio": 6.56,
+   "productSelfReport": {
+    "estimated_model_visible_tokens": 541,
+    "estimated_metadata_tokens": 6388,
+    "estimated_total_response_tokens": 6929,
+    "estimate_method": "chars_div_4",
+    "note": "the product's 'model visible' means the rendered context field only; the runtime gave the model the whole payload"
+   },
+   "topGroups": [
+    {
+     "group": "productContext.modelVisibleContext",
+     "characters": 2236,
+     "category": "REPOSITORY_EVIDENCE",
+     "tokens": 710
+    },
+    {
+     "group": "productContext.items[]",
+     "characters": 631,
+     "category": "REPOSITORY_EVIDENCE",
+     "tokens": 200
+    },
+    {
+     "group": "productContext.diagnostics",
+     "characters": 439,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 139
+    },
+    {
+     "group": "diagnostics.retrieval",
+     "characters": 392,
+     "category": "MACHINE_DIAGNOSTIC",
+     "tokens": 124
+    },
+    {
+     "group": "diagnostics.freshness",
+     "characters": 368,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 117
+    },
+    {
+     "group": "capsuleResult.digest",
+     "characters": 339,
+     "category": "REPOSITORY_EVIDENCE",
+     "tokens": 108
+    },
+    {
+     "group": "productContext.accounting",
+     "characters": 312,
+     "category": "MACHINE_DIAGNOSTIC",
+     "tokens": 99
+    },
+    {
+     "group": "responseBudget.compacted_fields[]",
+     "characters": 290,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 92
+    },
+    {
+     "group": "diagnostics.indexFreshness",
+     "characters": 276,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 88
+    },
+    {
+     "group": "deferred.notes[]",
+     "characters": 241,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 76
+    },
+    {
+     "group": "pivotNeighborhood[].excerpts[]",
+     "characters": 186,
+     "category": "REPOSITORY_EVIDENCE",
+     "tokens": 59
+    },
+    {
+     "group": "deferred.items[]",
+     "characters": 173,
+     "category": "PROVENANCE",
+     "tokens": 55
+    }
+   ]
+  },
+  {
+   "instanceId": "sphinx-doc__sphinx-7440",
+   "modelVisibleCharacters": 26124,
+   "outputCharacters": 25967,
+   "envelopeWrapperCharacters": 157,
+   "modelVisibleTokens": 8292,
+   "authority": "DERIVED_FROM_PROVIDER_REPORTED (chars converted at the M166-A calibrated rate)",
+   "categoryCharacters": {
+    "REPOSITORY_EVIDENCE": 3279,
+    "AGENT_USEFUL_CONTROL": 2159,
+    "MACHINE_DIAGNOSTIC": 2406,
+    "PROVENANCE": 1124,
+    "DUPLICATE": 5221,
+    "TRANSPORT_STRUCTURE": 11767,
+    "OTHER": 11
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 1041,
+    "AGENT_USEFUL_CONTROL": 685,
+    "MACHINE_DIAGNOSTIC": 764,
+    "PROVENANCE": 357,
+    "DUPLICATE": 1657,
+    "TRANSPORT_STRUCTURE": 3735,
+    "OTHER": 3
+   },
+   "evidenceSharePercent": 12.6,
+   "nonEvidenceTokens": 7251,
+   "metadataToEvidenceRatio": 6.97,
+   "productSelfReport": {
+    "estimated_model_visible_tokens": 515,
+    "estimated_metadata_tokens": 5977,
+    "estimated_total_response_tokens": 6492,
+    "estimate_method": "chars_div_4",
+    "note": "the product's 'model visible' means the rendered context field only; the runtime gave the model the whole payload"
+   },
+   "topGroups": [
+    {
+     "group": "productContext.modelVisibleContext",
+     "characters": 2121,
+     "category": "REPOSITORY_EVIDENCE",
+     "tokens": 673
+    },
+    {
+     "group": "productContext.items[]",
+     "characters": 550,
+     "category": "REPOSITORY_EVIDENCE",
+     "tokens": 175
+    },
+    {
+     "group": "capsuleResult.digest",
+     "characters": 441,
+     "category": "REPOSITORY_EVIDENCE",
+     "tokens": 140
+    },
+    {
+     "group": "productContext.diagnostics",
+     "characters": 439,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 139
+    },
+    {
+     "group": "diagnostics.freshness",
+     "characters": 368,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 117
+    },
+    {
+     "group": "diagnostics.retrieval",
+     "characters": 363,
+     "category": "MACHINE_DIAGNOSTIC",
+     "tokens": 115
+    },
+    {
+     "group": "productContext.accounting",
+     "characters": 314,
+     "category": "MACHINE_DIAGNOSTIC",
+     "tokens": 100
+    },
+    {
+     "group": "responseBudget.compacted_fields[]",
+     "characters": 297,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 94
+    },
+    {
+     "group": "diagnostics.indexFreshness",
+     "characters": 274,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 87
+    },
+    {
+     "group": "request.query",
+     "characters": 272,
+     "category": "MACHINE_DIAGNOSTIC",
+     "tokens": 86
+    },
+    {
+     "group": "taskSummary.normalizedQuery",
+     "characters": 256,
+     "category": "MACHINE_DIAGNOSTIC",
+     "tokens": 81
+    },
+    {
+     "group": "deferred.notes[]",
+     "characters": 241,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 76
+    }
+   ]
+  },
+  {
+   "instanceId": "sympy__sympy-13798",
+   "modelVisibleCharacters": 33808,
+   "outputCharacters": 33651,
+   "envelopeWrapperCharacters": 157,
+   "modelVisibleTokens": 10731,
+   "authority": "DERIVED_FROM_PROVIDER_REPORTED (chars converted at the M166-A calibrated rate)",
+   "categoryCharacters": {
+    "REPOSITORY_EVIDENCE": 4257,
+    "AGENT_USEFUL_CONTROL": 2154,
+    "MACHINE_DIAGNOSTIC": 5356,
+    "PROVENANCE": 1093,
+    "DUPLICATE": 8589,
+    "TRANSPORT_STRUCTURE": 12196,
+    "OTHER": 6
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 1351,
+    "AGENT_USEFUL_CONTROL": 684,
+    "MACHINE_DIAGNOSTIC": 1700,
+    "PROVENANCE": 347,
+    "DUPLICATE": 2726,
+    "TRANSPORT_STRUCTURE": 3871,
+    "OTHER": 2
+   },
+   "evidenceSharePercent": 12.6,
+   "nonEvidenceTokens": 9380,
+   "metadataToEvidenceRatio": 6.94,
+   "productSelfReport": {
+    "estimated_model_visible_tokens": 641,
+    "estimated_metadata_tokens": 7772,
+    "estimated_total_response_tokens": 8413,
+    "estimate_method": "chars_div_4",
+    "note": "the product's 'model visible' means the rendered context field only; the runtime gave the model the whole payload"
+   },
+   "topGroups": [
+    {
+     "group": "diagnostics.retrieval",
+     "characters": 3350,
+     "category": "MACHINE_DIAGNOSTIC",
+     "tokens": 1063
+    },
+    {
+     "group": "productContext.modelVisibleContext",
+     "characters": 2648,
+     "category": "REPOSITORY_EVIDENCE",
+     "tokens": 840
+    },
+    {
+     "group": "productContext.items[]",
+     "characters": 540,
+     "category": "REPOSITORY_EVIDENCE",
+     "tokens": 171
+    },
+    {
+     "group": "capsuleResult.digest",
+     "characters": 500,
+     "category": "REPOSITORY_EVIDENCE",
+     "tokens": 159
+    },
+    {
+     "group": "productContext.diagnostics",
+     "characters": 439,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 139
+    },
+    {
+     "group": "pivotNeighborhood[].excerpts[]",
+     "characters": 409,
+     "category": "REPOSITORY_EVIDENCE",
+     "tokens": 130
+    },
+    {
+     "group": "diagnostics.freshness",
+     "characters": 368,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 117
+    },
+    {
+     "group": "productContext.accounting",
+     "characters": 314,
+     "category": "MACHINE_DIAGNOSTIC",
+     "tokens": 100
+    },
+    {
+     "group": "responseBudget.compacted_fields[]",
+     "characters": 290,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 92
+    },
+    {
+     "group": "diagnostics.indexFreshness",
+     "characters": 264,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 84
+    },
+    {
+     "group": "request.query",
+     "characters": 247,
+     "category": "MACHINE_DIAGNOSTIC",
+     "tokens": 78
+    },
+    {
+     "group": "deferred.notes[]",
+     "characters": 241,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 76
+    }
+   ]
+  },
+  {
+   "instanceId": "sympy__sympy-14976",
+   "modelVisibleCharacters": 36481,
+   "outputCharacters": 36324,
+   "envelopeWrapperCharacters": 157,
+   "modelVisibleTokens": 11579,
+   "authority": "DERIVED_FROM_PROVIDER_REPORTED (chars converted at the M166-A calibrated rate)",
+   "categoryCharacters": {
+    "REPOSITORY_EVIDENCE": 4134,
+    "AGENT_USEFUL_CONTROL": 2178,
+    "MACHINE_DIAGNOSTIC": 7246,
+    "PROVENANCE": 1033,
+    "DUPLICATE": 9791,
+    "TRANSPORT_STRUCTURE": 11938,
+    "OTHER": 4
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 1312,
+    "AGENT_USEFUL_CONTROL": 691,
+    "MACHINE_DIAGNOSTIC": 2300,
+    "PROVENANCE": 328,
+    "DUPLICATE": 3108,
+    "TRANSPORT_STRUCTURE": 3789,
+    "OTHER": 1
+   },
+   "evidenceSharePercent": 11.3,
+   "nonEvidenceTokens": 10267,
+   "metadataToEvidenceRatio": 7.83,
+   "productSelfReport": {
+    "estimated_model_visible_tokens": 675,
+    "estimated_metadata_tokens": 8406,
+    "estimated_total_response_tokens": 9081,
+    "estimate_method": "chars_div_4",
+    "note": "the product's 'model visible' means the rendered context field only; the runtime gave the model the whole payload"
+   },
+   "topGroups": [
+    {
+     "group": "diagnostics.retrieval",
+     "characters": 5698,
+     "category": "MACHINE_DIAGNOSTIC",
+     "tokens": 1809
+    },
+    {
+     "group": "productContext.modelVisibleContext",
+     "characters": 2763,
+     "category": "REPOSITORY_EVIDENCE",
+     "tokens": 877
+    },
+    {
+     "group": "productContext.diagnostics",
+     "characters": 439,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 139
+    },
+    {
+     "group": "productContext.items[]",
+     "characters": 418,
+     "category": "REPOSITORY_EVIDENCE",
+     "tokens": 133
+    },
+    {
+     "group": "pivotNeighborhood[].excerpts[]",
+     "characters": 405,
+     "category": "REPOSITORY_EVIDENCE",
+     "tokens": 129
+    },
+    {
+     "group": "diagnostics.freshness",
+     "characters": 368,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 117
+    },
+    {
+     "group": "capsuleResult.digest",
+     "characters": 322,
+     "category": "REPOSITORY_EVIDENCE",
+     "tokens": 102
+    },
+    {
+     "group": "productContext.accounting",
+     "characters": 314,
+     "category": "MACHINE_DIAGNOSTIC",
+     "tokens": 100
+    },
+    {
+     "group": "responseBudget.compacted_fields[]",
+     "characters": 290,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 92
+    },
+    {
+     "group": "diagnostics.indexFreshness",
+     "characters": 264,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 84
+    },
+    {
+     "group": "deferred.notes[]",
+     "characters": 241,
+     "category": "AGENT_USEFUL_CONTROL",
+     "tokens": 76
+    },
+    {
+     "group": "deferred.items[]",
+     "characters": 173,
+     "category": "PROVENANCE",
+     "tokens": 55
+    }
+   ]
+  }
+ ]
+}

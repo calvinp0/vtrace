@@ -114,6 +114,7 @@ import {
 import { resolveDeferredVexpRef } from "../runPipeline/expandDeferredVexpRef";
 import {
   compactProductResponse,
+  agentFacingIndexFreshness,
   isMcpResponseDetail,
   McpResponseDetail,
   remeasureResponseBudget,
@@ -1562,7 +1563,11 @@ const INDEX_FRESHNESS_SCHEMA = objectProperty(
       additionalProperties: false,
     },
   },
-  ["state", "isStale", "summary", "reasons", "observedFileChanges", "autoReindex", "snapshot", "currentHead", "comparison", "readiness"],
+  // `whyItMatters` and `recommendedAction` are declared elsewhere in this shape and
+  // survive at every detail level with the state itself. The indexer's own working
+  // out — observed changes, auto-reindex bookkeeping, snapshot fingerprints, head
+  // comparison — is detail-conditional and returned at `detail=debug`.
+  ["state", "isStale", "summary", "reasons", "readiness"],
 );
 
 const FILE_WATCHER_STATUS_SCHEMA = objectProperty(
@@ -1711,7 +1716,9 @@ const GET_CODE_CONTEXT_INDEX_FRESHNESS_DIAGNOSTIC_SCHEMA = objectProperty(
     currentHead: { type: ["string", "null"], description: "Current selected-worktree HEAD." },
     indexRunId: { type: ["integer", "string", "null"], description: "Manifest index run id." },
   },
-  ["status", "reason", "action", "beforeState", "afterState", "latestRunId"],
+  // Status, reason and action are the readiness truth and are always present.
+  // The refresh bookkeeping around them is detail-conditional (`detail=debug`).
+  ["status", "reason", "action"],
 );
 
 const RUN_PIPELINE_DIAGNOSTICS_SCHEMA = objectProperty(
@@ -2395,6 +2402,10 @@ const RUN_PIPELINE_RULE_SECTION_SCHEMA = objectProperty(
 const RUN_PIPELINE_ORCHESTRATION_DIAGNOSTICS_SCHEMA = objectProperty(
   "Explicit orchestration diagnostics combining intent, retrieval, impact, and memory decisions.",
   {
+    omittedForDetail: {
+      type: ["string", "null"],
+      description: "Present when machine-facing diagnostics were held for detail=debug; says so where the removal happened.",
+    },
     intent: objectProperty(
       "Intent-selection diagnostics.",
       {
@@ -2549,7 +2560,13 @@ const RUN_PIPELINE_ORCHESTRATION_DIAGNOSTICS_SCHEMA = objectProperty(
     deferredCount: integerProperty("Number of deferred expandable placeholders emitted."),
     omittedSectionCount: integerProperty("Number of top-level sections (context, impact, flow, session, durable) omitted."),
   },
-  ["intent", "retrieval", "impact", "flow", "memory", "rules", "budget", "deferredCount", "omittedSectionCount"],
+  // Detail-conditional. These members answer how the answer was computed and are
+  // returned at `detail=debug`; at compact and standard the response carries only
+  // the freshness and readiness diagnostics an agent can act on, because M166
+  // measured the rest as model-visible, billed on every call, and consumed by no
+  // product code. A schema that declared them required would describe a response
+  // shape the tool no longer returns by default.
+  [],
 );
 
 const RUN_PIPELINE_DEFERRED_ITEM_SCHEMA = objectProperty(
@@ -9385,6 +9402,19 @@ async function handleGetCodeContextRequest({
   // run_pipeline already applied the bounded shape; this tool only overwrites
   // freshness/timing afterwards, so re-measure rather than re-compact (which would
   // under-report what the inner pass removed).
+  //
+  // The overwrite must land in the SAME shape the inner pass settled on. Writing the
+  // raw index-freshness record here used to restore, after compaction, the detail the
+  // envelope had just held back — and twice over, since it appears both as
+  // `refreshDiagnostics` and as `diagnostics.indexFreshness`. That is why M165
+  // measured this wrapper as more expensive than the tool it wraps.
+  const detailRequested = parseOptionalStringField(McpToolId.GetCodeContext, input, "detail");
+  const responseDetail = typeof detailRequested === "string" && isMcpResponseDetail(detailRequested)
+    ? detailRequested
+    : McpResponseDetail.Standard;
+  const indexFreshnessForResponse = responseDetail === McpResponseDetail.Debug
+    ? check.indexFreshness
+    : agentFacingIndexFreshness(check.indexFreshness);
   return {
     ok: true,
     output: remeasureResponseBudget({
@@ -9400,7 +9430,11 @@ async function handleGetCodeContextRequest({
           status: check.indexFreshness.status,
           reason: check.indexFreshness.reason,
           action: check.indexFreshness.action,
-          refreshDiagnostics: check.indexFreshness,
+          // The precise record is `diagnostics.indexFreshness`; repeating it here
+          // is the duplication M166-B measured, and the envelope already replaces
+          // it with a reference.
+          refreshDiagnostics: result.output.productContext.freshness?.refreshDiagnostics
+            ?? { ref: "diagnostics.indexFreshness" },
         },
         timing: {
           ...result.output.productContext.timing,
@@ -9415,7 +9449,7 @@ async function handleGetCodeContextRequest({
       },
       diagnostics: {
         ...result.output.diagnostics,
-        indexFreshness: check.indexFreshness,
+        indexFreshness: indexFreshnessForResponse,
       },
     }),
   };

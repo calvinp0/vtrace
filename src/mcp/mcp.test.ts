@@ -1831,7 +1831,7 @@ test("get_code_context inherits unified intent metadata and impact ungating from
       schema: MCP_SERVER_SCHEMA,
       requestId: "req-get-code-context-impact-intent",
       toolId: McpToolId.GetCodeContext,
-      input: { query: "what is the impact of changing createSession" },
+      input: { detail: "debug", query: "what is the impact of changing createSession" },
     });
 
     assert.equal(response.result.ok, true);
@@ -2685,6 +2685,7 @@ test("run_pipeline skips impact with explicit reason when no focal symbol can be
       requestId: "req-run-pipeline-impact-ambiguous",
       toolId: McpToolId.RunPipeline,
       input: {
+        detail: "debug",
         query: "what breaks if I change the public api for session code",
       },
     });
@@ -2714,6 +2715,7 @@ test("run_pipeline reports multiple_focal_symbols when impact trigger mentions m
       requestId: "req-run-pipeline-impact-multiple",
       toolId: McpToolId.RunPipeline,
       input: {
+        detail: "debug",
         task: "what breaks if I change createSession and readSession",
         preset: "refactor",
       },
@@ -2752,6 +2754,7 @@ test("run_pipeline memory section includes durable observations when they match 
       requestId: "req-run-pipeline-memory-hit",
       toolId: McpToolId.RunPipeline,
       input: {
+        detail: "debug",
         query: "rename createSession",
         sessionId: "session-alpha",
       },
@@ -2779,6 +2782,7 @@ test("run_pipeline memory section includes durable observations when they match 
       requestId: "req-run-pipeline-memory-no-session",
       toolId: McpToolId.RunPipeline,
       input: {
+        detail: "debug",
         query: "rename createSession",
       },
     });
@@ -2979,13 +2983,13 @@ test("run_pipeline returns explicit retrieval diagnostics for empty candidate an
       schema: MCP_SERVER_SCHEMA,
       requestId: "req-run-pipeline-no-candidates",
       toolId: McpToolId.RunPipeline,
-      input: { query: "definitely_missing_pipeline_symbol" },
+      input: { detail: "debug", query: "definitely_missing_pipeline_symbol" },
     });
     const unsupported = await server.handleRequest({
       schema: MCP_SERVER_SCHEMA,
       requestId: "req-run-pipeline-unsupported-shape",
       toolId: McpToolId.RunPipeline,
-      input: { query: "!!! ???" },
+      input: { detail: "debug", query: "!!! ???" },
     });
 
     assert.equal(noCandidates.result.ok, true);
@@ -3035,6 +3039,7 @@ const stores = new ProductStoreLease(db, initialized.paths.dbPath).write;
         requestId: "req-run-pipeline-recovered",
         toolId: McpToolId.RunPipeline,
         input: {
+          detail: "debug",
           query: "Session",
           maxBudgetCharacters: fallbackBudget,
         },
@@ -3080,6 +3085,7 @@ test("run_pipeline deferred placeholders cover context, impact, session, and dur
       requestId: "req-run-pipeline-deferred",
       toolId: McpToolId.RunPipeline,
       input: {
+        detail: "debug",
         query: "rename createSession",
         sessionId: "session-beta",
       },
@@ -3150,6 +3156,7 @@ const stores = new ProductStoreLease(db, initialized.paths.dbPath).write;
       requestId: "req-run-pipeline-schema-parity",
       toolId: McpToolId.RunPipeline,
       input: {
+        detail: "debug",
         query: "rename createSession",
         maxBudgetCharacters: 5_000,
       },
@@ -3369,7 +3376,7 @@ const stores = new ProductStoreLease(db, initialized.paths.dbPath).write;
         schema: MCP_SERVER_SCHEMA,
         requestId: "req-run-pipeline-nudge-no-session",
         toolId: McpToolId.RunPipeline,
-        input: { query: "Session" },
+        input: { detail: "debug", query: "Session" },
       });
       assert.equal(noSession.result.ok, true);
       assert.equal(noSession.result.output.diagnostics.nudge.enabled, false);
@@ -3379,7 +3386,7 @@ const stores = new ProductStoreLease(db, initialized.paths.dbPath).write;
         schema: MCP_SERVER_SCHEMA,
         requestId: "req-run-pipeline-nudge-1",
         toolId: McpToolId.RunPipeline,
-        input: { query: "createSession", sessionId: "nudge-session" },
+        input: { detail: "debug", query: "createSession", sessionId: "nudge-session" },
       });
       assert.equal(first.result.ok, true);
       assert.equal(first.result.output.diagnostics.nudge.enabled, false);
@@ -3396,7 +3403,7 @@ const stores = new ProductStoreLease(db, initialized.paths.dbPath).write;
         schema: MCP_SERVER_SCHEMA,
         requestId: "req-run-pipeline-nudge-3",
         toolId: McpToolId.RunPipeline,
-        input: { query: "readSession", sessionId: "nudge-session" },
+        input: { detail: "debug", query: "readSession", sessionId: "nudge-session" },
       });
 
       assert.equal(third.result.ok, true);
@@ -3430,7 +3437,7 @@ const stores = new ProductStoreLease(db, initialized.paths.dbPath).write;
         schema: MCP_SERVER_SCHEMA,
         requestId: "req-run-pipeline-nudge-after-durable",
         toolId: McpToolId.RunPipeline,
-        input: { query: "SessionManager", sessionId: "nudge-session" },
+        input: { detail: "debug", query: "SessionManager", sessionId: "nudge-session" },
       });
       assert.equal(afterDurable.result.ok, true);
       assert.equal(afterDurable.result.output.diagnostics.nudge.enabled, false);
@@ -3534,7 +3541,7 @@ test("index_status and run_pipeline diagnostics report watcher-observed stale fi
       schema: MCP_SERVER_SCHEMA,
       requestId: "req-run-pipeline-stale-watcher",
       toolId: McpToolId.RunPipeline,
-      input: { query: "session manager", maxBudgetCharacters: 4_000 },
+      input: { detail: "debug", query: "session manager", maxBudgetCharacters: 4_000 },
     });
 
     assert.equal(status.result.ok, true);
@@ -3769,6 +3776,7 @@ test("get_code_context auto_refresh defaults to never and if_stale refreshes onl
       requestId: "req-worktree-auto-enabled",
       toolId: McpToolId.GetCodeContext,
       input: {
+        detail: "debug",
         task: "find createSession",
         repo_root: featureRoot,
         auto_refresh: "if_stale",

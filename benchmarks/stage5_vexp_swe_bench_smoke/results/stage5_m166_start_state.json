@@ -1,0 +1,67 @@
+{
+ "schemaVersion": 1,
+ "milestone": "M166",
+ "title": "MCP Response Tax and Model-Visible Compression Audit \u2014 start state",
+ "resolvedMechanically": true,
+ "git": {
+  "branch": "main",
+  "head": "506dbb500e6695bd8dfbd160d163c7fab1922786",
+  "headSubject": "Find the composed investigation already shipping, and stop the experiment for it",
+  "originMain": "bcdd962e42cfdfccbce89e14885a90f405ba3490",
+  "aheadOfOriginMain": 84,
+  "behindOriginMain": 0,
+  "pushed": false
+ },
+ "predecessorShas": {
+  "m164ReadinessRepair": {
+   "sha": "7dc9385aad239b048b6314c516b8f8a1f46668d3",
+   "subject": "Let an indexed repository be readable without having been initialized"
+  },
+  "m164Evidence": {
+   "sha": "0ed243628513166441d91115dee1382f01fc7b27",
+   "subject": "Record M164: the evidence arrived, and it changed nothing"
+  },
+  "m164FinalNumbers": {
+   "sha": "c355221761160254974e9eb573b8b35e094210a0",
+   "subject": "Record the final verification numbers in the M164 report"
+  },
+  "m165Predecessor": {
+   "sha": "c355221761160254974e9eb573b8b35e094210a0",
+   "subject": "Record the final verification numbers in the M164 report"
+  },
+  "m165Final": {
+   "sha": "506dbb500e6695bd8dfbd160d163c7fab1922786",
+   "subject": "Find the composed investigation already shipping, and stop the experiment for it"
+  }
+ },
+ "worktrees": {
+  "count": 14,
+  "expectedFromM165Report": 13,
+  "verified": true,
+  "list": [
+   "/home/calvin/code/vtrace",
+   "/home/calvin/bench/vtrace-m140/impl/m136base",
+   "/home/calvin/bench/vtrace-m140/impl/m139",
+   "/home/calvin/bench/vtrace-m140/impl/m140a",
+   "/home/calvin/bench/vtrace-m140/impl/m140a2",
+   "/home/calvin/bench/vtrace-m140/impl/m140a3",
+   "/home/calvin/bench/vtrace-m140/impl/m140a4",
+   "/home/calvin/bench/vtrace-m140/impl/m140a5",
+   "/home/calvin/bench/vtrace-m140/impl/m140a6",
+   "/home/calvin/bench/vtrace-m142/bisect-0e4edc7",
+   "/home/calvin/bench/vtrace-m142/bisect-321f9a3",
+   "/home/calvin/bench/vtrace-m142/bisect-69826d3",
+   "/home/calvin/bench/vtrace-m142/iso-head",
+   "/home/calvin/bench/vtrace-m142/pred"
+  ]
+ },
+ "dirtyState": {
+  "modifiedTracked": [
+   "benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_outcome_ledger.json",
+   "benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_outcome_ledger.md"
+  ],
+  "untrackedCount": 167,
+  "policy": "pre-existing dirt preserved; stage5_outcome_ledger.* never staged"
+ },
+ "coAuthorTrailers": "NONE"
+}

@@ -1,0 +1,1004 @@
+{
+ "schemaVersion": 1,
+ "milestone": "M166",
+ "workstream": "C",
+ "title": "Token cost of each counterfactual, over the twelve payloads the agents received",
+ "tokenConversion": {
+  "charactersPerToken": 3.151,
+  "authority": "DERIVED_FROM_PROVIDER_REPORTED"
+ },
+ "currentMedianModelFacingTokens": 8944,
+ "variants": [
+  {
+   "variant": "FULL_CURRENT",
+   "construction": "the payload as delivered",
+   "medianModelFacingTokens": 8944,
+   "deltaVersusCurrent": 0,
+   "reductionPercent": 0,
+   "evidenceTokensRetained": 1266,
+   "tasksWithSafetyFailure": 0,
+   "tasksWithPreservationFailure": 0,
+   "safetyFailureKinds": [],
+   "preservationFailureKinds": [],
+   "safe": true,
+   "machineRequiredMetadataRetainedElsewhere": "n/a"
+  },
+  {
+   "variant": "NO_DUPLICATES",
+   "construction": "same JSON shape, spans classified DUPLICATE removed",
+   "medianModelFacingTokens": 7005,
+   "deltaVersusCurrent": -1939,
+   "reductionPercent": 21.7,
+   "evidenceTokensRetained": 1266,
+   "tasksWithSafetyFailure": 0,
+   "tasksWithPreservationFailure": 0,
+   "safetyFailureKinds": [],
+   "preservationFailureKinds": [],
+   "safe": true,
+   "machineRequiredMetadataRetainedElsewhere": "yes — the authoritative structured result is unchanged and still reaches CLI and programmatic MCP consumers; only the model-facing rendering is simulated smaller"
+  },
+  {
+   "variant": "NO_MACHINE_DIAGNOSTICS",
+   "construction": "NO_DUPLICATES, then leaves classified MACHINE_DIAGNOSTIC removed",
+   "medianModelFacingTokens": 4151,
+   "deltaVersusCurrent": -4793,
+   "reductionPercent": 53.6,
+   "evidenceTokensRetained": 1266,
+   "tasksWithSafetyFailure": 0,
+   "tasksWithPreservationFailure": 0,
+   "safetyFailureKinds": [],
+   "preservationFailureKinds": [],
+   "safe": true,
+   "machineRequiredMetadataRetainedElsewhere": "yes — the authoritative structured result is unchanged and still reaches CLI and programmatic MCP consumers; only the model-facing rendering is simulated smaller"
+  },
+  {
+   "variant": "COMPACT_PROVENANCE",
+   "construction": "NO_MACHINE_DIAGNOSTICS, then per-item and per-section provenance collapsed into one response-level list",
+   "medianModelFacingTokens": 3623,
+   "deltaVersusCurrent": -5321,
+   "reductionPercent": 59.5,
+   "evidenceTokensRetained": 1266,
+   "tasksWithSafetyFailure": 0,
+   "tasksWithPreservationFailure": 0,
+   "safetyFailureKinds": [],
+   "preservationFailureKinds": [],
+   "safe": true,
+   "machineRequiredMetadataRetainedElsewhere": "yes — the authoritative structured result is unchanged and still reaches CLI and programmatic MCP consumers; only the model-facing rendering is simulated smaller"
+  },
+  {
+   "variant": "AGENT_MINIMAL_SAFE",
+   "construction": "canonical rendering, one provenance line, and every retained evidence/control leaf as a `path: value` line — no JSON scaffolding",
+   "medianModelFacingTokens": 4883,
+   "deltaVersusCurrent": -4061,
+   "reductionPercent": 45.4,
+   "evidenceTokensRetained": 1266,
+   "tasksWithSafetyFailure": 0,
+   "tasksWithPreservationFailure": 0,
+   "safetyFailureKinds": [],
+   "preservationFailureKinds": [],
+   "safe": true,
+   "machineRequiredMetadataRetainedElsewhere": "yes — the authoritative structured result is unchanged and still reaches CLI and programmatic MCP consumers; only the model-facing rendering is simulated smaller"
+  },
+  {
+   "variant": "EVIDENCE_ONLY",
+   "construction": "the canonical rendering alone; deliberately unsafe, included as a floor",
+   "medianModelFacingTokens": 813,
+   "deltaVersusCurrent": -8131,
+   "reductionPercent": 90.9,
+   "evidenceTokensRetained": 1266,
+   "tasksWithSafetyFailure": 12,
+   "tasksWithPreservationFailure": 12,
+   "safetyFailureKinds": [
+    "component statuses distinguishable (not_applicable vs no_relevant_evidence vs not_observed)",
+    "readiness truth retained (ready vs degraded vs stale)",
+    "degraded/result state retained",
+    "absence semantics retained (bounded absence must not read as authoritative absence)",
+    "authority limitations retained (support must not read as ownership, static must not read as dynamic)",
+    "material omission disclosed (partial coverage must not read as complete)",
+    "roles retained (support must remain distinguishable from pivot)"
+   ],
+   "preservationFailureKinds": [
+    "roles",
+    "skeletons",
+    "neighborhood excerpts",
+    "provenance for external consumers",
+    "memory and flow statuses",
+    "item paths"
+   ],
+   "safe": false,
+   "machineRequiredMetadataRetainedElsewhere": "yes — the authoritative structured result is unchanged and still reaches CLI and programmatic MCP consumers; only the model-facing rendering is simulated smaller"
+  }
+ ],
+ "compositionOfTheTax": {
+  "duplicatePercent": 21.8,
+  "transportStructurePercent": 41.9,
+  "machineDiagnosticPercent": 11.3,
+  "provenancePercent": 3.9,
+  "repositoryEvidencePercent": 14.2,
+  "agentUsefulControlPercent": 7.7
+ },
+ "bestSafeVariant": {
+  "variant": "COMPACT_PROVENANCE",
+  "construction": "NO_MACHINE_DIAGNOSTICS, then per-item and per-section provenance collapsed into one response-level list",
+  "medianModelFacingTokens": 3623,
+  "deltaVersusCurrent": -5321,
+  "reductionPercent": 59.5,
+  "evidenceTokensRetained": 1266,
+  "tasksWithSafetyFailure": 0,
+  "tasksWithPreservationFailure": 0,
+  "safetyFailureKinds": [],
+  "preservationFailureKinds": [],
+  "safe": true,
+  "machineRequiredMetadataRetainedElsewhere": "yes — the authoritative structured result is unchanged and still reaches CLI and programmatic MCP consumers; only the model-facing rendering is simulated smaller"
+ },
+ "materialityTest": {
+  "rule": "§45 — a saving on the order of thousands of model-visible tokens per call is material; tens are not",
+  "medianSavingTokens": 5321,
+  "material": true
+ },
+ "primaryDecision": "MODEL_VISIBLE_TAX_DOMINATED_BY_TRANSPORT",
+ "secondaryCharacterizations": [
+  "MODEL_VISIBLE_TAX_DOMINATED_BY_DUPLICATION (secondary)",
+  "MODEL_VISIBLE_TAX_DOMINATED_BY_TRANSPORT (secondary)"
+ ],
+ "cases": [
+  {
+   "instanceId": "astropy__astropy-13977",
+   "deliveredCharacters": 30389,
+   "deliveredTokens": 9646,
+   "variants": {
+    "FULL_CURRENT": {
+     "modelFacingCharacters": 30389,
+     "modelFacingTokens": 9646,
+     "reductionPercent": 0,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "NO_DUPLICATES": {
+     "modelFacingCharacters": 22162,
+     "modelFacingTokens": 7034,
+     "reductionPercent": 27.1,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "NO_MACHINE_DIAGNOSTICS": {
+     "modelFacingCharacters": 12306,
+     "modelFacingTokens": 3906,
+     "reductionPercent": 59.5,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "COMPACT_PROVENANCE": {
+     "modelFacingCharacters": 10616,
+     "modelFacingTokens": 3370,
+     "reductionPercent": 65.1,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "AGENT_MINIMAL_SAFE": {
+     "modelFacingCharacters": 14497,
+     "modelFacingTokens": 4601,
+     "reductionPercent": 52.3,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "EVIDENCE_ONLY": {
+     "modelFacingCharacters": 2175,
+     "modelFacingTokens": 690,
+     "reductionPercent": 92.8,
+     "safetyFailures": [
+      "component statuses distinguishable (not_applicable vs no_relevant_evidence vs not_observed): changed: impact NOT_APPLICABLE->NOT_OBSERVED, memorySession NOT_APPLICABLE->NOT_OBSERVED, memoryCapsuleSurfaced NO_RELEVANT_EVIDENCE->NOT_OBSERVED, context DELIVERED->NOT_OBSERVED",
+      "readiness truth retained (ready vs degraded vs stale): freshness fresh->null, ready true->null",
+      "degraded/result state retained: resolved->null",
+      "absence semantics retained (bounded absence must not read as authoritative absence): missing: coverage.absenceClaim=not_observed, coverage.enumerationComplete=false, coverage.mode=selective_task_retrieval",
+      "authority limitations retained (support must not read as ownership, static must not read as dynamic): missing: Impact is bounded static structural graph evidence, not dynamic execution flow. | Token estimates use a character ratio and are approximate. | Return types are reported only when parser-backed signatures contain them. | Capsule v2 does not expose an internal retrieval timing seam; capsuleBuildMs includes retrieval and retrievalMs is zero rather than double-counted. | staticEvidenceOnly | Compression relative to uniquely selected full files; not the repository, provider-billed tokens, or exact tokenizer usage. | pivot_source_bounded_to_signatures",
+      "material omission disclosed (partial coverage must not read as complete): missing: capsuleResult.discarded, capsuleResult.pivots[].evidence, capsuleResult.pivots[].roleReason, capsuleResult.pivots[].source, capsuleResult.support[].evidence, capsuleResult.support[].roleReason, capsuleResult.support[].source, context.pivots, context.supports, diagnostics.retrieval.search, pivotNeighborhoodExcerptCharacters, productContextItemBodyCharacters, capsuleItemBodyCharacters, retrievalSearchEntries, productContextItemMetadataKeys, capsuleDiscardedCandidates, additionalOmittedDetailKinds, context_capsule",
+      "roles retained (support must remain distinguishable from pivot): 0/5 distinct roles"
+     ],
+     "preservationFailures": [
+      "roles: 0/5 distinct",
+      "skeletons: 0/2",
+      "neighborhood excerpts: 0/4",
+      "provenance for external consumers: 4/12 identifiers still resolvable from the model-facing text"
+     ]
+    }
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 1101,
+    "AGENT_USEFUL_CONTROL": 686,
+    "MACHINE_DIAGNOSTIC": 1304,
+    "PROVENANCE": 342,
+    "DUPLICATE": 2434,
+    "TRANSPORT_STRUCTURE": 3728,
+    "OTHER": 1
+   }
+  },
+  {
+   "instanceId": "django__django-11451",
+   "deliveredCharacters": 24291,
+   "deliveredTokens": 7710,
+   "variants": {
+    "FULL_CURRENT": {
+     "modelFacingCharacters": 24291,
+     "modelFacingTokens": 7710,
+     "reductionPercent": 0,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "NO_DUPLICATES": {
+     "modelFacingCharacters": 18870,
+     "modelFacingTokens": 5989,
+     "reductionPercent": 22.3,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "NO_MACHINE_DIAGNOSTICS": {
+     "modelFacingCharacters": 11632,
+     "modelFacingTokens": 3692,
+     "reductionPercent": 52.1,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "COMPACT_PROVENANCE": {
+     "modelFacingCharacters": 10038,
+     "modelFacingTokens": 3186,
+     "reductionPercent": 58.7,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "AGENT_MINIMAL_SAFE": {
+     "modelFacingCharacters": 13774,
+     "modelFacingTokens": 4372,
+     "reductionPercent": 43.3,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "EVIDENCE_ONLY": {
+     "modelFacingCharacters": 1754,
+     "modelFacingTokens": 557,
+     "reductionPercent": 92.8,
+     "safetyFailures": [
+      "component statuses distinguishable (not_applicable vs no_relevant_evidence vs not_observed): changed: impact NOT_APPLICABLE->NOT_OBSERVED, memorySession NOT_APPLICABLE->NOT_OBSERVED, memoryDurable NOT_APPLICABLE->NOT_OBSERVED, memoryCapsuleSurfaced NO_RELEVANT_EVIDENCE->NOT_OBSERVED, context DELIVERED->NOT_OBSERVED",
+      "readiness truth retained (ready vs degraded vs stale): freshness fresh->null, ready true->null",
+      "degraded/result state retained: resolved->null",
+      "absence semantics retained (bounded absence must not read as authoritative absence): missing: coverage.absenceClaim=not_observed, coverage.enumerationComplete=false, coverage.mode=selective_task_retrieval",
+      "authority limitations retained (support must not read as ownership, static must not read as dynamic): missing: Impact is bounded static structural graph evidence, not dynamic execution flow. | Token estimates use a character ratio and are approximate. | Return types are reported only when parser-backed signatures contain them. | Capsule v2 does not expose an internal retrieval timing seam; capsuleBuildMs includes retrieval and retrievalMs is zero rather than double-counted. | staticEvidenceOnly | Compression relative to uniquely selected full files; not the repository, provider-billed tokens, or exact tokenizer usage. | pivot_source_bounded_to_signatures",
+      "material omission disclosed (partial coverage must not read as complete): missing: capsuleResult.discarded, capsuleResult.pivots[].evidence, capsuleResult.pivots[].roleReason, capsuleResult.pivots[].source, capsuleResult.support[].evidence, capsuleResult.support[].roleReason, capsuleResult.support[].source, context.pivots, context.supports, pivotNeighborhood[].excerpts[].text, pivotNeighborhoodExcerptCharacters, productContextItemBodyCharacters, capsuleItemBodyCharacters, capsuleDiscardedCandidates, productContextItemMetadataKeys, capsuleItemEvidenceLines, additionalOmittedDetailKinds, context_capsule",
+      "roles retained (support must remain distinguishable from pivot): 0/5 distinct roles"
+     ],
+     "preservationFailures": [
+      "roles: 0/5 distinct",
+      "skeletons: 0/2",
+      "neighborhood excerpts: 0/4",
+      "memory and flow statuses: memory NOT_OBSERVED, flow NOT_OBSERVED",
+      "provenance for external consumers: 4/12 identifiers still resolvable from the model-facing text"
+     ]
+    }
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 938,
+    "AGENT_USEFUL_CONTROL": 693,
+    "MACHINE_DIAGNOSTIC": 556,
+    "PROVENANCE": 335,
+    "DUPLICATE": 1515,
+    "TRANSPORT_STRUCTURE": 3621,
+    "OTHER": 1
+   }
+  },
+  {
+   "instanceId": "django__django-13343",
+   "deliveredCharacters": 25665,
+   "deliveredTokens": 8146,
+   "variants": {
+    "FULL_CURRENT": {
+     "modelFacingCharacters": 25665,
+     "modelFacingTokens": 8146,
+     "reductionPercent": 0,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "NO_DUPLICATES": {
+     "modelFacingCharacters": 20094,
+     "modelFacingTokens": 6378,
+     "reductionPercent": 21.7,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "NO_MACHINE_DIAGNOSTICS": {
+     "modelFacingCharacters": 12985,
+     "modelFacingTokens": 4121,
+     "reductionPercent": 49.4,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "COMPACT_PROVENANCE": {
+     "modelFacingCharacters": 11222,
+     "modelFacingTokens": 3562,
+     "reductionPercent": 56.3,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "AGENT_MINIMAL_SAFE": {
+     "modelFacingCharacters": 15127,
+     "modelFacingTokens": 4801,
+     "reductionPercent": 41.1,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "EVIDENCE_ONLY": {
+     "modelFacingCharacters": 2690,
+     "modelFacingTokens": 854,
+     "reductionPercent": 89.5,
+     "safetyFailures": [
+      "component statuses distinguishable (not_applicable vs no_relevant_evidence vs not_observed): changed: impact NOT_APPLICABLE->NOT_OBSERVED, memorySession NOT_APPLICABLE->NOT_OBSERVED, memoryDurable NOT_APPLICABLE->NOT_OBSERVED, memoryCapsuleSurfaced NO_RELEVANT_EVIDENCE->NOT_OBSERVED, context DELIVERED->NOT_OBSERVED",
+      "readiness truth retained (ready vs degraded vs stale): freshness fresh->null, ready true->null",
+      "degraded/result state retained: resolved->null",
+      "absence semantics retained (bounded absence must not read as authoritative absence): missing: coverage.absenceClaim=not_observed, coverage.enumerationComplete=false, coverage.mode=selective_task_retrieval",
+      "authority limitations retained (support must not read as ownership, static must not read as dynamic): missing: Impact is bounded static structural graph evidence, not dynamic execution flow. | Token estimates use a character ratio and are approximate. | Return types are reported only when parser-backed signatures contain them. | Capsule v2 does not expose an internal retrieval timing seam; capsuleBuildMs includes retrieval and retrievalMs is zero rather than double-counted. | staticEvidenceOnly | Compression relative to uniquely selected full files; not the repository, provider-billed tokens, or exact tokenizer usage. | pivot_source_bounded_to_signatures",
+      "material omission disclosed (partial coverage must not read as complete): missing: capsuleResult.discarded, capsuleResult.pivots[].evidence, capsuleResult.pivots[].roleReason, capsuleResult.pivots[].source, capsuleResult.support[].evidence, capsuleResult.support[].roleReason, capsuleResult.support[].source, context.pivots, context.supports, pivotNeighborhood[].excerpts[].text, pivotNeighborhoodExcerptCharacters, productContextItemBodyCharacters, capsuleItemBodyCharacters, productContextItemMetadataKeys, capsuleDiscardedCandidates, productContextDiagnosticFilePaths, additionalOmittedDetailKinds, context_capsule",
+      "roles retained (support must remain distinguishable from pivot): 0/5 distinct roles"
+     ],
+     "preservationFailures": [
+      "roles: 0/5 distinct",
+      "skeletons: 0/2",
+      "neighborhood excerpts: 0/4",
+      "memory and flow statuses: memory NOT_OBSERVED, flow NOT_OBSERVED",
+      "provenance for external consumers: 3/12 identifiers still resolvable from the model-facing text"
+     ]
+    }
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 1328,
+    "AGENT_USEFUL_CONTROL": 694,
+    "MACHINE_DIAGNOSTIC": 527,
+    "PROVENANCE": 354,
+    "DUPLICATE": 1455,
+    "TRANSPORT_STRUCTURE": 3737,
+    "OTHER": 1
+   }
+  },
+  {
+   "instanceId": "matplotlib__matplotlib-24177",
+   "deliveredCharacters": 27163,
+   "deliveredTokens": 8622,
+   "variants": {
+    "FULL_CURRENT": {
+     "modelFacingCharacters": 27163,
+     "modelFacingTokens": 8622,
+     "reductionPercent": 0,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "NO_DUPLICATES": {
+     "modelFacingCharacters": 21824,
+     "modelFacingTokens": 6927,
+     "reductionPercent": 19.7,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "NO_MACHINE_DIAGNOSTICS": {
+     "modelFacingCharacters": 14417,
+     "modelFacingTokens": 4576,
+     "reductionPercent": 46.9,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "COMPACT_PROVENANCE": {
+     "modelFacingCharacters": 12808,
+     "modelFacingTokens": 4065,
+     "reductionPercent": 52.8,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "AGENT_MINIMAL_SAFE": {
+     "modelFacingCharacters": 16422,
+     "modelFacingTokens": 5212,
+     "reductionPercent": 39.5,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "EVIDENCE_ONLY": {
+     "modelFacingCharacters": 4291,
+     "modelFacingTokens": 1362,
+     "reductionPercent": 84.2,
+     "safetyFailures": [
+      "component statuses distinguishable (not_applicable vs no_relevant_evidence vs not_observed): changed: impact NOT_APPLICABLE->NOT_OBSERVED, memorySession NOT_APPLICABLE->NOT_OBSERVED, memoryDurable NOT_APPLICABLE->NOT_OBSERVED, memoryCapsuleSurfaced NO_RELEVANT_EVIDENCE->NOT_OBSERVED, context DELIVERED->NOT_OBSERVED",
+      "readiness truth retained (ready vs degraded vs stale): freshness fresh->null, ready true->null",
+      "degraded/result state retained: resolved->null",
+      "absence semantics retained (bounded absence must not read as authoritative absence): missing: coverage.absenceClaim=not_observed, coverage.enumerationComplete=false, coverage.mode=selective_task_retrieval",
+      "authority limitations retained (support must not read as ownership, static must not read as dynamic): missing: Impact is bounded static structural graph evidence, not dynamic execution flow. | Token estimates use a character ratio and are approximate. | Return types are reported only when parser-backed signatures contain them. | Capsule v2 does not expose an internal retrieval timing seam; capsuleBuildMs includes retrieval and retrievalMs is zero rather than double-counted. | staticEvidenceOnly | Compression relative to uniquely selected full files; not the repository, provider-billed tokens, or exact tokenizer usage. | pivot_source_bounded_to_signatures",
+      "material omission disclosed (partial coverage must not read as complete): missing: capsuleResult.discarded, capsuleResult.pivots[].evidence, capsuleResult.pivots[].roleReason, capsuleResult.pivots[].source, capsuleResult.support[].evidence, capsuleResult.support[].roleReason, capsuleResult.support[].source, context.pivots, context.supports, diagnostics.retrieval.search, productContextItemBodyCharacters, pivotNeighborhoodExcerptCharacters, capsuleItemBodyCharacters, retrievalSearchEntries, capsuleDiscardedCandidates, productContextItemMetadataKeys, additionalOmittedDetailKinds, context_capsule",
+      "roles retained (support must remain distinguishable from pivot): 0/5 distinct roles"
+     ],
+     "preservationFailures": [
+      "roles: 0/5 distinct",
+      "skeletons: 0/2",
+      "neighborhood excerpts: 0/4",
+      "memory and flow statuses: memory NOT_OBSERVED, flow NOT_OBSERVED",
+      "provenance for external consumers: 4/12 identifiers still resolvable from the model-facing text"
+     ]
+    }
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 1827,
+    "AGENT_USEFUL_CONTROL": 691,
+    "MACHINE_DIAGNOSTIC": 602,
+    "PROVENANCE": 340,
+    "DUPLICATE": 1497,
+    "TRANSPORT_STRUCTURE": 3613,
+    "OTHER": 1
+   }
+  },
+  {
+   "instanceId": "pydata__xarray-4966",
+   "deliveredCharacters": 26662,
+   "deliveredTokens": 8463,
+   "variants": {
+    "FULL_CURRENT": {
+     "modelFacingCharacters": 26662,
+     "modelFacingTokens": 8463,
+     "reductionPercent": 0,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "NO_DUPLICATES": {
+     "modelFacingCharacters": 21978,
+     "modelFacingTokens": 6976,
+     "reductionPercent": 17.6,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "NO_MACHINE_DIAGNOSTICS": {
+     "modelFacingCharacters": 12828,
+     "modelFacingTokens": 4072,
+     "reductionPercent": 51.9,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "COMPACT_PROVENANCE": {
+     "modelFacingCharacters": 10777,
+     "modelFacingTokens": 3421,
+     "reductionPercent": 59.6,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "AGENT_MINIMAL_SAFE": {
+     "modelFacingCharacters": 14794,
+     "modelFacingTokens": 4696,
+     "reductionPercent": 44.5,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "EVIDENCE_ONLY": {
+     "modelFacingCharacters": 2068,
+     "modelFacingTokens": 656,
+     "reductionPercent": 92.2,
+     "safetyFailures": [
+      "component statuses distinguishable (not_applicable vs no_relevant_evidence vs not_observed): changed: impact NOT_APPLICABLE->NOT_OBSERVED, memorySession NOT_APPLICABLE->NOT_OBSERVED, memoryCapsuleSurfaced NO_RELEVANT_EVIDENCE->NOT_OBSERVED, context DELIVERED->NOT_OBSERVED",
+      "readiness truth retained (ready vs degraded vs stale): freshness fresh->null, ready true->null",
+      "degraded/result state retained: resolved->null",
+      "absence semantics retained (bounded absence must not read as authoritative absence): missing: coverage.absenceClaim=not_observed, coverage.enumerationComplete=false, coverage.mode=selective_task_retrieval",
+      "authority limitations retained (support must not read as ownership, static must not read as dynamic): missing: Impact is bounded static structural graph evidence, not dynamic execution flow. | Token estimates use a character ratio and are approximate. | Return types are reported only when parser-backed signatures contain them. | Capsule v2 does not expose an internal retrieval timing seam; capsuleBuildMs includes retrieval and retrievalMs is zero rather than double-counted. | staticEvidenceOnly | Compression relative to uniquely selected full files; not the repository, provider-billed tokens, or exact tokenizer usage. | pivot_source_bounded_to_signatures",
+      "material omission disclosed (partial coverage must not read as complete): missing: capsuleResult.discarded, capsuleResult.pivots[].evidence, capsuleResult.pivots[].roleReason, capsuleResult.pivots[].source, capsuleResult.support[].evidence, capsuleResult.support[].roleReason, capsuleResult.support[].source, context.pivots, context.supports, pivotNeighborhood[].excerpts[].text, pivotNeighborhoodExcerptCharacters, productContextItemBodyCharacters, capsuleItemBodyCharacters, productContextItemMetadataKeys, capsuleDiscardedCandidates, capsuleItemEvidenceLines, additionalOmittedDetailKinds, context_capsule",
+      "roles retained (support must remain distinguishable from pivot): 0/5 distinct roles"
+     ],
+     "preservationFailures": [
+      "roles: 0/5 distinct",
+      "skeletons: 0/2",
+      "neighborhood excerpts: 0/4",
+      "provenance for external consumers: 4/12 identifiers still resolvable from the model-facing text"
+     ]
+    }
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 1039,
+    "AGENT_USEFUL_CONTROL": 690,
+    "MACHINE_DIAGNOSTIC": 767,
+    "PROVENANCE": 352,
+    "DUPLICATE": 1811,
+    "TRANSPORT_STRUCTURE": 3752,
+    "OTHER": 2
+   }
+  },
+  {
+   "instanceId": "pytest-dev__pytest-7982",
+   "deliveredCharacters": 28483,
+   "deliveredTokens": 9041,
+   "variants": {
+    "FULL_CURRENT": {
+     "modelFacingCharacters": 28483,
+     "modelFacingTokens": 9041,
+     "reductionPercent": 0,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "NO_DUPLICATES": {
+     "modelFacingCharacters": 23293,
+     "modelFacingTokens": 7393,
+     "reductionPercent": 18.2,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "NO_MACHINE_DIAGNOSTICS": {
+     "modelFacingCharacters": 12500,
+     "modelFacingTokens": 3968,
+     "reductionPercent": 56.1,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "COMPACT_PROVENANCE": {
+     "modelFacingCharacters": 10763,
+     "modelFacingTokens": 3416,
+     "reductionPercent": 62.2,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "AGENT_MINIMAL_SAFE": {
+     "modelFacingCharacters": 14308,
+     "modelFacingTokens": 4541,
+     "reductionPercent": 49.8,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "EVIDENCE_ONLY": {
+     "modelFacingCharacters": 2558,
+     "modelFacingTokens": 812,
+     "reductionPercent": 91,
+     "safetyFailures": [
+      "component statuses distinguishable (not_applicable vs no_relevant_evidence vs not_observed): changed: impact NOT_APPLICABLE->NOT_OBSERVED, memorySession NOT_APPLICABLE->NOT_OBSERVED, memoryCapsuleSurfaced NO_RELEVANT_EVIDENCE->NOT_OBSERVED, context DELIVERED->NOT_OBSERVED",
+      "readiness truth retained (ready vs degraded vs stale): freshness fresh->null, ready true->null",
+      "degraded/result state retained: resolved->null",
+      "absence semantics retained (bounded absence must not read as authoritative absence): missing: coverage.absenceClaim=not_observed, coverage.enumerationComplete=false, coverage.mode=selective_task_retrieval",
+      "authority limitations retained (support must not read as ownership, static must not read as dynamic): missing: Impact is bounded static structural graph evidence, not dynamic execution flow. | Token estimates use a character ratio and are approximate. | Return types are reported only when parser-backed signatures contain them. | Capsule v2 does not expose an internal retrieval timing seam; capsuleBuildMs includes retrieval and retrievalMs is zero rather than double-counted. | staticEvidenceOnly | Compression relative to uniquely selected full files; not the repository, provider-billed tokens, or exact tokenizer usage.",
+      "material omission disclosed (partial coverage must not read as complete): missing: capsuleResult.discarded, capsuleResult.pivots[].evidence, capsuleResult.pivots[].roleReason, capsuleResult.pivots[].source, capsuleResult.support[].evidence, capsuleResult.support[].roleReason, capsuleResult.support[].source, context.pivots, context.supports, diagnostics.retrieval.search, capsuleItemBodyCharacters, productContextItemBodyCharacters, pivotNeighborhoodExcerptCharacters, retrievalSearchEntries, capsuleDiscardedCandidates, additionalOmittedDetailKinds, context_capsule",
+      "roles retained (support must remain distinguishable from pivot): 0/5 distinct roles"
+     ],
+     "preservationFailures": [
+      "roles: 0/5 distinct",
+      "skeletons: 0/1",
+      "neighborhood excerpts: 0/4",
+      "provenance for external consumers: 4/12 identifiers still resolvable from the model-facing text"
+     ]
+    }
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 1219,
+    "AGENT_USEFUL_CONTROL": 689,
+    "MACHINE_DIAGNOSTIC": 1253,
+    "PROVENANCE": 309,
+    "DUPLICATE": 1998,
+    "TRANSPORT_STRUCTURE": 3520,
+    "OTHER": 2
+   }
+  },
+  {
+   "instanceId": "scikit-learn__scikit-learn-13496",
+   "deliveredCharacters": 34519,
+   "deliveredTokens": 10956,
+   "variants": {
+    "FULL_CURRENT": {
+     "modelFacingCharacters": 34519,
+     "modelFacingTokens": 10956,
+     "reductionPercent": 0,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "NO_DUPLICATES": {
+     "modelFacingCharacters": 26110,
+     "modelFacingTokens": 8287,
+     "reductionPercent": 24.4,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "NO_MACHINE_DIAGNOSTICS": {
+     "modelFacingCharacters": 13743,
+     "modelFacingTokens": 4362,
+     "reductionPercent": 60.2,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "COMPACT_PROVENANCE": {
+     "modelFacingCharacters": 11608,
+     "modelFacingTokens": 3684,
+     "reductionPercent": 66.4,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "AGENT_MINIMAL_SAFE": {
+     "modelFacingCharacters": 15639,
+     "modelFacingTokens": 4964,
+     "reductionPercent": 54.7,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "EVIDENCE_ONLY": {
+     "modelFacingCharacters": 3133,
+     "modelFacingTokens": 994,
+     "reductionPercent": 90.9,
+     "safetyFailures": [
+      "component statuses distinguishable (not_applicable vs no_relevant_evidence vs not_observed): changed: impact NOT_APPLICABLE->NOT_OBSERVED, memorySession NOT_APPLICABLE->NOT_OBSERVED, memoryCapsuleSurfaced NO_RELEVANT_EVIDENCE->NOT_OBSERVED, context DELIVERED->NOT_OBSERVED",
+      "readiness truth retained (ready vs degraded vs stale): freshness fresh->null, ready true->null",
+      "degraded/result state retained: resolved->null",
+      "absence semantics retained (bounded absence must not read as authoritative absence): missing: coverage.absenceClaim=not_observed, coverage.enumerationComplete=false, coverage.mode=selective_task_retrieval",
+      "authority limitations retained (support must not read as ownership, static must not read as dynamic): missing: Impact is bounded static structural graph evidence, not dynamic execution flow. | Token estimates use a character ratio and are approximate. | Return types are reported only when parser-backed signatures contain them. | Capsule v2 does not expose an internal retrieval timing seam; capsuleBuildMs includes retrieval and retrievalMs is zero rather than double-counted. | staticEvidenceOnly | Compression relative to uniquely selected full files; not the repository, provider-billed tokens, or exact tokenizer usage.",
+      "material omission disclosed (partial coverage must not read as complete): missing: capsuleResult.discarded, capsuleResult.pivots[].evidence, capsuleResult.pivots[].roleReason, capsuleResult.pivots[].source, capsuleResult.support[].evidence, capsuleResult.support[].roleReason, capsuleResult.support[].source, context.pivots, context.supports, diagnostics.retrieval.search, capsuleItemBodyCharacters, productContextItemBodyCharacters, pivotNeighborhoodExcerptCharacters, retrievalSearchEntries, productContextItemMetadataKeys, capsuleDiscardedCandidates, additionalOmittedDetailKinds, context_capsule",
+      "roles retained (support must remain distinguishable from pivot): 0/5 distinct roles"
+     ],
+     "preservationFailures": [
+      "roles: 0/5 distinct",
+      "skeletons: 0/1",
+      "neighborhood excerpts: 0/4",
+      "provenance for external consumers: 4/12 identifiers still resolvable from the model-facing text"
+     ]
+    }
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 1428,
+    "AGENT_USEFUL_CONTROL": 673,
+    "MACHINE_DIAGNOSTIC": 1761,
+    "PROVENANCE": 369,
+    "DUPLICATE": 2818,
+    "TRANSPORT_STRUCTURE": 3857,
+    "OTHER": 2
+   }
+  },
+  {
+   "instanceId": "scikit-learn__scikit-learn-14087",
+   "deliveredCharacters": 31521,
+   "deliveredTokens": 10005,
+   "variants": {
+    "FULL_CURRENT": {
+     "modelFacingCharacters": 31521,
+     "modelFacingTokens": 10005,
+     "reductionPercent": 0,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "NO_DUPLICATES": {
+     "modelFacingCharacters": 25458,
+     "modelFacingTokens": 8080,
+     "reductionPercent": 19.2,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "NO_MACHINE_DIAGNOSTICS": {
+     "modelFacingCharacters": 13876,
+     "modelFacingTokens": 4404,
+     "reductionPercent": 56,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "COMPACT_PROVENANCE": {
+     "modelFacingCharacters": 11606,
+     "modelFacingTokens": 3684,
+     "reductionPercent": 63.2,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "AGENT_MINIMAL_SAFE": {
+     "modelFacingCharacters": 15725,
+     "modelFacingTokens": 4991,
+     "reductionPercent": 50.1,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "EVIDENCE_ONLY": {
+     "modelFacingCharacters": 2990,
+     "modelFacingTokens": 949,
+     "reductionPercent": 90.5,
+     "safetyFailures": [
+      "component statuses distinguishable (not_applicable vs no_relevant_evidence vs not_observed): changed: impact NOT_APPLICABLE->NOT_OBSERVED, memorySession NOT_APPLICABLE->NOT_OBSERVED, memoryCapsuleSurfaced NO_RELEVANT_EVIDENCE->NOT_OBSERVED, context DELIVERED->NOT_OBSERVED",
+      "readiness truth retained (ready vs degraded vs stale): freshness fresh->null, ready true->null",
+      "degraded/result state retained: resolved->null",
+      "absence semantics retained (bounded absence must not read as authoritative absence): missing: coverage.absenceClaim=not_observed, coverage.enumerationComplete=false, coverage.mode=selective_task_retrieval",
+      "authority limitations retained (support must not read as ownership, static must not read as dynamic): missing: Impact is bounded static structural graph evidence, not dynamic execution flow. | Token estimates use a character ratio and are approximate. | Return types are reported only when parser-backed signatures contain them. | Capsule v2 does not expose an internal retrieval timing seam; capsuleBuildMs includes retrieval and retrievalMs is zero rather than double-counted. | staticEvidenceOnly | Compression relative to uniquely selected full files; not the repository, provider-billed tokens, or exact tokenizer usage.",
+      "material omission disclosed (partial coverage must not read as complete): missing: capsuleResult.discarded, capsuleResult.pivots[].evidence, capsuleResult.pivots[].roleReason, capsuleResult.pivots[].source, capsuleResult.support[].evidence, capsuleResult.support[].roleReason, capsuleResult.support[].source, context.pivots, context.supports, diagnostics.retrieval.search, pivotNeighborhoodExcerptCharacters, productContextItemBodyCharacters, capsuleItemBodyCharacters, retrievalSearchEntries, productContextItemMetadataKeys, capsuleDiscardedCandidates, additionalOmittedDetailKinds, context_capsule",
+      "roles retained (support must remain distinguishable from pivot): 0/5 distinct roles"
+     ],
+     "preservationFailures": [
+      "item paths: 4/5 present in the model-facing text",
+      "roles: 0/5 distinct",
+      "skeletons: 0/1",
+      "neighborhood excerpts: 0/4",
+      "provenance for external consumers: 3/12 identifiers still resolvable from the model-facing text"
+     ]
+    }
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 1388,
+    "AGENT_USEFUL_CONTROL": 673,
+    "MACHINE_DIAGNOSTIC": 1451,
+    "PROVENANCE": 371,
+    "DUPLICATE": 2199,
+    "TRANSPORT_STRUCTURE": 3871,
+    "OTHER": 2
+   }
+  },
+  {
+   "instanceId": "sphinx-doc__sphinx-11445",
+   "deliveredCharacters": 27873,
+   "deliveredTokens": 8847,
+   "variants": {
+    "FULL_CURRENT": {
+     "modelFacingCharacters": 27873,
+     "modelFacingTokens": 8847,
+     "reductionPercent": 0,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "NO_DUPLICATES": {
+     "modelFacingCharacters": 21725,
+     "modelFacingTokens": 6896,
+     "reductionPercent": 22.1,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "NO_MACHINE_DIAGNOSTICS": {
+     "modelFacingCharacters": 13992,
+     "modelFacingTokens": 4441,
+     "reductionPercent": 49.8,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "COMPACT_PROVENANCE": {
+     "modelFacingCharacters": 11997,
+     "modelFacingTokens": 3808,
+     "reductionPercent": 57,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "AGENT_MINIMAL_SAFE": {
+     "modelFacingCharacters": 16856,
+     "modelFacingTokens": 5350,
+     "reductionPercent": 39.5,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "EVIDENCE_ONLY": {
+     "modelFacingCharacters": 2164,
+     "modelFacingTokens": 687,
+     "reductionPercent": 92.2,
+     "safetyFailures": [
+      "component statuses distinguishable (not_applicable vs no_relevant_evidence vs not_observed): changed: impact NOT_APPLICABLE->NOT_OBSERVED, memorySession NOT_APPLICABLE->NOT_OBSERVED, memoryDurable NOT_APPLICABLE->NOT_OBSERVED, memoryCapsuleSurfaced NO_RELEVANT_EVIDENCE->NOT_OBSERVED, context DELIVERED->NOT_OBSERVED",
+      "readiness truth retained (ready vs degraded vs stale): freshness fresh->null, ready true->null",
+      "degraded/result state retained: resolved->null",
+      "absence semantics retained (bounded absence must not read as authoritative absence): missing: coverage.absenceClaim=not_observed, coverage.enumerationComplete=false, coverage.mode=selective_task_retrieval",
+      "authority limitations retained (support must not read as ownership, static must not read as dynamic): missing: Impact is bounded static structural graph evidence, not dynamic execution flow. | Token estimates use a character ratio and are approximate. | Return types are reported only when parser-backed signatures contain them. | Capsule v2 does not expose an internal retrieval timing seam; capsuleBuildMs includes retrieval and retrievalMs is zero rather than double-counted. | staticEvidenceOnly | Compression relative to uniquely selected full files; not the repository, provider-billed tokens, or exact tokenizer usage.",
+      "material omission disclosed (partial coverage must not read as complete): missing: capsuleResult.discarded, capsuleResult.pivots[].evidence, capsuleResult.pivots[].roleReason, capsuleResult.pivots[].source, capsuleResult.support[].evidence, capsuleResult.support[].roleReason, capsuleResult.support[].source, context.pivots, context.supports, diagnostics.retrieval.search, pivotNeighborhoodExcerptCharacters, productContextItemBodyCharacters, capsuleItemBodyCharacters, retrievalSearchEntries, productContextItemMetadataKeys, capsuleDiscardedCandidates, additionalOmittedDetailKinds, context_capsule",
+      "roles retained (support must remain distinguishable from pivot): 0/5 distinct roles"
+     ],
+     "preservationFailures": [
+      "roles: 0/5 distinct",
+      "skeletons: 0/1",
+      "neighborhood excerpts: 0/4",
+      "memory and flow statuses: memory NOT_OBSERVED, flow NOT_OBSERVED",
+      "provenance for external consumers: 3/12 identifiers still resolvable from the model-facing text"
+     ]
+    }
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 1170,
+    "AGENT_USEFUL_CONTROL": 701,
+    "MACHINE_DIAGNOSTIC": 624,
+    "PROVENANCE": 395,
+    "DUPLICATE": 1905,
+    "TRANSPORT_STRUCTURE": 4002,
+    "OTHER": 1
+   }
+  },
+  {
+   "instanceId": "sphinx-doc__sphinx-7440",
+   "deliveredCharacters": 26124,
+   "deliveredTokens": 8292,
+   "variants": {
+    "FULL_CURRENT": {
+     "modelFacingCharacters": 26124,
+     "modelFacingTokens": 8292,
+     "reductionPercent": 0,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "NO_DUPLICATES": {
+     "modelFacingCharacters": 21898,
+     "modelFacingTokens": 6950,
+     "reductionPercent": 16.2,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "NO_MACHINE_DIAGNOSTICS": {
+     "modelFacingCharacters": 12939,
+     "modelFacingTokens": 4107,
+     "reductionPercent": 50.5,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "COMPACT_PROVENANCE": {
+     "modelFacingCharacters": 10889,
+     "modelFacingTokens": 3456,
+     "reductionPercent": 58.3,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "AGENT_MINIMAL_SAFE": {
+     "modelFacingCharacters": 15085,
+     "modelFacingTokens": 4788,
+     "reductionPercent": 42.3,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "EVIDENCE_ONLY": {
+     "modelFacingCharacters": 2059,
+     "modelFacingTokens": 654,
+     "reductionPercent": 92.1,
+     "safetyFailures": [
+      "component statuses distinguishable (not_applicable vs no_relevant_evidence vs not_observed): changed: impact NOT_APPLICABLE->NOT_OBSERVED, memorySession NOT_APPLICABLE->NOT_OBSERVED, memoryCapsuleSurfaced NO_RELEVANT_EVIDENCE->NOT_OBSERVED, context DELIVERED->NOT_OBSERVED",
+      "readiness truth retained (ready vs degraded vs stale): freshness fresh->null, ready true->null",
+      "degraded/result state retained: resolved->null",
+      "absence semantics retained (bounded absence must not read as authoritative absence): missing: coverage.absenceClaim=not_observed, coverage.enumerationComplete=false, coverage.mode=selective_task_retrieval",
+      "authority limitations retained (support must not read as ownership, static must not read as dynamic): missing: Impact is bounded static structural graph evidence, not dynamic execution flow. | Token estimates use a character ratio and are approximate. | Return types are reported only when parser-backed signatures contain them. | Capsule v2 does not expose an internal retrieval timing seam; capsuleBuildMs includes retrieval and retrievalMs is zero rather than double-counted. | staticEvidenceOnly | Compression relative to uniquely selected full files; not the repository, provider-billed tokens, or exact tokenizer usage. | pivot_source_bounded_to_signatures",
+      "material omission disclosed (partial coverage must not read as complete): missing: capsuleResult.discarded, capsuleResult.pivots[].evidence, capsuleResult.pivots[].roleReason, capsuleResult.pivots[].source, capsuleResult.support[].evidence, capsuleResult.support[].roleReason, capsuleResult.support[].source, context.pivots, context.supports, pivotNeighborhood[].excerpts[].text, pivotNeighborhoodExcerptCharacters, productContextItemBodyCharacters, capsuleItemBodyCharacters, productContextItemMetadataKeys, capsuleDiscardedCandidates, capsuleItemEvidenceLines, additionalOmittedDetailKinds, context_capsule",
+      "roles retained (support must remain distinguishable from pivot): 0/5 distinct roles"
+     ],
+     "preservationFailures": [
+      "roles: 0/5 distinct",
+      "skeletons: 0/2",
+      "neighborhood excerpts: 0/4",
+      "provenance for external consumers: 3/12 identifiers still resolvable from the model-facing text"
+     ]
+    }
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 1041,
+    "AGENT_USEFUL_CONTROL": 685,
+    "MACHINE_DIAGNOSTIC": 764,
+    "PROVENANCE": 357,
+    "DUPLICATE": 1657,
+    "TRANSPORT_STRUCTURE": 3735,
+    "OTHER": 3
+   }
+  },
+  {
+   "instanceId": "sympy__sympy-13798",
+   "deliveredCharacters": 33808,
+   "deliveredTokens": 10731,
+   "variants": {
+    "FULL_CURRENT": {
+     "modelFacingCharacters": 33808,
+     "modelFacingTokens": 10731,
+     "reductionPercent": 0,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "NO_DUPLICATES": {
+     "modelFacingCharacters": 25997,
+     "modelFacingTokens": 8252,
+     "reductionPercent": 23.1,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "NO_MACHINE_DIAGNOSTICS": {
+     "modelFacingCharacters": 13721,
+     "modelFacingTokens": 4355,
+     "reductionPercent": 59.4,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "COMPACT_PROVENANCE": {
+     "modelFacingCharacters": 11767,
+     "modelFacingTokens": 3735,
+     "reductionPercent": 65.2,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "AGENT_MINIMAL_SAFE": {
+     "modelFacingCharacters": 16078,
+     "modelFacingTokens": 5103,
+     "reductionPercent": 52.4,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "EVIDENCE_ONLY": {
+     "modelFacingCharacters": 2563,
+     "modelFacingTokens": 814,
+     "reductionPercent": 92.4,
+     "safetyFailures": [
+      "component statuses distinguishable (not_applicable vs no_relevant_evidence vs not_observed): changed: impact NOT_APPLICABLE->NOT_OBSERVED, memorySession NOT_APPLICABLE->NOT_OBSERVED, memoryCapsuleSurfaced NO_RELEVANT_EVIDENCE->NOT_OBSERVED, context DELIVERED->NOT_OBSERVED",
+      "readiness truth retained (ready vs degraded vs stale): freshness fresh->null, ready true->null",
+      "degraded/result state retained: resolved->null",
+      "absence semantics retained (bounded absence must not read as authoritative absence): missing: coverage.absenceClaim=not_observed, coverage.enumerationComplete=false, coverage.mode=selective_task_retrieval",
+      "authority limitations retained (support must not read as ownership, static must not read as dynamic): missing: Impact is bounded static structural graph evidence, not dynamic execution flow. | Token estimates use a character ratio and are approximate. | Return types are reported only when parser-backed signatures contain them. | Capsule v2 does not expose an internal retrieval timing seam; capsuleBuildMs includes retrieval and retrievalMs is zero rather than double-counted. | staticEvidenceOnly | Compression relative to uniquely selected full files; not the repository, provider-billed tokens, or exact tokenizer usage. | pivot_source_bounded_to_signatures",
+      "material omission disclosed (partial coverage must not read as complete): missing: capsuleResult.discarded, capsuleResult.pivots[].evidence, capsuleResult.pivots[].roleReason, capsuleResult.pivots[].source, capsuleResult.support[].evidence, capsuleResult.support[].roleReason, capsuleResult.support[].source, context.pivots, context.supports, diagnostics.retrieval.search, pivotNeighborhoodExcerptCharacters, productContextItemBodyCharacters, capsuleItemBodyCharacters, retrievalSearchEntries, capsuleDiscardedCandidates, capsuleItemEvidenceLines, additionalOmittedDetailKinds, context_capsule",
+      "roles retained (support must remain distinguishable from pivot): 0/5 distinct roles"
+     ],
+     "preservationFailures": [
+      "roles: 0/5 distinct",
+      "skeletons: 0/2",
+      "neighborhood excerpts: 0/4",
+      "provenance for external consumers: 3/12 identifiers still resolvable from the model-facing text"
+     ]
+    }
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 1351,
+    "AGENT_USEFUL_CONTROL": 684,
+    "MACHINE_DIAGNOSTIC": 1700,
+    "PROVENANCE": 347,
+    "DUPLICATE": 2726,
+    "TRANSPORT_STRUCTURE": 3871,
+    "OTHER": 2
+   }
+  },
+  {
+   "instanceId": "sympy__sympy-14976",
+   "deliveredCharacters": 36481,
+   "deliveredTokens": 11579,
+   "variants": {
+    "FULL_CURRENT": {
+     "modelFacingCharacters": 36481,
+     "modelFacingTokens": 11579,
+     "reductionPercent": 0,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "NO_DUPLICATES": {
+     "modelFacingCharacters": 26507,
+     "modelFacingTokens": 8413,
+     "reductionPercent": 27.3,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "NO_MACHINE_DIAGNOSTICS": {
+     "modelFacingCharacters": 13173,
+     "modelFacingTokens": 4181,
+     "reductionPercent": 63.9,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "COMPACT_PROVENANCE": {
+     "modelFacingCharacters": 11680,
+     "modelFacingTokens": 3707,
+     "reductionPercent": 68,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "AGENT_MINIMAL_SAFE": {
+     "modelFacingCharacters": 15958,
+     "modelFacingTokens": 5065,
+     "reductionPercent": 56.3,
+     "safetyFailures": [],
+     "preservationFailures": []
+    },
+    "EVIDENCE_ONLY": {
+     "modelFacingCharacters": 2699,
+     "modelFacingTokens": 857,
+     "reductionPercent": 92.6,
+     "safetyFailures": [
+      "component statuses distinguishable (not_applicable vs no_relevant_evidence vs not_observed): changed: impact NOT_APPLICABLE->NOT_OBSERVED, memorySession NOT_APPLICABLE->NOT_OBSERVED, memoryDurable NOT_APPLICABLE->NOT_OBSERVED, memoryCapsuleSurfaced NO_RELEVANT_EVIDENCE->NOT_OBSERVED, context DELIVERED->NOT_OBSERVED",
+      "readiness truth retained (ready vs degraded vs stale): freshness fresh->null, ready true->null",
+      "degraded/result state retained: resolved->null",
+      "absence semantics retained (bounded absence must not read as authoritative absence): missing: coverage.absenceClaim=not_observed, coverage.enumerationComplete=false, coverage.mode=selective_task_retrieval",
+      "authority limitations retained (support must not read as ownership, static must not read as dynamic): missing: Impact is bounded static structural graph evidence, not dynamic execution flow. | Token estimates use a character ratio and are approximate. | Return types are reported only when parser-backed signatures contain them. | Capsule v2 does not expose an internal retrieval timing seam; capsuleBuildMs includes retrieval and retrievalMs is zero rather than double-counted. | staticEvidenceOnly | Compression relative to uniquely selected full files; not the repository, provider-billed tokens, or exact tokenizer usage. | pivot_source_bounded_to_signatures",
+      "material omission disclosed (partial coverage must not read as complete): missing: capsuleResult.discarded, capsuleResult.pivots[].evidence, capsuleResult.pivots[].roleReason, capsuleResult.pivots[].source, capsuleResult.support[].evidence, capsuleResult.support[].roleReason, capsuleResult.support[].source, context.pivots, context.supports, diagnostics.retrieval.search, pivotNeighborhoodExcerptCharacters, productContextItemBodyCharacters, retrievalSearchEntries, capsuleItemBodyCharacters, capsuleDiscardedCandidates, capsuleItemEvidenceLines, additionalOmittedDetailKinds, context_capsule",
+      "roles retained (support must remain distinguishable from pivot): 0/4 distinct roles"
+     ],
+     "preservationFailures": [
+      "roles: 0/4 distinct",
+      "skeletons: 0/3",
+      "neighborhood excerpts: 0/4",
+      "memory and flow statuses: memory NOT_OBSERVED, flow NOT_OBSERVED",
+      "provenance for external consumers: 2/12 identifiers still resolvable from the model-facing text"
+     ]
+    }
+   },
+   "categoryTokens": {
+    "REPOSITORY_EVIDENCE": 1312,
+    "AGENT_USEFUL_CONTROL": 691,
+    "MACHINE_DIAGNOSTIC": 2300,
+    "PROVENANCE": 328,
+    "DUPLICATE": 3108,
+    "TRANSPORT_STRUCTURE": 3789,
+    "OTHER": 1
+   }
+  }
+ ]
+}

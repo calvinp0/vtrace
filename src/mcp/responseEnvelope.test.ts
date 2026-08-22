@@ -229,8 +229,25 @@ function duplicatedResponse() {
           laneCandidateFiles: Array.from({ length: 80 }, (_, index) => `pkg/candidate_${index}.py`),
         },
       },
-      indexFreshness: { status: "fresh", reason: "fresh", action: "none", manifestDelta: "x".repeat(900) },
-      freshness: { state: "fresh", nested: { verbose: "x".repeat(400) } },
+      indexFreshness: {
+        status: "fresh",
+        reason: "fresh",
+        action: "none",
+        readiness: { ready: true, sourceFresh: true },
+        beforeState: "fresh",
+        latestRunId: 7,
+        manifestDelta: "x".repeat(900),
+      },
+      freshness: {
+        state: "fresh",
+        isStale: false,
+        recommendedAction: "none",
+        readiness: { ready: true, sourceFresh: true },
+        snapshot: { lastIndexedHead: "abc" },
+        nested: { verbose: "x".repeat(400) },
+      },
+      budget: { model: "bounded", usedCharacters: 10 },
+      nudge: { enabled: false, reason: "no_session" },
       impact: { included: false, skipReason: "not_requested_by_intent" },
     },
     accounting: { latencyMs: 12, estimatedOutputTokens: 900, method: "chars_div_4" },
@@ -375,22 +392,116 @@ test("detail modes trade evidence for size without ever unbounding the response"
   );
 });
 
-test("raw retrieval matrices are counts by default and bounded samples under debug", () => {
+test("raw retrieval matrices reach the model at no detail level, and are bounded samples under debug", () => {
+  // M166 measured these matrices as model-visible and billed on every call while no
+  // product code read them. They are now held for `detail=debug`, where the earlier
+  // bounding still applies: a debug response is more informative, never unbounded.
   const standard = compactProductResponse(duplicatedResponse(), { requestedContextTokens: 12_000 });
-  const standardSearch = standard.diagnostics.retrieval.search as Record<string, unknown>;
-  assert.equal(standardSearch.queryVariants, undefined);
-  assert.equal(standardSearch.queryVariantsCount, 60);
-  assert.equal(standardSearch.laneCandidateFilesCount, 80);
-  // Short, readable term lists are not collateral damage.
-  assert.deepEqual(standardSearch.identifierTerms, ["failure"]);
+  assert.equal(standard.diagnostics.retrieval, undefined);
 
   const debug = compactProductResponse(duplicatedResponse(), {
     requestedContextTokens: 12_000,
     detail: McpResponseDetail.Debug,
   });
   const debugSearch = debug.diagnostics.retrieval.search as Record<string, unknown>;
-  assert.equal((debugSearch.queryVariantsSample as string[]).length, 12);
+  assert.equal(debugSearch.queryVariants, undefined);
   assert.equal(debugSearch.queryVariantsCount, 60);
+  assert.equal(debugSearch.laneCandidateFilesCount, 80);
+  // Short, readable term lists are not collateral damage.
+  assert.deepEqual(debugSearch.identifierTerms, ["failure"]);
+  assert.equal((debugSearch.queryVariantsSample as string[]).length, 12);
+});
+
+test("the default response keeps readiness truth and holds machine diagnostics for debug", () => {
+  // M166-D. The model is billed for every character of this response and re-billed
+  // on every later request in the run, so the default carries what an agent can act
+  // on and nothing else. What must survive is what stops a bounded answer reading as
+  // an authoritative one: status, reason, action and the readiness predicates.
+  const standard = compactProductResponse(duplicatedResponse(), { requestedContextTokens: 12_000 });
+  const debug = compactProductResponse(duplicatedResponse(), {
+    requestedContextTokens: 12_000,
+    detail: McpResponseDetail.Debug,
+  });
+  const diagnostics = standard.diagnostics as Record<string, any>;
+  const debugDiagnostics = debug.diagnostics as Record<string, any>;
+
+  // Every machine-facing member the response can carry is gone from the default.
+  for (const machineFacing of ["retrieval", "budget", "nudge", "intent", "memory", "rules", "impact", "flow"]) {
+    if (debugDiagnostics[machineFacing] === undefined) continue;
+    assert.equal(diagnostics[machineFacing], undefined, `${machineFacing} should not reach the model by default`);
+  }
+  // and at least two of them really were there, so this is not a vacuous loop.
+  assert.notEqual(debugDiagnostics.retrieval, undefined);
+  assert.notEqual(debugDiagnostics.impact, undefined);
+
+  // Readiness truth survives, in both places that carry it.
+  assert.equal(diagnostics.indexFreshness.status, "fresh");
+  assert.equal(diagnostics.indexFreshness.reason, "fresh");
+  assert.equal(diagnostics.indexFreshness.action, "none");
+  assert.deepEqual(diagnostics.indexFreshness.readiness, { ready: true, sourceFresh: true });
+  assert.equal(diagnostics.freshness.state, "fresh");
+  assert.equal(diagnostics.freshness.isStale, false);
+  assert.equal(diagnostics.freshness.recommendedAction, "none");
+  assert.deepEqual(diagnostics.freshness.readiness, { ready: true, sourceFresh: true });
+
+  // The indexer's own working out is not part of the answer.
+  assert.equal(diagnostics.indexFreshness.beforeState, undefined);
+  assert.equal(diagnostics.indexFreshness.latestRunId, undefined);
+  assert.equal(diagnostics.indexFreshness.manifestDelta, undefined);
+  assert.equal(diagnostics.freshness.snapshot, undefined);
+  assert.equal(diagnostics.freshness.nested, undefined);
+
+  // Component skip reasons live in their own top-level sections and are untouched,
+  // so not_applicable stays distinguishable from no_relevant_evidence.
+  assert.equal(standard.flow.skipReason, "no_indexed_path_found");
+  assert.equal(standard.memory.session.included, false);
+  assert.equal(standard.rules.included, false);
+});
+
+test("removing the machine diagnostics is disclosed, not silent", () => {
+  // A response that quietly dropped detail would let partial coverage read as
+  // complete. The envelope says what it held back and where to get it.
+  const standard = compactProductResponse(duplicatedResponse(), { requestedContextTokens: 12_000 });
+  assert.ok((standard.responseBudget.omitted_detail_counts as Record<string, number>).machineFacingDiagnosticCharacters > 0);
+  assert.ok(standard.responseBudget.compacted_fields.includes("diagnostics"));
+  // The envelope's expansion list is bounded, so the disclosure must also live where
+  // the removal happened; otherwise a reduced diagnostics block reads as a whole one.
+  assert.ok(
+    typeof (standard.diagnostics as Record<string, any>).omittedForDetail === "string"
+    && (standard.diagnostics as Record<string, any>).omittedForDetail.includes("detail=debug"),
+  );
+});
+
+test("detail=debug still returns the full diagnostics", () => {
+  const debug = compactProductResponse(duplicatedResponse(), {
+    requestedContextTokens: 12_000,
+    detail: McpResponseDetail.Debug,
+  });
+  const diagnostics = debug.diagnostics as Record<string, any>;
+  for (const machineFacing of ["retrieval", "budget", "nudge", "impact"]) {
+    assert.notEqual(diagnostics[machineFacing], undefined, `${machineFacing} must survive at debug`);
+  }
+  assert.notEqual(diagnostics.freshness.snapshot, undefined);
+  assert.notEqual(diagnostics.indexFreshness.beforeState, undefined);
+  assert.equal(diagnostics.indexFreshness.latestRunId, 7);
+});
+
+test("holding the diagnostics back makes the response materially smaller", () => {
+  const standard = compactProductResponse(duplicatedResponse(), { requestedContextTokens: 12_000 });
+  const debug = compactProductResponse(duplicatedResponse(), {
+    requestedContextTokens: 12_000,
+    detail: McpResponseDetail.Debug,
+  });
+  assert.ok(
+    JSON.stringify(standard).length < JSON.stringify(debug).length,
+    "the default must cost less than debug",
+  );
+  // The evidence itself is untouched by the saving.
+  assert.equal(standard.productContext.modelVisibleContext, debug.productContext.modelVisibleContext);
+  assert.deepEqual(
+    standard.productContext.items.map((item: any) => item.path),
+    debug.productContext.items.map((item: any) => item.path),
+  );
 });
 
 test("include_item_content restores per-item bodies as an explicit opt-in", () => {

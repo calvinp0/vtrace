@@ -1,0 +1,300 @@
+{
+ "schemaVersion": 1,
+ "milestone": "M166",
+ "workstream": "B",
+ "title": "Frozen classification rules for a model-facing response",
+ "frozenAt": "benchmarks/stage5_vexp_swe_bench_smoke/m166Taxonomy.ts",
+ "mutuallyExclusive": true,
+ "charactersSumToPayload": "asserted by m166Taxonomy.test.ts — decompose charges every character exactly once",
+ "categories": {
+  "REPOSITORY_EVIDENCE": "source excerpts, signatures, skeletons, impact evidence, caller/dependent names, relevant paths and symbols, task-relevant structural relationships",
+  "AGENT_USEFUL_CONTROL": "why selected, role labels, authority limitations, material omission reasons, freshness and readiness truth, partial/degraded state, not-applicable status that prevents false inference",
+  "MACHINE_DIAGNOSTIC": "candidate counts, scorer metrics, rank and lane diagnostics, budget and timing internals, debug flags, derivation bookkeeping",
+  "PROVENANCE": "index commit and tree identity, workspace identity, content hashes, producer ids, derivation versions",
+  "DUPLICATE": "a fact already conveyed elsewhere in the same model-facing response, by canonical semantic identity",
+  "TRANSPORT_STRUCTURE": "JSON keys, braces, quotes, commas — measured as the payload minus the sum of leaf values",
+  "OTHER": "unmatched by any rule; a non-zero value here means the rule table has fallen behind the schema"
+ },
+ "canonicalRendering": {
+  "path": "productContext.modelVisibleContext",
+  "why": "the only field the product itself declares model-visible, and the only one written to be read; duplication is measured against it"
+ },
+ "duplicateDetection": {
+  "wholeValue": "a non-canonical string leaf of >= 12 characters whose value appears in the canonical rendering, or which repeats an earlier leaf's value",
+  "composite": "a string leaf of > 200 characters is charged line by line; lines restating canonical or earlier lines are duplicate, the rest keeps its base category",
+  "objectLevel": "an object of >= 200 serialized characters that is byte-identical to an earlier object in the same response",
+  "deliberatelyNotCounted": "repetition inside the canonical rendering itself, and short shared vocabulary such as a status word appearing twice"
+ },
+ "ruleCount": 65,
+ "rules": [
+  {
+   "pattern": "^productContext\\.modelVisibleContext$",
+   "category": "REPOSITORY_EVIDENCE"
+  },
+  {
+   "pattern": "^productContext\\.leadPivot$",
+   "category": "REPOSITORY_EVIDENCE"
+  },
+  {
+   "pattern": "^productContext\\.roleCounts\\.",
+   "category": "REPOSITORY_EVIDENCE"
+  },
+  {
+   "pattern": "^productContext\\.items\\[\\]\\.(path|symbol|fqName|contentMode|roles\\[\\]|selectionReasons\\[\\]|lineSpan\\.)",
+   "category": "REPOSITORY_EVIDENCE"
+  },
+  {
+   "pattern": "^productContext\\.items\\[\\]\\.metadata\\.(fqName|kind|returnType|exported|pivotFqName|direction|edgeType|relationKind|evidenceStrength|applicability|targetKind|requiredTargetSources)",
+   "category": "REPOSITORY_EVIDENCE"
+  },
+  {
+   "pattern": "^pivotNeighborhood\\[\\]\\.(pivot\\.|excerpts\\[\\]\\.(filePath|symbol|fqName|startLine|endLine|text|reason))",
+   "category": "REPOSITORY_EVIDENCE"
+  },
+  {
+   "pattern": "^pivotNeighborhood\\[\\]\\.skipped",
+   "category": "AGENT_USEFUL_CONTROL"
+  },
+  {
+   "pattern": "^inspectFirst\\.",
+   "category": "REPOSITORY_EVIDENCE"
+  },
+  {
+   "pattern": "^capsuleResult\\.digest$",
+   "category": "REPOSITORY_EVIDENCE"
+  },
+  {
+   "pattern": "^capsuleResult\\.(pivots|support)\\[\\]\\.(path|fqName|symbol|kind|contentMode|role|signature|source|evidence|roleReason|isNonSourceExample)",
+   "category": "REPOSITORY_EVIDENCE"
+  },
+  {
+   "pattern": "^context\\.(pivots|supports)\\[\\]\\.(filePath|fqName|symbol|contentMode|role)",
+   "category": "REPOSITORY_EVIDENCE"
+  },
+  {
+   "pattern": "^impact\\.(focalSymbol|summary|topDependents)",
+   "category": "REPOSITORY_EVIDENCE"
+  },
+  {
+   "pattern": "^flow\\.(start|end|paths|summary)",
+   "category": "REPOSITORY_EVIDENCE"
+  },
+  {
+   "pattern": "^deferred\\.items\\[\\]\\.summary$",
+   "category": "REPOSITORY_EVIDENCE"
+  },
+  {
+   "pattern": "^productContext\\.(resultState|resolved|retrievalFound|deliveryFailed|capsuleMode)$",
+   "category": "AGENT_USEFUL_CONTROL"
+  },
+  {
+   "pattern": "^productContext\\.coverage\\.",
+   "category": "AGENT_USEFUL_CONTROL"
+  },
+  {
+   "pattern": "^productContext\\.delivery\\.status$",
+   "category": "AGENT_USEFUL_CONTROL"
+  },
+  {
+   "pattern": "^productContext\\.diagnostics\\.(limitations\\[\\]|staticEvidenceOnly|duplicatePolicy)$",
+   "category": "AGENT_USEFUL_CONTROL"
+  },
+  {
+   "pattern": "^productContext\\.accounting\\.claimBoundary$",
+   "category": "AGENT_USEFUL_CONTROL"
+  },
+  {
+   "pattern": "^productContext\\.freshness\\.(status|reason|action)$",
+   "category": "AGENT_USEFUL_CONTROL"
+  },
+  {
+   "pattern": "^(impact|flow)\\.(included|skipReason|triggerReason|selectionSource|claimScope|verificationRecommended|bothDirectionsReachable|endpointsResolved)$",
+   "category": "AGENT_USEFUL_CONTROL"
+  },
+  {
+   "pattern": "^memory\\.[a-zA-Z]+\\.(included|skipReason)$",
+   "category": "AGENT_USEFUL_CONTROL"
+  },
+  {
+   "pattern": "^rules\\.included$",
+   "category": "AGENT_USEFUL_CONTROL"
+  },
+  {
+   "pattern": "^context\\.(included|skipReason|truncated|compressed|note|itemCount)$",
+   "category": "AGENT_USEFUL_CONTROL"
+  },
+  {
+   "pattern": "^capsuleResult\\.(warnings\\[\\]|reason|actualMode|actionabilityHints)",
+   "category": "AGENT_USEFUL_CONTROL"
+  },
+  {
+   "pattern": "^deferred\\.(notes\\[\\]|expandable|expansionTool)$",
+   "category": "AGENT_USEFUL_CONTROL"
+  },
+  {
+   "pattern": "^deferred\\.items\\[\\]\\.(kind|expandable|expansionTool|suggestedTool)$",
+   "category": "AGENT_USEFUL_CONTROL"
+  },
+  {
+   "pattern": "^intent\\.(selectedIntent|confidence|reason|rationale|impactSkipReason|flowSkipReason|editGoal)$",
+   "category": "AGENT_USEFUL_CONTROL"
+  },
+  {
+   "pattern": "^workspaceRouting\\.(outcome|reason|uniquenessProven)$",
+   "category": "AGENT_USEFUL_CONTROL"
+  },
+  {
+   "pattern": "^diagnostics\\.freshness\\.(state|isStale|summary|whyItMatters|recommendedAction)$",
+   "category": "AGENT_USEFUL_CONTROL"
+  },
+  {
+   "pattern": "^diagnostics\\.(freshness|indexFreshness)\\.readiness\\.",
+   "category": "AGENT_USEFUL_CONTROL"
+  },
+  {
+   "pattern": "^diagnostics\\.indexFreshness\\.(status|reason|action)$",
+   "category": "AGENT_USEFUL_CONTROL"
+  },
+  {
+   "pattern": "^responseBudget\\.(compacted_fields\\[\\]|omitted_detail_counts\\.|expansion_available\\.|within_envelope|compaction_applied)",
+   "category": "AGENT_USEFUL_CONTROL"
+  },
+  {
+   "pattern": "^(schemaVersion|authoritativeCapsuleManifestId)$",
+   "category": "PROVENANCE"
+  },
+  {
+   "pattern": "^(runtime|capsule)\\.",
+   "category": "PROVENANCE"
+  },
+  {
+   "pattern": "^productContext\\.(responseVersion|taskHash|selectedFileHash)$",
+   "category": "PROVENANCE"
+  },
+  {
+   "pattern": "^productContext\\.repository\\.",
+   "category": "PROVENANCE"
+  },
+  {
+   "pattern": "^productContext\\.items\\[\\]\\.(stableId|contentHash|id)$",
+   "category": "PROVENANCE"
+  },
+  {
+   "pattern": "^productContext\\.items\\[\\]\\.metadata\\.(contextId|contextReference|pivotContextId|pivotContextReference|skeletonFallback)$",
+   "category": "PROVENANCE"
+  },
+  {
+   "pattern": "^context\\.(capsuleManifestId|capsuleRef|capsuleProfileId|routingProfileId|supersededBy)$",
+   "category": "PROVENANCE"
+  },
+  {
+   "pattern": "^deferred\\.items\\[\\]\\.(id|hash)$",
+   "category": "PROVENANCE"
+  },
+  {
+   "pattern": "^(impact\\.impactRef|flow\\.flowRef)$",
+   "category": "PROVENANCE"
+  },
+  {
+   "pattern": "^responseBudget\\.envelopeVersion$",
+   "category": "PROVENANCE"
+  },
+  {
+   "pattern": "\\.(worktreeRoot|headCommit|currentHead|previousHead|latestRunId|indexRunId|lastIndexed[A-Za-z]+)$",
+   "category": "PROVENANCE"
+  },
+  {
+   "pattern": "^diagnostics\\.(freshness|indexFreshness)\\.(snapshot\\.|requestedWorktree\\.|indexedWorktree\\.)",
+   "category": "PROVENANCE"
+  },
+  {
+   "pattern": "^productContext\\.freshness\\.refreshDiagnostics\\.(snapshot\\.|requestedWorktree\\.|indexedWorktree\\.)",
+   "category": "PROVENANCE"
+  },
+  {
+   "pattern": "^diagnostics\\.",
+   "category": "MACHINE_DIAGNOSTIC"
+  },
+  {
+   "pattern": "^productContext\\.(timing|accounting|delivery)\\.",
+   "category": "MACHINE_DIAGNOSTIC"
+  },
+  {
+   "pattern": "^productContext\\.diagnostics\\.",
+   "category": "MACHINE_DIAGNOSTIC"
+  },
+  {
+   "pattern": "^productContext\\.freshness\\.",
+   "category": "MACHINE_DIAGNOSTIC"
+  },
+  {
+   "pattern": "^capsuleResult\\.(diagnostics|budget|summary|discarded)",
+   "category": "MACHINE_DIAGNOSTIC"
+  },
+  {
+   "pattern": "^capsuleResult\\.(query|intent)$",
+   "category": "MACHINE_DIAGNOSTIC"
+  },
+  {
+   "pattern": "^capsuleResult\\.(pivots|support)\\[\\]\\.(estimatedTokens|contextItemId)$",
+   "category": "MACHINE_DIAGNOSTIC"
+  },
+  {
+   "pattern": "^productContext\\.(task|intent)$",
+   "category": "MACHINE_DIAGNOSTIC"
+  },
+  {
+   "pattern": "^productContext\\.items\\[\\]\\.(estimatedTokens|contentCharacters|selectionReasonsOmitted)$",
+   "category": "MACHINE_DIAGNOSTIC"
+  },
+  {
+   "pattern": "^productContext\\.items\\[\\]\\.metadata\\.boundedMetadataOmittedKeys$",
+   "category": "MACHINE_DIAGNOSTIC"
+  },
+  {
+   "pattern": "^pivotNeighborhood\\[\\]\\.excerpts\\[\\]\\.textCharacters$",
+   "category": "MACHINE_DIAGNOSTIC"
+  },
+  {
+   "pattern": "^(request|taskSummary|accounting|savedObservation)",
+   "category": "MACHINE_DIAGNOSTIC"
+  },
+  {
+   "pattern": "^responseBudget\\.",
+   "category": "MACHINE_DIAGNOSTIC"
+  },
+  {
+   "pattern": "^context\\.budget\\.",
+   "category": "MACHINE_DIAGNOSTIC"
+  },
+  {
+   "pattern": "^(impact|flow)\\.",
+   "category": "MACHINE_DIAGNOSTIC"
+  },
+  {
+   "pattern": "^memory\\.",
+   "category": "MACHINE_DIAGNOSTIC"
+  },
+  {
+   "pattern": "^rules\\.",
+   "category": "MACHINE_DIAGNOSTIC"
+  },
+  {
+   "pattern": "^intent\\.",
+   "category": "MACHINE_DIAGNOSTIC"
+  },
+  {
+   "pattern": "^workspaceRouting\\.",
+   "category": "MACHINE_DIAGNOSTIC"
+  }
+ ],
+ "categoryValues": [
+  "REPOSITORY_EVIDENCE",
+  "AGENT_USEFUL_CONTROL",
+  "MACHINE_DIAGNOSTIC",
+  "PROVENANCE",
+  "DUPLICATE",
+  "TRANSPORT_STRUCTURE",
+  "OTHER"
+ ]
+}
