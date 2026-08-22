@@ -3238,3 +3238,98 @@ same files itself within a few ordinary searches.
   Nothing in M161–M164 has tested a corpus where localization is genuinely hard.
   That, not a better tool or a better prompt, is the informative next experiment
   if this line continues.
+
+## M165 — Single-call investigation composition audit (commit pending)
+
+**A PASS · B PASS · C PASS (no product change) · D PASS · E NOT FROZEN.
+M165 overall PASS.** No product code changed, no live agent ran, $0.00 spent.
+
+```text
+A verdict:        COMPOSITION_ALREADY_EXISTS
+decision gate:    PIPELINE_ALREADY_RICH_AND_EXPOSED
+product changed:  NO
+retrieval changed: NO
+live spend:       NOT REQUESTED
+```
+
+The milestone asked whether VTRACE could compose a VEXP-shaped single-call
+investigation from capabilities it already had. It already does, already exposes
+it, and **M164 already measured it**.
+
+```text
+implemented tools     21      (registry-reconstructed, not documentation)
+MCP-registered        21
+default-visible       14      the reported "~14" is right for this layer only
+hidden but registered  7
+placeholders / dead    0
+M164 live surface      2
+```
+
+`get_code_context` **is** `run_pipeline`: its metadata is a spread of
+`RUN_PIPELINE_TOOL_DEFINITION.metadata`, and its handler runs an index-freshness
+gate then calls `RUN_PIPELINE_TOOL_DEFINITION.handler` verbatim, overwriting only
+`freshness`/`timing`/`indexMode`. §12's thin-wrapper test resolves inverted:
+`get_code_context` is the wrapper, not `run_pipeline`.
+
+Deterministic 12-task comparison over M164's own preserved workspaces, through a
+real `mcp-serve` process, structured truth from the JSON-RPC payload:
+
+```text
+same lead pivot                 12/12
+same item paths                 12/12
+same model-visible context      12/12   (hash-identical)
+same component statuses         10/12
+index writes                        0
+within response envelope        12/12
+
+median get_code_context      8,678 tokens
+median run_pipeline          8,480 tokens
+median increment              -613 tokens   run_pipeline is CHEAPER
+```
+
+What the existing single call already delivered, by the product's own
+`roleCounts`: primary context 12/12, structural skeletons 12/12, impact 10/12
+(median 1.5 items), memory 0/12 (truthfully — isolated checkouts), rules 0/12,
+flow 0/12. §102's meaningful-composition gate is met by the tool that shipped.
+
+## M165 standing findings
+
+- **The composition was never missing; only the reading of it was.** Impact runs
+  on two independent lanes and only one is intent-gated. The top-level `impact`
+  section requires impact/refactor intent and was skipped `not_requested_by_intent`
+  12/12, while `productContext`'s ungated `addImpactEvidence` lane delivered
+  bounded callers/importers/subtypes on 10/12. An audit that read only the section
+  would have reported "impact never delivered" and licensed building a capability
+  that already worked.
+
+- **M164 was the pipeline experiment, retroactively.** Its twelve forced
+  `get_code_context` calls each carried primary context, structural skeletons and
+  (10/12) impact evidence. Its UTILITY_NEUTRAL verdict therefore reads more
+  strongly than when it was issued: a bounded composed investigation, delivered at
+  turn zero with the gold file leading 8/12, produced zero unique wins and zero
+  voluntary second calls. The VEXP-shaped composition is not the missing
+  ingredient.
+
+- **The proposed three-arm sweep would have compared a treatment with itself.**
+  CONTEXT_TRIGGER and PIPELINE_TRIGGER call the same handler and render
+  byte-identical model-visible context 12/12. ~$20 would have bought a guaranteed
+  null result attributable to the harness rather than the hypothesis. §101 exists
+  for exactly this case and was applied.
+
+- **A tool being cheaper than its own wrapper is a smell worth keeping.**
+  `run_pipeline` costs 613 fewer median tokens than `get_code_context` because the
+  wrapper's freshness diagnostics push the response past a compaction threshold,
+  dropping a bounded pivot-neighborhood excerpt on 2/12. Compaction is silently
+  trading evidence for diagnostics.
+
+- **85% of the first-call response is metadata.** Median 7,407 metadata tokens
+  against 996 model-visible ones. Before blaming the task population for zero
+  adoption, note that an agent paying ~8.7k tokens to receive ~1k tokens of
+  evidence is making a defensible economic choice. This is measurable offline and
+  is the most actionable finding M165 produced.
+
+- **Recommendation unchanged from M164, and now better supported.** The untested
+  variable remains the task population, not the product surface. M165 removes the
+  remaining alternative explanation — that the first call was too thin — so a
+  hard-localization corpus is the informative next experiment. No retrieval,
+  ranking, candidate-generation or index-schema change is licensed by M165.

@@ -1,0 +1,356 @@
+{
+ "schemaVersion": 1,
+ "milestone": "M165",
+ "workstream": "D",
+ "title": "Added-value ledger: run_pipeline over get_code_context",
+ "denominator": 12,
+ "headline": {
+  "verdict": "NO_MATERIAL_ADDED_EVIDENCE",
+  "why": "get_code_context delegates to run_pipeline's handler after a freshness gate. The composed investigation is the SAME object; only the freshness/timing fields differ."
+ },
+ "parityWithContextCall": {
+  "sameLeadPivot": "12/12",
+  "sameItemPaths": "12/12",
+  "sameModelVisibleContext": "12/12"
+ },
+ "meaningfulCompositionGate": {
+  "note": "These are what get_code_context ALREADY composed in M164, not what a new pipeline would add.",
+  "tasksWithPrimaryContext": "12/12",
+  "tasksWithStructuralSupport": "12/12",
+  "tasksWithImpact": "10/12",
+  "tasksWithMemory": "0/12",
+  "tasksWithRules": "0/12",
+  "tasksWithDocumentation": "3/12",
+  "tasksWithFlow": "0/12",
+  "memoryAbsenceIsTruthful": "Isolated SWE-bench checkouts carry no prior session or durable observations. 0/12 is the correct answer, not a failure (§26/§58)."
+ },
+ "pipelineAdditions": {
+  "tasksWhereRunPipelineAddsAnything": "2/12",
+  "additionKinds": {
+   "PIVOT_NEIGHBORHOOD": 2,
+   "IMPACT": 0,
+   "STRUCTURAL_API": 0,
+   "MEMORY": 0,
+   "FLOW": 0,
+   "MULTI_REPO": 0
+  },
+  "explanation": "get_code_context carries extra freshness diagnostics, which pushes its response over a compaction threshold and drops the bounded pivot-neighborhood excerpt. The rendered model-visible context is byte-identical on all 12."
+ },
+ "tokenEconomics": {
+  "medianContextOnlyTokens": 8680,
+  "medianPipelineTokens": 8480.5,
+  "medianIncrement": -610.5,
+  "p90Increment": 828,
+  "medianModelVisibleTokens": 996,
+  "medianMetadataTokens": 7408,
+  "metadataSharePercent": 85.3,
+  "reading": "run_pipeline is CHEAPER than get_code_context, not richer. Both spend the large majority of their response on metadata rather than model-visible evidence."
+ },
+ "intentDistribution": {
+  "explain": 2,
+  "feature": 6,
+  "debug": 4
+ },
+ "impactSectionGate": {
+  "note": "The top-level impact SECTION is intent-gated to impact/refactor intent. No task in this population resolves to either, so the section is skipped 12/12 — while the productContext impact LANE still delivered on 10/12.",
+  "skipReasons": {
+   "not_requested_by_intent": 11,
+   "multiple_focal_symbols": 1
+  }
+ },
+ "indexWrites": 0,
+ "rows": [
+  {
+   "instanceId": "sympy__sympy-13798",
+   "sameLeadPivot": true,
+   "sameItemPaths": true,
+   "sameModelVisibleContext": true,
+   "composedByFirstCall": {
+    "primaryContext": true,
+    "structuralSupport": true,
+    "impact": true,
+    "memory": false,
+    "rules": false,
+    "documentation": false,
+    "impactItems": 1,
+    "skeletonItems": 1
+   },
+   "pipelineAdditionsOverContext": [],
+   "tokenDelta": -611,
+   "contextOnlyTokens": 7895,
+   "pipelineTokens": 7284,
+   "modelVisibleTokens": 709,
+   "metadataTokens": 7186,
+   "intent": "explain",
+   "impactSectionSkipReason": "not_requested_by_intent"
+  },
+  {
+   "instanceId": "django__django-11451",
+   "sameLeadPivot": true,
+   "sameItemPaths": true,
+   "sameModelVisibleContext": true,
+   "composedByFirstCall": {
+    "primaryContext": true,
+    "structuralSupport": true,
+    "impact": true,
+    "memory": false,
+    "rules": false,
+    "documentation": false,
+    "impactItems": 1,
+    "skeletonItems": 1
+   },
+   "pipelineAdditionsOverContext": [],
+   "tokenDelta": -610,
+   "contextOnlyTokens": 8289,
+   "pipelineTokens": 7679,
+   "modelVisibleTokens": 1182,
+   "metadataTokens": 7107,
+   "intent": "feature",
+   "impactSectionSkipReason": "not_requested_by_intent"
+  },
+  {
+   "instanceId": "sphinx-doc__sphinx-7440",
+   "sameLeadPivot": true,
+   "sameItemPaths": true,
+   "sameModelVisibleContext": true,
+   "composedByFirstCall": {
+    "primaryContext": true,
+    "structuralSupport": true,
+    "impact": false,
+    "memory": false,
+    "rules": false,
+    "documentation": false,
+    "impactItems": 0,
+    "skeletonItems": 1
+   },
+   "pipelineAdditionsOverContext": [
+    "PIVOT_NEIGHBORHOOD"
+   ],
+   "tokenDelta": 828,
+   "contextOnlyTokens": 7846,
+   "pipelineTokens": 8674,
+   "modelVisibleTokens": 787,
+   "metadataTokens": 7059,
+   "intent": "debug",
+   "impactSectionSkipReason": "not_requested_by_intent"
+  },
+  {
+   "instanceId": "scikit-learn__scikit-learn-14087",
+   "sameLeadPivot": true,
+   "sameItemPaths": true,
+   "sameModelVisibleContext": true,
+   "composedByFirstCall": {
+    "primaryContext": true,
+    "structuralSupport": true,
+    "impact": true,
+    "memory": false,
+    "rules": false,
+    "documentation": false,
+    "impactItems": 1,
+    "skeletonItems": 1
+   },
+   "pipelineAdditionsOverContext": [],
+   "tokenDelta": -648,
+   "contextOnlyTokens": 8577,
+   "pipelineTokens": 7929,
+   "modelVisibleTokens": 1183,
+   "metadataTokens": 7394,
+   "intent": "debug",
+   "impactSectionSkipReason": "not_requested_by_intent"
+  },
+  {
+   "instanceId": "sphinx-doc__sphinx-11445",
+   "sameLeadPivot": true,
+   "sameItemPaths": true,
+   "sameModelVisibleContext": true,
+   "composedByFirstCall": {
+    "primaryContext": true,
+    "structuralSupport": true,
+    "impact": true,
+    "memory": false,
+    "rules": false,
+    "documentation": false,
+    "impactItems": 2,
+    "skeletonItems": 1
+   },
+   "pipelineAdditionsOverContext": [],
+   "tokenDelta": -631,
+   "contextOnlyTokens": 9194,
+   "pipelineTokens": 8563,
+   "modelVisibleTokens": 884,
+   "metadataTokens": 8310,
+   "intent": "feature",
+   "impactSectionSkipReason": "not_requested_by_intent"
+  },
+  {
+   "instanceId": "django__django-13343",
+   "sameLeadPivot": true,
+   "sameItemPaths": true,
+   "sameModelVisibleContext": true,
+   "composedByFirstCall": {
+    "primaryContext": true,
+    "structuralSupport": true,
+    "impact": true,
+    "memory": false,
+    "rules": false,
+    "documentation": false,
+    "impactItems": 2,
+    "skeletonItems": 1
+   },
+   "pipelineAdditionsOverContext": [],
+   "tokenDelta": 357,
+   "contextOnlyTokens": 8783,
+   "pipelineTokens": 9140,
+   "modelVisibleTokens": 800,
+   "metadataTokens": 7983,
+   "intent": "feature",
+   "impactSectionSkipReason": "not_requested_by_intent"
+  },
+  {
+   "instanceId": "matplotlib__matplotlib-24177",
+   "sameLeadPivot": true,
+   "sameItemPaths": true,
+   "sameModelVisibleContext": true,
+   "composedByFirstCall": {
+    "primaryContext": true,
+    "structuralSupport": true,
+    "impact": true,
+    "memory": false,
+    "rules": false,
+    "documentation": true,
+    "impactItems": 1,
+    "skeletonItems": 1
+   },
+   "pipelineAdditionsOverContext": [],
+   "tokenDelta": -633,
+   "contextOnlyTokens": 8530,
+   "pipelineTokens": 7897,
+   "modelVisibleTokens": 1108,
+   "metadataTokens": 7422,
+   "intent": "debug",
+   "impactSectionSkipReason": "multiple_focal_symbols"
+  },
+  {
+   "instanceId": "scikit-learn__scikit-learn-13496",
+   "sameLeadPivot": true,
+   "sameItemPaths": true,
+   "sameModelVisibleContext": true,
+   "composedByFirstCall": {
+    "primaryContext": true,
+    "structuralSupport": true,
+    "impact": true,
+    "memory": false,
+    "rules": false,
+    "documentation": false,
+    "impactItems": 2,
+    "skeletonItems": 1
+   },
+   "pipelineAdditionsOverContext": [],
+   "tokenDelta": 32,
+   "contextOnlyTokens": 9146,
+   "pipelineTokens": 9178,
+   "modelVisibleTokens": 1360,
+   "metadataTokens": 7786,
+   "intent": "feature",
+   "impactSectionSkipReason": "not_requested_by_intent"
+  },
+  {
+   "instanceId": "sympy__sympy-14976",
+   "sameLeadPivot": true,
+   "sameItemPaths": true,
+   "sameModelVisibleContext": true,
+   "composedByFirstCall": {
+    "primaryContext": true,
+    "structuralSupport": true,
+    "impact": true,
+    "memory": false,
+    "rules": false,
+    "documentation": true,
+    "impactItems": 5,
+    "skeletonItems": 1
+   },
+   "pipelineAdditionsOverContext": [
+    "PIVOT_NEIGHBORHOOD"
+   ],
+   "tokenDelta": 1493,
+   "contextOnlyTokens": 7625,
+   "pipelineTokens": 9118,
+   "modelVisibleTokens": 804,
+   "metadataTokens": 6821,
+   "intent": "feature",
+   "impactSectionSkipReason": "not_requested_by_intent"
+  },
+  {
+   "instanceId": "astropy__astropy-13977",
+   "sameLeadPivot": true,
+   "sameItemPaths": true,
+   "sameModelVisibleContext": true,
+   "composedByFirstCall": {
+    "primaryContext": true,
+    "structuralSupport": true,
+    "impact": false,
+    "memory": false,
+    "rules": false,
+    "documentation": false,
+    "impactItems": 0,
+    "skeletonItems": 2
+   },
+   "pipelineAdditionsOverContext": [],
+   "tokenDelta": -619,
+   "contextOnlyTokens": 9017,
+   "pipelineTokens": 8398,
+   "modelVisibleTokens": 1462,
+   "metadataTokens": 7555,
+   "intent": "debug",
+   "impactSectionSkipReason": "not_requested_by_intent"
+  },
+  {
+   "instanceId": "pydata__xarray-4966",
+   "sameLeadPivot": true,
+   "sameItemPaths": true,
+   "sameModelVisibleContext": true,
+   "composedByFirstCall": {
+    "primaryContext": true,
+    "structuralSupport": true,
+    "impact": true,
+    "memory": false,
+    "rules": false,
+    "documentation": false,
+    "impactItems": 6,
+    "skeletonItems": 1
+   },
+   "pipelineAdditionsOverContext": [],
+   "tokenDelta": -114,
+   "contextOnlyTokens": 9187,
+   "pipelineTokens": 9073,
+   "modelVisibleTokens": 1988,
+   "metadataTokens": 7199,
+   "intent": "feature",
+   "impactSectionSkipReason": "not_requested_by_intent"
+  },
+  {
+   "instanceId": "pytest-dev__pytest-7982",
+   "sameLeadPivot": true,
+   "sameItemPaths": true,
+   "sameModelVisibleContext": true,
+   "composedByFirstCall": {
+    "primaryContext": true,
+    "structuralSupport": true,
+    "impact": true,
+    "memory": false,
+    "rules": false,
+    "documentation": true,
+    "impactItems": 6,
+    "skeletonItems": 1
+   },
+   "pipelineAdditionsOverContext": [],
+   "tokenDelta": -628,
+   "contextOnlyTokens": 8834,
+   "pipelineTokens": 8206,
+   "modelVisibleTokens": 860,
+   "metadataTokens": 7974,
+   "intent": "explain",
+   "impactSectionSkipReason": "not_requested_by_intent"
+  }
+ ]
+}
