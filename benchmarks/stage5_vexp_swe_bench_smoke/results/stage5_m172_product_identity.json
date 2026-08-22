@@ -1,0 +1,18 @@
+{
+ "schemaVersion": "stage5.m172.product-identity.v1",
+ "milestone": "M172",
+ "workstream": "M172-E",
+ "title": "The shipped projector against the qualified one, over every capture in all three corpora",
+ "method": {
+  "qualified": "benchmarks/stage5_vexp_swe_bench_smoke/m172Projection.ts at P_SUPPLY — the module M172-D measured",
+  "shipped": "src/runPipeline/orientationProjection.ts — what run_pipeline now returns by default",
+  "comparison": "JSON.stringify of the model-facing packet, byte-compared",
+  "allowedDivergence": "on non-resolved states the benchmark emits a `problem` packet and the product declines, leaving the authoritative failure envelope intact. Strictly more conservative, and no measured number depends on it: non-resolved cases are excluded from every rate and median."
+ },
+ "capturesCompared": 210,
+ "identicalProjections": 209,
+ "bothDeclined": 1,
+ "mismatches": 0,
+ "pass": true,
+ "detail": []
+}

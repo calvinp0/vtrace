@@ -4027,7 +4027,7 @@ gate G1, G3, G5                       PASS   46.8% reduction, 0 unsafe, 0 fixed 
   read — or a tool contract admitting more than one window, which is a change to
   the harness and not to VTRACE.
 
-## M171 — agent-facing orientation contract redesign (commit pending)
+## M171 — agent-facing orientation contract redesign (18473b0b)
 
 **MIXED. Offline design and qualification; $0.00 live; `src/` byte-identical
 throughout. No product change made and none licensed.**
@@ -4125,3 +4125,113 @@ unsupported claims / false absence              0 / 0 over 96 audited packets
   against Broad100-A knowing the three cases and their positions are now known,
   and hold Broad100-B back as the clean check. No live spend is licensed: there
   is no shipped treatment to requalify.
+
+## M172 — the bound that was never wired (commit pending)
+
+**PASS. Offline design and qualification; $0.00 live. The default disclosure of
+`run_pipeline` is now a bounded orientation; the authoritative result is
+unchanged and reachable at `detail=debug`. No retrieval change.**
+
+M171 cut the response elevenfold and declined to ship on a three-case gold-symbol
+miss, recommending its successor settle the bound on development evidence. M172
+took M171's rungs apart, found the bound it had been tuning was not wired at all,
+froze the replacement on that defect rather than on any outcome, and shipped.
+
+```text
+A PASS   bundle decomposed, defect found      B PASS   frozen pre-holdout on architecture
+C PASS   5 controls, measured not asserted    D PASS   every gate, both corpora
+E PASS   integrated, 0 mismatches vs qualified
+
+orientation verdict   MINIMUM_SUFFICIENT_ORIENTATION_CONFIRMED (offline gates, not solve rate)
+economics verdict     PROACTIVE_PIPELINE_ECONOMICS_MATERIALLY_CHANGED
+product verdict       DEFAULT_ORIENTATION_REDESIGN_SHIPPED
+product changed       YES (disclosure only)   retrieval changed   NO
+live requalification  LICENSED, NOT REQUESTED, NOT RUN
+```
+
+```text
+current default median model-visible tokens   6,766 dev / 6,884 B
+orientation median / p90                        603 / 850 A, 621 / 865 B
+projected attributable cost                   $0.0081 A, $0.0084 B (gate $0.0262)
+reduction                                     11.0-12.5x across all slices
+pivot identity                                99/99 A, 98/98 B, 12/12 dev
+gold file delta vs current                    0.00pp on every slice
+gold symbol delta vs current                  0.00pp on every slice (M171: -3.00 / -3.41)
+related entries M171 withheld, M172 delivers  66 on B, 47 on A, at no measured cost
+unsupported claims / false absence            0 / 0 over 234 audited packets
+shipped vs qualified projector                210 captures, 0 mismatches
+bun test                                      5425 pass, 0 fail (baseline 5405)
+```
+
+## M172 standing findings
+
+- **The bound everyone was tuning was never wired.** `Rung.ceilingTokens` is
+  declared on the interface, set on all four M171 rungs, and read by nothing;
+  `projectOrientation` consults only `focusCodeCharacters` and `relatedCap`.
+  M171's "the ceiling is inert" understated it — the ceiling was absent, and the
+  packet was bounded once, by an undeclared parameter, while the declared one was
+  documentation. Measured post hoc it would not have bound anyway: R1000, the
+  smallest rung, leaves at least 459 tokens of headroom on every development case.
+
+- **A cap that saves nothing still costs something.** Delivering the full
+  authoritative related supply has the same median, p90 and max token cost as
+  capping at five, because the withheld entries are cheap and the median case
+  supplies exactly five. The cap withheld 5 development entries, 47 on
+  Broad100-A and 66 on Broad100-B while standing proxy for a constraint with over
+  a thousand tokens spare. Removing it changed no delivery rate anywhere — which
+  is what makes the removal safe rather than clever.
+
+- **Development could not discriminate the candidates, and saying so is the
+  finding.** `P_M171_R2000`, `P_SUPPLY` and `P_RELATION` score identically on gold
+  file, gold symbol, files delivered and pivot identity over all twelve
+  development cases. A policy chosen on those numbers is chosen on noise — the
+  same blindness that let M171's development slice read 0.00pp where its 88-case
+  remainder read −3.41pp. The freeze was therefore made on a defect visible
+  without any delivery metric.
+
+- **The obvious alternative was wrong, and cheap to disprove.** Proximity-only
+  entries — *"in the same file as the focus symbol; no indexed relationship to
+  it"* — appear 6 times across 3 development cases, always within the first five
+  slots, which looks exactly like filler displacing real relationships. It never
+  does: 0 cases where a proximity entry precedes a real one. They pad the tail to
+  the cap. `P_RELATION` was rejected on that evidence rather than deferred.
+
+- **A promoted bound has to be shown doing something.** Four of the five controls
+  would have passed vacuously against M171's projector, because a bound that is
+  never applied cannot be caught misbehaving. Written against a synthetic supply
+  large enough to reach it, the ceiling binds at supply 46 and delivers 45. The
+  real corpora max out at 9, so the packet is supply-bound and the ceiling is
+  genuine but idle — which is the honest description, and different from "the
+  ceiling works".
+
+- **A contaminated holdout recovering exactly what it lost is not evidence.**
+  Broad100-A goes from −3.00pp to 0.00pp, recovering precisely M171's three
+  cases. A was contaminated twice — it holds all twelve development cases, and
+  M171 published which three failed and at what positions. The evidence is
+  Broad100-B, where the same policy delivers 66 previously-withheld entries and
+  moves no delivery rate at all.
+
+- **The qualification-to-product gap is where a result usually leaks away.** The
+  numbers were measured on a benchmark module; a different file ships. Closed
+  twice: 210 captures with 0 mismatches between shipped and qualified projector,
+  and 209/209 shipped packets are supersets of M171's with an identical focus,
+  which is how M171's 7/7 first-action support transfers by construction instead
+  of by assertion.
+
+- **Compacting a default breaks every consumer that was reading the default to
+  get the authoritative result.** ~80 assertions across nine test files now pass
+  `detail: "debug"`. That is not incidental — it is the measurement of how much
+  code treated the disclosure channel as the state channel, and their passing is
+  the debug-preservation proof. `get_code_context` was one of them in product
+  code: it post-processed the delegated `productContext` and threw when there
+  wasn't one.
+
+- **Next-step recommendation: stop tuning the packet and look at the pivot.**
+  Packet size is settled — the ceiling is idle, the cap is gone, and cost is a
+  twelfth of what M169 condemned. What M171 measured and M172 did not change is
+  that orientation is right or wrong per case and never partly right: early-phase
+  support was 0% or 100% across the twelve live transcripts, with nothing
+  between. A bigger packet does not rescue a wrong pivot. That makes pivot
+  correctness the remaining variable, and it is a retrieval question. A live
+  requalification is licensed on economics but costs real money and is not
+  requested; the cheaper next milestone is offline and aimed at the pivot.

@@ -1422,7 +1422,7 @@ test("run_pipeline default path exposes the unversioned capsule response", async
       schema: MCP_SERVER_SCHEMA,
       requestId: "req-run-pipeline-default-v1",
       toolId: McpToolId.RunPipeline,
-      input: { query: V2_PIPELINE_QUERY },
+      input: { detail: "debug", query: V2_PIPELINE_QUERY },
     });
 
     assert.equal(response.result.ok, true);
@@ -1455,6 +1455,7 @@ test.skip("run_pipeline capsule_engine=v2 returns a bounded Capsule v2 section a
       requestId: "req-run-pipeline-v2",
       toolId: McpToolId.RunPipeline,
       input: {
+        detail: "debug",
         query: V2_PIPELINE_QUERY,
         capsule_engine: "v2",
         capsule_intent: "modify",
@@ -1524,6 +1525,7 @@ test.skip("get_code_context inherits capsule_engine=v2 by delegating to run_pipe
       requestId: "req-get-code-context-v2",
       toolId: McpToolId.GetCodeContext,
       input: {
+        detail: "debug",
         query: V2_PIPELINE_QUERY,
         capsule_engine: "v2",
         capsule_intent: "modify",
@@ -1555,9 +1557,9 @@ test("M119 primary product paths share task, selection, roles, estimator, and wo
       capsule_intent: "modify",
       capsule_budget_tokens: 8_000,
     } as const;
-    const code = await server.handleRequest({ schema: MCP_SERVER_SCHEMA, requestId: "m119-code", toolId: McpToolId.GetCodeContext, input });
-    const capsule = await server.handleRequest({ schema: MCP_SERVER_SCHEMA, requestId: "m119-capsule", toolId: McpToolId.GetContextCapsule, input });
-    const pipeline = await server.handleRequest({ schema: MCP_SERVER_SCHEMA, requestId: "m119-pipeline", toolId: McpToolId.RunPipeline, input });
+    const code = await server.handleRequest({ schema: MCP_SERVER_SCHEMA, requestId: "m119-code", toolId: McpToolId.GetCodeContext, input: { ...input, detail: "debug" } });
+    const capsule = await server.handleRequest({ schema: MCP_SERVER_SCHEMA, requestId: "m119-capsule", toolId: McpToolId.GetContextCapsule, input: { ...input, detail: "debug" } });
+    const pipeline = await server.handleRequest({ schema: MCP_SERVER_SCHEMA, requestId: "m119-pipeline", toolId: McpToolId.RunPipeline, input: { ...input, detail: "debug" } });
     for (const result of [code, capsule, pipeline]) assert.equal(result.result.ok, true);
     const parity = (response: any) => {
       const product = response.result.output.productContext;
@@ -1590,9 +1592,9 @@ test("M130 product tools share one source-bearing representation and each stay i
       capsule_intent: "modify",
       max_tokens: 6_000,
     } as const;
-    const code = await server.handleRequest({ schema: MCP_SERVER_SCHEMA, requestId: "m130-code", toolId: McpToolId.GetCodeContext, input });
-    const capsule = await server.handleRequest({ schema: MCP_SERVER_SCHEMA, requestId: "m130-capsule", toolId: McpToolId.GetContextCapsule, input });
-    const pipeline = await server.handleRequest({ schema: MCP_SERVER_SCHEMA, requestId: "m130-pipeline", toolId: McpToolId.RunPipeline, input });
+    const code = await server.handleRequest({ schema: MCP_SERVER_SCHEMA, requestId: "m130-code", toolId: McpToolId.GetCodeContext, input: { ...input, detail: "debug" } });
+    const capsule = await server.handleRequest({ schema: MCP_SERVER_SCHEMA, requestId: "m130-capsule", toolId: McpToolId.GetContextCapsule, input: { ...input, detail: "debug" } });
+    const pipeline = await server.handleRequest({ schema: MCP_SERVER_SCHEMA, requestId: "m130-pipeline", toolId: McpToolId.RunPipeline, input: { ...input, detail: "debug" } });
     for (const result of [code, capsule, pipeline]) assert.equal(result.result.ok, true);
 
     const outputs = [code, capsule, pipeline].map((response: any) => response.result.output);
@@ -1652,19 +1654,19 @@ test("unversioned product tools share one capsule selection and model-visible co
         schema: MCP_SERVER_SCHEMA,
         requestId: "m127-run",
         toolId: McpToolId.RunPipeline,
-        input: common,
+        input: { ...common, detail: "debug" },
       }),
       server.handleRequest({
         schema: MCP_SERVER_SCHEMA,
         requestId: "m127-code",
         toolId: McpToolId.GetCodeContext,
-        input: { ...common, auto_refresh: "never" },
+        input: { ...common, auto_refresh: "never", detail: "debug" },
       }),
       server.handleRequest({
         schema: MCP_SERVER_SCHEMA,
         requestId: "m127-capsule",
         toolId: McpToolId.GetContextCapsule,
-        input: common,
+        input: { ...common, detail: "debug" },
       }),
     ]);
 
@@ -1708,7 +1710,7 @@ test("MCP hides the old selector from schemas, accepts deprecated aliases, and r
           schema: MCP_SERVER_SCHEMA,
           requestId: `m127-${toolId}-${alias}`,
           toolId,
-          input: { task: "modify createSession", capsule_engine: alias },
+          input: { task: "modify createSession", capsule_engine: alias, detail: "debug" },
         });
         assert.equal(response.result.ok, true);
         assert.match(response.result.output.capsule.compatibilityWarnings[0], /deprecated and ignored/);
@@ -1755,7 +1757,7 @@ test.skip("get_code_context default delegation records effectiveCapsuleEngine=v1
       schema: MCP_SERVER_SCHEMA,
       requestId: "req-get-code-context-default-engine",
       toolId: McpToolId.GetCodeContext,
-      input: { query: "where is createSession" },
+      input: { detail: "debug", query: "where is createSession" },
     });
 
     assert.equal(response.result.ok, true);
@@ -1788,6 +1790,7 @@ test("get_code_context inherits run_pipeline impact source excerpts when the imp
       requestId: "req-get-code-context-impact-excerpts",
       toolId: McpToolId.GetCodeContext,
       input: {
+        detail: "debug",
         query: "refactor createSession",
         intent: "refactor",
       },
@@ -1937,7 +1940,7 @@ test("run_pipeline default path includes the deterministic accounting block", as
       schema: MCP_SERVER_SCHEMA,
       requestId: "req-run-pipeline-accounting",
       toolId: McpToolId.RunPipeline,
-      input: { query: V2_PIPELINE_QUERY },
+      input: { detail: "debug", query: V2_PIPELINE_QUERY },
     });
 
     assert.equal(response.result.ok, true);
@@ -1961,6 +1964,7 @@ test.skip("run_pipeline v2 opt-in includes the deterministic accounting block", 
       requestId: "req-run-pipeline-v2-accounting",
       toolId: McpToolId.RunPipeline,
       input: {
+        detail: "debug",
         query: V2_PIPELINE_QUERY,
         capsule_engine: "v2",
         capsule_intent: "modify",
@@ -1986,7 +1990,7 @@ test("get_code_context returns accounting through delegation to run_pipeline", a
       schema: MCP_SERVER_SCHEMA,
       requestId: "req-get-code-context-accounting",
       toolId: McpToolId.GetCodeContext,
-      input: { task: "where is createSession", maxBudgetCharacters: 5_000 },
+      input: { detail: "debug", task: "where is createSession", maxBudgetCharacters: 5_000 },
     });
 
     assert.equal(response.result.ok, true);
@@ -2009,6 +2013,7 @@ test.skip("run_pipeline accepts the camelCase capsuleEngine alias and is determi
       requestId: "req-run-pipeline-v2-camel",
       toolId: McpToolId.RunPipeline,
       input: {
+        detail: "debug",
         query: V2_PIPELINE_QUERY,
         capsuleEngine: "v2",
         capsuleIntent: "modify",
@@ -2041,6 +2046,7 @@ test.skip("run_pipeline capsule_engine=v2 persists a manifest resolvable by chec
       requestId: "req-run-pipeline-v2-manifest",
       toolId: McpToolId.RunPipeline,
       input: {
+        detail: "debug",
         query: V2_PIPELINE_QUERY,
         capsule_engine: "v2",
         capsule_intent: "modify",
@@ -2073,6 +2079,7 @@ test.skip("run_pipeline capsule_engine=v2 is rejected for a multi-repo workspace
       requestId: "req-run-pipeline-v2-multi-repo",
       toolId: McpToolId.RunPipeline,
       input: {
+        detail: "debug",
         query: V2_PIPELINE_QUERY,
         capsule_engine: "v2",
       },
@@ -2096,7 +2103,7 @@ test("run_pipeline persists a manifest surfaced in context.capsuleManifestId and
       schema: MCP_SERVER_SCHEMA,
       requestId: "req-run-pipeline-manifest",
       toolId: McpToolId.RunPipeline,
-      input: { query: "Session" },
+      input: { detail: "debug", query: "Session" },
     });
     assert.equal(pipeline.result.ok, true);
     const manifestId = pipeline.result.output.context.capsuleManifestId;
@@ -2284,6 +2291,7 @@ test.skip("run_pipeline reports selected repos, per-repo diagnostics, and skips 
       requestId: "req-workspace-run-pipeline",
       toolId: McpToolId.RunPipeline,
       input: {
+        detail: "debug",
         query: "rename createSession",
         maxBudgetCharacters: 10_000,
       },
@@ -2317,6 +2325,7 @@ test.skip("run_pipeline repos filter limits context retrieval to selected aliase
       requestId: "req-workspace-run-pipeline-filtered",
       toolId: McpToolId.RunPipeline,
       input: {
+        detail: "debug",
         query: "Session",
         repos: ["beta"],
         maxBudgetCharacters: 10_000,
@@ -2352,6 +2361,7 @@ test.skip("run_pipeline vNext returns a compact orchestration result that differ
       requestId: "req-run-pipeline-vnext-shape",
       toolId: McpToolId.RunPipeline,
       input: {
+        detail: "debug",
         query: "Session",
         maxBudgetCharacters: 5_000,
       },
@@ -2423,13 +2433,13 @@ test("get_code_context delegates to the same implementation and output as run_pi
       schema: MCP_SERVER_SCHEMA,
       requestId: "req-get-code-context-alias",
       toolId: McpToolId.GetCodeContext,
-      input,
+      input: { ...input, detail: "debug" },
     });
     const runPipeline = await server.handleRequest({
       schema: MCP_SERVER_SCHEMA,
       requestId: "req-run-pipeline-alias-target",
       toolId: McpToolId.RunPipeline,
-      input,
+      input: { ...input, detail: "debug" },
     });
 
     assert.equal(getCodeContext.result.ok, true);
@@ -2484,13 +2494,13 @@ test("run_pipeline auto-intent resolves refactor preset for rename phrasing and 
       schema: MCP_SERVER_SCHEMA,
       requestId: "req-run-pipeline-auto-refactor",
       toolId: McpToolId.RunPipeline,
-      input: { query: "rename createSession" },
+      input: { detail: "debug", query: "rename createSession" },
     });
     const explore = await server.handleRequest({
       schema: MCP_SERVER_SCHEMA,
       requestId: "req-run-pipeline-auto-explore",
       toolId: McpToolId.RunPipeline,
-      input: { query: "where is createSession" },
+      input: { detail: "debug", query: "where is createSession" },
     });
 
     assert.equal(refactor.result.ok, true);
@@ -2525,6 +2535,7 @@ test("run_pipeline presets materially change capsule profile, include-tests defa
           requestId: `req-run-pipeline-preset-${preset}`,
           toolId: McpToolId.RunPipeline,
           input: {
+            detail: "debug",
             query: "createSession",
             intent: preset,
             maxBudgetCharacters: 5_000,
@@ -2593,6 +2604,7 @@ test("run_pipeline interprets product max_tokens as tokens while preserving the 
       requestId: "req-run-pipeline-product-facing-input",
       toolId: McpToolId.RunPipeline,
       input: {
+        detail: "debug",
         task: "debug why createSession fails",
         preset: "debug",
         max_tokens: 4_000,
@@ -2605,6 +2617,7 @@ test("run_pipeline interprets product max_tokens as tokens while preserving the 
       requestId: "req-run-pipeline-legacy-input",
       toolId: McpToolId.RunPipeline,
       input: {
+        detail: "debug",
         query: "debug why createSession fails",
         intent: "debug",
         maxBudgetCharacters: 4_000,
@@ -2636,7 +2649,7 @@ test("run_pipeline includes compact impact section for refactor tasks with a cle
       schema: MCP_SERVER_SCHEMA,
       requestId: "req-run-pipeline-impact-included",
       toolId: McpToolId.RunPipeline,
-      input: { query: "rename createSession" },
+      input: { detail: "debug", query: "rename createSession" },
     });
 
     assert.equal(response.result.ok, true);
@@ -2686,6 +2699,7 @@ test("run_pipeline skips impact with explicit reason when no focal symbol can be
       toolId: McpToolId.RunPipeline,
       input: {
         detail: "debug",
+        detail: "debug",
         query: "what breaks if I change the public api for session code",
       },
     });
@@ -2716,6 +2730,7 @@ test("run_pipeline reports multiple_focal_symbols when impact trigger mentions m
       toolId: McpToolId.RunPipeline,
       input: {
         detail: "debug",
+        detail: "debug",
         task: "what breaks if I change createSession and readSession",
         preset: "refactor",
       },
@@ -2743,6 +2758,7 @@ test("run_pipeline memory section includes durable observations when they match 
       requestId: "req-run-pipeline-seed-memory",
       toolId: McpToolId.RunPipeline,
       input: {
+        detail: "debug",
         query: "rename createSession",
         sessionId: "session-alpha",
         saveObservation: true,
@@ -2754,6 +2770,7 @@ test("run_pipeline memory section includes durable observations when they match 
       requestId: "req-run-pipeline-memory-hit",
       toolId: McpToolId.RunPipeline,
       input: {
+        detail: "debug",
         detail: "debug",
         query: "rename createSession",
         sessionId: "session-alpha",
@@ -2783,6 +2800,7 @@ test("run_pipeline memory section includes durable observations when they match 
       toolId: McpToolId.RunPipeline,
       input: {
         detail: "debug",
+        detail: "debug",
         query: "rename createSession",
       },
     });
@@ -2809,6 +2827,7 @@ const stores = new ProductStoreLease(db, initialized.paths.dbPath).write;
         requestId: "req-run-pipeline-compressed-seed",
         toolId: McpToolId.RunPipeline,
         input: {
+          detail: "debug",
           query: "rename createSession memory lifecycle",
           sessionId: "session-compress",
         },
@@ -2830,6 +2849,7 @@ const stores = new ProductStoreLease(db, initialized.paths.dbPath).write;
         requestId: "req-run-pipeline-compressed-memory",
         toolId: McpToolId.RunPipeline,
         input: {
+          detail: "debug",
           query: "rename createSession memory lifecycle",
           includeMemory: true,
         },
@@ -2900,6 +2920,7 @@ const stores = new ProductStoreLease(db, initialized.paths.dbPath).write;
         requestId: "req-run-pipeline-consolidated-memory",
         toolId: McpToolId.RunPipeline,
         input: {
+          detail: "debug",
           query: "rename createSession lifecycle memory",
           includeMemory: true,
         },
@@ -2933,6 +2954,7 @@ test("run_pipeline explore preset de-emphasizes durable memory unless includeMem
       requestId: "req-run-pipeline-seed-explore-memory",
       toolId: McpToolId.RunPipeline,
       input: {
+        detail: "debug",
         query: "rename createSession",
         sessionId: "session-gamma",
         saveObservation: true,
@@ -2944,6 +2966,7 @@ test("run_pipeline explore preset de-emphasizes durable memory unless includeMem
       requestId: "req-run-pipeline-explore-memory-skipped",
       toolId: McpToolId.RunPipeline,
       input: {
+        detail: "debug",
         query: "createSession",
         intent: "explore",
       },
@@ -2957,6 +2980,7 @@ test("run_pipeline explore preset de-emphasizes durable memory unless includeMem
       requestId: "req-run-pipeline-explore-memory-forced",
       toolId: McpToolId.RunPipeline,
       input: {
+        detail: "debug",
         query: "createSession",
         intent: "explore",
         includeMemory: true,
@@ -3040,6 +3064,7 @@ const stores = new ProductStoreLease(db, initialized.paths.dbPath).write;
         toolId: McpToolId.RunPipeline,
         input: {
           detail: "debug",
+          detail: "debug",
           query: "Session",
           maxBudgetCharacters: fallbackBudget,
         },
@@ -3074,6 +3099,7 @@ test("run_pipeline deferred placeholders cover context, impact, session, and dur
       requestId: "req-run-pipeline-seed-deferred",
       toolId: McpToolId.RunPipeline,
       input: {
+        detail: "debug",
         query: "rename createSession",
         sessionId: "session-beta",
         saveObservation: true,
@@ -3085,6 +3111,7 @@ test("run_pipeline deferred placeholders cover context, impact, session, and dur
       requestId: "req-run-pipeline-deferred",
       toolId: McpToolId.RunPipeline,
       input: {
+        detail: "debug",
         detail: "debug",
         query: "rename createSession",
         sessionId: "session-beta",
@@ -3157,6 +3184,7 @@ const stores = new ProductStoreLease(db, initialized.paths.dbPath).write;
       toolId: McpToolId.RunPipeline,
       input: {
         detail: "debug",
+        detail: "debug",
         query: "rename createSession",
         maxBudgetCharacters: 5_000,
       },
@@ -3217,6 +3245,7 @@ const stores = new ProductStoreLease(db, initialized.paths.dbPath).write;
       requestId: "req-run-pipeline-stale-schema-parity",
       toolId: McpToolId.RunPipeline,
       input: {
+        detail: "debug",
         query: "rename createSession",
         maxBudgetCharacters: 5_000,
       },
@@ -3256,19 +3285,19 @@ test("run_pipeline is deterministic across repeated calls for the same request",
       schema: MCP_SERVER_SCHEMA,
       requestId: "req-run-pipeline-det-prime",
       toolId: McpToolId.RunPipeline,
-      input: { query: "rename createSession" },
+      input: { detail: "debug", query: "rename createSession" },
     });
     const first = await server.handleRequest({
       schema: MCP_SERVER_SCHEMA,
       requestId: "req-run-pipeline-det-first",
       toolId: McpToolId.RunPipeline,
-      input: { query: "rename createSession" },
+      input: { detail: "debug", query: "rename createSession" },
     });
     const second = await server.handleRequest({
       schema: MCP_SERVER_SCHEMA,
       requestId: "req-run-pipeline-det-second",
       toolId: McpToolId.RunPipeline,
-      input: { query: "rename createSession" },
+      input: { detail: "debug", query: "rename createSession" },
     });
 
     assert.equal(first.result.ok, true);
@@ -3292,7 +3321,7 @@ test("run_pipeline rejects unknown intent presets with invalid_request", async (
       schema: MCP_SERVER_SCHEMA,
       requestId: "req-run-pipeline-bad-intent",
       toolId: McpToolId.RunPipeline,
-      input: { query: "Session", intent: "planetary" },
+      input: { detail: "debug", query: "Session", intent: "planetary" },
     });
     assert.equal(response.result.ok, false);
     assert.equal(response.result.error.code, "invalid_request");
@@ -3315,7 +3344,7 @@ const stores = new ProductStoreLease(db, initialized.paths.dbPath).write;
         schema: MCP_SERVER_SCHEMA,
         requestId: "req-run-pipeline-silent-1",
         toolId: McpToolId.RunPipeline,
-        input: { query: "Session" },
+        input: { detail: "debug", query: "Session" },
       });
       assert.equal(silentFirst.result.ok, true);
       assert.equal(silentFirst.result.output.savedObservation, null);
@@ -3326,7 +3355,7 @@ const stores = new ProductStoreLease(db, initialized.paths.dbPath).write;
         schema: MCP_SERVER_SCHEMA,
         requestId: "req-run-pipeline-silent-2",
         toolId: McpToolId.RunPipeline,
-        input: { query: "Session" },
+        input: { detail: "debug", query: "Session" },
       });
       assert.equal(silentSecond.result.ok, true);
       assert.equal(silentSecond.result.output.savedObservation, null);
@@ -3337,6 +3366,7 @@ const stores = new ProductStoreLease(db, initialized.paths.dbPath).write;
         requestId: "req-run-pipeline-saved",
         toolId: McpToolId.RunPipeline,
         input: {
+          detail: "debug",
           query: "Session",
           sessionId: "pipeline-session",
           saveObservation: true,
@@ -3397,7 +3427,7 @@ const stores = new ProductStoreLease(db, initialized.paths.dbPath).write;
         schema: MCP_SERVER_SCHEMA,
         requestId: "req-run-pipeline-nudge-2",
         toolId: McpToolId.RunPipeline,
-        input: { query: "loadSession", sessionId: "nudge-session" },
+        input: { detail: "debug", query: "loadSession", sessionId: "nudge-session" },
       });
       const third = await server.handleRequest({
         schema: MCP_SERVER_SCHEMA,
@@ -3590,7 +3620,7 @@ test("get_code_context returns fast stale envelope and does not auto-reindex whe
       schema: MCP_SERVER_SCHEMA,
       requestId: "req-get-code-context-stale-fast-fail",
       toolId: McpToolId.GetCodeContext,
-      input: { query: "session manager", maxBudgetCharacters: 4_000 },
+      input: { detail: "debug", query: "session manager", maxBudgetCharacters: 4_000 },
     });
     const elapsedMs = Date.now() - startMs;
 
@@ -3660,7 +3690,7 @@ const stores = new ProductStoreLease(db, initialized.paths.dbPath).write;
       schema: MCP_SERVER_SCHEMA,
       requestId: "req-get-code-context-missing-index",
       toolId: McpToolId.GetCodeContext,
-      input: { query: "session manager", maxBudgetCharacters: 4_000 },
+      input: { detail: "debug", query: "session manager", maxBudgetCharacters: 4_000 },
     });
 
     assert.equal(response.result.ok, true);
@@ -3684,7 +3714,7 @@ test("get_code_context returns nextTool=index_repo when the repo is not ready", 
       schema: MCP_SERVER_SCHEMA,
       requestId: "req-get-code-context-repo-not-ready",
       toolId: McpToolId.GetCodeContext,
-      input: { query: "session manager", maxBudgetCharacters: 4_000 },
+      input: { detail: "debug", query: "session manager", maxBudgetCharacters: 4_000 },
     });
 
     assert.equal(response.result.ok, true);
@@ -3713,7 +3743,7 @@ test("index_repo remains callable and recovers from stale_index reported by get_
       schema: MCP_SERVER_SCHEMA,
       requestId: "req-get-code-context-recovery-stale",
       toolId: McpToolId.GetCodeContext,
-      input: { query: "session manager", maxBudgetCharacters: 4_000 },
+      input: { detail: "debug", query: "session manager", maxBudgetCharacters: 4_000 },
     });
     assert.equal(staleResponse.result.ok, true);
     assert.equal(staleResponse.result.output.resolved, false);
@@ -3732,7 +3762,7 @@ test("index_repo remains callable and recovers from stale_index reported by get_
       schema: MCP_SERVER_SCHEMA,
       requestId: "req-get-code-context-recovery-retry",
       toolId: McpToolId.GetCodeContext,
-      input: { query: "session manager", maxBudgetCharacters: 4_000 },
+      input: { detail: "debug", query: "session manager", maxBudgetCharacters: 4_000 },
     });
 
     assert.equal(retry.result.ok, true);
@@ -3761,6 +3791,7 @@ test("get_code_context auto_refresh defaults to never and if_stale refreshes onl
       requestId: "req-worktree-auto-disabled",
       toolId: McpToolId.GetCodeContext,
       input: {
+        detail: "debug",
         task: "find createSession",
         repo_root: featureRoot,
       },
@@ -3776,6 +3807,7 @@ test("get_code_context auto_refresh defaults to never and if_stale refreshes onl
       requestId: "req-worktree-auto-enabled",
       toolId: McpToolId.GetCodeContext,
       input: {
+        detail: "debug",
         detail: "debug",
         task: "find createSession",
         repo_root: featureRoot,
@@ -3804,7 +3836,7 @@ test("original detached-checkout scenario cannot reuse its index for a new main 
       schema: MCP_SERVER_SCHEMA,
       requestId: "req-detached-isolation-missing",
       toolId: McpToolId.GetCodeContext,
-      input: { task: "find createSession", repo_root: featureRoot },
+      input: { detail: "debug", task: "find createSession", repo_root: featureRoot },
     });
     assert.equal(missing.result.ok, true);
     assert.equal(missing.result.output.reason, "missing_index");
@@ -3813,7 +3845,7 @@ test("original detached-checkout scenario cannot reuse its index for a new main 
       schema: MCP_SERVER_SCHEMA,
       requestId: "req-detached-isolation-refresh",
       toolId: McpToolId.GetCodeContext,
-      input: { task: "find createSession", repo_root: featureRoot, auto_refresh: "if_stale" },
+      input: { detail: "debug", task: "find createSession", repo_root: featureRoot, auto_refresh: "if_stale" },
     });
     assert.equal(refreshed.result.ok, true);
     assert.equal("resolved" in refreshed.result.output, false);
@@ -3839,7 +3871,7 @@ test("run_pipeline still surfaces stale diagnostics without short-circuiting on 
       schema: MCP_SERVER_SCHEMA,
       requestId: "req-run-pipeline-no-regression-on-stale",
       toolId: McpToolId.RunPipeline,
-      input: { query: "session manager", maxBudgetCharacters: 4_000 },
+      input: { detail: "debug", query: "session manager", maxBudgetCharacters: 4_000 },
     });
 
     assert.equal(pipeline.result.ok, true);
@@ -5767,7 +5799,7 @@ test("M164: an indexed but never-initialized repo answers get_code_context from 
       schema: bound.server.schema,
       requestId: "m164-index-only",
       toolId: McpToolId.GetCodeContext,
-      input: { query: "read a user session" },
+      input: { detail: "debug", query: "read a user session" },
     });
 
     const output = response.result?.output as Record<string, unknown> | undefined;
@@ -5801,7 +5833,7 @@ test("M164: index authority still refuses a stale index on a never-initialized r
       schema: bound.server.schema,
       requestId: "m164-index-only-stale",
       toolId: McpToolId.GetCodeContext,
-      input: { query: "read a user session" },
+      input: { detail: "debug", query: "read a user session" },
     });
 
     const output = response.result?.output as Record<string, unknown> | undefined;
@@ -5828,7 +5860,7 @@ test("M164: an initialized repo is still judged on its own recorded readiness", 
       schema: bound.server.schema,
       requestId: "m164-initialized-not-ready",
       toolId: McpToolId.GetCodeContext,
-      input: { query: "read a user session" },
+      input: { detail: "debug", query: "read a user session" },
     });
 
     const output = response.result?.output as Record<string, unknown> | undefined;

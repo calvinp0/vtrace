@@ -90,7 +90,10 @@ async function deliveryStates(repoRoot: string, query: string): Promise<Record<s
       schema: MCP_SERVER_SCHEMA,
       requestId: `m157-${name}`,
       toolId,
-      input: { query },
+      // detail=debug asks for the AUTHORITATIVE result. run_pipeline and
+      // get_code_context project a compact orientation by default, and this
+      // test is about what the pipeline resolved, not about what it discloses.
+      input: { query, detail: "debug" },
     });
     const output = response.result.output as Record<string, unknown>;
     const product = (output.productContext ?? output) as Record<string, unknown>;

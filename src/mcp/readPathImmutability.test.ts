@@ -137,9 +137,15 @@ function contextBoundTo(root: string): McpServerContext {
 
 async function callTool(toolId: McpToolId, input: Record<string, unknown>): Promise<any> {
   const registry = defaultMcpToolRegistry;
+  // run_pipeline and get_code_context project a compact orientation by default;
+  // this suite asserts the read paths do not mutate the index, which is a
+  // property of the authoritative run rather than of what it discloses.
+  const authoritativeInput = toolId === McpToolId.RunPipeline || toolId === McpToolId.GetCodeContext
+    ? { ...input, detail: "debug" }
+    : input;
   return (await registry.getByToolId(toolId)!.handler({
     context: contextBoundTo(repoRoot),
-    request: { schema: MCP_SERVER_SCHEMA, requestId: "m151-immutable", toolId, input },
+    request: { schema: MCP_SERVER_SCHEMA, requestId: "m151-immutable", toolId, input: authoritativeInput },
   })) as any;
 }
 

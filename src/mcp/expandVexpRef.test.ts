@@ -352,7 +352,7 @@ test("expand_vexp_ref expands a V-REF emitted by run_pipeline and is determinist
       schema: MCP_SERVER_SCHEMA,
       requestId: "req-pipeline",
       toolId: McpToolId.RunPipeline,
-      input: { query: "rename createSession", maxBudgetCharacters: 4_000 },
+      input: { detail: "debug", query: "rename createSession", maxBudgetCharacters: 4_000 },
     });
     assert.equal(pipeline.result.ok, true);
     if (!pipeline.result.ok) throw new Error("pipeline failed");
@@ -417,7 +417,7 @@ test("expand_vexp_ref resolves a persisted V-REF after process store reset", asy
       schema: MCP_SERVER_SCHEMA,
       requestId: "req-pipeline-persisted",
       toolId: McpToolId.RunPipeline,
-      input: { query: "rename createSession", maxBudgetCharacters: 4_000 },
+      input: { detail: "debug", query: "rename createSession", maxBudgetCharacters: 4_000 },
     });
     assert.equal(pipeline.result.ok, true);
     if (!pipeline.result.ok) throw new Error("pipeline failed");
@@ -451,7 +451,7 @@ test("expand_vexp_ref returns stored truth after source files change", async () 
       schema: MCP_SERVER_SCHEMA,
       requestId: "req-pipeline-stored-truth",
       toolId: McpToolId.RunPipeline,
-      input: { query: "rename createSession", maxBudgetCharacters: 4_000 },
+      input: { detail: "debug", query: "rename createSession", maxBudgetCharacters: 4_000 },
     });
     assert.equal(pipeline.result.ok, true);
     if (!pipeline.result.ok) throw new Error("pipeline failed");
@@ -503,7 +503,7 @@ test("persisted expand_vexp_ref returns stored truth after source files change a
       schema: MCP_SERVER_SCHEMA,
       requestId: "req-pipeline-persisted-stored-truth",
       toolId: McpToolId.RunPipeline,
-      input: { query: "rename createSession", maxBudgetCharacters: 4_000 },
+      input: { detail: "debug", query: "rename createSession", maxBudgetCharacters: 4_000 },
     });
     assert.equal(pipeline.result.ok, true);
     if (!pipeline.result.ok) throw new Error("pipeline failed");
@@ -631,7 +631,7 @@ test("expand_vexp_ref returns expired when a previously published V-REF has been
       schema: MCP_SERVER_SCHEMA,
       requestId: "req-pipeline-expire",
       toolId: McpToolId.RunPipeline,
-      input: { query: "rename createSession", maxBudgetCharacters: 4_000 },
+      input: { detail: "debug", query: "rename createSession", maxBudgetCharacters: 4_000 },
     });
     assert.equal(pipeline.result.ok, true);
     if (!pipeline.result.ok) throw new Error("pipeline failed");
@@ -675,7 +675,7 @@ test("every deferred V-REF emitted by run_pipeline is expandable", async () => {
       schema: MCP_SERVER_SCHEMA,
       requestId: "req-pipeline-all-expandable",
       toolId: McpToolId.RunPipeline,
-      input: { query: "trace the flow from beta to base", intent: "explore", maxBudgetCharacters: 4_000 },
+      input: { detail: "debug", query: "trace the flow from beta to base", intent: "explore", maxBudgetCharacters: 4_000 },
     });
     assert.equal(pipeline.result.ok, true);
     if (!pipeline.result.ok) throw new Error("pipeline failed");
@@ -724,7 +724,7 @@ test("logic_flow deferred V-REF expands to the full LogicFlowOutput", async () =
       schema: MCP_SERVER_SCHEMA,
       requestId: "req-pipeline-flow",
       toolId: McpToolId.RunPipeline,
-      input: { query: "trace the flow from beta to base", intent: "explore", maxBudgetCharacters: 4_000 },
+      input: { detail: "debug", query: "trace the flow from beta to base", intent: "explore", maxBudgetCharacters: 4_000 },
     });
     assert.equal(pipeline.result.ok, true);
     if (!pipeline.result.ok) throw new Error("pipeline failed");

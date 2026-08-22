@@ -96,7 +96,11 @@ async function supportStates(repoRoot: string): Promise<Record<string, SupportSt
       // The tier is derived from the budget, and the default micro tier has a
       // single support slot — which would make the bounded-set assertions
       // vacuous. Standard tier is the one the broad corpus measures.
-      input: { query: QUERY, capsule_budget_tokens: 8_000 },
+      // detail=debug asks for the AUTHORITATIVE result: run_pipeline and
+      // get_code_context project a compact orientation by default, and this
+      // suite is about the support set the pipeline SELECTED, not about how
+      // much of it the default disclosure carries.
+      input: { query: QUERY, capsule_budget_tokens: 8_000, detail: "debug" },
     });
     const output = response.result.output as Record<string, unknown>;
     // `capsuleResult` is the authoritative capsule as each surface serializes

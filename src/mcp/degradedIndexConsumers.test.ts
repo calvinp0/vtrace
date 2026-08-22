@@ -94,7 +94,7 @@ test("M156: get_code_context serves a degraded index normally", async () => {
       schema: MCP_SERVER_SCHEMA,
       requestId: "m156-code-context",
       toolId: McpToolId.GetCodeContext,
-      input: { query: QUERY },
+      input: { detail: "debug", query: QUERY },
     });
 
     // §24/§26: the failed Python fixture is irrelevant to a TypeScript question,
@@ -112,7 +112,7 @@ test("M156: run_pipeline and get_context_capsule work on a degraded index", asyn
       schema: MCP_SERVER_SCHEMA,
       requestId: "m156-pipeline",
       toolId: McpToolId.RunPipeline,
-      input: { query: QUERY },
+      input: { detail: "debug", query: QUERY },
     });
     assert.equal(pipeline.result.ok, true);
 

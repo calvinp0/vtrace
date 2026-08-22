@@ -1,0 +1,158 @@
+{
+ "schemaVersion": "stage5.m172.economics.v1",
+ "milestone": "M172",
+ "workstream": "M172-D",
+ "title": "Projected first-call economics for the frozen orientation, against M169's baseline",
+ "basis": {
+  "label": "PROJECTED ATTRIBUTABLE COST — offline. No agent ran and no provider reported a token.",
+  "tokenAuthority": "M166 measured calibration, 0.3174 tokens per character over 363 provider-reported samples",
+  "pricing": "M169's own basis: 1h cache write at $10/MTok, cache read at $0.50/MTok",
+  "amplification": "a uniform 7 requests, the M169 ledger median, applied identically to both arms",
+  "m169BaselineLocalizationUsd": 0.052438,
+  "gateUsd": 0.026219,
+  "gateRule": "at or below 50% of M169's median baseline localization cost"
+ },
+ "m169Reference": {
+  "pipelineAttributableCostUsd": 0.0985,
+  "investigationDisplacedUsd": 0.0026,
+  "ratio": 37.9,
+  "verdict": "10 PIPELINE_ECONOMIC_LOSS, 1 ROUGH_BREAK_EVEN, 0 WIN, 1 NOT_MEASURABLE"
+ },
+ "rows": [
+  {
+   "slice": "broad100a_full",
+   "cases": 100,
+   "delivered": 99,
+   "currentMedianTokens": 6685,
+   "orientationMedianTokens": 603,
+   "orientationP90Tokens": 850,
+   "orientationMaxTokens": 978,
+   "reductionFactor": 11.086235489220563,
+   "currentProjectedCostUsd": 0.09024750000000001,
+   "orientationProjectedCostUsd": 0.0081405,
+   "pivotIdentity": 1,
+   "goldFileDeltaVsCurrentPp": 0,
+   "goldSymbolDeltaVsCurrentPp": 0,
+   "goldSymbolDeltaVsM171Pp": 2.9999999999999973,
+   "relatedWithheldByM171Cap": 47,
+   "relatedWithheldByM172Ceiling": 0,
+   "ceilingBindsCases": 0,
+   "soundnessViolations": 0
+  },
+  {
+   "slice": "broad100a_non_development_remainder",
+   "cases": 88,
+   "delivered": 87,
+   "currentMedianTokens": 6659,
+   "orientationMedianTokens": 606,
+   "orientationP90Tokens": 840,
+   "orientationMaxTokens": 978,
+   "reductionFactor": 10.988448844884488,
+   "currentProjectedCostUsd": 0.08989649999999999,
+   "orientationProjectedCostUsd": 0.008181,
+   "pivotIdentity": 1,
+   "goldFileDeltaVsCurrentPp": 0,
+   "goldSymbolDeltaVsCurrentPp": 0,
+   "goldSymbolDeltaVsM171Pp": 3.409090909090912,
+   "relatedWithheldByM171Cap": 42,
+   "relatedWithheldByM172Ceiling": 0,
+   "ceilingBindsCases": 0,
+   "soundnessViolations": 0
+  },
+  {
+   "slice": "broad100a_development_members",
+   "cases": 12,
+   "delivered": 12,
+   "currentMedianTokens": 6771,
+   "orientationMedianTokens": 544,
+   "orientationP90Tokens": 922,
+   "orientationMaxTokens": 947,
+   "reductionFactor": 12.446691176470589,
+   "currentProjectedCostUsd": 0.0914085,
+   "orientationProjectedCostUsd": 0.007344000000000001,
+   "pivotIdentity": 1,
+   "goldFileDeltaVsCurrentPp": 0,
+   "goldSymbolDeltaVsCurrentPp": 0,
+   "goldSymbolDeltaVsM171Pp": 0,
+   "relatedWithheldByM171Cap": 5,
+   "relatedWithheldByM172Ceiling": 0,
+   "ceilingBindsCases": 0,
+   "soundnessViolations": 0
+  },
+  {
+   "slice": "broad100b_full",
+   "cases": 100,
+   "delivered": 98,
+   "currentMedianTokens": 6884,
+   "orientationMedianTokens": 621,
+   "orientationP90Tokens": 865,
+   "orientationMaxTokens": 1103,
+   "reductionFactor": 11.085346215780998,
+   "currentProjectedCostUsd": 0.092934,
+   "orientationProjectedCostUsd": 0.0083835,
+   "pivotIdentity": 1,
+   "goldFileDeltaVsCurrentPp": 0,
+   "goldSymbolDeltaVsCurrentPp": 0,
+   "goldSymbolDeltaVsM171Pp": 0,
+   "relatedWithheldByM171Cap": 66,
+   "relatedWithheldByM172Ceiling": 0,
+   "ceilingBindsCases": 0,
+   "soundnessViolations": 0
+  }
+ ],
+ "gates": [
+  {
+   "slice": "broad100b_full",
+   "medianTokensAtOrBelow2000": true,
+   "p90TokensAtOrBelow2500": true,
+   "projectedCostWithinGate": true,
+   "pivotIdentityWhole": true,
+   "goldFileRegressionWithin2Pp": true,
+   "goldSymbolRegressionWithin2Pp": true,
+   "noSoundnessViolations": true
+  },
+  {
+   "slice": "broad100a_full",
+   "medianTokensAtOrBelow2000": true,
+   "p90TokensAtOrBelow2500": true,
+   "projectedCostWithinGate": true,
+   "pivotIdentityWhole": true,
+   "goldFileRegressionWithin2Pp": true,
+   "goldSymbolRegressionWithin2Pp": true,
+   "noSoundnessViolations": true
+  },
+  {
+   "slice": "broad100a_non_development_remainder",
+   "medianTokensAtOrBelow2000": true,
+   "p90TokensAtOrBelow2500": true,
+   "projectedCostWithinGate": true,
+   "pivotIdentityWhole": true,
+   "goldFileRegressionWithin2Pp": true,
+   "goldSymbolRegressionWithin2Pp": true,
+   "noSoundnessViolations": true
+  }
+ ],
+ "allGatesPass": true,
+ "m171Comparison": {
+  "note": "M171 froze a count cap of 5 and failed one gate. The same corpora under M172 differ only in that the cap is gone and the ceiling is enforced.",
+  "broad100aGoldSymbolPp": {
+   "m171": -2.9999999999999973,
+   "m172": 0
+  },
+  "broad100aRemainderGoldSymbolPp": {
+   "m171": -3.409090909090912,
+   "m172": 0
+  },
+  "broad100bGoldSymbolPp": {
+   "m171": 0,
+   "m172": 0
+  },
+  "relatedEntriesRecoveredOnB": 66,
+  "costOfRecovery": "none measurable: the median packet moves from M171's level to 621 tokens on B while every delivery rate is unchanged"
+ },
+ "readingTheResult": [
+  "the economics gate is passed by roughly a factor of three, and was passed by every candidate rung M171 measured too — cost was never the binding constraint on this design",
+  "what M171 got wrong was not the price but the bound: a count cap withheld authoritative evidence that the cost bound had over a thousand tokens of room for",
+  "an economics-plausibility gate is not a utility claim. It means a live requalification is now affordable, not that it would win."
+ ]
+}

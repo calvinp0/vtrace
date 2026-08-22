@@ -30,6 +30,7 @@ import {
 } from "../capsuleV2/engineSelection";
 import { getRuntimeProvenance } from "../runtime/provenance";
 import { buildInspectFirst, type InspectFirst } from "../runPipeline/inspectFirst";
+import { projectRunPipelineOrientation } from "../runPipeline/orientationProjection";
 import {
   buildContextAccounting,
   impactGraphOutputFilePathGroups,
@@ -8704,7 +8705,7 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
         [],
       ),
       outputSchema: objectSchema(
-        "Explicit run_pipeline orchestration output.",
+        "run_pipeline output, in one of two shapes selected by `detail`. By DEFAULT the tool returns a bounded orientation — `schemaVersion: run_pipeline.orientation/1`, with `focus`, `related`, `boundary` and optional `notes` — projected from the full authoritative result, which stays server-side. `detail=debug` returns that authoritative orchestration result instead, whose properties are the remainder of this schema. Failure and not-ready states are never projected: they keep their full envelope, reason and nextTool at every detail level.",
         {
           schemaVersion: stringProperty("Orchestration result schema version."),
           workspace: {
@@ -8810,20 +8811,55 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
             required: ["observation", "staleness"],
             additionalProperties: false,
           },
+          // ---- the default disclosure ----------------------------------
+          // Everything above documents the AUTHORITATIVE orchestration result,
+          // which is what `detail=debug` returns. The four properties below are
+          // what a default call returns instead: a bounded orientation
+          // projected from that same result. Both are documented here because
+          // one tool returns both, selected by `detail`.
+          focus: {
+            type: ["object", "null"],
+            description: "The single location the orientation is about. Present on a projected orientation.",
+            properties: {
+              at: stringProperty("Canonical `path::Symbol` identity, exactly as the index spells it."),
+              file: stringProperty("Repo-relative path."),
+              lines: { type: ["string", "null"], description: "`start-end` line span, or null when the item has none." },
+              form: { type: ["string", "null"], description: "What `code` is — full body, signature-only skeleton, and so on. A skeleton read as an implementation is a misreading this field prevents." },
+              why: { type: ["string", "null"], description: "The authoritative selection reason, verbatim." },
+              code: { type: ["string", "null"], description: "Source for the focus, head-bounded on a line boundary." },
+              codeTruncated: booleanProperty("True when `code` is a prefix of a longer span."),
+            },
+            required: ["at", "file", "lines", "form", "why", "code", "codeTruncated"],
+            additionalProperties: false,
+          },
+          related: arrayProperty(
+            "Task-relevant locations in the authoritative order the pipeline ranked them, each carrying the relationship the index actually records. Never re-ranked and never strengthened: a potential caller is not rendered as a caller, and a symbol reached by no edge says so.",
+            objectProperty(
+              "A related location and the claim made about it.",
+              {
+                at: stringProperty("Canonical `path::Symbol` identity."),
+                file: stringProperty("Repo-relative path."),
+                lines: { type: ["string", "null"], description: "`start-end` line span, or null." },
+                how: stringProperty("The authoritative relationship or role, verbatim or from the frozen relationship phrase table."),
+              },
+              ["at", "file", "lines", "how"],
+            ),
+          ),
+          boundary: stringProperty(
+            "The claim boundary, present on every projected orientation without exception. It states that the packet is a selection rather than an enumeration, which is what makes every omission above a non-claim: items not shown are not thereby absent.",
+          ),
+          notes: arrayProperty(
+            "Interpretation-critical qualifications only — a non-fresh index, a multi-repository routing outcome, a truncated excerpt. Absent when there is nothing that changes how the packet reads.",
+            stringProperty("One qualification."),
+          ),
         },
+        // Only `schemaVersion` is common to both shapes, so it is the only
+        // property this tool guarantees unconditionally. Which shape arrives is
+        // determined by `detail` and declared by the version string itself:
+        // `run_pipeline.orientation/1` for the default projection, the
+        // orchestration version for `detail=debug`.
         [
           "schemaVersion",
-          "request",
-          "intent",
-          "taskSummary",
-          "context",
-          "impact",
-          "flow",
-          "memory",
-          "rules",
-          "diagnostics",
-          "deferred",
-          "savedObservation",
         ],
       ),
     },
@@ -9212,18 +9248,40 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
 
           // The last thing that happens to a context response: bound the complete
           // serialized result, not just the model-visible context inside it.
+          const authoritativeResult = compactProductResponse(
+            accounting === undefined ? assembledOutput : { ...assembledOutput, accounting },
+            {
+              requestedContextTokens: capsuleBudgetTokens
+                ?? maxTokens
+                ?? CAPSULE_V2_PRODUCT_DEFAULT_BUDGET_TOKENS,
+              ...(detailRequested === undefined ? {} : { detail: detailRequested }),
+              ...(includeItemContent === undefined ? {} : { includeItemContent }),
+            },
+          );
+
+          // The authoritative result above is complete and stays that way; what
+          // follows decides only how much of it the model is handed by default.
+          //
+          // Serialising all of it cost $0.0985 a task to displace $0.0026 of the
+          // investigation it was meant to replace (M169). The evidence was never
+          // the problem — the response carries 895 characters of code inside
+          // 21,318 characters of response — so the default became a projection
+          // rather than a dump: a median of ~610 model-visible tokens against
+          // ~6,800, with gold file and gold symbol delivery unchanged to the
+          // percentage point on two disjoint hundred-task corpora.
+          //
+          // `detail=debug` returns the authoritative result whole. The projector
+          // also DECLINES on any state it is not defined over — unready, stale,
+          // empty, delivery-failed — so failure envelopes keep their reason and
+          // their nextTool at full fidelity. A compact success output does not
+          // license a vague failure output.
+          const orientation = detailRequested === McpResponseDetail.Debug
+            ? null
+            : projectRunPipelineOrientation(authoritativeResult);
+
           return {
             ok: true,
-            output: compactProductResponse(
-              accounting === undefined ? assembledOutput : { ...assembledOutput, accounting },
-              {
-                requestedContextTokens: capsuleBudgetTokens
-                  ?? maxTokens
-                  ?? CAPSULE_V2_PRODUCT_DEFAULT_BUDGET_TOKENS,
-                ...(detailRequested === undefined ? {} : { detail: detailRequested }),
-                ...(includeItemContent === undefined ? {} : { includeItemContent }),
-              },
-            ),
+            output: orientation ?? authoritativeResult,
           };
         },
         requestedRoot,
@@ -9396,6 +9454,17 @@ async function handleGetCodeContextRequest({
   });
 
   if (!result.ok) {
+    return result;
+  }
+
+  // When the inner pass projected an orientation there is no authoritative
+  // `productContext` here to overwrite, and nothing this wrapper could add to
+  // it: the freshness qualification the model needs is already inside the
+  // packet as an interpretation-critical note, and the timing and index-mode
+  // records the overwrite below exists to correct are not disclosed by default
+  // at all. Reaching into the projection to write them would put back exactly
+  // the machine-facing detail the projection was made to hold back.
+  if ((result.output as { productContext?: unknown } | undefined)?.productContext === undefined) {
     return result;
   }
 

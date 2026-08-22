@@ -30,10 +30,13 @@ const registry = defaultMcpToolRegistry;
  * different envelopes (M140-B learned this the hard way: `get_impact_graph`
  * and `search_logic_flow` wrap everything in `{ ok, output }`).
  */
+// get_code_context and run_pipeline are asked at detail=debug: they project a
+// compact orientation by default, and readiness parity is a property of the
+// authoritative envelope each tool returns.
 const READINESS_SENSITIVE_TOOLS = [
-  { toolId: McpToolId.GetCodeContext, input: { query: "alpha" }, policy: "fail_closed" },
+  { toolId: McpToolId.GetCodeContext, input: { query: "alpha", detail: "debug" }, policy: "fail_closed" },
   { toolId: McpToolId.GetContextCapsule, input: { query: "alpha" }, policy: "fail_closed" },
-  { toolId: McpToolId.RunPipeline, input: { query: "alpha" }, policy: "fail_closed" },
+  { toolId: McpToolId.RunPipeline, input: { query: "alpha", detail: "debug" }, policy: "fail_closed" },
   { toolId: McpToolId.GetImpactGraph, input: { symbol_fqn: "alpha.py::alpha" }, policy: "serve_with_warning" },
   { toolId: McpToolId.SearchLogicFlow, input: { start: "beta.py::beta", end: "alpha.py::alpha" }, policy: "serve_with_warning" },
 ] as const;

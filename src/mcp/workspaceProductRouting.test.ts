@@ -100,9 +100,15 @@ async function callTool(
   const registry = defaultMcpToolRegistry;
   const definition = registry.getByToolId(toolId);
   assert.notEqual(definition, undefined, `tool ${toolId} must be registered`);
+  // run_pipeline and get_code_context project a compact orientation by default;
+  // this suite asserts on the authoritative result, so it asks for that result
+  // explicitly rather than for the disclosure.
+  const authoritativeInput = toolId === McpToolId.RunPipeline || toolId === McpToolId.GetCodeContext
+    ? { ...input, detail: "debug" }
+    : input;
   return (await definition!.handler({
     context,
-    request: { schema: registry.schema, requestId: "m151", toolId, input },
+    request: { schema: registry.schema, requestId: "m151", toolId, input: authoritativeInput },
   })) as any;
 }
 

@@ -206,7 +206,7 @@ export function parseRenderedBodies(rendered: string): ReadonlyMap<string, strin
  * Everything the projector is allowed to look at, pulled out of the
  * authoritative response once so the selection logic reads as selection.
  */
-interface AuthoritativeView {
+export interface AuthoritativeView {
   readonly state: OrientationState;
   readonly problemReason: string;
   readonly recommendedAction: string | null;
@@ -226,7 +226,7 @@ interface AuthoritativeView {
   readonly notes: readonly string[];
 }
 
-function readAuthoritative(output: Record<string, unknown>): AuthoritativeView {
+export function readAuthoritative(output: Record<string, unknown>): AuthoritativeView {
   const productContext = isRecord(output.productContext) ? output.productContext : {};
   const diagnostics = isRecord(output.diagnostics) ? output.diagnostics : {};
   const diagFreshness = isRecord(diagnostics.freshness) ? diagnostics.freshness : {};
@@ -303,7 +303,7 @@ function readAuthoritative(output: Record<string, unknown>): AuthoritativeView {
 // ---- selection ----------------------------------------------------
 
 /** Head-bound a body on a line boundary, so a truncated excerpt is never a half line. */
-function headBound(body: string, limit: number): { readonly text: string; readonly truncated: boolean } {
+export function headBound(body: string, limit: number): { readonly text: string; readonly truncated: boolean } {
   if (body.length <= limit) return { text: body, truncated: false };
   const slice = body.slice(0, limit);
   const lastNewline = slice.lastIndexOf("\n");
