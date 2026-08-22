@@ -125,8 +125,11 @@ const pairwise = PAIRS.map(([left, right]) => ({
 }));
 
 const strictBehaviours = byArm("vtrace_strict").map(behaviour);
-const guardedRuns = strictBehaviours.filter((b) => b.guardStatus === "GUARDED").length;
-const guardInactiveRuns = strictBehaviours.filter((b) => b.guardStatus === "GUARD_INACTIVE").length;
+const countStatus = (s: string) => strictBehaviours.filter((b) => b.guardStatus === s).length;
+const guardedRuns = countStatus("GUARDED");
+const guardUnexercisedRuns = countStatus("GUARD_UNEXERCISED");
+const guardDegradedRuns = countStatus("GUARD_DEGRADED");
+const guardFaultRuns = countStatus("GUARD_FAULT");
 
 const primary = pairwise[0]!;
 const verdict = coercionVerdict({
@@ -135,7 +138,9 @@ const verdict = coercionVerdict({
   trafficDelta: primary.deltas.find((d) => d.metric === "totalTraffic")!,
   outcomes: primary.outcomes,
   guardedRuns,
-  guardInactiveRuns,
+  guardUnexercisedRuns,
+  guardDegradedRuns,
+  guardFaultRuns,
 });
 
 const report = {
@@ -151,9 +156,14 @@ const report = {
   guard: {
     strictRuns: strictBehaviours.length,
     guarded: guardedRuns,
-    inactive: guardInactiveRuns,
+    unexercised: guardUnexercisedRuns,
+    degraded: guardDegradedRuns,
+    fault: guardFaultRuns,
     totalDenials: strictBehaviours.reduce((s, b) => s + b.guardDenials, 0),
-    note: "GUARD_INACTIVE runs are reported separately and never pooled with guarded runs",
+    note:
+      "GUARD_UNEXERCISED = policy in force, agent never attempted a search (valid). "
+      + "GUARD_DEGRADED = hook ran and allowed a search through (never pooled with guarded). "
+      + "GUARD_FAULT = searches attempted but the hook never ran (apparatus failure).",
   },
   firstActionCompliance: Object.fromEntries(ARMS.map((a) => [a, {
     runs: byArm(a).length,
@@ -171,5 +181,5 @@ const report = {
 
 writeFileSync(path.join(RESULTS, "stage5_m168_runs.json"), `${JSON.stringify(report, null, 2)}\n`);
 console.log(`collected ${records.length}/36 runs · complete triples ${report.completeTriples.length}/12 · spend $${report.spendSoFarUsd.toFixed(4)}`);
-console.log(`guard: ${guardedRuns} guarded, ${guardInactiveRuns} inactive of ${strictBehaviours.length} strict runs`);
+console.log(`guard: ${guardedRuns} guarded, ${guardUnexercisedRuns} unexercised, ${guardDegradedRuns} degraded, ${guardFaultRuns} fault (of ${strictBehaviours.length} strict runs)`);
 console.log(`primary verdict: ${verdict.verdict}`);

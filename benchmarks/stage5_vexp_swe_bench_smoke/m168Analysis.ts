@@ -50,10 +50,21 @@ export interface Behaviour {
   readonly guardDenials: number;
   readonly guardAllows: number;
   /**
-   * A strict-arm run whose guard never denied anything AND never saw an index
-   * is silently unguarded. Reported, never pooled with guarded runs.
+   * Four distinct states, because "the guard did not deny anything" has three
+   * very different causes and pooling them would be wrong in both directions:
+   *
+   *   GUARDED             the hook denied at least one real attempt
+   *   GUARD_UNEXERCISED   the hook was armed but the agent never attempted a
+   *                       search, so there was nothing to deny. The treatment
+   *                       WAS in force; it simply was not needed. A valid
+   *                       strict run.
+   *   GUARD_DEGRADED      the hook ran and ALLOWED a search through (the
+   *                       engine's index was missing) — the strict arm was
+   *                       silently not strict. Reported, never pooled.
+   *   GUARD_FAULT         searches were attempted but the hook never ran at
+   *                       all. That is an apparatus failure, not an outcome.
    */
-  readonly guardStatus: "GUARDED" | "GUARD_INACTIVE" | "NO_GUARD";
+  readonly guardStatus: "GUARDED" | "GUARD_UNEXERCISED" | "GUARD_DEGRADED" | "GUARD_FAULT" | "NO_GUARD";
 }
 
 export function behaviour(r: RunRecord): Behaviour {
@@ -63,17 +74,18 @@ export function behaviour(r: RunRecord): Behaviour {
   const denials = r.guardEvents.filter((e) => e.decision === "deny").length;
   const allows = r.guardEvents.filter((e) => e.decision === "allow").length;
 
-  const hasGuard = r.arm === "vtrace_strict";
-  const guardStatus: Behaviour["guardStatus"] = !hasGuard
-    ? "NO_GUARD"
-    : denials > 0
-      ? "GUARDED"
-      // The guard ran and let searches through, or never ran at all. Either way
-      // the strict arm was not strict, and that is a reported state.
-      : "GUARD_INACTIVE";
+  const searchAttempts = calls.filter((c) => isSearch(c.tool)).length;
+  const hookRan = r.guardEvents.length > 0;
+
+  let guardStatus: Behaviour["guardStatus"];
+  if (r.arm !== "vtrace_strict") guardStatus = "NO_GUARD";
+  else if (denials > 0) guardStatus = "GUARDED";
+  else if (allows > 0) guardStatus = "GUARD_DEGRADED";
+  else if (searchAttempts === 0 && !hookRan) guardStatus = "GUARD_UNEXERCISED";
+  else guardStatus = "GUARD_FAULT";
 
   return {
-    searchAttempts: calls.filter((c) => isSearch(c.tool)).length,
+    searchAttempts,
     reads: calls.filter((c) => c.tool === "Read").length,
     filesOpened: new Set(calls.filter((c) => c.path !== null).map((c) => c.path!)).size,
     pipelineCalls,
@@ -184,7 +196,9 @@ export interface CoercionVerdict {
   readonly trafficDelta: PairedDelta;
   readonly outcomes: OutcomeMatrix;
   readonly guardedRuns: number;
-  readonly guardInactiveRuns: number;
+  readonly guardUnexercisedRuns: number;
+  readonly guardDegradedRuns: number;
+  readonly guardFaultRuns: number;
   readonly verdict:
     | "COERCION_REDUCES_WORK_WITHOUT_OUTCOME_COST"
     | "COERCION_REDUCES_WORK_AT_OUTCOME_COST"
@@ -199,12 +213,17 @@ export function coercionVerdict(input: {
   trafficDelta: PairedDelta;
   outcomes: OutcomeMatrix;
   guardedRuns: number;
-  guardInactiveRuns: number;
+  guardUnexercisedRuns: number;
+  guardDegradedRuns: number;
+  guardFaultRuns: number;
 }): CoercionVerdict {
-  const { searchDelta, costDelta, outcomes, guardedRuns, guardInactiveRuns } = input;
+  const { searchDelta, costDelta, outcomes, guardedRuns, guardUnexercisedRuns } = input;
 
-  // A strict arm that was never actually strict cannot answer the question.
-  if (guardedRuns === 0) {
+  // The treatment must have been in force somewhere. A run where the hook was
+  // armed but never needed still counts: the agent was under the policy and
+  // chose not to search, which is itself the effect being measured. Only a
+  // sweep where the policy was NOWHERE in force cannot answer the question.
+  if (guardedRuns + guardUnexercisedRuns === 0) {
     return { ...input, verdict: "INCONCLUSIVE_GUARD_INACTIVE" };
   }
 

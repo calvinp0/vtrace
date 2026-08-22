@@ -77,16 +77,28 @@ describe("guard status is never assumed", () => {
     expect(b.guardDenials).toBe(1);
   });
 
-  test("a strict run whose guard only ever allowed is GUARD_INACTIVE, not GUARDED", () => {
+  test("a strict run whose guard ran and ALLOWED a search is GUARD_DEGRADED", () => {
     const b = behaviour(run({
       label: "l", arm: "vtrace_strict",
+      toolCalls: [call("Grep")],
       guardEvents: [{ decision: "allow", indexPresent: false }],
     }));
-    expect(b.guardStatus).toBe("GUARD_INACTIVE");
+    expect(b.guardStatus).toBe("GUARD_DEGRADED");
   });
 
-  test("a strict run whose guard never fired at all is GUARD_INACTIVE", () => {
-    expect(behaviour(run({ label: "l", arm: "vtrace_strict" })).guardStatus).toBe("GUARD_INACTIVE");
+  test("a strict run that never attempted a search is UNEXERCISED, not degraded — "
+    + "the policy was in force, it simply was not needed", () => {
+    const b = behaviour(run({
+      label: "l", arm: "vtrace_strict", toolCalls: [call("Read", "/a.py")],
+    }));
+    expect(b.guardStatus).toBe("GUARD_UNEXERCISED");
+  });
+
+  test("searches attempted but no hook invocation at all is an apparatus FAULT", () => {
+    const b = behaviour(run({
+      label: "l", arm: "vtrace_strict", toolCalls: [call("Grep")], guardEvents: [],
+    }));
+    expect(b.guardStatus).toBe("GUARD_FAULT");
   });
 
   test("non-strict arms are NO_GUARD, distinct from an inactive guard", () => {
@@ -148,12 +160,20 @@ describe("coercion verdict", () => {
       new Map<string, boolean | null>([["t", true]]),
       new Map<string, boolean | null>([["t", true]])),
     guardedRuns: 1,
-    guardInactiveRuns: 0,
+    guardUnexercisedRuns: 0,
+    guardDegradedRuns: 0,
+    guardFaultRuns: 0,
   };
 
-  test("an inactive guard cannot answer the question, whatever the numbers say", () => {
-    expect(coercionVerdict({ ...base, guardedRuns: 0, guardInactiveRuns: 12 }).verdict)
-      .toBe("INCONCLUSIVE_GUARD_INACTIVE");
+  test("a sweep where the policy was nowhere in force cannot answer the question", () => {
+    expect(coercionVerdict({
+      ...base, guardedRuns: 0, guardUnexercisedRuns: 0, guardDegradedRuns: 12,
+    }).verdict).toBe("INCONCLUSIVE_GUARD_INACTIVE");
+  });
+
+  test("unexercised runs still count as the policy being in force", () => {
+    expect(coercionVerdict({ ...base, guardedRuns: 0, guardUnexercisedRuns: 6 }).verdict)
+      .not.toBe("INCONCLUSIVE_GUARD_INACTIVE");
   });
 
   test("less work, same outcomes", () => {
