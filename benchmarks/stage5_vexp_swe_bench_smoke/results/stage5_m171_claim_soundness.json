@@ -1,0 +1,30 @@
+{
+ "schemaVersion": "stage5.m171.claim-soundness.v1",
+ "milestone": "M171",
+ "workstream": "M171-D",
+ "title": "Every claim in every packet, checked against the state it was projected from",
+ "method": {
+  "rule": "§49 — derive the claims a reasonable consumer can make from the PACKET, then check each against the authoritative state. A reader's view is the only view a truthfulness audit may use.",
+  "checks": [
+   "UNSUPPORTED_LOCATION",
+   "UNSUPPORTED_FILE",
+   "UNSUPPORTED_SPAN",
+   "UNSUPPORTED_RELATION",
+   "AUTHORED_PROSE",
+   "NEGATIVE_OR_EXHAUSTIVE_CLAIM",
+   "FABRICATED_SOURCE"
+  ],
+  "tolerance": "zero. One violation anywhere fails D.",
+  "sources": {
+   "captured_fresh_index": "12 development cases, re-captured on fresh indexes",
+   "live_transcript_envelope": "the 12 envelopes agents were actually handed in M168"
+  }
+ },
+ "packetsAudited": 96,
+ "violationsByKind": {},
+ "totalViolations": 0,
+ "passes": true,
+ "unsupportedClaims": 0,
+ "falseAbsenceOrExhaustiveClaims": 0,
+ "rows": []
+}

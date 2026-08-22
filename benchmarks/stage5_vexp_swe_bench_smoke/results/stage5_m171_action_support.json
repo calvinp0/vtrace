@@ -1,0 +1,327 @@
+{
+ "schemaVersion": "stage5.m171.agent-consumption.v1",
+ "milestone": "M171",
+ "workstream": "M171-B",
+ "title": "What agents did with the orientation they were handed, on twelve valid live runs",
+ "frozenDefinitions": {
+  "repositoryAction": "Read/Edit/Write/NotebookEdit, or a Grep/Glob carrying an explicit path or glob. Bash is recorded and never counted.",
+  "firstMeaningfulAction": "the first repository action strictly after the orientation result",
+  "earlyPhase": "every repository action strictly before the first Edit/Write/NotebookEdit; the whole run when it never edits",
+  "support": "the action's repo-relative FILE path is among the file paths the response surfaced",
+  "frozenBefore": "these definitions were written into m171Consumption.ts before any rate was computed (§41)"
+ },
+ "source": "M168 vtrace_clean first-pass transcripts; the envelope measured is the one inside the agent's own tool_result block",
+ "aggregate": {
+  "runs": 12,
+  "readable": 12,
+  "firstActionSupported": 7,
+  "firstActionMeasurable": 12,
+  "firstActionSupportRate": 0.5833333333333334,
+  "firstEditSupported": 7,
+  "firstEditMeasurable": 12,
+  "medianEarlyPhaseSupportRate": 1,
+  "medianSurfacedFiles": 3,
+  "medianSurfacedNeverTouchedShare": 0.75,
+  "medianRepositoryActions": 4
+ },
+ "rows": [
+  {
+   "label": "m168_vtrace_clean_astropy__astropy_14369",
+   "readable": true,
+   "envelopeCharacters": 25119,
+   "surfacedFiles": 4,
+   "surfacedSymbols": 8,
+   "totalToolCalls": 14,
+   "repositoryActions": 7,
+   "shellActions": 7,
+   "firstAction": {
+    "tool": "Read",
+    "path": "astropy/units/format/cds.py",
+    "supported": false
+   },
+   "earlyPhaseTotal": 1,
+   "earlyPhaseSupported": 0,
+   "earlyPhaseSupportRate": 0,
+   "firstEditPath": "astropy/units/format/cds.py",
+   "firstEditSupported": false,
+   "surfacedNeverTouched": 4,
+   "surfacedNeverTouchedShare": 1,
+   "touchedNeverSurfaced": [
+    "astropy/units/format",
+    "astropy/units/format/cds.py",
+    "astropy/units/format/cds_parsetab.py",
+    "astropy/utils",
+    "astropy/utils/parsing.py"
+   ]
+  },
+  {
+   "label": "m168_vtrace_clean_django__django_13658",
+   "readable": true,
+   "envelopeCharacters": 23999,
+   "surfacedFiles": 4,
+   "surfacedSymbols": 6,
+   "totalToolCalls": 4,
+   "repositoryActions": 4,
+   "shellActions": 0,
+   "firstAction": {
+    "tool": "Read",
+    "path": "django/core/management/__init__.py",
+    "supported": true
+   },
+   "earlyPhaseTotal": 2,
+   "earlyPhaseSupported": 2,
+   "earlyPhaseSupportRate": 1,
+   "firstEditPath": "django/core/management/__init__.py",
+   "firstEditSupported": true,
+   "surfacedNeverTouched": 3,
+   "surfacedNeverTouchedShare": 0.75,
+   "touchedNeverSurfaced": []
+  },
+  {
+   "label": "m168_vtrace_clean_matplotlib__matplotlib_22719",
+   "readable": true,
+   "envelopeCharacters": 20641,
+   "surfacedFiles": 2,
+   "surfacedSymbols": 5,
+   "totalToolCalls": 6,
+   "repositoryActions": 3,
+   "shellActions": 3,
+   "firstAction": {
+    "tool": "Read",
+    "path": "lib/matplotlib/category.py",
+    "supported": true
+   },
+   "earlyPhaseTotal": 1,
+   "earlyPhaseSupported": 1,
+   "earlyPhaseSupportRate": 1,
+   "firstEditPath": "lib/matplotlib/category.py",
+   "firstEditSupported": true,
+   "surfacedNeverTouched": 1,
+   "surfacedNeverTouchedShare": 0.5,
+   "touchedNeverSurfaced": []
+  },
+  {
+   "label": "m168_vtrace_clean_mwaskom__seaborn_3187",
+   "readable": true,
+   "envelopeCharacters": 19407,
+   "surfacedFiles": 3,
+   "surfacedSymbols": 6,
+   "totalToolCalls": 25,
+   "repositoryActions": 15,
+   "shellActions": 6,
+   "firstAction": {
+    "tool": "Read",
+    "path": "seaborn/_core/scales.py",
+    "supported": true
+   },
+   "earlyPhaseTotal": 6,
+   "earlyPhaseSupported": 6,
+   "earlyPhaseSupportRate": 1,
+   "firstEditPath": "seaborn/_core/scales.py",
+   "firstEditSupported": true,
+   "surfacedNeverTouched": 2,
+   "surfacedNeverTouchedShare": 0.6666666666666666,
+   "touchedNeverSurfaced": [
+    "seaborn",
+    "seaborn/utils.py"
+   ]
+  },
+  {
+   "label": "m168_vtrace_clean_pallets__flask_5014",
+   "readable": true,
+   "envelopeCharacters": 18866,
+   "surfacedFiles": 4,
+   "surfacedSymbols": 5,
+   "totalToolCalls": 2,
+   "repositoryActions": 2,
+   "shellActions": 0,
+   "firstAction": {
+    "tool": "Read",
+    "path": "src/flask/blueprints.py",
+    "supported": true
+   },
+   "earlyPhaseTotal": 1,
+   "earlyPhaseSupported": 1,
+   "earlyPhaseSupportRate": 1,
+   "firstEditPath": "src/flask/blueprints.py",
+   "firstEditSupported": true,
+   "surfacedNeverTouched": 3,
+   "surfacedNeverTouchedShare": 0.75,
+   "touchedNeverSurfaced": []
+  },
+  {
+   "label": "m168_vtrace_clean_psf__requests_1724",
+   "readable": true,
+   "envelopeCharacters": 23395,
+   "surfacedFiles": 3,
+   "surfacedSymbols": 7,
+   "totalToolCalls": 8,
+   "repositoryActions": 5,
+   "shellActions": 0,
+   "firstAction": {
+    "tool": "Read",
+    "path": "requests/utils.py",
+    "supported": false
+   },
+   "earlyPhaseTotal": 2,
+   "earlyPhaseSupported": 0,
+   "earlyPhaseSupportRate": 0,
+   "firstEditPath": "requests/models.py",
+   "firstEditSupported": false,
+   "surfacedNeverTouched": 3,
+   "surfacedNeverTouchedShare": 1,
+   "touchedNeverSurfaced": [
+    "requests/models.py",
+    "requests/utils.py"
+   ]
+  },
+  {
+   "label": "m168_vtrace_clean_pydata__xarray_6599",
+   "readable": true,
+   "envelopeCharacters": 20790,
+   "surfacedFiles": 5,
+   "surfacedSymbols": 5,
+   "totalToolCalls": 25,
+   "repositoryActions": 7,
+   "shellActions": 13,
+   "firstAction": {
+    "tool": "Read",
+    "path": "xarray/core/computation.py",
+    "supported": false
+   },
+   "earlyPhaseTotal": 2,
+   "earlyPhaseSupported": 0,
+   "earlyPhaseSupportRate": 0,
+   "firstEditPath": "xarray/core/computation.py",
+   "firstEditSupported": false,
+   "surfacedNeverTouched": 5,
+   "surfacedNeverTouchedShare": 1,
+   "touchedNeverSurfaced": [
+    "doc/whats-new.rst",
+    "xarray/core/computation.py"
+   ]
+  },
+  {
+   "label": "m168_vtrace_clean_pylint_dev__pylint_4551",
+   "readable": true,
+   "envelopeCharacters": 20331,
+   "surfacedFiles": 3,
+   "surfacedSymbols": 6,
+   "totalToolCalls": 24,
+   "repositoryActions": 15,
+   "shellActions": 6,
+   "firstAction": {
+    "tool": "Grep",
+    "path": "pylint/pyreverse",
+    "supported": false
+   },
+   "earlyPhaseTotal": 6,
+   "earlyPhaseSupported": 0,
+   "earlyPhaseSupportRate": 0,
+   "firstEditPath": "pylint/pyreverse/inspector.py",
+   "firstEditSupported": false,
+   "surfacedNeverTouched": 3,
+   "surfacedNeverTouchedShare": 1,
+   "touchedNeverSurfaced": [
+    "pylint/checkers/utils.py",
+    "pylint/pyreverse",
+    "pylint/pyreverse/diagrams.py",
+    "pylint/pyreverse/inspector.py"
+   ]
+  },
+  {
+   "label": "m168_vtrace_clean_pytest_dev__pytest_7432",
+   "readable": true,
+   "envelopeCharacters": 18984,
+   "surfacedFiles": 2,
+   "surfacedSymbols": 6,
+   "totalToolCalls": 12,
+   "repositoryActions": 3,
+   "shellActions": 9,
+   "firstAction": {
+    "tool": "Read",
+    "path": "src/_pytest/skipping.py",
+    "supported": false
+   },
+   "earlyPhaseTotal": 1,
+   "earlyPhaseSupported": 0,
+   "earlyPhaseSupportRate": 0,
+   "firstEditPath": "src/_pytest/skipping.py",
+   "firstEditSupported": false,
+   "surfacedNeverTouched": 2,
+   "surfacedNeverTouchedShare": 1,
+   "touchedNeverSurfaced": [
+    "src/_pytest/skipping.py"
+   ]
+  },
+  {
+   "label": "m168_vtrace_clean_scikit_learn__scikit_learn_10844",
+   "readable": true,
+   "envelopeCharacters": 22818,
+   "surfacedFiles": 2,
+   "surfacedSymbols": 7,
+   "totalToolCalls": 6,
+   "repositoryActions": 2,
+   "shellActions": 4,
+   "firstAction": {
+    "tool": "Read",
+    "path": "sklearn/metrics/cluster/supervised.py",
+    "supported": true
+   },
+   "earlyPhaseTotal": 1,
+   "earlyPhaseSupported": 1,
+   "earlyPhaseSupportRate": 1,
+   "firstEditPath": "sklearn/metrics/cluster/supervised.py",
+   "firstEditSupported": true,
+   "surfacedNeverTouched": 1,
+   "surfacedNeverTouchedShare": 0.5,
+   "touchedNeverSurfaced": []
+  },
+  {
+   "label": "m168_vtrace_clean_sphinx_doc__sphinx_7462",
+   "readable": true,
+   "envelopeCharacters": 20843,
+   "surfacedFiles": 3,
+   "surfacedSymbols": 5,
+   "totalToolCalls": 6,
+   "repositoryActions": 4,
+   "shellActions": 2,
+   "firstAction": {
+    "tool": "Read",
+    "path": "sphinx/domains/python.py",
+    "supported": true
+   },
+   "earlyPhaseTotal": 1,
+   "earlyPhaseSupported": 1,
+   "earlyPhaseSupportRate": 1,
+   "firstEditPath": "sphinx/domains/python.py",
+   "firstEditSupported": true,
+   "surfacedNeverTouched": 2,
+   "surfacedNeverTouchedShare": 0.6666666666666666,
+   "touchedNeverSurfaced": []
+  },
+  {
+   "label": "m168_vtrace_clean_sympy__sympy_13480",
+   "readable": true,
+   "envelopeCharacters": 20532,
+   "surfacedFiles": 4,
+   "surfacedSymbols": 6,
+   "totalToolCalls": 7,
+   "repositoryActions": 3,
+   "shellActions": 4,
+   "firstAction": {
+    "tool": "Read",
+    "path": "sympy/functions/elementary/hyperbolic.py",
+    "supported": true
+   },
+   "earlyPhaseTotal": 1,
+   "earlyPhaseSupported": 1,
+   "earlyPhaseSupportRate": 1,
+   "firstEditPath": "sympy/functions/elementary/hyperbolic.py",
+   "firstEditSupported": true,
+   "surfacedNeverTouched": 3,
+   "surfacedNeverTouchedShare": 0.75,
+   "touchedNeverSurfaced": []
+  }
+ ]
+}

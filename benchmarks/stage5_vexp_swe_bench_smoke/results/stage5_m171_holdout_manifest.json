@@ -1,0 +1,36 @@
+{
+ "schemaVersion": "stage5.m171.holdout-manifest.v1",
+ "milestone": "M171",
+ "workstream": "M171-B",
+ "title": "The holdout populations and the contamination between them, named",
+ "broad100a": {
+  "cases": 100,
+  "identity": "the exact public VEXP 100-task manifest (M168)",
+  "freshIndexRoot": "results/workspaces/m169_broad_a/<instance_id>",
+  "developmentMembers": [
+   "astropy__astropy-14369",
+   "django__django-13658",
+   "matplotlib__matplotlib-22719",
+   "mwaskom__seaborn-3187",
+   "pallets__flask-5014",
+   "psf__requests-1724",
+   "pydata__xarray-6599",
+   "pylint-dev__pylint-4551",
+   "pytest-dev__pytest-7432",
+   "scikit-learn__scikit-learn-10844",
+   "sphinx-doc__sphinx-7462",
+   "sympy__sympy-13480"
+  ],
+  "remainder": 88,
+  "inferenceRule": "§32 — primary A inference uses the non-development remainder. Full A is reported alongside and never substituted for it."
+ },
+ "broad100b": {
+  "cases": 100,
+  "identity": "independent, disjoint from A",
+  "freshIndexRoot": "per-fixture workspace field",
+  "developmentMembers": [],
+  "remainder": 100,
+  "inferenceRule": "§71 — B is never tuned against. If B fails, the milestone closes MIXED rather than adjusting the contract."
+ },
+ "disjoint": true
+}

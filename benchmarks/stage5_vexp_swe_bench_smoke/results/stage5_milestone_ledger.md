@@ -4026,3 +4026,102 @@ gate G1, G3, G5                       PASS   46.8% reduction, 0 unsafe, 0 fixed 
   localizes for a median of $0.052 and half the tasks never issue a whole-file
   read — or a tool contract admitting more than one window, which is a change to
   the harness and not to VTRACE.
+
+## M171 — agent-facing orientation contract redesign (commit pending)
+
+**MIXED. Offline design and qualification; $0.00 live; `src/` byte-identical
+throughout. No product change made and none licensed.**
+
+M169 closed the mandatory pipeline on price and M170 closed transparent mediation
+on opportunity. M171 asked whether the price was a property of the product
+category or of the disclosure, built the projector that answers it, and found the
+answer is the disclosure — then did not ship, because one delivery gate frozen
+before the holdout missed by three cases.
+
+```text
+A PASS   contract decomposed, cost re-derived   B PASS   40 rules, 0 unclassified
+C PASS   5 proofs incl. no-refill               D PASS   96 packets, 0 violations
+E MIXED  5 of 6 holdout gates                   F NOT RUN  E did not license it
+
+orientation verdict   COMPACT_ORIENTATION_PLAUSIBLE
+economics verdict     PROACTIVE_PIPELINE_ECONOMICS_MATERIALLY_CHANGED (candidate only)
+product verdict       DEFAULT_ORIENTATION_REDESIGN_NOT_LICENSED
+product changed       NO        retrieval changed   NO
+live requalification  NOT LICENSED, NOT REQUESTED
+```
+
+```text
+current default median model-visible tokens   6,766   ($0.1035 projected)
+selected orientation median / p90               582 / 850   ($0.0079)
+reduction                                      11.4-11.8x across both corpora
+evidence density                              24.4% -> 68.3%, same instrument
+pivot identity                          99/99 A, 98/98 B, 12/12 development
+action-support preservation                     7/7 at every rung, incl. R1000
+gold file delivery                            0.00pp on all three slices
+gold symbol delivery                  -3.00pp A full, -3.41pp A remainder, 0.00pp B
+unsupported claims / false absence              0 / 0 over 96 audited packets
+```
+
+## M171 standing findings
+
+- **The response is 21,318 characters and carries 895 characters of code.**
+  Repository source is about 4% of what the model pays for; `pivotNeighborhood`
+  excerpt bodies are stripped before emission, so the only source reaching the
+  model lives inside `productContext.modelVisibleContext`. The projector cuts its
+  excerpt from that same string, which is what keeps M171 a projection: it cannot
+  show source the current default does not already show.
+
+- **Repeated identity, not repeated boundaries, is the redundancy.** 89 distinct
+  facts across 146 surfaces; the task string on 7 surfaces, the intent on 8, a
+  symbol identity on a median of 4 and a maximum of 9 — while every epistemic and
+  provenance field is asserted exactly once. §8's hypothesis that repeated
+  claim-boundary prose was the cost was measurably wrong.
+
+- **The orientation is right or wrong per case, never partly right.** Across the
+  twelve M168 live runs, early-phase support is 0% or 100% with nothing between:
+  seven runs had first action, first edit and every early action supported, five
+  had none. Median 3 files surfaced, median 75% never opened. A bigger packet
+  does not rescue a wrong pivot, and a right pivot does not need a bigger packet.
+
+- **"Enough, then stop" has to be structural or it does not hold.** The projector
+  has no notion of remaining space, so a raised ceiling attracts nothing: proven
+  by byte-identity when the ceiling rises over a complete packet, and by
+  invariance when unrelated internal bytes are freed — the direct answer to
+  M166's refill. At a 2,000-token ceiling the median packet is 582 tokens and the
+  maximum across 188 holdout cases is 1,007. The ceiling never binds.
+
+- **The packet is bounded twice and the wrong bound binds.** The token ceiling is
+  inert; the related cap of five decides every packet. All three gold-symbol
+  losses are symbols at authoritative position six or seven in a packet that
+  names six locations, in files the packet still delivers. R2500 would recover
+  all three and was not adopted, because choosing a parameter after seeing which
+  value fixes the holdout is what §70 forbids.
+
+- **The development set understated the regression to zero.** Gold-symbol delta
+  is 0.00pp on the twelve development cases and −3.41pp on the 88-case
+  non-development remainder. Reporting only "Broad100-A" or only the development
+  numbers would have shown a clean pass. The A-remainder split is the reason it
+  did not.
+
+- **A frozen phrase table that fails closed is what makes selective disclosure
+  truthful.** Every string in a packet is verbatim-authoritative or one of a
+  declared set; the relationship enum renders through an exhaustive table, and an
+  unmapped token drops the neighbour rather than shipping an opaque or
+  over-strong label. `fallback_symbol_window` renders as "in the same file as the
+  focus symbol; no indexed relationship to it" — stating an absence rather than
+  implying a relation. 96 packets, 0 unsupported claims, 0 false absence.
+
+- **A scanner cannot judge the sentence whose job is to deny the claim.** The
+  enumerating-wording detector fired on the boundary line's own "not an
+  exhaustive repository listing". The boundary is excluded from the scanner and
+  asserted directly instead. Fifth instance since M167 of a classifier that had to
+  be told what it was looking at before its verdict counted.
+
+- **Next-step recommendation: settle what "enough" means before touching the cap
+  again.** The evidence says a compact orientation preserves everything that
+  mattered on this population at one twelfth the price, and that the only thing
+  standing between it and a shipped default is a bound chosen for a ceiling that
+  never binds. A successor should decide the cap on development evidence, report
+  against Broad100-A knowing the three cases and their positions are now known,
+  and hold Broad100-B back as the clean check. No live spend is licensed: there
+  is no shipped treatment to requalify.

@@ -1,0 +1,275 @@
+{
+ "schemaVersion": "stage5.m171.disclosure-matrix.v1",
+ "milestone": "M171",
+ "workstream": "M171-B",
+ "title": "Every field of the current default response, classified with a reason",
+ "classes": {
+  "ALWAYS_MODEL_VISIBLE": "in every default packet",
+  "VISIBLE_WHEN_NONDEFAULT": "only when its value is not the quiet case",
+  "VISIBLE_WHEN_INTERPRETATION_CRITICAL": "only when omitting it would let a reader misread a claim the packet DOES make",
+  "DEBUG_ONLY": "retained, reachable at detail=debug",
+  "INTERNAL_ONLY": "never serialized in any mode"
+ },
+ "rulesPerClass": {
+  "ALWAYS_MODEL_VISIBLE": 7,
+  "VISIBLE_WHEN_NONDEFAULT": 5,
+  "VISIBLE_WHEN_INTERPRETATION_CRITICAL": 6,
+  "DEBUG_ONLY": 22
+ },
+ "coverageCheck": {
+  "responsesInspected": 24,
+  "unclassifiedPaths": [],
+  "passes": true,
+  "meaning": "§10 — no field disappears by intuition. A path no rule covers is a failure, not a silent omission."
+ },
+ "internalOnly": {
+  "note": "Nothing currently in the response is INTERNAL_ONLY: every field is at least reachable at detail=debug (§78). The class exists for state the pipeline computes and has never serialized.",
+  "examples": [
+   "the full retrieval candidate population and its scores",
+   "ranking intermediates inside the hybrid retriever",
+   "pivotNeighborhood[].excerpts[].text, already stripped before any response is emitted"
+  ]
+ },
+ "matrix": [
+  {
+   "pattern": "^productContext\\.leadPivot$",
+   "disclosure": "ALWAYS_MODEL_VISIBLE",
+   "reason": "the primary target identity IS the orientation; 7 of 12 live runs went straight to it and 5 of 12 went elsewhere precisely when it was wrong",
+   "retainedAt": "orientation.focus.at"
+  },
+  {
+   "pattern": "^productContext\\.items\\[\\]\\.(path|symbol|fqName)$",
+   "disclosure": "ALWAYS_MODEL_VISIBLE",
+   "reason": "a location the agent can open; the packet is a list of places, and this is the place",
+   "retainedAt": "orientation.focus / orientation.related[].at"
+  },
+  {
+   "pattern": "^productContext\\.items\\[\\]\\.lineSpan\\.",
+   "disclosure": "ALWAYS_MODEL_VISIBLE",
+   "reason": "a location without a span forces a whole-file read, which is the cost M170 tried and failed to mediate away",
+   "retainedAt": "orientation.focus.lines / related[].lines"
+  },
+  {
+   "pattern": "^productContext\\.modelVisibleContext$",
+   "disclosure": "ALWAYS_MODEL_VISIBLE",
+   "reason": "the only place a serialized response carries source text at all; the focus excerpt is cut from it",
+   "retainedAt": "orientation.focus.code"
+  },
+  {
+   "pattern": "^productContext\\.items\\[\\]\\.selectionReasons\\[\\]$",
+   "disclosure": "ALWAYS_MODEL_VISIBLE",
+   "reason": "the authoritative reason a location was chosen, reused verbatim as the relationship claim; re-wording it is how a claim gets strengthened",
+   "retainedAt": "orientation.focus.why / related[].how"
+  },
+  {
+   "pattern": "^productContext\\.(resultState|resolved|retrievalFound|deliveryFailed)$",
+   "disclosure": "ALWAYS_MODEL_VISIBLE",
+   "reason": "whether there is an answer at all; collapsing this into a compact success shape is what §11 forbids",
+   "retainedAt": "orientation.state"
+  },
+  {
+   "pattern": "^schemaVersion$",
+   "disclosure": "ALWAYS_MODEL_VISIBLE",
+   "reason": "contract identity; a consumer that cannot name the contract cannot parse it safely",
+   "retainedAt": "orientation.schemaVersion"
+  },
+  {
+   "pattern": "^(productContext\\.freshness|diagnostics\\.indexFreshness)\\.(status|reason|action)$",
+   "disclosure": "VISIBLE_WHEN_NONDEFAULT",
+   "reason": "a FRESH index adds nothing to a decision; a stale or unknown one changes how every other claim in the packet should be read",
+   "retainedAt": "orientation.notes when not fresh; full record at detail=debug"
+  },
+  {
+   "pattern": "^diagnostics\\.freshness\\.readiness\\.",
+   "disclosure": "VISIBLE_WHEN_NONDEFAULT",
+   "reason": "readiness is the gate, not the content: when it fails the packet becomes a problem report, when it passes it is silent",
+   "retainedAt": "orientation.problem.readiness when not ready"
+  },
+  {
+   "pattern": "^workspaceRouting\\.(isWorkspace|outcome|reason|routeSource|leadRepository)$",
+   "disclosure": "VISIBLE_WHEN_NONDEFAULT",
+   "reason": "which repository answered matters only when more than one could have",
+   "retainedAt": "orientation.notes when a workspace routed"
+  },
+  {
+   "pattern": "^pivotNeighborhood\\[\\]\\.excerpts\\[\\]\\.(fqName|filePath|symbol|startLine|endLine)$",
+   "disclosure": "VISIBLE_WHEN_NONDEFAULT",
+   "reason": "graph neighbours are named when the rung has room for them, in authoritative order",
+   "retainedAt": "orientation.related[]"
+  },
+  {
+   "pattern": "^pivotNeighborhood\\[\\]\\.excerpts\\[\\]\\.reason$",
+   "disclosure": "VISIBLE_WHEN_NONDEFAULT",
+   "reason": "the typed relationship, rendered through a frozen exhaustive phrase table that fails closed on an unknown token",
+   "retainedAt": "orientation.related[].how"
+  },
+  {
+   "pattern": "^productContext\\.items\\[\\]\\.contentMode$",
+   "disclosure": "VISIBLE_WHEN_INTERPRETATION_CRITICAL",
+   "reason": "a skeleton shown without its label reads as the implementation; this is the qualifier that protects the code field",
+   "retainedAt": "orientation.focus.form"
+  },
+  {
+   "pattern": "^capsuleResult\\.warnings\\[\\]$",
+   "disclosure": "VISIBLE_WHEN_INTERPRETATION_CRITICAL",
+   "reason": "pivot_source_bounded_to_signatures says the body was never delivered; carried structurally by focus.form rather than as prose",
+   "retainedAt": "orientation.focus.form; full list at detail=debug"
+  },
+  {
+   "pattern": "^productContext\\.coverage\\.",
+   "disclosure": "VISIBLE_WHEN_INTERPRETATION_CRITICAL",
+   "reason": "selective_task_retrieval / not_observed / enumerationComplete=false is exactly what the single global boundary line says, once, unconditionally",
+   "retainedAt": "orientation.boundary"
+  },
+  {
+   "pattern": "^productContext\\.accounting\\.claimBoundary$",
+   "disclosure": "VISIBLE_WHEN_INTERPRETATION_CRITICAL",
+   "reason": "bounds a compression claim the orientation packet does not make; without the claim the boundary has nothing to protect",
+   "retainedAt": "detail=debug, alongside the accounting it bounds"
+  },
+  {
+   "pattern": "^productContext\\.diagnostics\\.limitations\\[\\]$",
+   "disclosure": "VISIBLE_WHEN_INTERPRETATION_CRITICAL",
+   "reason": "three of the four bound fields the packet no longer carries (impact, token estimates, return types); the fourth is an internal timing note",
+   "retainedAt": "detail=debug, alongside the fields they bound"
+  },
+  {
+   "pattern": "^pivotNeighborhood\\[\\]\\.skipped",
+   "disclosure": "VISIBLE_WHEN_INTERPRETATION_CRITICAL",
+   "reason": "source_unavailable is a bounded absence; omitting the neighbour AND the skip keeps the packet silent rather than negative",
+   "retainedAt": "detail=debug"
+  },
+  {
+   "pattern": "^productContext\\.items\\[\\]\\.(roles|metadata|estimatedTokens|contentCharacters|selectionReasonsOmitted|id|stableId|contentHash)",
+   "disclosure": "DEBUG_ONLY",
+   "reason": "per-item bookkeeping and role vocabulary; the role is already implicit in whether the item is the focus or a related entry",
+   "retainedAt": "detail=debug"
+  },
+  {
+   "pattern": "^productContext\\.(task|intent|taskHash|selectedFileHash|responseVersion|capsuleMode)$",
+   "disclosure": "DEBUG_ONLY",
+   "reason": "restatement of the request the agent just made, or an identifier for it; the task string alone is asserted on 7 surfaces",
+   "retainedAt": "detail=debug"
+  },
+  {
+   "pattern": "^productContext\\.(repository|timing|accounting|delivery|roleCounts|diagnostics)\\.",
+   "disclosure": "DEBUG_ONLY",
+   "reason": "workspace identity, timings, budget arithmetic, counters; none of it changes where the agent looks first",
+   "retainedAt": "detail=debug"
+  },
+  {
+   "pattern": "^productContext\\.diagnostics$",
+   "disclosure": "DEBUG_ONLY",
+   "reason": "container",
+   "retainedAt": "detail=debug"
+  },
+  {
+   "pattern": "^capsuleResult\\.",
+   "disclosure": "DEBUG_ONLY",
+   "reason": "a second rendering of the same selection: digest, pivots, support, budget, retrieval counters, discarded candidates",
+   "retainedAt": "detail=debug"
+  },
+  {
+   "pattern": "^context\\.",
+   "disclosure": "DEBUG_ONLY",
+   "reason": "the compatibility alias the response itself marks supersededBy=productContext",
+   "retainedAt": "detail=debug"
+  },
+  {
+   "pattern": "^(impact|flow)\\.",
+   "disclosure": "DEBUG_ONLY",
+   "reason": "on the development corpus impact is skipped by intent and flow resolves no endpoints; when either produces evidence it reaches the packet as a related entry, and when it does not, omission is not a negative claim",
+   "retainedAt": "detail=debug, and get_impact_graph on demand"
+  },
+  {
+   "pattern": "^memory\\.",
+   "disclosure": "DEBUG_ONLY",
+   "reason": "durable memory on this corpus is VTRACE's own prior tool calls (\"Built context capsule for query with 2 pivots\"); M164 measured zero voluntary reuse",
+   "retainedAt": "detail=debug, and search_memory on demand"
+  },
+  {
+   "pattern": "^rules\\.",
+   "disclosure": "DEBUG_ONLY",
+   "reason": "no active rule fired on any development case; the notes explain a mechanism rather than the repository",
+   "retainedAt": "detail=debug"
+  },
+  {
+   "pattern": "^deferred\\.",
+   "disclosure": "DEBUG_ONLY",
+   "reason": "expansion ids and suggested inputs for tools the agent can call by name anyway; the ids restate the task a further time",
+   "retainedAt": "detail=debug, expansion still served by expand_vexp_ref"
+  },
+  {
+   "pattern": "^(request|taskSummary)\\.",
+   "disclosure": "DEBUG_ONLY",
+   "reason": "the request echoed back, twice",
+   "retainedAt": "detail=debug"
+  },
+  {
+   "pattern": "^intent\\.(impactSkipReason|flowSkipReason|impactEligible|flowEligible)$",
+   "disclosure": "DEBUG_ONLY",
+   "reason": "why a component did not run. The packet never claims to enumerate impact or flow, so their absence asserts nothing and needs no excuse (§35)",
+   "retainedAt": "detail=debug"
+  },
+  {
+   "pattern": "^intent\\.",
+   "disclosure": "DEBUG_ONLY",
+   "reason": "the routing classifier's own decision, restated across 18 keys of which 5 hold the same value; it explains VTRACE's behaviour, not the repository",
+   "retainedAt": "detail=debug"
+  },
+  {
+   "pattern": "^accounting\\.",
+   "disclosure": "DEBUG_ONLY",
+   "reason": "a savings claim about the response, priced against a naive full-file baseline; the orientation packet makes no savings claim for it to bound",
+   "retainedAt": "detail=debug"
+  },
+  {
+   "pattern": "^(runtime|capsule)\\.",
+   "disclosure": "DEBUG_ONLY",
+   "reason": "build and implementation provenance; an audit input, not an orientation input",
+   "retainedAt": "detail=debug"
+  },
+  {
+   "pattern": "^responseBudget\\.",
+   "disclosure": "DEBUG_ONLY",
+   "reason": "the envelope's account of its own size, priced in a chars/4 estimate M166 showed understates by 1.27x",
+   "retainedAt": "detail=debug"
+  },
+  {
+   "pattern": "^diagnostics\\.",
+   "disclosure": "DEBUG_ONLY",
+   "reason": "machine-facing freshness prose and the omittedForDetail pointer",
+   "retainedAt": "detail=debug"
+  },
+  {
+   "pattern": "^inspectFirst\\.",
+   "disclosure": "DEBUG_ONLY",
+   "reason": "a second opinion about where to look, derived from the same selection the focus comes from",
+   "retainedAt": "detail=debug"
+  },
+  {
+   "pattern": "^(authoritativeCapsuleManifestId|savedObservation)$",
+   "disclosure": "DEBUG_ONLY",
+   "reason": "manifest identity and the observation-write receipt",
+   "retainedAt": "detail=debug"
+  },
+  {
+   "pattern": "^workspaceRouting\\.",
+   "disclosure": "DEBUG_ONLY",
+   "reason": "routing evidence, candidate repositories and coverage counters beyond the outcome itself",
+   "retainedAt": "detail=debug"
+  },
+  {
+   "pattern": "^productContext\\.",
+   "disclosure": "DEBUG_ONLY",
+   "reason": "remaining productContext bookkeeping",
+   "retainedAt": "detail=debug"
+  },
+  {
+   "pattern": "^pivotNeighborhood\\[\\]\\.",
+   "disclosure": "DEBUG_ONLY",
+   "reason": "remaining neighborhood bookkeeping",
+   "retainedAt": "detail=debug"
+  }
+ ]
+}

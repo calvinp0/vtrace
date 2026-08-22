@@ -1,0 +1,158 @@
+{
+ "schemaVersion": "stage5.m171.dose-curve.v1",
+ "milestone": "M171",
+ "workstream": "M171-C",
+ "title": "Model-visible cost and evidence density across projection rungs",
+ "method": {
+  "internalStateAcrossRungs": "IDENTICAL BY CONSTRUCTION — the pipeline is invoked once per case and every rung is projected from that one captured authoritative response. This is why M171 does not repeat M169's non-monotone budget ladder: nothing upstream of the projector can move.",
+  "evidenceMeasure": "characters spent asserting IDENTITY, SOURCE, ROLE or RELATIONSHIP facts, by the same extractor on both sides. Repeated surfaces count on the response side because the model pays for each of them.",
+  "tokenAuthority": "M166 measured calibration, 0.3174 tokens/character",
+  "costAuthority": "PROJECTED ATTRIBUTABLE COST (§65): cache write at the 1h rate plus one cache read per subsequent request, per-case amplification from the M169 ledger"
+ },
+ "proofs": {
+  "monotonicity": {
+   "violations": [],
+   "passes": true,
+   "rule": "§45 — a location named at a smaller rung is named at a larger one"
+  },
+  "excerptPrefix": {
+   "violations": [],
+   "passes": true,
+   "rule": "each rung's excerpt is a prefix of the next"
+  },
+  "noRefill": {
+   "violations": [],
+   "passes": true,
+   "rule": "§17/§46 — a packet already complete below its ceiling does not grow when the ceiling rises"
+  },
+  "projectorPurity": {
+   "violations": [],
+   "passes": true,
+   "rule": "§73 — the projector does not mutate the authoritative state it reads"
+  },
+  "pivotIdentity": {
+   "drift": [],
+   "passes": true,
+   "rule": "§36/§58 — the projected focus is the authoritative lead pivot, at every rung"
+  }
+ },
+ "curve": [
+  {
+   "rung": "CURRENT",
+   "cases": 12,
+   "tokens": {
+    "median": 6766,
+    "p90": 8795,
+    "max": 9031
+   },
+   "projectedAttributableCostUsd": {
+    "median": 0.10353,
+    "p90": 0.149515,
+    "max": 0.150885
+   },
+   "evidenceDensity": {
+    "median": 0.24433189757182752
+   },
+   "medianEvidenceCharacters": 5314,
+   "medianLocations": null,
+   "medianRelated": null,
+   "ceilingBinds": null
+  },
+  {
+   "rung": "R1000",
+   "cases": 12,
+   "tokens": {
+    "median": 373,
+    "p90": 522,
+    "max": 541
+   },
+   "projectedAttributableCostUsd": {
+    "median": 0.0056430000000000004,
+    "p90": 0.00762,
+    "max": 0.0116315
+   },
+   "evidenceDensity": {
+    "median": 0.6388415672913118
+   },
+   "medianEvidenceCharacters": 750,
+   "medianLocations": 3,
+   "medianRelated": 2,
+   "ceilingBinds": 11
+  },
+  {
+   "rung": "R1500",
+   "cases": 12,
+   "tokens": {
+    "median": 430,
+    "p90": 728,
+    "max": 731
+   },
+   "projectedAttributableCostUsd": {
+    "median": 0.00621,
+    "p90": 0.009735,
+    "max": 0.015652
+   },
+   "evidenceDensity": {
+    "median": 0.6573116691285081
+   },
+   "medianEvidenceCharacters": 890,
+   "medianLocations": 4,
+   "medianRelated": 3,
+   "ceilingBinds": 11
+  },
+  {
+   "rung": "R2000",
+   "cases": 12,
+   "tokens": {
+    "median": 544,
+    "p90": 859,
+    "max": 947
+   },
+   "projectedAttributableCostUsd": {
+    "median": 0.007592,
+    "p90": 0.011445,
+    "max": 0.0184685
+   },
+   "evidenceDensity": {
+    "median": 0.682798833819242
+   },
+   "medianEvidenceCharacters": 1171,
+   "medianLocations": 6,
+   "medianRelated": 5,
+   "ceilingBinds": 10
+  },
+  {
+   "rung": "R2500",
+   "cases": 12,
+   "tokens": {
+    "median": 544,
+    "p90": 922,
+    "max": 987
+   },
+   "projectedAttributableCostUsd": {
+    "median": 0.007592,
+    "p90": 0.012869,
+    "max": 0.019823
+   },
+   "evidenceDensity": {
+    "median": 0.682798833819242
+   },
+   "medianEvidenceCharacters": 1171,
+   "medianLocations": 6,
+   "medianRelated": 5,
+   "ceilingBinds": 1
+  }
+ ],
+ "gates": {
+  "medianTokensAtOrBelow": 2000,
+  "p90TokensAtOrBelow": 2500,
+  "projectedCostAtOrBelowUsd": 0.026219,
+  "projectedCostBasis": "50% of the M169 median baselineInvestigationAllUsd of $0.052438",
+  "passingRungs": [
+   "R1000",
+   "R1500",
+   "R2000",
+   "R2500"
+  ]
+ }
+}

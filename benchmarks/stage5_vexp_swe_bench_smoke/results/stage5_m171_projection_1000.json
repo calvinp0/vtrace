@@ -1,0 +1,282 @@
+{
+ "schemaVersion": "stage5.m171.projection.v1",
+ "milestone": "M171",
+ "workstream": "M171-C",
+ "rung": {
+  "name": "R1000",
+  "ceilingTokens": 1000,
+  "focusCodeCharacters": 700,
+  "relatedCap": 2
+ },
+ "corpus": "development (12 M168/M169 cases), fresh indexes",
+ "rows": [
+  {
+   "instanceId": "astropy__astropy-14369",
+   "rung": "R1000",
+   "characters": 1296,
+   "tokens": 411,
+   "projectedCostUsd": 0.006987,
+   "relatedCount": 2,
+   "focus": "astropy/io/ascii/cds.py::Cds",
+   "focusCodeCharacters": 461,
+   "focusCodeTruncated": false,
+   "evidenceCharacters": 872,
+   "evidenceDensity": 0.6728395061728395,
+   "locations": [
+    "astropy/io/ascii/cds.py::Cds",
+    "astropy/table/table.py::Table",
+    "astropy/units/format/cds_lextab.py::_tabversion"
+   ],
+   "files": [
+    "astropy/io/ascii/cds.py",
+    "astropy/table/table.py",
+    "astropy/units/format/cds_lextab.py"
+   ]
+  },
+  {
+   "instanceId": "django__django-13658",
+   "rung": "R1000",
+   "characters": 1174,
+   "tokens": 373,
+   "projectedCostUsd": 0.004476,
+   "relatedCount": 2,
+   "focus": "core/management/__init__.py::ManagementUtility",
+   "focusCodeCharacters": 261,
+   "focusCodeTruncated": false,
+   "evidenceCharacters": 750,
+   "evidenceDensity": 0.6388415672913118,
+   "locations": [
+    "core/management/__init__.py::ManagementUtility",
+    "core/management/__init__.py::execute_from_command_line",
+    "core/management/commands/loaddata.py::Command.parse_name"
+   ],
+   "files": [
+    "core/management/__init__.py",
+    "core/management/commands/loaddata.py"
+   ]
+  },
+  {
+   "instanceId": "matplotlib__matplotlib-22719",
+   "rung": "R1000",
+   "characters": 971,
+   "tokens": 308,
+   "projectedCostUsd": 0.004004,
+   "relatedCount": 2,
+   "focus": "lib/matplotlib/units.py::ConversionError",
+   "focusCodeCharacters": 42,
+   "focusCodeTruncated": false,
+   "evidenceCharacters": 552,
+   "evidenceDensity": 0.568486096807415,
+   "locations": [
+    "lib/matplotlib/category.py::StrCategoryConverter.convert",
+    "lib/matplotlib/tests/test_rcparams.py::test_Bug_2543",
+    "lib/matplotlib/units.py::ConversionError"
+   ],
+   "files": [
+    "lib/matplotlib/category.py",
+    "lib/matplotlib/tests/test_rcparams.py",
+    "lib/matplotlib/units.py"
+   ]
+  },
+  {
+   "instanceId": "mwaskom__seaborn-3187",
+   "rung": "R1000",
+   "characters": 1055,
+   "tokens": 335,
+   "projectedCostUsd": 0.007537500000000001,
+   "relatedCount": 2,
+   "focus": "seaborn/utils.py::move_legend",
+   "focusCodeCharacters": 219,
+   "focusCodeTruncated": false,
+   "evidenceCharacters": 636,
+   "evidenceDensity": 0.6028436018957346,
+   "locations": [
+    "seaborn/_core/plot.py::Plotter._make_legend",
+    "seaborn/utils.py::move_legend",
+    "tests/test_utils.py::test_move_legend_grid_object"
+   ],
+   "files": [
+    "seaborn/_core/plot.py",
+    "seaborn/utils.py",
+    "tests/test_utils.py"
+   ]
+  },
+  {
+   "instanceId": "pallets__flask-5014",
+   "rung": "R1000",
+   "characters": 1617,
+   "tokens": 513,
+   "projectedCostUsd": 0.0056430000000000004,
+   "relatedCount": 2,
+   "focus": "src/flask/blueprints.py::Blueprint",
+   "focusCodeCharacters": 691,
+   "focusCodeTruncated": true,
+   "evidenceCharacters": 1124,
+   "evidenceDensity": 0.6951144094001237,
+   "locations": [
+    "src/flask/app.py::Flask.name",
+    "src/flask/blueprints.py::Blueprint",
+    "tests/test_async.py::_async_app"
+   ],
+   "files": [
+    "src/flask/app.py",
+    "src/flask/blueprints.py",
+    "tests/test_async.py"
+   ]
+  },
+  {
+   "instanceId": "psf__requests-1724",
+   "rung": "R1000",
+   "characters": 963,
+   "tokens": 306,
+   "projectedCostUsd": 0.004130999999999999,
+   "relatedCount": 2,
+   "focus": "requests/sessions.py::Session.send",
+   "focusCodeCharacters": 66,
+   "focusCodeTruncated": false,
+   "evidenceCharacters": 544,
+   "evidenceDensity": 0.564901349948079,
+   "locations": [
+    "requests/packages/urllib3/response.py::HTTPResponse.from_httplib",
+    "requests/sessions.py::Session.request",
+    "requests/sessions.py::Session.send"
+   ],
+   "files": [
+    "requests/packages/urllib3/response.py",
+    "requests/sessions.py"
+   ]
+  },
+  {
+   "instanceId": "pydata__xarray-6599",
+   "rung": "R1000",
+   "characters": 868,
+   "tokens": 276,
+   "projectedCostUsd": 0.00621,
+   "relatedCount": 1,
+   "focus": "xarray/core/computation.py::polyval",
+   "focusCodeCharacters": 86,
+   "focusCodeTruncated": false,
+   "evidenceCharacters": 489,
+   "evidenceDensity": 0.5633640552995391,
+   "locations": [
+    "asv_bench/benchmarks/polyfit.py::Polyval",
+    "xarray/core/computation.py::polyval"
+   ],
+   "files": [
+    "asv_bench/benchmarks/polyfit.py",
+    "xarray/core/computation.py"
+   ]
+  },
+  {
+   "instanceId": "pylint-dev__pylint-4551",
+   "rung": "R1000",
+   "characters": 1703,
+   "tokens": 541,
+   "projectedCostUsd": 0.0116315,
+   "relatedCount": 2,
+   "focus": "pylint/lint/pylinter.py::PyLinter.python3_porting_mode",
+   "focusCodeCharacters": 687,
+   "focusCodeTruncated": true,
+   "evidenceCharacters": 1193,
+   "evidenceDensity": 0.7005284791544334,
+   "locations": [
+    "pylint/checkers/python3.py::Python3Checker.visit_call",
+    "pylint/lint/pylinter.py::PyLinter",
+    "pylint/lint/pylinter.py::PyLinter.python3_porting_mode"
+   ],
+   "files": [
+    "pylint/checkers/python3.py",
+    "pylint/lint/pylinter.py"
+   ]
+  },
+  {
+   "instanceId": "pytest-dev__pytest-7432",
+   "rung": "R1000",
+   "characters": 1602,
+   "tokens": 508,
+   "projectedCostUsd": 0.00762,
+   "relatedCount": 2,
+   "focus": "src/_pytest/skipping.py::evaluate_skip_marks",
+   "focusCodeCharacters": 677,
+   "focusCodeTruncated": true,
+   "evidenceCharacters": 1092,
+   "evidenceDensity": 0.6816479400749064,
+   "locations": [
+    ".github/labels.toml#document",
+    "src/_pytest/skipping.py::evaluate_skip_marks",
+    "testing/test_skipping.py::TestEvaluation.test_marked_one_arg"
+   ],
+   "files": [
+    ".github/labels.toml",
+    "src/_pytest/skipping.py",
+    "testing/test_skipping.py"
+   ]
+  },
+  {
+   "instanceId": "scikit-learn__scikit-learn-10844",
+   "rung": "R1000",
+   "characters": 1211,
+   "tokens": 384,
+   "projectedCostUsd": 0.004992,
+   "relatedCount": 2,
+   "focus": "sklearn/metrics/cluster/supervised.py::fowlkes_mallows_score",
+   "focusCodeCharacters": 249,
+   "focusCodeTruncated": false,
+   "evidenceCharacters": 792,
+   "evidenceDensity": 0.6540049545829892,
+   "locations": [
+    "sklearn/learning_curve.py::validation_curve",
+    "sklearn/metrics/cluster/supervised.py::fowlkes_mallows_score",
+    "sklearn/metrics/cluster/tests/test_supervised.py::test_fowlkes_mallows_score"
+   ],
+   "files": [
+    "sklearn/learning_curve.py",
+    "sklearn/metrics/cluster/supervised.py",
+    "sklearn/metrics/cluster/tests/test_supervised.py"
+   ]
+  },
+  {
+   "instanceId": "sphinx-doc__sphinx-7462",
+   "rung": "R1000",
+   "characters": 961,
+   "tokens": 305,
+   "projectedCostUsd": 0.0038125000000000004,
+   "relatedCount": 2,
+   "focus": "sphinx/domains/python.py::_parse_annotation",
+   "focusCodeCharacters": 78,
+   "focusCodeTruncated": false,
+   "evidenceCharacters": 542,
+   "evidenceDensity": 0.5639958376690947,
+   "locations": [
+    "sphinx/domains/python.py::PyObject.handle_signature",
+    "sphinx/domains/python.py::_parse_annotation",
+    "sphinx/domains/python.py::_parse_arglist"
+   ],
+   "files": [
+    "sphinx/domains/python.py"
+   ]
+  },
+  {
+   "instanceId": "sympy__sympy-13480",
+   "rung": "R1000",
+   "characters": 1644,
+   "tokens": 522,
+   "projectedCostUsd": 0.0070469999999999994,
+   "relatedCount": 2,
+   "focus": "sympy/functions/elementary/hyperbolic.py::coth",
+   "focusCodeCharacters": 593,
+   "focusCodeTruncated": false,
+   "evidenceCharacters": 1210,
+   "evidenceDensity": 0.7360097323600974,
+   "locations": [
+    "sympy/functions/elementary/exponential.py::log",
+    "sympy/functions/elementary/hyperbolic.py::coth",
+    "sympy/functions/elementary/hyperbolic.py::tanh._eval_rewrite_as_coth"
+   ],
+   "files": [
+    "sympy/functions/elementary/exponential.py",
+    "sympy/functions/elementary/hyperbolic.py"
+   ]
+  }
+ ]
+}

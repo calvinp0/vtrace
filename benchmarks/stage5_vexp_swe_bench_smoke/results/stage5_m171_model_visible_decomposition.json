@@ -1,0 +1,1495 @@
+{
+ "schemaVersion": "stage5.m171.model-visible-decomposition.v1",
+ "milestone": "M171",
+ "workstream": "M171-A",
+ "title": "Current default model-visible cost, independently re-derived (§87)",
+ "tokenAuthority": {
+  "resultTokensPerCharacter": 0.3174032272551657,
+  "resultCharactersPerToken": 3.1505665794509503,
+  "samples": 363,
+  "rSquared": 0.9263011489720135,
+  "authority": "DERIVED_FROM_PROVIDER_REPORTED",
+  "source": "stage5_m166_token_authority.json"
+ },
+ "pricingAuthority": {
+  "model": "payload written to cache once at the 1h rate, then re-read by every subsequent request",
+  "perCaseAmplificationSource": "stage5_m169_economic_classes.json rows[].pipelineAmplificationRequests",
+  "note": "PROJECTED ATTRIBUTABLE COST (§65). No provider telemetry exists for these offline calls."
+ },
+ "aggregate": {
+  "cases": 12,
+  "modelVisibleCharacters": {
+   "median": 21318,
+   "p90": 27710,
+   "max": 28453
+  },
+  "modelVisibleTokens": {
+   "median": 6766,
+   "p90": 8795,
+   "max": 9031
+  },
+  "projectedAttributableCostUsd": {
+   "median": 0.10353,
+   "p90": 0.149515,
+   "max": 0.150885
+  },
+  "evidenceDensity": {
+   "median": 0.17784711388455537,
+   "note": "REPOSITORY_EVIDENCE characters / total model-facing characters, M166 taxonomy"
+  }
+ },
+ "reconciliation": {
+  "m169Reference": {
+   "medianDeliveredPayloadTokens": 6383,
+   "medianPipelineAttributableCostUsd": 0.088416,
+   "medianBaselineInvestigationAllUsd": 0.052438,
+   "medianBaselineInvestigationPreEditUsd": 0.048256,
+   "source": "stage5_m169_economic_classes.json medians"
+  },
+  "m171MedianTokens": 6766,
+  "deltaVsM169Tokens": 383,
+  "m171MedianProjectedCostUsd": 0.10353,
+  "deltaVsM169CostUsd": 0.015114000000000002,
+  "reading": "M171 re-derives the current default independently, on fresh indexes and the frozen fixture task rather than the live agent's composed task. The two are close but not identical and neither is a correction of the other."
+ },
+ "perCase": [
+  {
+   "instanceId": "astropy__astropy-14369",
+   "modelVisibleCharacters": 27710,
+   "outputCharacters": 27559,
+   "envelopeOverheadCharacters": 151,
+   "modelVisibleTokens": 8795,
+   "amplificationRequests": 14,
+   "projectedAttributableCostUsd": 0.149515,
+   "byCategory": {
+    "REPOSITORY_EVIDENCE": 6369,
+    "AGENT_USEFUL_CONTROL": 2185,
+    "MACHINE_DIAGNOSTIC": 2176,
+    "PROVENANCE": 1293,
+    "DUPLICATE": 5392,
+    "TRANSPORT_STRUCTURE": 10138,
+    "OTHER": 6
+   },
+   "evidenceCharacters": 6369,
+   "evidenceDensity": 0.22984482136412848,
+   "facts": {
+    "facts": 113,
+    "factsAssertedMoreThanOnce": 37,
+    "repetitionRate": 0.3274336283185841,
+    "totalSurfaces": 194,
+    "charactersByKind": {
+     "ACCOUNTING": 3095,
+     "COMPONENT_STATUS": 148,
+     "DEFERRAL": 1104,
+     "EPISTEMIC": 1290,
+     "IDENTITY": 2813,
+     "PROVENANCE": 1413,
+     "RELATIONSHIP": 32,
+     "RESTATEMENT": 2148,
+     "ROLE": 2280,
+     "SOURCE": 3590
+    },
+    "factsByKind": {
+     "ACCOUNTING": 8,
+     "COMPONENT_STATUS": 7,
+     "DEFERRAL": 2,
+     "EPISTEMIC": 21,
+     "IDENTITY": 15,
+     "PROVENANCE": 14,
+     "RELATIONSHIP": 4,
+     "RESTATEMENT": 2,
+     "ROLE": 29,
+     "SOURCE": 11
+    },
+    "repeatedByKind": {
+     "EPISTEMIC": 1,
+     "IDENTITY": 14,
+     "PROVENANCE": 1,
+     "RESTATEMENT": 2,
+     "ROLE": 19
+    },
+    "maxSurfacesForOneFact": 9,
+    "mostRepeatedFacts": [
+     {
+      "identity": "astropy/io/ascii/cds.py::Cds",
+      "kind": "IDENTITY",
+      "surfaces": 9
+     },
+     {
+      "identity": "intent",
+      "kind": "RESTATEMENT",
+      "surfaces": 8
+     },
+     {
+      "identity": "astropy/table/table.py::Table",
+      "kind": "IDENTITY",
+      "surfaces": 7
+     },
+     {
+      "identity": "astropy/units/format/cds_lextab.py::_tabversion",
+      "kind": "IDENTITY",
+      "surfaces": 7
+     },
+     {
+      "identity": "task",
+      "kind": "RESTATEMENT",
+      "surfaces": 7
+     },
+     {
+      "identity": "astropy/io/ascii/tests/test_cds_header_from_readme.py::read_table1",
+      "kind": "IDENTITY",
+      "surfaces": 4
+     },
+     {
+      "identity": "astropy/io/ascii/tests/test_cds_header_from_readme.py::test_cds_ignore_nullable",
+      "kind": "IDENTITY",
+      "surfaces": 4
+     },
+     {
+      "identity": "astropy/io/ascii/tests/test_cds_header_from_readme.py::test_cds_order",
+      "kind": "IDENTITY",
+      "surfaces": 4
+     },
+     {
+      "identity": "astropy/io/ascii/cds.py::Cds#roles",
+      "kind": "ROLE",
+      "surfaces": 4
+     },
+     {
+      "identity": "astropy/table/table.py::Table#roles",
+      "kind": "ROLE",
+      "surfaces": 4
+     },
+     {
+      "identity": "astropy/units/format/cds_lextab.py::_tabversion#roles",
+      "kind": "ROLE",
+      "surfaces": 4
+     },
+     {
+      "identity": "astropy/io/ascii/tests/test_cds_header_from_readme.py::test_header_from_readme",
+      "kind": "IDENTITY",
+      "surfaces": 3
+     }
+    ]
+   }
+  },
+  {
+   "instanceId": "django__django-13658",
+   "modelVisibleCharacters": 19779,
+   "outputCharacters": 19628,
+   "envelopeOverheadCharacters": 151,
+   "modelVisibleTokens": 6278,
+   "amplificationRequests": 4,
+   "projectedAttributableCostUsd": 0.075336,
+   "byCategory": {
+    "REPOSITORY_EVIDENCE": 3213,
+    "AGENT_USEFUL_CONTROL": 2214,
+    "MACHINE_DIAGNOSTIC": 1727,
+    "PROVENANCE": 961,
+    "DUPLICATE": 3429,
+    "TRANSPORT_STRUCTURE": 8079,
+    "OTHER": 5
+   },
+   "evidenceCharacters": 3213,
+   "evidenceDensity": 0.1624450174427423,
+   "facts": {
+    "facts": 85,
+    "factsAssertedMoreThanOnce": 20,
+    "repetitionRate": 0.23529411764705882,
+    "totalSurfaces": 134,
+    "charactersByKind": {
+     "ACCOUNTING": 3049,
+     "COMPONENT_STATUS": 167,
+     "DEFERRAL": 541,
+     "EPISTEMIC": 1370,
+     "IDENTITY": 1713,
+     "PROVENANCE": 1251,
+     "RELATIONSHIP": 80,
+     "RESTATEMENT": 1542,
+     "ROLE": 1314,
+     "SOURCE": 1273
+    },
+    "factsByKind": {
+     "ACCOUNTING": 8,
+     "COMPONENT_STATUS": 7,
+     "DEFERRAL": 1,
+     "EPISTEMIC": 22,
+     "IDENTITY": 9,
+     "PROVENANCE": 10,
+     "RELATIONSHIP": 4,
+     "RESTATEMENT": 2,
+     "ROLE": 15,
+     "SOURCE": 7
+    },
+    "repeatedByKind": {
+     "EPISTEMIC": 1,
+     "IDENTITY": 6,
+     "PROVENANCE": 1,
+     "RESTATEMENT": 2,
+     "ROLE": 10
+    },
+    "maxSurfacesForOneFact": 9,
+    "mostRepeatedFacts": [
+     {
+      "identity": "core/management/__init__.py::ManagementUtility",
+      "kind": "IDENTITY",
+      "surfaces": 9
+     },
+     {
+      "identity": "core/management/commands/loaddata.py::Command.parse_name",
+      "kind": "IDENTITY",
+      "surfaces": 7
+     },
+     {
+      "identity": "task",
+      "kind": "RESTATEMENT",
+      "surfaces": 7
+     },
+     {
+      "identity": "intent",
+      "kind": "RESTATEMENT",
+      "surfaces": 6
+     },
+     {
+      "identity": "core/management/__init__.py::execute_from_command_line",
+      "kind": "IDENTITY",
+      "surfaces": 4
+     },
+     {
+      "identity": "core/management/__init__.py::ManagementUtility#roles",
+      "kind": "ROLE",
+      "surfaces": 4
+     },
+     {
+      "identity": "core/management/commands/loaddata.py::Command.parse_name#roles",
+      "kind": "ROLE",
+      "surfaces": 4
+     },
+     {
+      "identity": "core/management/__init__.py::ManagementUtility#why:actionable class — symbol-name match",
+      "kind": "ROLE",
+      "surfaces": 3
+     },
+     {
+      "identity": "core/management/commands/loaddata.py::Command.parse_name#why:strong target but beyond the pivot budge",
+      "kind": "ROLE",
+      "surfaces": 3
+     },
+     {
+      "identity": "freshness",
+      "kind": "EPISTEMIC",
+      "surfaces": 2
+     },
+     {
+      "identity": "core/management/__init__.py::execute_from_command_line#lines",
+      "kind": "IDENTITY",
+      "surfaces": 2
+     },
+     {
+      "identity": "core/management/__init__.py::ManagementUtility#lines",
+      "kind": "IDENTITY",
+      "surfaces": 2
+     }
+    ]
+   }
+  },
+  {
+   "instanceId": "matplotlib__matplotlib-22719",
+   "modelVisibleCharacters": 26281,
+   "outputCharacters": 26130,
+   "envelopeOverheadCharacters": 151,
+   "modelVisibleTokens": 8342,
+   "amplificationRequests": 6,
+   "projectedAttributableCostUsd": 0.10844599999999999,
+   "byCategory": {
+    "REPOSITORY_EVIDENCE": 4674,
+    "AGENT_USEFUL_CONTROL": 2191,
+    "MACHINE_DIAGNOSTIC": 2214,
+    "PROVENANCE": 1040,
+    "DUPLICATE": 7090,
+    "TRANSPORT_STRUCTURE": 8911,
+    "OTHER": 10
+   },
+   "evidenceCharacters": 4674,
+   "evidenceDensity": 0.17784711388455537,
+   "facts": {
+    "facts": 94,
+    "factsAssertedMoreThanOnce": 26,
+    "repetitionRate": 0.2765957446808511,
+    "totalSurfaces": 160,
+    "charactersByKind": {
+     "ACCOUNTING": 3090,
+     "COMPONENT_STATUS": 149,
+     "DEFERRAL": 1554,
+     "EPISTEMIC": 1329,
+     "IDENTITY": 2040,
+     "PROVENANCE": 1299,
+     "RELATIONSHIP": 65,
+     "RESTATEMENT": 3946,
+     "ROLE": 2022,
+     "SOURCE": 2109
+    },
+    "factsByKind": {
+     "ACCOUNTING": 8,
+     "COMPONENT_STATUS": 7,
+     "DEFERRAL": 2,
+     "EPISTEMIC": 21,
+     "IDENTITY": 10,
+     "PROVENANCE": 11,
+     "RELATIONSHIP": 4,
+     "RESTATEMENT": 2,
+     "ROLE": 21,
+     "SOURCE": 8
+    },
+    "repeatedByKind": {
+     "EPISTEMIC": 1,
+     "IDENTITY": 8,
+     "PROVENANCE": 1,
+     "RESTATEMENT": 2,
+     "ROLE": 14
+    },
+    "maxSurfacesForOneFact": 9,
+    "mostRepeatedFacts": [
+     {
+      "identity": "lib/matplotlib/units.py::ConversionError",
+      "kind": "IDENTITY",
+      "surfaces": 9
+     },
+     {
+      "identity": "lib/matplotlib/category.py::StrCategoryConverter.convert",
+      "kind": "IDENTITY",
+      "surfaces": 8
+     },
+     {
+      "identity": "intent",
+      "kind": "RESTATEMENT",
+      "surfaces": 8
+     },
+     {
+      "identity": "lib/matplotlib/tests/test_rcparams.py::test_Bug_2543",
+      "kind": "IDENTITY",
+      "surfaces": 7
+     },
+     {
+      "identity": "task",
+      "kind": "RESTATEMENT",
+      "surfaces": 7
+     },
+     {
+      "identity": "lib/matplotlib/axis.py::Axis.convert_units",
+      "kind": "IDENTITY",
+      "surfaces": 4
+     },
+     {
+      "identity": "lib/matplotlib/category.py::StrCategoryConverter.convert#roles",
+      "kind": "ROLE",
+      "surfaces": 4
+     },
+     {
+      "identity": "lib/matplotlib/tests/test_rcparams.py::test_Bug_2543#roles",
+      "kind": "ROLE",
+      "surfaces": 4
+     },
+     {
+      "identity": "lib/matplotlib/units.py::ConversionError#roles",
+      "kind": "ROLE",
+      "surfaces": 4
+     },
+     {
+      "identity": "lib/matplotlib/category.py::StrCategoryConverter.convert#why:strong target beyond the pivot budget — ",
+      "kind": "ROLE",
+      "surfaces": 3
+     },
+     {
+      "identity": "lib/matplotlib/tests/test_rcparams.py::test_Bug_2543#why:bounded routed FTS rank covers unmatched",
+      "kind": "ROLE",
+      "surfaces": 3
+     },
+     {
+      "identity": "lib/matplotlib/units.py::ConversionError#why:actionable class — symbol-name match; st",
+      "kind": "ROLE",
+      "surfaces": 3
+     }
+    ]
+   }
+  },
+  {
+   "instanceId": "mwaskom__seaborn-3187",
+   "modelVisibleCharacters": 21127,
+   "outputCharacters": 20976,
+   "envelopeOverheadCharacters": 151,
+   "modelVisibleTokens": 6706,
+   "amplificationRequests": 25,
+   "projectedAttributableCostUsd": 0.150885,
+   "byCategory": {
+    "REPOSITORY_EVIDENCE": 3656,
+    "AGENT_USEFUL_CONTROL": 2157,
+    "MACHINE_DIAGNOSTIC": 1514,
+    "PROVENANCE": 1082,
+    "DUPLICATE": 3791,
+    "TRANSPORT_STRUCTURE": 8772,
+    "OTHER": 4
+   },
+   "evidenceCharacters": 3656,
+   "evidenceDensity": 0.17304870544800494,
+   "facts": {
+    "facts": 96,
+    "factsAssertedMoreThanOnce": 28,
+    "repetitionRate": 0.2916666666666667,
+    "totalSurfaces": 157,
+    "charactersByKind": {
+     "ACCOUNTING": 3081,
+     "COMPONENT_STATUS": 168,
+     "DEFERRAL": 529,
+     "EPISTEMIC": 1290,
+     "IDENTITY": 1789,
+     "PROVENANCE": 1332,
+     "RELATIONSHIP": 48,
+     "RESTATEMENT": 1458,
+     "ROLE": 1663,
+     "SOURCE": 1662
+    },
+    "factsByKind": {
+     "ACCOUNTING": 8,
+     "COMPONENT_STATUS": 7,
+     "DEFERRAL": 1,
+     "EPISTEMIC": 21,
+     "IDENTITY": 11,
+     "PROVENANCE": 12,
+     "RELATIONSHIP": 4,
+     "RESTATEMENT": 2,
+     "ROLE": 21,
+     "SOURCE": 9
+    },
+    "repeatedByKind": {
+     "EPISTEMIC": 1,
+     "IDENTITY": 10,
+     "PROVENANCE": 1,
+     "RESTATEMENT": 2,
+     "ROLE": 14
+    },
+    "maxSurfacesForOneFact": 9,
+    "mostRepeatedFacts": [
+     {
+      "identity": "seaborn/utils.py::move_legend",
+      "kind": "IDENTITY",
+      "surfaces": 9
+     },
+     {
+      "identity": "seaborn/_core/plot.py::Plotter._make_legend",
+      "kind": "IDENTITY",
+      "surfaces": 7
+     },
+     {
+      "identity": "task",
+      "kind": "RESTATEMENT",
+      "surfaces": 7
+     },
+     {
+      "identity": "intent",
+      "kind": "RESTATEMENT",
+      "surfaces": 6
+     },
+     {
+      "identity": "tests/test_utils.py::test_move_legend_grid_object",
+      "kind": "IDENTITY",
+      "surfaces": 4
+     },
+     {
+      "identity": "tests/test_utils.py::test_move_legend_input_checks",
+      "kind": "IDENTITY",
+      "surfaces": 4
+     },
+     {
+      "identity": "tests/test_utils.py::test_move_legend_matplotlib_objects",
+      "kind": "IDENTITY",
+      "surfaces": 4
+     },
+     {
+      "identity": "seaborn/_core/plot.py::Plotter._make_legend#roles",
+      "kind": "ROLE",
+      "surfaces": 4
+     },
+     {
+      "identity": "seaborn/utils.py::move_legend#roles",
+      "kind": "ROLE",
+      "surfaces": 4
+     },
+     {
+      "identity": "seaborn/_core/plot.py::Plotter._make_legend#why:lexical match; issue-domain relevance (n",
+      "kind": "ROLE",
+      "surfaces": 3
+     },
+     {
+      "identity": "seaborn/utils.py::move_legend#why:actionable function — strong lexical mat",
+      "kind": "ROLE",
+      "surfaces": 3
+     },
+     {
+      "identity": "freshness",
+      "kind": "EPISTEMIC",
+      "surfaces": 2
+     }
+    ]
+   }
+  },
+  {
+   "instanceId": "pallets__flask-5014",
+   "modelVisibleCharacters": 20314,
+   "outputCharacters": 20163,
+   "envelopeOverheadCharacters": 151,
+   "modelVisibleTokens": 6448,
+   "amplificationRequests": 2,
+   "projectedAttributableCostUsd": 0.07092799999999999,
+   "byCategory": {
+    "REPOSITORY_EVIDENCE": 4625,
+    "AGENT_USEFUL_CONTROL": 2166,
+    "MACHINE_DIAGNOSTIC": 1761,
+    "PROVENANCE": 933,
+    "DUPLICATE": 2774,
+    "TRANSPORT_STRUCTURE": 7900,
+    "OTHER": 4
+   },
+   "evidenceCharacters": 4625,
+   "evidenceDensity": 0.22767549473269666,
+   "facts": {
+    "facts": 78,
+    "factsAssertedMoreThanOnce": 16,
+    "repetitionRate": 0.20512820512820512,
+    "totalSurfaces": 124,
+    "charactersByKind": {
+     "ACCOUNTING": 3088,
+     "COMPONENT_STATUS": 150,
+     "DEFERRAL": 870,
+     "EPISTEMIC": 1290,
+     "IDENTITY": 1104,
+     "PROVENANCE": 1210,
+     "RELATIONSHIP": 33,
+     "RESTATEMENT": 1211,
+     "ROLE": 1292,
+     "SOURCE": 3309
+    },
+    "factsByKind": {
+     "ACCOUNTING": 8,
+     "COMPONENT_STATUS": 7,
+     "DEFERRAL": 2,
+     "EPISTEMIC": 21,
+     "IDENTITY": 7,
+     "PROVENANCE": 9,
+     "RELATIONSHIP": 4,
+     "RESTATEMENT": 2,
+     "ROLE": 12,
+     "SOURCE": 6
+    },
+    "repeatedByKind": {
+     "EPISTEMIC": 1,
+     "IDENTITY": 4,
+     "PROVENANCE": 1,
+     "RESTATEMENT": 2,
+     "ROLE": 8
+    },
+    "maxSurfacesForOneFact": 9,
+    "mostRepeatedFacts": [
+     {
+      "identity": "src/flask/blueprints.py::Blueprint",
+      "kind": "IDENTITY",
+      "surfaces": 9
+     },
+     {
+      "identity": "src/flask/app.py::Flask.name",
+      "kind": "IDENTITY",
+      "surfaces": 8
+     },
+     {
+      "identity": "intent",
+      "kind": "RESTATEMENT",
+      "surfaces": 8
+     },
+     {
+      "identity": "task",
+      "kind": "RESTATEMENT",
+      "surfaces": 7
+     },
+     {
+      "identity": "src/flask/app.py::Flask.name#roles",
+      "kind": "ROLE",
+      "surfaces": 4
+     },
+     {
+      "identity": "src/flask/blueprints.py::Blueprint#roles",
+      "kind": "ROLE",
+      "surfaces": 4
+     },
+     {
+      "identity": "src/flask/app.py::Flask.name#why:strong target beyond the pivot budget — ",
+      "kind": "ROLE",
+      "surfaces": 3
+     },
+     {
+      "identity": "src/flask/blueprints.py::Blueprint#why:actionable class — symbol-name match; st",
+      "kind": "ROLE",
+      "surfaces": 3
+     },
+     {
+      "identity": "freshness",
+      "kind": "EPISTEMIC",
+      "surfaces": 2
+     },
+     {
+      "identity": "src/flask/app.py::Flask.name#lines",
+      "kind": "IDENTITY",
+      "surfaces": 2
+     },
+     {
+      "identity": "src/flask/blueprints.py::Blueprint#lines",
+      "kind": "IDENTITY",
+      "surfaces": 2
+     },
+     {
+      "identity": "capsuleManifestId",
+      "kind": "PROVENANCE",
+      "surfaces": 2
+     }
+    ]
+   }
+  },
+  {
+   "instanceId": "psf__requests-1724",
+   "modelVisibleCharacters": 28453,
+   "outputCharacters": 28302,
+   "envelopeOverheadCharacters": 151,
+   "modelVisibleTokens": 9031,
+   "amplificationRequests": 7,
+   "projectedAttributableCostUsd": 0.1219185,
+   "byCategory": {
+    "REPOSITORY_EVIDENCE": 4726,
+    "AGENT_USEFUL_CONTROL": 2169,
+    "MACHINE_DIAGNOSTIC": 2718,
+    "PROVENANCE": 1050,
+    "DUPLICATE": 8964,
+    "TRANSPORT_STRUCTURE": 8635,
+    "OTHER": 40
+   },
+   "evidenceCharacters": 4726,
+   "evidenceDensity": 0.16609847819210627,
+   "facts": {
+    "facts": 92,
+    "factsAssertedMoreThanOnce": 24,
+    "repetitionRate": 0.2608695652173913,
+    "totalSurfaces": 149,
+    "charactersByKind": {
+     "ACCOUNTING": 3430,
+     "COMPONENT_STATUS": 149,
+     "DEFERRAL": 2508,
+     "EPISTEMIC": 1290,
+     "IDENTITY": 1637,
+     "PROVENANCE": 1289,
+     "RELATIONSHIP": 32,
+     "RESTATEMENT": 7747,
+     "ROLE": 1298,
+     "SOURCE": 1883
+    },
+    "factsByKind": {
+     "ACCOUNTING": 8,
+     "COMPONENT_STATUS": 7,
+     "DEFERRAL": 2,
+     "EPISTEMIC": 21,
+     "IDENTITY": 11,
+     "PROVENANCE": 11,
+     "RELATIONSHIP": 4,
+     "RESTATEMENT": 2,
+     "ROLE": 18,
+     "SOURCE": 8
+    },
+    "repeatedByKind": {
+     "EPISTEMIC": 1,
+     "IDENTITY": 8,
+     "PROVENANCE": 1,
+     "RESTATEMENT": 2,
+     "ROLE": 12
+    },
+    "maxSurfacesForOneFact": 9,
+    "mostRepeatedFacts": [
+     {
+      "identity": "requests/sessions.py::Session.send",
+      "kind": "IDENTITY",
+      "surfaces": 9
+     },
+     {
+      "identity": "intent",
+      "kind": "RESTATEMENT",
+      "surfaces": 8
+     },
+     {
+      "identity": "requests/packages/urllib3/response.py::HTTPResponse.from_httplib",
+      "kind": "IDENTITY",
+      "surfaces": 7
+     },
+     {
+      "identity": "task",
+      "kind": "RESTATEMENT",
+      "surfaces": 7
+     },
+     {
+      "identity": "requests/sessions.py::Session",
+      "kind": "IDENTITY",
+      "surfaces": 4
+     },
+     {
+      "identity": "requests/sessions.py::Session.request",
+      "kind": "IDENTITY",
+      "surfaces": 4
+     },
+     {
+      "identity": "requests/packages/urllib3/response.py::HTTPResponse.from_httplib#roles",
+      "kind": "ROLE",
+      "surfaces": 4
+     },
+     {
+      "identity": "requests/sessions.py::Session.send#roles",
+      "kind": "ROLE",
+      "surfaces": 4
+     },
+     {
+      "identity": "requests/packages/urllib3/response.py::HTTPResponse.from_httplib#why:strong target beyond the pivot budget — ",
+      "kind": "ROLE",
+      "surfaces": 3
+     },
+     {
+      "identity": "requests/sessions.py::Session.send#why:local implementation helper invoked by t",
+      "kind": "ROLE",
+      "surfaces": 3
+     },
+     {
+      "identity": "freshness",
+      "kind": "EPISTEMIC",
+      "surfaces": 2
+     },
+     {
+      "identity": "requests/packages/urllib3/response.py::HTTPResponse.from_httplib#lines",
+      "kind": "IDENTITY",
+      "surfaces": 2
+     }
+    ]
+   }
+  },
+  {
+   "instanceId": "pydata__xarray-6599",
+   "modelVisibleCharacters": 16095,
+   "outputCharacters": 15944,
+   "envelopeOverheadCharacters": 151,
+   "modelVisibleTokens": 5109,
+   "amplificationRequests": 25,
+   "projectedAttributableCostUsd": 0.11495250000000001,
+   "byCategory": {
+    "REPOSITORY_EVIDENCE": 1871,
+    "AGENT_USEFUL_CONTROL": 2143,
+    "MACHINE_DIAGNOSTIC": 1382,
+    "PROVENANCE": 901,
+    "DUPLICATE": 2336,
+    "TRANSPORT_STRUCTURE": 7307,
+    "OTHER": 4
+   },
+   "evidenceCharacters": 1871,
+   "evidenceDensity": 0.11624728176452315,
+   "facts": {
+    "facts": 65,
+    "factsAssertedMoreThanOnce": 15,
+    "repetitionRate": 0.23076923076923078,
+    "totalSurfaces": 107,
+    "charactersByKind": {
+     "ACCOUNTING": 3067,
+     "COMPONENT_STATUS": 168,
+     "DEFERRAL": 413,
+     "EPISTEMIC": 1336,
+     "IDENTITY": 899,
+     "PROVENANCE": 1211,
+     "RESTATEMENT": 646,
+     "ROLE": 1136,
+     "SOURCE": 211
+    },
+    "factsByKind": {
+     "ACCOUNTING": 8,
+     "COMPONENT_STATUS": 7,
+     "DEFERRAL": 1,
+     "EPISTEMIC": 21,
+     "IDENTITY": 4,
+     "PROVENANCE": 9,
+     "RESTATEMENT": 2,
+     "ROLE": 11,
+     "SOURCE": 2
+    },
+    "repeatedByKind": {
+     "EPISTEMIC": 1,
+     "IDENTITY": 4,
+     "PROVENANCE": 1,
+     "RESTATEMENT": 2,
+     "ROLE": 7
+    },
+    "maxSurfacesForOneFact": 9,
+    "mostRepeatedFacts": [
+     {
+      "identity": "xarray/core/computation.py::polyval",
+      "kind": "IDENTITY",
+      "surfaces": 9
+     },
+     {
+      "identity": "asv_bench/benchmarks/polyfit.py::Polyval",
+      "kind": "IDENTITY",
+      "surfaces": 7
+     },
+     {
+      "identity": "task",
+      "kind": "RESTATEMENT",
+      "surfaces": 7
+     },
+     {
+      "identity": "intent",
+      "kind": "RESTATEMENT",
+      "surfaces": 6
+     },
+     {
+      "identity": "asv_bench/benchmarks/polyfit.py::Polyval#roles",
+      "kind": "ROLE",
+      "surfaces": 4
+     },
+     {
+      "identity": "xarray/core/computation.py::polyval#roles",
+      "kind": "ROLE",
+      "surfaces": 4
+     },
+     {
+      "identity": "asv_bench/benchmarks/polyfit.py::Polyval#why:non-source example (path under asv_bench",
+      "kind": "ROLE",
+      "surfaces": 3
+     },
+     {
+      "identity": "xarray/core/computation.py::polyval#why:strong target but beyond the pivot budge",
+      "kind": "ROLE",
+      "surfaces": 3
+     },
+     {
+      "identity": "freshness",
+      "kind": "EPISTEMIC",
+      "surfaces": 2
+     },
+     {
+      "identity": "asv_bench/benchmarks/polyfit.py::Polyval#lines",
+      "kind": "IDENTITY",
+      "surfaces": 2
+     },
+     {
+      "identity": "xarray/core/computation.py::polyval#lines",
+      "kind": "IDENTITY",
+      "surfaces": 2
+     },
+     {
+      "identity": "capsuleManifestId",
+      "kind": "PROVENANCE",
+      "surfaces": 2
+     }
+    ]
+   }
+  },
+  {
+   "instanceId": "pylint-dev__pylint-4551",
+   "modelVisibleCharacters": 20609,
+   "outputCharacters": 20458,
+   "envelopeOverheadCharacters": 151,
+   "modelVisibleTokens": 6541,
+   "amplificationRequests": 23,
+   "projectedAttributableCostUsd": 0.1406315,
+   "byCategory": {
+    "REPOSITORY_EVIDENCE": 4111,
+    "AGENT_USEFUL_CONTROL": 2125,
+    "MACHINE_DIAGNOSTIC": 1799,
+    "PROVENANCE": 964,
+    "DUPLICATE": 3434,
+    "TRANSPORT_STRUCTURE": 8020,
+    "OTHER": 5
+   },
+   "evidenceCharacters": 4111,
+   "evidenceDensity": 0.19947595710611868,
+   "facts": {
+    "facts": 84,
+    "factsAssertedMoreThanOnce": 20,
+    "repetitionRate": 0.23809523809523808,
+    "totalSurfaces": 133,
+    "charactersByKind": {
+     "ACCOUNTING": 3095,
+     "COMPONENT_STATUS": 168,
+     "DEFERRAL": 563,
+     "EPISTEMIC": 1255,
+     "IDENTITY": 1849,
+     "PROVENANCE": 1254,
+     "RELATIONSHIP": 32,
+     "RESTATEMENT": 1696,
+     "ROLE": 1396,
+     "SOURCE": 2037
+    },
+    "factsByKind": {
+     "ACCOUNTING": 8,
+     "COMPONENT_STATUS": 7,
+     "DEFERRAL": 1,
+     "EPISTEMIC": 20,
+     "IDENTITY": 10,
+     "PROVENANCE": 10,
+     "RELATIONSHIP": 4,
+     "RESTATEMENT": 2,
+     "ROLE": 15,
+     "SOURCE": 7
+    },
+    "repeatedByKind": {
+     "EPISTEMIC": 1,
+     "IDENTITY": 6,
+     "PROVENANCE": 1,
+     "RESTATEMENT": 2,
+     "ROLE": 10
+    },
+    "maxSurfacesForOneFact": 9,
+    "mostRepeatedFacts": [
+     {
+      "identity": "pylint/lint/pylinter.py::PyLinter.python3_porting_mode",
+      "kind": "IDENTITY",
+      "surfaces": 9
+     },
+     {
+      "identity": "pylint/checkers/python3.py::Python3Checker.visit_call",
+      "kind": "IDENTITY",
+      "surfaces": 7
+     },
+     {
+      "identity": "task",
+      "kind": "RESTATEMENT",
+      "surfaces": 7
+     },
+     {
+      "identity": "intent",
+      "kind": "RESTATEMENT",
+      "surfaces": 6
+     },
+     {
+      "identity": "pylint/lint/pylinter.py::PyLinter",
+      "kind": "IDENTITY",
+      "surfaces": 4
+     },
+     {
+      "identity": "pylint/checkers/python3.py::Python3Checker.visit_call#roles",
+      "kind": "ROLE",
+      "surfaces": 4
+     },
+     {
+      "identity": "pylint/lint/pylinter.py::PyLinter.python3_porting_mode#roles",
+      "kind": "ROLE",
+      "surfaces": 4
+     },
+     {
+      "identity": "pylint/checkers/python3.py::Python3Checker.visit_call#why:issue-domain relevance; graph/import nei",
+      "kind": "ROLE",
+      "surfaces": 3
+     },
+     {
+      "identity": "pylint/lint/pylinter.py::PyLinter.python3_porting_mode#why:actionable method — symbol-name match; l",
+      "kind": "ROLE",
+      "surfaces": 3
+     },
+     {
+      "identity": "freshness",
+      "kind": "EPISTEMIC",
+      "surfaces": 2
+     },
+     {
+      "identity": "pylint/checkers/python3.py::Python3Checker.visit_call#lines",
+      "kind": "IDENTITY",
+      "surfaces": 2
+     },
+     {
+      "identity": "pylint/lint/pylinter.py::PyLinter.python3_porting_mode#lines",
+      "kind": "IDENTITY",
+      "surfaces": 2
+     }
+    ]
+   }
+  },
+  {
+   "instanceId": "pytest-dev__pytest-7432",
+   "modelVisibleCharacters": 21744,
+   "outputCharacters": 21593,
+   "envelopeOverheadCharacters": 151,
+   "modelVisibleTokens": 6902,
+   "amplificationRequests": 10,
+   "projectedAttributableCostUsd": 0.10353,
+   "byCategory": {
+    "REPOSITORY_EVIDENCE": 4432,
+    "AGENT_USEFUL_CONTROL": 2148,
+    "MACHINE_DIAGNOSTIC": 1457,
+    "PROVENANCE": 1053,
+    "DUPLICATE": 3596,
+    "TRANSPORT_STRUCTURE": 8879,
+    "OTHER": 28
+   },
+   "evidenceCharacters": 4432,
+   "evidenceDensity": 0.20382634289919058,
+   "facts": {
+    "facts": 96,
+    "factsAssertedMoreThanOnce": 28,
+    "repetitionRate": 0.2916666666666667,
+    "totalSurfaces": 158,
+    "charactersByKind": {
+     "ACCOUNTING": 3064,
+     "COMPONENT_STATUS": 157,
+     "DEFERRAL": 480,
+     "EPISTEMIC": 1253,
+     "IDENTITY": 2002,
+     "PROVENANCE": 1334,
+     "RELATIONSHIP": 32,
+     "RESTATEMENT": 1116,
+     "ROLE": 1606,
+     "SOURCE": 3214
+    },
+    "factsByKind": {
+     "ACCOUNTING": 8,
+     "COMPONENT_STATUS": 7,
+     "DEFERRAL": 1,
+     "EPISTEMIC": 20,
+     "IDENTITY": 12,
+     "PROVENANCE": 12,
+     "RELATIONSHIP": 4,
+     "RESTATEMENT": 2,
+     "ROLE": 21,
+     "SOURCE": 9
+    },
+    "repeatedByKind": {
+     "EPISTEMIC": 1,
+     "IDENTITY": 10,
+     "PROVENANCE": 1,
+     "RESTATEMENT": 2,
+     "ROLE": 14
+    },
+    "maxSurfacesForOneFact": 9,
+    "mostRepeatedFacts": [
+     {
+      "identity": "src/_pytest/skipping.py::evaluate_skip_marks",
+      "kind": "IDENTITY",
+      "surfaces": 9
+     },
+     {
+      "identity": "intent",
+      "kind": "RESTATEMENT",
+      "surfaces": 8
+     },
+     {
+      "identity": ".github/labels.toml#document",
+      "kind": "IDENTITY",
+      "surfaces": 7
+     },
+     {
+      "identity": "task",
+      "kind": "RESTATEMENT",
+      "surfaces": 7
+     },
+     {
+      "identity": "testing/test_skipping.py::TestEvaluation.test_marked_one_arg",
+      "kind": "IDENTITY",
+      "surfaces": 4
+     },
+     {
+      "identity": "testing/test_skipping.py::TestEvaluation.test_marked_one_arg_twice",
+      "kind": "IDENTITY",
+      "surfaces": 4
+     },
+     {
+      "identity": ".github/labels.toml#document#roles",
+      "kind": "ROLE",
+      "surfaces": 4
+     },
+     {
+      "identity": "src/_pytest/skipping.py::evaluate_skip_marks#roles",
+      "kind": "ROLE",
+      "surfaces": 4
+     },
+     {
+      "identity": "testing/test_skipping.py::TestEvaluation.test_marked_one_arg_with_reason",
+      "kind": "IDENTITY",
+      "surfaces": 3
+     },
+     {
+      "identity": ".github/labels.toml#document#why:document FTS matches: mark, pytest, repo",
+      "kind": "ROLE",
+      "surfaces": 3
+     },
+     {
+      "identity": "src/_pytest/skipping.py::evaluate_skip_marks#why:actionable function — strong lexical mat",
+      "kind": "ROLE",
+      "surfaces": 3
+     },
+     {
+      "identity": "freshness",
+      "kind": "EPISTEMIC",
+      "surfaces": 2
+     }
+    ]
+   }
+  },
+  {
+   "instanceId": "scikit-learn__scikit-learn-10844",
+   "modelVisibleCharacters": 22151,
+   "outputCharacters": 22000,
+   "envelopeOverheadCharacters": 151,
+   "modelVisibleTokens": 7031,
+   "amplificationRequests": 6,
+   "projectedAttributableCostUsd": 0.091403,
+   "byCategory": {
+    "REPOSITORY_EVIDENCE": 3987,
+    "AGENT_USEFUL_CONTROL": 2166,
+    "MACHINE_DIAGNOSTIC": 1775,
+    "PROVENANCE": 1066,
+    "DUPLICATE": 4348,
+    "TRANSPORT_STRUCTURE": 8654,
+    "OTHER": 4
+   },
+   "evidenceCharacters": 3987,
+   "evidenceDensity": 0.17999187395602909,
+   "facts": {
+    "facts": 91,
+    "factsAssertedMoreThanOnce": 24,
+    "repetitionRate": 0.26373626373626374,
+    "totalSurfaces": 148,
+    "charactersByKind": {
+     "ACCOUNTING": 3077,
+     "COMPONENT_STATUS": 150,
+     "DEFERRAL": 898,
+     "EPISTEMIC": 1290,
+     "IDENTITY": 2342,
+     "PROVENANCE": 1303,
+     "RELATIONSHIP": 32,
+     "RESTATEMENT": 1323,
+     "ROLE": 1894,
+     "SOURCE": 2691
+    },
+    "factsByKind": {
+     "ACCOUNTING": 8,
+     "COMPONENT_STATUS": 7,
+     "DEFERRAL": 2,
+     "EPISTEMIC": 21,
+     "IDENTITY": 10,
+     "PROVENANCE": 11,
+     "RELATIONSHIP": 4,
+     "RESTATEMENT": 2,
+     "ROLE": 18,
+     "SOURCE": 8
+    },
+    "repeatedByKind": {
+     "EPISTEMIC": 1,
+     "IDENTITY": 8,
+     "PROVENANCE": 1,
+     "RESTATEMENT": 2,
+     "ROLE": 12
+    },
+    "maxSurfacesForOneFact": 9,
+    "mostRepeatedFacts": [
+     {
+      "identity": "sklearn/metrics/cluster/supervised.py::fowlkes_mallows_score",
+      "kind": "IDENTITY",
+      "surfaces": 9
+     },
+     {
+      "identity": "intent",
+      "kind": "RESTATEMENT",
+      "surfaces": 8
+     },
+     {
+      "identity": "sklearn/learning_curve.py::validation_curve",
+      "kind": "IDENTITY",
+      "surfaces": 7
+     },
+     {
+      "identity": "task",
+      "kind": "RESTATEMENT",
+      "surfaces": 7
+     },
+     {
+      "identity": "sklearn/metrics/cluster/tests/test_supervised.py::test_fowlkes_mallows_score",
+      "kind": "IDENTITY",
+      "surfaces": 4
+     },
+     {
+      "identity": "sklearn/metrics/cluster/tests/test_supervised.py::test_fowlkes_mallows_score_properties",
+      "kind": "IDENTITY",
+      "surfaces": 4
+     },
+     {
+      "identity": "sklearn/learning_curve.py::validation_curve#roles",
+      "kind": "ROLE",
+      "surfaces": 4
+     },
+     {
+      "identity": "sklearn/metrics/cluster/supervised.py::fowlkes_mallows_score#roles",
+      "kind": "ROLE",
+      "surfaces": 4
+     },
+     {
+      "identity": "sklearn/learning_curve.py::validation_curve#why:lexical match (not a pivot: no direct ev",
+      "kind": "ROLE",
+      "surfaces": 3
+     },
+     {
+      "identity": "sklearn/metrics/cluster/supervised.py::fowlkes_mallows_score#why:local implementation helper whose name m",
+      "kind": "ROLE",
+      "surfaces": 3
+     },
+     {
+      "identity": "freshness",
+      "kind": "EPISTEMIC",
+      "surfaces": 2
+     },
+     {
+      "identity": "sklearn/learning_curve.py::validation_curve#lines",
+      "kind": "IDENTITY",
+      "surfaces": 2
+     }
+    ]
+   }
+  },
+  {
+   "instanceId": "sphinx-doc__sphinx-7462",
+   "modelVisibleCharacters": 21318,
+   "outputCharacters": 21167,
+   "envelopeOverheadCharacters": 151,
+   "modelVisibleTokens": 6766,
+   "amplificationRequests": 5,
+   "projectedAttributableCostUsd": 0.084575,
+   "byCategory": {
+    "REPOSITORY_EVIDENCE": 3065,
+    "AGENT_USEFUL_CONTROL": 2170,
+    "MACHINE_DIAGNOSTIC": 1987,
+    "PROVENANCE": 1075,
+    "DUPLICATE": 4074,
+    "TRANSPORT_STRUCTURE": 8770,
+    "OTHER": 26
+   },
+   "evidenceCharacters": 3065,
+   "evidenceDensity": 0.14377521343465616,
+   "facts": {
+    "facts": 89,
+    "factsAssertedMoreThanOnce": 23,
+    "repetitionRate": 0.25842696629213485,
+    "totalSurfaces": 146,
+    "charactersByKind": {
+     "ACCOUNTING": 3088,
+     "COMPONENT_STATUS": 150,
+     "DEFERRAL": 1064,
+     "EPISTEMIC": 1290,
+     "IDENTITY": 1701,
+     "PROVENANCE": 1294,
+     "RELATIONSHIP": 33,
+     "RESTATEMENT": 1978,
+     "ROLE": 1399,
+     "SOURCE": 1797
+    },
+    "factsByKind": {
+     "ACCOUNTING": 8,
+     "COMPONENT_STATUS": 7,
+     "DEFERRAL": 2,
+     "EPISTEMIC": 21,
+     "IDENTITY": 9,
+     "PROVENANCE": 11,
+     "RELATIONSHIP": 4,
+     "RESTATEMENT": 2,
+     "ROLE": 17,
+     "SOURCE": 8
+    },
+    "repeatedByKind": {
+     "EPISTEMIC": 1,
+     "IDENTITY": 8,
+     "PROVENANCE": 1,
+     "RESTATEMENT": 2,
+     "ROLE": 11
+    },
+    "maxSurfacesForOneFact": 9,
+    "mostRepeatedFacts": [
+     {
+      "identity": "sphinx/domains/python.py::_parse_annotation",
+      "kind": "IDENTITY",
+      "surfaces": 9
+     },
+     {
+      "identity": "sphinx/domains/python.py::_parse_arglist",
+      "kind": "IDENTITY",
+      "surfaces": 8
+     },
+     {
+      "identity": "intent",
+      "kind": "RESTATEMENT",
+      "surfaces": 8
+     },
+     {
+      "identity": "task",
+      "kind": "RESTATEMENT",
+      "surfaces": 7
+     },
+     {
+      "identity": "sphinx/domains/python.py::PyObject.handle_signature",
+      "kind": "IDENTITY",
+      "surfaces": 4
+     },
+     {
+      "identity": "tests/test_domain_py.py::test_parse_annotation",
+      "kind": "IDENTITY",
+      "surfaces": 4
+     },
+     {
+      "identity": "sphinx/domains/python.py::_parse_annotation#roles",
+      "kind": "ROLE",
+      "surfaces": 4
+     },
+     {
+      "identity": "sphinx/domains/python.py::_parse_arglist#roles",
+      "kind": "ROLE",
+      "surfaces": 4
+     },
+     {
+      "identity": "sphinx/domains/python.py::_parse_annotation#why:actionable function — in a likely edit f",
+      "kind": "ROLE",
+      "surfaces": 3
+     },
+     {
+      "identity": "sphinx/domains/python.py::_parse_arglist#why:strong target beyond the pivot budget — ",
+      "kind": "ROLE",
+      "surfaces": 3
+     },
+     {
+      "identity": "freshness",
+      "kind": "EPISTEMIC",
+      "surfaces": 2
+     },
+     {
+      "identity": "sphinx/domains/python.py::_parse_annotation#lines",
+      "kind": "IDENTITY",
+      "surfaces": 2
+     }
+    ]
+   }
+  },
+  {
+   "instanceId": "sympy__sympy-13480",
+   "modelVisibleCharacters": 22327,
+   "outputCharacters": 22176,
+   "envelopeOverheadCharacters": 151,
+   "modelVisibleTokens": 7087,
+   "amplificationRequests": 7,
+   "projectedAttributableCostUsd": 0.0956745,
+   "byCategory": {
+    "REPOSITORY_EVIDENCE": 4172,
+    "AGENT_USEFUL_CONTROL": 2170,
+    "MACHINE_DIAGNOSTIC": 2035,
+    "PROVENANCE": 990,
+    "DUPLICATE": 4501,
+    "TRANSPORT_STRUCTURE": 8278,
+    "OTHER": 30
+   },
+   "evidenceCharacters": 4172,
+   "evidenceDensity": 0.1868589600035831,
+   "facts": {
+    "facts": 85,
+    "factsAssertedMoreThanOnce": 20,
+    "repetitionRate": 0.23529411764705882,
+    "totalSurfaces": 136,
+    "charactersByKind": {
+     "ACCOUNTING": 3107,
+     "COMPONENT_STATUS": 149,
+     "DEFERRAL": 1132,
+     "EPISTEMIC": 1290,
+     "IDENTITY": 1767,
+     "PROVENANCE": 1249,
+     "RELATIONSHIP": 33,
+     "RESTATEMENT": 2248,
+     "ROLE": 1522,
+     "SOURCE": 2354
+    },
+    "factsByKind": {
+     "ACCOUNTING": 8,
+     "COMPONENT_STATUS": 7,
+     "DEFERRAL": 2,
+     "EPISTEMIC": 21,
+     "IDENTITY": 9,
+     "PROVENANCE": 10,
+     "RELATIONSHIP": 4,
+     "RESTATEMENT": 2,
+     "ROLE": 15,
+     "SOURCE": 7
+    },
+    "repeatedByKind": {
+     "EPISTEMIC": 1,
+     "IDENTITY": 6,
+     "PROVENANCE": 1,
+     "RESTATEMENT": 2,
+     "ROLE": 10
+    },
+    "maxSurfacesForOneFact": 9,
+    "mostRepeatedFacts": [
+     {
+      "identity": "sympy/functions/elementary/hyperbolic.py::coth",
+      "kind": "IDENTITY",
+      "surfaces": 9
+     },
+     {
+      "identity": "sympy/functions/elementary/exponential.py::log",
+      "kind": "IDENTITY",
+      "surfaces": 8
+     },
+     {
+      "identity": "intent",
+      "kind": "RESTATEMENT",
+      "surfaces": 8
+     },
+     {
+      "identity": "task",
+      "kind": "RESTATEMENT",
+      "surfaces": 7
+     },
+     {
+      "identity": "sympy/functions/elementary/exponential.py::log#roles",
+      "kind": "ROLE",
+      "surfaces": 4
+     },
+     {
+      "identity": "sympy/functions/elementary/hyperbolic.py::coth#roles",
+      "kind": "ROLE",
+      "surfaces": 4
+     },
+     {
+      "identity": "sympy/functions/elementary/hyperbolic.py::tanh._eval_rewrite_as_coth",
+      "kind": "IDENTITY",
+      "surfaces": 3
+     },
+     {
+      "identity": "sympy/functions/elementary/exponential.py::log#why:strong target beyond the pivot budget — ",
+      "kind": "ROLE",
+      "surfaces": 3
+     },
+     {
+      "identity": "sympy/functions/elementary/hyperbolic.py::coth#why:actionable class — symbol-name match; in",
+      "kind": "ROLE",
+      "surfaces": 3
+     },
+     {
+      "identity": "freshness",
+      "kind": "EPISTEMIC",
+      "surfaces": 2
+     },
+     {
+      "identity": "sympy/functions/elementary/exponential.py::log#lines",
+      "kind": "IDENTITY",
+      "surfaces": 2
+     },
+     {
+      "identity": "sympy/functions/elementary/hyperbolic.py::coth#lines",
+      "kind": "IDENTITY",
+      "surfaces": 2
+     }
+    ]
+   }
+  }
+ ]
+}
