@@ -1,0 +1,1003 @@
+{
+  "schemaVersion": "stage5.m170.counterfactual.v1",
+  "milestone": "M170",
+  "workstream": "C",
+  "title": "Counterfactual read mediation over the M168 baseline arm",
+  "level": "LEVEL_1_DETERMINISTIC_OPPORTUNITY_ONLY",
+  "method": {
+    "seam": "PreToolUse updatedInput — offset/limit on the agent's own Read",
+    "ranker": "src/capsule/sweQueryShaping.shapeSweQuery + src/retrieval/hybridRetrieval.hybridRetrieve, in process, over the workspace's own .vtrace/index.sqlite — the product's own retrieval, not a proxy",
+    "spans": "src/db/repositories/symbolsRepository.listSymbolsForFile",
+    "query": "the SWE-bench problem statement, which is what the agent's own prompt carries; a live hook reads it from the transcript at zero model cost",
+    "windowParameters": {
+      "marginLines": 20,
+      "topK": 3,
+      "declineAboveDeliveredShare": 0.75,
+      "minimumFileLines": 120
+    },
+    "disclosure": "every mediated result carries a partial-view banner, because the harness will not emit one",
+    "liveSpendUsd": 0
+  },
+  "controls": {
+    "operationsReplayed": 10,
+    "workspaceReproducesNativeResult": 10,
+    "workspaceMismatch": 0,
+    "mismatchDetail": [],
+    "censoredRunsExcludedFromWholeRunProjection": [
+      "m168_baseline_pylint_dev__pylint_4551"
+    ]
+  },
+  "policySummary": {
+    "P1_TOP_SYMBOL": {
+      "firedOperations": 3,
+      "declinedOperations": 7,
+      "nativeCharacters": 39209,
+      "mediatedCharacters": 8589,
+      "operationLocalReduction": 0.7809,
+      "savedCostUsdEstimated": 0.105358,
+      "verdicts": {
+        "DECLINED": 7,
+        "UNSAFE_MEDIATION": 1,
+        "SAFE_MEDIATION": 1,
+        "RECOVERABLE_OVERPRUNE": 1
+      },
+      "unsafeMediations": 1
+    },
+    "P4_TOP_SYMBOL_SCOPE": {
+      "firedOperations": 3,
+      "declinedOperations": 7,
+      "nativeCharacters": 39209,
+      "mediatedCharacters": 20861,
+      "operationLocalReduction": 0.468,
+      "savedCostUsdEstimated": 0.06391,
+      "verdicts": {
+        "DECLINED": 7,
+        "SAFE_MEDIATION": 2,
+        "RECOVERABLE_OVERPRUNE": 1
+      },
+      "unsafeMediations": 0
+    },
+    "P2_COVER_TOP_K": {
+      "firedOperations": 1,
+      "declinedOperations": 9,
+      "nativeCharacters": 11865,
+      "mediatedCharacters": 7117,
+      "operationLocalReduction": 0.4002,
+      "savedCostUsdEstimated": 0.015935,
+      "verdicts": {
+        "DECLINED": 9,
+        "RECOVERABLE_OVERPRUNE": 1
+      },
+      "unsafeMediations": 0
+    },
+    "P3_COVER_ALL_RANKED": {
+      "firedOperations": 0,
+      "declinedOperations": 10,
+      "nativeCharacters": 0,
+      "mediatedCharacters": 0,
+      "operationLocalReduction": 0,
+      "savedCostUsdEstimated": 0,
+      "verdicts": {
+        "DECLINED": 10
+      },
+      "unsafeMediations": 0
+    },
+    "PX_ORACLE_UPPER_BOUND": {
+      "firedOperations": 6,
+      "declinedOperations": 4,
+      "nativeCharacters": 87459,
+      "mediatedCharacters": 17698,
+      "operationLocalReduction": 0.7976,
+      "savedCostUsdEstimated": 0.279102,
+      "verdicts": {
+        "SAFE_MEDIATION": 5,
+        "DECLINED": 4,
+        "RECOVERABLE_OVERPRUNE": 1
+      },
+      "unsafeMediations": 0
+    }
+  },
+  "wholeRunProjection": {
+    "P1_TOP_SYMBOL": {
+      "savedCostUsdEstimatedUncensored": 0.105358,
+      "wholeRunCostUsdUncensored": 4.87584,
+      "wholeRunReductionShare": 0.0216,
+      "tasksInCorpus": 12,
+      "tasksWhereMediationFired": 3
+    },
+    "P4_TOP_SYMBOL_SCOPE": {
+      "savedCostUsdEstimatedUncensored": 0.06391,
+      "wholeRunCostUsdUncensored": 4.87584,
+      "wholeRunReductionShare": 0.0131,
+      "tasksInCorpus": 12,
+      "tasksWhereMediationFired": 3
+    },
+    "P2_COVER_TOP_K": {
+      "savedCostUsdEstimatedUncensored": 0.015935,
+      "wholeRunCostUsdUncensored": 4.87584,
+      "wholeRunReductionShare": 0.0033,
+      "tasksInCorpus": 12,
+      "tasksWhereMediationFired": 1
+    },
+    "P3_COVER_ALL_RANKED": {
+      "savedCostUsdEstimatedUncensored": 0,
+      "wholeRunCostUsdUncensored": 4.87584,
+      "wholeRunReductionShare": 0,
+      "tasksInCorpus": 12,
+      "tasksWhereMediationFired": 0
+    },
+    "PX_ORACLE_UPPER_BOUND": {
+      "savedCostUsdEstimatedUncensored": 0.234412,
+      "wholeRunCostUsdUncensored": 4.87584,
+      "wholeRunReductionShare": 0.0481,
+      "tasksInCorpus": 12,
+      "tasksWhereMediationFired": 6
+    }
+  },
+  "perTask": [
+    {
+      "instanceLabel": "astropy__astropy_14369",
+      "instanceId": "astropy__astropy-14369",
+      "status": "REPLAYED",
+      "wholeFileReads": 1,
+      "rankMs": 515.4,
+      "operations": [
+        {
+          "instanceId": "astropy__astropy-14369",
+          "orderIndex": 2,
+          "filePath": "astropy/units/format/cds.py",
+          "totalLines": 359,
+          "nativeCharacters": 11616,
+          "nativeTokensEstimated": 3544,
+          "nativeCostUsd": 0.06733600000000001,
+          "nativeReproducesFromWorkspace": true,
+          "renderedCharacters": 11616,
+          "rankedInFile": 0,
+          "rankedInFileTop": [],
+          "editAnchors": [
+            182,
+            182
+          ],
+          "rereadSpans": [
+            {
+              "first": 175,
+              "last": 204
+            },
+            {
+              "first": 163,
+              "last": 212
+            },
+            {
+              "first": 180,
+              "last": 194
+            }
+          ],
+          "rankMs": 515.4,
+          "nameLookupOnlyResults": 0,
+          "policies": {
+            "P1_TOP_SYMBOL": {
+              "fired": false,
+              "verdict": "DECLINED",
+              "savedCharacters": 0,
+              "savedTokensEstimated": 0
+            },
+            "P4_TOP_SYMBOL_SCOPE": {
+              "fired": false,
+              "verdict": "DECLINED",
+              "savedCharacters": 0,
+              "savedTokensEstimated": 0
+            },
+            "P2_COVER_TOP_K": {
+              "fired": false,
+              "verdict": "DECLINED",
+              "savedCharacters": 0,
+              "savedTokensEstimated": 0
+            },
+            "P3_COVER_ALL_RANKED": {
+              "fired": false,
+              "verdict": "DECLINED",
+              "savedCharacters": 0,
+              "savedTokensEstimated": 0
+            },
+            "PX_ORACLE_UPPER_BOUND": {
+              "fired": true,
+              "window": {
+                "first": 143,
+                "last": 232
+              },
+              "deliveredLines": 90,
+              "mediatedCharacters": 3260,
+              "disclosureCharacters": 216,
+              "reductionShare": 0.7194,
+              "savedCharacters": 8356,
+              "savedTokensEstimated": 2549,
+              "savedCostUsdEstimated": 0.048438,
+              "verdict": "SAFE_MEDIATION"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "instanceLabel": "django__django_13658",
+      "instanceId": "django__django-13658",
+      "status": "REPLAYED",
+      "wholeFileReads": 1,
+      "rankMs": 2427.9,
+      "operations": [
+        {
+          "instanceId": "django__django-13658",
+          "orderIndex": 1,
+          "filePath": "django/core/management/__init__.py",
+          "totalLines": 415,
+          "nativeCharacters": 18551,
+          "nativeTokensEstimated": 5661,
+          "nativeCostUsd": 0.0594405,
+          "nativeReproducesFromWorkspace": true,
+          "renderedCharacters": 18551,
+          "rankedInFile": 3,
+          "rankedInFileTop": [
+            {
+              "fqName": "django/core/management/__init__.py::ManagementUtility.__init__",
+              "rank": 0,
+              "first": 188,
+              "last": 193
+            },
+            {
+              "fqName": "django/core/management/__init__.py::ManagementUtility",
+              "rank": 17,
+              "first": 184,
+              "last": 408
+            },
+            {
+              "fqName": "django/core/management/__init__.py::call_command",
+              "rank": 58,
+              "first": 78,
+              "last": 181
+            }
+          ],
+          "editAnchors": [
+            347
+          ],
+          "rereadSpans": [],
+          "rankMs": 2427.9,
+          "nameLookupOnlyResults": 60,
+          "policies": {
+            "P1_TOP_SYMBOL": {
+              "fired": true,
+              "window": {
+                "first": 168,
+                "last": 213
+              },
+              "deliveredLines": 46,
+              "mediatedCharacters": 2034,
+              "disclosureCharacters": 223,
+              "reductionShare": 0.8904,
+              "savedCharacters": 16517,
+              "savedTokensEstimated": 5040,
+              "savedCostUsdEstimated": 0.052923,
+              "verdict": "UNSAFE_MEDIATION"
+            },
+            "P4_TOP_SYMBOL_SCOPE": {
+              "fired": true,
+              "window": {
+                "first": 164,
+                "last": 415
+              },
+              "deliveredLines": 252,
+              "mediatedCharacters": 12314,
+              "disclosureCharacters": 223,
+              "reductionShare": 0.3362,
+              "savedCharacters": 6237,
+              "savedTokensEstimated": 1903,
+              "savedCostUsdEstimated": 0.019984,
+              "verdict": "SAFE_MEDIATION"
+            },
+            "P2_COVER_TOP_K": {
+              "fired": false,
+              "verdict": "DECLINED",
+              "savedCharacters": 0,
+              "savedTokensEstimated": 0
+            },
+            "P3_COVER_ALL_RANKED": {
+              "fired": false,
+              "verdict": "DECLINED",
+              "savedCharacters": 0,
+              "savedTokensEstimated": 0
+            },
+            "PX_ORACLE_UPPER_BOUND": {
+              "fired": true,
+              "window": {
+                "first": 327,
+                "last": 367
+              },
+              "deliveredLines": 41,
+              "mediatedCharacters": 2130,
+              "disclosureCharacters": 223,
+              "reductionShare": 0.8852,
+              "savedCharacters": 16421,
+              "savedTokensEstimated": 5011,
+              "savedCostUsdEstimated": 0.052616,
+              "verdict": "SAFE_MEDIATION"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "instanceLabel": "matplotlib__matplotlib_22719",
+      "instanceId": "matplotlib__matplotlib-22719",
+      "status": "REPLAYED",
+      "wholeFileReads": 1,
+      "rankMs": 822.8,
+      "operations": [
+        {
+          "instanceId": "matplotlib__matplotlib-22719",
+          "orderIndex": 0,
+          "filePath": "lib/matplotlib/category.py",
+          "totalLines": 245,
+          "nativeCharacters": 8793,
+          "nativeTokensEstimated": 2683,
+          "nativeCostUsd": 0.037562,
+          "nativeReproducesFromWorkspace": true,
+          "renderedCharacters": 8793,
+          "rankedInFile": 3,
+          "rankedInFileTop": [
+            {
+              "fqName": "lib/matplotlib/category.py::StrCategoryConverter.convert",
+              "rank": 1,
+              "first": 28,
+              "last": 69
+            },
+            {
+              "fqName": "lib/matplotlib/category.py::StrCategoryConverter",
+              "rank": 8,
+              "first": 26,
+              "last": 126
+            },
+            {
+              "fqName": "lib/matplotlib/category.py::UnitData.update",
+              "rank": 18,
+              "first": 209,
+              "last": 237
+            }
+          ],
+          "editAnchors": [
+            53
+          ],
+          "rereadSpans": [
+            {
+              "first": 50,
+              "last": 74
+            }
+          ],
+          "rankMs": 822.8,
+          "nameLookupOnlyResults": 0,
+          "policies": {
+            "P1_TOP_SYMBOL": {
+              "fired": true,
+              "window": {
+                "first": 8,
+                "last": 89
+              },
+              "deliveredLines": 82,
+              "mediatedCharacters": 3219,
+              "disclosureCharacters": 212,
+              "reductionShare": 0.6339,
+              "savedCharacters": 5574,
+              "savedTokensEstimated": 1701,
+              "savedCostUsdEstimated": 0.023811,
+              "verdict": "SAFE_MEDIATION"
+            },
+            "P4_TOP_SYMBOL_SCOPE": {
+              "fired": true,
+              "window": {
+                "first": 6,
+                "last": 146
+              },
+              "deliveredLines": 141,
+              "mediatedCharacters": 5211,
+              "disclosureCharacters": 213,
+              "reductionShare": 0.4074,
+              "savedCharacters": 3582,
+              "savedTokensEstimated": 1093,
+              "savedCostUsdEstimated": 0.015302,
+              "verdict": "SAFE_MEDIATION"
+            },
+            "P2_COVER_TOP_K": {
+              "fired": false,
+              "verdict": "DECLINED",
+              "savedCharacters": 0,
+              "savedTokensEstimated": 0
+            },
+            "P3_COVER_ALL_RANKED": {
+              "fired": false,
+              "verdict": "DECLINED",
+              "savedCharacters": 0,
+              "savedTokensEstimated": 0
+            },
+            "PX_ORACLE_UPPER_BOUND": {
+              "fired": true,
+              "window": {
+                "first": 30,
+                "last": 94
+              },
+              "deliveredLines": 65,
+              "mediatedCharacters": 2856,
+              "disclosureCharacters": 213,
+              "reductionShare": 0.6752,
+              "savedCharacters": 5937,
+              "savedTokensEstimated": 1812,
+              "savedCostUsdEstimated": 0.025362,
+              "verdict": "SAFE_MEDIATION"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "instanceLabel": "mwaskom__seaborn_3187",
+      "instanceId": "mwaskom__seaborn-3187",
+      "status": "NO_FIRE_NO_WHOLE_FILE_READ",
+      "wholeFileReads": 0
+    },
+    {
+      "instanceLabel": "pallets__flask_5014",
+      "instanceId": "pallets__flask-5014",
+      "status": "REPLAYED",
+      "wholeFileReads": 1,
+      "rankMs": 96.3,
+      "operations": [
+        {
+          "instanceId": "pallets__flask-5014",
+          "orderIndex": 1,
+          "filePath": "src/flask/blueprints.py",
+          "totalLines": 622,
+          "nativeCharacters": 26736,
+          "nativeTokensEstimated": 8158,
+          "nativeCostUsd": 0.085659,
+          "nativeReproducesFromWorkspace": true,
+          "renderedCharacters": 26736,
+          "rankedInFile": 27,
+          "rankedInFileTop": [
+            {
+              "fqName": "src/flask/blueprints.py::Blueprint",
+              "rank": 2,
+              "first": 117,
+              "last": 621
+            },
+            {
+              "fqName": "src/flask/blueprints.py::Blueprint.app_url_value_preprocessor",
+              "rank": 12,
+              "first": 602,
+              "last": 611
+            },
+            {
+              "fqName": "src/flask/blueprints.py::Blueprint.app_errorhandler",
+              "rank": 13,
+              "first": 588,
+              "last": 599
+            },
+            {
+              "fqName": "src/flask/blueprints.py::Blueprint.register",
+              "rank": 15,
+              "first": 268,
+              "last": 402
+            }
+          ],
+          "editAnchors": [
+            193
+          ],
+          "rereadSpans": [],
+          "rankMs": 96.3,
+          "nameLookupOnlyResults": 60,
+          "policies": {
+            "P1_TOP_SYMBOL": {
+              "fired": false,
+              "verdict": "DECLINED",
+              "savedCharacters": 0,
+              "savedTokensEstimated": 0
+            },
+            "P4_TOP_SYMBOL_SCOPE": {
+              "fired": false,
+              "verdict": "DECLINED",
+              "savedCharacters": 0,
+              "savedTokensEstimated": 0
+            },
+            "P2_COVER_TOP_K": {
+              "fired": false,
+              "verdict": "DECLINED",
+              "savedCharacters": 0,
+              "savedTokensEstimated": 0
+            },
+            "P3_COVER_ALL_RANKED": {
+              "fired": false,
+              "verdict": "DECLINED",
+              "savedCharacters": 0,
+              "savedTokensEstimated": 0
+            },
+            "PX_ORACLE_UPPER_BOUND": {
+              "fired": true,
+              "window": {
+                "first": 173,
+                "last": 213
+              },
+              "deliveredLines": 41,
+              "mediatedCharacters": 1957,
+              "disclosureCharacters": 212,
+              "reductionShare": 0.9268,
+              "savedCharacters": 24779,
+              "savedTokensEstimated": 7561,
+              "savedCostUsdEstimated": 0.079389,
+              "verdict": "SAFE_MEDIATION"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "instanceLabel": "psf__requests_1724",
+      "instanceId": "psf__requests-1724",
+      "status": "NO_FIRE_NO_WHOLE_FILE_READ",
+      "wholeFileReads": 0
+    },
+    {
+      "instanceLabel": "pydata__xarray_6599",
+      "instanceId": "pydata__xarray-6599",
+      "status": "NO_FIRE_NO_WHOLE_FILE_READ",
+      "wholeFileReads": 0
+    },
+    {
+      "instanceLabel": "pylint_dev__pylint_4551",
+      "instanceId": "pylint-dev__pylint-4551",
+      "status": "REPLAYED",
+      "wholeFileReads": 5,
+      "rankMs": 134.7,
+      "operations": [
+        {
+          "instanceId": "pylint-dev__pylint-4551",
+          "orderIndex": 2,
+          "filePath": "pylint/pyreverse/inspector.py",
+          "totalLines": 356,
+          "nativeCharacters": 13562,
+          "nativeTokensEstimated": 4138,
+          "nativeCostUsd": 0.107588,
+          "nativeReproducesFromWorkspace": true,
+          "renderedCharacters": 13562,
+          "rankedInFile": 0,
+          "rankedInFileTop": [],
+          "editAnchors": [
+            226,
+            59
+          ],
+          "rereadSpans": [
+            {
+              "first": 220,
+              "last": 249
+            },
+            {
+              "first": 55,
+              "last": 84
+            },
+            {
+              "first": 275,
+              "last": 299
+            },
+            {
+              "first": 60,
+              "last": 119
+            },
+            {
+              "first": 1,
+              "last": 25
+            },
+            {
+              "first": 62,
+              "last": 121
+            },
+            {
+              "first": 280,
+              "last": 304
+            },
+            {
+              "first": 245,
+              "last": 284
+            }
+          ],
+          "rankMs": 134.7,
+          "nameLookupOnlyResults": 0,
+          "policies": {
+            "P1_TOP_SYMBOL": {
+              "fired": false,
+              "verdict": "DECLINED",
+              "savedCharacters": 0,
+              "savedTokensEstimated": 0
+            },
+            "P4_TOP_SYMBOL_SCOPE": {
+              "fired": false,
+              "verdict": "DECLINED",
+              "savedCharacters": 0,
+              "savedTokensEstimated": 0
+            },
+            "P2_COVER_TOP_K": {
+              "fired": false,
+              "verdict": "DECLINED",
+              "savedCharacters": 0,
+              "savedTokensEstimated": 0
+            },
+            "P3_COVER_ALL_RANKED": {
+              "fired": false,
+              "verdict": "DECLINED",
+              "savedCharacters": 0,
+              "savedTokensEstimated": 0
+            },
+            "PX_ORACLE_UPPER_BOUND": {
+              "fired": false,
+              "verdict": "DECLINED",
+              "savedCharacters": 0,
+              "savedTokensEstimated": 0
+            }
+          }
+        },
+        {
+          "instanceId": "pylint-dev__pylint-4551",
+          "orderIndex": 3,
+          "filePath": "pylint/pyreverse/utils.py",
+          "totalLines": 216,
+          "nativeCharacters": 7244,
+          "nativeTokensEstimated": 2210,
+          "nativeCostUsd": 0.056355,
+          "nativeReproducesFromWorkspace": true,
+          "renderedCharacters": 7244,
+          "rankedInFile": 0,
+          "rankedInFileTop": [],
+          "editAnchors": [],
+          "rereadSpans": [],
+          "rankMs": 134.7,
+          "nameLookupOnlyResults": 0,
+          "policies": {
+            "P1_TOP_SYMBOL": {
+              "fired": false,
+              "verdict": "DECLINED",
+              "savedCharacters": 0,
+              "savedTokensEstimated": 0
+            },
+            "P4_TOP_SYMBOL_SCOPE": {
+              "fired": false,
+              "verdict": "DECLINED",
+              "savedCharacters": 0,
+              "savedTokensEstimated": 0
+            },
+            "P2_COVER_TOP_K": {
+              "fired": false,
+              "verdict": "DECLINED",
+              "savedCharacters": 0,
+              "savedTokensEstimated": 0
+            },
+            "P3_COVER_ALL_RANKED": {
+              "fired": false,
+              "verdict": "DECLINED",
+              "savedCharacters": 0,
+              "savedTokensEstimated": 0
+            },
+            "PX_ORACLE_UPPER_BOUND": {
+              "fired": false,
+              "verdict": "DECLINED",
+              "savedCharacters": 0,
+              "savedTokensEstimated": 0
+            }
+          }
+        },
+        {
+          "instanceId": "pylint-dev__pylint-4551",
+          "orderIndex": 4,
+          "filePath": "pylint/pyreverse/diagrams.py",
+          "totalLines": 256,
+          "nativeCharacters": 9898,
+          "nativeTokensEstimated": 3020,
+          "nativeCostUsd": 0.07701,
+          "nativeReproducesFromWorkspace": true,
+          "renderedCharacters": 9898,
+          "rankedInFile": 0,
+          "rankedInFileTop": [],
+          "editAnchors": [],
+          "rereadSpans": [
+            {
+              "first": 115,
+              "last": 139
+            },
+            {
+              "first": 78,
+              "last": 102
+            }
+          ],
+          "rankMs": 134.7,
+          "nameLookupOnlyResults": 0,
+          "policies": {
+            "P1_TOP_SYMBOL": {
+              "fired": false,
+              "verdict": "DECLINED",
+              "savedCharacters": 0,
+              "savedTokensEstimated": 0
+            },
+            "P4_TOP_SYMBOL_SCOPE": {
+              "fired": false,
+              "verdict": "DECLINED",
+              "savedCharacters": 0,
+              "savedTokensEstimated": 0
+            },
+            "P2_COVER_TOP_K": {
+              "fired": false,
+              "verdict": "DECLINED",
+              "savedCharacters": 0,
+              "savedTokensEstimated": 0
+            },
+            "P3_COVER_ALL_RANKED": {
+              "fired": false,
+              "verdict": "DECLINED",
+              "savedCharacters": 0,
+              "savedTokensEstimated": 0
+            },
+            "PX_ORACLE_UPPER_BOUND": {
+              "fired": true,
+              "window": {
+                "first": 58,
+                "last": 159
+              },
+              "deliveredLines": 102,
+              "mediatedCharacters": 4154,
+              "disclosureCharacters": 216,
+              "reductionShare": 0.5803,
+              "savedCharacters": 5744,
+              "savedTokensEstimated": 1753,
+              "savedCostUsdEstimated": 0.04469,
+              "verdict": "SAFE_MEDIATION"
+            }
+          }
+        },
+        {
+          "instanceId": "pylint-dev__pylint-4551",
+          "orderIndex": 26,
+          "filePath": "tests/unittest_pyreverse_inspector.py",
+          "totalLines": 131,
+          "nativeCharacters": 4498,
+          "nativeTokensEstimated": 1372,
+          "nativeCostUsd": 0.02058,
+          "nativeReproducesFromWorkspace": true,
+          "renderedCharacters": 4498,
+          "rankedInFile": 0,
+          "rankedInFileTop": [],
+          "editAnchors": [],
+          "rereadSpans": [],
+          "rankMs": 134.7,
+          "nameLookupOnlyResults": 0,
+          "policies": {
+            "P1_TOP_SYMBOL": {
+              "fired": false,
+              "verdict": "DECLINED",
+              "savedCharacters": 0,
+              "savedTokensEstimated": 0
+            },
+            "P4_TOP_SYMBOL_SCOPE": {
+              "fired": false,
+              "verdict": "DECLINED",
+              "savedCharacters": 0,
+              "savedTokensEstimated": 0
+            },
+            "P2_COVER_TOP_K": {
+              "fired": false,
+              "verdict": "DECLINED",
+              "savedCharacters": 0,
+              "savedTokensEstimated": 0
+            },
+            "P3_COVER_ALL_RANKED": {
+              "fired": false,
+              "verdict": "DECLINED",
+              "savedCharacters": 0,
+              "savedTokensEstimated": 0
+            },
+            "PX_ORACLE_UPPER_BOUND": {
+              "fired": false,
+              "verdict": "DECLINED",
+              "savedCharacters": 0,
+              "savedTokensEstimated": 0
+            }
+          }
+        },
+        {
+          "instanceId": "pylint-dev__pylint-4551",
+          "orderIndex": 27,
+          "filePath": "tests/data/clientmodule_test.py",
+          "totalLines": 30,
+          "nativeCharacters": 859,
+          "nativeTokensEstimated": 262,
+          "nativeCostUsd": 0.003799,
+          "nativeReproducesFromWorkspace": true,
+          "renderedCharacters": 859,
+          "rankedInFile": 0,
+          "rankedInFileTop": [],
+          "editAnchors": [],
+          "rereadSpans": [],
+          "rankMs": 134.7,
+          "nameLookupOnlyResults": 0,
+          "policies": {
+            "P1_TOP_SYMBOL": {
+              "fired": false,
+              "verdict": "DECLINED",
+              "savedCharacters": 0,
+              "savedTokensEstimated": 0
+            },
+            "P4_TOP_SYMBOL_SCOPE": {
+              "fired": false,
+              "verdict": "DECLINED",
+              "savedCharacters": 0,
+              "savedTokensEstimated": 0
+            },
+            "P2_COVER_TOP_K": {
+              "fired": false,
+              "verdict": "DECLINED",
+              "savedCharacters": 0,
+              "savedTokensEstimated": 0
+            },
+            "P3_COVER_ALL_RANKED": {
+              "fired": false,
+              "verdict": "DECLINED",
+              "savedCharacters": 0,
+              "savedTokensEstimated": 0
+            },
+            "PX_ORACLE_UPPER_BOUND": {
+              "fired": false,
+              "verdict": "DECLINED",
+              "savedCharacters": 0,
+              "savedTokensEstimated": 0
+            }
+          }
+        }
+      ]
+    },
+    {
+      "instanceLabel": "pytest_dev__pytest_7432",
+      "instanceId": "pytest-dev__pytest-7432",
+      "status": "REPLAYED",
+      "wholeFileReads": 1,
+      "rankMs": 96.9,
+      "operations": [
+        {
+          "instanceId": "pytest-dev__pytest-7432",
+          "orderIndex": 0,
+          "filePath": "src/_pytest/skipping.py",
+          "totalLines": 315,
+          "nativeCharacters": 11865,
+          "nativeTokensEstimated": 3620,
+          "nativeCostUsd": 0.03982,
+          "nativeReproducesFromWorkspace": true,
+          "renderedCharacters": 11865,
+          "rankedInFile": 19,
+          "rankedInFileTop": [
+            {
+              "fqName": "src/_pytest/skipping.py::pytest_runtest_makereport",
+              "rank": 0,
+              "first": 261,
+              "last": 305
+            },
+            {
+              "fqName": "src/_pytest/skipping.py::Skip",
+              "rank": 2,
+              "first": 153,
+              "last": 156
+            },
+            {
+              "fqName": "src/_pytest/skipping.py::evaluate_skip_marks",
+              "rank": 6,
+              "first": 159,
+              "last": 187
+            },
+            {
+              "fqName": "src/_pytest/skipping.py::pytest_runtest_setup",
+              "rank": 8,
+              "first": 233,
+              "last": 244
+            }
+          ],
+          "editAnchors": [
+            294
+          ],
+          "rereadSpans": [
+            {
+              "first": 260,
+              "last": 319
+            }
+          ],
+          "rankMs": 96.9,
+          "nameLookupOnlyResults": 0,
+          "policies": {
+            "P1_TOP_SYMBOL": {
+              "fired": true,
+              "window": {
+                "first": 241,
+                "last": 315
+              },
+              "deliveredLines": 75,
+              "mediatedCharacters": 3336,
+              "disclosureCharacters": 212,
+              "reductionShare": 0.7188,
+              "savedCharacters": 8529,
+              "savedTokensEstimated": 2602,
+              "savedCostUsdEstimated": 0.028624,
+              "verdict": "RECOVERABLE_OVERPRUNE"
+            },
+            "P4_TOP_SYMBOL_SCOPE": {
+              "fired": true,
+              "window": {
+                "first": 241,
+                "last": 315
+              },
+              "deliveredLines": 75,
+              "mediatedCharacters": 3336,
+              "disclosureCharacters": 212,
+              "reductionShare": 0.7188,
+              "savedCharacters": 8529,
+              "savedTokensEstimated": 2602,
+              "savedCostUsdEstimated": 0.028624,
+              "verdict": "RECOVERABLE_OVERPRUNE"
+            },
+            "P2_COVER_TOP_K": {
+              "fired": true,
+              "window": {
+                "first": 133,
+                "last": 315
+              },
+              "deliveredLines": 183,
+              "mediatedCharacters": 7117,
+              "disclosureCharacters": 212,
+              "reductionShare": 0.4002,
+              "savedCharacters": 4748,
+              "savedTokensEstimated": 1449,
+              "savedCostUsdEstimated": 0.015935,
+              "verdict": "RECOVERABLE_OVERPRUNE"
+            },
+            "P3_COVER_ALL_RANKED": {
+              "fired": false,
+              "verdict": "DECLINED",
+              "savedCharacters": 0,
+              "savedTokensEstimated": 0
+            },
+            "PX_ORACLE_UPPER_BOUND": {
+              "fired": true,
+              "window": {
+                "first": 240,
+                "last": 315
+              },
+              "deliveredLines": 76,
+              "mediatedCharacters": 3341,
+              "disclosureCharacters": 212,
+              "reductionShare": 0.7184,
+              "savedCharacters": 8524,
+              "savedTokensEstimated": 2601,
+              "savedCostUsdEstimated": 0.028607,
+              "verdict": "RECOVERABLE_OVERPRUNE"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "instanceLabel": "scikit_learn__scikit_learn_10844",
+      "instanceId": "scikit-learn__scikit-learn-10844",
+      "status": "NO_FIRE_NO_WHOLE_FILE_READ",
+      "wholeFileReads": 0
+    },
+    {
+      "instanceLabel": "sphinx_doc__sphinx_7462",
+      "instanceId": "sphinx-doc__sphinx-7462",
+      "status": "NO_FIRE_NO_WHOLE_FILE_READ",
+      "wholeFileReads": 0
+    },
+    {
+      "instanceLabel": "sympy__sympy_13480",
+      "instanceId": "sympy__sympy-13480",
+      "status": "NO_FIRE_NO_WHOLE_FILE_READ",
+      "wholeFileReads": 0
+    }
+  ]
+}

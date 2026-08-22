@@ -3944,3 +3944,85 @@ next lever             NO_FURTHER_PROACTIVE_PIPELINE_WORK
   re-running against them is not reproducible without a rebuild. M169
   re-materialised both broad corpora under fresh roots and left the originals
   untouched.
+
+## M170 — transparent agent-workflow integration and automatic reduction qualification (commit pending)
+
+**MIXED. Offline audit; $0.00 live; `src/` byte-identical throughout. No product
+change made and none licensed.**
+
+M169 closed the proactive architecture. M170 asked the opposite question —
+whether VTRACE can sit UNDERNEATH an operation the agent already chose — and
+found a seam that costs nothing and an opportunity that is worth nothing.
+
+```text
+A PASS   investigation surface priced      B PASS   one zero-cost seam, no new capability
+C PASS   counterfactual replayed           D NOT RUN  C did not license it
+E PASS   200 fresh-index cases, both corpora, 0 derivation-invalid
+
+automatic integration verdict   TRANSPARENT_MEDIATION_NOT_ECONOMIC
+product changed                 NO          selected mediation   NONE
+live extension                  NOT AUTHORIZED, NOT REQUESTED
+```
+
+```text
+investigation share of run cost      12.5%   ($0.611 of $4.876, 11 uncensored)
+whole-file reads, share of that      51.8%   10 operations
+whole-file reads, share of run        5.9%
+oracle whole-run ceiling              4.81%  (future-reading selector)
+best implementable whole-run          1.31%
+gate G2 preservation >= 95%           FAIL   66.7% observed / 30.6% A / 33.3% B
+gate G1, G3, G5                       PASS   46.8% reduction, 0 unsafe, 0 fixed tokens
+```
+
+## M170 standing findings
+
+- **`PreToolUse.updatedInput` is the seam, and it is the first architecture here
+  with no fixed tax.** It rewrites the parameters of an operation the agent already
+  chose; the native tool runs; the model makes no extra decision and reads no extra
+  schema. The harness validates the rewrite against the tool's own schema and falls
+  back to the agent's input when it is absent, so fail-open is inherited rather than
+  built. Enabled and never firing it costs 0 model tokens, against the mandatory
+  pipeline's $0.0985 per task. Verified against the shipped binary's own strings.
+
+- **The reachable opportunity is 5.9% of a run and the oracle ceiling is 4.81%.**
+  Investigation is 12.5% of whole-run cost; whole-file reads are half of that; ten
+  operations carry half of all investigation and the largest single one carries
+  12.2%. Operation-local reductions of 47–94% are large fractions of something
+  small. §28 earned its place in the plan.
+
+- **Read's one-contiguous-window schema is the binding constraint, not ranking.**
+  About half of gold-edited files are edited in two or more places (35/72 A,
+  49/103 B) with p90 spreads of 532 and 989 lines. Reduction and gold containment
+  trade monotonically across four policies and both corpora with no acceptable
+  rung: 94% reduction buys 31% containment, 73% containment costs a 22% fire rate.
+  Better retrieval moves a case between rungs; it does not create one.
+
+- **Bounding a Read deletes the harness's own honesty; bounding a Grep does not.**
+  `[Truncated: PARTIAL view — …]` is emitted only when `(offset ?? 1) <= 1 &&
+  limit === undefined`. Supplying a limit suppresses the banner and
+  `truncatedByTokenCap` together. Grep's result mapper, by contrast, appends
+  `[Showing results with pagination = limit: N]` whenever a bound applies. The
+  safe family and the valuable family are therefore not the same family.
+
+- **The agent already narrows its own searches.** 83% of baseline Greps were
+  scoped by `path` or `glob` and 11% carried an explicit `head_limit` — the
+  narrowing a search mediation would apply is one the agent applies to itself.
+  M169's "a skipped search is not a saved search", arriving from the other side.
+
+- **`searchSymbols` is a name lookup and returns zero results for issue prose.**
+  A mediation built on it would have declined on every real task while reporting
+  itself as correctly fail-open. Every producer row in
+  `stage5_m170_seams_and_producers.json` is verified by importing the module.
+
+- **The captured tool-call artifact truncates outputs at 8,192 characters.**
+  django-13658's largest Read is 18,551 characters, not the 8,192 stored. Any
+  investigation cost read from `_tool_calls_with_outputs.json` understates the
+  largest operations by up to 3x. M170 reads the raw stream.
+
+- **Next-step recommendation: keep the seam, drop the mediation, and change the
+  population before changing the design.** Read narrowing has a 4.81% ceiling and
+  no safe rung; no further work on it is licensed. What would change the
+  conclusion is a population where localization is genuinely expensive — this one
+  localizes for a median of $0.052 and half the tasks never issue a whole-file
+  read — or a tool contract admitting more than one window, which is a change to
+  the harness and not to VTRACE.
