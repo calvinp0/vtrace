@@ -3657,3 +3657,79 @@ since M156 was already measured on the competitor's own task set, and Broad100-B
   select the sample until the arm set is fixed. No VTRACE product work is licensed
   by M168 — the gaps it confirmed are in the external benchmark's construction and
   accounting, not in VTRACE.
+
+## M168-E protocol freeze — three-arm VTRACE policy ablation (commit pending)
+
+**Reframed on instruction after M168-A/B/C. Sample and arms frozen; smoke
+controls 9 pass / 0 fail / 5 awaiting a live agent. $0.00 spent, no product
+change, awaiting authorisation for 36 runs under a $50 cap.**
+
+The live phase no longer attempts to reproduce the historical VEXP result — its
+provenance is not recoverable and arm B is blocked on a licence. It asks instead:
+
+> Does the VEXP-published coercive investigation policy change the utility or
+> economics of VTRACE's already-qualified `run_pipeline` treatment?
+
+```text
+A  BASELINE        no VTRACE at all
+B  VTRACE_STRICT   mandate + VEXP prohibition text + Grep|Glob denial hook
+C  VTRACE_CLEAN    mandate only
+
+primary    B vs C      secondary   C vs A,  B vs A
+```
+
+**B and C differ by 191 characters and one hook.** The isolation invariant is
+checked in code and the protocol freeze refuses to write itself if it fails:
+identical MCP config hash, identical tool inventory, identical allowed-tools,
+and `strict − prohibition == clean` byte-for-byte. Both policies travel the same
+channel at the same prompt position (`VTRACE_TASK_TRIGGER_FILE`, last section) —
+the channel M163 built and M164 qualified.
+
+Twelve tasks, one per repository, complexity 14–234, seed 42, drawn from the
+frozen VEXP manifest **before any arm was materialised**, reading only `repo`,
+FAIL_TO_PASS count and gold patch size. The other 88 are untouched holdout.
+Proportional allocation was rejected deliberately: at n=12 it spends five slots
+on django and leaves seven repositories unrepresented, and the primary
+comparison is paired, so task difficulty is already controlled while repository
+shape — the thing a search-suppression policy should interact with — is not.
+
+## M168-E standing findings (pre-execution)
+
+- **The guard's conditionality is inherited, not designed, and it is telemetered.**
+  VEXP denies only while its own engine artifacts exist and exits 0 otherwise, so
+  a dead daemon silently converts the strict arm into an unguarded one. The
+  VTRACE analogue conditions on `.vtrace/index.sqlite`, preserving that failure
+  mode on purpose — but every hook invocation writes its decision to
+  `_m168_guard_events/<label>.jsonl`, so a run whose guard never fired is
+  reported `GUARD_INACTIVE` rather than pooled with guarded runs. The rerun
+  policy names this case in advance and does not rerun it.
+
+- **Reproducing a policy means reproducing its defects, including where it prints.**
+  VEXP's hook writes its denial reason to stdout and exits 2. Whether Claude Code
+  surfaces stdout to the model on a PreToolUse denial is UNKNOWN. If it does not,
+  arm B's agent learns only that something was blocked and may retry blindly —
+  which would change the very economics under measurement. The published
+  behaviour is reproduced exactly rather than corrected, and the visibility
+  question is a named NOT_RUN control resolved by the first live runs.
+
+- **Stated policy stays broader than enforced policy, on purpose.** B's text
+  forbids grep, glob, Bash, Read and cat; the hook denies `Grep` and `Glob`.
+  Narrowing the prose to match the hook would test a policy VEXP never shipped.
+  Both halves are recorded separately in `M168_POLICY_ENFORCEMENT` and nothing in
+  the analysis may read one as evidence of the other.
+
+- **A proven apparatus beat a byte-faithful one, once.** VEXP registers its hook
+  through a repository `.claude/settings.json`; M168 registers it through
+  `--settings`, the path this harness has actually run hooks through since M76.
+  The enforcement semantics are identical and the deviation is recorded. The
+  policy *text* channel was chosen the other way round — for isolation between B
+  and C rather than fidelity to VEXP — because the primary comparison is internal.
+
+- **Cost estimate is grounded in this harness's own history, not a guess.** M164's
+  24 runs: mean $0.7992, median $0.6470, p90 $1.5531. 36 runs projects to $28.77,
+  p90-weighted $55.91, theoretical maximum $108. Requested hard cap **$50**,
+  enforced before every spawn against recorded cost plus a running-average
+  projection, and never raised. Arm B costing *more* than C is a measurement, not
+  an overrun.
+
+- **Next step:** awaiting authorisation. Nothing live runs until it is given.

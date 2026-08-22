@@ -1,0 +1,178 @@
+{
+  "milestone": "M168-D",
+  "spend": "$0.00 — no agent spawned",
+  "smokeInstance": "astropy__astropy-13977",
+  "smokeInstanceDenominatorStatus": "OUT — Broad100-B, disjoint from the VEXP 100",
+  "workspacePreparation": {
+    "reProvenHere": false,
+    "note": "the runner's own workspace/index path is unchanged from M164, where it ran 24 times; per-run readiness is asserted again inside the live sweep rather than mocked here"
+  },
+  "offlineControls": {
+    "pass": 9,
+    "fail": 0
+  },
+  "liveControlsOutstanding": 5,
+  "controls": [
+    {
+      "id": "baseline-leakage",
+      "arm": "baseline",
+      "question": "does the baseline carry any VTRACE server, policy, hook or tool?",
+      "status": "PASS",
+      "detail": {
+        "emittedEnvKeys": []
+      }
+    },
+    {
+      "id": "strict-has-guard",
+      "arm": "vtrace_strict",
+      "question": "does only the strict arm register a PreToolUse hook?",
+      "status": "PASS",
+      "detail": {
+        "strict": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m168_wiring/m168_smoke_vtrace_strict.settings.json",
+        "clean": null
+      }
+    },
+    {
+      "id": "identical-engine-config",
+      "arm": "all",
+      "question": "do B and C get the identical MCP config and tool inventory?",
+      "status": "PASS",
+      "detail": {
+        "configsIdenticalModuloLabel": true,
+        "allowedTools": "mcp__vtrace__run_pipeline,mcp__vtrace__get_impact_graph"
+      }
+    },
+    {
+      "id": "policy-differs-by-exactly-the-prohibition",
+      "arm": "all",
+      "question": "is the coercive policy the ONLY textual difference between B and C?",
+      "status": "PASS",
+      "detail": {
+        "strictChars": 691,
+        "cleanChars": 500,
+        "differenceChars": 191,
+        "prohibitionChars": 191,
+        "bothChannels": "VTRACE_TASK_TRIGGER_FILE, appended as the last prompt section"
+      }
+    },
+    {
+      "id": "guard-matcher-scope",
+      "arm": "vtrace_strict",
+      "question": "does the hook match exactly Grep|Glob and nothing more?",
+      "status": "PASS",
+      "detail": {
+        "matcher": "Grep|Glob"
+      }
+    },
+    {
+      "id": "guard-denies-when-engine-ready",
+      "arm": "vtrace_strict",
+      "question": "does the guard deny with exit 2 when the index exists?",
+      "status": "PASS",
+      "detail": {
+        "exitCode": 2,
+        "message": "DENY: Use mcp__vtrace__run_pipeline instead of Grep/Glob. vtrace index is ready.",
+        "eventLogged": true
+      }
+    },
+    {
+      "id": "guard-allows-when-engine-absent",
+      "arm": "vtrace_strict",
+      "question": "does the guard allow — as VEXP's does — when the engine is not ready?",
+      "status": "PASS",
+      "detail": {
+        "exitCode": 0,
+        "eventLogged": true,
+        "note": "this failure mode is inherited from the published policy on purpose; the event log makes a silently-unguarded run visible in the telemetry"
+      }
+    },
+    {
+      "id": "guard-denial-reason-visibility",
+      "arm": "vtrace_strict",
+      "question": "does the model see WHY a search was denied?",
+      "status": "NOT_RUN",
+      "detail": {
+        "reasonStream": "stdout, exit 2 — reproducing the published script exactly",
+        "modelVisibility": "UNKNOWN",
+        "why": "requires a live agent; if the reason does not reach the model it may retry blindly, which changes the economics the experiment measures. Measured in the live smoke, not assumed here."
+      }
+    },
+    {
+      "id": "tool-inventory-served",
+      "arm": "all",
+      "question": "does the server serve exactly the frozen inventory, under the frozen names?",
+      "status": "PASS",
+      "detail": {
+        "served": [
+          {
+            "name": "run_pipeline",
+            "descriptionChars": 223
+          },
+          {
+            "name": "get_impact_graph",
+            "descriptionChars": 796
+          }
+        ],
+        "expected": [
+          "get_impact_graph",
+          "run_pipeline"
+        ],
+        "serverInfo": {
+          "name": "vtrace_rc1_mcp",
+          "version": "1.0.0"
+        },
+        "agentVisibleName": "mcp__vtrace__run_pipeline"
+      }
+    },
+    {
+      "id": "pipeline-returns-evidence",
+      "arm": "all",
+      "question": "does the mandated first call return repository evidence?",
+      "status": "PASS",
+      "detail": {
+        "status": "VALID_NONEMPTY",
+        "chars": 19387,
+        "preview": "{\"schema\":{\"name\":\"vtrace.mcp_server\",\"version\":\"1.0.0\"},\"requestId\":\"jsonrpc:3:run_pipeline\",\"toolId\":\"run_pipeline\",\"result\":{\"ok\":true,\"output\":{\"schemaVersion\":\"run_pipeline.vnext/1\",\"request\":{\"query\":\"Quantity.__array_ufunc__ returns a plain ndarray instead of raising\",\"maxResults\":6,\"maxBudge",
+        "workspace": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m164_tools_neutral_policy_astropy__astropy_13977/astropy__astropy-13977",
+        "outOfDenominator": "astropy__astropy-13977 is in Broad100-B, not in the 12 or the 88"
+      }
+    },
+    {
+      "id": "first-action-compliance",
+      "arm": "all",
+      "question": "does the agent actually call the mandated tool first, on each VTRACE arm?",
+      "status": "NOT_RUN",
+      "detail": {
+        "reason": "requires a live agent spawn; carried into the authorisation request"
+      }
+    },
+    {
+      "id": "guard-fires-in-anger",
+      "arm": "all",
+      "question": "does the hook deny a Grep the agent actually attempted?",
+      "status": "NOT_RUN",
+      "detail": {
+        "reason": "requires a live agent spawn; carried into the authorisation request"
+      }
+    },
+    {
+      "id": "baseline-sees-no-vtrace",
+      "arm": "all",
+      "question": "does the baseline transcript contain zero VTRACE schemas or calls?",
+      "status": "NOT_RUN",
+      "detail": {
+        "reason": "requires a live agent spawn; carried into the authorisation request"
+      }
+    },
+    {
+      "id": "cost-per-run",
+      "arm": "all",
+      "question": "what does one run of each arm actually cost?",
+      "status": "NOT_RUN",
+      "detail": {
+        "reason": "requires a live agent spawn; carried into the authorisation request"
+      }
+    }
+  ],
+  "verdict": "OFFLINE_CONTROLS_PASS"
+}
