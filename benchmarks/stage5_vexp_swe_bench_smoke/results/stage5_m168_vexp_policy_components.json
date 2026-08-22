@@ -1,0 +1,95 @@
+{
+  "milestone": "M168-A",
+  "source": "https://github.com/Vexp-ai/vexp-swe-bench.git@d658e3457b82b5cb041f586093cc5002008a8cea",
+  "components": [
+    {
+      "component": "mandatory pipeline-first instruction",
+      "channel": "repo .claude/CLAUDE.md written by setupVexpRepo",
+      "statedPolicy": "call `run_pipeline` FIRST for every task",
+      "enforced": false,
+      "enforcementMechanism": "prose only",
+      "bytes": 790,
+      "sha256": "3cae7075d347af4fcf9faebce53acc42185965c28909d64a4a7a9d2ab23a26f3"
+    },
+    {
+      "component": "native-search prohibition text",
+      "channel": "same CLAUDE.md",
+      "statedPolicy": "Do NOT use grep, glob, Bash, Read, or cat to search/explore the codebase",
+      "enforced": false,
+      "enforcementMechanism": "prose only — note it names five tools",
+      "sha256": "3cae7075d347af4fcf9faebce53acc42185965c28909d64a4a7a9d2ab23a26f3"
+    },
+    {
+      "component": "PreToolUse denial hook",
+      "channel": "repo .claude/settings.json + .claude/hooks/vexp-guard.sh",
+      "statedPolicy": "matcher Grep|Glob → exit 2 (deny)",
+      "enforced": true,
+      "enforcementMechanism": "shell hook; denies ONLY when both .vexp/daemon.sock and .vexp/healthy exist, otherwise exits 0 and the tool call proceeds",
+      "hookMatcher": "Grep|Glob",
+      "hookDeniesTools": [
+        "Grep",
+        "Glob"
+      ],
+      "hookDoesNotDenyTools": [
+        "Bash",
+        "Read",
+        "cat via Bash"
+      ],
+      "bytes": 235,
+      "sha256": "f14b4f8a57c8b4c3ce59c0d1ce0d2b72d22a6138c74c57377218268cae31b1db",
+      "note": "the hook script interpolates the absolute repo path, so per-run bytes differ; the hash above is of the template at the pinned commit"
+    },
+    {
+      "component": "MCP server exposure",
+      "channel": ".bench-mcp-config.json passed as --mcp-config --strict-mcp-config",
+      "statedPolicy": "server key `vexp`, command `npx -y vexp-mcp`",
+      "enforced": true,
+      "enforcementMechanism": "Claude Code MCP config",
+      "note": "server key `vexp` implies agent-visible tool ids of the form mcp__vexp__<tool>"
+    },
+    {
+      "component": "index lifecycle",
+      "channel": "npx -y vexp-cli index (once per repository)",
+      "enforced": true,
+      "enforcementMechanism": "child process; failures are WARNED AND SWALLOWED, run continues unindexed"
+    },
+    {
+      "component": "daemon lifecycle",
+      "channel": "npx -y vexp-cli daemon --workspace <repo> (once per task)",
+      "enforced": true,
+      "enforcementMechanism": "child process; a daemon that is not ready in 120s only prints a warning, and because the guard requires a live socket, a dead daemon silently disables the search denial"
+    },
+    {
+      "component": "normal tool whitelist",
+      "channel": "--allowedTools",
+      "enforced": true,
+      "allowedTools": [
+        "Edit",
+        "Write",
+        "Bash",
+        "Read",
+        "Glob",
+        "Grep",
+        "TodoWrite"
+      ],
+      "note": "identical for the vexp arm and the --no-vexp baseline"
+    }
+  ],
+  "statedVersusEnforced": {
+    "instructionSaysBlocked": [
+      "grep",
+      "glob",
+      "Bash",
+      "Read",
+      "cat"
+    ],
+    "hookActuallyBlocks": [
+      "Grep",
+      "Glob"
+    ],
+    "hookBlocksOnlyWhen": "daemon socket AND healthy marker both present",
+    "gap": "Bash, Read and shell `cat` are prohibited in prose but never enforced"
+  },
+  "claudeMdText": "## vexp — Context-Aware AI Coding\n\n### MANDATORY: use vexp pipeline\nFor every task — bug fixes, features, refactors, debugging:\n**call \\`run_pipeline\\` FIRST**. It executes context search + impact analysis +\nmemory recall in a single call, returning compressed results.\n\nDo NOT use grep, glob, Bash, Read, or cat to search/explore the codebase.\nvexp returns pre-indexed, graph-ranked context that is more relevant and\nuses fewer tokens than manual searching.\n\n### Primary Tool\n- \\`run_pipeline\\` — **USE THIS FOR EVERYTHING**. Single call that runs\n  capsule + impact + memory server-side.\n\n### Workflow\n1. \\`run_pipeline(\"your task\")\\` — ALWAYS FIRST\n2. Make targeted changes based on the context returned\n3. Only call \\`run_pipeline\\` again if you need more context during implementation\n",
+  "guardScriptTemplate": "#!/usr/bin/env bash\nSOCK=\"${repoPath}/.vexp/daemon.sock\"\nHEALTHY=\"${repoPath}/.vexp/healthy\"\nif [ -S \"$SOCK\" ] && [ -f \"$HEALTHY\" ]; then\n  echo \"DENY: Use run_pipeline instead of Grep/Glob. vexp daemon is running.\"\n  exit 2\nfi\nexit 0\n"
+}

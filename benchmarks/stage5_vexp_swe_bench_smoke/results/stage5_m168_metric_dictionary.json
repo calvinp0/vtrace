@@ -1,0 +1,65 @@
+{
+  "milestone": "M168-B",
+  "rule": "No number crosses from one column to the other until both columns name the same measurement boundary. Inherited from M166: SERIALIZED TOKENS != MODEL-CONTEXT TOKENS until directly measured.",
+  "metrics": [
+    {
+      "metric": "cost per task",
+      "vexpDefinition": "mean of RunResult.costUsd, which is Claude Code's self-reported total_cost_usd on 95/100 rows and the harness's own re-priced token sum on the 5 cost-limit kills",
+      "vtraceDefinition": "same runtime source (Claude Code total_cost_usd) in the Stage 5 harness",
+      "comparable": "YES, if and only if both arms are run under the same harness in the same window",
+      "note": "the two accountings inside VEXP's own published file disagree: re-pricing its token columns with its own price table yields a different mean than its cost column"
+    },
+    {
+      "metric": "tokens used / tokens saved / saving %",
+      "vexpDefinition": "(token_budget - tokens_used) / token_budget read from the latest row of the capsule_feedback table in .vexp/index.db — a product-internal estimate of how much of its OWN context budget the capsule consumed",
+      "vtraceDefinition": "vtraceContextBudget telemetry — also a product-internal budget accounting, also not model tokens",
+      "comparable": "NO",
+      "reason": "neither quantity is a model-context token count, and neither is measured against a counterfactual in which the tool was absent",
+      "observedInPublishedArtifact": "null on 100/100 rows — never collected"
+    },
+    {
+      "metric": "input tokens",
+      "vexpDefinition": "sum of usage.input_tokens over assistant events — UNCACHED input only",
+      "vtraceDefinition": "same field in the Stage 5 harness",
+      "comparable": "YES",
+      "note": "median 2 tokens in the published artifact; 100.0% of all traffic is cache read/write, so \"input tokens\" is a near-empty column and must never be read as the model's context size"
+    },
+    {
+      "metric": "cache read / cache creation tokens",
+      "vexpDefinition": "summed from assistant-event usage",
+      "vtraceDefinition": "same",
+      "comparable": "YES"
+    },
+    {
+      "metric": "total model traffic",
+      "vexpDefinition": "not reported; derivable as input + output + cacheRead + cacheCreation",
+      "vtraceDefinition": "same derivation",
+      "comparable": "YES"
+    },
+    {
+      "metric": "~60% fewer tokens (run_pipeline tool description)",
+      "vexpDefinition": "UNKNOWN — no measurement, baseline or boundary is published with the claim",
+      "vtraceDefinition": "n/a",
+      "comparable": "NO"
+    },
+    {
+      "metric": "70-90% token savings vs Read (get_skeleton tool description)",
+      "vexpDefinition": "UNKNOWN — presumably payload size of a skeleton against full file content",
+      "vtraceDefinition": "VTRACE makes the analogous structural claim but M166/M167 showed payload-size reductions do not convert to model-token reductions in an envelope-bound response",
+      "comparable": "NO"
+    },
+    {
+      "metric": "58% lower cost per task / 90% fewer tool calls (npm package description)",
+      "vexpDefinition": "UNKNOWN — no baseline named, not reproducible from any artifact in the harness",
+      "vtraceDefinition": "n/a",
+      "comparable": "NO"
+    },
+    {
+      "metric": "competitor $/task on the public leaderboard",
+      "vexpDefinition": "each competitor's own published figure, imported from data/external and their leaderboards",
+      "vtraceDefinition": "n/a",
+      "comparable": "NO",
+      "reason": "VEXP's column is a caching-heavy Claude Code cost while the competitors' columns come from unrelated scaffolds and their own accounting; the harness never runs those agents itself"
+    }
+  ]
+}

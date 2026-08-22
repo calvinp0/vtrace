@@ -1,0 +1,144 @@
+{
+  "milestone": "M168-C",
+  "vexpSurface": {
+    "system": "vexp-cli@2.0.24 (default)",
+    "visible": [
+      {
+        "toolId": "run_pipeline",
+        "descriptionChars": 949
+      },
+      {
+        "toolId": "get_skeleton",
+        "descriptionChars": 718
+      },
+      {
+        "toolId": "index_status",
+        "descriptionChars": 208
+      },
+      {
+        "toolId": "expand_vexp_ref",
+        "descriptionChars": 306
+      }
+    ],
+    "hiddenCount": 7
+  },
+  "vtraceSurface": {
+    "system": "vtrace (default registry)",
+    "visible": [
+      {
+        "toolId": "get_code_context",
+        "descriptionChars": 1360
+      },
+      {
+        "toolId": "run_pipeline",
+        "descriptionChars": 223
+      },
+      {
+        "toolId": "index_repo",
+        "descriptionChars": 139
+      },
+      {
+        "toolId": "check_capsule_staleness",
+        "descriptionChars": 74
+      },
+      {
+        "toolId": "get_context_capsule",
+        "descriptionChars": 72
+      },
+      {
+        "toolId": "get_impact_graph",
+        "descriptionChars": 796
+      },
+      {
+        "toolId": "search_logic_flow",
+        "descriptionChars": 349
+      },
+      {
+        "toolId": "get_skeleton",
+        "descriptionChars": 74
+      },
+      {
+        "toolId": "index_status",
+        "descriptionChars": 67
+      },
+      {
+        "toolId": "workspace_setup",
+        "descriptionChars": 75
+      },
+      {
+        "toolId": "get_session_context",
+        "descriptionChars": 133
+      },
+      {
+        "toolId": "search_memory",
+        "descriptionChars": 109
+      },
+      {
+        "toolId": "save_observation",
+        "descriptionChars": 74
+      },
+      {
+        "toolId": "expand_vexp_ref",
+        "descriptionChars": 154
+      }
+    ],
+    "hiddenCount": 7
+  },
+  "vexpAllToolsGate": "VEXP_ALL_TOOLS=1 promotes the other seven into tools/list",
+  "differential": {
+    "left": "vtrace (default registry)",
+    "right": "vexp-cli@2.0.24 (default)",
+    "leftVisibleCount": 14,
+    "rightVisibleCount": 4,
+    "sharedToolIds": [
+      "expand_vexp_ref",
+      "get_skeleton",
+      "index_status",
+      "run_pipeline"
+    ],
+    "leftOnlyToolIds": [
+      "check_capsule_staleness",
+      "get_code_context",
+      "get_context_capsule",
+      "get_impact_graph",
+      "get_session_context",
+      "index_repo",
+      "save_observation",
+      "search_logic_flow",
+      "search_memory",
+      "workspace_setup"
+    ],
+    "rightOnlyToolIds": [],
+    "leftDescriptionChars": 3699,
+    "rightDescriptionChars": 2181,
+    "sharedDescriptionChars": [
+      {
+        "toolId": "expand_vexp_ref",
+        "left": 154,
+        "right": 306
+      },
+      {
+        "toolId": "get_skeleton",
+        "left": 74,
+        "right": 718
+      },
+      {
+        "toolId": "index_status",
+        "left": 67,
+        "right": 208
+      },
+      {
+        "toolId": "run_pipeline",
+        "left": 223,
+        "right": 949
+      }
+    ],
+    "identical": false
+  },
+  "observations": [
+    "VTRACE serves 14 tools by default; VEXP serves 4",
+    "VEXP's four visible descriptions total 2181 chars against VTRACE's 3699 across fourteen — VEXP spends more words on fewer doors",
+    "on the one tool both call run_pipeline, VEXP's description asserts primacy (PRIMARY TOOL / ALWAYS call this first / ALWAYS prefer this over Read, Grep, Glob) while VTRACE's is a bare alias pointer to get_code_context",
+    "VTRACE already has createRestrictedMcpToolRegistry, so matching VEXP's narrow surface is a configuration of shipped behaviour and needs no product change"
+  ]
+}

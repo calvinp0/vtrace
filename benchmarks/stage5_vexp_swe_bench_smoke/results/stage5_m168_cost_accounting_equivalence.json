@@ -1,0 +1,49 @@
+{
+  "milestone": "M168-B",
+  "pricingTable": {
+    "inputPerMTok": 5,
+    "outputPerMTok": 25,
+    "cacheReadPerMTok": 0.5,
+    "cacheWritePerMTok": 6.25
+  },
+  "pricingSource": "https://github.com/Vexp-ai/vexp-swe-bench.git@d658e3457b82b5cb041f586093cc5002008a8cea:src/metrics/pricing.ts",
+  "reconciliation": {
+    "rowCount": 100,
+    "agreeingRows": 5,
+    "disagreeingRows": 95,
+    "maxAbsoluteDeltaUsd": 1.3867852,
+    "medianRatio": 1.2267394494199348,
+    "publishedMeanCostUsd": 0.6720689724999996,
+    "repricedMeanCostUsd": 0.82975048,
+    "meanCostGapPct": 23.462101949662674,
+    "agreeingRowIds": [
+      "django__django-15503",
+      "django__django-16263",
+      "django__django-16819",
+      "django__django-17084",
+      "sympy__sympy-16792"
+    ],
+    "verdict": "ACCOUNTING_METRICS_PARTIALLY_EQUIVALENT"
+  },
+  "agreeingRowsAreCostLimitKills": {
+    "agreeingRows": 5,
+    "ofWhichAtOrAboveCostLimit": 5,
+    "costLimitUsd": 3,
+    "mechanism": "parseStreamJson returns early on the stream's `result` event and reports Claude Code's own total_cost_usd. A run killed at the cost limit never emits that event, so the harness falls back to calculateCost over its own token sums — which is why exactly those rows re-price exactly.",
+    "confirmed": true
+  },
+  "tokenTotals": {
+    "input": 11666,
+    "output": 17853,
+    "cacheRead": 109603261,
+    "cacheCreation": 4427002,
+    "totalModelTraffic": 114059782
+  },
+  "costDecompositionPct": {
+    "input": 0.07029824194859158,
+    "output": 0.5379026716561828,
+    "cacheRead": 66.04591599633663,
+    "cacheCreation": 33.34588309005859
+  },
+  "verdict": "ACCOUNTING_METRICS_PARTIALLY_EQUIVALENT"
+}

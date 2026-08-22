@@ -1,0 +1,63 @@
+{
+  "milestone": "M168-A",
+  "generatedBy": "run_stage5_m168_authority.ts",
+  "benchmarkRepository": "https://github.com/Vexp-ai/vexp-swe-bench.git",
+  "benchmarkCommit": "d658e3457b82b5cb041f586093cc5002008a8cea",
+  "benchmarkCommitAuthor": "Nicola Alessi",
+  "benchmarkCommitDate": "2026-03-22T19:04:18+01:00",
+  "benchmarkCommitSubject": "Update repository URL in README",
+  "benchmarkPackageName": "vexp-swe-bench",
+  "benchmarkPackageVersion": "0.1.0",
+  "localCheckoutPath": "/home/calvin/code/vexp-swe-bench",
+  "localWorkingTreeDrift": [
+    {
+      "status": "M",
+      "path": "dist/agents/claude-code.js"
+    },
+    {
+      "status": "D",
+      "path": "plots/01-comparison-leaderboard.png"
+    },
+    {
+      "status": "D",
+      "path": "plots/02-per-repo-comparison.png"
+    },
+    {
+      "status": "D",
+      "path": "plots/03-resolution-delta.png"
+    },
+    {
+      "status": "M",
+      "path": "results/eval-logs/predictions.jsonl"
+    },
+    {
+      "status": "D",
+      "path": "results/swebench-2026-03-22.jsonl"
+    }
+  ],
+  "localWorkingTreeIsPristine": false,
+  "publishedDefaults": {
+    "model": "claude-opus-4-5-20251101",
+    "agent": "claude-code",
+    "maxTurns": 250,
+    "costLimitUsd": 3,
+    "timeoutSeconds": 0,
+    "source": "README.md `run` options + src/cli.ts defaults at the pinned commit"
+  },
+  "vexpRuntime": {
+    "minimumVersionRequiredByHarness": "1.2.0 (src/vexp/ensure.ts MIN_VERSION)",
+    "versionUsedForThePublishedBenchmark": "UNKNOWN",
+    "versionInstalledOnThisMachine": "2.0.24",
+    "licenceRequired": "vexp Pro or Team (src/vexp/ensure.ts VALID_PLANS)",
+    "licenceStateOnThisMachine": "ABSENT",
+    "nativeCoreInstalledOnThisMachine": false
+  },
+  "grader": "SWE-bench Verified official Docker evaluation (swebench python package)",
+  "unknowns": [
+    "vexp-cli version used for the published benchmark",
+    "vexp-core version used for the published benchmark",
+    "Claude Code CLI version used for the published benchmark",
+    "host/hardware and concurrency of the published benchmark",
+    "whether the published run used the strict policy shipped at this commit"
+  ]
+}

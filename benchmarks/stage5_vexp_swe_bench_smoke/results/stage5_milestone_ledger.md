@@ -3545,3 +3545,115 @@ and 2/12 disclosed-omitted, 0 silent; index writes 0.
   `diagnostics.sectionDecisionsOmitted`. Pre-existing behaviour, unchanged here — but
   the level a maintainer switches to in order to see everything can still, truthfully,
   hold things back.
+
+## M168 — VEXP benchmark protocol reproduction and differential attribution (commit pending)
+
+**A PASS · B PASS · C MIXED · D BLOCKED · E NOT AUTHORISED.
+M168 stopped before spend.** No product change, no live agent, $0.00 spent.
+
+```text
+protocol verdict:      PARTIAL_PROTOCOL_REPRODUCTION
+accounting verdict:    ACCOUNTING_METRICS_PARTIALLY_EQUIVALENT
+                       (ACCOUNTING_DEFINITION_GAP_CONFIRMED inside VEXP's own artifact)
+product changed:       NO
+retrieval changed:     NO
+live extension:        AWAITING A DECISION (three options, section 7 of the report)
+```
+
+M165–M167 ruled out the internal explanations for M164's null. M168 turned outward
+and froze the competitor's public benchmark: `Vexp-ai/vexp-swe-bench @ d658e345`,
+2026-03-22, 100 tasks, Opus 4.5, 250 turns, $3/task, official Docker grading.
+
+**The published 73% is backed by real grading and does not evidence a marginal VEXP
+effect.** 98 official `report.json` files are committed and tally 73 resolved. The
+same commit's telemetry does not match the same commit's treatment:
+
+```text
+timestamps      100 rows on an exact 300s grid, ordered by instance id;
+                durations sum to 16,927s across a 29,700s span
+vexpMetrics     null 100/100 — never collected
+run_pipeline    5/100 rows, under a policy mandating it first on every task
+Grep / Glob     79/100 rows, 487 calls, under a hook configured to deny both
+tool naming     two spellings in one file, neither matching the harness's own
+                MCP config key
+eval logs       one directory, 7 distinct evaluation run ids, 1 of 99 files
+                citing the directory's own id
+```
+
+**The accounting disagrees with itself by 23.5%.** Re-pricing the published token
+columns with the published price table gives $0.8298/task against the published
+$0.6721. Mechanism confirmed, not guessed: 95 rows report Claude Code's
+`total_cost_usd`; the 5 that re-price exactly are exactly the 5 killed at the $3
+cost limit, which never emit the `result` event the parser short-circuits on.
+
+**Surfaces differ where it is most expensive.** VTRACE serves 14 tools by default,
+VEXP 4 (11 registered, gated behind `VEXP_ALL_TOOLS`). VEXP spends 2,181
+description chars on those 4; VTRACE 3,699 on 14. On the shared `run_pipeline`,
+VEXP writes 949 chars of primacy and displacement, VTRACE 223 of alias pointer.
+
+**Broad100-A is the VEXP manifest, exactly.** VTRACE's broad retrieval evidence
+since M156 was already measured on the competitor's own task set, and Broad100-B
+(with the M162/M164 pilot inside it) is disjoint, so a clean holdout already exists.
+
+## M168 standing findings
+
+- **A benchmark result and a benchmark treatment are separate claims, and an
+  artifact can carry the first without the second.** The grading logs are real
+  SWE-bench Docker output; the run rows beside them show the mandated tool on 5% of
+  tasks and the denied tools on 79%. Nothing here says the score is wrong — it says
+  the artifact cannot tell you what produced it. Any future milestone that plans to
+  reproduce an external protocol must check treatment-compliance telemetry *before*
+  budgeting the reproduction, because that check is cheap and it can invalidate the
+  whole experiment. Here it cost an afternoon and saved 48 live runs.
+
+- **Stated policy is not enforced policy, and the difference is where the behaviour
+  lives.** VEXP's CLAUDE.md forbids grep, glob, Bash, Read and cat; its hook denies
+  `Grep` and `Glob`, and only while a daemon socket and a healthy marker both exist.
+  Index failure and daemon failure are both caught, warned and continued past. A
+  strict arm can therefore degrade into an unguarded arm without anything in the
+  result row saying so. Any VTRACE parity scaffold must record enforcement events,
+  not policy intent — §55 was right and this is why.
+
+- **Two accountings in one file is the M166 invariant meeting an external case.**
+  `SERIALIZED TOKENS != MODEL-CONTEXT TOKENS until directly measured` now has a
+  sibling: *a cost column and a token column are two measurements until one is
+  derived from the other*. The 23.5% gap is not an error by either party — it is
+  the difference between what a provider bills and what a stream sums. The rule
+  going forward: a cross-system economic comparison names its boundary or it is not
+  a comparison. VEXP's own "tokens saved" is a third boundary again — capsule
+  budget consumed, not model tokens, and never against a tool-absent counterfactual
+  — which makes it NOT COMPARABLE to anything VTRACE reports, including VTRACE's
+  own `vtraceContextBudget`.
+
+- **The contradiction M168 existed to resolve was never a contradiction.** M164's
+  neutral marginal utility and the public 73% are not in tension, because the
+  public number has no paired no-VEXP baseline. The leaderboard sets a
+  caching-heavy Claude Code cost against competitors' own published figures from
+  unrelated scaffolds that this harness never runs. `BENCHMARK_SCAFFOLD_GAP` and
+  `ACCOUNTING_DEFINITION_GAP` are supported; `RETRIEVAL_QUALITY_GAP` and
+  `AGENT_POLICY_GAP` remain untested and no longer have an external result
+  demanding that they be true.
+
+- **The competitor is not runnable here, and the runnable version is the wrong
+  one.** `@vexp/core-linux-x64` never installed, vexp-cli 2.0.24 hard-gates every
+  command behind an upgrade to 2.7.0, and the benchmark path requires a Pro/Team
+  licence. Upgrading yields current-default policy, five minor versions past
+  anything the March run could have used and past VEXP's own reported policy
+  change. Arm B can only ever be
+  `FAITHFUL_PROTOCOL_REPRODUCTION_WITH_RUNTIME_DRIFT`, never a reproduction of the
+  published claim. The published-versus-current distinction (§13) turned out to be
+  the binding constraint, not a bookkeeping nicety.
+
+- **The most valuable remaining experiment does not need the competitor.** A / C / D
+  — clean baseline, VTRACE under VEXP-shaped coercion, VTRACE with the pipeline
+  offered but native tools free — isolates policy from retrieval, which is the one
+  live variable M162 through M167 never manipulated. It needs no licence and no
+  competitor install, and `createRestrictedMcpToolRegistry` means the narrow-surface
+  arm is a configuration of shipped behaviour rather than a product change.
+
+- **Next-step recommendation:** run the three-arm A/C/D differential on 12 tasks
+  drawn from the frozen VEXP manifest (Broad100-A, where VTRACE-side retrieval
+  evidence is already in hand), holding Broad100-B clean for extension. Do not
+  select the sample until the arm set is fixed. No VTRACE product work is licensed
+  by M168 — the gaps it confirmed are in the external benchmark's construction and
+  accounting, not in VTRACE.
