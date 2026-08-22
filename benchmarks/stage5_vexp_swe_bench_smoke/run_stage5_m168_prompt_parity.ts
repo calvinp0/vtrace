@@ -26,6 +26,7 @@ import {
 
 const RESULTS = path.resolve("benchmarks/stage5_vexp_swe_bench_smoke/results");
 const RUNS = path.join(RESULTS, "runs");
+const WIRING_DIR = path.join(RESULTS, "_m168_wiring");
 
 /** The marker the runner stamps on the block, and the adapter's injection log. */
 const DISCIPLINE_MARKER = "## STAGE5_TOOL_USE_DISCIPLINE";
@@ -50,16 +51,24 @@ interface ParityRow {
   runnerFlagInjected: boolean | null;
   /** Independent: the patched adapter logs unconditionally when the env is set. */
   adapterLoggedDisciplineInjection: boolean;
-  /** Independent: the block's own marker anywhere in the captured transcript. */
-  disciplineMarkerInTranscript: boolean;
-  tokenDisciplineMarkerInTranscript: boolean;
+  /**
+   * The prompt is passed to the agent via argv and is NOT echoed into the
+   * stream, so the transcript cannot answer "was this text in the prompt".
+   * Recorded as an explicit unobservable rather than scored as an absence —
+   * a check that can only ever return false is not a control.
+   */
+  promptTextObservableInTranscript: false;
   /** The arm's own policy must be present exactly when it should be. */
   adapterLoggedPolicyInjection: boolean;
   policyExpected: boolean;
-  prohibitionInTranscript: boolean;
+  /** Sourced from the injected policy FILE, which is the byte-exact artifact. */
+  policyFileExists: boolean;
+  policyFileMatchesArm: boolean;
+  prohibitionInPolicyFile: boolean;
   prohibitionExpected: boolean;
-  mandateToolNameInTranscript: boolean;
-  mandateExpected: boolean;
+  /** Tool NAMES do appear in the transcript, as tool_use events. */
+  vtraceToolCallsInTranscript: number;
+  vtraceToolCallsExpected: boolean;
   verdict: "PASS" | "FAIL";
   failures: string[];
 }
@@ -87,6 +96,8 @@ for (const label of existsSync(RUNS) ? readdirSync(RUNS).sort() : []) {
 
   const policyText = claudeMdForArm(arm);
   const policyExpected = policyText !== null;
+  // The bytes actually handed to the agent for this run.
+  const policyFile = read(path.join(WIRING_DIR, `${label}.policy.md`));
   const prohibitionExpected = arm === "vtrace_strict";
 
   const row: ParityRow = {
@@ -97,14 +108,15 @@ for (const label of existsSync(RUNS) ? readdirSync(RUNS).sort() : []) {
     runnerFlagInjected: typeof meta.stage5ToolUseDisciplineInjected === "boolean"
       ? meta.stage5ToolUseDisciplineInjected : null,
     adapterLoggedDisciplineInjection: stderr.includes(DISCIPLINE_INJECTION_LOG),
-    disciplineMarkerInTranscript: transcript.includes(DISCIPLINE_MARKER),
-    tokenDisciplineMarkerInTranscript: transcript.includes(TOKEN_DISCIPLINE_MARKER),
+    promptTextObservableInTranscript: false,
     adapterLoggedPolicyInjection: stderr.includes(TRIGGER_INJECTION_LOG),
     policyExpected,
-    prohibitionInTranscript: transcript.includes(M168_PROHIBITION_TEXT.trim().split("\n")[0]!),
+    policyFileExists: policyFile !== "",
+    policyFileMatchesArm: policyText !== null && policyFile === policyText,
+    prohibitionInPolicyFile: policyFile.includes(M168_PROHIBITION_TEXT),
     prohibitionExpected,
-    mandateToolNameInTranscript: transcript.includes(M168_PIPELINE_TOOL_NAME),
-    mandateExpected: policyExpected,
+    vtraceToolCallsInTranscript: (transcript.match(/mcp__vtrace__/g) ?? []).length,
+    vtraceToolCallsExpected: arm !== "baseline",
     verdict: "PASS",
     failures: [],
   };
@@ -119,12 +131,7 @@ for (const label of existsSync(RUNS) ? readdirSync(RUNS).sort() : []) {
   if (row.adapterLoggedDisciplineInjection) {
     row.failures.push("the adapter logged a discipline injection — the env var was set");
   }
-  if (row.disciplineMarkerInTranscript) {
-    row.failures.push("the discipline marker appears in the captured transcript");
-  }
-  if (row.tokenDisciplineMarkerInTranscript) {
-    row.failures.push("the token-discipline marker appears in the captured transcript");
-  }
+  // No transcript-sourced discipline assertion: see promptTextObservableInTranscript.
 
   // ── each arm carries exactly its own policy, no more and no less ──
   if (row.adapterLoggedPolicyInjection !== policyExpected) {
@@ -134,15 +141,21 @@ for (const label of existsSync(RUNS) ? readdirSync(RUNS).sort() : []) {
         : "the baseline received a policy injection",
     );
   }
-  if (row.prohibitionInTranscript !== prohibitionExpected) {
+  if (policyExpected && !row.policyFileMatchesArm) {
+    row.failures.push("the injected policy file does not match this arm's frozen bytes");
+  }
+  if (row.prohibitionInPolicyFile !== prohibitionExpected) {
     row.failures.push(
       prohibitionExpected
-        ? "the strict arm's prohibition is absent from the transcript"
-        : "a non-strict arm carries the prohibition text",
+        ? "the strict arm's policy file is missing the prohibition"
+        : "a non-strict arm's policy file carries the prohibition",
     );
   }
-  if (arm === "baseline" && row.mandateToolNameInTranscript) {
-    row.failures.push("the baseline transcript mentions the VTRACE pipeline tool");
+  if (arm === "baseline" && row.vtraceToolCallsInTranscript > 0) {
+    row.failures.push("the baseline transcript contains VTRACE tool calls");
+  }
+  if (arm !== "baseline" && row.vtraceToolCallsInTranscript === 0) {
+    row.failures.push("a treatment arm made no VTRACE tool call at all");
   }
 
   row.verdict = row.failures.length === 0 ? "PASS" : "FAIL";
@@ -158,12 +171,19 @@ const report = {
     runnerBookkeeping: ["stage5ToolUseDisciplineDisabledByFlag", "stage5ToolUseDisciplineInjected"],
     independent: [
       `patched adapter stderr: "${DISCIPLINE_INJECTION_LOG}" must be absent`,
-      `captured transcript: "${DISCIPLINE_MARKER}" must be absent`,
-      `captured transcript: "${TOKEN_DISCIPLINE_MARKER}" must be absent`,
+      "injected policy file bytes must equal the arm's frozen policy",
+      "baseline transcript must contain zero mcp__vtrace__ tool calls",
     ],
-    note:
-      "the runner's flag alone would not catch a prompt that carries the text anyway, "
-      + "which is the failure this control exists for",
+    unobservable: {
+      what: "whether a given string was in the agent's prompt",
+      why: "the prompt is passed via argv and is never echoed into the stream; "
+        + `neither "${DISCIPLINE_MARKER}" nor "${TOKEN_DISCIPLINE_MARKER}" nor the `
+        + "policy text can appear there, so scanning for them would be a check that "
+        + "cannot fail. Recorded as unobservable rather than scored as absence.",
+      substitutedBy:
+        "the patched adapter's own injection log, which DID fire on the discarded "
+        + "pre-fix run and does not fire now — a signal with a known positive",
+    },
   },
   runsChecked: rows.length,
   pass: rows.length - failed.length,
