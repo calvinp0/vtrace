@@ -135,6 +135,92 @@ const INDEX_FRESHNESS_ESSENTIAL = Object.freeze([
 const QUERY_REFERENCE = "@request.task";
 
 /**
+ * What stands in place of the caller's own prose in the default projection.
+ *
+ * Frozen — never re-worded per call. It is a sentence rather than a deletion
+ * because a silently absent field would make its ABSENCE informative, and this
+ * response's whole design rests on omission carrying no claim. It states who
+ * supplied the text and where the text still is.
+ */
+export const REQUEST_PROSE_OMITTED =
+  "@omitted: supplied by the caller; returned verbatim at detail=debug";
+
+/**
+ * Project the request block for the model, keeping the whole of it for a
+ * maintainer.
+ *
+ * WHAT WENT WRONG. Every large field in this response yields to the ceiling
+ * except one. The tier immediately below already deduplicates repeated task text
+ * — `taskSummary.query`, `taskSummary.normalizedQuery`, `capsuleResult.query` all
+ * become `@request.task` — and deliberately exempts `request` itself, on the
+ * grounds that it echoes the caller verbatim and is therefore a correctness
+ * surface. That is a sound rule for a field somebody reads. M175-A went looking
+ * for the readers: there are none in the product. The shipped block's only
+ * consumers anywhere in the repository are two assertions in `mcp.test.ts`, both
+ * issued at `detail=debug`, and a benchmark analyzer that counts it AS duplication.
+ *
+ * Meanwhile `request.task` is assigned `orchestration.request.query` at
+ * formatRunPipelineOutput.ts:211 — the same string under a second key, identical
+ * in 199 of 199 captured responses. So the one field the ladder could not touch
+ * was the caller's own question, carried twice.
+ *
+ * WHAT IT COST. M174 measured a response in which retrieval had succeeded with ten
+ * items and a correct lead pivot, and the agent received none of them: 6,435
+ * tokens of metadata against 3,731 of evidence under a 9,200 ceiling, a deficit of
+ * 966 tokens, with 5,087 tokens of that metadata being the question echoed back.
+ * The ladder had nothing left to give up but the evidence, so it gave up the
+ * evidence and advised the caller to raise `max_tokens`.
+ *
+ * THE PROPERTY THIS RESTORES. The request block's cost was unbounded in the
+ * caller's own input — a median of 644 tokens on Broad100-A and 878 on
+ * Broad100-B, reaching 12,923 on the longest question. It is now a constant 65,
+ * whatever is asked. That is the point: no question can be long enough to
+ * outbid the repository evidence, because the question is no longer what is
+ * being weighed.
+ *
+ * NOT A DELETION, AND NOT A BUDGET MEASURE. The block keeps its shape, its
+ * resolved parameters (`maxResults`, `maxBudgetCharacters`, `includeTests`, …)
+ * and its place in the schema; two field VALUES change. It is applied
+ * unconditionally rather than as another rung, because "reference the request,
+ * do not restate it" is the default contract and not an emergency: a rung would
+ * leave the echo present on every response that happens to fit, and make the
+ * evidence's survival depend on the order of the ladder.
+ *
+ * `detail=debug` returns the request whole and is not routed through here.
+ */
+function projectRequestDisclosure(
+  draft: JsonRecord,
+  options: {
+    readonly detail: McpResponseDetail;
+    readonly compactedFields: string[];
+    readonly omitted: Record<string, number>;
+  },
+): void {
+  if (options.detail === McpResponseDetail.Debug) return;
+  const request = asRecord(draft.request);
+  if (request === undefined) return;
+
+  let removedCharacters = 0;
+  if (typeof request.task === "string" && request.task !== REQUEST_PROSE_OMITTED) {
+    removedCharacters += request.task.length;
+    request.task = REQUEST_PROSE_OMITTED;
+  }
+  if (typeof request.query === "string" && request.query !== QUERY_REFERENCE) {
+    removedCharacters += request.query.length;
+    request.query = QUERY_REFERENCE;
+  }
+  if (removedCharacters === 0) return;
+
+  // Recorded as a compacted field and NOT as an omitted-detail count. Those counts
+  // are ranked by magnitude to decide which six are worth reporting, so a
+  // character-scale entry here would evict the item-scale kinds that tell a
+  // maintainer what the response actually gave up. The projection is also not
+  // "detail omitted" in the sense the other counts mean: nothing of the
+  // repository was withheld, the caller's own input was simply not sent back.
+  options.compactedFields.push("request.task/request.query");
+}
+
+/**
  * Left in place of static per-call honesty boilerplate under tight budgets. The
  * claims themselves are declared in the tool output schema, which the caller sees
  * once per session rather than once per response.
@@ -227,6 +313,11 @@ export function compactProductResponse<T>(
     omitted.productContextItemsDroppedForBudget = delivery?.accounting.droppedForBudget ?? 0;
   }
   const modelVisibleContext = readModelVisibleContext(draft);
+
+  // 0. Project the caller's own question out of the model-facing response. This
+  // runs before every measurement below, so the budget it frees is available to
+  // the evidence rather than merely to the accounting. See M175.
+  projectRequestDisclosure(draft, { detail, compactedFields, omitted });
 
   // 1. Remove duplicated source bodies from metadata items.
   compactProductContextItems(draft, {

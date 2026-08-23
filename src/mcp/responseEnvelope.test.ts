@@ -11,6 +11,7 @@ import { test } from "bun:test";
 import { estimateTokens } from "../capsuleV2/tokens";
 import {
   McpResponseDetail,
+  REQUEST_PROSE_OMITTED,
   compactProductResponse,
   isMcpResponseDetail,
   remeasureResponseBudget,
@@ -770,4 +771,99 @@ test("M142-D: a response stays bounded as the hidden candidate pool grows", () =
   // A thousandfold larger pool must not produce a materially larger response.
   const growth = sizes[sizes.length - 1]! - sizes[0]!;
   assert.ok(growth < 200, `response grew ${growth} bytes across a 1000x pool: ${sizes.join(" -> ")}`);
+});
+
+// ── M175: the caller's own question must not outbid the repository evidence ──
+
+/** A response whose only oversized field is the question the caller asked. */
+function echoedResponse(taskCharacters: number) {
+  const draft = duplicatedResponse() as unknown as Record<string, any>;
+  const question = "the reported failure occurs when the axis converts empty data. "
+    .repeat(Math.ceil(taskCharacters / 62)).slice(0, taskCharacters);
+  draft.request = {
+    query: question,
+    task: question,
+    maxResults: 6,
+    maxBudgetCharacters: 2_000,
+    includeTests: true,
+    includeFileContent: true,
+  };
+  return draft;
+}
+
+test("M175: the default response references the request instead of restating it", () => {
+  const response = compactProductResponse(echoedResponse(12_000) as never, {
+    requestedContextTokens: 8_000,
+  }) as unknown as Record<string, any>;
+
+  assert.equal(response.request.task, REQUEST_PROSE_OMITTED);
+  assert.equal(response.request.query, "@request.task");
+  // The block keeps its shape and its RESOLVED parameters; only prose is projected.
+  assert.equal(response.request.maxResults, 6);
+  assert.equal(response.request.maxBudgetCharacters, 2_000);
+  assert.equal(response.request.includeTests, true);
+});
+
+test("M175: detail=debug still returns the request verbatim", () => {
+  const draft = echoedResponse(12_000);
+  const question = draft.request.task as string;
+  const response = compactProductResponse(draft as never, {
+    requestedContextTokens: 8_000,
+    detail: McpResponseDetail.Debug,
+  }) as unknown as Record<string, any>;
+
+  assert.equal(response.request.task, question);
+  assert.equal(response.request.query, question);
+});
+
+test("M175: the request block's cost is constant in the length of the question", () => {
+  // The defect was that this cost was unbounded in the caller's own input. Two
+  // questions three orders of magnitude apart must now cost the same.
+  const sizes = [200, 4_000, 60_000].map((characters) => {
+    const response = compactProductResponse(echoedResponse(characters) as never, {
+      requestedContextTokens: 8_000,
+    }) as unknown as Record<string, any>;
+    return serialize(response.request).length;
+  });
+  assert.equal(new Set(sizes).size, 1, `request block sizes diverged: ${sizes.join(" -> ")}`);
+});
+
+test("M175: a long question no longer evicts the evidence it was asked about", () => {
+  // The M174 incident, reduced to its mechanism: retrieval succeeds, the echo
+  // fills the envelope, and the ladder has nothing left to drop but the evidence.
+  const withEcho = compactProductResponse(echoedResponse(30_000) as never, {
+    requestedContextTokens: 8_000,
+  }) as unknown as Record<string, any>;
+
+  assert.notEqual(withEcho.productContext.resultState, "delivery_failure");
+  assert.notEqual(withEcho.productContext.deliveryFailed, true);
+  assert.ok(
+    withEcho.productContext.items.length > 0,
+    "evidence was evicted by a question the response did not need to repeat",
+  );
+  assert.ok(withEcho.responseBudget.within_envelope);
+});
+
+test("M175: projecting the request changes nothing about the evidence selected", () => {
+  // §49 — freed budget may restore what was already selected and must attract
+  // nothing new. A short question leaves nothing to project, so the two responses
+  // must agree item for item.
+  const short = compactProductResponse(echoedResponse(120) as never, {
+    requestedContextTokens: 8_000,
+  }) as unknown as Record<string, any>;
+  const long = compactProductResponse(echoedResponse(30_000) as never, {
+    requestedContextTokens: 8_000,
+  }) as unknown as Record<string, any>;
+
+  assert.deepEqual(
+    long.productContext.items.map((item: { path: string }) => item.path),
+    short.productContext.items.map((item: { path: string }) => item.path),
+  );
+});
+
+test("M175: a response with no request block is untouched", () => {
+  const draft = duplicatedResponse() as unknown as Record<string, any>;
+  delete draft.request;
+  const response = compactProductResponse(draft as never, { requestedContextTokens: 8_000 });
+  assert.equal((response as unknown as Record<string, any>).request, undefined);
 });
