@@ -31,6 +31,7 @@ import {
 import { getRuntimeProvenance } from "../runtime/provenance";
 import { buildInspectFirst, type InspectFirst } from "../runPipeline/inspectFirst";
 import { projectRunPipelineOrientation } from "../runPipeline/orientationProjection";
+import { projectOrientationDecline } from "../runPipeline/orientationDecline";
 import {
   buildContextAccounting,
   impactGraphOutputFilePathGroups,
@@ -9279,9 +9280,24 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
             ? null
             : projectRunPipelineOrientation(authoritativeResult);
 
+          // When the projector declines, the model used to receive the whole
+          // authoritative result. M174-A measured that path at 26,227 characters
+          // and 6,482 model-visible tokens to deliver one 186-character sentence,
+          // 81.6% of it the agent's own question echoed back twice. A decline is
+          // not a failure envelope — the staleness envelopes with `reason` and
+          // `nextTool` are returned before assembly and never reach here — so
+          // there was nothing in that payload the terse form omits.
+          //
+          // The decline projector compacts only states it can positively identify
+          // and returns null on any other shape, so an unrecognised output keeps
+          // full fidelity rather than being summarised into a guess.
+          const decline = orientation === null && detailRequested !== McpResponseDetail.Debug
+            ? projectOrientationDecline(authoritativeResult)
+            : null;
+
           return {
             ok: true,
-            output: orientation ?? authoritativeResult,
+            output: orientation ?? decline ?? authoritativeResult,
           };
         },
         requestedRoot,
