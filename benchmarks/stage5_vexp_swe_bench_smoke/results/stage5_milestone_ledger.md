@@ -4361,3 +4361,112 @@ pivot             gold on 11/12, DIRECTLY_USED 10/12, 0 causal consequences
   already paid for — twenty-four transcripts that can be read for whether an agent
   told where to look still needs to look, and whether early editing causes the
   implementation-phase tail.
+
+---
+
+# M174 — Post-Orientation Work Displacement and Implementation-Cost Attribution
+
+`<M174_COMMITS>`
+
+M173 closed on `ECONOMIC_DIAGNOSIS_REQUIRED`: the packet is cheap and consumed,
+the solve set does not move, and a $0.0563 median premium sits somewhere after
+the first edit. M174 read the twenty-four transcripts it had already paid for
+and found out where.
+
+```text
+A PASS   empty-delivery fallback repaired, 3/3 identity controls, 18 new tests
+B PASS   12/12 pairs reconstructed from full streams, 0 problems
+C PASS   4/4 classifier controls, WORK_DISPLACEMENT 0/12
+D PASS   tail selected mechanically, both cases reconstructed request by request
+E PASS   premium reconciled to $0.0003 residual on $2.2011
+F PASS   verdicts reached
+
+mechanism   STOCHASTIC_TAIL_DOMINANT
+economics   COMPACT_ORIENTATION_ECONOMICALLY_NEUTRAL
+product     KEEP_COMPACT_ORIENTATION_UNCHANGED
+live        LIVE_WORK_NOT_LICENSED        spend $0.00
+```
+
+```text
+                                       baseline   compact    delta
+pre-edit incl. the orientation call      $2.4791   $2.4481   -$0.0309
+implementation                           $1.3091   $2.0544   +$0.7455
+verification / test / debug              $1.7995   $3.2862   +$1.4868
+total (11 uncensored pairs)              $5.5876   $7.7888   +$2.2011
+
+post-edit premium from the two tail runs           +$2.1365    95.7%
+post-edit premium, the other nine pairs            +$0.0958    $0.0106/pair
+displacement                        0/12 pairs classified, 8/12 exactly zero
+first meaningful edit B-A           median +1, later on 8 of 11
+first-edit survival                 A 4 final / B 4 final     rework A 6 / B 3
+```
+
+## M174 standing findings
+
+- **The work did not move, and it did not vanish either.** Displacement measured
+  across each arm's OWN first meaningful edit is zero on eight of twelve pairs
+  and no pair classifies as `WORK_DISPLACEMENT`. The skipped pre-edit reading
+  never comes back. But pre-edit cost including the orientation call is flat at
+  −$0.0309 over eleven pairs, so almost nothing was saved either. The packet
+  substitutes for the investigation it replaces at approximately its own price.
+
+- **M173's $1.06 pre-edit saving was a phase-labelling artifact, and M174 has to
+  own the correction.** The treatment's orientation call is its own first
+  request, and in the baseline that request is pre-edit investigation. Charged
+  where it belongs, the saving is $0.03, not $1.06. The whole +$2.20 premium is
+  after the first edit. The reconciliation closes to $0.0003, so there is no
+  unattributed remainder for a mechanism to hide in.
+
+- **95.7% of the post-edit premium is two runs, and they do not share a cause.**
+  `xarray-6599` wrote the same repair as its baseline (82% line overlap) and then
+  spent fourteen requests on `pip: command not found`, nine virtualenv rebuilds
+  and clearing `/tmp` — the same tmpfs that killed four M173 baseline arms with
+  `ENOSPC`. `astropy-14369` chose a *different* repair (38% overlap: a grammar
+  restructure against a rule extension) and spent its premium proving it; its
+  implementation phase was $0.16 CHEAPER. One infrastructure, one strategy,
+  neither orientation. The other nine pairs carry $0.0106 each.
+
+- **The premature-edit hypothesis fails on three independent measures.** The
+  treatment edits LATER (median +1 request, later on 8 of 11), its first edit
+  survives at the same rate as the baseline's (4 final / 4 final), and it reworks
+  LESS (3 against 6). Whatever the premium buys, it is not bought by editing too
+  soon.
+
+- **No omitted-context class survives.** All three §43 candidates fail, and
+  `requests-1724` fails instructively: the packet's focus `requests/sessions.py`
+  IS the gold file, the baseline edited `models.py` and lost, and the "omitted"
+  file would have endorsed the wrong direction. The packet named a patched file
+  on 10/12 and was edited on 10/12. `COMPACT_ORIENTATION_OMISSION_CAUSAL` is not
+  established anywhere in this corpus.
+
+- **The fallback was not an empty delivery, and what it actually was is worse.**
+  Traced live: retrieval SUCCEEDED — ten items, correct lead pivot — and the
+  response envelope evicted all ten, because `request.query` and `request.task`
+  echo the agent's 10,611-character question twice for 81.6% of the response.
+  Metadata 6,435 + evidence 3,731 = 10,166 against a 9,200 ceiling, so the
+  envelope kept the echo and dropped the evidence, then advised "increase
+  max_tokens". The old path shipped 26,227 characters / 8,229 tokens to deliver
+  one 186-character sentence. The decline projector cuts that to 143 tokens
+  (57.5x) with compact output byte-identical and `detail=debug` untouched.
+
+- **A detector that tracks the packet is not measuring the agent.** §67's
+  uniform-label check caught `TREATMENT_ONLY` correlating with packet size rather
+  than behaviour: the split shows genuine extra agent-acquired information is
+  ZERO on seven of twelve pairs, with 44 of the remainder in a single pair. The
+  first reading would have reported every treatment run doing 11–23 units of
+  work it never performed.
+
+- **The eviction is the cause and was deliberately left alone.** An envelope that
+  spends 6,435 tokens echoing the question and then reports the evidence would
+  not fit is a real defect, but repairing it changes what evidence agents receive
+  and is beyond M174's single licensed product change. Recorded, not acted on.
+
+- **Next-step recommendation: this is a harness problem before it is a product
+  problem.** Do not redesign the packet — it is correct, consumed, break-even and
+  causally inert. Do not touch retrieval — M173 showed wrong pivots are not
+  causal and M174 shows correct ones are not either. Twelve pairs cannot resolve
+  a $0.0106-per-pair effect when two runs decided by a virtualenv and a grammar
+  preference carry 95.7% of the totals. If the economic question is worth
+  closing, it needs replication at a sample size where a tail cannot dominate,
+  on infrastructure where an agent does not spend fourteen requests looking for
+  `pip`. Fix the environment friction first. No live spend until then.

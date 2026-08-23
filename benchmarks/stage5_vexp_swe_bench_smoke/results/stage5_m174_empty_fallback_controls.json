@@ -1,0 +1,44 @@
+{
+ "schemaVersion": "stage5.m174.fallback-controls.v1",
+ "milestone": "M174",
+ "workstream": "M174-A",
+ "invariant": "A valid empty compact orientation must remain compact and truthful; it must never expose the full authoritative internal payload merely because no focus was selected.",
+ "beforeSource": "_m174_fallback_capture/*.json — captured from the SHIPPED product before the repair",
+ "allPass": true,
+ "controls": [
+  {
+   "control": "NON_EMPTY_COMPACT_UNCHANGED",
+   "instanceId": "mwaskom__seaborn-3187",
+   "beforeSha": "ba04af89faf3d3e4",
+   "afterSha": "ba04af89faf3d3e4",
+   "beforeCharacters": 1474,
+   "afterCharacters": 1474,
+   "identical": true,
+   "pass": true
+  },
+  {
+   "control": "EMPTY_DELIVERY_IS_COMPACT_AND_TRUTHFUL",
+   "instanceId": "matplotlib__matplotlib-22719",
+   "beforeCharacters": 25926,
+   "beforeTokens": 8229,
+   "afterCharacters": 451,
+   "afterTokens": 143,
+   "reductionFactor": 57.5,
+   "state": "evidence_found_but_undelivered",
+   "declaresNoFalseAbsence": true,
+   "namesTopMatch": "lib/matplotlib/axis.py::Axis.convert_units",
+   "echoesTheRequest": false,
+   "isDecline": true,
+   "withinTokenTarget": true,
+   "pass": true
+  },
+  {
+   "control": "DEBUG_STILL_AUTHORITATIVE",
+   "instanceId": "mwaskom__seaborn-3187",
+   "characters": 36734,
+   "hasProductContext": true,
+   "isDecline": false,
+   "pass": true
+  }
+ ]
+}

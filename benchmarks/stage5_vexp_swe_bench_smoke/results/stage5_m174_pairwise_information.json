@@ -1,0 +1,2015 @@
+{
+ "schemaVersion": "stage5.m174.pairwise-information.v1",
+ "milestone": "M174",
+ "workstream": "M174-C",
+ "definitions": {
+  "DISPLACED": "A knew it before A's first meaningful edit; B did not know it before B's; B learned it after (§25)",
+  "ELIMINATED": "A acquired it; B never did (§26)",
+  "TREATMENT_ONLY": "B acquired it; A never did (§27)",
+  "strongUnits": "RANGE_READ, SYMBOL_SEEN, RELATION_SEEN, TEST_SEEN — content seen, not merely a path listed"
+ },
+ "economicThresholds": {
+  "winAtOrBelow": 0.8,
+  "breakEvenAtOrBelow": 1.25,
+  "inheritedFrom": "M173, which inherited from M169, unchanged"
+ },
+ "classifierControls": {
+  "ran": true,
+  "identity": {
+   "displaced": 0,
+   "eliminated": 0,
+   "treatmentOnly": 0,
+   "pass": true
+  },
+  "knownPositive": {
+   "displaced": 1,
+   "pass": true
+  },
+  "knownNegative": {
+   "displaced": 0,
+   "pass": true
+  },
+  "editRule": {
+   "knownPositive": "astropy vtrace_compact edits astropy/units/format/cds.py -> MEANINGFUL",
+   "knownNegative": "astropy vtrace_compact writes /tmp/test_cds_grammar.py -> SCRATCH",
+   "pass": true
+  }
+ },
+ "pairs": [
+  {
+   "instanceId": "astropy__astropy_14369",
+   "censored": false,
+   "resolvedA": false,
+   "resolvedB": false,
+   "costA": 1.4958585,
+   "costB": 2.2104995,
+   "costDeltaUsd": 0.714641,
+   "costRatio": 1.4777,
+   "economicClass": "ECONOMIC_LOSS",
+   "requestsA": 16,
+   "requestsB": 32,
+   "firstEditA": 6,
+   "firstEditB": 3,
+   "firstEditDelta": -3,
+   "phaseCostsA": {
+    "PHASE_0_ORIENTATION": {
+     "requests": 0,
+     "inputSideCostUsd": 0,
+     "estimatedOutputCostUsd": 0,
+     "totalCostUsd": 0
+    },
+    "PHASE_1_PRE_EDIT": {
+     "requests": 6,
+     "inputSideCostUsd": 0.581719,
+     "estimatedOutputCostUsd": 0.236937,
+     "totalCostUsd": 0.818656
+    },
+    "PHASE_2_IMPLEMENTATION": {
+     "requests": 4,
+     "inputSideCostUsd": 0.176961,
+     "estimatedOutputCostUsd": 0.183167,
+     "totalCostUsd": 0.360128
+    },
+    "PHASE_3_VERIFICATION": {
+     "requests": 6,
+     "inputSideCostUsd": 0.233828,
+     "estimatedOutputCostUsd": 0.083246,
+     "totalCostUsd": 0.317074
+    }
+   },
+   "phaseCostsB": {
+    "PHASE_0_ORIENTATION": {
+     "requests": 1,
+     "inputSideCostUsd": 0.063257,
+     "estimatedOutputCostUsd": 0.007247,
+     "totalCostUsd": 0.070504
+    },
+    "PHASE_1_PRE_EDIT": {
+     "requests": 2,
+     "inputSideCostUsd": 0.081017,
+     "estimatedOutputCostUsd": 0.23092,
+     "totalCostUsd": 0.311937
+    },
+    "PHASE_2_IMPLEMENTATION": {
+     "requests": 1,
+     "inputSideCostUsd": 0.153946,
+     "estimatedOutputCostUsd": 0.046937,
+     "totalCostUsd": 0.200883
+    },
+    "PHASE_3_VERIFICATION": {
+     "requests": 28,
+     "inputSideCostUsd": 1.125079,
+     "estimatedOutputCostUsd": 0.502096,
+     "totalCostUsd": 1.627175
+    }
+   },
+   "orientation": {
+    "delivered": true,
+    "focusFile": "astropy/units/format/cds.py",
+    "focusAt": "astropy/units/format/cds.py::CDS",
+    "relatedFiles": 6,
+    "unitsConferred": 36,
+    "focusFileInGoldPatch": true
+   },
+   "information": {
+    "baselinePreEditStrong": 80,
+    "treatmentPreEditStrong": 59,
+    "treatmentPostEditStrong": 8,
+    "displacedStrong": 2,
+    "eliminatedStrong": 78,
+    "treatmentOnlyStrong": 21,
+    "treatmentOnlyAgentAcquired": 4,
+    "treatmentOnlyPacketConferred": 17,
+    "treatmentOnlyAgentKeys": [
+     "RANGE_READ:astropy/units/tests/test_format.py@0",
+     "RANGE_READ:astropy/units/tests/test_format.py@1",
+     "RANGE_READ:astropy/units/tests/test_format.py@2",
+     "TEST_SEEN:astropy/units/tests/test_format.py@astropy/units/tests/test_format.py::test_cds_grammar"
+    ],
+    "sharedPreEditStrong": 40,
+    "displacementRate": 0.025,
+    "displacedKeys": [
+     "RANGE_READ:astropy/io/ascii/cds.py@0",
+     "RANGE_READ:astropy/io/ascii/cds.py@2"
+    ],
+    "eliminatedKeys": [
+     "RANGE_READ:astropy/io/ascii/cds.py@1",
+     "RANGE_READ:astropy/io/ascii/cds.py@10",
+     "RANGE_READ:astropy/io/ascii/cds.py@11",
+     "RANGE_READ:astropy/io/ascii/cds.py@12",
+     "RANGE_READ:astropy/io/ascii/cds.py@13",
+     "RANGE_READ:astropy/io/ascii/cds.py@14",
+     "RANGE_READ:astropy/io/ascii/cds.py@15",
+     "RANGE_READ:astropy/io/ascii/cds.py@16",
+     "RANGE_READ:astropy/io/ascii/cds.py@17",
+     "RANGE_READ:astropy/io/ascii/cds.py@18",
+     "RANGE_READ:astropy/io/ascii/cds.py@19",
+     "RANGE_READ:astropy/io/ascii/cds.py@20",
+     "RANGE_READ:astropy/io/ascii/cds.py@21",
+     "RANGE_READ:astropy/io/ascii/cds.py@22",
+     "RANGE_READ:astropy/io/ascii/cds.py@23",
+     "RANGE_READ:astropy/io/ascii/cds.py@24",
+     "RANGE_READ:astropy/io/ascii/cds.py@25",
+     "RANGE_READ:astropy/io/ascii/cds.py@26",
+     "RANGE_READ:astropy/io/ascii/cds.py@27",
+     "RANGE_READ:astropy/io/ascii/cds.py@28",
+     "RANGE_READ:astropy/io/ascii/cds.py@29",
+     "RANGE_READ:astropy/io/ascii/cds.py@3",
+     "RANGE_READ:astropy/io/ascii/cds.py@30",
+     "RANGE_READ:astropy/io/ascii/cds.py@31",
+     "RANGE_READ:astropy/io/ascii/cds.py@32",
+     "RANGE_READ:astropy/io/ascii/cds.py@33",
+     "RANGE_READ:astropy/io/ascii/cds.py@34",
+     "RANGE_READ:astropy/io/ascii/cds.py@35",
+     "RANGE_READ:astropy/io/ascii/cds.py@36",
+     "RANGE_READ:astropy/io/ascii/cds.py@37",
+     "RANGE_READ:astropy/io/ascii/cds.py@38",
+     "RANGE_READ:astropy/io/ascii/cds.py@39",
+     "RANGE_READ:astropy/io/ascii/cds.py@4",
+     "RANGE_READ:astropy/io/ascii/cds.py@5",
+     "RANGE_READ:astropy/io/ascii/cds.py@6",
+     "RANGE_READ:astropy/io/ascii/cds.py@7",
+     "RANGE_READ:astropy/io/ascii/cds.py@8",
+     "RANGE_READ:astropy/io/ascii/cds.py@9",
+     "RANGE_READ:astropy/units/format/cds_parsetab.py@0",
+     "RANGE_READ:astropy/units/format/cds_parsetab.py@1"
+    ],
+    "allUnitsDisplaced": 3,
+    "allUnitsEliminated": 101,
+    "allUnitsTreatmentOnly": 32
+   },
+   "firstEdit": {
+    "aPath": "astropy/units/format/cds.py",
+    "bPath": "astropy/units/format/cds.py",
+    "aSurvival": "PARTIALLY_CORRECT",
+    "bSurvival": "PARTIALLY_CORRECT",
+    "aOverlap": 0.286,
+    "bOverlap": 0.571,
+    "sameFile": true
+   },
+   "revisionA": {
+    "meaningfulEdits": 3,
+    "scratchEdits": 0,
+    "reworkEdits": 1,
+    "filesEdited": 2
+   },
+   "revisionB": {
+    "meaningfulEdits": 1,
+    "scratchEdits": 3,
+    "reworkEdits": 0,
+    "filesEdited": 1
+   },
+   "testA": {
+    "total": 0,
+    "before": 0,
+    "after": 0,
+    "repeats": 0,
+    "distinct": 0
+   },
+   "testB": {
+    "total": 1,
+    "before": 0,
+    "after": 1,
+    "repeats": 0,
+    "distinct": 1
+   },
+   "patch": {
+    "filesA": [
+     "astropy/units/format/cds.py"
+    ],
+    "filesB": [
+     "astropy/units/format/cds.py"
+    ],
+    "sharedFiles": [
+     "astropy/units/format/cds.py"
+    ],
+    "jaccard": 1,
+    "sameFileSet": true
+   }
+  },
+  {
+   "instanceId": "django__django_13658",
+   "censored": false,
+   "resolvedA": true,
+   "resolvedB": true,
+   "costA": 0.1878255,
+   "costB": 0.26486,
+   "costDeltaUsd": 0.077034,
+   "costRatio": 1.4101,
+   "economicClass": "ECONOMIC_LOSS",
+   "requestsA": 4,
+   "requestsB": 6,
+   "firstEditA": 2,
+   "firstEditB": 3,
+   "firstEditDelta": 1,
+   "phaseCostsA": {
+    "PHASE_0_ORIENTATION": {
+     "requests": 0,
+     "inputSideCostUsd": 0,
+     "estimatedOutputCostUsd": 0,
+     "totalCostUsd": 0
+    },
+    "PHASE_1_PRE_EDIT": {
+     "requests": 2,
+     "inputSideCostUsd": 0.072813,
+     "estimatedOutputCostUsd": 0.008068,
+     "totalCostUsd": 0.080881
+    },
+    "PHASE_2_IMPLEMENTATION": {
+     "requests": 1,
+     "inputSideCostUsd": 0.068845,
+     "estimatedOutputCostUsd": 0.011396,
+     "totalCostUsd": 0.080241
+    },
+    "PHASE_3_VERIFICATION": {
+     "requests": 1,
+     "inputSideCostUsd": 0.022518,
+     "estimatedOutputCostUsd": 0.004186,
+     "totalCostUsd": 0.026704
+    }
+   },
+   "phaseCostsB": {
+    "PHASE_0_ORIENTATION": {
+     "requests": 1,
+     "inputSideCostUsd": 0.099455,
+     "estimatedOutputCostUsd": 0.004599,
+     "totalCostUsd": 0.104054
+    },
+    "PHASE_1_PRE_EDIT": {
+     "requests": 2,
+     "inputSideCostUsd": 0.052307,
+     "estimatedOutputCostUsd": 0.008027,
+     "totalCostUsd": 0.060335
+    },
+    "PHASE_2_IMPLEMENTATION": {
+     "requests": 1,
+     "inputSideCostUsd": 0.02915,
+     "estimatedOutputCostUsd": 0.016254,
+     "totalCostUsd": 0.045404
+    },
+    "PHASE_3_VERIFICATION": {
+     "requests": 2,
+     "inputSideCostUsd": 0.044672,
+     "estimatedOutputCostUsd": 0.010395,
+     "totalCostUsd": 0.055067
+    }
+   },
+   "orientation": {
+    "delivered": true,
+    "focusFile": "django/core/management/__init__.py",
+    "focusAt": "django/core/management/__init__.py::ManagementUtility",
+    "relatedFiles": 5,
+    "unitsConferred": 29,
+    "focusFileInGoldPatch": true
+   },
+   "information": {
+    "baselinePreEditStrong": 40,
+    "treatmentPreEditStrong": 22,
+    "treatmentPostEditStrong": 2,
+    "displacedStrong": 0,
+    "eliminatedStrong": 33,
+    "treatmentOnlyStrong": 15,
+    "treatmentOnlyAgentAcquired": 0,
+    "treatmentOnlyPacketConferred": 15,
+    "treatmentOnlyAgentKeys": [],
+    "sharedPreEditStrong": 7,
+    "displacementRate": 0,
+    "displacedKeys": [],
+    "eliminatedKeys": [
+     "RANGE_READ:django/core/management/__init__.py@0",
+     "RANGE_READ:django/core/management/__init__.py@10",
+     "RANGE_READ:django/core/management/__init__.py@11",
+     "RANGE_READ:django/core/management/__init__.py@12",
+     "RANGE_READ:django/core/management/__init__.py@13",
+     "RANGE_READ:django/core/management/__init__.py@14",
+     "RANGE_READ:django/core/management/__init__.py@15",
+     "RANGE_READ:django/core/management/__init__.py@16",
+     "RANGE_READ:django/core/management/__init__.py@17",
+     "RANGE_READ:django/core/management/__init__.py@18",
+     "RANGE_READ:django/core/management/__init__.py@19",
+     "RANGE_READ:django/core/management/__init__.py@2",
+     "RANGE_READ:django/core/management/__init__.py@20",
+     "RANGE_READ:django/core/management/__init__.py@21",
+     "RANGE_READ:django/core/management/__init__.py@22",
+     "RANGE_READ:django/core/management/__init__.py@23",
+     "RANGE_READ:django/core/management/__init__.py@24",
+     "RANGE_READ:django/core/management/__init__.py@25",
+     "RANGE_READ:django/core/management/__init__.py@26",
+     "RANGE_READ:django/core/management/__init__.py@27",
+     "RANGE_READ:django/core/management/__init__.py@28",
+     "RANGE_READ:django/core/management/__init__.py@29",
+     "RANGE_READ:django/core/management/__init__.py@30",
+     "RANGE_READ:django/core/management/__init__.py@31",
+     "RANGE_READ:django/core/management/__init__.py@32",
+     "RANGE_READ:django/core/management/__init__.py@33",
+     "RANGE_READ:django/core/management/__init__.py@34",
+     "RANGE_READ:django/core/management/__init__.py@35",
+     "RANGE_READ:django/core/management/__init__.py@36",
+     "RANGE_READ:django/core/management/__init__.py@37",
+     "RANGE_READ:django/core/management/__init__.py@38",
+     "RANGE_READ:django/core/management/__init__.py@39",
+     "RANGE_READ:django/core/management/__init__.py@9"
+    ],
+    "allUnitsDisplaced": 0,
+    "allUnitsEliminated": 33,
+    "allUnitsTreatmentOnly": 18
+   },
+   "firstEdit": {
+    "aPath": "django/core/management/__init__.py",
+    "bPath": "django/core/management/__init__.py",
+    "aSurvival": "FINAL_OR_NEAR_FINAL",
+    "bSurvival": "FINAL_OR_NEAR_FINAL",
+    "aOverlap": 1,
+    "bOverlap": 1,
+    "sameFile": true
+   },
+   "revisionA": {
+    "meaningfulEdits": 1,
+    "scratchEdits": 0,
+    "reworkEdits": 0,
+    "filesEdited": 1
+   },
+   "revisionB": {
+    "meaningfulEdits": 1,
+    "scratchEdits": 0,
+    "reworkEdits": 0,
+    "filesEdited": 1
+   },
+   "testA": {
+    "total": 0,
+    "before": 0,
+    "after": 0,
+    "repeats": 0,
+    "distinct": 0
+   },
+   "testB": {
+    "total": 0,
+    "before": 0,
+    "after": 0,
+    "repeats": 0,
+    "distinct": 0
+   },
+   "patch": {
+    "filesA": [
+     "django/core/management/__init__.py"
+    ],
+    "filesB": [
+     "django/core/management/__init__.py"
+    ],
+    "sharedFiles": [
+     "django/core/management/__init__.py"
+    ],
+    "jaccard": 1,
+    "sameFileSet": true
+   }
+  },
+  {
+   "instanceId": "matplotlib__matplotlib_22719",
+   "censored": false,
+   "resolvedA": true,
+   "resolvedB": true,
+   "costA": 0.3737555000000001,
+   "costB": 0.4029205,
+   "costDeltaUsd": 0.029165,
+   "costRatio": 1.078,
+   "economicClass": "ROUGH_NEUTRAL",
+   "requestsA": 8,
+   "requestsB": 10,
+   "firstEditA": 1,
+   "firstEditB": 2,
+   "firstEditDelta": 1,
+   "phaseCostsA": {
+    "PHASE_0_ORIENTATION": {
+     "requests": 0,
+     "inputSideCostUsd": 0,
+     "estimatedOutputCostUsd": 0,
+     "totalCostUsd": 0
+    },
+    "PHASE_1_PRE_EDIT": {
+     "requests": 1,
+     "inputSideCostUsd": 0.122385,
+     "estimatedOutputCostUsd": 0.00697,
+     "totalCostUsd": 0.129355
+    },
+    "PHASE_2_IMPLEMENTATION": {
+     "requests": 6,
+     "inputSideCostUsd": 0.159638,
+     "estimatedOutputCostUsd": 0.050913,
+     "totalCostUsd": 0.210552
+    },
+    "PHASE_3_VERIFICATION": {
+     "requests": 1,
+     "inputSideCostUsd": 0.025182,
+     "estimatedOutputCostUsd": 0.008667,
+     "totalCostUsd": 0.033849
+    }
+   },
+   "phaseCostsB": {
+    "PHASE_0_ORIENTATION": {
+     "requests": 1,
+     "inputSideCostUsd": 0.086281,
+     "estimatedOutputCostUsd": 0.005618,
+     "totalCostUsd": 0.0919
+    },
+    "PHASE_1_PRE_EDIT": {
+     "requests": 1,
+     "inputSideCostUsd": 0.022478,
+     "estimatedOutputCostUsd": 0.002968,
+     "totalCostUsd": 0.025446
+    },
+    "PHASE_2_IMPLEMENTATION": {
+     "requests": 1,
+     "inputSideCostUsd": 0.043134,
+     "estimatedOutputCostUsd": 0.027738,
+     "totalCostUsd": 0.070873
+    },
+    "PHASE_3_VERIFICATION": {
+     "requests": 7,
+     "inputSideCostUsd": 0.163076,
+     "estimatedOutputCostUsd": 0.051626,
+     "totalCostUsd": 0.214702
+    }
+   },
+   "orientation": {
+    "delivered": true,
+    "focusFile": "lib/matplotlib/category.py",
+    "focusAt": "lib/matplotlib/category.py::StrCategoryConverter.convert",
+    "relatedFiles": 4,
+    "unitsConferred": 23,
+    "focusFileInGoldPatch": true
+   },
+   "information": {
+    "baselinePreEditStrong": 40,
+    "treatmentPreEditStrong": 51,
+    "treatmentPostEditStrong": 2,
+    "displacedStrong": 0,
+    "eliminatedStrong": 0,
+    "treatmentOnlyStrong": 11,
+    "treatmentOnlyAgentAcquired": 0,
+    "treatmentOnlyPacketConferred": 11,
+    "treatmentOnlyAgentKeys": [],
+    "sharedPreEditStrong": 40,
+    "displacementRate": 0,
+    "displacedKeys": [],
+    "eliminatedKeys": [],
+    "allUnitsDisplaced": 0,
+    "allUnitsEliminated": 0,
+    "allUnitsTreatmentOnly": 12
+   },
+   "firstEdit": {
+    "aPath": "lib/matplotlib/category.py",
+    "bPath": "lib/matplotlib/category.py",
+    "aSurvival": "SUPERSEDED",
+    "bSurvival": "PARTIALLY_CORRECT",
+    "aOverlap": 0.1,
+    "bOverlap": 0.455,
+    "sameFile": true
+   },
+   "revisionA": {
+    "meaningfulEdits": 2,
+    "scratchEdits": 0,
+    "reworkEdits": 1,
+    "filesEdited": 1
+   },
+   "revisionB": {
+    "meaningfulEdits": 1,
+    "scratchEdits": 0,
+    "reworkEdits": 0,
+    "filesEdited": 1
+   },
+   "testA": {
+    "total": 0,
+    "before": 0,
+    "after": 0,
+    "repeats": 0,
+    "distinct": 0
+   },
+   "testB": {
+    "total": 0,
+    "before": 0,
+    "after": 0,
+    "repeats": 0,
+    "distinct": 0
+   },
+   "patch": {
+    "filesA": [
+     "lib/matplotlib/category.py"
+    ],
+    "filesB": [
+     "lib/matplotlib/category.py"
+    ],
+    "sharedFiles": [
+     "lib/matplotlib/category.py"
+    ],
+    "jaccard": 1,
+    "sameFileSet": true
+   }
+  },
+  {
+   "instanceId": "mwaskom__seaborn_3187",
+   "censored": false,
+   "resolvedA": false,
+   "resolvedB": false,
+   "costA": 1.0545375000000001,
+   "costB": 0.9905285,
+   "costDeltaUsd": -0.064009,
+   "costRatio": 0.9393,
+   "economicClass": "ROUGH_NEUTRAL",
+   "requestsA": 25,
+   "requestsB": 21,
+   "firstEditA": 8,
+   "firstEditB": 12,
+   "firstEditDelta": 4,
+   "phaseCostsA": {
+    "PHASE_0_ORIENTATION": {
+     "requests": 0,
+     "inputSideCostUsd": 0,
+     "estimatedOutputCostUsd": 0,
+     "totalCostUsd": 0
+    },
+    "PHASE_1_PRE_EDIT": {
+     "requests": 8,
+     "inputSideCostUsd": 0.297638,
+     "estimatedOutputCostUsd": 0.102722,
+     "totalCostUsd": 0.400361
+    },
+    "PHASE_2_IMPLEMENTATION": {
+     "requests": 4,
+     "inputSideCostUsd": 0.108907,
+     "estimatedOutputCostUsd": 0.035805,
+     "totalCostUsd": 0.144712
+    },
+    "PHASE_3_VERIFICATION": {
+     "requests": 13,
+     "inputSideCostUsd": 0.436367,
+     "estimatedOutputCostUsd": 0.073098,
+     "totalCostUsd": 0.509465
+    }
+   },
+   "phaseCostsB": {
+    "PHASE_0_ORIENTATION": {
+     "requests": 1,
+     "inputSideCostUsd": 0.100375,
+     "estimatedOutputCostUsd": 0.005496,
+     "totalCostUsd": 0.105871
+    },
+    "PHASE_1_PRE_EDIT": {
+     "requests": 11,
+     "inputSideCostUsd": 0.38913,
+     "estimatedOutputCostUsd": 0.13516,
+     "totalCostUsd": 0.524289
+    },
+    "PHASE_2_IMPLEMENTATION": {
+     "requests": 3,
+     "inputSideCostUsd": 0.089136,
+     "estimatedOutputCostUsd": 0.033268,
+     "totalCostUsd": 0.122404
+    },
+    "PHASE_3_VERIFICATION": {
+     "requests": 6,
+     "inputSideCostUsd": 0.186388,
+     "estimatedOutputCostUsd": 0.051577,
+     "totalCostUsd": 0.237965
+    }
+   },
+   "orientation": {
+    "delivered": true,
+    "focusFile": "seaborn/_core/scales.py",
+    "focusAt": "seaborn/_core/scales.py::Nominal",
+    "relatedFiles": 5,
+    "unitsConferred": 26,
+    "focusFileInGoldPatch": true
+   },
+   "information": {
+    "baselinePreEditStrong": 8,
+    "treatmentPreEditStrong": 26,
+    "treatmentPostEditStrong": 5,
+    "displacedStrong": 0,
+    "eliminatedStrong": 5,
+    "treatmentOnlyStrong": 23,
+    "treatmentOnlyAgentAcquired": 9,
+    "treatmentOnlyPacketConferred": 14,
+    "treatmentOnlyAgentKeys": [
+     "RANGE_READ:seaborn/_core/scales.py@0",
+     "RANGE_READ:seaborn/_core/scales.py@10",
+     "RANGE_READ:seaborn/_core/scales.py@12",
+     "RANGE_READ:seaborn/_core/scales.py@13",
+     "RANGE_READ:seaborn/_core/scales.py@5",
+     "RANGE_READ:seaborn/_core/scales.py@9",
+     "RANGE_READ:seaborn/utils.py@13",
+     "RANGE_READ:seaborn/utils.py@14",
+     "TEST_SEEN:tests/test_utils.py@tests/test_utils.py::test_locator_to_legend_entries"
+    ],
+    "sharedPreEditStrong": 4,
+    "displacementRate": 0,
+    "displacedKeys": [],
+    "eliminatedKeys": [
+     "RANGE_READ:seaborn/_core/plot.py@17",
+     "RANGE_READ:seaborn/_core/plot.py@30",
+     "RANGE_READ:seaborn/_core/plot.py@31",
+     "RANGE_READ:seaborn/_core/plot.py@32",
+     "RANGE_READ:seaborn/_core/scales.py@1"
+    ],
+    "allUnitsDisplaced": 0,
+    "allUnitsEliminated": 5,
+    "allUnitsTreatmentOnly": 44
+   },
+   "firstEdit": {
+    "aPath": "seaborn/_core/scales.py",
+    "bPath": "seaborn/_core/scales.py",
+    "aSurvival": "FINAL_OR_NEAR_FINAL",
+    "bSurvival": "PARTIALLY_CORRECT",
+    "aOverlap": 1,
+    "bOverlap": 0.6,
+    "sameFile": true
+   },
+   "revisionA": {
+    "meaningfulEdits": 4,
+    "scratchEdits": 0,
+    "reworkEdits": 2,
+    "filesEdited": 2
+   },
+   "revisionB": {
+    "meaningfulEdits": 2,
+    "scratchEdits": 0,
+    "reworkEdits": 0,
+    "filesEdited": 2
+   },
+   "testA": {
+    "total": 0,
+    "before": 0,
+    "after": 0,
+    "repeats": 0,
+    "distinct": 0
+   },
+   "testB": {
+    "total": 1,
+    "before": 0,
+    "after": 1,
+    "repeats": 0,
+    "distinct": 1
+   },
+   "patch": {
+    "filesA": [
+     "seaborn/_core/plot.py",
+     "seaborn/_core/scales.py",
+     "uv.lock"
+    ],
+    "filesB": [
+     "seaborn/_core/scales.py",
+     "seaborn/utils.py"
+    ],
+    "sharedFiles": [
+     "seaborn/_core/scales.py"
+    ],
+    "jaccard": 0.25,
+    "sameFileSet": false
+   }
+  },
+  {
+   "instanceId": "pallets__flask_5014",
+   "censored": false,
+   "resolvedA": true,
+   "resolvedB": true,
+   "costA": 0.24868949999999998,
+   "costB": 0.21426499999999998,
+   "costDeltaUsd": -0.034424,
+   "costRatio": 0.8616,
+   "economicClass": "ROUGH_NEUTRAL",
+   "requestsA": 4,
+   "requestsB": 6,
+   "firstEditA": 2,
+   "firstEditB": 3,
+   "firstEditDelta": 1,
+   "phaseCostsA": {
+    "PHASE_0_ORIENTATION": {
+     "requests": 0,
+     "inputSideCostUsd": 0,
+     "estimatedOutputCostUsd": 0,
+     "totalCostUsd": 0
+    },
+    "PHASE_1_PRE_EDIT": {
+     "requests": 2,
+     "inputSideCostUsd": 0.108659,
+     "estimatedOutputCostUsd": 0.004684,
+     "totalCostUsd": 0.113343
+    },
+    "PHASE_2_IMPLEMENTATION": {
+     "requests": 1,
+     "inputSideCostUsd": 0.094473,
+     "estimatedOutputCostUsd": 0.012631,
+     "totalCostUsd": 0.107104
+    },
+    "PHASE_3_VERIFICATION": {
+     "requests": 1,
+     "inputSideCostUsd": 0.023908,
+     "estimatedOutputCostUsd": 0.004335,
+     "totalCostUsd": 0.028243
+    }
+   },
+   "phaseCostsB": {
+    "PHASE_0_ORIENTATION": {
+     "requests": 1,
+     "inputSideCostUsd": 0.025141,
+     "estimatedOutputCostUsd": 0.002516,
+     "totalCostUsd": 0.027657
+    },
+    "PHASE_1_PRE_EDIT": {
+     "requests": 2,
+     "inputSideCostUsd": 0.082869,
+     "estimatedOutputCostUsd": 0.007359,
+     "totalCostUsd": 0.090228
+    },
+    "PHASE_2_IMPLEMENTATION": {
+     "requests": 1,
+     "inputSideCostUsd": 0.028264,
+     "estimatedOutputCostUsd": 0.016093,
+     "totalCostUsd": 0.044356
+    },
+    "PHASE_3_VERIFICATION": {
+     "requests": 2,
+     "inputSideCostUsd": 0.042792,
+     "estimatedOutputCostUsd": 0.009232,
+     "totalCostUsd": 0.052023
+    }
+   },
+   "orientation": {
+    "delivered": true,
+    "focusFile": "src/flask/blueprints.py",
+    "focusAt": "src/flask/blueprints.py::Blueprint",
+    "relatedFiles": 4,
+    "unitsConferred": 31,
+    "focusFileInGoldPatch": true
+   },
+   "information": {
+    "baselinePreEditStrong": 40,
+    "treatmentPreEditStrong": 24,
+    "treatmentPostEditStrong": 2,
+    "displacedStrong": 0,
+    "eliminatedStrong": 29,
+    "treatmentOnlyStrong": 13,
+    "treatmentOnlyAgentAcquired": 0,
+    "treatmentOnlyPacketConferred": 13,
+    "treatmentOnlyAgentKeys": [],
+    "sharedPreEditStrong": 11,
+    "displacementRate": 0,
+    "displacedKeys": [],
+    "eliminatedKeys": [
+     "RANGE_READ:src/flask/blueprints.py@0",
+     "RANGE_READ:src/flask/blueprints.py@1",
+     "RANGE_READ:src/flask/blueprints.py@13",
+     "RANGE_READ:src/flask/blueprints.py@14",
+     "RANGE_READ:src/flask/blueprints.py@15",
+     "RANGE_READ:src/flask/blueprints.py@16",
+     "RANGE_READ:src/flask/blueprints.py@17",
+     "RANGE_READ:src/flask/blueprints.py@18",
+     "RANGE_READ:src/flask/blueprints.py@19",
+     "RANGE_READ:src/flask/blueprints.py@20",
+     "RANGE_READ:src/flask/blueprints.py@21",
+     "RANGE_READ:src/flask/blueprints.py@22",
+     "RANGE_READ:src/flask/blueprints.py@23",
+     "RANGE_READ:src/flask/blueprints.py@24",
+     "RANGE_READ:src/flask/blueprints.py@25",
+     "RANGE_READ:src/flask/blueprints.py@26",
+     "RANGE_READ:src/flask/blueprints.py@27",
+     "RANGE_READ:src/flask/blueprints.py@28",
+     "RANGE_READ:src/flask/blueprints.py@29",
+     "RANGE_READ:src/flask/blueprints.py@30",
+     "RANGE_READ:src/flask/blueprints.py@31",
+     "RANGE_READ:src/flask/blueprints.py@32",
+     "RANGE_READ:src/flask/blueprints.py@33",
+     "RANGE_READ:src/flask/blueprints.py@34",
+     "RANGE_READ:src/flask/blueprints.py@35",
+     "RANGE_READ:src/flask/blueprints.py@36",
+     "RANGE_READ:src/flask/blueprints.py@37",
+     "RANGE_READ:src/flask/blueprints.py@38",
+     "RANGE_READ:src/flask/blueprints.py@39"
+    ],
+    "allUnitsDisplaced": 0,
+    "allUnitsEliminated": 29,
+    "allUnitsTreatmentOnly": 15
+   },
+   "firstEdit": {
+    "aPath": "src/flask/blueprints.py",
+    "bPath": "src/flask/blueprints.py",
+    "aSurvival": "PARTIALLY_CORRECT",
+    "bSurvival": "PARTIALLY_CORRECT",
+    "aOverlap": 0.5,
+    "bOverlap": 0.5,
+    "sameFile": true
+   },
+   "revisionA": {
+    "meaningfulEdits": 1,
+    "scratchEdits": 0,
+    "reworkEdits": 0,
+    "filesEdited": 1
+   },
+   "revisionB": {
+    "meaningfulEdits": 1,
+    "scratchEdits": 0,
+    "reworkEdits": 0,
+    "filesEdited": 1
+   },
+   "testA": {
+    "total": 0,
+    "before": 0,
+    "after": 0,
+    "repeats": 0,
+    "distinct": 0
+   },
+   "testB": {
+    "total": 0,
+    "before": 0,
+    "after": 0,
+    "repeats": 0,
+    "distinct": 0
+   },
+   "patch": {
+    "filesA": [
+     "src/flask/blueprints.py"
+    ],
+    "filesB": [
+     "src/flask/blueprints.py"
+    ],
+    "sharedFiles": [
+     "src/flask/blueprints.py"
+    ],
+    "jaccard": 1,
+    "sameFileSet": true
+   }
+  },
+  {
+   "instanceId": "psf__requests_1724",
+   "censored": false,
+   "resolvedA": false,
+   "resolvedB": false,
+   "costA": 0.23571049999999996,
+   "costB": 0.7286710000000001,
+   "costDeltaUsd": 0.492961,
+   "costRatio": 3.0914,
+   "economicClass": "ECONOMIC_LOSS",
+   "requestsA": 6,
+   "requestsB": 18,
+   "firstEditA": 4,
+   "firstEditB": 4,
+   "firstEditDelta": 0,
+   "phaseCostsA": {
+    "PHASE_0_ORIENTATION": {
+     "requests": 0,
+     "inputSideCostUsd": 0,
+     "estimatedOutputCostUsd": 0,
+     "totalCostUsd": 0
+    },
+    "PHASE_1_PRE_EDIT": {
+     "requests": 4,
+     "inputSideCostUsd": 0.142669,
+     "estimatedOutputCostUsd": 0.025019,
+     "totalCostUsd": 0.167688
+    },
+    "PHASE_2_IMPLEMENTATION": {
+     "requests": 1,
+     "inputSideCostUsd": 0.0249,
+     "estimatedOutputCostUsd": 0.012852,
+     "totalCostUsd": 0.037752
+    },
+    "PHASE_3_VERIFICATION": {
+     "requests": 1,
+     "inputSideCostUsd": 0.023141,
+     "estimatedOutputCostUsd": 0.007129,
+     "totalCostUsd": 0.030271
+    }
+   },
+   "phaseCostsB": {
+    "PHASE_0_ORIENTATION": {
+     "requests": 1,
+     "inputSideCostUsd": 0.120905,
+     "estimatedOutputCostUsd": 0.007225,
+     "totalCostUsd": 0.12813
+    },
+    "PHASE_1_PRE_EDIT": {
+     "requests": 3,
+     "inputSideCostUsd": 0.084322,
+     "estimatedOutputCostUsd": 0.0355,
+     "totalCostUsd": 0.119822
+    },
+    "PHASE_2_IMPLEMENTATION": {
+     "requests": 9,
+     "inputSideCostUsd": 0.218871,
+     "estimatedOutputCostUsd": 0.062374,
+     "totalCostUsd": 0.281245
+    },
+    "PHASE_3_VERIFICATION": {
+     "requests": 5,
+     "inputSideCostUsd": 0.144297,
+     "estimatedOutputCostUsd": 0.055176,
+     "totalCostUsd": 0.199474
+    }
+   },
+   "orientation": {
+    "delivered": true,
+    "focusFile": "requests/sessions.py",
+    "focusAt": "requests/sessions.py::Session.post",
+    "relatedFiles": 6,
+    "unitsConferred": 37,
+    "focusFileInGoldPatch": true
+   },
+   "information": {
+    "baselinePreEditStrong": 4,
+    "treatmentPreEditStrong": 65,
+    "treatmentPostEditStrong": 8,
+    "displacedStrong": 4,
+    "eliminatedStrong": 0,
+    "treatmentOnlyStrong": 65,
+    "treatmentOnlyAgentAcquired": 44,
+    "treatmentOnlyPacketConferred": 21,
+    "treatmentOnlyAgentKeys": [
+     "RANGE_READ:requests/compat.py@0",
+     "RANGE_READ:requests/compat.py@1",
+     "RANGE_READ:requests/compat.py@10",
+     "RANGE_READ:requests/compat.py@11",
+     "RANGE_READ:requests/compat.py@12",
+     "RANGE_READ:requests/compat.py@13",
+     "RANGE_READ:requests/compat.py@14",
+     "RANGE_READ:requests/compat.py@15",
+     "RANGE_READ:requests/compat.py@16",
+     "RANGE_READ:requests/compat.py@17",
+     "RANGE_READ:requests/compat.py@18",
+     "RANGE_READ:requests/compat.py@19",
+     "RANGE_READ:requests/compat.py@2",
+     "RANGE_READ:requests/compat.py@20",
+     "RANGE_READ:requests/compat.py@21",
+     "RANGE_READ:requests/compat.py@22",
+     "RANGE_READ:requests/compat.py@23",
+     "RANGE_READ:requests/compat.py@24",
+     "RANGE_READ:requests/compat.py@25",
+     "RANGE_READ:requests/compat.py@26",
+     "RANGE_READ:requests/compat.py@27",
+     "RANGE_READ:requests/compat.py@28",
+     "RANGE_READ:requests/compat.py@29",
+     "RANGE_READ:requests/compat.py@3",
+     "RANGE_READ:requests/compat.py@30",
+     "RANGE_READ:requests/compat.py@31",
+     "RANGE_READ:requests/compat.py@32",
+     "RANGE_READ:requests/compat.py@33",
+     "RANGE_READ:requests/compat.py@34",
+     "RANGE_READ:requests/compat.py@35",
+     "RANGE_READ:requests/compat.py@36",
+     "RANGE_READ:requests/compat.py@37",
+     "RANGE_READ:requests/compat.py@38",
+     "RANGE_READ:requests/compat.py@39",
+     "RANGE_READ:requests/compat.py@4",
+     "RANGE_READ:requests/compat.py@5",
+     "RANGE_READ:requests/compat.py@6",
+     "RANGE_READ:requests/compat.py@7",
+     "RANGE_READ:requests/compat.py@8",
+     "RANGE_READ:requests/compat.py@9"
+    ],
+    "sharedPreEditStrong": 0,
+    "displacementRate": 1,
+    "displacedKeys": [
+     "RANGE_READ:requests/models.py@0",
+     "RANGE_READ:requests/models.py@5",
+     "RANGE_READ:requests/models.py@6",
+     "RANGE_READ:requests/utils.py@11"
+    ],
+    "eliminatedKeys": [],
+    "allUnitsDisplaced": 6,
+    "allUnitsEliminated": 0,
+    "allUnitsTreatmentOnly": 68
+   },
+   "firstEdit": {
+    "aPath": "requests/models.py",
+    "bPath": "requests/sessions.py",
+    "aSurvival": "PARTIALLY_CORRECT",
+    "bSurvival": "FINAL_OR_NEAR_FINAL",
+    "aOverlap": 0.2,
+    "bOverlap": 1,
+    "sameFile": false
+   },
+   "revisionA": {
+    "meaningfulEdits": 1,
+    "scratchEdits": 0,
+    "reworkEdits": 0,
+    "filesEdited": 1
+   },
+   "revisionB": {
+    "meaningfulEdits": 3,
+    "scratchEdits": 0,
+    "reworkEdits": 1,
+    "filesEdited": 2
+   },
+   "testA": {
+    "total": 0,
+    "before": 0,
+    "after": 0,
+    "repeats": 0,
+    "distinct": 0
+   },
+   "testB": {
+    "total": 0,
+    "before": 0,
+    "after": 0,
+    "repeats": 0,
+    "distinct": 0
+   },
+   "patch": {
+    "filesA": [
+     "requests/models.py"
+    ],
+    "filesB": [
+     "requests/models.py",
+     "requests/sessions.py"
+    ],
+    "sharedFiles": [
+     "requests/models.py"
+    ],
+    "jaccard": 0.5,
+    "sameFileSet": false
+   }
+  },
+  {
+   "instanceId": "pydata__xarray_6599",
+   "censored": false,
+   "resolvedA": true,
+   "resolvedB": true,
+   "costA": 0.8564505000000001,
+   "costB": 1.586579,
+   "costDeltaUsd": 0.730128,
+   "costRatio": 1.8525,
+   "economicClass": "ECONOMIC_LOSS",
+   "requestsA": 23,
+   "requestsB": 30,
+   "firstEditA": 12,
+   "firstEditB": 6,
+   "firstEditDelta": -6,
+   "phaseCostsA": {
+    "PHASE_0_ORIENTATION": {
+     "requests": 0,
+     "inputSideCostUsd": 0,
+     "estimatedOutputCostUsd": 0,
+     "totalCostUsd": 0
+    },
+    "PHASE_1_PRE_EDIT": {
+     "requests": 12,
+     "inputSideCostUsd": 0.382487,
+     "estimatedOutputCostUsd": 0.113099,
+     "totalCostUsd": 0.495586
+    },
+    "PHASE_2_IMPLEMENTATION": {
+     "requests": 1,
+     "inputSideCostUsd": 0.026221,
+     "estimatedOutputCostUsd": 0.018331,
+     "totalCostUsd": 0.044552
+    },
+    "PHASE_3_VERIFICATION": {
+     "requests": 10,
+     "inputSideCostUsd": 0.254417,
+     "estimatedOutputCostUsd": 0.061895,
+     "totalCostUsd": 0.316312
+    }
+   },
+   "phaseCostsB": {
+    "PHASE_0_ORIENTATION": {
+     "requests": 1,
+     "inputSideCostUsd": 0.073217,
+     "estimatedOutputCostUsd": 0.006195,
+     "totalCostUsd": 0.079412
+    },
+    "PHASE_1_PRE_EDIT": {
+     "requests": 5,
+     "inputSideCostUsd": 0.114556,
+     "estimatedOutputCostUsd": 0.046165,
+     "totalCostUsd": 0.160721
+    },
+    "PHASE_2_IMPLEMENTATION": {
+     "requests": 17,
+     "inputSideCostUsd": 0.580962,
+     "estimatedOutputCostUsd": 0.470502,
+     "totalCostUsd": 1.051464
+    },
+    "PHASE_3_VERIFICATION": {
+     "requests": 7,
+     "inputSideCostUsd": 0.240069,
+     "estimatedOutputCostUsd": 0.054913,
+     "totalCostUsd": 0.294983
+    }
+   },
+   "orientation": {
+    "delivered": true,
+    "focusFile": "xarray/core/combine.py",
+    "focusAt": "xarray/core/combine.py::combine_by_coords",
+    "relatedFiles": 4,
+    "unitsConferred": 26,
+    "focusFileInGoldPatch": false
+   },
+   "information": {
+    "baselinePreEditStrong": 5,
+    "treatmentPreEditStrong": 23,
+    "treatmentPostEditStrong": 2,
+    "displacedStrong": 0,
+    "eliminatedStrong": 3,
+    "treatmentOnlyStrong": 21,
+    "treatmentOnlyAgentAcquired": 0,
+    "treatmentOnlyPacketConferred": 21,
+    "treatmentOnlyAgentKeys": [],
+    "sharedPreEditStrong": 2,
+    "displacementRate": 0,
+    "displacedKeys": [],
+    "eliminatedKeys": [
+     "RANGE_READ:xarray/core/computation.py@36",
+     "RANGE_READ:xarray/core/computation.py@37",
+     "RANGE_READ:xarray/core/duck_array_ops.py@9"
+    ],
+    "allUnitsDisplaced": 0,
+    "allUnitsEliminated": 8,
+    "allUnitsTreatmentOnly": 26
+   },
+   "firstEdit": {
+    "aPath": "xarray/core/computation.py",
+    "bPath": "xarray/core/computation.py",
+    "aSurvival": "PARTIALLY_CORRECT",
+    "bSurvival": "PARTIALLY_CORRECT",
+    "aOverlap": 0.786,
+    "bOverlap": 0.75,
+    "sameFile": true
+   },
+   "revisionA": {
+    "meaningfulEdits": 1,
+    "scratchEdits": 0,
+    "reworkEdits": 0,
+    "filesEdited": 1
+   },
+   "revisionB": {
+    "meaningfulEdits": 2,
+    "scratchEdits": 0,
+    "reworkEdits": 1,
+    "filesEdited": 1
+   },
+   "testA": {
+    "total": 0,
+    "before": 0,
+    "after": 0,
+    "repeats": 0,
+    "distinct": 0
+   },
+   "testB": {
+    "total": 0,
+    "before": 0,
+    "after": 0,
+    "repeats": 0,
+    "distinct": 0
+   },
+   "patch": {
+    "filesA": [
+     "xarray/core/computation.py"
+    ],
+    "filesB": [
+     "uv.lock",
+     "xarray/core/computation.py"
+    ],
+    "sharedFiles": [
+     "xarray/core/computation.py"
+    ],
+    "jaccard": 0.5,
+    "sameFileSet": false
+   }
+  },
+  {
+   "instanceId": "pylint_dev__pylint_4551",
+   "censored": true,
+   "resolvedA": false,
+   "resolvedB": false,
+   "costA": 3.0131607500000004,
+   "costB": 1.4387984999999996,
+   "costDeltaUsd": -1.574362,
+   "costRatio": 0.4775,
+   "economicClass": "NOT_MEASURABLE",
+   "requestsA": 31,
+   "requestsB": 30,
+   "firstEditA": 17,
+   "firstEditB": 14,
+   "firstEditDelta": -3,
+   "phaseCostsA": {
+    "PHASE_0_ORIENTATION": {
+     "requests": 0,
+     "inputSideCostUsd": 0,
+     "estimatedOutputCostUsd": null,
+     "totalCostUsd": 0
+    },
+    "PHASE_1_PRE_EDIT": {
+     "requests": 17,
+     "inputSideCostUsd": 0.635606,
+     "estimatedOutputCostUsd": null,
+     "totalCostUsd": 0.635606
+    },
+    "PHASE_2_IMPLEMENTATION": {
+     "requests": 10,
+     "inputSideCostUsd": 0.487935,
+     "estimatedOutputCostUsd": null,
+     "totalCostUsd": 0.487935
+    },
+    "PHASE_3_VERIFICATION": {
+     "requests": 4,
+     "inputSideCostUsd": 0.181535,
+     "estimatedOutputCostUsd": null,
+     "totalCostUsd": 0.181535
+    }
+   },
+   "phaseCostsB": {
+    "PHASE_0_ORIENTATION": {
+     "requests": 1,
+     "inputSideCostUsd": 0.098715,
+     "estimatedOutputCostUsd": 0.00542,
+     "totalCostUsd": 0.104135
+    },
+    "PHASE_1_PRE_EDIT": {
+     "requests": 13,
+     "inputSideCostUsd": 0.431411,
+     "estimatedOutputCostUsd": 0.11139,
+     "totalCostUsd": 0.542801
+    },
+    "PHASE_2_IMPLEMENTATION": {
+     "requests": 3,
+     "inputSideCostUsd": 0.109203,
+     "estimatedOutputCostUsd": 0.076192,
+     "totalCostUsd": 0.185396
+    },
+    "PHASE_3_VERIFICATION": {
+     "requests": 13,
+     "inputSideCostUsd": 0.473744,
+     "estimatedOutputCostUsd": 0.132722,
+     "totalCostUsd": 0.606466
+    }
+   },
+   "orientation": {
+    "delivered": true,
+    "focusFile": "pylint/pyreverse/utils.py",
+    "focusAt": "pylint/pyreverse/utils.py::LocalsVisitor.__init__",
+    "relatedFiles": 5,
+    "unitsConferred": 24,
+    "focusFileInGoldPatch": false
+   },
+   "information": {
+    "baselinePreEditStrong": 242,
+    "treatmentPreEditStrong": 98,
+    "treatmentPostEditStrong": 85,
+    "displacedStrong": 80,
+    "eliminatedStrong": 76,
+    "treatmentOnlyStrong": 12,
+    "treatmentOnlyAgentAcquired": 0,
+    "treatmentOnlyPacketConferred": 12,
+    "treatmentOnlyAgentKeys": [],
+    "sharedPreEditStrong": 86,
+    "displacementRate": 0.3306,
+    "displacedKeys": [
+     "RANGE_READ:tests/data/clientmodule_test.py@0",
+     "RANGE_READ:tests/data/clientmodule_test.py@1",
+     "RANGE_READ:tests/data/clientmodule_test.py@10",
+     "RANGE_READ:tests/data/clientmodule_test.py@11",
+     "RANGE_READ:tests/data/clientmodule_test.py@12",
+     "RANGE_READ:tests/data/clientmodule_test.py@13",
+     "RANGE_READ:tests/data/clientmodule_test.py@14",
+     "RANGE_READ:tests/data/clientmodule_test.py@15",
+     "RANGE_READ:tests/data/clientmodule_test.py@16",
+     "RANGE_READ:tests/data/clientmodule_test.py@17",
+     "RANGE_READ:tests/data/clientmodule_test.py@18",
+     "RANGE_READ:tests/data/clientmodule_test.py@19",
+     "RANGE_READ:tests/data/clientmodule_test.py@2",
+     "RANGE_READ:tests/data/clientmodule_test.py@20",
+     "RANGE_READ:tests/data/clientmodule_test.py@21",
+     "RANGE_READ:tests/data/clientmodule_test.py@22",
+     "RANGE_READ:tests/data/clientmodule_test.py@23",
+     "RANGE_READ:tests/data/clientmodule_test.py@24",
+     "RANGE_READ:tests/data/clientmodule_test.py@25",
+     "RANGE_READ:tests/data/clientmodule_test.py@26",
+     "RANGE_READ:tests/data/clientmodule_test.py@27",
+     "RANGE_READ:tests/data/clientmodule_test.py@28",
+     "RANGE_READ:tests/data/clientmodule_test.py@29",
+     "RANGE_READ:tests/data/clientmodule_test.py@3",
+     "RANGE_READ:tests/data/clientmodule_test.py@30",
+     "RANGE_READ:tests/data/clientmodule_test.py@31",
+     "RANGE_READ:tests/data/clientmodule_test.py@32",
+     "RANGE_READ:tests/data/clientmodule_test.py@33",
+     "RANGE_READ:tests/data/clientmodule_test.py@34",
+     "RANGE_READ:tests/data/clientmodule_test.py@35",
+     "RANGE_READ:tests/data/clientmodule_test.py@36",
+     "RANGE_READ:tests/data/clientmodule_test.py@37",
+     "RANGE_READ:tests/data/clientmodule_test.py@38",
+     "RANGE_READ:tests/data/clientmodule_test.py@39",
+     "RANGE_READ:tests/data/clientmodule_test.py@4",
+     "RANGE_READ:tests/data/clientmodule_test.py@5",
+     "RANGE_READ:tests/data/clientmodule_test.py@6",
+     "RANGE_READ:tests/data/clientmodule_test.py@7",
+     "RANGE_READ:tests/data/clientmodule_test.py@8",
+     "RANGE_READ:tests/data/clientmodule_test.py@9"
+    ],
+    "eliminatedKeys": [
+     "RANGE_READ:pylint/pyreverse/utils.py@0",
+     "RANGE_READ:pylint/pyreverse/utils.py@1",
+     "RANGE_READ:pylint/pyreverse/utils.py@10",
+     "RANGE_READ:pylint/pyreverse/utils.py@11",
+     "RANGE_READ:pylint/pyreverse/utils.py@12",
+     "RANGE_READ:pylint/pyreverse/utils.py@13",
+     "RANGE_READ:pylint/pyreverse/utils.py@14",
+     "RANGE_READ:pylint/pyreverse/utils.py@15",
+     "RANGE_READ:pylint/pyreverse/utils.py@16",
+     "RANGE_READ:pylint/pyreverse/utils.py@17",
+     "RANGE_READ:pylint/pyreverse/utils.py@18",
+     "RANGE_READ:pylint/pyreverse/utils.py@19",
+     "RANGE_READ:pylint/pyreverse/utils.py@20",
+     "RANGE_READ:pylint/pyreverse/utils.py@21",
+     "RANGE_READ:pylint/pyreverse/utils.py@22",
+     "RANGE_READ:pylint/pyreverse/utils.py@23",
+     "RANGE_READ:pylint/pyreverse/utils.py@24",
+     "RANGE_READ:pylint/pyreverse/utils.py@25",
+     "RANGE_READ:pylint/pyreverse/utils.py@26",
+     "RANGE_READ:pylint/pyreverse/utils.py@27",
+     "RANGE_READ:pylint/pyreverse/utils.py@28",
+     "RANGE_READ:pylint/pyreverse/utils.py@29",
+     "RANGE_READ:pylint/pyreverse/utils.py@30",
+     "RANGE_READ:pylint/pyreverse/utils.py@31",
+     "RANGE_READ:pylint/pyreverse/utils.py@32",
+     "RANGE_READ:pylint/pyreverse/utils.py@33",
+     "RANGE_READ:pylint/pyreverse/utils.py@34",
+     "RANGE_READ:pylint/pyreverse/utils.py@35",
+     "RANGE_READ:pylint/pyreverse/utils.py@36",
+     "RANGE_READ:pylint/pyreverse/utils.py@37",
+     "RANGE_READ:pylint/pyreverse/utils.py@38",
+     "RANGE_READ:pylint/pyreverse/utils.py@39",
+     "RANGE_READ:pylint/pyreverse/utils.py@5",
+     "RANGE_READ:pylint/pyreverse/utils.py@6",
+     "RANGE_READ:pylint/pyreverse/utils.py@7",
+     "RANGE_READ:pylint/pyreverse/utils.py@8",
+     "RANGE_READ:pylint/pyreverse/utils.py@9",
+     "RANGE_READ:pylint/pyreverse/writer.py@0",
+     "RANGE_READ:pylint/pyreverse/writer.py@1",
+     "RANGE_READ:pylint/pyreverse/writer.py@10"
+    ],
+    "allUnitsDisplaced": 84,
+    "allUnitsEliminated": 81,
+    "allUnitsTreatmentOnly": 16
+   },
+   "firstEdit": {
+    "aPath": "pylint/pyreverse/inspector.py",
+    "bPath": "pylint/pyreverse/inspector.py",
+    "aSurvival": "FINAL_OR_NEAR_FINAL",
+    "bSurvival": "FINAL_OR_NEAR_FINAL",
+    "aOverlap": 0.855,
+    "bOverlap": 0.824,
+    "sameFile": true
+   },
+   "revisionA": {
+    "meaningfulEdits": 4,
+    "scratchEdits": 1,
+    "reworkEdits": 3,
+    "filesEdited": 1
+   },
+   "revisionB": {
+    "meaningfulEdits": 2,
+    "scratchEdits": 0,
+    "reworkEdits": 1,
+    "filesEdited": 1
+   },
+   "testA": {
+    "total": 0,
+    "before": 0,
+    "after": 0,
+    "repeats": 0,
+    "distinct": 0
+   },
+   "testB": {
+    "total": 0,
+    "before": 0,
+    "after": 0,
+    "repeats": 0,
+    "distinct": 0
+   },
+   "patch": {
+    "filesA": [
+     "pylint/pyreverse/inspector.py"
+    ],
+    "filesB": [
+     "pylint/pyreverse/inspector.py"
+    ],
+    "sharedFiles": [
+     "pylint/pyreverse/inspector.py"
+    ],
+    "jaccard": 1,
+    "sameFileSet": true
+   }
+  },
+  {
+   "instanceId": "pytest_dev__pytest_7432",
+   "censored": false,
+   "resolvedA": true,
+   "resolvedB": true,
+   "costA": 0.3697885,
+   "costB": 0.38561700000000004,
+   "costDeltaUsd": 0.015829,
+   "costRatio": 1.0428,
+   "economicClass": "ROUGH_NEUTRAL",
+   "requestsA": 7,
+   "requestsB": 8,
+   "firstEditA": 1,
+   "firstEditB": 2,
+   "firstEditDelta": 1,
+   "phaseCostsA": {
+    "PHASE_0_ORIENTATION": {
+     "requests": 0,
+     "inputSideCostUsd": 0,
+     "estimatedOutputCostUsd": 0,
+     "totalCostUsd": 0
+    },
+    "PHASE_1_PRE_EDIT": {
+     "requests": 1,
+     "inputSideCostUsd": 0.05416,
+     "estimatedOutputCostUsd": 0.007206,
+     "totalCostUsd": 0.061366
+    },
+    "PHASE_2_IMPLEMENTATION": {
+     "requests": 1,
+     "inputSideCostUsd": 0.05472,
+     "estimatedOutputCostUsd": 0.070672,
+     "totalCostUsd": 0.125393
+    },
+    "PHASE_3_VERIFICATION": {
+     "requests": 5,
+     "inputSideCostUsd": 0.140958,
+     "estimatedOutputCostUsd": 0.042072,
+     "totalCostUsd": 0.18303
+    }
+   },
+   "phaseCostsB": {
+    "PHASE_0_ORIENTATION": {
+     "requests": 1,
+     "inputSideCostUsd": 0.098305,
+     "estimatedOutputCostUsd": 0.004286,
+     "totalCostUsd": 0.102591
+    },
+    "PHASE_1_PRE_EDIT": {
+     "requests": 1,
+     "inputSideCostUsd": 0.022509,
+     "estimatedOutputCostUsd": 0.004213,
+     "totalCostUsd": 0.026721
+    },
+    "PHASE_2_IMPLEMENTATION": {
+     "requests": 1,
+     "inputSideCostUsd": 0.054756,
+     "estimatedOutputCostUsd": 0.045865,
+     "totalCostUsd": 0.100621
+    },
+    "PHASE_3_VERIFICATION": {
+     "requests": 5,
+     "inputSideCostUsd": 0.124173,
+     "estimatedOutputCostUsd": 0.031512,
+     "totalCostUsd": 0.155684
+    }
+   },
+   "orientation": {
+    "delivered": true,
+    "focusFile": "src/_pytest/skipping.py",
+    "focusAt": "src/_pytest/skipping.py::pytest_runtest_setup",
+    "relatedFiles": 5,
+    "unitsConferred": 23,
+    "focusFileInGoldPatch": true
+   },
+   "information": {
+    "baselinePreEditStrong": 40,
+    "treatmentPreEditStrong": 53,
+    "treatmentPostEditStrong": 2,
+    "displacedStrong": 0,
+    "eliminatedStrong": 0,
+    "treatmentOnlyStrong": 13,
+    "treatmentOnlyAgentAcquired": 0,
+    "treatmentOnlyPacketConferred": 13,
+    "treatmentOnlyAgentKeys": [],
+    "sharedPreEditStrong": 40,
+    "displacementRate": 0,
+    "displacedKeys": [],
+    "eliminatedKeys": [],
+    "allUnitsDisplaced": 0,
+    "allUnitsEliminated": 0,
+    "allUnitsTreatmentOnly": 16
+   },
+   "firstEdit": {
+    "aPath": "src/_pytest/skipping.py",
+    "bPath": "src/_pytest/skipping.py",
+    "aSurvival": "SUPERSEDED",
+    "bSurvival": "SUPERSEDED",
+    "aOverlap": 0,
+    "bOverlap": 0,
+    "sameFile": true
+   },
+   "revisionA": {
+    "meaningfulEdits": 1,
+    "scratchEdits": 0,
+    "reworkEdits": 0,
+    "filesEdited": 1
+   },
+   "revisionB": {
+    "meaningfulEdits": 1,
+    "scratchEdits": 1,
+    "reworkEdits": 0,
+    "filesEdited": 1
+   },
+   "testA": {
+    "total": 2,
+    "before": 0,
+    "after": 2,
+    "repeats": 0,
+    "distinct": 2
+   },
+   "testB": {
+    "total": 2,
+    "before": 0,
+    "after": 2,
+    "repeats": 0,
+    "distinct": 2
+   },
+   "patch": {
+    "filesA": [
+     "src/_pytest/skipping.py"
+    ],
+    "filesB": [
+     "src/_pytest/skipping.py"
+    ],
+    "sharedFiles": [
+     "src/_pytest/skipping.py"
+    ],
+    "jaccard": 1,
+    "sameFileSet": true
+   }
+  },
+  {
+   "instanceId": "scikit_learn__scikit_learn_10844",
+   "censored": false,
+   "resolvedA": true,
+   "resolvedB": true,
+   "costA": 0.251031,
+   "costB": 0.26721300000000003,
+   "costDeltaUsd": 0.016182,
+   "costRatio": 1.0645,
+   "economicClass": "ROUGH_NEUTRAL",
+   "requestsA": 8,
+   "requestsB": 6,
+   "firstEditA": 2,
+   "firstEditB": 3,
+   "firstEditDelta": 1,
+   "phaseCostsA": {
+    "PHASE_0_ORIENTATION": {
+     "requests": 0,
+     "inputSideCostUsd": 0,
+     "estimatedOutputCostUsd": 0,
+     "totalCostUsd": 0
+    },
+    "PHASE_1_PRE_EDIT": {
+     "requests": 2,
+     "inputSideCostUsd": 0.077911,
+     "estimatedOutputCostUsd": 0.012952,
+     "totalCostUsd": 0.090863
+    },
+    "PHASE_2_IMPLEMENTATION": {
+     "requests": 3,
+     "inputSideCostUsd": 0.062828,
+     "estimatedOutputCostUsd": 0.025427,
+     "totalCostUsd": 0.088256
+    },
+    "PHASE_3_VERIFICATION": {
+     "requests": 3,
+     "inputSideCostUsd": 0.056867,
+     "estimatedOutputCostUsd": 0.015046,
+     "totalCostUsd": 0.071912
+    }
+   },
+   "phaseCostsB": {
+    "PHASE_0_ORIENTATION": {
+     "requests": 1,
+     "inputSideCostUsd": 0.102955,
+     "estimatedOutputCostUsd": 0.005474,
+     "totalCostUsd": 0.108429
+    },
+    "PHASE_1_PRE_EDIT": {
+     "requests": 2,
+     "inputSideCostUsd": 0.041765,
+     "estimatedOutputCostUsd": 0.006937,
+     "totalCostUsd": 0.048702
+    },
+    "PHASE_2_IMPLEMENTATION": {
+     "requests": 1,
+     "inputSideCostUsd": 0.02841,
+     "estimatedOutputCostUsd": 0.017826,
+     "totalCostUsd": 0.046236
+    },
+    "PHASE_3_VERIFICATION": {
+     "requests": 2,
+     "inputSideCostUsd": 0.043608,
+     "estimatedOutputCostUsd": 0.020237,
+     "totalCostUsd": 0.063845
+    }
+   },
+   "orientation": {
+    "delivered": true,
+    "focusFile": "sklearn/metrics/cluster/supervised.py",
+    "focusAt": "sklearn/metrics/cluster/supervised.py::comb2",
+    "relatedFiles": 6,
+    "unitsConferred": 29,
+    "focusFileInGoldPatch": true
+   },
+   "information": {
+    "baselinePreEditStrong": 0,
+    "treatmentPreEditStrong": 22,
+    "treatmentPostEditStrong": 1,
+    "displacedStrong": 0,
+    "eliminatedStrong": 0,
+    "treatmentOnlyStrong": 20,
+    "treatmentOnlyAgentAcquired": 1,
+    "treatmentOnlyPacketConferred": 19,
+    "treatmentOnlyAgentKeys": [
+     "RANGE_READ:sklearn/metrics/cluster/supervised.py@15"
+    ],
+    "sharedPreEditStrong": 0,
+    "displacementRate": 0,
+    "displacedKeys": [],
+    "eliminatedKeys": [],
+    "allUnitsDisplaced": 0,
+    "allUnitsEliminated": 10,
+    "allUnitsTreatmentOnly": 21
+   },
+   "firstEdit": {
+    "aPath": "sklearn/metrics/cluster/supervised.py",
+    "bPath": "sklearn/metrics/cluster/supervised.py",
+    "aSurvival": "FINAL_OR_NEAR_FINAL",
+    "bSurvival": "FINAL_OR_NEAR_FINAL",
+    "aOverlap": 1,
+    "bOverlap": 1,
+    "sameFile": true
+   },
+   "revisionA": {
+    "meaningfulEdits": 2,
+    "scratchEdits": 0,
+    "reworkEdits": 1,
+    "filesEdited": 1
+   },
+   "revisionB": {
+    "meaningfulEdits": 1,
+    "scratchEdits": 0,
+    "reworkEdits": 0,
+    "filesEdited": 1
+   },
+   "testA": {
+    "total": 0,
+    "before": 0,
+    "after": 0,
+    "repeats": 0,
+    "distinct": 0
+   },
+   "testB": {
+    "total": 0,
+    "before": 0,
+    "after": 0,
+    "repeats": 0,
+    "distinct": 0
+   },
+   "patch": {
+    "filesA": [
+     "sklearn/metrics/cluster/supervised.py"
+    ],
+    "filesB": [
+     "sklearn/metrics/cluster/supervised.py"
+    ],
+    "sharedFiles": [
+     "sklearn/metrics/cluster/supervised.py"
+    ],
+    "jaccard": 1,
+    "sameFileSet": true
+   }
+  },
+  {
+   "instanceId": "sphinx_doc__sphinx_7462",
+   "censored": false,
+   "resolvedA": false,
+   "resolvedB": false,
+   "costA": 0.268135,
+   "costB": 0.3244345,
+   "costDeltaUsd": 0.0563,
+   "costRatio": 1.21,
+   "economicClass": "ROUGH_NEUTRAL",
+   "requestsA": 6,
+   "requestsB": 8,
+   "firstEditA": 1,
+   "firstEditB": 2,
+   "firstEditDelta": 1,
+   "phaseCostsA": {
+    "PHASE_0_ORIENTATION": {
+     "requests": 0,
+     "inputSideCostUsd": 0,
+     "estimatedOutputCostUsd": 0,
+     "totalCostUsd": 0
+    },
+    "PHASE_1_PRE_EDIT": {
+     "requests": 1,
+     "inputSideCostUsd": 0.055551,
+     "estimatedOutputCostUsd": 0.00558,
+     "totalCostUsd": 0.061131
+    },
+    "PHASE_2_IMPLEMENTATION": {
+     "requests": 1,
+     "inputSideCostUsd": 0.025551,
+     "estimatedOutputCostUsd": 0.052091,
+     "totalCostUsd": 0.077642
+    },
+    "PHASE_3_VERIFICATION": {
+     "requests": 4,
+     "inputSideCostUsd": 0.101509,
+     "estimatedOutputCostUsd": 0.027853,
+     "totalCostUsd": 0.129362
+    }
+   },
+   "phaseCostsB": {
+    "PHASE_0_ORIENTATION": {
+     "requests": 1,
+     "inputSideCostUsd": 0.099705,
+     "estimatedOutputCostUsd": 0.004146,
+     "totalCostUsd": 0.103851
+    },
+    "PHASE_1_PRE_EDIT": {
+     "requests": 1,
+     "inputSideCostUsd": 0.020549,
+     "estimatedOutputCostUsd": 0.003536,
+     "totalCostUsd": 0.024085
+    },
+    "PHASE_2_IMPLEMENTATION": {
+     "requests": 1,
+     "inputSideCostUsd": 0.026344,
+     "estimatedOutputCostUsd": 0.026763,
+     "totalCostUsd": 0.053108
+    },
+    "PHASE_3_VERIFICATION": {
+     "requests": 5,
+     "inputSideCostUsd": 0.110112,
+     "estimatedOutputCostUsd": 0.033279,
+     "totalCostUsd": 0.143391
+    }
+   },
+   "orientation": {
+    "delivered": true,
+    "focusFile": "sphinx/domains/python.py",
+    "focusAt": "sphinx/domains/python.py::_parse_annotation",
+    "relatedFiles": 4,
+    "unitsConferred": 26,
+    "focusFileInGoldPatch": true
+   },
+   "information": {
+    "baselinePreEditStrong": 2,
+    "treatmentPreEditStrong": 19,
+    "treatmentPostEditStrong": 2,
+    "displacedStrong": 0,
+    "eliminatedStrong": 0,
+    "treatmentOnlyStrong": 17,
+    "treatmentOnlyAgentAcquired": 0,
+    "treatmentOnlyPacketConferred": 17,
+    "treatmentOnlyAgentKeys": [],
+    "sharedPreEditStrong": 2,
+    "displacementRate": 0,
+    "displacedKeys": [],
+    "eliminatedKeys": [],
+    "allUnitsDisplaced": 0,
+    "allUnitsEliminated": 0,
+    "allUnitsTreatmentOnly": 19
+   },
+   "firstEdit": {
+    "aPath": "sphinx/domains/python.py",
+    "bPath": "sphinx/domains/python.py",
+    "aSurvival": "PARTIALLY_CORRECT",
+    "bSurvival": "PARTIALLY_CORRECT",
+    "aOverlap": 0.667,
+    "bOverlap": 0.222,
+    "sameFile": true
+   },
+   "revisionA": {
+    "meaningfulEdits": 2,
+    "scratchEdits": 0,
+    "reworkEdits": 1,
+    "filesEdited": 1
+   },
+   "revisionB": {
+    "meaningfulEdits": 2,
+    "scratchEdits": 0,
+    "reworkEdits": 1,
+    "filesEdited": 1
+   },
+   "testA": {
+    "total": 0,
+    "before": 0,
+    "after": 0,
+    "repeats": 0,
+    "distinct": 0
+   },
+   "testB": {
+    "total": 0,
+    "before": 0,
+    "after": 0,
+    "repeats": 0,
+    "distinct": 0
+   },
+   "patch": {
+    "filesA": [
+     "sphinx/domains/python.py"
+    ],
+    "filesB": [
+     "sphinx/domains/python.py"
+    ],
+    "sharedFiles": [
+     "sphinx/domains/python.py"
+    ],
+    "jaccard": 1,
+    "sameFileSet": true
+   }
+  },
+  {
+   "instanceId": "sympy__sympy_13480",
+   "censored": false,
+   "resolvedA": true,
+   "resolvedB": true,
+   "costA": 0.2458635,
+   "costB": 0.413186,
+   "costDeltaUsd": 0.167322,
+   "costRatio": 1.6806,
+   "economicClass": "ECONOMIC_LOSS",
+   "requestsA": 8,
+   "requestsB": 12,
+   "firstEditA": 1,
+   "firstEditB": 2,
+   "firstEditDelta": 1,
+   "phaseCostsA": {
+    "PHASE_0_ORIENTATION": {
+     "requests": 0,
+     "inputSideCostUsd": 0,
+     "estimatedOutputCostUsd": 0,
+     "totalCostUsd": 0
+    },
+    "PHASE_1_PRE_EDIT": {
+     "requests": 1,
+     "inputSideCostUsd": 0.053541,
+     "estimatedOutputCostUsd": 0.00632,
+     "totalCostUsd": 0.059862
+    },
+    "PHASE_2_IMPLEMENTATION": {
+     "requests": 1,
+     "inputSideCostUsd": 0.020451,
+     "estimatedOutputCostUsd": 0.012291,
+     "totalCostUsd": 0.032742
+    },
+    "PHASE_3_VERIFICATION": {
+     "requests": 6,
+     "inputSideCostUsd": 0.118546,
+     "estimatedOutputCostUsd": 0.034714,
+     "totalCostUsd": 0.15326
+    }
+   },
+   "phaseCostsB": {
+    "PHASE_0_ORIENTATION": {
+     "requests": 1,
+     "inputSideCostUsd": 0.097715,
+     "estimatedOutputCostUsd": 0.006727,
+     "totalCostUsd": 0.104442
+    },
+    "PHASE_1_PRE_EDIT": {
+     "requests": 1,
+     "inputSideCostUsd": 0.024699,
+     "estimatedOutputCostUsd": 0.004364,
+     "totalCostUsd": 0.029063
+    },
+    "PHASE_2_IMPLEMENTATION": {
+     "requests": 1,
+     "inputSideCostUsd": 0.022738,
+     "estimatedOutputCostUsd": 0.015093,
+     "totalCostUsd": 0.037831
+    },
+    "PHASE_3_VERIFICATION": {
+     "requests": 9,
+     "inputSideCostUsd": 0.188734,
+     "estimatedOutputCostUsd": 0.053115,
+     "totalCostUsd": 0.24185
+    }
+   },
+   "orientation": {
+    "delivered": true,
+    "focusFile": "sympy/functions/elementary/hyperbolic.py",
+    "focusAt": "sympy/functions/elementary/hyperbolic.py::coth",
+    "relatedFiles": 5,
+    "unitsConferred": 31,
+    "focusFileInGoldPatch": true
+   },
+   "information": {
+    "baselinePreEditStrong": 2,
+    "treatmentPreEditStrong": 21,
+    "treatmentPostEditStrong": 3,
+    "displacedStrong": 0,
+    "eliminatedStrong": 0,
+    "treatmentOnlyStrong": 21,
+    "treatmentOnlyAgentAcquired": 2,
+    "treatmentOnlyPacketConferred": 19,
+    "treatmentOnlyAgentKeys": [
+     "RANGE_READ:sympy/functions/elementary/hyperbolic.py@8",
+     "RANGE_READ:sympy/functions/elementary/hyperbolic.py@9"
+    ],
+    "sharedPreEditStrong": 2,
+    "displacementRate": 0,
+    "displacedKeys": [],
+    "eliminatedKeys": [],
+    "allUnitsDisplaced": 0,
+    "allUnitsEliminated": 0,
+    "allUnitsTreatmentOnly": 24
+   },
+   "firstEdit": {
+    "aPath": "sympy/functions/elementary/hyperbolic.py",
+    "bPath": "sympy/functions/elementary/hyperbolic.py",
+    "aSurvival": "PARTIALLY_CORRECT",
+    "bSurvival": "PARTIALLY_CORRECT",
+    "aOverlap": 0.5,
+    "bOverlap": 0.25,
+    "sameFile": true
+   },
+   "revisionA": {
+    "meaningfulEdits": 1,
+    "scratchEdits": 0,
+    "reworkEdits": 0,
+    "filesEdited": 1
+   },
+   "revisionB": {
+    "meaningfulEdits": 1,
+    "scratchEdits": 0,
+    "reworkEdits": 0,
+    "filesEdited": 1
+   },
+   "testA": {
+    "total": 0,
+    "before": 0,
+    "after": 0,
+    "repeats": 0,
+    "distinct": 0
+   },
+   "testB": {
+    "total": 0,
+    "before": 0,
+    "after": 0,
+    "repeats": 0,
+    "distinct": 0
+   },
+   "patch": {
+    "filesA": [
+     "sympy/functions/elementary/hyperbolic.py"
+    ],
+    "filesB": [
+     "sympy/functions/elementary/hyperbolic.py"
+    ],
+    "sharedFiles": [
+     "sympy/functions/elementary/hyperbolic.py"
+    ],
+    "jaccard": 1,
+    "sameFileSet": true
+   }
+  }
+ ]
+}

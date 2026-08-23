@@ -1,0 +1,478 @@
+{
+ "schemaVersion": "stage5.m174.tail-audit.v1",
+ "milestone": "M174",
+ "workstream": "M174-D",
+ "tailRule": "the top 2 positive whole-run paired cost deltas among uncensored pairs",
+ "tail": [
+  "pydata__xarray_6599",
+  "astropy__astropy_14369"
+ ],
+ "tailShare": {
+  "top1": 0.3175,
+  "top2": 0.6283,
+  "top3": 0.8427
+ },
+ "mechanismTally": {
+  "IMPLEMENTATION_STRATEGY_DIVERGENCE": 2,
+  "STOCHASTIC_OR_UNATTRIBUTABLE": 7,
+  "WORK_ELIMINATION": 2,
+  "NOT_MEASURABLE": 1
+ },
+ "uniformLabelCheck": {
+  "rule": "§67 — a single label across all twelve is a detector smell until validated",
+  "distinctMechanisms": 4,
+  "pass": true
+ },
+ "omittedContextSummary": {
+  "pairsWithCandidateOmission": 3,
+  "pairsWithNoDisplacement": 9,
+  "note": "COMPACT_ORIENTATION_OMISSION_CAUSAL requires all five §43 conditions; a candidate is not a finding"
+ },
+ "pairs": [
+  {
+   "instanceId": "astropy__astropy_14369",
+   "isTail": true,
+   "mechanism": "IMPLEMENTATION_STRATEGY_DIVERGENCE",
+   "secondary": [
+    "ENVIRONMENT_FRICTION",
+    "DIFFERENT_REPAIR",
+    "PRE_EDIT_WORK_ELIMINATED"
+   ],
+   "because": "the arms' first repo edits share only 38% of their lines; the treatment implemented a different repair",
+   "costDeltaUsd": 0.714641,
+   "costRatio": 1.4777,
+   "deltaPreEdit": -0.5067,
+   "deltaImplementation": -0.1592,
+   "deltaVerification": 1.3101,
+   "firstEditOverlap": 0.385,
+   "environmentFrictionA": {
+    "requests": 1,
+    "failures": 1,
+    "venvRebuilds": 0
+   },
+   "environmentFrictionB": {
+    "requests": 12,
+    "failures": 9,
+    "venvRebuilds": 0
+   },
+   "orientationFocusFile": "astropy/units/format/cds.py",
+   "orientationUsedByFirstEdit": true,
+   "omittedContext": {
+    "displacedUnits": 2,
+    "displacedInFilesThePacketNamed": 0,
+    "displacedInFilesThePacketDidNotName": 2,
+    "candidateOmittedFiles": [
+     "astropy/io/ascii/cds.py"
+    ],
+    "verdict": "CANDIDATE_OMISSION"
+   },
+   "displacedStrong": 2,
+   "eliminatedStrong": 78,
+   "treatmentOnlyAgentAcquired": 4
+  },
+  {
+   "instanceId": "django__django_13658",
+   "isTail": false,
+   "mechanism": "STOCHASTIC_OR_UNATTRIBUTABLE",
+   "secondary": [
+    "PRE_EDIT_WORK_ELIMINATED"
+   ],
+   "because": "no displacement, no divergent repair, no orientation-traceable extra work",
+   "costDeltaUsd": 0.077034,
+   "costRatio": 1.4101,
+   "deltaPreEdit": -0.0205,
+   "deltaImplementation": -0.0348,
+   "deltaVerification": 0.0284,
+   "firstEditOverlap": 1,
+   "environmentFrictionA": {
+    "requests": 1,
+    "failures": 1,
+    "venvRebuilds": 0
+   },
+   "environmentFrictionB": {
+    "requests": 1,
+    "failures": 1,
+    "venvRebuilds": 0
+   },
+   "orientationFocusFile": "django/core/management/__init__.py",
+   "orientationUsedByFirstEdit": true,
+   "omittedContext": {
+    "displacedUnits": 0,
+    "displacedInFilesThePacketNamed": 0,
+    "displacedInFilesThePacketDidNotName": 0,
+    "candidateOmittedFiles": [],
+    "verdict": "NO_DISPLACEMENT_TO_EXPLAIN"
+   },
+   "displacedStrong": 0,
+   "eliminatedStrong": 33,
+   "treatmentOnlyAgentAcquired": 0
+  },
+  {
+   "instanceId": "matplotlib__matplotlib_22719",
+   "isTail": false,
+   "mechanism": "STOCHASTIC_OR_UNATTRIBUTABLE",
+   "secondary": [],
+   "because": "no displacement, no divergent repair, no orientation-traceable extra work",
+   "costDeltaUsd": 0.029165,
+   "costRatio": 1.078,
+   "deltaPreEdit": -0.1039,
+   "deltaImplementation": -0.1397,
+   "deltaVerification": 0.1809,
+   "firstEditOverlap": 0.636,
+   "environmentFrictionA": {
+    "requests": 3,
+    "failures": 2,
+    "venvRebuilds": 0
+   },
+   "environmentFrictionB": {
+    "requests": 4,
+    "failures": 4,
+    "venvRebuilds": 0
+   },
+   "orientationFocusFile": "lib/matplotlib/category.py",
+   "orientationUsedByFirstEdit": true,
+   "omittedContext": {
+    "displacedUnits": 0,
+    "displacedInFilesThePacketNamed": 0,
+    "displacedInFilesThePacketDidNotName": 0,
+    "candidateOmittedFiles": [],
+    "verdict": "NO_DISPLACEMENT_TO_EXPLAIN"
+   },
+   "displacedStrong": 0,
+   "eliminatedStrong": 0,
+   "treatmentOnlyAgentAcquired": 0
+  },
+  {
+   "instanceId": "mwaskom__seaborn_3187",
+   "isTail": false,
+   "mechanism": "WORK_ELIMINATION",
+   "secondary": [
+    "DIFFERENT_REPAIR",
+    "PRE_EDIT_WORK_ELIMINATED"
+   ],
+   "because": "5 strong units the baseline acquired and the treatment never needed, at no cost premium",
+   "costDeltaUsd": -0.064009,
+   "costRatio": 0.9393,
+   "deltaPreEdit": 0.1239,
+   "deltaImplementation": -0.0223,
+   "deltaVerification": -0.2715,
+   "firstEditOverlap": 0,
+   "environmentFrictionA": {
+    "requests": 4,
+    "failures": 4,
+    "venvRebuilds": 0
+   },
+   "environmentFrictionB": {
+    "requests": 2,
+    "failures": 2,
+    "venvRebuilds": 0
+   },
+   "orientationFocusFile": "seaborn/_core/scales.py",
+   "orientationUsedByFirstEdit": true,
+   "omittedContext": {
+    "displacedUnits": 0,
+    "displacedInFilesThePacketNamed": 0,
+    "displacedInFilesThePacketDidNotName": 0,
+    "candidateOmittedFiles": [],
+    "verdict": "NO_DISPLACEMENT_TO_EXPLAIN"
+   },
+   "displacedStrong": 0,
+   "eliminatedStrong": 5,
+   "treatmentOnlyAgentAcquired": 9
+  },
+  {
+   "instanceId": "pallets__flask_5014",
+   "isTail": false,
+   "mechanism": "WORK_ELIMINATION",
+   "secondary": [
+    "PRE_EDIT_WORK_ELIMINATED"
+   ],
+   "because": "29 strong units the baseline acquired and the treatment never needed, at no cost premium",
+   "costDeltaUsd": -0.034424,
+   "costRatio": 0.8616,
+   "deltaPreEdit": -0.0231,
+   "deltaImplementation": -0.0627,
+   "deltaVerification": 0.0238,
+   "firstEditOverlap": 1,
+   "environmentFrictionA": {
+    "requests": 0,
+    "failures": 0,
+    "venvRebuilds": 0
+   },
+   "environmentFrictionB": {
+    "requests": 0,
+    "failures": 0,
+    "venvRebuilds": 0
+   },
+   "orientationFocusFile": "src/flask/blueprints.py",
+   "orientationUsedByFirstEdit": true,
+   "omittedContext": {
+    "displacedUnits": 0,
+    "displacedInFilesThePacketNamed": 0,
+    "displacedInFilesThePacketDidNotName": 0,
+    "candidateOmittedFiles": [],
+    "verdict": "NO_DISPLACEMENT_TO_EXPLAIN"
+   },
+   "displacedStrong": 0,
+   "eliminatedStrong": 29,
+   "treatmentOnlyAgentAcquired": 0
+  },
+  {
+   "instanceId": "psf__requests_1724",
+   "isTail": false,
+   "mechanism": "IMPLEMENTATION_STRATEGY_DIVERGENCE",
+   "secondary": [
+    "DIFFERENT_REPAIR"
+   ],
+   "because": "the arms' first repo edits share only 0% of their lines; the treatment implemented a different repair",
+   "costDeltaUsd": 0.492961,
+   "costRatio": 3.0914,
+   "deltaPreEdit": -0.0479,
+   "deltaImplementation": 0.2435,
+   "deltaVerification": 0.1692,
+   "firstEditOverlap": 0,
+   "environmentFrictionA": {
+    "requests": 0,
+    "failures": 0,
+    "venvRebuilds": 0
+   },
+   "environmentFrictionB": {
+    "requests": 1,
+    "failures": 1,
+    "venvRebuilds": 0
+   },
+   "orientationFocusFile": "requests/sessions.py",
+   "orientationUsedByFirstEdit": true,
+   "omittedContext": {
+    "displacedUnits": 4,
+    "displacedInFilesThePacketNamed": 0,
+    "displacedInFilesThePacketDidNotName": 4,
+    "candidateOmittedFiles": [
+     "requests/models.py",
+     "requests/utils.py"
+    ],
+    "verdict": "CANDIDATE_OMISSION"
+   },
+   "displacedStrong": 4,
+   "eliminatedStrong": 0,
+   "treatmentOnlyAgentAcquired": 44
+  },
+  {
+   "instanceId": "pydata__xarray_6599",
+   "isTail": true,
+   "mechanism": "STOCHASTIC_OR_UNATTRIBUTABLE",
+   "secondary": [
+    "ENVIRONMENT_FRICTION",
+    "PRE_EDIT_WORK_ELIMINATED"
+   ],
+   "because": "14 requests spent on interpreter/venv/disk friction, 9 environment rebuilds — not repository work",
+   "costDeltaUsd": 0.730128,
+   "costRatio": 1.8525,
+   "deltaPreEdit": -0.3349,
+   "deltaImplementation": 1.0069,
+   "deltaVerification": -0.0213,
+   "firstEditOverlap": 0.818,
+   "environmentFrictionA": {
+    "requests": 3,
+    "failures": 2,
+    "venvRebuilds": 0
+   },
+   "environmentFrictionB": {
+    "requests": 14,
+    "failures": 12,
+    "venvRebuilds": 9
+   },
+   "orientationFocusFile": "xarray/core/combine.py",
+   "orientationUsedByFirstEdit": false,
+   "omittedContext": {
+    "displacedUnits": 0,
+    "displacedInFilesThePacketNamed": 0,
+    "displacedInFilesThePacketDidNotName": 0,
+    "candidateOmittedFiles": [],
+    "verdict": "NO_DISPLACEMENT_TO_EXPLAIN"
+   },
+   "displacedStrong": 0,
+   "eliminatedStrong": 3,
+   "treatmentOnlyAgentAcquired": 0
+  },
+  {
+   "instanceId": "pylint_dev__pylint_4551",
+   "isTail": false,
+   "mechanism": "NOT_MEASURABLE",
+   "secondary": [],
+   "because": "M173 censored an arm of this pair",
+   "costDeltaUsd": -1.574362,
+   "costRatio": 0.4775,
+   "deltaPreEdit": -0.0928,
+   "deltaImplementation": -0.3025,
+   "deltaVerification": 0.4249,
+   "firstEditOverlap": 0.175,
+   "environmentFrictionA": {
+    "requests": 6,
+    "failures": 5,
+    "venvRebuilds": 0
+   },
+   "environmentFrictionB": {
+    "requests": 5,
+    "failures": 5,
+    "venvRebuilds": 0
+   },
+   "orientationFocusFile": "pylint/pyreverse/utils.py",
+   "orientationUsedByFirstEdit": false,
+   "omittedContext": {
+    "displacedUnits": 40,
+    "displacedInFilesThePacketNamed": 0,
+    "displacedInFilesThePacketDidNotName": 40,
+    "candidateOmittedFiles": [
+     "tests/data/clientmodule_test.py"
+    ],
+    "verdict": "CANDIDATE_OMISSION"
+   },
+   "displacedStrong": 80,
+   "eliminatedStrong": 76,
+   "treatmentOnlyAgentAcquired": 0
+  },
+  {
+   "instanceId": "pytest_dev__pytest_7432",
+   "isTail": false,
+   "mechanism": "STOCHASTIC_OR_UNATTRIBUTABLE",
+   "secondary": [
+    "DIFFERENT_REPAIR"
+   ],
+   "because": "no displacement, no divergent repair, no orientation-traceable extra work",
+   "costDeltaUsd": 0.015829,
+   "costRatio": 1.0428,
+   "deltaPreEdit": -0.0346,
+   "deltaImplementation": -0.0248,
+   "deltaVerification": -0.0273,
+   "firstEditOverlap": 0.385,
+   "environmentFrictionA": {
+    "requests": 3,
+    "failures": 3,
+    "venvRebuilds": 0
+   },
+   "environmentFrictionB": {
+    "requests": 2,
+    "failures": 2,
+    "venvRebuilds": 0
+   },
+   "orientationFocusFile": "src/_pytest/skipping.py",
+   "orientationUsedByFirstEdit": true,
+   "omittedContext": {
+    "displacedUnits": 0,
+    "displacedInFilesThePacketNamed": 0,
+    "displacedInFilesThePacketDidNotName": 0,
+    "candidateOmittedFiles": [],
+    "verdict": "NO_DISPLACEMENT_TO_EXPLAIN"
+   },
+   "displacedStrong": 0,
+   "eliminatedStrong": 0,
+   "treatmentOnlyAgentAcquired": 0
+  },
+  {
+   "instanceId": "scikit_learn__scikit_learn_10844",
+   "isTail": false,
+   "mechanism": "STOCHASTIC_OR_UNATTRIBUTABLE",
+   "secondary": [],
+   "because": "no displacement, no divergent repair, no orientation-traceable extra work",
+   "costDeltaUsd": 0.016182,
+   "costRatio": 1.0645,
+   "deltaPreEdit": -0.0422,
+   "deltaImplementation": -0.042,
+   "deltaVerification": -0.0081,
+   "firstEditOverlap": 1,
+   "environmentFrictionA": {
+    "requests": 1,
+    "failures": 1,
+    "venvRebuilds": 0
+   },
+   "environmentFrictionB": {
+    "requests": 0,
+    "failures": 0,
+    "venvRebuilds": 0
+   },
+   "orientationFocusFile": "sklearn/metrics/cluster/supervised.py",
+   "orientationUsedByFirstEdit": true,
+   "omittedContext": {
+    "displacedUnits": 0,
+    "displacedInFilesThePacketNamed": 0,
+    "displacedInFilesThePacketDidNotName": 0,
+    "candidateOmittedFiles": [],
+    "verdict": "NO_DISPLACEMENT_TO_EXPLAIN"
+   },
+   "displacedStrong": 0,
+   "eliminatedStrong": 0,
+   "treatmentOnlyAgentAcquired": 1
+  },
+  {
+   "instanceId": "sphinx_doc__sphinx_7462",
+   "isTail": false,
+   "mechanism": "STOCHASTIC_OR_UNATTRIBUTABLE",
+   "secondary": [],
+   "because": "no displacement, no divergent repair, no orientation-traceable extra work",
+   "costDeltaUsd": 0.0563,
+   "costRatio": 1.21,
+   "deltaPreEdit": -0.037,
+   "deltaImplementation": -0.0245,
+   "deltaVerification": 0.014,
+   "firstEditOverlap": 0.889,
+   "environmentFrictionA": {
+    "requests": 2,
+    "failures": 2,
+    "venvRebuilds": 0
+   },
+   "environmentFrictionB": {
+    "requests": 3,
+    "failures": 3,
+    "venvRebuilds": 0
+   },
+   "orientationFocusFile": "sphinx/domains/python.py",
+   "orientationUsedByFirstEdit": true,
+   "omittedContext": {
+    "displacedUnits": 0,
+    "displacedInFilesThePacketNamed": 0,
+    "displacedInFilesThePacketDidNotName": 0,
+    "candidateOmittedFiles": [],
+    "verdict": "NO_DISPLACEMENT_TO_EXPLAIN"
+   },
+   "displacedStrong": 0,
+   "eliminatedStrong": 0,
+   "treatmentOnlyAgentAcquired": 0
+  },
+  {
+   "instanceId": "sympy__sympy_13480",
+   "isTail": false,
+   "mechanism": "STOCHASTIC_OR_UNATTRIBUTABLE",
+   "secondary": [],
+   "because": "no displacement, no divergent repair, no orientation-traceable extra work",
+   "costDeltaUsd": 0.167322,
+   "costRatio": 1.6806,
+   "deltaPreEdit": -0.0308,
+   "deltaImplementation": 0.0051,
+   "deltaVerification": 0.0886,
+   "firstEditOverlap": 0.5,
+   "environmentFrictionA": {
+    "requests": 4,
+    "failures": 4,
+    "venvRebuilds": 1
+   },
+   "environmentFrictionB": {
+    "requests": 4,
+    "failures": 4,
+    "venvRebuilds": 0
+   },
+   "orientationFocusFile": "sympy/functions/elementary/hyperbolic.py",
+   "orientationUsedByFirstEdit": true,
+   "omittedContext": {
+    "displacedUnits": 0,
+    "displacedInFilesThePacketNamed": 0,
+    "displacedInFilesThePacketDidNotName": 0,
+    "candidateOmittedFiles": [],
+    "verdict": "NO_DISPLACEMENT_TO_EXPLAIN"
+   },
+   "displacedStrong": 0,
+   "eliminatedStrong": 0,
+   "treatmentOnlyAgentAcquired": 2
+  }
+ ]
+}
