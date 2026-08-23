@@ -173,3 +173,241 @@ function relationFor(edge: ImpactEdge, line: number): StaticRelationEvidence {
     limitations: [],
   };
 }
+
+// ── M177: response totality ─────────────────────────────────────────────────
+//
+// Before M177 every budget below the envelope floor threw
+// `impact_response_envelope_unreachable`, which the MCP server's catch-all
+// reported as `handler_failed`: a predictable product condition arriving as an
+// implementation fault. Reproduced through the real transport on
+// `pytest-dev__pytest-10081` at max_tokens 1/50/100/200/400, and — more
+// tellingly — on a symbol with no impact at all, where there was never any
+// evidence to shed.
+//
+// WHY THESE TESTS USE A DIFFERENT FIXTURE. `graph()` above is deliberately
+// evidence-heavy and metadata-light, which is the right shape for testing the
+// compaction ladder but the wrong shape for testing its terminal: it fits at
+// max_tokens=1 and never reaches the code under test. M177-A measured the real
+// floor to be 61% METADATA, so `realisticGraph()` carries the field population a
+// real response has — hashed symbol ids, a full edge-type inventory, multi-key
+// count maps, the M139 caller-coverage block and one line each of real coverage
+// and limitation prose. Nothing here is padding for its own sake; remove any of
+// it and the fixture stops representing a real response.
+
+test("M177: a budget too small for any response returns a bounded decline, not a throw", () => {
+  for (const maxTokens of [1, 25, 50, 100]) {
+    const response = compactImpactProductResponse(realisticGraph(1_000, maxTokens));
+    assert.equal(response.diagnostics.envelopeDecline, true, `max_tokens=${maxTokens}`);
+    assert.equal(response.responseBudget.retainedEdges, 0);
+    assert.equal(response.edges.length, 0);
+    assert.equal(response.directRelations.length, 0);
+    assert.equal(response.nodes.length, 0);
+    assert.equal(response.paths.length, 0);
+    // The terminal is returned, never re-gated, so it has to actually fit —
+    // otherwise the unreachable state has just moved one rung down.
+    assert.ok(
+      response.responseBudget.estimatedTotalTokens <= response.responseBudget.totalCeiling,
+      `max_tokens=${maxTokens}: ${response.responseBudget.estimatedTotalTokens} > ${response.responseBudget.totalCeiling}`,
+    );
+    assert.ok(response.responseBudget.serializedCharacters <= IMPACT_HARD_SERIALIZED_CHARACTER_CEILING);
+    assert.equal(response.responseBudget.withinEnvelope, true);
+  }
+});
+
+test("M177: the decline counts what it could not deliver instead of reporting an empty graph", () => {
+  const response = compactImpactProductResponse(realisticGraph(1_000, 1));
+  // The one claim this record must never make: that there is nothing there.
+  assert.ok(response.responseBudget.omittedEdges >= 990);
+  assert.equal(response.responseBudget.resultState, "bounded_truncated");
+  assert.equal(response.diagnostics.deliveryTruncated, true);
+  assert.equal(response.richSummary.truncated, true);
+  // Discovered populations are facts about the repository, not about the
+  // response, so they survive a delivery of nothing.
+  assert.equal(response.richSummary.directIncoming, 1_000);
+  assert.equal(response.summary.consumers.exactCallerCount, 1_000);
+  assert.equal(response.summary.consumers.potentialCallerCount, 4);
+});
+
+test("M177: a genuinely empty impact is never dressed as a delivery loss, at any budget", () => {
+  // EMPTY_IMPACT is not BOUNDED_NONDELIVERY, and `omittedEdges` is what tells
+  // them apart: nothing was withheld, because there was nothing to withhold.
+  // The invariant holds whether or not the budget is tight enough to reach the
+  // terminal, which is why every budget is checked rather than the one that
+  // happens to decline.
+  for (const maxTokens of [1, 25, 200, 1_200]) {
+    const response = compactImpactProductResponse(realisticGraph(0, maxTokens));
+    assert.equal(response.responseBudget.omittedEdges, 0, `max_tokens=${maxTokens}`);
+    assert.equal(response.responseBudget.retainedEdges, 0);
+    assert.notEqual(response.responseBudget.resultState, "bounded_truncated");
+  }
+});
+
+test("M177: the terminal preserves an honest zero when it fires on an empty impact", () => {
+  // An empty graph is SMALL, so reaching its terminal takes a response whose
+  // irreducible metadata is large for a reason other than evidence. A deeply
+  // nested module path is that reason, and it is a real one: identity is the
+  // only variable-length metadata a decline carries. It stays under the
+  // 200-character bound on purpose, so this also covers the case where a long
+  // identity is still short enough to be quoted verbatim.
+  const deep = `src/_pytest/${"config/parsing/".repeat(8)}argparsing.py::__all__`;
+  const base = realisticGraph(0, 1);
+  const response = compactImpactProductResponse({
+    ...base,
+    requested: { ...base.requested, symbolFqn: deep },
+    resolvedSymbol: { ...base.resolvedSymbol, fqName: deep, filePath: deep.split("::")[0]! },
+  });
+  assert.equal(response.diagnostics.envelopeDecline, true);
+  assert.equal(response.responseBudget.omittedEdges, 0);
+  assert.equal(response.responseBudget.retainedEdges, 0);
+  assert.notEqual(response.responseBudget.resultState, "bounded_truncated");
+  assert.equal(response.resolvedSymbol.fqName, deep);
+  assert.ok(response.responseBudget.estimatedTotalTokens <= response.responseBudget.totalCeiling);
+});
+
+test("M177: responses that already fitted are untouched and carry no decline marker", () => {
+  for (const maxTokens of [1_200, 3_000, 20_000]) {
+    const response = compactImpactProductResponse(realisticGraph(1_000, maxTokens));
+    assert.equal(response.diagnostics.envelopeDecline, undefined, `max_tokens=${maxTokens}`);
+    assert.ok(response.responseBudget.retainedEdges > 0);
+    assert.equal(response.responseBudget.withinEnvelope, true);
+  }
+});
+
+test("M177: the terminal still fits when the repository supplies pathological identities", () => {
+  // The only variable-length values the terminal carries are four identity
+  // strings. Copied through unbounded, a long enough symbol name would push the
+  // decline itself past the ceiling.
+  const huge = `src/${"deeply/".repeat(400)}mod.py::${"Outer.".repeat(400)}target`;
+  const base = realisticGraph(1_000, 1);
+  const response = compactImpactProductResponse({
+    ...base,
+    requested: { ...base.requested, symbolFqn: huge },
+    resolvedSymbol: { ...base.resolvedSymbol, fqName: huge, filePath: huge, localName: huge },
+  });
+  assert.equal(response.diagnostics.envelopeDecline, true);
+  assert.ok(response.responseBudget.estimatedTotalTokens <= response.responseBudget.totalCeiling);
+  // Omission, not truncation: `fqName` is the argument a caller feeds back to
+  // this same tool, so half a symbol name is an identity that does not resolve.
+  assert.equal(response.resolvedSymbol.fqName.startsWith("@omitted:"), true);
+  assert.equal(response.requested.symbolFqn.startsWith("@omitted:"), true);
+});
+
+test("M177: identities short enough to stay usable are quoted verbatim in the decline", () => {
+  const response = compactImpactProductResponse(realisticGraph(1_000, 1));
+  assert.equal(response.resolvedSymbol.fqName, "src/_pytest/config/argparsing.py::OptionGroup._addoption_instance");
+  assert.equal(response.requested.symbolFqn, "src/_pytest/config/argparsing.py::OptionGroup._addoption_instance");
+});
+
+test("M177: the decline cannot strengthen a caller-coverage claim", () => {
+  const base = realisticGraph(1_000, 1);
+  const response = compactImpactProductResponse({
+    ...base,
+    callerCoverage: {
+      status: "complete",
+      exactCallerCount: 7,
+      deliveredExactCallerCount: 7,
+      potentialCallerCount: 4,
+      deliveredPotentialCallerCount: 4,
+      potentialCallersOmitted: 0,
+      competingDefinitionCount: 0,
+      candidateFilesScanned: 3,
+      candidateFilesAvailable: 3,
+      reasonCodes: [],
+      notes: ["all call sites resolved"],
+    },
+  });
+  // Dropping evidence for budget can never increase certainty.
+  assert.notEqual(response.callerCoverage.status, "complete");
+  assert.equal(response.callerCoverage.deliveredExactCallerCount, 0);
+  assert.equal(response.callerCoverage.deliveredPotentialCallerCount, 0);
+  // …but what was DISCOVERED is a fact about the repository and must survive.
+  assert.equal(response.callerCoverage.exactCallerCount, 7);
+  assert.equal(response.callerCoverage.potentialCallerCount, 4);
+  assert.equal(response.callerCoverage.potentialCallersOmitted, 4);
+});
+
+test("M177: building a decline does not mutate the authoritative input", () => {
+  const input = realisticGraph(1_000, 1);
+  const before = JSON.stringify(input);
+  compactImpactProductResponse(input);
+  assert.equal(JSON.stringify(input), before);
+});
+
+/**
+ * A response shaped like a real one: the metadata is what decides whether the
+ * terminal is reached, so a fixture that skimps on it cannot test the terminal.
+ */
+function realisticGraph(totalEdges: number, maxTokens: number): ImpactGraphOutput {
+  const base = graph(totalEdges);
+  const fqName = "src/_pytest/config/argparsing.py::OptionGroup._addoption_instance";
+  return {
+    ...base,
+    requested: { ...base.requested, symbolFqn: fqName },
+    resolvedSymbol: {
+      symbolId: "415ecf29444b2adeb2d1ca4456f989a6d5763570f52534e480e7759eb81b62de",
+      filePath: "src/_pytest/config/argparsing.py",
+      fqName,
+      localName: "_addoption_instance",
+      kind: SymbolKind.Function,
+    },
+    coverage: {
+      ...base.coverage,
+      supportedEdgeTypes: [EdgeType.Calls, EdgeType.Contains, EdgeType.Imports, EdgeType.References],
+      observedEdgeTypes: [EdgeType.Calls, EdgeType.Contains],
+      notes: [
+        "Structural evidence only: dynamic dispatch, reflection and runtime registration are not modelled, so an absent relation is not proof that no call path exists at runtime.",
+        "Cross-repository traversal is disabled for this repo-bound index.",
+      ],
+    },
+    summary: {
+      ...base.summary,
+      consumers: {
+        exactCallerCount: totalEdges,
+        exactReferenceCount: 3,
+        potentialCallerCount: 4,
+        structuralContainerCount: 1,
+        outgoingDependencyCount: 2,
+        reverseReachableSymbolCount: 10,
+      },
+    },
+    richSummary: {
+      ...base.richSummary,
+      countsByRelation: { calls: totalEdges, contains: 2, imports: 5, references: 3 },
+      countsByStrength: { resolved: totalEdges, heuristic: 4, lexical: 1 },
+      // M139 always emits this: it names the population each count above was
+      // measured over. `graph()` predates it, and leaving it out is most of why
+      // that fixture's floor sits below any budget worth testing.
+      fieldDomains: {
+        directIncoming: "canonical_retained",
+        directOutgoing: "canonical_retained",
+        transitiveIncoming: "full_graph",
+        transitiveOutgoing: "full_graph",
+        affectedFiles: "full_graph",
+        affectedSymbols: "full_graph",
+        countsByRelation: "canonical_retained",
+        countsByStrength: "canonical_retained",
+        omittedPaths: "full_graph",
+        omittedEdges: "full_graph",
+      },
+    },
+    limits: { ...base.limits, maxTokens },
+    diagnostics: {
+      ...base.diagnostics,
+      limitations: ["Potential call sites were scanned lexically over owning-class-related files only; files above the size limit were skipped and are reported in candidateFilesAvailable."],
+    },
+    callerCoverage: {
+      status: "incomplete",
+      exactCallerCount: totalEdges,
+      deliveredExactCallerCount: 0,
+      potentialCallerCount: 4,
+      deliveredPotentialCallerCount: 4,
+      potentialCallersOmitted: 0,
+      competingDefinitionCount: 2,
+      candidateFilesScanned: 30,
+      candidateFilesAvailable: 40,
+      reasonCodes: ["callsite_candidates_omitted", "unsupported_language_in_candidate_files"],
+      notes: ["caller coverage incomplete; additional unresolved call sites omitted for response budget"],
+    },
+    potentialCallers: [],
+  };
+}

@@ -337,9 +337,178 @@ export function compactImpactProductResponse(
   });
   if (responseBudget.estimatedTotalTokens > totalCeiling
     || responseBudget.serializedCharacters > IMPACT_HARD_SERIALIZED_CHARACTER_CEILING) {
-    throw new Error("impact_response_envelope_unreachable");
+    return buildBoundedImpactDecline(draft, {
+      requestedMaxTokens,
+      totalCeiling,
+      requestedMaxEdges,
+      originalUniqueEdges,
+    });
   }
   draft.responseBudget = responseBudget;
+  return draft as ImpactProductResponse;
+}
+
+/**
+ * Bounds on the only strings in the terminal record whose length is decided by
+ * the repository rather than by this file. Everything else the record carries is
+ * a frozen constant, a boolean, or a non-negative integer, so these four bounds
+ * are what make the terminal's size a constant instead of an input.
+ */
+const DECLINE_IDENTITY_CHARACTERS = 200;
+
+/**
+ * Left in place of an identity that exceeded its bound.
+ *
+ * OMISSION, NOT TRUNCATION, for M176's reason: `fqName` is the argument a caller
+ * feeds back to this same tool, so half a symbol name is an identity that does
+ * not resolve — strictly worse than an explicit refusal to quote it.
+ */
+const DECLINE_OVER_BOUND = "@omitted: exceeded the bounded impact response limit";
+
+const boundedIdentity = (value: string): string =>
+  value.length <= DECLINE_IDENTITY_CHARACTERS ? value : DECLINE_OVER_BOUND;
+
+/**
+ * The terminal record for an impact response that cannot be represented inside
+ * its own envelope. Returned unconditionally: it is measured for reporting, never
+ * re-gated, so there is no path from here back to an unreachable state.
+ *
+ * WHY THIS EXISTS. The ladder above is a real bounded degradation and for almost
+ * every request it is enough. But it can only shrink the five model-visible keys,
+ * and M177-A measured the floor to be 61% METADATA — 745 tokens of `richSummary`,
+ * `diagnostics`, `callerCoverage`, `summary`, `resolvedSymbol`, `coverage` and
+ * `timing` that no rung touches — against a ceiling of only
+ * `max_tokens + max(800, 15%)`. So for any small budget the ladder runs out with
+ * the response still too large, and before M177 it threw
+ * `impact_response_envelope_unreachable`, which the MCP server's catch-all
+ * reported as `handler_failed`. Reproduced through the real transport on
+ * `pytest-dev__pytest-10081` at `max_tokens` 1/50/100/200/400 — and, more
+ * tellingly, on a symbol with NO impact at all, where there was never any
+ * evidence to shed.
+ *
+ * WHAT IT SAYS. Nothing authored. Every fact here was already established before
+ * the ladder ran, carried in the field the caller already reads:
+ * `summary.consumers` and `richSummary` keep the DISCOVERED population,
+ * `callerCoverage` keeps the discovered/delivered split M139 built for exactly
+ * this purpose, and `responseBudget.omittedEdges` says how much did not travel.
+ * The reader can therefore tell "55 edges exist and you received none" from "this
+ * symbol has no impact", which is the one distinction a decline must never blur.
+ *
+ * NOT A NEW PUBLIC STATE. `bounded_truncated` beside `retainedEdges: 0` already
+ * means what this needs it to mean, and a genuinely empty impact still reports
+ * `omittedEdges: 0`. Following M176, the distinction only a maintainer needs is
+ * one internal boolean, `diagnostics.envelopeDecline`.
+ *
+ * NOT A DUMP. No evidence travels inside the record. The authoritative graph is
+ * dropped whole and counted, never summarised in prose.
+ */
+function buildBoundedImpactDecline(
+  draft: MutableImpactResponse,
+  input: {
+    requestedMaxTokens: number;
+    totalCeiling: number;
+    requestedMaxEdges: number;
+    originalUniqueEdges: number;
+  },
+): ImpactProductResponse {
+  // Every model-visible channel yields at once. There is no ordering question
+  // left to get wrong: the ladder already tried every priority it knows.
+  draft.nodes = [];
+  draft.edges = [];
+  draft.directRelations = [];
+  draft.paths = [];
+  draft.view = { format: draft.view.format, lines: [] };
+  draft.dependentFiles = [];
+  draft.affectedFiles = [];
+  draft.entrypoints = [];
+  draft.tests = [];
+  // Unproven call sites are evidence too, and they leave as evidence: the count
+  // they came from stays visible in `callerCoverage` below.
+  const deliveredPotentialCallers = 0;
+  draft.potentialCallers = [];
+  delete draft.accounting;
+
+  // The deprecated mixed-direction counts describe the DELIVERED set — that is
+  // what `rebuildCanonicalNodeAndViewProjections` maintains them as everywhere
+  // else — so they go to zero with the delivery. `summary.consumers` is M139's
+  // truthful discovered accounting and is deliberately left alone: it is the
+  // field that keeps this record from reading as "there are no consumers".
+  draft.summary = {
+    ...draft.summary,
+    dependentSymbolCount: 0,
+    dependentFileCount: 0,
+    maxObservedDistance: 0,
+  };
+
+  // Coverage prose and edge-type inventories are schema-declared or restate
+  // `observedEdgeTypes`; none of them is a claim that survives losing the graph.
+  draft.coverage = {
+    ...draft.coverage,
+    supportedEdgeTypes: [],
+    observedEdgeTypes: [],
+    notes: [],
+  };
+
+  // Counts stay; the three open-ended maps go. `countsByRelation` and
+  // `countsByStrength` are keyed by relation kinds the repository supplies and
+  // `fieldDomains` labels fields this record no longer carries, so all three are
+  // unbounded in principle and describe a delivered graph that is now empty.
+  draft.richSummary = {
+    ...draft.richSummary,
+    countsByRelation: {},
+    countsByStrength: {},
+    fieldDomains: {},
+    truncated: true,
+  };
+
+  // The discovered/delivered split, restated for a delivery of nothing. This is
+  // the field that carries the truth: `exactCallerCount` keeps what was found and
+  // `deliveredExactCallerCount` drops to zero beside it.
+  if (draft.callerCoverage !== undefined) {
+    const withCounts = withDeliveredCallerCounts(draft.callerCoverage, deliveredPotentialCallers);
+    draft.callerCoverage = {
+      ...withCounts,
+      deliveredExactCallerCount: 0,
+      status: withCounts.status === "complete" && withCounts.exactCallerCount > 0
+        ? "incomplete"
+        : withCounts.status,
+      reasonCodes: withCounts.reasonCodes.slice(0, 4),
+      notes: [],
+    };
+  }
+
+  draft.diagnostics = {
+    ...draft.diagnostics,
+    canonicalEdgesRetained: 0,
+    canonicalNodesRetained: 0,
+    deliveryTruncated: true,
+    limitations: [],
+    // The one thing this record says that a graceful degradation does not: the
+    // bounded form could not be built from the response, only in place of it.
+    // Internal, bounded, and the only way telemetry can attribute the two apart.
+    envelopeDecline: true,
+  };
+
+  // Identities are the last variable-length values left. Bounding them is what
+  // turns the terminal's size from an input into a constant.
+  draft.requested = { ...draft.requested, symbolFqn: boundedIdentity(draft.requested.symbolFqn) };
+  draft.resolvedSymbol = {
+    ...draft.resolvedSymbol,
+    filePath: boundedIdentity(draft.resolvedSymbol.filePath),
+    fqName: boundedIdentity(draft.resolvedSymbol.fqName),
+    localName: boundedIdentity(draft.resolvedSymbol.localName),
+  };
+
+  // A single audit entry rather than the ladder's accumulated list: every rung
+  // ran and none of it survived, so enumerating them would spend the envelope
+  // restating one fact this field already carries.
+  draft.responseBudget = buildBudget(draft, {
+    requestedMaxTokens: input.requestedMaxTokens,
+    totalCeiling: input.totalCeiling,
+    requestedMaxEdges: input.requestedMaxEdges,
+    originalUniqueEdges: input.originalUniqueEdges,
+    compacted: new Set(["impact_envelope_decline"]),
+  });
   return draft as ImpactProductResponse;
 }
 

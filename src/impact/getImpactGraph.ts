@@ -323,6 +323,18 @@ export interface ImpactDiagnostics {
   readonly deliveryTruncated: boolean;
   readonly traversalLimitReached: boolean;
   readonly limitations: readonly string[];
+  /**
+   * Set only when the response envelope's degradation ladder was EXHAUSTED and
+   * the bounded terminal record was returned in place of the response (M177).
+   *
+   * Absent on every response the ladder was able to build, including a normal
+   * `bounded_truncated` one, so telemetry can tell "degraded gracefully" from
+   * "could not build the degraded form" — the distinction a maintainer needs and
+   * an agent cannot act on. It deliberately does NOT get its own `resultState`:
+   * `bounded_truncated` beside `retainedEdges: 0` already says what the model
+   * needs, and a genuinely empty impact still reports `omittedEdges: 0`.
+   */
+  readonly envelopeDecline?: true;
 }
 
 export interface ImpactGraphError {
