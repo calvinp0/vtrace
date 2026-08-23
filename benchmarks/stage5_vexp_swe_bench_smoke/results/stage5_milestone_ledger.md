@@ -4236,7 +4236,7 @@ bun test                                      5425 pass, 0 fail (baseline 5405)
   requalification is licensed on economics but costs real money and is not
   requested; the cheaper next milestone is offline and aimed at the pivot.
 
-## M173 — cost was not the thing (commit pending)
+## M173 — cost was not the thing (edd52104)
 
 **MIXED. 24/24 live runs, 12/12 balanced pairs, $17.83 of a $45 cap. `src/`
 byte-identical to `9242d879` throughout; no product change. The orientation is
