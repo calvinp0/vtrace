@@ -1,0 +1,1098 @@
+{
+  "schemaVersion": "stage5.m173.orientation-use.v1",
+  "milestone": "M173",
+  "workstream": "M173-D",
+  "sourceSeparation": "§68 — the compact transcript is the only source for what the agent saw and did; gold is the only source for whether the focus was right. No analysis-only data was exposed to a model.",
+  "classifiersFrozenBefore": "any M173 live run existed (m173Consumption.ts)",
+  "useCounts": {
+    "DIRECTLY_USED": 10,
+    "IGNORED": 2
+  },
+  "pivotCounts": {
+    "PIVOT_WAS_CORRECT": 11,
+    "IGNORED_OR_RECOVERED": 1
+  },
+  "rediscoveryTotals": {
+    "targetedConfirmation": 39,
+    "redundantRediscovery": 4,
+    "newInformationSearch": 53
+  },
+  "focusIsGold": {
+    "correct": 11,
+    "wrong": 1,
+    "unobservable": 0
+  },
+  "pivotWorkVerdict": "PIVOT_CORRECTNESS_NOT_LICENSED",
+  "pivotWorkRule": "§36/§77 — licensed only where a wrong pivot has an OBSERVED downstream consequence. A wrong pivot that was ignored, recovered from, or left no trace does not license retrieval work, however many of them there are.",
+  "causalPivotLosses": [],
+  "rows": [
+    {
+      "instanceId": "astropy__astropy-14369",
+      "orientationDisclosure": "COMPACT_ORIENTATION",
+      "focusFile": "astropy/units/format/cds.py",
+      "focusAt": "astropy/units/format/cds.py::CDS",
+      "relatedFiles": [
+        "astropy/io/ascii/mrt.py",
+        "astropy/table/tests/test_table.py",
+        "astropy/units/tests/test_format.py",
+        "astropy/units/format/base.py",
+        "astropy/units/format/cds.py"
+      ],
+      "goldFiles": [
+        "astropy/units/format/cds.py",
+        "astropy/units/format/cds_parsetab.py"
+      ],
+      "focusIsGold": true,
+      "use": "DIRECTLY_USED",
+      "useReason": "the agent edited the file the orientation focused on",
+      "editedFocus": true,
+      "editedRelated": true,
+      "inspectedFocus": true,
+      "editedFiles": [
+        "astropy/units/format/cds.py"
+      ],
+      "baselineEditedFiles": [
+        "astropy/units/format/cds.py"
+      ],
+      "baselineEditedTheSameFocus": true,
+      "rediscovery": {
+        "targetedConfirmation": 7,
+        "redundantRediscovery": 1,
+        "newInformationSearch": 4,
+        "classified": [
+          {
+            "requestIndex": 1,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/astropy__astropy/astropy/units/format/cds.py",
+            "verdict": "TARGETED_CONFIRMATION"
+          },
+          {
+            "requestIndex": 2,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/astropy__astropy/astropy/units/format/cds.py",
+            "verdict": "TARGETED_CONFIRMATION"
+          },
+          {
+            "requestIndex": 8,
+            "kind": "SHELL_INSPECTION",
+            "target": null,
+            "verdict": "NEW_INFORMATION_SEARCH"
+          },
+          {
+            "requestIndex": 17,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/astropy__astropy/astropy/units/format/cds.py",
+            "verdict": "TARGETED_CONFIRMATION"
+          },
+          {
+            "requestIndex": 18,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/astropy__astropy/astropy/units/tests/test_format.py",
+            "verdict": "TARGETED_CONFIRMATION"
+          },
+          {
+            "requestIndex": 19,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/astropy__astropy/astropy/units/tests/test_format.py",
+            "verdict": "TARGETED_CONFIRMATION"
+          },
+          {
+            "requestIndex": 20,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/astropy__astropy/astropy/io/ascii/cds.py",
+            "verdict": "NEW_INFORMATION_SEARCH"
+          },
+          {
+            "requestIndex": 21,
+            "kind": "SEARCH",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/astropy__astropy/astropy/io/ascii/cds.py",
+            "verdict": "REDUNDANT_REDISCOVERY"
+          },
+          {
+            "requestIndex": 22,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/astropy__astropy/astropy/io/ascii/cds.py",
+            "verdict": "NEW_INFORMATION_SEARCH"
+          },
+          {
+            "requestIndex": 23,
+            "kind": "SEARCH",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/astropy__astropy/astropy/units/tests/test_format.py",
+            "verdict": "TARGETED_CONFIRMATION"
+          },
+          {
+            "requestIndex": 24,
+            "kind": "SEARCH",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/astropy__astropy/astropy/units/tests/test_format.py",
+            "verdict": "TARGETED_CONFIRMATION"
+          },
+          {
+            "requestIndex": 29,
+            "kind": "SHELL_INSPECTION",
+            "target": null,
+            "verdict": "NEW_INFORMATION_SEARCH"
+          }
+        ]
+      },
+      "preEditInvestigationCallsBaseline": 7,
+      "preEditInvestigationCallsCompact": 2,
+      "preEditInvestigationDelta": -5,
+      "pivotConsequence": "PIVOT_WAS_CORRECT",
+      "resolved": false,
+      "baselineResolved": false
+    },
+    {
+      "instanceId": "django__django-13658",
+      "orientationDisclosure": "COMPACT_ORIENTATION",
+      "focusFile": "django/core/management/__init__.py",
+      "focusAt": "django/core/management/__init__.py::ManagementUtility",
+      "relatedFiles": [
+        "django/core/management/commands/loaddata.py",
+        "django/core/management/__init__.py",
+        "tests/bash_completion/tests.py",
+        "tests/user_commands/tests.py"
+      ],
+      "goldFiles": [
+        "django/core/management/__init__.py"
+      ],
+      "focusIsGold": true,
+      "use": "DIRECTLY_USED",
+      "useReason": "the agent edited the file the orientation focused on",
+      "editedFocus": true,
+      "editedRelated": true,
+      "inspectedFocus": true,
+      "editedFiles": [
+        "django/core/management/__init__.py"
+      ],
+      "baselineEditedFiles": [
+        "django/core/management/__init__.py"
+      ],
+      "baselineEditedTheSameFocus": true,
+      "rediscovery": {
+        "targetedConfirmation": 3,
+        "redundantRediscovery": 0,
+        "newInformationSearch": 0,
+        "classified": [
+          {
+            "requestIndex": 1,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/django__django/django/core/management/__init__.py",
+            "verdict": "TARGETED_CONFIRMATION"
+          },
+          {
+            "requestIndex": 2,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/django__django/django/core/management/__init__.py",
+            "verdict": "TARGETED_CONFIRMATION"
+          },
+          {
+            "requestIndex": 4,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/django__django/django/core/management/__init__.py",
+            "verdict": "TARGETED_CONFIRMATION"
+          }
+        ]
+      },
+      "preEditInvestigationCallsBaseline": 2,
+      "preEditInvestigationCallsCompact": 2,
+      "preEditInvestigationDelta": 0,
+      "pivotConsequence": "PIVOT_WAS_CORRECT",
+      "resolved": true,
+      "baselineResolved": true
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-22719",
+      "orientationDisclosure": "COMPACT_ORIENTATION",
+      "focusFile": "lib/matplotlib/category.py",
+      "focusAt": "lib/matplotlib/category.py::StrCategoryConverter.convert",
+      "relatedFiles": [
+        "lib/matplotlib/category.py",
+        "lib/matplotlib/_api/deprecation.py"
+      ],
+      "goldFiles": [
+        "lib/matplotlib/category.py"
+      ],
+      "focusIsGold": true,
+      "use": "DIRECTLY_USED",
+      "useReason": "the agent edited the file the orientation focused on",
+      "editedFocus": true,
+      "editedRelated": true,
+      "inspectedFocus": true,
+      "editedFiles": [
+        "lib/matplotlib/category.py"
+      ],
+      "baselineEditedFiles": [
+        "lib/matplotlib/category.py"
+      ],
+      "baselineEditedTheSameFocus": true,
+      "rediscovery": {
+        "targetedConfirmation": 2,
+        "redundantRediscovery": 0,
+        "newInformationSearch": 0,
+        "classified": [
+          {
+            "requestIndex": 1,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/matplotlib__matplotlib/lib/matplotlib/category.py",
+            "verdict": "TARGETED_CONFIRMATION"
+          },
+          {
+            "requestIndex": 8,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/matplotlib__matplotlib/lib/matplotlib/category.py",
+            "verdict": "TARGETED_CONFIRMATION"
+          }
+        ]
+      },
+      "preEditInvestigationCallsBaseline": 1,
+      "preEditInvestigationCallsCompact": 1,
+      "preEditInvestigationDelta": 0,
+      "pivotConsequence": "PIVOT_WAS_CORRECT",
+      "resolved": true,
+      "baselineResolved": true
+    },
+    {
+      "instanceId": "mwaskom__seaborn-3187",
+      "orientationDisclosure": "COMPACT_ORIENTATION",
+      "focusFile": "seaborn/_core/scales.py",
+      "focusAt": "seaborn/_core/scales.py::Nominal",
+      "relatedFiles": [
+        "seaborn/_core/plot.py",
+        "seaborn/_core/properties.py"
+      ],
+      "goldFiles": [
+        "seaborn/_core/scales.py",
+        "seaborn/utils.py"
+      ],
+      "focusIsGold": true,
+      "use": "DIRECTLY_USED",
+      "useReason": "the agent edited the file the orientation focused on",
+      "editedFocus": true,
+      "editedRelated": false,
+      "inspectedFocus": true,
+      "editedFiles": [
+        "seaborn/_core/scales.py",
+        "seaborn/utils.py"
+      ],
+      "baselineEditedFiles": [
+        "seaborn/_core/plot.py",
+        "seaborn/_core/scales.py",
+        "uv.lock"
+      ],
+      "baselineEditedTheSameFocus": true,
+      "rediscovery": {
+        "targetedConfirmation": 9,
+        "redundantRediscovery": 0,
+        "newInformationSearch": 6,
+        "classified": [
+          {
+            "requestIndex": 1,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/mwaskom__seaborn/seaborn/_core/scales.py",
+            "verdict": "TARGETED_CONFIRMATION"
+          },
+          {
+            "requestIndex": 2,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/mwaskom__seaborn/seaborn/_core/scales.py",
+            "verdict": "TARGETED_CONFIRMATION"
+          },
+          {
+            "requestIndex": 3,
+            "kind": "SEARCH",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/mwaskom__seaborn",
+            "verdict": "NEW_INFORMATION_SEARCH"
+          },
+          {
+            "requestIndex": 5,
+            "kind": "SHELL_INSPECTION",
+            "target": null,
+            "verdict": "NEW_INFORMATION_SEARCH"
+          },
+          {
+            "requestIndex": 6,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/mwaskom__seaborn/seaborn/utils.py",
+            "verdict": "NEW_INFORMATION_SEARCH"
+          },
+          {
+            "requestIndex": 7,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/mwaskom__seaborn/seaborn/_core/scales.py",
+            "verdict": "TARGETED_CONFIRMATION"
+          },
+          {
+            "requestIndex": 8,
+            "kind": "SEARCH",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/mwaskom__seaborn/seaborn/_core/scales.py",
+            "verdict": "TARGETED_CONFIRMATION"
+          },
+          {
+            "requestIndex": 9,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/mwaskom__seaborn/seaborn/_core/scales.py",
+            "verdict": "TARGETED_CONFIRMATION"
+          },
+          {
+            "requestIndex": 10,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/mwaskom__seaborn/seaborn/_core/scales.py",
+            "verdict": "TARGETED_CONFIRMATION"
+          },
+          {
+            "requestIndex": 11,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/mwaskom__seaborn/seaborn/_core/scales.py",
+            "verdict": "TARGETED_CONFIRMATION"
+          },
+          {
+            "requestIndex": 13,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/mwaskom__seaborn/seaborn/utils.py",
+            "verdict": "NEW_INFORMATION_SEARCH"
+          },
+          {
+            "requestIndex": 15,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/mwaskom__seaborn/seaborn/_core/scales.py",
+            "verdict": "TARGETED_CONFIRMATION"
+          },
+          {
+            "requestIndex": 15,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/mwaskom__seaborn/seaborn/utils.py",
+            "verdict": "NEW_INFORMATION_SEARCH"
+          },
+          {
+            "requestIndex": 18,
+            "kind": "SEARCH",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/mwaskom__seaborn/seaborn",
+            "verdict": "NEW_INFORMATION_SEARCH"
+          },
+          {
+            "requestIndex": 19,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/mwaskom__seaborn/seaborn/_core/scales.py",
+            "verdict": "TARGETED_CONFIRMATION"
+          }
+        ]
+      },
+      "preEditInvestigationCallsBaseline": 8,
+      "preEditInvestigationCallsCompact": 10,
+      "preEditInvestigationDelta": 2,
+      "pivotConsequence": "PIVOT_WAS_CORRECT",
+      "resolved": false,
+      "baselineResolved": false
+    },
+    {
+      "instanceId": "pallets__flask-5014",
+      "orientationDisclosure": "COMPACT_ORIENTATION",
+      "focusFile": "src/flask/blueprints.py",
+      "focusAt": "src/flask/blueprints.py::Blueprint",
+      "relatedFiles": [
+        "src/flask/wrappers.py",
+        "tests/test_async.py",
+        "tests/test_basic.py"
+      ],
+      "goldFiles": [
+        "src/flask/blueprints.py"
+      ],
+      "focusIsGold": true,
+      "use": "DIRECTLY_USED",
+      "useReason": "the agent edited the file the orientation focused on",
+      "editedFocus": true,
+      "editedRelated": false,
+      "inspectedFocus": true,
+      "editedFiles": [
+        "src/flask/blueprints.py"
+      ],
+      "baselineEditedFiles": [
+        "src/flask/blueprints.py"
+      ],
+      "baselineEditedTheSameFocus": true,
+      "rediscovery": {
+        "targetedConfirmation": 2,
+        "redundantRediscovery": 0,
+        "newInformationSearch": 0,
+        "classified": [
+          {
+            "requestIndex": 2,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/pallets__flask/src/flask/blueprints.py",
+            "verdict": "TARGETED_CONFIRMATION"
+          },
+          {
+            "requestIndex": 4,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/pallets__flask/src/flask/blueprints.py",
+            "verdict": "TARGETED_CONFIRMATION"
+          }
+        ]
+      },
+      "preEditInvestigationCallsBaseline": 2,
+      "preEditInvestigationCallsCompact": 1,
+      "preEditInvestigationDelta": -1,
+      "pivotConsequence": "PIVOT_WAS_CORRECT",
+      "resolved": true,
+      "baselineResolved": true
+    },
+    {
+      "instanceId": "psf__requests-1724",
+      "orientationDisclosure": "COMPACT_ORIENTATION",
+      "focusFile": "requests/sessions.py",
+      "focusAt": "requests/sessions.py::Session.post",
+      "relatedFiles": [
+        "requests/cookies.py",
+        "requests/packages/urllib3/request.py",
+        "requests/sessions.py"
+      ],
+      "goldFiles": [
+        "requests/sessions.py"
+      ],
+      "focusIsGold": true,
+      "use": "DIRECTLY_USED",
+      "useReason": "the agent edited the file the orientation focused on",
+      "editedFocus": true,
+      "editedRelated": true,
+      "inspectedFocus": true,
+      "editedFiles": [
+        "requests/models.py",
+        "requests/sessions.py"
+      ],
+      "baselineEditedFiles": [
+        "requests/models.py"
+      ],
+      "baselineEditedTheSameFocus": false,
+      "rediscovery": {
+        "targetedConfirmation": 5,
+        "redundantRediscovery": 2,
+        "newInformationSearch": 6,
+        "classified": [
+          {
+            "requestIndex": 1,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/psf__requests/requests/sessions.py",
+            "verdict": "TARGETED_CONFIRMATION"
+          },
+          {
+            "requestIndex": 2,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/psf__requests/requests/compat.py",
+            "verdict": "NEW_INFORMATION_SEARCH"
+          },
+          {
+            "requestIndex": 3,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/psf__requests/requests/sessions.py",
+            "verdict": "TARGETED_CONFIRMATION"
+          },
+          {
+            "requestIndex": 6,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/psf__requests/requests/sessions.py",
+            "verdict": "TARGETED_CONFIRMATION"
+          },
+          {
+            "requestIndex": 6,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/psf__requests/requests/sessions.py",
+            "verdict": "TARGETED_CONFIRMATION"
+          },
+          {
+            "requestIndex": 7,
+            "kind": "SEARCH",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/psf__requests/requests",
+            "verdict": "REDUNDANT_REDISCOVERY"
+          },
+          {
+            "requestIndex": 8,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/psf__requests/requests/models.py",
+            "verdict": "NEW_INFORMATION_SEARCH"
+          },
+          {
+            "requestIndex": 9,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/psf__requests/requests/models.py",
+            "verdict": "NEW_INFORMATION_SEARCH"
+          },
+          {
+            "requestIndex": 10,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/psf__requests/requests/models.py",
+            "verdict": "NEW_INFORMATION_SEARCH"
+          },
+          {
+            "requestIndex": 10,
+            "kind": "SEARCH",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/psf__requests/requests",
+            "verdict": "REDUNDANT_REDISCOVERY"
+          },
+          {
+            "requestIndex": 11,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/psf__requests/requests/utils.py",
+            "verdict": "NEW_INFORMATION_SEARCH"
+          },
+          {
+            "requestIndex": 13,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/psf__requests/requests/models.py",
+            "verdict": "NEW_INFORMATION_SEARCH"
+          },
+          {
+            "requestIndex": 14,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/psf__requests/requests/sessions.py",
+            "verdict": "TARGETED_CONFIRMATION"
+          }
+        ]
+      },
+      "preEditInvestigationCallsBaseline": 6,
+      "preEditInvestigationCallsCompact": 3,
+      "preEditInvestigationDelta": -3,
+      "pivotConsequence": "PIVOT_WAS_CORRECT",
+      "resolved": false,
+      "baselineResolved": false
+    },
+    {
+      "instanceId": "pydata__xarray-6599",
+      "orientationDisclosure": "COMPACT_ORIENTATION",
+      "focusFile": "xarray/core/combine.py",
+      "focusAt": "xarray/core/combine.py::combine_by_coords",
+      "relatedFiles": [
+        "xarray/core/dataset.py",
+        "xarray/tests/test_combine.py",
+        "asv_bench/benchmarks/combine.py",
+        "xarray/backends/api.py"
+      ],
+      "goldFiles": [
+        "xarray/core/computation.py"
+      ],
+      "focusIsGold": false,
+      "use": "IGNORED",
+      "useReason": "no delivered file was edited or inspected",
+      "editedFocus": false,
+      "editedRelated": false,
+      "inspectedFocus": false,
+      "editedFiles": [
+        "uv.lock",
+        "xarray/core/computation.py"
+      ],
+      "baselineEditedFiles": [
+        "xarray/core/computation.py"
+      ],
+      "baselineEditedTheSameFocus": false,
+      "rediscovery": {
+        "targetedConfirmation": 0,
+        "redundantRediscovery": 0,
+        "newInformationSearch": 14,
+        "classified": [
+          {
+            "requestIndex": 1,
+            "kind": "SEARCH",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/pydata__xarray",
+            "verdict": "NEW_INFORMATION_SEARCH"
+          },
+          {
+            "requestIndex": 2,
+            "kind": "SEARCH",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/pydata__xarray/xarray/core/computation.py",
+            "verdict": "NEW_INFORMATION_SEARCH"
+          },
+          {
+            "requestIndex": 3,
+            "kind": "SEARCH",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/pydata__xarray",
+            "verdict": "NEW_INFORMATION_SEARCH"
+          },
+          {
+            "requestIndex": 4,
+            "kind": "SEARCH",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/pydata__xarray/xarray/core/duck_array_ops.py",
+            "verdict": "NEW_INFORMATION_SEARCH"
+          },
+          {
+            "requestIndex": 5,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/pydata__xarray/xarray/core/computation.py",
+            "verdict": "NEW_INFORMATION_SEARCH"
+          },
+          {
+            "requestIndex": 9,
+            "kind": "SHELL_INSPECTION",
+            "target": null,
+            "verdict": "NEW_INFORMATION_SEARCH"
+          },
+          {
+            "requestIndex": 15,
+            "kind": "SHELL_INSPECTION",
+            "target": null,
+            "verdict": "NEW_INFORMATION_SEARCH"
+          },
+          {
+            "requestIndex": 17,
+            "kind": "SHELL_INSPECTION",
+            "target": null,
+            "verdict": "NEW_INFORMATION_SEARCH"
+          },
+          {
+            "requestIndex": 18,
+            "kind": "SHELL_INSPECTION",
+            "target": null,
+            "verdict": "NEW_INFORMATION_SEARCH"
+          },
+          {
+            "requestIndex": 19,
+            "kind": "SHELL_INSPECTION",
+            "target": null,
+            "verdict": "NEW_INFORMATION_SEARCH"
+          },
+          {
+            "requestIndex": 20,
+            "kind": "SHELL_INSPECTION",
+            "target": null,
+            "verdict": "NEW_INFORMATION_SEARCH"
+          },
+          {
+            "requestIndex": 21,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/pydata__xarray/xarray/core/computation.py",
+            "verdict": "NEW_INFORMATION_SEARCH"
+          },
+          {
+            "requestIndex": 27,
+            "kind": "SHELL_INSPECTION",
+            "target": null,
+            "verdict": "NEW_INFORMATION_SEARCH"
+          },
+          {
+            "requestIndex": 28,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/pydata__xarray/xarray/core/computation.py",
+            "verdict": "NEW_INFORMATION_SEARCH"
+          }
+        ]
+      },
+      "preEditInvestigationCallsBaseline": 12,
+      "preEditInvestigationCallsCompact": 5,
+      "preEditInvestigationDelta": -7,
+      "pivotConsequence": "IGNORED_OR_RECOVERED",
+      "resolved": true,
+      "baselineResolved": true
+    },
+    {
+      "instanceId": "pylint-dev__pylint-4551",
+      "orientationDisclosure": "COMPACT_ORIENTATION",
+      "focusFile": "pylint/pyreverse/utils.py",
+      "focusAt": "pylint/pyreverse/utils.py::LocalsVisitor.__init__",
+      "relatedFiles": [
+        "pylint/pyreverse/writer.py",
+        "pylint/pyreverse/utils.py",
+        "pylint/pyreverse/diadefslib.py"
+      ],
+      "goldFiles": [
+        "pylint/pyreverse/diagrams.py",
+        "pylint/pyreverse/inspector.py",
+        "pylint/pyreverse/utils.py",
+        "pylint/pyreverse/writer.py"
+      ],
+      "focusIsGold": true,
+      "use": "IGNORED",
+      "useReason": "no delivered file was edited or inspected",
+      "editedFocus": false,
+      "editedRelated": false,
+      "inspectedFocus": false,
+      "editedFiles": [
+        "pylint/pyreverse/inspector.py"
+      ],
+      "baselineEditedFiles": [
+        "pylint/pyreverse/inspector.py"
+      ],
+      "baselineEditedTheSameFocus": false,
+      "rediscovery": {
+        "targetedConfirmation": 0,
+        "redundantRediscovery": 1,
+        "newInformationSearch": 22,
+        "classified": [
+          {
+            "requestIndex": 1,
+            "kind": "SEARCH",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/pylint-dev__pylint/pylint/pyreverse",
+            "verdict": "NEW_INFORMATION_SEARCH"
+          },
+          {
+            "requestIndex": 1,
+            "kind": "SEARCH",
+            "target": "pylint/pyreverse/**/*.py",
+            "verdict": "NEW_INFORMATION_SEARCH"
+          },
+          {
+            "requestIndex": 2,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/pylint-dev__pylint/pylint/pyreverse/inspector.py",
+            "verdict": "NEW_INFORMATION_SEARCH"
+          },
+          {
+            "requestIndex": 3,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/pylint-dev__pylint/pylint/pyreverse/diagrams.py",
+            "verdict": "NEW_INFORMATION_SEARCH"
+          },
+          {
+            "requestIndex": 7,
+            "kind": "SEARCH",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/pylint-dev__pylint",
+            "verdict": "NEW_INFORMATION_SEARCH"
+          },
+          {
+            "requestIndex": 8,
+            "kind": "SEARCH",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/pylint-dev__pylint",
+            "verdict": "NEW_INFORMATION_SEARCH"
+          },
+          {
+            "requestIndex": 9,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/pylint-dev__pylint/pylint/extensions/docparams.py",
+            "verdict": "NEW_INFORMATION_SEARCH"
+          },
+          {
+            "requestIndex": 10,
+            "kind": "SEARCH",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/pylint-dev__pylint",
+            "verdict": "NEW_INFORMATION_SEARCH"
+          },
+          {
+            "requestIndex": 11,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/pylint-dev__pylint/pylint/pyreverse/inspector.py",
+            "verdict": "NEW_INFORMATION_SEARCH"
+          },
+          {
+            "requestIndex": 12,
+            "kind": "SEARCH",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/pylint-dev__pylint/pylint/checkers/utils.py",
+            "verdict": "REDUNDANT_REDISCOVERY"
+          },
+          {
+            "requestIndex": 13,
+            "kind": "SEARCH",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/pylint-dev__pylint",
+            "verdict": "NEW_INFORMATION_SEARCH"
+          },
+          {
+            "requestIndex": 15,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/pylint-dev__pylint/pylint/pyreverse/inspector.py",
+            "verdict": "NEW_INFORMATION_SEARCH"
+          },
+          {
+            "requestIndex": 17,
+            "kind": "SHELL_INSPECTION",
+            "target": null,
+            "verdict": "NEW_INFORMATION_SEARCH"
+          },
+          {
+            "requestIndex": 20,
+            "kind": "SEARCH",
+            "target": "tests/**/test*pyreverse*.py",
+            "verdict": "NEW_INFORMATION_SEARCH"
+          },
+          {
+            "requestIndex": 21,
+            "kind": "SEARCH",
+            "target": "tests/**/*pyreverse*",
+            "verdict": "NEW_INFORMATION_SEARCH"
+          },
+          {
+            "requestIndex": 21,
+            "kind": "SEARCH",
+            "target": "tests/**/*inspector*",
+            "verdict": "NEW_INFORMATION_SEARCH"
+          },
+          {
+            "requestIndex": 22,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/pylint-dev__pylint/tests/unittest_pyreverse_inspector.py",
+            "verdict": "NEW_INFORMATION_SEARCH"
+          },
+          {
+            "requestIndex": 23,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/pylint-dev__pylint/tests/data/clientmodule_test.py",
+            "verdict": "NEW_INFORMATION_SEARCH"
+          },
+          {
+            "requestIndex": 24,
+            "kind": "SEARCH",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/pylint-dev__pylint/pylint/pyreverse",
+            "verdict": "NEW_INFORMATION_SEARCH"
+          },
+          {
+            "requestIndex": 25,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/pylint-dev__pylint/pylint/pyreverse/inspector.py",
+            "verdict": "NEW_INFORMATION_SEARCH"
+          },
+          {
+            "requestIndex": 26,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/pylint-dev__pylint/pylint/pyreverse/inspector.py",
+            "verdict": "NEW_INFORMATION_SEARCH"
+          },
+          {
+            "requestIndex": 27,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/pylint-dev__pylint/pylint/pyreverse/inspector.py",
+            "verdict": "NEW_INFORMATION_SEARCH"
+          },
+          {
+            "requestIndex": 28,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/pylint-dev__pylint/pylint/pyreverse/inspector.py",
+            "verdict": "NEW_INFORMATION_SEARCH"
+          }
+        ]
+      },
+      "preEditInvestigationCallsBaseline": 18,
+      "preEditInvestigationCallsCompact": 11,
+      "preEditInvestigationDelta": -7,
+      "pivotConsequence": "PIVOT_WAS_CORRECT",
+      "resolved": false,
+      "baselineResolved": false
+    },
+    {
+      "instanceId": "pytest-dev__pytest-7432",
+      "orientationDisclosure": "COMPACT_ORIENTATION",
+      "focusFile": "src/_pytest/skipping.py",
+      "focusAt": "src/_pytest/skipping.py::pytest_runtest_setup",
+      "relatedFiles": [
+        ".github/labels.toml",
+        "testing/test_skipping.py",
+        "src/_pytest/outcomes.py"
+      ],
+      "goldFiles": [
+        "src/_pytest/skipping.py"
+      ],
+      "focusIsGold": true,
+      "use": "DIRECTLY_USED",
+      "useReason": "the agent edited the file the orientation focused on",
+      "editedFocus": true,
+      "editedRelated": false,
+      "inspectedFocus": true,
+      "editedFiles": [
+        "src/_pytest/skipping.py"
+      ],
+      "baselineEditedFiles": [
+        "src/_pytest/skipping.py"
+      ],
+      "baselineEditedTheSameFocus": true,
+      "rediscovery": {
+        "targetedConfirmation": 2,
+        "redundantRediscovery": 0,
+        "newInformationSearch": 0,
+        "classified": [
+          {
+            "requestIndex": 1,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/pytest-dev__pytest/src/_pytest/skipping.py",
+            "verdict": "TARGETED_CONFIRMATION"
+          },
+          {
+            "requestIndex": 6,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/pytest-dev__pytest/src/_pytest/skipping.py",
+            "verdict": "TARGETED_CONFIRMATION"
+          }
+        ]
+      },
+      "preEditInvestigationCallsBaseline": 1,
+      "preEditInvestigationCallsCompact": 1,
+      "preEditInvestigationDelta": 0,
+      "pivotConsequence": "PIVOT_WAS_CORRECT",
+      "resolved": true,
+      "baselineResolved": true
+    },
+    {
+      "instanceId": "scikit-learn__scikit-learn-10844",
+      "orientationDisclosure": "COMPACT_ORIENTATION",
+      "focusFile": "sklearn/metrics/cluster/supervised.py",
+      "focusAt": "sklearn/metrics/cluster/supervised.py::comb2",
+      "relatedFiles": [
+        "sklearn/metrics/cluster/expected_mutual_info_fast.pyx",
+        "sklearn/metrics/cluster/tests/test_supervised.py",
+        "sklearn/metrics/cluster/supervised.py"
+      ],
+      "goldFiles": [
+        "sklearn/metrics/cluster/supervised.py"
+      ],
+      "focusIsGold": true,
+      "use": "DIRECTLY_USED",
+      "useReason": "the agent edited the file the orientation focused on",
+      "editedFocus": true,
+      "editedRelated": true,
+      "inspectedFocus": true,
+      "editedFiles": [
+        "sklearn/metrics/cluster/supervised.py"
+      ],
+      "baselineEditedFiles": [
+        "sklearn/metrics/cluster/supervised.py"
+      ],
+      "baselineEditedTheSameFocus": true,
+      "rediscovery": {
+        "targetedConfirmation": 3,
+        "redundantRediscovery": 0,
+        "newInformationSearch": 0,
+        "classified": [
+          {
+            "requestIndex": 1,
+            "kind": "SEARCH",
+            "target": "sklearn/metrics/cluster/supervised.py",
+            "verdict": "TARGETED_CONFIRMATION"
+          },
+          {
+            "requestIndex": 2,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/scikit-learn__scikit-learn/sklearn/metrics/cluster/supervised.py",
+            "verdict": "TARGETED_CONFIRMATION"
+          },
+          {
+            "requestIndex": 4,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/scikit-learn__scikit-learn/sklearn/metrics/cluster/supervised.py",
+            "verdict": "TARGETED_CONFIRMATION"
+          }
+        ]
+      },
+      "preEditInvestigationCallsBaseline": 2,
+      "preEditInvestigationCallsCompact": 2,
+      "preEditInvestigationDelta": 0,
+      "pivotConsequence": "PIVOT_WAS_CORRECT",
+      "resolved": true,
+      "baselineResolved": true
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-7462",
+      "orientationDisclosure": "COMPACT_ORIENTATION",
+      "focusFile": "sphinx/domains/python.py",
+      "focusAt": "sphinx/domains/python.py::_parse_annotation",
+      "relatedFiles": [
+        "sphinx/domains/__init__.py",
+        "sphinx/domains/python.py",
+        "tests/test_domain_py.py"
+      ],
+      "goldFiles": [
+        "sphinx/domains/python.py",
+        "sphinx/pycode/ast.py"
+      ],
+      "focusIsGold": true,
+      "use": "DIRECTLY_USED",
+      "useReason": "the agent edited the file the orientation focused on",
+      "editedFocus": true,
+      "editedRelated": true,
+      "inspectedFocus": true,
+      "editedFiles": [
+        "sphinx/domains/python.py"
+      ],
+      "baselineEditedFiles": [
+        "sphinx/domains/python.py"
+      ],
+      "baselineEditedTheSameFocus": true,
+      "rediscovery": {
+        "targetedConfirmation": 2,
+        "redundantRediscovery": 0,
+        "newInformationSearch": 0,
+        "classified": [
+          {
+            "requestIndex": 1,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/sphinx-doc__sphinx/sphinx/domains/python.py",
+            "verdict": "TARGETED_CONFIRMATION"
+          },
+          {
+            "requestIndex": 6,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/sphinx-doc__sphinx/sphinx/domains/python.py",
+            "verdict": "TARGETED_CONFIRMATION"
+          }
+        ]
+      },
+      "preEditInvestigationCallsBaseline": 1,
+      "preEditInvestigationCallsCompact": 1,
+      "preEditInvestigationDelta": 0,
+      "pivotConsequence": "PIVOT_WAS_CORRECT",
+      "resolved": false,
+      "baselineResolved": false
+    },
+    {
+      "instanceId": "sympy__sympy-13480",
+      "orientationDisclosure": "COMPACT_ORIENTATION",
+      "focusFile": "sympy/functions/elementary/hyperbolic.py",
+      "focusAt": "sympy/functions/elementary/hyperbolic.py::coth",
+      "relatedFiles": [
+        "sympy/functions/elementary/exponential.py",
+        "sympy/functions/elementary/hyperbolic.py"
+      ],
+      "goldFiles": [
+        "sympy/functions/elementary/hyperbolic.py"
+      ],
+      "focusIsGold": true,
+      "use": "DIRECTLY_USED",
+      "useReason": "the agent edited the file the orientation focused on",
+      "editedFocus": true,
+      "editedRelated": true,
+      "inspectedFocus": true,
+      "editedFiles": [
+        "sympy/functions/elementary/hyperbolic.py"
+      ],
+      "baselineEditedFiles": [
+        "sympy/functions/elementary/hyperbolic.py"
+      ],
+      "baselineEditedTheSameFocus": true,
+      "rediscovery": {
+        "targetedConfirmation": 4,
+        "redundantRediscovery": 0,
+        "newInformationSearch": 1,
+        "classified": [
+          {
+            "requestIndex": 1,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/sympy__sympy/sympy/functions/elementary/hyperbolic.py",
+            "verdict": "TARGETED_CONFIRMATION"
+          },
+          {
+            "requestIndex": 7,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/sympy__sympy/sympy/functions/elementary/hyperbolic.py",
+            "verdict": "TARGETED_CONFIRMATION"
+          },
+          {
+            "requestIndex": 8,
+            "kind": "SEARCH",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/sympy__sympy/sympy/functions/elementary/hyperbolic.py",
+            "verdict": "TARGETED_CONFIRMATION"
+          },
+          {
+            "requestIndex": 9,
+            "kind": "READ",
+            "target": "/home/calvin/code/vexp-swe-bench/.bench-repos/sympy__sympy/sympy/functions/elementary/hyperbolic.py",
+            "verdict": "TARGETED_CONFIRMATION"
+          },
+          {
+            "requestIndex": 10,
+            "kind": "SHELL_INSPECTION",
+            "target": null,
+            "verdict": "NEW_INFORMATION_SEARCH"
+          }
+        ]
+      },
+      "preEditInvestigationCallsBaseline": 1,
+      "preEditInvestigationCallsCompact": 1,
+      "preEditInvestigationDelta": 0,
+      "pivotConsequence": "PIVOT_WAS_CORRECT",
+      "resolved": true,
+      "baselineResolved": true
+    }
+  ]
+}

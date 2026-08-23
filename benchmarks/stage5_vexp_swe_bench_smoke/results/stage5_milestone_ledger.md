@@ -4235,3 +4235,129 @@ bun test                                      5425 pass, 0 fail (baseline 5405)
   correctness the remaining variable, and it is a retrieval question. A live
   requalification is licensed on economics but costs real money and is not
   requested; the cheaper next milestone is offline and aimed at the pivot.
+
+## M173 — cost was not the thing (commit pending)
+
+**MIXED. 24/24 live runs, 12/12 balanced pairs, $17.83 of a $45 cap. `src/`
+byte-identical to `9242d879` throughout; no product change. The orientation is
+now almost free, almost always right, and directly used — and it changes
+nothing.**
+
+M169 condemned the proactive pipeline at $0.0985 a task to displace $0.0026 and
+closed on `NO_FURTHER_PROACTIVE_PIPELINE_WORK`. M172 made the same intelligence
+fit in a twelfth of the tokens. M173 reran the causal comparison against the
+shipped compact default and answered the question those two set up.
+
+```text
+A PASS   protocol frozen, accounting discriminates, 12/12 positive control
+B PASS   24/24 runs, 12/12 balanced pairs, 119 gates pass / 0 fail / 1 unobservable
+C PASS   authoritative grades, M169 diagnostic recomputed
+D PASS   use and pivot causality from rules frozen before any run existed
+E PASS   verdicts reached
+
+architecture  COMPACT_AUTOMATIC_ORIENTATION_UTILITY_NEUTRAL
+economics     ECONOMICALLY_NEUTRAL        utility  UTILITY_NEUTRAL
+M169 null     M169_ECONOMIC_NULL_WEAKENED  product  KEEP_COMPACT_ORIENTATION_DEFAULT
+pivot work    PIVOT_CORRECTNESS_NOT_LICENSED
+extension     ECONOMIC_DIAGNOSIS_REQUIRED
+```
+
+```text
+                                 M169 (rich)      M173 (compact)
+orientation attributable cost    $0.0985 / task   $0.0106 / task    9.3x cheaper
+investigation displaced          $0.0026 / task   $0.0109 / task    4.2x more
+whole-run investigation net      -$0.0070         +$0.1220          sign reversed
+aggregate economic ratio         38x              1.0x
+economic classes                 0 win / 10 loss  4 win / 7 loss
+
+baseline resolved 7/12   compact VTRACE resolved 7/12   the SAME seven, task for task
+unique wins       0 / 0                  median paired cost delta  +$0.0563
+orientation       median 629 tokens (M172 projected 621), $0.0111 median
+delivery          COMPACT_ORIENTATION 12/12, fallback 0, detail=debug 0, debug seen 0
+pivot             gold on 11/12, DIRECTLY_USED 10/12, 0 causal consequences
+```
+
+## M173 standing findings
+
+- **Cost was not the thing preventing automatic orientation from being useful.**
+  Every economic quantity M169 condemned moved — the first call is 9.3x cheaper,
+  it displaces 4.2x more, the ratio fell from 38 to 1.0, and whole-run
+  investigation displacement changed sign — and the solve set did not move at
+  all. Not 7 and 7 by coincidence of totals: the same seven tasks, twelve paired
+  runs, twelve identical verdicts. The orientation now costs almost exactly what
+  it displaces, which is the break-even M169 said no payload size could reach,
+  and reaching it bought nothing.
+
+- **The null is not a delivery failure, and this is the first milestone that can
+  prove it.** The model received `COMPACT_ORIENTATION` on 12/12 with zero
+  fallbacks, the focus file was a gold-patch file on 11/12, and the agent edited
+  that focus on 10/12. Zero `detail=debug` requests, zero authoritative payloads,
+  zero voluntary follow-up calls, `run_pipeline` first on 11/12. The agent was
+  handed the right file at the right symbol for a tenth of the old price and was
+  already going to reach it.
+
+- **The premium moved from the packet to the implementation phase.** The
+  treatment still costs a $0.0563 median more, and splitting each run at its own
+  edits shows why: pre-edit is $0.046 CHEAPER in aggregate, debug/test $0.034
+  cheaper, and implementation $1.4622 more expensive — the whole premium and
+  more. Its median is $0.0008, so it is a two-case tail rather than a shift, and
+  the mean of $0.2001 against that median is why §42 exists.
+
+- **The tail's shape suggests displacement rather than saving, and refuses to
+  confirm it.** `Spearman(Δ pre-edit requests, Δ whole-run cost) = -0.682`: the
+  further ahead the treatment's first edit, the more the run costs. Both
+  earlier-edit cases ran 19 and 13 requests longer and cost ~$0.72 more. But they
+  disagree — astropy's pivot was correct and used, xarray's was the one wrong
+  pivot and was ignored — so either the packet shortens the approach even when
+  rejected, or one case is variance wearing the same shape. n=2 cannot separate
+  them, and neither can 11 pairs.
+
+- **Wrong pivots are not the story, and the standing instruction was right to
+  demand the check.** One pivot of twelve was wrong (xarray-6599); the agent
+  ignored it and solved the task anyway. Zero caused a wrong edit, zero caused
+  extra investigation. All five shared failures received a CORRECT gold pivot and
+  four of the five edited it — retrieval did its job on every failure and the
+  task was lost regardless. `PIVOT_CORRECTNESS_WORK_LICENSED: NO`.
+
+- **Almost none of the agent's verification is waste, so there is almost none to
+  recover.** Under rules frozen before the runs existed: 39 TARGETED_CONFIRMATION,
+  53 NEW_INFORMATION_SEARCH, and 4 REDUNDANT_REDISCOVERY out of 96
+  post-orientation investigation actions. §33's warning held — the packet carries
+  a skeleton, not a file, so opening what it pointed at is consumption. Searching
+  fell on 8/11 pairs and rose on none, without any coercion.
+
+- **The compact default has an escape hatch, found before the money was spent.**
+  `projectRunPipelineOrientation` declines on an empty delivery and
+  `orientation ?? authoritativeResult` then hands the model the full 26,075-char
+  payload M169 priced. matplotlib-22719 did exactly that under a raw
+  problem-statement query on a healthy index; under an agent-shaped query all
+  twelve are compact. It never opened in 24 live runs, but it is a real property
+  of the shipped product and every run is classified for it.
+
+- **A spend guard's granularity is part of its design, and its estimator is not.**
+  Gating at task entry rather than per spawn meant no pair was ever left half-run.
+  But the frozen running average, seeded by astropy — complexity 99, the
+  second-priciest pair in M168 — projected $44.48 and stopped the sweep at 1/12
+  under a $35 cap. The next task cost $0.45 and the projection fell to $24.95. The
+  cap was raised once by the owner; the estimator was deliberately NOT reseeded,
+  because a guard tuned mid-sweep by the thing it is guarding is not a guard. Final
+  spend was $17.83.
+
+- **An infrastructure failure that bills $0.00 still has to be classified.** Four
+  baseline arms died with `ENOSPC` on `mkdtemp '/tmp/vexp-swebench-*'`: the
+  external harness copies whole repositories into a 32G tmpfs and twenty runs
+  exhausted its INODES while free bytes still read healthy. No agent spawned, no
+  money billed, `ABORT_RE` did not match, so the driver called it a result. All
+  four were the BASELINE arm — leaving them would have compared eight full pairs
+  against four treatment-only runs, the censored sample §13 forbids. Rerun under
+  §61, recorded in `stage5_m173_rerun_log.json`, grading pointed at disk after.
+
+- **Next-step recommendation: the question is no longer what VTRACE delivers.**
+  It delivers the gold file, compactly, and the agent uses it, and the outcome
+  does not move. No orientation product fixes that, because on astropy the packet
+  was correct and used and the run still ran nineteen requests longer. Do not
+  extend to 100 tasks: that buys precision about a null. Do not touch retrieval:
+  M173 checked and wrong pivots are not causal. What is worth doing is offline and
+  already paid for — twenty-four transcripts that can be read for whether an agent
+  told where to look still needs to look, and whether early editing causes the
+  implementation-phase tail.

@@ -1,0 +1,26 @@
+{
+  "milestone": "M173",
+  "frozenBefore": "any M173 live run existed",
+  "inheritedFrom": "M169, unchanged",
+  "thresholds": {
+    "winAtOrBelow": 0.8,
+    "breakEvenAtOrBelow": 1.25
+  },
+  "classes": {
+    "ORIENTATION_ECONOMIC_WIN": "ratio <= 0.8",
+    "ROUGH_BREAK_EVEN": "0.8 < ratio <= 1.25",
+    "ORIENTATION_ECONOMIC_LOSS": "ratio > 1.25, or displaced nothing while costing something",
+    "NOT_MEASURABLE": "a censored arm, or a broken cache identity, in the pair"
+  },
+  "ratio": "orientation attributable cost / paired pre-edit investigation displaced",
+  "investigationDefinition": {
+    "kinds": [
+      "SEARCH",
+      "READ",
+      "SHELL_INSPECTION"
+    ],
+    "source": "m169Economics.INVESTIGATION_KINDS, imported not restated",
+    "redefinitionAfterResults": "FORBIDDEN — §27"
+  },
+  "winRule": "§38 — a win requires the orientation's attributable cost to be offset by measured reduced investigation or whole-run cost. Fewer grep calls are not savings."
+}

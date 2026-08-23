@@ -1,0 +1,130 @@
+{
+  "milestone": "M173",
+  "source": "stage5_m168_sample_manifest.json — the exact frozen M168/M169 twelve, unmodified",
+  "selectedIdListSha256": "ecdba7c4a32a3abdd6b321e2d46499a574f638d02fe3aae7863a1fe1a52b6de5",
+  "matchesM168": true,
+  "sampleSize": 12,
+  "reselection": "FORBIDDEN — §13. No task removed for expected outcome; sphinx-7462 verified present.",
+  "selected": [
+    {
+      "instanceId": "astropy__astropy-14369",
+      "repo": "astropy/astropy",
+      "baseCommit": "fa4e8d1cd279acf9b24560813c8652494ccd5922",
+      "complexity": 99,
+      "difficulty": "1-4 hours",
+      "withinRepoComplexityRank": 5,
+      "withinRepoTaskCount": 5,
+      "targetQuantile": 0.9583333333333334
+    },
+    {
+      "instanceId": "django__django-13658",
+      "repo": "django/django",
+      "baseCommit": "0773837e15bb632afffb6848a58c59a791008fa1",
+      "complexity": 19,
+      "difficulty": "15 min - 1 hour",
+      "withinRepoComplexityRank": 17,
+      "withinRepoTaskCount": 44,
+      "targetQuantile": 0.375
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-22719",
+      "repo": "matplotlib/matplotlib",
+      "baseCommit": "a2a1b0a11b993fe5f8fab64b6161e99243a6393c",
+      "complexity": 16,
+      "difficulty": "<15 min fix",
+      "withinRepoComplexityRank": 1,
+      "withinRepoTaskCount": 7,
+      "targetQuantile": 0.125
+    },
+    {
+      "instanceId": "mwaskom__seaborn-3187",
+      "repo": "mwaskom/seaborn",
+      "baseCommit": "22cdfb0c93f8ec78492d87edb810f10cb7f57a31",
+      "complexity": 36,
+      "difficulty": "15 min - 1 hour",
+      "withinRepoComplexityRank": 1,
+      "withinRepoTaskCount": 1,
+      "targetQuantile": 0.2916666666666667
+    },
+    {
+      "instanceId": "pallets__flask-5014",
+      "repo": "pallets/flask",
+      "baseCommit": "7ee9ceb71e868944a46e1ff00b506772a53a4f1d",
+      "complexity": 15,
+      "difficulty": "<15 min fix",
+      "withinRepoComplexityRank": 1,
+      "withinRepoTaskCount": 1,
+      "targetQuantile": 0.4583333333333333
+    },
+    {
+      "instanceId": "psf__requests-1724",
+      "repo": "psf/requests",
+      "baseCommit": "1ba83c47ce7b177efe90d5f51f7760680f72eda0",
+      "complexity": 67,
+      "difficulty": "<15 min fix",
+      "withinRepoComplexityRank": 4,
+      "withinRepoTaskCount": 4,
+      "targetQuantile": 0.875
+    },
+    {
+      "instanceId": "pydata__xarray-6599",
+      "repo": "pydata/xarray",
+      "baseCommit": "6bb2b855498b5c68d7cca8cceb710365d58e6048",
+      "complexity": 18,
+      "difficulty": "15 min - 1 hour",
+      "withinRepoComplexityRank": 4,
+      "withinRepoTaskCount": 6,
+      "targetQuantile": 0.625
+    },
+    {
+      "instanceId": "pylint-dev__pylint-4551",
+      "repo": "pylint-dev/pylint",
+      "baseCommit": "99589b08de8c5a2c6cc61e13a37420a868c80599",
+      "complexity": 234,
+      "difficulty": "1-4 hours",
+      "withinRepoComplexityRank": 2,
+      "withinRepoTaskCount": 2,
+      "targetQuantile": 0.5416666666666666
+    },
+    {
+      "instanceId": "pytest-dev__pytest-7432",
+      "repo": "pytest-dev/pytest",
+      "baseCommit": "e6e300e729dd33956e5448d8be9a0b1540b4e53a",
+      "complexity": 15,
+      "difficulty": "<15 min fix",
+      "withinRepoComplexityRank": 1,
+      "withinRepoTaskCount": 4,
+      "targetQuantile": 0.20833333333333334
+    },
+    {
+      "instanceId": "scikit-learn__scikit-learn-10844",
+      "repo": "scikit-learn/scikit-learn",
+      "baseCommit": "97523985b39ecde369d83352d7c3baf403b60a22",
+      "complexity": 17,
+      "difficulty": "15 min - 1 hour",
+      "withinRepoComplexityRank": 2,
+      "withinRepoTaskCount": 2,
+      "targetQuantile": 0.7083333333333334
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-7462",
+      "repo": "sphinx-doc/sphinx",
+      "baseCommit": "b3e26a6c851133b82b50f4b68b53692076574d13",
+      "complexity": 44,
+      "difficulty": "<15 min fix",
+      "withinRepoComplexityRank": 6,
+      "withinRepoTaskCount": 7,
+      "targetQuantile": 0.7916666666666666
+    },
+    {
+      "instanceId": "sympy__sympy-13480",
+      "repo": "sympy/sympy",
+      "baseCommit": "f57fe3f4b3f2cab225749e1b3b38ae1bf80b62f0",
+      "complexity": 14,
+      "difficulty": "<15 min fix",
+      "withinRepoComplexityRank": 1,
+      "withinRepoTaskCount": 17,
+      "targetQuantile": 0.041666666666666664
+    }
+  ]
+}

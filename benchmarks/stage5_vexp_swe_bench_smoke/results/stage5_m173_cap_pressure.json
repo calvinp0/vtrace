@@ -1,0 +1,336 @@
+{
+  "schemaVersion": "stage5.m173.cap-pressure.v1",
+  "milestone": "M173",
+  "workstream": "M173-B",
+  "hardCapUsd": 35,
+  "completed": {
+    "tasksWithCompletePair": 1,
+    "tasksTotal": 12,
+    "armRunsCompleted": 2,
+    "armRunsPlanned": 24
+  },
+  "spend": {
+    "totalRecordedUsd": 3.7064,
+    "byArmUsd": {
+      "baseline": 1.4959,
+      "vtrace_compact": 2.2105
+    },
+    "runsByArm": {
+      "baseline": 1,
+      "vtrace_compact": 1
+    },
+    "runningAverageUsd": 1.8532,
+    "headroomUsd": 31.2936
+  },
+  "remaining": {
+    "armRuns": 22,
+    "projectedCostToFinishUsd": 40.7699,
+    "projectedTotalUsd": 44.4763,
+    "fitsWithinCap": false,
+    "runs": [
+      {
+        "instanceId": "django__django-13658",
+        "arm": "baseline",
+        "order": 2
+      },
+      {
+        "instanceId": "django__django-13658",
+        "arm": "vtrace_compact",
+        "order": 2
+      },
+      {
+        "instanceId": "matplotlib__matplotlib-22719",
+        "arm": "baseline",
+        "order": 3
+      },
+      {
+        "instanceId": "matplotlib__matplotlib-22719",
+        "arm": "vtrace_compact",
+        "order": 3
+      },
+      {
+        "instanceId": "mwaskom__seaborn-3187",
+        "arm": "baseline",
+        "order": 4
+      },
+      {
+        "instanceId": "mwaskom__seaborn-3187",
+        "arm": "vtrace_compact",
+        "order": 4
+      },
+      {
+        "instanceId": "pallets__flask-5014",
+        "arm": "baseline",
+        "order": 5
+      },
+      {
+        "instanceId": "pallets__flask-5014",
+        "arm": "vtrace_compact",
+        "order": 5
+      },
+      {
+        "instanceId": "psf__requests-1724",
+        "arm": "baseline",
+        "order": 6
+      },
+      {
+        "instanceId": "psf__requests-1724",
+        "arm": "vtrace_compact",
+        "order": 6
+      },
+      {
+        "instanceId": "pydata__xarray-6599",
+        "arm": "baseline",
+        "order": 7
+      },
+      {
+        "instanceId": "pydata__xarray-6599",
+        "arm": "vtrace_compact",
+        "order": 7
+      },
+      {
+        "instanceId": "pylint-dev__pylint-4551",
+        "arm": "baseline",
+        "order": 8
+      },
+      {
+        "instanceId": "pylint-dev__pylint-4551",
+        "arm": "vtrace_compact",
+        "order": 8
+      },
+      {
+        "instanceId": "pytest-dev__pytest-7432",
+        "arm": "baseline",
+        "order": 9
+      },
+      {
+        "instanceId": "pytest-dev__pytest-7432",
+        "arm": "vtrace_compact",
+        "order": 9
+      },
+      {
+        "instanceId": "scikit-learn__scikit-learn-10844",
+        "arm": "baseline",
+        "order": 10
+      },
+      {
+        "instanceId": "scikit-learn__scikit-learn-10844",
+        "arm": "vtrace_compact",
+        "order": 10
+      },
+      {
+        "instanceId": "sphinx-doc__sphinx-7462",
+        "arm": "baseline",
+        "order": 11
+      },
+      {
+        "instanceId": "sphinx-doc__sphinx-7462",
+        "arm": "vtrace_compact",
+        "order": 11
+      },
+      {
+        "instanceId": "sympy__sympy-13480",
+        "arm": "baseline",
+        "order": 12
+      },
+      {
+        "instanceId": "sympy__sympy-13480",
+        "arm": "vtrace_compact",
+        "order": 12
+      }
+    ]
+  },
+  "armSkew": {
+    "verdict": "TREATMENT_SKEWED",
+    "treatmentOverBaselineMeanRatio": 1.478,
+    "completionBalanced": true,
+    "note": "if the pressure is TREATMENT_SKEWED, a truncated sweep would report the cheap half of the treatment distribution as the treatment. The remedy is a larger cap or a smaller sample, never dropping the expensive treatment runs (§13)."
+  },
+  "balance": {
+    "halfRunPairs": [],
+    "balanced": true,
+    "policy": "the spend guard gates at TASK entry, so a pair that has begun always finishes. A half-run pair here means an infrastructure failure or an operator interrupt, not the cap."
+  },
+  "perTask": [
+    {
+      "order": 1,
+      "instanceId": "astropy__astropy-14369",
+      "completedArms": [
+        "baseline",
+        "vtrace_compact"
+      ],
+      "remainingArms": [],
+      "pairComplete": true,
+      "pairHalfRun": false,
+      "costUsd": {
+        "baseline": 1.4958585,
+        "vtrace_compact": 2.2104995
+      }
+    },
+    {
+      "order": 2,
+      "instanceId": "django__django-13658",
+      "completedArms": [],
+      "remainingArms": [
+        "baseline",
+        "vtrace_compact"
+      ],
+      "pairComplete": false,
+      "pairHalfRun": false,
+      "costUsd": {
+        "baseline": null,
+        "vtrace_compact": null
+      }
+    },
+    {
+      "order": 3,
+      "instanceId": "matplotlib__matplotlib-22719",
+      "completedArms": [],
+      "remainingArms": [
+        "baseline",
+        "vtrace_compact"
+      ],
+      "pairComplete": false,
+      "pairHalfRun": false,
+      "costUsd": {
+        "baseline": null,
+        "vtrace_compact": null
+      }
+    },
+    {
+      "order": 4,
+      "instanceId": "mwaskom__seaborn-3187",
+      "completedArms": [],
+      "remainingArms": [
+        "baseline",
+        "vtrace_compact"
+      ],
+      "pairComplete": false,
+      "pairHalfRun": false,
+      "costUsd": {
+        "baseline": null,
+        "vtrace_compact": null
+      }
+    },
+    {
+      "order": 5,
+      "instanceId": "pallets__flask-5014",
+      "completedArms": [],
+      "remainingArms": [
+        "baseline",
+        "vtrace_compact"
+      ],
+      "pairComplete": false,
+      "pairHalfRun": false,
+      "costUsd": {
+        "baseline": null,
+        "vtrace_compact": null
+      }
+    },
+    {
+      "order": 6,
+      "instanceId": "psf__requests-1724",
+      "completedArms": [],
+      "remainingArms": [
+        "baseline",
+        "vtrace_compact"
+      ],
+      "pairComplete": false,
+      "pairHalfRun": false,
+      "costUsd": {
+        "baseline": null,
+        "vtrace_compact": null
+      }
+    },
+    {
+      "order": 7,
+      "instanceId": "pydata__xarray-6599",
+      "completedArms": [],
+      "remainingArms": [
+        "baseline",
+        "vtrace_compact"
+      ],
+      "pairComplete": false,
+      "pairHalfRun": false,
+      "costUsd": {
+        "baseline": null,
+        "vtrace_compact": null
+      }
+    },
+    {
+      "order": 8,
+      "instanceId": "pylint-dev__pylint-4551",
+      "completedArms": [],
+      "remainingArms": [
+        "baseline",
+        "vtrace_compact"
+      ],
+      "pairComplete": false,
+      "pairHalfRun": false,
+      "costUsd": {
+        "baseline": null,
+        "vtrace_compact": null
+      }
+    },
+    {
+      "order": 9,
+      "instanceId": "pytest-dev__pytest-7432",
+      "completedArms": [],
+      "remainingArms": [
+        "baseline",
+        "vtrace_compact"
+      ],
+      "pairComplete": false,
+      "pairHalfRun": false,
+      "costUsd": {
+        "baseline": null,
+        "vtrace_compact": null
+      }
+    },
+    {
+      "order": 10,
+      "instanceId": "scikit-learn__scikit-learn-10844",
+      "completedArms": [],
+      "remainingArms": [
+        "baseline",
+        "vtrace_compact"
+      ],
+      "pairComplete": false,
+      "pairHalfRun": false,
+      "costUsd": {
+        "baseline": null,
+        "vtrace_compact": null
+      }
+    },
+    {
+      "order": 11,
+      "instanceId": "sphinx-doc__sphinx-7462",
+      "completedArms": [],
+      "remainingArms": [
+        "baseline",
+        "vtrace_compact"
+      ],
+      "pairComplete": false,
+      "pairHalfRun": false,
+      "costUsd": {
+        "baseline": null,
+        "vtrace_compact": null
+      }
+    },
+    {
+      "order": 12,
+      "instanceId": "sympy__sympy-13480",
+      "completedArms": [],
+      "remainingArms": [
+        "baseline",
+        "vtrace_compact"
+      ],
+      "pairComplete": false,
+      "pairHalfRun": false,
+      "costUsd": {
+        "baseline": null,
+        "vtrace_compact": null
+      }
+    }
+  ]
+}

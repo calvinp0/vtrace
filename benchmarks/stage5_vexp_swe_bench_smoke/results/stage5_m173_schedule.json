@@ -1,0 +1,109 @@
+{
+  "milestone": "M173",
+  "scheduling": "per-task paired, arm order alternating by task position so neither arm systematically owns the earlier half of the execution window or the first attempt at a fresh clone",
+  "frozenBeforeExecution": true,
+  "plannedRuns": {
+    "tasks": 12,
+    "arms": 2,
+    "total": 24
+  },
+  "sequential": "REQUIRED — the first pass writes a shared results/_agent_stream.jsonl",
+  "schedule": [
+    {
+      "order": 1,
+      "instanceId": "astropy__astropy-14369",
+      "armOrder": [
+        "baseline",
+        "vtrace_compact"
+      ]
+    },
+    {
+      "order": 2,
+      "instanceId": "django__django-13658",
+      "armOrder": [
+        "vtrace_compact",
+        "baseline"
+      ]
+    },
+    {
+      "order": 3,
+      "instanceId": "matplotlib__matplotlib-22719",
+      "armOrder": [
+        "baseline",
+        "vtrace_compact"
+      ]
+    },
+    {
+      "order": 4,
+      "instanceId": "mwaskom__seaborn-3187",
+      "armOrder": [
+        "vtrace_compact",
+        "baseline"
+      ]
+    },
+    {
+      "order": 5,
+      "instanceId": "pallets__flask-5014",
+      "armOrder": [
+        "baseline",
+        "vtrace_compact"
+      ]
+    },
+    {
+      "order": 6,
+      "instanceId": "psf__requests-1724",
+      "armOrder": [
+        "vtrace_compact",
+        "baseline"
+      ]
+    },
+    {
+      "order": 7,
+      "instanceId": "pydata__xarray-6599",
+      "armOrder": [
+        "baseline",
+        "vtrace_compact"
+      ]
+    },
+    {
+      "order": 8,
+      "instanceId": "pylint-dev__pylint-4551",
+      "armOrder": [
+        "vtrace_compact",
+        "baseline"
+      ]
+    },
+    {
+      "order": 9,
+      "instanceId": "pytest-dev__pytest-7432",
+      "armOrder": [
+        "baseline",
+        "vtrace_compact"
+      ]
+    },
+    {
+      "order": 10,
+      "instanceId": "scikit-learn__scikit-learn-10844",
+      "armOrder": [
+        "vtrace_compact",
+        "baseline"
+      ]
+    },
+    {
+      "order": 11,
+      "instanceId": "sphinx-doc__sphinx-7462",
+      "armOrder": [
+        "baseline",
+        "vtrace_compact"
+      ]
+    },
+    {
+      "order": 12,
+      "instanceId": "sympy__sympy-13480",
+      "armOrder": [
+        "vtrace_compact",
+        "baseline"
+      ]
+    }
+  ]
+}

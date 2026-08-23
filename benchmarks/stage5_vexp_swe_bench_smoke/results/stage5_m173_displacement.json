@@ -1,0 +1,224 @@
+{
+  "schemaVersion": "stage5.m173.displacement.v1",
+  "milestone": "M173",
+  "workstream": "M173-C",
+  "question": "the orientation is cheap and the treatment still costs more — where is the premium?",
+  "answer": {
+    "notInTheOrientation": "the packet's own attributable cost is a median of $0.0111 a task",
+    "notInInvestigation": "pre-edit cost across the sample is LOWER by $0.0460 in total, and searches fall on every task",
+    "inImplementation": "implementation-phase cost is higher by $1.4622 in total — the whole premium and more — while its MEDIAN is $0.0008, so it is a tail and not a shift"
+  },
+  "phase": {
+    "note": "input-side phase costs, split at each run's OWN first and last edit. The three do not sum to the whole-run delta because output cost is not per-request observable (M169).",
+    "medianDeltaPreEditCostUsd": 0.064702,
+    "medianDeltaImplementationCostUsd": 0.000793,
+    "medianDeltaDebugTestCostUsd": 0.008603,
+    "totalDeltaPreEditCostUsd": -0.046,
+    "totalDeltaImplementationCostUsd": 1.4622,
+    "totalDeltaDebugTestCostUsd": -0.0342
+  },
+  "correlation": {
+    "preEditRequestsVsPostEditRequests": -0.627,
+    "preEditRequestsVsImplementationCost": -0.373,
+    "preEditRequestsVsWholeRunCost": -0.682,
+    "reading": "negative means the FURTHER AHEAD the treatment arm's first edit is relative to the baseline's, the MORE the whole run costs."
+  },
+  "displacementHypothesis": {
+    "statement": "the orientation does not remove the work of understanding; it lets the agent begin editing before it has done that work, and the work reappears afterwards at a higher price.",
+    "evidence": {
+      "tasksWhereTreatmentEditedEarlier": 2,
+      "medianWholeRunDeltaUsdWhenEarlier": 0.7223845,
+      "medianWholeRunDeltaUsdOtherwise": 0.029165,
+      "cases": [
+        {
+          "instanceId": "astropy__astropy-14369",
+          "deltaPreEditRequests": -3,
+          "deltaPostEditRequests": 19,
+          "deltaWholeRunCostUsd": 0.714641,
+          "resolvedBaseline": false,
+          "resolvedCompact": false
+        },
+        {
+          "instanceId": "pydata__xarray-6599",
+          "deltaPreEditRequests": -6,
+          "deltaPostEditRequests": 13,
+          "deltaWholeRunCostUsd": 0.730128,
+          "resolvedBaseline": true,
+          "resolvedCompact": true
+        }
+      ]
+    },
+    "strength": "SUGGESTIVE, NOT ESTABLISHED. The rank correlation is over 11 pairs and only 2 of them sit in the earlier-edit group. It is offered as the mechanism most consistent with the measurements, and it is exactly the shape a larger qualification should be designed to confirm or kill — not a finding to build retrieval work on."
+  },
+  "rows": [
+    {
+      "instanceId": "astropy__astropy-14369",
+      "measurable": true,
+      "deltaPreEditRequests": -3,
+      "deltaPostEditRequests": 19,
+      "deltaPreEditCostUsd": -0.437445,
+      "deltaImplementationCostUsd": 0.932045,
+      "deltaDebugTestCostUsd": -0.063809,
+      "deltaWholeRunCostUsd": 0.714641,
+      "deltaSearches": -5,
+      "orientationAttributableCostUsd": 0.01885,
+      "treatmentEditedEarlier": true,
+      "resolvedBaseline": false,
+      "resolvedCompact": false
+    },
+    {
+      "instanceId": "django__django-13658",
+      "measurable": true,
+      "deltaPreEditRequests": 1,
+      "deltaPostEditRequests": 1,
+      "deltaPreEditCostUsd": 0.078949,
+      "deltaImplementationCostUsd": -0.039695,
+      "deltaDebugTestCostUsd": 0.022154,
+      "deltaWholeRunCostUsd": 0.077034,
+      "deltaSearches": -1,
+      "orientationAttributableCostUsd": 0.007536,
+      "treatmentEditedEarlier": false,
+      "resolvedBaseline": true,
+      "resolvedCompact": true
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-22719",
+      "measurable": true,
+      "deltaPreEditRequests": 1,
+      "deltaPostEditRequests": 1,
+      "deltaPreEditCostUsd": -0.013625,
+      "deltaImplementationCostUsd": -0.116504,
+      "deltaDebugTestCostUsd": 0.137894,
+      "deltaWholeRunCostUsd": 0.029165,
+      "deltaSearches": 0,
+      "orientationAttributableCostUsd": 0.007574,
+      "treatmentEditedEarlier": false,
+      "resolvedBaseline": true,
+      "resolvedCompact": true
+    },
+    {
+      "instanceId": "mwaskom__seaborn-3187",
+      "measurable": true,
+      "deltaPreEditRequests": 4,
+      "deltaPostEditRequests": -8,
+      "deltaPreEditCostUsd": 0.191867,
+      "deltaImplementationCostUsd": -0.019771,
+      "deltaDebugTestCostUsd": -0.249979,
+      "deltaWholeRunCostUsd": -0.064009,
+      "deltaSearches": -3,
+      "orientationAttributableCostUsd": 0.011134,
+      "treatmentEditedEarlier": false,
+      "resolvedBaseline": false,
+      "resolvedCompact": false
+    },
+    {
+      "instanceId": "pallets__flask-5014",
+      "measurable": true,
+      "deltaPreEditRequests": 1,
+      "deltaPostEditRequests": 1,
+      "deltaPreEditCostUsd": -0.000649,
+      "deltaImplementationCostUsd": -0.066209,
+      "deltaDebugTestCostUsd": 0.018884,
+      "deltaWholeRunCostUsd": -0.034424,
+      "deltaSearches": -1,
+      "orientationAttributableCostUsd": 0.011626,
+      "treatmentEditedEarlier": false,
+      "resolvedBaseline": true,
+      "resolvedCompact": true
+    },
+    {
+      "instanceId": "psf__requests-1724",
+      "measurable": true,
+      "deltaPreEditRequests": 0,
+      "deltaPostEditRequests": 12,
+      "deltaPreEditCostUsd": 0.062559,
+      "deltaImplementationCostUsd": 0.193971,
+      "deltaDebugTestCostUsd": 0.121156,
+      "deltaWholeRunCostUsd": 0.492961,
+      "deltaSearches": -1,
+      "orientationAttributableCostUsd": 0.011844,
+      "treatmentEditedEarlier": false,
+      "resolvedBaseline": false,
+      "resolvedCompact": false
+    },
+    {
+      "instanceId": "pydata__xarray-6599",
+      "measurable": true,
+      "deltaPreEditRequests": -6,
+      "deltaPostEditRequests": 13,
+      "deltaPreEditCostUsd": -0.194714,
+      "deltaImplementationCostUsd": 0.554741,
+      "deltaDebugTestCostUsd": -0.014348,
+      "deltaWholeRunCostUsd": 0.730128,
+      "deltaSearches": -3,
+      "orientationAttributableCostUsd": 0.015096,
+      "treatmentEditedEarlier": true,
+      "resolvedBaseline": true,
+      "resolvedCompact": true
+    },
+    {
+      "instanceId": "pylint-dev__pylint-4551",
+      "measurable": false
+    },
+    {
+      "instanceId": "pytest-dev__pytest-7432",
+      "measurable": true,
+      "deltaPreEditRequests": 1,
+      "deltaPostEditRequests": 0,
+      "deltaPreEditCostUsd": 0.066654,
+      "deltaImplementationCostUsd": 0.054927,
+      "deltaDebugTestCostUsd": -0.071677,
+      "deltaWholeRunCostUsd": 0.015829,
+      "deltaSearches": 0,
+      "orientationAttributableCostUsd": 0.007891,
+      "treatmentEditedEarlier": false,
+      "resolvedBaseline": true,
+      "resolvedCompact": true
+    },
+    {
+      "instanceId": "scikit-learn__scikit-learn-10844",
+      "measurable": true,
+      "deltaPreEditRequests": 1,
+      "deltaPostEditRequests": -3,
+      "deltaPreEditCostUsd": 0.06681,
+      "deltaImplementationCostUsd": -0.034418,
+      "deltaDebugTestCostUsd": -0.013259,
+      "deltaWholeRunCostUsd": 0.016182,
+      "deltaSearches": -1,
+      "orientationAttributableCostUsd": 0.00798,
+      "treatmentEditedEarlier": false,
+      "resolvedBaseline": true,
+      "resolvedCompact": true
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-7462",
+      "measurable": true,
+      "deltaPreEditRequests": 1,
+      "deltaPostEditRequests": 1,
+      "deltaPreEditCostUsd": 0.064702,
+      "deltaImplementationCostUsd": 0.000793,
+      "deltaDebugTestCostUsd": 0.008603,
+      "deltaWholeRunCostUsd": 0.0563,
+      "deltaSearches": 0,
+      "orientationAttributableCostUsd": 0.006188,
+      "treatmentEditedEarlier": false,
+      "resolvedBaseline": false,
+      "resolvedCompact": false
+    },
+    {
+      "instanceId": "sympy__sympy-13480",
+      "measurable": true,
+      "deltaPreEditRequests": 1,
+      "deltaPostEditRequests": 3,
+      "deltaPreEditCostUsd": 0.068873,
+      "deltaImplementationCostUsd": 0.002287,
+      "deltaDebugTestCostUsd": 0.070188,
+      "deltaWholeRunCostUsd": 0.167322,
+      "deltaSearches": 0,
+      "orientationAttributableCostUsd": 0.011295,
+      "treatmentEditedEarlier": false,
+      "resolvedBaseline": true,
+      "resolvedCompact": true
+    }
+  ]
+}

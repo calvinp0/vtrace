@@ -1,0 +1,262 @@
+{
+  "schemaVersion": "stage5.m173.query-sensitivity.v1",
+  "milestone": "M173",
+  "workstream": "M173-A",
+  "finding": "the shipped default is compact only when the pipeline delivers. On an empty delivery projectRunPipelineOrientation declines and the tool returns the full authoritative result, which is the payload M169 priced at $0.0985. The compact treatment therefore has an escape hatch, and M173 measures per run whether it opened.",
+  "queryShapes": {
+    "proxy": "the raw SWE-bench problem statement — what a preflight can know",
+    "agent": "the first run_pipeline query M168's clean arm authored, lifted verbatim from its transcript"
+  },
+  "counts": {
+    "tasks": 12,
+    "compactUnderBoth": 11,
+    "compactOnlyUnderAgentQuery": 1,
+    "fallbackUnderAgentQuery": 0,
+    "agentQueryUnavailable": 0,
+    "errors": 0
+  },
+  "declaredFallbackRiskBeforeSpend": [],
+  "limit": "the live agent authors a fresh query and will not reproduce M168's bytes. This measures how the product behaves under an AGENT-SHAPED query, not a prediction of any run.",
+  "rows": [
+    {
+      "instanceId": "astropy__astropy-14369",
+      "verdict": "COMPACT_UNDER_BOTH",
+      "proxyQueryCharacters": 2597,
+      "agentQueryCharacters": 223,
+      "proxy": {
+        "disclosure": "COMPACT_ORIENTATION",
+        "characters": 1892,
+        "focusFile": "astropy/coordinates/matching.py",
+        "relatedCount": 5,
+        "deliveredItems": null
+      },
+      "agent": {
+        "disclosure": "COMPACT_ORIENTATION",
+        "characters": 2560,
+        "focusFile": "astropy/io/ascii/cds.py",
+        "relatedCount": 7,
+        "deliveredItems": null
+      }
+    },
+    {
+      "instanceId": "django__django-13658",
+      "verdict": "COMPACT_UNDER_BOTH",
+      "proxyQueryCharacters": 1237,
+      "agentQueryCharacters": 210,
+      "proxy": {
+        "disclosure": "COMPACT_ORIENTATION",
+        "characters": 2043,
+        "focusFile": "django/core/management/__init__.py",
+        "relatedCount": 6,
+        "deliveredItems": null
+      },
+      "agent": {
+        "disclosure": "COMPACT_ORIENTATION",
+        "characters": 1840,
+        "focusFile": "django/core/management/__init__.py",
+        "relatedCount": 5,
+        "deliveredItems": null
+      }
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-22719",
+      "verdict": "COMPACT_ONLY_UNDER_AGENT_QUERY",
+      "proxyQueryCharacters": 10176,
+      "agentQueryCharacters": 325,
+      "proxy": {
+        "disclosure": "AUTHORITATIVE_DEBUG",
+        "characters": 26075,
+        "focusFile": null,
+        "relatedCount": null,
+        "deliveredItems": 0
+      },
+      "agent": {
+        "disclosure": "COMPACT_ORIENTATION",
+        "characters": 1703,
+        "focusFile": "lib/matplotlib/category.py",
+        "relatedCount": 4,
+        "deliveredItems": null
+      }
+    },
+    {
+      "instanceId": "mwaskom__seaborn-3187",
+      "verdict": "COMPACT_UNDER_BOTH",
+      "proxyQueryCharacters": 1438,
+      "agentQueryCharacters": 141,
+      "proxy": {
+        "disclosure": "COMPACT_ORIENTATION",
+        "characters": 1625,
+        "focusFile": "seaborn/_core/scales.py",
+        "relatedCount": 5,
+        "deliveredItems": null
+      },
+      "agent": {
+        "disclosure": "COMPACT_ORIENTATION",
+        "characters": 1775,
+        "focusFile": "seaborn/_core/scales.py",
+        "relatedCount": 5,
+        "deliveredItems": null
+      }
+    },
+    {
+      "instanceId": "pallets__flask-5014",
+      "verdict": "COMPACT_UNDER_BOTH",
+      "proxyQueryCharacters": 195,
+      "agentQueryCharacters": 72,
+      "proxy": {
+        "disclosure": "COMPACT_ORIENTATION",
+        "characters": 2123,
+        "focusFile": "src/flask/app.py",
+        "relatedCount": 5,
+        "deliveredItems": null
+      },
+      "agent": {
+        "disclosure": "COMPACT_ORIENTATION",
+        "characters": 3105,
+        "focusFile": "src/flask/blueprints.py",
+        "relatedCount": 4,
+        "deliveredItems": null
+      }
+    },
+    {
+      "instanceId": "psf__requests-1724",
+      "verdict": "COMPACT_UNDER_BOTH",
+      "proxyQueryCharacters": 7476,
+      "agentQueryCharacters": 239,
+      "proxy": {
+        "disclosure": "COMPACT_ORIENTATION",
+        "characters": 1046,
+        "focusFile": "requests/sessions.py",
+        "relatedCount": 0,
+        "deliveredItems": null
+      },
+      "agent": {
+        "disclosure": "COMPACT_ORIENTATION",
+        "characters": 2038,
+        "focusFile": "requests/api.py",
+        "relatedCount": 6,
+        "deliveredItems": null
+      }
+    },
+    {
+      "instanceId": "pydata__xarray-6599",
+      "verdict": "COMPACT_UNDER_BOTH",
+      "proxyQueryCharacters": 4310,
+      "agentQueryCharacters": 228,
+      "proxy": {
+        "disclosure": "COMPACT_ORIENTATION",
+        "characters": 2051,
+        "focusFile": "xarray/coding/times.py",
+        "relatedCount": 6,
+        "deliveredItems": null
+      },
+      "agent": {
+        "disclosure": "COMPACT_ORIENTATION",
+        "characters": 1994,
+        "focusFile": "xarray/core/combine.py",
+        "relatedCount": 4,
+        "deliveredItems": null
+      }
+    },
+    {
+      "instanceId": "pylint-dev__pylint-4551",
+      "verdict": "COMPACT_UNDER_BOTH",
+      "proxyQueryCharacters": 777,
+      "agentQueryCharacters": 222,
+      "proxy": {
+        "disclosure": "COMPACT_ORIENTATION",
+        "characters": 2001,
+        "focusFile": "pylint/checkers/classes.py",
+        "relatedCount": 6,
+        "deliveredItems": null
+      },
+      "agent": {
+        "disclosure": "COMPACT_ORIENTATION",
+        "characters": 1670,
+        "focusFile": "pylint/pyreverse/utils.py",
+        "relatedCount": 5,
+        "deliveredItems": null
+      }
+    },
+    {
+      "instanceId": "pytest-dev__pytest-7432",
+      "verdict": "COMPACT_UNDER_BOTH",
+      "proxyQueryCharacters": 773,
+      "agentQueryCharacters": 269,
+      "proxy": {
+        "disclosure": "COMPACT_ORIENTATION",
+        "characters": 2003,
+        "focusFile": "src/_pytest/skipping.py",
+        "relatedCount": 5,
+        "deliveredItems": null
+      },
+      "agent": {
+        "disclosure": "COMPACT_ORIENTATION",
+        "characters": 1934,
+        "focusFile": "src/_pytest/hookspec.py",
+        "relatedCount": 5,
+        "deliveredItems": null
+      }
+    },
+    {
+      "instanceId": "scikit-learn__scikit-learn-10844",
+      "verdict": "COMPACT_UNDER_BOTH",
+      "proxyQueryCharacters": 2399,
+      "agentQueryCharacters": 146,
+      "proxy": {
+        "disclosure": "COMPACT_ORIENTATION",
+        "characters": 1745,
+        "focusFile": "sklearn/metrics/cluster/supervised.py",
+        "relatedCount": 4,
+        "deliveredItems": null
+      },
+      "agent": {
+        "disclosure": "COMPACT_ORIENTATION",
+        "characters": 2213,
+        "focusFile": "sklearn/metrics/cluster/supervised.py",
+        "relatedCount": 6,
+        "deliveredItems": null
+      }
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-7462",
+      "verdict": "COMPACT_UNDER_BOTH",
+      "proxyQueryCharacters": 1169,
+      "agentQueryCharacters": 131,
+      "proxy": {
+        "disclosure": "COMPACT_ORIENTATION",
+        "characters": 1474,
+        "focusFile": "sphinx/domains/python.py",
+        "relatedCount": 5,
+        "deliveredItems": null
+      },
+      "agent": {
+        "disclosure": "COMPACT_ORIENTATION",
+        "characters": 1489,
+        "focusFile": "sphinx/domains/python.py",
+        "relatedCount": 4,
+        "deliveredItems": null
+      }
+    },
+    {
+      "instanceId": "sympy__sympy-13480",
+      "verdict": "COMPACT_UNDER_BOTH",
+      "proxyQueryCharacters": 430,
+      "agentQueryCharacters": 108,
+      "proxy": {
+        "disclosure": "COMPACT_ORIENTATION",
+        "characters": 2544,
+        "focusFile": "sympy/functions/elementary/hyperbolic.py",
+        "relatedCount": 6,
+        "deliveredItems": null
+      },
+      "agent": {
+        "disclosure": "COMPACT_ORIENTATION",
+        "characters": 2935,
+        "focusFile": "sympy/functions/elementary/hyperbolic.py",
+        "relatedCount": 5,
+        "deliveredItems": null
+      }
+    }
+  ]
+}
