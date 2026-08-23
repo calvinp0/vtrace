@@ -1,0 +1,56 @@
+{
+  "schemaVersion": "stage5.m175.regression-checks.v1",
+  "milestone": "M175",
+  "touchedSourceFiles": [
+    "src/mcp/responseEnvelope.ts"
+  ],
+  "reachability": {
+    "gate": "no retrieval or projection module may reach the changed file",
+    "retrievalRoots": [
+      "src/runPipeline/runPipelineOrchestrator.ts",
+      "src/capsuleV2/buildCapsuleV2.ts",
+      "src/retrieval/rerankGraph.ts",
+      "src/runPipeline/orientationProjection.ts",
+      "src/runPipeline/orientationDecline.ts"
+    ],
+    "modulesInRetrievalClosure": 153,
+    "rows": [
+      {
+        "file": "src/mcp/responseEnvelope.ts",
+        "reachableFromRetrieval": false
+      }
+    ],
+    "verdict": "RETRIEVAL_CANNOT_REACH_THE_CHANGE"
+  },
+  "derivation": {
+    "gate": "mutating the changed file must move no index fingerprint (M146-A model)",
+    "rows": [
+      {
+        "file": "src/mcp/responseEnvelope.ts",
+        "unchanged": true,
+        "before": {
+          "index_format_version": 5,
+          "schema_version": "1.0.0+35b8285a7964",
+          "indexer_fingerprint": "e4841a232e914b7d82e4d81b23538ccaf228c0b3b03be541b16d56449e5651a1",
+          "parser_fingerprint": "e633009f0a91e53a54703dee3321497365873d1e47f63c855013b487b217f46c",
+          "config_hash": "4b003f2216cc9f0a1eb6b43e4c949ca7d730784e4a4ce2b54b1aaef3550e7de5"
+        },
+        "after": {
+          "index_format_version": 5,
+          "schema_version": "1.0.0+35b8285a7964",
+          "indexer_fingerprint": "e4841a232e914b7d82e4d81b23538ccaf228c0b3b03be541b16d56449e5651a1",
+          "parser_fingerprint": "e633009f0a91e53a54703dee3321497365873d1e47f63c855013b487b217f46c",
+          "config_hash": "4b003f2216cc9f0a1eb6b43e4c949ca7d730784e4a4ce2b54b1aaef3550e7de5"
+        }
+      }
+    ],
+    "verdict": "OUTSIDE_DERIVATION_CLOSURE"
+  },
+  "whitespaceCheck": {
+    "command": "git diff --check",
+    "clean": true,
+    "output": ""
+  },
+  "retrievalEvalNote": "run_stage5_m122_product_retrieval_eval.ts imports runReliableContextRetrieval and buildCapsuleV2 directly and never constructs an MCP response, so it cannot observe this change. The reachability proof above is the stronger statement: not that the eval agrees, but that no execution path connects the edit to retrieval at all.",
+  "empiricalCorroboration": "M175-E: across 200 cases the lead pivot is unchanged on every delivered packet and every after-packet is a superset of its before-packet."
+}

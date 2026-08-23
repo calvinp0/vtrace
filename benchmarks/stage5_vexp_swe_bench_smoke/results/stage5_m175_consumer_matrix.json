@@ -1,0 +1,73 @@
+{
+  "schemaVersion": "stage5.m175.consumer-matrix.v1",
+  "question": "Does any consumer require the full verbatim request text to be SHIPPED?",
+  "pipelineInputConsumers": {
+    "count": 14,
+    "needs": "full_verbatim_text",
+    "shippingRequired": false,
+    "note": "Every one reads the INPUT record server-side. None reads the response."
+  },
+  "responseOutputConsumers": {
+    "count": 5,
+    "productConsumers": 0,
+    "detail": [
+      {
+        "at": "benchmarks/stage5_vexp_swe_bench_smoke/m171Contract.ts:172",
+        "layer": "benchmark analyzer",
+        "needs": "nothing",
+        "why": "Counts both fields as duplicated restatement. M171 already MEASURED this echo; it is consumed here as the defect, never as information."
+      },
+      {
+        "at": "src/mcp/mcp.test.ts:2629",
+        "layer": "test",
+        "needs": "full_verbatim_text",
+        "why": "Asserts output.request.query round-trips. Issued at detail=\"debug\" — it constrains the DEBUG contract only, which is what makes a detail-gated repair testable without rewriting it."
+      },
+      {
+        "at": "benchmarks/stage5_vexp_swe_bench_smoke/m171Contract.ts:170",
+        "layer": "benchmark analyzer",
+        "needs": "normalized_value",
+        "why": "Falls back to request.task for the task label ONLY when productContext.task is absent; productContext.task is itself already '@request.task'."
+      },
+      {
+        "at": "benchmarks/stage5_vexp_swe_bench_smoke/m171Contract.ts:172",
+        "layer": "benchmark analyzer",
+        "needs": "nothing",
+        "why": "Counts both fields as duplicated restatement. M171 already MEASURED this echo; it is consumed here as the defect, never as information."
+      },
+      {
+        "at": "src/mcp/mcp.test.ts:2630",
+        "layer": "test",
+        "needs": "full_verbatim_text",
+        "why": "Asserts output.request.task round-trips. Also at detail=\"debug\"."
+      }
+    ]
+  },
+  "externalClients": [
+    {
+      "consumer": "Stage 5 benchmark client (vexp-swe-bench harness)",
+      "status": "SUPPORTED_BY_CODE",
+      "readsRequestBlock": false,
+      "evidence": "Reads modelPatch/resolved/costUsd/numTurns from the harness result row, never the run_pipeline request block (CLAUDE.md 'Reading captured run artifacts')."
+    },
+    {
+      "consumer": "Claude Code MCP integration",
+      "status": "PROVEN",
+      "readsRequestBlock": false,
+      "evidence": "M167 established structuredContent is model-facing and content[0].text duplicates it. The consumer is a language model reading prose, with no field-level contract on `request`."
+    },
+    {
+      "consumer": "Codex path",
+      "status": "UNKNOWN",
+      "readsRequestBlock": null,
+      "evidence": "No Codex-specific response handling is present in this repository. Not claimed either way."
+    },
+    {
+      "consumer": "Generic MCP response handling and tests",
+      "status": "PROVEN",
+      "readsRequestBlock": true,
+      "evidence": "src/mcp/mcp.test.ts:2629-2630, both issued at detail=\"debug\"."
+    }
+  ],
+  "verdict": "NO_PRODUCT_CONSUMER_READS_THE_SHIPPED_REQUEST_BLOCK"
+}

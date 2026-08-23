@@ -1,0 +1,81 @@
+{
+  "schemaVersion": "stage5.m175.disclosure-matrix.v1",
+  "legend": {
+    "internalAuthority": "must be retained server-side",
+    "defaultModelFacing": "must be shipped in the compact default",
+    "debugModelFacing": "must be shipped at detail=debug"
+  },
+  "fields": [
+    {
+      "field": "raw task text (input record)",
+      "internalAuthority": true,
+      "defaultModelFacing": false,
+      "debugModelFacing": true,
+      "why": "Retrieval, routing, hashing and memory all consume it. The agent authored it, so shipping it back adds nothing."
+    },
+    {
+      "field": "normalized task / intent query",
+      "internalAuthority": true,
+      "defaultModelFacing": false,
+      "debugModelFacing": true,
+      "why": "Derived server-side for intent selection. Already reduced to a reference by the envelope's existing tier."
+    },
+    {
+      "field": "retrieval query",
+      "internalAuthority": true,
+      "defaultModelFacing": false,
+      "debugModelFacing": true,
+      "why": "IS the task string here — no separate derived query exists in this path, so there is no divergence to disclose."
+    },
+    {
+      "field": "output.request.query",
+      "internalAuthority": false,
+      "defaultModelFacing": false,
+      "debugModelFacing": true,
+      "why": "A rendering of the input record. No product consumer."
+    },
+    {
+      "field": "output.request.task",
+      "internalAuthority": false,
+      "defaultModelFacing": false,
+      "debugModelFacing": true,
+      "why": "The identical string a second time. No product consumer, and no information the sibling lacks."
+    },
+    {
+      "field": "task hash",
+      "internalAuthority": true,
+      "defaultModelFacing": false,
+      "debugModelFacing": true,
+      "why": "Server-side provenance. §19: a hash the model cannot act on is still billed overhead."
+    },
+    {
+      "field": "query hash / capsule ref",
+      "internalAuthority": true,
+      "defaultModelFacing": false,
+      "debugModelFacing": true,
+      "why": "Server-side identity for capsule and memory rows."
+    },
+    {
+      "field": "intent decision",
+      "internalAuthority": true,
+      "defaultModelFacing": false,
+      "debugModelFacing": true,
+      "why": "Machine-facing; M166 moved diagnostics behind detail=debug."
+    },
+    {
+      "field": "retrieval provenance",
+      "internalAuthority": true,
+      "defaultModelFacing": false,
+      "debugModelFacing": true,
+      "why": "Machine-facing."
+    },
+    {
+      "field": "non-fresh index status",
+      "internalAuthority": true,
+      "defaultModelFacing": true,
+      "debugModelFacing": true,
+      "why": "Interpretation-critical: already an orientation note. Unchanged by M175."
+    }
+  ],
+  "boundedTruth": "The agent supplied the task. Sending it back is not disclosure, it is restatement, and under a shared ceiling restatement is paid for with evidence."
+}

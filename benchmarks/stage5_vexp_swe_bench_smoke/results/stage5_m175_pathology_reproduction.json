@@ -1,0 +1,193 @@
+{
+  "schemaVersion": "stage5.m175.pathology-reproduction.v1",
+  "milestone": "M175",
+  "workstream": "M175-B",
+  "subject": "matplotlib__matplotlib-22719",
+  "control": "mwaskom__seaborn-3187",
+  "method": {
+    "defaultPath": "run_pipeline with no detail and no max_tokens — what an agent receives",
+    "envelopeInternals": "M174's own default-path capture, taken before the decline projector hid the authoritative envelope. It is the only artifact recording the DEFAULT path's budget arithmetic.",
+    "supplementary": "a detail=debug capture, for the echo's composition only",
+    "taskText": "the raw SWE-bench problem_statement, which is what the live M173/M174 runs sent",
+    "claim": "cause, from the envelope's own accounting — not effect, which is M175-E",
+    "whyNotDebugForPrevalence": "detail=debug retains machine-facing diagnostics the default path drops, so it degrades on cases the default path delivers. Measured here: the seaborn control fails delivery at debug and succeeds on the default path. Prevalence is measured on the default path only."
+  },
+  "rejectedInstrument": {
+    "method": "capture one snapshot above the ceiling, replay compaction under each policy",
+    "why": "max_tokens feeds budgetTokens (tools.ts:9189) as well as requestedContextTokens (tools.ts:9255). A capture at 120,000 selected 24 items where the product's 8,000 selected 10, so the replay would have compared policies across different pipeline states and violated the isolation it was chosen for.",
+    "measured": {
+      "wideBudgetSelected": 24,
+      "productBudgetSelected": 10
+    }
+  },
+  "defectVerdict": "REQUEST_ECHO_EVICTION_CONFIRMED",
+  "cases": [
+    {
+      "instanceId": "matplotlib__matplotlib-22719",
+      "role": "known_positive",
+      "taskCharacters": 10176,
+      "requestedContextTokens": 8000,
+      "defaultPathToday": {
+        "kind": "decline",
+        "schemaVersion": "run_pipeline.orientation.none/1",
+        "declineState": "evidence_found_but_undelivered",
+        "focusAt": null,
+        "focusFile": null,
+        "relatedCount": 0,
+        "relatedFiles": [],
+        "relatedSymbols": [],
+        "characters": 451,
+        "billedTokens": 143
+      },
+      "defaultPathM174": {
+        "source": "results/_m174_fallback_capture",
+        "delivery": {
+          "resolved": false,
+          "retrievalFound": true,
+          "deliveryFailed": true,
+          "resultState": "delivery_failure",
+          "selectedItemsBeforeBudget": 10,
+          "deliveredItems": 0,
+          "droppedForBudget": 10,
+          "leadPivot": "lib/matplotlib/axis.py::Axis.convert_units",
+          "pivotDelivered": false,
+          "withinEnvelope": true,
+          "ceilingTokens": 9200,
+          "totalResponseTokens": 6482,
+          "metadataTokens": 6435,
+          "modelVisibleTokens": 47,
+          "serializedCharacters": 25926
+        },
+        "attribution": {
+          "requestBlockCharacters": 21395,
+          "requestBlockTokens": 5349,
+          "taskCharacters": 10173,
+          "queryCharacters": 10173,
+          "verbatimEchoCharacters": 20346,
+          "verbatimEchoTokens": 5087,
+          "duplicatedEchoCharacters": 10173,
+          "identical": true,
+          "totalCharacters": 25926,
+          "totalTokens": 6482,
+          "echoShareOfResponse": 0.7847720435084471,
+          "evidenceCharacters": 225,
+          "evidenceTokens": 57
+        }
+      },
+      "sufficiency": {
+        "evidenceTokens": 3731,
+        "metadataTokensAfterDegradation": 6435,
+        "ceilingTokens": 9200,
+        "deficitTokens": 966,
+        "duplicateOnlyTokens": 2544,
+        "bothCopiesTokens": 5087,
+        "duplicateOnlySuffices": true,
+        "bothCopiesSuffices": true,
+        "headroomAfterBothCopies": 4121,
+        "conservative": "Metadata is measured after degradation, so the per-item metadata a delivered response would also carry is excluded. The real deficit is larger and so is the real echo saving; this understates both."
+      },
+      "debugDetail": {
+        "note": "detail=debug retains machine-facing diagnostics, so its envelope is larger than the default path's. Reported for the echo's composition only.",
+        "attribution": {
+          "requestBlockCharacters": 21396,
+          "requestBlockTokens": 5349,
+          "taskCharacters": 10173,
+          "queryCharacters": 10173,
+          "verbatimEchoCharacters": 20346,
+          "verbatimEchoTokens": 5087,
+          "duplicatedEchoCharacters": 10173,
+          "identical": true,
+          "totalCharacters": 25926,
+          "totalTokens": 6482,
+          "echoShareOfResponse": 0.7847720435084471,
+          "evidenceCharacters": 225,
+          "evidenceTokens": 57
+        },
+        "delivery": {
+          "resolved": false,
+          "retrievalFound": true,
+          "deliveryFailed": true,
+          "resultState": "delivery_failure",
+          "selectedItemsBeforeBudget": 15,
+          "deliveredItems": 0,
+          "droppedForBudget": 15,
+          "leadPivot": "lib/matplotlib/axis.py::Axis.convert_units",
+          "pivotDelivered": false,
+          "withinEnvelope": true,
+          "ceilingTokens": 9200,
+          "totalResponseTokens": 6482,
+          "metadataTokens": 6435,
+          "modelVisibleTokens": 47,
+          "serializedCharacters": 25926
+        },
+        "requestBlockTokens": 5349
+      }
+    },
+    {
+      "instanceId": "mwaskom__seaborn-3187",
+      "role": "known_negative",
+      "taskCharacters": 1438,
+      "requestedContextTokens": 8000,
+      "defaultPathToday": {
+        "kind": "orientation",
+        "schemaVersion": "run_pipeline.orientation/1",
+        "declineState": null,
+        "focusAt": "seaborn/_core/scales.py::ContinuousBase._setup",
+        "focusFile": "seaborn/_core/scales.py",
+        "relatedCount": 5,
+        "relatedFiles": [
+          "seaborn/_core/scales.py",
+          "seaborn/_core/plot.py"
+        ],
+        "relatedSymbols": [
+          "seaborn/_core/scales.py::ContinuousBase._setup",
+          "seaborn/_core/plot.py::Plot",
+          "seaborn/_core/scales.py::ContinuousBase",
+          "seaborn/_core/scales.py::PseudoAxis",
+          "seaborn/_core/scales.py::Scale",
+          "seaborn/_core/scales.py::ContinuousBase._get_transform"
+        ],
+        "characters": 1474,
+        "billedTokens": 468
+      },
+      "defaultPathM174": null,
+      "sufficiency": null,
+      "debugDetail": {
+        "note": "detail=debug retains machine-facing diagnostics, so its envelope is larger than the default path's. Reported for the echo's composition only.",
+        "attribution": {
+          "requestBlockCharacters": 3187,
+          "requestBlockTokens": 797,
+          "taskCharacters": 1437,
+          "queryCharacters": 1437,
+          "verbatimEchoCharacters": 2874,
+          "verbatimEchoTokens": 719,
+          "duplicatedEchoCharacters": 1437,
+          "identical": true,
+          "totalCharacters": 7766,
+          "totalTokens": 1942,
+          "echoShareOfResponse": 0.3700746845222766,
+          "evidenceCharacters": 225,
+          "evidenceTokens": 57
+        },
+        "delivery": {
+          "resolved": false,
+          "retrievalFound": true,
+          "deliveryFailed": true,
+          "resultState": "delivery_failure",
+          "selectedItemsBeforeBudget": 9,
+          "deliveredItems": 0,
+          "droppedForBudget": 9,
+          "leadPivot": "seaborn/_core/scales.py::ContinuousBase._setup",
+          "pivotDelivered": false,
+          "withinEnvelope": true,
+          "ceilingTokens": 9200,
+          "totalResponseTokens": 1942,
+          "metadataTokens": 1895,
+          "modelVisibleTokens": 47,
+          "serializedCharacters": 7766
+        },
+        "requestBlockTokens": 797
+      }
+    }
+  ]
+}

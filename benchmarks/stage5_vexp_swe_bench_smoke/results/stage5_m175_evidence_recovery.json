@@ -1,0 +1,59 @@
+{
+  "schemaVersion": "stage5.m175.evidence-recovery.v1",
+  "workstream": "M175-E",
+  "goldStatus": "diagnostic only (§44); movement is DELIVERY RECOVERY, never retrieval improvement (§45)",
+  "corpora": {
+    "broad100a": {
+      "cases": 100,
+      "deliveredPackets": {
+        "before": 99,
+        "after": 100
+      },
+      "relatedItems": {
+        "before": 464,
+        "after": 514
+      },
+      "additionalPreviouslySelectedItemsRestored": 50,
+      "casesWithItemsRestored": 17,
+      "casesWithItemsReduced": 0,
+      "pivotsRestored": 1,
+      "goldFilesRestored": {
+        "scored": 100,
+        "before": 66,
+        "after": 67
+      },
+      "goldSymbolsRestored": {
+        "scored": 100,
+        "before": 43,
+        "after": 45
+      },
+      "classification": "DELIVERY_RECOVERY — retrieval is byte-identical across the arms (§45)"
+    },
+    "broad100b": {
+      "cases": 98,
+      "deliveredPackets": {
+        "before": 94,
+        "after": 96
+      },
+      "relatedItems": {
+        "before": 396,
+        "after": 476
+      },
+      "additionalPreviouslySelectedItemsRestored": 80,
+      "casesWithItemsRestored": 31,
+      "casesWithItemsReduced": 0,
+      "pivotsRestored": 2,
+      "goldFilesRestored": {
+        "scored": 98,
+        "before": 53,
+        "after": 55
+      },
+      "goldSymbolsRestored": {
+        "scored": 98,
+        "before": 33,
+        "after": 36
+      },
+      "classification": "DELIVERY_RECOVERY — retrieval is byte-identical across the arms (§45)"
+    }
+  }
+}

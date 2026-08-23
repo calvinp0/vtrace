@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "stage5.m175.nonpathological-identity.v1",
+  "workstream": "M175-E",
+  "gate": "§51 — where the echo did not decide delivery, the packet's repository semantics must not move",
+  "corpora": {
+    "broad100a": {
+      "bothDelivered": 99,
+      "focusUnchanged": 99,
+      "focusChanged": [],
+      "byteIdenticalEvidence": 83,
+      "afterIsSupersetOfBefore": 99,
+      "notSuperset": [],
+      "verdict": "EVERY_DELIVERED_PACKET_PRESERVED_OR_EXTENDED"
+    },
+    "broad100b": {
+      "bothDelivered": 94,
+      "focusUnchanged": 94,
+      "focusChanged": [],
+      "byteIdenticalEvidence": 63,
+      "afterIsSupersetOfBefore": 94,
+      "notSuperset": [],
+      "verdict": "EVERY_DELIVERED_PACKET_PRESERVED_OR_EXTENDED"
+    }
+  }
+}

@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "stage5.m175.candidate.v1",
+  "policy": "TASK_ONLY",
+  "profile": {
+    "policy": "TASK_ONLY",
+    "whatTheModelSees": "the question once, verbatim; `query` becomes '@request.task'",
+    "schemaChange": "field_value_only",
+    "consumersBroken": [],
+    "debugPreserved": true,
+    "leavesVerbatimProse": true,
+    "falseAbsenceRisk": "none — the reference names where the value went"
+  },
+  "economics": [
+    {
+      "corpus": "broad100a",
+      "medianTokens": 348,
+      "p90Tokens": 763,
+      "maxTokens": 2702,
+      "medianSavedTokens": 296,
+      "p90SavedTokens": 712,
+      "maxSavedTokens": 2650
+    },
+    {
+      "corpus": "broad100b",
+      "medianTokens": 464,
+      "p90Tokens": 1174,
+      "maxTokens": 6487,
+      "medianSavedTokens": 413.5,
+      "p90SavedTokens": 1123,
+      "maxSavedTokens": 6436
+    }
+  ],
+  "frozen": false
+}

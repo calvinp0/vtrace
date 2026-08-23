@@ -1,0 +1,85 @@
+{
+  "schemaVersion": "stage5.m175.start-state.v1",
+  "milestone": "M175",
+  "recordedAtUtc": "2026-08-23T13:59:44.217608+00:00",
+  "branch": "main",
+  "head": "1b078193787109e7f771359f5c0d26f5e7ac0908",
+  "headSubject": "Record M174's own commit hashes in the ledger heading",
+  "originMain": "bcdd962e42cfdfccbce89e14885a90f405ba3490",
+  "aheadOfOriginMain": 102,
+  "behindOriginMain": 0,
+  "ancestry": {
+    "M174": [
+      {
+        "commit": "4d4d8cb4",
+        "subject": "Stop spending 8,229 tokens to say that nothing fit"
+      },
+      {
+        "commit": "3d493b21",
+        "subject": "The work never moved, and two virtualenvs cost more than the packet ever did"
+      },
+      {
+        "commit": "1b078193",
+        "subject": "Record M174's own commit hashes in the ledger heading"
+      }
+    ],
+    "M173": [
+      {
+        "commit": "edd52104",
+        "subject": "Make the orientation nine times cheaper, and change nothing at all"
+      },
+      {
+        "commit": "e0252fac",
+        "subject": "Record M173's own commit hash in the ledger heading"
+      }
+    ],
+    "M172": [
+      {
+        "commit": "b173df2d",
+        "subject": "Delete the bound nobody wired, and hand the agent a twelfth of the response"
+      },
+      {
+        "commit": "9242d879",
+        "subject": "Record M172's own commit hash in the ledger heading"
+      }
+    ],
+    "M171": [
+      {
+        "commit": "18473b0b",
+        "subject": "Send the agent a twelfth of the response, and lose three symbols to the wrong bound"
+      }
+    ]
+  },
+  "dirtyTrackedFiles": [
+    "benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_outcome_ledger.json",
+    "benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_outcome_ledger.md"
+  ],
+  "untrackedEntryCount": 191,
+  "worktrees": [
+    "/home/calvin/code/vtrace",
+    "/home/calvin/bench/vtrace-m140/impl/m136base",
+    "/home/calvin/bench/vtrace-m140/impl/m139",
+    "/home/calvin/bench/vtrace-m140/impl/m140a",
+    "/home/calvin/bench/vtrace-m140/impl/m140a2",
+    "/home/calvin/bench/vtrace-m140/impl/m140a3",
+    "/home/calvin/bench/vtrace-m140/impl/m140a4",
+    "/home/calvin/bench/vtrace-m140/impl/m140a5",
+    "/home/calvin/bench/vtrace-m140/impl/m140a6",
+    "/home/calvin/bench/vtrace-m142/bisect-0e4edc7",
+    "/home/calvin/bench/vtrace-m142/bisect-321f9a3",
+    "/home/calvin/bench/vtrace-m142/bisect-69826d3",
+    "/home/calvin/bench/vtrace-m142/iso-head",
+    "/home/calvin/bench/vtrace-m142/pred"
+  ],
+  "policy": {
+    "workOnMainOnly": true,
+    "pushProhibited": true,
+    "coAuthorTrailerProhibited": true,
+    "preserveUnrelatedDirt": true,
+    "preserveWorktrees": true,
+    "liveAgents": "not licensed",
+    "dockerEvaluate": "not run",
+    "expectedLiveSpendUsd": 0.0
+  },
+  "dirtyTrackedNote": "Pre-existing dirt inherited from before M175; not touched (CLAUDE.md)."
+}

@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "stage5.m175.candidate.v1",
+  "policy": "IDENTITY_ONLY",
+  "profile": {
+    "policy": "IDENTITY_ONLY",
+    "whatTheModelSees": "'@omitted: supplied by the caller; returned verbatim at detail=debug' and '@request.task'",
+    "schemaChange": "field_value_only",
+    "consumersBroken": [],
+    "debugPreserved": true,
+    "leavesVerbatimProse": false,
+    "falseAbsenceRisk": "handled — the marker states that the caller supplied the text and that debug returns it, so the omission carries no claim."
+  },
+  "economics": [
+    {
+      "corpus": "broad100a",
+      "medianTokens": 65,
+      "p90Tokens": 65,
+      "maxTokens": 65,
+      "medianSavedTokens": 579,
+      "p90SavedTokens": 1410,
+      "maxSavedTokens": 5287
+    },
+    {
+      "corpus": "broad100b",
+      "medianTokens": 65,
+      "p90Tokens": 65,
+      "maxTokens": 65,
+      "medianSavedTokens": 812.5,
+      "p90SavedTokens": 2232,
+      "maxSavedTokens": 12858
+    }
+  ],
+  "frozen": true
+}

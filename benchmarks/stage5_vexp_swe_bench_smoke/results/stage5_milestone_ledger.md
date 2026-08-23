@@ -4473,3 +4473,111 @@ first-edit survival                 A 4 final / B 4 final     rework A 6 / B 3
   closing, it needs replication at a sample size where a tail cannot dominate,
   on infrastructure where an agent does not spend fourteen requests looking for
   `pip`. Fix the environment friction first. No live spend until then.
+
+---
+
+# M175 — Orientation Envelope Input-Echo Elimination and Evidence-Budget Correctness
+
+```text
+bc6e2ecd  Stop paying for the question twice, and let the answer fit
+```
+
+M174 repaired the empty-delivery fallback and recorded, without acting on it, that
+the fallback was never the problem: retrieval had succeeded with ten items and a
+correct lead pivot, and the agent got none of them because the envelope had spent
+itself echoing the question. M175 removed the echo.
+
+```text
+A PASS   authority audit; 199/199 captures identical; ZERO product consumers
+B PASS   defect confirmed from the envelope's own accounting; 7/7 controls + identity + refill
+C PASS   five candidates priced, IDENTITY_ONLY frozen before any holdout was seen
+D PASS   one function in the existing envelope; 6 tests, 4 fail without it
+E PASS   198 valid cases across two corpora, two checkouts, one index
+F PASS   verdicts reached
+
+defect          REQUEST_ECHO_EVICTION_CONFIRMED
+repair          MINIMAL_REQUEST_DISCLOSURE_REPAIR_VALIDATED
+evidence budget EVIDENCE_BUDGET_REALLOCATED_TO_REPOSITORY_EVIDENCE
+product         KEEP_COMPACT_ORIENTATION_WITH_REQUEST_ECHO_FIX
+live            LIVE_WORK_NOT_LICENSED        spend $0.00
+retrieval       UNCHANGED
+```
+
+```text
+                              A before  A after   B before  B after
+valid cases                        100      100         98       98
+request block, median tokens     617.5       65      848.5       65
+request block, max tokens        5,133       65     12,430       65
+packets delivered                   99      100         94       96
+related items delivered            464      514        396      476
+gold file delivered                 66       67         53       55
+gold symbol delivered               43       45         33       36
+delivery failures                    1        0          4        2
+focus changed                        —        0          —        0
+cases losing evidence                —        0          —        0
+
+known positive  matplotlib-22719   decline → orientation, same correct pivot,
+                                   gold file and symbol both recovered
+```
+
+## M175 standing findings
+
+- **The exemption protected nothing and cost the product its evidence.** `request`
+  was the only large field with no reduction at any rung, exempt because it "echoes
+  the caller's own input verbatim and is a correctness surface". Its readers, in
+  full: two assertions in `mcp.test.ts`, both at `detail=debug`, and a benchmark
+  analyzer that counts it as duplication. `request.task` is assigned
+  `orchestration.request.query` at `formatRunPipelineOutput.ts:211` and was
+  identical to it in 199 of 199 captures. Before calling a field a correctness
+  surface, find the code that reads it — that audit is the transferable part.
+
+- **The fix is that the cost is CONSTANT, not that it is smaller.** 65 tokens
+  whatever is asked, against a median of 618/849 and a max of 12,430. Past that max
+  the response could not be assembled at all: Broad100-B's two longest questions
+  threw `product_response_envelope_unreachable` and returned `handler_failed` with
+  no response. Anything unbounded in the caller's input eventually exceeds any fixed
+  ceiling, which is why a budget-triggered rung was rejected.
+
+- **The obvious instrument does not work, and the reason should not be rediscovered.**
+  Replaying compaction over one snapshot would isolate policies perfectly, but
+  compaction runs before any response is observable, so a capture at the product's
+  budget is already the wreck — `productContext.items` arrives empty. Capturing above
+  the ceiling keeps the evidence, but `max_tokens` feeds `budgetTokens`
+  (`tools.ts:9189`) as well as `requestedContextTokens` (`tools.ts:9255`), so a wider
+  capture SELECTS DIFFERENTLY: 24 items at 120,000 against 10 at 8,000. Replaced by
+  two checkouts answering against one corpus and one index.
+
+- **`detail=debug` is not the default path and must not be used to measure it.** It
+  retains machine-facing diagnostics the default drops, so it degrades on cases the
+  default delivers — the seaborn control fails delivery at debug and succeeds by
+  default. Envelope internals were read at debug; prevalence and delivery only on the
+  default path.
+
+- **Evidence yields to the budget; the echo did not.** The most useful control found
+  nothing: 144,000 characters of evidence beside a 90-character request delivers
+  fine, because the progressive packer shrinks evidence to fit. A large evidence
+  supply never evicts itself, which is what made the narrow claim provable instead of
+  a plausible story about big responses.
+
+- **M172 had already removed the request from the packet; what remained was that it
+  decided whether the packet got evidence.** Request-restatement share of the
+  orientation packet was zero before M175 and is zero after. The contested resource
+  was the 9,200-token ceiling the packet is projected from, and that is where every
+  prevalence figure here is measured.
+
+- **The prevalence is a tail and the milestone should not be sold as more.** The
+  request block exceeded 25% of the ceiling on 4/100 (A) and 9/98 (B). Three
+  responses in 198 went from unusable to usable, 48 gained evidence, 147 are
+  unchanged. Nothing regressed on any measure: focus unchanged on all 193 delivered
+  packets, every after-packet a superset of its before-packet, retrieval unreachable
+  from the change across a 153-module import closure, index fingerprints unmoved.
+
+- **Next-step recommendation: no live work, and one lead worth taking.** §83's test is
+  whether the fix changes normal packets or only rare ones, and 147 of 198 responses
+  are byte-identical — requalifying an agent against that buys precision about a
+  null, and M174 already showed the packet is causally inert on outcomes. The lead is
+  what this uncovered rather than fixed: `product_response_envelope_unreachable` is a
+  reachable crash on ordinary input. M175 removed the largest field that reached it;
+  the throw remains, and any sufficiently large irreducible field still finds it. A
+  response that cannot be made to fit should degrade to a truthful non-answer, not
+  fail the call.

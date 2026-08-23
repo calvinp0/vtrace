@@ -1,0 +1,169 @@
+{
+  "schemaVersion": "stage5.m175.candidate-comparison.v1",
+  "milestone": "M175",
+  "workstream": "M175-C",
+  "decisionBasis": "envelope cost and consumer compatibility only — no delivery outcome was consulted",
+  "frozenPolicy": "IDENTITY_ONLY",
+  "frozenBefore": "any Broad100-A or Broad100-B evaluation of the repair (§68, §42)",
+  "profiles": [
+    {
+      "policy": "CURRENT",
+      "whatTheModelSees": "the caller's own question, twice, verbatim",
+      "schemaChange": "none",
+      "consumersBroken": [],
+      "debugPreserved": true,
+      "leavesVerbatimProse": true,
+      "falseAbsenceRisk": "none — nothing is omitted"
+    },
+    {
+      "policy": "TASK_ONLY",
+      "whatTheModelSees": "the question once, verbatim; `query` becomes '@request.task'",
+      "schemaChange": "field_value_only",
+      "consumersBroken": [],
+      "debugPreserved": true,
+      "leavesVerbatimProse": true,
+      "falseAbsenceRisk": "none — the reference names where the value went"
+    },
+    {
+      "policy": "QUERY_ONLY",
+      "whatTheModelSees": "the question once, verbatim; `task` becomes '@request.query'",
+      "schemaChange": "field_value_only",
+      "consumersBroken": [],
+      "debugPreserved": true,
+      "leavesVerbatimProse": true,
+      "falseAbsenceRisk": "none, but it inverts the codebase's own convention: `productContext.task` and the envelope's existing dedup tier both already point AT `@request.task` as canonical."
+    },
+    {
+      "policy": "IDENTITY_ONLY",
+      "whatTheModelSees": "'@omitted: supplied by the caller; returned verbatim at detail=debug' and '@request.task'",
+      "schemaChange": "field_value_only",
+      "consumersBroken": [],
+      "debugPreserved": true,
+      "leavesVerbatimProse": false,
+      "falseAbsenceRisk": "handled — the marker states that the caller supplied the text and that debug returns it, so the omission carries no claim."
+    },
+    {
+      "policy": "NO_REQUEST_DISCLOSURE",
+      "whatTheModelSees": "nothing; the `request` block is absent",
+      "schemaChange": "block_removed",
+      "consumersBroken": [
+        "any consumer branching on the presence of `request` — none proven, and §11 forbids claiming an unknown consumer is safe"
+      ],
+      "debugPreserved": true,
+      "leavesVerbatimProse": false,
+      "falseAbsenceRisk": "UNHANDLED — a silently absent block is indistinguishable from a response that never had one, which is exactly the false-absence failure the projector's boundary rule forbids."
+    }
+  ],
+  "economics": [
+    {
+      "corpus": "broad100a",
+      "cases": 100,
+      "taskCharacters": {
+        "median": 1145.5,
+        "p90": 2749,
+        "max": 10176
+      },
+      "byPolicy": {
+        "CURRENT": {
+          "medianTokens": 644,
+          "p90Tokens": 1475,
+          "maxTokens": 5352,
+          "medianSavedTokens": 0,
+          "p90SavedTokens": 0,
+          "maxSavedTokens": 0
+        },
+        "TASK_ONLY": {
+          "medianTokens": 348,
+          "p90Tokens": 763,
+          "maxTokens": 2702,
+          "medianSavedTokens": 296,
+          "p90SavedTokens": 712,
+          "maxSavedTokens": 2650
+        },
+        "QUERY_ONLY": {
+          "medianTokens": 348,
+          "p90Tokens": 763,
+          "maxTokens": 2702,
+          "medianSavedTokens": 296,
+          "p90SavedTokens": 712,
+          "maxSavedTokens": 2650
+        },
+        "IDENTITY_ONLY": {
+          "medianTokens": 65,
+          "p90Tokens": 65,
+          "maxTokens": 65,
+          "medianSavedTokens": 579,
+          "p90SavedTokens": 1410,
+          "maxSavedTokens": 5287
+        },
+        "NO_REQUEST_DISCLOSURE": {
+          "medianTokens": 1,
+          "p90Tokens": 1,
+          "maxTokens": 1,
+          "medianSavedTokens": 643,
+          "p90SavedTokens": 1474,
+          "maxSavedTokens": 5351
+        }
+      }
+    },
+    {
+      "corpus": "broad100b",
+      "cases": 100,
+      "taskCharacters": {
+        "median": 1589.5,
+        "p90": 4267,
+        "max": 24770
+      },
+      "byPolicy": {
+        "CURRENT": {
+          "medianTokens": 877.5,
+          "p90Tokens": 2297,
+          "maxTokens": 12923,
+          "medianSavedTokens": 0,
+          "p90SavedTokens": 0,
+          "maxSavedTokens": 0
+        },
+        "TASK_ONLY": {
+          "medianTokens": 464,
+          "p90Tokens": 1174,
+          "maxTokens": 6487,
+          "medianSavedTokens": 413.5,
+          "p90SavedTokens": 1123,
+          "maxSavedTokens": 6436
+        },
+        "QUERY_ONLY": {
+          "medianTokens": 464.5,
+          "p90Tokens": 1174,
+          "maxTokens": 6487,
+          "medianSavedTokens": 413,
+          "p90SavedTokens": 1123,
+          "maxSavedTokens": 6436
+        },
+        "IDENTITY_ONLY": {
+          "medianTokens": 65,
+          "p90Tokens": 65,
+          "maxTokens": 65,
+          "medianSavedTokens": 812.5,
+          "p90SavedTokens": 2232,
+          "maxSavedTokens": 12858
+        },
+        "NO_REQUEST_DISCLOSURE": {
+          "medianTokens": 1,
+          "p90Tokens": 1,
+          "maxTokens": 1,
+          "medianSavedTokens": 876.5,
+          "p90SavedTokens": 2296,
+          "maxSavedTokens": 12922
+        }
+      }
+    }
+  ],
+  "rationale": {
+    "rejected": {
+      "TASK_ONLY": "Halves the echo and leaves the other half unreducible. A sufficiently long question still evicts evidence, so it fixes the measured case rather than the defect.",
+      "QUERY_ONLY": "Same objection, and it inverts the codebase's own canonical direction: the envelope's existing dedup tier and productContext.task both already reference '@request.task'.",
+      "NO_REQUEST_DISCLOSURE": "Removes a published block where a shortening suffices (§56), and makes the omission silent, which is the false-absence failure the projection rules forbid."
+    },
+    "selected": "IDENTITY_ONLY removes every verbatim copy while preserving the block, its shape, its resolved parameters, all debug fidelity, and every consumer M175-A could find."
+  }
+}

@@ -1,0 +1,1291 @@
+{
+  "schemaVersion": "stage5.m175.request-authority.v1",
+  "field": "request.task",
+  "semantics": "Assigned `orchestration.request.query` at formatRunPipelineOutput.ts:211. Not a derived query, not a normalization, not a distinct concept: the same string under a second key.",
+  "totalSites": 7,
+  "byObject": {
+    "pipeline_input_record": 0,
+    "response_output_block": 3,
+    "textual_reference": 4
+  },
+  "byRole": {
+    "producer": 0,
+    "consumer": 3,
+    "reference": 4
+  },
+  "sites": [
+    {
+      "file": "benchmarks/stage5_vexp_swe_bench_smoke/m171Contract.ts",
+      "line": 170,
+      "text": "const task = text(productContext.task) || text(request.task);",
+      "object": "response_output_block",
+      "role": "consumer",
+      "layer": "benchmark analyzer",
+      "needs": "normalized_value",
+      "why": "Falls back to request.task for the task label ONLY when productContext.task is absent; productContext.task is itself already '@request.task'."
+    },
+    {
+      "file": "benchmarks/stage5_vexp_swe_bench_smoke/m171Contract.ts",
+      "line": 172,
+      "text": "[\"request.query\", request.query], [\"request.task\", request.task],",
+      "object": "response_output_block",
+      "role": "consumer",
+      "layer": "benchmark analyzer",
+      "needs": "nothing",
+      "why": "Counts both fields as duplicated restatement. M171 already MEASURED this echo; it is consumed here as the defect, never as information."
+    },
+    {
+      "file": "src/mcp/mcp.test.ts",
+      "line": 2630,
+      "text": "assert.equal(productFacing.result.output.request.task, \"debug why createSession fails\");",
+      "object": "response_output_block",
+      "role": "consumer",
+      "layer": "test",
+      "needs": "full_verbatim_text",
+      "why": "Asserts output.request.task round-trips. Also at detail=\"debug\"."
+    },
+    {
+      "file": "src/mcp/responseEnvelope.ts",
+      "line": 135,
+      "text": "const QUERY_REFERENCE = \"@request.task\";",
+      "object": "textual_reference",
+      "role": "reference",
+      "layer": "response envelope",
+      "needs": "nothing",
+      "why": "QUERY_REFERENCE = '@request.task'. The envelope ALREADY names request.task as the canonical copy and rewrites the others to point at it — the idiom M175 extends rather than invents."
+    },
+    {
+      "file": "src/mcp/responseEnvelope.ts",
+      "line": 1288,
+      "text": "// Repeated query text: `request.query` duplicates `request.task`, and",
+      "object": "textual_reference",
+      "role": "reference",
+      "layer": "response envelope",
+      "needs": "nothing",
+      "why": "The comment declaring `request` a correctness surface that is never rewritten. This is the exemption that let the echo outbid the evidence, and the one M175 revises."
+    },
+    {
+      "file": "src/productContext/budgetDelivery.ts",
+      "line": 380,
+      "text": "const task = typeof product.task === \"string\" ? product.task : \"@request.task\";",
+      "object": "textual_reference",
+      "role": "reference",
+      "layer": "product context",
+      "needs": "nothing",
+      "why": "productContext.task already ships as '@request.task' rather than a fifth verbatim copy."
+    },
+    {
+      "file": "src/runPipeline/orientationDecline.ts",
+      "line": 24,
+      "text": "* `request.task`: the agent's own 10,611-character question, echoed back at it",
+      "object": "textual_reference",
+      "role": "reference",
+      "layer": "documentation",
+      "needs": "nothing",
+      "why": "M174's record of the defect."
+    }
+  ],
+  "identityObservations": [
+    {
+      "source": "_m174_fallback_capture/matplotlib__matplotlib_22719",
+      "queryCharacters": 10173,
+      "taskCharacters": 10173,
+      "identical": true
+    },
+    {
+      "source": "broad100a/astropy__astropy-14365#debug",
+      "queryCharacters": 325,
+      "taskCharacters": 325,
+      "identical": true
+    },
+    {
+      "source": "broad100a/astropy__astropy-14369#debug",
+      "queryCharacters": 259,
+      "taskCharacters": 259,
+      "identical": true
+    },
+    {
+      "source": "broad100a/astropy__astropy-14539#debug",
+      "queryCharacters": 208,
+      "taskCharacters": 208,
+      "identical": true
+    },
+    {
+      "source": "broad100a/astropy__astropy-14598#debug",
+      "queryCharacters": 277,
+      "taskCharacters": 277,
+      "identical": true
+    },
+    {
+      "source": "broad100a/astropy__astropy-7166#debug",
+      "queryCharacters": 163,
+      "taskCharacters": 163,
+      "identical": true
+    },
+    {
+      "source": "broad100a/django__django-10880#debug",
+      "queryCharacters": 202,
+      "taskCharacters": 202,
+      "identical": true
+    },
+    {
+      "source": "broad100a/django__django-10973#debug",
+      "queryCharacters": 154,
+      "taskCharacters": 154,
+      "identical": true
+    },
+    {
+      "source": "broad100a/django__django-11095#debug",
+      "queryCharacters": 94,
+      "taskCharacters": 94,
+      "identical": true
+    },
+    {
+      "source": "broad100a/django__django-11133#debug",
+      "queryCharacters": 132,
+      "taskCharacters": 132,
+      "identical": true
+    },
+    {
+      "source": "broad100a/django__django-11206#debug",
+      "queryCharacters": 190,
+      "taskCharacters": 190,
+      "identical": true
+    },
+    {
+      "source": "broad100a/django__django-11490#debug",
+      "queryCharacters": 194,
+      "taskCharacters": 194,
+      "identical": true
+    },
+    {
+      "source": "broad100a/django__django-11728#debug",
+      "queryCharacters": 169,
+      "taskCharacters": 169,
+      "identical": true
+    },
+    {
+      "source": "broad100a/django__django-11740#debug",
+      "queryCharacters": 105,
+      "taskCharacters": 105,
+      "identical": true
+    },
+    {
+      "source": "broad100a/django__django-11749#debug",
+      "queryCharacters": 212,
+      "taskCharacters": 212,
+      "identical": true
+    },
+    {
+      "source": "broad100a/django__django-11815#debug",
+      "queryCharacters": 154,
+      "taskCharacters": 154,
+      "identical": true
+    },
+    {
+      "source": "broad100a/django__django-11820#debug",
+      "queryCharacters": 181,
+      "taskCharacters": 181,
+      "identical": true
+    },
+    {
+      "source": "broad100a/django__django-12050#debug",
+      "queryCharacters": 172,
+      "taskCharacters": 172,
+      "identical": true
+    },
+    {
+      "source": "broad100a/django__django-12273#debug",
+      "queryCharacters": 213,
+      "taskCharacters": 213,
+      "identical": true
+    },
+    {
+      "source": "broad100a/django__django-12276#debug",
+      "queryCharacters": 103,
+      "taskCharacters": 103,
+      "identical": true
+    },
+    {
+      "source": "broad100a/django__django-12325#debug",
+      "queryCharacters": 176,
+      "taskCharacters": 176,
+      "identical": true
+    },
+    {
+      "source": "broad100a/django__django-12774#debug",
+      "queryCharacters": 581,
+      "taskCharacters": 581,
+      "identical": true
+    },
+    {
+      "source": "broad100a/django__django-12858#debug",
+      "queryCharacters": 221,
+      "taskCharacters": 221,
+      "identical": true
+    },
+    {
+      "source": "broad100a/django__django-13012#debug",
+      "queryCharacters": 225,
+      "taskCharacters": 225,
+      "identical": true
+    },
+    {
+      "source": "broad100a/django__django-13112#debug",
+      "queryCharacters": 369,
+      "taskCharacters": 369,
+      "identical": true
+    },
+    {
+      "source": "broad100a/django__django-13195#debug",
+      "queryCharacters": 127,
+      "taskCharacters": 127,
+      "identical": true
+    },
+    {
+      "source": "broad100a/django__django-13363#debug",
+      "queryCharacters": 97,
+      "taskCharacters": 97,
+      "identical": true
+    },
+    {
+      "source": "broad100a/django__django-13512#debug",
+      "queryCharacters": 89,
+      "taskCharacters": 89,
+      "identical": true
+    },
+    {
+      "source": "broad100a/django__django-13513#debug",
+      "queryCharacters": 157,
+      "taskCharacters": 157,
+      "identical": true
+    },
+    {
+      "source": "broad100a/django__django-13551#debug",
+      "queryCharacters": 100,
+      "taskCharacters": 100,
+      "identical": true
+    },
+    {
+      "source": "broad100a/django__django-13590#debug",
+      "queryCharacters": 154,
+      "taskCharacters": 154,
+      "identical": true
+    },
+    {
+      "source": "broad100a/django__django-13658#debug",
+      "queryCharacters": 210,
+      "taskCharacters": 210,
+      "identical": true
+    },
+    {
+      "source": "broad100a/django__django-13810#debug",
+      "queryCharacters": 211,
+      "taskCharacters": 211,
+      "identical": true
+    },
+    {
+      "source": "broad100a/django__django-13820#debug",
+      "queryCharacters": 241,
+      "taskCharacters": 241,
+      "identical": true
+    },
+    {
+      "source": "broad100a/django__django-14608#debug",
+      "queryCharacters": 93,
+      "taskCharacters": 93,
+      "identical": true
+    },
+    {
+      "source": "broad100a/django__django-14792#debug",
+      "queryCharacters": 239,
+      "taskCharacters": 239,
+      "identical": true
+    },
+    {
+      "source": "broad100a/django__django-15037#debug",
+      "queryCharacters": 91,
+      "taskCharacters": 91,
+      "identical": true
+    },
+    {
+      "source": "broad100a/django__django-15503#debug",
+      "queryCharacters": 396,
+      "taskCharacters": 396,
+      "identical": true
+    },
+    {
+      "source": "broad100a/django__django-15572#debug",
+      "queryCharacters": 242,
+      "taskCharacters": 242,
+      "identical": true
+    },
+    {
+      "source": "broad100a/django__django-15695#debug",
+      "queryCharacters": 249,
+      "taskCharacters": 249,
+      "identical": true
+    },
+    {
+      "source": "broad100a/django__django-15731#debug",
+      "queryCharacters": 100,
+      "taskCharacters": 100,
+      "identical": true
+    },
+    {
+      "source": "broad100a/django__django-16256#debug",
+      "queryCharacters": 213,
+      "taskCharacters": 213,
+      "identical": true
+    },
+    {
+      "source": "broad100a/django__django-16263#debug",
+      "queryCharacters": 176,
+      "taskCharacters": 176,
+      "identical": true
+    },
+    {
+      "source": "broad100a/django__django-16333#debug",
+      "queryCharacters": 253,
+      "taskCharacters": 253,
+      "identical": true
+    },
+    {
+      "source": "broad100a/django__django-16569#debug",
+      "queryCharacters": 106,
+      "taskCharacters": 106,
+      "identical": true
+    },
+    {
+      "source": "broad100a/django__django-16667#debug",
+      "queryCharacters": 362,
+      "taskCharacters": 362,
+      "identical": true
+    },
+    {
+      "source": "broad100a/django__django-16819#debug",
+      "queryCharacters": 133,
+      "taskCharacters": 133,
+      "identical": true
+    },
+    {
+      "source": "broad100a/django__django-16877#debug",
+      "queryCharacters": 220,
+      "taskCharacters": 220,
+      "identical": true
+    },
+    {
+      "source": "broad100a/django__django-16938#debug",
+      "queryCharacters": 1165,
+      "taskCharacters": 1165,
+      "identical": true
+    },
+    {
+      "source": "broad100a/django__django-17084#debug",
+      "queryCharacters": 109,
+      "taskCharacters": 109,
+      "identical": true
+    },
+    {
+      "source": "broad100a/matplotlib__matplotlib-22719#debug",
+      "queryCharacters": 482,
+      "taskCharacters": 482,
+      "identical": true
+    },
+    {
+      "source": "broad100a/matplotlib__matplotlib-24627#debug",
+      "queryCharacters": 197,
+      "taskCharacters": 197,
+      "identical": true
+    },
+    {
+      "source": "broad100a/matplotlib__matplotlib-24870#debug",
+      "queryCharacters": 92,
+      "taskCharacters": 92,
+      "identical": true
+    },
+    {
+      "source": "broad100a/matplotlib__matplotlib-24970#debug",
+      "queryCharacters": 83,
+      "taskCharacters": 83,
+      "identical": true
+    },
+    {
+      "source": "broad100a/matplotlib__matplotlib-25332#debug",
+      "queryCharacters": 153,
+      "taskCharacters": 153,
+      "identical": true
+    },
+    {
+      "source": "broad100a/matplotlib__matplotlib-25960#debug",
+      "queryCharacters": 68,
+      "taskCharacters": 68,
+      "identical": true
+    },
+    {
+      "source": "broad100a/matplotlib__matplotlib-26466#debug",
+      "queryCharacters": 96,
+      "taskCharacters": 96,
+      "identical": true
+    },
+    {
+      "source": "broad100a/mwaskom__seaborn-3187#debug",
+      "queryCharacters": 198,
+      "taskCharacters": 198,
+      "identical": true
+    },
+    {
+      "source": "broad100a/pallets__flask-5014#debug",
+      "queryCharacters": 141,
+      "taskCharacters": 141,
+      "identical": true
+    },
+    {
+      "source": "broad100a/psf__requests-1142#debug",
+      "queryCharacters": 130,
+      "taskCharacters": 130,
+      "identical": true
+    },
+    {
+      "source": "broad100a/psf__requests-1724#debug",
+      "queryCharacters": 944,
+      "taskCharacters": 944,
+      "identical": true
+    },
+    {
+      "source": "broad100a/psf__requests-1921#debug",
+      "queryCharacters": 239,
+      "taskCharacters": 239,
+      "identical": true
+    },
+    {
+      "source": "broad100a/psf__requests-5414#debug",
+      "queryCharacters": 345,
+      "taskCharacters": 345,
+      "identical": true
+    },
+    {
+      "source": "broad100a/pydata__xarray-2905#debug",
+      "queryCharacters": 92,
+      "taskCharacters": 92,
+      "identical": true
+    },
+    {
+      "source": "broad100a/pydata__xarray-3677#debug",
+      "queryCharacters": 857,
+      "taskCharacters": 857,
+      "identical": true
+    },
+    {
+      "source": "broad100a/pydata__xarray-4695#debug",
+      "queryCharacters": 231,
+      "taskCharacters": 231,
+      "identical": true
+    },
+    {
+      "source": "broad100a/pydata__xarray-6599#debug",
+      "queryCharacters": 82,
+      "taskCharacters": 82,
+      "identical": true
+    },
+    {
+      "source": "broad100a/pydata__xarray-6938#debug",
+      "queryCharacters": 62,
+      "taskCharacters": 62,
+      "identical": true
+    },
+    {
+      "source": "broad100a/pydata__xarray-6992#debug",
+      "queryCharacters": 156,
+      "taskCharacters": 156,
+      "identical": true
+    },
+    {
+      "source": "broad100a/pylint-dev__pylint-4551#debug",
+      "queryCharacters": 232,
+      "taskCharacters": 232,
+      "identical": true
+    },
+    {
+      "source": "broad100a/pylint-dev__pylint-8898#debug",
+      "queryCharacters": 726,
+      "taskCharacters": 726,
+      "identical": true
+    },
+    {
+      "source": "broad100a/pytest-dev__pytest-10051#debug",
+      "queryCharacters": 144,
+      "taskCharacters": 144,
+      "identical": true
+    },
+    {
+      "source": "broad100a/pytest-dev__pytest-5262#debug",
+      "queryCharacters": 140,
+      "taskCharacters": 140,
+      "identical": true
+    },
+    {
+      "source": "broad100a/pytest-dev__pytest-6197#debug",
+      "queryCharacters": 186,
+      "taskCharacters": 186,
+      "identical": true
+    },
+    {
+      "source": "broad100a/pytest-dev__pytest-7432#debug",
+      "queryCharacters": 148,
+      "taskCharacters": 148,
+      "identical": true
+    },
+    {
+      "source": "broad100a/scikit-learn__scikit-learn-10844#debug",
+      "queryCharacters": 155,
+      "taskCharacters": 155,
+      "identical": true
+    },
+    {
+      "source": "broad100a/scikit-learn__scikit-learn-11578#debug",
+      "queryCharacters": 357,
+      "taskCharacters": 357,
+      "identical": true
+    },
+    {
+      "source": "broad100a/sphinx-doc__sphinx-7462#debug",
+      "queryCharacters": 229,
+      "taskCharacters": 229,
+      "identical": true
+    },
+    {
+      "source": "broad100a/sphinx-doc__sphinx-7748#debug",
+      "queryCharacters": 256,
+      "taskCharacters": 256,
+      "identical": true
+    },
+    {
+      "source": "broad100a/sphinx-doc__sphinx-7910#debug",
+      "queryCharacters": 93,
+      "taskCharacters": 93,
+      "identical": true
+    },
+    {
+      "source": "broad100a/sphinx-doc__sphinx-9230#debug",
+      "queryCharacters": 88,
+      "taskCharacters": 88,
+      "identical": true
+    },
+    {
+      "source": "broad100a/sphinx-doc__sphinx-9320#debug",
+      "queryCharacters": 84,
+      "taskCharacters": 84,
+      "identical": true
+    },
+    {
+      "source": "broad100a/sphinx-doc__sphinx-9698#debug",
+      "queryCharacters": 115,
+      "taskCharacters": 115,
+      "identical": true
+    },
+    {
+      "source": "broad100a/sphinx-doc__sphinx-9711#debug",
+      "queryCharacters": 69,
+      "taskCharacters": 69,
+      "identical": true
+    },
+    {
+      "source": "broad100a/sympy__sympy-12419#debug",
+      "queryCharacters": 74,
+      "taskCharacters": 74,
+      "identical": true
+    },
+    {
+      "source": "broad100a/sympy__sympy-12481#debug",
+      "queryCharacters": 186,
+      "taskCharacters": 186,
+      "identical": true
+    },
+    {
+      "source": "broad100a/sympy__sympy-13372#debug",
+      "queryCharacters": 555,
+      "taskCharacters": 555,
+      "identical": true
+    },
+    {
+      "source": "broad100a/sympy__sympy-13480#debug",
+      "queryCharacters": 261,
+      "taskCharacters": 261,
+      "identical": true
+    },
+    {
+      "source": "broad100a/sympy__sympy-13974#debug",
+      "queryCharacters": 191,
+      "taskCharacters": 191,
+      "identical": true
+    },
+    {
+      "source": "broad100a/sympy__sympy-15599#debug",
+      "queryCharacters": 275,
+      "taskCharacters": 275,
+      "identical": true
+    },
+    {
+      "source": "broad100a/sympy__sympy-15875#debug",
+      "queryCharacters": 133,
+      "taskCharacters": 133,
+      "identical": true
+    },
+    {
+      "source": "broad100a/sympy__sympy-16597#debug",
+      "queryCharacters": 82,
+      "taskCharacters": 82,
+      "identical": true
+    },
+    {
+      "source": "broad100a/sympy__sympy-16766#debug",
+      "queryCharacters": 124,
+      "taskCharacters": 124,
+      "identical": true
+    },
+    {
+      "source": "broad100a/sympy__sympy-16792#debug",
+      "queryCharacters": 371,
+      "taskCharacters": 371,
+      "identical": true
+    },
+    {
+      "source": "broad100a/sympy__sympy-18189#debug",
+      "queryCharacters": 149,
+      "taskCharacters": 149,
+      "identical": true
+    },
+    {
+      "source": "broad100a/sympy__sympy-19637#debug",
+      "queryCharacters": 90,
+      "taskCharacters": 90,
+      "identical": true
+    },
+    {
+      "source": "broad100a/sympy__sympy-20428#debug",
+      "queryCharacters": 890,
+      "taskCharacters": 890,
+      "identical": true
+    },
+    {
+      "source": "broad100a/sympy__sympy-20801#debug",
+      "queryCharacters": 81,
+      "taskCharacters": 81,
+      "identical": true
+    },
+    {
+      "source": "broad100a/sympy__sympy-23413#debug",
+      "queryCharacters": 121,
+      "taskCharacters": 121,
+      "identical": true
+    },
+    {
+      "source": "broad100a/sympy__sympy-24213#debug",
+      "queryCharacters": 392,
+      "taskCharacters": 392,
+      "identical": true
+    },
+    {
+      "source": "broad100a/sympy__sympy-24562#debug",
+      "queryCharacters": 196,
+      "taskCharacters": 196,
+      "identical": true
+    },
+    {
+      "source": "broad100b/astropy__astropy-12907#debug",
+      "queryCharacters": 130,
+      "taskCharacters": 130,
+      "identical": true
+    },
+    {
+      "source": "broad100b/astropy__astropy-13236#debug",
+      "queryCharacters": 152,
+      "taskCharacters": 152,
+      "identical": true
+    },
+    {
+      "source": "broad100b/astropy__astropy-13398#debug",
+      "queryCharacters": 214,
+      "taskCharacters": 214,
+      "identical": true
+    },
+    {
+      "source": "broad100b/astropy__astropy-13453#debug",
+      "queryCharacters": 121,
+      "taskCharacters": 121,
+      "identical": true
+    },
+    {
+      "source": "broad100b/astropy__astropy-14508#debug",
+      "queryCharacters": 259,
+      "taskCharacters": 259,
+      "identical": true
+    },
+    {
+      "source": "broad100b/astropy__astropy-14995#debug",
+      "queryCharacters": 206,
+      "taskCharacters": 206,
+      "identical": true
+    },
+    {
+      "source": "broad100b/astropy__astropy-7336#debug",
+      "queryCharacters": 630,
+      "taskCharacters": 630,
+      "identical": true
+    },
+    {
+      "source": "broad100b/astropy__astropy-7606#debug",
+      "queryCharacters": 190,
+      "taskCharacters": 190,
+      "identical": true
+    },
+    {
+      "source": "broad100b/astropy__astropy-7671#debug",
+      "queryCharacters": 191,
+      "taskCharacters": 191,
+      "identical": true
+    },
+    {
+      "source": "broad100b/astropy__astropy-8707#debug",
+      "queryCharacters": 277,
+      "taskCharacters": 277,
+      "identical": true
+    },
+    {
+      "source": "broad100b/astropy__astropy-8872#debug",
+      "queryCharacters": 320,
+      "taskCharacters": 320,
+      "identical": true
+    },
+    {
+      "source": "broad100b/django__django-11603#debug",
+      "queryCharacters": 158,
+      "taskCharacters": 158,
+      "identical": true
+    },
+    {
+      "source": "broad100b/django__django-11880#debug",
+      "queryCharacters": 336,
+      "taskCharacters": 336,
+      "identical": true
+    },
+    {
+      "source": "broad100b/django__django-12741#debug",
+      "queryCharacters": 90,
+      "taskCharacters": 90,
+      "identical": true
+    },
+    {
+      "source": "broad100b/django__django-14500#debug",
+      "queryCharacters": 84,
+      "taskCharacters": 84,
+      "identical": true
+    },
+    {
+      "source": "broad100b/django__django-14559#debug",
+      "queryCharacters": 160,
+      "taskCharacters": 160,
+      "identical": true
+    },
+    {
+      "source": "broad100b/django__django-15022#debug",
+      "queryCharacters": 75,
+      "taskCharacters": 75,
+      "identical": true
+    },
+    {
+      "source": "broad100b/django__django-15252#debug",
+      "queryCharacters": 89,
+      "taskCharacters": 89,
+      "identical": true
+    },
+    {
+      "source": "broad100b/django__django-15375#debug",
+      "queryCharacters": 200,
+      "taskCharacters": 200,
+      "identical": true
+    },
+    {
+      "source": "broad100b/django__django-15569#debug",
+      "queryCharacters": 164,
+      "taskCharacters": 164,
+      "identical": true
+    },
+    {
+      "source": "broad100b/django__django-15629#debug",
+      "queryCharacters": 86,
+      "taskCharacters": 86,
+      "identical": true
+    },
+    {
+      "source": "broad100b/django__django-16100#debug",
+      "queryCharacters": 138,
+      "taskCharacters": 138,
+      "identical": true
+    },
+    {
+      "source": "broad100b/matplotlib__matplotlib-13989#debug",
+      "queryCharacters": 162,
+      "taskCharacters": 162,
+      "identical": true
+    },
+    {
+      "source": "broad100b/matplotlib__matplotlib-20488#debug",
+      "queryCharacters": 267,
+      "taskCharacters": 267,
+      "identical": true
+    },
+    {
+      "source": "broad100b/matplotlib__matplotlib-20676#debug",
+      "queryCharacters": 177,
+      "taskCharacters": 177,
+      "identical": true
+    },
+    {
+      "source": "broad100b/matplotlib__matplotlib-20859#debug",
+      "queryCharacters": 426,
+      "taskCharacters": 426,
+      "identical": true
+    },
+    {
+      "source": "broad100b/matplotlib__matplotlib-22871#debug",
+      "queryCharacters": 96,
+      "taskCharacters": 96,
+      "identical": true
+    },
+    {
+      "source": "broad100b/matplotlib__matplotlib-23314#debug",
+      "queryCharacters": 68,
+      "taskCharacters": 68,
+      "identical": true
+    },
+    {
+      "source": "broad100b/matplotlib__matplotlib-23412#debug",
+      "queryCharacters": 77,
+      "taskCharacters": 77,
+      "identical": true
+    },
+    {
+      "source": "broad100b/matplotlib__matplotlib-25311#debug",
+      "queryCharacters": 88,
+      "taskCharacters": 88,
+      "identical": true
+    },
+    {
+      "source": "broad100b/matplotlib__matplotlib-25479#debug",
+      "queryCharacters": 367,
+      "taskCharacters": 367,
+      "identical": true
+    },
+    {
+      "source": "broad100b/matplotlib__matplotlib-26291#debug",
+      "queryCharacters": 214,
+      "taskCharacters": 214,
+      "identical": true
+    },
+    {
+      "source": "broad100b/mwaskom__seaborn-3069#debug",
+      "queryCharacters": 154,
+      "taskCharacters": 154,
+      "identical": true
+    },
+    {
+      "source": "broad100b/psf__requests-1766#debug",
+      "queryCharacters": 102,
+      "taskCharacters": 102,
+      "identical": true
+    },
+    {
+      "source": "broad100b/psf__requests-2317#debug",
+      "queryCharacters": 76,
+      "taskCharacters": 76,
+      "identical": true
+    },
+    {
+      "source": "broad100b/psf__requests-2931#debug",
+      "queryCharacters": 136,
+      "taskCharacters": 136,
+      "identical": true
+    },
+    {
+      "source": "broad100b/psf__requests-6028#debug",
+      "queryCharacters": 40,
+      "taskCharacters": 40,
+      "identical": true
+    },
+    {
+      "source": "broad100b/pydata__xarray-3095#debug",
+      "queryCharacters": 184,
+      "taskCharacters": 184,
+      "identical": true
+    },
+    {
+      "source": "broad100b/pydata__xarray-3151#debug",
+      "queryCharacters": 221,
+      "taskCharacters": 221,
+      "identical": true
+    },
+    {
+      "source": "broad100b/pydata__xarray-3993#debug",
+      "queryCharacters": 137,
+      "taskCharacters": 137,
+      "identical": true
+    },
+    {
+      "source": "broad100b/pydata__xarray-4075#debug",
+      "queryCharacters": 107,
+      "taskCharacters": 107,
+      "identical": true
+    },
+    {
+      "source": "broad100b/pydata__xarray-4094#debug",
+      "queryCharacters": 127,
+      "taskCharacters": 127,
+      "identical": true
+    },
+    {
+      "source": "broad100b/pydata__xarray-4629#debug",
+      "queryCharacters": 201,
+      "taskCharacters": 201,
+      "identical": true
+    },
+    {
+      "source": "broad100b/pydata__xarray-4687#debug",
+      "queryCharacters": 133,
+      "taskCharacters": 133,
+      "identical": true
+    },
+    {
+      "source": "broad100b/pydata__xarray-6721#debug",
+      "queryCharacters": 98,
+      "taskCharacters": 98,
+      "identical": true
+    },
+    {
+      "source": "broad100b/pydata__xarray-6744#debug",
+      "queryCharacters": 137,
+      "taskCharacters": 137,
+      "identical": true
+    },
+    {
+      "source": "broad100b/pydata__xarray-7229#debug",
+      "queryCharacters": 86,
+      "taskCharacters": 86,
+      "identical": true
+    },
+    {
+      "source": "broad100b/pydata__xarray-7233#debug",
+      "queryCharacters": 90,
+      "taskCharacters": 90,
+      "identical": true
+    },
+    {
+      "source": "broad100b/pylint-dev__pylint-4604#debug",
+      "queryCharacters": 89,
+      "taskCharacters": 89,
+      "identical": true
+    },
+    {
+      "source": "broad100b/pylint-dev__pylint-4661#debug",
+      "queryCharacters": 125,
+      "taskCharacters": 125,
+      "identical": true
+    },
+    {
+      "source": "broad100b/pylint-dev__pylint-4970#debug",
+      "queryCharacters": 107,
+      "taskCharacters": 107,
+      "identical": true
+    },
+    {
+      "source": "broad100b/pylint-dev__pylint-6386#debug",
+      "queryCharacters": 64,
+      "taskCharacters": 64,
+      "identical": true
+    },
+    {
+      "source": "broad100b/pylint-dev__pylint-6528#debug",
+      "queryCharacters": 77,
+      "taskCharacters": 77,
+      "identical": true
+    },
+    {
+      "source": "broad100b/pylint-dev__pylint-6903#debug",
+      "queryCharacters": 93,
+      "taskCharacters": 93,
+      "identical": true
+    },
+    {
+      "source": "broad100b/pylint-dev__pylint-7080#debug",
+      "queryCharacters": 60,
+      "taskCharacters": 60,
+      "identical": true
+    },
+    {
+      "source": "broad100b/pylint-dev__pylint-7277#debug",
+      "queryCharacters": 92,
+      "taskCharacters": 92,
+      "identical": true
+    },
+    {
+      "source": "broad100b/pytest-dev__pytest-10081#debug",
+      "queryCharacters": 194,
+      "taskCharacters": 194,
+      "identical": true
+    },
+    {
+      "source": "broad100b/pytest-dev__pytest-10356#debug",
+      "queryCharacters": 224,
+      "taskCharacters": 224,
+      "identical": true
+    },
+    {
+      "source": "broad100b/pytest-dev__pytest-5787#debug",
+      "queryCharacters": 202,
+      "taskCharacters": 202,
+      "identical": true
+    },
+    {
+      "source": "broad100b/pytest-dev__pytest-5840#debug",
+      "queryCharacters": 197,
+      "taskCharacters": 197,
+      "identical": true
+    },
+    {
+      "source": "broad100b/pytest-dev__pytest-6202#debug",
+      "queryCharacters": 193,
+      "taskCharacters": 193,
+      "identical": true
+    },
+    {
+      "source": "broad100b/pytest-dev__pytest-7205#debug",
+      "queryCharacters": 213,
+      "taskCharacters": 213,
+      "identical": true
+    },
+    {
+      "source": "broad100b/pytest-dev__pytest-7236#debug",
+      "queryCharacters": 190,
+      "taskCharacters": 190,
+      "identical": true
+    },
+    {
+      "source": "broad100b/pytest-dev__pytest-7324#debug",
+      "queryCharacters": 266,
+      "taskCharacters": 266,
+      "identical": true
+    },
+    {
+      "source": "broad100b/pytest-dev__pytest-7490#debug",
+      "queryCharacters": 205,
+      "taskCharacters": 205,
+      "identical": true
+    },
+    {
+      "source": "broad100b/pytest-dev__pytest-7521#debug",
+      "queryCharacters": 280,
+      "taskCharacters": 280,
+      "identical": true
+    },
+    {
+      "source": "broad100b/pytest-dev__pytest-7571#debug",
+      "queryCharacters": 248,
+      "taskCharacters": 248,
+      "identical": true
+    },
+    {
+      "source": "broad100b/scikit-learn__scikit-learn-10297#debug",
+      "queryCharacters": 244,
+      "taskCharacters": 244,
+      "identical": true
+    },
+    {
+      "source": "broad100b/scikit-learn__scikit-learn-10908#debug",
+      "queryCharacters": 334,
+      "taskCharacters": 334,
+      "identical": true
+    },
+    {
+      "source": "broad100b/scikit-learn__scikit-learn-12973#debug",
+      "queryCharacters": 164,
+      "taskCharacters": 164,
+      "identical": true
+    },
+    {
+      "source": "broad100b/scikit-learn__scikit-learn-13135#debug",
+      "queryCharacters": 378,
+      "taskCharacters": 378,
+      "identical": true
+    },
+    {
+      "source": "broad100b/scikit-learn__scikit-learn-13142#debug",
+      "queryCharacters": 572,
+      "taskCharacters": 572,
+      "identical": true
+    },
+    {
+      "source": "broad100b/scikit-learn__scikit-learn-13328#debug",
+      "queryCharacters": 302,
+      "taskCharacters": 302,
+      "identical": true
+    },
+    {
+      "source": "broad100b/scikit-learn__scikit-learn-13779#debug",
+      "queryCharacters": 273,
+      "taskCharacters": 273,
+      "identical": true
+    },
+    {
+      "source": "broad100b/scikit-learn__scikit-learn-14053#debug",
+      "queryCharacters": 314,
+      "taskCharacters": 314,
+      "identical": true
+    },
+    {
+      "source": "broad100b/scikit-learn__scikit-learn-14894#debug",
+      "queryCharacters": 491,
+      "taskCharacters": 491,
+      "identical": true
+    },
+    {
+      "source": "broad100b/scikit-learn__scikit-learn-26194#debug",
+      "queryCharacters": 315,
+      "taskCharacters": 315,
+      "identical": true
+    },
+    {
+      "source": "broad100b/sphinx-doc__sphinx-10449#debug",
+      "queryCharacters": 96,
+      "taskCharacters": 96,
+      "identical": true
+    },
+    {
+      "source": "broad100b/sphinx-doc__sphinx-10466#debug",
+      "queryCharacters": 62,
+      "taskCharacters": 62,
+      "identical": true
+    },
+    {
+      "source": "broad100b/sphinx-doc__sphinx-7454#debug",
+      "queryCharacters": 75,
+      "taskCharacters": 75,
+      "identical": true
+    },
+    {
+      "source": "broad100b/sphinx-doc__sphinx-7757#debug",
+      "queryCharacters": 82,
+      "taskCharacters": 82,
+      "identical": true
+    },
+    {
+      "source": "broad100b/sphinx-doc__sphinx-7985#debug",
+      "queryCharacters": 171,
+      "taskCharacters": 171,
+      "identical": true
+    },
+    {
+      "source": "broad100b/sphinx-doc__sphinx-8459#debug",
+      "queryCharacters": 103,
+      "taskCharacters": 103,
+      "identical": true
+    },
+    {
+      "source": "broad100b/sphinx-doc__sphinx-8548#debug",
+      "queryCharacters": 205,
+      "taskCharacters": 205,
+      "identical": true
+    },
+    {
+      "source": "broad100b/sphinx-doc__sphinx-8595#debug",
+      "queryCharacters": 66,
+      "taskCharacters": 66,
+      "identical": true
+    },
+    {
+      "source": "broad100b/sphinx-doc__sphinx-9258#debug",
+      "queryCharacters": 167,
+      "taskCharacters": 167,
+      "identical": true
+    },
+    {
+      "source": "broad100b/sphinx-doc__sphinx-9602#debug",
+      "queryCharacters": 82,
+      "taskCharacters": 82,
+      "identical": true
+    },
+    {
+      "source": "broad100b/sphinx-doc__sphinx-9658#debug",
+      "queryCharacters": 77,
+      "taskCharacters": 77,
+      "identical": true
+    },
+    {
+      "source": "broad100b/sympy__sympy-13031#debug",
+      "queryCharacters": 73,
+      "taskCharacters": 73,
+      "identical": true
+    },
+    {
+      "source": "broad100b/sympy__sympy-13551#debug",
+      "queryCharacters": 74,
+      "taskCharacters": 74,
+      "identical": true
+    },
+    {
+      "source": "broad100b/sympy__sympy-13852#debug",
+      "queryCharacters": 62,
+      "taskCharacters": 62,
+      "identical": true
+    },
+    {
+      "source": "broad100b/sympy__sympy-14531#debug",
+      "queryCharacters": 77,
+      "taskCharacters": 77,
+      "identical": true
+    },
+    {
+      "source": "broad100b/sympy__sympy-15345#debug",
+      "queryCharacters": 64,
+      "taskCharacters": 64,
+      "identical": true
+    },
+    {
+      "source": "broad100b/sympy__sympy-15976#debug",
+      "queryCharacters": 165,
+      "taskCharacters": 165,
+      "identical": true
+    },
+    {
+      "source": "broad100b/sympy__sympy-16450#debug",
+      "queryCharacters": 87,
+      "taskCharacters": 87,
+      "identical": true
+    },
+    {
+      "source": "broad100b/sympy__sympy-16886#debug",
+      "queryCharacters": 121,
+      "taskCharacters": 121,
+      "identical": true
+    },
+    {
+      "source": "broad100b/sympy__sympy-18698#debug",
+      "queryCharacters": 160,
+      "taskCharacters": 160,
+      "identical": true
+    },
+    {
+      "source": "broad100b/sympy__sympy-23824#debug",
+      "queryCharacters": 617,
+      "taskCharacters": 617,
+      "identical": true
+    }
+  ],
+  "identityVerdict": "IDENTICAL",
+  "identityEvidence": {
+    "capturesInspected": 199,
+    "identicalCount": 199,
+    "disagreeing": [],
+    "byConstruction": "src/runPipeline/formatRunPipelineOutput.ts:211"
+  }
+}

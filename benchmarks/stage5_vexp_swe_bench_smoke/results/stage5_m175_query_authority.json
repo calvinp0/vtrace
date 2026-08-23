@@ -1,0 +1,238 @@
+{
+  "schemaVersion": "stage5.m175.query-authority.v1",
+  "field": "request.query",
+  "semantics": "The caller's own argument, spread verbatim into the response's request block.",
+  "totalSites": 22,
+  "byObject": {
+    "pipeline_input_record": 14,
+    "response_output_block": 5,
+    "textual_reference": 3
+  },
+  "byRole": {
+    "producer": 3,
+    "consumer": 16,
+    "reference": 3
+  },
+  "sites": [
+    {
+      "file": "benchmarks/stage5_vexp_swe_bench_smoke/m166Taxonomy.test.ts",
+      "line": 58,
+      "text": "assert.deepEqual(duplicated, [\"productContext.items[0].path\", \"request.query\"]);",
+      "object": "textual_reference",
+      "role": "reference",
+      "layer": "benchmark test",
+      "needs": "nothing",
+      "why": "M166 classified 'request.query' as duplicated content. Prior art for the same finding."
+    },
+    {
+      "file": "benchmarks/stage5_vexp_swe_bench_smoke/m171Contract.ts",
+      "line": 172,
+      "text": "[\"request.query\", request.query], [\"request.task\", request.task],",
+      "object": "response_output_block",
+      "role": "consumer",
+      "layer": "benchmark analyzer",
+      "needs": "nothing",
+      "why": "Counts both fields as duplicated restatement. M171 already MEASURED this echo; it is consumed here as the defect, never as information."
+    },
+    {
+      "file": "src/mcp/mcp.test.ts",
+      "line": 2629,
+      "text": "assert.equal(productFacing.result.output.request.query, \"debug why createSession fails\");",
+      "object": "response_output_block",
+      "role": "consumer",
+      "layer": "test",
+      "needs": "full_verbatim_text",
+      "why": "Asserts output.request.query round-trips. Issued at detail=\"debug\" — it constrains the DEBUG contract only, which is what makes a detail-gated repair testable without rewriting it."
+    },
+    {
+      "file": "src/mcp/responseEnvelope.ts",
+      "line": 1288,
+      "text": "// Repeated query text: `request.query` duplicates `request.task`, and",
+      "object": "textual_reference",
+      "role": "reference",
+      "layer": "response envelope",
+      "needs": "nothing",
+      "why": "The comment declaring `request` a correctness surface that is never rewritten. This is the exemption that let the echo outbid the evidence, and the one M175 revises."
+    },
+    {
+      "file": "src/mcp/tools.ts",
+      "line": 4603,
+      "text": "query: request.query,",
+      "object": "pipeline_input_record",
+      "role": "consumer",
+      "layer": "product routing",
+      "needs": "full_verbatim_text",
+      "why": "Routing resolves the repository from the query before assembly."
+    },
+    {
+      "file": "src/mcp/tools.ts",
+      "line": 9114,
+      "text": "queryText: orchestration.request.query,",
+      "object": "pipeline_input_record",
+      "role": "consumer",
+      "layer": "memory write",
+      "needs": "full_verbatim_text",
+      "why": "Observation rows store the query text server-side."
+    },
+    {
+      "file": "src/mcp/tools.ts",
+      "line": 9116,
+      "text": "summary: observationText ?? `run_pipeline: ${orchestration.request.query}`,",
+      "object": "pipeline_input_record",
+      "role": "consumer",
+      "layer": "memory write",
+      "needs": "full_verbatim_text",
+      "why": "Observation summary embeds the query text server-side."
+    },
+    {
+      "file": "src/mcp/tools.ts",
+      "line": 9135,
+      "text": "queryText: orchestration.request.query,",
+      "object": "pipeline_input_record",
+      "role": "consumer",
+      "layer": "memory write",
+      "needs": "full_verbatim_text",
+      "why": "Observation rows store the query text server-side."
+    },
+    {
+      "file": "src/runPipeline/formatRunPipelineOutput.ts",
+      "line": 37,
+      "text": "capsuleRef: `vexp:capsule:${compactOrchestrationHash(orchestration.request.query)}`,",
+      "object": "pipeline_input_record",
+      "role": "consumer",
+      "layer": "capsule reference",
+      "needs": "hash_or_identity_only",
+      "why": "Builds `vexp:capsule:<hash>`; consumes the text, ships only the digest."
+    },
+    {
+      "file": "src/runPipeline/formatRunPipelineOutput.ts",
+      "line": 211,
+      "text": "task: orchestration.request.query,",
+      "object": "response_output_block",
+      "role": "producer",
+      "layer": "response assembly",
+      "needs": "nothing",
+      "why": "THE DUPLICATION. `task: orchestration.request.query` — output.request.task is assigned the identical string already spread in as output.request.query. One object, two keys, one value, and both are serialized."
+    },
+    {
+      "file": "src/runPipeline/formatRunPipelineOutput.ts",
+      "line": 242,
+      "text": "query: orchestration.request.query,",
+      "object": "response_output_block",
+      "role": "producer",
+      "layer": "response assembly",
+      "needs": "nothing",
+      "why": "`taskSummary.query` is a THIRD verbatim copy. Already reduced to a reference by the envelope."
+    },
+    {
+      "file": "src/runPipeline/formatRunPipelineOutput.ts",
+      "line": 243,
+      "text": "normalizedQuery: normalizeIntentQuery(orchestration.request.query),",
+      "object": "response_output_block",
+      "role": "producer",
+      "layer": "response assembly",
+      "needs": "nothing",
+      "why": "`taskSummary.normalizedQuery` is a derived fourth copy. Already reduced by the envelope."
+    },
+    {
+      "file": "src/runPipeline/orientationDecline.ts",
+      "line": 23,
+      "text": "* WHAT THE 26,227 CHARACTERS WERE. 81.6% of that response was `request.query` and",
+      "object": "textual_reference",
+      "role": "reference",
+      "layer": "documentation",
+      "needs": "nothing",
+      "why": "M174's record of the defect."
+    },
+    {
+      "file": "src/runPipeline/runPipelineOrchestrator.ts",
+      "line": 1573,
+      "text": "const stableId = `vexp:capsule:${compactHash(input.request.query)}`;",
+      "object": "pipeline_input_record",
+      "role": "consumer",
+      "layer": "capsule identity",
+      "needs": "full_verbatim_text",
+      "why": "Hashes the query into a stable capsule id. Needs the exact bytes; needs none of them shipped."
+    },
+    {
+      "file": "src/runPipeline/runPipelineOrchestrator.ts",
+      "line": 1583,
+      "text": "query: input.request.query,",
+      "object": "pipeline_input_record",
+      "role": "consumer",
+      "layer": "capsule assembly",
+      "needs": "full_verbatim_text",
+      "why": "Query text drives capsule construction."
+    },
+    {
+      "file": "src/runPipeline/runPipelineOrchestrator.ts",
+      "line": 1606,
+      "text": "query: input.request.query,",
+      "object": "pipeline_input_record",
+      "role": "consumer",
+      "layer": "capsule assembly",
+      "needs": "full_verbatim_text",
+      "why": "Query text drives capsule construction."
+    },
+    {
+      "file": "src/runPipeline/runPipelineOrchestrator.ts",
+      "line": 1736,
+      "text": "const stableId = `vexp:memory:${compactHash(input.request.query)}`;",
+      "object": "pipeline_input_record",
+      "role": "consumer",
+      "layer": "memory identity",
+      "needs": "full_verbatim_text",
+      "why": "Hashes the query into a stable memory-observation id."
+    },
+    {
+      "file": "src/runPipeline/runPipelineOrchestrator.ts",
+      "line": 1743,
+      "text": "query: input.request.query,",
+      "object": "pipeline_input_record",
+      "role": "consumer",
+      "layer": "memory lookup",
+      "needs": "full_verbatim_text",
+      "why": "Session/durable observation lookup keys on the query."
+    },
+    {
+      "file": "src/runPipeline/runPipelineOrchestrator.ts",
+      "line": 1750,
+      "text": "query: input.request.query,",
+      "object": "pipeline_input_record",
+      "role": "consumer",
+      "layer": "memory lookup",
+      "needs": "full_verbatim_text",
+      "why": "Session/durable observation lookup keys on the query."
+    },
+    {
+      "file": "src/runPipeline/runPipelineOrchestrator.ts",
+      "line": 1770,
+      "text": "query: input.request.query,",
+      "object": "pipeline_input_record",
+      "role": "consumer",
+      "layer": "memory lookup",
+      "needs": "full_verbatim_text",
+      "why": "Session/durable observation lookup keys on the query."
+    },
+    {
+      "file": "src/workspace/productRoute.ts",
+      "line": 389,
+      "text": "const hints = extractQueryRouteHints(request.query, request.explicitPaths ?? []);",
+      "object": "pipeline_input_record",
+      "role": "consumer",
+      "layer": "workspace routing",
+      "needs": "full_verbatim_text",
+      "why": "Route hints are extracted from the query text before any index opens."
+    },
+    {
+      "file": "src/workspace/productRoute.ts",
+      "line": 405,
+      "text": "? deriveBehavioralObjective(deriveQueryIntent(request.query))",
+      "object": "pipeline_input_record",
+      "role": "consumer",
+      "layer": "intent derivation",
+      "needs": "full_verbatim_text",
+      "why": "Behavioural objective is derived from query intent."
+    }
+  ]
+}

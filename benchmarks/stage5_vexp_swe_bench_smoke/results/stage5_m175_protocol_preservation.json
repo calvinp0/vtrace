@@ -1,0 +1,49 @@
+{
+  "schemaVersion": "stage5.m175.protocol-preservation.v1",
+  "workstream": "M175-D",
+  "gate": "§35/§36/§55 — both channels carry the same compact request semantics; no wire-only victory",
+  "channelRelationship": "content[0].text is JSON.stringify of the same output object (src/mcp/startServer.ts:592), so a change to structuredContent is the same change in the text channel. Verified, not assumed.",
+  "schemaCompatibility": {
+    "change": "field_value_only",
+    "blockRemoved": false,
+    "fieldsRemoved": [],
+    "note": "§56/§57 — the published block keeps its shape and keys; two values become references. No parallel version, no OrientationResultV2."
+  },
+  "rows": [
+    {
+      "instanceId": "matplotlib__matplotlib-22719",
+      "requestBlockPresent": false,
+      "projected": null,
+      "resolvedParametersPreserved": null,
+      "structuredContentCarriesProse": false,
+      "textChannelCarriesProse": false,
+      "textChannelCharacters": 1421,
+      "note": "This path returned a projection, which carries no request block at all — the compact orientation packet never had one. The gate is vacuous here and is reported as such."
+    },
+    {
+      "instanceId": "mwaskom__seaborn-3187",
+      "requestBlockPresent": false,
+      "projected": null,
+      "resolvedParametersPreserved": null,
+      "structuredContentCarriesProse": false,
+      "textChannelCarriesProse": false,
+      "textChannelCharacters": 1474,
+      "note": "This path returned a projection, which carries no request block at all — the compact orientation packet never had one. The gate is vacuous here and is reported as such."
+    }
+  ],
+  "checks": [
+    {
+      "gate": "protocol",
+      "claim": "matplotlib__matplotlib-22719: the caller's prose is absent from BOTH channels at standard detail",
+      "holds": true,
+      "detail": "structuredContent=false text=false (§36: a wire-only reduction is not a win)"
+    },
+    {
+      "gate": "protocol",
+      "claim": "mwaskom__seaborn-3187: the caller's prose is absent from BOTH channels at standard detail",
+      "holds": true,
+      "detail": "structuredContent=false text=false (§36: a wire-only reduction is not a win)"
+    }
+  ],
+  "verdict": "PROTOCOL_PRESERVED"
+}
