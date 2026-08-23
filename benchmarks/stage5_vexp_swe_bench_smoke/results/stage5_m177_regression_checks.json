@@ -1,0 +1,45 @@
+{
+  "schemaVersion": "stage5.m177.regression-checks.v1",
+  "milestone": "M177",
+  "workstream": "F",
+  "commands": [
+    { "command": "bun run typecheck", "result": "pass", "output": "tsc --noEmit, no diagnostics" },
+    { "command": "bun run typecheck:benchmarks", "result": "pass", "output": "tsc -p tsconfig.benchmarks.json, no diagnostics" },
+    { "command": "bun test", "result": "pass", "pass": 5506, "skip": 49, "fail": 0, "expectCalls": 5553, "tests": 5555, "files": 352, "wallClockSeconds": 344.71 },
+    { "command": "git diff --check", "result": "pass", "output": "clean" }
+  ],
+  "newTests": {
+    "file": "src/impact/impactResponseEnvelope.test.ts",
+    "added": 8,
+    "fileTotal": 15,
+    "names": [
+      "M177: a budget too small for any response returns a bounded decline, not a throw",
+      "M177: the decline counts what it could not deliver instead of reporting an empty graph",
+      "M177: a genuinely empty impact is never dressed as a delivery loss, at any budget",
+      "M177: the terminal preserves an honest zero when it fires on an empty impact",
+      "M177: responses that already fitted are untouched and carry no decline marker",
+      "M177: the terminal still fits when the repository supplies pathological identities",
+      "M177: identities short enough to stay usable are quoted verbatim in the decline",
+      "M177: the decline cannot strengthen a caller-coverage claim",
+      "M177: building a decline does not mutate the authoritative input"
+    ],
+    "note": "nine test bodies; the count of eight above counts the pair covering empty impact as the one control §17 asks for."
+  },
+  "incidents": [
+    {
+      "kind": "ENVIRONMENTAL_FAILURE",
+      "what": "the first verification batch was killed at 1800s by a `timeout 1800` this milestone wrapped around `bun test`",
+      "cause": "the harness's paired corpus and real-MCP transport runs were executing concurrently and saturated the machine",
+      "resolution": "re-run with no inner timeout on an otherwise idle machine: 5555 tests in 344.71s, 0 fail",
+      "countedAsAnEnvelopeFailure": false,
+      "note": "§54 — recorded, not counted. No result in this milestone is derived from the killed run."
+    }
+  ],
+  "preExistingDirtyFilesNotTouched": [
+    "benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_outcome_ledger.json",
+    "benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_outcome_ledger.md"
+  ],
+  "worktreesCreated": [
+    { "path": "/home/calvin/bench/vtrace-m177/pre-repair", "commit": "ab0384fc534426b485599e28ed1bf901ad61c170", "purpose": "the pre-repair envelope, imported into the paired qualification process", "userWorktreesTouched": false }
+  ]
+}

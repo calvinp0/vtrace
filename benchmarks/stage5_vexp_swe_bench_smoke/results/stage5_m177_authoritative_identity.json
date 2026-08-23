@@ -1,0 +1,139 @@
+{
+  "schemaVersion": "stage5.m177.authoritative-identity.v1",
+  "milestone": "M177",
+  "note": "§30 — the engine is upstream of the repair and unmodified. Compared at EQUAL budget only; see the comment in this script for why across-budget comparison would be wrong.",
+  "engineFilesChangedByM177": [
+    "src/impact/getImpactGraph.ts (ImpactDiagnostics.envelopeDecline, an optional response field; no computation)"
+  ],
+  "rows": [
+    {
+      "symbolFqn": "src/_pytest/debugging.py::_enter_pdb",
+      "maxTokens": 1,
+      "identity": "07f73ebe3c966793d0d86059b753388c73530db1179abd5543ed58721507d9b1",
+      "stableAcrossRepeatedRuns": true,
+      "edges": 3,
+      "directRelations": 5,
+      "consumers": {
+        "exactCallerCount": 1,
+        "exactReferenceCount": 0,
+        "structuralContainerCount": 0,
+        "outgoingDependencyCount": 4,
+        "reverseReachableSymbolCount": 3,
+        "potentialCallerCount": 0
+      }
+    },
+    {
+      "symbolFqn": "src/_pytest/debugging.py::_enter_pdb",
+      "maxTokens": 200,
+      "identity": "80b5db81372653214a49d9c71e294f0620c9b31198ed4d1fa235d210ff93a8ac",
+      "stableAcrossRepeatedRuns": true,
+      "edges": 3,
+      "directRelations": 5,
+      "consumers": {
+        "exactCallerCount": 1,
+        "exactReferenceCount": 0,
+        "structuralContainerCount": 0,
+        "outgoingDependencyCount": 4,
+        "reverseReachableSymbolCount": 3,
+        "potentialCallerCount": 0
+      }
+    },
+    {
+      "symbolFqn": "src/_pytest/debugging.py::_enter_pdb",
+      "maxTokens": 477,
+      "identity": "8beac68ebf410afae6291154d6cd19663a11ec44be0ef716888348793393e6d0",
+      "stableAcrossRepeatedRuns": true,
+      "edges": 3,
+      "directRelations": 5,
+      "consumers": {
+        "exactCallerCount": 1,
+        "exactReferenceCount": 0,
+        "structuralContainerCount": 0,
+        "outgoingDependencyCount": 4,
+        "reverseReachableSymbolCount": 3,
+        "potentialCallerCount": 0
+      }
+    },
+    {
+      "symbolFqn": "src/_pytest/debugging.py::_enter_pdb",
+      "maxTokens": 1200,
+      "identity": "16bd20601fd3d2457ed40adf845cfc96719fd83796b9adceaa105eb64c8e62a3",
+      "stableAcrossRepeatedRuns": true,
+      "edges": 3,
+      "directRelations": 5,
+      "consumers": {
+        "exactCallerCount": 1,
+        "exactReferenceCount": 0,
+        "structuralContainerCount": 0,
+        "outgoingDependencyCount": 4,
+        "reverseReachableSymbolCount": 3,
+        "potentialCallerCount": 0
+      }
+    },
+    {
+      "symbolFqn": "src/_pytest/__init__.py::__all__",
+      "maxTokens": 1,
+      "identity": "8b534fd26777e211c1b44582fb8ea08e1a6ab1b5995e81da40ece335343f8780",
+      "stableAcrossRepeatedRuns": true,
+      "edges": 0,
+      "directRelations": 0,
+      "consumers": {
+        "exactCallerCount": 0,
+        "exactReferenceCount": 0,
+        "structuralContainerCount": 0,
+        "outgoingDependencyCount": 0,
+        "reverseReachableSymbolCount": 0,
+        "potentialCallerCount": 0
+      }
+    },
+    {
+      "symbolFqn": "src/_pytest/__init__.py::__all__",
+      "maxTokens": 200,
+      "identity": "0ea0c36446db49d783d4b83be1fdecb248ca64e374cce0e5c06821cdee2230f6",
+      "stableAcrossRepeatedRuns": true,
+      "edges": 0,
+      "directRelations": 0,
+      "consumers": {
+        "exactCallerCount": 0,
+        "exactReferenceCount": 0,
+        "structuralContainerCount": 0,
+        "outgoingDependencyCount": 0,
+        "reverseReachableSymbolCount": 0,
+        "potentialCallerCount": 0
+      }
+    },
+    {
+      "symbolFqn": "src/_pytest/__init__.py::__all__",
+      "maxTokens": 477,
+      "identity": "08857cd4c85f9074ed5b5f9ba39e07c7230b035abe06eea93fe70fd21a56a12f",
+      "stableAcrossRepeatedRuns": true,
+      "edges": 0,
+      "directRelations": 0,
+      "consumers": {
+        "exactCallerCount": 0,
+        "exactReferenceCount": 0,
+        "structuralContainerCount": 0,
+        "outgoingDependencyCount": 0,
+        "reverseReachableSymbolCount": 0,
+        "potentialCallerCount": 0
+      }
+    },
+    {
+      "symbolFqn": "src/_pytest/__init__.py::__all__",
+      "maxTokens": 1200,
+      "identity": "c248546570e87519f93f3ca5b7da9348616789d751f00150459a04484314d18f",
+      "stableAcrossRepeatedRuns": true,
+      "edges": 0,
+      "directRelations": 0,
+      "consumers": {
+        "exactCallerCount": 0,
+        "exactReferenceCount": 0,
+        "structuralContainerCount": 0,
+        "outgoingDependencyCount": 0,
+        "reverseReachableSymbolCount": 0,
+        "potentialCallerCount": 0
+      }
+    }
+  ],
+  "allStable": true
+}

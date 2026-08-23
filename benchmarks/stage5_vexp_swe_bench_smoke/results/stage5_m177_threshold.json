@@ -1,0 +1,111 @@
+{
+  "schemaVersion": "stage5.m177.threshold.v1",
+  "milestone": "M177",
+  "symbolFqn": "src/_pytest/debugging.py::_enter_pdb",
+  "largestBudgetProducingDecline": 476,
+  "smallestBudgetProducingResponse": 478,
+  "deterministic": false,
+  "whyNotDeterministic": "the response carries `timing` as full-precision floats, so `serializedCharacters` varies by a few characters between otherwise identical runs and the floor jitters by about one token. Measured directly: the same max_tokens=476 request answered on one run and declined on another. The threshold is therefore reported as a location, never used as a gate.",
+  "ladder": [
+    {
+      "maxTokens": 1,
+      "before": "impact_response_envelope_unreachable",
+      "after": "bounded_decline"
+    },
+    {
+      "maxTokens": 25,
+      "before": "impact_response_envelope_unreachable",
+      "after": "bounded_decline"
+    },
+    {
+      "maxTokens": 50,
+      "before": "impact_response_envelope_unreachable",
+      "after": "bounded_decline"
+    },
+    {
+      "maxTokens": 100,
+      "before": "impact_response_envelope_unreachable",
+      "after": "bounded_decline"
+    },
+    {
+      "maxTokens": 200,
+      "before": "impact_response_envelope_unreachable",
+      "after": "bounded_decline"
+    },
+    {
+      "maxTokens": 300,
+      "before": "impact_response_envelope_unreachable",
+      "after": "bounded_decline"
+    },
+    {
+      "maxTokens": 400,
+      "before": "impact_response_envelope_unreachable",
+      "after": "bounded_decline"
+    },
+    {
+      "maxTokens": 450,
+      "before": "impact_response_envelope_unreachable",
+      "after": "bounded_decline"
+    },
+    {
+      "maxTokens": 470,
+      "before": "impact_response_envelope_unreachable",
+      "after": "bounded_decline"
+    },
+    {
+      "maxTokens": 474,
+      "before": "impact_response_envelope_unreachable",
+      "after": "bounded_decline"
+    },
+    {
+      "maxTokens": 476,
+      "before": "impact_response_envelope_unreachable",
+      "after": "bounded_decline"
+    },
+    {
+      "maxTokens": 478,
+      "before": "response",
+      "after": "response"
+    },
+    {
+      "maxTokens": 480,
+      "before": "response",
+      "after": "response"
+    },
+    {
+      "maxTokens": 500,
+      "before": "response",
+      "after": "response"
+    },
+    {
+      "maxTokens": 600,
+      "before": "response",
+      "after": "response"
+    },
+    {
+      "maxTokens": 800,
+      "before": "response",
+      "after": "response"
+    },
+    {
+      "maxTokens": 1000,
+      "before": "response",
+      "after": "response"
+    },
+    {
+      "maxTokens": 1200,
+      "before": "response",
+      "after": "response"
+    },
+    {
+      "maxTokens": 1600,
+      "before": "response",
+      "after": "response"
+    },
+    {
+      "maxTokens": 2000,
+      "before": "response",
+      "after": "response"
+    }
+  ]
+}

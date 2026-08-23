@@ -1,0 +1,69 @@
+{
+  "schemaVersion": "stage5.m177.truthfulness-controls.v1",
+  "milestone": "M177",
+  "workstream": "C/E",
+  "rule": "§19 (permanent, from M167) — every classifier needs an identity control, a known positive and a known negative. Uniform labels are detector-smell until the controls pass.",
+  "classifiers": [
+    {
+      "name": "envelopeDecline",
+      "what": "did the ladder exhaust and the terminal record get returned in place of a response?",
+      "readsFrom": "diagnostics.envelopeDecline === true",
+      "identityControl": {
+        "description": "the same authoritative snapshot at a budget that fits and a budget that does not must classify differently; nothing else about the request changes",
+        "evidence": "stage5_m177_observations.json ladder — max_tokens 476 -> bounded_decline, 478 -> response, same symbol, same index",
+        "passed": true
+      },
+      "knownPositive": {
+        "description": "pytest-dev__pytest-10081 :: _enter_pdb at max_tokens 1/50/100/200/400, the case M176 recorded as unrepaired",
+        "expected": "envelopeDecline true",
+        "observed": "true on 5/5 through real MCP transport; 208/208 offline across the corpus",
+        "passed": true
+      },
+      "knownNegative": {
+        "description": "the same symbol at the tool's default budget, and every corpus request at max_tokens 1200",
+        "expected": "envelopeDecline absent",
+        "observed": "absent on 60/60 default-budget requests and on all 92 rows the pre-repair path already delivered",
+        "passed": true
+      },
+      "falsePositiveRisk": "the marker is set at exactly one site and nowhere else in the repository; it cannot be produced by a caught exception or by a response the ladder built."
+    },
+    {
+      "name": "fabricated-absence auditor",
+      "what": "does a delivered response assert an absence the authoritative result contradicts?",
+      "readsFrom": "auditTruthfulness() in run_stage5_m177_corpus.ts — six checks, each naming the authoritative fact it compares against",
+      "identityControl": {
+        "description": "run over BOTH arms of the same 300 requests. An auditor that only ever returns zero proves nothing, so it must be able to fire.",
+        "evidence": "the auditor's discovered-count checks fire on a deliberately mutated response in the unit suite (M177: the decline cannot strengthen a caller-coverage claim)",
+        "passed": true
+      },
+      "knownPositive": {
+        "description": "a decline constructed from a callerCoverage claiming status=complete with 7 exact callers",
+        "expected": "status must not survive as complete; delivered counts must drop to zero; discovered counts must survive",
+        "observed": "asserted in src/impact/impactResponseEnvelope.test.ts",
+        "passed": true
+      },
+      "knownNegative": {
+        "description": "all 300 corpus requests in both arms",
+        "expected": "0 violations — the pre-repair arm was already truthful where it delivered at all",
+        "observed": "before 0, after 0",
+        "passed": true
+      }
+    }
+  ],
+  "truthfulnessMetrics": {
+    "note": "§42 — target 0 for every row",
+    "fabricatedAbsenceClaims": 0,
+    "falseEmptyImpactClaims": 0,
+    "falseExhaustiveClaims": 0,
+    "ownershipStrengthening": 0,
+    "exactOrPotentialStrengthening": 0,
+    "population": "300 offline paired requests + 18 real-transport observations"
+  },
+  "emptyVersusUndelivered": {
+    "question": "§17/§24 — can a reader tell 'no impact exists' from 'impact exists and none was delivered'?",
+    "discriminator": "responseBudget.omittedEdges beside retainedEdges, and resultState",
+    "evidenceExistsDeclines": { "count": 191, "omittedEdges": ">0", "resultState": "bounded_truncated" },
+    "emptyImpactDeclines": { "count": 17, "omittedEdges": 0, "resultState": "response_compacted" },
+    "collapsed": false
+  }
+}

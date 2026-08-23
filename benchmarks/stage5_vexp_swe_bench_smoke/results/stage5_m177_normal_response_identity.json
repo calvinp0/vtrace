@@ -1,0 +1,19 @@
+{
+  "schemaVersion": "stage5.m177.normal-response-identity.v1",
+  "milestone": "M177",
+  "workstream": "E",
+  "question": "§31/§78 — did the repair change any response the pre-repair path could already deliver?",
+  "method": "both envelope implementations imported into ONE process and called on the SAME in-memory authoritative snapshot. No scheduling, no load and no clock separates the arms, which is the strongest available form of §55's interleaving rule.",
+  "preRepairSource": { "worktree": "/home/calvin/bench/vtrace-m177/pre-repair", "commit": "ab0384fc534426b485599e28ed1bf901ad61c170" },
+  "identityDefinition": {
+    "included": "every response field, with object keys canonically sorted so insertion order cannot register as a change",
+    "excluded": ["timing", "accounting"],
+    "whyExcluded": "both are clock readings. timing carries full-precision floats whose decimal length varies run to run; an identity comparison that included them would report drift on every second run and prove nothing on any of them."
+  },
+  "result": { "comparableRows": 92, "identical": 92, "different": 0, "differingRows": [] },
+  "answer": "NO. Where the safety net does not fire, the response is identical.",
+  "sideChannelChecks": {
+    "authoritativeComputationUnchanged": "stage5_m177_authoritative_identity.json — the engine is upstream of the envelope; the only engine-file change is an optional ImpactDiagnostics.envelopeDecline response field, no computation",
+    "inputNotMutated": "asserted in src/impact/impactResponseEnvelope.test.ts (compactImpactProductResponse structuredClones its input; the decline mutates only the clone)"
+  }
+}

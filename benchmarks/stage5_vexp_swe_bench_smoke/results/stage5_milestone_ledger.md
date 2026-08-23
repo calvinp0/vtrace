@@ -4728,3 +4728,145 @@ known positive  pytest-dev__pytest-10081   max_tokens 50/100/150 handler_failed 
   separated in time or load (11 of 200 under concurrent load, 0 of 11 interleaved,
   focus never moved, mechanism not investigated). Take only one of these, and only
   because it is measured.
+
+---
+
+# M177 — `get_impact_graph` Response Totality and Truthful Bounded Degradation
+
+```text
+bd712492  Answer with what you could not send, instead of dropping the call
+this commit  M177 evidence, controls and closure
+```
+
+M176 proved the response-totality invariant for `run_pipeline` and recorded, as a
+confirmed and deliberately unrepaired instance of the same defect class, that
+`get_impact_graph` still threw `impact_response_envelope_unreachable` at
+`impactResponseEnvelope.ts:340`. M177 repaired that one instance.
+
+```text
+A PASS   path traced from source and measurement; line 340's reachability explained;
+         computation separated from delivery; repair seam identified
+B PASS   known positive reproduced through real MCP stdio; 6 controls established
+C PASS   decline contract derived; terminal construction proven; no new public state
+D PASS   one function, one return where there was one throw; 8 new tests
+E PASS   300 paired offline requests + 18 real-transport observations
+F PASS   verdicts reached
+
+defect          IMPACT_ENVELOPE_TOTALITY_DEFECT_CONFIRMED
+degradation     IMPACT_TRUTHFUL_BOUNDED_DEGRADATION_VALIDATED
+totality        IMPACT_VALID_REQUEST_RESPONSE_TOTALITY_CONFIRMED
+product         KEEP_GET_IMPACT_GRAPH_WITH_TOTALITY_FIX
+repository-wide KNOWN_ENVELOPE_TOTALITY_INSTANCES_REPAIRED
+live            LIVE_WORK_NOT_LICENSED        spend $0.00
+retrieval       UNCHANGED
+impact graph    UNCHANGED
+```
+
+```text
+                                        before   after
+valid requests (60 symbols x 5 budgets)    300     300
+  envelope-induced handler failures        208       0
+  truthful bounded declines                  0     208
+  fabricated absences                        0       0
+  normal successful responses               92     300
+  normal-response identity mismatches        —       0
+default budget only
+  requests                                  60      60
+  bounded declines                           0       0
+real MCP transport (18 observations)
+  envelope-induced handler failures          7       0
+  invalid_request / repo_not_ready         2/2     2/2
+
+known positive  pytest-dev__pytest-10081 :: _enter_pdb
+                max_tokens 1/50/100/200/400/476  handler_failed -> bounded decline,
+                2,575-2,581 chars, 0 retained / 55 omitted edges;
+                478+ byte-identical to the pre-repair response
+```
+
+## M177 standing findings
+
+- **A degradation ladder must be gated on the same condition that decides whether
+  its output can be returned.** `fits()` at `:183` tests three conditions; the
+  throw at `:338` tested two of them. Every rung of compaction was driven by
+  `modelVisibleEstimatedTokens <= requestedMaxTokens`, and then the call died on
+  `estimatedTotalTokens > totalCeiling`. The ladder spent itself answering one
+  question and was killed by another, so its residue was optimised against the
+  wrong constraint. The mismatch is still there; only the throw is gone.
+
+- **The floor was 61% metadata, and the ladder could only shrink the other 39%.**
+  Read at the envelope floor for `_enter_pdb`: 745 tokens of `richSummary`,
+  `diagnostics`, `callerCoverage`, `summary`, `resolvedSymbol`, `coverage`,
+  `timing`, `requested` and `limits` that no rung touches, against 472 tokens of
+  delivered evidence. The ladder's own floor is above zero too — `directRelations`
+  stops at one, `edges` stops at one — and the five model-visible keys serialize to
+  23 tokens even when every one of them is empty.
+
+- **The decisive control was the symbol with no impact at all.** `__all__` — zero
+  relations, zero edges, zero potential callers — also threw, at `max_tokens=1`,
+  through the real transport. That rules out "the graph was too big" as the
+  explanation. A defect reproduced on the case with nothing in it is a defect in
+  the container, not the contents.
+
+- **The truthful decline vocabulary already existed, and M139 built it.**
+  `callerCoverage.exactCallerCount` beside `deliveredExactCallerCount`, and
+  `richSummary.fieldDomains` naming the population each count was measured over,
+  exist precisely so a reader can tell "we did not deliver it" from "it does not
+  exist". `bounded_truncated` with `retainedEdges: 0` and `omittedEdges: 55` says
+  what the decline needs to say, and an honest zero still reports
+  `omittedEdges: 0`. No new public state; the maintainer's distinction is one
+  internal boolean, `diagnostics.envelopeDecline`, exactly as in M176.
+
+- **Analogous is not shared, and the difference is the contract.** `run_pipeline`'s
+  terminal replaces the response with a differently-shaped record; `get_impact_graph`
+  declares eleven required output fields, so its terminal must remain a valid
+  `ImpactGraphOutput` — the same draft with its evidence emptied and its metadata
+  bounded. Extracting a common envelope would have to erase the one difference that
+  decides each design. The duplication is 40 lines and was chosen deliberately.
+
+- **The terminal is safe because it is never re-gated, not because it is small.**
+  It is built once and returned; nothing tests it and can reject it, so §26's
+  "decline that cannot itself fit" is structurally absent rather than argued away.
+  Its size is a constant: frozen constants, booleans, non-negative integers, enums,
+  and four identity strings bounded at 200 characters — **omitted** past the bound,
+  never truncated, because `fqName` is the argument a caller feeds back to this same
+  tool and half a symbol name is an identity that does not resolve.
+
+- **Both arms in one process is stronger than interleaving, when the code allows
+  it.** M176 lost 11 of 200 identity comparisons to arms separated by minutes and
+  load. The impact envelope is a pure function of an `ImpactGraphOutput`, so the
+  pre-repair implementation was imported from a detached worktree and called on the
+  *same in-memory object*. 92 of 92 comparable responses identical, with no
+  scheduling difference able to reach the comparison at all.
+
+- **Two instruments were wrong before the product was.** The first residue check
+  reported 7 distinct terminal bodies across 7 failing budgets; the difference was
+  `limits.maxTokens`, which is the request echoed back, and `responseBudget`, which
+  reports it. And the first unit fixture never reached the code under test, because
+  `graph()` is evidence-heavy and metadata-light and therefore fits at
+  `max_tokens=1` — the exact opposite of the shape that fails. Both were fixed by
+  measuring rather than by adjusting the expectation.
+
+- **The envelope floor is not perfectly deterministic, by about one token.**
+  `timing` carries full-precision floats whose decimal length varies, so
+  `serializedCharacters` moves a few characters between runs: `max_tokens=476`
+  answered on one real-transport run and declined on another with no code change.
+  Every acceptance number here is a count of states; the threshold is reported as a
+  location and never used as a gate.
+
+- **Monotonicity holds on this ladder, and that is an observation, not a result.**
+  Zero violations over 20 rungs: `retainedEdges` non-decreasing, no delivered
+  response reverting to a decline. One ladder, one specimen. M176's genuine
+  non-monotone delivery packer in `budgetDelivery.ts` is a different component and
+  is untouched.
+
+- **Next-step recommendation: stop, and do not start the monotonicity repair.**
+  §80 is explicit and the measurement supports it — bounded declines are 0 of 60 at
+  the default budget, so this closes a correctness branch rather than opening a
+  tuning one. Six defects remain measured and unrepaired in
+  `stage5_m177_outstanding_defects.md`; the two worth anyone's attention are the
+  non-monotone packer (M176, reproduced, explicitly gated on authorization) and the
+  `fits()`/terminal-check condition mismatch found here, which cannot be tightened
+  without starting to decline responses the product returns today. The
+  repository-wide claim is deliberately narrow: **all currently known instances are
+  repaired**, not "no other instance exists" — no sweep for further envelope
+  implementations was performed.

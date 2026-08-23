@@ -1,0 +1,31 @@
+{
+  "schemaVersion": "stage5.m177.handler-failure-tally.v1",
+  "milestone": "M177",
+  "workstream": "E",
+  "taxonomy": {
+    "VALID_REQUEST_ENVELOPE_FAILURE": "M177's target: engine ok, response envelope could not represent the result",
+    "INVALID_REQUEST_FAILURE": "unresolvable symbol, out-of-bound arguments — preserved unchanged",
+    "REPOSITORY_STATE_FAILURE": "repo_not_ready, missing/stale index — preserved unchanged",
+    "COMPONENT_FAILURE": "a genuine fault inside the engine or a dependency — still handler_failed",
+    "ENVIRONMENTAL_FAILURE": "ENOSPC, TMPDIR exhaustion, machine saturation, timeouts",
+    "OTHER": "unclassified"
+  },
+  "offlinePairedCorpus": {
+    "source": "stage5_m177_corpus_results.json",
+    "method": "both envelope implementations in one process over the same authoritative snapshot",
+    "validRequests": 300,
+    "before": { "VALID_REQUEST_ENVELOPE_FAILURE": 208, "COMPONENT_FAILURE": 0, "OTHER": 0, "responses": 92 },
+    "after": { "VALID_REQUEST_ENVELOPE_FAILURE": 0, "COMPONENT_FAILURE": 0, "OTHER": 0, "responses": 300, "boundedDeclines": 208 }
+  },
+  "realTransport": {
+    "source": "stage5_m177_known_positive_{before,after}_transport.json",
+    "validRequests": 18,
+    "before": { "VALID_REQUEST_ENVELOPE_FAILURE": 7, "INVALID_REQUEST_FAILURE": 2, "REPOSITORY_STATE_FAILURE": 2, "responses": 7 },
+    "after": { "VALID_REQUEST_ENVELOPE_FAILURE": 0, "INVALID_REQUEST_FAILURE": 2, "REPOSITORY_STATE_FAILURE": 2, "responses": 14, "boundedDeclines": 6 }
+  },
+  "environmentalFailures": {
+    "count": 0,
+    "note": "§54 — no ENOSPC, TMPDIR exhaustion, saturation or timeout was observed. No run was discarded or re-run for environmental reasons."
+  },
+  "verdict": "VALID_REQUEST_ENVELOPE_FAILURE: 208 -> 0 offline, 7 -> 0 through real transport. No other failure class moved."
+}

@@ -1,0 +1,56 @@
+{
+  "schemaVersion": "stage5.m177.start-state.v1",
+  "milestone": "M177",
+  "title": "get_impact_graph response totality and truthful bounded degradation",
+  "predecessor": "M176",
+  "git": {
+    "branch": "main",
+    "head": "ab0384fc534426b485599e28ed1bf901ad61c170",
+    "headSubject": "Measure the crash on ordinary input, then measure that it is gone",
+    "aheadOfOriginMain": 108,
+    "behindOriginMain": 0,
+    "m176Commits": [
+      { "short": "2ec33aec", "full": "2ec33aec1c6baf62f6b999c6f78aaada9f668a4c", "subject": "Write down where M175's pre-repair arm came from, then delete it" },
+      { "short": "aaab4b81", "full": "aaab4b818cbf67d5a3bc0c66d38e40d519d2af5c", "subject": "Answer the question you cannot answer, instead of dropping the call" },
+      { "short": "ab0384fc", "full": "ab0384fc534426b485599e28ed1bf901ad61c170", "subject": "Measure the crash on ordinary input, then measure that it is gone" }
+    ],
+    "trackedDirtyAtStart": [
+      "benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_outcome_ledger.json",
+      "benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_outcome_ledger.md"
+    ],
+    "trackedDirtyPolicy": "pre-existing, predates M177, must not be staged or modified (CLAUDE.md)",
+    "untrackedPathCount": 196,
+    "worktrees": [
+      "/home/calvin/code/vtrace (main, ab0384fc)",
+      "/home/calvin/bench/vtrace-m140/impl/m136base",
+      "/home/calvin/bench/vtrace-m140/impl/m139",
+      "/home/calvin/bench/vtrace-m140/impl/m140a",
+      "/home/calvin/bench/vtrace-m140/impl/m140a2",
+      "/home/calvin/bench/vtrace-m140/impl/m140a3",
+      "/home/calvin/bench/vtrace-m140/impl/m140a4",
+      "/home/calvin/bench/vtrace-m140/impl/m140a5",
+      "/home/calvin/bench/vtrace-m140/impl/m140a6",
+      "/home/calvin/bench/vtrace-m142/bisect-0e4edc7",
+      "/home/calvin/bench/vtrace-m142/bisect-321f9a3",
+      "/home/calvin/bench/vtrace-m142/bisect-69826d3",
+      "/home/calvin/bench/vtrace-m142/iso-head",
+      "/home/calvin/bench/vtrace-m142/pred",
+      "/home/calvin/bench/vtrace-m176/pre-repair (eec70c3c)"
+    ],
+    "worktreePolicy": "user worktrees preserved; M177 creates none"
+  },
+  "inheritedDefect": {
+    "source": "stage5_m176_sibling_defect.json",
+    "status": "CONFIRMED_UNREPAIRED",
+    "file": "src/impact/impactResponseEnvelope.ts",
+    "line": 340,
+    "message": "impact_response_envelope_unreachable"
+  },
+  "licence": {
+    "liveAgents": false,
+    "docker": false,
+    "vexp": false,
+    "paidApi": false,
+    "expectedLiveSpendUsd": 0.0
+  }
+}

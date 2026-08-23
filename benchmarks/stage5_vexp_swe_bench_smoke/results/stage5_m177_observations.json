@@ -1,0 +1,373 @@
+{
+  "schemaVersion": "stage5.m177.observations.v1",
+  "milestone": "M177",
+  "workstream": "E",
+  "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m160_broad_b/pytest-dev__pytest-10081",
+  "authoritativeIdentity": {
+    "note": "§30 — the engine is upstream of the repair and unmodified. Compared at EQUAL budget only; see the comment in this script for why across-budget comparison would be wrong.",
+    "engineFilesChangedByM177": [
+      "src/impact/getImpactGraph.ts (ImpactDiagnostics.envelopeDecline, an optional response field; no computation)"
+    ],
+    "rows": [
+      {
+        "symbolFqn": "src/_pytest/debugging.py::_enter_pdb",
+        "maxTokens": 1,
+        "identity": "07f73ebe3c966793d0d86059b753388c73530db1179abd5543ed58721507d9b1",
+        "stableAcrossRepeatedRuns": true,
+        "edges": 3,
+        "directRelations": 5,
+        "consumers": {
+          "exactCallerCount": 1,
+          "exactReferenceCount": 0,
+          "structuralContainerCount": 0,
+          "outgoingDependencyCount": 4,
+          "reverseReachableSymbolCount": 3,
+          "potentialCallerCount": 0
+        }
+      },
+      {
+        "symbolFqn": "src/_pytest/debugging.py::_enter_pdb",
+        "maxTokens": 200,
+        "identity": "80b5db81372653214a49d9c71e294f0620c9b31198ed4d1fa235d210ff93a8ac",
+        "stableAcrossRepeatedRuns": true,
+        "edges": 3,
+        "directRelations": 5,
+        "consumers": {
+          "exactCallerCount": 1,
+          "exactReferenceCount": 0,
+          "structuralContainerCount": 0,
+          "outgoingDependencyCount": 4,
+          "reverseReachableSymbolCount": 3,
+          "potentialCallerCount": 0
+        }
+      },
+      {
+        "symbolFqn": "src/_pytest/debugging.py::_enter_pdb",
+        "maxTokens": 477,
+        "identity": "8beac68ebf410afae6291154d6cd19663a11ec44be0ef716888348793393e6d0",
+        "stableAcrossRepeatedRuns": true,
+        "edges": 3,
+        "directRelations": 5,
+        "consumers": {
+          "exactCallerCount": 1,
+          "exactReferenceCount": 0,
+          "structuralContainerCount": 0,
+          "outgoingDependencyCount": 4,
+          "reverseReachableSymbolCount": 3,
+          "potentialCallerCount": 0
+        }
+      },
+      {
+        "symbolFqn": "src/_pytest/debugging.py::_enter_pdb",
+        "maxTokens": 1200,
+        "identity": "16bd20601fd3d2457ed40adf845cfc96719fd83796b9adceaa105eb64c8e62a3",
+        "stableAcrossRepeatedRuns": true,
+        "edges": 3,
+        "directRelations": 5,
+        "consumers": {
+          "exactCallerCount": 1,
+          "exactReferenceCount": 0,
+          "structuralContainerCount": 0,
+          "outgoingDependencyCount": 4,
+          "reverseReachableSymbolCount": 3,
+          "potentialCallerCount": 0
+        }
+      },
+      {
+        "symbolFqn": "src/_pytest/__init__.py::__all__",
+        "maxTokens": 1,
+        "identity": "8b534fd26777e211c1b44582fb8ea08e1a6ab1b5995e81da40ece335343f8780",
+        "stableAcrossRepeatedRuns": true,
+        "edges": 0,
+        "directRelations": 0,
+        "consumers": {
+          "exactCallerCount": 0,
+          "exactReferenceCount": 0,
+          "structuralContainerCount": 0,
+          "outgoingDependencyCount": 0,
+          "reverseReachableSymbolCount": 0,
+          "potentialCallerCount": 0
+        }
+      },
+      {
+        "symbolFqn": "src/_pytest/__init__.py::__all__",
+        "maxTokens": 200,
+        "identity": "0ea0c36446db49d783d4b83be1fdecb248ca64e374cce0e5c06821cdee2230f6",
+        "stableAcrossRepeatedRuns": true,
+        "edges": 0,
+        "directRelations": 0,
+        "consumers": {
+          "exactCallerCount": 0,
+          "exactReferenceCount": 0,
+          "structuralContainerCount": 0,
+          "outgoingDependencyCount": 0,
+          "reverseReachableSymbolCount": 0,
+          "potentialCallerCount": 0
+        }
+      },
+      {
+        "symbolFqn": "src/_pytest/__init__.py::__all__",
+        "maxTokens": 477,
+        "identity": "08857cd4c85f9074ed5b5f9ba39e07c7230b035abe06eea93fe70fd21a56a12f",
+        "stableAcrossRepeatedRuns": true,
+        "edges": 0,
+        "directRelations": 0,
+        "consumers": {
+          "exactCallerCount": 0,
+          "exactReferenceCount": 0,
+          "structuralContainerCount": 0,
+          "outgoingDependencyCount": 0,
+          "reverseReachableSymbolCount": 0,
+          "potentialCallerCount": 0
+        }
+      },
+      {
+        "symbolFqn": "src/_pytest/__init__.py::__all__",
+        "maxTokens": 1200,
+        "identity": "c248546570e87519f93f3ca5b7da9348616789d751f00150459a04484314d18f",
+        "stableAcrossRepeatedRuns": true,
+        "edges": 0,
+        "directRelations": 0,
+        "consumers": {
+          "exactCallerCount": 0,
+          "exactReferenceCount": 0,
+          "structuralContainerCount": 0,
+          "outgoingDependencyCount": 0,
+          "reverseReachableSymbolCount": 0,
+          "potentialCallerCount": 0
+        }
+      }
+    ],
+    "allStable": true
+  },
+  "terminalConstruction": {
+    "note": "§26 — a decline that could itself fail to fit would just move the unreachable state one rung down.",
+    "budgetsProbed": [
+      1,
+      25,
+      50,
+      100,
+      200,
+      300,
+      400
+    ],
+    "residueConstantBelowFloor": true,
+    "distinctResidues": 1,
+    "argument": "the terminal is built once and RETURNED, never re-measured against a gate that can reject it. Its size is a constant: every field it carries is a frozen constant, a boolean, a non-negative integer, an enum, or one of four identity strings bounded at 200 characters with omission (not truncation) past the bound."
+  },
+  "threshold": {
+    "largestBudgetProducingDecline": 476,
+    "smallestBudgetProducingResponse": 478,
+    "deterministic": false,
+    "whyNotDeterministic": "the response carries `timing` as full-precision floats, so `serializedCharacters` varies by a few characters between otherwise identical runs and the floor jitters by about one token. Measured directly: the same max_tokens=476 request answered on one run and declined on another. The threshold is therefore reported as a location, never used as a gate."
+  },
+  "ladder": [
+    {
+      "maxTokens": 1,
+      "beforeState": "impact_response_envelope_unreachable",
+      "afterState": "bounded_decline",
+      "authoritativeIdentity": "07f73ebe3c966793d0d86059b753388c73530db1179abd5543ed58721507d9b1",
+      "retainedEdges": 0,
+      "omittedEdges": 55,
+      "resultState": "bounded_truncated",
+      "serializedCharacters": 2578
+    },
+    {
+      "maxTokens": 25,
+      "beforeState": "impact_response_envelope_unreachable",
+      "afterState": "bounded_decline",
+      "authoritativeIdentity": "0ea1251c184c49b53644eeeace81015156059f1d74c7e5365579fad753d1b4ee",
+      "retainedEdges": 0,
+      "omittedEdges": 55,
+      "resultState": "bounded_truncated",
+      "serializedCharacters": 2581
+    },
+    {
+      "maxTokens": 50,
+      "beforeState": "impact_response_envelope_unreachable",
+      "afterState": "bounded_decline",
+      "authoritativeIdentity": "06e68dded940f9a8bde3f5da5261fe47a43d16747cac1c2c4e3c38fffb89a660",
+      "retainedEdges": 0,
+      "omittedEdges": 55,
+      "resultState": "bounded_truncated",
+      "serializedCharacters": 2580
+    },
+    {
+      "maxTokens": 100,
+      "beforeState": "impact_response_envelope_unreachable",
+      "afterState": "bounded_decline",
+      "authoritativeIdentity": "f05af8e37cff06103634ba48a58fc91c5094626db8b9d90eecf9ac787100be9b",
+      "retainedEdges": 0,
+      "omittedEdges": 55,
+      "resultState": "bounded_truncated",
+      "serializedCharacters": 2581
+    },
+    {
+      "maxTokens": 200,
+      "beforeState": "impact_response_envelope_unreachable",
+      "afterState": "bounded_decline",
+      "authoritativeIdentity": "80b5db81372653214a49d9c71e294f0620c9b31198ed4d1fa235d210ff93a8ac",
+      "retainedEdges": 0,
+      "omittedEdges": 55,
+      "resultState": "bounded_truncated",
+      "serializedCharacters": 2584
+    },
+    {
+      "maxTokens": 300,
+      "beforeState": "impact_response_envelope_unreachable",
+      "afterState": "bounded_decline",
+      "authoritativeIdentity": "4079ed284aff391bfb3d52e8d741d6833f2d69fcc15b26cbf8cf14a89e19e363",
+      "retainedEdges": 0,
+      "omittedEdges": 55,
+      "resultState": "bounded_truncated",
+      "serializedCharacters": 2583
+    },
+    {
+      "maxTokens": 400,
+      "beforeState": "impact_response_envelope_unreachable",
+      "afterState": "bounded_decline",
+      "authoritativeIdentity": "b417d4efd866d9de09550666d99e64b5ded4fc780e4a39885604f32e0e15aed5",
+      "retainedEdges": 0,
+      "omittedEdges": 55,
+      "resultState": "bounded_truncated",
+      "serializedCharacters": 2582
+    },
+    {
+      "maxTokens": 450,
+      "beforeState": "impact_response_envelope_unreachable",
+      "afterState": "bounded_decline",
+      "authoritativeIdentity": "1bb36be94e61b6f59cc52b2c86c21ba3187d5dc0e3a3af7b4c363e7e8d2a372b",
+      "retainedEdges": 0,
+      "omittedEdges": 55,
+      "resultState": "bounded_truncated",
+      "serializedCharacters": 2583
+    },
+    {
+      "maxTokens": 470,
+      "beforeState": "impact_response_envelope_unreachable",
+      "afterState": "bounded_decline",
+      "authoritativeIdentity": "55e4c8c1fa7dc969cc968317c94e627fd7f5f9492e8724e6073e4b1b9484402d",
+      "retainedEdges": 0,
+      "omittedEdges": 55,
+      "resultState": "bounded_truncated",
+      "serializedCharacters": 2581
+    },
+    {
+      "maxTokens": 474,
+      "beforeState": "impact_response_envelope_unreachable",
+      "afterState": "bounded_decline",
+      "authoritativeIdentity": "355ade234fcb6a1e3ae0496169fd2290bd8f76eb18ac49a15e9abdbda1283110",
+      "retainedEdges": 0,
+      "omittedEdges": 55,
+      "resultState": "bounded_truncated",
+      "serializedCharacters": 2583
+    },
+    {
+      "maxTokens": 476,
+      "beforeState": "impact_response_envelope_unreachable",
+      "afterState": "bounded_decline",
+      "authoritativeIdentity": "5e478426e384642f0f05058406288aeeaf67fe84ddcb7d921ff91b0afc5aafcd",
+      "retainedEdges": 0,
+      "omittedEdges": 55,
+      "resultState": "bounded_truncated",
+      "serializedCharacters": 2582
+    },
+    {
+      "maxTokens": 478,
+      "beforeState": "response",
+      "afterState": "response",
+      "authoritativeIdentity": "ab52802c2775b79ff7bcfe83cb00967dd577e0dfa77899e361df11ed24330e6e",
+      "retainedEdges": 1,
+      "omittedEdges": 55,
+      "resultState": "bounded_truncated",
+      "serializedCharacters": 5104
+    },
+    {
+      "maxTokens": 480,
+      "beforeState": "response",
+      "afterState": "response",
+      "authoritativeIdentity": "46b75e4a10845f231fb6f05ebe43519ded596aaa7c2cde627a0f5e3872ad8189",
+      "retainedEdges": 1,
+      "omittedEdges": 55,
+      "resultState": "bounded_truncated",
+      "serializedCharacters": 5106
+    },
+    {
+      "maxTokens": 500,
+      "beforeState": "response",
+      "afterState": "response",
+      "authoritativeIdentity": "d1df90fc3cddd14abbf33ec6d2d1b5661be044185f5c8502c86534f1a9080c9c",
+      "retainedEdges": 1,
+      "omittedEdges": 55,
+      "resultState": "bounded_truncated",
+      "serializedCharacters": 5106
+    },
+    {
+      "maxTokens": 600,
+      "beforeState": "response",
+      "afterState": "response",
+      "authoritativeIdentity": "e7405d5828d55a88d0bd05becf9ef398c6fd3f807719383b34fb050a83b5c2b2",
+      "retainedEdges": 1,
+      "omittedEdges": 55,
+      "resultState": "bounded_truncated",
+      "serializedCharacters": 5105
+    },
+    {
+      "maxTokens": 800,
+      "beforeState": "response",
+      "afterState": "response",
+      "authoritativeIdentity": "dac8009a92593a22a75a557738cc498adea5ddeea722807c601b3a2dbfda90b1",
+      "retainedEdges": 2,
+      "omittedEdges": 55,
+      "resultState": "bounded_truncated",
+      "serializedCharacters": 5736
+    },
+    {
+      "maxTokens": 1000,
+      "beforeState": "response",
+      "afterState": "response",
+      "authoritativeIdentity": "12e70290bb5754bccd103d1af147cecbb42b435aedb0dd9cc2c7db593628e2a1",
+      "retainedEdges": 4,
+      "omittedEdges": 55,
+      "resultState": "bounded_truncated",
+      "serializedCharacters": 7051
+    },
+    {
+      "maxTokens": 1200,
+      "beforeState": "response",
+      "afterState": "response",
+      "authoritativeIdentity": "16bd20601fd3d2457ed40adf845cfc96719fd83796b9adceaa105eb64c8e62a3",
+      "retainedEdges": 5,
+      "omittedEdges": 55,
+      "resultState": "bounded_truncated",
+      "serializedCharacters": 7900
+    },
+    {
+      "maxTokens": 1600,
+      "beforeState": "response",
+      "afterState": "response",
+      "authoritativeIdentity": "2f9f3909bf306cf7dccd1b82e9d8c8ef83763bdb4228b355661f2143712ad934",
+      "retainedEdges": 5,
+      "omittedEdges": 55,
+      "resultState": "bounded_truncated",
+      "serializedCharacters": 9470
+    },
+    {
+      "maxTokens": 2000,
+      "beforeState": "response",
+      "afterState": "response",
+      "authoritativeIdentity": "b8071034c8b98ae9596dfb9c4d58054fdd8f41906ed064542af482405b1002b3",
+      "retainedEdges": 5,
+      "omittedEdges": 55,
+      "resultState": "bounded_truncated",
+      "serializedCharacters": 10890
+    }
+  ],
+  "monotonicity": {
+    "note": "§36/§37 — OBSERVED, NOT REPAIRED. Weak property: for a fixed request and authoritative state, more budget must not remove evidence or weaken the delivered state.",
+    "acceptanceGate": false,
+    "violations": [],
+    "holdsOnThisLadder": true,
+    "relatedKnownDefect": "M176 measured a genuine non-monotone delivery packer in the run_pipeline path (django__django-10880: orientation at 400/600, delivery_failure at 800/1000, orientation again at 1600). That is budgetDelivery.ts, a different component, and is out of M177's scope."
+  }
+}
