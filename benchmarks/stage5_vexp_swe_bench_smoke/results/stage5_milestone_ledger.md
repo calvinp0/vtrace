@@ -4366,7 +4366,10 @@ pivot             gold on 11/12, DIRECTLY_USED 10/12, 0 causal consequences
 
 # M174 — Post-Orientation Work Displacement and Implementation-Cost Attribution
 
-`<M174_COMMITS>`
+```text
+4d4d8cb4  Stop spending 8,229 tokens to say that nothing fit
+3d493b21  The work never moved, and two virtualenvs cost more than the packet ever did
+```
 
 M173 closed on `ECONOMIC_DIAGNOSIS_REQUIRED`: the packet is cheap and consumed,
 the solve set does not move, and a $0.0563 median premium sits somewhere after
