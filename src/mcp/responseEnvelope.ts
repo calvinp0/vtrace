@@ -305,6 +305,10 @@ export function compactProductResponse<T>(
   const omitted: Record<string, number> = {};
   const expansion: Record<string, string> = {};
 
+  // Captured before any rung runs: the ladder destroys the readiness record, and
+  // the terminal decline below outranks every other state on it.
+  const indexReady = readIndexReadiness(draft);
+
   const delivery = applyProgressiveContextBudget(draft, options.requestedContextTokens);
   const deliveryCompacted = delivery?.accounting.status === "compacted"
     || delivery?.accounting.status === "failed";
@@ -417,7 +421,22 @@ export function compactProductResponse<T>(
   }
 
   if (!accounting.within_envelope) {
-    throw new Error("product_response_envelope_unreachable");
+    // Every rung has run and the response still does not fit. This is a product
+    // condition, not a transport fault, so it terminates in a bounded truthful
+    // record rather than an exception. See buildBoundedEnvelopeDecline.
+    const bounded = buildBoundedEnvelopeDecline(draft, compactedFields, omitted, indexReady);
+    return {
+      ...bounded,
+      responseBudget: measureResponse(bounded, {
+        requestedContextTokens: options.requestedContextTokens,
+        modelVisibleContext: readModelVisibleContext(bounded),
+        detail,
+        compactionApplied: true,
+        compactedFields,
+        omitted,
+        expansion,
+      }),
+    } as unknown as T & { responseBudget: ResponseBudgetAccounting };
   }
 
   draft.responseBudget = accounting;
@@ -441,6 +460,7 @@ export function remeasureResponseBudget<T extends { responseBudget: ResponseBudg
   const previous = output.responseBudget;
   delete draft.responseBudget;
 
+  const indexReady = readIndexReadiness(draft);
   const compactedFields = [...previous.compacted_fields];
   const omitted = { ...previous.omitted_detail_counts };
   const expansion = { ...previous.expansion_available };
@@ -514,7 +534,22 @@ export function remeasureResponseBudget<T extends { responseBudget: ResponseBudg
   }
 
   if (!accounting.within_envelope) {
-    throw new Error("product_response_envelope_unreachable");
+    // Same terminal condition on the re-measure path, reached when
+    // `get_code_context` overwrites freshness and timing on a response the inner
+    // pass had already brought inside the envelope.
+    const bounded = buildBoundedEnvelopeDecline(draft, compactedFields, omitted, indexReady);
+    return {
+      ...bounded,
+      responseBudget: measureResponse(bounded, {
+        requestedContextTokens: previous.requested_context_tokens,
+        modelVisibleContext: readModelVisibleContext(bounded),
+        detail,
+        compactionApplied: true,
+        compactedFields,
+        omitted,
+        expansion,
+      }),
+    } as unknown as T;
   }
 
   return { ...draft, responseBudget: accounting } as unknown as T;
@@ -706,6 +741,181 @@ function degradeOversizedProductResponse(
   omitted.productContextItems = (omitted.productContextItems ?? 0) + items.length;
   omitted.modelVisibleCharacters = (omitted.modelVisibleCharacters ?? 0) + originalContext.length;
   compactedFields.push("productContext.bounded_degradation");
+}
+
+/**
+ * Explicit bounds on every string the terminal record may carry that the caller
+ * or the repository, rather than this file, decides the length of. A fallback
+ * that exists to bound the response must not contain a field that does not.
+ */
+const BOUNDED_DECLINE_TOP_MATCH_CHARACTERS = 256;
+const BOUNDED_DECLINE_FRESHNESS_STATUS_CHARACTERS = 64;
+const BOUNDED_DECLINE_FRESHNESS_REASON_CHARACTERS = 256;
+const BOUNDED_DECLINE_CONTEXT_CHARACTERS = 512;
+
+/**
+ * Left in place of a value that exceeded its bound.
+ *
+ * OMISSION, NOT TRUNCATION. Every bounded field here is load-bearing for a claim:
+ * `topMatchReference` is a follow-up tool argument, and the freshness pair is
+ * quoted verbatim into the decline's own note. A truncated symbol name is an
+ * identity that does not resolve, and a truncated freshness reason is a
+ * re-worded claim. Both are worse than saying nothing, so over-long values are
+ * dropped and marked rather than cut.
+ */
+const BOUNDED_DECLINE_OVER_BOUND = "@omitted: exceeded the bounded response limit";
+
+const boundedString = (value: unknown, limit: number): string | undefined => {
+  if (typeof value !== "string" || value === "") return undefined;
+  return value.length <= limit ? value : BOUNDED_DECLINE_OVER_BOUND;
+};
+
+const boundedCount = (value: unknown): number =>
+  typeof value === "number" && Number.isFinite(value) ? Math.max(0, Math.floor(value)) : 0;
+
+/**
+ * The terminal record for a response that cannot be represented inside its own
+ * envelope. Fixed shape, bounded by construction: every field is a frozen
+ * constant, a boolean, a non-negative integer, or a string with a declared limit.
+ *
+ * WHY THIS EXISTS. `degradeOversizedProductResponse` above is a real bounded
+ * degradation, and for most responses it is enough. But it bounds `productContext`
+ * and a response is more than its `productContext`: M176-A measured ten default
+ * model-facing fields — `request.repoRoot`, `productContext.leadPivot`,
+ * `productContext.freshness.reason`, `workspaceRouting.*`, `intent.reason`,
+ * `savedObservation`, `warnings`, `flow.skipReason` among them — whose cost no
+ * rung of the ladder reduces, each able on its own to carry an otherwise ordinary
+ * response past even the DEFAULT ceiling. When that happened the ladder ran out
+ * and the tool threw `product_response_envelope_unreachable`, which the server's
+ * catch-all reported as `handler_failed`: a predictable product condition
+ * arriving as an implementation fault, with no evidence, no orientation and no
+ * decline. Reproduced on an ordinary corpus case (`pytest-dev__pytest-10081`,
+ * `max_tokens` 150) through the real MCP transport.
+ *
+ * WHAT IT SAYS, AND WHAT IT REFUSES TO SAY. Nothing here is authored prose about
+ * the repository. The record carries FACTS the ladder already established —
+ * whether retrieval found anything, whether delivery failed, whether the index
+ * vouched for itself, and the one top-match identity, if there is a real one
+ * short enough to be usable — in the same field names the decline projector
+ * already reads. So the model receives the decline it would have received had the
+ * ladder been able to stop one rung earlier, in the SAME vocabulary: relevant
+ * evidence was found and none of it survived the response budget. It is never
+ * reported as "nothing was found" unless retrieval's own finding was that
+ * nothing was found.
+ *
+ * NOT A NEW PUBLIC STATE. Ladder exhaustion changes nothing the model could infer
+ * or act on differently — evidence existed, none could be delivered inside the
+ * bound — so it reuses `evidence_found_but_undelivered` rather than minting
+ * vocabulary for a distinction only a maintainer can use. The distinction a
+ * maintainer DOES need is kept as one internal boolean,
+ * `productContext.diagnostics.envelopeDecline`, so telemetry can separate a
+ * response that degraded gracefully from one whose degraded form could not itself
+ * be built.
+ *
+ * NOT A DUMP. The authoritative payload does not travel inside this record in any
+ * form. Everything the ladder had left is dropped, and `omitted_detail_counts`
+ * says how much.
+ */
+function buildBoundedEnvelopeDecline(
+  draft: JsonRecord,
+  compactedFields: string[],
+  omitted: Record<string, number>,
+  /**
+   * Whether the index vouched for itself, read BEFORE the ladder ran.
+   *
+   * It has to be, because by this point the fact is gone: the
+   * `diagnostics.indexFreshness` rung deletes every object-valued key under
+   * `diagnostics.freshness`, and `readiness` is one. That is sound for a response
+   * that survives — the scalar status fields callers branch on are kept, and the
+   * precise record is `diagnostics.indexFreshness`. It is not sound HERE, where
+   * readiness outranks every other decline state and `readDeclineEvidence`
+   * defaults a missing readiness record to ready. Restoring the one boolean the
+   * decline needs is why it is captured at entry rather than looked up at exit.
+   */
+  indexReady: boolean | null,
+): JsonRecord {
+  const productContext = asRecord(draft.productContext);
+  const droppedCharacters = serialize(draft).length;
+
+  const bounded: JsonRecord = {};
+  if (typeof draft.schemaVersion === "string") bounded.schemaVersion = draft.schemaVersion;
+
+  // Carried in the exact shape the decline projector reads, so an unready index
+  // is still reported as an unready index and never as a delivery loss.
+  if (indexReady !== null) {
+    bounded.diagnostics = { freshness: { readiness: { ready: indexReady } } };
+  }
+
+  if (productContext !== undefined) {
+    // `retrievalFound` decides between "nothing was relevant" and "something was
+    // and you are not getting it". It is read, never assumed: §21 requires an
+    // empty retrieval to stay an empty retrieval.
+    const retrievalFound = productContext.retrievalFound === true;
+    const context = boundedString(productContext.modelVisibleContext, BOUNDED_DECLINE_CONTEXT_CHARACTERS);
+    const topMatch = boundedString(
+      typeof productContext.topMatchReference === "string" && productContext.topMatchReference !== ""
+        ? productContext.topMatchReference
+        : productContext.leadPivot,
+      BOUNDED_DECLINE_TOP_MATCH_CHARACTERS,
+    );
+    const freshness = asRecord(productContext.freshness);
+    const status = boundedString(freshness?.status, BOUNDED_DECLINE_FRESHNESS_STATUS_CHARACTERS);
+    const reason = boundedString(freshness?.reason, BOUNDED_DECLINE_FRESHNESS_REASON_CHARACTERS);
+    const delivery = asRecord(productContext.delivery);
+
+    bounded.productContext = {
+      responseVersion: typeof productContext.responseVersion === "string"
+        ? productContext.responseVersion
+        : null,
+      resolved: false,
+      retrievalFound,
+      // The ladder having been exhausted IS a delivery failure, and the decline
+      // projector reads this to reach the right state. It stays false when
+      // retrieval found nothing, so an empty result is never dressed as a loss.
+      deliveryFailed: retrievalFound,
+      resultState: retrievalFound ? "delivery_failure" : "no_result",
+      items: [],
+      omittedItemCount: boundedCount(productContext.omittedItemCount),
+      modelVisibleContext: context ?? "",
+      // Disclosed only where the record genuinely holds a match, and only when it
+      // is short enough to still be a usable follow-up argument (M174's rule).
+      ...(retrievalFound && topMatch !== undefined && topMatch !== BOUNDED_DECLINE_OVER_BOUND
+        ? { topMatchReference: topMatch }
+        : {}),
+      ...(status === undefined ? {} : { freshness: { status, ...(reason === undefined ? {} : { reason }) } }),
+      delivery: {
+        status: retrievalFound ? "failed" : "no_result",
+        selectedItemsBeforeBudget: boundedCount(delivery?.selectedItemsBeforeBudget),
+        deliveredItems: 0,
+        droppedForBudget: boundedCount(delivery?.droppedForBudget),
+      },
+      diagnostics: {
+        resultState: retrievalFound ? "delivery_failure" : "no_result",
+        retrievalFound,
+        responseCompacted: true,
+        // The one thing this record says that the graceful degradation does not:
+        // the bounded form could not itself be built from the response. Internal,
+        // bounded, and the only way telemetry can attribute the two apart.
+        envelopeDecline: true,
+      },
+    };
+  }
+
+  compactedFields.push("response.bounded_envelope_decline");
+  omitted.boundedEnvelopeDeclineCharacters =
+    (omitted.boundedEnvelopeDeclineCharacters ?? 0)
+    + Math.max(0, droppedCharacters - serialize(bounded).length);
+  return bounded;
+}
+
+/**
+ * Whether the index vouched for itself, as recorded before any compaction ran.
+ * `null` when the response carries no readiness record at all — which
+ * `readDeclineEvidence` reads as ready, and which this must not silently assert.
+ */
+function readIndexReadiness(draft: JsonRecord): boolean | null {
+  const readiness = asRecord(asRecord(asRecord(draft.diagnostics)?.freshness)?.readiness);
+  return readiness === undefined ? null : readiness.ready === true;
 }
 
 function readModelVisibleContext(draft: JsonRecord): string {

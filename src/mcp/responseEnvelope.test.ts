@@ -867,3 +867,201 @@ test("M175: a response with no request block is untouched", () => {
   const response = compactProductResponse(draft as never, { requestedContextTokens: 8_000 });
   assert.equal((response as unknown as Record<string, any>).request, undefined);
 });
+
+// ── M176: response-envelope totality ──
+//
+// The ladder in `compactProductResponse` used to end in
+// `throw new Error("product_response_envelope_unreachable")`, which the MCP
+// server's catch-all reported as `handler_failed`. M176-A measured ten default
+// model-facing fields that no rung reduces — `request.repoRoot`,
+// `productContext.leadPivot`, `productContext.freshness.reason`,
+// `workspaceRouting.*`, `intent.reason`, `savedObservation`, `warnings`,
+// `flow.skipReason` among them — each able on its own to carry an ordinary
+// response past even the DEFAULT ceiling, and reproduced the crash through the
+// real MCP transport on `pytest-dev__pytest-10081` at `max_tokens` 150.
+//
+// These tests pin the replacement: predictable envelope pressure terminates in a
+// bounded truthful decline, in the SAME public vocabulary, without becoming a
+// place for unexpected failures to hide.
+
+/** Bulk in a field no rung of the ladder reduces. The M176-A known positive. */
+function irreduciblyOversizedResponse(characters = 200_000) {
+  const draft = duplicatedResponse() as unknown as Record<string, any>;
+  draft.productContext.leadPivot = "pkg/pivot.py::pivot_function";
+  draft.productContext.freshness = { status: "fresh", reason: "index current" };
+  draft.workspaceRouting = { isWorkspace: false, outcome: "single_repository", reason: "x".repeat(characters) };
+  return draft;
+}
+
+const budgetOf = (response: unknown) =>
+  (response as { responseBudget: { within_envelope: boolean; compacted_fields: readonly string[] } }).responseBudget;
+
+/**
+ * The authoritative signal, read from the internal marker rather than from
+ * `compacted_fields` — that list is a bounded audit report, sorted and capped at
+ * ten entries, so a step's presence in it is not a fact about the response.
+ */
+const declined = (response: unknown): boolean =>
+  (response as { productContext?: { diagnostics?: { envelopeDecline?: unknown } } })
+    .productContext?.diagnostics?.envelopeDecline === true;
+
+test("M176: an irreducibly oversized response terminates instead of throwing", () => {
+  const response = compactProductResponse(irreduciblyOversizedResponse() as never, {
+    requestedContextTokens: 8_000,
+  }) as unknown as Record<string, any>;
+
+  assert.equal(declined(response), true);
+  assert.equal(budgetOf(response).within_envelope, true);
+  // Evidence existed, so the record says so — and never that nothing was found.
+  assert.equal(response.productContext.retrievalFound, true);
+  assert.equal(response.productContext.deliveryFailed, true);
+  assert.equal(response.productContext.resultState, "delivery_failure");
+  assert.equal(response.productContext.diagnostics.envelopeDecline, true);
+  // No authoritative payload travels inside the terminal record.
+  assert.deepEqual(response.productContext.items, []);
+  assert.equal(response.workspaceRouting, undefined);
+  assert.equal(response.capsuleResult, undefined);
+  assert.equal(serialize(response).includes("x".repeat(1_000)), false);
+});
+
+test("M176: the bounded decline fits even the smallest ceiling, whatever is thrown at it", () => {
+  // Every field M176-A classified as unbounded, all oversized at once, measured
+  // against `responseTokenCeiling(0)` — the smallest ceiling the product has.
+  const draft = duplicatedResponse() as unknown as Record<string, any>;
+  const huge = "y".repeat(300_000);
+  draft.request.repoRoot = huge;
+  draft.productContext.repository = { worktreeId: huge };
+  draft.productContext.freshness = { status: huge, reason: huge };
+  draft.productContext.leadPivot = huge;
+  draft.productContext.topMatchReference = huge;
+  draft.workspaceRouting = { reason: huge, perRepository: [{ reason: huge }] };
+  draft.intent = { reason: huge };
+  draft.savedObservation = huge;
+  draft.warnings = [huge];
+  draft.flow = { skipReason: huge };
+
+  for (const detail of [McpResponseDetail.Standard, McpResponseDetail.Debug, McpResponseDetail.Compact]) {
+    const response = compactProductResponse(draft as never, { requestedContextTokens: 0, detail });
+    const budget = budgetOf(response) as unknown as Record<string, number | boolean>;
+    assert.equal(declined(response), true, `declined at ${detail}`);
+    assert.equal(budget.within_envelope, true, `within envelope at ${detail}`);
+    assert.ok(
+      (budget.estimated_total_response_tokens as number) <= responseTokenCeiling(0),
+      `${detail}: ${budget.estimated_total_response_tokens} > ${responseTokenCeiling(0)}`,
+    );
+  }
+});
+
+test("M176: an over-long top match is omitted rather than truncated", () => {
+  // A truncated symbol name is an identity that does not resolve. §30 requires a
+  // declared bound; the bound is enforced by dropping the field, not cutting it.
+  const draft = irreduciblyOversizedResponse();
+  draft.productContext.leadPivot = `pkg/deep.py::${"Nested.".repeat(200)}symbol`;
+  const response = compactProductResponse(draft as never, { requestedContextTokens: 8_000 }) as unknown as Record<string, any>;
+
+  assert.equal(declined(response), true);
+  assert.equal(response.productContext.topMatchReference, undefined);
+
+  // A usable one survives, because withholding it would make a recoverable state
+  // look like a dead end (M174's rule, unchanged).
+  const short = irreduciblyOversizedResponse();
+  short.productContext.topMatchReference = "pkg/pivot.py::pivot_function";
+  const kept = compactProductResponse(short as never, { requestedContextTokens: 8_000 }) as unknown as Record<string, any>;
+  assert.equal(kept.productContext.topMatchReference, "pkg/pivot.py::pivot_function");
+});
+
+test("M176: an empty retrieval under envelope pressure stays an empty retrieval", () => {
+  // §21. The new state applies only where evidence exists and cannot be
+  // disclosed. Retrieval's own finding is never dressed up as a delivery loss.
+  const draft = irreduciblyOversizedResponse();
+  draft.productContext.resolved = false;
+  draft.productContext.items = [];
+  draft.productContext.modelVisibleContext = "";
+
+  const response = compactProductResponse(draft as never, { requestedContextTokens: 8_000 }) as unknown as Record<string, any>;
+  assert.equal(declined(response), true);
+  assert.equal(response.productContext.retrievalFound, false);
+  assert.equal(response.productContext.deliveryFailed, false);
+  assert.equal(response.productContext.resultState, "no_result");
+});
+
+test("M176: an unready index under envelope pressure is still reported as unready", () => {
+  // §22. Readiness outranks every other decline state, and it is carried in the
+  // exact shape the decline projector reads.
+  const draft = irreduciblyOversizedResponse();
+  draft.diagnostics = { freshness: { readiness: { ready: false, reason: "missing_index" } } };
+
+  const response = compactProductResponse(draft as never, { requestedContextTokens: 8_000 }) as unknown as Record<string, any>;
+  assert.equal(declined(response), true);
+  assert.equal(response.diagnostics.freshness.readiness.ready, false);
+});
+
+test("M176: a response that fits is untouched by the existence of the fallback", () => {
+  // §20, §46. No premature decline, and no new terseness: a comfortable response
+  // must be byte-identical to what it would be if the fallback did not exist —
+  // which it is, because the fallback is reachable only from a failed measurement.
+  const fitting = compactProductResponse(duplicatedResponse(), { requestedContextTokens: 12_000 });
+  assert.equal(declined(fitting), false);
+  assert.equal((fitting as unknown as Record<string, any>).productContext.diagnostics.envelopeDecline, undefined);
+  assert.ok((fitting as unknown as Record<string, any>).productContext.items.length > 0);
+
+  // The graceful degradation one rung above is also still reachable, and is NOT
+  // marked as an envelope decline: telemetry must be able to tell them apart.
+  const degraded = compactProductResponse(duplicatedResponse(), { requestedContextTokens: 1 }) as unknown as Record<string, any>;
+  assert.equal(declined(degraded), false);
+  assert.equal(degraded.productContext.resultState, "delivery_failure");
+  assert.equal(degraded.productContext.diagnostics.envelopeDecline, undefined);
+});
+
+test("M176: a genuine implementation failure still fails", () => {
+  // §23, §71. The fallback classifies ONE predictable condition. It must not
+  // become the place unexpected faults go to be made presentable.
+  const hostile = irreduciblyOversizedResponse();
+  Object.defineProperty(hostile.productContext, "items", {
+    get() { throw new Error("synthetic_internal_failure"); },
+    enumerable: true,
+  });
+
+  assert.throws(
+    () => compactProductResponse(hostile as never, { requestedContextTokens: 8_000 }),
+    /synthetic_internal_failure/,
+  );
+});
+
+test("M176: a larger envelope never yields a weaker terminal state", () => {
+  // §47, §48. Monotonicity is what makes the decline a floor and not a coin toss:
+  // once a budget delivers items, no larger budget may deliver fewer, and no
+  // larger budget may decline where a smaller one answered.
+  const rank = (response: Record<string, any>): number => {
+    if (declined(response)) return 0;
+    if (response.productContext.resultState === "delivery_failure") return 1;
+    return 2;
+  };
+  const draft = irreduciblyOversizedResponse(60_000);
+  let previousRank = -1;
+  let previousItems = 0;
+  for (const budget of [0, 100, 1_000, 4_000, 8_000, 16_000, 32_000, 64_000]) {
+    const response = compactProductResponse(draft as never, { requestedContextTokens: budget }) as unknown as Record<string, any>;
+    assert.ok(rank(response) >= previousRank, `terminal state weakened at budget ${budget}`);
+    assert.ok(response.productContext.items.length >= previousItems, `items dropped at budget ${budget}`);
+    previousRank = rank(response);
+    previousItems = response.productContext.items.length;
+  }
+  assert.equal(previousRank, 2, "a large enough envelope must eventually deliver an orientation");
+});
+
+test("M176: the re-measure path terminates too", () => {
+  // `get_code_context` overwrites freshness and timing on an already-bounded
+  // response, which can push it back over the ceiling. Same condition, same
+  // terminal record — responseEnvelope.ts:517 threw here as well.
+  const compacted = compactProductResponse(duplicatedResponse(), { requestedContextTokens: 500 });
+  const mutated = {
+    ...(compacted as unknown as Record<string, any>),
+    workspaceRouting: { reason: "z".repeat(200_000) },
+  } as never;
+
+  const remeasured = remeasureResponseBudget(mutated) as unknown as Record<string, any>;
+  assert.equal(declined(remeasured), true);
+  assert.equal(remeasured.responseBudget.within_envelope, true);
+  assert.equal(remeasured.workspaceRouting, undefined);
+});
