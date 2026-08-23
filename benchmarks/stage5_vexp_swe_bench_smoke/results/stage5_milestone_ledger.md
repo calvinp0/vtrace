@@ -4480,6 +4480,7 @@ first-edit survival                 A 4 final / B 4 final     rework A 6 / B 3
 
 ```text
 bc6e2ecd  Stop paying for the question twice, and let the answer fit
+366883d2  Find out who was reading the field nobody was reading
 ```
 
 M174 repaired the empty-delivery fallback and recorded, without acting on it, that
