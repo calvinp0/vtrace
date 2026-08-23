@@ -207,3 +207,22 @@ git diff --check               clean
 
 Six new tests in `src/mcp/responseEnvelope.test.ts`; four fail with the repair
 disabled, verified by disabling it and re-running.
+
+## Reproduction authority
+
+Recorded here so the before/after comparison does not depend on a live checkout
+surviving. M176 removed the milestone-owned worktree after this note was written.
+
+```text
+pre-repair commit    1b078193  Record M174's own commit hashes in the ledger heading
+post-repair commits  bc6e2ecd  Stop paying for the question twice, and let the answer fit
+                     366883d2  Find out who was reading the field nobody was reading
+
+reconstruct the pre-repair arm:
+  git worktree add --detach /home/calvin/bench/vtrace-m175/pre-repair 1b078193
+  ln -s "$PWD/node_modules" /home/calvin/bench/vtrace-m175/pre-repair/node_modules
+
+re-run the paired corpora:
+  bun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m175_corpus.ts --corpus broad100a
+  bun benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m175_corpus.ts --corpus broad100b
+```
