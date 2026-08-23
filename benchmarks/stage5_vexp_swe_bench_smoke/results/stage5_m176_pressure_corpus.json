@@ -1,0 +1,55 @@
+{
+  "schemaVersion": "stage5.m176.pressure-corpus.v1",
+  "milestone": "M176",
+  "workstream": "B",
+  "categories": [
+    {
+      "category": "historical pressure case",
+      "source": "M176-A floor search over real captures",
+      "cases": [
+        "pytest-dev__pytest-10081"
+      ]
+    },
+    {
+      "category": "ordinary corpus cases",
+      "source": "Broad100-A/B",
+      "cases": "measured in M176-E"
+    },
+    {
+      "category": "adversarial large-field",
+      "source": "synthetic, authored pre-compaction",
+      "cases": [
+        "pressuredResponse(200_000 irreducible chars)"
+      ]
+    },
+    {
+      "category": "pathological identity",
+      "source": "synthetic",
+      "cases": [
+        "1,406-character leadPivot"
+      ]
+    },
+    {
+      "category": "empty retrieval",
+      "source": "synthetic",
+      "cases": [
+        "retrievalFound=false under pressure"
+      ]
+    },
+    {
+      "category": "repository authority",
+      "source": "synthetic",
+      "cases": [
+        "readiness.ready=false under pressure"
+      ]
+    },
+    {
+      "category": "unexpected implementation fault",
+      "source": "synthetic",
+      "cases": [
+        "throwing getter on productContext.items"
+      ]
+    }
+  ],
+  "note": "Retrieval was not modified to manufacture any case. The adversarial fixtures exercise the formatter and envelope paths directly, as §17 permits."
+}

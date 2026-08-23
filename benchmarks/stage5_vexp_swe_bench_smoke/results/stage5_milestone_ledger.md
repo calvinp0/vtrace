@@ -4582,3 +4582,149 @@ known positive  matplotlib-22719   decline → orientation, same correct pivot,
   the throw remains, and any sufficiently large irreducible field still finds it. A
   response that cannot be made to fit should degrade to a truthful non-answer, not
   fail the call.
+
+---
+
+# M176 — Response Envelope Totality and Truthful Degradation
+
+```text
+2ec33aec  Write down where M175's pre-repair arm came from, then delete it
+aaab4b81  Answer the question you cannot answer, instead of dropping the call
+```
+
+M175 removed the largest field that could exhaust the response envelope and
+recorded, without acting on it, that the throw at the end of the ladder remained:
+any sufficiently large irreducible field still found it, and a response that could
+not be made to fit failed the call instead of degrading to a truthful non-answer.
+M176 removed the throw.
+
+```text
+A PASS   traced end to end; 11/11 source steps re-verified; 10 unbounded fields measured
+B PASS   crash reproduced on ordinary corpus input through the real transport; 14/14 controls
+C PASS   no new public state; precedence frozen; every bounded field bound by omission
+D PASS   one function, two returns where there were two throws; 9 tests
+E PASS   200 valid cases across two corpora, two checkouts, one index, two budgets
+F PASS   verdicts reached
+
+defect          ENVELOPE_TOTALITY_DEFECT_CONFIRMED
+degradation     TRUTHFUL_BOUNDED_DEGRADATION_VALIDATED
+totality        VALID_REQUEST_RESPONSE_TOTALITY_CONFIRMED
+product         KEEP_COMPACT_ORIENTATION_WITH_TOTALITY_FIX
+live            LIVE_WORK_NOT_LICENSED        spend $0.00
+retrieval       UNCHANGED
+```
+
+```text
+                                        A before  A after   B before  B after
+valid requests                               100      100        100      100
+default budget
+  normal orientations                        100      100         96       96
+  empty retrievals                             0        0          2        2
+  readiness refusals                           0        0          2        2
+  tool errors                                  0        0          0        0
+  envelope-induced handler failures            0        0          0        0
+pressured budget (max_tokens 150)
+  envelope-induced handler failures            9        0         10        0
+  recovered                                    —        9          —       10
+  fabricated absence                           —        0          —        0
+  max model-facing response tokens             —      150          —      152
+
+known positive  pytest-dev__pytest-10081   max_tokens 50/100/150 handler_failed →
+                                           evidence_found_but_undelivered, 445 chars,
+                                           byte-identical to the same case at a
+                                           budget that already fitted
+```
+
+## M176 standing findings
+
+- **A fail-closed ladder needs a terminal representation, not just a terminal
+  decision.** Refusing to ship `within_envelope:false` was correct. Refusing by
+  throwing turned a predictable product condition into an implementation fault at
+  the transport boundary, where the server's catch-all cannot tell it from a real
+  bug. The transferable rule: when a ladder can run out, decide what the last rung
+  RETURNS before deciding that it stops.
+
+- **The envelope is enforced on a payload the model does not receive.**
+  `tools.ts:9252` bounds the authoritative result; `tools.ts:9282` then projects
+  the compact orientation the agent actually gets. On the known positive the
+  model-facing answer is 445 characters and the call died because the authoritative
+  payload behind it would not fit under a 1,150-token ceiling. Recorded, not acted
+  on: projecting first and bounding the projection would change the default
+  packet's construction order that M172/M173 froze.
+
+- **The floor is the instrument, and it dodges M175's trap.** M175 established
+  that raising the ceiling to observe a response changes what it selects. The
+  smallest `max_tokens` at which a response still terminates does not: at exactly
+  that budget the whole ladder has run and the residue is readable on a specimen
+  that was never given a different budget in order to be read. The offline floor
+  (193 tokens) predicted the live threshold exactly.
+
+- **Ten default model-facing fields grow that floor without limit**, each taking an
+  ordinary response past even the DEFAULT ceiling at ~32,000 characters on its own:
+  `request.repoRoot`, `productContext.leadPivot`, `productContext.freshness.reason`,
+  `productContext.repository.worktreeId`, `workspaceRouting.reason`,
+  `workspaceRouting.perRepository[]`, `intent.reason`, `savedObservation`,
+  `warnings`, `flow.skipReason`. M175's `request.task` is CONSTANT, as designed.
+
+- **Ladder exhaustion did not earn a new agent-facing state.** It changes nothing a
+  coding model can infer or do differently from the graceful case — evidence
+  existed, none could be delivered, same remedy. The distinction a maintainer needs
+  is one internal boolean, `productContext.diagnostics.envelopeDecline`. §42's
+  "do not pool states" is satisfied in the reporting, which is where it matters.
+
+- **Bound by omission, not truncation, wherever a value carries a claim.**
+  `topMatch` is a follow-up tool argument, so a truncated symbol name is an
+  identity that does not resolve; the freshness pair is quoted verbatim into the
+  decline's note, so a truncated reason is a re-worded claim.
+
+- **The ladder was already destroying readiness under pressure.** The
+  `diagnostics.indexFreshness` rung deletes every object-valued key under
+  `diagnostics.freshness`, `readiness` among them, and `readDeclineEvidence`
+  defaults a missing record to READY. The boolean is now captured before the ladder
+  runs. Responses that fit are unaffected.
+
+- **`compacted_fields` is a bounded audit report, not a fact about the response.**
+  Sorted, deduplicated, capped at ten entries — the first draft of the M176 tests
+  used it as a signal that a step had run and six of them failed for that reason.
+  Telemetry and tests must read the state itself.
+
+- **Two raw tallies did not survive attribution, and both were re-measured rather
+  than explained.** 11 of 200 default responses were not byte-identical between the
+  arms; re-run with the checkouts INTERLEAVED, all 11 are byte-identical and both
+  arms self-stable — Broad100-A and B had run concurrently, separating the arms by
+  minutes and load. And §48 monotonicity does NOT hold on
+  this corpus: `django__django-10880` delivers an orientation at 400 and 600, a
+  delivery_failure at 800 and 1,000, and an orientation again at 1,600. Both checkouts loaded into
+  one process over the same snapshot bytes give byte-identical rank ladders apart
+  from the four budgets where `throw` became `decline`. Pre-existing, in the
+  progressive delivery packer, unchanged by M176.
+
+- **A second non-idempotence trap, recorded so it is not walked into again.**
+  `applyProgressiveContextBudget` derives retrieval success from
+  `resolved || items.length > 0` and never consults a `retrievalFound` a previous
+  pass wrote, so replaying compaction over an already-compacted `delivery_failure`
+  response reclassifies it as `no_result` — a fabricated absence. The live product
+  compacts once, so it is not shipped; but M175's 8,000-token `.debug` captures are
+  unusable as specimens for delivery-state analysis, and every M176 specimen is a
+  single-pass authoritative capture at 120,000 tokens.
+
+- **The invariant is established architecturally, satisfied for `run_pipeline`, and
+  has one known outstanding violation.** `get_impact_graph` throws
+  `impact_response_envelope_unreachable` at `impactResponseEnvelope.ts:340` —
+  reproduced deterministically on a real symbol at `max_tokens` 1/50/200/400, with
+  1,200 succeeding. Recorded, NOT repaired: §34 bounds the diff to the measured
+  `run_pipeline` envelope, and repairing an envelope this milestone never measured
+  would ship a change with no control corpus. M176 does not establish the invariant
+  repository-wide.
+
+- **Next-step recommendation: no live work, and no projection work.** Bounded
+  declines are rare on ordinary input — 0 of 200 at the default budget, reachable
+  only under a deliberately pressured budget or an adversarial field — which closes
+  the correctness branch rather than opening a tuning one. Three concretely measured
+  defects remain, in order: `get_impact_graph` envelope totality (same defect class,
+  same repair shape, deterministic reproduction, narrow milestone); non-monotone
+  progressive delivery packing in `budgetDelivery.ts` (a larger budget can deliver
+  less, on 2 of 4 specimens); and `related`-selection instability across runs
+  separated in time or load (11 of 200 under concurrent load, 0 of 11 interleaved,
+  focus never moved, mechanism not investigated). Take only one of these, and only
+  because it is measured.

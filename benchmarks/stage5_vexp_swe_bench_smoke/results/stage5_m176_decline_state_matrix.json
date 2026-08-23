@@ -1,0 +1,112 @@
+{
+  "schemaVersion": "stage5.m176.decline-state-matrix.v1",
+  "milestone": "M176",
+  "workstream": "C",
+  "question": "Which terminal state does a valid request reach, and in what order is that decided?",
+  "authority": {
+    "file": "src/runPipeline/orientationDecline.ts",
+    "function": "decideDecline",
+    "rewritten": false,
+    "why": "M174's ordering is preserved exactly. The bounded terminal record introduced by M176 does not add a branch to this authority; it populates the fields the authority already reads, so ladder exhaustion resolves through the existing order rather than around it."
+  },
+  "vocabulary": {
+    "public": [
+      "run_pipeline.orientation/1 — a focused orientation packet",
+      "repository_not_ready",
+      "no_relevant_evidence",
+      "evidence_found_but_undelivered",
+      "no_focus_selected",
+      "handler_failed — unexpected implementation or runtime fault"
+    ],
+    "added": [],
+    "addedWhy": "Ladder exhaustion changes nothing a coding model can infer or act on differently: in both the graceful and the exhausted case relevant evidence exists, none could be delivered inside the bound, and the remedy is identical. A second public state would be vocabulary the agent cannot use.",
+    "internal": [
+      "productContext.diagnostics.envelopeDecline — true only where the ladder was exhausted"
+    ],
+    "internalWhy": "The distinction a maintainer needs, and telemetry needs, without the public schema growing a state. Absent from the graceful degradation one rung above, so the two are separable in M176-E's reporting rather than pooled."
+  },
+  "precedence": [
+    {
+      "rank": 1,
+      "ready": false,
+      "retrieval": "any",
+      "fitsEnvelope": "any",
+      "terminal": "repository_not_ready",
+      "discloseTopMatch": false,
+      "why": "A claim derived from an index that has not vouched for itself is a claim about a stale snapshot, not about the working tree. Outranks everything.",
+      "m176Note": "The ladder's diagnostics.indexFreshness rung deletes every object-valued key under diagnostics.freshness, readiness included, so under pressure this fact was already gone. The terminal record captures the boolean BEFORE the ladder runs."
+    },
+    {
+      "rank": 2,
+      "ready": true,
+      "retrieval": "empty",
+      "fitsEnvelope": "any",
+      "terminal": "no_relevant_evidence",
+      "discloseTopMatch": false,
+      "why": "Retrieval's own finding is that nothing was relevant. Naming a top match of an empty result set would manufacture a lead out of a non-answer.",
+      "m176Note": "retrievalFound is READ from the record, never assumed, so an empty retrieval under envelope pressure stays an empty retrieval and is never dressed as a delivery loss (§21)."
+    },
+    {
+      "rank": 3,
+      "ready": true,
+      "retrieval": "non-empty",
+      "fitsEnvelope": true,
+      "terminal": "run_pipeline.orientation/1",
+      "discloseTopMatch": "n/a — the focus IS the answer",
+      "why": "The normal path. Unchanged by M176.",
+      "m176Note": "No premature decline: the fallback is reachable only from a FAILED measurement, so a response that fits is byte-identical to what it was before M176 existed (§20, §46)."
+    },
+    {
+      "rank": 4,
+      "ready": true,
+      "retrieval": "non-empty",
+      "fitsEnvelope": false,
+      "ladder": "succeeded",
+      "terminal": "evidence_found_but_undelivered",
+      "discloseTopMatch": true,
+      "why": "degradeOversizedProductResponse emptied productContext and the response then fitted. M174 behaviour, unchanged.",
+      "envelopeDeclineMarker": false
+    },
+    {
+      "rank": 5,
+      "ready": true,
+      "retrieval": "non-empty",
+      "fitsEnvelope": false,
+      "ladder": "exhausted",
+      "terminal": "evidence_found_but_undelivered",
+      "discloseTopMatch": true,
+      "why": "The state M176 makes reachable. Before M176 this threw product_response_envelope_unreachable and arrived as handler_failed with no evidence, no orientation and no decline.",
+      "envelopeDeclineMarker": true
+    },
+    {
+      "rank": 6,
+      "ready": "any",
+      "retrieval": "unexpected internal fault",
+      "fitsEnvelope": "n/a",
+      "terminal": "handler_failed",
+      "discloseTopMatch": false,
+      "why": "Unchanged, and deliberately so. The fallback is reached from a failed MEASUREMENT and never from a caught exception, so a genuine implementation fault still propagates to the server's catch-all (§23, §71)."
+    }
+  ],
+  "boundsOnTheTerminalRecord": {
+    "topMatchReference": { "limit": 256, "overLimit": "omitted", "why": "A truncated symbol name is an identity that does not resolve, and topMatch is a follow-up tool argument." },
+    "freshnessStatus": { "limit": 64, "overLimit": "omitted" },
+    "freshnessReason": { "limit": 256, "overLimit": "omitted", "why": "The pair is quoted verbatim into the decline's note; a truncated reason is a re-worded claim." },
+    "modelVisibleContext": { "limit": 512, "overLimit": "omitted" },
+    "everythingElse": "frozen constants, booleans, and non-negative integers"
+  },
+  "executableTests": {
+    "file": "src/mcp/responseEnvelope.test.ts",
+    "tests": [
+      "M176: an irreducibly oversized response terminates instead of throwing",
+      "M176: the bounded decline fits even the smallest ceiling, whatever is thrown at it",
+      "M176: an over-long top match is omitted rather than truncated",
+      "M176: an empty retrieval under envelope pressure stays an empty retrieval",
+      "M176: an unready index under envelope pressure is still reported as unready",
+      "M176: a response that fits is untouched by the existence of the fallback",
+      "M176: a genuine implementation failure still fails",
+      "M176: a larger envelope never yields a weaker terminal state",
+      "M176: the re-measure path terminates too"
+    ]
+  }
+}

@@ -1,0 +1,153 @@
+{
+  "schemaVersion": "stage5.m176.totality-results.v1",
+  "milestone": "M176",
+  "workstream": "E",
+  "question": "Can every valid, authoritative run_pipeline request return a bounded product-level response even when useful repository evidence cannot be represented inside the envelope?",
+  "corporaMeasured": [
+    "broad100a",
+    "broad100b"
+  ],
+  "corporaMissing": [],
+  "denominators": {
+    "note": "Every count is over the cases with a task and a workspace, per corpus. States are reported separately and never pooled. The two budgets are separate measurements of different questions and their counts are never added together as if they were one run.",
+    "perCorpus": [
+      {
+        "corpus": "broad100a",
+        "validRequests": 100
+      },
+      {
+        "corpus": "broad100b",
+        "validRequests": 100
+      }
+    ]
+  },
+  "rows": [
+    {
+      "corpus": "broad100a",
+      "validRequests": 100,
+      "defaultBudget": {
+        "normalOrientations": 100,
+        "emptyRetrievals": 0,
+        "boundedDeliveryDeclines": 0,
+        "noFocusSelected": 0,
+        "readinessRefusals": 0,
+        "invalidRequests": 0,
+        "toolErrors": 0,
+        "envelopeInducedHandlerFailures": 0,
+        "envelopeInducedHandlerFailuresBefore": 0,
+        "byteIdenticalBeforeAfter": 94,
+        "maxModelFacingBilledTokens": 1015
+      },
+      "pressuredBudget": {
+        "maxTokens": 150,
+        "envelopeInducedHandlerFailuresBefore": 9,
+        "envelopeInducedHandlerFailuresAfter": 0,
+        "recovered": 9,
+        "fabricatedAbsence": 0,
+        "normalOrientations": 0,
+        "boundedDeliveryDeclines": 100,
+        "emptyRetrievals": 0,
+        "toolErrors": 0,
+        "maxModelFacingBilledTokens": 150
+      }
+    },
+    {
+      "corpus": "broad100b",
+      "validRequests": 100,
+      "defaultBudget": {
+        "normalOrientations": 96,
+        "emptyRetrievals": 2,
+        "boundedDeliveryDeclines": 0,
+        "noFocusSelected": 0,
+        "readinessRefusals": 2,
+        "invalidRequests": 0,
+        "toolErrors": 0,
+        "envelopeInducedHandlerFailures": 0,
+        "envelopeInducedHandlerFailuresBefore": 0,
+        "byteIdenticalBeforeAfter": 95,
+        "maxModelFacingBilledTokens": 964
+      },
+      "pressuredBudget": {
+        "maxTokens": 150,
+        "envelopeInducedHandlerFailuresBefore": 10,
+        "envelopeInducedHandlerFailuresAfter": 0,
+        "recovered": 10,
+        "fabricatedAbsence": 0,
+        "normalOrientations": 0,
+        "boundedDeliveryDeclines": 96,
+        "emptyRetrievals": 2,
+        "toolErrors": 0,
+        "maxModelFacingBilledTokens": 152
+      }
+    }
+  ],
+  "aggregate": {
+    "validRequests": 200,
+    "envelopeInducedHandlerFailuresBefore": 19,
+    "envelopeInducedHandlerFailuresAfter": 0,
+    "defaultBudgetByteIdentical": 189,
+    "fabricatedAbsence": 0
+  },
+  "gates": {
+    "E1 ordinary valid requests ending in handler_failed from envelope pressure": {
+      "target": 0,
+      "observed": 0,
+      "pass": true
+    },
+    "E2 known pathological cases degrade truthfully": {
+      "target": "0 fabricated absence",
+      "observed": 0,
+      "pass": true
+    },
+    "E3 no identity miss is attributable to the repair": {
+      "target": "NO_IDENTITY_MISS_ATTRIBUTABLE_TO_THE_REPAIR",
+      "observed": "NO_IDENTITY_MISS_ATTRIBUTABLE_TO_THE_REPAIR",
+      "pass": true,
+      "rawTally": "189/200 byte-identical in the paired corpus run",
+      "why": "The paired arms were separated by minutes and by a different machine load, because Broad100-A and Broad100-B ran concurrently. Re-measured with the checkouts INTERLEAVED, every miss is byte-identical in both arms and each arm is self-stable across repeats. The raw tally is reported rather than hidden, and it is not the gate."
+    },
+    "E4 controls pass": {
+      "target": "CONTROLS_PASS",
+      "observed": "CONTROLS_PASS",
+      "pass": true
+    },
+    "E5 no monotonicity violation is attributable to the repair": {
+      "target": "MONOTONICITY_VIOLATIONS_PRE_EXISTING_AND_UNCHANGED",
+      "observed": "MONOTONICITY_VIOLATIONS_PRE_EXISTING_AND_UNCHANGED",
+      "pass": true,
+      "rawSweep": "monotonic across all specimens: false",
+      "why": "§48 does NOT hold on this corpus, and M176 does not make it hold. The violation is in the progressive delivery packer — django__django-10880 delivers an orientation at 400 and 600, a delivery_failure at 800 and 1,000, and an orientation again at 1,600 — and is byte-for-byte identical in both checkouts. It is reported as a measured pre-existing defect, not as a passing gate."
+    },
+    "E6 known positive reproduced before and recovered after": {
+      "target": ">0 before, 0 after",
+      "observed": "3 before, 0 after",
+      "pass": true
+    }
+  },
+  "openDefectsMeasuredNotRepaired": [
+    {
+      "defect": "§48 monotonicity: a larger envelope can deliver a weaker terminal state",
+      "where": "src/productContext/budgetDelivery.ts — progressive delivery packing",
+      "evidence": "stage5_m176_monotonicity_attribution.json",
+      "prevalence": "2 of 4 authoritative specimens show at least one non-monotone budget",
+      "attribution": "pre-existing; byte-for-byte identical in both checkouts"
+    },
+    {
+      "defect": "run_pipeline related-item selection is not stable across runs separated in time or load",
+      "where": "observed, mechanism not established",
+      "evidence": "stage5_m176_identity_attribution.json — 11 of 200 default responses differed when the arms were separated by minutes under concurrent load, and all 11 are byte-identical when interleaved. Focus was identical in every case; only `related` grew.",
+      "prevalence": "11 of 200 under concurrent load, 0 of 11 when interleaved",
+      "attribution": "not attributable to the repair; mechanism not investigated"
+    },
+    {
+      "defect": "impact_response_envelope_unreachable — the same defect class in get_impact_graph",
+      "where": "src/impact/impactResponseEnvelope.ts:340",
+      "evidence": "stage5_m176_sibling_defect.json",
+      "prevalence": "max_tokens 1/50/200/400 all fail on a real symbol; 1,200 succeeds",
+      "attribution": "pre-existing; deliberately out of scope (§34)"
+    }
+  ],
+  "liveWork": "NOT RUN",
+  "liveSpendUsd": 0,
+  "utilityClaim": "NONE. No agents were run. M176 makes no claim about solve rate, agent utility or cost, and none is derivable from these measurements."
+}

@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "stage5.m176.readiness-controls.v1",
+  "milestone": "M176",
+  "workstream": "B",
+  "controls": [
+    {
+      "name": "readiness_survives_pressure",
+      "why": "Readiness outranks every other decline state and must not be lost to the ladder (§22).",
+      "expected": "ready=false preserved",
+      "observed": "ready=false preserved",
+      "agrees": true
+    }
+  ],
+  "finding": "The ladder's `diagnostics.indexFreshness` rung deletes every object-valued key under `diagnostics.freshness`, and `readiness` is one — so under budget pressure the readiness record was already gone before any decline could read it, and `readDeclineEvidence` defaults a missing record to ready. The terminal record therefore captures the single boolean it needs BEFORE the ladder runs. Responses that fit are unaffected."
+}

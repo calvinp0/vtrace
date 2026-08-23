@@ -1,0 +1,55 @@
+{
+  "schemaVersion": "stage5.m176.sibling-defect.v1",
+  "milestone": "M176",
+  "workstream": "A/F",
+  "status": "CONFIRMED_UNREPAIRED",
+  "tool": "get_impact_graph",
+  "source": {
+    "file": "src/impact/impactResponseEnvelope.ts",
+    "line": 340,
+    "message": "impact_response_envelope_unreachable"
+  },
+  "sourceEvidence": "compactImpactProductResponse runs its own degradation ladder — proven-relation projections, then unproven call sites worst-confidence-first, then a structured bounded_degradation, then canonical edges one at a time — and ends by throwing when the rebuilt budget still exceeds either the token ceiling or IMPACT_HARD_SERIALIZED_CHARACTER_CEILING. Structurally the same defect as responseEnvelope.ts:420: a deliberate fail-closed ladder with no bounded terminal representation for the state it closes on.",
+  "reproduction": {
+    "transport": "real MCP stdio, this checkout",
+    "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m160_broad_b/pytest-dev__pytest-10081",
+    "symbolFqn": "src/_pytest/debugging.py::_enter_pdb",
+    "ladder": [
+      {
+        "maxTokens": 1,
+        "ok": false,
+        "errorCode": "handler_failed",
+        "errorDetail": "impact_response_envelope_unreachable"
+      },
+      {
+        "maxTokens": 50,
+        "ok": false,
+        "errorCode": "handler_failed",
+        "errorDetail": "impact_response_envelope_unreachable"
+      },
+      {
+        "maxTokens": 200,
+        "ok": false,
+        "errorCode": "handler_failed",
+        "errorDetail": "impact_response_envelope_unreachable"
+      },
+      {
+        "maxTokens": 400,
+        "ok": false,
+        "errorCode": "handler_failed",
+        "errorDetail": "impact_response_envelope_unreachable"
+      },
+      {
+        "maxTokens": 1200,
+        "ok": true,
+        "errorCode": null,
+        "errorDetail": null
+      }
+    ],
+    "thresholdBetween": [
+      400,
+      1200
+    ]
+  },
+  "scope": "Recorded, not repaired. §34 bounds the product diff to the already-measured run_pipeline envelope. §4's invariant is architectural and general; after M176 it is SATISFIED for the repaired run_pipeline path and has one known outstanding violation here."
+}

@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "stage5.m176.debug-behavior.v1",
+  "milestone": "M176",
+  "workstream": "D",
+  "question": "Is detail=debug inside or outside the totality guarantee?",
+  "answer": "Inside. Debug is a public tool mode and routes through the same envelope, so it reaches the same terminal record. It remains richer where it fits; it no longer crashes where it does not. §16's warning still stands: debug is not an oracle for the default path, and this is a claim about debug only.",
+  "before": {
+    "ok": false,
+    "errorCode": "handler_failed",
+    "errorDetail": "product_response_envelope_unreachable",
+    "characters": 4
+  },
+  "after": {
+    "ok": true,
+    "errorCode": null,
+    "errorDetail": null,
+    "characters": 2040,
+    "declined": true
+  }
+}

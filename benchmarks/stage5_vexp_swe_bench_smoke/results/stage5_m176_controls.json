@@ -1,0 +1,237 @@
+{
+  "schemaVersion": "stage5.m176.controls.v1",
+  "milestone": "M176",
+  "workstream": "B/D",
+  "verdict": "CONTROLS_PASS",
+  "controls": [
+    {
+      "name": "known_positive_crashes_before",
+      "why": "The control is only evidence if the unrepaired product genuinely fails on it (§18).",
+      "expected": "at least one crash",
+      "observed": "3 crashes",
+      "agrees": true,
+      "detail": {
+        "crashingBudgets": [
+          50,
+          100,
+          150
+        ]
+      }
+    },
+    {
+      "name": "known_positive_recovers_after",
+      "why": "Every budget must terminate in a bounded product response (§44).",
+      "expected": "0 errors",
+      "observed": "0 errors",
+      "agrees": true
+    },
+    {
+      "name": "normal_response_identity",
+      "why": "The safety net must be invisible when it is not needed (§20, §43).",
+      "expected": "5 identical",
+      "observed": "5 identical",
+      "agrees": true,
+      "detail": {
+        "changed": []
+      }
+    },
+    {
+      "name": "recovered_state_is_not_absence",
+      "why": "The model must not infer 'no relevant matches' where evidence exists (§25).",
+      "expected": "evidence_found_but_undelivered",
+      "observed": "evidence_found_but_undelivered",
+      "agrees": true,
+      "detail": {
+        "payload": {
+          "schemaVersion": "run_pipeline.orientation.none/1",
+          "state": "evidence_found_but_undelivered",
+          "summary": "Relevant evidence was found, but none of it survived the response budget.",
+          "boundary": "No focused orientation was selected from the current authoritative repository evidence. This is not an assertion that relevant code does not exist.",
+          "nextStep": "Increase max_tokens or narrow the request.",
+          "topMatch": "src/_pytest/debugging.py::_enter_pdb"
+        }
+      }
+    },
+    {
+      "name": "protocol_both_representations",
+      "why": "content[0].text and structuredContent must agree; neither full nor empty (§39).",
+      "expected": "text == serialized output",
+      "observed": "445 vs 445",
+      "agrees": true,
+      "detail": {
+        "isError": false,
+        "structuredCharacters": 596
+      }
+    },
+    {
+      "name": "debug_terminates",
+      "why": "detail=debug is public. It may stay richer, but it must not crash (§40).",
+      "expected": "ok",
+      "observed": "ok",
+      "agrees": true,
+      "detail": {
+        "beforeOk": false,
+        "beforeError": "product_response_envelope_unreachable",
+        "afterCharacters": 2040,
+        "afterDeclined": true
+      }
+    },
+    {
+      "name": "retrieval_empty_stays_empty",
+      "why": "The new state applies only where evidence exists and cannot be disclosed (§21).",
+      "expected": "no_result",
+      "observed": "no_result",
+      "agrees": true
+    },
+    {
+      "name": "readiness_survives_pressure",
+      "why": "Readiness outranks every other decline state and must not be lost to the ladder (§22).",
+      "expected": "ready=false preserved",
+      "observed": "ready=false preserved",
+      "agrees": true
+    },
+    {
+      "name": "unexpected_error_still_errors",
+      "why": "The fallback classifies ONE predictable condition; it must not hide bugs (§23, §71).",
+      "expected": "synthetic_internal_failure",
+      "observed": "synthetic_internal_failure",
+      "agrees": true
+    },
+    {
+      "name": "over_long_top_match_omitted",
+      "why": "A truncated symbol name is an identity that does not resolve (§30).",
+      "expected": "omitted",
+      "observed": "omitted",
+      "agrees": true
+    },
+    {
+      "name": "decline_is_bounded",
+      "why": "The terminal record must be small and deterministic whatever produced it (§27).",
+      "expected": "<= 200 model-facing billed tokens",
+      "observed": "139 model-facing billed tokens",
+      "agrees": true,
+      "detail": {
+        "sizes": [
+          {
+            "requestedContextTokens": 0,
+            "internalCharacters": 1694,
+            "internalBilledTokens": 538,
+            "characters": 437,
+            "billedTokens": 139,
+            "declined": true
+          },
+          {
+            "requestedContextTokens": 8000,
+            "internalCharacters": 2242,
+            "internalBilledTokens": 712,
+            "characters": 437,
+            "billedTokens": 139,
+            "declined": true
+          },
+          {
+            "requestedContextTokens": 120000,
+            "internalCharacters": 203295,
+            "internalBilledTokens": 64526,
+            "characters": 1399,
+            "billedTokens": 444,
+            "declined": false
+          }
+        ],
+        "decliningBudgets": [
+          0,
+          8000
+        ],
+        "internalRecordBilledTokens": [
+          538,
+          712
+        ],
+        "internalRecordNote": "The authoritative bounded record, model-facing only at detail=debug. Bounded by construction but larger than the projection, most of it responseBudget's own audit lists."
+      }
+    },
+    {
+      "name": "no_premature_decline",
+      "why": "A budget large enough to carry the response must still carry it (§46).",
+      "expected": "delivered at the largest budget",
+      "observed": "delivered",
+      "agrees": true
+    },
+    {
+      "name": "envelope_monotonicity",
+      "why": "A larger envelope must never produce a strictly weaker terminal state (§48).",
+      "expected": "non-decreasing",
+      "observed": "1≤1≤1≤1≤2",
+      "agrees": true,
+      "detail": {
+        "ladder": [
+          {
+            "maxTokens": 100,
+            "rank": 1,
+            "state": "evidence_found_but_undelivered"
+          },
+          {
+            "maxTokens": 400,
+            "rank": 1,
+            "state": "evidence_found_but_undelivered"
+          },
+          {
+            "maxTokens": 2000,
+            "rank": 1,
+            "state": "evidence_found_but_undelivered"
+          },
+          {
+            "maxTokens": 8000,
+            "rank": 1,
+            "state": "evidence_found_but_undelivered"
+          },
+          {
+            "maxTokens": 32000,
+            "rank": 2,
+            "state": "run_pipeline.orientation/1"
+          }
+        ]
+      }
+    },
+    {
+      "name": "sibling_defect_reproduced",
+      "why": "The same defect class in get_impact_graph, established by reproduction so the next milestone can be scoped from a measured defect rather than an analogy.",
+      "expected": "reproduces",
+      "observed": "4/5 budgets crash",
+      "agrees": true,
+      "detail": {
+        "ladder": [
+          {
+            "maxTokens": 1,
+            "ok": false,
+            "errorCode": "handler_failed",
+            "errorDetail": "impact_response_envelope_unreachable"
+          },
+          {
+            "maxTokens": 50,
+            "ok": false,
+            "errorCode": "handler_failed",
+            "errorDetail": "impact_response_envelope_unreachable"
+          },
+          {
+            "maxTokens": 200,
+            "ok": false,
+            "errorCode": "handler_failed",
+            "errorDetail": "impact_response_envelope_unreachable"
+          },
+          {
+            "maxTokens": 400,
+            "ok": false,
+            "errorCode": "handler_failed",
+            "errorDetail": "impact_response_envelope_unreachable"
+          },
+          {
+            "maxTokens": 1200,
+            "ok": true,
+            "errorCode": null,
+            "errorDetail": null
+          }
+        ]
+      }
+    }
+  ],
+  "failures": []
+}

@@ -1,0 +1,123 @@
+{
+  "schemaVersion": "stage5.m176.truthfulness-controls.v1",
+  "milestone": "M176",
+  "workstream": "B/C",
+  "question": "Does the bounded decline say only true things, and refuse to say false ones?",
+  "controls": [
+    {
+      "name": "recovered_state_is_not_absence",
+      "why": "The model must not infer 'no relevant matches' where evidence exists (§25).",
+      "expected": "evidence_found_but_undelivered",
+      "observed": "evidence_found_but_undelivered",
+      "agrees": true,
+      "detail": {
+        "payload": {
+          "schemaVersion": "run_pipeline.orientation.none/1",
+          "state": "evidence_found_but_undelivered",
+          "summary": "Relevant evidence was found, but none of it survived the response budget.",
+          "boundary": "No focused orientation was selected from the current authoritative repository evidence. This is not an assertion that relevant code does not exist.",
+          "nextStep": "Increase max_tokens or narrow the request.",
+          "topMatch": "src/_pytest/debugging.py::_enter_pdb"
+        }
+      }
+    },
+    {
+      "name": "retrieval_empty_stays_empty",
+      "why": "The new state applies only where evidence exists and cannot be disclosed (§21).",
+      "expected": "no_result",
+      "observed": "no_result",
+      "agrees": true
+    },
+    {
+      "name": "readiness_survives_pressure",
+      "why": "Readiness outranks every other decline state and must not be lost to the ladder (§22).",
+      "expected": "ready=false preserved",
+      "observed": "ready=false preserved",
+      "agrees": true
+    },
+    {
+      "name": "unexpected_error_still_errors",
+      "why": "The fallback classifies ONE predictable condition; it must not hide bugs (§23, §71).",
+      "expected": "synthetic_internal_failure",
+      "observed": "synthetic_internal_failure",
+      "agrees": true
+    },
+    {
+      "name": "over_long_top_match_omitted",
+      "why": "A truncated symbol name is an identity that does not resolve (§30).",
+      "expected": "omitted",
+      "observed": "omitted",
+      "agrees": true
+    },
+    {
+      "name": "decline_is_bounded",
+      "why": "The terminal record must be small and deterministic whatever produced it (§27).",
+      "expected": "<= 200 model-facing billed tokens",
+      "observed": "139 model-facing billed tokens",
+      "agrees": true,
+      "detail": {
+        "sizes": [
+          {
+            "requestedContextTokens": 0,
+            "internalCharacters": 1694,
+            "internalBilledTokens": 538,
+            "characters": 437,
+            "billedTokens": 139,
+            "declined": true
+          },
+          {
+            "requestedContextTokens": 8000,
+            "internalCharacters": 2242,
+            "internalBilledTokens": 712,
+            "characters": 437,
+            "billedTokens": 139,
+            "declined": true
+          },
+          {
+            "requestedContextTokens": 120000,
+            "internalCharacters": 203295,
+            "internalBilledTokens": 64526,
+            "characters": 1399,
+            "billedTokens": 444,
+            "declined": false
+          }
+        ],
+        "decliningBudgets": [
+          0,
+          8000
+        ],
+        "internalRecordBilledTokens": [
+          538,
+          712
+        ],
+        "internalRecordNote": "The authoritative bounded record, model-facing only at detail=debug. Bounded by construction but larger than the projection, most of it responseBudget's own audit lists."
+      }
+    }
+  ],
+  "declineSizes": [
+    {
+      "requestedContextTokens": 0,
+      "internalCharacters": 1694,
+      "internalBilledTokens": 538,
+      "characters": 437,
+      "billedTokens": 139,
+      "declined": true
+    },
+    {
+      "requestedContextTokens": 8000,
+      "internalCharacters": 2242,
+      "internalBilledTokens": 712,
+      "characters": 437,
+      "billedTokens": 139,
+      "declined": true
+    },
+    {
+      "requestedContextTokens": 120000,
+      "internalCharacters": 203295,
+      "internalBilledTokens": 64526,
+      "characters": 1399,
+      "billedTokens": 444,
+      "declined": false
+    }
+  ]
+}

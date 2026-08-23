@@ -1,0 +1,3565 @@
+{
+  "schemaVersion": "stage5.m176.corpus.v1",
+  "milestone": "M176",
+  "workstream": "E",
+  "corpus": "broad100a",
+  "question": "Does every valid request terminate in a bounded product response, and are responses that already worked unchanged?",
+  "method": "Two checkouts, one corpus, one index, real MCP stdio transport. Retrieval and ranking are the same code reading the same database in both arms.",
+  "preRepairRoot": "/home/calvin/bench/vtrace-m176/pre-repair",
+  "pressuredMaxTokens": 150,
+  "pressuredMaxTokensWhy": "M176-A measured the tightest real specimen's envelope floor at 193 estimator tokens and the live threshold sits exactly there. 150 is the smallest valid budget known to reach the condition on real corpus data.",
+  "validRequests": 100,
+  "denominators": {
+    "note": "Every count below is over the same denominator: the cases with a task and a workspace. States are reported separately and never pooled.",
+    "cases": 100,
+    "manifestCases": 100
+  },
+  "defaultBudget": {
+    "before": {
+      "orientation": 100,
+      "decline_no_relevant_evidence": 0,
+      "decline_evidence_found_but_undelivered": 0,
+      "decline_repository_not_ready": 0,
+      "decline_no_focus_selected": 0,
+      "authoritative": 0,
+      "refused_repo_not_ready": 0,
+      "refused_invalid_request": 0,
+      "refused_handler_failed_envelope": 0,
+      "refused_handler_failed_other": 0,
+      "refused_other": 0
+    },
+    "after": {
+      "orientation": 100,
+      "decline_no_relevant_evidence": 0,
+      "decline_evidence_found_but_undelivered": 0,
+      "decline_repository_not_ready": 0,
+      "decline_no_focus_selected": 0,
+      "authoritative": 0,
+      "refused_repo_not_ready": 0,
+      "refused_invalid_request": 0,
+      "refused_handler_failed_envelope": 0,
+      "refused_handler_failed_other": 0,
+      "refused_other": 0
+    },
+    "identical": 94,
+    "changed": [
+      {
+        "instanceId": "django__django-11728",
+        "before": {
+          "kind": "orientation",
+          "characters": 2841
+        },
+        "after": {
+          "kind": "orientation",
+          "characters": 2942
+        }
+      },
+      {
+        "instanceId": "django__django-13112",
+        "before": {
+          "kind": "orientation",
+          "characters": 1277
+        },
+        "after": {
+          "kind": "orientation",
+          "characters": 2014
+        }
+      },
+      {
+        "instanceId": "django__django-13810",
+        "before": {
+          "kind": "orientation",
+          "characters": 2204
+        },
+        "after": {
+          "kind": "orientation",
+          "characters": 2681
+        }
+      },
+      {
+        "instanceId": "django__django-13820",
+        "before": {
+          "kind": "orientation",
+          "characters": 1795
+        },
+        "after": {
+          "kind": "orientation",
+          "characters": 1955
+        }
+      },
+      {
+        "instanceId": "django__django-16256",
+        "before": {
+          "kind": "orientation",
+          "characters": 2775
+        },
+        "after": {
+          "kind": "orientation",
+          "characters": 3197
+        }
+      },
+      {
+        "instanceId": "django__django-16569",
+        "before": {
+          "kind": "orientation",
+          "characters": 2800
+        },
+        "after": {
+          "kind": "orientation",
+          "characters": 2934
+        }
+      }
+    ],
+    "envelopeInducedHandlerFailures": 0
+  },
+  "pressuredBudget": {
+    "before": {
+      "orientation": 0,
+      "decline_no_relevant_evidence": 0,
+      "decline_evidence_found_but_undelivered": 91,
+      "decline_repository_not_ready": 0,
+      "decline_no_focus_selected": 0,
+      "authoritative": 0,
+      "refused_repo_not_ready": 0,
+      "refused_invalid_request": 0,
+      "refused_handler_failed_envelope": 9,
+      "refused_handler_failed_other": 0,
+      "refused_other": 0
+    },
+    "after": {
+      "orientation": 0,
+      "decline_no_relevant_evidence": 0,
+      "decline_evidence_found_but_undelivered": 100,
+      "decline_repository_not_ready": 0,
+      "decline_no_focus_selected": 0,
+      "authoritative": 0,
+      "refused_repo_not_ready": 0,
+      "refused_invalid_request": 0,
+      "refused_handler_failed_envelope": 0,
+      "refused_handler_failed_other": 0,
+      "refused_other": 0
+    },
+    "envelopeInducedHandlerFailuresBefore": 9,
+    "envelopeInducedHandlerFailuresAfter": 0,
+    "recovered": 9,
+    "recoveredInstances": [
+      "astropy__astropy-14365",
+      "django__django-11206",
+      "django__django-12858",
+      "django__django-13512",
+      "django__django-15572",
+      "django__django-16569",
+      "pallets__flask-5014",
+      "sympy__sympy-19637",
+      "sympy__sympy-23413"
+    ],
+    "stillFailing": [],
+    "fabricatedAbsence": [],
+    "maxModelFacingBilledTokens": 150
+  },
+  "maxModelFacingBilledTokensDefaultAfter": 1015,
+  "goldScored": false,
+  "goldScoredWhy": "Retrieval is unchanged by construction; there is no retrieval claim in M176 and none is derivable from it.",
+  "rows": [
+    {
+      "instanceId": "astropy__astropy-14365",
+      "taskCharacters": 1339,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 496
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 496
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "refused",
+        "declineState": null,
+        "ok": false,
+        "errorDetail": "product_response_envelope_unreachable",
+        "billedTokens": 1
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 143
+      },
+      "pressuredRecovered": true
+    },
+    {
+      "instanceId": "astropy__astropy-14369",
+      "taskCharacters": 2597,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 553
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 553
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 147
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 147
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "astropy__astropy-14539",
+      "taskCharacters": 1463,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 578
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 578
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 143
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 143
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "astropy__astropy-14598",
+      "taskCharacters": 2651,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 768
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 768
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 141
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 141
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "astropy__astropy-7166",
+      "taskCharacters": 162,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 657
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 657
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 150
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 150
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "django__django-10880",
+      "taskCharacters": 278,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 599
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 599
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 138
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 138
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "django__django-10973",
+      "taskCharacters": 357,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 488
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 488
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 145
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 145
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "django__django-11095",
+      "taskCharacters": 381,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 597
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 597
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 144
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 144
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "django__django-11133",
+      "taskCharacters": 895,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 683
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 683
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 141
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 141
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "django__django-11206",
+      "taskCharacters": 698,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 317
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 317
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "refused",
+        "declineState": null,
+        "ok": false,
+        "errorDetail": "product_response_envelope_unreachable",
+        "billedTokens": 1
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 139
+      },
+      "pressuredRecovered": true
+    },
+    {
+      "instanceId": "django__django-11490",
+      "taskCharacters": 457,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 543
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 543
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 143
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 143
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "django__django-11728",
+      "taskCharacters": 499,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 902
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 934
+      },
+      "defaultIdentical": false,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 145
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 145
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "django__django-11740",
+      "taskCharacters": 1973,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 450
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 450
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 146
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 146
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "django__django-11749",
+      "taskCharacters": 1249,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 547
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 547
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 141
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 141
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "django__django-11815",
+      "taskCharacters": 1601,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 559
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 559
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 140
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 140
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "django__django-11820",
+      "taskCharacters": 343,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 696
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 696
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 143
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 143
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "django__django-12050",
+      "taskCharacters": 347,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 888
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 888
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 144
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 144
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "django__django-12273",
+      "taskCharacters": 926,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 607
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 607
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 140
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 140
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "django__django-12276",
+      "taskCharacters": 604,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 485
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 485
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 143
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 143
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "django__django-12325",
+      "taskCharacters": 900,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 557
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 557
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 139
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 139
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "django__django-12774",
+      "taskCharacters": 1094,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 866
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 866
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 138
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 138
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "django__django-12858",
+      "taskCharacters": 794,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 501
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 501
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "refused",
+        "declineState": null,
+        "ok": false,
+        "errorDetail": "product_response_envelope_unreachable",
+        "billedTokens": 1
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 141
+      },
+      "pressuredRecovered": true
+    },
+    {
+      "instanceId": "django__django-13012",
+      "taskCharacters": 1414,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 893
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 893
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 143
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 143
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "django__django-13112",
+      "taskCharacters": 1944,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 405
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 639
+      },
+      "defaultIdentical": false,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 142
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 142
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "django__django-13195",
+      "taskCharacters": 2402,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 608
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 608
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 140
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 140
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "django__django-13363",
+      "taskCharacters": 1676,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 640
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 640
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 143
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 143
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "django__django-13512",
+      "taskCharacters": 462,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 500
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 500
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "refused",
+        "declineState": null,
+        "ok": false,
+        "errorDetail": "product_response_envelope_unreachable",
+        "billedTokens": 1
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 137
+      },
+      "pressuredRecovered": true
+    },
+    {
+      "instanceId": "django__django-13513",
+      "taskCharacters": 1158,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 895
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 895
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 141
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 141
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "django__django-13551",
+      "taskCharacters": 603,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 840
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 840
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 143
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 143
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "django__django-13590",
+      "taskCharacters": 859,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 635
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 635
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 140
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 140
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "django__django-13658",
+      "taskCharacters": 1237,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 546
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 546
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 142
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 142
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "django__django-13810",
+      "taskCharacters": 2259,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 700
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 851
+      },
+      "defaultIdentical": false,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 143
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 143
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "django__django-13820",
+      "taskCharacters": 2102,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 570
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 621
+      },
+      "defaultIdentical": false,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 138
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 138
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "django__django-14608",
+      "taskCharacters": 605,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 538
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 538
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 141
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 141
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "django__django-14792",
+      "taskCharacters": 1514,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 823
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 823
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 148
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 148
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "django__django-15037",
+      "taskCharacters": 502,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 721
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 721
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 142
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 142
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "django__django-15503",
+      "taskCharacters": 1797,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 700
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 700
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 143
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 143
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "django__django-15572",
+      "taskCharacters": 1388,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 461
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 461
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "refused",
+        "declineState": null,
+        "ok": false,
+        "errorDetail": "product_response_envelope_unreachable",
+        "billedTokens": 1
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 143
+      },
+      "pressuredRecovered": true
+    },
+    {
+      "instanceId": "django__django-15695",
+      "taskCharacters": 1259,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 629
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 629
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 147
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 147
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "django__django-15731",
+      "taskCharacters": 1179,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 830
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 830
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 143
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 143
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "django__django-16256",
+      "taskCharacters": 2110,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 881
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 1015
+      },
+      "defaultIdentical": false,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 149
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 149
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "django__django-16263",
+      "taskCharacters": 656,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 579
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 579
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 139
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 139
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "django__django-16333",
+      "taskCharacters": 557,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 567
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 567
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 138
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 138
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "django__django-16569",
+      "taskCharacters": 1740,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 889
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 931
+      },
+      "defaultIdentical": false,
+      "pressuredBefore": {
+        "kind": "refused",
+        "declineState": null,
+        "ok": false,
+        "errorDetail": "product_response_envelope_unreachable",
+        "billedTokens": 1
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 138
+      },
+      "pressuredRecovered": true
+    },
+    {
+      "instanceId": "django__django-16667",
+      "taskCharacters": 1758,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 559
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 559
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 141
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 141
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "django__django-16819",
+      "taskCharacters": 146,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 940
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 940
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 145
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 145
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "django__django-16877",
+      "taskCharacters": 435,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 430
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 430
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 143
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 143
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "django__django-16938",
+      "taskCharacters": 4015,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 359
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 359
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 144
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 144
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "django__django-17084",
+      "taskCharacters": 648,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 443
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 443
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 139
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 139
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-22719",
+      "taskCharacters": 10176,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 411
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 411
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 142
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 142
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-24627",
+      "taskCharacters": 395,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 928
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 928
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 140
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 140
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-24870",
+      "taskCharacters": 1150,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 538
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 538
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 140
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 140
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-24970",
+      "taskCharacters": 1758,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 649
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 649
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 141
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 141
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-25332",
+      "taskCharacters": 1004,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 662
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 662
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 140
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 140
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-25960",
+      "taskCharacters": 788,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 549
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 549
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 141
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 141
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-26466",
+      "taskCharacters": 1412,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 728
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 728
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 142
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 142
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "mwaskom__seaborn-3187",
+      "taskCharacters": 1438,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 468
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 468
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 140
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 140
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "pallets__flask-5014",
+      "taskCharacters": 195,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 626
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 626
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "refused",
+        "declineState": null,
+        "ok": false,
+        "errorDetail": "product_response_envelope_unreachable",
+        "billedTokens": 1
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 137
+      },
+      "pressuredRecovered": true
+    },
+    {
+      "instanceId": "psf__requests-1142",
+      "taskCharacters": 381,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 557
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 557
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 143
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 143
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "psf__requests-1724",
+      "taskCharacters": 7476,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 641
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 641
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 139
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 139
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "psf__requests-1921",
+      "taskCharacters": 708,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 847
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 847
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 139
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 139
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "psf__requests-5414",
+      "taskCharacters": 1428,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 441
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 441
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 140
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 140
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "pydata__xarray-2905",
+      "taskCharacters": 2135,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 509
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 509
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 143
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 143
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "pydata__xarray-3677",
+      "taskCharacters": 1456,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 723
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 723
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 143
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 143
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "pydata__xarray-4695",
+      "taskCharacters": 3514,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 744
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 744
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 141
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 141
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "pydata__xarray-6599",
+      "taskCharacters": 4310,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 603
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 603
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 143
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 143
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "pydata__xarray-6938",
+      "taskCharacters": 2978,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 350
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 350
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 140
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 140
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "pydata__xarray-6992",
+      "taskCharacters": 1562,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 788
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 788
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 140
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 140
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "pylint-dev__pylint-4551",
+      "taskCharacters": 777,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 587
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 587
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 141
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 141
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "pylint-dev__pylint-8898",
+      "taskCharacters": 3455,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 371
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 371
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 145
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 145
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "pytest-dev__pytest-10051",
+      "taskCharacters": 1371,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 499
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 499
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 139
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 139
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "pytest-dev__pytest-5262",
+      "taskCharacters": 4789,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 357
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 357
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 143
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 143
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "pytest-dev__pytest-6197",
+      "taskCharacters": 2749,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 827
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 827
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 144
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 144
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "pytest-dev__pytest-7432",
+      "taskCharacters": 773,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 588
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 588
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 143
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 143
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "scikit-learn__scikit-learn-10844",
+      "taskCharacters": 2399,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 506
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 506
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 149
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 149
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "scikit-learn__scikit-learn-11578",
+      "taskCharacters": 7387,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 436
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 436
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 145
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 145
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-7462",
+      "taskCharacters": 1169,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 420
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 420
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 143
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 143
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-7748",
+      "taskCharacters": 381,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 761
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 761
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 143
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 143
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-7910",
+      "taskCharacters": 1139,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 737
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 737
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 141
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 141
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-9230",
+      "taskCharacters": 1237,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 683
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 683
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 144
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 144
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-9320",
+      "taskCharacters": 1117,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 644
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 644
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 141
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 141
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-9698",
+      "taskCharacters": 817,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 709
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 709
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 142
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 142
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-9711",
+      "taskCharacters": 1571,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 708
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 708
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 144
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 144
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "sympy__sympy-12419",
+      "taskCharacters": 1141,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 607
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 607
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 139
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 139
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "sympy__sympy-12481",
+      "taskCharacters": 407,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 607
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 607
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 145
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 145
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "sympy__sympy-13372",
+      "taskCharacters": 1183,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 472
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 472
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 138
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 138
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "sympy__sympy-13480",
+      "taskCharacters": 430,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 760
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 760
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 144
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 144
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "sympy__sympy-13974",
+      "taskCharacters": 1044,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 589
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 589
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 149
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 149
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "sympy__sympy-15599",
+      "taskCharacters": 1828,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 425
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 425
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 142
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 142
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "sympy__sympy-15875",
+      "taskCharacters": 563,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 519
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 519
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 141
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 141
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "sympy__sympy-16597",
+      "taskCharacters": 611,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 669
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 669
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 144
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 144
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "sympy__sympy-16766",
+      "taskCharacters": 599,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 769
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 769
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 143
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 143
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "sympy__sympy-16792",
+      "taskCharacters": 1930,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 852
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 852
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 143
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 143
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "sympy__sympy-18189",
+      "taskCharacters": 678,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 688
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 688
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 143
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 143
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "sympy__sympy-19637",
+      "taskCharacters": 221,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 429
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 429
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "refused",
+        "declineState": null,
+        "ok": false,
+        "errorDetail": "product_response_envelope_unreachable",
+        "billedTokens": 1
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 139
+      },
+      "pressuredRecovered": true
+    },
+    {
+      "instanceId": "sympy__sympy-20428",
+      "taskCharacters": 3710,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 661
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 661
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 143
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 143
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "sympy__sympy-20801",
+      "taskCharacters": 509,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 670
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 670
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 146
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 146
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "sympy__sympy-23413",
+      "taskCharacters": 353,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 585
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 585
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "refused",
+        "declineState": null,
+        "ok": false,
+        "errorDetail": "product_response_envelope_unreachable",
+        "billedTokens": 1
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 148
+      },
+      "pressuredRecovered": true
+    },
+    {
+      "instanceId": "sympy__sympy-24213",
+      "taskCharacters": 1023,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 518
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 518
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 150
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 150
+      },
+      "pressuredRecovered": false
+    },
+    {
+      "instanceId": "sympy__sympy-24562",
+      "taskCharacters": 222,
+      "defaultBefore": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 629
+      },
+      "defaultAfter": {
+        "kind": "orientation",
+        "declineState": null,
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 629
+      },
+      "defaultIdentical": true,
+      "pressuredBefore": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 140
+      },
+      "pressuredAfter": {
+        "kind": "decline",
+        "declineState": "evidence_found_but_undelivered",
+        "ok": true,
+        "errorDetail": null,
+        "billedTokens": 140
+      },
+      "pressuredRecovered": false
+    }
+  ]
+}

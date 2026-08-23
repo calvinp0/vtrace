@@ -1,0 +1,180 @@
+{
+  "schemaVersion": "stage5.m176.known-positive.v1",
+  "milestone": "M176",
+  "workstream": "B",
+  "question": "Does an ordinary valid request reach handler_failed through envelope pressure, and does it stop?",
+  "method": "Real MCP stdio transport, two checkouts, one workspace, one index. The before arm is the pre-repair commit; the after arm is this one.",
+  "instanceId": "pytest-dev__pytest-10081",
+  "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m160_broad_b/pytest-dev__pytest-10081",
+  "preRepairRoot": "/home/calvin/bench/vtrace-m176/pre-repair",
+  "taskCharacters": 2905,
+  "envelopeFloorTokens": null,
+  "boundary": [
+    {
+      "maxTokens": 50,
+      "before": {
+        "ok": false,
+        "errorCode": "handler_failed",
+        "errorDetail": "product_response_envelope_unreachable",
+        "schemaVersion": "",
+        "characters": 4
+      },
+      "after": {
+        "ok": true,
+        "errorCode": null,
+        "errorDetail": null,
+        "schemaVersion": "run_pipeline.orientation.none/1",
+        "characters": 445
+      },
+      "identical": false,
+      "afterBilledTokens": 141
+    },
+    {
+      "maxTokens": 100,
+      "before": {
+        "ok": false,
+        "errorCode": "handler_failed",
+        "errorDetail": "product_response_envelope_unreachable",
+        "schemaVersion": "",
+        "characters": 4
+      },
+      "after": {
+        "ok": true,
+        "errorCode": null,
+        "errorDetail": null,
+        "schemaVersion": "run_pipeline.orientation.none/1",
+        "characters": 445
+      },
+      "identical": false,
+      "afterBilledTokens": 141
+    },
+    {
+      "maxTokens": 150,
+      "before": {
+        "ok": false,
+        "errorCode": "handler_failed",
+        "errorDetail": "product_response_envelope_unreachable",
+        "schemaVersion": "",
+        "characters": 4
+      },
+      "after": {
+        "ok": true,
+        "errorCode": null,
+        "errorDetail": null,
+        "schemaVersion": "run_pipeline.orientation.none/1",
+        "characters": 445
+      },
+      "identical": false,
+      "afterBilledTokens": 141
+    },
+    {
+      "maxTokens": 193,
+      "before": {
+        "ok": true,
+        "errorCode": null,
+        "errorDetail": null,
+        "schemaVersion": "run_pipeline.orientation.none/1",
+        "characters": 445
+      },
+      "after": {
+        "ok": true,
+        "errorCode": null,
+        "errorDetail": null,
+        "schemaVersion": "run_pipeline.orientation.none/1",
+        "characters": 445
+      },
+      "identical": true,
+      "afterBilledTokens": 141
+    },
+    {
+      "maxTokens": 200,
+      "before": {
+        "ok": true,
+        "errorCode": null,
+        "errorDetail": null,
+        "schemaVersion": "run_pipeline.orientation.none/1",
+        "characters": 445
+      },
+      "after": {
+        "ok": true,
+        "errorCode": null,
+        "errorDetail": null,
+        "schemaVersion": "run_pipeline.orientation.none/1",
+        "characters": 445
+      },
+      "identical": true,
+      "afterBilledTokens": 141
+    },
+    {
+      "maxTokens": 400,
+      "before": {
+        "ok": true,
+        "errorCode": null,
+        "errorDetail": null,
+        "schemaVersion": "run_pipeline.orientation.none/1",
+        "characters": 445
+      },
+      "after": {
+        "ok": true,
+        "errorCode": null,
+        "errorDetail": null,
+        "schemaVersion": "run_pipeline.orientation.none/1",
+        "characters": 445
+      },
+      "identical": true,
+      "afterBilledTokens": 141
+    },
+    {
+      "maxTokens": 8000,
+      "before": {
+        "ok": true,
+        "errorCode": null,
+        "errorDetail": null,
+        "schemaVersion": "run_pipeline.orientation.none/1",
+        "characters": 445
+      },
+      "after": {
+        "ok": true,
+        "errorCode": null,
+        "errorDetail": null,
+        "schemaVersion": "run_pipeline.orientation.none/1",
+        "characters": 445
+      },
+      "identical": true,
+      "afterBilledTokens": 141
+    },
+    {
+      "maxTokens": 32000,
+      "before": {
+        "ok": true,
+        "errorCode": null,
+        "errorDetail": null,
+        "schemaVersion": "run_pipeline.orientation/1",
+        "characters": 4715
+      },
+      "after": {
+        "ok": true,
+        "errorCode": null,
+        "errorDetail": null,
+        "schemaVersion": "run_pipeline.orientation/1",
+        "characters": 4715
+      },
+      "identical": true,
+      "afterBilledTokens": 1497
+    }
+  ],
+  "crashingBudgetsBefore": [
+    50,
+    100,
+    150
+  ],
+  "crashingBudgetsAfter": [],
+  "recoveredPayload": {
+    "schemaVersion": "run_pipeline.orientation.none/1",
+    "state": "evidence_found_but_undelivered",
+    "summary": "Relevant evidence was found, but none of it survived the response budget.",
+    "boundary": "No focused orientation was selected from the current authoritative repository evidence. This is not an assertion that relevant code does not exist.",
+    "nextStep": "Increase max_tokens or narrow the request.",
+    "topMatch": "src/_pytest/debugging.py::_enter_pdb"
+  }
+}

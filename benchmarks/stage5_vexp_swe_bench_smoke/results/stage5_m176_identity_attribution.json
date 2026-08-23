@@ -1,0 +1,218 @@
+{
+  "schemaVersion": "stage5.m176.identity-attribution.v1",
+  "milestone": "M176",
+  "workstream": "E",
+  "question": "Are the default-budget identity misses caused by the repair, or by run-to-run variance?",
+  "method": "The two checkouts are re-run INTERLEAVED, back to back, twice each, on exactly the cases the paired corpus run recorded as changed. Interleaving makes temporal state and machine load shared by both arms instead of separating them, and the self-comparison of each checkout is the control that distinguishes a code difference from a run-to-run one.",
+  "whyItWasSuspect": "The repair replaces a response that FAILED to fit, wholesale. It cannot turn an orientation packet into a larger orientation packet with the same focus and more related items, which is what all 11 misses looked like.",
+  "corpusRunConditions": "Broad100-A and Broad100-B were captured concurrently, and within each corpus the before arm for a case ran before the after arm. The arms were therefore separated by minutes and by a different machine load.",
+  "repeats": 2,
+  "rows": [
+    {
+      "instanceId": "django__django-11728",
+      "beforeCharacters": [
+        2841,
+        2841
+      ],
+      "afterCharacters": [
+        2841,
+        2841
+      ],
+      "beforeSelfStable": true,
+      "afterSelfStable": true,
+      "identicalWhenInterleaved": true,
+      "focusIdentical": true,
+      "relatedBefore": 4,
+      "relatedAfter": 4,
+      "attribution": "IDENTICAL_WHEN_INTERLEAVED"
+    },
+    {
+      "instanceId": "django__django-13112",
+      "beforeCharacters": [
+        1277,
+        1277
+      ],
+      "afterCharacters": [
+        1277,
+        1277
+      ],
+      "beforeSelfStable": true,
+      "afterSelfStable": true,
+      "identicalWhenInterleaved": true,
+      "focusIdentical": true,
+      "relatedBefore": 3,
+      "relatedAfter": 3,
+      "attribution": "IDENTICAL_WHEN_INTERLEAVED"
+    },
+    {
+      "instanceId": "django__django-13810",
+      "beforeCharacters": [
+        2204,
+        2204
+      ],
+      "afterCharacters": [
+        2204,
+        2204
+      ],
+      "beforeSelfStable": true,
+      "afterSelfStable": true,
+      "identicalWhenInterleaved": true,
+      "focusIdentical": true,
+      "relatedBefore": 3,
+      "relatedAfter": 3,
+      "attribution": "IDENTICAL_WHEN_INTERLEAVED"
+    },
+    {
+      "instanceId": "django__django-13820",
+      "beforeCharacters": [
+        1795,
+        1795
+      ],
+      "afterCharacters": [
+        1795,
+        1795
+      ],
+      "beforeSelfStable": true,
+      "afterSelfStable": true,
+      "identicalWhenInterleaved": true,
+      "focusIdentical": true,
+      "relatedBefore": 4,
+      "relatedAfter": 4,
+      "attribution": "IDENTICAL_WHEN_INTERLEAVED"
+    },
+    {
+      "instanceId": "django__django-16256",
+      "beforeCharacters": [
+        2775,
+        2775
+      ],
+      "afterCharacters": [
+        2775,
+        2775
+      ],
+      "beforeSelfStable": true,
+      "afterSelfStable": true,
+      "identicalWhenInterleaved": true,
+      "focusIdentical": true,
+      "relatedBefore": 3,
+      "relatedAfter": 3,
+      "attribution": "IDENTICAL_WHEN_INTERLEAVED"
+    },
+    {
+      "instanceId": "django__django-16569",
+      "beforeCharacters": [
+        2800,
+        2800
+      ],
+      "afterCharacters": [
+        2800,
+        2800
+      ],
+      "beforeSelfStable": true,
+      "afterSelfStable": true,
+      "identicalWhenInterleaved": true,
+      "focusIdentical": true,
+      "relatedBefore": 6,
+      "relatedAfter": 6,
+      "attribution": "IDENTICAL_WHEN_INTERLEAVED"
+    },
+    {
+      "instanceId": "astropy__astropy-14508",
+      "beforeCharacters": [
+        1930,
+        1930
+      ],
+      "afterCharacters": [
+        1930,
+        1930
+      ],
+      "beforeSelfStable": true,
+      "afterSelfStable": true,
+      "identicalWhenInterleaved": true,
+      "focusIdentical": true,
+      "relatedBefore": 2,
+      "relatedAfter": 2,
+      "attribution": "IDENTICAL_WHEN_INTERLEAVED"
+    },
+    {
+      "instanceId": "astropy__astropy-14995",
+      "beforeCharacters": [
+        992,
+        992
+      ],
+      "afterCharacters": [
+        992,
+        992
+      ],
+      "beforeSelfStable": true,
+      "afterSelfStable": true,
+      "identicalWhenInterleaved": true,
+      "focusIdentical": true,
+      "relatedBefore": 1,
+      "relatedAfter": 1,
+      "attribution": "IDENTICAL_WHEN_INTERLEAVED"
+    },
+    {
+      "instanceId": "astropy__astropy-7671",
+      "beforeCharacters": [
+        1349,
+        1349
+      ],
+      "afterCharacters": [
+        1349,
+        1349
+      ],
+      "beforeSelfStable": true,
+      "afterSelfStable": true,
+      "identicalWhenInterleaved": true,
+      "focusIdentical": true,
+      "relatedBefore": 3,
+      "relatedAfter": 3,
+      "attribution": "IDENTICAL_WHEN_INTERLEAVED"
+    },
+    {
+      "instanceId": "django__django-15629",
+      "beforeCharacters": [
+        1920,
+        1920
+      ],
+      "afterCharacters": [
+        1920,
+        1920
+      ],
+      "beforeSelfStable": true,
+      "afterSelfStable": true,
+      "identicalWhenInterleaved": true,
+      "focusIdentical": true,
+      "relatedBefore": 3,
+      "relatedAfter": 3,
+      "attribution": "IDENTICAL_WHEN_INTERLEAVED"
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-20488",
+      "beforeCharacters": [
+        2197,
+        2197
+      ],
+      "afterCharacters": [
+        2197,
+        2197
+      ],
+      "beforeSelfStable": true,
+      "afterSelfStable": true,
+      "identicalWhenInterleaved": true,
+      "focusIdentical": true,
+      "relatedBefore": 5,
+      "relatedAfter": 5,
+      "attribution": "IDENTICAL_WHEN_INTERLEAVED"
+    }
+  ],
+  "summary": {
+    "rechecked": 11,
+    "identicalWhenInterleaved": 11,
+    "attributedToRepair": 0,
+    "runToRunVariance": 0,
+    "focusIdenticalEverywhere": true
+  },
+  "verdict": "NO_IDENTITY_MISS_ATTRIBUTABLE_TO_THE_REPAIR"
+}

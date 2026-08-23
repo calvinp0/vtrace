@@ -1,0 +1,199 @@
+{
+  "schemaVersion": "stage5.m176.boundary-controls.v1",
+  "milestone": "M176",
+  "workstream": "B",
+  "question": "Is behaviour deterministic and monotone across the threshold?",
+  "accountingMethod": "Envelope arithmetic is chars/4, the estimator the product itself applies. Billed figures use M166's measured 0.3174 tokens/character and are reporting only.",
+  "budgets": [
+    50,
+    100,
+    150,
+    193,
+    200,
+    400,
+    8000,
+    32000
+  ],
+  "boundary": [
+    {
+      "maxTokens": 50,
+      "before": {
+        "ok": false,
+        "errorCode": "handler_failed",
+        "errorDetail": "product_response_envelope_unreachable",
+        "schemaVersion": "",
+        "characters": 4
+      },
+      "after": {
+        "ok": true,
+        "errorCode": null,
+        "errorDetail": null,
+        "schemaVersion": "run_pipeline.orientation.none/1",
+        "characters": 445
+      },
+      "identical": false,
+      "afterBilledTokens": 141
+    },
+    {
+      "maxTokens": 100,
+      "before": {
+        "ok": false,
+        "errorCode": "handler_failed",
+        "errorDetail": "product_response_envelope_unreachable",
+        "schemaVersion": "",
+        "characters": 4
+      },
+      "after": {
+        "ok": true,
+        "errorCode": null,
+        "errorDetail": null,
+        "schemaVersion": "run_pipeline.orientation.none/1",
+        "characters": 445
+      },
+      "identical": false,
+      "afterBilledTokens": 141
+    },
+    {
+      "maxTokens": 150,
+      "before": {
+        "ok": false,
+        "errorCode": "handler_failed",
+        "errorDetail": "product_response_envelope_unreachable",
+        "schemaVersion": "",
+        "characters": 4
+      },
+      "after": {
+        "ok": true,
+        "errorCode": null,
+        "errorDetail": null,
+        "schemaVersion": "run_pipeline.orientation.none/1",
+        "characters": 445
+      },
+      "identical": false,
+      "afterBilledTokens": 141
+    },
+    {
+      "maxTokens": 193,
+      "before": {
+        "ok": true,
+        "errorCode": null,
+        "errorDetail": null,
+        "schemaVersion": "run_pipeline.orientation.none/1",
+        "characters": 445
+      },
+      "after": {
+        "ok": true,
+        "errorCode": null,
+        "errorDetail": null,
+        "schemaVersion": "run_pipeline.orientation.none/1",
+        "characters": 445
+      },
+      "identical": true,
+      "afterBilledTokens": 141
+    },
+    {
+      "maxTokens": 200,
+      "before": {
+        "ok": true,
+        "errorCode": null,
+        "errorDetail": null,
+        "schemaVersion": "run_pipeline.orientation.none/1",
+        "characters": 445
+      },
+      "after": {
+        "ok": true,
+        "errorCode": null,
+        "errorDetail": null,
+        "schemaVersion": "run_pipeline.orientation.none/1",
+        "characters": 445
+      },
+      "identical": true,
+      "afterBilledTokens": 141
+    },
+    {
+      "maxTokens": 400,
+      "before": {
+        "ok": true,
+        "errorCode": null,
+        "errorDetail": null,
+        "schemaVersion": "run_pipeline.orientation.none/1",
+        "characters": 445
+      },
+      "after": {
+        "ok": true,
+        "errorCode": null,
+        "errorDetail": null,
+        "schemaVersion": "run_pipeline.orientation.none/1",
+        "characters": 445
+      },
+      "identical": true,
+      "afterBilledTokens": 141
+    },
+    {
+      "maxTokens": 8000,
+      "before": {
+        "ok": true,
+        "errorCode": null,
+        "errorDetail": null,
+        "schemaVersion": "run_pipeline.orientation.none/1",
+        "characters": 445
+      },
+      "after": {
+        "ok": true,
+        "errorCode": null,
+        "errorDetail": null,
+        "schemaVersion": "run_pipeline.orientation.none/1",
+        "characters": 445
+      },
+      "identical": true,
+      "afterBilledTokens": 141
+    },
+    {
+      "maxTokens": 32000,
+      "before": {
+        "ok": true,
+        "errorCode": null,
+        "errorDetail": null,
+        "schemaVersion": "run_pipeline.orientation/1",
+        "characters": 4715
+      },
+      "after": {
+        "ok": true,
+        "errorCode": null,
+        "errorDetail": null,
+        "schemaVersion": "run_pipeline.orientation/1",
+        "characters": 4715
+      },
+      "identical": true,
+      "afterBilledTokens": 1497
+    }
+  ],
+  "monotonicity": [
+    {
+      "maxTokens": 100,
+      "rank": 1,
+      "state": "evidence_found_but_undelivered"
+    },
+    {
+      "maxTokens": 400,
+      "rank": 1,
+      "state": "evidence_found_but_undelivered"
+    },
+    {
+      "maxTokens": 2000,
+      "rank": 1,
+      "state": "evidence_found_but_undelivered"
+    },
+    {
+      "maxTokens": 8000,
+      "rank": 1,
+      "state": "evidence_found_but_undelivered"
+    },
+    {
+      "maxTokens": 32000,
+      "rank": 2,
+      "state": "run_pipeline.orientation/1"
+    }
+  ],
+  "monotonic": true
+}

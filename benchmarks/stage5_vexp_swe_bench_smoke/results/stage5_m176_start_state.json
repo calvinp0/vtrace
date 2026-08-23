@@ -1,0 +1,87 @@
+{
+  "schemaVersion": "stage5.m176.start-state.v1",
+  "milestone": "M176",
+  "recordedAtUtc": "2026-08-23T17:13:35.837239+00:00",
+  "branch": "main",
+  "head": "eec70c3c2cc451e0511c97a0da66cb97845845af",
+  "headSubject": "Record M175's own commit hashes in the ledger heading",
+  "originMain": "bcdd962e42cfdfccbce89e14885a90f405ba3490",
+  "aheadOfOriginMain": 105,
+  "behindOriginMain": 0,
+  "ancestry": {
+    "M175": [
+      {
+        "commit": "bc6e2ecd",
+        "subject": "Stop paying for the question twice, and let the answer fit"
+      },
+      {
+        "commit": "366883d2",
+        "subject": "Find out who was reading the field nobody was reading"
+      },
+      {
+        "commit": "eec70c3c",
+        "subject": "Record M175's own commit hashes in the ledger heading"
+      }
+    ],
+    "M174": [
+      {
+        "commit": "4d4d8cb4",
+        "subject": "Stop spending 8,229 tokens to say that nothing fit"
+      },
+      {
+        "commit": "3d493b21",
+        "subject": "The work never moved, and two virtualenvs cost more than the packet ever did"
+      },
+      {
+        "commit": "1b078193",
+        "subject": "Record M174's own commit hashes in the ledger heading"
+      }
+    ],
+    "M173": [
+      {
+        "commit": "edd52104",
+        "subject": "Make the orientation nine times cheaper, and change nothing at all"
+      },
+      {
+        "commit": "e0252fac",
+        "subject": "Record M173's own commit hash in the ledger heading"
+      }
+    ]
+  },
+  "dirtyTrackedFiles": [
+    "enchmarks/stage5_vexp_swe_bench_smoke/results/stage5_outcome_ledger.json",
+    "benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_outcome_ledger.md"
+  ],
+  "untrackedEntryCount": 194,
+  "worktrees": [
+    "/home/calvin/code/vtrace",
+    "/home/calvin/bench/vtrace-m140/impl/m136base",
+    "/home/calvin/bench/vtrace-m140/impl/m139",
+    "/home/calvin/bench/vtrace-m140/impl/m140a",
+    "/home/calvin/bench/vtrace-m140/impl/m140a2",
+    "/home/calvin/bench/vtrace-m140/impl/m140a3",
+    "/home/calvin/bench/vtrace-m140/impl/m140a4",
+    "/home/calvin/bench/vtrace-m140/impl/m140a5",
+    "/home/calvin/bench/vtrace-m140/impl/m140a6",
+    "/home/calvin/bench/vtrace-m142/bisect-0e4edc7",
+    "/home/calvin/bench/vtrace-m142/bisect-321f9a3",
+    "/home/calvin/bench/vtrace-m142/bisect-69826d3",
+    "/home/calvin/bench/vtrace-m142/iso-head",
+    "/home/calvin/bench/vtrace-m142/pred",
+    "/home/calvin/bench/vtrace-m175/pre-repair"
+  ],
+  "milestoneOwnedWorktrees": [
+    "/home/calvin/bench/vtrace-m175/pre-repair"
+  ],
+  "policy": {
+    "workOnMainOnly": true,
+    "pushProhibited": true,
+    "coAuthorTrailerProhibited": true,
+    "preserveUnrelatedDirt": true,
+    "preserveWorktrees": true,
+    "liveAgents": "not licensed",
+    "dockerEvaluate": "not run",
+    "expectedLiveSpendUsd": 0.0
+  },
+  "dirtyTrackedNote": "Pre-existing dirt inherited from before M175; not touched (CLAUDE.md)."
+}
