@@ -181,6 +181,18 @@ M179: the recovered packet is one the packer already builds, never a new claim
       pre-repair -> resultState 'delivery_failure'
 ```
 
+## Commits
+
+```text
+7381a57414eb0311a8f7e6e655651fcfbc5f719b   product   (responseEnvelope.ts + its test)
+d5a39f93ec9b4d701d11f074ff08646f12ffc643   evidence + ledger
+a4eee924d9559ad1f9e132b008ba2f34eb126426   M178 close, the state this began from
+```
+
+Only `src/mcp/responseEnvelope.ts` changed. The packer, the orientation projector,
+retrieval, ranking and the impact envelope are untouched — `git diff` over `src/`
+between M178's close and here is two files.
+
 ## Scope note
 
 Measured on the `run_pipeline` delivery path. `get_impact_graph` has its own

@@ -4992,8 +4992,8 @@ verification   typecheck 0, typecheck:benchmarks 0,
 ## M179 — Monotone Delivery Packing and Budget-Preservation Invariant
 
 ```text
-commits  <product>                                   product
-         <evidence>                                  evidence + ledger
+commits  7381a57414eb0311a8f7e6e655651fcfbc5f719b   product
+         d5a39f93ec9b4d701d11f074ff08646f12ffc643   evidence + ledger
 from     a4eee924d9559ad1f9e132b008ba2f34eb126426    (M178 close)
 
 A PASS   packer mapped as a state machine; every budget-dependent decision and
