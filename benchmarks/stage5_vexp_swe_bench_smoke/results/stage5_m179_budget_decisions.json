@@ -1,0 +1,113 @@
+{
+ "schemaVersion": "stage5.m179.budget-decisions.v1",
+ "milestone": "M179",
+ "workstream": "A",
+ "contracts": {
+  "MODEL_VISIBLE_BUDGET": "max_tokens. Bounds the rendered model-visible context. Enforced by the packer (M178 P1).",
+  "HARD_DELIVERY_CONSTRAINT": "responseTokenCeiling(max_tokens). Bounds the complete serialized response. Enforced by the envelope (M178 P2/P3).",
+  "SOFT_PRODUCT_TARGET": "the orientation packet ceiling. Not derived from max_tokens (M178 P6)."
+ },
+ "decisions": [
+  {
+   "id": "P-ENTRY",
+   "file": "src/productContext/budgetDelivery.ts",
+   "line": 113,
+   "decision": "initialModelTokens <= budget -> COMPLETE, ladder skipped entirely",
+   "bound": "MODEL_VISIBLE_BUDGET",
+   "affects": "whether any compaction runs at all"
+  },
+  {
+   "id": "P-FIT",
+   "file": "src/productContext/budgetDelivery.ts",
+   "line": 142,
+   "decision": "estimateTokens(render(items)) <= budget -> publish at this rung",
+   "bound": "MODEL_VISIBLE_BUDGET",
+   "affects": "which rung is published; the ONLY budget input to the ladder"
+  },
+  {
+   "id": "P-FAILCTX",
+   "file": "src/productContext/budgetDelivery.ts",
+   "line": 255,
+   "decision": "FAILURE_CONTEXT emitted only when it itself fits the budget",
+   "bound": "MODEL_VISIBLE_BUDGET",
+   "affects": "text of an already-failed delivery"
+  },
+  {
+   "id": "E-CEILING",
+   "file": "src/mcp/responseEnvelope.ts",
+   "line": 78,
+   "decision": "responseTokenCeiling(B) = B + max(1000, ceil(0.15B))",
+   "bound": "HARD_DELIVERY_CONSTRAINT",
+   "affects": "every escalation below"
+  },
+  {
+   "id": "E-SECTIONS",
+   "file": "src/mcp/responseEnvelope.ts",
+   "line": 306,
+   "decision": "drop optional sections while total + accounting > ceiling",
+   "bound": "HARD_DELIVERY_CONSTRAINT",
+   "affects": "pivotNeighborhood, taskSummary, context, memory, rules, inspectFirst, impact"
+  },
+  {
+   "id": "E-MANDATORY",
+   "file": "src/mcp/responseEnvelope.ts",
+   "line": 419,
+   "decision": "!within_envelope -> productContext.items collapsed to the strongest one",
+   "bound": "HARD_DELIVERY_CONSTRAINT",
+   "affects": "item metadata only; modelVisibleContext is NOT touched"
+  },
+  {
+   "id": "E-NONESSENTIAL",
+   "file": "src/mcp/responseEnvelope.ts",
+   "line": 419,
+   "decision": "!within_envelope -> nonessential envelope metadata removed",
+   "bound": "HARD_DELIVERY_CONSTRAINT",
+   "affects": "envelope metadata only"
+  },
+  {
+   "id": "E-DEGRADE",
+   "file": "src/mcp/responseEnvelope.ts",
+   "line": 432,
+   "decision": "!within_envelope -> degradeOversizedProductResponse sets resultState=delivery_failure and items=[]",
+   "bound": "HARD_DELIVERY_CONSTRAINT",
+   "affects": "THE TERMINAL STATE. Discards all evidence; no rung below it returns any."
+  },
+  {
+   "id": "E-DECLINE",
+   "file": "src/mcp/responseEnvelope.ts",
+   "line": 443,
+   "decision": "!within_envelope -> buildBoundedEnvelopeDecline (M176 terminal)",
+   "bound": "HARD_DELIVERY_CONSTRAINT",
+   "affects": "bounded truthful decline"
+  },
+  {
+   "id": "O-PROJECT",
+   "file": "src/runPipeline/orientationProjection.ts",
+   "line": 239,
+   "decision": "resolved !== true || deliveryFailed === true -> no orientation packet",
+   "bound": "derived",
+   "affects": "translates E-DEGRADE into the agent-visible outcome"
+  },
+  {
+   "id": "O-CEILING",
+   "file": "src/runPipeline/orientationProjection.ts",
+   "line": 328,
+   "decision": "orientationTokens(packet) > 2000 -> stop admitting related entries",
+   "bound": "SOFT_PRODUCT_TARGET",
+   "affects": "related list length; NOT derived from max_tokens"
+  }
+ ],
+ "separationOfSelectionAndRendering": {
+  "selectionDecidedBy": [
+   "P-FIT rungs 3, 5, 6, 8 (items removed)",
+   "E-MANDATORY (item metadata collapsed)",
+   "E-DEGRADE (all evidence discarded)"
+  ],
+  "renderingDecidedBy": [
+   "P-FIT rungs 0, 1, 2, 4, 7 (bodies weakened)",
+   "O-CEILING (related prefix)",
+   "H-FOCUS-CODE (focus head bound)"
+  ],
+  "note": "The packer owns productContext.modelVisibleContext, and NOTHING downstream of it can shrink that string. E-MANDATORY and E-NONESSENTIAL reduce metadata only. So once the packer has chosen a rung, the envelope's sole remaining move against an oversized response is to discard the evidence entirely."
+ }
+}

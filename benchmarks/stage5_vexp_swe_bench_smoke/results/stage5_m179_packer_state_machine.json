@@ -1,0 +1,136 @@
+{
+ "schemaVersion": "stage5.m179.packer-state-machine.v1",
+ "milestone": "M179",
+ "workstream": "A",
+ "component": "src/productContext/budgetDelivery.ts :: applyProgressiveContextBudget",
+ "entryStates": [
+  {
+   "state": "NO_RESULT",
+   "condition": "no items and not resolved",
+   "terminal": true
+  },
+  {
+   "state": "COMPLETE",
+   "condition": "initialModelTokens <= budget",
+   "terminal": true,
+   "note": "source items verbatim; the ladder never runs"
+  },
+  {
+   "state": "LADDER",
+   "condition": "initialModelTokens > budget",
+   "terminal": false
+  }
+ ],
+ "rungs": [
+  {
+   "rung": 0,
+   "state": "SELECTION_REASONS_COMPACTED",
+   "stage": "selection_reasons_compacted",
+   "scope": "every item",
+   "mutates": "representation",
+   "removesEvidence": false,
+   "reorders": false,
+   "rebuilds": false,
+   "restarts": false
+  },
+  {
+   "rung": 1,
+   "state": "SUPPORT_EXCERPT_SHORTENED",
+   "stage": "support_excerpt_shortened",
+   "scope": "optional support, weakest first",
+   "mutates": "representation",
+   "removesEvidence": false,
+   "reorders": false,
+   "rebuilds": false,
+   "restarts": false
+  },
+  {
+   "rung": 2,
+   "state": "SUPPORT_SKELETONIZED",
+   "stage": "support_skeletonized",
+   "scope": "optional support, weakest first",
+   "mutates": "representation",
+   "removesEvidence": false,
+   "reorders": false,
+   "rebuilds": false,
+   "restarts": false
+  },
+  {
+   "rung": 3,
+   "state": "SUPPORT_DROPPED",
+   "stage": "support_dropped",
+   "scope": "optional support that is not answer-bearing",
+   "mutates": "selection",
+   "removesEvidence": true,
+   "reorders": false,
+   "rebuilds": false,
+   "restarts": false
+  },
+  {
+   "rung": 4,
+   "state": "SECONDARY_PIVOT_SKELETONIZED",
+   "stage": "secondary_pivot_skeletonized",
+   "scope": "pivots[1..], weakest first",
+   "mutates": "representation",
+   "removesEvidence": false,
+   "reorders": false,
+   "rebuilds": false,
+   "restarts": false
+  },
+  {
+   "rung": 5,
+   "state": "SECONDARY_PIVOT_DROPPED",
+   "stage": "secondary_pivot_dropped",
+   "scope": "pivots[1..] that are not answer-bearing",
+   "mutates": "selection",
+   "removesEvidence": true,
+   "reorders": false,
+   "rebuilds": false,
+   "restarts": false
+  },
+  {
+   "rung": 6,
+   "state": "WEAK_CONTEXT_DROPPED",
+   "stage": "support_dropped",
+   "scope": "any non-answer-bearing, non-required item; keeps at least one",
+   "mutates": "selection",
+   "removesEvidence": true,
+   "reorders": false,
+   "rebuilds": false,
+   "restarts": false
+  },
+  {
+   "rung": 7,
+   "state": "MINIMAL_REPRESENTATION",
+   "stage": "minimal_representation",
+   "scope": "every remaining item, weakest first",
+   "mutates": "representation",
+   "removesEvidence": false,
+   "reorders": false,
+   "rebuilds": false,
+   "restarts": false
+  },
+  {
+   "rung": 8,
+   "state": "STRONGEST_ITEM_ONLY",
+   "stage": "minimal_representation",
+   "scope": "keep the single strongest item",
+   "mutates": "selection",
+   "removesEvidence": true,
+   "reorders": false,
+   "rebuilds": false,
+   "restarts": false
+  }
+ ],
+ "terminalState": {
+  "state": "DELIVERY_FAILURE",
+  "condition": "no rung fits the budget",
+  "note": "sets resultState=delivery_failure and empties items"
+ },
+ "invariants": {
+  "rungSequenceIsBudgetIndependent": true,
+  "rungSequenceIsNonIncreasingInSize": true,
+  "budgetSelectsOnlyTheStoppingIndex": true,
+  "consequence": "Because the drafts are the same at every budget and never grow, the largest publishable rung is non-decreasing in the budget. This component is budget-monotone ON ITS OWN, and M179-B confirms it empirically on the known positive: the packer resolves at every budget of the Django ladder."
+ }
+}

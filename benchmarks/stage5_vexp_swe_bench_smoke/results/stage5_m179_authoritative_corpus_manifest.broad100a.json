@@ -1,0 +1,2017 @@
+{
+ "schemaVersion": "stage5.m179.authoritative-corpus.v2",
+ "milestone": "M179",
+ "workstream": "B",
+ "corpus": "broad100a",
+ "capturedAtMaxTokens": 120000,
+ "capturedDetail": "debug",
+ "includeItemContent": true,
+ "sourceManifest": "benchmarks/stage5_vexp_swe_bench_smoke/results/_m171_capture/broad100a.manifest.json",
+ "sourceManifestVtraceCommit": "f04a0f8c47bd4332dd365e76b68ce17eb2f7d1ad",
+ "cacheDir": "benchmarks/stage5_vexp_swe_bench_smoke/results/_m179_authoritative/broad100a",
+ "summary": {
+  "requested": 100,
+  "captured": 88,
+  "failed": 12,
+  "capturedWithoutItemBodies": 0
+ },
+ "corpusIdentityHash": "d07dc075a86ab615",
+ "rows": [
+  {
+   "instanceId": "astropy__astropy-14365",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/astropy__astropy-14365",
+   "authoritativeCharacters": 115823,
+   "itemBodies": {
+    "items": 23,
+    "withContent": 20,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "9c5179d00fe0d821",
+    "leadPivot": "astropy/io/ascii/qdp.py::_write_table_qdp",
+    "taskHash": "097b246e51f0922866703bfbef84f17dbd862051304f5aa2b7476e86553541b6",
+    "selectedFileHash": "866abce0fa20fa76cd148ded1fefd5b59a62f0072909c490eaf4e7f3a3dad5ac",
+    "retrievalFound": true,
+    "candidateSupplyHash": "8ff5a8076b0e8651",
+    "candidateOrderHash": "56f9fce8bc9aa7aa",
+    "neighborhoodHash": "bfd19bb0abadb759",
+    "itemCount": 23
+   }
+  },
+  {
+   "instanceId": "astropy__astropy-14369",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/astropy__astropy-14369",
+   "authoritativeCharacters": 113226,
+   "itemBodies": {
+    "items": 24,
+    "withContent": 20,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "44e2870a09741a82",
+    "leadPivot": "astropy/coordinates/matching.py::_get_cartesian_kdtree",
+    "taskHash": "54b4c93e0ae8d3a9e781c1e7ec0d756c5236b10b14efc37ae6b9cd8deb10adfc",
+    "selectedFileHash": "dd970c0114bc7c4aaa3afef912e77d8161ce44b8fd31d585d0ac60bb9cf06cd9",
+    "retrievalFound": true,
+    "candidateSupplyHash": "7847c6e1c19b24e7",
+    "candidateOrderHash": "74a438fd6ec1ecd9",
+    "neighborhoodHash": "3422befd0c00e652",
+    "itemCount": 24
+   }
+  },
+  {
+   "instanceId": "astropy__astropy-14539",
+   "captured": false,
+   "error": "no_structured_content"
+  },
+  {
+   "instanceId": "astropy__astropy-14598",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/astropy__astropy-14598",
+   "authoritativeCharacters": 223141,
+   "itemBodies": {
+    "items": 21,
+    "withContent": 20,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "1c6ef6dac2d5d8ae",
+    "leadPivot": "astropy/io/fits/diff.py::FITSDiff",
+    "taskHash": "79d8be755924330eb807e15026e3106a2ce9265871eb9f4248c1f66388e0e442",
+    "selectedFileHash": "1a74e4d9825a11b27f3c80a3d8a3585d7aea974524e81c28f293b17ff21826d7",
+    "retrievalFound": true,
+    "candidateSupplyHash": "d508f718be7faa1a",
+    "candidateOrderHash": "cd051a6dae3216dd",
+    "neighborhoodHash": "fcb13d0b02e44c3d",
+    "itemCount": 21
+   }
+  },
+  {
+   "instanceId": "astropy__astropy-7166",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/astropy__astropy-7166",
+   "authoritativeCharacters": 99769,
+   "itemBodies": {
+    "items": 25,
+    "withContent": 22,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "dd087b20f8ae6cca",
+    "leadPivot": "astropy/utils/misc.py::InheritDocstrings",
+    "taskHash": "0848fd663aecf63b2f90ffb97034dae0aaf9b3a32fca0a72ac33619cc581269a",
+    "selectedFileHash": "4716b3e5ae5636f8147d7446b3c7233441386a4bc484c0639dd6e04ed5ca62c6",
+    "retrievalFound": true,
+    "candidateSupplyHash": "bf7ee12b71b1199a",
+    "candidateOrderHash": "bf63b1d81126051e",
+    "neighborhoodHash": "5dad88f31f1ae19d",
+    "itemCount": 25
+   }
+  },
+  {
+   "instanceId": "django__django-10880",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/django__django-10880",
+   "authoritativeCharacters": 66454,
+   "itemBodies": {
+    "items": 22,
+    "withContent": 19,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "dd89566334a4debe",
+    "leadPivot": "db/models/query.py::QuerySet.count",
+    "taskHash": "ca4de1bd833616ccfb0d9087e43b91cc54eb7fa6d7e5a681914c2bf265de5946",
+    "selectedFileHash": "558b6f6ebd044ff515bcf36abe6e7ca3f9203576550aaf3403db525c5c739cd4",
+    "retrievalFound": true,
+    "candidateSupplyHash": "7883681d0a8dfde7",
+    "candidateOrderHash": "61da14064a8871cd",
+    "neighborhoodHash": "0e77425f02789e42",
+    "itemCount": 22
+   }
+  },
+  {
+   "instanceId": "django__django-10973",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/django__django-10973",
+   "authoritativeCharacters": 70581,
+   "itemBodies": {
+    "items": 18,
+    "withContent": 17,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "fb387e9fc7b09b96",
+    "leadPivot": "db/backends/postgresql/client.py::_escape_pgpass",
+    "taskHash": "f28e7eaa064f9d5bcb25cf19175635804f6e859d80983110e766f8afe7cd35e0",
+    "selectedFileHash": "a5f2e26265b8578d25458e40baf34d894497c5ff336c8315b59dd268e1a1efca",
+    "retrievalFound": true,
+    "candidateSupplyHash": "4d91862f7f503a62",
+    "candidateOrderHash": "f77720cdf3242f9e",
+    "neighborhoodHash": "2c10dde4fb6a59c0",
+    "itemCount": 18
+   }
+  },
+  {
+   "instanceId": "django__django-11095",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/django__django-11095",
+   "authoritativeCharacters": 206168,
+   "itemBodies": {
+    "items": 17,
+    "withContent": 17,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "ec582bd3532e27ad",
+    "leadPivot": "contrib/admin/options.py::ModelAdmin",
+    "taskHash": "3df2963423779c76d086d8bf61087435533430a716233e8fe9ab7c3afa27f19c",
+    "selectedFileHash": "cf984eefb349c867254a3fae37b1eb73e638b948d8e19d69fc41cccb68e472b4",
+    "retrievalFound": true,
+    "candidateSupplyHash": "093253ba16d7557d",
+    "candidateOrderHash": "9656f160971ed400",
+    "neighborhoodHash": "4d384fad9f26adb0",
+    "itemCount": 17
+   }
+  },
+  {
+   "instanceId": "django__django-11133",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/django__django-11133",
+   "authoritativeCharacters": 97342,
+   "itemBodies": {
+    "items": 21,
+    "withContent": 20,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "999c0050fa0409f2",
+    "leadPivot": "http/response.py::HttpResponse",
+    "taskHash": "67b879b7e235bee1e773859db7ada427289cc8b1e01a81748f866a3c033f3e31",
+    "selectedFileHash": "ddf72138947a3a01ff8a3619103c580b95f7ef3ac39e88154f122bea95babcfa",
+    "retrievalFound": true,
+    "candidateSupplyHash": "76c68dce09fb7410",
+    "candidateOrderHash": "739c1447ecc37c34",
+    "neighborhoodHash": "55415162a876f01c",
+    "itemCount": 21
+   }
+  },
+  {
+   "instanceId": "django__django-11206",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/django__django-11206",
+   "authoritativeCharacters": 53001,
+   "itemBodies": {
+    "items": 13,
+    "withContent": 6,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "277d739690e09689",
+    "leadPivot": "utils/numberformat.py::format",
+    "taskHash": "33f8d30d45b08badad787119a78c240057b8a25109d40779b16c0090fa56f1ec",
+    "selectedFileHash": "68f9a7251daecdf1d31dd15052e5467dffb345e2da82d6a277962850bbdba8cd",
+    "retrievalFound": true,
+    "candidateSupplyHash": "0881e79f614a61e1",
+    "candidateOrderHash": "c5770d0abf835015",
+    "neighborhoodHash": "21b3aafe52a90f53",
+    "itemCount": 13
+   }
+  },
+  {
+   "instanceId": "django__django-11490",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/django__django-11490",
+   "authoritativeCharacters": 79651,
+   "itemBodies": {
+    "items": 20,
+    "withContent": 19,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "727d45ba942bd6f0",
+    "leadPivot": "db/models/sql/compiler.py::SQLCompiler.get_combinator_sql",
+    "taskHash": "e17ccb26a703ecb8de4f01271f0d1f2131807b0fd9d0b831c6fe6a12cf284edb",
+    "selectedFileHash": "f0dd829ac23fb9050843999f205255408825eb7f5b73eeaef44d08aa43397476",
+    "retrievalFound": true,
+    "candidateSupplyHash": "3943624a6ac497a1",
+    "candidateOrderHash": "755234da523d69dd",
+    "neighborhoodHash": "3e8cb555bfb05635",
+    "itemCount": 20
+   }
+  },
+  {
+   "instanceId": "django__django-11728",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/django__django-11728",
+   "authoritativeCharacters": 125579,
+   "itemBodies": {
+    "items": 21,
+    "withContent": 17,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "95eed080dff8152e",
+    "leadPivot": "contrib/admin/checks.py::ModelAdminChecks",
+    "taskHash": "c9b946396e5e7be8ce6386935c0f2f81d9425532542a3d53a31db40fcb158033",
+    "selectedFileHash": "4cb7b043be2e318bb40d82c06514bf356b671c89faf340da4749be495c66da8e",
+    "retrievalFound": true,
+    "candidateSupplyHash": "54d47776841463da",
+    "candidateOrderHash": "e841de3d8cce9327",
+    "neighborhoodHash": "e7ef26400a8e1106",
+    "itemCount": 21
+   }
+  },
+  {
+   "instanceId": "django__django-11740",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/django__django-11740",
+   "authoritativeCharacters": 129578,
+   "itemBodies": {
+    "items": 21,
+    "withContent": 18,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "4acecda412835570",
+    "leadPivot": "contrib/admin/migrations/0001_initial.py::Migration",
+    "taskHash": "f6752ea7f292f8f2b19c093f7d814400b9a82b30a0e3e3c5a2cb0adff027ddd6",
+    "selectedFileHash": "0f6da282861dd29607005661416344871116e73a6c6da542fb2b07b6d37ff560",
+    "retrievalFound": true,
+    "candidateSupplyHash": "cae2377b9b33cd34",
+    "candidateOrderHash": "2928329861569064",
+    "neighborhoodHash": "19e6d981b120bc56",
+    "itemCount": 21
+   }
+  },
+  {
+   "instanceId": "django__django-11749",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/django__django-11749",
+   "authoritativeCharacters": 77826,
+   "itemBodies": {
+    "items": 17,
+    "withContent": 7,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "fdcc129c8dca44ae",
+    "leadPivot": "core/management/__init__.py::call_command",
+    "taskHash": "13bec9fd7e7a35382be90f11792e9741467b3e2d08ef47784a6811e650ec8f76",
+    "selectedFileHash": "2ffa5506b7199a14316aa4df97798eddfaa75473a69926daba4a377fe3ed7f99",
+    "retrievalFound": true,
+    "candidateSupplyHash": "a3ffacd4b8c30ea2",
+    "candidateOrderHash": "13742049fb1d2dcb",
+    "neighborhoodHash": "d4af08a764770e29",
+    "itemCount": 17
+   }
+  },
+  {
+   "instanceId": "django__django-11815",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/django__django-11815",
+   "authoritativeCharacters": 122414,
+   "itemBodies": {
+    "items": 26,
+    "withContent": 24,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "c59a24a4b61c165f",
+    "leadPivot": "contrib/admin/options.py::ModelAdmin.message_user",
+    "taskHash": "f72480b072f3a127145698a592c9f0d1ade626fbb679cf562db9f52f64a0b146",
+    "selectedFileHash": "04d7af1f9bf4164b4961cfbefd325db33f8ccb7cf8fbf8f5eed6188164b5f965",
+    "retrievalFound": true,
+    "candidateSupplyHash": "8d62f70098c06227",
+    "candidateOrderHash": "318b3cfca6ac44f3",
+    "neighborhoodHash": "53c7b1df617a48ab",
+    "itemCount": 26
+   }
+  },
+  {
+   "instanceId": "django__django-11820",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/django__django-11820",
+   "authoritativeCharacters": 77586,
+   "itemBodies": {
+    "items": 22,
+    "withContent": 22,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "b49e8f4a5e579f71",
+    "leadPivot": "db/models/fields/related.py::ForeignObject.related_fields",
+    "taskHash": "77205cc6d0f63dc71a58671a55aedcf1f038c0ed32235e7af435b4faa1c933fc",
+    "selectedFileHash": "b057ebb25f425d07ef1e6666c849f03ab1eec0c31debf1f127790f26688f125f",
+    "retrievalFound": true,
+    "candidateSupplyHash": "e7a2074a6f8719e3",
+    "candidateOrderHash": "1eee4060369857db",
+    "neighborhoodHash": "3cc296bf73912f18",
+    "itemCount": 22
+   }
+  },
+  {
+   "instanceId": "django__django-12050",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/django__django-12050",
+   "authoritativeCharacters": 84489,
+   "itemBodies": {
+    "items": 24,
+    "withContent": 22,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "28fba4a0799a29d3",
+    "leadPivot": "db/models/sql/query.py::Query.resolve_lookup_value",
+    "taskHash": "dc3e03a4399ea17b16c8d81e6a1bf4892d486acc98a1b14aae319b6a2bd9deb8",
+    "selectedFileHash": "fb4c09522937de848d407af6aa5249b4d15a989ca32c9b57e574ae8247504ee7",
+    "retrievalFound": true,
+    "candidateSupplyHash": "788f778b47355547",
+    "candidateOrderHash": "b5ace46e5e09ed38",
+    "neighborhoodHash": "c63d3bd9b538ff17",
+    "itemCount": 24
+   }
+  },
+  {
+   "instanceId": "django__django-12273",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/django__django-12273",
+   "authoritativeCharacters": 86466,
+   "itemBodies": {
+    "items": 20,
+    "withContent": 19,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "2dcc51ea2f247319",
+    "leadPivot": "db/models/fields/files.py::FieldFile.save",
+    "taskHash": "b5d688194593d9062c6025538e32bdb944927a9e07d8303a193eb6697790f0ce",
+    "selectedFileHash": "36cec7335e4b7b0ea5bf28c9277431f9051144cc0c31ac5fa5c5e50d88b2fb82",
+    "retrievalFound": true,
+    "candidateSupplyHash": "0983bd8d2b2174b9",
+    "candidateOrderHash": "371876d3f2be5894",
+    "neighborhoodHash": "2c439e9a4170cfbe",
+    "itemCount": 20
+   }
+  },
+  {
+   "instanceId": "django__django-12276",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/django__django-12276",
+   "authoritativeCharacters": 58633,
+   "itemBodies": {
+    "items": 18,
+    "withContent": 18,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "8e261f6c7045be82",
+    "leadPivot": "forms/widgets.py::ClearableFileInput.use_required_attribute",
+    "taskHash": "2cafeabea4416876948904576458ccdbbe607f9a49975fd527128ee78269d045",
+    "selectedFileHash": "8ec18b516992e41c8ff99aad62ca9fbc1f2f455ed117662f371abdda02431e87",
+    "retrievalFound": true,
+    "candidateSupplyHash": "1c2c85569784c005",
+    "candidateOrderHash": "1dd9095c8cd0af52",
+    "neighborhoodHash": "c70a5ba43e26b050",
+    "itemCount": 18
+   }
+  },
+  {
+   "instanceId": "django__django-12325",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/django__django-12325",
+   "authoritativeCharacters": 62267,
+   "itemBodies": {
+    "items": 17,
+    "withContent": 16,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "c99fbcf3a8bf4070",
+    "leadPivot": "db/models/deletion.py::CASCADE",
+    "taskHash": "5d5e674df8347c838fd55f24e226c3f52a5a721dcc882fb801b0d955ec6153ce",
+    "selectedFileHash": "28edf7a11cab95f401b291206fdba1b7248c1de600fdf18d40d5d8d0c87493d4",
+    "retrievalFound": true,
+    "candidateSupplyHash": "fe3f296b7062413d",
+    "candidateOrderHash": "ddf750a0a86a2b32",
+    "neighborhoodHash": "8b66c9c9294db223",
+    "itemCount": 17
+   }
+  },
+  {
+   "instanceId": "django__django-12774",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/django__django-12774",
+   "authoritativeCharacters": 147250,
+   "itemBodies": {
+    "items": 23,
+    "withContent": 20,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "5e41ae3b248f7f5f",
+    "leadPivot": "db/models/query.py::QuerySet.in_bulk",
+    "taskHash": "def4e93e0ac209ba7cfb5825c82be3ee25259d4372af4f1e61f64f458302abc7",
+    "selectedFileHash": "4c340e88896217e787624b1c3fbf261113b4d4f68a763b19d95f5c61414724a1",
+    "retrievalFound": true,
+    "candidateSupplyHash": "bd43bac749d71cce",
+    "candidateOrderHash": "b477b149a91c8871",
+    "neighborhoodHash": "0f8a38c24664b9fe",
+    "itemCount": 23
+   }
+  },
+  {
+   "instanceId": "django__django-12858",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/django__django-12858",
+   "authoritativeCharacters": 106841,
+   "itemBodies": {
+    "items": 22,
+    "withContent": 20,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "5abd9f751af7aff1",
+    "leadPivot": "db/models/base.py::Model._check_ordering",
+    "taskHash": "e5af8d757c7c97d704975708531ee6998951e7748a472079a8dfdb9a8b2d0243",
+    "selectedFileHash": "01d06abd9950bd5e38df30ef0ca04300546429f5ab412a643bcaf7a14960617b",
+    "retrievalFound": true,
+    "candidateSupplyHash": "590887b2a3a81ebf",
+    "candidateOrderHash": "0c9273f522bc8287",
+    "neighborhoodHash": "7483fcfe1f695cbe",
+    "itemCount": 22
+   }
+  },
+  {
+   "instanceId": "django__django-13012",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/django__django-13012",
+   "authoritativeCharacters": 112903,
+   "itemBodies": {
+    "items": 20,
+    "withContent": 19,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "be9553556dceaefb",
+    "leadPivot": "db/models/sql/compiler.py::SQLInsertCompiler.prepare_value",
+    "taskHash": "be3b7f518dbc2bdb004329f92f9229079f60fe2d0876be7807470d82933ad443",
+    "selectedFileHash": "948816031f9bdec2a509a52409e5b80b805b31d4372246362322bb7fd8e1a3bc",
+    "retrievalFound": true,
+    "candidateSupplyHash": "9477f24160a5affe",
+    "candidateOrderHash": "b4e628fa84ecc9d4",
+    "neighborhoodHash": "e2d57d75ce4ab07f",
+    "itemCount": 20
+   }
+  },
+  {
+   "instanceId": "django__django-13112",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/django__django-13112",
+   "authoritativeCharacters": 115086,
+   "itemBodies": {
+    "items": 22,
+    "withContent": 19,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "8ca97da6bbbed5aa",
+    "leadPivot": "contrib/admin/checks.py::check_dependencies",
+    "taskHash": "31dc505b18cbd285d95cfdb740a6ebe7c86148ef6f33a8cc917edf48134715aa",
+    "selectedFileHash": "b5a2f863f5c39c5959740a58d32f87de636828c8f0a6a5726482ef6ac654d669",
+    "retrievalFound": true,
+    "candidateSupplyHash": "fe556e732fccebbf",
+    "candidateOrderHash": "6f146ec601405548",
+    "neighborhoodHash": "6f1d7b316475c1de",
+    "itemCount": 22
+   }
+  },
+  {
+   "instanceId": "django__django-13195",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/django__django-13195",
+   "authoritativeCharacters": 91328,
+   "itemBodies": {
+    "items": 21,
+    "withContent": 18,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "3bdf0cdbf3a4beaa",
+    "leadPivot": "contrib/messages/storage/cookie.py::CookieStorage._update_cookie",
+    "taskHash": "1aa6bf1db5115e7cb82a21d9c68c68ec3b3f8f8cc778a35e60cd521f77db7dec",
+    "selectedFileHash": "cbd515e7f178e974381027cf94d6f51888ab14471a95600964fe427fea7a55a4",
+    "retrievalFound": true,
+    "candidateSupplyHash": "8638605dfea154be",
+    "candidateOrderHash": "bfa2f7f4369cd882",
+    "neighborhoodHash": "ffc17d1585e7ccd2",
+    "itemCount": 21
+   }
+  },
+  {
+   "instanceId": "django__django-13363",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/django__django-13363",
+   "authoritativeCharacters": 101582,
+   "itemBodies": {
+    "items": 24,
+    "withContent": 21,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "83a1d0b77a24cd7b",
+    "leadPivot": "db/models/functions/datetime.py::TimezoneMixin.get_tzname",
+    "taskHash": "8623db866d2513e1618c179d2c0f291bc9ffb23a8f964e364767a5a9c21bb3ac",
+    "selectedFileHash": "314c57f661a3de5de68200ed5c157a6a28464809d4fb09127e14d0cd939c0692",
+    "retrievalFound": true,
+    "candidateSupplyHash": "0591a30270329df3",
+    "candidateOrderHash": "54cd3223153e2b50",
+    "neighborhoodHash": "343159ed067fb3cf",
+    "itemCount": 24
+   }
+  },
+  {
+   "instanceId": "django__django-13512",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/django__django-13512",
+   "authoritativeCharacters": 68353,
+   "itemBodies": {
+    "items": 22,
+    "withContent": 19,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "93fe5374472f790c",
+    "leadPivot": "core/signing.py::JSONSerializer.dumps",
+    "taskHash": "7fd4944b22dc8bcb11439b27cdaa0d388a56cbb619a1b8dcb2bc1674f38c6269",
+    "selectedFileHash": "aa2f3de0e1861fd1f20b741b11e193b99047c29addf4b1ccca1f66e3b298fbc4",
+    "retrievalFound": true,
+    "candidateSupplyHash": "997ff5b0b4a5de9e",
+    "candidateOrderHash": "33c19e1fef9b362e",
+    "neighborhoodHash": "178f5f411205f4a2",
+    "itemCount": 22
+   }
+  },
+  {
+   "instanceId": "django__django-13513",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/django__django-13513",
+   "authoritativeCharacters": 110376,
+   "itemBodies": {
+    "items": 21,
+    "withContent": 18,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "095ce4611519871f",
+    "leadPivot": "views/debug.py::ExceptionReporter._get_lines_from_file",
+    "taskHash": "731d02e7d7f830058b1a61c69061bef50bf4c6a454e815c99fdaa82d55a58230",
+    "selectedFileHash": "9103576c3188d702a053695d32410cf0e8774e750e78bc04cb423fa66065c6ea",
+    "retrievalFound": true,
+    "candidateSupplyHash": "d71c1bb93442d4a5",
+    "candidateOrderHash": "e8f7f8ea34ef8615",
+    "neighborhoodHash": "caa61303d4254098",
+    "itemCount": 21
+   }
+  },
+  {
+   "instanceId": "django__django-13551",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/django__django-13551",
+   "authoritativeCharacters": 76441,
+   "itemBodies": {
+    "items": 18,
+    "withContent": 18,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "f463aef691b79159",
+    "leadPivot": "contrib/auth/tokens.py::PasswordResetTokenGenerator._make_hash_value",
+    "taskHash": "e24e76377f6c5cf72cf81a877998fbb09d0e39f7396c8a08d1f5a5c1b99056d6",
+    "selectedFileHash": "e4a5f3c53c19c2af7b8ee9bac544fc58e8e80e5550dff4e2928277b81791e048",
+    "retrievalFound": true,
+    "candidateSupplyHash": "d73890107c743860",
+    "candidateOrderHash": "b0aff8c20d8e7e54",
+    "neighborhoodHash": "9a0f214a4bdf941e",
+    "itemCount": 18
+   }
+  },
+  {
+   "instanceId": "django__django-13590",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/django__django-13590",
+   "authoritativeCharacters": 83403,
+   "itemBodies": {
+    "items": 23,
+    "withContent": 17,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "fa59eab6634de1b6",
+    "leadPivot": "db/migrations/operations/base.py::Operation.__new__",
+    "taskHash": "74396509b0c09973350cef4dad3959ff549f160d5c3d3eb5eea6874cac91a15c",
+    "selectedFileHash": "f1d0329bc2439854cd5d9c555656c50e01c0703ef9b40358a759f8238a50fb01",
+    "retrievalFound": true,
+    "candidateSupplyHash": "33c6eb5120cd552b",
+    "candidateOrderHash": "d891f61c68d6bcee",
+    "neighborhoodHash": "0518d91b0b2029d5",
+    "itemCount": 23
+   }
+  },
+  {
+   "instanceId": "django__django-13658",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/django__django-13658",
+   "authoritativeCharacters": 94400,
+   "itemBodies": {
+    "items": 22,
+    "withContent": 19,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "51a6165a7d11cfb1",
+    "leadPivot": "core/management/__init__.py::ManagementUtility.__init__",
+    "taskHash": "9f87f13a368e0959ad5f3b88c5438ebd98ec202fcc75cb6517d373d1b47c6cbd",
+    "selectedFileHash": "ac5cf6cbca8fa3fabc4380c4929ed83175036651734b42b91c7fbf25dc0135ca",
+    "retrievalFound": true,
+    "candidateSupplyHash": "5b083737edd709a3",
+    "candidateOrderHash": "b3d87d7c5639e389",
+    "neighborhoodHash": "9ce0471e2e18cfbe",
+    "itemCount": 22
+   }
+  },
+  {
+   "instanceId": "django__django-13810",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/django__django-13810",
+   "authoritativeCharacters": 134765,
+   "itemBodies": {
+    "items": 19,
+    "withContent": 17,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "cb2194f1c1322073",
+    "leadPivot": "core/exceptions.py::MiddlewareNotUsed",
+    "taskHash": "5065775b0b831c97c47ccff3e086d3fccd3d666aa8cba4d0149bacefbd145b0b",
+    "selectedFileHash": "bf57cd1a7d2c8b945707b3a73f1192646ffa7bfcc42bd68a10a815fbe755453e",
+    "retrievalFound": true,
+    "candidateSupplyHash": "7bdf038db37b3d04",
+    "candidateOrderHash": "f1f6f0a088bebbc5",
+    "neighborhoodHash": "d9fd3216c80341e3",
+    "itemCount": 19
+   }
+  },
+  {
+   "instanceId": "django__django-13820",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/django__django-13820",
+   "authoritativeCharacters": 155847,
+   "itemBodies": {
+    "items": 22,
+    "withContent": 20,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "f8546c809e07e65e",
+    "leadPivot": "apps/config.py::AppConfig",
+    "taskHash": "e1b2974bb4dfdd2f815c438031e94eac6c0bcb983eead63877640fad24edbfe5",
+    "selectedFileHash": "b6dcf94a288294342d7f2e1f542cbdb86f2a6d1205fe7856650133742cc93ead",
+    "retrievalFound": true,
+    "candidateSupplyHash": "c8f2c2c0318dd5bb",
+    "candidateOrderHash": "7797538afe95f683",
+    "neighborhoodHash": "2c7f8ecd2ca0595a",
+    "itemCount": 22
+   }
+  },
+  {
+   "instanceId": "django__django-14608",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/django__django-14608",
+   "authoritativeCharacters": 75867,
+   "itemBodies": {
+    "items": 21,
+    "withContent": 21,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "d4fce73cad0e4d98",
+    "leadPivot": "forms/formsets.py::BaseFormSet.non_form_errors",
+    "taskHash": "7cbaad47d61697896ecae542cc80ba390e433cc43de309881aacc7c90c579b7d",
+    "selectedFileHash": "6d7f2782d337484b47f8b45106445113e0681c9fd331b0de811d12d446cfe17f",
+    "retrievalFound": true,
+    "candidateSupplyHash": "ec40b76ffbe6136e",
+    "candidateOrderHash": "3542f07cd6db484e",
+    "neighborhoodHash": "84455dfde3550e75",
+    "itemCount": 21
+   }
+  },
+  {
+   "instanceId": "django__django-14792",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/django__django-14792",
+   "authoritativeCharacters": 111148,
+   "itemBodies": {
+    "items": 23,
+    "withContent": 19,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "8d55f25c36890f6b",
+    "leadPivot": "db/backends/postgresql/operations.py::DatabaseOperations",
+    "taskHash": "a87429718b41b385a256183df2d15a11c54e90e68d7ac6e600cc7052e357c787",
+    "selectedFileHash": "869cd1431e9a30303eb6058a71f88fedaa1faa11f1e8dda076ba81041bfe89da",
+    "retrievalFound": true,
+    "candidateSupplyHash": "237645cf604f0551",
+    "candidateOrderHash": "a2122e5ba664cd64",
+    "neighborhoodHash": "794c2d3f8784d204",
+    "itemCount": 23
+   }
+  },
+  {
+   "instanceId": "django__django-15037",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/django__django-15037",
+   "authoritativeCharacters": 95964,
+   "itemBodies": {
+    "items": 22,
+    "withContent": 20,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "b178b0715f25e231",
+    "leadPivot": "db/models/fields/related.py::ForeignKey",
+    "taskHash": "444084ac3faa3f8e98647f0271f0e75a248493b0b3d50d31d62ff088e55f7465",
+    "selectedFileHash": "327b65f07430c30cef21bb1083291c223133267ef5832b03002aeb6b9afa3884",
+    "retrievalFound": true,
+    "candidateSupplyHash": "a8c9a46eec536ecc",
+    "candidateOrderHash": "1a9a7307368866c9",
+    "neighborhoodHash": "4b6cc370f0435b39",
+    "itemCount": 22
+   }
+  },
+  {
+   "instanceId": "django__django-15503",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/django__django-15503",
+   "authoritativeCharacters": 99189,
+   "itemBodies": {
+    "items": 22,
+    "withContent": 19,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "f77c7845dae388cc",
+    "leadPivot": "contrib/messages/storage/cookie.py::MessageEncoder.default",
+    "taskHash": "770f97d5bc2cf456b6b63d0ecd4bf3bd358bb4a55a9d7d9736b2d5f5cf19a2cd",
+    "selectedFileHash": "3495e3516f1ef44f43ea38747e5d8bc36a3273e909fbdd7fe8b61ffb99db8e58",
+    "retrievalFound": true,
+    "candidateSupplyHash": "b7aa3b24d8947ba6",
+    "candidateOrderHash": "14299173f12c153a",
+    "neighborhoodHash": "0ed33fc5ee43edc4",
+    "itemCount": 22
+   }
+  },
+  {
+   "instanceId": "django__django-15572",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/django__django-15572",
+   "authoritativeCharacters": 78486,
+   "itemBodies": {
+    "items": 20,
+    "withContent": 19,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "5f46a9c7b25fb200",
+    "leadPivot": "template/utils.py::EngineHandler.templates",
+    "taskHash": "c1b4c2478010a876badf0ee032e3cc7db1516bb421ce0f2a8ad1e0deaf4307c9",
+    "selectedFileHash": "5906277583f3da4daae9cef72517c2157f6761e473bfec1de18e041d4ea7d53f",
+    "retrievalFound": true,
+    "candidateSupplyHash": "ea475627f68d7d3e",
+    "candidateOrderHash": "e2e993c9d21270a6",
+    "neighborhoodHash": "34d84c48b12f3b38",
+    "itemCount": 20
+   }
+  },
+  {
+   "instanceId": "django__django-15695",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/django__django-15695",
+   "authoritativeCharacters": 76410,
+   "itemBodies": {
+    "items": 19,
+    "withContent": 16,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "f9d2d1c5f44218e0",
+    "leadPivot": "db/migrations/operations/models.py::RenameIndex.__init__",
+    "taskHash": "0080fdcddb310d76840eb0488600b4c6a44b7ef9ac8aa3f18aae29f7ad3c13b4",
+    "selectedFileHash": "f038709f0897b75b999ae41cc163e73836a44083226d22e333ba9ea093c17153",
+    "retrievalFound": true,
+    "candidateSupplyHash": "dc109bc109d6f340",
+    "candidateOrderHash": "87d757673bfb93eb",
+    "neighborhoodHash": "1d8117e49b15de74",
+    "itemCount": 19
+   }
+  },
+  {
+   "instanceId": "django__django-15731",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/django__django-15731",
+   "authoritativeCharacters": 85253,
+   "itemBodies": {
+    "items": 24,
+    "withContent": 22,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "35da488b035b5ee5",
+    "leadPivot": "db/models/manager.py::BaseManager._get_queryset_methods",
+    "taskHash": "0af6b1bf3da57f171e96491c3a730b3db4c077f5a92166cf3fd8cce1a00834c0",
+    "selectedFileHash": "7343cd0edeb550c6c76f5f0c85572238f98c40578ff287e2586d675a3ca5994b",
+    "retrievalFound": true,
+    "candidateSupplyHash": "ecfb010af3d8e519",
+    "candidateOrderHash": "fcd91fc06cb7a9a3",
+    "neighborhoodHash": "1dd4d9458bcda44e",
+    "itemCount": 24
+   }
+  },
+  {
+   "instanceId": "django__django-16256",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/django__django-16256",
+   "authoritativeCharacters": 90294,
+   "itemBodies": {
+    "items": 19,
+    "withContent": 18,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "304c6bc49f1d614a",
+    "leadPivot": "db/models/fields/related_descriptors.py::ManyToManyDescriptor",
+    "taskHash": "bfb77d5b9347a5517bb00c3a290fab44e75bac03632a574772e9ced7310b3842",
+    "selectedFileHash": "4639ba323aeee64aa6d88966f713cbf2b565e0020198af0a17eaf1ca15eb8c2d",
+    "retrievalFound": true,
+    "candidateSupplyHash": "c779ac457c232405",
+    "candidateOrderHash": "26b534a4665c89ba",
+    "neighborhoodHash": "eb3c889bd4a457bc",
+    "itemCount": 19
+   }
+  },
+  {
+   "instanceId": "django__django-16263",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/django__django-16263",
+   "authoritativeCharacters": 68723,
+   "itemBodies": {
+    "items": 23,
+    "withContent": 21,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "d8bf55199765940b",
+    "leadPivot": "db/models/query.py::QuerySet.annotate",
+    "taskHash": "984895cd6602914898de4682a5b1b14a786821a2331015b2aa12a9bbf20429c8",
+    "selectedFileHash": "9b889967f87aa48c8ef0ce5446ed5c5179babe9f712275a5a54e412119218e38",
+    "retrievalFound": true,
+    "candidateSupplyHash": "c131f6ac413e21b3",
+    "candidateOrderHash": "2006f701862acdcb",
+    "neighborhoodHash": "83d070234a9ef27e",
+    "itemCount": 23
+   }
+  },
+  {
+   "instanceId": "django__django-16333",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/django__django-16333",
+   "authoritativeCharacters": 74506,
+   "itemBodies": {
+    "items": 20,
+    "withContent": 18,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "8bb05f8e58cc9563",
+    "leadPivot": "contrib/auth/forms.py::UserCreationForm.save",
+    "taskHash": "e0c84232980947c30bbf4ed81c944746f992603885ea8ca630af38aa2714763e",
+    "selectedFileHash": "dbd92d75dad50108507087d15e0d6ac8fe718b7ee080ac5ed081f6d45ffb1157",
+    "retrievalFound": true,
+    "candidateSupplyHash": "5d673a1c6ad3f750",
+    "candidateOrderHash": "3e777f2ae7877b3b",
+    "neighborhoodHash": "2decd3adf4b4704f",
+    "itemCount": 20
+   }
+  },
+  {
+   "instanceId": "django__django-16569",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/django__django-16569",
+   "authoritativeCharacters": 143485,
+   "itemBodies": {
+    "items": 20,
+    "withContent": 17,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "4f96ec5d9d62189f",
+    "leadPivot": "contrib/auth/models.py::AnonymousUser",
+    "taskHash": "79c93c8b4c1f5d436e635724900b41ffff15d68fa41822d58183c9f765db2636",
+    "selectedFileHash": "a2654992595eea60a4e23aaa9dd5f1360ff866c19e40b5cad00f8d85ac7f731f",
+    "retrievalFound": true,
+    "candidateSupplyHash": "37d3585997ad992d",
+    "candidateOrderHash": "f9bccf271407f840",
+    "neighborhoodHash": "5a960b833c5be836",
+    "itemCount": 20
+   }
+  },
+  {
+   "instanceId": "django__django-16667",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/django__django-16667",
+   "authoritativeCharacters": 96915,
+   "itemBodies": {
+    "items": 19,
+    "withContent": 16,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "92df4ff75c6226bd",
+    "leadPivot": "forms/widgets.py::SelectDateWidget",
+    "taskHash": "6a9c0c039695ff8e781908d9e121475b32a3b94090835326beacf9d8493f463c",
+    "selectedFileHash": "0bc5d2533bbbd047c2b9498d4e121ccf73cc6ab5e3f0fc0900a833ac8eafdc76",
+    "retrievalFound": true,
+    "candidateSupplyHash": "83a585d2ccb41398",
+    "candidateOrderHash": "988ac59079d55817",
+    "neighborhoodHash": "5a23e055a04484d1",
+    "itemCount": 19
+   }
+  },
+  {
+   "instanceId": "django__django-16819",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/django__django-16819",
+   "authoritativeCharacters": 71871,
+   "itemBodies": {
+    "items": 19,
+    "withContent": 16,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "fba4a0592d81f372",
+    "leadPivot": "db/migrations/operations/models.py::RemoveIndex",
+    "taskHash": "faf6666a3a72f73e8c66f507b52ef48c9e05175c82661c6328614aaa1e145ff3",
+    "selectedFileHash": "f5fe1e3e52f152b529efb4c85f376183f92e65c0d50d8a607b3d73d6ab0034f1",
+    "retrievalFound": true,
+    "candidateSupplyHash": "5a5a45601ae78cf7",
+    "candidateOrderHash": "5d63c8d8f0c7dcec",
+    "neighborhoodHash": "6de60bbff3e68de8",
+    "itemCount": 19
+   }
+  },
+  {
+   "instanceId": "django__django-16877",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/django__django-16877",
+   "authoritativeCharacters": 56625,
+   "itemBodies": {
+    "items": 17,
+    "withContent": 17,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "4e40b29d78a90e32",
+    "leadPivot": "template/defaultfilters.py::escape_filter",
+    "taskHash": "b96375f4ecaee93213d8678bcf884807862452936aedef5311c9820b03b8b59a",
+    "selectedFileHash": "000060485cd5cf32d3ac4a07d26c917f466080a53b8abdcb1c7af3ecd57cf894",
+    "retrievalFound": true,
+    "candidateSupplyHash": "ac7131f8b8c94b81",
+    "candidateOrderHash": "5876179cb95e5a66",
+    "neighborhoodHash": "c2c187a92ad0132f",
+    "itemCount": 17
+   }
+  },
+  {
+   "instanceId": "django__django-16938",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/django__django-16938",
+   "authoritativeCharacters": 131343,
+   "itemBodies": {
+    "items": 21,
+    "withContent": 19,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "1facf7d1a2b41778",
+    "leadPivot": "db/models/sql/compiler.py::SQLCompiler.get_combinator_sql",
+    "taskHash": "10b23140eabbb291b9a24fd17d84a3671a57abe2aff5543e83419da94b9a0617",
+    "selectedFileHash": "c1e4bd4e4b98a5aa8157156cdb84284d0e8e5a41a10988ccd60ab6ea1ed112e7",
+    "retrievalFound": true,
+    "candidateSupplyHash": "5872826d1743ad70",
+    "candidateOrderHash": "79d094fdf90e1f7c",
+    "neighborhoodHash": "70c92d0de1cc4e44",
+    "itemCount": 21
+   }
+  },
+  {
+   "instanceId": "django__django-17084",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/django__django-17084",
+   "authoritativeCharacters": 82174,
+   "itemBodies": {
+    "items": 20,
+    "withContent": 17,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "59bee2ebc6d42e91",
+    "leadPivot": "template/defaultfilters.py::date",
+    "taskHash": "6c2cc6cb3d829215ca5946fa57db801c8adca340c72724401319cd2095c14d99",
+    "selectedFileHash": "513a48dc2a0bd0dac7b01d584702799c39d82847db9a117cde1620222c2aae00",
+    "retrievalFound": true,
+    "candidateSupplyHash": "1b2eaa07bad6399e",
+    "candidateOrderHash": "525a16e681864b70",
+    "neighborhoodHash": "2a25a528b9c2bd20",
+    "itemCount": 20
+   }
+  },
+  {
+   "instanceId": "matplotlib__matplotlib-22719",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/matplotlib__matplotlib-22719",
+   "authoritativeCharacters": 186742,
+   "itemBodies": {
+    "items": 24,
+    "withContent": 22,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "d69a0f9ba543d880",
+    "leadPivot": "lib/matplotlib/axis.py::Axis.convert_units",
+    "taskHash": "311a68109cba64897671fe117a5cf0db70b33a6f6b288de88e42920b4e24a091",
+    "selectedFileHash": "c9f84c7fd1e20bccffa4f62c0e77b91b6c5d526db509fb98abdfa3e65ba11417",
+    "retrievalFound": true,
+    "candidateSupplyHash": "c442629263b4437d",
+    "candidateOrderHash": "b3d97e915d47bcc0",
+    "neighborhoodHash": "4f522a1a82e2a5be",
+    "itemCount": 24
+   }
+  },
+  {
+   "instanceId": "matplotlib__matplotlib-24627",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/matplotlib__matplotlib-24627",
+   "authoritativeCharacters": 83260,
+   "itemBodies": {
+    "items": 18,
+    "withContent": 18,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "2a2d47f5d8f6f6c0",
+    "leadPivot": "lib/matplotlib/artist.py::Artist.remove",
+    "taskHash": "df7a23ab989356fee313c68118f6f7dc72d52abe536caf900b0e9152660f09d7",
+    "selectedFileHash": "d190fb213570cf13983f062d976f2f52071256968c355f738a379533fbe0dcf8",
+    "retrievalFound": true,
+    "candidateSupplyHash": "3325fd1ab2811916",
+    "candidateOrderHash": "33acf6250de255e1",
+    "neighborhoodHash": "f8e169f794668336",
+    "itemCount": 18
+   }
+  },
+  {
+   "instanceId": "matplotlib__matplotlib-24870",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/matplotlib__matplotlib-24870",
+   "authoritativeCharacters": 115350,
+   "itemBodies": {
+    "items": 17,
+    "withContent": 16,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "122ed9507e76be34",
+    "leadPivot": "lib/matplotlib/pyplot.py::subplot",
+    "taskHash": "93b9662123e95fb6d5f0ba48a4cd14ad8873d35b910f81a7fd31aed97b6e0c28",
+    "selectedFileHash": "bd9818d46c38edbca4d3b8291c30b53c3788581462f4c5983a1bac89fd7d6539",
+    "retrievalFound": true,
+    "candidateSupplyHash": "c0fc84ee8989c3ad",
+    "candidateOrderHash": "aa38e511e3952e38",
+    "neighborhoodHash": "0a9b097226c11387",
+    "itemCount": 17
+   }
+  },
+  {
+   "instanceId": "matplotlib__matplotlib-24970",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/matplotlib__matplotlib-24970",
+   "authoritativeCharacters": 103989,
+   "itemBodies": {
+    "items": 19,
+    "withContent": 17,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "f9822f2a18627ad7",
+    "leadPivot": "lib/matplotlib/pyplot.py::_copy_docstring_and_deprecators",
+    "taskHash": "90871bf8c0c1011f272f7f762cc822bb1fb51f5509bda7ef0883987a9bd8dc49",
+    "selectedFileHash": "6e68ae268b078ce889051671180e1c74fcf03685bf40a3cd1f1108d6bcb77717",
+    "retrievalFound": true,
+    "candidateSupplyHash": "3ef0ff0a72c7316a",
+    "candidateOrderHash": "5975c09796c6b59d",
+    "neighborhoodHash": "b91ae0b0286af26d",
+    "itemCount": 19
+   }
+  },
+  {
+   "instanceId": "matplotlib__matplotlib-25332",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/matplotlib__matplotlib-25332",
+   "authoritativeCharacters": 141567,
+   "itemBodies": {
+    "items": 20,
+    "withContent": 19,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "17d1a5e7c8848e04",
+    "leadPivot": "lib/matplotlib/pyplot.py::figure",
+    "taskHash": "d2ee05598a4489016ab16bf42697cb42300194d0eca13332062962318fcd878b",
+    "selectedFileHash": "55a19d5dd51176ab844e15b9ac6cbb6f6d7a0d27e02c45cf6efdfac47d0ee215",
+    "retrievalFound": true,
+    "candidateSupplyHash": "bc03a77a15dd7278",
+    "candidateOrderHash": "91a6c5e3737680c0",
+    "neighborhoodHash": "b8bb99db7b28158a",
+    "itemCount": 20
+   }
+  },
+  {
+   "instanceId": "matplotlib__matplotlib-25960",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/matplotlib__matplotlib-25960",
+   "authoritativeCharacters": 93679,
+   "itemBodies": {
+    "items": 14,
+    "withContent": 14,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "a3bbf46675c2afaa",
+    "leadPivot": "lib/matplotlib/figure.py::FigureBase.subfigures",
+    "taskHash": "f777ed56b38734685ae0a9b61fd5704b0436b710b66b3e8ddc44d32e31ca9431",
+    "selectedFileHash": "475078bb82fe66c35773bfba1cfefd0e31272e3072a372dd4818f648fa853d66",
+    "retrievalFound": true,
+    "candidateSupplyHash": "2eb47dfd668c67af",
+    "candidateOrderHash": "14118baae87e8146",
+    "neighborhoodHash": "09c7b7c2c3535d51",
+    "itemCount": 14
+   }
+  },
+  {
+   "instanceId": "matplotlib__matplotlib-26466",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/matplotlib__matplotlib-26466",
+   "authoritativeCharacters": 123573,
+   "itemBodies": {
+    "items": 27,
+    "withContent": 24,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "0bc602078b7c45ee",
+    "leadPivot": "lib/matplotlib/axes/_axes.py::Axes.annotate",
+    "taskHash": "30e380ca591a9b917848bc8f1e9a874c910ba22837f630be15f2efbbeacce3f5",
+    "selectedFileHash": "42a9713c6858008f21d352b322e5ada8bc1284479130f9cf2c1de065de85579e",
+    "retrievalFound": true,
+    "candidateSupplyHash": "fcdf85476134a9a1",
+    "candidateOrderHash": "c5be77ae6180db56",
+    "neighborhoodHash": "df9c943db54d6db8",
+    "itemCount": 27
+   }
+  },
+  {
+   "instanceId": "mwaskom__seaborn-3187",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/mwaskom__seaborn-3187",
+   "authoritativeCharacters": 169831,
+   "itemBodies": {
+    "items": 26,
+    "withContent": 22,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "aaef4a79809e49cc",
+    "leadPivot": "seaborn/_core/scales.py::ContinuousBase._setup",
+    "taskHash": "81b8dd7baa117b1c125c8edf2b8f1c38958c5f58bc99e58a157e07b9c7957ea5",
+    "selectedFileHash": "5543702e4b2fe902f2c699dc4782c8c1d022d99a70ee79a6f194fa795479b17e",
+    "retrievalFound": true,
+    "candidateSupplyHash": "18d176f23fe1661b",
+    "candidateOrderHash": "5a3d582451a283a2",
+    "neighborhoodHash": "ca92f4f7ed497a22",
+    "itemCount": 26
+   }
+  },
+  {
+   "instanceId": "pallets__flask-5014",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/pallets__flask-5014",
+   "authoritativeCharacters": 117406,
+   "itemBodies": {
+    "items": 21,
+    "withContent": 21,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "48fd916856dc295a",
+    "leadPivot": "src/flask/app.py::Flask.name",
+    "taskHash": "375dbd2a7f012d8043680031e7df123fb1b7139e47de8d276be5b6321ddc4dde",
+    "selectedFileHash": "db21a01f8f657b382f3b3b36a9c6aafca24b06dc70ddb4217457807a817a4b8f",
+    "retrievalFound": true,
+    "candidateSupplyHash": "259ed86549772906",
+    "candidateOrderHash": "8702076a626c3d78",
+    "neighborhoodHash": "6c32a7b39b319a66",
+    "itemCount": 21
+   }
+  },
+  {
+   "instanceId": "psf__requests-1142",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/psf__requests-1142",
+   "authoritativeCharacters": 71852,
+   "itemBodies": {
+    "items": 23,
+    "withContent": 23,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "71f820f1b97fe20b",
+    "leadPivot": "requests/models.py::PreparedRequest.prepare_content_length",
+    "taskHash": "eade6f49f359c6ddf9524b8675c4a9ab7a1a3d5eda14e4fe6e769a2dea429387",
+    "selectedFileHash": "41b664dbb47bad03cbd33a41647272675c38f301ed08f289f2aae836e74162ae",
+    "retrievalFound": true,
+    "candidateSupplyHash": "3d8c9d6d6ef9189e",
+    "candidateOrderHash": "48e73263ba77bbdd",
+    "neighborhoodHash": "d3e73e937cf3c694",
+    "itemCount": 23
+   }
+  },
+  {
+   "instanceId": "psf__requests-1724",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/psf__requests-1724",
+   "authoritativeCharacters": 166773,
+   "itemBodies": {
+    "items": 26,
+    "withContent": 24,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "fff027705faeeaad",
+    "leadPivot": "requests/sessions.py::Session.request",
+    "taskHash": "8b5ceb0cb786a68bb336dc0af4ad3908c925a065d81f77d33f5bc71ebcbe0428",
+    "selectedFileHash": "e2b055bb60703483ca77ab9bd18775f0efdf08e2fc00784a4e14ff11ec29d595",
+    "retrievalFound": true,
+    "candidateSupplyHash": "d32fed6fd9ea3cd5",
+    "candidateOrderHash": "903ab611a72be0b4",
+    "neighborhoodHash": "665413498a2901e1",
+    "itemCount": 26
+   }
+  },
+  {
+   "instanceId": "psf__requests-1921",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/psf__requests-1921",
+   "authoritativeCharacters": 89118,
+   "itemBodies": {
+    "items": 21,
+    "withContent": 21,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "31a17c3c90bfa87f",
+    "leadPivot": "requests/sessions.py::Session",
+    "taskHash": "9d0f8ec018bc4d898a81bcc9d5fc9174bf8cbb56705f6cf32ef11c81e198ca70",
+    "selectedFileHash": "8d50beae5d21d3c2e2b5c15cb575d8fa23db65116d6394ea86932be82036467a",
+    "retrievalFound": true,
+    "candidateSupplyHash": "756511389164d678",
+    "candidateOrderHash": "ef3f8557123c27a5",
+    "neighborhoodHash": "08752368da4f610a",
+    "itemCount": 21
+   }
+  },
+  {
+   "instanceId": "psf__requests-5414",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/psf__requests-5414",
+   "authoritativeCharacters": 113118,
+   "itemBodies": {
+    "items": 19,
+    "withContent": 19,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "e83dc110dd1ae4c0",
+    "leadPivot": "requests/models.py::PreparedRequest.prepare_url",
+    "taskHash": "680f398ad1f22354289f63887960eff1b324e471429b3978c2442785bd46e689",
+    "selectedFileHash": "9b3109e70ae6e50a296f9fd746804423c67cb7ad67d2cc744d5cbc5d57ba0e4f",
+    "retrievalFound": true,
+    "candidateSupplyHash": "2a3780c80d0eae19",
+    "candidateOrderHash": "f7ea644e1865cdfc",
+    "neighborhoodHash": "9da7d03015acd0c1",
+    "itemCount": 19
+   }
+  },
+  {
+   "instanceId": "pydata__xarray-2905",
+   "captured": false,
+   "error": "no_structured_content"
+  },
+  {
+   "instanceId": "pydata__xarray-3677",
+   "captured": false,
+   "error": "no_structured_content"
+  },
+  {
+   "instanceId": "pydata__xarray-4695",
+   "captured": false,
+   "error": "no_structured_content"
+  },
+  {
+   "instanceId": "pydata__xarray-6599",
+   "captured": false,
+   "error": "no_structured_content"
+  },
+  {
+   "instanceId": "pydata__xarray-6938",
+   "captured": false,
+   "error": "no_structured_content"
+  },
+  {
+   "instanceId": "pydata__xarray-6992",
+   "captured": false,
+   "error": "no_structured_content"
+  },
+  {
+   "instanceId": "pylint-dev__pylint-4551",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/pylint-dev__pylint-4551",
+   "authoritativeCharacters": 85429,
+   "itemBodies": {
+    "items": 20,
+    "withContent": 19,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "6091a2459e14229c",
+    "leadPivot": "pylint/checkers/classes.py::ClassChecker.__init__",
+    "taskHash": "66b5c35a3a489a8ff461880b891d09d0096a78428dc6dcc1790324f5ee87cf0d",
+    "selectedFileHash": "00e6bd7e6054dab9fc6ecb7b90c1898da2596e3bcb1edf4b48cf75da98da3041",
+    "retrievalFound": true,
+    "candidateSupplyHash": "38fba23478c75a62",
+    "candidateOrderHash": "a15dadee8d5fa045",
+    "neighborhoodHash": "26d252706433f8dc",
+    "itemCount": 20
+   }
+  },
+  {
+   "instanceId": "pylint-dev__pylint-8898",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/pylint-dev__pylint-8898",
+   "authoritativeCharacters": 133717,
+   "itemBodies": {
+    "items": 19,
+    "withContent": 19,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "438e91a96ac174e1",
+    "leadPivot": "pylint/config/argument.py::_regexp_csv_transfomer",
+    "taskHash": "404803d2e68133c7558e593f2765ef32c10291ad1cade68a30f67fb4b0de5766",
+    "selectedFileHash": "03c448d4434585820ef958cac25ef94e5a64f26ea19679838c5ab04677fb2fa6",
+    "retrievalFound": true,
+    "candidateSupplyHash": "f12be3ce0df3da3f",
+    "candidateOrderHash": "b34d2f000a3bca7e",
+    "neighborhoodHash": "75f6c8f7cac161f4",
+    "itemCount": 19
+   }
+  },
+  {
+   "instanceId": "pytest-dev__pytest-10051",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/pytest-dev__pytest-10051",
+   "authoritativeCharacters": 135685,
+   "itemBodies": {
+    "items": 24,
+    "withContent": 22,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "d7a192f65ca34496",
+    "leadPivot": "src/_pytest/logging.py::LogCaptureHandler.reset",
+    "taskHash": "3fe4a8a976be6b8395647fd211efe4ad27e650bffc9353ac8e9b4a792ba5b3c3",
+    "selectedFileHash": "5a96c7c889f64e6e8ff23c3c8efe71a5eb3353661587c087150cc13a66a9c0cf",
+    "retrievalFound": true,
+    "candidateSupplyHash": "53a6c9716beb21a8",
+    "candidateOrderHash": "2d5cbc676476fe27",
+    "neighborhoodHash": "f58df86b824f29b8",
+    "itemCount": 24
+   }
+  },
+  {
+   "instanceId": "pytest-dev__pytest-5262",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/pytest-dev__pytest-5262",
+   "authoritativeCharacters": 127465,
+   "itemBodies": {
+    "items": 17,
+    "withContent": 17,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "698f323e2a02c53a",
+    "leadPivot": "src/_pytest/capture.py::pytest_addoption",
+    "taskHash": "904cb12ccfd761005f3bc9a514d84ba8a73503c72c9a59d64af3b0b5b586912a",
+    "selectedFileHash": "fef9ed8e6a26f8c9dae5c64191cb8c15dcaeaff196486ae420d27d6bdf13c3e5",
+    "retrievalFound": true,
+    "candidateSupplyHash": "d740d54be2f4c498",
+    "candidateOrderHash": "5a761c3eb228f044",
+    "neighborhoodHash": "498ef40220734d9e",
+    "itemCount": 17
+   }
+  },
+  {
+   "instanceId": "pytest-dev__pytest-6197",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/pytest-dev__pytest-6197",
+   "authoritativeCharacters": 81160,
+   "itemBodies": {
+    "items": 11,
+    "withContent": 11,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "2acfec0af4cd0658",
+    "leadPivot": "src/_pytest/hookspec.py::pytest_assertion_pass",
+    "taskHash": "88f35d4056f4c5be715dde327bf7379fe9345f2f261bc8b202dbccce49c0e3b4",
+    "selectedFileHash": "7dc3d02c5d9717f767767f401a62d8319bc9c5380d7407af6d389a9555c7e8bd",
+    "retrievalFound": true,
+    "candidateSupplyHash": "7dee5fc15e0061b3",
+    "candidateOrderHash": "7c6fa886e8c8fa6c",
+    "neighborhoodHash": "9508860af337ac27",
+    "itemCount": 11
+   }
+  },
+  {
+   "instanceId": "pytest-dev__pytest-7432",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/pytest-dev__pytest-7432",
+   "authoritativeCharacters": 96749,
+   "itemBodies": {
+    "items": 16,
+    "withContent": 15,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "264d74b29722cac4",
+    "leadPivot": "src/_pytest/skipping.py::pytest_addoption",
+    "taskHash": "53ca5c5f8f63da62f3f3316ae040ed84c21af0561376b31f896e8be99c1eb4ac",
+    "selectedFileHash": "51f762a811cde3b7edbf846cc268f556b0bb8008d899c33a6cc5c34247a398ef",
+    "retrievalFound": true,
+    "candidateSupplyHash": "6593f0c5a2e3af54",
+    "candidateOrderHash": "d6074fcfa11743c1",
+    "neighborhoodHash": "192c79e0d057e222",
+    "itemCount": 16
+   }
+  },
+  {
+   "instanceId": "scikit-learn__scikit-learn-10844",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/scikit-learn__scikit-learn-10844",
+   "authoritativeCharacters": 121473,
+   "itemBodies": {
+    "items": 17,
+    "withContent": 16,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "d27c2f1414023b2d",
+    "leadPivot": "sklearn/metrics/cluster/supervised.py::fowlkes_mallows_score",
+    "taskHash": "7a86c825f3ec323157fa50fc805459fedd7a63c653a9dc2f354bb3381d5a72ab",
+    "selectedFileHash": "bdc2a3345b17ff29ebd0c6ad582d1a50b67a81130d06848525c41d920943e40f",
+    "retrievalFound": true,
+    "candidateSupplyHash": "34b0a5ed6719fb94",
+    "candidateOrderHash": "5366a693d4d788b7",
+    "neighborhoodHash": "9e74b3af3883cb2d",
+    "itemCount": 17
+   }
+  },
+  {
+   "instanceId": "scikit-learn__scikit-learn-11578",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/scikit-learn__scikit-learn-11578",
+   "authoritativeCharacters": 175829,
+   "itemBodies": {
+    "items": 21,
+    "withContent": 19,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "6cd42e19484404b6",
+    "leadPivot": "sklearn/preprocessing/label.py::LabelBinarizer",
+    "taskHash": "bbf649397da40667c7c6a51dcad355cf7781046cbac501d8e71e890172aa00b0",
+    "selectedFileHash": "605027d6c3546ba335594a1bdb6e12fb99cae2b79db8682531353ec9ace1400b",
+    "retrievalFound": true,
+    "candidateSupplyHash": "d3f11d708205ed28",
+    "candidateOrderHash": "ba017162c643cbb0",
+    "neighborhoodHash": "d5d83b254cd53df8",
+    "itemCount": 21
+   }
+  },
+  {
+   "instanceId": "sphinx-doc__sphinx-7462",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/sphinx-doc__sphinx-7462",
+   "authoritativeCharacters": 72830,
+   "itemBodies": {
+    "items": 17,
+    "withContent": 16,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "3536e0d5f624dda4",
+    "leadPivot": "sphinx/domains/python.py::_parse_annotation",
+    "taskHash": "d1f0bba8ce4a78ae3457920694b52d64fe51a2a056003469da3aa8e1760c289c",
+    "selectedFileHash": "00aa0c605967a088dff506c632429b42fed95addef1cfb0842983541ffae20fe",
+    "retrievalFound": true,
+    "candidateSupplyHash": "872e3c73d29434e8",
+    "candidateOrderHash": "f75f225b448f68ec",
+    "neighborhoodHash": "cbdc19a0b5bc21c1",
+    "itemCount": 17
+   }
+  },
+  {
+   "instanceId": "sphinx-doc__sphinx-7748",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/sphinx-doc__sphinx-7748",
+   "authoritativeCharacters": 190088,
+   "itemBodies": {
+    "items": 21,
+    "withContent": 20,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "79adb9ce178687d5",
+    "leadPivot": "sphinx/ext/autodoc/__init__.py::Documenter",
+    "taskHash": "7621651828d732efc955b64a4329b593a8c441815d22859ace37b53ab590e7bc",
+    "selectedFileHash": "19b087f160b222a3cdec93c30a8c1206a158f1d153f0c7faee78e29675b361e4",
+    "retrievalFound": true,
+    "candidateSupplyHash": "47f980873a196416",
+    "candidateOrderHash": "f5691e0c2cd2c338",
+    "neighborhoodHash": "759e5af3c1e73779",
+    "itemCount": 21
+   }
+  },
+  {
+   "instanceId": "sphinx-doc__sphinx-7910",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/sphinx-doc__sphinx-7910",
+   "authoritativeCharacters": 153304,
+   "itemBodies": {
+    "items": 20,
+    "withContent": 18,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "9aa25314a131f16a",
+    "leadPivot": "sphinx/builders/__init__.py::Builder",
+    "taskHash": "d373bd4504fb939aa1818c99cae771c2f7e67285f0babcee3a2282234b4c0c49",
+    "selectedFileHash": "7b2fb0668576c3322c8805c7773a68aaf5e8752f0777f61bdb20fa338d7597aa",
+    "retrievalFound": true,
+    "candidateSupplyHash": "7492d999b9e4fcd5",
+    "candidateOrderHash": "8ddd8858f2c620e9",
+    "neighborhoodHash": "91e9bb1e85ab15ed",
+    "itemCount": 20
+   }
+  },
+  {
+   "instanceId": "sphinx-doc__sphinx-9230",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/sphinx-doc__sphinx-9230",
+   "authoritativeCharacters": 87987,
+   "itemBodies": {
+    "items": 26,
+    "withContent": 21,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "4a400868cbb2d5ad",
+    "leadPivot": "sphinx/ext/intersphinx.py::_strip_basic_auth",
+    "taskHash": "628384545e885d0d96933f49fcf2a840bdf4ca02a8d7282e8d86c8a5e5fc16c5",
+    "selectedFileHash": "76d7871af505a2f88105b303c518effceeeb9349df688338008f27c3d0e04eff",
+    "retrievalFound": true,
+    "candidateSupplyHash": "02623a6452720f74",
+    "candidateOrderHash": "e8b87a466636f47a",
+    "neighborhoodHash": "9827b0b17315615f",
+    "itemCount": 26
+   }
+  },
+  {
+   "instanceId": "sphinx-doc__sphinx-9320",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/sphinx-doc__sphinx-9320",
+   "authoritativeCharacters": 92570,
+   "itemBodies": {
+    "items": 24,
+    "withContent": 23,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "83cf52bed48fe608",
+    "leadPivot": "sphinx/cmd/quickstart.py::ask_user",
+    "taskHash": "7f12b5b687c966c6bfd14d023eb1cfa7db60a45e3a4db36bc30595260c163948",
+    "selectedFileHash": "456b88d1c31edebacfb9ceb4f05481b24aedd0bff1635eff4449f59dd297e3e5",
+    "retrievalFound": true,
+    "candidateSupplyHash": "d64f0b832e238d07",
+    "candidateOrderHash": "c11778a3063cd6e6",
+    "neighborhoodHash": "f5248d78e9009346",
+    "itemCount": 24
+   }
+  },
+  {
+   "instanceId": "sphinx-doc__sphinx-9698",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/sphinx-doc__sphinx-9698",
+   "authoritativeCharacters": 78922,
+   "itemBodies": {
+    "items": 24,
+    "withContent": 21,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "bdc23af923c0b994",
+    "leadPivot": "sphinx/directives/__init__.py::optional_int",
+    "taskHash": "6da9b0b8f83b05e43dfbece2fef9cd7411c593630b4cbe961949da9605827c89",
+    "selectedFileHash": "f6ec05330e111c28cab02a662b9ccd1fcf2629224f16a1e805d4a671567956ea",
+    "retrievalFound": true,
+    "candidateSupplyHash": "8ae1ab98258b3a58",
+    "candidateOrderHash": "092185c04777313f",
+    "neighborhoodHash": "a871137c7b208455",
+    "itemCount": 24
+   }
+  },
+  {
+   "instanceId": "sphinx-doc__sphinx-9711",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/sphinx-doc__sphinx-9711",
+   "authoritativeCharacters": 174048,
+   "itemBodies": {
+    "items": 16,
+    "withContent": 12,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "832b7bf6668ff891",
+    "leadPivot": "sphinx/extension.py::verify_needs_extensions",
+    "taskHash": "e022ce98802e7ec3979a2e81221f61843237c9bb00c2ea0889521564480f8219",
+    "selectedFileHash": "f92d74e5191803aab4cc3904ef0b847d4664fcdc4eb212814262e63861fa42bd",
+    "retrievalFound": true,
+    "candidateSupplyHash": "4ddef84e12df3574",
+    "candidateOrderHash": "ddd96307c6728ca3",
+    "neighborhoodHash": "854a67d9e9f3bd93",
+    "itemCount": 16
+   }
+  },
+  {
+   "instanceId": "sympy__sympy-12419",
+   "captured": false,
+   "error": "no_structured_content"
+  },
+  {
+   "instanceId": "sympy__sympy-12481",
+   "captured": false,
+   "error": "no_structured_content"
+  },
+  {
+   "instanceId": "sympy__sympy-13372",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/sympy__sympy-13372",
+   "authoritativeCharacters": 78803,
+   "itemBodies": {
+    "items": 17,
+    "withContent": 17,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "afa43a2f70268c54",
+    "leadPivot": "sympy/core/evalf.py::evalf",
+    "taskHash": "da5483c59849178210e1c6b065aac2fc2dc055b2cb238e3c14982095a72a8d46",
+    "selectedFileHash": "c9121e8fe311e39b8c0e341411d30d24ce526173115804e793e9ff34acdfc618",
+    "retrievalFound": true,
+    "candidateSupplyHash": "08bf8f69b508ef70",
+    "candidateOrderHash": "66f4292466511726",
+    "neighborhoodHash": "57c2b768a4bb1faf",
+    "itemCount": 17
+   }
+  },
+  {
+   "instanceId": "sympy__sympy-13480",
+   "captured": false,
+   "error": "no_structured_content"
+  },
+  {
+   "instanceId": "sympy__sympy-13974",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/sympy__sympy-13974",
+   "authoritativeCharacters": 153119,
+   "itemBodies": {
+    "items": 23,
+    "withContent": 21,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "5eadf9c2a6266514",
+    "leadPivot": "sympy/physics/quantum/tensorproduct.py::tensor_product_simp",
+    "taskHash": "2ecb270de599818e4a0c5c31c9114fcbdb8f5f1e6e56145427b5853fd6774f28",
+    "selectedFileHash": "f9ff3173f66c9f6df893cd2aef772b39738dbb515f0fa88f8d3a5efe854401a8",
+    "retrievalFound": true,
+    "candidateSupplyHash": "31cfe43e2b801011",
+    "candidateOrderHash": "e112805f96420519",
+    "neighborhoodHash": "dbb653ce398b57f5",
+    "itemCount": 23
+   }
+  },
+  {
+   "instanceId": "sympy__sympy-15599",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/sympy__sympy-15599",
+   "authoritativeCharacters": 96742,
+   "itemBodies": {
+    "items": 14,
+    "withContent": 14,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "593442f2a3ab2831",
+    "leadPivot": "sympy/core/mod.py::Mod",
+    "taskHash": "2b637537fab497d1c885ebffc0b5b00b9efecd4f6137efce18484ec72a605fa3",
+    "selectedFileHash": "3650a8e793aa7fd9f6e5f15a4341587a58fb0fc8cd172a2b2319bd98737e2882",
+    "retrievalFound": true,
+    "candidateSupplyHash": "6bd301dfe0766d12",
+    "candidateOrderHash": "c55d78e0bbdd5378",
+    "neighborhoodHash": "53d88a29323e03a5",
+    "itemCount": 14
+   }
+  },
+  {
+   "instanceId": "sympy__sympy-15875",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/sympy__sympy-15875",
+   "authoritativeCharacters": 84944,
+   "itemBodies": {
+    "items": 20,
+    "withContent": 17,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "8d2c755c39ae1fbd",
+    "leadPivot": "release/fabfile.py::copy_release_files",
+    "taskHash": "d6cf558633a61bef03779249363d420d9337eb7a7e757ab8a2dd7bd945e4d159",
+    "selectedFileHash": "a20a04780d6ee97bdc196d9b40989da5489c28776224e55f80cb68f3dace7af9",
+    "retrievalFound": true,
+    "candidateSupplyHash": "5fa68b6bd743f936",
+    "candidateOrderHash": "75b27b2b4ea97d2e",
+    "neighborhoodHash": "e4c9e393e3553740",
+    "itemCount": 20
+   }
+  },
+  {
+   "instanceId": "sympy__sympy-16597",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/sympy__sympy-16597",
+   "authoritativeCharacters": 93181,
+   "itemBodies": {
+    "items": 23,
+    "withContent": 20,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "868b68fe4a461c2d",
+    "leadPivot": "sympy/combinatorics/permutations.py::Permutation.is_even",
+    "taskHash": "1b075fe2477e450508666e33e3d1fae3721126338263cd0054a643026b307b01",
+    "selectedFileHash": "495c9f7b463045f85bcc30190c4a4f321873d7c66b5a354156358582a2f51465",
+    "retrievalFound": true,
+    "candidateSupplyHash": "ab58d3206ee14d70",
+    "candidateOrderHash": "228b691837783d88",
+    "neighborhoodHash": "bd11d96aeb322972",
+    "itemCount": 23
+   }
+  },
+  {
+   "instanceId": "sympy__sympy-16766",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/sympy__sympy-16766",
+   "authoritativeCharacters": 173683,
+   "itemBodies": {
+    "items": 26,
+    "withContent": 23,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "766818a660107c0b",
+    "leadPivot": "sympy/printing/pycode.py::PythonCodePrinter",
+    "taskHash": "78558ecbf739d7b9c7b56e83cb0bb68ac866865fc2d27275b077445371ebd2b2",
+    "selectedFileHash": "b23615ce184237e86f9969c9744066a76d06aede43ada238010808ef30d52e54",
+    "retrievalFound": true,
+    "candidateSupplyHash": "0b7ae9076e9feb96",
+    "candidateOrderHash": "2051a6c8c33df682",
+    "neighborhoodHash": "5ce47b830fc3385d",
+    "itemCount": 26
+   }
+  },
+  {
+   "instanceId": "sympy__sympy-16792",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/sympy__sympy-16792",
+   "authoritativeCharacters": 105834,
+   "itemBodies": {
+    "items": 24,
+    "withContent": 21,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "3eb8e520e523d89c",
+    "leadPivot": "sympy/codegen/ast.py::FunctionDefinition",
+    "taskHash": "8c71ffa7bbf7fbae3acb57e4cde5d4374d26cc8e695581c5af136be2b64904bf",
+    "selectedFileHash": "3c3ad40f184baab34d8c75ccd59221489e635de01f8d25924533fa67c1588459",
+    "retrievalFound": true,
+    "candidateSupplyHash": "21f395fb9e0a859d",
+    "candidateOrderHash": "d04d43405097454d",
+    "neighborhoodHash": "f34bc5582f9c2d7d",
+    "itemCount": 24
+   }
+  },
+  {
+   "instanceId": "sympy__sympy-18189",
+   "captured": false,
+   "error": "no_structured_content"
+  },
+  {
+   "instanceId": "sympy__sympy-19637",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/sympy__sympy-19637",
+   "authoritativeCharacters": 87792,
+   "itemBodies": {
+    "items": 15,
+    "withContent": 15,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "6cbb17039bd74ecf",
+    "leadPivot": "sympy/core/sympify.py::kernS",
+    "taskHash": "0fc2a029fb7992b9a286a2e20d24f5e28d6dd0ae7c0788fbd74f841873091a93",
+    "selectedFileHash": "e8e067b11adfc7b72876531438661d2f3454daaed7949772e06a2129ebf961d7",
+    "retrievalFound": true,
+    "candidateSupplyHash": "070065ef475ed547",
+    "candidateOrderHash": "dc10dc98a3822de1",
+    "neighborhoodHash": "9ea14e53c56b610f",
+    "itemCount": 15
+   }
+  },
+  {
+   "instanceId": "sympy__sympy-20428",
+   "captured": false,
+   "error": "no_structured_content"
+  },
+  {
+   "instanceId": "sympy__sympy-20801",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/sympy__sympy-20801",
+   "authoritativeCharacters": 139673,
+   "itemBodies": {
+    "items": 23,
+    "withContent": 20,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "a5aeed37c5239737",
+    "leadPivot": "sympy/concrete/expr_with_limits.py::ExprWithLimits",
+    "taskHash": "57d6f096be81007cd86b4f0f7a80fd821191c37923be823877d23e55a99b82bf",
+    "selectedFileHash": "f1dfecac9b7558b385c73f143899bc1249349d439416a6cedfaf3f80282bd0d6",
+    "retrievalFound": true,
+    "candidateSupplyHash": "5ed78612e364e736",
+    "candidateOrderHash": "f5cb71c4a4f3902b",
+    "neighborhoodHash": "1ae8b31afc275fb2",
+    "itemCount": 23
+   }
+  },
+  {
+   "instanceId": "sympy__sympy-23413",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/sympy__sympy-23413",
+   "authoritativeCharacters": 93098,
+   "itemBodies": {
+    "items": 23,
+    "withContent": 20,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "dd418742e73bc3eb",
+    "leadPivot": "sympy/polys/matrices/normalforms.py::hermite_normal_form",
+    "taskHash": "98590890f74d3a2a8d7771d0349832a658c374278669c4eb3bc727e82f39da3f",
+    "selectedFileHash": "16d79798a5f25834824857871b4e15dd775ef143eef6b0be7797cc753bad42f1",
+    "retrievalFound": true,
+    "candidateSupplyHash": "bf0f9acbe2ebe683",
+    "candidateOrderHash": "1a5f50c83a0adc7a",
+    "neighborhoodHash": "09f84bf8abc0435e",
+    "itemCount": 23
+   }
+  },
+  {
+   "instanceId": "sympy__sympy-24213",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/sympy__sympy-24213",
+   "authoritativeCharacters": 123800,
+   "itemBodies": {
+    "items": 21,
+    "withContent": 20,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "a9e93c863e57f6c6",
+    "leadPivot": "sympy/physics/units/unitsystem.py::UnitSystem._collect_factor_and_dimension",
+    "taskHash": "cacfd8c1eb05ba28257b72eff122da5a4805458de98df1f9f5bfb54ad3a9af3f",
+    "selectedFileHash": "0405023e68964fcc00c59cc302e1de407d0eff16269ec05a359de3c23802daf1",
+    "retrievalFound": true,
+    "candidateSupplyHash": "d30c413b2ac59a24",
+    "candidateOrderHash": "3fc963bc88a32a81",
+    "neighborhoodHash": "e4a862fb21277b61",
+    "itemCount": 21
+   }
+  },
+  {
+   "instanceId": "sympy__sympy-24562",
+   "captured": true,
+   "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/sympy__sympy-24562",
+   "authoritativeCharacters": 116103,
+   "itemBodies": {
+    "items": 21,
+    "withContent": 18,
+    "valid": true
+   },
+   "identity": {
+    "objectHash": "f0bc0c24fa42643b",
+    "leadPivot": "sympy/core/numbers.py::Rational",
+    "taskHash": "144549f2aea8a125e0e7d72ff6561ea4657281356b2d947ea3f7c4b1ae12461a",
+    "selectedFileHash": "a744e768c9ad7fcfc3bdc1d91aaa32153f998e948730a8117c6d118b5af2ae2c",
+    "retrievalFound": true,
+    "candidateSupplyHash": "676b8ffd2e5e35b8",
+    "candidateOrderHash": "80d26148d3cb0851",
+    "neighborhoodHash": "37693a571e07f026",
+    "itemCount": 21
+   }
+  }
+ ]
+}

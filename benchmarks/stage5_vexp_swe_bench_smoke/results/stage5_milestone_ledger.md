@@ -4988,3 +4988,149 @@ verification   typecheck 0, typecheck:benchmarks 0,
   **the audited response-fit contract is coherent for the measured model-facing
   envelope paths** — no repository-wide sweep was performed, and `search_logic_flow`
   accepts a `max_tokens` that was not audited.
+
+## M179 — Monotone Delivery Packing and Budget-Preservation Invariant
+
+```text
+commits  <product>                                   product
+         <evidence>                                  evidence + ledger
+from     a4eee924d9559ad1f9e132b008ba2f34eb126426    (M178 close)
+
+A PASS   packer mapped as a state machine; every budget-dependent decision and
+         hidden cap named; selection separated from rendering
+B PASS   two frozen corpora captured and hashed; detector 15/15, identity 24/24,
+         fixture control caught a corpus that was measuring headers
+C PASS   first divergence located to the token; 1,088/1,088 declines dominated
+D PASS   three candidates simulated before any code change; C_NESTED_RUNG selected
+E PASS   one seam, one function; no V2 path, no refactor
+F PASS   qualified on Broad100-A and Broad100-B; verdicts reached
+
+root cause        PACKER_FALLBACK_NON_MONOTONICITY
+invariant         BUDGET_MONOTONE_DELIVERY_PARTIAL
+repair            MONOTONE_PACKER_REPAIR_VALIDATED
+product           KEEP_COMPACT_ORIENTATION_WITH_MONOTONE_PACKER
+totality          RESPONSE_TOTALITY_PRESERVED
+truthfulness      PACKER_TRUTHFULNESS_PRESERVED
+economics         COMPACT_ECONOMICS_PRESERVED
+next work         PACKER_FOLLOWUP_REQUIRED   (item metadata is evidence; NOT started)
+live              LIVE_WORK_NOT_RUN          spend $0.00
+retrieval         UNCHANGED
+ranking           UNCHANGED
+fit contract      UNCHANGED (M178 names preserved)
+```
+
+```text
+ordered budget pairs, 169 frozen objects x 12 budgets    before   after
+  orientation -> decline                                  1,088       0
+  semantic item loss                                         40      62
+  priority inversion                                          0       0
+  representation downgrade                                    0       0
+  interpretation-critical qualifier evicted                   0       0
+  focus substituted                                           6      21
+  decline -> refused (throw)                                  0       0
+  total violating pairs                                   1,134      83
+  cases with any violation                              156/169  45/169
+dominance of the declines (before)
+  Broad100-A                                            580/580       —
+  Broad100-B                                            508/508       —
+gates
+  no-refill: budgets that already worked and changed         —       0
+  default-budget byte-identical                              —   155/169
+  default-budget changes classified UNEXPECTED               —       0
+  totality failures / throws                               0/0     0/0
+  truthfulness failures                                      —       0
+economics on the path that already worked
+  Broad100-A median / p90 model-visible tokens          921/5,131  921/5,131
+  Broad100-B median / p90 model-visible tokens        1,334/5,360 1,334/5,360
+
+verification   typecheck 0,
+               typecheck:benchmarks 1 PRE-EXISTING (M178's deleted worktree path), 0 new,
+               bun test 5515 pass / 49 skip / 0 fail (5,564 across 352 files),
+               git diff --check clean
+
+               ENVIRONMENTAL, recorded per §105: one full-suite run taken while the
+               machine sat at load average 21-27 under unrelated jobs reported
+               2 fail / 2 errors and took 478s against a 267s baseline, with bun
+               holding ~20% of a core. Re-run under normal load: 0 fail. Targeted
+               runs of every subset the repair can reach are clean --
+               src/mcp 228/0, src/runPipeline 96/0, benchmarks 2,608/0. No product
+               regression is derived from the saturated run.
+```
+
+## M179 standing findings
+
+- **The packer was not where the defect lived, and M176's attribution was wrong.**
+  `applyProgressiveContextBudget` resolves at *every* budget of the Django ladder
+  and its delivered item count rises 1 → 12 → 17 → 22. Its rung sequence does not
+  depend on the budget, no rung grows a draft, and the budget selects only where to
+  stop — so it is budget-monotone on its own. The decline came from
+  `degradeOversizedProductResponse`, two components downstream.
+
+- **The two bounds M178 named grow at different rates, and the packer aims at the
+  wrong one.** `max_tokens` bounds the evidence; `B + max(1000, 15%)` bounds the
+  complete response. Real metadata costs 1,087–1,269 tokens against a 1,000-token
+  allowance, so affordable evidence is `B - ~221` and any rung in that gap is
+  selected and then cannot be sent. The fit condition `rung(B) <= ceiling(B) -
+  metadata` predicts the terminal state on every row of the ladder.
+
+- **Non-monotone because slack is, not because the ladder is.** Rung sizes are a
+  step function, so `B - rung(B)` collapses when the ladder jumps. Boundary search
+  puts the Django transition at **946 good / 947 bad** — exactly the rung size —
+  and recovery at **2,124 / 2,125**.
+
+- **Every decline was dominated, and the arithmetic shows by how much.**
+  1,088/1,088 across both corpora: a packet already proven deliverable at a smaller
+  budget satisfied both M178 contracts at the larger one. At `max_tokens` 1,000 the
+  degraded Django response occupied 1,210 tokens of a 2,000-token ceiling — the
+  product discarded the evidence and shipped 790 tokens of unused headroom.
+
+- **The repair lowers the packer's aim, never the caller's entitlement.** The
+  evidence budget may be reduced beneath a fixed ceiling until the chosen rung is
+  deliverable. It cannot invent anything: re-running a fixed ladder at a smaller
+  budget returns a rung the packer would itself have published for a smaller
+  request. Raising the metadata allowance was simulated and rejected on measurement
+  rather than principle — it changes *which* budgets fail and leaves 580 violations
+  standing.
+
+- **The default path was failing on ordinary tasks.** `run_pipeline`'s default
+  `max_tokens` is 8,000, and at that budget **14 of 169** frozen tasks returned a
+  47-token delivery-failure notice instead of evidence — `pallets__flask-5014`,
+  `pytest-dev__pytest-10051`, `sphinx-doc__sphinx-7748`, `sympy__sympy-13974` and
+  ten more on Broad100-B. They now return 6,002–7,876 model-visible tokens. These
+  were not edge budgets chosen to provoke the defect; this is the shipping default.
+
+- **"Enough, then stop" survived, and that is measured rather than argued.** Every
+  budget that already produced an orientation is byte-identical, on both corpora,
+  at every budget. The whole-ladder and default-budget medians rise only because
+  334 budgets that used to deliver nothing now deliver evidence; on the path that
+  already worked, median and p90 are identical to the token.
+
+- **Three instrument errors, two caught before they became findings.** (1) The
+  corpus was a response, not the packer's input: `compactProductResponse` removes
+  `items[].content` unconditionally, so captures taken the ordinary way — including
+  M176's own snapshots — re-pack into body-free sections and measure rungs made of
+  headers. With `include_item_content` the Django window moves from 800–1,000 to
+  1,000–2,000. (2) `codeTruncated` is not a downgrade signal: treating it as one
+  reported 815 representation regressions, 477 of which were a body growing from
+  221 to 1,799 characters with an honest qualifier. Measuring delivered code took
+  that class to 0 before and 0 after. (3) Not fixed, only normalized:
+  `parseRenderedBodies` serves the renderer's closing sentence as the last item's
+  source code, on **268 of 582** and **218 of 464** orientation packets.
+
+- **What the repair exposed is the next milestone.** 83 pairs still lose a related
+  entry or move the focus, and all of them trace to one thing:
+  `compactMandatoryProductMetadata` collapses `productContext.items` as a *metadata*
+  saving, while the orientation projector derives both the focus and the entire
+  related list from that array. It also keeps `items[0]` where the packer's own
+  rung 8 keeps `sort(compareKeepPriority)[0]` — two different "strongest item"
+  rules, so a larger budget can point the agent at a different site. These pairs
+  were mostly unmeasurable before, because those budgets declined instead of
+  delivering. **PACKER_FOLLOWUP_REQUIRED; not started.**
+
+- **Next-step recommendation: item metadata is evidence.** M180 should make the
+  last-resort item collapse aware that the orientation projector reads
+  `productContext.items` as its evidence source — not widen the packer, not touch
+  retrieval, and not raise any ceiling. The M179 claim stays narrow: **the
+  orientation → decline class is eliminated on the measured `run_pipeline` delivery
+  path.** `get_impact_graph` has its own envelope and its own ladder and was not
+  swept for monotonicity here.

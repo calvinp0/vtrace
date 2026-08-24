@@ -1,0 +1,142 @@
+{
+ "schemaVersion": "stage5.m179.hidden-bounds.v1",
+ "milestone": "M179",
+ "workstream": "A",
+ "bounds": [
+  {
+   "id": "H-SUPPORT-EXCERPT",
+   "value": 900,
+   "unit": "characters",
+   "file": "src/productContext/budgetDelivery.ts",
+   "line": 172,
+   "governs": "optional-support excerpt head bound",
+   "interactsWithBudget": "sets the size of the rung-1 step"
+  },
+  {
+   "id": "H-MINIMAL-LINES",
+   "value": 8,
+   "unit": "lines",
+   "file": "src/productContext/budgetDelivery.ts",
+   "line": 439,
+   "governs": "minimalContent line window",
+   "interactsWithBudget": "sets the floor size of any skeletonized item"
+  },
+  {
+   "id": "H-MINIMAL-CHARS",
+   "value": 480,
+   "unit": "characters",
+   "file": "src/productContext/budgetDelivery.ts",
+   "line": 440,
+   "governs": "minimalContent character window",
+   "interactsWithBudget": "sets the floor size of any skeletonized item"
+  },
+  {
+   "id": "H-MINIMAL-FALLBACK",
+   "value": 240,
+   "unit": "characters",
+   "file": "src/productContext/budgetDelivery.ts",
+   "line": 445,
+   "governs": "minimalContent fallback slice",
+   "interactsWithBudget": "absolute floor of one item's body"
+  },
+  {
+   "id": "H-REASON",
+   "value": 160,
+   "unit": "characters",
+   "file": "src/productContext/budgetDelivery.ts",
+   "line": 424,
+   "governs": "compacted selection reason",
+   "interactsWithBudget": "sets the size of the rung-0 step"
+  },
+  {
+   "id": "H-FOCUS-CODE",
+   "value": 1800,
+   "unit": "characters",
+   "file": "src/runPipeline/orientationProjection.ts",
+   "line": 125,
+   "governs": "orientation focus excerpt head bound",
+   "interactsWithBudget": "caps the focus body regardless of budget"
+  },
+  {
+   "id": "H-ORIENTATION-CEILING",
+   "value": 2000,
+   "unit": "tokens (chars x 0.3174)",
+   "file": "src/runPipeline/orientationProjection.ts",
+   "line": 122,
+   "governs": "orientation packet ceiling; admits a prefix of related",
+   "interactsWithBudget": "INDEPENDENT of max_tokens; can bind before the caller's budget does"
+  },
+  {
+   "id": "H-METADATA-FLOOR",
+   "value": 1000,
+   "unit": "tokens",
+   "file": "src/mcp/responseEnvelope.ts",
+   "line": 75,
+   "governs": "flat metadata allowance added to the ceiling",
+   "interactsWithBudget": "THE BINDING BOUND. Evidence may claim B; delivery affords B + allowance - actualMetadata."
+  },
+  {
+   "id": "H-METADATA-RATIO",
+   "value": 0.15,
+   "unit": "fraction",
+   "file": "src/mcp/responseEnvelope.ts",
+   "line": 76,
+   "governs": "proportional metadata allowance",
+   "interactsWithBudget": "overtakes the floor only above max_tokens 6,667"
+  },
+  {
+   "id": "H-MANDATORY-ITEMS",
+   "value": 1,
+   "unit": "items",
+   "file": "src/mcp/responseEnvelope.ts",
+   "line": 660,
+   "governs": "last-resort item-metadata collapse",
+   "interactsWithBudget": "reduces item metadata, never modelVisibleContext"
+  }
+ ],
+ "twoBoundArithmetic": {
+  "ceilingFormula": "B + max(RESPONSE_METADATA_ALLOWANCE_FLOOR_TOKENS, ceil(B * RESPONSE_METADATA_ALLOWANCE_RATIO))",
+  "allowanceFloorTokens": 1000,
+  "allowanceRatio": 0.15,
+  "ratioOvertakesFloorAtBudget": 6667,
+  "affordableEvidenceFormula": "responseTokenCeiling(B) - actualMetadataTokens",
+  "worked": [
+   {
+    "budget": 400,
+    "ceiling": 1400,
+    "affordableEvidenceAtMetadata1221": 179,
+    "packerMayClaim": 400,
+    "packerOverclaimsBy": 221
+   },
+   {
+    "budget": 600,
+    "ceiling": 1600,
+    "affordableEvidenceAtMetadata1221": 379,
+    "packerMayClaim": 600,
+    "packerOverclaimsBy": 221
+   },
+   {
+    "budget": 800,
+    "ceiling": 1800,
+    "affordableEvidenceAtMetadata1221": 579,
+    "packerMayClaim": 800,
+    "packerOverclaimsBy": 221
+   },
+   {
+    "budget": 1000,
+    "ceiling": 2000,
+    "affordableEvidenceAtMetadata1221": 779,
+    "packerMayClaim": 1000,
+    "packerOverclaimsBy": 221
+   },
+   {
+    "budget": 1600,
+    "ceiling": 2600,
+    "affordableEvidenceAtMetadata1221": 1379,
+    "packerMayClaim": 1600,
+    "packerOverclaimsBy": 221
+   }
+  ],
+  "finding": "Whenever real metadata exceeds the flat allowance, affordable evidence is strictly LESS than the budget the packer is permitted to spend. The packer is not misreading its bound; it is enforcing a bound nobody can honour."
+ }
+}
