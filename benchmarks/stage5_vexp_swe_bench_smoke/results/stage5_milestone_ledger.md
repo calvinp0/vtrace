@@ -5426,3 +5426,78 @@ what must not move                                            before   after
   contaminate a live comparison. Measure it first; it is much cheaper. Do not
   raise the orientation ceiling and do not relax prefix admission to recover the
   single `TensAdd` entry: that trades a bounded omission for a monotonicity risk.
+
+## M182 — Related-Selection Stability Under Load and Deterministic Packet Reproducibility
+
+```text
+overall           PASS (A/B/C/D/E/F all PASS)
+stability         SEMANTIC_PACKET_STABILITY_VALIDATED
+root cause        ENVIRONMENTAL_ONLY_FALSE_POSITIVE
+repair            NO_PRODUCT_CHANGE_REQUIRED
+product           KEEP_COMPACT_ORIENTATION_UNCHANGED
+totality          RESPONSE_TOTALITY_PRESERVED
+truthfulness      ORIENTATION_TRUTHFULNESS_PRESERVED
+economics         CURRENT_COMPACT_ECONOMICS_PRESERVED
+live readiness    CURRENT_PRODUCT_LIVE_REQUALIFICATION_LICENSED
+live              LIVE_WORK_NOT_RUN          spend $0.00
+retrieval         UNCHANGED
+ranking           UNCHANGED
+fit contract      UNCHANGED
+ownership         UNCHANGED
+evidence commit   <pending>
+```
+
+```text
+frozen-authority stability
+  cases                                                        7
+  deliveries                                               1,820
+  conditions        serial/repeat/CPU/I/O/concurrent/interleaved/process
+  focus / membership / order / reason changes          0 / 0 / 0 / 0
+  semantic packet variation cases                           0
+
+fixed-index full generation
+  cases / calls                                          3 / 48
+  conditions                  warm/CPU/concurrent/new-process
+  supply/order/rank/item/packet variation rows     0/0/0/0/0
+  telemetry-normalized byte variation rows                  0
+
+real default MCP framed stdio
+  calls / semantic hashes / byte hashes                  6 / 1 / 1
+```
+
+## M182 standing findings
+
+- **Current related selection is a deterministic intervention in the measured
+  regime.** The experiment froze authority before projection and separately
+  reran fixed-index generation. Both layers stayed stable. M176's 11/200
+  cross-time arm differences had no preserved first divergence and disappeared
+  when interleaved; with M182's current-product controls they are an
+  environmental-only false positive, not a product defect.
+
+- **Debug bytes can move while the agent packet does not.** Every varying leaf
+  was in `productContext.timing`, `accounting`, or `responseBudget` fields derived
+  from timing/serialized width. Removing those diagnostic blocks made full
+  responses identical, and the default MCP orientation was byte-identical without
+  normalization. Timing is not retrieval authority.
+
+- **Stable order already exists and remains semantically ranked.** Material
+  comparators use primary score/tier/role priority, then repo-relative
+  path/FQN/stable symbol ID. Assembly sorts `roleOrder, identity` before
+  first-wins dedupe; the packer embeds authoritative index; projection preserves
+  the resulting prefix. M182 did not alphabetize or add a second ordering owner.
+
+- **Current default size is 1,229 median / 1,527 p90 / 1,576 max model-facing
+  tokens** over 167 Broad default-budget orientations. This is the treatment a
+  future live benchmark must qualify, not M173's ~629-token packet.
+
+- **Next-step recommendation: a current-product paired live requalification is
+  licensed, but not started.** Prefer a preregistered new stratified sample with a
+  small replication stratum, actual default automatic compact orientation, no
+  investigation coercion, and whole-run solve/token/cache/cost metrics. The
+  deterministic semantic-preservation branch M175–M182 is closed unless new
+  evidence appears.
+
+- **The untracked audit remains untouched.** `VTRACE_TOOLING_AUDIT.md` still has
+  the stale M171 five-entry-cap and pre-M179 non-monotonicity claims. M182 records
+  them in its tracked audit-status artifact but does not take ownership of the
+  user's untracked file.

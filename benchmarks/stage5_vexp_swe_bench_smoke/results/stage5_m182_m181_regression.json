@@ -1,0 +1,7 @@
+{
+  "sourceAuthority":"stage5_m181_candidate_canonical_primary.json and stage5_m181_qualification.json; no product diff in M182",
+  "canonicalPrimaryReasonViolations":0,
+  "unsupportedClaims":0,
+  "representationOnlyEllipsisPairs":12,
+  "verdict":"PASS"
+}

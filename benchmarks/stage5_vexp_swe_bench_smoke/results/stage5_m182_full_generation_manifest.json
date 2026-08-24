@@ -1,0 +1,29 @@
+{
+  "milestone": "M182-C",
+  "fixedIndex": true,
+  "cacheState": "cold new process and warm same process both measured",
+  "sessionState": "saveObservation=false; no sessionId or observationText; manifest writes do not feed evidence selection",
+  "cases": [
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-10880",
+      "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/django__django-10880",
+      "taskHash": "b2baf9d5493087f4",
+      "taskCharacters": 278
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "astropy__astropy-14365",
+      "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m169_broad_a/astropy__astropy-14365",
+      "taskHash": "4a5df23451fc194f",
+      "taskCharacters": 1339
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sympy__sympy-23824",
+      "repoRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m160_broad_b/sympy__sympy-23824",
+      "taskHash": "be9f091bcc97b8fe",
+      "taskCharacters": 2103
+    }
+  ]
+}

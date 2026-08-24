@@ -1,0 +1,43 @@
+{
+  "milestone":"M182-F",
+  "overall":"PASS",
+  "workstreams":{"A":"PASS","B":"PASS","C":"PASS","D":"PASS","E":"PASS","F":"PASS"},
+  "measurements":{
+    "frozenCases":7,
+    "frozenDeliveries":1820,
+    "fullGenerationCases":3,
+    "fullGenerationCalls":48,
+    "realMcpDefaultCalls":6,
+    "semanticPacketVariations":0,
+    "upstreamSupplyVariations":0,
+    "candidateOrderVariations":0,
+    "rankVectorVariations":0,
+    "semanticItemSupplyVariations":0,
+    "focusChanges":0,
+    "relatedMembershipChanges":0,
+    "relatedOrderChanges":0,
+    "primaryReasonChanges":0,
+    "telemetryNormalizedByteVariations":0
+  },
+  "controls":{"knownPositive":"PASS","knownNegative":"PASS","identity100":"PASS"},
+  "preservation":{"m179":"PASS","m180":"PASS","m181":"PASS","truthfulness":"PASS","totality":"PASS","economics":"PASS","moduleInvariant":"PASS"},
+  "verification":{
+    "m181Qualification":"PASS",
+    "typecheck":"PASS",
+    "typecheckBenchmarks":"PASS",
+    "bunTest":{"pass":5523,"skip":49,"fail":0,"tests":5572,"files":353,"seconds":203.47},
+    "gitDiffCheck":"clean"
+  },
+  "verdicts":{
+    "stability":"SEMANTIC_PACKET_STABILITY_VALIDATED",
+    "rootCause":"ENVIRONMENTAL_ONLY_FALSE_POSITIVE",
+    "repair":"NO_PRODUCT_CHANGE_REQUIRED",
+    "product":"KEEP_COMPACT_ORIENTATION_UNCHANGED",
+    "totality":"RESPONSE_TOTALITY_PRESERVED",
+    "truthfulness":"ORIENTATION_TRUTHFULNESS_PRESERVED",
+    "economics":"CURRENT_COMPACT_ECONOMICS_PRESERVED",
+    "liveReadiness":"CURRENT_PRODUCT_LIVE_REQUALIFICATION_LICENSED"
+  },
+  "liveSpendUsd":0,
+  "liveWork":"NOT RUN"
+}

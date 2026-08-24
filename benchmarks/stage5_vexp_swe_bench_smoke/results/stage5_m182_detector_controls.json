@@ -1,0 +1,28 @@
+{
+  "knownPositive": {
+    "mutation": "swap first two ordered related entries",
+    "baselineHash": "e67c8dcf1a9825da",
+    "mutatedHash": "539b5c72b491536e",
+    "differences": [
+      "related_order_or_membership",
+      "primary_reason"
+    ],
+    "fired": true
+  },
+  "knownNegative": {
+    "mutation": "change timing/elapsed/process telemetry only",
+    "semanticHashes": [
+      "e67c8dcf1a9825da",
+      "e67c8dcf1a9825da"
+    ],
+    "rawByteHashes": [
+      "b7df4108479c5876",
+      "1b9c5087cd4ac714"
+    ],
+    "semanticResult": "SEMANTICALLY_IDENTICAL"
+  },
+  "identity": {
+    "repetitions": 100,
+    "distinctSemanticPackets": 1
+  }
+}

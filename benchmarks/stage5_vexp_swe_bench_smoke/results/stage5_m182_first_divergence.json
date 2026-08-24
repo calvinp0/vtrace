@@ -1,0 +1,13 @@
+{
+  "milestone":"M182-D",
+  "semanticVariations":0,
+  "pairwiseTrace":{
+    "runA":["authoritativeSupplyHash","candidateOrderHash","rankVectorHash","semanticItemSupplyHash","semanticPacketHash"],
+    "runB":["authoritativeSupplyHash","candidateOrderHash","rankVectorHash","semanticItemSupplyHash","semanticPacketHash"],
+    "firstDifferingSemanticHash":null
+  },
+  "firstByteDivergence":"timing/accounting/responseBudget diagnostics on authoritative debug output",
+  "modelFacing":false,
+  "counterfactualStableOrderTest":"not licensed: no unstable raw semantic order was observed to normalize",
+  "classification":"NO_SEMANTIC_DIVERGENCE"
+}

@@ -1,0 +1,11 @@
+{
+  "claimsDelivered":10201,
+  "unsupportedClaims":0,
+  "falseAbsence":0,
+  "falseExhaustive":0,
+  "exactPotentialStrengthening":0,
+  "ownershipStrengthening":0,
+  "boundednessStrengthening":0,
+  "invalidPrimaryReason":0,
+  "verdict":"ORIENTATION_TRUTHFULNESS_PRESERVED"
+}

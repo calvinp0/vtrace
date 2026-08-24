@@ -1,0 +1,10 @@
+{
+  "source":"stage5_m181_candidate_canonical_primary.json; M182 has no product diff",
+  "modelFacingOrientationTokens":{
+    "allDeliveringBudgets":{"count":1380,"median":542,"p90":1306,"max":1576},
+    "defaultBudget8000":{"count":167,"median":1229,"p90":1527,"max":1576}
+  },
+  "beforeAfterChangePercent":0,
+  "verdict":"CURRENT_COMPACT_ECONOMICS_PRESERVED",
+  "note":"modelVisibleEstimatedTokens remains misleading for the impact envelope and was not renamed. These figures use orientation packet measurement, not that field."
+}

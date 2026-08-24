@@ -1,0 +1,16 @@
+{
+  "milestone": "M182-A",
+  "answer": "No material equal-ranked selection point was found whose winner is left to completion/query/insertion order.",
+  "comparators": [
+    {"surface":"hybrid candidates","primary":"scores.final","secondary":["fqName","symbolId"],"totalForDistinctSymbols":true},
+    {"surface":"debug-role pivots","primary":"anchor/rendering/expansion/effectiveFinal","secondary":["fqName","symbolId"],"totalForDistinctSymbols":true},
+    {"surface":"final pivots","primary":"cap/anchor/rendering/evidence/score or v2Score","secondary":["fqName","symbolId"],"totalForDistinctSymbols":true},
+    {"surface":"coedit proposals","primary":"rescue precedence then score","secondary":["repo-relative path"],"totalForDistinctFiles":true},
+    {"surface":"product dedupe","primary":"roleOrder","secondary":["canonical identity"],"totalForDistinctDrafts":true},
+    {"surface":"budget retention","primary":"keepPriority including authoritative index","secondary":["display id"],"totalForDistinctItems":true}
+  ],
+  "runtimeStableSortCaveat":"No material comparator relies on stable-sort propagation of an unstable producer at the final semantic selection seam.",
+  "canonicalTieKey":"existing repo-relative path / fqName / stable symbol id; no new lexical policy added",
+  "semanticRankingPolicyChanged":false,
+  "totalOrderingChanged":false
+}

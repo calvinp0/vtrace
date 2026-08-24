@@ -1,0 +1,535 @@
+{
+  "milestone": "M182-B",
+  "conditions": [
+    {
+      "condition": "NORMAL_SERIAL",
+      "repetitionsPerCase": 50,
+      "cases": 7,
+      "rows": [
+        {
+          "instanceId": "django__django-10880",
+          "repetitions": 50,
+          "distinctSemanticPackets": 1,
+          "distinctByteOutputs": 1,
+          "distinctNormalizedByteOutputs": 1,
+          "distinctFocusIds": 1,
+          "distinctRelatedOrdered": 1,
+          "distinctRelatedUnordered": 1,
+          "distinctReasonRoleVectors": 1
+        },
+        {
+          "instanceId": "astropy__astropy-14365",
+          "repetitions": 50,
+          "distinctSemanticPackets": 1,
+          "distinctByteOutputs": 1,
+          "distinctNormalizedByteOutputs": 1,
+          "distinctFocusIds": 1,
+          "distinctRelatedOrdered": 1,
+          "distinctRelatedUnordered": 1,
+          "distinctReasonRoleVectors": 1
+        },
+        {
+          "instanceId": "django__django-11095",
+          "repetitions": 50,
+          "distinctSemanticPackets": 1,
+          "distinctByteOutputs": 1,
+          "distinctNormalizedByteOutputs": 1,
+          "distinctFocusIds": 1,
+          "distinctRelatedOrdered": 1,
+          "distinctRelatedUnordered": 1,
+          "distinctReasonRoleVectors": 1
+        },
+        {
+          "instanceId": "matplotlib__matplotlib-22719",
+          "repetitions": 50,
+          "distinctSemanticPackets": 1,
+          "distinctByteOutputs": 1,
+          "distinctNormalizedByteOutputs": 1,
+          "distinctFocusIds": 1,
+          "distinctRelatedOrdered": 1,
+          "distinctRelatedUnordered": 1,
+          "distinctReasonRoleVectors": 1
+        },
+        {
+          "instanceId": "sympy__sympy-23824",
+          "repetitions": 50,
+          "distinctSemanticPackets": 1,
+          "distinctByteOutputs": 1,
+          "distinctNormalizedByteOutputs": 1,
+          "distinctFocusIds": 1,
+          "distinctRelatedOrdered": 1,
+          "distinctRelatedUnordered": 1,
+          "distinctReasonRoleVectors": 1
+        },
+        {
+          "instanceId": "sphinx-doc__sphinx-8595",
+          "repetitions": 50,
+          "distinctSemanticPackets": 1,
+          "distinctByteOutputs": 1,
+          "distinctNormalizedByteOutputs": 1,
+          "distinctFocusIds": 1,
+          "distinctRelatedOrdered": 1,
+          "distinctRelatedUnordered": 1,
+          "distinctReasonRoleVectors": 1
+        },
+        {
+          "instanceId": "scikit-learn__scikit-learn-13135",
+          "repetitions": 50,
+          "distinctSemanticPackets": 1,
+          "distinctByteOutputs": 1,
+          "distinctNormalizedByteOutputs": 1,
+          "distinctFocusIds": 1,
+          "distinctRelatedOrdered": 1,
+          "distinctRelatedUnordered": 1,
+          "distinctReasonRoleVectors": 1
+        }
+      ],
+      "totals": {
+        "deliveries": 350,
+        "casesWithSemanticVariation": 0,
+        "casesWithByteVariation": 0,
+        "focusChanges": 0,
+        "relatedOrderChanges": 0,
+        "relatedMembershipChanges": 0,
+        "reasonChanges": 0
+      }
+    },
+    {
+      "condition": "NORMAL_REPEAT",
+      "repetitionsPerCase": 50,
+      "cases": 7,
+      "rows": [
+        {
+          "instanceId": "django__django-10880",
+          "repetitions": 50,
+          "distinctSemanticPackets": 1,
+          "distinctByteOutputs": 1,
+          "distinctNormalizedByteOutputs": 1,
+          "distinctFocusIds": 1,
+          "distinctRelatedOrdered": 1,
+          "distinctRelatedUnordered": 1,
+          "distinctReasonRoleVectors": 1
+        },
+        {
+          "instanceId": "astropy__astropy-14365",
+          "repetitions": 50,
+          "distinctSemanticPackets": 1,
+          "distinctByteOutputs": 1,
+          "distinctNormalizedByteOutputs": 1,
+          "distinctFocusIds": 1,
+          "distinctRelatedOrdered": 1,
+          "distinctRelatedUnordered": 1,
+          "distinctReasonRoleVectors": 1
+        },
+        {
+          "instanceId": "django__django-11095",
+          "repetitions": 50,
+          "distinctSemanticPackets": 1,
+          "distinctByteOutputs": 1,
+          "distinctNormalizedByteOutputs": 1,
+          "distinctFocusIds": 1,
+          "distinctRelatedOrdered": 1,
+          "distinctRelatedUnordered": 1,
+          "distinctReasonRoleVectors": 1
+        },
+        {
+          "instanceId": "matplotlib__matplotlib-22719",
+          "repetitions": 50,
+          "distinctSemanticPackets": 1,
+          "distinctByteOutputs": 1,
+          "distinctNormalizedByteOutputs": 1,
+          "distinctFocusIds": 1,
+          "distinctRelatedOrdered": 1,
+          "distinctRelatedUnordered": 1,
+          "distinctReasonRoleVectors": 1
+        },
+        {
+          "instanceId": "sympy__sympy-23824",
+          "repetitions": 50,
+          "distinctSemanticPackets": 1,
+          "distinctByteOutputs": 1,
+          "distinctNormalizedByteOutputs": 1,
+          "distinctFocusIds": 1,
+          "distinctRelatedOrdered": 1,
+          "distinctRelatedUnordered": 1,
+          "distinctReasonRoleVectors": 1
+        },
+        {
+          "instanceId": "sphinx-doc__sphinx-8595",
+          "repetitions": 50,
+          "distinctSemanticPackets": 1,
+          "distinctByteOutputs": 1,
+          "distinctNormalizedByteOutputs": 1,
+          "distinctFocusIds": 1,
+          "distinctRelatedOrdered": 1,
+          "distinctRelatedUnordered": 1,
+          "distinctReasonRoleVectors": 1
+        },
+        {
+          "instanceId": "scikit-learn__scikit-learn-13135",
+          "repetitions": 50,
+          "distinctSemanticPackets": 1,
+          "distinctByteOutputs": 1,
+          "distinctNormalizedByteOutputs": 1,
+          "distinctFocusIds": 1,
+          "distinctRelatedOrdered": 1,
+          "distinctRelatedUnordered": 1,
+          "distinctReasonRoleVectors": 1
+        }
+      ],
+      "totals": {
+        "deliveries": 350,
+        "casesWithSemanticVariation": 0,
+        "casesWithByteVariation": 0,
+        "focusChanges": 0,
+        "relatedOrderChanges": 0,
+        "relatedMembershipChanges": 0,
+        "reasonChanges": 0
+      }
+    },
+    {
+      "condition": "ARTIFICIAL_CPU_LOAD",
+      "repetitionsPerCase": 30,
+      "cases": 7,
+      "rows": [
+        {
+          "instanceId": "django__django-10880",
+          "repetitions": 30,
+          "distinctSemanticPackets": 1,
+          "distinctByteOutputs": 1,
+          "distinctNormalizedByteOutputs": 1,
+          "distinctFocusIds": 1,
+          "distinctRelatedOrdered": 1,
+          "distinctRelatedUnordered": 1,
+          "distinctReasonRoleVectors": 1
+        },
+        {
+          "instanceId": "astropy__astropy-14365",
+          "repetitions": 30,
+          "distinctSemanticPackets": 1,
+          "distinctByteOutputs": 1,
+          "distinctNormalizedByteOutputs": 1,
+          "distinctFocusIds": 1,
+          "distinctRelatedOrdered": 1,
+          "distinctRelatedUnordered": 1,
+          "distinctReasonRoleVectors": 1
+        },
+        {
+          "instanceId": "django__django-11095",
+          "repetitions": 30,
+          "distinctSemanticPackets": 1,
+          "distinctByteOutputs": 1,
+          "distinctNormalizedByteOutputs": 1,
+          "distinctFocusIds": 1,
+          "distinctRelatedOrdered": 1,
+          "distinctRelatedUnordered": 1,
+          "distinctReasonRoleVectors": 1
+        },
+        {
+          "instanceId": "matplotlib__matplotlib-22719",
+          "repetitions": 30,
+          "distinctSemanticPackets": 1,
+          "distinctByteOutputs": 1,
+          "distinctNormalizedByteOutputs": 1,
+          "distinctFocusIds": 1,
+          "distinctRelatedOrdered": 1,
+          "distinctRelatedUnordered": 1,
+          "distinctReasonRoleVectors": 1
+        },
+        {
+          "instanceId": "sympy__sympy-23824",
+          "repetitions": 30,
+          "distinctSemanticPackets": 1,
+          "distinctByteOutputs": 1,
+          "distinctNormalizedByteOutputs": 1,
+          "distinctFocusIds": 1,
+          "distinctRelatedOrdered": 1,
+          "distinctRelatedUnordered": 1,
+          "distinctReasonRoleVectors": 1
+        },
+        {
+          "instanceId": "sphinx-doc__sphinx-8595",
+          "repetitions": 30,
+          "distinctSemanticPackets": 1,
+          "distinctByteOutputs": 1,
+          "distinctNormalizedByteOutputs": 1,
+          "distinctFocusIds": 1,
+          "distinctRelatedOrdered": 1,
+          "distinctRelatedUnordered": 1,
+          "distinctReasonRoleVectors": 1
+        },
+        {
+          "instanceId": "scikit-learn__scikit-learn-13135",
+          "repetitions": 30,
+          "distinctSemanticPackets": 1,
+          "distinctByteOutputs": 1,
+          "distinctNormalizedByteOutputs": 1,
+          "distinctFocusIds": 1,
+          "distinctRelatedOrdered": 1,
+          "distinctRelatedUnordered": 1,
+          "distinctReasonRoleVectors": 1
+        }
+      ],
+      "totals": {
+        "deliveries": 210,
+        "casesWithSemanticVariation": 0,
+        "casesWithByteVariation": 0,
+        "focusChanges": 0,
+        "relatedOrderChanges": 0,
+        "relatedMembershipChanges": 0,
+        "reasonChanges": 0
+      }
+    },
+    {
+      "condition": "ARTIFICIAL_IO_LOAD",
+      "repetitionsPerCase": 30,
+      "cases": 7,
+      "rows": [
+        {
+          "instanceId": "django__django-10880",
+          "repetitions": 30,
+          "distinctSemanticPackets": 1,
+          "distinctByteOutputs": 1,
+          "distinctNormalizedByteOutputs": 1,
+          "distinctFocusIds": 1,
+          "distinctRelatedOrdered": 1,
+          "distinctRelatedUnordered": 1,
+          "distinctReasonRoleVectors": 1
+        },
+        {
+          "instanceId": "astropy__astropy-14365",
+          "repetitions": 30,
+          "distinctSemanticPackets": 1,
+          "distinctByteOutputs": 1,
+          "distinctNormalizedByteOutputs": 1,
+          "distinctFocusIds": 1,
+          "distinctRelatedOrdered": 1,
+          "distinctRelatedUnordered": 1,
+          "distinctReasonRoleVectors": 1
+        },
+        {
+          "instanceId": "django__django-11095",
+          "repetitions": 30,
+          "distinctSemanticPackets": 1,
+          "distinctByteOutputs": 1,
+          "distinctNormalizedByteOutputs": 1,
+          "distinctFocusIds": 1,
+          "distinctRelatedOrdered": 1,
+          "distinctRelatedUnordered": 1,
+          "distinctReasonRoleVectors": 1
+        },
+        {
+          "instanceId": "matplotlib__matplotlib-22719",
+          "repetitions": 30,
+          "distinctSemanticPackets": 1,
+          "distinctByteOutputs": 1,
+          "distinctNormalizedByteOutputs": 1,
+          "distinctFocusIds": 1,
+          "distinctRelatedOrdered": 1,
+          "distinctRelatedUnordered": 1,
+          "distinctReasonRoleVectors": 1
+        },
+        {
+          "instanceId": "sympy__sympy-23824",
+          "repetitions": 30,
+          "distinctSemanticPackets": 1,
+          "distinctByteOutputs": 1,
+          "distinctNormalizedByteOutputs": 1,
+          "distinctFocusIds": 1,
+          "distinctRelatedOrdered": 1,
+          "distinctRelatedUnordered": 1,
+          "distinctReasonRoleVectors": 1
+        },
+        {
+          "instanceId": "sphinx-doc__sphinx-8595",
+          "repetitions": 30,
+          "distinctSemanticPackets": 1,
+          "distinctByteOutputs": 1,
+          "distinctNormalizedByteOutputs": 1,
+          "distinctFocusIds": 1,
+          "distinctRelatedOrdered": 1,
+          "distinctRelatedUnordered": 1,
+          "distinctReasonRoleVectors": 1
+        },
+        {
+          "instanceId": "scikit-learn__scikit-learn-13135",
+          "repetitions": 30,
+          "distinctSemanticPackets": 1,
+          "distinctByteOutputs": 1,
+          "distinctNormalizedByteOutputs": 1,
+          "distinctFocusIds": 1,
+          "distinctRelatedOrdered": 1,
+          "distinctRelatedUnordered": 1,
+          "distinctReasonRoleVectors": 1
+        }
+      ],
+      "totals": {
+        "deliveries": 210,
+        "casesWithSemanticVariation": 0,
+        "casesWithByteVariation": 0,
+        "focusChanges": 0,
+        "relatedOrderChanges": 0,
+        "relatedMembershipChanges": 0,
+        "reasonChanges": 0
+      }
+    },
+    {
+      "condition": "CONTROLLED_CONCURRENT_PACKING",
+      "repetitionsPerCase": 30,
+      "cases": 7,
+      "rows": [
+        {
+          "instanceId": "django__django-10880",
+          "repetitions": 30,
+          "distinctSemanticPackets": 1,
+          "distinctByteOutputs": 1,
+          "distinctNormalizedByteOutputs": 1,
+          "distinctFocusIds": 1,
+          "distinctRelatedOrdered": 1,
+          "distinctRelatedUnordered": 1,
+          "distinctReasonRoleVectors": 1
+        },
+        {
+          "instanceId": "astropy__astropy-14365",
+          "repetitions": 30,
+          "distinctSemanticPackets": 1,
+          "distinctByteOutputs": 1,
+          "distinctNormalizedByteOutputs": 1,
+          "distinctFocusIds": 1,
+          "distinctRelatedOrdered": 1,
+          "distinctRelatedUnordered": 1,
+          "distinctReasonRoleVectors": 1
+        },
+        {
+          "instanceId": "django__django-11095",
+          "repetitions": 30,
+          "distinctSemanticPackets": 1,
+          "distinctByteOutputs": 1,
+          "distinctNormalizedByteOutputs": 1,
+          "distinctFocusIds": 1,
+          "distinctRelatedOrdered": 1,
+          "distinctRelatedUnordered": 1,
+          "distinctReasonRoleVectors": 1
+        },
+        {
+          "instanceId": "matplotlib__matplotlib-22719",
+          "repetitions": 30,
+          "distinctSemanticPackets": 1,
+          "distinctByteOutputs": 1,
+          "distinctNormalizedByteOutputs": 1,
+          "distinctFocusIds": 1,
+          "distinctRelatedOrdered": 1,
+          "distinctRelatedUnordered": 1,
+          "distinctReasonRoleVectors": 1
+        },
+        {
+          "instanceId": "sympy__sympy-23824",
+          "repetitions": 30,
+          "distinctSemanticPackets": 1,
+          "distinctByteOutputs": 1,
+          "distinctNormalizedByteOutputs": 1,
+          "distinctFocusIds": 1,
+          "distinctRelatedOrdered": 1,
+          "distinctRelatedUnordered": 1,
+          "distinctReasonRoleVectors": 1
+        },
+        {
+          "instanceId": "sphinx-doc__sphinx-8595",
+          "repetitions": 30,
+          "distinctSemanticPackets": 1,
+          "distinctByteOutputs": 1,
+          "distinctNormalizedByteOutputs": 1,
+          "distinctFocusIds": 1,
+          "distinctRelatedOrdered": 1,
+          "distinctRelatedUnordered": 1,
+          "distinctReasonRoleVectors": 1
+        },
+        {
+          "instanceId": "scikit-learn__scikit-learn-13135",
+          "repetitions": 30,
+          "distinctSemanticPackets": 1,
+          "distinctByteOutputs": 1,
+          "distinctNormalizedByteOutputs": 1,
+          "distinctFocusIds": 1,
+          "distinctRelatedOrdered": 1,
+          "distinctRelatedUnordered": 1,
+          "distinctReasonRoleVectors": 1
+        }
+      ],
+      "totals": {
+        "deliveries": 210,
+        "casesWithSemanticVariation": 0,
+        "casesWithByteVariation": 0,
+        "focusChanges": 0,
+        "relatedOrderChanges": 0,
+        "relatedMembershipChanges": 0,
+        "reasonChanges": 0
+      }
+    },
+    {
+      "condition": "SAME_PROCESS_INTERLEAVED",
+      "schedule": "round-robin across cases",
+      "repetitionsPerCase": 20,
+      "cases": 7,
+      "rows": [
+        {
+          "instanceId": "django__django-10880",
+          "repetitions": 20,
+          "distinctSemanticPackets": 1
+        },
+        {
+          "instanceId": "astropy__astropy-14365",
+          "repetitions": 20,
+          "distinctSemanticPackets": 1
+        },
+        {
+          "instanceId": "django__django-11095",
+          "repetitions": 20,
+          "distinctSemanticPackets": 1
+        },
+        {
+          "instanceId": "matplotlib__matplotlib-22719",
+          "repetitions": 20,
+          "distinctSemanticPackets": 1
+        },
+        {
+          "instanceId": "sympy__sympy-23824",
+          "repetitions": 20,
+          "distinctSemanticPackets": 1
+        },
+        {
+          "instanceId": "sphinx-doc__sphinx-8595",
+          "repetitions": 20,
+          "distinctSemanticPackets": 1
+        },
+        {
+          "instanceId": "scikit-learn__scikit-learn-13135",
+          "repetitions": 20,
+          "distinctSemanticPackets": 1
+        }
+      ],
+      "totals": {
+        "deliveries": 140,
+        "casesWithSemanticVariation": 0,
+        "casesWithByteVariation": 0,
+        "focusChanges": 0,
+        "relatedOrderChanges": 0,
+        "relatedMembershipChanges": 0,
+        "reasonChanges": 0
+      }
+    }
+  ],
+  "processBoundary": {
+    "condition": "SEPARATE_PROCESS",
+    "processes": 5,
+    "repetitionsPerCasePerProcess": 10,
+    "distinctWorkerResults": 1,
+    "workerHashes": [
+      "d824a768fc7ac080",
+      "d824a768fc7ac080",
+      "d824a768fc7ac080",
+      "d824a768fc7ac080",
+      "d824a768fc7ac080"
+    ]
+  }
+}

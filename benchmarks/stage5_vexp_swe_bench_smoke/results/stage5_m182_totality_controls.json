@@ -1,0 +1,9 @@
+{
+  "deliveries":2028,
+  "throws":0,
+  "outsideEnvelope":0,
+  "unsupportedTerminalStates":0,
+  "handlerFailuresDueToEnvelope":0,
+  "unreachable":0,
+  "verdict":"RESPONSE_TOTALITY_PRESERVED"
+}

@@ -1,0 +1,11 @@
+{
+  "milestone": "M182-A",
+  "materialQueries": [
+    {"repository":"symbolsRepository","status":"ORDER BY present on ordered symbol-list paths","semanticNormalization":"path/fqName/kind/span/id"},
+    {"repository":"edgesRepository","status":"ORDER BY id/path/ordinal present on relation-list paths consumed by retrieval and impact"},
+    {"repository":"filesRepository","status":"list path query ORDER BY path"}
+  ],
+  "unorderedQueriesFound":"Existence/count/single-row and bulk id-map queries exist without ORDER BY; their row order is not consumed as semantic priority.",
+  "repairLicensed":false,
+  "classification":"NO_UNORDERED_DATABASE_RESULT_AT_FIRST_SEMANTIC_DIVERGENCE"
+}
