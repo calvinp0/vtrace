@@ -110,6 +110,16 @@ export interface CompactProductResponseOptions {
    * Off by default: those bodies are already rendered in `modelVisibleContext`.
    */
   readonly includeItemContent?: boolean;
+  /**
+   * INTERNAL. The budget the delivery packer may spend on evidence, when that has
+   * had to be reduced below the caller's `requestedContextTokens` for the packet
+   * to be deliverable at all. The CEILING is never reduced with it: the caller's
+   * entitlement to a complete response is unchanged, and only the packer's target
+   * moves. Set solely by `retryWithinCeiling` below; no tool passes it.
+   */
+  readonly evidenceBudgetTokens?: number;
+  /** INTERNAL. Guards the retry above; see `MAX_EVIDENCE_BUDGET_RETRIES`. */
+  readonly evidenceBudgetRetryDepth?: number;
 }
 
 type JsonRecord = Record<string, unknown>;
@@ -314,6 +324,61 @@ const LAST_RESORT_OPTIONAL_SECTIONS = Object.freeze([
 ]);
 
 /**
+ * How many times the evidence budget may be lowered before the response is
+ * declared undeliverable. Each attempt must reduce it strictly, so this bounds
+ * work rather than deciding policy; measured convergence is one attempt.
+ */
+const MAX_EVIDENCE_BUDGET_RETRIES = 3;
+
+/**
+ * Re-pack the SAME authoritative result against a smaller evidence budget, under
+ * the caller's unchanged ceiling.
+ *
+ * WHY THIS AND NOT A LARGER CEILING. Raising the metadata allowance would move
+ * which budgets fail without making a bigger budget behave better than a smaller
+ * one; the defect is that MORE budget could produce LESS, and only lowering the
+ * packer's aim to what delivery can afford fixes that.
+ *
+ * WHY IT CANNOT INVENT ANYTHING. The packer's ladder is a fixed sequence of ever
+ * weaker drafts, identical at every budget, in which the budget selects only where
+ * to stop. Re-running it at a smaller budget therefore returns a rung the packer
+ * would itself have published for a smaller request — an existing representation
+ * of existing evidence, never a new claim, and never more evidence than the
+ * caller's own budget already allowed.
+ *
+ * The retry starts from `output`, not from the half-compacted draft: the packer
+ * renders from `productContext.items[].content`, which the compaction above has
+ * by then removed as a duplicate, so descending in place would render bodiless
+ * sections and call it compaction.
+ */
+function retryWithinCeiling<T>(
+  output: T,
+  options: CompactProductResponseOptions,
+  accounting: ResponseBudgetAccounting,
+  evidenceBudgetTokens: number,
+): (T & { responseBudget: ResponseBudgetAccounting }) | undefined {
+  const depth = options.evidenceBudgetRetryDepth ?? 0;
+  if (depth >= MAX_EVIDENCE_BUDGET_RETRIES) return undefined;
+
+  // What the envelope can still afford to spend on evidence, measured from the
+  // metadata this attempt actually cost rather than from the flat allowance.
+  const affordable = responseTokenCeiling(options.requestedContextTokens)
+    - accounting.estimated_metadata_tokens;
+  if (affordable < 1 || affordable >= evidenceBudgetTokens) return undefined;
+
+  const candidate = compactProductResponse(output, {
+    ...options,
+    evidenceBudgetTokens: affordable,
+    evidenceBudgetRetryDepth: depth + 1,
+  });
+  // Accept only a strict improvement. A retry that still cannot be delivered
+  // leaves the original attempt to degrade truthfully, exactly as it does today.
+  const productContext = asRecord((candidate as unknown as JsonRecord).productContext);
+  const stillFailed = productContext?.deliveryFailed === true || productContext?.resolved !== true;
+  return candidate.responseBudget.within_envelope && !stillFailed ? candidate : undefined;
+}
+
+/**
  * Rewrite a context-producing MCP tool result into the bounded response shape and
  * attach its budget accounting. Pure: the input value is never mutated.
  */
@@ -331,7 +396,15 @@ export function compactProductResponse<T>(
   // the terminal decline below outranks every other state on it.
   const indexReady = readIndexReadiness(draft);
 
-  const delivery = applyProgressiveContextBudget(draft, options.requestedContextTokens);
+  // M178 named the two bounds this function enforces; M179 stopped them being the
+  // same number. `max_tokens` is what the EVIDENCE may cost and is what the packer
+  // targets; the ceiling is what the COMPLETE RESPONSE may cost and is what may
+  // withhold it. The flat metadata allowance between them is not always enough for
+  // real metadata, so the evidence a response can actually carry is `ceiling -
+  // metadata`, which is routinely LESS than `max_tokens`. When it is, the packer is
+  // aiming at a target nobody can honour, and `retryWithinCeiling` lowers the aim.
+  const evidenceBudgetTokens = options.evidenceBudgetTokens ?? options.requestedContextTokens;
+  const delivery = applyProgressiveContextBudget(draft, evidenceBudgetTokens);
   const deliveryCompacted = delivery?.accounting.status === "compacted"
     || delivery?.accounting.status === "failed";
   if (deliveryCompacted) {
@@ -427,6 +500,12 @@ export function compactProductResponse<T>(
       omitted,
       expansion,
     });
+  }
+
+  if (!accounting.within_envelope) {
+    // Before discarding the evidence, spend less on it. See `retryWithinCeiling`.
+    const retried = retryWithinCeiling(output, options, accounting, evidenceBudgetTokens);
+    if (retried !== undefined) return retried;
   }
 
   if (!accounting.within_envelope) {

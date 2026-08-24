@@ -1065,3 +1065,98 @@ test("M176: the re-measure path terminates too", () => {
   assert.equal(remeasured.responseBudget.within_envelope, true);
   assert.equal(remeasured.workspaceRouting, undefined);
 });
+
+// ---------------------------------------------------------------------------
+// M179 — budget-monotone delivery.
+//
+// `max_tokens` bounds the EVIDENCE; the ceiling bounds the COMPLETE RESPONSE and
+// adds a FLAT metadata allowance. When real metadata costs more than that
+// allowance, the evidence a response can carry is `ceiling - metadata`, which is
+// LESS than the budget the packer is allowed to spend — so the packer selects a
+// rung the envelope cannot ship, and the only remaining move was to discard every
+// piece of evidence. Because rung sizes are a step function of the budget, a
+// LARGER `max_tokens` could land on a rung that overflowed while a SMALLER one
+// landed on one that fitted: more budget, less answer.
+//
+// Measured on frozen authoritative objects from Broad100-A and Broad100-B:
+// 1,088 ordered budget pairs went orientation -> decline, and every one of them
+// was DOMINATED — a packet already proven deliverable at a smaller budget
+// satisfied both contracts at the larger one.
+
+/** Metadata no rung reduces, sized past the flat allowance. */
+function metadataHeavyResponse(characters: number) {
+  const draft = duplicatedResponse() as unknown as Record<string, any>;
+  draft.productContext.leadPivot = "pkg/pivot.py::pivot_function";
+  draft.productContext.freshness = { status: "fresh", reason: "index current" };
+  draft.workspaceRouting = { isWorkspace: false, outcome: "single_repository", reason: "x".repeat(characters) };
+  return draft;
+}
+
+const stateOf = (response: unknown): string =>
+  String((response as { productContext?: { resultState?: unknown } }).productContext?.resultState);
+
+test("M179: more delivery budget never withdraws a deliverable answer", () => {
+  // Every ORDERED pair, which is the stronger property: 400 good and 1,600 bad is
+  // a violation even when every adjacent step looks fine.
+  for (const characters of [2_000, 4_000, 6_000, 8_000]) {
+    const budgets = [200, 400, 600, 800, 1_000, 1_200, 1_600, 2_000, 3_200, 6_400, 8_000];
+    const states = budgets.map((requestedContextTokens) => ({
+      budget: requestedContextTokens,
+      resolved: stateOf(compactProductResponse(metadataHeavyResponse(characters) as never, { requestedContextTokens })) === "resolved",
+    }));
+    for (const lower of states) {
+      for (const higher of states) {
+        if (higher.budget <= lower.budget || !lower.resolved) continue;
+        assert.ok(
+          higher.resolved,
+          `metadata=${characters}: max_tokens ${lower.budget} delivered an answer and ${higher.budget} did not`,
+        );
+      }
+    }
+  }
+});
+
+test("M179: the recovered packet is one the packer already builds, never a new claim", () => {
+  // 1,200 is the budget this fixture used to lose: at 800 the packer landed on a
+  // rung that fitted, at 1,200 on one that did not, and the answer disappeared.
+  const response = compactProductResponse(metadataHeavyResponse(4_000) as never, {
+    requestedContextTokens: 1_200,
+  }) as unknown as Record<string, any>;
+  const budget = budgetOf(response) as unknown as Record<string, number>;
+
+  assert.equal(response.productContext.resultState, "resolved");
+  assert.equal(response.productContext.deliveryFailed, false);
+  // Both M178 contracts hold: evidence inside the caller's budget, complete
+  // response inside the caller's ceiling. The retry lowers the packer's aim; it
+  // never raises the caller's entitlement.
+  assert.ok(budget.estimated_model_visible_tokens <= 1_200);
+  assert.ok(budget.within_envelope);
+  assert.ok(response.productContext.items.length >= 1);
+  // The evidence is real, not the failure notice standing in for it.
+  assert.equal(String(response.productContext.modelVisibleContext).includes("VTRACE delivery failure"), false);
+});
+
+test("M179: a budget that already worked is untouched", () => {
+  // §48's no-refill gate. The retry runs only where the response was about to be
+  // discarded, so a response that already fitted must be byte-identical — the
+  // repair may not become a licence to fill every envelope to its ceiling.
+  for (const requestedContextTokens of [8_000, 16_000, 32_000]) {
+    const plain = compactProductResponse(duplicatedResponse() as never, { requestedContextTokens });
+    assert.equal(stateOf(plain), "resolved");
+    assert.equal(
+      serialize(plain as never),
+      serialize(compactProductResponse(duplicatedResponse() as never, { requestedContextTokens }) as never),
+    );
+  }
+});
+
+test("M179: when even the smallest rung cannot be delivered, the decline is still truthful", () => {
+  // Monotonicity does not require pretending evidence fits (§56). The retry is
+  // bounded and gives up, and what it gives up to is M176's terminal record.
+  const response = compactProductResponse(irreduciblyOversizedResponse() as never, {
+    requestedContextTokens: 8_000,
+  }) as unknown as Record<string, any>;
+  assert.equal(declined(response), true);
+  assert.equal(budgetOf(response).within_envelope, true);
+  assert.equal(response.productContext.retrievalFound, true);
+});
