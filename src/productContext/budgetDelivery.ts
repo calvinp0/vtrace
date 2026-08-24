@@ -424,9 +424,34 @@ function keepPriority(roles: string[], answerBearing: boolean, index: number): n
     - index;
 }
 
+/**
+ * Reduce a reason array to one model-facing line. REDUCTION, NOT RESELECTION.
+ *
+ * `selectionReasons` is not a bag of interchangeable justifications: the assembly
+ * layer builds it as `unique([roleReason, ...evidence])`, and `roleReason` is
+ * declared at its definition as "The decisive reason this item landed in its
+ * role". Position 0 is a contract, and `projectRunPipelineOrientation` consumes
+ * it as one — it reuses the first reason verbatim as the relationship claim the
+ * agent is told about the item.
+ *
+ * This function used to prefer the first reason matching
+ * `/preferred contrast|symbol-name match|direct evidence|exact/iu`, four
+ * substrings lifted from `answerBearing` above, where they decide which ITEM to
+ * keep. Ranking an EXPLANATION by a keep-priority vocabulary put a second,
+ * undeclared selector in front of the declared one, and the two disagreed
+ * whenever the decisive reason did not happen to contain one of those
+ * substrings. Measured on 169 frozen cases: 277 substitutions, every one of them
+ * replacing the decisive role claim with retrieval provenance, and 214 of those
+ * with a scorer diagnostic of the form `preferred contrast side matched: <terms>
+ * (+0.18)` — matched tokens and a float, in place of "the edit site is the helper
+ * it calls". Which of them the agent saw depended on whether the response had
+ * been compacted.
+ *
+ * So: keep the head, shorten it if it is long, and leave the choice to the layer
+ * that owns it.
+ */
 function compactReasons(reasons: string[]): string[] {
-  const preferred = reasons.find((reason) => /preferred contrast|symbol-name match|direct evidence|exact/iu.test(reason));
-  const first = preferred ?? reasons[0];
+  const first = reasons[0];
   return first === undefined ? [] : [first.length <= 160 ? first : `${first.slice(0, 159)}…`];
 }
 
