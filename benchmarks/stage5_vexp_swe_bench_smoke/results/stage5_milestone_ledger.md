@@ -5279,8 +5279,8 @@ ordered budget pairs, M180 preservation semantics             before   after
 ## M181 — Selection-Reason Semantic Stability Across Compaction
 
 ```text
-commits  PENDING_PRODUCT   product (compactReasons + first test for budgetDelivery.ts)
-         PENDING_EVIDENCE  evidence + ledger
+commits  14a67868672398aae8faa56901e1eb85ae5d3839   product (compactReasons + first test for budgetDelivery.ts)
+         83163d2dd7f74ad55a44f763dc9673ae36c4cef8   evidence + ledger
 from     189e190ded87b3b1ce952126b4997a8843e44e95    (M180 close)
 
 A PASS   19/19 source claims re-verified against the file and line they cite;
