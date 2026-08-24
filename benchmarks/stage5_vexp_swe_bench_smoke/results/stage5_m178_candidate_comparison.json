@@ -1,0 +1,115 @@
+{
+  "milestone": "M178-D",
+  "frozenCorpus": "stage5_m178_disagreement_results.json",
+  "observations": 1042,
+  "disagreements": {
+    "total": 564,
+    "atDefaultBudget": 0,
+    "atPressureBudgets": 564,
+    "maxExcessTokensOverRequested": 41,
+    "meanExcessTokensOverRequested": 18.08,
+    "surplusAllowanceBound": 41,
+    "excessNeverExceedsSurplus": true
+  },
+  "selectionCriteria": [
+    {
+      "rank": 1,
+      "criterion": "semantic correctness",
+      "finding": "C_TERMINAL is refuted. The remaining three all deliver a coherent contract; C_STRICT_FITS and C_EXPLICIT_SPLIT differ on whether the model-facing bound is HARD (decline on breach) or a COMPACTION TARGET (best effort, with the total bound as the hard one)."
+    },
+    {
+      "rank": 2,
+      "criterion": "compatibility with actual client/protocol constraints",
+      "finding": "Neutral. No protocol limit is implicated: C2, the only transport-shaped condition, is provably dead, and M167 found the wire duplicate costs no model tokens in the proven client."
+    },
+    {
+      "rank": 3,
+      "criterion": "preservation of truthfulness and totality",
+      "finding": "Neutral. All three admissible candidates terminate in a response or a truthful bounded decline; none throws."
+    },
+    {
+      "rank": 4,
+      "criterion": "minimal unintended normal-product behaviour change",
+      "finding": "DECISIVE. C_EXPLICIT_SPLIT changes 0 responses. C_STRICT_FITS changes 564, destroying 25 delivered edges to reclaim at most 41 tokens each. §40 permits a tiny-budget behaviour change only when the old behaviour violated a REAL required bound; the bound it breaches is the compaction target, while the hard total bound was satisfied throughout."
+    },
+    {
+      "rank": 5,
+      "criterion": "implementation simplicity",
+      "finding": "C_EXPLICIT_SPLIT is two named predicates over the existing arithmetic. No new state, no new budget."
+    },
+    {
+      "rank": 6,
+      "criterion": "token/economic side effect",
+      "finding": "C_EXPLICIT_SPLIT: none. C_STRICT_FITS: strictly fewer evidence tokens delivered, for no billing benefit."
+    }
+  ],
+  "selected": "C_EXPLICIT_SPLIT",
+  "selectionFrozenBeforeImplementation": true,
+  "djangoUsedAsOptimizationTarget": false,
+  "candidates": [
+    {
+      "candidate": "C_CURRENT_SPLIT",
+      "ladderGate": "C1 && C2 && C3",
+      "terminalGate": "C1 && C2",
+      "semanticallyAdmissible": true,
+      "refutation": null,
+      "normalResponses": 774,
+      "truthfulDeclines": 268,
+      "handlerFailures": 0,
+      "defaultBudgetOutputChanges": 0,
+      "pressureBudgetOutputChanges": 0,
+      "evidenceEdgesLost": 0,
+      "maxExcessTokensOverRequested": 41,
+      "publishedBoundHonoured": false,
+      "notes": "The product as M177 left it. Honours the published TOTAL bound always, and the published MODEL-FACING bound everywhere except a window whose width is the surplus metadata allowance (observed max excess 41 tokens)."
+    },
+    {
+      "candidate": "C_STRICT_FITS",
+      "ladderGate": "C1 && C2 && C3",
+      "terminalGate": "C1 && C2 && C3",
+      "semanticallyAdmissible": true,
+      "refutation": null,
+      "normalResponses": 210,
+      "truthfulDeclines": 832,
+      "handlerFailures": 0,
+      "defaultBudgetOutputChanges": 0,
+      "pressureBudgetOutputChanges": 564,
+      "evidenceEdgesLost": 25,
+      "maxExcessTokensOverRequested": 0,
+      "publishedBoundHonoured": true,
+      "notes": "Honours both published bounds exactly. Costs 25 delivered edges across 564 calls, every one of them to recover at most 41 tokens of surplus metadata allowance — and each such call drops from bounded evidence to a decline carrying none. M177's warning in §4 is precisely this trade."
+    },
+    {
+      "candidate": "C_TERMINAL",
+      "ladderGate": "C1 && C2",
+      "terminalGate": "C1 && C2",
+      "semanticallyAdmissible": false,
+      "refutation": "Refuted on the published contract, not on a count. With C3 removed from the LADDER, delivered evidence is bounded only by totalCeiling - metadata = max_tokens + allowance - metadata, so a caller who asks for 400 tokens of model-facing impact content can receive up to 400 + 800 - metadata. get_impact_graph's own schema states that max_tokens bounds model-facing impact content; this candidate stops enforcing it.",
+      "normalResponses": null,
+      "truthfulDeclines": null,
+      "handlerFailures": null,
+      "defaultBudgetOutputChanges": null,
+      "pressureBudgetOutputChanges": null,
+      "evidenceEdgesLost": null,
+      "maxExcessTokensOverRequested": null,
+      "publishedBoundHonoured": false,
+      "notes": "Dropped under §34 before simulation. Not measured, because an invalid contract does not earn a measurement."
+    },
+    {
+      "candidate": "C_EXPLICIT_SPLIT",
+      "ladderGate": "fitsResponseEnvelope && meetsEvidenceBudget  (identical truth value to C1 && C2 && C3)",
+      "terminalGate": "fitsResponseEnvelope  (identical truth value to C1 && C2)",
+      "semanticallyAdmissible": true,
+      "refutation": null,
+      "normalResponses": 774,
+      "truthfulDeclines": 268,
+      "handlerFailures": 0,
+      "defaultBudgetOutputChanges": 0,
+      "pressureBudgetOutputChanges": 0,
+      "evidenceEdgesLost": 0,
+      "maxExcessTokensOverRequested": 41,
+      "publishedBoundHonoured": false,
+      "notes": "Behaviourally identical to C_CURRENT_SPLIT by construction — the same two truth values, reached through two named predicates instead of one ambiguous one. Changes what the code MEANS, not what it DOES."
+    }
+  ]
+}

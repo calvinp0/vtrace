@@ -1,0 +1,292 @@
+{
+  "milestone": "M178-A",
+  "generatedFrom": "run_stage5_m178_predicate_audit.ts",
+  "predicates": [
+    {
+      "id": "P1_pipeline_delivery",
+      "site": "src/productContext/budgetDelivery.ts:136",
+      "expression": "estimateTokens(render(product, items)) <= budget",
+      "measures": "the rendered model-visible context string",
+      "unit": "tokens (chars/4)",
+      "budgetSource": "the caller's max_tokens",
+      "consumers": [
+        "applyProgressiveContextBudget, called from compactProductResponse"
+      ],
+      "onFalse": "shed a further delivery rung; ultimately deliveryFailed",
+      "compactionCanAffectIt": true,
+      "modelSeesTheConstrainedBytes": true
+    },
+    {
+      "id": "P2_pipeline_envelope_ladder",
+      "site": "src/mcp/responseEnvelope.ts:1509 (withinBudget)",
+      "expression": "estimateTokens(serialize(draft)) + accountingTokens() <= ceilingTokens",
+      "measures": "the complete serialized response plus the accounting block it will carry",
+      "unit": "tokens (chars/4)",
+      "budgetSource": "responseTokenCeiling(max_tokens) = max_tokens + max(1000, 15%)",
+      "consumers": [
+        "enforceTotalEnvelope"
+      ],
+      "onFalse": "apply the next envelope compaction step",
+      "compactionCanAffectIt": true,
+      "modelSeesTheConstrainedBytes": true
+    },
+    {
+      "id": "P3_pipeline_envelope_terminal",
+      "site": "src/mcp/responseEnvelope.ts:2311 (within_envelope)",
+      "expression": "estimated_total_response_tokens <= responseTokenCeiling(requested_context_tokens)",
+      "measures": "the complete serialized response",
+      "unit": "tokens (chars/4)",
+      "budgetSource": "responseTokenCeiling(max_tokens)",
+      "consumers": [
+        "compactProductResponse terminal",
+        "remeasureResponseBudget terminal"
+      ],
+      "onFalse": "escalate a rung; when exhausted, buildBoundedEnvelopeDecline",
+      "compactionCanAffectIt": true,
+      "modelSeesTheConstrainedBytes": true,
+      "note": "P2 and P3 are the SAME concept. run_pipeline's ladder is gated on the condition its own terminal tests."
+    },
+    {
+      "id": "C1_impact_total",
+      "site": "src/impact/impactResponseEnvelope.ts:192",
+      "expression": "estimatedTotalTokens <= totalCeiling",
+      "measures": "the complete serialized impact response",
+      "unit": "tokens (chars/4)",
+      "budgetSource": "min(max_tokens + max(800, 15%), 20000)",
+      "consumers": [
+        "fits() (ladder)",
+        "the terminal at :330"
+      ],
+      "onFalse": "ladder: next rung. terminal: buildBoundedImpactDecline",
+      "compactionCanAffectIt": "partially — only the five evidence keys, never the metadata",
+      "modelSeesTheConstrainedBytes": true
+    },
+    {
+      "id": "C2_impact_characters",
+      "site": "src/impact/impactResponseEnvelope.ts:193",
+      "expression": "serializedCharacters <= 80000",
+      "measures": "the complete serialized impact response",
+      "unit": "characters",
+      "budgetSource": "a flat constant",
+      "consumers": [
+        "fits() (ladder)",
+        "the terminal at :330"
+      ],
+      "onFalse": "ladder: next rung. terminal: buildBoundedImpactDecline",
+      "compactionCanAffectIt": true,
+      "modelSeesTheConstrainedBytes": true,
+      "verdict": "DEAD — implied by C1 at every budget. See c2Implication."
+    },
+    {
+      "id": "C3_impact_evidence",
+      "site": "src/impact/impactResponseEnvelope.ts:194",
+      "expression": "modelVisibleEstimatedTokens <= requestedMaxTokens",
+      "measures": "five keys only — edges, nodes, view, directRelations, paths",
+      "unit": "tokens (chars/4)",
+      "budgetSource": "the caller's max_tokens",
+      "consumers": [
+        "fits() (ladder) ONLY — the terminal at :330 does not test it"
+      ],
+      "onFalse": "ladder: next rung. terminal: no effect.",
+      "compactionCanAffectIt": true,
+      "modelSeesTheConstrainedBytes": true,
+      "note": "This is the impact path's analogue of P1, fused into the same predicate as C1."
+    },
+    {
+      "id": "P6_orientation_related_cap",
+      "site": "src/runPipeline/orientationProjection.ts:328",
+      "expression": "orientationTokens(assemble(focus, next, notes)) > ORIENTATION_POLICY.ceilingTokens",
+      "measures": "the assembled orientation packet",
+      "unit": "tokens (characters * 0.3174, M166's calibrated provider rate)",
+      "budgetSource": "a FIXED 2000-token constant, NOT the caller's max_tokens",
+      "consumers": [
+        "projectRunPipelineOrientation"
+      ],
+      "onFalse": "stop admitting related entries",
+      "compactionCanAffectIt": true,
+      "modelSeesTheConstrainedBytes": true,
+      "verdict": "A DIFFERENT UNIT AND A DIFFERENT BUDGET from every predicate above. §43."
+    },
+    {
+      "id": "P7_impact_path_budget",
+      "site": "src/impact/getImpactGraph.ts:966",
+      "expression": "used + cost > maxTokens -> stop",
+      "measures": "retained path evidence, PRE-ENVELOPE",
+      "unit": "tokens (chars/4)",
+      "budgetSource": "the caller's max_tokens",
+      "consumers": [
+        "getImpactGraph (the ENGINE, not the envelope)"
+      ],
+      "onFalse": "stop admitting paths",
+      "compactionCanAffectIt": false,
+      "modelSeesTheConstrainedBytes": true,
+      "note": "The second spend of max_tokens on this path, and the reason M178-B holds the engine fixed."
+    }
+  ],
+  "accountingSurfaces": [
+    {
+      "surface": "structuredContent",
+      "measuredUnit": "tokens (chars/4)",
+      "modelSeesIt": true,
+      "wireOnly": false,
+      "usedByFitCondition": [
+        "C1",
+        "C3 (five keys of it)",
+        "P2",
+        "P3"
+      ],
+      "evidence": "M167 — the proven agent client reads structuredContent."
+    },
+    {
+      "surface": "content[0].text fallback",
+      "measuredUnit": "characters",
+      "modelSeesIt": false,
+      "wireOnly": true,
+      "usedByFitCondition": [],
+      "evidence": "M167 — a total duplicate costing 0 model tokens in the proven client; unremovable under protocol 2024-11-05."
+    },
+    {
+      "surface": "request echo (limits.maxTokens, responseBudget.requestedMaxTokens)",
+      "measuredUnit": "tokens (chars/4)",
+      "modelSeesIt": true,
+      "wireOnly": false,
+      "usedByFitCondition": [
+        "C1 (it is serialized, so it is counted)"
+      ],
+      "evidence": "M175 repaired its cost to a constant 65 tokens. It is a BUDGET PARAMETER, never content. §14."
+    },
+    {
+      "surface": "JSON-RPC protocol wrapper",
+      "measuredUnit": "bytes",
+      "modelSeesIt": false,
+      "wireOnly": true,
+      "usedByFitCondition": [],
+      "evidence": "M167 — outside every predicate in this inventory."
+    },
+    {
+      "surface": "internal diagnostics (detail=debug)",
+      "measuredUnit": "tokens (chars/4)",
+      "modelSeesIt": true,
+      "wireOnly": false,
+      "usedByFitCondition": [
+        "C1",
+        "P2",
+        "P3"
+      ],
+      "evidence": "M166 — moved behind detail=debug because the model is billed for every character."
+    },
+    {
+      "surface": "impact response metadata (richSummary, callerCoverage, summary, coverage, resolvedSymbol, diagnostics, timing)",
+      "measuredUnit": "tokens (chars/4)",
+      "modelSeesIt": true,
+      "wireOnly": false,
+      "usedByFitCondition": [
+        "C1 only — C3 excludes it by construction"
+      ],
+      "evidence": "M177 measured it at 745 of 1,217 tokens (61%) at the envelope floor. No rung of the ladder can shrink it."
+    }
+  ],
+  "estimators": {
+    "impactEnvelope": {
+      "method": "chars_div_4",
+      "exactTokenizer": false,
+      "site": "src/capsuleV2/tokens.ts estimateTokens"
+    },
+    "pipelineEnvelope": {
+      "method": "chars_div_4",
+      "exactTokenizer": false,
+      "site": "src/capsuleV2/tokens.ts estimateTokens"
+    },
+    "pipelineDelivery": {
+      "method": "chars_div_4",
+      "exactTokenizer": false,
+      "site": "src/capsuleV2/tokens.ts estimateTokens"
+    },
+    "orientationProjection": {
+      "method": "characters * 0.3174032272551657",
+      "exactTokenizer": false,
+      "site": "src/runPipeline/orientationProjection.ts:133",
+      "note": "M166's measured provider rate over 363 samples. chars/4 understates serialized tool JSON materially."
+    },
+    "unitConsistencyDefect": {
+      "present": true,
+      "description": "C2 compares CHARACTERS to a character constant while C1 and C3 compare TOKENS to token budgets, inside one boolean. The comparison is internally consistent (each side is in its own unit) but the conjunction hides that one condition is not denominated in the caller's currency. C2 is dead, so nothing rides on it today."
+    }
+  },
+  "constants": {
+    "IMPACT_METADATA_ALLOWANCE_FLOOR_TOKENS": 800,
+    "IMPACT_HARD_SERIALIZED_CHARACTER_CEILING": 80000,
+    "RESPONSE_METADATA_ALLOWANCE_FLOOR_TOKENS": 1000,
+    "RESPONSE_METADATA_ALLOWANCE_RATIO": 0.15,
+    "orientationCeilingTokens": 2000,
+    "pipelineCeilingAtDefault": 2200,
+    "impactCeilingAtDefault": 2000
+  },
+  "c2Implication": {
+    "holds": true,
+    "counterexamples": [],
+    "maxImpliedCharacters": 80000
+  },
+  "knownPositive": {
+    "symbolFqn": "src/_pytest/debugging.py::_enter_pdb",
+    "firstDeliveringBudget": 477,
+    "modelVisibleFloorTokens": 484,
+    "metadataFloorTokens": 793,
+    "predictedWindow": {
+      "lowBudget": 477,
+      "highBudget": 483,
+      "width": 7
+    },
+    "windowWidthEquals": "IMPACT_METADATA_ALLOWANCE_FLOOR_TOKENS - metadataFloorTokens",
+    "windowWidthCheck": true
+  },
+  "instrumentControls": {
+    "knownPositive": {
+      "budget": 477,
+      "classification": "emitted_with_ladder_gate_false",
+      "reachedState": "normal(resultState=bounded_truncated,edges=1,c3=F)",
+      "passes": true
+    },
+    "knownNegative": {
+      "budget": 1200,
+      "classification": "agree_normal",
+      "reachedState": "normal(resultState=bounded_truncated,edges=5,c3=T)",
+      "passes": true
+    },
+    "identity": {
+      "budget": 477,
+      "passes": true
+    },
+    "budgetEchoTrap": {
+      "controlled": true,
+      "budgetParameterFields": [
+        "limits.maxTokens",
+        "responseBudget.requestedMaxTokens",
+        "responseBudget.totalCeiling",
+        "responseBudget.serializedCharacters",
+        "responseBudget.estimatedTotalTokens",
+        "responseBudget.metadataEstimatedTokens"
+      ],
+      "lowBudget": 477,
+      "highBudget": 483,
+      "contentIdentical": true,
+      "fullIdentical": false,
+      "passes": true
+    },
+    "fixtureTrap": {
+      "budget": 1,
+      "reachedState": "decline(resultState=bounded_truncated)",
+      "declines": true,
+      "passes": true,
+      "note": "M177's graph() fixture fitted at max_tokens=1 and never reached this branch. This one declines, measured."
+    },
+    "classifierNotDegenerate": {
+      "distinctLabels": [
+        "emitted_with_ladder_gate_false",
+        "agree_normal",
+        "unobservable_on_decline"
+      ],
+      "passes": true
+    }
+  }
+}

@@ -1,0 +1,318 @@
+{
+  "milestone": "M178-B",
+  "generatedFrom": "run_stage5_m178_disagreement.ts",
+  "repo": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/workspaces/m160_broad_b/pytest-dev__pytest-10081",
+  "corpusSize": 60,
+  "defaultBudget": 1200,
+  "pressureBudgets": [
+    1,
+    50,
+    200,
+    400,
+    800
+  ],
+  "searchCeiling": 20000,
+  "selection": "src/_pytest/% ordered by fq_name, stratified by authoritative edge count, first come",
+  "corpus": [
+    {
+      "symbolFqn": "src/_pytest/__init__.py::<module>",
+      "authoritativeEdges": 0,
+      "sizeClass": "empty"
+    },
+    {
+      "symbolFqn": "src/_pytest/__init__.py::__all__",
+      "authoritativeEdges": 0,
+      "sizeClass": "empty"
+    },
+    {
+      "symbolFqn": "src/_pytest/_argcomplete.py::<module>",
+      "authoritativeEdges": 0,
+      "sizeClass": "empty"
+    },
+    {
+      "symbolFqn": "src/_pytest/_code/__init__.py::<module>",
+      "authoritativeEdges": 0,
+      "sizeClass": "empty"
+    },
+    {
+      "symbolFqn": "src/_pytest/_code/__init__.py::__all__",
+      "authoritativeEdges": 0,
+      "sizeClass": "empty"
+    },
+    {
+      "symbolFqn": "src/_pytest/_code/code.py::<module>",
+      "authoritativeEdges": 0,
+      "sizeClass": "empty"
+    },
+    {
+      "symbolFqn": "src/_pytest/_code/source.py::<module>",
+      "authoritativeEdges": 0,
+      "sizeClass": "empty"
+    },
+    {
+      "symbolFqn": "src/_pytest/_io/__init__.py::<module>",
+      "authoritativeEdges": 0,
+      "sizeClass": "empty"
+    },
+    {
+      "symbolFqn": "src/_pytest/_io/__init__.py::__all__",
+      "authoritativeEdges": 0,
+      "sizeClass": "empty"
+    },
+    {
+      "symbolFqn": "src/_pytest/_io/saferepr.py::<module>",
+      "authoritativeEdges": 0,
+      "sizeClass": "empty"
+    },
+    {
+      "symbolFqn": "src/_pytest/_io/terminalwriter.py::<module>",
+      "authoritativeEdges": 0,
+      "sizeClass": "empty"
+    },
+    {
+      "symbolFqn": "src/_pytest/_io/wcwidth.py::<module>",
+      "authoritativeEdges": 0,
+      "sizeClass": "empty"
+    },
+    {
+      "symbolFqn": "src/_pytest/assertion/__init__.py::<module>",
+      "authoritativeEdges": 0,
+      "sizeClass": "empty"
+    },
+    {
+      "symbolFqn": "src/_pytest/assertion/rewrite.py::<module>",
+      "authoritativeEdges": 0,
+      "sizeClass": "empty"
+    },
+    {
+      "symbolFqn": "src/_pytest/assertion/rewrite.py::PYC_EXT",
+      "authoritativeEdges": 0,
+      "sizeClass": "empty"
+    },
+    {
+      "symbolFqn": "src/_pytest/_argcomplete.py::FastFilesCompleter",
+      "authoritativeEdges": 2,
+      "sizeClass": "small"
+    },
+    {
+      "symbolFqn": "src/_pytest/_argcomplete.py::FastFilesCompleter.__call__",
+      "authoritativeEdges": 1,
+      "sizeClass": "small"
+    },
+    {
+      "symbolFqn": "src/_pytest/_argcomplete.py::FastFilesCompleter.__init__",
+      "authoritativeEdges": 1,
+      "sizeClass": "small"
+    },
+    {
+      "symbolFqn": "src/_pytest/_io/terminalwriter.py::get_terminal_width",
+      "authoritativeEdges": 2,
+      "sizeClass": "small"
+    },
+    {
+      "symbolFqn": "src/_pytest/assertion/__init__.py::AssertionState",
+      "authoritativeEdges": 2,
+      "sizeClass": "small"
+    },
+    {
+      "symbolFqn": "src/_pytest/assertion/__init__.py::AssertionState.__init__",
+      "authoritativeEdges": 4,
+      "sizeClass": "small"
+    },
+    {
+      "symbolFqn": "src/_pytest/assertion/__init__.py::DummyRewriteHook",
+      "authoritativeEdges": 4,
+      "sizeClass": "small"
+    },
+    {
+      "symbolFqn": "src/_pytest/assertion/__init__.py::DummyRewriteHook.mark_rewrite",
+      "authoritativeEdges": 4,
+      "sizeClass": "small"
+    },
+    {
+      "symbolFqn": "src/_pytest/assertion/__init__.py::install_importhook",
+      "authoritativeEdges": 4,
+      "sizeClass": "small"
+    },
+    {
+      "symbolFqn": "src/_pytest/assertion/__init__.py::pytest_addoption",
+      "authoritativeEdges": 1,
+      "sizeClass": "small"
+    },
+    {
+      "symbolFqn": "src/_pytest/assertion/__init__.py::pytest_collection",
+      "authoritativeEdges": 1,
+      "sizeClass": "small"
+    },
+    {
+      "symbolFqn": "src/_pytest/assertion/__init__.py::pytest_sessionfinish",
+      "authoritativeEdges": 1,
+      "sizeClass": "small"
+    },
+    {
+      "symbolFqn": "src/_pytest/assertion/rewrite.py::PYTEST_TAG",
+      "authoritativeEdges": 3,
+      "sizeClass": "small"
+    },
+    {
+      "symbolFqn": "src/_pytest/assertion/rewrite.py::_call_assertion_pass",
+      "authoritativeEdges": 1,
+      "sizeClass": "small"
+    },
+    {
+      "symbolFqn": "src/_pytest/assertion/rewrite.py::_call_reprcompare",
+      "authoritativeEdges": 1,
+      "sizeClass": "small"
+    },
+    {
+      "symbolFqn": "src/_pytest/_io/saferepr.py::AlwaysDispatchingPrettyPrinter",
+      "authoritativeEdges": 8,
+      "sizeClass": "medium"
+    },
+    {
+      "symbolFqn": "src/_pytest/_io/saferepr.py::AlwaysDispatchingPrettyPrinter._format",
+      "authoritativeEdges": 7,
+      "sizeClass": "medium"
+    },
+    {
+      "symbolFqn": "src/_pytest/_io/saferepr.py::DEFAULT_REPR_MAX_SIZE",
+      "authoritativeEdges": 13,
+      "sizeClass": "medium"
+    },
+    {
+      "symbolFqn": "src/_pytest/_io/saferepr.py::_pformat_dispatch",
+      "authoritativeEdges": 10,
+      "sizeClass": "medium"
+    },
+    {
+      "symbolFqn": "src/_pytest/assertion/__init__.py::pytest_runtest_protocol",
+      "authoritativeEdges": 5,
+      "sizeClass": "medium"
+    },
+    {
+      "symbolFqn": "src/_pytest/assertion/__init__.py::register_assert_rewrite",
+      "authoritativeEdges": 5,
+      "sizeClass": "medium"
+    },
+    {
+      "symbolFqn": "src/_pytest/assertion/rewrite.py::AssertionRewritingHook.__init__",
+      "authoritativeEdges": 18,
+      "sizeClass": "medium"
+    },
+    {
+      "symbolFqn": "src/_pytest/assertion/rewrite.py::AssertionRewritingHook._early_rewrite_bailout",
+      "authoritativeEdges": 19,
+      "sizeClass": "medium"
+    },
+    {
+      "symbolFqn": "src/_pytest/assertion/rewrite.py::AssertionRewritingHook._find_spec",
+      "authoritativeEdges": 16,
+      "sizeClass": "medium"
+    },
+    {
+      "symbolFqn": "src/_pytest/assertion/rewrite.py::AssertionRewritingHook._is_marked_for_rewrite",
+      "authoritativeEdges": 20,
+      "sizeClass": "medium"
+    },
+    {
+      "symbolFqn": "src/_pytest/assertion/rewrite.py::AssertionRewritingHook._should_rewrite",
+      "authoritativeEdges": 20,
+      "sizeClass": "medium"
+    },
+    {
+      "symbolFqn": "src/_pytest/assertion/rewrite.py::AssertionRewritingHook._warn_already_imported",
+      "authoritativeEdges": 17,
+      "sizeClass": "medium"
+    },
+    {
+      "symbolFqn": "src/_pytest/assertion/rewrite.py::AssertionRewritingHook.create_module",
+      "authoritativeEdges": 16,
+      "sizeClass": "medium"
+    },
+    {
+      "symbolFqn": "src/_pytest/assertion/rewrite.py::AssertionRewritingHook.find_spec",
+      "authoritativeEdges": 19,
+      "sizeClass": "medium"
+    },
+    {
+      "symbolFqn": "src/_pytest/assertion/rewrite.py::AssertionRewritingHook.get_data",
+      "authoritativeEdges": 16,
+      "sizeClass": "medium"
+    },
+    {
+      "symbolFqn": "src/_pytest/_code/code.py::Code",
+      "authoritativeEdges": 76,
+      "sizeClass": "large"
+    },
+    {
+      "symbolFqn": "src/_pytest/_code/code.py::Code.__eq__",
+      "authoritativeEdges": 64,
+      "sizeClass": "large"
+    },
+    {
+      "symbolFqn": "src/_pytest/_code/code.py::Code.__hash__",
+      "authoritativeEdges": 64,
+      "sizeClass": "large"
+    },
+    {
+      "symbolFqn": "src/_pytest/_code/code.py::Code.__init__",
+      "authoritativeEdges": 64,
+      "sizeClass": "large"
+    },
+    {
+      "symbolFqn": "src/_pytest/_code/code.py::Code.__slots__",
+      "authoritativeEdges": 64,
+      "sizeClass": "large"
+    },
+    {
+      "symbolFqn": "src/_pytest/_code/code.py::Code.firstlineno",
+      "authoritativeEdges": 64,
+      "sizeClass": "large"
+    },
+    {
+      "symbolFqn": "src/_pytest/_code/code.py::Code.from_function",
+      "authoritativeEdges": 65,
+      "sizeClass": "large"
+    },
+    {
+      "symbolFqn": "src/_pytest/_code/code.py::Code.fullsource",
+      "authoritativeEdges": 65,
+      "sizeClass": "large"
+    },
+    {
+      "symbolFqn": "src/_pytest/_code/code.py::Code.getargs",
+      "authoritativeEdges": 64,
+      "sizeClass": "large"
+    },
+    {
+      "symbolFqn": "src/_pytest/_code/code.py::Code.name",
+      "authoritativeEdges": 64,
+      "sizeClass": "large"
+    },
+    {
+      "symbolFqn": "src/_pytest/_code/code.py::Code.path",
+      "authoritativeEdges": 65,
+      "sizeClass": "large"
+    },
+    {
+      "symbolFqn": "src/_pytest/_code/code.py::Code.source",
+      "authoritativeEdges": 65,
+      "sizeClass": "large"
+    },
+    {
+      "symbolFqn": "src/_pytest/_code/code.py::E",
+      "authoritativeEdges": 64,
+      "sizeClass": "large"
+    },
+    {
+      "symbolFqn": "src/_pytest/_code/code.py::ExceptionChainRepr",
+      "authoritativeEdges": 75,
+      "sizeClass": "large"
+    },
+    {
+      "symbolFqn": "src/_pytest/_code/code.py::ExceptionChainRepr.__attrs_post_init__",
+      "authoritativeEdges": 66,
+      "sizeClass": "large"
+    }
+  ]
+}

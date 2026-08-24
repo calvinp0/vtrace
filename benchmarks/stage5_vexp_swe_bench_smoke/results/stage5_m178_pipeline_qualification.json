@@ -1,0 +1,872 @@
+{
+  "milestone": "M178-F",
+  "generatedFrom": "run_stage5_m178_qualification.ts",
+  "snapshots": 6,
+  "budgets": [
+    0,
+    50,
+    100,
+    150,
+    200,
+    400,
+    600,
+    800,
+    1000,
+    1600,
+    3200,
+    6400,
+    8000,
+    16000,
+    32000,
+    64000
+  ],
+  "pipelineFitContract": {
+    "observations": 64,
+    "deliveryContractViolations": 0,
+    "envelopeContractViolations": 0,
+    "predictionHolds": true,
+    "interpretation": "run_pipeline has NO analogue of the impact disagreement window: its evidence budget is enforced by a separate packer that sheds to zero rather than overshoot, so no surplus metadata allowance is ever available to the evidence channel."
+  },
+  "totality": {
+    "validRequests": 64,
+    "normalResponses": 56,
+    "truthfulDeclines": 8,
+    "handlerFailures": 0,
+    "unreachableStates": 0
+  },
+  "djangoMonotonicity": {
+    "instanceId": "django__django-10880",
+    "sequence": [
+      {
+        "budget": 400,
+        "state": "orientation",
+        "modelVisibleTokens": 144
+      },
+      {
+        "budget": 600,
+        "state": "orientation",
+        "modelVisibleTokens": 144
+      },
+      {
+        "budget": 800,
+        "state": "delivery_failure",
+        "modelVisibleTokens": 47
+      },
+      {
+        "budget": 1000,
+        "state": "delivery_failure",
+        "modelVisibleTokens": 47
+      },
+      {
+        "budget": 1600,
+        "state": "orientation",
+        "modelVisibleTokens": 1260
+      }
+    ],
+    "violationsAcrossFullGrid": [
+      800
+    ],
+    "stillReproduces": true,
+    "note": "M178 changed no packing, ordering or selection. Reported, never tuned.",
+    "reproduced": true
+  },
+  "monotonicityViolationsAcrossCorpus": 2,
+  "cases": [
+    {
+      "instanceId": "astropy__astropy-14365",
+      "monotonicityViolationsAtBudgets": [],
+      "ladder": [
+        {
+          "budget": 0,
+          "state": "delivery_failure",
+          "rank": 1,
+          "modelVisibleTokens": 0,
+          "totalTokens": 986,
+          "ceiling": 1000,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        },
+        {
+          "budget": 50,
+          "state": "delivery_failure",
+          "rank": 1,
+          "modelVisibleTokens": 40,
+          "totalTokens": 1027,
+          "ceiling": 1050,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        },
+        {
+          "budget": 100,
+          "state": "delivery_failure",
+          "rank": 1,
+          "modelVisibleTokens": 40,
+          "totalTokens": 1027,
+          "ceiling": 1100,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        },
+        {
+          "budget": 150,
+          "state": "delivery_failure",
+          "rank": 1,
+          "modelVisibleTokens": 40,
+          "totalTokens": 1027,
+          "ceiling": 1150,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        },
+        {
+          "budget": 200,
+          "state": "delivery_failure",
+          "rank": 1,
+          "modelVisibleTokens": 40,
+          "totalTokens": 1180,
+          "ceiling": 1200,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        },
+        {
+          "budget": 400,
+          "state": "delivery_failure",
+          "rank": 1,
+          "modelVisibleTokens": 40,
+          "totalTokens": 1180,
+          "ceiling": 1400,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        },
+        {
+          "budget": 600,
+          "state": "orientation",
+          "rank": 2,
+          "modelVisibleTokens": 410,
+          "totalTokens": 1494,
+          "ceiling": 1600,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        },
+        {
+          "budget": 800,
+          "state": "orientation",
+          "rank": 2,
+          "modelVisibleTokens": 410,
+          "totalTokens": 1646,
+          "ceiling": 1800,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        },
+        {
+          "budget": 1000,
+          "state": "orientation",
+          "rank": 2,
+          "modelVisibleTokens": 410,
+          "totalTokens": 1646,
+          "ceiling": 2000,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        },
+        {
+          "budget": 1600,
+          "state": "orientation",
+          "rank": 2,
+          "modelVisibleTokens": 1407,
+          "totalTokens": 2499,
+          "ceiling": 2600,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        },
+        {
+          "budget": 3200,
+          "state": "orientation",
+          "rank": 2,
+          "modelVisibleTokens": 1407,
+          "totalTokens": 4040,
+          "ceiling": 4200,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        },
+        {
+          "budget": 6400,
+          "state": "orientation",
+          "rank": 2,
+          "modelVisibleTokens": 1407,
+          "totalTokens": 7116,
+          "ceiling": 7400,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        },
+        {
+          "budget": 8000,
+          "state": "orientation",
+          "rank": 2,
+          "modelVisibleTokens": 6886,
+          "totalTokens": 9072,
+          "ceiling": 9200,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        },
+        {
+          "budget": 16000,
+          "state": "orientation",
+          "rank": 2,
+          "modelVisibleTokens": 6886,
+          "totalTokens": 18023,
+          "ceiling": 18400,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        },
+        {
+          "budget": 32000,
+          "state": "orientation",
+          "rank": 2,
+          "modelVisibleTokens": 6886,
+          "totalTokens": 19682,
+          "ceiling": 36800,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        },
+        {
+          "budget": 64000,
+          "state": "orientation",
+          "rank": 2,
+          "modelVisibleTokens": 6886,
+          "totalTokens": 19682,
+          "ceiling": 73600,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        }
+      ]
+    },
+    {
+      "instanceId": "django__django-10880",
+      "monotonicityViolationsAtBudgets": [
+        800
+      ],
+      "ladder": [
+        {
+          "budget": 0,
+          "state": "delivery_failure",
+          "rank": 1,
+          "modelVisibleTokens": 0,
+          "totalTokens": 980,
+          "ceiling": 1000,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        },
+        {
+          "budget": 50,
+          "state": "delivery_failure",
+          "rank": 1,
+          "modelVisibleTokens": 40,
+          "totalTokens": 1021,
+          "ceiling": 1050,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        },
+        {
+          "budget": 100,
+          "state": "delivery_failure",
+          "rank": 1,
+          "modelVisibleTokens": 40,
+          "totalTokens": 1022,
+          "ceiling": 1100,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        },
+        {
+          "budget": 150,
+          "state": "delivery_failure",
+          "rank": 1,
+          "modelVisibleTokens": 47,
+          "totalTokens": 1032,
+          "ceiling": 1150,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        },
+        {
+          "budget": 200,
+          "state": "delivery_failure",
+          "rank": 1,
+          "modelVisibleTokens": 47,
+          "totalTokens": 1186,
+          "ceiling": 1200,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        },
+        {
+          "budget": 400,
+          "state": "orientation",
+          "rank": 2,
+          "modelVisibleTokens": 144,
+          "totalTokens": 1365,
+          "ceiling": 1400,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        },
+        {
+          "budget": 600,
+          "state": "orientation",
+          "rank": 2,
+          "modelVisibleTokens": 144,
+          "totalTokens": 1365,
+          "ceiling": 1600,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        },
+        {
+          "budget": 800,
+          "state": "delivery_failure",
+          "rank": 1,
+          "modelVisibleTokens": 47,
+          "totalTokens": 1185,
+          "ceiling": 1800,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        },
+        {
+          "budget": 1000,
+          "state": "delivery_failure",
+          "rank": 1,
+          "modelVisibleTokens": 47,
+          "totalTokens": 1185,
+          "ceiling": 2000,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        },
+        {
+          "budget": 1600,
+          "state": "orientation",
+          "rank": 2,
+          "modelVisibleTokens": 1260,
+          "totalTokens": 2485,
+          "ceiling": 2600,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        },
+        {
+          "budget": 3200,
+          "state": "orientation",
+          "rank": 2,
+          "modelVisibleTokens": 2863,
+          "totalTokens": 4128,
+          "ceiling": 4200,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        },
+        {
+          "budget": 6400,
+          "state": "orientation",
+          "rank": 2,
+          "modelVisibleTokens": 2863,
+          "totalTokens": 7248,
+          "ceiling": 7400,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        },
+        {
+          "budget": 8000,
+          "state": "orientation",
+          "rank": 2,
+          "modelVisibleTokens": 2863,
+          "totalTokens": 9051,
+          "ceiling": 9200,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        },
+        {
+          "budget": 16000,
+          "state": "orientation",
+          "rank": 2,
+          "modelVisibleTokens": 2863,
+          "totalTokens": 13754,
+          "ceiling": 18400,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        },
+        {
+          "budget": 32000,
+          "state": "orientation",
+          "rank": 2,
+          "modelVisibleTokens": 2863,
+          "totalTokens": 13754,
+          "ceiling": 36800,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        },
+        {
+          "budget": 64000,
+          "state": "orientation",
+          "rank": 2,
+          "modelVisibleTokens": 2863,
+          "totalTokens": 13754,
+          "ceiling": 73600,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        }
+      ]
+    },
+    {
+      "instanceId": "django__django-11603",
+      "monotonicityViolationsAtBudgets": [
+        1000
+      ],
+      "ladder": [
+        {
+          "budget": 0,
+          "state": "delivery_failure+envelopeDecline",
+          "rank": 1,
+          "modelVisibleTokens": 47,
+          "totalTokens": 520,
+          "ceiling": 1000,
+          "deliveryContractHolds": false,
+          "envelopeContractHolds": true,
+          "declined": true,
+          "threw": null
+        },
+        {
+          "budget": 50,
+          "state": "delivery_failure+envelopeDecline",
+          "rank": 1,
+          "modelVisibleTokens": 47,
+          "totalTokens": 520,
+          "ceiling": 1050,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": true,
+          "threw": null
+        },
+        {
+          "budget": 100,
+          "state": "delivery_failure+envelopeDecline",
+          "rank": 1,
+          "modelVisibleTokens": 47,
+          "totalTokens": 521,
+          "ceiling": 1100,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": true,
+          "threw": null
+        },
+        {
+          "budget": 150,
+          "state": "delivery_failure+envelopeDecline",
+          "rank": 1,
+          "modelVisibleTokens": 47,
+          "totalTokens": 521,
+          "ceiling": 1150,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": true,
+          "threw": null
+        },
+        {
+          "budget": 200,
+          "state": "delivery_failure",
+          "rank": 1,
+          "modelVisibleTokens": 47,
+          "totalTokens": 1174,
+          "ceiling": 1200,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        },
+        {
+          "budget": 400,
+          "state": "orientation",
+          "rank": 2,
+          "modelVisibleTokens": 172,
+          "totalTokens": 1362,
+          "ceiling": 1400,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        },
+        {
+          "budget": 600,
+          "state": "orientation",
+          "rank": 2,
+          "modelVisibleTokens": 172,
+          "totalTokens": 1514,
+          "ceiling": 1600,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        },
+        {
+          "budget": 800,
+          "state": "orientation",
+          "rank": 2,
+          "modelVisibleTokens": 172,
+          "totalTokens": 1514,
+          "ceiling": 1800,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        },
+        {
+          "budget": 1000,
+          "state": "delivery_failure",
+          "rank": 1,
+          "modelVisibleTokens": 47,
+          "totalTokens": 1327,
+          "ceiling": 2000,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        },
+        {
+          "budget": 1600,
+          "state": "orientation",
+          "rank": 2,
+          "modelVisibleTokens": 1175,
+          "totalTokens": 2529,
+          "ceiling": 2600,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        },
+        {
+          "budget": 3200,
+          "state": "orientation",
+          "rank": 2,
+          "modelVisibleTokens": 2426,
+          "totalTokens": 3804,
+          "ceiling": 4200,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        },
+        {
+          "budget": 6400,
+          "state": "orientation",
+          "rank": 2,
+          "modelVisibleTokens": 2426,
+          "totalTokens": 6748,
+          "ceiling": 7400,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        },
+        {
+          "budget": 8000,
+          "state": "orientation",
+          "rank": 2,
+          "modelVisibleTokens": 2426,
+          "totalTokens": 9157,
+          "ceiling": 9200,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        },
+        {
+          "budget": 16000,
+          "state": "orientation",
+          "rank": 2,
+          "modelVisibleTokens": 2426,
+          "totalTokens": 13419,
+          "ceiling": 18400,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        },
+        {
+          "budget": 32000,
+          "state": "orientation",
+          "rank": 2,
+          "modelVisibleTokens": 2426,
+          "totalTokens": 13419,
+          "ceiling": 36800,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        },
+        {
+          "budget": 64000,
+          "state": "orientation",
+          "rank": 2,
+          "modelVisibleTokens": 2426,
+          "totalTokens": 13419,
+          "ceiling": 73600,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        }
+      ]
+    },
+    {
+      "instanceId": "pytest-dev__pytest-10081",
+      "monotonicityViolationsAtBudgets": [],
+      "ladder": [
+        {
+          "budget": 0,
+          "state": "delivery_failure+envelopeDecline",
+          "rank": 1,
+          "modelVisibleTokens": 47,
+          "totalTokens": 522,
+          "ceiling": 1000,
+          "deliveryContractHolds": false,
+          "envelopeContractHolds": true,
+          "declined": true,
+          "threw": null
+        },
+        {
+          "budget": 50,
+          "state": "delivery_failure+envelopeDecline",
+          "rank": 1,
+          "modelVisibleTokens": 47,
+          "totalTokens": 522,
+          "ceiling": 1050,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": true,
+          "threw": null
+        },
+        {
+          "budget": 100,
+          "state": "delivery_failure+envelopeDecline",
+          "rank": 1,
+          "modelVisibleTokens": 47,
+          "totalTokens": 523,
+          "ceiling": 1100,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": true,
+          "threw": null
+        },
+        {
+          "budget": 150,
+          "state": "delivery_failure+envelopeDecline",
+          "rank": 1,
+          "modelVisibleTokens": 47,
+          "totalTokens": 523,
+          "ceiling": 1150,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": true,
+          "threw": null
+        },
+        {
+          "budget": 200,
+          "state": "delivery_failure",
+          "rank": 1,
+          "modelVisibleTokens": 40,
+          "totalTokens": 1193,
+          "ceiling": 1200,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        },
+        {
+          "budget": 400,
+          "state": "delivery_failure",
+          "rank": 1,
+          "modelVisibleTokens": 40,
+          "totalTokens": 1345,
+          "ceiling": 1400,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        },
+        {
+          "budget": 600,
+          "state": "delivery_failure",
+          "rank": 1,
+          "modelVisibleTokens": 40,
+          "totalTokens": 1345,
+          "ceiling": 1600,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        },
+        {
+          "budget": 800,
+          "state": "delivery_failure",
+          "rank": 1,
+          "modelVisibleTokens": 47,
+          "totalTokens": 1355,
+          "ceiling": 1800,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        },
+        {
+          "budget": 1000,
+          "state": "delivery_failure",
+          "rank": 1,
+          "modelVisibleTokens": 47,
+          "totalTokens": 1356,
+          "ceiling": 2000,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        },
+        {
+          "budget": 1600,
+          "state": "delivery_failure",
+          "rank": 1,
+          "modelVisibleTokens": 47,
+          "totalTokens": 1355,
+          "ceiling": 2600,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        },
+        {
+          "budget": 3200,
+          "state": "orientation",
+          "rank": 2,
+          "modelVisibleTokens": 1663,
+          "totalTokens": 3092,
+          "ceiling": 4200,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        },
+        {
+          "budget": 6400,
+          "state": "orientation",
+          "rank": 2,
+          "modelVisibleTokens": 1663,
+          "totalTokens": 7372,
+          "ceiling": 7400,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        },
+        {
+          "budget": 8000,
+          "state": "orientation",
+          "rank": 2,
+          "modelVisibleTokens": 1663,
+          "totalTokens": 9113,
+          "ceiling": 9200,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        },
+        {
+          "budget": 16000,
+          "state": "orientation",
+          "rank": 2,
+          "modelVisibleTokens": 13977,
+          "totalTokens": 18203,
+          "ceiling": 18400,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        },
+        {
+          "budget": 32000,
+          "state": "orientation",
+          "rank": 2,
+          "modelVisibleTokens": 13977,
+          "totalTokens": 29101,
+          "ceiling": 36800,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        },
+        {
+          "budget": 64000,
+          "state": "orientation",
+          "rank": 2,
+          "modelVisibleTokens": 13977,
+          "totalTokens": 29101,
+          "ceiling": 73600,
+          "deliveryContractHolds": true,
+          "envelopeContractHolds": true,
+          "declined": false,
+          "threw": null
+        }
+      ]
+    }
+  ]
+}

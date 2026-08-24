@@ -4870,3 +4870,121 @@ known positive  pytest-dev__pytest-10081 :: _enter_pdb
   repository-wide claim is deliberately narrow: **all currently known instances are
   repaired**, not "no other instance exists" — no sweep for further envelope
   implementations was performed.
+
+## M178 — Response Fit Contract Consistency and Budget-Semantics Alignment
+
+```text
+commits  a16a1709246113715cebc379cabe5c5938a8dd01   product
+         <evidence commit>                          evidence + ledger
+from     ac2284bdaf7dfea818d7971a2cc037e91e57641b   (M177 close)
+
+A PASS   every fit predicate inventoried, decomposed, unit-audited
+B PASS   disagreement corpus frozen; all six instrument controls pass
+C PASS   contract derived; three hypotheses resolved
+D PASS   four candidates simulated; C_EXPLICIT_SPLIT selected before implementation
+E PASS   smallest change: two named predicates, output byte-identical
+F PASS   verdicts reached
+
+contract          MULTI_SURFACE_FIT_CONTRACT_CONFIRMED
+root cause        FIT_CONCEPTS_CONFLATED
+alignment         FIT_CONTRACT_ALIGNMENT_VALIDATED
+product           KEEP_CURRENT_RESPONSE_CONTRACT_UNCHANGED
+totality          RESPONSE_TOTALITY_PRESERVED
+monotonicity      NON_MONOTONE_DELIVERY_STILL_CONFIRMED
+next work         MONOTONE_DELIVERY_PACKER_WORK_LICENSED  (M179; NOT started)
+live              LIVE_WORK_NOT_LICENSED        spend $0.00
+retrieval         UNCHANGED
+impact graph      UNCHANGED
+```
+
+```text
+                                             before   after
+paired responses (60 symbols x 19 budgets)    1,140   1,140
+  byte-identical                                  —   1,140
+  normal responses                              644     644
+  truthful declines                             496     496
+  envelope handler failures                       0       0
+  unreachable states                              0       0
+default budget only
+  disagreements, envelope-isolated                0       0
+  disagreements, engine-coupled                   0       0
+pressure budgets
+  delivered with the compaction target unmet    564     564   (retained deliberately)
+run_pipeline (6 snapshots x 16 budgets)
+  delivery-contract violations                    0       0
+  envelope-contract violations                    0       0
+real MCP stdio (18 observations)
+  handler failures / unreachable                0/0     0/0
+
+verification   typecheck 0, typecheck:benchmarks 0,
+               bun test 5511 pass / 49 skip / 0 fail, git diff --check clean
+```
+
+## M178 standing findings
+
+- **`max_tokens` was never one bound, and the tool schema said so all along.**
+  `get_impact_graph` publishes "max_tokens bounds model-facing impact content"
+  AND "the complete response adds max(800, 15%) metadata tokens and is checked
+  after all fields are attached". `run_pipeline` publishes the same pair. Two
+  contracts, both real, both public. M177's mismatch was one boolean named
+  `fits()` computing both, and neither caller was wrong: the terminal tests the
+  only condition that may withhold a response, the ladder pursues a target it is
+  permitted to miss. **FIT_CONCEPTS_CONFLATED**, and the repair is two names.
+
+- **The disagreement window is the surplus metadata allowance, exactly.** Below
+  its floor the ladder is exhausted, so the draft is a constant; the terminal
+  accepts on `B >= mvFloor + metaFloor - allowance` and the target holds on
+  `mvFloor <= B`, so a normal response is emitted with the target unmet on a
+  window of width `allowance - metaFloor`. Nothing about the evidence enters it.
+  On the M177 known positive: 484 + 793 - 800 = 477, window [477, 483], width 7 =
+  800 - 793. **60 of 60** corpus symbols confirm the prediction, 0 failures, and
+  the measured excess never exceeds the surplus bound (max 41, mean 18.08). The
+  overshoot is allowance metadata did not need — not the caller's evidence budget.
+
+- **The structural claim was checked on the implementation it was NOT derived
+  from.** `run_pipeline` carries the same two bounds but enforces them in two
+  components: `budgetDelivery.ts` sheds to `delivery_failure` rather than
+  overshoot, so no surplus is ever available to its evidence channel, and its
+  ladder and terminal test the same condition. Predicted no window; measured 0
+  violations of either contract over 6 snapshots x 16 budgets. `get_impact_graph`
+  needed the two names because one ladder does both jobs there.
+
+- **C2 is dead, and that is a proof rather than a sample.** `totalCeiling` is
+  clamped to `IMPACT_HARD_SERIALIZED_CHARACTER_CEILING / 4`, so C1 already bounds
+  the response at 80,000 characters — C2's own bound. Zero counterexamples across
+  every budget the tool accepts (1..20,000). Kept as an explicit backstop and
+  pinned by a test, because the clamp that kills it is three lines away.
+
+- **Two instrument errors, both caught before they became findings.** The M176
+  snapshots are wrapped under `.snapshot`, and compacting the wrapper produced a
+  flat meaningless ladder. And varying the request budget moves the ENGINE's spend
+  of `max_tokens` (`takePathsWithinTokenBudget`) as well as the envelope's, which
+  manufactured a "residue constant on 14/60" and 18 false window-prediction
+  failures. Holding one authoritative object fixed and varying only
+  `limits.maxTokens` took both controls to 60/60. M178 is a milestone about the
+  envelope; the engine had to be held still to see it.
+
+- **Never compare envelope outcomes across two runs.** A naive before/after re-run
+  reported 20 decision differences across 1,016 shared cases — every one a
+  specimen sitting on its envelope floor and tipped by the decimal width of a
+  `timing` float, and none of them the change. The M177 technique (both arms
+  imported into one process, called on the same in-memory object) returned 1,140
+  of 1,140 byte-identical. Expect ~2% boundary noise from any other method.
+
+- **`modelVisibleEstimatedTokens` measures five evidence keys, not what the model
+  sees.** M166/M167 established the whole response is model-visible and billed, so
+  the quantity matching that name is `estimatedTotalTokens`. The field name
+  asserts the opposite of what it measures and is the likeliest cause of a future
+  reader re-deriving M177's reading. NOT renamed: it is agent-visible output and a
+  rename would break byte-identity for no gain the predicate names do not deliver.
+  Recorded as an outstanding defect.
+
+- **Next-step recommendation: M179, the monotone delivery packer, and nothing
+  else.** The Django sequence reproduces unchanged (400/600 orientation, 800/1000
+  delivery_failure, 1600 orientation; one violation on the grid), and M178 proves
+  it is not caused by fit semantics — it sits on the `run_pipeline` path, which has
+  no disagreement window at all. M179 inherits a settled definition of "fits at
+  budget B" and a packer defect entirely its own. The M178 claim stays narrow:
+  **the audited response-fit contract is coherent for the measured model-facing
+  envelope paths** — no repository-wide sweep was performed, and `search_logic_flow`
+  accepts a `max_tokens` that was not audited.
