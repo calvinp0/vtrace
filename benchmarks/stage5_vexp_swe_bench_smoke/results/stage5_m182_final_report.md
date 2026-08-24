@@ -175,4 +175,8 @@ git diff --check
 clean
 ```
 
-Commits are backfilled after the evidence commit. Pushed: **NO**.
+```text
+commits:
+c17329dce00c4af3b879c2d2c447c62d650ce86d   evidence + ledger
+pushed:                                      NO
+```
