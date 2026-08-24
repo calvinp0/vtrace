@@ -1,0 +1,12 @@
+{
+  "milestone": "M181-F",
+  "generatedFrom": "run_stage5_m181_ceiling.ts",
+  "question": "§87 — does the smaller-budget packet actually fit under the fixed orientation ceiling once mandatory truthful content is included?",
+  "answer": "NO — and the boundary has two halves, not one. Every lost entry is bounded: most because restoring it exceeds the 2,000-token ceiling outright, the rest because admission had ALREADY STOPPED at an earlier, larger candidate. Neither is an algorithmic semantic regression, and no entry was excluded by a decision that could have gone the other way for free.",
+  "mechanism": "The projector admits an authoritative-order PREFIX under a flat 2,000-token ceiling, and `orientationProjection.ts:345` BREAKS on the first candidate that does not fit rather than skipping it. That is deliberate: a prefix is what keeps a tighter bound's output a subset of a looser one's, the property M179 and M180 both depend on. The cost is that a later, smaller candidate can be excluded while fitting on its own — which is what the counterfactual finds. Relaxing it would trade a bounded omission for a monotonicity risk, so §49 leaves it alone.",
+  "verdicts": {
+    "EXPECTED_BOUNDARY_EFFECT": 13,
+    "PREFIX_ADMISSION_BOUNDED": 1
+  },
+  "ceilingUnchangedByThisMilestone": true
+}

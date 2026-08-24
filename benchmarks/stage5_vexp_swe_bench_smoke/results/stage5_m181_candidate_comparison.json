@@ -1,0 +1,852 @@
+{
+  "milestone": "M181-D",
+  "generatedFrom": "run_stage5_m181_decision.ts",
+  "candidates": {
+    "C_CURRENT": "normal path uses selectionReasons[0]; compact path reselects by substring",
+    "C_CANONICAL_REASON": "compactReasons reduces WITHOUT reselecting, so both paths render the declared decisive reason"
+  },
+  "rejectedWithoutSimulation": {
+    "C_COMPACT_CANONICAL": "REJECTED BY M181-C. Making compactReasons' preference the shared selector contradicts the only declared contract in the source (`roleReason` is 'the decisive reason'), and the permutation control shows that preference is order-blind — it returns one reason for six orders whose decisive reason differs. §31 forbids simulating candidates C has rejected.",
+    "C_REASON_SET_AUTHORITY": "REJECTED BY M181-C. Excusing primary-reason substitution from the invariant is only admissible if the primary is presentational. It is not: four independent source sites treat position 0 as the claim, and the substitutions cross from DEBUG_ONLY scorer output to SEMANTIC_ROLE. This was the §35 no-change outcome and the evidence did not support it.",
+    "C_STABLE_INSERTION": "SUBSUMED. Preserving source ordering and using the first reason everywhere is exactly C_CANONICAL_REASON on this codebase, because the source ordering already places the decisive reason first."
+  },
+  "metrics": {
+    "reasonResidualPairs": {
+      "before": 106,
+      "after": 12
+    },
+    "ceilingResidualPairs": {
+      "before": 8,
+      "after": 8
+    },
+    "orientationToDecline": {
+      "before": 0,
+      "after": 0
+    },
+    "claimDowngraded": {
+      "before": 0,
+      "after": 0
+    },
+    "focusChanged": {
+      "before": 0,
+      "after": 0
+    },
+    "priorityInversion": {
+      "before": 0,
+      "after": 0
+    },
+    "representationDowngrade": {
+      "before": 0,
+      "after": 0
+    },
+    "qualifierEvicted": {
+      "before": 0,
+      "after": 0
+    },
+    "benignClaimUpgraded": {
+      "before": 757,
+      "after": 754
+    },
+    "benignFocusResolved": {
+      "before": 21,
+      "after": 21
+    },
+    "substitutionsTotal": {
+      "before": 289,
+      "after": 12
+    },
+    "substitutionsNonEquivalent": {
+      "before": 277,
+      "after": 0
+    },
+    "substitutionsEllipsisOnly": {
+      "before": 12,
+      "after": 12
+    },
+    "claimsDelivered": {
+      "before": 10203,
+      "after": 10201
+    },
+    "claimsUnsupported": {
+      "before": 0,
+      "after": 0
+    },
+    "claimsOutsideSupply": {
+      "before": 0,
+      "after": 0
+    },
+    "ownershipProjectorSupplyCut": {
+      "before": 0,
+      "after": 0
+    },
+    "ownershipSerializedItemsCut": {
+      "before": 722,
+      "after": 722
+    },
+    "totalityThrows": {
+      "before": 0,
+      "after": 0
+    },
+    "totalityOutsideEnvelope": {
+      "before": 0,
+      "after": 0
+    },
+    "orientations": {
+      "before": 1380,
+      "after": 1380
+    },
+    "declines": {
+      "before": 648,
+      "after": 648
+    }
+  },
+  "packetEconomics": {
+    "allBudgets": {
+      "before": {
+        "count": 1380,
+        "median": 542,
+        "p90": 1306,
+        "max": 1576,
+        "mean": 642.3
+      },
+      "after": {
+        "count": 1380,
+        "median": 542,
+        "p90": 1306,
+        "max": 1576,
+        "mean": 642.8
+      }
+    },
+    "atDefaultBudget": {
+      "before": {
+        "count": 167,
+        "median": 1225,
+        "p90": 1527,
+        "max": 1576,
+        "mean": 1204.5
+      },
+      "after": {
+        "count": 167,
+        "median": 1229,
+        "p90": 1527,
+        "max": 1576,
+        "mean": 1205.2
+      }
+    },
+    "medianChangePercent": 0,
+    "investigationThreshold": "§54 — >10% median increase warrants explanation"
+  },
+  "defaultBudgetChanges": {
+    "PRIMARY_REASON_ONLY": 21,
+    "REASON_ORDER_ONLY": 0,
+    "CLAIM_CHANGED": 0,
+    "ITEM_CHANGED": 0,
+    "UNEXPECTED": 0,
+    "IDENTICAL": 148
+  },
+  "identity": {
+    "cases": 169,
+    "itemSupplyIdentical": 162,
+    "relatedOrderIdentical": 163,
+    "defaultSerializedIdentical": 148,
+    "defaultPacketIdentical": 148,
+    "defaultRelatedSetIdentical": 169,
+    "defaultFocusSymbolIdentical": 169
+  },
+  "selectionDelta": {
+    "question": "Did preserving the decisive reason change WHICH evidence was delivered, or only WHERE the byte budget ran out?",
+    "pointsCompared": 2028,
+    "pointsDiffering": 8,
+    "byBudget": {
+      "1600": 1,
+      "2000": 5,
+      "3200": 1,
+      "6400": 1
+    },
+    "relatedSymbolGainedOnly": 2,
+    "relatedSymbolLostOnly": 4,
+    "relatedSymbolGainedAndLost": 0,
+    "deliveredItemsMovedButAdmittedRelatedDidNot": 2,
+    "priorityInversionsBetweenArms": 0,
+    "inversions": [],
+    "finding": "NO RE-RANKING. Every differing point is a tail item entering or leaving the delivered set; the symbols the two arms share come back in the same relative order at every one of them. `compareKeepPriority` is untouched and `answerBearing` is computed in `mutableItem` from the FULL reason array before `compactReasons` runs, so neither could have moved. What moved is the rendered byte count.",
+    "detail": [
+      {
+        "case": "broad100a/django__django-13012",
+        "budget": 2000,
+        "state": [
+          "orientation",
+          "orientation"
+        ],
+        "beforeItems": [
+          "P1",
+          "P2",
+          "P3",
+          "P4",
+          "P5",
+          "P6",
+          "S2",
+          "S7",
+          "S8",
+          "R1",
+          "I1"
+        ],
+        "afterItems": [
+          "P1",
+          "P2",
+          "P3",
+          "P4",
+          "P5",
+          "P6",
+          "S2",
+          "S7",
+          "S8",
+          "R1"
+        ],
+        "relatedCount": [
+          9,
+          8
+        ]
+      },
+      {
+        "case": "broad100a/django__django-15572",
+        "budget": 2000,
+        "state": [
+          "orientation",
+          "orientation"
+        ],
+        "beforeItems": [
+          "P1",
+          "P2",
+          "P3",
+          "P4",
+          "P5",
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S9",
+          "S10",
+          "R1",
+          "I1",
+          "I2"
+        ],
+        "afterItems": [
+          "P1",
+          "P2",
+          "P3",
+          "P4",
+          "P5",
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S9",
+          "S10",
+          "R1",
+          "I1"
+        ],
+        "relatedCount": [
+          12,
+          11
+        ]
+      },
+      {
+        "case": "broad100a/psf__requests-1724",
+        "budget": 6400,
+        "state": [
+          "orientation",
+          "orientation"
+        ],
+        "beforeItems": [
+          "P1",
+          "P2",
+          "P3",
+          "P4",
+          "P5",
+          "P6",
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5",
+          "S7",
+          "S8",
+          "S9",
+          "R1",
+          "R2",
+          "I1",
+          "I2",
+          "I3",
+          "I4",
+          "I5",
+          "I6",
+          "M1",
+          "M2"
+        ],
+        "afterItems": [
+          "P1",
+          "P2",
+          "P3",
+          "P4",
+          "P5",
+          "P6",
+          "S1",
+          "S3",
+          "S4",
+          "S5",
+          "S7",
+          "S8",
+          "S9",
+          "R1",
+          "R2",
+          "I1",
+          "I2",
+          "I3",
+          "I4",
+          "I5",
+          "I6",
+          "M1",
+          "M2"
+        ],
+        "relatedCount": [
+          19,
+          18
+        ]
+      },
+      {
+        "case": "broad100a/pytest-dev__pytest-10051",
+        "budget": 2000,
+        "state": [
+          "orientation",
+          "orientation"
+        ],
+        "beforeItems": [
+          "P1",
+          "P2",
+          "P3",
+          "P4",
+          "P5",
+          "P6",
+          "S1",
+          "S4",
+          "S5",
+          "S6",
+          "R1",
+          "R2",
+          "I1",
+          "I2",
+          "I3"
+        ],
+        "afterItems": [
+          "P1",
+          "P2",
+          "P3",
+          "P4",
+          "P5",
+          "P6",
+          "S1",
+          "S4",
+          "S5",
+          "S6",
+          "R1",
+          "R2",
+          "I1",
+          "I2"
+        ],
+        "relatedCount": [
+          12,
+          11
+        ]
+      },
+      {
+        "case": "broad100a/sphinx-doc__sphinx-9230",
+        "budget": 1600,
+        "state": [
+          "orientation",
+          "orientation"
+        ],
+        "beforeItems": [
+          "P1",
+          "P2",
+          "P3",
+          "P4",
+          "P5",
+          "S2",
+          "S3",
+          "S6",
+          "R1",
+          "R2",
+          "R3"
+        ],
+        "afterItems": [
+          "P1",
+          "P2",
+          "P3",
+          "P4",
+          "P5",
+          "S2",
+          "S3",
+          "S6",
+          "R1",
+          "R2",
+          "R3",
+          "I1"
+        ],
+        "relatedCount": [
+          7,
+          8
+        ]
+      },
+      {
+        "case": "broad100a/sphinx-doc__sphinx-9230",
+        "budget": 2000,
+        "state": [
+          "orientation",
+          "orientation"
+        ],
+        "beforeItems": [
+          "P1",
+          "P2",
+          "P3",
+          "P4",
+          "P5",
+          "S2",
+          "S3",
+          "S6",
+          "R1",
+          "R2",
+          "R3",
+          "I1",
+          "I2",
+          "I3",
+          "I4",
+          "I5",
+          "I6"
+        ],
+        "afterItems": [
+          "P1",
+          "P2",
+          "P3",
+          "P4",
+          "P5",
+          "S2",
+          "S3",
+          "S6",
+          "R1",
+          "R2",
+          "R3",
+          "I1",
+          "I2",
+          "I3",
+          "I4",
+          "I5",
+          "I6",
+          "M1"
+        ],
+        "relatedCount": [
+          13,
+          13
+        ]
+      },
+      {
+        "case": "broad100b/django__django-15252",
+        "budget": 2000,
+        "state": [
+          "orientation",
+          "orientation"
+        ],
+        "beforeItems": [
+          "P1",
+          "P2",
+          "P3",
+          "P4",
+          "P5",
+          "P6",
+          "S1",
+          "S5",
+          "S6",
+          "S7",
+          "R1",
+          "R2",
+          "R3",
+          "I1",
+          "I2",
+          "M1",
+          "M2"
+        ],
+        "afterItems": [
+          "P1",
+          "P2",
+          "P3",
+          "P4",
+          "P5",
+          "P6",
+          "S1",
+          "S5",
+          "S6",
+          "S7",
+          "R1",
+          "R2",
+          "R3",
+          "I1",
+          "I2",
+          "M1"
+        ],
+        "relatedCount": [
+          11,
+          11
+        ]
+      },
+      {
+        "case": "broad100b/pytest-dev__pytest-7521",
+        "budget": 3200,
+        "state": [
+          "orientation",
+          "orientation"
+        ],
+        "beforeItems": [
+          "P1",
+          "P2",
+          "P3",
+          "P4",
+          "P5",
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5",
+          "S6",
+          "S7",
+          "S8",
+          "I1"
+        ],
+        "afterItems": [
+          "P1",
+          "P2",
+          "P3",
+          "P4",
+          "P5",
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5",
+          "S6",
+          "S7",
+          "S8",
+          "I1",
+          "I2"
+        ],
+        "relatedCount": [
+          13,
+          14
+        ]
+      }
+    ]
+  },
+  "examples": [
+    {
+      "case": "broad100a/django__django-12774",
+      "class": "PRIMARY_REASON_ONLY",
+      "beforeTokens": 1081,
+      "afterTokens": 1080,
+      "examples": [
+        {
+          "at": "db/models/query.py::QuerySet",
+          "before": "preferred contrast side matched: query, set, class, models (+0.24)",
+          "after": "containing class for the body-literal edit-site method"
+        }
+      ]
+    },
+    {
+      "case": "broad100a/django__django-13810",
+      "class": "PRIMARY_REASON_ONLY",
+      "beforeTokens": 855,
+      "afterTokens": 868,
+      "examples": [
+        {
+          "at": "contrib/sessions/backends/file.py::SessionStore._get_storage_path",
+          "before": "preferred contrast side matched: session, file, path, py (+0.24)",
+          "after": "strong target beyond the pivot budget — task diagnostic literal appears in this symbol's body — explicit edit site"
+        }
+      ]
+    },
+    {
+      "case": "broad100a/django__django-13820",
+      "class": "PRIMARY_REASON_ONLY",
+      "beforeTokens": 1164,
+      "afterTokens": 1175,
+      "examples": [
+        {
+          "at": "db/migrations/operations/special.py::SeparateDatabaseAndState",
+          "before": "preferred contrast side matched: migrations, don, have, will (+0.24)",
+          "after": "strong target but beyond the pivot budget — pivot: actionable class — strong lexical match; issue-domain relevance"
+        }
+      ]
+    },
+    {
+      "case": "broad100a/django__django-16569",
+      "class": "PRIMARY_REASON_ONLY",
+      "beforeTokens": 910,
+      "afterTokens": 925,
+      "examples": [
+        {
+          "at": "forms/formsets.py::BaseFormSet.initial_form_count",
+          "before": "task names file stem `formsets` (direct evidence, weak)",
+          "after": "strong target beyond the pivot budget — local implementation helper whose name matches the issue — likely edit site"
+        }
+      ]
+    },
+    {
+      "case": "broad100a/matplotlib__matplotlib-24870",
+      "class": "PRIMARY_REASON_ONLY",
+      "beforeTokens": 1319,
+      "afterTokens": 1335,
+      "examples": [
+        {
+          "at": "examples/subplots_axes_and_figures/auto_subplots_adjust.py::on_draw",
+          "before": "preferred contrast side matched: auto, draw (+0.12)",
+          "after": "strong target but beyond the pivot budget — pivot: actionable function — strong lexical match; issue-domain relevance"
+        }
+      ]
+    },
+    {
+      "case": "broad100a/matplotlib__matplotlib-25332",
+      "class": "PRIMARY_REASON_ONLY",
+      "beforeTokens": 1360,
+      "afterTokens": 1359,
+      "examples": [
+        {
+          "at": "lib/matplotlib/pyplot.py::show",
+          "before": "task names module path `matplotlib.pyplot` (direct evidence, strong)",
+          "after": "actionable function — in a likely edit file; strong lexical match"
+        }
+      ]
+    },
+    {
+      "case": "broad100a/pytest-dev__pytest-10051",
+      "class": "PRIMARY_REASON_ONLY",
+      "beforeTokens": 1064,
+      "afterTokens": 1081,
+      "examples": [
+        {
+          "at": "src/_pytest/logging.py::LoggingPlugin._runtest_for",
+          "before": "preferred contrast side matched: when, pytest, src, logging (+0.24)",
+          "after": "source line anchor in the issue points at this symbol — explicit edit site"
+        },
+        {
+          "at": "src/_pytest/warnings.py::warning_record_to_str",
+          "before": "preferred contrast side matched: pytest, src, py, def (+0.24)",
+          "after": "strong target beyond the pivot budget — local implementation helper whose name matches the issue — likely edit site"
+        }
+      ]
+    },
+    {
+      "case": "broad100a/scikit-learn__scikit-learn-11578",
+      "class": "PRIMARY_REASON_ONLY",
+      "beforeTokens": 1445,
+      "afterTokens": 1425,
+      "examples": [
+        {
+          "at": "sklearn/utils/extmath.py::softmax",
+          "before": "preferred contrast side matched: logistic, calculate, out, softmax (+0.24)",
+          "after": "direct subtree and task-objective evidence"
+        },
+        {
+          "at": "sklearn/linear_model/logistic.py::_log_reg_scoring_path",
+          "before": "preferred contrast side matched: logistic, regression, multi, class (+0.24)",
+          "after": "generic lexical match outside the explicit task subtree"
+        }
+      ]
+    },
+    {
+      "case": "broad100a/sympy__sympy-13974",
+      "class": "PRIMARY_REASON_ONLY",
+      "beforeTokens": 1545,
+      "afterTokens": 1542,
+      "examples": [
+        {
+          "at": "sympy/physics/paulialgebra.py::delta",
+          "before": "task names module path `sympy.physics.paulialgebra` (direct evidence, strong)",
+          "after": "actionable function — in a likely edit file; strong lexical match"
+        }
+      ]
+    },
+    {
+      "case": "broad100b/astropy__astropy-14508",
+      "class": "PRIMARY_REASON_ONLY",
+      "beforeTokens": 1051,
+      "afterTokens": 1051,
+      "examples": [
+        {
+          "at": "astropy/io/fits/card.py::Card.keyword",
+          "before": "preferred contrast side matched: io, fits, card, keyword (+0.24)",
+          "after": "actionable method — in a likely edit file; strong lexical match"
+        }
+      ]
+    },
+    {
+      "case": "broad100b/astropy__astropy-14995",
+      "class": "PRIMARY_REASON_ONLY",
+      "beforeTokens": 975,
+      "afterTokens": 987,
+      "examples": [
+        {
+          "at": "astropy/nddata/nduncertainty.py::NDUncertainty.array",
+          "before": "preferred contrast side matched: nd, numpy, astropy, nddata (+0.24)",
+          "after": "strong target beyond the pivot budget — local implementation helper invoked by the entry point — likely edit site"
+        }
+      ]
+    },
+    {
+      "case": "broad100b/matplotlib__matplotlib-20676",
+      "class": "PRIMARY_REASON_ONLY",
+      "beforeTokens": 1398,
+      "afterTokens": 1406,
+      "examples": [
+        {
+          "at": "lib/matplotlib/widgets.py::LockDraw",
+          "before": "preferred contrast side matched: can, avoid, matplotlib, widgets (+0.24)",
+          "after": "actionable class — in a likely edit file; strong lexical match"
+        },
+        {
+          "at": "lib/matplotlib/pyplot.py::plot",
+          "before": "preferred contrast side matched: data, matplotlib, pyplot, plot (+0.24)",
+          "after": "strong target beyond the pivot budget — local implementation helper invoked by the entry point — likely edit site"
+        }
+      ]
+    },
+    {
+      "case": "broad100b/matplotlib__matplotlib-22871",
+      "class": "PRIMARY_REASON_ONLY",
+      "beforeTokens": 1530,
+      "afterTokens": 1529,
+      "examples": [
+        {
+          "at": "lib/matplotlib/pyplot.py::show",
+          "before": "task names module path `matplotlib.pyplot` (direct evidence, strong)",
+          "after": "actionable function — in a likely edit file; strong lexical match"
+        }
+      ]
+    },
+    {
+      "case": "broad100b/matplotlib__matplotlib-23412",
+      "class": "PRIMARY_REASON_ONLY",
+      "beforeTokens": 1141,
+      "afterTokens": 1139,
+      "examples": [
+        {
+          "at": "lib/matplotlib/pyplot.py::show",
+          "before": "task names module path `matplotlib.pyplot` (direct evidence, strong)",
+          "after": "actionable function — in a likely edit file; strong lexical match"
+        }
+      ]
+    },
+    {
+      "case": "broad100b/matplotlib__matplotlib-25311",
+      "class": "PRIMARY_REASON_ONLY",
+      "beforeTokens": 1333,
+      "afterTokens": 1342,
+      "examples": [
+        {
+          "at": "lib/matplotlib/pyplot.py::show",
+          "before": "task names module path `matplotlib.pyplot` (direct evidence, strong)",
+          "after": "strong target beyond the pivot budget — actionable function — in a likely edit file; strong lexical match"
+        }
+      ]
+    },
+    {
+      "case": "broad100b/pytest-dev__pytest-10081",
+      "class": "PRIMARY_REASON_ONLY",
+      "beforeTokens": 1097,
+      "afterTokens": 1112,
+      "examples": [
+        {
+          "at": "src/_pytest/debugging.py::pytestPDB._get_pdb_wrapper_class",
+          "before": "preferred contrast side matched: pdb, pytest, class, py (+0.24)",
+          "after": "local implementation helper whose name matches the issue — likely edit site"
+        },
+        {
+          "at": "src/_pytest/debugging.py::post_mortem",
+          "before": "preferred contrast side matched: pytest, py, def, traceback (+0.24)",
+          "after": "strong target beyond the pivot budget — local implementation helper whose name matches the issue — likely edit site"
+        }
+      ]
+    },
+    {
+      "case": "broad100b/scikit-learn__scikit-learn-10908",
+      "class": "PRIMARY_REASON_ONLY",
+      "beforeTokens": 1207,
+      "afterTokens": 1229,
+      "examples": [
+        {
+          "at": "sklearn/feature_extraction/text.py::CountVectorizer._count_vocab",
+          "before": "preferred contrast side matched: count, vectorizer, feature, vocabulary (+0.24)",
+          "after": "strong target beyond the pivot budget — local implementation helper invoked by the entry point — likely edit site"
+        },
+        {
+          "at": "sklearn/feature_extraction/text.py::VectorizerMixin._validate_vocabulary",
+          "before": "preferred contrast side matched: vectorizer, feature, vocabulary, sklearn (+0.24)",
+          "after": "strong target beyond the pivot budget — local implementation helper invoked by the entry point — likely edit site"
+        }
+      ]
+    },
+    {
+      "case": "broad100b/scikit-learn__scikit-learn-13142",
+      "class": "PRIMARY_REASON_ONLY",
+      "beforeTokens": 934,
+      "afterTokens": 930,
+      "examples": [
+        {
+          "at": "sklearn/utils/testing.py::assert_warns",
+          "before": "task names module path `sklearn.utils.testing` (direct evidence, strong)",
+          "after": "actionable function — in a likely edit file; strong lexical match"
+        },
+        {
+          "at": "sklearn/utils/testing.py::assert_warns_message",
+          "before": "task names module path `sklearn.utils.testing` (direct evidence, strong)",
+          "after": "actionable function — in a likely edit file; strong lexical match"
+        }
+      ]
+    },
+    {
+      "case": "broad100b/scikit-learn__scikit-learn-14053",
+      "class": "PRIMARY_REASON_ONLY",
+      "beforeTokens": 839,
+      "afterTokens": 835,
+      "examples": [
+        {
+          "at": "sklearn/tree/export.py::_MPLTreeExporter.export",
+          "before": "task names module path `sklearn.tree.export` (direct evidence, strong)",
+          "after": "actionable method — in a likely edit file; strong lexical match"
+        }
+      ]
+    },
+    {
+      "case": "broad100b/sympy__sympy-13551",
+      "class": "PRIMARY_REASON_ONLY",
+      "beforeTokens": 1166,
+      "afterTokens": 1167,
+      "examples": []
+    },
+    {
+      "case": "broad100b/sympy__sympy-23824",
+      "class": "PRIMARY_REASON_ONLY",
+      "beforeTokens": 1526,
+      "afterTokens": 1526,
+      "examples": [
+        {
+          "at": "sympy/tensor/tensor.py::TensAdd.equals",
+          "before": "preferred contrast side matched: sympy, tensor, def, equals (+0.24)",
+          "after": "actionable method — in a likely edit file; strong lexical match"
+        },
+        {
+          "at": "sympy/physics/hep/gamma_matrices.py::gamma_trace",
+          "before": "preferred contrast side matched: physics, hep, gamma, matrices (+0.24)",
+          "after": "local implementation helper whose name matches the issue — likely edit site"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,63 @@
+{
+  "milestone": "M181-A",
+  "generatedFrom": "run_stage5_m181_architecture.ts",
+  "matrix": [
+    {
+      "surface": "authoritative item (assembly output)",
+      "fullReasonSet": "present, ordered",
+      "primaryReason": "position 0 = roleReason",
+      "orderingAuthoritative": "YES (declared)",
+      "agentVisible": "via modelVisibleContext `why:` lines",
+      "usedInSelection": "no"
+    },
+    {
+      "surface": "evidence-layer render (uncompacted)",
+      "fullReasonSet": "all rendered as `why:` lines",
+      "primaryReason": "position 0",
+      "orderingAuthoritative": "YES (inherited)",
+      "agentVisible": "YES",
+      "usedInSelection": "no"
+    },
+    {
+      "surface": "evidence-layer render (compacted)",
+      "fullReasonSet": "REDUCED TO ONE by compactReasons",
+      "primaryReason": "substring-preferred, else position 0",
+      "orderingAuthoritative": "NO — substring match overrides order",
+      "agentVisible": "YES",
+      "usedInSelection": "no"
+    },
+    {
+      "surface": "compact orientation (`related[].how`, `focus.why`)",
+      "fullReasonSet": "not shown",
+      "primaryReason": "position 0 of whatever survived",
+      "orderingAuthoritative": "YES (declared consumer contract)",
+      "agentVisible": "YES — this is the packet",
+      "usedInSelection": "no"
+    },
+    {
+      "surface": "response metadata `productContext.items[]`",
+      "fullReasonSet": "sliced to 3, then 1, then dropped",
+      "primaryReason": "position 0",
+      "orderingAuthoritative": "YES (slice keeps the head)",
+      "agentVisible": "YES",
+      "usedInSelection": "no"
+    },
+    {
+      "surface": "`answerBearing` / keep priority",
+      "fullReasonSet": "ALL reasons, joined and substring-tested",
+      "primaryReason": "not used",
+      "orderingAuthoritative": "no — order-insensitive",
+      "agentVisible": "no",
+      "usedInSelection": "YES"
+    },
+    {
+      "surface": "benchmark telemetry (M180 identity)",
+      "fullReasonSet": "not used",
+      "primaryReason": "position 0 (`semanticItemIdentity`)",
+      "orderingAuthoritative": "YES",
+      "agentVisible": "no",
+      "usedInSelection": "no"
+    }
+  ],
+  "finding": "Six surfaces treat position 0 as the head of an ordered, authoritative array. One — `compactReasons` — overrides it on a substring match. That one is also the only surface with no declared contract, no test and no comment stating an intent."
+}

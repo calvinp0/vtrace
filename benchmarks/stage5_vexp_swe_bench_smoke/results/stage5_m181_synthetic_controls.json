@@ -1,0 +1,190 @@
+{
+  "milestone": "M181-B",
+  "generatedFrom": "run_stage5_m181_controls.ts",
+  "method": "hand-written reason arrays on a synthetic object with no retrieval, ranking or upstream state",
+  "ladder": [
+    400,
+    600,
+    800,
+    1000,
+    1600,
+    3200,
+    8000,
+    16000
+  ],
+  "scenarios": [
+    {
+      "scenario": "one_reason_no_preferred_substring",
+      "reasons": [
+        "entry point/caller delegating to local helpers — the edit site is the helper it calls"
+      ],
+      "expectation": "both paths must show ROLE_A",
+      "positionZero": "entry point/caller delegating to local helpers — the edit site is the helper it calls",
+      "compactWouldPrefer": "entry point/caller delegating to local helpers — the edit site is the helper it calls",
+      "displayedByBudget": {
+        "400": "pivot, required",
+        "600": "entry point/caller delegating to local helpers — the edit site is the helper it calls",
+        "800": "entry point/caller delegating to local helpers — the edit site is the helper it calls",
+        "1000": "entry point/caller delegating to local helpers — the edit site is the helper it calls",
+        "1600": "entry point/caller delegating to local helpers — the edit site is the helper it calls",
+        "3200": "entry point/caller delegating to local helpers — the edit site is the helper it calls",
+        "8000": "entry point/caller delegating to local helpers — the edit site is the helper it calls",
+        "16000": "entry point/caller delegating to local helpers — the edit site is the helper it calls"
+      },
+      "distinctDisplayed": [
+        "pivot, required",
+        "entry point/caller delegating to local helpers — the edit site is the helper it calls"
+      ],
+      "stableAcrossBudgets": false
+    },
+    {
+      "scenario": "one_reason_with_preferred_substring",
+      "reasons": [
+        "preferred contrast side matched: alpha, beta, gamma (+0.24)"
+      ],
+      "expectation": "both paths must show SCORE_B",
+      "positionZero": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+      "compactWouldPrefer": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+      "displayedByBudget": {
+        "400": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "600": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "800": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "1000": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "1600": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "3200": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "8000": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "16000": "preferred contrast side matched: alpha, beta, gamma (+0.24)"
+      },
+      "distinctDisplayed": [
+        "preferred contrast side matched: alpha, beta, gamma (+0.24)"
+      ],
+      "stableAcrossBudgets": true
+    },
+    {
+      "scenario": "two_reasons_role_first_score_second",
+      "reasons": [
+        "entry point/caller delegating to local helpers — the edit site is the helper it calls",
+        "preferred contrast side matched: alpha, beta, gamma (+0.24)"
+      ],
+      "expectation": "compact prefers SCORE_B; normal keeps ROLE_A",
+      "positionZero": "entry point/caller delegating to local helpers — the edit site is the helper it calls",
+      "compactWouldPrefer": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+      "displayedByBudget": {
+        "400": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "600": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "800": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "1000": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "1600": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "3200": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "8000": "entry point/caller delegating to local helpers — the edit site is the helper it calls",
+        "16000": "entry point/caller delegating to local helpers — the edit site is the helper it calls"
+      },
+      "distinctDisplayed": [
+        "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "entry point/caller delegating to local helpers — the edit site is the helper it calls"
+      ],
+      "stableAcrossBudgets": false
+    },
+    {
+      "scenario": "two_reasons_score_first_role_second",
+      "reasons": [
+        "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "entry point/caller delegating to local helpers — the edit site is the helper it calls"
+      ],
+      "expectation": "both show SCORE_B — position 0 already matches",
+      "positionZero": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+      "compactWouldPrefer": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+      "displayedByBudget": {
+        "400": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "600": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "800": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "1000": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "1600": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "3200": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "8000": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "16000": "preferred contrast side matched: alpha, beta, gamma (+0.24)"
+      },
+      "distinctDisplayed": [
+        "preferred contrast side matched: alpha, beta, gamma (+0.24)"
+      ],
+      "stableAcrossBudgets": true
+    },
+    {
+      "scenario": "three_reasons_role_score_graph",
+      "reasons": [
+        "entry point/caller delegating to local helpers — the edit site is the helper it calls",
+        "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "3 indexed symbol(s) depend on this"
+      ],
+      "expectation": "compact prefers SCORE_B; normal keeps ROLE_A",
+      "positionZero": "entry point/caller delegating to local helpers — the edit site is the helper it calls",
+      "compactWouldPrefer": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+      "displayedByBudget": {
+        "400": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "600": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "800": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "1000": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "1600": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "3200": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "8000": "entry point/caller delegating to local helpers — the edit site is the helper it calls",
+        "16000": "entry point/caller delegating to local helpers — the edit site is the helper it calls"
+      },
+      "distinctDisplayed": [
+        "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "entry point/caller delegating to local helpers — the edit site is the helper it calls"
+      ],
+      "stableAcrossBudgets": false
+    },
+    {
+      "scenario": "three_reasons_role_graph_only",
+      "reasons": [
+        "entry point/caller delegating to local helpers — the edit site is the helper it calls",
+        "3 indexed symbol(s) depend on this"
+      ],
+      "expectation": "no preferred substring: both keep ROLE_A",
+      "positionZero": "entry point/caller delegating to local helpers — the edit site is the helper it calls",
+      "compactWouldPrefer": "entry point/caller delegating to local helpers — the edit site is the helper it calls",
+      "displayedByBudget": {
+        "400": "pivot, required",
+        "600": "entry point/caller delegating to local helpers — the edit site is the helper it calls",
+        "800": "entry point/caller delegating to local helpers — the edit site is the helper it calls",
+        "1000": "entry point/caller delegating to local helpers — the edit site is the helper it calls",
+        "1600": "entry point/caller delegating to local helpers — the edit site is the helper it calls",
+        "3200": "entry point/caller delegating to local helpers — the edit site is the helper it calls",
+        "8000": "entry point/caller delegating to local helpers — the edit site is the helper it calls",
+        "16000": "entry point/caller delegating to local helpers — the edit site is the helper it calls"
+      },
+      "distinctDisplayed": [
+        "pivot, required",
+        "entry point/caller delegating to local helpers — the edit site is the helper it calls"
+      ],
+      "stableAcrossBudgets": false
+    },
+    {
+      "scenario": "duplicate_reasons",
+      "reasons": [
+        "entry point/caller delegating to local helpers — the edit site is the helper it calls",
+        "entry point/caller delegating to local helpers — the edit site is the helper it calls",
+        "3 indexed symbol(s) depend on this"
+      ],
+      "expectation": "both keep ROLE_A",
+      "positionZero": "entry point/caller delegating to local helpers — the edit site is the helper it calls",
+      "compactWouldPrefer": "entry point/caller delegating to local helpers — the edit site is the helper it calls",
+      "displayedByBudget": {
+        "400": "pivot, required",
+        "600": "entry point/caller delegating to local helpers — the edit site is the helper it calls",
+        "800": "entry point/caller delegating to local helpers — the edit site is the helper it calls",
+        "1000": "entry point/caller delegating to local helpers — the edit site is the helper it calls",
+        "1600": "entry point/caller delegating to local helpers — the edit site is the helper it calls",
+        "3200": "entry point/caller delegating to local helpers — the edit site is the helper it calls",
+        "8000": "entry point/caller delegating to local helpers — the edit site is the helper it calls",
+        "16000": "entry point/caller delegating to local helpers — the edit site is the helper it calls"
+      },
+      "distinctDisplayed": [
+        "pivot, required",
+        "entry point/caller delegating to local helpers — the edit site is the helper it calls"
+      ],
+      "stableAcrossBudgets": false
+    }
+  ]
+}

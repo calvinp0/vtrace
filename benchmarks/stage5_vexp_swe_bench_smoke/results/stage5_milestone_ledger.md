@@ -5275,3 +5275,154 @@ ordered budget pairs, M180 preservation semantics             before   after
   reassess it only after the claim-selection defect is closed. The M180 claim stays
   narrow: **response bookkeeping can no longer alter the semantic evidence supply
   the orientation projector consumes, on the measured `run_pipeline` delivery path.**
+
+## M181 — Selection-Reason Semantic Stability Across Compaction
+
+```text
+commits  PENDING_PRODUCT   product (compactReasons + first test for budgetDelivery.ts)
+         PENDING_EVIDENCE  evidence + ledger
+from     189e190ded87b3b1ce952126b4997a8843e44e95    (M180 close)
+
+A PASS   19/19 source claims re-verified against the file and line they cite;
+         every producer, consumer and ordering source traced; vocabulary
+         enumerated from the corpus (2,908 items, 9 families); compactReasons
+         audited and the instrument's mirror regex proved character-identical to
+         the product's; reason choice established as explanation-level, not
+         selection-level
+B PASS   106 / 8 / 757 / 21 reproduced EXACTLY, using M180's comparePreservation
+         imported rather than reimplemented; authoritative reason sets frozen from
+         the object deliver() clones, so no delivered field testifies about itself;
+         identity 0 failures, known-negative 0/2,292, synthetic reproduces the
+         defect with no retrieval or ranking present, permutation decisive
+C PASS   reasons classified: position 0 is actionable role, the tail is provenance,
+         separated BY POSITION at assembly; equivalence relation defined narrowly
+         (same claim, not both-true); canonical-primary answered YES from four
+         independent source sites; no product code changed before this concluded
+D PASS   three of five §31 candidates rejected without simulation on C's grounds;
+         two simulated on 169 cases; policy frozen before confirmation; not chosen
+         to zero the 106
+E PASS   one hunk in budgetDelivery.ts — reduction, not reselection; plus the
+         first test file that module has ever had; no V2 path, no schema change
+F PASS   15/15 closure gates; ceiling residuals counterfactually characterised
+
+reason contract   PRIMARY_SELECTION_REASON_CANONICAL
+root cause        COMPACT_REASON_SELECTION_BREAKS_CANONICALITY
+preservation      BUDGET_MONOTONE_AGENT_SEMANTICS_VALIDATED
+repair            SELECTION_REASON_REPAIR_VALIDATED
+product           KEEP_COMPACT_ORIENTATION_WITH_REASON_FIX
+totality          RESPONSE_TOTALITY_PRESERVED
+truthfulness      SELECTION_REASON_TRUTHFULNESS_PRESERVED
+economics         CURRENT_COMPACT_ECONOMICS_PRESERVED   (packet median 542 -> 542)
+ceiling           REMAINING_CEILING_CASES_EXPECTED_BOUNDARY_EFFECTS
+next work         CURRENT_PRODUCT_LIVE_REQUALIFICATION_REVIEW_LICENSED
+                  (review and planning only; NOT authorised to run)
+live              LIVE_WORK_NOT_RUN          spend $0.00
+retrieval         UNCHANGED
+ranking           UNCHANGED   (0 priority inversions between arms)
+fit contract      UNCHANGED (M178 names preserved)
+ownership         UNCHANGED (M180 separation preserved)
+```
+
+```text
+ordered budget pairs, M180 preservation semantics             before   after
+  semantic role changed (the reason residual)                    106      12
+  related item lost (the ceiling residual)                         8       8
+  focus changed / claim downgraded / orientation -> decline         0       0
+  priority inversion / representation downgrade / qualifier        0       0
+  total                                                          114      20
+  (benign: claim upgraded)                                       757     754
+  (benign: focus resolved to the declared lead pivot)             21      21
+
+symbol-level reason substitutions                             before   after
+  semantically non-equivalent (role claim -> provenance)          277       0
+  representation only (160-character ellipsis)                    12      12
+  total                                                          289      12
+
+truthfulness, all delivering budgets                          before   after
+  claims delivered                                            10,203  10,201
+  unsupported by the authoritative reason set                      0       0
+  about a symbol outside the supply                                0       0
+
+what must not move                                            before   after
+  projector supply cut by metadata (M180 invariant)                0       0
+  throws / responses outside the envelope                          0       0
+  orientations / declines                                1,380/648  1,380/648
+  packet median, delivering budgets / default budget      542/1,225  542/1,229
+```
+
+## M181 standing findings
+
+- **The array is a role claim followed by its provenance, and the separation is
+  positional.** `assembleProductContext.ts:408` builds
+  `unique([roleReason, ...evidence])`, and `productAdapter.ts:48` declares
+  `roleReason` to be *"The decisive reason this item landed in its role"*.
+  Position 0 answers what part the symbol plays; the tail answers how VTRACE found
+  it. So a selector that ignores position cannot help but sometimes replace an
+  actionable claim with provenance — which is what it did, **277 times out of
+  277, always in that direction**, never the reverse.
+
+- **`compactReasons` was doing two jobs and was only ever authorised to do one.**
+  Reducing the array to one entry is its job; deciding WHICH entry was not. Its
+  preference was a substring match on
+  `/preferred contrast|symbol-name match|direct evidence|exact/iu` — the same four
+  substrings `answerBearing` uses twelve lines above to decide which ITEM to keep.
+  A keep-priority vocabulary was reused to rank an EXPLANATION. The shared word
+  "preferred" made that read like intent.
+
+- **The permutation control is what settled it.** One reason set in six orders:
+  the declared decisive reason takes **three** distinct values, `compactReasons`'
+  choice takes **one**. A selector that answers identically for orders whose
+  decisive reason differs is not implementing a rival contract; it is blind to the
+  only contract there is. Without this control the milestone could have concluded
+  that two defensible priorities merely disagreed and split the difference.
+
+- **The consumer arrived after the transform, and nothing failed in between.**
+  `compactReasons` shipped in M136 (2026-08-09), when reasons were only rendered
+  as a list of `why:` lines and reducing five to one had no canonical answer to
+  violate. The orientation projector, which gave position 0 the standing of *the
+  relationship claim*, shipped in M172. Neither change was wrong when made. The
+  contract broke in the gap, silently, because **`budgetDelivery.ts` had no test
+  at all**. It has one now, and it tests the contract rather than the behaviour.
+
+- **A delivered response cannot testify about itself.** Every reason field on a
+  delivered response is downstream of the transform under test. The witness is the
+  frozen authoritative object, which `deliver()` clones before compacting. M180
+  needed the same move for items (`modelVisibleContext` as the unforgeable
+  witness); this is the reason-shaped version of it, and it is the reusable part.
+
+- **What moved is the byte count, not the ranking — and that was measured.**
+  8 of 2,028 (case, budget) points deliver a different evidence set, because a
+  reason string has a length, `render()` includes it and `fits()` reads it. All 8
+  are a tail entry entering or leaving. **0 priority inversions between arms**:
+  the symbols both arms share come back in the same relative order everywhere.
+  `compareKeepPriority` is untouched and `answerBearing` is computed from the FULL
+  reason array before `compactReasons` runs, so neither could have moved.
+
+- **The 8 ceiling pairs are genuinely bounded, and a sloppy counterfactual said
+  otherwise.** Restoring each of the 14 lost entries into the larger budget's
+  packet: **13** exceed the 2,000-token ceiling, **1** (`sympy-23824`, `TensAdd`,
+  1,988 tokens) would fit but was excluded because admission had already stopped
+  at an earlier, larger candidate — the deliberate prefix rule that keeps a
+  tighter bound's output a subset of a looser one's. **0 unexplained.** The first
+  version of this counterfactual restored a stub entry with no file and no line
+  span, understated the cost, and reported 4 apparent extra defects. A
+  counterfactual must reconstruct the thing it measures whole.
+
+- **Two preservation metrics, and they still differ.** Raw presentation
+  preservation is NOT achieved: 12 reason strings still change with budget, all of
+  them the 160-character ellipsis cutting one claim. Agent-relevant semantic
+  preservation IS: 0 violations. Reporting only one of them would have made the
+  milestone unable to say "the wording moved and the meaning did not" — or to
+  notice when that is false.
+
+- **Next-step recommendation: assess load stability before spending anything.**
+  `CURRENT_PRODUCT_LIVE_REQUALIFICATION_REVIEW_LICENSED` licenses review and
+  planning only. The product IS materially different from the M173 treatment that
+  was last qualified live — M180 roughly doubled the packet median, M181 changed
+  which claim reaches the agent on 21 of 169 default-budget cases — and the
+  deterministic defects that would confound such a run are now closed. But
+  related-selection instability under load has not been measured since its
+  deterministic mechanism was removed, and it is the one open item that could
+  contaminate a live comparison. Measure it first; it is much cheaper. Do not
+  raise the orientation ceiling and do not relax prefix admission to recover the
+  single `TensAdd` entry: that trades a bounded omission for a monotonicity risk.

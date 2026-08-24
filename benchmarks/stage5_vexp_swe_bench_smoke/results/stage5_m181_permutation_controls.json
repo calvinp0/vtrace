@@ -1,0 +1,185 @@
+{
+  "milestone": "M181-B",
+  "generatedFrom": "run_stage5_m181_controls.ts",
+  "ladder": [
+    400,
+    600,
+    800,
+    1000,
+    1600,
+    3200,
+    8000,
+    16000
+  ],
+  "question": "Does the displayed reason move when only the ORDER of an identical reason set changes?",
+  "set": [
+    "entry point/caller delegating to local helpers — the edit site is the helper it calls",
+    "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+    "3 indexed symbol(s) depend on this"
+  ],
+  "rows": [
+    {
+      "order": "012",
+      "reasons": [
+        "entry point/caller delegating to local helpers — the edit site is the helper it calls",
+        "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "3 indexed symbol(s) depend on this"
+      ],
+      "positionZero": "entry point/caller delegating to local helpers — the edit site is the helper it calls",
+      "positionZeroFamily": "ROLE_DECISIVE",
+      "compactPreferred": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+      "compactPreferredFamily": "SCORING_DIAGNOSTIC",
+      "displayedByBudget": {
+        "400": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "600": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "800": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "1000": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "1600": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "3200": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "8000": "entry point/caller delegating to local helpers — the edit site is the helper it calls",
+        "16000": "entry point/caller delegating to local helpers — the edit site is the helper it calls"
+      },
+      "distinctDisplayed": [
+        "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "entry point/caller delegating to local helpers — the edit site is the helper it calls"
+      ],
+      "followsPositionZeroAtEveryBudget": false
+    },
+    {
+      "order": "021",
+      "reasons": [
+        "entry point/caller delegating to local helpers — the edit site is the helper it calls",
+        "3 indexed symbol(s) depend on this",
+        "preferred contrast side matched: alpha, beta, gamma (+0.24)"
+      ],
+      "positionZero": "entry point/caller delegating to local helpers — the edit site is the helper it calls",
+      "positionZeroFamily": "ROLE_DECISIVE",
+      "compactPreferred": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+      "compactPreferredFamily": "SCORING_DIAGNOSTIC",
+      "displayedByBudget": {
+        "400": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "600": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "800": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "1000": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "1600": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "3200": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "8000": "entry point/caller delegating to local helpers — the edit site is the helper it calls",
+        "16000": "entry point/caller delegating to local helpers — the edit site is the helper it calls"
+      },
+      "distinctDisplayed": [
+        "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "entry point/caller delegating to local helpers — the edit site is the helper it calls"
+      ],
+      "followsPositionZeroAtEveryBudget": false
+    },
+    {
+      "order": "102",
+      "reasons": [
+        "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "entry point/caller delegating to local helpers — the edit site is the helper it calls",
+        "3 indexed symbol(s) depend on this"
+      ],
+      "positionZero": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+      "positionZeroFamily": "SCORING_DIAGNOSTIC",
+      "compactPreferred": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+      "compactPreferredFamily": "SCORING_DIAGNOSTIC",
+      "displayedByBudget": {
+        "400": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "600": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "800": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "1000": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "1600": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "3200": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "8000": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "16000": "preferred contrast side matched: alpha, beta, gamma (+0.24)"
+      },
+      "distinctDisplayed": [
+        "preferred contrast side matched: alpha, beta, gamma (+0.24)"
+      ],
+      "followsPositionZeroAtEveryBudget": true
+    },
+    {
+      "order": "120",
+      "reasons": [
+        "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "3 indexed symbol(s) depend on this",
+        "entry point/caller delegating to local helpers — the edit site is the helper it calls"
+      ],
+      "positionZero": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+      "positionZeroFamily": "SCORING_DIAGNOSTIC",
+      "compactPreferred": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+      "compactPreferredFamily": "SCORING_DIAGNOSTIC",
+      "displayedByBudget": {
+        "400": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "600": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "800": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "1000": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "1600": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "3200": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "8000": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "16000": "preferred contrast side matched: alpha, beta, gamma (+0.24)"
+      },
+      "distinctDisplayed": [
+        "preferred contrast side matched: alpha, beta, gamma (+0.24)"
+      ],
+      "followsPositionZeroAtEveryBudget": true
+    },
+    {
+      "order": "201",
+      "reasons": [
+        "3 indexed symbol(s) depend on this",
+        "entry point/caller delegating to local helpers — the edit site is the helper it calls",
+        "preferred contrast side matched: alpha, beta, gamma (+0.24)"
+      ],
+      "positionZero": "3 indexed symbol(s) depend on this",
+      "positionZeroFamily": "GRAPH_DEPENDENCY",
+      "compactPreferred": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+      "compactPreferredFamily": "SCORING_DIAGNOSTIC",
+      "displayedByBudget": {
+        "400": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "600": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "800": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "1000": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "1600": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "3200": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "8000": "3 indexed symbol(s) depend on this",
+        "16000": "3 indexed symbol(s) depend on this"
+      },
+      "distinctDisplayed": [
+        "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "3 indexed symbol(s) depend on this"
+      ],
+      "followsPositionZeroAtEveryBudget": false
+    },
+    {
+      "order": "210",
+      "reasons": [
+        "3 indexed symbol(s) depend on this",
+        "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "entry point/caller delegating to local helpers — the edit site is the helper it calls"
+      ],
+      "positionZero": "3 indexed symbol(s) depend on this",
+      "positionZeroFamily": "GRAPH_DEPENDENCY",
+      "compactPreferred": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+      "compactPreferredFamily": "SCORING_DIAGNOSTIC",
+      "displayedByBudget": {
+        "400": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "600": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "800": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "1000": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "1600": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "3200": "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "8000": "3 indexed symbol(s) depend on this",
+        "16000": "3 indexed symbol(s) depend on this"
+      },
+      "distinctDisplayed": [
+        "preferred contrast side matched: alpha, beta, gamma (+0.24)",
+        "3 indexed symbol(s) depend on this"
+      ],
+      "followsPositionZeroAtEveryBudget": false
+    }
+  ],
+  "distinctPositionZeroAcrossOrders": 3,
+  "distinctCompactPreferredAcrossOrders": 1,
+  "finding": "The compact selector is LESS order-sensitive than the declared contract: it returns the same reason for orders whose declared decisive reason differs. That is not a competing contract, it is an override of the only contract there is."
+}

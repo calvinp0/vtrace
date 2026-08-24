@@ -1,0 +1,42 @@
+{
+  "milestone": "M181",
+  "title": "Selection-Reason Semantic Stability Across Compaction",
+  "startedFrom": {
+    "head": "189e190ded87b3b1ce952126b4997a8843e44e95",
+    "headSubject": "Record M180's own commit hashes in the ledger and report",
+    "branch": "main",
+    "m180Commits": {
+      "harnessHygiene": "291c9c8dd439cce12114e89d50988434295578b9",
+      "product": "e62cbe6eb4798ce4ba4be55ed337ce014fbd07ee",
+      "evidence": "cb522c9c1636c34532f104d4915d2d4db8590553",
+      "shaBackfill": "189e190ded87b3b1ce952126b4997a8843e44e95"
+    },
+    "authorityVerified": "HEAD equals M180's declared SHA-backfill commit"
+  },
+  "baselineGates": {
+    "typecheck": "PASS",
+    "typecheckBenchmarks": "PASS",
+    "test": { "pass": 5518, "skip": 49, "fail": 0, "expectCalls": 5553, "tests": 5567, "files": 352 },
+    "gitDiffCheck": "clean"
+  },
+  "inheritedResiduals": {
+    "reasonSelectionPairs": 106,
+    "fixedCeilingPairs": 8,
+    "total": 113,
+    "ownershipMutations": 0,
+    "orientationToDecline": 0,
+    "unsupportedClaims": 0
+  },
+  "corpus": {
+    "root": "benchmarks/stage5_vexp_swe_bench_smoke/results/_m179_authoritative",
+    "broad100a": 100,
+    "broad100b": 100,
+    "note": "frozen authoritative objects, inherited from M179 and reused unchanged by M180 and M181"
+  },
+  "prohibitions": {
+    "liveAgents": "PROHIBITED",
+    "docker": "PROHIBITED",
+    "orientationCeilingChange": "PROHIBITED",
+    "retrievalOrRankingChange": "PROHIBITED"
+  }
+}

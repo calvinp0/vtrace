@@ -1,0 +1,167 @@
+{
+  "milestone": "M181-F",
+  "generatedFrom": "run_stage5_m181_qualification.ts",
+  "corpus": "_m179_authoritative broad100a + broad100b, 169 valid frozen cases, 12 budgets, 66 ordered pairs per case",
+  "gates": [
+    {
+      "gate": "§52 semantic preservation — non-equivalent reason substitutions",
+      "result": "PASS",
+      "detail": "277 → 0"
+    },
+    {
+      "gate": "§52 presentation preservation — reason strings that still move across budgets",
+      "result": "PASS",
+      "detail": "289 → 12, all 12 of them the 160-character ellipsis shortening one claim. REPORTED, NOT ZERO: §53 forbids hiding a presentation change just because it is semantically inert."
+    },
+    {
+      "gate": "§43 truthfulness — claims not supported by the authoritative reason set",
+      "result": "PASS",
+      "detail": "unsupported 0, outside supply 0, over 10201 delivered claims"
+    },
+    {
+      "gate": "§46 / §89 M179 — orientation → decline",
+      "result": "PASS",
+      "detail": "0 → 0"
+    },
+    {
+      "gate": "§45 / §88 M180 — metadata mutating the projector's semantic supply",
+      "result": "PASS",
+      "detail": "0 → 0; the metadata layer still cuts productContext.items on 722 budgets, which M180 says it should"
+    },
+    {
+      "gate": "§47 / §76 totality — throws and out-of-envelope responses",
+      "result": "PASS",
+      "detail": "2028 deliveries, 0 throws, 0 outside envelope; orientations 1380 → 1380, declines 648 → 648"
+    },
+    {
+      "gate": "§32 no re-ranking — shared symbols reordered between arms",
+      "result": "PASS",
+      "detail": "8 of 2028 (case, budget) points differ, all tail additions or removals; 0 inversions"
+    },
+    {
+      "gate": "§41 default-budget change classes",
+      "result": "PASS",
+      "detail": "PRIMARY_REASON_ONLY 21, IDENTICAL 148, ITEM_CHANGED 0, UNEXPECTED 0"
+    },
+    {
+      "gate": "§42 claim identity — evidence unchanged where only the explanation moved",
+      "result": "PASS",
+      "detail": "related symbol set 169/169, focus symbol 169/169"
+    },
+    {
+      "gate": "§48 fit contract",
+      "result": "PASS",
+      "detail": "UNCHANGED. M178's names and predicates were not read or written by this milestone."
+    },
+    {
+      "gate": "§54 / §90 packet economics",
+      "result": "PASS",
+      "detail": "median over delivering budgets 542 → 542 tokens (0.00%); at the default budget 1225 → 1229"
+    },
+    {
+      "gate": "§79 ceiling residuals characterised, not repaired",
+      "result": "PASS",
+      "detail": "14 lost entries: 13 exceed the ceiling when restored, 1 blocked by prefix admission, 0 unexplained"
+    },
+    {
+      "gate": "§23 identity control",
+      "result": "PASS",
+      "detail": "0 failures over repeated deliveries of the same object at the same budget"
+    },
+    {
+      "gate": "§22 known negative",
+      "result": "PASS",
+      "detail": "2292 multi-reason items where both selectors agree; 0 fired"
+    },
+    {
+      "gate": "§18 reason-set stability across budgets",
+      "result": "PASS",
+      "detail": "the authoritative reason set never varies with budget"
+    }
+  ],
+  "failed": 0,
+  "overall": "PASS",
+  "residuals": {
+    "primaryReasonChangedSetIdentical": {
+      "before": 277,
+      "after": 0
+    },
+    "reasonOrderChangedSetIdentical": {
+      "before": 0,
+      "after": 0
+    },
+    "reasonSetChanged": {
+      "before": 0,
+      "after": 0
+    },
+    "semanticRoleChangedPairs": {
+      "before": 106,
+      "after": 12
+    },
+    "equivalentPresentationChange": {
+      "before": 12,
+      "after": 12
+    },
+    "trueSemanticViolation": {
+      "before": 277,
+      "after": 0
+    },
+    "fixedCeilingPairs": {
+      "before": 8,
+      "after": 8
+    },
+    "totalPairs": {
+      "before": 114,
+      "after": 20
+    }
+  },
+  "broadReasonStats": {
+    "itemsInFrozenCorpus": 2908,
+    "itemsWithOneReason": 449,
+    "itemsWithMultipleReasons": 2459,
+    "medianReasonsPerItem": 3,
+    "maxReasonsPerItem": 3,
+    "reasonFamilies": 9,
+    "itemsWhereTheTwoSelectorsDisagree": 167,
+    "substitutionsWhereAuthoritativeSetDiffered": 0,
+    "substitutionsSemanticallyNonEquivalent": 277,
+    "substitutionsRepresentationOnly": 12
+  },
+  "packetEconomics": {
+    "basis": "orientation packets only; budgets producing no packet are counted as declines, not as cheap packets",
+    "allBudgets": {
+      "before": {
+        "count": 1380,
+        "median": 542,
+        "p90": 1306,
+        "max": 1576,
+        "mean": 642.3
+      },
+      "after": {
+        "count": 1380,
+        "median": 542,
+        "p90": 1306,
+        "max": 1576,
+        "mean": 642.8
+      }
+    },
+    "atDefaultBudget": {
+      "before": {
+        "count": 167,
+        "median": 1225,
+        "p90": 1527,
+        "max": 1576,
+        "mean": 1204.5
+      },
+      "after": {
+        "count": 167,
+        "median": 1229,
+        "p90": 1527,
+        "max": 1576,
+        "mean": 1205.2
+      }
+    },
+    "medianChangePercent": 0,
+    "note": "§55 — no attempt was made to recover M172's ~600-token regime, which M180 showed was partly the ownership defect starving the packet."
+  }
+}

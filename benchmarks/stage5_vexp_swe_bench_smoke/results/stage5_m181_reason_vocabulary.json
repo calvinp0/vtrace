@@ -1,0 +1,1303 @@
+{
+  "milestone": "M181-A",
+  "generatedFrom": "run_stage5_m181_architecture.ts",
+  "corpus": "_m179_authoritative (broad100a + broad100b), frozen authoritative objects",
+  "corpusItems": 2908,
+  "itemsWithOneReason": 449,
+  "itemsWithMultipleReasons": 2459,
+  "medianReasonsPerItem": 3,
+  "maxReasonsPerItem": 3,
+  "itemsWhereCompactWouldDisagreeWithPositionZero": 167,
+  "families": {
+    "ROLE_DECISIVE": {
+      "occurrences": 2615,
+      "distinctStrings": 662,
+      "samples": [
+        "task diagnostic literal appears in this symbol's body — explicit edit site",
+        "actionable class — in a likely edit file; strong lexical match",
+        "local implementation helper invoked by the entry point — likely edit site",
+        "actionable method — symbol-name match; strong lexical match"
+      ]
+    },
+    "GRAPH_DEPENDENCY": {
+      "occurrences": 1588,
+      "distinctStrings": 111,
+      "samples": [
+        "2 indexed symbol(s) depend on this",
+        "1 indexed symbol(s) depend on this",
+        "559 indexed symbol(s) depend on this",
+        "10 indexed symbol(s) depend on this"
+      ]
+    },
+    "LEXICAL_SIGNAL": {
+      "occurrences": 1399,
+      "distinctStrings": 729,
+      "samples": [
+        "lexical match on local_name, docstring, fq_name, local_name, docstring, signature, docstring, docstring, docstring, query_coverage",
+        "lexical match on docstring, docstring, docstring, docstring, fq_name, fq_name, docstring, docstring, docstring, docstring, docstri",
+        "lexical match on docstring, local_name, docstring, signature, docstring, signature, docstring, docstring, docstring, query_coverag",
+        "lexical match on signature, local_name, fq_name, docstring, docstring, docstring, docstring, docstring, query_coverage, technical_"
+      ]
+    },
+    "SCORING_DIAGNOSTIC": {
+      "occurrences": 613,
+      "distinctStrings": 447,
+      "samples": [
+        "preferred contrast side matched: ascii, qdp, table, format (+0.24)",
+        "preferred contrast side matched: ascii, qdp, table, read (+0.24)",
+        "preferred contrast side matched: ascii, format, file, read (+0.24)",
+        "preferred contrast side matched: are, removed, license, more (+0.24)"
+      ]
+    },
+    "DIRECT_EVIDENCE_ANCHOR": {
+      "occurrences": 449,
+      "distinctStrings": 261,
+      "samples": [
+        "task names module path `ascii.qdp` (direct evidence, strong)",
+        "task mentions high-signal literal `help` (symbol name)",
+        "task mentions high-signal literal `license` (body literal)",
+        "task mentions high-signal literal `Table` (symbol name)"
+      ]
+    },
+    "OTHER": {
+      "occurrences": 415,
+      "distinctStrings": 342,
+      "samples": [
+        "bounded routed FTS rank covers unmatched clue `astropy table`",
+        "routed rank score 129",
+        "bounded routed FTS rank covers unmatched clue `astropy io`",
+        "routed rank score 190"
+      ]
+    },
+    "COEDIT_HINT": {
+      "occurrences": 212,
+      "distinctStrings": 118,
+      "samples": [
+        "likely co-edit sibling of a high-confidence anchor",
+        "co-edit neighbour of anchor `Table` (astropy/io/votable/tree.py) via 7 calls/references edge(s); connecting symbols match task wor",
+        "co-edit neighbour of anchor `FITS_rec` (astropy/io/fits/fitsrec.py) via 39 calls/imports/references edge(s); connecting symbols ma",
+        "co-edit neighbour of anchor `fromstring` (astropy/io/fits/card.py) via 11 calls/imports/references edge(s); connecting symbols mat"
+      ]
+    },
+    "FILE_LOCALITY": {
+      "occurrences": 41,
+      "distinctStrings": 11,
+      "samples": [
+        "declared in likely edit file src/_pytest/skipping.py",
+        "declared in likely edit file sympy/core/evalf.py",
+        "declared in likely edit file sympy/core/mod.py",
+        "declared in likely edit file sympy/core/tests/test_arit.py"
+      ]
+    },
+    "BEHAVIORAL_MATCH": {
+      "occurrences": 23,
+      "distinctStrings": 22,
+      "samples": [
+        "implements the requested storage: returns the stored attribute on `streaming_content` (+0.55 mechanism)",
+        "implements the requested storage: returns the stored attribute on `srid` (+0.55 mechanism)",
+        "implements the requested storage: returns the stored attribute on `related_name` (+0.55 mechanism)",
+        "implements the requested storage: returns the stored attribute on `migrations` (+0.55 mechanism)"
+      ]
+    }
+  },
+  "familyDomains": {
+    "ROLE_DECISIVE": "ACTIONABLE SEMANTICS — states the item's role and what to do with it ('the edit site is the helper it calls', 'support, not an edit target')",
+    "DIRECT_EVIDENCE_ANCHOR": "STRONG PROVENANCE — the task text itself names this file or module",
+    "SCORING_DIAGNOSTIC": "SCORER INTERNALS — matched terms and a numeric score delta",
+    "LEXICAL_SIGNAL": "PROVENANCE — how the string matched",
+    "FILE_LOCALITY": "PROVENANCE — declared in a file the task points at",
+    "BEHAVIORAL_MATCH": "ACTIONABLE SEMANTICS — implements the behaviour the task asks for",
+    "GRAPH_DEPENDENCY": "STRUCTURAL FACT — indexed fan-in count",
+    "IMPACT_RELATION": "ACTIONABLE RELATION — indexed edge to a named pivot",
+    "COEDIT_HINT": "ACTIONABLE RELATION — co-edit coupling",
+    "MEMORY_SIGNAL": "PROVENANCE — memory scorer signal kind",
+    "PROJECT_RULE": "PROVENANCE — rule selection",
+    "ROLES_FALLBACK": "NOT A REASON — the projector's fallback when the array is empty",
+    "OTHER": "unclassified"
+  },
+  "perCase": [
+    {
+      "corpus": "broad100a",
+      "instanceId": "astropy__astropy-14365",
+      "items": 18,
+      "reasonSetsHash": "175da981ca279bb2",
+      "compactWouldDisagree": 2
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "astropy__astropy-14369",
+      "items": 19,
+      "reasonSetsHash": "8b4d533720461978",
+      "compactWouldDisagree": 6
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "astropy__astropy-14598",
+      "items": 18,
+      "reasonSetsHash": "4afd84f9ad2abbf2",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "astropy__astropy-7166",
+      "items": 20,
+      "reasonSetsHash": "f77dfe9e5d0b8628",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-10880",
+      "items": 17,
+      "reasonSetsHash": "a13a89e36c4d4238",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-10973",
+      "items": 15,
+      "reasonSetsHash": "9e17931e13773c44",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-11095",
+      "items": 15,
+      "reasonSetsHash": "81fc09a2f86c1b9c",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-11133",
+      "items": 19,
+      "reasonSetsHash": "a80223be76aec9d9",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-11206",
+      "items": 11,
+      "reasonSetsHash": "da2b35d9d66bce1a",
+      "compactWouldDisagree": 1
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-11490",
+      "items": 17,
+      "reasonSetsHash": "1390150df25dc39e",
+      "compactWouldDisagree": 4
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-11728",
+      "items": 17,
+      "reasonSetsHash": "64cac9e4ad504b47",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-11740",
+      "items": 18,
+      "reasonSetsHash": "fab8700d3289feea",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-11749",
+      "items": 14,
+      "reasonSetsHash": "5ebd024b0f6943f2",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-11815",
+      "items": 22,
+      "reasonSetsHash": "68945c6109111ae7",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-11820",
+      "items": 20,
+      "reasonSetsHash": "19933ff817256159",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-12050",
+      "items": 20,
+      "reasonSetsHash": "1fa9eddbe433ce61",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-12273",
+      "items": 17,
+      "reasonSetsHash": "af3e7ec95d2fca47",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-12276",
+      "items": 16,
+      "reasonSetsHash": "25bf8602964086c2",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-12325",
+      "items": 14,
+      "reasonSetsHash": "f6515277176ad70c",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-12774",
+      "items": 18,
+      "reasonSetsHash": "67a3fb5513115b71",
+      "compactWouldDisagree": 2
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-12858",
+      "items": 18,
+      "reasonSetsHash": "7327d75733df0e88",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-13012",
+      "items": 17,
+      "reasonSetsHash": "43fa762766434547",
+      "compactWouldDisagree": 1
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-13112",
+      "items": 17,
+      "reasonSetsHash": "9527f70179f6fd03",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-13195",
+      "items": 17,
+      "reasonSetsHash": "460ed00236aa4787",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-13363",
+      "items": 19,
+      "reasonSetsHash": "8e69e5c82c5bde03",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-13512",
+      "items": 17,
+      "reasonSetsHash": "00fab3cb5650e383",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-13513",
+      "items": 16,
+      "reasonSetsHash": "7dc1e3eebbd0ecf4",
+      "compactWouldDisagree": 1
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-13551",
+      "items": 16,
+      "reasonSetsHash": "88e12792bef747f3",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-13590",
+      "items": 18,
+      "reasonSetsHash": "b587c2444712b40e",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-13658",
+      "items": 18,
+      "reasonSetsHash": "e4f1ef31a3836935",
+      "compactWouldDisagree": 5
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-13810",
+      "items": 15,
+      "reasonSetsHash": "08b2737189b7d318",
+      "compactWouldDisagree": 1
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-13820",
+      "items": 18,
+      "reasonSetsHash": "193a67b4658718c9",
+      "compactWouldDisagree": 1
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-14608",
+      "items": 19,
+      "reasonSetsHash": "5b67fc33213f20ee",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-14792",
+      "items": 19,
+      "reasonSetsHash": "acbe4c74be443808",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-15037",
+      "items": 18,
+      "reasonSetsHash": "9a2309980309d4bf",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-15503",
+      "items": 17,
+      "reasonSetsHash": "85c4501900d58cec",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-15572",
+      "items": 17,
+      "reasonSetsHash": "b82c19f99e7c18f0",
+      "compactWouldDisagree": 1
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-15695",
+      "items": 16,
+      "reasonSetsHash": "67b5c64ff37fdfad",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-15731",
+      "items": 20,
+      "reasonSetsHash": "7773d6a0c1a2c5fb",
+      "compactWouldDisagree": 1
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-16256",
+      "items": 16,
+      "reasonSetsHash": "c37843a1cf88c0b7",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-16263",
+      "items": 19,
+      "reasonSetsHash": "df968823cd39fe3f",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-16333",
+      "items": 16,
+      "reasonSetsHash": "63549e46cc599476",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-16569",
+      "items": 15,
+      "reasonSetsHash": "28f712df12e9215f",
+      "compactWouldDisagree": 1
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-16667",
+      "items": 16,
+      "reasonSetsHash": "92e362908ab202ba",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-16819",
+      "items": 15,
+      "reasonSetsHash": "50860fc0fee7ac60",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-16877",
+      "items": 15,
+      "reasonSetsHash": "26dab9aea1fdc84b",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-16938",
+      "items": 18,
+      "reasonSetsHash": "449749a6d854cc8c",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-17084",
+      "items": 16,
+      "reasonSetsHash": "d175c7c29b1430ca",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "matplotlib__matplotlib-22719",
+      "items": 20,
+      "reasonSetsHash": "ae60a249dd0d09ae",
+      "compactWouldDisagree": 11
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "matplotlib__matplotlib-24627",
+      "items": 16,
+      "reasonSetsHash": "f367c984b439adda",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "matplotlib__matplotlib-24870",
+      "items": 14,
+      "reasonSetsHash": "9c9dd8fa159f3a96",
+      "compactWouldDisagree": 1
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "matplotlib__matplotlib-24970",
+      "items": 17,
+      "reasonSetsHash": "1c3935e99a75a9bf",
+      "compactWouldDisagree": 1
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "matplotlib__matplotlib-25332",
+      "items": 17,
+      "reasonSetsHash": "4e822efde90d403d",
+      "compactWouldDisagree": 1
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "matplotlib__matplotlib-25960",
+      "items": 13,
+      "reasonSetsHash": "18fe39502c454a1f",
+      "compactWouldDisagree": 1
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "matplotlib__matplotlib-26466",
+      "items": 23,
+      "reasonSetsHash": "be7720a68080a44e",
+      "compactWouldDisagree": 1
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "mwaskom__seaborn-3187",
+      "items": 22,
+      "reasonSetsHash": "eb92dbfc5314c7bb",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "pallets__flask-5014",
+      "items": 19,
+      "reasonSetsHash": "289f217c4d27128f",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "psf__requests-1142",
+      "items": 21,
+      "reasonSetsHash": "364422653fb5993a",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "psf__requests-1724",
+      "items": 22,
+      "reasonSetsHash": "86ac0b63fd1d9934",
+      "compactWouldDisagree": 8
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "psf__requests-1921",
+      "items": 19,
+      "reasonSetsHash": "a3bfee2e42a35a27",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "psf__requests-5414",
+      "items": 17,
+      "reasonSetsHash": "131111348b73b895",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "pylint-dev__pylint-4551",
+      "items": 17,
+      "reasonSetsHash": "9b184f067027ea66",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "pylint-dev__pylint-8898",
+      "items": 17,
+      "reasonSetsHash": "480c0e8bda33e5a7",
+      "compactWouldDisagree": 6
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "pytest-dev__pytest-10051",
+      "items": 20,
+      "reasonSetsHash": "dab1f8c820068c70",
+      "compactWouldDisagree": 3
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "pytest-dev__pytest-5262",
+      "items": 15,
+      "reasonSetsHash": "e69f27ca9a6b003f",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "pytest-dev__pytest-6197",
+      "items": 11,
+      "reasonSetsHash": "dfa328f81afe6936",
+      "compactWouldDisagree": 4
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "pytest-dev__pytest-7432",
+      "items": 15,
+      "reasonSetsHash": "be4cae4c83016305",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "scikit-learn__scikit-learn-10844",
+      "items": 14,
+      "reasonSetsHash": "41d07907935e70fd",
+      "compactWouldDisagree": 1
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "scikit-learn__scikit-learn-11578",
+      "items": 17,
+      "reasonSetsHash": "c407d219aafeb0cf",
+      "compactWouldDisagree": 3
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sphinx-doc__sphinx-7462",
+      "items": 14,
+      "reasonSetsHash": "939b943fa2c29e8e",
+      "compactWouldDisagree": 4
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sphinx-doc__sphinx-7748",
+      "items": 18,
+      "reasonSetsHash": "703bb61a73621cae",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sphinx-doc__sphinx-7910",
+      "items": 17,
+      "reasonSetsHash": "7e91fec65c7505a1",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sphinx-doc__sphinx-9230",
+      "items": 21,
+      "reasonSetsHash": "96b459d5a39b8b8c",
+      "compactWouldDisagree": 2
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sphinx-doc__sphinx-9320",
+      "items": 21,
+      "reasonSetsHash": "a6ecd2e973d06d7e",
+      "compactWouldDisagree": 2
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sphinx-doc__sphinx-9698",
+      "items": 19,
+      "reasonSetsHash": "33a35a46ce0303df",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sphinx-doc__sphinx-9711",
+      "items": 14,
+      "reasonSetsHash": "b3add6d2fe4ee89e",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sympy__sympy-13372",
+      "items": 15,
+      "reasonSetsHash": "8c0b8d92b4509429",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sympy__sympy-13974",
+      "items": 19,
+      "reasonSetsHash": "9e390b32c4768c65",
+      "compactWouldDisagree": 1
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sympy__sympy-15599",
+      "items": 12,
+      "reasonSetsHash": "77152aec7d48fe4d",
+      "compactWouldDisagree": 1
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sympy__sympy-15875",
+      "items": 15,
+      "reasonSetsHash": "bcca864de62d7e6d",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sympy__sympy-16597",
+      "items": 18,
+      "reasonSetsHash": "4fa9c68455a5fdbc",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sympy__sympy-16766",
+      "items": 22,
+      "reasonSetsHash": "00e747d791dc630e",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sympy__sympy-16792",
+      "items": 19,
+      "reasonSetsHash": "d05b053c06a20e79",
+      "compactWouldDisagree": 1
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sympy__sympy-19637",
+      "items": 13,
+      "reasonSetsHash": "2d257a27ce6e5aa3",
+      "compactWouldDisagree": 1
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sympy__sympy-20801",
+      "items": 18,
+      "reasonSetsHash": "09bf43d274bdfb8a",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sympy__sympy-23413",
+      "items": 19,
+      "reasonSetsHash": "af6fdaac580c9a24",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sympy__sympy-24213",
+      "items": 19,
+      "reasonSetsHash": "1ddd8f16b256bc62",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sympy__sympy-24562",
+      "items": 16,
+      "reasonSetsHash": "aa9becbe49df2754",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "astropy__astropy-12907",
+      "items": 20,
+      "reasonSetsHash": "f26b75c879184d2e",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "astropy__astropy-13398",
+      "items": 17,
+      "reasonSetsHash": "c4f421c9e5321573",
+      "compactWouldDisagree": 5
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "astropy__astropy-14508",
+      "items": 16,
+      "reasonSetsHash": "e109b72402ac7d31",
+      "compactWouldDisagree": 1
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "astropy__astropy-14995",
+      "items": 17,
+      "reasonSetsHash": "ca75357ed6b1f111",
+      "compactWouldDisagree": 1
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "astropy__astropy-7606",
+      "items": 16,
+      "reasonSetsHash": "d67e8c39e31a61f1",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "astropy__astropy-7671",
+      "items": 19,
+      "reasonSetsHash": "f507b25c62313dc4",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "astropy__astropy-8707",
+      "items": 16,
+      "reasonSetsHash": "cfb1883b0e59f948",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "django__django-11603",
+      "items": 16,
+      "reasonSetsHash": "bb1dc80bc9d2212f",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "django__django-11880",
+      "items": 19,
+      "reasonSetsHash": "802d84d1e974bf96",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "django__django-12741",
+      "items": 20,
+      "reasonSetsHash": "7dfead855a285f28",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "django__django-14500",
+      "items": 18,
+      "reasonSetsHash": "86af588cac40aed3",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "django__django-14559",
+      "items": 18,
+      "reasonSetsHash": "32db76b6163d51d6",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "django__django-15022",
+      "items": 18,
+      "reasonSetsHash": "fec87390eb3a9be8",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "django__django-15252",
+      "items": 17,
+      "reasonSetsHash": "0fe034f98b526b92",
+      "compactWouldDisagree": 5
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "django__django-15375",
+      "items": 19,
+      "reasonSetsHash": "c8da185f41fccc60",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "django__django-15569",
+      "items": 15,
+      "reasonSetsHash": "bd856408290e7220",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "django__django-15629",
+      "items": 16,
+      "reasonSetsHash": "4a46b9587f604df0",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "django__django-16100",
+      "items": 19,
+      "reasonSetsHash": "eb87efb737e7a4b6",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "matplotlib__matplotlib-20488",
+      "items": 18,
+      "reasonSetsHash": "84a8882a9cb6621a",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "matplotlib__matplotlib-20676",
+      "items": 18,
+      "reasonSetsHash": "36687fd5db927f55",
+      "compactWouldDisagree": 2
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "matplotlib__matplotlib-22871",
+      "items": 20,
+      "reasonSetsHash": "8d4039975a645532",
+      "compactWouldDisagree": 1
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "matplotlib__matplotlib-23412",
+      "items": 19,
+      "reasonSetsHash": "dcfa4cc0f69c05fd",
+      "compactWouldDisagree": 2
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "matplotlib__matplotlib-25311",
+      "items": 15,
+      "reasonSetsHash": "784495c3b1468b85",
+      "compactWouldDisagree": 1
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "matplotlib__matplotlib-25479",
+      "items": 18,
+      "reasonSetsHash": "5a2c426ec397a63e",
+      "compactWouldDisagree": 9
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "matplotlib__matplotlib-26291",
+      "items": 19,
+      "reasonSetsHash": "d5a3e64078501765",
+      "compactWouldDisagree": 2
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "mwaskom__seaborn-3069",
+      "items": 15,
+      "reasonSetsHash": "db9f88cf8cc87ecb",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "psf__requests-1766",
+      "items": 15,
+      "reasonSetsHash": "3ec585b6eb9f03b1",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "psf__requests-2317",
+      "items": 18,
+      "reasonSetsHash": "700844af8bdeeb65",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "psf__requests-2931",
+      "items": 24,
+      "reasonSetsHash": "759420db49163491",
+      "compactWouldDisagree": 3
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "psf__requests-6028",
+      "items": 22,
+      "reasonSetsHash": "80f72cae0252687b",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pydata__xarray-3993",
+      "items": 15,
+      "reasonSetsHash": "7d77b1241d734af8",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pydata__xarray-4094",
+      "items": 16,
+      "reasonSetsHash": "954cc868a3152a1c",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pydata__xarray-6721",
+      "items": 16,
+      "reasonSetsHash": "67f06077f64c34fe",
+      "compactWouldDisagree": 13
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pydata__xarray-7229",
+      "items": 20,
+      "reasonSetsHash": "c8ed9f24dcaa4c4a",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pylint-dev__pylint-4604",
+      "items": 0,
+      "reasonSetsHash": "4f53cda18c2baa0c",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pylint-dev__pylint-4661",
+      "items": 16,
+      "reasonSetsHash": "5cc008bcef8e61cb",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pylint-dev__pylint-4970",
+      "items": 14,
+      "reasonSetsHash": "612d458253d7205d",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pylint-dev__pylint-6528",
+      "items": 20,
+      "reasonSetsHash": "77ce3be5b0f3b612",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pylint-dev__pylint-6903",
+      "items": 15,
+      "reasonSetsHash": "6a6c58be2e146ab6",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pylint-dev__pylint-7277",
+      "items": 19,
+      "reasonSetsHash": "66395353ce053aeb",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pytest-dev__pytest-10081",
+      "items": 18,
+      "reasonSetsHash": "4291235d79b78925",
+      "compactWouldDisagree": 2
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pytest-dev__pytest-10356",
+      "items": 15,
+      "reasonSetsHash": "2b11ae0c0c89a92a",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pytest-dev__pytest-5787",
+      "items": 0,
+      "reasonSetsHash": "4f53cda18c2baa0c",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pytest-dev__pytest-5840",
+      "items": 14,
+      "reasonSetsHash": "10352ffe1dbf77ea",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pytest-dev__pytest-6202",
+      "items": 22,
+      "reasonSetsHash": "27702c4d4c745aca",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pytest-dev__pytest-7205",
+      "items": 14,
+      "reasonSetsHash": "82998967559c5432",
+      "compactWouldDisagree": 10
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pytest-dev__pytest-7236",
+      "items": 17,
+      "reasonSetsHash": "f2cbed7306f0e0ac",
+      "compactWouldDisagree": 1
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pytest-dev__pytest-7324",
+      "items": 15,
+      "reasonSetsHash": "8f42d119123a8d69",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pytest-dev__pytest-7521",
+      "items": 21,
+      "reasonSetsHash": "5401f2a31e07f2e2",
+      "compactWouldDisagree": 2
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pytest-dev__pytest-7571",
+      "items": 16,
+      "reasonSetsHash": "a7f77913bd550d1f",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "scikit-learn__scikit-learn-10297",
+      "items": 19,
+      "reasonSetsHash": "b1e3f0247ec1599f",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "scikit-learn__scikit-learn-10908",
+      "items": 16,
+      "reasonSetsHash": "98a134f14845063f",
+      "compactWouldDisagree": 4
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "scikit-learn__scikit-learn-12973",
+      "items": 16,
+      "reasonSetsHash": "4ce2e8a395017cca",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "scikit-learn__scikit-learn-13135",
+      "items": 17,
+      "reasonSetsHash": "5d8c3255009de9e7",
+      "compactWouldDisagree": 6
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "scikit-learn__scikit-learn-13142",
+      "items": 16,
+      "reasonSetsHash": "734b5f9da8f2b6bc",
+      "compactWouldDisagree": 2
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "scikit-learn__scikit-learn-13328",
+      "items": 16,
+      "reasonSetsHash": "960924b36182e91e",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "scikit-learn__scikit-learn-13779",
+      "items": 17,
+      "reasonSetsHash": "a15ba1739b701f77",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "scikit-learn__scikit-learn-14053",
+      "items": 18,
+      "reasonSetsHash": "87de81d27c79a360",
+      "compactWouldDisagree": 2
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "scikit-learn__scikit-learn-14894",
+      "items": 16,
+      "reasonSetsHash": "f5fbfad45f71858c",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "scikit-learn__scikit-learn-26194",
+      "items": 23,
+      "reasonSetsHash": "75abbb1b02c67c38",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sphinx-doc__sphinx-10449",
+      "items": 15,
+      "reasonSetsHash": "4888c14ebda66354",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sphinx-doc__sphinx-10466",
+      "items": 17,
+      "reasonSetsHash": "f9ca860231b6fb9e",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sphinx-doc__sphinx-7454",
+      "items": 19,
+      "reasonSetsHash": "e2eec1b0813022f9",
+      "compactWouldDisagree": 2
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sphinx-doc__sphinx-7757",
+      "items": 18,
+      "reasonSetsHash": "8f1e4677784446a0",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sphinx-doc__sphinx-7985",
+      "items": 18,
+      "reasonSetsHash": "95ccb510eaeadae1",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sphinx-doc__sphinx-8459",
+      "items": 18,
+      "reasonSetsHash": "bdca3b1ef186a132",
+      "compactWouldDisagree": 2
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sphinx-doc__sphinx-8548",
+      "items": 16,
+      "reasonSetsHash": "fbf6be25fb617bb5",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sphinx-doc__sphinx-8595",
+      "items": 15,
+      "reasonSetsHash": "be39b27bd50683da",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sphinx-doc__sphinx-9258",
+      "items": 15,
+      "reasonSetsHash": "5f7ad3a6b38847f9",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sphinx-doc__sphinx-9602",
+      "items": 19,
+      "reasonSetsHash": "4ec90086f2f8554a",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sphinx-doc__sphinx-9658",
+      "items": 18,
+      "reasonSetsHash": "09f43ccca1f2dc8c",
+      "compactWouldDisagree": 6
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sympy__sympy-13031",
+      "items": 22,
+      "reasonSetsHash": "ad0fe9770b09ac74",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sympy__sympy-13551",
+      "items": 15,
+      "reasonSetsHash": "3633e616d69d2e57",
+      "compactWouldDisagree": 1
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sympy__sympy-13852",
+      "items": 17,
+      "reasonSetsHash": "488e81a6883fad1e",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sympy__sympy-14531",
+      "items": 23,
+      "reasonSetsHash": "4153063fa581b691",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sympy__sympy-15345",
+      "items": 15,
+      "reasonSetsHash": "29ad3260f4f1baa0",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sympy__sympy-15976",
+      "items": 22,
+      "reasonSetsHash": "7c32dc4fbf77cdb0",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sympy__sympy-16450",
+      "items": 18,
+      "reasonSetsHash": "826fea7219064881",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sympy__sympy-16886",
+      "items": 17,
+      "reasonSetsHash": "ba2b3625961a9c20",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sympy__sympy-18698",
+      "items": 20,
+      "reasonSetsHash": "03cb91a5baf2f203",
+      "compactWouldDisagree": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sympy__sympy-23824",
+      "items": 19,
+      "reasonSetsHash": "ff5fb5d923c99438",
+      "compactWouldDisagree": 2
+    }
+  ]
+}

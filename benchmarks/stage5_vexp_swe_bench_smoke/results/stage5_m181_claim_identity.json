@@ -1,0 +1,15 @@
+{
+  "milestone": "M181-D",
+  "generatedFrom": "run_stage5_m181_decision.ts",
+  "question": "§42 — did anything change that is not the reason explanation?",
+  "measuredAtDefaultBudget": {
+    "cases": 169,
+    "evidenceItemsDelivered": "162/169 identical across every budget",
+    "relatedAdmissionOrder": "163/169 identical across every budget",
+    "relatedSymbolSet": "169/169 identical",
+    "focusSymbol": "169/169 identical",
+    "serializedResponse": "148/169 identical",
+    "packet": "148/169 identical"
+  },
+  "interpretation": "`related[].how` and `focus.why` ARE the selection reason, reused verbatim by the projector. §42's `claim changes: 0` therefore cannot mean the string never moves — the repair exists to move it where two selectors disagreed. What must not move is the evidence: which symbol, which file, which lines, which roles, which form, which qualifiers, and in which order. Those are what the rows above measure."
+}

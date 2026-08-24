@@ -1,0 +1,1345 @@
+{
+  "milestone": "M181-D",
+  "candidate": "canonical_primary",
+  "generatedFrom": "run_stage5_m181_candidates.ts",
+  "method": "one frozen authoritative object per case, budget varied alone, single arm; reasons validated against the frozen object",
+  "budgets": [
+    100,
+    200,
+    400,
+    600,
+    800,
+    1000,
+    1200,
+    1600,
+    2000,
+    3200,
+    6400,
+    8000
+  ],
+  "defaultBudget": 8000,
+  "cases": 169,
+  "pairViolations": {
+    "RELATED_ITEM_LOST": 8,
+    "SEMANTIC_ROLE_CHANGED": 12
+  },
+  "pairBenign": {
+    "CLAIM_UPGRADED": 754,
+    "FOCUS_RESOLVED_TO_LEAD": 21
+  },
+  "substitutions": {
+    "total": 12,
+    "nonEquivalent": 0,
+    "ellipsisOnly": 12
+  },
+  "truthfulness": {
+    "claims": 10201,
+    "verbatim": 8270,
+    "ellipsized": 18,
+    "rolesFallback": 1913,
+    "unsupported": 0,
+    "outsideSupply": 0
+  },
+  "ownership": {
+    "budgets": 2028,
+    "serializedItemsCut": 722,
+    "projectorSupplyCut": 0
+  },
+  "totality": {
+    "deliveries": 2028,
+    "throws": 0,
+    "outsideEnvelope": 0,
+    "orientations": 1380,
+    "declines": 648
+  },
+  "packetEconomics": {
+    "basis": "orientation packets only; budgets that produce no packet are excluded and counted in `totality.declines`",
+    "deliveringBudgets": 1380,
+    "allBudgets": {
+      "count": 1380,
+      "median": 542,
+      "p90": 1306,
+      "max": 1576,
+      "mean": 642.8
+    },
+    "atDefaultBudget": {
+      "count": 167,
+      "median": 1229,
+      "p90": 1527,
+      "max": 1576,
+      "mean": 1205.2
+    },
+    "byBudget": {
+      "100": {
+        "count": 0,
+        "median": 0,
+        "p90": 0,
+        "max": 0,
+        "mean": 0
+      },
+      "200": {
+        "count": 0,
+        "median": 0,
+        "p90": 0,
+        "max": 0,
+        "mean": 0
+      },
+      "400": {
+        "count": 37,
+        "median": 184,
+        "p90": 222,
+        "max": 247,
+        "mean": 184.9
+      },
+      "600": {
+        "count": 91,
+        "median": 194,
+        "p90": 228,
+        "max": 247,
+        "mean": 195.4
+      },
+      "800": {
+        "count": 130,
+        "median": 196,
+        "p90": 236,
+        "max": 330,
+        "mean": 199.3
+      },
+      "1000": {
+        "count": 146,
+        "median": 202,
+        "p90": 247,
+        "max": 603,
+        "mean": 216.5
+      },
+      "1200": {
+        "count": 152,
+        "median": 221,
+        "p90": 555,
+        "max": 698,
+        "mean": 281.9
+      },
+      "1600": {
+        "count": 160,
+        "median": 522,
+        "p90": 841,
+        "max": 1014,
+        "mean": 507.1
+      },
+      "2000": {
+        "count": 163,
+        "median": 764,
+        "p90": 1039,
+        "max": 1221,
+        "mean": 732
+      },
+      "3200": {
+        "count": 167,
+        "median": 1026,
+        "p90": 1333,
+        "max": 1555,
+        "mean": 987.8
+      },
+      "6400": {
+        "count": 167,
+        "median": 1172,
+        "p90": 1525,
+        "max": 1576,
+        "mean": 1170.2
+      },
+      "8000": {
+        "count": 167,
+        "median": 1229,
+        "p90": 1527,
+        "max": 1576,
+        "mean": 1205.2
+      }
+    }
+  },
+  "perCase": {
+    "broad100a/astropy__astropy-14365": {
+      "itemSupplyHash": "895057f2e8bf4db4",
+      "relatedOrderHash": "406f597fda513010",
+      "defaultSerializedHash": "ccd7806ddb3caa89",
+      "defaultPacketHash": "b0436b5a5293f98c",
+      "defaultPacketTokens": 1442
+    },
+    "broad100a/astropy__astropy-14369": {
+      "itemSupplyHash": "69ba77e693906994",
+      "relatedOrderHash": "d58e79e3bbb494db",
+      "defaultSerializedHash": "97e71b93ff87321b",
+      "defaultPacketHash": "63a2252e1c86e9de",
+      "defaultPacketTokens": 1477
+    },
+    "broad100a/astropy__astropy-14598": {
+      "itemSupplyHash": "04244dde3d0a4060",
+      "relatedOrderHash": "8f9e522ac0f089a8",
+      "defaultSerializedHash": "6b35e85b9c0c0b0f",
+      "defaultPacketHash": "4c3de6638a92ae6c",
+      "defaultPacketTokens": 1347
+    },
+    "broad100a/astropy__astropy-7166": {
+      "itemSupplyHash": "fad71f780091a6a9",
+      "relatedOrderHash": "47be716f42fe952c",
+      "defaultSerializedHash": "04e6d64993861600",
+      "defaultPacketHash": "28f486090bf432a8",
+      "defaultPacketTokens": 1529
+    },
+    "broad100a/django__django-10880": {
+      "itemSupplyHash": "3c612542e7a682cb",
+      "relatedOrderHash": "af53a7638a0fc5eb",
+      "defaultSerializedHash": "b7952fdc81e8fbdf",
+      "defaultPacketHash": "2d9bc15f6ddffbae",
+      "defaultPacketTokens": 1133
+    },
+    "broad100a/django__django-10973": {
+      "itemSupplyHash": "adba22a477a636d0",
+      "relatedOrderHash": "88031d3795eef6cf",
+      "defaultSerializedHash": "2ef7142f047e0509",
+      "defaultPacketHash": "53948d3d5c0c79ed",
+      "defaultPacketTokens": 1020
+    },
+    "broad100a/django__django-11095": {
+      "itemSupplyHash": "50d0686662f8d99f",
+      "relatedOrderHash": "0f346145fa4d7d35",
+      "defaultSerializedHash": "e4f369e7e90d7210",
+      "defaultPacketHash": "b49dd3fb82776ed7",
+      "defaultPacketTokens": 488
+    },
+    "broad100a/django__django-11133": {
+      "itemSupplyHash": "0f4bb334e7fc7fca",
+      "relatedOrderHash": "93ec108d75afbd7e",
+      "defaultSerializedHash": "5192cf4adccce2ae",
+      "defaultPacketHash": "4c45f5ed5bbbf9c5",
+      "defaultPacketTokens": 1512
+    },
+    "broad100a/django__django-11206": {
+      "itemSupplyHash": "a24567f3e9db9c20",
+      "relatedOrderHash": "00ac974ff8eae3dc",
+      "defaultSerializedHash": "0b753a9ebaf99128",
+      "defaultPacketHash": "28e2f4cce2801c0d",
+      "defaultPacketTokens": 1171
+    },
+    "broad100a/django__django-11490": {
+      "itemSupplyHash": "9dbc7753a26b7b8a",
+      "relatedOrderHash": "308bf96dc30e11fb",
+      "defaultSerializedHash": "8fd8860a3a6ad306",
+      "defaultPacketHash": "d38b862dc1d7859e",
+      "defaultPacketTokens": 1455
+    },
+    "broad100a/django__django-11728": {
+      "itemSupplyHash": "409f39d97bb0cb26",
+      "relatedOrderHash": "87cc1a5df487dde7",
+      "defaultSerializedHash": "64b46c12b062eac8",
+      "defaultPacketHash": "5994632ea2259b6b",
+      "defaultPacketTokens": 992
+    },
+    "broad100a/django__django-11740": {
+      "itemSupplyHash": "11950a66c7251ae6",
+      "relatedOrderHash": "d7d22e23ace3e1b4",
+      "defaultSerializedHash": "7f9caaf8915c0369",
+      "defaultPacketHash": "ec121cc6a81bffc2",
+      "defaultPacketTokens": 1561
+    },
+    "broad100a/django__django-11749": {
+      "itemSupplyHash": "ee24014b62c57e37",
+      "relatedOrderHash": "6b2a381448c47214",
+      "defaultSerializedHash": "44266a85d02519aa",
+      "defaultPacketHash": "fb65a96163431a05",
+      "defaultPacketTokens": 1306
+    },
+    "broad100a/django__django-11815": {
+      "itemSupplyHash": "3f809e5382607f7e",
+      "relatedOrderHash": "0b52e347564cf474",
+      "defaultSerializedHash": "c59029c8cf675f5a",
+      "defaultPacketHash": "07c63aef3edd4dd4",
+      "defaultPacketTokens": 1576
+    },
+    "broad100a/django__django-11820": {
+      "itemSupplyHash": "e38bbd54fe064308",
+      "relatedOrderHash": "52e3fb26a6695456",
+      "defaultSerializedHash": "89cdd4ed2293e389",
+      "defaultPacketHash": "be70b455e8ebae58",
+      "defaultPacketTokens": 1217
+    },
+    "broad100a/django__django-12050": {
+      "itemSupplyHash": "0cf7887309e0a20e",
+      "relatedOrderHash": "41178c8fcf95eeda",
+      "defaultSerializedHash": "9ff52a9ba7416080",
+      "defaultPacketHash": "ad98927eacce1ff1",
+      "defaultPacketTokens": 1409
+    },
+    "broad100a/django__django-12273": {
+      "itemSupplyHash": "089c52e173736e87",
+      "relatedOrderHash": "70e3bc7017465aa7",
+      "defaultSerializedHash": "8dd39e6c3fc54570",
+      "defaultPacketHash": "025659d9865ee20e",
+      "defaultPacketTokens": 1064
+    },
+    "broad100a/django__django-12276": {
+      "itemSupplyHash": "176ee7cce895c07e",
+      "relatedOrderHash": "0ebea56c8a7271e8",
+      "defaultSerializedHash": "b4ae5f262f995242",
+      "defaultPacketHash": "7d58e9377ea65cb7",
+      "defaultPacketTokens": 1014
+    },
+    "broad100a/django__django-12325": {
+      "itemSupplyHash": "4e7e4cfc6f9eedd2",
+      "relatedOrderHash": "abb66141e9045947",
+      "defaultSerializedHash": "e562e949df3b635b",
+      "defaultPacketHash": "bb09200738e28372",
+      "defaultPacketTokens": 958
+    },
+    "broad100a/django__django-12774": {
+      "itemSupplyHash": "1a5b1f934ca2c95f",
+      "relatedOrderHash": "64d178735124cc66",
+      "defaultSerializedHash": "97cb970904c02171",
+      "defaultPacketHash": "21c3905848964e8c",
+      "defaultPacketTokens": 1080
+    },
+    "broad100a/django__django-12858": {
+      "itemSupplyHash": "1ac8d62f9563697a",
+      "relatedOrderHash": "e16c8c7e8008b4ce",
+      "defaultSerializedHash": "079260a055477ece",
+      "defaultPacketHash": "542741347734ae35",
+      "defaultPacketTokens": 1478
+    },
+    "broad100a/django__django-13012": {
+      "itemSupplyHash": "829d231d115c6c96",
+      "relatedOrderHash": "7e2b640fd8b66162",
+      "defaultSerializedHash": "61364b09eaa57a26",
+      "defaultPacketHash": "971f834da7409d0b",
+      "defaultPacketTokens": 1305
+    },
+    "broad100a/django__django-13112": {
+      "itemSupplyHash": "819e572072649f8e",
+      "relatedOrderHash": "d6b2cd1636bbfb00",
+      "defaultSerializedHash": "3b7a14476394e957",
+      "defaultPacketHash": "80f594f37c2beaef",
+      "defaultPacketTokens": 1369
+    },
+    "broad100a/django__django-13195": {
+      "itemSupplyHash": "d196520d4a9965d9",
+      "relatedOrderHash": "ccba1b67062665ac",
+      "defaultSerializedHash": "5b46ef40df29c691",
+      "defaultPacketHash": "c83911c65f728f58",
+      "defaultPacketTokens": 1124
+    },
+    "broad100a/django__django-13363": {
+      "itemSupplyHash": "1f2a1efaa6d13a64",
+      "relatedOrderHash": "de706c2fced5b46a",
+      "defaultSerializedHash": "9ef9603415e89913",
+      "defaultPacketHash": "ca880ff78b66ec4c",
+      "defaultPacketTokens": 1238
+    },
+    "broad100a/django__django-13512": {
+      "itemSupplyHash": "55089301d8adbb42",
+      "relatedOrderHash": "6ee1c1698da67240",
+      "defaultSerializedHash": "cc1d764d756a6bf3",
+      "defaultPacketHash": "46eeecdc8b4caf76",
+      "defaultPacketTokens": 1042
+    },
+    "broad100a/django__django-13513": {
+      "itemSupplyHash": "dd9316228ed47258",
+      "relatedOrderHash": "40facf4dc7722d79",
+      "defaultSerializedHash": "61602206e4cfe95d",
+      "defaultPacketHash": "96b90d572870a892",
+      "defaultPacketTokens": 1316
+    },
+    "broad100a/django__django-13551": {
+      "itemSupplyHash": "defa1acd6ed2af98",
+      "relatedOrderHash": "66fdc2c936053881",
+      "defaultSerializedHash": "de6a98c194cfe195",
+      "defaultPacketHash": "ce4a02224b1c9c34",
+      "defaultPacketTokens": 1257
+    },
+    "broad100a/django__django-13590": {
+      "itemSupplyHash": "549cd189cd1a30e5",
+      "relatedOrderHash": "f053ffab456a38e6",
+      "defaultSerializedHash": "a042336fba7297a9",
+      "defaultPacketHash": "5e0a6e8085535a45",
+      "defaultPacketTokens": 1140
+    },
+    "broad100a/django__django-13658": {
+      "itemSupplyHash": "41a3896ad1d11bac",
+      "relatedOrderHash": "7316caa21e82176d",
+      "defaultSerializedHash": "e4f613c7dc471043",
+      "defaultPacketHash": "7b1a162ce19d186e",
+      "defaultPacketTokens": 1003
+    },
+    "broad100a/django__django-13810": {
+      "itemSupplyHash": "f1745bf7b1793ba6",
+      "relatedOrderHash": "d64707dc30552f51",
+      "defaultSerializedHash": "d6641a732986cda9",
+      "defaultPacketHash": "aa0b19712c575b2e",
+      "defaultPacketTokens": 868
+    },
+    "broad100a/django__django-13820": {
+      "itemSupplyHash": "dd5c1169ce738139",
+      "relatedOrderHash": "cc53be789065fecb",
+      "defaultSerializedHash": "3ee4d7fadf64b3d4",
+      "defaultPacketHash": "7b1607964b0151e0",
+      "defaultPacketTokens": 1175
+    },
+    "broad100a/django__django-14608": {
+      "itemSupplyHash": "4f3ccfdbeaad153f",
+      "relatedOrderHash": "0398a0fd5065217d",
+      "defaultSerializedHash": "620bd54ed6483ff6",
+      "defaultPacketHash": "a3a57e25903ceab3",
+      "defaultPacketTokens": 1139
+    },
+    "broad100a/django__django-14792": {
+      "itemSupplyHash": "db7d97b9d8f71c02",
+      "relatedOrderHash": "5e6f4ad399d034ae",
+      "defaultSerializedHash": "aa01430e01506483",
+      "defaultPacketHash": "0961f357f07b8bad",
+      "defaultPacketTokens": 1529
+    },
+    "broad100a/django__django-15037": {
+      "itemSupplyHash": "a6c5c17abe3d8af1",
+      "relatedOrderHash": "327bd785b07a059f",
+      "defaultSerializedHash": "6f3f0546480494b6",
+      "defaultPacketHash": "d96489a9b9f7db0e",
+      "defaultPacketTokens": 1529
+    },
+    "broad100a/django__django-15503": {
+      "itemSupplyHash": "71a15111cbd5e28d",
+      "relatedOrderHash": "16dc68855c49f5d4",
+      "defaultSerializedHash": "5898bc809ffd7799",
+      "defaultPacketHash": "63f648245ddac389",
+      "defaultPacketTokens": 1065
+    },
+    "broad100a/django__django-15572": {
+      "itemSupplyHash": "9b658e705dffead0",
+      "relatedOrderHash": "4a8089b93507b238",
+      "defaultSerializedHash": "40b95d6083c0adad",
+      "defaultPacketHash": "b38dc26778a0483d",
+      "defaultPacketTokens": 1284
+    },
+    "broad100a/django__django-15695": {
+      "itemSupplyHash": "5ed567a657bf4b35",
+      "relatedOrderHash": "2bcac04c4fcf60cf",
+      "defaultSerializedHash": "07545ead94f4909d",
+      "defaultPacketHash": "055fb0b6373be587",
+      "defaultPacketTokens": 1172
+    },
+    "broad100a/django__django-15731": {
+      "itemSupplyHash": "a90bcd4453c78d42",
+      "relatedOrderHash": "66479943bd9311f1",
+      "defaultSerializedHash": "403af37bc26af1f2",
+      "defaultPacketHash": "2ba24c00e17198b1",
+      "defaultPacketTokens": 1353
+    },
+    "broad100a/django__django-16256": {
+      "itemSupplyHash": "1c72a9e55bca45bc",
+      "relatedOrderHash": "1331325cf6f6dcce",
+      "defaultSerializedHash": "ebfc554db196b895",
+      "defaultPacketHash": "5d65437368c15a2d",
+      "defaultPacketTokens": 1356
+    },
+    "broad100a/django__django-16263": {
+      "itemSupplyHash": "742260966d464e37",
+      "relatedOrderHash": "21289d3604d58f24",
+      "defaultSerializedHash": "abf14983f98e11e6",
+      "defaultPacketHash": "203f534873799acf",
+      "defaultPacketTokens": 1122
+    },
+    "broad100a/django__django-16333": {
+      "itemSupplyHash": "b4ef4a248e495cd6",
+      "relatedOrderHash": "4a9cd561e02ef91b",
+      "defaultSerializedHash": "507cd74270270920",
+      "defaultPacketHash": "1b759b192751ff2f",
+      "defaultPacketTokens": 1041
+    },
+    "broad100a/django__django-16569": {
+      "itemSupplyHash": "812a2cbbfa3d907e",
+      "relatedOrderHash": "d1f2d31d482ea053",
+      "defaultSerializedHash": "9b18dcff46bac974",
+      "defaultPacketHash": "29bfe1ab2e17d44c",
+      "defaultPacketTokens": 925
+    },
+    "broad100a/django__django-16667": {
+      "itemSupplyHash": "175de3cf897d5b06",
+      "relatedOrderHash": "971f84807d37ef1b",
+      "defaultSerializedHash": "26a837d12b67e0a9",
+      "defaultPacketHash": "fdc27fa29564a249",
+      "defaultPacketTokens": 1397
+    },
+    "broad100a/django__django-16819": {
+      "itemSupplyHash": "83f05af8915317f6",
+      "relatedOrderHash": "a595530a1d06fbba",
+      "defaultSerializedHash": "d863f233e6ca17e3",
+      "defaultPacketHash": "ec58a1ff1158774e",
+      "defaultPacketTokens": 1405
+    },
+    "broad100a/django__django-16877": {
+      "itemSupplyHash": "fd0e72a61c370e1b",
+      "relatedOrderHash": "e0a0ec7d2bb6cca2",
+      "defaultSerializedHash": "71a49ebb0b74cceb",
+      "defaultPacketHash": "8234a1b9ecb833f4",
+      "defaultPacketTokens": 897
+    },
+    "broad100a/django__django-16938": {
+      "itemSupplyHash": "e7ec22dd173994cd",
+      "relatedOrderHash": "24b9b638d176199a",
+      "defaultSerializedHash": "a18775a424b69a03",
+      "defaultPacketHash": "7c905c3e95afc758",
+      "defaultPacketTokens": 1491
+    },
+    "broad100a/django__django-17084": {
+      "itemSupplyHash": "33cbaa4c4fd2d50e",
+      "relatedOrderHash": "9de33dc68d1b08f8",
+      "defaultSerializedHash": "46c11d1fed2ac361",
+      "defaultPacketHash": "e2cd01206516e920",
+      "defaultPacketTokens": 997
+    },
+    "broad100a/matplotlib__matplotlib-22719": {
+      "itemSupplyHash": "e5a98356c3de901f",
+      "relatedOrderHash": "cb221da9cbd0de51",
+      "defaultSerializedHash": "f892339f90a5ca69",
+      "defaultPacketHash": "8447f5200b62ce42",
+      "defaultPacketTokens": 1269
+    },
+    "broad100a/matplotlib__matplotlib-24627": {
+      "itemSupplyHash": "9948e19002049875",
+      "relatedOrderHash": "e74229eff60205f3",
+      "defaultSerializedHash": "f684aa80e4a9d56c",
+      "defaultPacketHash": "1ae5a1b85c58f7e4",
+      "defaultPacketTokens": 1377
+    },
+    "broad100a/matplotlib__matplotlib-24870": {
+      "itemSupplyHash": "30cdc4ef950a4e85",
+      "relatedOrderHash": "02008effc556de82",
+      "defaultSerializedHash": "a5b5cfb882c9c333",
+      "defaultPacketHash": "44b924e1208bb4e7",
+      "defaultPacketTokens": 1335
+    },
+    "broad100a/matplotlib__matplotlib-24970": {
+      "itemSupplyHash": "14f9a03cffeb3ce7",
+      "relatedOrderHash": "2b9a8611ebcd0377",
+      "defaultSerializedHash": "5008011cb162a5d3",
+      "defaultPacketHash": "835254f90212bf2a",
+      "defaultPacketTokens": 1163
+    },
+    "broad100a/matplotlib__matplotlib-25332": {
+      "itemSupplyHash": "88bdc5f11fa4886c",
+      "relatedOrderHash": "81acee74d2c39f36",
+      "defaultSerializedHash": "9e1c0de608f57a2e",
+      "defaultPacketHash": "0c342448cb208084",
+      "defaultPacketTokens": 1359
+    },
+    "broad100a/matplotlib__matplotlib-25960": {
+      "itemSupplyHash": "88c581ace891364e",
+      "relatedOrderHash": "371591806774124d",
+      "defaultSerializedHash": "82b0771a83819d86",
+      "defaultPacketHash": "efa0c9684cca965d",
+      "defaultPacketTokens": 1225
+    },
+    "broad100a/matplotlib__matplotlib-26466": {
+      "itemSupplyHash": "e84a9448d951cf56",
+      "relatedOrderHash": "1bd76e30bb100ac3",
+      "defaultSerializedHash": "5f8450b0f8b8a8c3",
+      "defaultPacketHash": "2258afa7893dfc0f",
+      "defaultPacketTokens": 1500
+    },
+    "broad100a/mwaskom__seaborn-3187": {
+      "itemSupplyHash": "d91eeae17cf89d5c",
+      "relatedOrderHash": "1ccbf3c2bec5d2ba",
+      "defaultSerializedHash": "0a841bf7607a7259",
+      "defaultPacketHash": "afd39cd65ff1ed31",
+      "defaultPacketTokens": 1529
+    },
+    "broad100a/pallets__flask-5014": {
+      "itemSupplyHash": "bd3a51fccc39251f",
+      "relatedOrderHash": "0b0096e5990c2d64",
+      "defaultSerializedHash": "f599d445f1344156",
+      "defaultPacketHash": "75c87344e59ff5d2",
+      "defaultPacketTokens": 885
+    },
+    "broad100a/psf__requests-1142": {
+      "itemSupplyHash": "458a65df848aaa19",
+      "relatedOrderHash": "b4bab6e4c3e2611c",
+      "defaultSerializedHash": "6b490de49b390a5b",
+      "defaultPacketHash": "987067377cf585e7",
+      "defaultPacketTokens": 1218
+    },
+    "broad100a/psf__requests-1724": {
+      "itemSupplyHash": "992143c21d83ad62",
+      "relatedOrderHash": "64421608691de7de",
+      "defaultSerializedHash": "8d55be506e56bfa2",
+      "defaultPacketHash": "9223087db565d284",
+      "defaultPacketTokens": 1548
+    },
+    "broad100a/psf__requests-1921": {
+      "itemSupplyHash": "036e6050a4bf51f1",
+      "relatedOrderHash": "2c68ccf693ad0325",
+      "defaultSerializedHash": "89d2ac47e142b466",
+      "defaultPacketHash": "3f7df1840e3ee759",
+      "defaultPacketTokens": 1489
+    },
+    "broad100a/psf__requests-5414": {
+      "itemSupplyHash": "c2848022a71df0de",
+      "relatedOrderHash": "81375c47f7d07179",
+      "defaultSerializedHash": "77ba45c4ff886883",
+      "defaultPacketHash": "1bb782441ce36cce",
+      "defaultPacketTokens": 1339
+    },
+    "broad100a/pylint-dev__pylint-4551": {
+      "itemSupplyHash": "deac7215d9d49717",
+      "relatedOrderHash": "4b2885b00b16646f",
+      "defaultSerializedHash": "6d1d2ad02e9aa84f",
+      "defaultPacketHash": "20b30aec5edaf269",
+      "defaultPacketTokens": 1077
+    },
+    "broad100a/pylint-dev__pylint-8898": {
+      "itemSupplyHash": "a907bc64fe2b7964",
+      "relatedOrderHash": "f18fdc9388ed1b52",
+      "defaultSerializedHash": "9a722dcf636f1322",
+      "defaultPacketHash": "a55c694b2cf1d8a9",
+      "defaultPacketTokens": 1138
+    },
+    "broad100a/pytest-dev__pytest-10051": {
+      "itemSupplyHash": "f010d7a5ab61fa0c",
+      "relatedOrderHash": "192e0c9f08a89dd7",
+      "defaultSerializedHash": "91f96cf7172bb999",
+      "defaultPacketHash": "8b1d23a9f04bd505",
+      "defaultPacketTokens": 1081
+    },
+    "broad100a/pytest-dev__pytest-5262": {
+      "itemSupplyHash": "a979c84a245124d6",
+      "relatedOrderHash": "c9f1a02380bd155a",
+      "defaultSerializedHash": "a0147f2f2732f697",
+      "defaultPacketHash": "480cdbbf81bd451c",
+      "defaultPacketTokens": 911
+    },
+    "broad100a/pytest-dev__pytest-6197": {
+      "itemSupplyHash": "27bc04ce737fd9be",
+      "relatedOrderHash": "01301769f9e35e6b",
+      "defaultSerializedHash": "d78f4b139f63b2ba",
+      "defaultPacketHash": "662bab5f90616099",
+      "defaultPacketTokens": 934
+    },
+    "broad100a/pytest-dev__pytest-7432": {
+      "itemSupplyHash": "32e0efb0534c8369",
+      "relatedOrderHash": "626ea04a46654bf3",
+      "defaultSerializedHash": "ef7a3de0fbf7f200",
+      "defaultPacketHash": "ef7e791514b092d3",
+      "defaultPacketTokens": 946
+    },
+    "broad100a/scikit-learn__scikit-learn-10844": {
+      "itemSupplyHash": "59ad3c92544e1f9f",
+      "relatedOrderHash": "16d109a4eb919f05",
+      "defaultSerializedHash": "13db60a54f0fc6b6",
+      "defaultPacketHash": "a1ff922f6a0a4823",
+      "defaultPacketTokens": 1292
+    },
+    "broad100a/scikit-learn__scikit-learn-11578": {
+      "itemSupplyHash": "337434fc98e370dc",
+      "relatedOrderHash": "857ecbd826f36179",
+      "defaultSerializedHash": "7daf3ea222561b87",
+      "defaultPacketHash": "1254c3105cec8722",
+      "defaultPacketTokens": 1425
+    },
+    "broad100a/sphinx-doc__sphinx-7462": {
+      "itemSupplyHash": "1f29218ed26e8bb2",
+      "relatedOrderHash": "9bfce35746c95717",
+      "defaultSerializedHash": "babf60df9c9f5b5b",
+      "defaultPacketHash": "76a3dce09213b2c8",
+      "defaultPacketTokens": 1196
+    },
+    "broad100a/sphinx-doc__sphinx-7748": {
+      "itemSupplyHash": "a06bfbbe41c8f5cd",
+      "relatedOrderHash": "9abf414ad6e9d8f0",
+      "defaultSerializedHash": "7244f82bd2acfb9f",
+      "defaultPacketHash": "93d484187a1bc0bb",
+      "defaultPacketTokens": 924
+    },
+    "broad100a/sphinx-doc__sphinx-7910": {
+      "itemSupplyHash": "0cea5e8090aecb0c",
+      "relatedOrderHash": "707cefa17adbdbf3",
+      "defaultSerializedHash": "cbc0fbbf9b68d712",
+      "defaultPacketHash": "c8e3709552eae7af",
+      "defaultPacketTokens": 1232
+    },
+    "broad100a/sphinx-doc__sphinx-9230": {
+      "itemSupplyHash": "b881c54750bf6365",
+      "relatedOrderHash": "71616793015dc7a8",
+      "defaultSerializedHash": "a6fe7c326723aa59",
+      "defaultPacketHash": "f90a8b808d93f5a5",
+      "defaultPacketTokens": 1313
+    },
+    "broad100a/sphinx-doc__sphinx-9320": {
+      "itemSupplyHash": "93b9c0908ee32210",
+      "relatedOrderHash": "a67c4de9a2dd4b81",
+      "defaultSerializedHash": "ee39a58ae653d9b1",
+      "defaultPacketHash": "afd0d87f24a5369d",
+      "defaultPacketTokens": 1547
+    },
+    "broad100a/sphinx-doc__sphinx-9698": {
+      "itemSupplyHash": "6231717e848f0aee",
+      "relatedOrderHash": "308a46f7279052f3",
+      "defaultSerializedHash": "d610568c804c014c",
+      "defaultPacketHash": "764e1a2e9beedf50",
+      "defaultPacketTokens": 1068
+    },
+    "broad100a/sphinx-doc__sphinx-9711": {
+      "itemSupplyHash": "dd9a4016d1cda061",
+      "relatedOrderHash": "d57ba89e332c497c",
+      "defaultSerializedHash": "1cf901c718192eee",
+      "defaultPacketHash": "f07716c1af2e33bf",
+      "defaultPacketTokens": 498
+    },
+    "broad100a/sympy__sympy-13372": {
+      "itemSupplyHash": "4c6d345bf6b62645",
+      "relatedOrderHash": "19556304cc0b38cc",
+      "defaultSerializedHash": "e631860b288ffe78",
+      "defaultPacketHash": "9a1820fa65d369cd",
+      "defaultPacketTokens": 1300
+    },
+    "broad100a/sympy__sympy-13974": {
+      "itemSupplyHash": "3dfa7d1a8d72c66f",
+      "relatedOrderHash": "3a567fe363eb373e",
+      "defaultSerializedHash": "ea3b5d1236b59dd9",
+      "defaultPacketHash": "5773263545d63999",
+      "defaultPacketTokens": 1542
+    },
+    "broad100a/sympy__sympy-15599": {
+      "itemSupplyHash": "462488ebe9a4ccf3",
+      "relatedOrderHash": "ee599922339756f4",
+      "defaultSerializedHash": "2f761106037d6527",
+      "defaultPacketHash": "cd51705c3bcb56bb",
+      "defaultPacketTokens": 1077
+    },
+    "broad100a/sympy__sympy-15875": {
+      "itemSupplyHash": "900b5c69b98defc7",
+      "relatedOrderHash": "e5857b6a7ed85932",
+      "defaultSerializedHash": "19685f101f474b8a",
+      "defaultPacketHash": "566469cad82e6ca9",
+      "defaultPacketTokens": 952
+    },
+    "broad100a/sympy__sympy-16597": {
+      "itemSupplyHash": "8582ea074b70cde8",
+      "relatedOrderHash": "53c5022f893ca42c",
+      "defaultSerializedHash": "7fe7893a59d6a3bb",
+      "defaultPacketHash": "4a972c07d55805d8",
+      "defaultPacketTokens": 1092
+    },
+    "broad100a/sympy__sympy-16766": {
+      "itemSupplyHash": "47d65d61bcdd9e3c",
+      "relatedOrderHash": "7c4329c703ffd517",
+      "defaultSerializedHash": "8831c586d84dadbd",
+      "defaultPacketHash": "6261d59aebeddeed",
+      "defaultPacketTokens": 1251
+    },
+    "broad100a/sympy__sympy-16792": {
+      "itemSupplyHash": "7e0cd78003c9294e",
+      "relatedOrderHash": "b1f844f6a3fdac73",
+      "defaultSerializedHash": "4074c982c846079b",
+      "defaultPacketHash": "a5777e9c23721971",
+      "defaultPacketTokens": 1477
+    },
+    "broad100a/sympy__sympy-19637": {
+      "itemSupplyHash": "dee52973d473d0fa",
+      "relatedOrderHash": "4b63faae34566719",
+      "defaultSerializedHash": "77d827c001bae1fa",
+      "defaultPacketHash": "09d04dec5d600872",
+      "defaultPacketTokens": 1244
+    },
+    "broad100a/sympy__sympy-20801": {
+      "itemSupplyHash": "8576ff280255698b",
+      "relatedOrderHash": "f375a4a68d5347f0",
+      "defaultSerializedHash": "414bfe032b75c950",
+      "defaultPacketHash": "779fa4222acb28e7",
+      "defaultPacketTokens": 1255
+    },
+    "broad100a/sympy__sympy-23413": {
+      "itemSupplyHash": "b65040b87394233f",
+      "relatedOrderHash": "9dfe2941bed905fa",
+      "defaultSerializedHash": "5a555403ba4b8a7c",
+      "defaultPacketHash": "46ecdddf06ce2ab1",
+      "defaultPacketTokens": 1527
+    },
+    "broad100a/sympy__sympy-24213": {
+      "itemSupplyHash": "2eb7af1568051c34",
+      "relatedOrderHash": "250a10055eb1c969",
+      "defaultSerializedHash": "20c07c5ed8e5c216",
+      "defaultPacketHash": "5a4e71a2068df2de",
+      "defaultPacketTokens": 1527
+    },
+    "broad100a/sympy__sympy-24562": {
+      "itemSupplyHash": "e4e0506094d48cc2",
+      "relatedOrderHash": "9b1e007bfdea754c",
+      "defaultSerializedHash": "6223fa822dd9b690",
+      "defaultPacketHash": "764c8c1f21c9cbc8",
+      "defaultPacketTokens": 1402
+    },
+    "broad100b/astropy__astropy-12907": {
+      "itemSupplyHash": "c19d6a7576b7f539",
+      "relatedOrderHash": "913410c3c356c44b",
+      "defaultSerializedHash": "2915db6f3ed9706d",
+      "defaultPacketHash": "496c05e31e9e5148",
+      "defaultPacketTokens": 1525
+    },
+    "broad100b/astropy__astropy-13398": {
+      "itemSupplyHash": "ea8c03899b622e61",
+      "relatedOrderHash": "1f211d05326a4962",
+      "defaultSerializedHash": "fe1c53ccb509358c",
+      "defaultPacketHash": "6f071d4f05bf426d",
+      "defaultPacketTokens": 1538
+    },
+    "broad100b/astropy__astropy-14508": {
+      "itemSupplyHash": "88c39798e64c0593",
+      "relatedOrderHash": "d24b7a7bbc5a737e",
+      "defaultSerializedHash": "4db897d83332bdc7",
+      "defaultPacketHash": "dbc051e1919e931b",
+      "defaultPacketTokens": 1051
+    },
+    "broad100b/astropy__astropy-14995": {
+      "itemSupplyHash": "9277461c011b9676",
+      "relatedOrderHash": "86d52338be009cbe",
+      "defaultSerializedHash": "07d9b2abc0383a14",
+      "defaultPacketHash": "9988f375899cf111",
+      "defaultPacketTokens": 987
+    },
+    "broad100b/astropy__astropy-7606": {
+      "itemSupplyHash": "ad0eb6bef41e9774",
+      "relatedOrderHash": "c9d6c75ce53a669f",
+      "defaultSerializedHash": "3dd56f1a1385b500",
+      "defaultPacketHash": "508a1792de12368b",
+      "defaultPacketTokens": 1370
+    },
+    "broad100b/astropy__astropy-7671": {
+      "itemSupplyHash": "12b9fe37a308fdfc",
+      "relatedOrderHash": "84bc288c2494dae5",
+      "defaultSerializedHash": "a78b01a5c604ac62",
+      "defaultPacketHash": "9493add59d0fe48c",
+      "defaultPacketTokens": 1331
+    },
+    "broad100b/astropy__astropy-8707": {
+      "itemSupplyHash": "0926d5b5cab103e7",
+      "relatedOrderHash": "bef5ec02c07cd437",
+      "defaultSerializedHash": "1fecde876a961942",
+      "defaultPacketHash": "28059616e835d9c1",
+      "defaultPacketTokens": 1315
+    },
+    "broad100b/django__django-11603": {
+      "itemSupplyHash": "cd996f38dc7f6d30",
+      "relatedOrderHash": "c5c6d4b3adffab63",
+      "defaultSerializedHash": "fbaf6892d66db4cb",
+      "defaultPacketHash": "04155af2920f23d9",
+      "defaultPacketTokens": 994
+    },
+    "broad100b/django__django-11880": {
+      "itemSupplyHash": "0699bdd913968d6a",
+      "relatedOrderHash": "71b24d78d5f5267f",
+      "defaultSerializedHash": "abba2351a4248c16",
+      "defaultPacketHash": "60d9c0f551eb384f",
+      "defaultPacketTokens": 1123
+    },
+    "broad100b/django__django-12741": {
+      "itemSupplyHash": "3a389b870da9d236",
+      "relatedOrderHash": "331669f157d26b67",
+      "defaultSerializedHash": "5d1f524ddd5211b1",
+      "defaultPacketHash": "c823286168b79fa1",
+      "defaultPacketTokens": 1323
+    },
+    "broad100b/django__django-14500": {
+      "itemSupplyHash": "4e1c53f727e402b0",
+      "relatedOrderHash": "b3457bc52a25eacf",
+      "defaultSerializedHash": "93dc279ec6989a36",
+      "defaultPacketHash": "ca9ef70752b04d91",
+      "defaultPacketTokens": 1296
+    },
+    "broad100b/django__django-14559": {
+      "itemSupplyHash": "4c3f931c4163e216",
+      "relatedOrderHash": "83357e614fe0195c",
+      "defaultSerializedHash": "e82e99337e8a32bd",
+      "defaultPacketHash": "551c1e9f2cf77d70",
+      "defaultPacketTokens": 1552
+    },
+    "broad100b/django__django-15022": {
+      "itemSupplyHash": "5809d07311cb07a1",
+      "relatedOrderHash": "eafd1b2178e20c9c",
+      "defaultSerializedHash": "45c28ab463e63287",
+      "defaultPacketHash": "c01a5d7d718d2c1f",
+      "defaultPacketTokens": 1118
+    },
+    "broad100b/django__django-15252": {
+      "itemSupplyHash": "81a1723d58203928",
+      "relatedOrderHash": "18d4dcf60bc4173f",
+      "defaultSerializedHash": "707ef66a09ad0385",
+      "defaultPacketHash": "4cc5b0d712c713ea",
+      "defaultPacketTokens": 1135
+    },
+    "broad100b/django__django-15375": {
+      "itemSupplyHash": "b465082d67aa40e8",
+      "relatedOrderHash": "8e2505ed0a1c53e8",
+      "defaultSerializedHash": "a4d65a1d03f67be7",
+      "defaultPacketHash": "2efaf6dbd600ef62",
+      "defaultPacketTokens": 1201
+    },
+    "broad100b/django__django-15569": {
+      "itemSupplyHash": "7ea87b842a8fa7f0",
+      "relatedOrderHash": "de25473e87cf70b9",
+      "defaultSerializedHash": "57b801f3d97b2a8a",
+      "defaultPacketHash": "395995cf1433b146",
+      "defaultPacketTokens": 1026
+    },
+    "broad100b/django__django-15629": {
+      "itemSupplyHash": "7febdfc217b4584a",
+      "relatedOrderHash": "3e32d680af41e2d6",
+      "defaultSerializedHash": "a7390a959dc94492",
+      "defaultPacketHash": "4322312908bebdf6",
+      "defaultPacketTokens": 1076
+    },
+    "broad100b/django__django-16100": {
+      "itemSupplyHash": "61b0098dbd631181",
+      "relatedOrderHash": "194fee5f8fe94ac0",
+      "defaultSerializedHash": "c45b414be92a9a5f",
+      "defaultPacketHash": "bb26ee4e0b95a599",
+      "defaultPacketTokens": 1282
+    },
+    "broad100b/matplotlib__matplotlib-20488": {
+      "itemSupplyHash": "5ce845288355e5eb",
+      "relatedOrderHash": "25a664d26f64c2da",
+      "defaultSerializedHash": "55a8877fdd52ec43",
+      "defaultPacketHash": "d9b9c1bca2d938ee",
+      "defaultPacketTokens": 1161
+    },
+    "broad100b/matplotlib__matplotlib-20676": {
+      "itemSupplyHash": "370e0ff9321c4d9e",
+      "relatedOrderHash": "037fe7a592718520",
+      "defaultSerializedHash": "5202fb4b601511c3",
+      "defaultPacketHash": "3e0ca7845ecfec00",
+      "defaultPacketTokens": 1406
+    },
+    "broad100b/matplotlib__matplotlib-22871": {
+      "itemSupplyHash": "226b12ee893f532b",
+      "relatedOrderHash": "a5083c41b9f9700e",
+      "defaultSerializedHash": "1856d2944c4b7f40",
+      "defaultPacketHash": "ed39a59953456f7e",
+      "defaultPacketTokens": 1529
+    },
+    "broad100b/matplotlib__matplotlib-23412": {
+      "itemSupplyHash": "7085b78588882e3a",
+      "relatedOrderHash": "6562e0d2a265ba64",
+      "defaultSerializedHash": "5ba491503c146084",
+      "defaultPacketHash": "765e750c4bc00fd6",
+      "defaultPacketTokens": 1139
+    },
+    "broad100b/matplotlib__matplotlib-25311": {
+      "itemSupplyHash": "60e04f2193b049b8",
+      "relatedOrderHash": "2dcd458706fde6c2",
+      "defaultSerializedHash": "7b2cc1fff822b5c0",
+      "defaultPacketHash": "9780f33305db7a04",
+      "defaultPacketTokens": 1342
+    },
+    "broad100b/matplotlib__matplotlib-25479": {
+      "itemSupplyHash": "ce3f78020ce670a1",
+      "relatedOrderHash": "ecac185d99e032b4",
+      "defaultSerializedHash": "66c9a802bd6b706b",
+      "defaultPacketHash": "0cc5fc809513614a",
+      "defaultPacketTokens": 1298
+    },
+    "broad100b/matplotlib__matplotlib-26291": {
+      "itemSupplyHash": "5e8a91b8680ed93e",
+      "relatedOrderHash": "a64e1e8924b9fddb",
+      "defaultSerializedHash": "ceaa65571070c6ac",
+      "defaultPacketHash": "3f2df43ee015516b",
+      "defaultPacketTokens": 1354
+    },
+    "broad100b/mwaskom__seaborn-3069": {
+      "itemSupplyHash": "7061e2657e00639f",
+      "relatedOrderHash": "48b9f3eed9d6c35d",
+      "defaultSerializedHash": "bd95ed5c8e0def4f",
+      "defaultPacketHash": "98824b597b9bd640",
+      "defaultPacketTokens": 736
+    },
+    "broad100b/psf__requests-1766": {
+      "itemSupplyHash": "4577b7a528fb83fd",
+      "relatedOrderHash": "3dc685dfdc7d29dd",
+      "defaultSerializedHash": "68e159d62d433c78",
+      "defaultPacketHash": "c29aa3e5bb0b0536",
+      "defaultPacketTokens": 893
+    },
+    "broad100b/psf__requests-2317": {
+      "itemSupplyHash": "22646b5f740c5cee",
+      "relatedOrderHash": "d767f1c0e9ef001e",
+      "defaultSerializedHash": "b0c3f98571a5f283",
+      "defaultPacketHash": "ca1cbffae75f1a38",
+      "defaultPacketTokens": 1292
+    },
+    "broad100b/psf__requests-2931": {
+      "itemSupplyHash": "90e659d77efe6a9e",
+      "relatedOrderHash": "6d20847a9b9e9432",
+      "defaultSerializedHash": "77508c4f6e606227",
+      "defaultPacketHash": "6ad5466e3655b543",
+      "defaultPacketTokens": 1346
+    },
+    "broad100b/psf__requests-6028": {
+      "itemSupplyHash": "b4d34e6a0bfa670c",
+      "relatedOrderHash": "2fb50121a227e278",
+      "defaultSerializedHash": "99649fb149fc5dfd",
+      "defaultPacketHash": "9e0ed23b9f396b2f",
+      "defaultPacketTokens": 1547
+    },
+    "broad100b/pydata__xarray-3993": {
+      "itemSupplyHash": "52e913ee1774e74e",
+      "relatedOrderHash": "eeee3671c101e67e",
+      "defaultSerializedHash": "605fc4a916345fef",
+      "defaultPacketHash": "15478e3f3c095da7",
+      "defaultPacketTokens": 1363
+    },
+    "broad100b/pydata__xarray-4094": {
+      "itemSupplyHash": "02cea4ca3c173fbc",
+      "relatedOrderHash": "35414ffe80ccf8a0",
+      "defaultSerializedHash": "22f242bc5cc9790b",
+      "defaultPacketHash": "f8dbbcd517637505",
+      "defaultPacketTokens": 1367
+    },
+    "broad100b/pydata__xarray-6721": {
+      "itemSupplyHash": "4e78cc658ef9fce2",
+      "relatedOrderHash": "ac98c506b4f2f1f5",
+      "defaultSerializedHash": "7be67cd4ef1744e0",
+      "defaultPacketHash": "fdac8e5fc830d0d4",
+      "defaultPacketTokens": 985
+    },
+    "broad100b/pydata__xarray-7229": {
+      "itemSupplyHash": "9ec6d8dc84444f35",
+      "relatedOrderHash": "24fb5d8f128c8f70",
+      "defaultSerializedHash": "da4f79a2924d9ed0",
+      "defaultPacketHash": "c3fe5f841e2af2d0",
+      "defaultPacketTokens": 1210
+    },
+    "broad100b/pylint-dev__pylint-4604": {
+      "itemSupplyHash": "dcb86bee69584237",
+      "relatedOrderHash": "dcb86bee69584237",
+      "defaultSerializedHash": "bd4c3e0ea40e1214",
+      "defaultPacketHash": "12ae32cb1ec02d01",
+      "defaultPacketTokens": 0
+    },
+    "broad100b/pylint-dev__pylint-4661": {
+      "itemSupplyHash": "ee0841f54fda0566",
+      "relatedOrderHash": "13f6a01545248dab",
+      "defaultSerializedHash": "a4ad2035c5a3edcf",
+      "defaultPacketHash": "7fd87f54c0a72376",
+      "defaultPacketTokens": 392
+    },
+    "broad100b/pylint-dev__pylint-4970": {
+      "itemSupplyHash": "d2a8541e72cc8347",
+      "relatedOrderHash": "54f06197337ca0b3",
+      "defaultSerializedHash": "374ad2e27589061f",
+      "defaultPacketHash": "1b63eedbe72baa99",
+      "defaultPacketTokens": 1047
+    },
+    "broad100b/pylint-dev__pylint-6528": {
+      "itemSupplyHash": "3ce40dd4f8d9844f",
+      "relatedOrderHash": "69eda24e43f0d906",
+      "defaultSerializedHash": "2001f07760e49112",
+      "defaultPacketHash": "16cb3bad19614dc6",
+      "defaultPacketTokens": 1347
+    },
+    "broad100b/pylint-dev__pylint-6903": {
+      "itemSupplyHash": "e6e184249b4e92dc",
+      "relatedOrderHash": "25223eb7e3df8555",
+      "defaultSerializedHash": "62411faa97977726",
+      "defaultPacketHash": "5e3903ec62ba161a",
+      "defaultPacketTokens": 769
+    },
+    "broad100b/pylint-dev__pylint-7277": {
+      "itemSupplyHash": "f3c972b7cbc8e1fb",
+      "relatedOrderHash": "e524b32592452530",
+      "defaultSerializedHash": "71ee3b29dfafc150",
+      "defaultPacketHash": "456ad47822f44776",
+      "defaultPacketTokens": 567
+    },
+    "broad100b/pytest-dev__pytest-10081": {
+      "itemSupplyHash": "0625edde3c5da01d",
+      "relatedOrderHash": "64d688e76e5b0b6e",
+      "defaultSerializedHash": "5b95bfa45742024e",
+      "defaultPacketHash": "41f0416a5c65aed1",
+      "defaultPacketTokens": 1112
+    },
+    "broad100b/pytest-dev__pytest-10356": {
+      "itemSupplyHash": "dc86d46633c21589",
+      "relatedOrderHash": "122c09575ffccb01",
+      "defaultSerializedHash": "5197ff970d2337f9",
+      "defaultPacketHash": "af151f185406ebe4",
+      "defaultPacketTokens": 852
+    },
+    "broad100b/pytest-dev__pytest-5787": {
+      "itemSupplyHash": "dcb86bee69584237",
+      "relatedOrderHash": "dcb86bee69584237",
+      "defaultSerializedHash": "41f0820db51eba3d",
+      "defaultPacketHash": "12ae32cb1ec02d01",
+      "defaultPacketTokens": 0
+    },
+    "broad100b/pytest-dev__pytest-5840": {
+      "itemSupplyHash": "06f8281f682f8c0f",
+      "relatedOrderHash": "d20909c261c50f86",
+      "defaultSerializedHash": "8df5c1c846b2fe26",
+      "defaultPacketHash": "ae557c0b870681a7",
+      "defaultPacketTokens": 1225
+    },
+    "broad100b/pytest-dev__pytest-6202": {
+      "itemSupplyHash": "450e1263b73a0d72",
+      "relatedOrderHash": "3a850823b99366dd",
+      "defaultSerializedHash": "f3b6a19619b04fbb",
+      "defaultPacketHash": "e950a0e182963fa6",
+      "defaultPacketTokens": 1560
+    },
+    "broad100b/pytest-dev__pytest-7205": {
+      "itemSupplyHash": "971ee5103e7212cb",
+      "relatedOrderHash": "96690b38c8fb0469",
+      "defaultSerializedHash": "1dfd77e2ff462734",
+      "defaultPacketHash": "8bc1da2ad9d5f32b",
+      "defaultPacketTokens": 727
+    },
+    "broad100b/pytest-dev__pytest-7236": {
+      "itemSupplyHash": "e08763d6c486c1d1",
+      "relatedOrderHash": "9666d6bd7811e793",
+      "defaultSerializedHash": "d379dfe2758ab1dc",
+      "defaultPacketHash": "07ac08ce94ede336",
+      "defaultPacketTokens": 1167
+    },
+    "broad100b/pytest-dev__pytest-7324": {
+      "itemSupplyHash": "7249c34f8920a44d",
+      "relatedOrderHash": "588fa87efc03529d",
+      "defaultSerializedHash": "a396920bb46a735d",
+      "defaultPacketHash": "1f0ea2e30e9cc9e2",
+      "defaultPacketTokens": 874
+    },
+    "broad100b/pytest-dev__pytest-7521": {
+      "itemSupplyHash": "9d2de2ab349da56e",
+      "relatedOrderHash": "3cb6d377852284fd",
+      "defaultSerializedHash": "17b4c54cb709f7a8",
+      "defaultPacketHash": "106911b46baaee88",
+      "defaultPacketTokens": 1569
+    },
+    "broad100b/pytest-dev__pytest-7571": {
+      "itemSupplyHash": "f041620d3758d9f7",
+      "relatedOrderHash": "b74e2cf7f812fc5f",
+      "defaultSerializedHash": "5b04ea9011594337",
+      "defaultPacketHash": "c9835d14729760cb",
+      "defaultPacketTokens": 1103
+    },
+    "broad100b/scikit-learn__scikit-learn-10297": {
+      "itemSupplyHash": "cfe32856ccedd307",
+      "relatedOrderHash": "32b9b54917745d41",
+      "defaultSerializedHash": "1ebb15d611cd170c",
+      "defaultPacketHash": "9379c910b4683e11",
+      "defaultPacketTokens": 1113
+    },
+    "broad100b/scikit-learn__scikit-learn-10908": {
+      "itemSupplyHash": "437ee0e72ec1242e",
+      "relatedOrderHash": "fda62492a03e3f07",
+      "defaultSerializedHash": "fb20f31684813b38",
+      "defaultPacketHash": "970c002b72ec8630",
+      "defaultPacketTokens": 1229
+    },
+    "broad100b/scikit-learn__scikit-learn-12973": {
+      "itemSupplyHash": "5dc8d53285e45524",
+      "relatedOrderHash": "596aceee369dc358",
+      "defaultSerializedHash": "d7ea4b32b135e955",
+      "defaultPacketHash": "3a23362affe1a452",
+      "defaultPacketTokens": 963
+    },
+    "broad100b/scikit-learn__scikit-learn-13135": {
+      "itemSupplyHash": "01e274b9871415aa",
+      "relatedOrderHash": "1311826a6f2cfdfa",
+      "defaultSerializedHash": "ae19eb296a968026",
+      "defaultPacketHash": "138221b4a71ae364",
+      "defaultPacketTokens": 1419
+    },
+    "broad100b/scikit-learn__scikit-learn-13142": {
+      "itemSupplyHash": "476a354e1b044f07",
+      "relatedOrderHash": "24f383592c2e8f6b",
+      "defaultSerializedHash": "f7178e22c4b6bba7",
+      "defaultPacketHash": "6fb9f459ab8263fc",
+      "defaultPacketTokens": 930
+    },
+    "broad100b/scikit-learn__scikit-learn-13328": {
+      "itemSupplyHash": "576c688216a77dbc",
+      "relatedOrderHash": "a78ad6f4508d5256",
+      "defaultSerializedHash": "be5fffd7b0f077e9",
+      "defaultPacketHash": "649bb31f3918e25f",
+      "defaultPacketTokens": 1284
+    },
+    "broad100b/scikit-learn__scikit-learn-13779": {
+      "itemSupplyHash": "b1ef966255285472",
+      "relatedOrderHash": "910d032a8c804096",
+      "defaultSerializedHash": "a093560c7b078eff",
+      "defaultPacketHash": "b31c2a3f37ae5209",
+      "defaultPacketTokens": 940
+    },
+    "broad100b/scikit-learn__scikit-learn-14053": {
+      "itemSupplyHash": "fe40870fa9ee3339",
+      "relatedOrderHash": "77f1b66c117e45ab",
+      "defaultSerializedHash": "3a5759650f223d83",
+      "defaultPacketHash": "0486347ca036ea3a",
+      "defaultPacketTokens": 835
+    },
+    "broad100b/scikit-learn__scikit-learn-14894": {
+      "itemSupplyHash": "549e19858b31076d",
+      "relatedOrderHash": "5b8f72453fd222a6",
+      "defaultSerializedHash": "b07fd083d7529fa7",
+      "defaultPacketHash": "ae1f24f16d411d74",
+      "defaultPacketTokens": 1262
+    },
+    "broad100b/scikit-learn__scikit-learn-26194": {
+      "itemSupplyHash": "bb8d11fa532128c5",
+      "relatedOrderHash": "1d039b41185ae081",
+      "defaultSerializedHash": "b25b13be967252e4",
+      "defaultPacketHash": "23b7115f2053a758",
+      "defaultPacketTokens": 1306
+    },
+    "broad100b/sphinx-doc__sphinx-10449": {
+      "itemSupplyHash": "3a2a48eecf3b7275",
+      "relatedOrderHash": "238f3dc51ac684d5",
+      "defaultSerializedHash": "039e50ccef5775ea",
+      "defaultPacketHash": "98c17e8b03327142",
+      "defaultPacketTokens": 879
+    },
+    "broad100b/sphinx-doc__sphinx-10466": {
+      "itemSupplyHash": "740d921b8b8a0db5",
+      "relatedOrderHash": "0a5257aea1136e7f",
+      "defaultSerializedHash": "7fae8180a62fd64b",
+      "defaultPacketHash": "e2834ff304eba592",
+      "defaultPacketTokens": 961
+    },
+    "broad100b/sphinx-doc__sphinx-7454": {
+      "itemSupplyHash": "ea47dd3ec466aba0",
+      "relatedOrderHash": "1a083741e1bfdf61",
+      "defaultSerializedHash": "7dd6a364c9068776",
+      "defaultPacketHash": "50154fb306b33759",
+      "defaultPacketTokens": 1066
+    },
+    "broad100b/sphinx-doc__sphinx-7757": {
+      "itemSupplyHash": "cf813d8c1ba914c2",
+      "relatedOrderHash": "269151f3e10e98bf",
+      "defaultSerializedHash": "4d12b1908dc3fbc5",
+      "defaultPacketHash": "f4e49367a0e03438",
+      "defaultPacketTokens": 1263
+    },
+    "broad100b/sphinx-doc__sphinx-7985": {
+      "itemSupplyHash": "4a268e88ca163a87",
+      "relatedOrderHash": "5bdfcc011581e941",
+      "defaultSerializedHash": "4566405ebe86fd38",
+      "defaultPacketHash": "5d7c880c34ae476e",
+      "defaultPacketTokens": 1173
+    },
+    "broad100b/sphinx-doc__sphinx-8459": {
+      "itemSupplyHash": "eea95d92271f6d48",
+      "relatedOrderHash": "14d64dab5f4fdfea",
+      "defaultSerializedHash": "8d27d8de82d77bad",
+      "defaultPacketHash": "73519d0a756197a3",
+      "defaultPacketTokens": 1099
+    },
+    "broad100b/sphinx-doc__sphinx-8548": {
+      "itemSupplyHash": "7abcefb8f58d67da",
+      "relatedOrderHash": "aa956a0c4da27340",
+      "defaultSerializedHash": "dcd14768616390bc",
+      "defaultPacketHash": "62a2a2721877899d",
+      "defaultPacketTokens": 1063
+    },
+    "broad100b/sphinx-doc__sphinx-8595": {
+      "itemSupplyHash": "6fda8442fe511b44",
+      "relatedOrderHash": "f3caf7350ef5ebc9",
+      "defaultSerializedHash": "54346d53680e6d19",
+      "defaultPacketHash": "6c1cc4877cd2d38b",
+      "defaultPacketTokens": 1390
+    },
+    "broad100b/sphinx-doc__sphinx-9258": {
+      "itemSupplyHash": "c835b179f57804a6",
+      "relatedOrderHash": "c4d15a447b8c8b65",
+      "defaultSerializedHash": "e3c19b6045f1ff16",
+      "defaultPacketHash": "391d6806e524b717",
+      "defaultPacketTokens": 1376
+    },
+    "broad100b/sphinx-doc__sphinx-9602": {
+      "itemSupplyHash": "98dd0bf203329330",
+      "relatedOrderHash": "149e55c789a14ab1",
+      "defaultSerializedHash": "0c66e14074bdbb83",
+      "defaultPacketHash": "0cb07142e53471cc",
+      "defaultPacketTokens": 710
+    },
+    "broad100b/sphinx-doc__sphinx-9658": {
+      "itemSupplyHash": "855ce4f5aa40797b",
+      "relatedOrderHash": "3159a5863fa1e865",
+      "defaultSerializedHash": "889735941494ef21",
+      "defaultPacketHash": "fa7e3d3d5dd0e05e",
+      "defaultPacketTokens": 1013
+    },
+    "broad100b/sympy__sympy-13031": {
+      "itemSupplyHash": "2b93bcc7a2f26994",
+      "relatedOrderHash": "dd4e5dbbc15a6569",
+      "defaultSerializedHash": "4552a4eb4a4a62ea",
+      "defaultPacketHash": "3e7fce75a79c454c",
+      "defaultPacketTokens": 1358
+    },
+    "broad100b/sympy__sympy-13551": {
+      "itemSupplyHash": "7375a845c16160aa",
+      "relatedOrderHash": "3f31f7fe7cfd9ba6",
+      "defaultSerializedHash": "668dcd7cb9dbbfa2",
+      "defaultPacketHash": "cfcd91cf2f7c5618",
+      "defaultPacketTokens": 1167
+    },
+    "broad100b/sympy__sympy-13852": {
+      "itemSupplyHash": "7a03474f8418a8a4",
+      "relatedOrderHash": "95ac3abb236141c3",
+      "defaultSerializedHash": "9a6bb1996ad1d58d",
+      "defaultPacketHash": "93870fde7e75880d",
+      "defaultPacketTokens": 1427
+    },
+    "broad100b/sympy__sympy-14531": {
+      "itemSupplyHash": "b8d82680bd9961c7",
+      "relatedOrderHash": "a266aba7c9dfc4ac",
+      "defaultSerializedHash": "7c1861f0760dd7ad",
+      "defaultPacketHash": "3a67da59f307691d",
+      "defaultPacketTokens": 1335
+    },
+    "broad100b/sympy__sympy-15345": {
+      "itemSupplyHash": "ab341d210148b397",
+      "relatedOrderHash": "b543a9d022efd38b",
+      "defaultSerializedHash": "6e1f0c4afc575558",
+      "defaultPacketHash": "f4bf16122212b295",
+      "defaultPacketTokens": 972
+    },
+    "broad100b/sympy__sympy-15976": {
+      "itemSupplyHash": "5d6397c9443371ba",
+      "relatedOrderHash": "df9b54663d2cee30",
+      "defaultSerializedHash": "99db7f913b57a123",
+      "defaultPacketHash": "cfa9a300b4524f22",
+      "defaultPacketTokens": 1551
+    },
+    "broad100b/sympy__sympy-16450": {
+      "itemSupplyHash": "d1e64dcf3b3daab8",
+      "relatedOrderHash": "3aca8fbf914cb656",
+      "defaultSerializedHash": "f76b8aa56000ac23",
+      "defaultPacketHash": "dda13c081a2bf6f2",
+      "defaultPacketTokens": 1477
+    },
+    "broad100b/sympy__sympy-16886": {
+      "itemSupplyHash": "35df7020652f0949",
+      "relatedOrderHash": "dabaf99426ff619b",
+      "defaultSerializedHash": "f296f6736e6c47da",
+      "defaultPacketHash": "46d651aad7bfc50b",
+      "defaultPacketTokens": 1229
+    },
+    "broad100b/sympy__sympy-18698": {
+      "itemSupplyHash": "80919d6b5238be16",
+      "relatedOrderHash": "ce342605f585dae1",
+      "defaultSerializedHash": "c75883a8e68d0872",
+      "defaultPacketHash": "3f3d9b169549e59f",
+      "defaultPacketTokens": 1191
+    },
+    "broad100b/sympy__sympy-23824": {
+      "itemSupplyHash": "fd049d7177d06612",
+      "relatedOrderHash": "000f271bc8ebc7b4",
+      "defaultSerializedHash": "25ef0be7d92c9a4f",
+      "defaultPacketHash": "ae1f238010ce468e",
+      "defaultPacketTokens": 1526
+    }
+  },
+  "detailArtifact": "stage5_m181_candidate_canonical_primary.detail.json"
+}
