@@ -1,4 +1,5 @@
 import { estimateTokens } from "../capsuleV2/tokens";
+import { publishSemanticItemSupply } from "./semanticItemSupply";
 
 export const DeliveryResultState = Object.freeze({
   Resolved: "resolved",
@@ -292,6 +293,11 @@ function finish(
   product.retrievalFound = input.retrievalFound;
   product.deliveryFailed = input.deliveryFailed;
   product.items = delivered;
+  // M180. `product.items` is about to become the response envelope's to shrink,
+  // and it will shrink it by deleting rows the orientation projector reads as
+  // evidence. What this component delivered is the authoritative supply, so it
+  // is published where serialization cannot reach it. See semanticItemSupply.ts.
+  publishSemanticItemSupply(product, delivered);
   if (renderContext && input.status === DeliveryStatus.Compacted) {
     product.modelVisibleContext = render(product, delivered.map((item, index) => mutableItem(item, index)));
   }

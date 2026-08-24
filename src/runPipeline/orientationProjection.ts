@@ -67,8 +67,13 @@
  * nothing, scores nothing, and can surface no source the authoritative response
  * did not already carry. `detail=debug` returns the authoritative result whole.
  *
- * PURE. No I/O, no clock, no randomness, no database.
+ * PURE. No I/O, no clock, no randomness, no database. Its item supply is read
+ * through the productContext record's OBJECT IDENTITY rather than its value
+ * (M180), so it is a deterministic function of the object it is handed and not
+ * of that object's JSON alone.
  */
+
+import { semanticItemSupplyOf } from "../productContext/semanticItemSupply";
 
 /**
  * The single global claim boundary. It appears on EVERY resolved packet, never
@@ -248,7 +253,19 @@ export function projectRunPipelineOrientation(output: unknown): OrientationPacke
   if (readiness !== null && readiness.ready !== true) return null;
 
   const bodies = parseRenderedBodies(text(productContext.modelVisibleContext));
-  const items = asArray(productContext.items)
+  // THE SUPPLY, NOT THE SERIALIZATION (M180). `productContext.items` is the
+  // response envelope's to compact, and it compacts it by DELETING rows — one
+  // rung reduced the array to a single entry, another halved it to a floor of
+  // three, neither touching `modelVisibleContext`. Reading it here made a
+  // bookkeeping operation decide what the agent is told: 72 of the 83
+  // preservation violations M179 left, and on 167 of 169 frozen cases, at some
+  // budget, the response shipped rendered evidence this projector could no
+  // longer see. `applyProgressiveContextBudget` owns the evidence budget and
+  // publishes what it delivered; that is what is read. When no supply was
+  // published — a value that was copied or deserialized on the way here — the
+  // fallback is the pre-M180 source, which is the safe direction to fail in.
+  const supply = semanticItemSupplyOf(productContext) ?? asArray(productContext.items);
+  const items = asArray(supply)
     .filter((item) => text(item.fqName) !== "")
     .map((item) => {
       const span = isRecord(item.lineSpan) ? item.lineSpan : null;

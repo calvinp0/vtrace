@@ -18,6 +18,7 @@ import {
   responseTokenCeiling,
   serialize,
 } from "./responseEnvelope";
+import { projectRunPipelineOrientation } from "../runPipeline/orientationProjection";
 
 /** A body long enough that accidental repetition is unmistakable in the totals. */
 function bigBody(marker: string, lines = 60): string {
@@ -1159,4 +1160,156 @@ test("M179: when even the smallest rung cannot be delivered, the decline is stil
   assert.equal(declined(response), true);
   assert.equal(budgetOf(response).within_envelope, true);
   assert.equal(response.productContext.retrievalFound, true);
+});
+
+// ---------------------------------------------------------------------------
+// M180 — item ownership.
+//
+// `productContext.items` served two masters: the model-facing per-item metadata
+// this module shrinks to fit a ceiling, and the INDEX
+// `projectRunPipelineOrientation` reads to decide what the agent is told. Two
+// rungs here shrank it by DELETING rows — one reduced the array to a single
+// entry, another halved it to a floor of three — while leaving
+// `modelVisibleContext` alone. So the response kept paying to ship evidence the
+// projector could no longer reach, and because how many rows survived depended
+// on the budget, a LARGER budget could deliver FEWER related entries.
+//
+// Measured on M179's frozen corpora: 722 of 1,380 delivering budgets had the
+// supply the projector consumed cut this way, and 72 of the 83 preservation
+// violations M179 left came from it. A synthetic object containing nothing but
+// sixteen items reproduces it — three related entries at 1,600 and two at 3,200.
+//
+// The evidence budget is the one contract entitled to decide what evidence
+// exists, so it publishes what it delivered and the projector reads that.
+
+/**
+ * A response whose items and rendering agree row for row, as the evidence layer
+ * always leaves them, with metadata heavy enough to put the item rungs on the
+ * path. Items carry a top-level `fqName`: the projector drops rows without one.
+ */
+function orientationResponse(itemCount: number, metadataCharacters: number, bodyLines = 60) {
+  const items = Array.from({ length: itemCount }, (_unused, index) => ({
+    id: index === 0 ? "P1" : `S${index}`,
+    stableId: `stable${index}`,
+    fqName: index === 0 ? "pkg/pivot.py::pivot_function" : `pkg/support${index}.py::support_function_${index}`,
+    path: index === 0 ? "pkg/pivot.py" : `pkg/support${index}.py`,
+    symbol: index === 0 ? "pivot_function" : `support_function_${index}`,
+    roles: index === 0 ? ["pivot", "required"] : ["support"],
+    contentMode: index === 0 ? "focused_source" : "skeleton",
+    lineSpan: { start: 10, end: 70 },
+    selectionReasons: [index === 0 ? "symbol-name match" : `structural neighbour ${index}`],
+    estimatedTokens: 200,
+    content: bigBody(`item${index}`, bodyLines),
+    metadata: { fqName: `pkg/item${index}.py::symbol_${index}`, kind: "function", noise: "n".repeat(120) },
+  }));
+  const modelVisibleContext = [
+    "# VTRACE product context",
+    "task: investigate the failure",
+    ...items.flatMap((item) => [
+      "",
+      `## [${item.id}] ${item.fqName}`,
+      `roles: ${item.roles.join(", ")}`,
+      `mode: ${item.contentMode}`,
+      `lines: ${item.lineSpan.start}-${item.lineSpan.end}`,
+      ...item.selectionReasons.map((reason) => `why: ${reason}`),
+      "",
+      item.content,
+    ]),
+  ].join("\n");
+  return {
+    schemaVersion: "run_pipeline.vnext/1",
+    productContext: {
+      responseVersion: 2,
+      resolved: true,
+      retrievalFound: true,
+      deliveryFailed: false,
+      resultState: "resolved",
+      task: "investigate the failure",
+      leadPivot: "pkg/pivot.py::pivot_function",
+      modelVisibleContext,
+      items,
+      freshness: { status: "fresh", reason: "index current" },
+      accounting: { budgetTokens: 8_000 },
+      diagnostics: { staticEvidenceOnly: true },
+      repository: { worktreeId: "test" },
+      timing: { totalMs: 1 },
+    },
+    workspaceRouting: { isWorkspace: false, outcome: "single_repository", reason: "x".repeat(metadataCharacters) },
+  };
+}
+
+/** Section ids of a rendering: what the EVIDENCE layer delivered, unforgeably. */
+const renderedIds = (response: unknown): string[] => {
+  const rendered = String((response as { productContext?: { modelVisibleContext?: unknown } }).productContext?.modelVisibleContext ?? "");
+  return rendered.split(/\n## /).slice(1).flatMap((section) => {
+    const match = /^\[([^\]]+)\]/.exec(section);
+    return match === null ? [] : [match[1]!];
+  });
+};
+
+test("M180: response metadata compaction never decides what the projector sees", () => {
+  for (const metadataCharacters of [2_000, 6_000]) {
+    for (const requestedContextTokens of [1_600, 2_000, 3_200, 6_400, 8_000]) {
+      const response = compactProductResponse(orientationResponse(12, metadataCharacters) as never, {
+        requestedContextTokens,
+      }) as unknown as Record<string, any>;
+      if (response.productContext.resultState !== "resolved") continue;
+
+      const packet = projectRunPipelineOrientation(response);
+      assert.ok(packet !== null, `no orientation at ${requestedContextTokens}/${metadataCharacters}`);
+      // Everything the evidence layer rendered is reachable: the focus plus the
+      // related list account for every delivered section. The bound that may
+      // still cut the list is the projector's own ceiling, not this module's.
+      const delivered = new Set([packet.focus.at, ...packet.related.map((entry) => entry.at)]);
+      assert.equal(
+        renderedIds(response).length <= delivered.size,
+        true,
+        `${renderedIds(response).length} sections rendered, ${delivered.size} reachable at ${requestedContextTokens}/${metadataCharacters}`,
+      );
+    }
+  }
+});
+
+test("M180: more delivery budget never withdraws a related entry", () => {
+  // 12 items, 60-line bodies and 2,000 characters of metadata is the shape that
+  // reproduces it before the repair: 6,400 delivered two related entries and
+  // 8,000 delivered none, because the larger budget carried more evidence, which
+  // cost more metadata, which put the mandatory collapse back on the path.
+  for (const [itemCount, metadataCharacters] of [[12, 2_000], [8, 0], [16, 1_000]] as const) {
+    const budgets = [800, 1_000, 1_200, 1_600, 2_000, 3_200, 6_400, 8_000];
+    const packets = budgets.map((requestedContextTokens) => ({
+      budget: requestedContextTokens,
+      packet: projectRunPipelineOrientation(
+        compactProductResponse(orientationResponse(itemCount, metadataCharacters) as never, { requestedContextTokens }),
+      ),
+    }));
+    for (const lower of packets) {
+      for (const higher of packets) {
+        if (higher.budget <= lower.budget || lower.packet === null) continue;
+        assert.ok(higher.packet !== null, `${lower.budget} delivered an orientation and ${higher.budget} did not`);
+        const present = new Set(higher.packet.related.map((entry) => entry.at));
+        for (const entry of lower.packet.related) {
+          assert.ok(
+            present.has(entry.at),
+            `${itemCount} items / metadata=${metadataCharacters}: ${entry.at} delivered at ${lower.budget}, missing at ${higher.budget}`,
+          );
+        }
+      }
+    }
+  }
+});
+
+test("M180: metadata compaction still shrinks the response", () => {
+  // The repair moves what compaction is ALLOWED to change, not whether it runs.
+  // A response whose per-item metadata is still ejected is the point; one that
+  // stopped compacting would trade a preservation defect for a budget one.
+  const response = compactProductResponse(orientationResponse(12, 2_000) as never, {
+    requestedContextTokens: 1_600,
+  }) as unknown as Record<string, any>;
+  assert.equal(response.responseBudget.within_envelope, true);
+  assert.equal(response.responseBudget.compaction_applied, true);
+  const items = response.productContext.items as Record<string, unknown>[];
+  assert.ok(items.length < 12, "per-item metadata rows were not compacted at all");
+  // And the evidence it names is still all there, in the rendering.
+  assert.equal(renderedIds(response).length > items.length, true);
 });
