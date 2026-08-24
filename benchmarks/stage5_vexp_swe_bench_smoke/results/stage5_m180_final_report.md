@@ -307,3 +307,15 @@ Measured on the `run_pipeline` delivery path with `detail=standard`.
 `get_impact_graph` has its own envelope and its own item handling and was not
 swept here. No live agents, no Docker, no SWE-bench utility claim. Live spend
 $0.00.
+
+## Commits
+
+```text
+291c9c8dd439cce12114e89d50988434295578b9   benchmark harness hygiene (NON_PRODUCT)
+e62cbe6eb4798ce4ba4be55ed337ce014fbd07ee   product
+cb522c9c1636c34532f104d4915d2d4db8590553   evidence + ledger
+47058f04ee189c82f49bb3fb64c4079817265957   M179 close, the state this began from
+```
+
+Product diff over `src/` against M179's close: three files plus one test file.
+Not pushed.

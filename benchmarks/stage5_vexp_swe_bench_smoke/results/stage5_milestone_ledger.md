@@ -5139,8 +5139,8 @@ verification   typecheck 0,
 
 ```text
 commits  291c9c8dd439cce12114e89d50988434295578b9   benchmark harness hygiene (NON_PRODUCT)
-         <product>                                  product
-         <evidence>                                 evidence + ledger
+         e62cbe6eb4798ce4ba4be55ed337ce014fbd07ee   product
+         cb522c9c1636c34532f104d4915d2d4db8590553   evidence + ledger
 from     47058f04ee189c82f49bb3fb64c4079817265957    (M179 close)
 
 A PASS   harness typecheck repaired in its own commit; every producer and consumer
