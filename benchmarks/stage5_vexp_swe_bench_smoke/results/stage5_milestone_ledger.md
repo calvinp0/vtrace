@@ -4875,7 +4875,7 @@ known positive  pytest-dev__pytest-10081 :: _enter_pdb
 
 ```text
 commits  a16a1709246113715cebc379cabe5c5938a8dd01   product
-         <evidence commit>                          evidence + ledger
+         4e38dfc5400525f9ebd2ab40cf640fa99024a219   evidence + ledger
 from     ac2284bdaf7dfea818d7971a2cc037e91e57641b   (M177 close)
 
 A PASS   every fit predicate inventoried, decomposed, unit-audited

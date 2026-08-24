@@ -24,7 +24,8 @@ impact computation changed: NO
 live spend:                 $0.00
 live work:                  NOT RUN
 
-commits:                    <filled in below>
+commits:                    a16a1709246113715cebc379cabe5c5938a8dd01  (product)
+                            4e38dfc5400525f9ebd2ab40cf640fa99024a219  (evidence + ledger)
 pushed:                     NO
 ```
 
