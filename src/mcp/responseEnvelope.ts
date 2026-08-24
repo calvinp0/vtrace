@@ -49,6 +49,28 @@ export function isMcpResponseDetail(value: string): value is McpResponseDetail {
  * Metadata allowance above the requested context budget. The complete serialized
  * response must fit `requested + max(FLOOR, requested * RATIO)` estimated tokens.
  * A flat floor keeps small requests workable; the ratio keeps large ones honest.
+ *
+ * THIS FILE OWNS ONE OF THE TWO RESPONSE CONTRACTS, AND NOT THE OTHER (M178).
+ * `max_tokens` carries two distinct bounds, and on this path they are enforced in
+ * two different components:
+ *
+ *   the EVIDENCE budget      model-visible context <= max_tokens
+ *                            enforced by productContext/budgetDelivery.ts
+ *
+ *   the DELIVERY constraint  complete serialized response <= the ceiling below
+ *                            enforced here, by `within_envelope`, and it is the
+ *                            only one that can withhold a response
+ *
+ * Both the escalation ladder (`enforceTotalEnvelope`) and the terminal
+ * (`within_envelope`) test the SAME condition, which is why this path has no
+ * ladder/terminal mismatch. `get_impact_graph` reaches the same two contracts
+ * through a single ladder and names them apart in `impactResponseEnvelope.ts`;
+ * M178-A deliberately did not merge the two implementations, because their output
+ * contracts differ (see stage5_m177_impact_envelope_architecture.md).
+ *
+ * A flat FLOOR necessarily over-grants whenever real metadata costs less than it,
+ * and M178-B measured where that surplus goes: on the impact path it becomes
+ * headroom the evidence may occupy. Same arithmetic applies here.
  */
 export const RESPONSE_METADATA_ALLOWANCE_FLOOR_TOKENS = 1_000;
 export const RESPONSE_METADATA_ALLOWANCE_RATIO = 0.15;

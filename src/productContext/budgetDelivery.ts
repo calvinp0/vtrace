@@ -133,6 +133,12 @@ export function applyProgressiveContextBudget(
   let skeletonizedItems = 0;
   let supportDropped = 0;
 
+  // THE EVIDENCE BUDGET, which on this path is enforced by this component alone.
+  // `max_tokens` bounds the MODEL-VISIBLE CONTEXT; the complete serialized
+  // response is a separate, larger bound enforced later and elsewhere, by
+  // `responseEnvelope.ts`. Two contracts, two components, two predicates — which
+  // is why `run_pipeline` has no equivalent of the ambiguity M178 found in
+  // `impactResponseEnvelope.ts`, where one ladder does both jobs.
   const fits = (): boolean => estimateTokens(render(product, items)) <= budget;
   const record = (stage: CompactionStage): void => {
     if (!stages.includes(stage)) stages.push(stage);

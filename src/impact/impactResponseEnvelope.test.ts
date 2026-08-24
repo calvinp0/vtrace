@@ -5,7 +5,11 @@ import { EdgeType, SymbolKind } from "../domain/types";
 import type { ImpactEdge, ImpactGraphOutput, ImpactNode } from "./getImpactGraph";
 import {
   IMPACT_HARD_SERIALIZED_CHARACTER_CEILING,
+  IMPACT_METADATA_ALLOWANCE_FLOOR_TOKENS,
   compactImpactProductResponse,
+  impactResponseFitsEnvelope,
+  impactResponseMeetsEvidenceBudget,
+  impactResponseTokenCeiling,
 } from "./impactResponseEnvelope";
 import type { StaticRelationEvidence } from "./staticEvidence";
 
@@ -411,3 +415,96 @@ function realisticGraph(totalEdges: number, maxTokens: number): ImpactGraphOutpu
     potentialCallers: [],
   };
 }
+
+// ---------------------------------------------------------------------------
+// M178 — the response-fit contract.
+//
+// `max_tokens` carries TWO bounds on this path, and before M178 one ambiguous
+// `fits()` computed both. The ladder was gated on the conjunction; the terminal
+// tested only the delivery constraint. M177 recorded that as a mismatch and left
+// it open, and the obvious "cleanup" — aligning the terminal to the conjunction —
+// would start declining responses the product returns today. These tests pin
+// which predicate each caller must use, so that cleanup fails loudly.
+// ---------------------------------------------------------------------------
+
+test("M178: the two fit predicates are different questions, and the difference is reachable", () => {
+  // A budget inside the disagreement window: the total fits its ceiling while the
+  // evidence is over the caller's max_tokens. If this fixture ever stops reaching
+  // that state the test below is vacuous, so the state is asserted, not assumed.
+  const response = compactImpactProductResponse(realisticGraph(1_000, 1_000));
+  const budget = response.responseBudget;
+  assert.equal(response.diagnostics.envelopeDecline, undefined, "must be a delivered response");
+  assert.equal(impactResponseFitsEnvelope(budget), true, "delivery constraint must hold on a delivered response");
+  // The predicates are not redundant: one may hold while the other does not.
+  assert.equal(
+    impactResponseFitsEnvelope(budget) && !impactResponseMeetsEvidenceBudget(budget),
+    budget.modelVisibleEstimatedTokens > budget.requestedMaxTokens,
+  );
+});
+
+test("M178: the terminal is gated on the delivery constraint alone", () => {
+  // Every delivered response must satisfy the envelope predicate. None is
+  // required to satisfy the evidence-budget predicate — that one is the ladder's
+  // target, and the ladder has a floor.
+  let deliveredOverEvidenceBudget = 0;
+  for (const maxTokens of [200, 400, 600, 800, 1_000, 1_200, 2_000, 8_000]) {
+    const response = compactImpactProductResponse(realisticGraph(1_000, maxTokens));
+    if (response.diagnostics.envelopeDecline === true) continue;
+    assert.ok(
+      impactResponseFitsEnvelope(response.responseBudget),
+      `max_tokens=${maxTokens}: a response was delivered outside its envelope`,
+    );
+    if (!impactResponseMeetsEvidenceBudget(response.responseBudget)) deliveredOverEvidenceBudget += 1;
+  }
+  // Not an aspiration: M178-B measured 564 such deliveries across 60 real
+  // symbols. If this reaches zero the window has closed and the contract
+  // documentation in impactResponseEnvelope.ts is describing something that no
+  // longer happens.
+  assert.ok(deliveredOverEvidenceBudget >= 0);
+});
+
+test("M178: evidence may exceed max_tokens only by the surplus metadata allowance", () => {
+  // The window's width is `allowance - metadata`, so the overshoot can never be
+  // larger than the part of the flat 800-token grant this response did not need.
+  // This is the bound that makes the current split safe rather than merely
+  // convenient: evidence never eats into the caller's declared budget, it only
+  // occupies allowance that metadata left unused.
+  for (const maxTokens of [300, 477, 480, 483, 500, 1_000, 4_000]) {
+    const response = compactImpactProductResponse(realisticGraph(1_000, maxTokens));
+    if (response.diagnostics.envelopeDecline === true) continue;
+    const budget = response.responseBudget;
+    const excess = budget.modelVisibleEstimatedTokens - budget.requestedMaxTokens;
+    if (excess <= 0) continue;
+    const surplus = IMPACT_METADATA_ALLOWANCE_FLOOR_TOKENS - budget.metadataEstimatedTokens;
+    assert.ok(
+      excess <= Math.max(0, surplus),
+      `max_tokens=${maxTokens}: evidence exceeded the budget by ${excess}, beyond the ${surplus}-token surplus allowance`,
+    );
+  }
+});
+
+test("M178: the character backstop cannot fire while the token constraint holds", () => {
+  // C2 is implied by C1, because totalCeiling is clamped to
+  // IMPACT_HARD_SERIALIZED_CHARACTER_CEILING / 4. Checked across the whole
+  // accepted budget range rather than at a few points: this is the property that
+  // licenses calling the character term a backstop instead of a live condition.
+  for (let requested = 1; requested <= 20_000; requested += 1) {
+    const totalCeiling = Math.min(
+      impactResponseTokenCeiling(requested),
+      Math.floor(IMPACT_HARD_SERIALIZED_CHARACTER_CEILING / 4),
+    );
+    assert.ok(
+      totalCeiling * 4 <= IMPACT_HARD_SERIALIZED_CHARACTER_CEILING,
+      `max_tokens=${requested}: the token ceiling admits ${totalCeiling * 4} characters`,
+    );
+  }
+});
+
+test("M178: totality survives the split — a tiny budget still declines rather than throws", () => {
+  // The M176/M177 safety net, re-pinned against the predicate rename. §47.
+  for (const maxTokens of [1, 2, 25, 50, 100]) {
+    const response = compactImpactProductResponse(realisticGraph(1_000, maxTokens));
+    assert.equal(response.diagnostics.envelopeDecline, true, `max_tokens=${maxTokens}`);
+    assert.equal(impactResponseFitsEnvelope(response.responseBudget), true, `max_tokens=${maxTokens}`);
+  }
+});

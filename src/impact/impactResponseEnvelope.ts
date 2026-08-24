@@ -78,6 +78,54 @@ export function impactResponseTokenCeiling(requestedMaxTokens: number): number {
 }
 
 /**
+ * THE HARD DELIVERY CONSTRAINT: may this response be returned at all?
+ *
+ * The complete serialized response against `max_tokens` plus the documented
+ * metadata allowance — the bound `get_impact_graph`'s schema publishes as "the
+ * complete response adds max(800, 15%) metadata tokens and is checked after all
+ * fields are attached". Failing it is the ONLY reason a well-formed impact result
+ * may be withheld, and the failure is a truthful bounded decline, never a throw.
+ *
+ * The character term is a backstop that cannot currently fire: `totalCeiling` is
+ * clamped to `IMPACT_HARD_SERIALIZED_CHARACTER_CEILING / 4`, so satisfying the
+ * token term already bounds the response at 80,000 characters. M178-A proved the
+ * implication over every budget the tool accepts (1..20,000, zero
+ * counterexamples). It is kept, and pinned by a test, because it is what makes
+ * the clamp's job explicit rather than incidental.
+ */
+export function impactResponseFitsEnvelope(budget: ImpactResponseBudget): boolean {
+  return budget.estimatedTotalTokens <= budget.totalCeiling
+    && budget.serializedCharacters <= IMPACT_HARD_SERIALIZED_CHARACTER_CEILING;
+}
+
+/**
+ * THE COMPACTION TARGET: should the ladder keep shedding evidence?
+ *
+ * The five evidence keys against the caller's `max_tokens` — the bound the schema
+ * publishes as "max_tokens bounds model-facing impact content". This is what the
+ * degradation ladder is FOR, and it is deliberately NOT a delivery gate.
+ *
+ * WHY IT IS A TARGET AND NOT A GATE, since M177 recorded the difference as a
+ * mismatch and a later reader will be tempted to "fix" it. The ladder has a floor
+ * — one relation, one edge — below which the only remaining move is to deliver
+ * nothing. Promoting this to a delivery gate would convert exactly those calls
+ * into declines: M178-B measured 564 of them across the frozen corpus, costing 25
+ * delivered edges, every one to reclaim at most 41 tokens. Worse, that excess is
+ * not evidence overspending its budget at all — it is the SURPLUS METADATA
+ * ALLOWANCE. The window in which a delivered response exceeds `max_tokens` has
+ * width exactly `IMPACT_METADATA_ALLOWANCE_FLOOR_TOKENS - metadataTokens`: the
+ * flat 800-token grant minus what this specimen's unshrinkable metadata actually
+ * costs. When metadata comes in under its allowance, the slack is spent on
+ * evidence rather than wasted — which is the allowance working, not leaking.
+ *
+ * ZERO of the 60 corpus symbols reach that window at the default budget, in
+ * either the envelope-isolated or the engine-coupled view.
+ */
+export function impactResponseMeetsEvidenceBudget(budget: ImpactResponseBudget): boolean {
+  return budget.modelVisibleEstimatedTokens <= budget.requestedMaxTokens;
+}
+
+/**
  * Final model-facing gate for get_impact_graph. The traversal may inspect more
  * evidence, but every compatibility projection is rebuilt from one retained set
  * of persisted edge ids before the complete serialized object is measured.
@@ -180,7 +228,18 @@ export function compactImpactProductResponse(
     compacted.add("accounting.skippedFiles");
   }
 
-  const fits = (): boolean => {
+  /**
+   * The ladder's gate: keep compacting while EITHER contract is unsatisfied.
+   *
+   * Both predicates belong here and they answer different questions —
+   * `impactResponseFitsEnvelope` decides whether the response may be returned,
+   * `impactResponseMeetsEvidenceBudget` decides whether it is as small as the
+   * caller asked for. Only the first governs the terminal below. Naming them
+   * apart is M178's whole change: the single ambiguous `fits()` that used to sit
+   * here read as though the terminal was failing to enforce one of its own
+   * conditions, when in fact the two were never the same contract.
+   */
+  const ladderSatisfied = (): boolean => {
     const accounting = buildBudget(draft, {
       requestedMaxTokens,
       totalCeiling,
@@ -188,30 +247,28 @@ export function compactImpactProductResponse(
       originalUniqueEdges,
       compacted,
     });
-    return accounting.estimatedTotalTokens <= totalCeiling
-      && accounting.serializedCharacters <= IMPACT_HARD_SERIALIZED_CHARACTER_CEILING
-      && accounting.modelVisibleEstimatedTokens <= requestedMaxTokens;
+    return impactResponseFitsEnvelope(accounting) && impactResponseMeetsEvidenceBudget(accounting);
   };
 
-  if (!fits() && draft.paths.length > 0) {
+  if (!ladderSatisfied() && draft.paths.length > 0) {
     draft.paths = [];
     compacted.add("paths");
   }
-  if (!fits() && (draft.affectedFiles.length + draft.entrypoints.length + draft.tests.length) > 0) {
+  if (!ladderSatisfied() && (draft.affectedFiles.length + draft.entrypoints.length + draft.tests.length) > 0) {
     draft.affectedFiles = [];
     draft.entrypoints = [];
     draft.tests = [];
     compacted.add("affectedFiles/entrypoints/tests");
   }
-  if (!fits() && draft.diagnostics.limitations.length > 1) {
+  if (!ladderSatisfied() && draft.diagnostics.limitations.length > 1) {
     draft.diagnostics = { ...draft.diagnostics, limitations: draft.diagnostics.limitations.slice(0, 1) };
     compacted.add("diagnostics.limitations");
   }
-  if (!fits() && draft.coverage.notes.length > 1) {
+  if (!ladderSatisfied() && draft.coverage.notes.length > 1) {
     draft.coverage = { ...draft.coverage, notes: draft.coverage.notes.slice(0, 1) };
     compacted.add("coverage.notes");
   }
-  if (!fits() && draft.accounting !== undefined && "estimatedOutputTokens" in draft.accounting) {
+  if (!ladderSatisfied() && draft.accounting !== undefined && "estimatedOutputTokens" in draft.accounting) {
     draft.accounting = {
       latencyMs: draft.accounting.latencyMs,
       ref: "responseBudget",
@@ -222,7 +279,7 @@ export function compactImpactProductResponse(
   // Prefer compact direct caller/reference evidence over lower-value transitive
   // compatibility edges. This is what keeps all known ARC call sites visible
   // under max_edges:10 without spending the envelope on unrelated depth-2 rows.
-  if (!fits() && draft.directRelations.length > 0) {
+  if (!ladderSatisfied() && draft.directRelations.length > 0) {
     const directEdgeIds = new Set(
       draft.directRelations.flatMap((relation) => relation.edgeId === null ? [] : [relation.edgeId]),
     );
@@ -241,7 +298,7 @@ export function compactImpactProductResponse(
   // none".
   // Shed the explanation before the evidence: a bare `file:line receiver` still
   // tells an agent where to look, whereas dropping the site hides it entirely.
-  if (!fits() && draft.potentialCallers.some((caller) => caller.sourceText !== undefined)) {
+  if (!ladderSatisfied() && draft.potentialCallers.some((caller) => caller.sourceText !== undefined)) {
     draft.potentialCallers = draft.potentialCallers.map((caller) => ({
       filePath: caller.filePath,
       line: caller.line,
@@ -254,7 +311,7 @@ export function compactImpactProductResponse(
     compacted.add("potentialCallers[].compactProjection");
   }
 
-  if (!fits() && draft.directRelations.length > 0) {
+  if (!ladderSatisfied() && draft.directRelations.length > 0) {
     draft.directRelations = draft.directRelations.map(minimalRelation);
     rebuildCanonicalNodeAndViewProjections(draft, compacted);
     compacted.add("directRelations[].compactProjection");
@@ -264,12 +321,12 @@ export function compactImpactProductResponse(
   // lowest-ranked detailed evidence tail. The compact legacy edge projection is
   // retained independently so graph semantics do not disappear merely because
   // one verbose compatibility representation was compacted.
-  while (!fits() && draft.directRelations.length > 1) {
+  while (!ladderSatisfied() && draft.directRelations.length > 1) {
     draft.directRelations = draft.directRelations.slice(0, -1);
     rebuildCanonicalNodeAndViewProjections(draft, compacted);
     compacted.add("directRelations");
   }
-  if (!fits() && draft.paths.length > 0) {
+  if (!ladderSatisfied() && draft.paths.length > 0) {
     draft.paths = [];
     compacted.add("paths");
   }
@@ -278,7 +335,7 @@ export function compactImpactProductResponse(
   // target's own downstream dependencies are the least relevant thing in the
   // response. Spending the last of the envelope on `copy -> as_dict` while
   // discarding candidate call sites inverts the priority the caller asked for.
-  if (!fits()
+  if (!ladderSatisfied()
     && draft.callerCoverage !== undefined
     && draft.callerCoverage.exactCallerCount === 0
     && draft.callerCoverage.status !== "complete"
@@ -295,7 +352,7 @@ export function compactImpactProductResponse(
   // "the class contains this method" would answer a consumer question with the
   // one relation that is not a consumer.
   for (const tier of ["unresolved", "medium", "high"] as const) {
-    if (fits() || draft.potentialCallers.length === 0) break;
+    if (ladderSatisfied() || draft.potentialCallers.length === 0) break;
     const retained = draft.potentialCallers.filter((caller) => caller.confidence !== tier);
     if (retained.length === draft.potentialCallers.length) continue;
     draft.potentialCallers = retained;
@@ -308,7 +365,7 @@ export function compactImpactProductResponse(
   // The mandatory root and one compact relation are designed to fit even the
   // 400-token supported minimum. This is a valid structured degradation, never
   // substring truncation or invalid JSON.
-  if (!fits()) {
+  if (!ladderSatisfied()) {
     draft.directRelations = draft.directRelations.slice(0, 1).map(minimalRelation);
     draft.paths = [];
     draft.affectedFiles = [];
@@ -322,7 +379,7 @@ export function compactImpactProductResponse(
     compacted.add("bounded_degradation");
   }
 
-  while (!fits() && draft.edges.length > 1) {
+  while (!ladderSatisfied() && draft.edges.length > 1) {
     draft.edges = draft.edges.slice(0, -1);
     rebuildCanonicalNodeAndViewProjections(draft, compacted);
     compacted.add("canonicalEdges");
@@ -335,8 +392,13 @@ export function compactImpactProductResponse(
     originalUniqueEdges,
     compacted,
   });
-  if (responseBudget.estimatedTotalTokens > totalCeiling
-    || responseBudget.serializedCharacters > IMPACT_HARD_SERIALIZED_CHARACTER_CEILING) {
+  // THE TERMINAL TESTS THE DELIVERY CONSTRAINT, AND ONLY IT. The evidence budget
+  // is a compaction target that the ladder above has already pursued as far as its
+  // floor allows; a response that is inside its envelope is deliverable even if
+  // the ladder could not shrink the evidence the last few tokens. See
+  // `impactResponseMeetsEvidenceBudget` for why promoting it here would trade
+  // delivered evidence for surplus metadata allowance.
+  if (!impactResponseFitsEnvelope(responseBudget)) {
     return buildBoundedImpactDecline(draft, {
       requestedMaxTokens,
       totalCeiling,
