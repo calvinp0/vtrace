@@ -1,0 +1,104 @@
+{
+  "milestone": "M180-A",
+  "question": "who creates, populates, clones, filters, compacts, replaces or aliases productContext.items",
+  "method": "source audit of every assignment to productContext.items / product.items in src/, confirmed by execution against the M179 frozen corpus",
+  "producers": [
+    {
+      "function": "assembleProductContext",
+      "file": "src/productContext/assembleProductContext.ts:268",
+      "inputAuthority": "retrieval + Capsule v2 selection",
+      "itemType": "full selected item: id, fqName, path, symbol, lineSpan, roles, contentMode, selectionReasons, content, metadata",
+      "orderingSemantics": "selection priority; assignDisplayIds stamps P#/S#/I#/M# in that order",
+      "authoritative": true,
+      "presentationOriented": false,
+      "mutationAllowed": "no — this is the supply",
+      "callerRetainsAlias": "no; the value is embedded in the run_pipeline output"
+    },
+    {
+      "function": "applyProgressiveContextBudget -> finish",
+      "file": "src/productContext/budgetDelivery.ts:294",
+      "inputAuthority": "the assembled supply plus the caller's evidence budget (max_tokens)",
+      "itemType": "the delivered subset, with bodies excerpted/skeletonized and selectionReasons compacted",
+      "orderingSemantics": "authoritative order preserved; drops are by keep-priority, never by position",
+      "authoritative": true,
+      "presentationOriented": false,
+      "mutationAllowed": "yes — this IS the evidence budget, the one contract entitled to change what evidence exists",
+      "callerRetainsAlias": "operates on responseEnvelope's structuredClone; renders productContext.modelVisibleContext from the SAME delivered list, so items and rendering agree item for item on exit",
+      "measured": "monotone in budget on every case swept: 7 -> 13 -> 13 -> 21 -> 21 items for django__django-11133 at 800/1600/3200/6400/8000"
+    },
+    {
+      "function": "compactProductContextItems",
+      "file": "src/mcp/responseEnvelope.ts:1054",
+      "inputAuthority": "none — response serialization",
+      "itemType": "same rows, with content removed as a duplicate of modelVisibleContext and metadata reduced to ITEM_METADATA_KEEP",
+      "orderingSemantics": "unchanged; one row in, one row out",
+      "authoritative": false,
+      "presentationOriented": true,
+      "mutationAllowed": "representation only — and it stays inside that, which is why it causes no violation",
+      "callerRetainsAlias": "rewrites productContext.items in place on the draft"
+    },
+    {
+      "function": "enforceTotalEnvelope rung 'productContext.items[].selectionReasons'",
+      "file": "src/mcp/responseEnvelope.ts:1664",
+      "inputAuthority": "none — response serialization",
+      "itemType": "rows with selectionReasons truncated to the first entry",
+      "orderingSemantics": "unchanged",
+      "authoritative": false,
+      "presentationOriented": true,
+      "mutationAllowed": "representation only in practice: the projector reads reasons[0], so a prefix truncation is invisible to it",
+      "callerRetainsAlias": "in place"
+    },
+    {
+      "function": "enforceTotalEnvelope rung 'productContext.items'",
+      "file": "src/mcp/responseEnvelope.ts:2209",
+      "inputAuthority": "none — response serialization",
+      "itemType": "items.slice(0, kept), halving down to MIN_RETAINED_PRODUCT_ITEMS = 3",
+      "orderingSemantics": "authoritative-order prefix",
+      "authoritative": false,
+      "presentationOriented": true,
+      "mutationAllowed": "DELETES ROWS. Comment claims 'the rendered context itself is untouched' — true, and that is the defect: the rendering keeps the evidence while the index over it is cut",
+      "callerRetainsAlias": "in place",
+      "measuredViolations": 9
+    },
+    {
+      "function": "compactMandatoryProductMetadata",
+      "file": "src/mcp/responseEnvelope.ts:744",
+      "inputAuthority": "none — response serialization",
+      "itemType": "a single row rebuilt from items[0]: id, stableId, path, symbol, fqName, roles, contentMode, estimatedTokens, metadata.fqName, contextReference. lineSpan and selectionReasons are NOT carried",
+      "orderingSemantics": "collapses to items[0] — first in authoritative order, which is not necessarily productContext.leadPivot",
+      "authoritative": false,
+      "presentationOriented": true,
+      "mutationAllowed": "DELETES ROWS, and strips lineSpan and selectionReasons from the survivor, so even the focus loses its line span and its selection reason",
+      "callerRetainsAlias": "in place",
+      "measuredViolations": 63
+    },
+    {
+      "function": "degradeOversizedProductResponse",
+      "file": "src/mcp/responseEnvelope.ts:811",
+      "inputAuthority": "none — last-resort degradation",
+      "itemType": "productContext.items = []",
+      "orderingSemantics": "n/a",
+      "authoritative": false,
+      "presentationOriented": true,
+      "mutationAllowed": "yes, and it is truthful: it also sets deliveryFailed/resolved so the projector declines rather than reading an emptied array",
+      "callerRetainsAlias": "in place",
+      "measuredViolations": 0
+    },
+    {
+      "function": "buildBoundedEnvelopeDecline",
+      "file": "src/mcp/responseEnvelope.ts:2431",
+      "inputAuthority": "none — M176 terminal",
+      "itemType": "a fresh bounded record; not the draft object",
+      "orderingSemantics": "n/a",
+      "authoritative": false,
+      "presentationOriented": true,
+      "mutationAllowed": "yes; resolved is false so the projector declines",
+      "callerRetainsAlias": "returns a NEW object, so no draft aliasing survives it"
+    }
+  ],
+  "aliasingFinding": {
+    "callerObjectMutated": false,
+    "evidence": "compactProductResponse opens with structuredClone(output); the caller's authoritative object is never reached. Every rung then mutates the draft's productContext record IN PLACE — productContext.items = ... — so the productContext object identity is stable from the evidence layer to the wire, while the array it holds is replaced repeatedly.",
+    "consequence": "This is not a shared-object aliasing bug. It is a LAYERING bug: the projector is handed the serializer's output and reads it as evidence."
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "milestone": "M180 — benchmark harness hygiene",
+  "classification": ["NON_PRODUCT", "BENCHMARK_HARNESS_HYGIENE", "PRE_EXISTING_AT_M179_START"],
+  "before": {
+    "command": "bun run typecheck:benchmarks",
+    "result": "1 error",
+    "error": "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m178_identity.ts(37,63): error TS2307: Cannot find module '/home/calvin/bench/vtrace-m178/pre-split/src/impact/impactResponseEnvelope'",
+    "cause": "a STATIC import of a temporary detached worktree the script's own header tells you to create. Module resolution happens before any statement runs, so the existsSync guard already in main() could never protect it. Red since the worktree was removed; pre-existing at a4eee924, M178's close.",
+    "preExistingAt": "a4eee924d9559ad1f9e132b008ba2f34eb126426"
+  },
+  "after": {
+    "command": "bun run typecheck:benchmarks",
+    "result": "0 errors",
+    "repair": "the pre-split envelope is loaded through a computed specifier inside main(), after the existing existsSync guard — the pattern M179's cross-checkout loader already uses",
+    "runtimeBehaviour": "unchanged; the script still refuses with 'pre-split worktree missing: ...' when the worktree is absent",
+    "commit": "291c9c8dd439cce12114e89d50988434295578b9"
+  },
+  "productBehaviourAffected": "NO — no file under src/ was touched by this commit",
+  "historicalM178ArtifactsAmended": "NO"
+}

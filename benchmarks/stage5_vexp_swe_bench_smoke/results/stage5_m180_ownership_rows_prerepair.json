@@ -1,0 +1,3153 @@
+{
+  "milestone": "M180-B",
+  "note": "per-case aggregate of the per-budget ownership observation; withheld = rendered sections with no productContext.items row",
+  "arm": "pre-M180 (291c9c8d)",
+  "cases": [
+    {
+      "corpus": "broad100a",
+      "instanceId": "astropy__astropy-14365",
+      "budgets": 12,
+      "withheldBudgets": 5,
+      "degradedBudgets": 3,
+      "withheldBy": {
+        "mandatory_collapse": 5
+      },
+      "evidenceSupplyRange": [
+        0,
+        23
+      ],
+      "projectorInputRange": [
+        0,
+        1
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "astropy__astropy-14369",
+      "budgets": 12,
+      "withheldBudgets": 3,
+      "degradedBudgets": 5,
+      "withheldBy": {
+        "mandatory_collapse": 2,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        24
+      ],
+      "projectorInputRange": [
+        0,
+        3
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "astropy__astropy-14598",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 5,
+      "withheldBy": {
+        "mandatory_collapse": 3,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        18
+      ],
+      "projectorInputRange": [
+        0,
+        9
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "astropy__astropy-7166",
+      "budgets": 12,
+      "withheldBudgets": 5,
+      "degradedBudgets": 2,
+      "withheldBy": {
+        "mandatory_collapse": 4,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        25
+      ],
+      "projectorInputRange": [
+        0,
+        3
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-10880",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 2,
+      "withheldBy": {
+        "mandatory_collapse": 4
+      },
+      "evidenceSupplyRange": [
+        0,
+        22
+      ],
+      "projectorInputRange": [
+        0,
+        22
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-10973",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 2,
+      "withheldBy": {
+        "mandatory_collapse": 4
+      },
+      "evidenceSupplyRange": [
+        0,
+        18
+      ],
+      "projectorInputRange": [
+        0,
+        18
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-11095",
+      "budgets": 12,
+      "withheldBudgets": 3,
+      "degradedBudgets": 3,
+      "withheldBy": {
+        "mandatory_collapse": 2,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        10
+      ],
+      "projectorInputRange": [
+        0,
+        10
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-11133",
+      "budgets": 12,
+      "withheldBudgets": 8,
+      "degradedBudgets": 3,
+      "withheldBy": {
+        "mandatory_collapse": 6,
+        "envelope_ladder_slice": 2
+      },
+      "evidenceSupplyRange": [
+        0,
+        21
+      ],
+      "projectorInputRange": [
+        0,
+        5
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-11206",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 3,
+      "withheldBy": {
+        "mandatory_collapse": 4
+      },
+      "evidenceSupplyRange": [
+        0,
+        13
+      ],
+      "projectorInputRange": [
+        0,
+        13
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-11490",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 3,
+      "withheldBy": {
+        "mandatory_collapse": 3,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        20
+      ],
+      "projectorInputRange": [
+        0,
+        20
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-11728",
+      "budgets": 12,
+      "withheldBudgets": 6,
+      "degradedBudgets": 2,
+      "withheldBy": {
+        "mandatory_collapse": 5,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        13
+      ],
+      "projectorInputRange": [
+        0,
+        9
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-11740",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 4,
+      "withheldBy": {
+        "mandatory_collapse": 4
+      },
+      "evidenceSupplyRange": [
+        0,
+        21
+      ],
+      "projectorInputRange": [
+        0,
+        1
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-11749",
+      "budgets": 12,
+      "withheldBudgets": 6,
+      "degradedBudgets": 3,
+      "withheldBy": {
+        "mandatory_collapse": 6
+      },
+      "evidenceSupplyRange": [
+        0,
+        17
+      ],
+      "projectorInputRange": [
+        0,
+        17
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-11815",
+      "budgets": 12,
+      "withheldBudgets": 5,
+      "degradedBudgets": 4,
+      "withheldBy": {
+        "mandatory_collapse": 5
+      },
+      "evidenceSupplyRange": [
+        0,
+        26
+      ],
+      "projectorInputRange": [
+        0,
+        1
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-11820",
+      "budgets": 12,
+      "withheldBudgets": 5,
+      "degradedBudgets": 2,
+      "withheldBy": {
+        "mandatory_collapse": 3,
+        "envelope_ladder_slice": 2
+      },
+      "evidenceSupplyRange": [
+        0,
+        22
+      ],
+      "projectorInputRange": [
+        0,
+        22
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-12050",
+      "budgets": 12,
+      "withheldBudgets": 5,
+      "degradedBudgets": 2,
+      "withheldBy": {
+        "mandatory_collapse": 4,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        24
+      ],
+      "projectorInputRange": [
+        0,
+        24
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-12273",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 3,
+      "withheldBy": {
+        "mandatory_collapse": 3,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        20
+      ],
+      "projectorInputRange": [
+        0,
+        20
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-12276",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 2,
+      "withheldBy": {
+        "mandatory_collapse": 4
+      },
+      "evidenceSupplyRange": [
+        0,
+        18
+      ],
+      "projectorInputRange": [
+        0,
+        18
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-12325",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 3,
+      "withheldBy": {
+        "mandatory_collapse": 4
+      },
+      "evidenceSupplyRange": [
+        0,
+        17
+      ],
+      "projectorInputRange": [
+        0,
+        17
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-12774",
+      "budgets": 12,
+      "withheldBudgets": 3,
+      "degradedBudgets": 3,
+      "withheldBy": {
+        "mandatory_collapse": 2,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        19
+      ],
+      "projectorInputRange": [
+        0,
+        19
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-12858",
+      "budgets": 12,
+      "withheldBudgets": 5,
+      "degradedBudgets": 3,
+      "withheldBy": {
+        "mandatory_collapse": 4,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        22
+      ],
+      "projectorInputRange": [
+        0,
+        3
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-13012",
+      "budgets": 12,
+      "withheldBudgets": 5,
+      "degradedBudgets": 4,
+      "withheldBy": {
+        "mandatory_collapse": 5
+      },
+      "evidenceSupplyRange": [
+        0,
+        20
+      ],
+      "projectorInputRange": [
+        0,
+        1
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-13112",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 4,
+      "withheldBy": {
+        "mandatory_collapse": 4
+      },
+      "evidenceSupplyRange": [
+        0,
+        22
+      ],
+      "projectorInputRange": [
+        0,
+        1
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-13195",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 5,
+      "withheldBy": {
+        "mandatory_collapse": 2,
+        "envelope_ladder_slice": 2
+      },
+      "evidenceSupplyRange": [
+        0,
+        21
+      ],
+      "projectorInputRange": [
+        0,
+        10
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-13363",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 4,
+      "withheldBy": {
+        "mandatory_collapse": 3,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        24
+      ],
+      "projectorInputRange": [
+        0,
+        6
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-13512",
+      "budgets": 12,
+      "withheldBudgets": 3,
+      "degradedBudgets": 2,
+      "withheldBy": {
+        "mandatory_collapse": 3
+      },
+      "evidenceSupplyRange": [
+        0,
+        22
+      ],
+      "projectorInputRange": [
+        0,
+        22
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-13513",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 3,
+      "withheldBy": {
+        "mandatory_collapse": 4
+      },
+      "evidenceSupplyRange": [
+        0,
+        21
+      ],
+      "projectorInputRange": [
+        0,
+        1
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-13551",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 3,
+      "withheldBy": {
+        "mandatory_collapse": 3,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        18
+      ],
+      "projectorInputRange": [
+        0,
+        18
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-13590",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 3,
+      "withheldBy": {
+        "mandatory_collapse": 3,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        23
+      ],
+      "projectorInputRange": [
+        0,
+        23
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-13658",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 3,
+      "withheldBy": {
+        "mandatory_collapse": 3,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        22
+      ],
+      "projectorInputRange": [
+        0,
+        22
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-13810",
+      "budgets": 12,
+      "withheldBudgets": 3,
+      "degradedBudgets": 4,
+      "withheldBy": {
+        "mandatory_collapse": 2,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        19
+      ],
+      "projectorInputRange": [
+        0,
+        19
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-13820",
+      "budgets": 12,
+      "withheldBudgets": 5,
+      "degradedBudgets": 4,
+      "withheldBy": {
+        "mandatory_collapse": 3,
+        "envelope_ladder_slice": 2
+      },
+      "evidenceSupplyRange": [
+        0,
+        17
+      ],
+      "projectorInputRange": [
+        0,
+        3
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-14608",
+      "budgets": 12,
+      "withheldBudgets": 5,
+      "degradedBudgets": 3,
+      "withheldBy": {
+        "mandatory_collapse": 4,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        21
+      ],
+      "projectorInputRange": [
+        0,
+        21
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-14792",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 4,
+      "withheldBy": {
+        "mandatory_collapse": 3,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        23
+      ],
+      "projectorInputRange": [
+        0,
+        3
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-15037",
+      "budgets": 12,
+      "withheldBudgets": 5,
+      "degradedBudgets": 2,
+      "withheldBy": {
+        "mandatory_collapse": 3,
+        "envelope_ladder_slice": 2
+      },
+      "evidenceSupplyRange": [
+        0,
+        22
+      ],
+      "projectorInputRange": [
+        0,
+        4
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-15503",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 4,
+      "withheldBy": {
+        "mandatory_collapse": 3,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        22
+      ],
+      "projectorInputRange": [
+        0,
+        11
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-15572",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 3,
+      "withheldBy": {
+        "mandatory_collapse": 3,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        20
+      ],
+      "projectorInputRange": [
+        0,
+        20
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-15695",
+      "budgets": 12,
+      "withheldBudgets": 2,
+      "degradedBudgets": 3,
+      "withheldBy": {
+        "mandatory_collapse": 2
+      },
+      "evidenceSupplyRange": [
+        0,
+        19
+      ],
+      "projectorInputRange": [
+        0,
+        19
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-15731",
+      "budgets": 12,
+      "withheldBudgets": 5,
+      "degradedBudgets": 3,
+      "withheldBy": {
+        "mandatory_collapse": 4,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        24
+      ],
+      "projectorInputRange": [
+        0,
+        24
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-16256",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 4,
+      "withheldBy": {
+        "mandatory_collapse": 3,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        19
+      ],
+      "projectorInputRange": [
+        0,
+        19
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-16263",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 3,
+      "withheldBy": {
+        "mandatory_collapse": 3,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        23
+      ],
+      "projectorInputRange": [
+        0,
+        23
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-16333",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 2,
+      "withheldBy": {
+        "mandatory_collapse": 3,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        20
+      ],
+      "projectorInputRange": [
+        0,
+        20
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-16569",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 4,
+      "withheldBy": {
+        "mandatory_collapse": 4
+      },
+      "evidenceSupplyRange": [
+        0,
+        13
+      ],
+      "projectorInputRange": [
+        0,
+        13
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-16667",
+      "budgets": 12,
+      "withheldBudgets": 5,
+      "degradedBudgets": 4,
+      "withheldBy": {
+        "mandatory_collapse": 4,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        19
+      ],
+      "projectorInputRange": [
+        0,
+        9
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-16819",
+      "budgets": 12,
+      "withheldBudgets": 6,
+      "degradedBudgets": 2,
+      "withheldBy": {
+        "mandatory_collapse": 5,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        19
+      ],
+      "projectorInputRange": [
+        0,
+        19
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-16877",
+      "budgets": 12,
+      "withheldBudgets": 5,
+      "degradedBudgets": 2,
+      "withheldBy": {
+        "mandatory_collapse": 5
+      },
+      "evidenceSupplyRange": [
+        0,
+        17
+      ],
+      "projectorInputRange": [
+        0,
+        17
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-16938",
+      "budgets": 12,
+      "withheldBudgets": 3,
+      "degradedBudgets": 7,
+      "withheldBy": {
+        "mandatory_collapse": 3
+      },
+      "evidenceSupplyRange": [
+        0,
+        21
+      ],
+      "projectorInputRange": [
+        0,
+        1
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-17084",
+      "budgets": 12,
+      "withheldBudgets": 5,
+      "degradedBudgets": 2,
+      "withheldBy": {
+        "mandatory_collapse": 4,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        20
+      ],
+      "projectorInputRange": [
+        0,
+        20
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "matplotlib__matplotlib-22719",
+      "budgets": 12,
+      "withheldBudgets": 2,
+      "degradedBudgets": 9,
+      "withheldBy": {
+        "mandatory_collapse": 2
+      },
+      "evidenceSupplyRange": [
+        0,
+        24
+      ],
+      "projectorInputRange": [
+        0,
+        1
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "matplotlib__matplotlib-24627",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 2,
+      "withheldBy": {
+        "mandatory_collapse": 3,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        18
+      ],
+      "projectorInputRange": [
+        0,
+        18
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "matplotlib__matplotlib-24870",
+      "budgets": 12,
+      "withheldBudgets": 5,
+      "degradedBudgets": 4,
+      "withheldBy": {
+        "mandatory_collapse": 4,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        17
+      ],
+      "projectorInputRange": [
+        0,
+        3
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "matplotlib__matplotlib-24970",
+      "budgets": 12,
+      "withheldBudgets": 5,
+      "degradedBudgets": 4,
+      "withheldBy": {
+        "mandatory_collapse": 4,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        19
+      ],
+      "projectorInputRange": [
+        0,
+        9
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "matplotlib__matplotlib-25332",
+      "budgets": 12,
+      "withheldBudgets": 5,
+      "degradedBudgets": 3,
+      "withheldBy": {
+        "mandatory_collapse": 5
+      },
+      "evidenceSupplyRange": [
+        0,
+        18
+      ],
+      "projectorInputRange": [
+        0,
+        1
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "matplotlib__matplotlib-25960",
+      "budgets": 12,
+      "withheldBudgets": 5,
+      "degradedBudgets": 3,
+      "withheldBy": {
+        "mandatory_collapse": 3,
+        "envelope_ladder_slice": 2
+      },
+      "evidenceSupplyRange": [
+        0,
+        14
+      ],
+      "projectorInputRange": [
+        0,
+        14
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "matplotlib__matplotlib-26466",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 4,
+      "withheldBy": {
+        "mandatory_collapse": 4
+      },
+      "evidenceSupplyRange": [
+        0,
+        27
+      ],
+      "projectorInputRange": [
+        0,
+        1
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "mwaskom__seaborn-3187",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 4,
+      "withheldBy": {
+        "mandatory_collapse": 2,
+        "envelope_ladder_slice": 2
+      },
+      "evidenceSupplyRange": [
+        0,
+        25
+      ],
+      "projectorInputRange": [
+        0,
+        12
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "pallets__flask-5014",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 3,
+      "withheldBy": {
+        "mandatory_collapse": 2,
+        "envelope_ladder_slice": 2
+      },
+      "evidenceSupplyRange": [
+        0,
+        16
+      ],
+      "projectorInputRange": [
+        0,
+        16
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "psf__requests-1142",
+      "budgets": 12,
+      "withheldBudgets": 6,
+      "degradedBudgets": 2,
+      "withheldBy": {
+        "mandatory_collapse": 5,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        23
+      ],
+      "projectorInputRange": [
+        0,
+        23
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "psf__requests-1724",
+      "budgets": 12,
+      "withheldBudgets": 2,
+      "degradedBudgets": 9,
+      "withheldBy": {
+        "mandatory_collapse": 2
+      },
+      "evidenceSupplyRange": [
+        0,
+        26
+      ],
+      "projectorInputRange": [
+        0,
+        1
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "psf__requests-1921",
+      "budgets": 12,
+      "withheldBudgets": 7,
+      "degradedBudgets": 2,
+      "withheldBy": {
+        "mandatory_collapse": 5,
+        "envelope_ladder_slice": 2
+      },
+      "evidenceSupplyRange": [
+        0,
+        21
+      ],
+      "projectorInputRange": [
+        0,
+        5
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "psf__requests-5414",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 4,
+      "withheldBy": {
+        "mandatory_collapse": 4
+      },
+      "evidenceSupplyRange": [
+        0,
+        19
+      ],
+      "projectorInputRange": [
+        0,
+        15
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "pylint-dev__pylint-4551",
+      "budgets": 12,
+      "withheldBudgets": 3,
+      "degradedBudgets": 3,
+      "withheldBy": {
+        "mandatory_collapse": 3
+      },
+      "evidenceSupplyRange": [
+        0,
+        20
+      ],
+      "projectorInputRange": [
+        0,
+        20
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "pylint-dev__pylint-8898",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 6,
+      "withheldBy": {
+        "mandatory_collapse": 4
+      },
+      "evidenceSupplyRange": [
+        0,
+        19
+      ],
+      "projectorInputRange": [
+        0,
+        1
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "pytest-dev__pytest-10051",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 3,
+      "withheldBy": {
+        "mandatory_collapse": 4
+      },
+      "evidenceSupplyRange": [
+        0,
+        24
+      ],
+      "projectorInputRange": [
+        0,
+        19
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "pytest-dev__pytest-5262",
+      "budgets": 12,
+      "withheldBudgets": 3,
+      "degradedBudgets": 7,
+      "withheldBy": {
+        "mandatory_collapse": 3
+      },
+      "evidenceSupplyRange": [
+        0,
+        17
+      ],
+      "projectorInputRange": [
+        0,
+        1
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "pytest-dev__pytest-6197",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 5,
+      "withheldBy": {
+        "mandatory_collapse": 4
+      },
+      "evidenceSupplyRange": [
+        0,
+        11
+      ],
+      "projectorInputRange": [
+        0,
+        11
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "pytest-dev__pytest-7432",
+      "budgets": 12,
+      "withheldBudgets": 6,
+      "degradedBudgets": 3,
+      "withheldBy": {
+        "mandatory_collapse": 5,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        16
+      ],
+      "projectorInputRange": [
+        0,
+        8
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "scikit-learn__scikit-learn-10844",
+      "budgets": 12,
+      "withheldBudgets": 5,
+      "degradedBudgets": 5,
+      "withheldBy": {
+        "mandatory_collapse": 5
+      },
+      "evidenceSupplyRange": [
+        0,
+        17
+      ],
+      "projectorInputRange": [
+        0,
+        9
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "scikit-learn__scikit-learn-11578",
+      "budgets": 12,
+      "withheldBudgets": 3,
+      "degradedBudgets": 9,
+      "withheldBy": {
+        "mandatory_collapse": 3
+      },
+      "evidenceSupplyRange": [
+        0,
+        21
+      ],
+      "projectorInputRange": [
+        0,
+        1
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sphinx-doc__sphinx-7462",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 3,
+      "withheldBy": {
+        "mandatory_collapse": 4
+      },
+      "evidenceSupplyRange": [
+        0,
+        17
+      ],
+      "projectorInputRange": [
+        0,
+        17
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sphinx-doc__sphinx-7748",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 2,
+      "withheldBy": {
+        "mandatory_collapse": 4
+      },
+      "evidenceSupplyRange": [
+        0,
+        8
+      ],
+      "projectorInputRange": [
+        0,
+        8
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sphinx-doc__sphinx-7910",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 3,
+      "withheldBy": {
+        "mandatory_collapse": 3,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        16
+      ],
+      "projectorInputRange": [
+        0,
+        12
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sphinx-doc__sphinx-9230",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 3,
+      "withheldBy": {
+        "mandatory_collapse": 3,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        26
+      ],
+      "projectorInputRange": [
+        0,
+        26
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sphinx-doc__sphinx-9320",
+      "budgets": 12,
+      "withheldBudgets": 6,
+      "degradedBudgets": 3,
+      "withheldBy": {
+        "mandatory_collapse": 4,
+        "envelope_ladder_slice": 2
+      },
+      "evidenceSupplyRange": [
+        0,
+        24
+      ],
+      "projectorInputRange": [
+        0,
+        12
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sphinx-doc__sphinx-9698",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 3,
+      "withheldBy": {
+        "mandatory_collapse": 3,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        24
+      ],
+      "projectorInputRange": [
+        0,
+        24
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sphinx-doc__sphinx-9711",
+      "budgets": 12,
+      "withheldBudgets": 5,
+      "degradedBudgets": 5,
+      "withheldBy": {
+        "mandatory_collapse": 4,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        6
+      ],
+      "projectorInputRange": [
+        0,
+        6
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sympy__sympy-13372",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 4,
+      "withheldBy": {
+        "mandatory_collapse": 3,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        17
+      ],
+      "projectorInputRange": [
+        0,
+        17
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sympy__sympy-13974",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 3,
+      "withheldBy": {
+        "mandatory_collapse": 4
+      },
+      "evidenceSupplyRange": [
+        0,
+        23
+      ],
+      "projectorInputRange": [
+        0,
+        1
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sympy__sympy-15599",
+      "budgets": 12,
+      "withheldBudgets": 6,
+      "degradedBudgets": 4,
+      "withheldBy": {
+        "mandatory_collapse": 6
+      },
+      "evidenceSupplyRange": [
+        0,
+        14
+      ],
+      "projectorInputRange": [
+        0,
+        14
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sympy__sympy-15875",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 2,
+      "withheldBy": {
+        "mandatory_collapse": 3,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        20
+      ],
+      "projectorInputRange": [
+        0,
+        10
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sympy__sympy-16597",
+      "budgets": 12,
+      "withheldBudgets": 5,
+      "degradedBudgets": 2,
+      "withheldBy": {
+        "mandatory_collapse": 3,
+        "envelope_ladder_slice": 2
+      },
+      "evidenceSupplyRange": [
+        0,
+        23
+      ],
+      "projectorInputRange": [
+        0,
+        3
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sympy__sympy-16766",
+      "budgets": 12,
+      "withheldBudgets": 5,
+      "degradedBudgets": 2,
+      "withheldBy": {
+        "mandatory_collapse": 4,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        24
+      ],
+      "projectorInputRange": [
+        0,
+        12
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sympy__sympy-16792",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 4,
+      "withheldBy": {
+        "mandatory_collapse": 3,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        24
+      ],
+      "projectorInputRange": [
+        0,
+        12
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sympy__sympy-19637",
+      "budgets": 12,
+      "withheldBudgets": 9,
+      "degradedBudgets": 3,
+      "withheldBy": {
+        "mandatory_collapse": 7,
+        "envelope_ladder_slice": 2
+      },
+      "evidenceSupplyRange": [
+        0,
+        15
+      ],
+      "projectorInputRange": [
+        0,
+        3
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sympy__sympy-20801",
+      "budgets": 12,
+      "withheldBudgets": 5,
+      "degradedBudgets": 2,
+      "withheldBy": {
+        "mandatory_collapse": 3,
+        "envelope_ladder_slice": 2
+      },
+      "evidenceSupplyRange": [
+        0,
+        18
+      ],
+      "projectorInputRange": [
+        0,
+        4
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sympy__sympy-23413",
+      "budgets": 12,
+      "withheldBudgets": 5,
+      "degradedBudgets": 3,
+      "withheldBy": {
+        "mandatory_collapse": 4,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        23
+      ],
+      "projectorInputRange": [
+        0,
+        11
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sympy__sympy-24213",
+      "budgets": 12,
+      "withheldBudgets": 5,
+      "degradedBudgets": 3,
+      "withheldBy": {
+        "mandatory_collapse": 4,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        21
+      ],
+      "projectorInputRange": [
+        0,
+        3
+      ]
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sympy__sympy-24562",
+      "budgets": 12,
+      "withheldBudgets": 6,
+      "degradedBudgets": 2,
+      "withheldBy": {
+        "mandatory_collapse": 5,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        21
+      ],
+      "projectorInputRange": [
+        0,
+        6
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "astropy__astropy-12907",
+      "budgets": 12,
+      "withheldBudgets": 6,
+      "degradedBudgets": 4,
+      "withheldBy": {
+        "mandatory_collapse": 5,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        23
+      ],
+      "projectorInputRange": [
+        0,
+        5
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "astropy__astropy-13398",
+      "budgets": 12,
+      "withheldBudgets": 3,
+      "degradedBudgets": 8,
+      "withheldBy": {
+        "mandatory_collapse": 3
+      },
+      "evidenceSupplyRange": [
+        0,
+        21
+      ],
+      "projectorInputRange": [
+        0,
+        1
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "astropy__astropy-14508",
+      "budgets": 12,
+      "withheldBudgets": 3,
+      "degradedBudgets": 5,
+      "withheldBy": {
+        "mandatory_collapse": 3
+      },
+      "evidenceSupplyRange": [
+        0,
+        17
+      ],
+      "projectorInputRange": [
+        0,
+        17
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "astropy__astropy-14995",
+      "budgets": 12,
+      "withheldBudgets": 3,
+      "degradedBudgets": 6,
+      "withheldBy": {
+        "mandatory_collapse": 2,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        20
+      ],
+      "projectorInputRange": [
+        0,
+        3
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "astropy__astropy-7606",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 3,
+      "withheldBy": {
+        "mandatory_collapse": 3,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        20
+      ],
+      "projectorInputRange": [
+        0,
+        20
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "astropy__astropy-7671",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 4,
+      "withheldBy": {
+        "mandatory_collapse": 3,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        21
+      ],
+      "projectorInputRange": [
+        0,
+        3
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "astropy__astropy-8707",
+      "budgets": 12,
+      "withheldBudgets": 3,
+      "degradedBudgets": 3,
+      "withheldBy": {
+        "mandatory_collapse": 3
+      },
+      "evidenceSupplyRange": [
+        0,
+        19
+      ],
+      "projectorInputRange": [
+        0,
+        19
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "django__django-11603",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 2,
+      "withheldBy": {
+        "mandatory_collapse": 4
+      },
+      "evidenceSupplyRange": [
+        0,
+        20
+      ],
+      "projectorInputRange": [
+        0,
+        20
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "django__django-11880",
+      "budgets": 12,
+      "withheldBudgets": 3,
+      "degradedBudgets": 3,
+      "withheldBy": {
+        "mandatory_collapse": 2,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        24
+      ],
+      "projectorInputRange": [
+        0,
+        24
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "django__django-12741",
+      "budgets": 12,
+      "withheldBudgets": 5,
+      "degradedBudgets": 4,
+      "withheldBy": {
+        "mandatory_collapse": 3,
+        "envelope_ladder_slice": 2
+      },
+      "evidenceSupplyRange": [
+        0,
+        23
+      ],
+      "projectorInputRange": [
+        0,
+        11
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "django__django-14500",
+      "budgets": 12,
+      "withheldBudgets": 5,
+      "degradedBudgets": 2,
+      "withheldBy": {
+        "mandatory_collapse": 4,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        21
+      ],
+      "projectorInputRange": [
+        0,
+        10
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "django__django-14559",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 3,
+      "withheldBy": {
+        "mandatory_collapse": 3,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        23
+      ],
+      "projectorInputRange": [
+        0,
+        23
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "django__django-15022",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 3,
+      "withheldBy": {
+        "mandatory_collapse": 3,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        23
+      ],
+      "projectorInputRange": [
+        0,
+        5
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "django__django-15252",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 4,
+      "withheldBy": {
+        "mandatory_collapse": 4
+      },
+      "evidenceSupplyRange": [
+        0,
+        22
+      ],
+      "projectorInputRange": [
+        0,
+        17
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "django__django-15375",
+      "budgets": 12,
+      "withheldBudgets": 3,
+      "degradedBudgets": 4,
+      "withheldBy": {
+        "mandatory_collapse": 2,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        24
+      ],
+      "projectorInputRange": [
+        0,
+        24
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "django__django-15569",
+      "budgets": 12,
+      "withheldBudgets": 3,
+      "degradedBudgets": 3,
+      "withheldBy": {
+        "mandatory_collapse": 3
+      },
+      "evidenceSupplyRange": [
+        0,
+        18
+      ],
+      "projectorInputRange": [
+        0,
+        18
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "django__django-15629",
+      "budgets": 12,
+      "withheldBudgets": 3,
+      "degradedBudgets": 5,
+      "withheldBy": {
+        "mandatory_collapse": 2,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        21
+      ],
+      "projectorInputRange": [
+        0,
+        3
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "django__django-16100",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 3,
+      "withheldBy": {
+        "mandatory_collapse": 3,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        22
+      ],
+      "projectorInputRange": [
+        0,
+        22
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "matplotlib__matplotlib-20488",
+      "budgets": 12,
+      "withheldBudgets": 5,
+      "degradedBudgets": 4,
+      "withheldBy": {
+        "mandatory_collapse": 4,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        20
+      ],
+      "projectorInputRange": [
+        0,
+        3
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "matplotlib__matplotlib-20676",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 4,
+      "withheldBy": {
+        "mandatory_collapse": 3,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        19
+      ],
+      "projectorInputRange": [
+        0,
+        3
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "matplotlib__matplotlib-22871",
+      "budgets": 12,
+      "withheldBudgets": 5,
+      "degradedBudgets": 4,
+      "withheldBy": {
+        "mandatory_collapse": 3,
+        "envelope_ladder_slice": 2
+      },
+      "evidenceSupplyRange": [
+        0,
+        19
+      ],
+      "projectorInputRange": [
+        0,
+        3
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "matplotlib__matplotlib-23412",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 4,
+      "withheldBy": {
+        "mandatory_collapse": 3,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        22
+      ],
+      "projectorInputRange": [
+        0,
+        3
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "matplotlib__matplotlib-25311",
+      "budgets": 12,
+      "withheldBudgets": 5,
+      "degradedBudgets": 3,
+      "withheldBy": {
+        "mandatory_collapse": 5
+      },
+      "evidenceSupplyRange": [
+        0,
+        18
+      ],
+      "projectorInputRange": [
+        0,
+        1
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "matplotlib__matplotlib-25479",
+      "budgets": 12,
+      "withheldBudgets": 3,
+      "degradedBudgets": 8,
+      "withheldBy": {
+        "mandatory_collapse": 3
+      },
+      "evidenceSupplyRange": [
+        0,
+        20
+      ],
+      "projectorInputRange": [
+        0,
+        1
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "matplotlib__matplotlib-26291",
+      "budgets": 12,
+      "withheldBudgets": 3,
+      "degradedBudgets": 7,
+      "withheldBy": {
+        "mandatory_collapse": 3
+      },
+      "evidenceSupplyRange": [
+        0,
+        22
+      ],
+      "projectorInputRange": [
+        0,
+        1
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "mwaskom__seaborn-3069",
+      "budgets": 12,
+      "withheldBudgets": 5,
+      "degradedBudgets": 3,
+      "withheldBy": {
+        "mandatory_collapse": 4,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        10
+      ],
+      "projectorInputRange": [
+        0,
+        10
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "psf__requests-1766",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 2,
+      "withheldBy": {
+        "mandatory_collapse": 3,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        16
+      ],
+      "projectorInputRange": [
+        0,
+        16
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "psf__requests-2317",
+      "budgets": 12,
+      "withheldBudgets": 6,
+      "degradedBudgets": 3,
+      "withheldBy": {
+        "mandatory_collapse": 6
+      },
+      "evidenceSupplyRange": [
+        0,
+        20
+      ],
+      "projectorInputRange": [
+        0,
+        1
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "psf__requests-2931",
+      "budgets": 12,
+      "withheldBudgets": 5,
+      "degradedBudgets": 2,
+      "withheldBy": {
+        "mandatory_collapse": 4,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        27
+      ],
+      "projectorInputRange": [
+        0,
+        27
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "psf__requests-6028",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 4,
+      "withheldBy": {
+        "mandatory_collapse": 2,
+        "envelope_ladder_slice": 2
+      },
+      "evidenceSupplyRange": [
+        0,
+        22
+      ],
+      "projectorInputRange": [
+        0,
+        11
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pydata__xarray-3993",
+      "budgets": 12,
+      "withheldBudgets": 5,
+      "degradedBudgets": 3,
+      "withheldBy": {
+        "mandatory_collapse": 4,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        19
+      ],
+      "projectorInputRange": [
+        0,
+        3
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pydata__xarray-4094",
+      "budgets": 12,
+      "withheldBudgets": 5,
+      "degradedBudgets": 4,
+      "withheldBy": {
+        "mandatory_collapse": 5
+      },
+      "evidenceSupplyRange": [
+        0,
+        18
+      ],
+      "projectorInputRange": [
+        0,
+        1
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pydata__xarray-6721",
+      "budgets": 12,
+      "withheldBudgets": 2,
+      "degradedBudgets": 9,
+      "withheldBy": {
+        "mandatory_collapse": 2
+      },
+      "evidenceSupplyRange": [
+        0,
+        21
+      ],
+      "projectorInputRange": [
+        0,
+        1
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pydata__xarray-7229",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 6,
+      "withheldBy": {
+        "mandatory_collapse": 3,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        17
+      ],
+      "projectorInputRange": [
+        0,
+        8
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pylint-dev__pylint-4604",
+      "budgets": 12,
+      "withheldBudgets": 0,
+      "degradedBudgets": 12,
+      "withheldBy": {},
+      "evidenceSupplyRange": [
+        0,
+        0
+      ],
+      "projectorInputRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pylint-dev__pylint-4661",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 3,
+      "withheldBy": {
+        "mandatory_collapse": 3,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        11
+      ],
+      "projectorInputRange": [
+        0,
+        11
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pylint-dev__pylint-4970",
+      "budgets": 12,
+      "withheldBudgets": 7,
+      "degradedBudgets": 3,
+      "withheldBy": {
+        "mandatory_collapse": 6,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        16
+      ],
+      "projectorInputRange": [
+        0,
+        8
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pylint-dev__pylint-6528",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 5,
+      "withheldBy": {
+        "mandatory_collapse": 3,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        19
+      ],
+      "projectorInputRange": [
+        0,
+        4
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pylint-dev__pylint-6903",
+      "budgets": 12,
+      "withheldBudgets": 3,
+      "degradedBudgets": 5,
+      "withheldBy": {
+        "mandatory_collapse": 3
+      },
+      "evidenceSupplyRange": [
+        0,
+        10
+      ],
+      "projectorInputRange": [
+        0,
+        10
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pylint-dev__pylint-7277",
+      "budgets": 12,
+      "withheldBudgets": 3,
+      "degradedBudgets": 3,
+      "withheldBy": {
+        "mandatory_collapse": 2,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        16
+      ],
+      "projectorInputRange": [
+        0,
+        16
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pytest-dev__pytest-10081",
+      "budgets": 12,
+      "withheldBudgets": 3,
+      "degradedBudgets": 6,
+      "withheldBy": {
+        "mandatory_collapse": 2,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        19
+      ],
+      "projectorInputRange": [
+        0,
+        9
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pytest-dev__pytest-10356",
+      "budgets": 12,
+      "withheldBudgets": 3,
+      "degradedBudgets": 7,
+      "withheldBy": {
+        "mandatory_collapse": 3
+      },
+      "evidenceSupplyRange": [
+        0,
+        18
+      ],
+      "projectorInputRange": [
+        0,
+        1
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pytest-dev__pytest-5787",
+      "budgets": 12,
+      "withheldBudgets": 0,
+      "degradedBudgets": 12,
+      "withheldBy": {},
+      "evidenceSupplyRange": [
+        0,
+        0
+      ],
+      "projectorInputRange": [
+        0,
+        0
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pytest-dev__pytest-5840",
+      "budgets": 12,
+      "withheldBudgets": 7,
+      "degradedBudgets": 2,
+      "withheldBy": {
+        "mandatory_collapse": 6,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        18
+      ],
+      "projectorInputRange": [
+        0,
+        18
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pytest-dev__pytest-6202",
+      "budgets": 12,
+      "withheldBudgets": 6,
+      "degradedBudgets": 4,
+      "withheldBy": {
+        "mandatory_collapse": 5,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        24
+      ],
+      "projectorInputRange": [
+        0,
+        3
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pytest-dev__pytest-7205",
+      "budgets": 12,
+      "withheldBudgets": 3,
+      "degradedBudgets": 7,
+      "withheldBy": {
+        "mandatory_collapse": 2,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        14
+      ],
+      "projectorInputRange": [
+        0,
+        14
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pytest-dev__pytest-7236",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 5,
+      "withheldBy": {
+        "mandatory_collapse": 4
+      },
+      "evidenceSupplyRange": [
+        0,
+        19
+      ],
+      "projectorInputRange": [
+        0,
+        1
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pytest-dev__pytest-7324",
+      "budgets": 12,
+      "withheldBudgets": 6,
+      "degradedBudgets": 2,
+      "withheldBy": {
+        "mandatory_collapse": 5,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        18
+      ],
+      "projectorInputRange": [
+        0,
+        18
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pytest-dev__pytest-7521",
+      "budgets": 12,
+      "withheldBudgets": 3,
+      "degradedBudgets": 7,
+      "withheldBy": {
+        "mandatory_collapse": 3
+      },
+      "evidenceSupplyRange": [
+        0,
+        21
+      ],
+      "projectorInputRange": [
+        0,
+        1
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pytest-dev__pytest-7571",
+      "budgets": 12,
+      "withheldBudgets": 5,
+      "degradedBudgets": 3,
+      "withheldBy": {
+        "mandatory_collapse": 4,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        18
+      ],
+      "projectorInputRange": [
+        0,
+        18
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "scikit-learn__scikit-learn-10297",
+      "budgets": 12,
+      "withheldBudgets": 6,
+      "degradedBudgets": 4,
+      "withheldBy": {
+        "mandatory_collapse": 6
+      },
+      "evidenceSupplyRange": [
+        0,
+        22
+      ],
+      "projectorInputRange": [
+        0,
+        1
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "scikit-learn__scikit-learn-10908",
+      "budgets": 12,
+      "withheldBudgets": 5,
+      "degradedBudgets": 5,
+      "withheldBy": {
+        "mandatory_collapse": 3,
+        "envelope_ladder_slice": 2
+      },
+      "evidenceSupplyRange": [
+        0,
+        14
+      ],
+      "projectorInputRange": [
+        0,
+        3
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "scikit-learn__scikit-learn-12973",
+      "budgets": 12,
+      "withheldBudgets": 5,
+      "degradedBudgets": 4,
+      "withheldBy": {
+        "mandatory_collapse": 4,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        12
+      ],
+      "projectorInputRange": [
+        0,
+        6
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "scikit-learn__scikit-learn-13135",
+      "budgets": 12,
+      "withheldBudgets": 3,
+      "degradedBudgets": 8,
+      "withheldBy": {
+        "mandatory_collapse": 3
+      },
+      "evidenceSupplyRange": [
+        0,
+        20
+      ],
+      "projectorInputRange": [
+        0,
+        1
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "scikit-learn__scikit-learn-13142",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 5,
+      "withheldBy": {
+        "mandatory_collapse": 4
+      },
+      "evidenceSupplyRange": [
+        0,
+        13
+      ],
+      "projectorInputRange": [
+        0,
+        1
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "scikit-learn__scikit-learn-13328",
+      "budgets": 12,
+      "withheldBudgets": 3,
+      "degradedBudgets": 7,
+      "withheldBy": {
+        "mandatory_collapse": 3
+      },
+      "evidenceSupplyRange": [
+        0,
+        18
+      ],
+      "projectorInputRange": [
+        0,
+        1
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "scikit-learn__scikit-learn-13779",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 2,
+      "withheldBy": {
+        "mandatory_collapse": 3,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        14
+      ],
+      "projectorInputRange": [
+        0,
+        14
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "scikit-learn__scikit-learn-14053",
+      "budgets": 12,
+      "withheldBudgets": 3,
+      "degradedBudgets": 6,
+      "withheldBy": {
+        "mandatory_collapse": 3
+      },
+      "evidenceSupplyRange": [
+        0,
+        13
+      ],
+      "projectorInputRange": [
+        0,
+        13
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "scikit-learn__scikit-learn-14894",
+      "budgets": 12,
+      "withheldBudgets": 6,
+      "degradedBudgets": 4,
+      "withheldBy": {
+        "mandatory_collapse": 4,
+        "envelope_ladder_slice": 2
+      },
+      "evidenceSupplyRange": [
+        0,
+        19
+      ],
+      "projectorInputRange": [
+        0,
+        9
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "scikit-learn__scikit-learn-26194",
+      "budgets": 12,
+      "withheldBudgets": 6,
+      "degradedBudgets": 3,
+      "withheldBy": {
+        "mandatory_collapse": 6
+      },
+      "evidenceSupplyRange": [
+        0,
+        16
+      ],
+      "projectorInputRange": [
+        0,
+        16
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sphinx-doc__sphinx-10449",
+      "budgets": 12,
+      "withheldBudgets": 3,
+      "degradedBudgets": 7,
+      "withheldBy": {
+        "mandatory_collapse": 2,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        20
+      ],
+      "projectorInputRange": [
+        0,
+        10
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sphinx-doc__sphinx-10466",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 6,
+      "withheldBy": {
+        "mandatory_collapse": 3,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        20
+      ],
+      "projectorInputRange": [
+        0,
+        10
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sphinx-doc__sphinx-7454",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 5,
+      "withheldBy": {
+        "mandatory_collapse": 2,
+        "envelope_ladder_slice": 2
+      },
+      "evidenceSupplyRange": [
+        0,
+        23
+      ],
+      "projectorInputRange": [
+        0,
+        11
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sphinx-doc__sphinx-7757",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 2,
+      "withheldBy": {
+        "mandatory_collapse": 3,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        23
+      ],
+      "projectorInputRange": [
+        0,
+        23
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sphinx-doc__sphinx-7985",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 5,
+      "withheldBy": {
+        "mandatory_collapse": 4
+      },
+      "evidenceSupplyRange": [
+        0,
+        22
+      ],
+      "projectorInputRange": [
+        0,
+        1
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sphinx-doc__sphinx-8459",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 4,
+      "withheldBy": {
+        "mandatory_collapse": 3,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        22
+      ],
+      "projectorInputRange": [
+        0,
+        22
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sphinx-doc__sphinx-8548",
+      "budgets": 12,
+      "withheldBudgets": 5,
+      "degradedBudgets": 2,
+      "withheldBy": {
+        "mandatory_collapse": 4,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        18
+      ],
+      "projectorInputRange": [
+        0,
+        9
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sphinx-doc__sphinx-8595",
+      "budgets": 12,
+      "withheldBudgets": 2,
+      "degradedBudgets": 3,
+      "withheldBy": {
+        "mandatory_collapse": 2
+      },
+      "evidenceSupplyRange": [
+        0,
+        18
+      ],
+      "projectorInputRange": [
+        0,
+        18
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sphinx-doc__sphinx-9258",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 2,
+      "withheldBy": {
+        "mandatory_collapse": 3,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        18
+      ],
+      "projectorInputRange": [
+        0,
+        18
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sphinx-doc__sphinx-9602",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 3,
+      "withheldBy": {
+        "mandatory_collapse": 4
+      },
+      "evidenceSupplyRange": [
+        0,
+        14
+      ],
+      "projectorInputRange": [
+        0,
+        14
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sphinx-doc__sphinx-9658",
+      "budgets": 12,
+      "withheldBudgets": 3,
+      "degradedBudgets": 5,
+      "withheldBy": {
+        "mandatory_collapse": 2,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        20
+      ],
+      "projectorInputRange": [
+        0,
+        20
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sympy__sympy-13031",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 3,
+      "withheldBy": {
+        "mandatory_collapse": 3,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        26
+      ],
+      "projectorInputRange": [
+        0,
+        26
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sympy__sympy-13551",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 2,
+      "withheldBy": {
+        "mandatory_collapse": 3,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        19
+      ],
+      "projectorInputRange": [
+        0,
+        4
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sympy__sympy-13852",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 4,
+      "withheldBy": {
+        "mandatory_collapse": 3,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        21
+      ],
+      "projectorInputRange": [
+        0,
+        9
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sympy__sympy-14531",
+      "budgets": 12,
+      "withheldBudgets": 5,
+      "degradedBudgets": 2,
+      "withheldBy": {
+        "mandatory_collapse": 4,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        28
+      ],
+      "projectorInputRange": [
+        0,
+        14
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sympy__sympy-15345",
+      "budgets": 12,
+      "withheldBudgets": 6,
+      "degradedBudgets": 2,
+      "withheldBy": {
+        "mandatory_collapse": 5,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        20
+      ],
+      "projectorInputRange": [
+        0,
+        10
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sympy__sympy-15976",
+      "budgets": 12,
+      "withheldBudgets": 5,
+      "degradedBudgets": 3,
+      "withheldBy": {
+        "mandatory_collapse": 4,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        24
+      ],
+      "projectorInputRange": [
+        0,
+        3
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sympy__sympy-16450",
+      "budgets": 12,
+      "withheldBudgets": 3,
+      "degradedBudgets": 4,
+      "withheldBy": {
+        "mandatory_collapse": 2,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        22
+      ],
+      "projectorInputRange": [
+        0,
+        17
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sympy__sympy-16886",
+      "budgets": 12,
+      "withheldBudgets": 7,
+      "degradedBudgets": 2,
+      "withheldBy": {
+        "mandatory_collapse": 6,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        19
+      ],
+      "projectorInputRange": [
+        0,
+        19
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sympy__sympy-18698",
+      "budgets": 12,
+      "withheldBudgets": 6,
+      "degradedBudgets": 2,
+      "withheldBy": {
+        "mandatory_collapse": 5,
+        "envelope_ladder_slice": 1
+      },
+      "evidenceSupplyRange": [
+        0,
+        22
+      ],
+      "projectorInputRange": [
+        0,
+        22
+      ]
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sympy__sympy-23824",
+      "budgets": 12,
+      "withheldBudgets": 4,
+      "degradedBudgets": 4,
+      "withheldBy": {
+        "mandatory_collapse": 4
+      },
+      "evidenceSupplyRange": [
+        0,
+        23
+      ],
+      "projectorInputRange": [
+        0,
+        1
+      ]
+    }
+  ]
+}

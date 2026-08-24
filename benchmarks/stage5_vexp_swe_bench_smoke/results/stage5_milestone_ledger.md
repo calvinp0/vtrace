@@ -5134,3 +5134,144 @@ verification   typecheck 0,
   orientation → decline class is eliminated on the measured `run_pipeline` delivery
   path.** `get_impact_graph` has its own envelope and its own ladder and was not
   swept for monotonicity here.
+
+## M180 — `productContext.items` Evidence/Metadata Ownership and Monotone Semantic Preservation
+
+```text
+commits  291c9c8dd439cce12114e89d50988434295578b9   benchmark harness hygiene (NON_PRODUCT)
+         <product>                                  product
+         <evidence>                                 evidence + ledger
+from     47058f04ee189c82f49bb3fb64c4079817265957    (M179 close)
+
+A PASS   harness typecheck repaired in its own commit; every producer and consumer
+         of productContext.items traced; aliasing established (structuredClone at
+         the boundary, in-place mutation after — a layering defect, not aliasing);
+         compactor authority and projector input source established
+B PASS   83 of 83 reproduced exactly (35 A, 48 B); semantic identity and supply
+         hash defined; first divergence located; synthetic, known-negative and
+         identity controls pass
+C PASS   items classified MIXED_RESPONSIBILITY; compactor NOT authorized;
+         projector was reading a serialization surface; three lifetimes named;
+         no product code changed before diagnosis
+D PASS   three candidates simulated on both corpora before any product change;
+         candidate never tuned after measurement; not selected using gold
+E PASS   three files, one publication; no V2 path, no schema change, no refactor
+F PASS   all ordered budget pairs on both corpora; verdicts reached
+
+root cause        PROJECTOR_READS_MUTABLE_SERIALIZATION_SURFACE
+ownership         SEMANTIC_AND_METADATA_OWNERSHIP_SEPARATED
+preservation      BUDGET_MONOTONE_SEMANTIC_PRESERVATION_PARTIAL
+repair            ITEM_OWNERSHIP_REPAIR_VALIDATED
+product           KEEP_COMPACT_ORIENTATION_WITH_ITEM_OWNERSHIP_FIX
+totality          RESPONSE_TOTALITY_PRESERVED
+truthfulness      ORIENTATION_TRUTHFULNESS_PRESERVED
+economics         COMPACT_ECONOMICS_MATERIALLY_CHANGED   (packet +103% at the default budget)
+next work         SEMANTIC_PRESERVATION_FOLLOWUP_REQUIRED   (compactReasons; NOT started)
+live              LIVE_WORK_NOT_RUN          spend $0.00
+retrieval         UNCHANGED
+ranking           UNCHANGED
+fit contract      UNCHANGED (M178 names preserved)
+```
+
+```text
+the ownership metric (§60), 169 frozen objects x 12 budgets   before   after
+  delivering budgets                                           1,380   1,380
+  budgets where the metadata layer changed the semantic
+  evidence source the PROJECTOR CONSUMED                          722       0
+  budgets where productContext.items was compacted                722     722   (by design)
+
+ordered budget pairs, M180 preservation semantics             before   after
+  focus changed                                                    0       0
+  related item lost                                               54       8
+  related item replaced / semantic role changed                    0     106
+  claim downgraded                                                 0       0
+  orientation -> decline                                           0       0
+  priority inversion / representation downgrade / qualifier        0       0
+  total                                                           54     113
+  (benign: claim upgraded)                                         8     757
+  (benign: focus resolved to the declared lead pivot)             21      21
+```
+
+## M180 standing findings
+
+- **The array had two owners and the type said nothing.** `productContext.items` is
+  the model-facing per-item metadata `responseEnvelope.ts` shrinks to fit a ceiling
+  AND the index `projectRunPipelineOrientation` reads to decide what the agent is
+  told. Two rungs shrank it by DELETING rows — `compactMandatoryProductMetadata`
+  replaced the array with `[items[0]]` (63 of the 83), the escalation ladder halved
+  it to a floor of three (9 of the 83) — while leaving `modelVisibleContext`
+  untouched. The response kept paying to ship evidence the projector could no
+  longer reach, on **167 of 169** frozen cases at some budget.
+
+- **The rendering is an unforgeable witness, and that is what made attribution
+  possible.** `applyProgressiveContextBudget` sets `product.items` and renders
+  `modelVisibleContext` from the SAME delivered list, and nothing downstream
+  rewrites that rendering except the last-resort degradation. So `section ids minus
+  item ids` is exactly the evidence the metadata layer withheld from the projector.
+  Do NOT use `responseBudget.compacted_fields` for this: it is
+  `[...new Set(f)].sort().slice(0, n)`, alphabetically truncated, so
+  `productContext.items` falls off the report on precisely the responses where it
+  fired.
+
+- **A synthetic object with nothing in it but items reproduces the defect.**
+  Sixteen items, no retrieval, no ranking, no upstream state: three related entries
+  at `max_tokens` 1,600 and two at 3,200. There is nothing else to blame.
+
+- **On the default path the compacted response is discarded.** `tools.ts` returns
+  `orientation ?? decline ?? authoritativeResult`, so when the projector resolves,
+  nothing the envelope produced crosses the wire. The envelope was budgeting a
+  payload nobody receives, and the one lasting effect of that budgeting was to cut
+  the index of the payload that does.
+
+- **The repair is a publication, not a rewrite.** The component that owns the
+  evidence budget publishes what it delivered, frozen, keyed on the productContext
+  record's object identity, never serialized; the projector reads that. Zero
+  serialized bytes, so it cannot push a response over a ceiling — the response is
+  **byte-identical at the default budget on all 169 cases** and metadata medians are
+  unchanged to the token. `compactMandatoryProductMetadata` and the ladder are
+  untouched and still compact the same 722 budgets.
+
+- **The obvious repair was measured and rejected.** Making the rungs preserve rows
+  and reduce each to its index shape fixes the serialized response too — and costs
+  **26 new `orientation -> decline` pairs**, the class M179 drove from 1,088 to 0.
+  A stripped item row is still 178 characters and fourteen do not fit a 1,000-token
+  allowance. §55 admits no regression there, so it lost on totality, not economics.
+
+- **What the repair exposed is the next milestone.** 106 of the 113 residual
+  violations are `compactReasons` in `budgetDelivery.ts` selecting a *preferred*
+  reason while the uncompacted path leaves `selectionReasons[0]` first — so which of
+  a symbol's authoritative claims the agent sees depends on whether the evidence
+  layer compacted. Verified, not assumed: of **10,203** claims delivered, **10,185**
+  are verbatim authoritative and **18** an authoritative reason under the
+  160-character ellipsis; **0 unsupported**, **0** about a symbol outside the supply.
+  Nothing is invented and nothing is lost — the *choice* is budget-dependent. The
+  remaining 8 are `ORIENTATION_POLICY.ceilingTokens`, a flat 2,000 the packet now
+  reaches (M179 outstanding §2).
+
+- **Compactness was partly a defect.** The packet median rises 462/583 → 1,208/1,291
+  tokens, and 769 → 1,560 at the default budget. `ENOUGH, THEN STOP` still holds —
+  what ends a packet is the authoritative supply running out — but the supply was
+  being cut before it got there, so part of M172's measured ~600-token median was
+  this bug. Packets below `max_tokens` 800 are unchanged to the token; growth begins
+  at 1,600, where the collapse began. The packet is still bounded by the 2,000-token
+  orientation ceiling and four to five times cheaper than the full response.
+
+- **Two scorings, and the difference is the instrument.** Under M179's
+  `symbol|claim-wording` identity the after-count is 876, because the repaired arm
+  delivers **10,203** related entries where the pre-repair arm delivered **2,016**.
+  M180's preservation semantics were fixed before any candidate existed and are
+  symmetric — a claim decaying to the roles fallback and a focus abandoning the
+  declared lead pivot are violations, exactly as their reverses are benign. Measured
+  claim downgrades: **0**. Measured focus changes away from the lead: **0**; all 21
+  focus moves resolve *toward* it.
+
+- **Next-step recommendation: fix the claim, not the packet.** M181 should make
+  which authoritative `selectionReason` reaches the agent independent of whether the
+  evidence layer compacted — a `budgetDelivery.ts`/projector question, not a
+  retrieval or ranking one. Do not raise the orientation ceiling, do not widen the
+  metadata allowance, and do not re-open the item rows in the serialized response:
+  that was measured and costs a totality regression. Related-selection instability
+  under load has NOT been re-measured since the deterministic mechanism was removed;
+  reassess it only after the claim-selection defect is closed. The M180 claim stays
+  narrow: **response bookkeeping can no longer alter the semantic evidence supply
+  the orientation projector consumes, on the measured `run_pipeline` delivery path.**

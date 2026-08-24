@@ -1,0 +1,2224 @@
+{
+  "milestone": "M180-B",
+  "generatedFrom": "run_stage5_m180_reproduction.ts",
+  "arm": "/home/calvin/bench/vtrace-m180/pre-repair",
+  "method": "one frozen authoritative object per case, budget varied alone, current implementation only",
+  "budgets": [
+    100,
+    200,
+    400,
+    600,
+    800,
+    1000,
+    1200,
+    1600,
+    2000,
+    3200,
+    6400,
+    8000
+  ],
+  "historicalM179Violations": 83,
+  "reproducedViolations": 83,
+  "perCorpus": {
+    "broad100a": {
+      "cases": 88,
+      "violatingPairs": 35,
+      "casesWithViolation": 23,
+      "budgets": 1056,
+      "budgetsWhereMetadataMutatedSupply": 390
+    },
+    "broad100b": {
+      "cases": 81,
+      "violatingPairs": 48,
+      "casesWithViolation": 22,
+      "budgets": 972,
+      "budgetsWhereMetadataMutatedSupply": 332
+    }
+  },
+  "byClass": {
+    "RELATED_ITEM_LOST": 54,
+    "SEMANTIC_ROLE_CHANGED": 8,
+    "RELATED_ITEM_REPLACED": 11,
+    "FOCUS_CHANGED": 21
+  },
+  "byAttribution": {
+    "metadata_layer:mandatory_collapse": 63,
+    "evidence_layer_or_other": 11,
+    "metadata_layer:envelope_ladder_slice": 9
+  },
+  "identityControl": {
+    "checked": 169,
+    "failures": 0
+  },
+  "violations": [
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-11133",
+      "lower": 3200,
+      "higher": 6400,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "RELATED_ITEM_LOST"
+      ],
+      "lostEvidence": [
+        "http/response.py::HttpResponseBase|pivot, required",
+        "http/response.py::StreamingHttpResponse.__iter__|pivot, required"
+      ],
+      "stillRenderedAtHigher": [
+        "http/response.py::HttpResponseBase",
+        "http/response.py::StreamingHttpResponse.__iter__"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-11206",
+      "lower": 6400,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "SEMANTIC_ROLE_CHANGED",
+        "RELATED_ITEM_REPLACED"
+      ],
+      "lostEvidence": [
+        "utils/baseconv.py::BaseConverter.decimal_digits|support, skeleton",
+        "conf/locale/ar/formats.py::DECIMAL_SEPARATOR|support, skeleton",
+        "conf/locale/az/formats.py::DECIMAL_SEPARATOR|support, skeleton",
+        "conf/locale/bg/formats.py::DECIMAL_SEPARATOR|support, skeleton",
+        "conf/locale/bn/formats.py::DECIMAL_SEPARATOR|support, skeleton",
+        "conf/locale/bs/formats.py::DECIMAL_SEPARATOR|support, skeleton",
+        "conf/locale/ca/formats.py::DECIMAL_SEPARATOR|support, skeleton",
+        "conf/locale/cs/formats.py::DECIMAL_SEPARATOR|support, skeleton",
+        "conf/locale/cy/formats.py::DECIMAL_SEPARATOR|support, skeleton",
+        "conf/locale/da/formats.py::DECIMAL_SEPARATOR|support, skeleton"
+      ],
+      "stillRenderedAtHigher": [
+        "utils/baseconv.py::BaseConverter.decimal_digits",
+        "conf/locale/ar/formats.py::DECIMAL_SEPARATOR",
+        "conf/locale/az/formats.py::DECIMAL_SEPARATOR",
+        "conf/locale/bg/formats.py::DECIMAL_SEPARATOR",
+        "conf/locale/bn/formats.py::DECIMAL_SEPARATOR",
+        "conf/locale/bs/formats.py::DECIMAL_SEPARATOR",
+        "conf/locale/ca/formats.py::DECIMAL_SEPARATOR",
+        "conf/locale/cs/formats.py::DECIMAL_SEPARATOR",
+        "conf/locale/cy/formats.py::DECIMAL_SEPARATOR",
+        "conf/locale/da/formats.py::DECIMAL_SEPARATOR"
+      ],
+      "withheldByAtHigher": "none",
+      "attribution": "evidence_layer_or_other"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-11728",
+      "lower": 3200,
+      "higher": 6400,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "RELATED_ITEM_LOST"
+      ],
+      "lostEvidence": [
+        "contrib/admindocs/utils.py::replace_named_groups|pivot, required",
+        "db/models/fields/related.py::ForeignObject.related_fields|pivot, required",
+        "db/models/fields/related.py::RelatedField|support, skeleton",
+        "db/models/fields/related_lookups.py::RelatedLookupMixin.get_prep_lookup|support, skeleton"
+      ],
+      "stillRenderedAtHigher": [
+        "contrib/admindocs/utils.py::replace_named_groups",
+        "db/models/fields/related.py::ForeignObject.related_fields",
+        "db/models/fields/related.py::RelatedField",
+        "db/models/fields/related_lookups.py::RelatedLookupMixin.get_prep_lookup"
+      ],
+      "withheldByAtHigher": "envelope_ladder_slice",
+      "attribution": "metadata_layer:envelope_ladder_slice"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-11728",
+      "lower": 3200,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "RELATED_ITEM_LOST"
+      ],
+      "lostEvidence": [
+        "contrib/admin/options.py::InlineModelAdmin|pivot, required",
+        "contrib/admin/options.py::InlineModelAdmin.get_formset|pivot, required",
+        "contrib/admindocs/utils.py::replace_named_groups|pivot, required",
+        "db/models/fields/related.py::ForeignObject.related_fields|pivot, required",
+        "db/models/fields/related.py::RelatedField|support, skeleton",
+        "db/models/fields/related_lookups.py::RelatedLookupMixin.get_prep_lookup|support, skeleton"
+      ],
+      "stillRenderedAtHigher": [
+        "contrib/admin/options.py::InlineModelAdmin",
+        "contrib/admin/options.py::InlineModelAdmin.get_formset",
+        "contrib/admindocs/utils.py::replace_named_groups",
+        "db/models/fields/related.py::ForeignObject.related_fields",
+        "db/models/fields/related.py::RelatedField",
+        "db/models/fields/related_lookups.py::RelatedLookupMixin.get_prep_lookup"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-11728",
+      "lower": 6400,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "RELATED_ITEM_LOST"
+      ],
+      "lostEvidence": [
+        "contrib/admin/options.py::InlineModelAdmin|pivot, required",
+        "contrib/admin/options.py::InlineModelAdmin.get_formset|pivot, required"
+      ],
+      "stillRenderedAtHigher": [
+        "contrib/admin/options.py::InlineModelAdmin",
+        "contrib/admin/options.py::InlineModelAdmin.get_formset"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-12325",
+      "lower": 6400,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "SEMANTIC_ROLE_CHANGED",
+        "RELATED_ITEM_REPLACED"
+      ],
+      "lostEvidence": [
+        "db/models/deletion.py::PROTECT|pivot, required",
+        "contrib/postgres/fields/array.py::ArrayField.description|pivot, required",
+        "db/models/fields/related.py::OneToOneField.description|support, skeleton",
+        "db/models/fields/__init__.py::NullBooleanField.description|support, skeleton",
+        "contrib/postgres/fields/hstore.py::HStoreField.description|support, skeleton",
+        "contrib/gis/db/models/fields.py::GeometryField.description|support, skeleton",
+        "ForeignKeyDeferredAttribute|support, skeleton",
+        "db/models/fields/related.py::ForeignKey.description|support, skeleton",
+        "db/models/fields/related.py::ManyToManyField.description|support, skeleton",
+        "db/models/fields/__init__.py::CharField.description|support, skeleton",
+        "db/models/fields/__init__.py::SlugField.description|support, skeleton",
+        "db/models/fields/__init__.py::Field.description|support, skeleton",
+        "db/models/deletion.py::Collector.can_fast_delete|impact"
+      ],
+      "stillRenderedAtHigher": [
+        "db/models/deletion.py::PROTECT",
+        "contrib/postgres/fields/array.py::ArrayField.description",
+        "db/models/fields/related.py::OneToOneField.description",
+        "db/models/fields/__init__.py::NullBooleanField.description",
+        "contrib/postgres/fields/hstore.py::HStoreField.description",
+        "contrib/gis/db/models/fields.py::GeometryField.description",
+        "ForeignKeyDeferredAttribute",
+        "db/models/fields/related.py::ForeignKey.description",
+        "db/models/fields/related.py::ManyToManyField.description",
+        "db/models/fields/__init__.py::CharField.description",
+        "db/models/fields/__init__.py::SlugField.description",
+        "db/models/fields/__init__.py::Field.description",
+        "db/models/deletion.py::Collector.can_fast_delete"
+      ],
+      "withheldByAtHigher": "none",
+      "attribution": "evidence_layer_or_other"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-13820",
+      "lower": 3200,
+      "higher": 6400,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "RELATED_ITEM_LOST"
+      ],
+      "lostEvidence": [
+        "apps/config.py::AppConfig._path_from_module|pivot, required",
+        "db/migrations/autodetector.py::MigrationAutodetector._detect_changes|pivot, required"
+      ],
+      "stillRenderedAtHigher": [
+        "apps/config.py::AppConfig._path_from_module",
+        "db/migrations/autodetector.py::MigrationAutodetector._detect_changes"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-14792",
+      "lower": 3200,
+      "higher": 6400,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "RELATED_ITEM_LOST"
+      ],
+      "lostEvidence": [
+        "db/backends/base/operations.py::BaseDatabaseOperations.date_trunc_sql|pivot, required",
+        "db/backends/postgresql/operations.py::DatabaseOperations.date_trunc_sql|pivot, required"
+      ],
+      "stillRenderedAtHigher": [
+        "db/backends/base/operations.py::BaseDatabaseOperations.date_trunc_sql",
+        "db/backends/postgresql/operations.py::DatabaseOperations.date_trunc_sql"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-14792",
+      "lower": 3200,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "RELATED_ITEM_LOST"
+      ],
+      "lostEvidence": [
+        "db/backends/base/operations.py::BaseDatabaseOperations.date_trunc_sql|pivot, required",
+        "db/backends/postgresql/operations.py::DatabaseOperations.date_trunc_sql|pivot, required"
+      ],
+      "stillRenderedAtHigher": [
+        "db/backends/base/operations.py::BaseDatabaseOperations.date_trunc_sql",
+        "db/backends/postgresql/operations.py::DatabaseOperations.date_trunc_sql"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-15037",
+      "lower": 3200,
+      "higher": 6400,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "RELATED_ITEM_LOST"
+      ],
+      "lostEvidence": [
+        "db/backends/base/introspection.py::BaseDatabaseIntrospection.get_primary_key_column|pivot, required",
+        "db/models/fields/__init__.py::Field.deconstruct|pivot, required",
+        "db/models/fields/json.py::KeyTransformTextLookupMixin|pivot, required"
+      ],
+      "stillRenderedAtHigher": [
+        "db/backends/base/introspection.py::BaseDatabaseIntrospection.get_primary_key_column",
+        "db/models/fields/__init__.py::Field.deconstruct",
+        "db/models/fields/json.py::KeyTransformTextLookupMixin"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-15037",
+      "lower": 3200,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "RELATED_ITEM_LOST"
+      ],
+      "lostEvidence": [
+        "db/models/fields/json.py::KeyTransformTextLookupMixin|pivot, required"
+      ],
+      "stillRenderedAtHigher": [
+        "db/models/fields/json.py::KeyTransformTextLookupMixin"
+      ],
+      "withheldByAtHigher": "envelope_ladder_slice",
+      "attribution": "metadata_layer:envelope_ladder_slice"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-16877",
+      "lower": 6400,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "SEMANTIC_ROLE_CHANGED",
+        "RELATED_ITEM_REPLACED"
+      ],
+      "lostEvidence": [
+        "template/defaultfilters.py::safeseq|pivot, required",
+        "template/defaultfilters.py::escapejs_filter|pivot, required",
+        "template/defaultfilters.py::force_escape|pivot, required",
+        "template/defaultfilters.py::linebreaks_filter|pivot, required",
+        "template/defaulttags.py::do_filter|support, skeleton",
+        "core/checks/security/csrf.py::_csrf_middleware|support, skeleton",
+        "template/base.py::Parser.compile_filter|support, skeleton",
+        "template/defaultfilters.py::stringfilter|support, skeleton",
+        "template/defaultfilters.py::safe|support, skeleton",
+        "template/defaulttags.py::AutoEscapeControlNode|support, skeleton",
+        "template/defaultfilters.py::phone2numeric_filter|support, skeleton",
+        "template/base.py::Parser.unclosed_block_tag|support, skeleton",
+        "template/defaultfilters.py::urlencode|support, skeleton",
+        "template/base.py::FilterExpression|support, skeleton"
+      ],
+      "stillRenderedAtHigher": [
+        "template/defaultfilters.py::safeseq",
+        "template/defaultfilters.py::escapejs_filter",
+        "template/defaultfilters.py::force_escape",
+        "template/defaultfilters.py::linebreaks_filter",
+        "template/defaulttags.py::do_filter",
+        "core/checks/security/csrf.py::_csrf_middleware",
+        "template/base.py::Parser.compile_filter",
+        "template/defaultfilters.py::stringfilter",
+        "template/defaultfilters.py::safe",
+        "template/defaulttags.py::AutoEscapeControlNode",
+        "template/defaultfilters.py::phone2numeric_filter",
+        "template/base.py::Parser.unclosed_block_tag",
+        "template/defaultfilters.py::urlencode",
+        "template/base.py::FilterExpression"
+      ],
+      "withheldByAtHigher": "none",
+      "attribution": "evidence_layer_or_other"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "matplotlib__matplotlib-24870",
+      "lower": 3200,
+      "higher": 6400,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "RELATED_ITEM_LOST"
+      ],
+      "lostEvidence": [
+        "lib/matplotlib/pyplot.py::subplots|pivot, required",
+        "lib/mpl_toolkits/mplot3d/axes3d.py::Axes3D.contour|pivot, required"
+      ],
+      "stillRenderedAtHigher": [
+        "lib/matplotlib/pyplot.py::subplots",
+        "lib/mpl_toolkits/mplot3d/axes3d.py::Axes3D.contour"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "matplotlib__matplotlib-24870",
+      "lower": 3200,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "RELATED_ITEM_LOST"
+      ],
+      "lostEvidence": [
+        "lib/matplotlib/pyplot.py::subplots|pivot, required",
+        "lib/mpl_toolkits/mplot3d/axes3d.py::Axes3D.contour|pivot, required"
+      ],
+      "stillRenderedAtHigher": [
+        "lib/matplotlib/pyplot.py::subplots",
+        "lib/mpl_toolkits/mplot3d/axes3d.py::Axes3D.contour"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "matplotlib__matplotlib-25960",
+      "lower": 3200,
+      "higher": 6400,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "RELATED_ITEM_LOST",
+        "RELATED_ITEM_REPLACED"
+      ],
+      "lostEvidence": [
+        "lib/matplotlib/pyplot.py::show|support, skeleton"
+      ],
+      "stillRenderedAtHigher": [
+        "lib/matplotlib/pyplot.py::show"
+      ],
+      "withheldByAtHigher": "envelope_ladder_slice",
+      "attribution": "metadata_layer:envelope_ladder_slice"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "pallets__flask-5014",
+      "lower": 6400,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "RELATED_ITEM_LOST"
+      ],
+      "lostEvidence": [
+        "src/flask/blueprints.py::Blueprint.app_errorhandler|pivot, required",
+        "src/flask/blueprints.py::Blueprint.register|pivot, required",
+        "src/flask/scaffold.py::Scaffold.name|support, skeleton",
+        "src/flask/cli.py::CertParamType.name|support, skeleton",
+        "src/flask/helpers.py::_split_blueprint_path|support, skeleton",
+        "src/flask/scaffold.py::Scaffold.register_error_handler|support, skeleton",
+        "src/flask/app.py::Flask.finalize_request|support, skeleton",
+        "src/flask/app.py::Flask|impact",
+        "src/flask/app.py::Flask.__init__|impact",
+        "src/flask/app.py::Flask.auto_find_instance_path|impact",
+        "src/flask/app.py::Flask.run|impact"
+      ],
+      "stillRenderedAtHigher": [
+        "src/flask/blueprints.py::Blueprint.app_errorhandler",
+        "src/flask/blueprints.py::Blueprint.register",
+        "src/flask/scaffold.py::Scaffold.name",
+        "src/flask/cli.py::CertParamType.name",
+        "src/flask/helpers.py::_split_blueprint_path",
+        "src/flask/scaffold.py::Scaffold.register_error_handler",
+        "src/flask/app.py::Flask.finalize_request",
+        "src/flask/app.py::Flask",
+        "src/flask/app.py::Flask.__init__",
+        "src/flask/app.py::Flask.auto_find_instance_path",
+        "src/flask/app.py::Flask.run"
+      ],
+      "withheldByAtHigher": "envelope_ladder_slice",
+      "attribution": "metadata_layer:envelope_ladder_slice"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "psf__requests-1921",
+      "lower": 3200,
+      "higher": 6400,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "RELATED_ITEM_LOST"
+      ],
+      "lostEvidence": [
+        "requests/sessions.py::session|pivot, required",
+        "requests/sessions.py::Session.post|support, skeleton",
+        "requests/sessions.py::Session.prepare_request|support, skeleton",
+        "requests/sessions.py::Session.head|support, skeleton"
+      ],
+      "stillRenderedAtHigher": [
+        "requests/sessions.py::session",
+        "requests/sessions.py::Session.post",
+        "requests/sessions.py::Session.prepare_request",
+        "requests/sessions.py::Session.head"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "psf__requests-1921",
+      "lower": 3200,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "RELATED_ITEM_LOST",
+        "RELATED_ITEM_REPLACED"
+      ],
+      "lostEvidence": [
+        "requests/sessions.py::Session.prepare_request|support, skeleton",
+        "requests/sessions.py::Session.head|support, skeleton"
+      ],
+      "stillRenderedAtHigher": [
+        "requests/sessions.py::Session.prepare_request",
+        "requests/sessions.py::Session.head"
+      ],
+      "withheldByAtHigher": "envelope_ladder_slice",
+      "attribution": "metadata_layer:envelope_ladder_slice"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "psf__requests-5414",
+      "lower": 6400,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "RELATED_ITEM_LOST"
+      ],
+      "lostEvidence": [
+        "requests/exceptions.py::RequestsDependencyWarning|pivot, required",
+        "requests/help.py::_implementation|pivot, required",
+        "requests/help.py::info|pivot, required",
+        "requests/models.py::Response|pivot, required",
+        "requests/__init__.py::_check_cryptography|pivot, required, impact",
+        "docs/conf.py::version|support, skeleton, documentation",
+        "requests/models.py::Response.apparent_encoding|support, skeleton",
+        "requests/exceptions.py::InvalidURL|support, skeleton",
+        "requests/models.py::Request|support, skeleton",
+        "docs/conf.py::release|support, skeleton, documentation",
+        "requests/models.py::PreparedRequest.prepare|impact",
+        "requests/models.py::PreparedRequest|impact"
+      ],
+      "stillRenderedAtHigher": [
+        "requests/exceptions.py::RequestsDependencyWarning",
+        "requests/help.py::_implementation",
+        "requests/help.py::info",
+        "requests/models.py::Response",
+        "requests/__init__.py::_check_cryptography",
+        "docs/conf.py::version",
+        "requests/models.py::Response.apparent_encoding",
+        "requests/exceptions.py::InvalidURL",
+        "requests/models.py::Request",
+        "docs/conf.py::release",
+        "requests/models.py::PreparedRequest.prepare",
+        "requests/models.py::PreparedRequest"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "pytest-dev__pytest-10051",
+      "lower": 6400,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "RELATED_ITEM_LOST"
+      ],
+      "lostEvidence": [
+        "src/_pytest/logging.py::LoggingPlugin._runtest_for|pivot, required",
+        "src/_pytest/logging.py::LogCaptureFixture.get_records|pivot, required",
+        "scripts/release.py::regen|pivot, required",
+        "src/_pytest/logging.py::caplog|pivot, required",
+        "src/_pytest/assertion/rewrite.py::AssertionRewriter|pivot, required",
+        "src/_pytest/_argcomplete.py::FastFilesCompleter.__call__|support, skeleton",
+        "src/_pytest/python.py::CallSpec2|support, skeleton",
+        "src/_pytest/warnings.py::warning_record_to_str|support, skeleton",
+        "src/_pytest/logging.py::caplog_records_key|support, skeleton",
+        "src/_pytest/logging.py::LogCaptureHandler|impact",
+        "src/_pytest/logging.py::LoggingPlugin.pytest_runtest_call|impact",
+        "src/_pytest/logging.py::LoggingPlugin.pytest_runtest_setup|impact",
+        "src/_pytest/logging.py::LoggingPlugin.pytest_runtest_teardown|impact",
+        "src/_pytest/logging.py::LoggingPlugin|impact"
+      ],
+      "stillRenderedAtHigher": [
+        "src/_pytest/logging.py::LoggingPlugin._runtest_for",
+        "src/_pytest/logging.py::LogCaptureFixture.get_records",
+        "scripts/release.py::regen",
+        "src/_pytest/logging.py::caplog",
+        "src/_pytest/assertion/rewrite.py::AssertionRewriter",
+        "src/_pytest/_argcomplete.py::FastFilesCompleter.__call__",
+        "src/_pytest/python.py::CallSpec2",
+        "src/_pytest/warnings.py::warning_record_to_str",
+        "src/_pytest/logging.py::caplog_records_key",
+        "src/_pytest/logging.py::LogCaptureHandler",
+        "src/_pytest/logging.py::LoggingPlugin.pytest_runtest_call",
+        "src/_pytest/logging.py::LoggingPlugin.pytest_runtest_setup",
+        "src/_pytest/logging.py::LoggingPlugin.pytest_runtest_teardown",
+        "src/_pytest/logging.py::LoggingPlugin"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "scikit-learn__scikit-learn-10844",
+      "lower": 6400,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "RELATED_ITEM_LOST"
+      ],
+      "lostEvidence": [
+        "sklearn/feature_extraction/text.py::CountVectorizer|pivot, required",
+        "sklearn/feature_extraction/text.py::HashingVectorizer.fit|support, skeleton",
+        "sklearn/metrics/cluster/tests/test_supervised.py::test_fowlkes_mallows_score|impact",
+        "sklearn/metrics/cluster/tests/test_supervised.py::test_fowlkes_mallows_score_properties|impact",
+        "sklearn/feature_extraction/tests/test_text.py::test_count_vectorizer_max_features|impact"
+      ],
+      "stillRenderedAtHigher": [
+        "sklearn/feature_extraction/text.py::CountVectorizer",
+        "sklearn/feature_extraction/text.py::HashingVectorizer.fit",
+        "sklearn/metrics/cluster/tests/test_supervised.py::test_fowlkes_mallows_score",
+        "sklearn/metrics/cluster/tests/test_supervised.py::test_fowlkes_mallows_score_properties",
+        "sklearn/feature_extraction/tests/test_text.py::test_count_vectorizer_max_features"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sphinx-doc__sphinx-7748",
+      "lower": 3200,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "RELATED_ITEM_LOST"
+      ],
+      "lostEvidence": [
+        "sphinx/ext/autodoc/__init__.py::DocstringSignatureMixin|pivot, required",
+        "sphinx/ext/autodoc/__init__.py::DocstringStripSignatureMixin|pivot, required, impact",
+        "sphinx/ext/autodoc/__init__.py::DocstringSignatureMixin._find_signature|pivot, required",
+        "sphinx/ext/napoleon/docstring.py::GoogleDocstring|pivot, required",
+        "sphinx/ext/autodoc/__init__.py::Documenter.document_members|support, skeleton",
+        "doc/usage/extensions/example_google.py::function_with_types_in_docstring|support, skeleton, documentation"
+      ],
+      "stillRenderedAtHigher": [
+        "sphinx/ext/autodoc/__init__.py::DocstringSignatureMixin",
+        "sphinx/ext/autodoc/__init__.py::DocstringStripSignatureMixin",
+        "sphinx/ext/autodoc/__init__.py::DocstringSignatureMixin._find_signature",
+        "sphinx/ext/napoleon/docstring.py::GoogleDocstring",
+        "sphinx/ext/autodoc/__init__.py::Documenter.document_members",
+        "doc/usage/extensions/example_google.py::function_with_types_in_docstring"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sphinx-doc__sphinx-7748",
+      "lower": 6400,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "RELATED_ITEM_LOST"
+      ],
+      "lostEvidence": [
+        "sphinx/ext/autodoc/__init__.py::DocstringSignatureMixin|pivot, required",
+        "sphinx/ext/autodoc/__init__.py::DocstringStripSignatureMixin|pivot, required, impact",
+        "sphinx/ext/autodoc/__init__.py::DocstringSignatureMixin._find_signature|pivot, required",
+        "sphinx/ext/napoleon/docstring.py::GoogleDocstring|pivot, required",
+        "sphinx/ext/autodoc/__init__.py::Documenter.document_members|support, skeleton",
+        "doc/usage/extensions/example_google.py::function_with_types_in_docstring|support, skeleton, documentation"
+      ],
+      "stillRenderedAtHigher": [
+        "sphinx/ext/autodoc/__init__.py::DocstringSignatureMixin",
+        "sphinx/ext/autodoc/__init__.py::DocstringStripSignatureMixin",
+        "sphinx/ext/autodoc/__init__.py::DocstringSignatureMixin._find_signature",
+        "sphinx/ext/napoleon/docstring.py::GoogleDocstring",
+        "sphinx/ext/autodoc/__init__.py::Documenter.document_members",
+        "doc/usage/extensions/example_google.py::function_with_types_in_docstring"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sphinx-doc__sphinx-7910",
+      "lower": 3200,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "RELATED_ITEM_LOST"
+      ],
+      "lostEvidence": [
+        "sphinx/builders/__init__.py::Builder.prepare_writing|pivot, required",
+        "sphinx/ext/autodoc/__init__.py::ClassDocumenter|pivot, required"
+      ],
+      "stillRenderedAtHigher": [
+        "sphinx/builders/__init__.py::Builder.prepare_writing",
+        "sphinx/ext/autodoc/__init__.py::ClassDocumenter"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sphinx-doc__sphinx-7910",
+      "lower": 6400,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "RELATED_ITEM_LOST"
+      ],
+      "lostEvidence": [
+        "sphinx/builders/__init__.py::Builder.prepare_writing|pivot, required",
+        "sphinx/ext/autodoc/__init__.py::ClassDocumenter|pivot, required",
+        "sphinx/ext/autodoc/__init__.py::ClassDocumenter._get_signature|pivot, required",
+        "doc/usage/extensions/example_google.py::ExampleClass.__init__|pivot, required",
+        "doc/usage/extensions/example_numpy.py::ExampleClass.__init__|pivot, required",
+        "sphinx/directives/__init__.py::ObjectDescription._doc_field_type_map|support, skeleton",
+        "sphinx/domains/__init__.py::ObjType|support, skeleton",
+        "sphinx/builders/html/__init__.py::BuildInfo.__init__|support, skeleton",
+        "sphinx/ext/napoleon/__init__.py::_patch_python_domain|support, skeleton",
+        "doc/conf.py::man_pages|support, skeleton, documentation"
+      ],
+      "stillRenderedAtHigher": [
+        "sphinx/builders/__init__.py::Builder.prepare_writing",
+        "sphinx/ext/autodoc/__init__.py::ClassDocumenter",
+        "sphinx/ext/autodoc/__init__.py::ClassDocumenter._get_signature",
+        "doc/usage/extensions/example_google.py::ExampleClass.__init__",
+        "doc/usage/extensions/example_numpy.py::ExampleClass.__init__",
+        "sphinx/directives/__init__.py::ObjectDescription._doc_field_type_map",
+        "sphinx/domains/__init__.py::ObjType",
+        "sphinx/builders/html/__init__.py::BuildInfo.__init__",
+        "sphinx/ext/napoleon/__init__.py::_patch_python_domain",
+        "doc/conf.py::man_pages"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sphinx-doc__sphinx-9711",
+      "lower": 3200,
+      "higher": 6400,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "SEMANTIC_ROLE_CHANGED",
+        "RELATED_ITEM_REPLACED"
+      ],
+      "lostEvidence": [
+        "sphinx/application.py::Sphinx|pivot, required",
+        "sphinx/extension.py::setup|impact"
+      ],
+      "stillRenderedAtHigher": [
+        "sphinx/application.py::Sphinx",
+        "sphinx/extension.py::setup"
+      ],
+      "withheldByAtHigher": "none",
+      "attribution": "evidence_layer_or_other"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sphinx-doc__sphinx-9711",
+      "lower": 3200,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "SEMANTIC_ROLE_CHANGED",
+        "RELATED_ITEM_REPLACED"
+      ],
+      "lostEvidence": [
+        "sphinx/application.py::Sphinx|pivot, required",
+        "sphinx/extension.py::setup|impact"
+      ],
+      "stillRenderedAtHigher": [
+        "sphinx/application.py::Sphinx",
+        "sphinx/extension.py::setup"
+      ],
+      "withheldByAtHigher": "none",
+      "attribution": "evidence_layer_or_other"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sympy__sympy-16597",
+      "lower": 3200,
+      "higher": 6400,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "RELATED_ITEM_LOST"
+      ],
+      "lostEvidence": [
+        "sympy/printing/julia.py::julia_code|pivot, required",
+        "sympy/printing/fcode.py::FCodePrinter._print_NumberSymbol|pivot, required"
+      ],
+      "stillRenderedAtHigher": [
+        "sympy/printing/julia.py::julia_code",
+        "sympy/printing/fcode.py::FCodePrinter._print_NumberSymbol"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sympy__sympy-19637",
+      "lower": 3200,
+      "higher": 6400,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "RELATED_ITEM_LOST"
+      ],
+      "lostEvidence": [
+        "sympy/core/sympify.py::sympify|pivot, required",
+        "sympy/core/__init__.py::__all__|support, skeleton"
+      ],
+      "stillRenderedAtHigher": [
+        "sympy/core/sympify.py::sympify",
+        "sympy/core/__init__.py::__all__"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sympy__sympy-19637",
+      "lower": 3200,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "RELATED_ITEM_LOST",
+        "RELATED_ITEM_REPLACED"
+      ],
+      "lostEvidence": [
+        "sympy/core/__init__.py::__all__|support, skeleton"
+      ],
+      "stillRenderedAtHigher": [
+        "sympy/core/__init__.py::__all__"
+      ],
+      "withheldByAtHigher": "envelope_ladder_slice",
+      "attribution": "metadata_layer:envelope_ladder_slice"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sympy__sympy-20801",
+      "lower": 3200,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "RELATED_ITEM_LOST"
+      ],
+      "lostEvidence": [
+        "sympy/concrete/expr_with_limits.py::ExprWithLimits.is_number|pivot, required",
+        "sympy/combinatorics/perm_groups.py::PermutationGroup.subgroup_search|pivot, required"
+      ],
+      "stillRenderedAtHigher": [
+        "sympy/concrete/expr_with_limits.py::ExprWithLimits.is_number",
+        "sympy/combinatorics/perm_groups.py::PermutationGroup.subgroup_search"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sympy__sympy-20801",
+      "lower": 6400,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "RELATED_ITEM_LOST"
+      ],
+      "lostEvidence": [
+        "sympy/concrete/expr_with_limits.py::ExprWithLimits.is_number|pivot, required",
+        "sympy/combinatorics/perm_groups.py::PermutationGroup.subgroup_search|pivot, required",
+        "sympy/core/symbol.py::symbols|pivot, required"
+      ],
+      "stillRenderedAtHigher": [
+        "sympy/concrete/expr_with_limits.py::ExprWithLimits.is_number",
+        "sympy/combinatorics/perm_groups.py::PermutationGroup.subgroup_search",
+        "sympy/core/symbol.py::symbols"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sympy__sympy-24213",
+      "lower": 6400,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "RELATED_ITEM_LOST"
+      ],
+      "lostEvidence": [
+        "sympy/physics/units/quantities.py::Quantity._collect_factor_and_dimension|pivot, required",
+        "sympy/physics/units/dimensions.py::_QuantityMapper.set_quantity_scale_factor|pivot, required"
+      ],
+      "stillRenderedAtHigher": [
+        "sympy/physics/units/quantities.py::Quantity._collect_factor_and_dimension",
+        "sympy/physics/units/dimensions.py::_QuantityMapper.set_quantity_scale_factor"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sympy__sympy-24562",
+      "lower": 3200,
+      "higher": 6400,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "RELATED_ITEM_LOST"
+      ],
+      "lostEvidence": [
+        "sympy/assumptions/ask.py::AssumptionKeys.rational|pivot, required",
+        "sympy/concrete/guess.py::rationalize|pivot, required",
+        "sympy/assumptions/predicates/sets.py::RationalPredicate|pivot, required",
+        "sympy/polys/domains/rationalfield.py::RationalField|pivot, required",
+        "sympy/core/numbers.py::RationalConstant|support, skeleton"
+      ],
+      "stillRenderedAtHigher": [
+        "sympy/assumptions/ask.py::AssumptionKeys.rational",
+        "sympy/concrete/guess.py::rationalize",
+        "sympy/assumptions/predicates/sets.py::RationalPredicate",
+        "sympy/polys/domains/rationalfield.py::RationalField",
+        "sympy/core/numbers.py::RationalConstant"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sympy__sympy-24562",
+      "lower": 3200,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "RELATED_ITEM_LOST"
+      ],
+      "lostEvidence": [
+        "sympy/assumptions/ask.py::AssumptionKeys.rational|pivot, required",
+        "sympy/concrete/guess.py::rationalize|pivot, required",
+        "sympy/assumptions/predicates/sets.py::RationalPredicate|pivot, required",
+        "sympy/polys/domains/rationalfield.py::RationalField|pivot, required",
+        "sympy/core/numbers.py::RationalConstant|support, skeleton"
+      ],
+      "stillRenderedAtHigher": [
+        "sympy/assumptions/ask.py::AssumptionKeys.rational",
+        "sympy/concrete/guess.py::rationalize",
+        "sympy/assumptions/predicates/sets.py::RationalPredicate",
+        "sympy/polys/domains/rationalfield.py::RationalField",
+        "sympy/core/numbers.py::RationalConstant"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "astropy__astropy-14508",
+      "lower": 6400,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "RELATED_ITEM_LOST"
+      ],
+      "lostEvidence": [
+        "astropy/io/fits/card.py::Card.keyword|pivot, required",
+        "astropy/io/fits/column.py::ColDefs|pivot, required",
+        "astropy/io/fits/column.py::ColDefs.info|pivot, required",
+        "astropy/units/format/fits.py::Fits|pivot, required",
+        "astropy/__init__.py::Conf.unicode_output|support, skeleton",
+        "astropy/io/fits/diff.py::FITSDiff|support, skeleton",
+        "astropy/io/ascii/basic.py::BasicHeader.comment|support, skeleton",
+        "astropy/io/fits/convenience.py::getheader|support, skeleton",
+        "astropy/io/votable/converters.py::Converter|support, skeleton",
+        "astropy/__init__.py::Conf.use_color|support, skeleton",
+        "astropy/__init__.py::Conf|support, skeleton",
+        "astropy/io/fits/diff.py::HeaderDiff|support, skeleton",
+        "astropy/io/fits/card.py::_format_value|impact"
+      ],
+      "stillRenderedAtHigher": [
+        "astropy/io/fits/card.py::Card.keyword",
+        "astropy/io/fits/column.py::ColDefs",
+        "astropy/io/fits/column.py::ColDefs.info",
+        "astropy/units/format/fits.py::Fits",
+        "astropy/__init__.py::Conf.unicode_output",
+        "astropy/io/fits/diff.py::FITSDiff",
+        "astropy/io/ascii/basic.py::BasicHeader.comment",
+        "astropy/io/fits/convenience.py::getheader",
+        "astropy/io/votable/converters.py::Converter",
+        "astropy/__init__.py::Conf.use_color",
+        "astropy/__init__.py::Conf",
+        "astropy/io/fits/diff.py::HeaderDiff",
+        "astropy/io/fits/card.py::_format_value"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "django__django-14500",
+      "lower": 6400,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "RELATED_ITEM_LOST"
+      ],
+      "lostEvidence": [
+        "contrib/gis/gdal/raster/band.py::GDALBand.description|pivot, required",
+        "db/migrations/executor.py::MigrationExecutor.detect_soft_applied|pivot, required",
+        "db/migrations/loader.py::MigrationLoader|pivot, required",
+        "db/migrations/graph.py::MigrationGraph|pivot, required",
+        "contrib/gis/db/models/fields.py::GeometryField.description|support, skeleton",
+        "db/migrations/questioner.py::InteractiveMigrationQuestioner._ask_default|support, skeleton",
+        "db/migrations/migration.py::Migration.unapply|support, skeleton",
+        "db/migrations/executor.py::MigrationExecutor.unapply_migration|support, skeleton",
+        "db/migrations/graph.py::MigrationGraph.forwards_plan|support, skeleton"
+      ],
+      "stillRenderedAtHigher": [
+        "contrib/gis/gdal/raster/band.py::GDALBand.description",
+        "db/migrations/executor.py::MigrationExecutor.detect_soft_applied",
+        "db/migrations/loader.py::MigrationLoader",
+        "db/migrations/graph.py::MigrationGraph",
+        "contrib/gis/db/models/fields.py::GeometryField.description",
+        "db/migrations/questioner.py::InteractiveMigrationQuestioner._ask_default",
+        "db/migrations/migration.py::Migration.unapply",
+        "db/migrations/executor.py::MigrationExecutor.unapply_migration",
+        "db/migrations/graph.py::MigrationGraph.forwards_plan"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "django__django-15252",
+      "lower": 6400,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "RELATED_ITEM_LOST"
+      ],
+      "lostEvidence": [
+        "db/migrations/recorder.py::MigrationRecorder.ensure_schema|pivot, required",
+        "db/migrations/executor.py::MigrationExecutor|pivot, required",
+        "db/migrations/recorder.py::MigrationRecorder.applied_migrations|pivot, required",
+        "db/migrations/recorder.py::MigrationRecorder.flush|pivot, required",
+        "core/serializers/json.py::DjangoJSONEncoder.default|pivot, required",
+        "contrib/admin/apps.py::AdminConfig.default|support, skeleton",
+        "db/migrations/recorder.py::MigrationRecorder.record_applied|support, skeleton, impact",
+        "db/migrations/executor.py::MigrationExecutor.apply_migration|support, skeleton",
+        "db/migrations/recorder.py::MigrationRecorder.record_unapplied|support, skeleton, impact",
+        "contrib/messages/storage/cookie.py::MessageEncoder|impact",
+        "db/migrations/recorder.py::MigrationRecorder|impact"
+      ],
+      "stillRenderedAtHigher": [
+        "db/migrations/recorder.py::MigrationRecorder.ensure_schema",
+        "db/migrations/executor.py::MigrationExecutor",
+        "db/migrations/recorder.py::MigrationRecorder.applied_migrations",
+        "db/migrations/recorder.py::MigrationRecorder.flush",
+        "core/serializers/json.py::DjangoJSONEncoder.default",
+        "contrib/admin/apps.py::AdminConfig.default",
+        "db/migrations/recorder.py::MigrationRecorder.record_applied",
+        "db/migrations/executor.py::MigrationExecutor.apply_migration",
+        "db/migrations/recorder.py::MigrationRecorder.record_unapplied",
+        "contrib/messages/storage/cookie.py::MessageEncoder",
+        "db/migrations/recorder.py::MigrationRecorder"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "django__django-15629",
+      "lower": 6400,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "RELATED_ITEM_LOST"
+      ],
+      "lostEvidence": [
+        "contrib/auth/admin.py::UserAdmin|pivot, required",
+        "contrib/admin/forms.py::AdminAuthenticationForm|pivot, required"
+      ],
+      "stillRenderedAtHigher": [
+        "contrib/auth/admin.py::UserAdmin",
+        "contrib/admin/forms.py::AdminAuthenticationForm"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "matplotlib__matplotlib-22871",
+      "lower": 3200,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "RELATED_ITEM_LOST"
+      ],
+      "lostEvidence": [
+        "lib/matplotlib/dates.py::AutoDateLocator|pivot, required",
+        "lib/matplotlib/pyplot.py::show|pivot, required"
+      ],
+      "stillRenderedAtHigher": [
+        "lib/matplotlib/dates.py::AutoDateLocator",
+        "lib/matplotlib/pyplot.py::show"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "matplotlib__matplotlib-22871",
+      "lower": 6400,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "RELATED_ITEM_LOST"
+      ],
+      "lostEvidence": [
+        "lib/matplotlib/dates.py::AutoDateLocator|pivot, required",
+        "lib/matplotlib/pyplot.py::show|pivot, required"
+      ],
+      "stillRenderedAtHigher": [
+        "lib/matplotlib/dates.py::AutoDateLocator",
+        "lib/matplotlib/pyplot.py::show"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "matplotlib__matplotlib-23412",
+      "lower": 6400,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "RELATED_ITEM_LOST"
+      ],
+      "lostEvidence": [
+        "lib/matplotlib/pyplot.py::show|pivot, required",
+        "lib/matplotlib/figure.py::FigureBase.gca|pivot, required"
+      ],
+      "stillRenderedAtHigher": [
+        "lib/matplotlib/pyplot.py::show",
+        "lib/matplotlib/figure.py::FigureBase.gca"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "mwaskom__seaborn-3069",
+      "lower": 3200,
+      "higher": 6400,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "SEMANTIC_ROLE_CHANGED",
+        "RELATED_ITEM_REPLACED"
+      ],
+      "lostEvidence": [
+        "seaborn/_core/plot.py::Plot|pivot, required, impact",
+        "seaborn/categorical.py::_PointPlotter.plot|pivot, required"
+      ],
+      "stillRenderedAtHigher": [
+        "seaborn/_core/plot.py::Plot",
+        "seaborn/categorical.py::_PointPlotter.plot"
+      ],
+      "withheldByAtHigher": "none",
+      "attribution": "evidence_layer_or_other"
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "mwaskom__seaborn-3069",
+      "lower": 3200,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "RELATED_ITEM_LOST"
+      ],
+      "lostEvidence": [
+        "seaborn/_core/plot.py::Plot|pivot, required, impact",
+        "seaborn/categorical.py::_PointPlotter.plot|pivot, required"
+      ],
+      "stillRenderedAtHigher": [
+        "seaborn/_core/plot.py::Plot",
+        "seaborn/categorical.py::_PointPlotter.plot"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "mwaskom__seaborn-3069",
+      "lower": 6400,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "RELATED_ITEM_LOST"
+      ],
+      "lostEvidence": [
+        "seaborn/_core/plot.py::Plot|actionable class — symbol-name match; strong lexical match; issue-domain relevance; 233 dependents",
+        "seaborn/categorical.py::_PointPlotter.plot|actionable method — symbol-name match; lexical match; issue-domain relevance; graph/import neighbour",
+        "seaborn/_core/scales.py::Scale|actionable class — symbol-name match; strong lexical match; issue-domain relevance; 24 dependents",
+        "seaborn/_core/plot.py::Plotter|actionable class — symbol-name match; strong lexical match; issue-domain relevance",
+        "seaborn/_core/scales.py::PseudoAxis.set_major_formatter|lexical match; issue-domain relevance; graph/import neighbour (not a pivot: no direct evidence (graph/domain reach only))",
+        "seaborn/_core/plot.py::Plotter._setup_scales|strong target but beyond the pivot budget — pivot: actionable method — symbol-name match; lexical match; issue-domain relevance"
+      ],
+      "stillRenderedAtHigher": [
+        "seaborn/_core/plot.py::Plot",
+        "seaborn/categorical.py::_PointPlotter.plot",
+        "seaborn/_core/scales.py::Scale",
+        "seaborn/_core/plot.py::Plotter",
+        "seaborn/_core/scales.py::PseudoAxis.set_major_formatter",
+        "seaborn/_core/plot.py::Plotter._setup_scales"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "psf__requests-6028",
+      "lower": 3200,
+      "higher": 6400,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "RELATED_ITEM_LOST"
+      ],
+      "lostEvidence": [
+        "requests/cookies.py::RequestsCookieJar._find_no_duplicates|pivot, required",
+        "requests/models.py::Response|pivot, required"
+      ],
+      "stillRenderedAtHigher": [
+        "requests/cookies.py::RequestsCookieJar._find_no_duplicates",
+        "requests/models.py::Response"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pydata__xarray-7229",
+      "lower": 6400,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "RELATED_ITEM_LOST"
+      ],
+      "lostEvidence": [
+        "doc/examples/_code/accessor_example.py::GeoAccessor|pivot, required",
+        "xarray/coding/cftimeindex.py::CFTimeIndex|pivot, required",
+        "xarray/coding/cftimeindex.py::CFTimeIndex.asi8|pivot, required",
+        "xarray/tutorial.py::load_dataset|pivot, required",
+        "xarray/core/dataarray.py::DataArray.from_dict|pivot, required",
+        "xarray/core/variable.py::NON_NANOSECOND_WARNING|support, skeleton",
+        "xarray/backends/api.py::load_dataset|support, skeleton"
+      ],
+      "stillRenderedAtHigher": [
+        "doc/examples/_code/accessor_example.py::GeoAccessor",
+        "xarray/coding/cftimeindex.py::CFTimeIndex",
+        "xarray/coding/cftimeindex.py::CFTimeIndex.asi8",
+        "xarray/tutorial.py::load_dataset",
+        "xarray/core/dataarray.py::DataArray.from_dict",
+        "xarray/core/variable.py::NON_NANOSECOND_WARNING",
+        "xarray/backends/api.py::load_dataset"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pylint-dev__pylint-4970",
+      "lower": 6400,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "RELATED_ITEM_LOST"
+      ],
+      "lostEvidence": [
+        "pylint/checkers/similar.py::hash_lineset|pivot, required",
+        "pylint/checkers/similar.py::filter_noncode_lines|pivot, required",
+        "pylint/checkers/similar.py::LineSet|pivot, required",
+        "pylint/checkers/similar.py::MSGS|support, skeleton",
+        "pylint/checkers/similar.py::SimilarChecker|support, skeleton, impact",
+        "pylint/checkers/similar.py::DEFAULT_MIN_SIMILARITY_LINE|support, skeleton",
+        "pylint/checkers/refactoring/refactoring_checker.py::RefactoringChecker.msgs|support, skeleton"
+      ],
+      "stillRenderedAtHigher": [
+        "pylint/checkers/similar.py::hash_lineset",
+        "pylint/checkers/similar.py::filter_noncode_lines",
+        "pylint/checkers/similar.py::LineSet",
+        "pylint/checkers/similar.py::MSGS",
+        "pylint/checkers/similar.py::SimilarChecker",
+        "pylint/checkers/similar.py::DEFAULT_MIN_SIMILARITY_LINE",
+        "pylint/checkers/refactoring/refactoring_checker.py::RefactoringChecker.msgs"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pylint-dev__pylint-6528",
+      "lower": 6400,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "RELATED_ITEM_LOST"
+      ],
+      "lostEvidence": [
+        "pylint/checkers/design_analysis.py::MisdesignChecker|pivot, required",
+        "pylint/checkers/design_analysis.py::MisdesignChecker.visit_classdef|pivot, required",
+        "pylint/lint/base_options.py::_make_linter_options|pivot, required"
+      ],
+      "stillRenderedAtHigher": [
+        "pylint/checkers/design_analysis.py::MisdesignChecker",
+        "pylint/checkers/design_analysis.py::MisdesignChecker.visit_classdef",
+        "pylint/lint/base_options.py::_make_linter_options"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pylint-dev__pylint-6903",
+      "lower": 6400,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "SEMANTIC_ROLE_CHANGED",
+        "RELATED_ITEM_REPLACED"
+      ],
+      "lostEvidence": [
+        "pylint/lint/parallel.py::check_parallel|pivot, required",
+        "pylint/lint/pylinter.py::PyLinter|pivot, required",
+        "pylint/checkers/dunder_methods.py::DUNDER_METHODS|support, skeleton",
+        "pylint/reporters/text.py::ParseableTextReporter|support, skeleton",
+        "pylint/lint/run.py::_cpu_count|impact",
+        "pylint/lint/pylinter.py::PyLinter.check|impact",
+        "tests/benchmark/test_baseline_benchmarks.py::TestEstablishBaselineBenchmarks.test_baseline_benchmark_check_parallel_j2|impact"
+      ],
+      "stillRenderedAtHigher": [
+        "pylint/lint/parallel.py::check_parallel",
+        "pylint/lint/pylinter.py::PyLinter",
+        "pylint/checkers/dunder_methods.py::DUNDER_METHODS",
+        "pylint/reporters/text.py::ParseableTextReporter",
+        "pylint/lint/run.py::_cpu_count",
+        "pylint/lint/pylinter.py::PyLinter.check",
+        "tests/benchmark/test_baseline_benchmarks.py::TestEstablishBaselineBenchmarks.test_baseline_benchmark_check_parallel_j2"
+      ],
+      "withheldByAtHigher": "none",
+      "attribution": "evidence_layer_or_other"
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pytest-dev__pytest-7324",
+      "lower": 400,
+      "higher": 1000,
+      "m179Classes": [
+        "FOCUS_SUBSTITUTED"
+      ],
+      "m180Classes": [
+        "FOCUS_CHANGED"
+      ],
+      "lostEvidence": [
+        "focus:src/_pytest/_code/source.py::compile_"
+      ],
+      "stillRenderedAtHigher": [
+        "src/_pytest/_code/source.py::compile_"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pytest-dev__pytest-7324",
+      "lower": 400,
+      "higher": 1200,
+      "m179Classes": [
+        "FOCUS_SUBSTITUTED"
+      ],
+      "m180Classes": [
+        "FOCUS_CHANGED"
+      ],
+      "lostEvidence": [
+        "focus:src/_pytest/_code/source.py::compile_"
+      ],
+      "stillRenderedAtHigher": [
+        "src/_pytest/_code/source.py::compile_"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pytest-dev__pytest-7324",
+      "lower": 400,
+      "higher": 1600,
+      "m179Classes": [
+        "FOCUS_SUBSTITUTED"
+      ],
+      "m180Classes": [
+        "FOCUS_CHANGED"
+      ],
+      "lostEvidence": [
+        "focus:src/_pytest/_code/source.py::compile_"
+      ],
+      "stillRenderedAtHigher": [
+        "src/_pytest/_code/source.py::compile_"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pytest-dev__pytest-7324",
+      "lower": 400,
+      "higher": 2000,
+      "m179Classes": [
+        "FOCUS_SUBSTITUTED"
+      ],
+      "m180Classes": [
+        "FOCUS_CHANGED"
+      ],
+      "lostEvidence": [
+        "focus:src/_pytest/_code/source.py::compile_"
+      ],
+      "stillRenderedAtHigher": [
+        "src/_pytest/_code/source.py::compile_"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pytest-dev__pytest-7324",
+      "lower": 400,
+      "higher": 3200,
+      "m179Classes": [
+        "FOCUS_SUBSTITUTED"
+      ],
+      "m180Classes": [
+        "FOCUS_CHANGED"
+      ],
+      "lostEvidence": [
+        "focus:src/_pytest/_code/source.py::compile_"
+      ],
+      "stillRenderedAtHigher": [
+        "src/_pytest/_code/source.py::compile_"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pytest-dev__pytest-7324",
+      "lower": 400,
+      "higher": 6400,
+      "m179Classes": [
+        "FOCUS_SUBSTITUTED"
+      ],
+      "m180Classes": [
+        "FOCUS_CHANGED"
+      ],
+      "lostEvidence": [
+        "focus:src/_pytest/_code/source.py::compile_"
+      ],
+      "stillRenderedAtHigher": [
+        "src/_pytest/_code/source.py::compile_"
+      ],
+      "withheldByAtHigher": "envelope_ladder_slice",
+      "attribution": "metadata_layer:envelope_ladder_slice"
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pytest-dev__pytest-7324",
+      "lower": 400,
+      "higher": 8000,
+      "m179Classes": [
+        "FOCUS_SUBSTITUTED"
+      ],
+      "m180Classes": [
+        "FOCUS_CHANGED"
+      ],
+      "lostEvidence": [
+        "focus:src/_pytest/_code/source.py::compile_"
+      ],
+      "stillRenderedAtHigher": [
+        "src/_pytest/_code/source.py::compile_"
+      ],
+      "withheldByAtHigher": "none",
+      "attribution": "evidence_layer_or_other"
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pytest-dev__pytest-7324",
+      "lower": 600,
+      "higher": 1000,
+      "m179Classes": [
+        "FOCUS_SUBSTITUTED"
+      ],
+      "m180Classes": [
+        "FOCUS_CHANGED"
+      ],
+      "lostEvidence": [
+        "focus:src/_pytest/_code/source.py::compile_"
+      ],
+      "stillRenderedAtHigher": [
+        "src/_pytest/_code/source.py::compile_"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pytest-dev__pytest-7324",
+      "lower": 600,
+      "higher": 1200,
+      "m179Classes": [
+        "FOCUS_SUBSTITUTED"
+      ],
+      "m180Classes": [
+        "FOCUS_CHANGED"
+      ],
+      "lostEvidence": [
+        "focus:src/_pytest/_code/source.py::compile_"
+      ],
+      "stillRenderedAtHigher": [
+        "src/_pytest/_code/source.py::compile_"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pytest-dev__pytest-7324",
+      "lower": 600,
+      "higher": 1600,
+      "m179Classes": [
+        "FOCUS_SUBSTITUTED"
+      ],
+      "m180Classes": [
+        "FOCUS_CHANGED"
+      ],
+      "lostEvidence": [
+        "focus:src/_pytest/_code/source.py::compile_"
+      ],
+      "stillRenderedAtHigher": [
+        "src/_pytest/_code/source.py::compile_"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pytest-dev__pytest-7324",
+      "lower": 600,
+      "higher": 2000,
+      "m179Classes": [
+        "FOCUS_SUBSTITUTED"
+      ],
+      "m180Classes": [
+        "FOCUS_CHANGED"
+      ],
+      "lostEvidence": [
+        "focus:src/_pytest/_code/source.py::compile_"
+      ],
+      "stillRenderedAtHigher": [
+        "src/_pytest/_code/source.py::compile_"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pytest-dev__pytest-7324",
+      "lower": 600,
+      "higher": 3200,
+      "m179Classes": [
+        "FOCUS_SUBSTITUTED"
+      ],
+      "m180Classes": [
+        "FOCUS_CHANGED"
+      ],
+      "lostEvidence": [
+        "focus:src/_pytest/_code/source.py::compile_"
+      ],
+      "stillRenderedAtHigher": [
+        "src/_pytest/_code/source.py::compile_"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pytest-dev__pytest-7324",
+      "lower": 600,
+      "higher": 6400,
+      "m179Classes": [
+        "FOCUS_SUBSTITUTED"
+      ],
+      "m180Classes": [
+        "FOCUS_CHANGED"
+      ],
+      "lostEvidence": [
+        "focus:src/_pytest/_code/source.py::compile_"
+      ],
+      "stillRenderedAtHigher": [
+        "src/_pytest/_code/source.py::compile_"
+      ],
+      "withheldByAtHigher": "envelope_ladder_slice",
+      "attribution": "metadata_layer:envelope_ladder_slice"
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pytest-dev__pytest-7324",
+      "lower": 600,
+      "higher": 8000,
+      "m179Classes": [
+        "FOCUS_SUBSTITUTED"
+      ],
+      "m180Classes": [
+        "FOCUS_CHANGED"
+      ],
+      "lostEvidence": [
+        "focus:src/_pytest/_code/source.py::compile_"
+      ],
+      "stillRenderedAtHigher": [
+        "src/_pytest/_code/source.py::compile_"
+      ],
+      "withheldByAtHigher": "none",
+      "attribution": "evidence_layer_or_other"
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pytest-dev__pytest-7324",
+      "lower": 800,
+      "higher": 1000,
+      "m179Classes": [
+        "FOCUS_SUBSTITUTED"
+      ],
+      "m180Classes": [
+        "FOCUS_CHANGED"
+      ],
+      "lostEvidence": [
+        "focus:src/_pytest/_code/source.py::compile_"
+      ],
+      "stillRenderedAtHigher": [
+        "src/_pytest/_code/source.py::compile_"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pytest-dev__pytest-7324",
+      "lower": 800,
+      "higher": 1200,
+      "m179Classes": [
+        "FOCUS_SUBSTITUTED"
+      ],
+      "m180Classes": [
+        "FOCUS_CHANGED"
+      ],
+      "lostEvidence": [
+        "focus:src/_pytest/_code/source.py::compile_"
+      ],
+      "stillRenderedAtHigher": [
+        "src/_pytest/_code/source.py::compile_"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pytest-dev__pytest-7324",
+      "lower": 800,
+      "higher": 1600,
+      "m179Classes": [
+        "FOCUS_SUBSTITUTED"
+      ],
+      "m180Classes": [
+        "FOCUS_CHANGED"
+      ],
+      "lostEvidence": [
+        "focus:src/_pytest/_code/source.py::compile_"
+      ],
+      "stillRenderedAtHigher": [
+        "src/_pytest/_code/source.py::compile_"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pytest-dev__pytest-7324",
+      "lower": 800,
+      "higher": 2000,
+      "m179Classes": [
+        "FOCUS_SUBSTITUTED"
+      ],
+      "m180Classes": [
+        "FOCUS_CHANGED"
+      ],
+      "lostEvidence": [
+        "focus:src/_pytest/_code/source.py::compile_"
+      ],
+      "stillRenderedAtHigher": [
+        "src/_pytest/_code/source.py::compile_"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pytest-dev__pytest-7324",
+      "lower": 800,
+      "higher": 3200,
+      "m179Classes": [
+        "FOCUS_SUBSTITUTED"
+      ],
+      "m180Classes": [
+        "FOCUS_CHANGED"
+      ],
+      "lostEvidence": [
+        "focus:src/_pytest/_code/source.py::compile_"
+      ],
+      "stillRenderedAtHigher": [
+        "src/_pytest/_code/source.py::compile_"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pytest-dev__pytest-7324",
+      "lower": 800,
+      "higher": 6400,
+      "m179Classes": [
+        "FOCUS_SUBSTITUTED"
+      ],
+      "m180Classes": [
+        "FOCUS_CHANGED"
+      ],
+      "lostEvidence": [
+        "focus:src/_pytest/_code/source.py::compile_"
+      ],
+      "stillRenderedAtHigher": [
+        "src/_pytest/_code/source.py::compile_"
+      ],
+      "withheldByAtHigher": "envelope_ladder_slice",
+      "attribution": "metadata_layer:envelope_ladder_slice"
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pytest-dev__pytest-7324",
+      "lower": 800,
+      "higher": 8000,
+      "m179Classes": [
+        "FOCUS_SUBSTITUTED"
+      ],
+      "m180Classes": [
+        "FOCUS_CHANGED"
+      ],
+      "lostEvidence": [
+        "focus:src/_pytest/_code/source.py::compile_"
+      ],
+      "stillRenderedAtHigher": [
+        "src/_pytest/_code/source.py::compile_"
+      ],
+      "withheldByAtHigher": "none",
+      "attribution": "evidence_layer_or_other"
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "scikit-learn__scikit-learn-10908",
+      "lower": 3200,
+      "higher": 6400,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "RELATED_ITEM_LOST"
+      ],
+      "lostEvidence": [
+        "sklearn/feature_extraction/text.py::VectorizerMixin|pivot, required",
+        "sklearn/feature_extraction/text.py::VectorizerMixin._char_ngrams|pivot, required"
+      ],
+      "stillRenderedAtHigher": [
+        "sklearn/feature_extraction/text.py::VectorizerMixin",
+        "sklearn/feature_extraction/text.py::VectorizerMixin._char_ngrams"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "scikit-learn__scikit-learn-12973",
+      "lower": 6400,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "RELATED_ITEM_LOST"
+      ],
+      "lostEvidence": [
+        "sklearn/linear_model/least_angle.py::LassoLarsIC|pivot, required, impact",
+        "sklearn/dummy.py::DummyClassifier|pivot, required",
+        "sklearn/dummy.py::DummyClassifier.fit|pivot, required",
+        "sklearn/linear_model/least_angle.py::LassoLars|pivot, required",
+        "sklearn/feature_extraction/dict_vectorizer.py::_tosequence|pivot, required"
+      ],
+      "stillRenderedAtHigher": [
+        "sklearn/linear_model/least_angle.py::LassoLarsIC",
+        "sklearn/dummy.py::DummyClassifier",
+        "sklearn/dummy.py::DummyClassifier.fit",
+        "sklearn/linear_model/least_angle.py::LassoLars",
+        "sklearn/feature_extraction/dict_vectorizer.py::_tosequence"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "scikit-learn__scikit-learn-13779",
+      "lower": 3200,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "RELATED_ITEM_LOST"
+      ],
+      "lostEvidence": [
+        "sklearn/linear_model/logistic.py::LogisticRegression|pivot, required",
+        "sklearn/ensemble/forest.py::RandomForestClassifier|pivot, required"
+      ],
+      "stillRenderedAtHigher": [
+        "sklearn/linear_model/logistic.py::LogisticRegression",
+        "sklearn/ensemble/forest.py::RandomForestClassifier"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "scikit-learn__scikit-learn-13779",
+      "lower": 6400,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "RELATED_ITEM_LOST"
+      ],
+      "lostEvidence": [
+        "sklearn/linear_model/logistic.py::LogisticRegression|pivot, required",
+        "sklearn/ensemble/forest.py::RandomForestClassifier|pivot, required",
+        "sklearn/ensemble/voting.py::VotingClassifier|pivot, required",
+        "sklearn/ensemble/weight_boosting.py::AdaBoostClassifier.fit|pivot, required",
+        "sklearn/ensemble/voting.py::_BaseVoting.set_params|support, skeleton",
+        "sklearn/linear_model/logistic.py::LogisticRegressionCV|support, skeleton",
+        "sklearn/calibration.py::_CalibratedClassifier|impact",
+        "sklearn/ensemble/tests/test_bagging.py::test_estimators_samples|impact"
+      ],
+      "stillRenderedAtHigher": [
+        "sklearn/linear_model/logistic.py::LogisticRegression",
+        "sklearn/ensemble/forest.py::RandomForestClassifier",
+        "sklearn/ensemble/voting.py::VotingClassifier",
+        "sklearn/ensemble/weight_boosting.py::AdaBoostClassifier.fit",
+        "sklearn/ensemble/voting.py::_BaseVoting.set_params",
+        "sklearn/linear_model/logistic.py::LogisticRegressionCV",
+        "sklearn/calibration.py::_CalibratedClassifier",
+        "sklearn/ensemble/tests/test_bagging.py::test_estimators_samples"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "scikit-learn__scikit-learn-26194",
+      "lower": 6400,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "RELATED_ITEM_LOST"
+      ],
+      "lostEvidence": [
+        "sklearn/metrics/_plot/roc_curve.py::RocCurveDisplay|pivot, required",
+        "sklearn/metrics/_plot/roc_curve.py::RocCurveDisplay.from_estimator|pivot, required",
+        "sklearn/metrics/_ranking.py::precision_recall_curve|pivot, required",
+        "examples/miscellaneous/plot_display_object_visualization.py::y_score|support, skeleton, documentation",
+        "examples/model_selection/plot_precision_recall.py::y_score|support, skeleton, documentation",
+        "examples/applications/plot_species_distribution_modeling.py::plot_species_distribution|impact",
+        "sklearn/metrics/tests/test_ranking.py::test_micro_averaged_ovr_roc_auc|impact",
+        "sklearn/metrics/_plot/roc_curve.py::RocCurveDisplay.from_predictions|impact",
+        "sklearn/metrics/_plot/tests/test_roc_curve_display.py::test_roc_curve_display_default_labels|impact",
+        "sklearn/metrics/_plot/tests/test_roc_curve_display.py::test_plot_roc_curve_pos_label|impact",
+        "sklearn/metrics/_plot/tests/test_roc_curve_display.py::test_roc_curve_chance_level_line|impact",
+        "sklearn/metrics/_plot/tests/test_roc_curve_display.py::test_roc_curve_display_complex_pipeline|impact"
+      ],
+      "stillRenderedAtHigher": [
+        "sklearn/metrics/_plot/roc_curve.py::RocCurveDisplay",
+        "sklearn/metrics/_plot/roc_curve.py::RocCurveDisplay.from_estimator",
+        "sklearn/metrics/_ranking.py::precision_recall_curve",
+        "examples/miscellaneous/plot_display_object_visualization.py::y_score",
+        "examples/model_selection/plot_precision_recall.py::y_score",
+        "examples/applications/plot_species_distribution_modeling.py::plot_species_distribution",
+        "sklearn/metrics/tests/test_ranking.py::test_micro_averaged_ovr_roc_auc",
+        "sklearn/metrics/_plot/roc_curve.py::RocCurveDisplay.from_predictions",
+        "sklearn/metrics/_plot/tests/test_roc_curve_display.py::test_roc_curve_display_default_labels",
+        "sklearn/metrics/_plot/tests/test_roc_curve_display.py::test_plot_roc_curve_pos_label",
+        "sklearn/metrics/_plot/tests/test_roc_curve_display.py::test_roc_curve_chance_level_line",
+        "sklearn/metrics/_plot/tests/test_roc_curve_display.py::test_roc_curve_display_complex_pipeline"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sphinx-doc__sphinx-9602",
+      "lower": 6400,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "SEMANTIC_ROLE_CHANGED",
+        "RELATED_ITEM_REPLACED"
+      ],
+      "lostEvidence": [
+        "sphinx/addnodes.py::desc_sig_literal_number|pivot, required",
+        "sphinx/application.py::Sphinx.add_js_file|pivot, required",
+        "sphinx/addnodes.py::desc_sig_literal_string|pivot, required",
+        "sphinx/application.py::Sphinx|pivot, required",
+        "sphinx/domains/cpp.py::ASTBooleanLiteral|support, skeleton",
+        "sphinx/builders/latex/nodes.py::footnotetext|support, skeleton",
+        "sphinx/domains/c.py::ASTCharLiteral.describe_signature|impact",
+        "sphinx/domains/cpp.py::ASTCharLiteral.describe_signature|impact",
+        "sphinx/domains/c.py::ASTNumberLiteral.describe_signature|impact",
+        "sphinx/domains/cpp.py::ASTNumberLiteral.describe_signature|impact",
+        "sphinx/domains/cpp.py::ASTParametersQualifiers.describe_signature|impact"
+      ],
+      "stillRenderedAtHigher": [
+        "sphinx/addnodes.py::desc_sig_literal_number",
+        "sphinx/application.py::Sphinx.add_js_file",
+        "sphinx/addnodes.py::desc_sig_literal_string",
+        "sphinx/application.py::Sphinx",
+        "sphinx/domains/cpp.py::ASTBooleanLiteral",
+        "sphinx/builders/latex/nodes.py::footnotetext",
+        "sphinx/domains/c.py::ASTCharLiteral.describe_signature",
+        "sphinx/domains/cpp.py::ASTCharLiteral.describe_signature",
+        "sphinx/domains/c.py::ASTNumberLiteral.describe_signature",
+        "sphinx/domains/cpp.py::ASTNumberLiteral.describe_signature",
+        "sphinx/domains/cpp.py::ASTParametersQualifiers.describe_signature"
+      ],
+      "withheldByAtHigher": "none",
+      "attribution": "evidence_layer_or_other"
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sympy__sympy-13551",
+      "lower": 6400,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "RELATED_ITEM_LOST"
+      ],
+      "lostEvidence": [
+        "sympy/integrals/rubi/utility_function.py::Simplify|pivot, required",
+        "sympy/simplify/simplify.py::simplify|pivot, required",
+        "sympy/concrete/products.py::Product|pivot, required"
+      ],
+      "stillRenderedAtHigher": [
+        "sympy/integrals/rubi/utility_function.py::Simplify",
+        "sympy/simplify/simplify.py::simplify",
+        "sympy/concrete/products.py::Product"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sympy__sympy-13852",
+      "lower": 6400,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "RELATED_ITEM_LOST"
+      ],
+      "lostEvidence": [
+        "sympy/plotting/pygletplot/plot_modes.py::Polar|pivot, required",
+        "sympy/functions/elementary/exponential.py::exp_polar|pivot, required",
+        "sympy/core/function.py::expand_func|pivot, required",
+        "sympy/core/numbers.py::Rational|pivot, required",
+        "sympy/sets/fancysets.py::ComplexRegion.polar|pivot, required",
+        "sympy/functions/special/gamma_functions.py::loggamma._eval_expand_func|support, skeleton",
+        "sympy/simplify/simplify.py::nsimplify|support, skeleton",
+        "sympy/functions/special/zeta_functions.py::polylog|support, skeleton"
+      ],
+      "stillRenderedAtHigher": [
+        "sympy/plotting/pygletplot/plot_modes.py::Polar",
+        "sympy/functions/elementary/exponential.py::exp_polar",
+        "sympy/core/function.py::expand_func",
+        "sympy/core/numbers.py::Rational",
+        "sympy/sets/fancysets.py::ComplexRegion.polar",
+        "sympy/functions/special/gamma_functions.py::loggamma._eval_expand_func",
+        "sympy/simplify/simplify.py::nsimplify",
+        "sympy/functions/special/zeta_functions.py::polylog"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sympy__sympy-15976",
+      "lower": 3200,
+      "higher": 6400,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "RELATED_ITEM_LOST"
+      ],
+      "lostEvidence": [
+        "sympy/printing/mathml.py::mathml|pivot, required",
+        "sympy/combinatorics/perm_groups.py::PermutationGroup.presentation|pivot, required"
+      ],
+      "stillRenderedAtHigher": [
+        "sympy/printing/mathml.py::mathml",
+        "sympy/combinatorics/perm_groups.py::PermutationGroup.presentation"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sympy__sympy-15976",
+      "lower": 3200,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "RELATED_ITEM_LOST"
+      ],
+      "lostEvidence": [
+        "sympy/printing/mathml.py::mathml|pivot, required",
+        "sympy/combinatorics/perm_groups.py::PermutationGroup.presentation|pivot, required"
+      ],
+      "stillRenderedAtHigher": [
+        "sympy/printing/mathml.py::mathml",
+        "sympy/combinatorics/perm_groups.py::PermutationGroup.presentation"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sympy__sympy-16450",
+      "lower": 3200,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "RELATED_ITEM_LOST"
+      ],
+      "lostEvidence": [
+        "sympy/assumptions/ask.py::AssumptionKeys.commutative|pivot, required",
+        "sympy/codegen/ast.py::FloatType|pivot, required"
+      ],
+      "stillRenderedAtHigher": [
+        "sympy/assumptions/ask.py::AssumptionKeys.commutative",
+        "sympy/codegen/ast.py::FloatType"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sympy__sympy-16450",
+      "lower": 6400,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "RELATED_ITEM_LOST"
+      ],
+      "lostEvidence": [
+        "sympy/assumptions/ask.py::AssumptionKeys.commutative|pivot, required",
+        "sympy/codegen/ast.py::FloatType|pivot, required",
+        "sympy/codegen/ast.py::FloatType.max_exponent|pivot, required",
+        "sympy/series/formal.py::FormalPowerSeries.infinite|pivot, required",
+        "sympy/core/numbers.py::ImaginaryUnit.is_finite|support, skeleton",
+        "sympy/assumptions/handlers/calculus.py::AskFiniteHandler.Symbol|support, skeleton",
+        "sympy/core/symbol.py::Symbol|support, skeleton",
+        "sympy/simplify/simplify.py::posify|support, skeleton",
+        "sympy/assumptions/ask_generated.py::get_known_facts_dict|support, skeleton",
+        "sympy/assumptions/handlers/matrices.py::AskPositiveDefiniteHandler.MatrixSymbol|support, skeleton",
+        "sympy/core/numbers.py::NaN.is_finite|support, skeleton",
+        "sympy/assumptions/handlers/common.py::AskCommutativeHandler.Symbol|support, skeleton",
+        "sympy/core/symbol.py::symbols|support, skeleton"
+      ],
+      "stillRenderedAtHigher": [
+        "sympy/assumptions/ask.py::AssumptionKeys.commutative",
+        "sympy/codegen/ast.py::FloatType",
+        "sympy/codegen/ast.py::FloatType.max_exponent",
+        "sympy/series/formal.py::FormalPowerSeries.infinite",
+        "sympy/core/numbers.py::ImaginaryUnit.is_finite",
+        "sympy/assumptions/handlers/calculus.py::AskFiniteHandler.Symbol",
+        "sympy/core/symbol.py::Symbol",
+        "sympy/simplify/simplify.py::posify",
+        "sympy/assumptions/ask_generated.py::get_known_facts_dict",
+        "sympy/assumptions/handlers/matrices.py::AskPositiveDefiniteHandler.MatrixSymbol",
+        "sympy/core/numbers.py::NaN.is_finite",
+        "sympy/assumptions/handlers/common.py::AskCommutativeHandler.Symbol",
+        "sympy/core/symbol.py::symbols"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    }
+  ]
+}

@@ -1,0 +1,70 @@
+{
+  "milestone": "M180-A",
+  "question": "every material reader of productContext.items, and which layer each one expects",
+  "consumers": [
+    {
+      "consumer": "projectRunPipelineOrientation",
+      "file": "src/runPipeline/orientationProjection.ts:251",
+      "reads": ["fqName", "path", "lineSpan", "contentMode", "roles", "selectionReasons[0]", "id"],
+      "derives": ["focus (via leadPivot match, else first pivot role, else items[0])", "the ENTIRE related list", "focus.file", "focus.lines", "focus.form", "focus.why"],
+      "expects": "AUTHORITATIVE_SEMANTIC_ITEMS",
+      "getsToday": "COMPACTED_METADATA_ITEMS",
+      "note": "bodies come from productContext.modelVisibleContext, which no metadata rung rewrites; only the index over it is taken from items"
+    },
+    {
+      "consumer": "projectOrientationDecline",
+      "file": "src/runPipeline/orientationDecline.ts:131",
+      "reads": ["length only"],
+      "expects": "MODEL_FACING_ITEMS",
+      "getsToday": "MODEL_FACING_ITEMS",
+      "note": "runs only when the projector already declined; a count is all it needs"
+    },
+    {
+      "consumer": "default response serialization (structuredContent)",
+      "file": "src/mcp/tools.ts:9297",
+      "expects": "MODEL_FACING_ITEMS",
+      "getsToday": "MODEL_FACING_ITEMS",
+      "note": "reached only when the projector declines or detail=debug; on the orientation path the compacted response is DISCARDED and only the packet crosses the wire"
+    },
+    {
+      "consumer": "debug response",
+      "file": "src/mcp/tools.ts:9279 (detail=debug bypasses the projector)",
+      "expects": "MODEL_FACING_ITEMS",
+      "getsToday": "MODEL_FACING_ITEMS at the debug detail level",
+      "note": "still subject to the same total ceiling; a debug response is more informative, never unbounded"
+    },
+    {
+      "consumer": "response envelope packing (compactProductContextItems, enforceTotalEnvelope, compactMandatoryProductMetadata, degradeOversizedProductResponse)",
+      "file": "src/mcp/responseEnvelope.ts",
+      "expects": "MODEL_FACING_ITEMS",
+      "getsToday": "MODEL_FACING_ITEMS",
+      "note": "correct for its own purpose; the defect is that its output is then read as evidence"
+    },
+    {
+      "consumer": "applyProgressiveContextBudget",
+      "file": "src/productContext/budgetDelivery.ts:89",
+      "expects": "AUTHORITATIVE_SEMANTIC_ITEMS",
+      "getsToday": "AUTHORITATIVE_SEMANTIC_ITEMS",
+      "note": "runs first, before any metadata rung"
+    },
+    {
+      "consumer": "get_code_context",
+      "file": "src/mcp/tools.ts:9483",
+      "expects": "MODEL_FACING_ITEMS",
+      "getsToday": "MODEL_FACING_ITEMS",
+      "note": "returns early when the inner pass projected an orientation, so remeasureResponseBudget only ever runs on decline/debug responses"
+    },
+    {
+      "consumer": "benchmark diagnostics (m179Packing, m180Ownership, m175/m176/m177 instruments)",
+      "expects": "whatever the arm under test produces",
+      "getsToday": "MODEL_FACING_ITEMS"
+    },
+    {
+      "consumer": "memory / provenance",
+      "expects": "n/a",
+      "getsToday": "n/a",
+      "note": "no reader of productContext.items found in the memory or provenance paths"
+    }
+  ],
+  "keyAsymmetry": "exactly one consumer wants authoritative semantics AFTER the metadata layer has run, and it is the only consumer whose output the model actually receives by default"
+}

@@ -1,0 +1,870 @@
+{
+  "milestone": "M180-B",
+  "negative": {
+    "control": "known_negative",
+    "claim": "a case whose projector input equals the evidence layer's supply at every budget must show no violation",
+    "casesChecked": 169,
+    "casesNeverCut": 2,
+    "casesNeverCutWithViolations": 0,
+    "verdict": "NO_VIOLATION_AS_EXPECTED",
+    "examples": [
+      {
+        "case": "broad100b/pylint-dev__pylint-4604",
+        "budgetsWhereSupplyWasCut": 0,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/pytest-dev__pytest-5787",
+        "budgetsWhereSupplyWasCut": 0,
+        "violations": 0
+      }
+    ],
+    "distribution": [
+      {
+        "case": "broad100a/astropy__astropy-14365",
+        "budgetsWhereSupplyWasCut": 5,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/astropy__astropy-14369",
+        "budgetsWhereSupplyWasCut": 3,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/astropy__astropy-14598",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/astropy__astropy-7166",
+        "budgetsWhereSupplyWasCut": 5,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/django__django-10880",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/django__django-10973",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/django__django-11095",
+        "budgetsWhereSupplyWasCut": 3,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/django__django-11133",
+        "budgetsWhereSupplyWasCut": 8,
+        "violations": 1
+      },
+      {
+        "case": "broad100a/django__django-11206",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 1
+      },
+      {
+        "case": "broad100a/django__django-11490",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/django__django-11728",
+        "budgetsWhereSupplyWasCut": 6,
+        "violations": 3
+      },
+      {
+        "case": "broad100a/django__django-11740",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/django__django-11749",
+        "budgetsWhereSupplyWasCut": 6,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/django__django-11815",
+        "budgetsWhereSupplyWasCut": 5,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/django__django-11820",
+        "budgetsWhereSupplyWasCut": 5,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/django__django-12050",
+        "budgetsWhereSupplyWasCut": 5,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/django__django-12273",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/django__django-12276",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/django__django-12325",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 1
+      },
+      {
+        "case": "broad100a/django__django-12774",
+        "budgetsWhereSupplyWasCut": 3,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/django__django-12858",
+        "budgetsWhereSupplyWasCut": 5,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/django__django-13012",
+        "budgetsWhereSupplyWasCut": 5,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/django__django-13112",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/django__django-13195",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/django__django-13363",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/django__django-13512",
+        "budgetsWhereSupplyWasCut": 3,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/django__django-13513",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/django__django-13551",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/django__django-13590",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/django__django-13658",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/django__django-13810",
+        "budgetsWhereSupplyWasCut": 3,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/django__django-13820",
+        "budgetsWhereSupplyWasCut": 5,
+        "violations": 1
+      },
+      {
+        "case": "broad100a/django__django-14608",
+        "budgetsWhereSupplyWasCut": 5,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/django__django-14792",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 2
+      },
+      {
+        "case": "broad100a/django__django-15037",
+        "budgetsWhereSupplyWasCut": 5,
+        "violations": 2
+      },
+      {
+        "case": "broad100a/django__django-15503",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/django__django-15572",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/django__django-15695",
+        "budgetsWhereSupplyWasCut": 2,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/django__django-15731",
+        "budgetsWhereSupplyWasCut": 5,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/django__django-16256",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/django__django-16263",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/django__django-16333",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/django__django-16569",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/django__django-16667",
+        "budgetsWhereSupplyWasCut": 5,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/django__django-16819",
+        "budgetsWhereSupplyWasCut": 6,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/django__django-16877",
+        "budgetsWhereSupplyWasCut": 5,
+        "violations": 1
+      },
+      {
+        "case": "broad100a/django__django-16938",
+        "budgetsWhereSupplyWasCut": 3,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/django__django-17084",
+        "budgetsWhereSupplyWasCut": 5,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/matplotlib__matplotlib-22719",
+        "budgetsWhereSupplyWasCut": 2,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/matplotlib__matplotlib-24627",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/matplotlib__matplotlib-24870",
+        "budgetsWhereSupplyWasCut": 5,
+        "violations": 2
+      },
+      {
+        "case": "broad100a/matplotlib__matplotlib-24970",
+        "budgetsWhereSupplyWasCut": 5,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/matplotlib__matplotlib-25332",
+        "budgetsWhereSupplyWasCut": 5,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/matplotlib__matplotlib-25960",
+        "budgetsWhereSupplyWasCut": 5,
+        "violations": 1
+      },
+      {
+        "case": "broad100a/matplotlib__matplotlib-26466",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/mwaskom__seaborn-3187",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/pallets__flask-5014",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 1
+      },
+      {
+        "case": "broad100a/psf__requests-1142",
+        "budgetsWhereSupplyWasCut": 6,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/psf__requests-1724",
+        "budgetsWhereSupplyWasCut": 2,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/psf__requests-1921",
+        "budgetsWhereSupplyWasCut": 7,
+        "violations": 2
+      },
+      {
+        "case": "broad100a/psf__requests-5414",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 1
+      },
+      {
+        "case": "broad100a/pylint-dev__pylint-4551",
+        "budgetsWhereSupplyWasCut": 3,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/pylint-dev__pylint-8898",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/pytest-dev__pytest-10051",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 1
+      },
+      {
+        "case": "broad100a/pytest-dev__pytest-5262",
+        "budgetsWhereSupplyWasCut": 3,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/pytest-dev__pytest-6197",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/pytest-dev__pytest-7432",
+        "budgetsWhereSupplyWasCut": 6,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/scikit-learn__scikit-learn-10844",
+        "budgetsWhereSupplyWasCut": 5,
+        "violations": 1
+      },
+      {
+        "case": "broad100a/scikit-learn__scikit-learn-11578",
+        "budgetsWhereSupplyWasCut": 3,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/sphinx-doc__sphinx-7462",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/sphinx-doc__sphinx-7748",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 2
+      },
+      {
+        "case": "broad100a/sphinx-doc__sphinx-7910",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 2
+      },
+      {
+        "case": "broad100a/sphinx-doc__sphinx-9230",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/sphinx-doc__sphinx-9320",
+        "budgetsWhereSupplyWasCut": 6,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/sphinx-doc__sphinx-9698",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/sphinx-doc__sphinx-9711",
+        "budgetsWhereSupplyWasCut": 5,
+        "violations": 2
+      },
+      {
+        "case": "broad100a/sympy__sympy-13372",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/sympy__sympy-13974",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/sympy__sympy-15599",
+        "budgetsWhereSupplyWasCut": 6,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/sympy__sympy-15875",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/sympy__sympy-16597",
+        "budgetsWhereSupplyWasCut": 5,
+        "violations": 1
+      },
+      {
+        "case": "broad100a/sympy__sympy-16766",
+        "budgetsWhereSupplyWasCut": 5,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/sympy__sympy-16792",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/sympy__sympy-19637",
+        "budgetsWhereSupplyWasCut": 9,
+        "violations": 2
+      },
+      {
+        "case": "broad100a/sympy__sympy-20801",
+        "budgetsWhereSupplyWasCut": 5,
+        "violations": 2
+      },
+      {
+        "case": "broad100a/sympy__sympy-23413",
+        "budgetsWhereSupplyWasCut": 5,
+        "violations": 0
+      },
+      {
+        "case": "broad100a/sympy__sympy-24213",
+        "budgetsWhereSupplyWasCut": 5,
+        "violations": 1
+      },
+      {
+        "case": "broad100a/sympy__sympy-24562",
+        "budgetsWhereSupplyWasCut": 6,
+        "violations": 2
+      },
+      {
+        "case": "broad100b/astropy__astropy-12907",
+        "budgetsWhereSupplyWasCut": 6,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/astropy__astropy-13398",
+        "budgetsWhereSupplyWasCut": 3,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/astropy__astropy-14508",
+        "budgetsWhereSupplyWasCut": 3,
+        "violations": 1
+      },
+      {
+        "case": "broad100b/astropy__astropy-14995",
+        "budgetsWhereSupplyWasCut": 3,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/astropy__astropy-7606",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/astropy__astropy-7671",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/astropy__astropy-8707",
+        "budgetsWhereSupplyWasCut": 3,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/django__django-11603",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/django__django-11880",
+        "budgetsWhereSupplyWasCut": 3,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/django__django-12741",
+        "budgetsWhereSupplyWasCut": 5,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/django__django-14500",
+        "budgetsWhereSupplyWasCut": 5,
+        "violations": 1
+      },
+      {
+        "case": "broad100b/django__django-14559",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/django__django-15022",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/django__django-15252",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 1
+      },
+      {
+        "case": "broad100b/django__django-15375",
+        "budgetsWhereSupplyWasCut": 3,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/django__django-15569",
+        "budgetsWhereSupplyWasCut": 3,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/django__django-15629",
+        "budgetsWhereSupplyWasCut": 3,
+        "violations": 1
+      },
+      {
+        "case": "broad100b/django__django-16100",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/matplotlib__matplotlib-20488",
+        "budgetsWhereSupplyWasCut": 5,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/matplotlib__matplotlib-20676",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/matplotlib__matplotlib-22871",
+        "budgetsWhereSupplyWasCut": 5,
+        "violations": 2
+      },
+      {
+        "case": "broad100b/matplotlib__matplotlib-23412",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 1
+      },
+      {
+        "case": "broad100b/matplotlib__matplotlib-25311",
+        "budgetsWhereSupplyWasCut": 5,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/matplotlib__matplotlib-25479",
+        "budgetsWhereSupplyWasCut": 3,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/matplotlib__matplotlib-26291",
+        "budgetsWhereSupplyWasCut": 3,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/mwaskom__seaborn-3069",
+        "budgetsWhereSupplyWasCut": 5,
+        "violations": 3
+      },
+      {
+        "case": "broad100b/psf__requests-1766",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/psf__requests-2317",
+        "budgetsWhereSupplyWasCut": 6,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/psf__requests-2931",
+        "budgetsWhereSupplyWasCut": 5,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/psf__requests-6028",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 1
+      },
+      {
+        "case": "broad100b/pydata__xarray-3993",
+        "budgetsWhereSupplyWasCut": 5,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/pydata__xarray-4094",
+        "budgetsWhereSupplyWasCut": 5,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/pydata__xarray-6721",
+        "budgetsWhereSupplyWasCut": 2,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/pydata__xarray-7229",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 1
+      },
+      {
+        "case": "broad100b/pylint-dev__pylint-4604",
+        "budgetsWhereSupplyWasCut": 0,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/pylint-dev__pylint-4661",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/pylint-dev__pylint-4970",
+        "budgetsWhereSupplyWasCut": 7,
+        "violations": 1
+      },
+      {
+        "case": "broad100b/pylint-dev__pylint-6528",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 1
+      },
+      {
+        "case": "broad100b/pylint-dev__pylint-6903",
+        "budgetsWhereSupplyWasCut": 3,
+        "violations": 1
+      },
+      {
+        "case": "broad100b/pylint-dev__pylint-7277",
+        "budgetsWhereSupplyWasCut": 3,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/pytest-dev__pytest-10081",
+        "budgetsWhereSupplyWasCut": 3,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/pytest-dev__pytest-10356",
+        "budgetsWhereSupplyWasCut": 3,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/pytest-dev__pytest-5787",
+        "budgetsWhereSupplyWasCut": 0,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/pytest-dev__pytest-5840",
+        "budgetsWhereSupplyWasCut": 7,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/pytest-dev__pytest-6202",
+        "budgetsWhereSupplyWasCut": 6,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/pytest-dev__pytest-7205",
+        "budgetsWhereSupplyWasCut": 3,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/pytest-dev__pytest-7236",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/pytest-dev__pytest-7324",
+        "budgetsWhereSupplyWasCut": 6,
+        "violations": 21
+      },
+      {
+        "case": "broad100b/pytest-dev__pytest-7521",
+        "budgetsWhereSupplyWasCut": 3,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/pytest-dev__pytest-7571",
+        "budgetsWhereSupplyWasCut": 5,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/scikit-learn__scikit-learn-10297",
+        "budgetsWhereSupplyWasCut": 6,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/scikit-learn__scikit-learn-10908",
+        "budgetsWhereSupplyWasCut": 5,
+        "violations": 1
+      },
+      {
+        "case": "broad100b/scikit-learn__scikit-learn-12973",
+        "budgetsWhereSupplyWasCut": 5,
+        "violations": 1
+      },
+      {
+        "case": "broad100b/scikit-learn__scikit-learn-13135",
+        "budgetsWhereSupplyWasCut": 3,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/scikit-learn__scikit-learn-13142",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/scikit-learn__scikit-learn-13328",
+        "budgetsWhereSupplyWasCut": 3,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/scikit-learn__scikit-learn-13779",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 2
+      },
+      {
+        "case": "broad100b/scikit-learn__scikit-learn-14053",
+        "budgetsWhereSupplyWasCut": 3,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/scikit-learn__scikit-learn-14894",
+        "budgetsWhereSupplyWasCut": 6,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/scikit-learn__scikit-learn-26194",
+        "budgetsWhereSupplyWasCut": 6,
+        "violations": 1
+      },
+      {
+        "case": "broad100b/sphinx-doc__sphinx-10449",
+        "budgetsWhereSupplyWasCut": 3,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/sphinx-doc__sphinx-10466",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/sphinx-doc__sphinx-7454",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/sphinx-doc__sphinx-7757",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/sphinx-doc__sphinx-7985",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/sphinx-doc__sphinx-8459",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/sphinx-doc__sphinx-8548",
+        "budgetsWhereSupplyWasCut": 5,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/sphinx-doc__sphinx-8595",
+        "budgetsWhereSupplyWasCut": 2,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/sphinx-doc__sphinx-9258",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/sphinx-doc__sphinx-9602",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 1
+      },
+      {
+        "case": "broad100b/sphinx-doc__sphinx-9658",
+        "budgetsWhereSupplyWasCut": 3,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/sympy__sympy-13031",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/sympy__sympy-13551",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 1
+      },
+      {
+        "case": "broad100b/sympy__sympy-13852",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 1
+      },
+      {
+        "case": "broad100b/sympy__sympy-14531",
+        "budgetsWhereSupplyWasCut": 5,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/sympy__sympy-15345",
+        "budgetsWhereSupplyWasCut": 6,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/sympy__sympy-15976",
+        "budgetsWhereSupplyWasCut": 5,
+        "violations": 2
+      },
+      {
+        "case": "broad100b/sympy__sympy-16450",
+        "budgetsWhereSupplyWasCut": 3,
+        "violations": 2
+      },
+      {
+        "case": "broad100b/sympy__sympy-16886",
+        "budgetsWhereSupplyWasCut": 7,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/sympy__sympy-18698",
+        "budgetsWhereSupplyWasCut": 6,
+        "violations": 0
+      },
+      {
+        "case": "broad100b/sympy__sympy-23824",
+        "budgetsWhereSupplyWasCut": 4,
+        "violations": 0
+      }
+    ]
+  }
+}

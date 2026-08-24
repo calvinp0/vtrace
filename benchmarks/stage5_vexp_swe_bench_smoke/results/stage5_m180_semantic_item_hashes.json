@@ -1,0 +1,1526 @@
+{
+  "milestone": "M180-B",
+  "cases": [
+    {
+      "corpus": "broad100a",
+      "instanceId": "astropy__astropy-14365",
+      "authoritativeSupplyHash": "d12174602aaa9ba0",
+      "authoritativeItems": 23,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 2,
+      "budgetsWhereMetadataMutatedSupply": 5
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "astropy__astropy-14369",
+      "authoritativeSupplyHash": "52ec4e3893ffd77d",
+      "authoritativeItems": 24,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 3
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "astropy__astropy-14598",
+      "authoritativeSupplyHash": "b9e783c6a5b4d2fb",
+      "authoritativeItems": 21,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "astropy__astropy-7166",
+      "authoritativeSupplyHash": "3adb3ccdf6f2225f",
+      "authoritativeItems": 25,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 5
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-10880",
+      "authoritativeSupplyHash": "f4f7d7047e139332",
+      "authoritativeItems": 22,
+      "distinctEvidenceSupplyHashes": 6,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-10973",
+      "authoritativeSupplyHash": "bec969773e109e37",
+      "authoritativeItems": 18,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-11095",
+      "authoritativeSupplyHash": "99afa602f0e08910",
+      "authoritativeItems": 17,
+      "distinctEvidenceSupplyHashes": 3,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 3
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-11133",
+      "authoritativeSupplyHash": "c6acafb84a781d27",
+      "authoritativeItems": 21,
+      "distinctEvidenceSupplyHashes": 6,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 8
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-11206",
+      "authoritativeSupplyHash": "e9d5143d35d3dfec",
+      "authoritativeItems": 13,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-11490",
+      "authoritativeSupplyHash": "46e1030fd39280d3",
+      "authoritativeItems": 20,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-11728",
+      "authoritativeSupplyHash": "b707469930af4e2f",
+      "authoritativeItems": 21,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 6
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-11740",
+      "authoritativeSupplyHash": "037b2ba17dc7ef70",
+      "authoritativeItems": 21,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 2,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-11749",
+      "authoritativeSupplyHash": "60396e88c8c7510d",
+      "authoritativeItems": 17,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 6
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-11815",
+      "authoritativeSupplyHash": "a151352c30d90893",
+      "authoritativeItems": 26,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 2,
+      "budgetsWhereMetadataMutatedSupply": 5
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-11820",
+      "authoritativeSupplyHash": "052c2e5ec2f92523",
+      "authoritativeItems": 22,
+      "distinctEvidenceSupplyHashes": 6,
+      "distinctProjectorInputHashes": 5,
+      "budgetsWhereMetadataMutatedSupply": 5
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-12050",
+      "authoritativeSupplyHash": "03f779096b2c71e9",
+      "authoritativeItems": 24,
+      "distinctEvidenceSupplyHashes": 6,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 5
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-12273",
+      "authoritativeSupplyHash": "879f6d5abb21b3a8",
+      "authoritativeItems": 20,
+      "distinctEvidenceSupplyHashes": 6,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-12276",
+      "authoritativeSupplyHash": "8516c23d9b53308c",
+      "authoritativeItems": 18,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-12325",
+      "authoritativeSupplyHash": "ada0281eb2d7a2a3",
+      "authoritativeItems": 17,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-12774",
+      "authoritativeSupplyHash": "42bd58cabc6b9b76",
+      "authoritativeItems": 23,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 3
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-12858",
+      "authoritativeSupplyHash": "de2a6404c77f3de5",
+      "authoritativeItems": 22,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 5
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-13012",
+      "authoritativeSupplyHash": "8065b8e14d32e360",
+      "authoritativeItems": 20,
+      "distinctEvidenceSupplyHashes": 6,
+      "distinctProjectorInputHashes": 2,
+      "budgetsWhereMetadataMutatedSupply": 5
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-13112",
+      "authoritativeSupplyHash": "ec5d50fa03b220bc",
+      "authoritativeItems": 22,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 2,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-13195",
+      "authoritativeSupplyHash": "50dc40c7cc6bec16",
+      "authoritativeItems": 21,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-13363",
+      "authoritativeSupplyHash": "483d687126f2329c",
+      "authoritativeItems": 24,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-13512",
+      "authoritativeSupplyHash": "4186d37cb85b021c",
+      "authoritativeItems": 22,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 3
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-13513",
+      "authoritativeSupplyHash": "b66f975449307bc6",
+      "authoritativeItems": 21,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 2,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-13551",
+      "authoritativeSupplyHash": "b7a2ed6f497fed14",
+      "authoritativeItems": 18,
+      "distinctEvidenceSupplyHashes": 6,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-13590",
+      "authoritativeSupplyHash": "43ba9bab472846ee",
+      "authoritativeItems": 23,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-13658",
+      "authoritativeSupplyHash": "7e5eade5fc025d83",
+      "authoritativeItems": 22,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-13810",
+      "authoritativeSupplyHash": "050f7a9540a693b6",
+      "authoritativeItems": 19,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 3
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-13820",
+      "authoritativeSupplyHash": "664b8947dcebf132",
+      "authoritativeItems": 22,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 5
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-14608",
+      "authoritativeSupplyHash": "da2956de7c3ef328",
+      "authoritativeItems": 21,
+      "distinctEvidenceSupplyHashes": 7,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 5
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-14792",
+      "authoritativeSupplyHash": "93c522542bfec644",
+      "authoritativeItems": 23,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-15037",
+      "authoritativeSupplyHash": "a0bb42c33e94b41c",
+      "authoritativeItems": 22,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 5
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-15503",
+      "authoritativeSupplyHash": "8dc59d3f80fb1d6f",
+      "authoritativeItems": 22,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-15572",
+      "authoritativeSupplyHash": "ed88dbba83957b7e",
+      "authoritativeItems": 20,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-15695",
+      "authoritativeSupplyHash": "f1d6e4436f802b42",
+      "authoritativeItems": 19,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 2
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-15731",
+      "authoritativeSupplyHash": "2a8c33e1e8eb6e13",
+      "authoritativeItems": 24,
+      "distinctEvidenceSupplyHashes": 6,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 5
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-16256",
+      "authoritativeSupplyHash": "30e107019c805078",
+      "authoritativeItems": 19,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-16263",
+      "authoritativeSupplyHash": "73be104e09ee4b3c",
+      "authoritativeItems": 23,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-16333",
+      "authoritativeSupplyHash": "a49753a8719a6196",
+      "authoritativeItems": 20,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-16569",
+      "authoritativeSupplyHash": "bc95b9fe348d08ad",
+      "authoritativeItems": 20,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-16667",
+      "authoritativeSupplyHash": "137970d54febc949",
+      "authoritativeItems": 19,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 5
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-16819",
+      "authoritativeSupplyHash": "9f634fcd37c7b3d0",
+      "authoritativeItems": 19,
+      "distinctEvidenceSupplyHashes": 6,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 6
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-16877",
+      "authoritativeSupplyHash": "aea496ecce7ebcb2",
+      "authoritativeItems": 17,
+      "distinctEvidenceSupplyHashes": 6,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 5
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-16938",
+      "authoritativeSupplyHash": "3d30e313cb25d1f4",
+      "authoritativeItems": 21,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 2,
+      "budgetsWhereMetadataMutatedSupply": 3
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-17084",
+      "authoritativeSupplyHash": "22508b679df8bbf5",
+      "authoritativeItems": 20,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 5
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "matplotlib__matplotlib-22719",
+      "authoritativeSupplyHash": "aa2425be9bf906ac",
+      "authoritativeItems": 24,
+      "distinctEvidenceSupplyHashes": 3,
+      "distinctProjectorInputHashes": 2,
+      "budgetsWhereMetadataMutatedSupply": 2
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "matplotlib__matplotlib-24627",
+      "authoritativeSupplyHash": "8efcea4113f05db9",
+      "authoritativeItems": 18,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "matplotlib__matplotlib-24870",
+      "authoritativeSupplyHash": "f042d9e197eebaaa",
+      "authoritativeItems": 17,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 5
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "matplotlib__matplotlib-24970",
+      "authoritativeSupplyHash": "72002a570da055bc",
+      "authoritativeItems": 19,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 5
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "matplotlib__matplotlib-25332",
+      "authoritativeSupplyHash": "20fe64397bc999e1",
+      "authoritativeItems": 20,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 2,
+      "budgetsWhereMetadataMutatedSupply": 5
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "matplotlib__matplotlib-25960",
+      "authoritativeSupplyHash": "84597c99ff733034",
+      "authoritativeItems": 14,
+      "distinctEvidenceSupplyHashes": 6,
+      "distinctProjectorInputHashes": 5,
+      "budgetsWhereMetadataMutatedSupply": 5
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "matplotlib__matplotlib-26466",
+      "authoritativeSupplyHash": "bc1e9ab46e184c72",
+      "authoritativeItems": 27,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 2,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "mwaskom__seaborn-3187",
+      "authoritativeSupplyHash": "bd44803c349dce02",
+      "authoritativeItems": 26,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "pallets__flask-5014",
+      "authoritativeSupplyHash": "900a1d9f27d3cc0d",
+      "authoritativeItems": 21,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "psf__requests-1142",
+      "authoritativeSupplyHash": "40785438604bc9ee",
+      "authoritativeItems": 23,
+      "distinctEvidenceSupplyHashes": 6,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 6
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "psf__requests-1724",
+      "authoritativeSupplyHash": "49748039ea282506",
+      "authoritativeItems": 26,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 2,
+      "budgetsWhereMetadataMutatedSupply": 2
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "psf__requests-1921",
+      "authoritativeSupplyHash": "d808f0601420b480",
+      "authoritativeItems": 21,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 7
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "psf__requests-5414",
+      "authoritativeSupplyHash": "862459dd996f1c5d",
+      "authoritativeItems": 19,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "pylint-dev__pylint-4551",
+      "authoritativeSupplyHash": "17b40b5ec3fe2c0a",
+      "authoritativeItems": 20,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 3
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "pylint-dev__pylint-8898",
+      "authoritativeSupplyHash": "694f09e5ac05604c",
+      "authoritativeItems": 19,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 2,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "pytest-dev__pytest-10051",
+      "authoritativeSupplyHash": "8f01bd3535c1f117",
+      "authoritativeItems": 24,
+      "distinctEvidenceSupplyHashes": 6,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "pytest-dev__pytest-5262",
+      "authoritativeSupplyHash": "f9af68dc303f57fa",
+      "authoritativeItems": 17,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 2,
+      "budgetsWhereMetadataMutatedSupply": 3
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "pytest-dev__pytest-6197",
+      "authoritativeSupplyHash": "6a693c6ee03bdfce",
+      "authoritativeItems": 11,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "pytest-dev__pytest-7432",
+      "authoritativeSupplyHash": "a50aeb03076eced4",
+      "authoritativeItems": 16,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 6
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "scikit-learn__scikit-learn-10844",
+      "authoritativeSupplyHash": "13a6950bb8d75a7f",
+      "authoritativeItems": 17,
+      "distinctEvidenceSupplyHashes": 6,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 5
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "scikit-learn__scikit-learn-11578",
+      "authoritativeSupplyHash": "a6a8727efe8b9b27",
+      "authoritativeItems": 21,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 2,
+      "budgetsWhereMetadataMutatedSupply": 3
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sphinx-doc__sphinx-7462",
+      "authoritativeSupplyHash": "f2d2213bc4502cd4",
+      "authoritativeItems": 17,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sphinx-doc__sphinx-7748",
+      "authoritativeSupplyHash": "12dbefa8a8fcb8ff",
+      "authoritativeItems": 21,
+      "distinctEvidenceSupplyHashes": 3,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sphinx-doc__sphinx-7910",
+      "authoritativeSupplyHash": "e4ed87e62eaa21af",
+      "authoritativeItems": 20,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sphinx-doc__sphinx-9230",
+      "authoritativeSupplyHash": "fc0d92b0d866f594",
+      "authoritativeItems": 26,
+      "distinctEvidenceSupplyHashes": 6,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sphinx-doc__sphinx-9320",
+      "authoritativeSupplyHash": "582fd10ffe04687e",
+      "authoritativeItems": 24,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 6
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sphinx-doc__sphinx-9698",
+      "authoritativeSupplyHash": "ffda6a1509231fb6",
+      "authoritativeItems": 24,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sphinx-doc__sphinx-9711",
+      "authoritativeSupplyHash": "752fe0ee1fa6fe5e",
+      "authoritativeItems": 16,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 5
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sympy__sympy-13372",
+      "authoritativeSupplyHash": "2ee6ec4ecfe92b47",
+      "authoritativeItems": 17,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sympy__sympy-13974",
+      "authoritativeSupplyHash": "72f729ab162e705a",
+      "authoritativeItems": 23,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 2,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sympy__sympy-15599",
+      "authoritativeSupplyHash": "45fbc43ec81edc65",
+      "authoritativeItems": 14,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 6
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sympy__sympy-15875",
+      "authoritativeSupplyHash": "45e01c78be79f200",
+      "authoritativeItems": 20,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sympy__sympy-16597",
+      "authoritativeSupplyHash": "5b9f6a017131941a",
+      "authoritativeItems": 23,
+      "distinctEvidenceSupplyHashes": 6,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 5
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sympy__sympy-16766",
+      "authoritativeSupplyHash": "e5331656d79a3e84",
+      "authoritativeItems": 26,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 5
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sympy__sympy-16792",
+      "authoritativeSupplyHash": "d0dbe96030a3de4a",
+      "authoritativeItems": 24,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sympy__sympy-19637",
+      "authoritativeSupplyHash": "1902c2620de11c0c",
+      "authoritativeItems": 15,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 9
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sympy__sympy-20801",
+      "authoritativeSupplyHash": "a837571762904d71",
+      "authoritativeItems": 23,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 5
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sympy__sympy-23413",
+      "authoritativeSupplyHash": "7fb97f47d665656e",
+      "authoritativeItems": 23,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 5
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sympy__sympy-24213",
+      "authoritativeSupplyHash": "e5ed9e8f6137e9bb",
+      "authoritativeItems": 21,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 5
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "sympy__sympy-24562",
+      "authoritativeSupplyHash": "ea4f649a2aa737d0",
+      "authoritativeItems": 21,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 6
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "astropy__astropy-12907",
+      "authoritativeSupplyHash": "d298b2fc19e43ec3",
+      "authoritativeItems": 23,
+      "distinctEvidenceSupplyHashes": 6,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 6
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "astropy__astropy-13398",
+      "authoritativeSupplyHash": "8131599933bab42b",
+      "authoritativeItems": 21,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 2,
+      "budgetsWhereMetadataMutatedSupply": 3
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "astropy__astropy-14508",
+      "authoritativeSupplyHash": "cde5aba85b77c6eb",
+      "authoritativeItems": 19,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 3
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "astropy__astropy-14995",
+      "authoritativeSupplyHash": "14c1a11197f17db0",
+      "authoritativeItems": 22,
+      "distinctEvidenceSupplyHashes": 3,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 3
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "astropy__astropy-7606",
+      "authoritativeSupplyHash": "349f1d6f56c4e21d",
+      "authoritativeItems": 20,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "astropy__astropy-7671",
+      "authoritativeSupplyHash": "94fa0a10b7df00a5",
+      "authoritativeItems": 24,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "astropy__astropy-8707",
+      "authoritativeSupplyHash": "ba6f2c7967811da3",
+      "authoritativeItems": 21,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 3
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "django__django-11603",
+      "authoritativeSupplyHash": "b26a0ccd2fca1789",
+      "authoritativeItems": 20,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "django__django-11880",
+      "authoritativeSupplyHash": "d975dcd433d60e84",
+      "authoritativeItems": 24,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 3
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "django__django-12741",
+      "authoritativeSupplyHash": "ee0433054f1ded3b",
+      "authoritativeItems": 23,
+      "distinctEvidenceSupplyHashes": 6,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 5
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "django__django-14500",
+      "authoritativeSupplyHash": "b45f7c2f6cf9f9b9",
+      "authoritativeItems": 21,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 5
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "django__django-14559",
+      "authoritativeSupplyHash": "d382be089b7e755f",
+      "authoritativeItems": 23,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "django__django-15022",
+      "authoritativeSupplyHash": "802c624313b7d289",
+      "authoritativeItems": 23,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "django__django-15252",
+      "authoritativeSupplyHash": "938965244288af1b",
+      "authoritativeItems": 22,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "django__django-15375",
+      "authoritativeSupplyHash": "c3ae40efbb907aa1",
+      "authoritativeItems": 24,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 3
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "django__django-15569",
+      "authoritativeSupplyHash": "3016478d1c7a893a",
+      "authoritativeItems": 18,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 3
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "django__django-15629",
+      "authoritativeSupplyHash": "cb9c92c70cc5c518",
+      "authoritativeItems": 21,
+      "distinctEvidenceSupplyHashes": 3,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 3
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "django__django-16100",
+      "authoritativeSupplyHash": "5534b918882cef4e",
+      "authoritativeItems": 22,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "matplotlib__matplotlib-20488",
+      "authoritativeSupplyHash": "e246ad4ba7c8cff2",
+      "authoritativeItems": 20,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 5
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "matplotlib__matplotlib-20676",
+      "authoritativeSupplyHash": "ceb56a116a931506",
+      "authoritativeItems": 21,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "matplotlib__matplotlib-22871",
+      "authoritativeSupplyHash": "c6ae0f8e65627095",
+      "authoritativeItems": 22,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 5
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "matplotlib__matplotlib-23412",
+      "authoritativeSupplyHash": "dcf8aba58b9fd45a",
+      "authoritativeItems": 22,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "matplotlib__matplotlib-25311",
+      "authoritativeSupplyHash": "70aa3f5fab8bbd84",
+      "authoritativeItems": 18,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 2,
+      "budgetsWhereMetadataMutatedSupply": 5
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "matplotlib__matplotlib-25479",
+      "authoritativeSupplyHash": "a0eccd1504adb33e",
+      "authoritativeItems": 20,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 2,
+      "budgetsWhereMetadataMutatedSupply": 3
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "matplotlib__matplotlib-26291",
+      "authoritativeSupplyHash": "6e486c2235589bd6",
+      "authoritativeItems": 22,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 2,
+      "budgetsWhereMetadataMutatedSupply": 3
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "mwaskom__seaborn-3069",
+      "authoritativeSupplyHash": "91e125f83b14e7c1",
+      "authoritativeItems": 18,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 5
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "psf__requests-1766",
+      "authoritativeSupplyHash": "3b22bab9a82eed06",
+      "authoritativeItems": 16,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "psf__requests-2317",
+      "authoritativeSupplyHash": "d7aa62bdd58e88e4",
+      "authoritativeItems": 20,
+      "distinctEvidenceSupplyHashes": 7,
+      "distinctProjectorInputHashes": 2,
+      "budgetsWhereMetadataMutatedSupply": 6
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "psf__requests-2931",
+      "authoritativeSupplyHash": "89a9fc6d63bf79a1",
+      "authoritativeItems": 27,
+      "distinctEvidenceSupplyHashes": 7,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 5
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "psf__requests-6028",
+      "authoritativeSupplyHash": "a4a537d12679a835",
+      "authoritativeItems": 23,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pydata__xarray-3993",
+      "authoritativeSupplyHash": "69172bebc6f8155d",
+      "authoritativeItems": 19,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 5
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pydata__xarray-4094",
+      "authoritativeSupplyHash": "a83416ee1a825f05",
+      "authoritativeItems": 18,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 2,
+      "budgetsWhereMetadataMutatedSupply": 5
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pydata__xarray-6721",
+      "authoritativeSupplyHash": "2707ad691dc3e2e3",
+      "authoritativeItems": 21,
+      "distinctEvidenceSupplyHashes": 3,
+      "distinctProjectorInputHashes": 2,
+      "budgetsWhereMetadataMutatedSupply": 2
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pydata__xarray-7229",
+      "authoritativeSupplyHash": "9b877ed958197a80",
+      "authoritativeItems": 24,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pylint-dev__pylint-4604",
+      "authoritativeSupplyHash": "4f53cda18c2baa0c",
+      "authoritativeItems": 0,
+      "distinctEvidenceSupplyHashes": 1,
+      "distinctProjectorInputHashes": 1,
+      "budgetsWhereMetadataMutatedSupply": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pylint-dev__pylint-4661",
+      "authoritativeSupplyHash": "30e39f8cd3595778",
+      "authoritativeItems": 21,
+      "distinctEvidenceSupplyHashes": 3,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pylint-dev__pylint-4970",
+      "authoritativeSupplyHash": "6983152cb9432e25",
+      "authoritativeItems": 16,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 7
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pylint-dev__pylint-6528",
+      "authoritativeSupplyHash": "baa78337dd75fc9e",
+      "authoritativeItems": 25,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pylint-dev__pylint-6903",
+      "authoritativeSupplyHash": "679330c46ccab3ba",
+      "authoritativeItems": 17,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 3
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pylint-dev__pylint-7277",
+      "authoritativeSupplyHash": "655f5e7c6e6b9590",
+      "authoritativeItems": 24,
+      "distinctEvidenceSupplyHashes": 3,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 3
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pytest-dev__pytest-10081",
+      "authoritativeSupplyHash": "13ff3538bda354e8",
+      "authoritativeItems": 21,
+      "distinctEvidenceSupplyHashes": 3,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 3
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pytest-dev__pytest-10356",
+      "authoritativeSupplyHash": "4740ffae52bf6fc9",
+      "authoritativeItems": 18,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 2,
+      "budgetsWhereMetadataMutatedSupply": 3
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pytest-dev__pytest-5787",
+      "authoritativeSupplyHash": "4f53cda18c2baa0c",
+      "authoritativeItems": 0,
+      "distinctEvidenceSupplyHashes": 1,
+      "distinctProjectorInputHashes": 1,
+      "budgetsWhereMetadataMutatedSupply": 0
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pytest-dev__pytest-5840",
+      "authoritativeSupplyHash": "7d200d239e20b46b",
+      "authoritativeItems": 18,
+      "distinctEvidenceSupplyHashes": 6,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 7
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pytest-dev__pytest-6202",
+      "authoritativeSupplyHash": "5f374b56b03569a1",
+      "authoritativeItems": 24,
+      "distinctEvidenceSupplyHashes": 6,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 6
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pytest-dev__pytest-7205",
+      "authoritativeSupplyHash": "9e9cffac60ad6a9c",
+      "authoritativeItems": 14,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 3
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pytest-dev__pytest-7236",
+      "authoritativeSupplyHash": "4c08ea99a6ae3b5d",
+      "authoritativeItems": 19,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 2,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pytest-dev__pytest-7324",
+      "authoritativeSupplyHash": "c8b1141c88e6a774",
+      "authoritativeItems": 18,
+      "distinctEvidenceSupplyHashes": 7,
+      "distinctProjectorInputHashes": 5,
+      "budgetsWhereMetadataMutatedSupply": 6
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pytest-dev__pytest-7521",
+      "authoritativeSupplyHash": "4c30f88981b8b33d",
+      "authoritativeItems": 21,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 2,
+      "budgetsWhereMetadataMutatedSupply": 3
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "pytest-dev__pytest-7571",
+      "authoritativeSupplyHash": "6a34b1c6cc949a72",
+      "authoritativeItems": 18,
+      "distinctEvidenceSupplyHashes": 6,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 5
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "scikit-learn__scikit-learn-10297",
+      "authoritativeSupplyHash": "bb5fc13bd1c3c796",
+      "authoritativeItems": 22,
+      "distinctEvidenceSupplyHashes": 6,
+      "distinctProjectorInputHashes": 2,
+      "budgetsWhereMetadataMutatedSupply": 6
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "scikit-learn__scikit-learn-10908",
+      "authoritativeSupplyHash": "9a3b9566606eea35",
+      "authoritativeItems": 18,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 5
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "scikit-learn__scikit-learn-12973",
+      "authoritativeSupplyHash": "8d512e160a74d3dd",
+      "authoritativeItems": 20,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 5
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "scikit-learn__scikit-learn-13135",
+      "authoritativeSupplyHash": "a837fda0be4016b9",
+      "authoritativeItems": 20,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 2,
+      "budgetsWhereMetadataMutatedSupply": 3
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "scikit-learn__scikit-learn-13142",
+      "authoritativeSupplyHash": "98320f085993ced3",
+      "authoritativeItems": 20,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 2,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "scikit-learn__scikit-learn-13328",
+      "authoritativeSupplyHash": "81c01bc7eaa182c8",
+      "authoritativeItems": 20,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 2,
+      "budgetsWhereMetadataMutatedSupply": 3
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "scikit-learn__scikit-learn-13779",
+      "authoritativeSupplyHash": "d2afbf0664a74cd8",
+      "authoritativeItems": 22,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "scikit-learn__scikit-learn-14053",
+      "authoritativeSupplyHash": "7fbab9cdc91e72e1",
+      "authoritativeItems": 21,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 3
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "scikit-learn__scikit-learn-14894",
+      "authoritativeSupplyHash": "e9f89ff1f00ae6af",
+      "authoritativeItems": 19,
+      "distinctEvidenceSupplyHashes": 6,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 6
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "scikit-learn__scikit-learn-26194",
+      "authoritativeSupplyHash": "7b00d675c290aa3f",
+      "authoritativeItems": 26,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 6
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sphinx-doc__sphinx-10449",
+      "authoritativeSupplyHash": "c80b00d65d4f2e3d",
+      "authoritativeItems": 20,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 3
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sphinx-doc__sphinx-10466",
+      "authoritativeSupplyHash": "2aa083fc92d8aded",
+      "authoritativeItems": 20,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sphinx-doc__sphinx-7454",
+      "authoritativeSupplyHash": "dde1bf0521936c08",
+      "authoritativeItems": 23,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sphinx-doc__sphinx-7757",
+      "authoritativeSupplyHash": "fa81d08917475792",
+      "authoritativeItems": 23,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sphinx-doc__sphinx-7985",
+      "authoritativeSupplyHash": "60e1734b7c987c78",
+      "authoritativeItems": 22,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 2,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sphinx-doc__sphinx-8459",
+      "authoritativeSupplyHash": "e61e14a15e1fd50c",
+      "authoritativeItems": 22,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sphinx-doc__sphinx-8548",
+      "authoritativeSupplyHash": "8adb6fe1f162c70b",
+      "authoritativeItems": 18,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 5
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sphinx-doc__sphinx-8595",
+      "authoritativeSupplyHash": "01b676ea470000e1",
+      "authoritativeItems": 19,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 2
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sphinx-doc__sphinx-9258",
+      "authoritativeSupplyHash": "d16c711d5aa88dc5",
+      "authoritativeItems": 18,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sphinx-doc__sphinx-9602",
+      "authoritativeSupplyHash": "be6e5e283c1879a6",
+      "authoritativeItems": 21,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sphinx-doc__sphinx-9658",
+      "authoritativeSupplyHash": "6ab1fc3283110e54",
+      "authoritativeItems": 20,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 3
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sympy__sympy-13031",
+      "authoritativeSupplyHash": "3194b1bd8fa55164",
+      "authoritativeItems": 26,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sympy__sympy-13551",
+      "authoritativeSupplyHash": "5ed4beab0ee1ff54",
+      "authoritativeItems": 20,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sympy__sympy-13852",
+      "authoritativeSupplyHash": "292ecbab1839f377",
+      "authoritativeItems": 22,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 4
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sympy__sympy-14531",
+      "authoritativeSupplyHash": "e6d71e1e7dbbb2eb",
+      "authoritativeItems": 28,
+      "distinctEvidenceSupplyHashes": 6,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 5
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sympy__sympy-15345",
+      "authoritativeSupplyHash": "6367a6edf8f782ae",
+      "authoritativeItems": 20,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 6
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sympy__sympy-15976",
+      "authoritativeSupplyHash": "383aa1efe54ce620",
+      "authoritativeItems": 26,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 3,
+      "budgetsWhereMetadataMutatedSupply": 5
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sympy__sympy-16450",
+      "authoritativeSupplyHash": "ddce199b77a7d873",
+      "authoritativeItems": 23,
+      "distinctEvidenceSupplyHashes": 4,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 3
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sympy__sympy-16886",
+      "authoritativeSupplyHash": "3c7554604645ac34",
+      "authoritativeItems": 19,
+      "distinctEvidenceSupplyHashes": 6,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 7
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sympy__sympy-18698",
+      "authoritativeSupplyHash": "f2b3337505f6fbd8",
+      "authoritativeItems": 22,
+      "distinctEvidenceSupplyHashes": 6,
+      "distinctProjectorInputHashes": 4,
+      "budgetsWhereMetadataMutatedSupply": 6
+    },
+    {
+      "corpus": "broad100b",
+      "instanceId": "sympy__sympy-23824",
+      "authoritativeSupplyHash": "63faacc413a04edd",
+      "authoritativeItems": 23,
+      "distinctEvidenceSupplyHashes": 5,
+      "distinctProjectorInputHashes": 2,
+      "budgetsWhereMetadataMutatedSupply": 4
+    }
+  ]
+}

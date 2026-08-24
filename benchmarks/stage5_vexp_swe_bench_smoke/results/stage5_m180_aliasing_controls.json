@@ -1,0 +1,320 @@
+{
+  "milestone": "M180-A",
+  "synthetic": {
+    "control": "synthetic_aliasing",
+    "question": "does response metadata compaction change the item supply the projector reads, on an object with nothing but three items in it",
+    "authoritativeSupply": [
+      "A",
+      "S1",
+      "S2",
+      "S3",
+      "S4",
+      "S5",
+      "S6",
+      "S7",
+      "S8",
+      "S9",
+      "S10",
+      "S11",
+      "S12",
+      "S13",
+      "S14",
+      "S15"
+    ],
+    "rows": [
+      {
+        "budget": 200,
+        "authoritativeSupply": [
+          "A",
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5",
+          "S6",
+          "S7",
+          "S8",
+          "S9",
+          "S10",
+          "S11",
+          "S12",
+          "S13",
+          "S14",
+          "S15"
+        ],
+        "evidenceLayerSupply": [
+          "A"
+        ],
+        "projectorInput": [
+          "A"
+        ],
+        "withheld": [],
+        "withheldBy": "none",
+        "focus": "pkg/mod.py::alpha",
+        "related": 0
+      },
+      {
+        "budget": 400,
+        "authoritativeSupply": [
+          "A",
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5",
+          "S6",
+          "S7",
+          "S8",
+          "S9",
+          "S10",
+          "S11",
+          "S12",
+          "S13",
+          "S14",
+          "S15"
+        ],
+        "evidenceLayerSupply": [
+          "A"
+        ],
+        "projectorInput": [
+          "A"
+        ],
+        "withheld": [],
+        "withheldBy": "none",
+        "focus": "pkg/mod.py::alpha",
+        "related": 0
+      },
+      {
+        "budget": 800,
+        "authoritativeSupply": [
+          "A",
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5",
+          "S6",
+          "S7",
+          "S8",
+          "S9",
+          "S10",
+          "S11",
+          "S12",
+          "S13",
+          "S14",
+          "S15"
+        ],
+        "evidenceLayerSupply": [
+          "A",
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5",
+          "S6"
+        ],
+        "projectorInput": [
+          "A",
+          "S1",
+          "S2"
+        ],
+        "withheld": [
+          "S3",
+          "S4",
+          "S5",
+          "S6"
+        ],
+        "withheldBy": "envelope_ladder_slice",
+        "focus": "pkg/mod.py::alpha",
+        "related": 2
+      },
+      {
+        "budget": 1600,
+        "authoritativeSupply": [
+          "A",
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5",
+          "S6",
+          "S7",
+          "S8",
+          "S9",
+          "S10",
+          "S11",
+          "S12",
+          "S13",
+          "S14",
+          "S15"
+        ],
+        "evidenceLayerSupply": [
+          "A",
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5",
+          "S6",
+          "S7",
+          "S8",
+          "S9",
+          "S10",
+          "S11",
+          "S12",
+          "S13",
+          "S14",
+          "S15"
+        ],
+        "projectorInput": [
+          "A",
+          "S1",
+          "S2",
+          "S3"
+        ],
+        "withheld": [
+          "S4",
+          "S5",
+          "S6",
+          "S7",
+          "S8",
+          "S9",
+          "S10",
+          "S11",
+          "S12",
+          "S13",
+          "S14",
+          "S15"
+        ],
+        "withheldBy": "envelope_ladder_slice",
+        "focus": "pkg/mod.py::alpha",
+        "related": 3
+      },
+      {
+        "budget": 3200,
+        "authoritativeSupply": [
+          "A",
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5",
+          "S6",
+          "S7",
+          "S8",
+          "S9",
+          "S10",
+          "S11",
+          "S12",
+          "S13",
+          "S14",
+          "S15"
+        ],
+        "evidenceLayerSupply": [
+          "A",
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5",
+          "S6",
+          "S7",
+          "S8",
+          "S9",
+          "S10",
+          "S11",
+          "S12",
+          "S13",
+          "S14",
+          "S15"
+        ],
+        "projectorInput": [
+          "A",
+          "S1",
+          "S2"
+        ],
+        "withheld": [
+          "S3",
+          "S4",
+          "S5",
+          "S6",
+          "S7",
+          "S8",
+          "S9",
+          "S10",
+          "S11",
+          "S12",
+          "S13",
+          "S14",
+          "S15"
+        ],
+        "withheldBy": "envelope_ladder_slice",
+        "focus": "pkg/mod.py::alpha",
+        "related": 2
+      },
+      {
+        "budget": 8000,
+        "authoritativeSupply": [
+          "A",
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5",
+          "S6",
+          "S7",
+          "S8",
+          "S9",
+          "S10",
+          "S11",
+          "S12",
+          "S13",
+          "S14",
+          "S15"
+        ],
+        "evidenceLayerSupply": [
+          "A",
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5",
+          "S6",
+          "S7",
+          "S8",
+          "S9",
+          "S10",
+          "S11",
+          "S12",
+          "S13",
+          "S14",
+          "S15"
+        ],
+        "projectorInput": [
+          "A",
+          "S1",
+          "S2",
+          "S3",
+          "S4",
+          "S5",
+          "S6",
+          "S7",
+          "S8",
+          "S9",
+          "S10",
+          "S11",
+          "S12",
+          "S13",
+          "S14",
+          "S15"
+        ],
+        "withheld": [],
+        "withheldBy": "none",
+        "focus": "pkg/mod.py::alpha",
+        "related": 15
+      }
+    ],
+    "verdict": "SEMANTIC_SUPPLY_MUTATED_BY_METADATA_LAYER",
+    "budgetsWhereSupplyWasCut": 3
+  }
+}

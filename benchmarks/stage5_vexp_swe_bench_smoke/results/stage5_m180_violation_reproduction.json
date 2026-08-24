@@ -1,0 +1,1329 @@
+{
+  "milestone": "M180-B",
+  "generatedFrom": "run_stage5_m180_reproduction.ts",
+  "arm": "/home/calvin/code/vtrace",
+  "method": "one frozen authoritative object per case, budget varied alone, current implementation only",
+  "budgets": [
+    100,
+    200,
+    400,
+    600,
+    800,
+    1000,
+    1200,
+    1600,
+    2000,
+    3200,
+    6400,
+    8000
+  ],
+  "historicalM179Violations": 83,
+  "reproducedViolations": 876,
+  "perCorpus": {
+    "broad100a": {
+      "cases": 88,
+      "violatingPairs": 523,
+      "casesWithViolation": 83,
+      "budgets": 1056,
+      "budgetsWhereMetadataMutatedSupply": 390
+    },
+    "broad100b": {
+      "cases": 81,
+      "violatingPairs": 353,
+      "casesWithViolation": 65,
+      "budgets": 972,
+      "budgetsWhereMetadataMutatedSupply": 332
+    }
+  },
+  "byClass": {
+    "SEMANTIC_ROLE_CHANGED": 848,
+    "RELATED_ITEM_REPLACED": 855,
+    "RELATED_ITEM_LOST": 8,
+    "FOCUS_CHANGED": 21
+  },
+  "byAttribution": {
+    "metadata_layer:mandatory_collapse": 544,
+    "metadata_layer:envelope_ladder_slice": 187,
+    "evidence_layer_or_other": 145
+  },
+  "identityControl": {
+    "checked": 169,
+    "failures": 0
+  },
+  "violations": [
+    {
+      "corpus": "broad100a",
+      "instanceId": "astropy__astropy-14365",
+      "lower": 1600,
+      "higher": 2000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "SEMANTIC_ROLE_CHANGED",
+        "RELATED_ITEM_REPLACED"
+      ],
+      "lostEvidence": [
+        "astropy/io/ascii/qdp.py::_line_type|pivot, required",
+        "astropy/io/ascii/qdp.py::QDP|pivot, required",
+        "astropy/io/ascii/qdp.py::QDP.read|pivot, required",
+        "astropy/io/registry/interface.py::UnifiedReadWrite.help|pivot, required",
+        "astropy/visualization/interval.py::ZScaleInterval|pivot, required",
+        "astropy/io/votable/tree.py::Table|support, skeleton"
+      ],
+      "stillRenderedAtHigher": [
+        "astropy/io/ascii/qdp.py::_line_type",
+        "astropy/io/ascii/qdp.py::QDP",
+        "astropy/io/ascii/qdp.py::QDP.read",
+        "astropy/io/registry/interface.py::UnifiedReadWrite.help",
+        "astropy/visualization/interval.py::ZScaleInterval",
+        "astropy/io/votable/tree.py::Table"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "astropy__astropy-14365",
+      "lower": 1600,
+      "higher": 3200,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "SEMANTIC_ROLE_CHANGED",
+        "RELATED_ITEM_REPLACED"
+      ],
+      "lostEvidence": [
+        "astropy/io/ascii/qdp.py::_line_type|pivot, required",
+        "astropy/io/ascii/qdp.py::QDP|pivot, required",
+        "astropy/io/ascii/qdp.py::QDP.read|pivot, required",
+        "astropy/io/registry/interface.py::UnifiedReadWrite.help|pivot, required",
+        "astropy/visualization/interval.py::ZScaleInterval|pivot, required",
+        "astropy/io/votable/tree.py::Table|support, skeleton",
+        "astropy/io/fits/scripts/fitsdiff.py::match_files|support, skeleton",
+        "astropy/table/row.py::Row.table|support, skeleton",
+        "astropy/table/table.py::Table|support, skeleton",
+        "astropy/io/fits/scripts/fitsdiff.py::handle_options|support, skeleton"
+      ],
+      "stillRenderedAtHigher": [
+        "astropy/io/ascii/qdp.py::_line_type",
+        "astropy/io/ascii/qdp.py::QDP",
+        "astropy/io/ascii/qdp.py::QDP.read",
+        "astropy/io/registry/interface.py::UnifiedReadWrite.help",
+        "astropy/visualization/interval.py::ZScaleInterval",
+        "astropy/io/votable/tree.py::Table",
+        "astropy/io/fits/scripts/fitsdiff.py::match_files",
+        "astropy/table/row.py::Row.table",
+        "astropy/table/table.py::Table",
+        "astropy/io/fits/scripts/fitsdiff.py::handle_options"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "astropy__astropy-14365",
+      "lower": 1600,
+      "higher": 6400,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "SEMANTIC_ROLE_CHANGED",
+        "RELATED_ITEM_REPLACED"
+      ],
+      "lostEvidence": [
+        "astropy/io/ascii/qdp.py::_line_type|pivot, required",
+        "astropy/io/ascii/qdp.py::QDP|pivot, required",
+        "astropy/io/ascii/qdp.py::QDP.read|pivot, required",
+        "astropy/io/registry/interface.py::UnifiedReadWrite.help|pivot, required",
+        "astropy/visualization/interval.py::ZScaleInterval|pivot, required",
+        "astropy/io/votable/tree.py::Table|support, skeleton",
+        "astropy/io/fits/scripts/fitsdiff.py::match_files|support, skeleton",
+        "astropy/table/row.py::Row.table|support, skeleton",
+        "astropy/table/table.py::Table|support, skeleton",
+        "astropy/io/fits/scripts/fitsdiff.py::handle_options|support, skeleton"
+      ],
+      "stillRenderedAtHigher": [
+        "astropy/io/ascii/qdp.py::_line_type",
+        "astropy/io/ascii/qdp.py::QDP",
+        "astropy/io/ascii/qdp.py::QDP.read",
+        "astropy/io/registry/interface.py::UnifiedReadWrite.help",
+        "astropy/visualization/interval.py::ZScaleInterval",
+        "astropy/io/votable/tree.py::Table",
+        "astropy/io/fits/scripts/fitsdiff.py::match_files",
+        "astropy/table/row.py::Row.table",
+        "astropy/table/table.py::Table",
+        "astropy/io/fits/scripts/fitsdiff.py::handle_options"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "astropy__astropy-14365",
+      "lower": 1600,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "SEMANTIC_ROLE_CHANGED",
+        "RELATED_ITEM_REPLACED"
+      ],
+      "lostEvidence": [
+        "astropy/io/ascii/qdp.py::_line_type|pivot, required",
+        "astropy/io/ascii/qdp.py::QDP|pivot, required",
+        "astropy/io/ascii/qdp.py::QDP.read|pivot, required",
+        "astropy/io/registry/interface.py::UnifiedReadWrite.help|pivot, required",
+        "astropy/visualization/interval.py::ZScaleInterval|pivot, required",
+        "astropy/io/votable/tree.py::Table|support, skeleton",
+        "astropy/io/fits/scripts/fitsdiff.py::match_files|support, skeleton",
+        "astropy/table/row.py::Row.table|support, skeleton",
+        "astropy/table/table.py::Table|support, skeleton",
+        "astropy/io/fits/scripts/fitsdiff.py::handle_options|support, skeleton"
+      ],
+      "stillRenderedAtHigher": [
+        "astropy/io/ascii/qdp.py::_line_type",
+        "astropy/io/ascii/qdp.py::QDP",
+        "astropy/io/ascii/qdp.py::QDP.read",
+        "astropy/io/registry/interface.py::UnifiedReadWrite.help",
+        "astropy/visualization/interval.py::ZScaleInterval",
+        "astropy/io/votable/tree.py::Table",
+        "astropy/io/fits/scripts/fitsdiff.py::match_files",
+        "astropy/table/row.py::Row.table",
+        "astropy/table/table.py::Table",
+        "astropy/io/fits/scripts/fitsdiff.py::handle_options"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "astropy__astropy-14365",
+      "lower": 2000,
+      "higher": 3200,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "SEMANTIC_ROLE_CHANGED",
+        "RELATED_ITEM_REPLACED"
+      ],
+      "lostEvidence": [
+        "astropy/io/fits/scripts/fitsdiff.py::match_files|support, skeleton",
+        "astropy/table/row.py::Row.table|support, skeleton",
+        "astropy/table/table.py::Table|support, skeleton",
+        "astropy/io/fits/scripts/fitsdiff.py::handle_options|support, skeleton"
+      ],
+      "stillRenderedAtHigher": [
+        "astropy/io/fits/scripts/fitsdiff.py::match_files",
+        "astropy/table/row.py::Row.table",
+        "astropy/table/table.py::Table",
+        "astropy/io/fits/scripts/fitsdiff.py::handle_options"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "astropy__astropy-14365",
+      "lower": 2000,
+      "higher": 6400,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "SEMANTIC_ROLE_CHANGED",
+        "RELATED_ITEM_REPLACED"
+      ],
+      "lostEvidence": [
+        "astropy/io/fits/scripts/fitsdiff.py::match_files|support, skeleton",
+        "astropy/table/row.py::Row.table|support, skeleton",
+        "astropy/table/table.py::Table|support, skeleton",
+        "astropy/io/fits/scripts/fitsdiff.py::handle_options|support, skeleton"
+      ],
+      "stillRenderedAtHigher": [
+        "astropy/io/fits/scripts/fitsdiff.py::match_files",
+        "astropy/table/row.py::Row.table",
+        "astropy/table/table.py::Table",
+        "astropy/io/fits/scripts/fitsdiff.py::handle_options"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "astropy__astropy-14365",
+      "lower": 2000,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "SEMANTIC_ROLE_CHANGED",
+        "RELATED_ITEM_REPLACED"
+      ],
+      "lostEvidence": [
+        "astropy/io/ascii/qdp.py::QDP|preferred contrast side matched: ascii, qdp, table, format (+0.24)",
+        "astropy/io/ascii/qdp.py::QDP.read|preferred contrast side matched: ascii, qdp, table, read (+0.24)",
+        "astropy/io/fits/scripts/fitsdiff.py::match_files|support, skeleton",
+        "astropy/table/row.py::Row.table|support, skeleton",
+        "astropy/table/table.py::Table|support, skeleton",
+        "astropy/io/fits/scripts/fitsdiff.py::handle_options|support, skeleton"
+      ],
+      "stillRenderedAtHigher": [
+        "astropy/io/ascii/qdp.py::QDP",
+        "astropy/io/ascii/qdp.py::QDP.read",
+        "astropy/io/fits/scripts/fitsdiff.py::match_files",
+        "astropy/table/row.py::Row.table",
+        "astropy/table/table.py::Table",
+        "astropy/io/fits/scripts/fitsdiff.py::handle_options"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "astropy__astropy-14365",
+      "lower": 3200,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "SEMANTIC_ROLE_CHANGED",
+        "RELATED_ITEM_REPLACED"
+      ],
+      "lostEvidence": [
+        "astropy/io/ascii/qdp.py::QDP|preferred contrast side matched: ascii, qdp, table, format (+0.24)",
+        "astropy/io/ascii/qdp.py::QDP.read|preferred contrast side matched: ascii, qdp, table, read (+0.24)"
+      ],
+      "stillRenderedAtHigher": [
+        "astropy/io/ascii/qdp.py::QDP",
+        "astropy/io/ascii/qdp.py::QDP.read"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "astropy__astropy-14365",
+      "lower": 6400,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "SEMANTIC_ROLE_CHANGED",
+        "RELATED_ITEM_REPLACED"
+      ],
+      "lostEvidence": [
+        "astropy/io/ascii/qdp.py::QDP|preferred contrast side matched: ascii, qdp, table, format (+0.24)",
+        "astropy/io/ascii/qdp.py::QDP.read|preferred contrast side matched: ascii, qdp, table, read (+0.24)"
+      ],
+      "stillRenderedAtHigher": [
+        "astropy/io/ascii/qdp.py::QDP",
+        "astropy/io/ascii/qdp.py::QDP.read"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "astropy__astropy-14369",
+      "lower": 3200,
+      "higher": 6400,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "SEMANTIC_ROLE_CHANGED",
+        "RELATED_ITEM_REPLACED"
+      ],
+      "lostEvidence": [
+        "astropy/io/ascii/cds.py::Cds.read|preferred contrast side matched: read, cds, astropy, table (+0.24)",
+        "astropy/io/ascii/html.py::HTML.read|preferred contrast side matched: read, format, astropy, table (+0.24)",
+        "astropy/io/ascii/cds.py::Cds|preferred contrast side matched: units, read, cds, format (+0.24)",
+        "astropy/io/ascii/core.py::BaseReader.read|preferred contrast side matched: read, format, astropy, table (+0.24)",
+        "astropy/io/votable/tree.py::Table|support, skeleton",
+        "astropy/table/table.py::Table|support, skeleton",
+        "astropy/io/ascii/basic.py::CommentedHeader.read|support, skeleton",
+        "astropy/io/ascii/fastbasic.py::FastBasic.read|preferred contrast side matched: read, astropy, table, ascii (+0.24)",
+        "astropy/io/fits/scripts/fitsheader.py::print_headers_as_table|support, skeleton"
+      ],
+      "stillRenderedAtHigher": [
+        "astropy/io/ascii/cds.py::Cds.read",
+        "astropy/io/ascii/html.py::HTML.read",
+        "astropy/io/ascii/cds.py::Cds",
+        "astropy/io/ascii/core.py::BaseReader.read",
+        "astropy/io/votable/tree.py::Table",
+        "astropy/table/table.py::Table",
+        "astropy/io/ascii/basic.py::CommentedHeader.read",
+        "astropy/io/ascii/fastbasic.py::FastBasic.read",
+        "astropy/io/fits/scripts/fitsheader.py::print_headers_as_table"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "astropy__astropy-14369",
+      "lower": 3200,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "SEMANTIC_ROLE_CHANGED",
+        "RELATED_ITEM_REPLACED"
+      ],
+      "lostEvidence": [
+        "astropy/io/ascii/cds.py::Cds.read|preferred contrast side matched: read, cds, astropy, table (+0.24)",
+        "astropy/io/ascii/html.py::HTML.read|preferred contrast side matched: read, format, astropy, table (+0.24)",
+        "astropy/io/ascii/cds.py::Cds|preferred contrast side matched: units, read, cds, format (+0.24)",
+        "astropy/io/ascii/core.py::BaseReader.read|preferred contrast side matched: read, format, astropy, table (+0.24)",
+        "astropy/io/votable/tree.py::Table|support, skeleton",
+        "astropy/table/table.py::Table|support, skeleton",
+        "astropy/io/ascii/basic.py::CommentedHeader.read|support, skeleton",
+        "astropy/io/ascii/fastbasic.py::FastBasic.read|preferred contrast side matched: read, astropy, table, ascii (+0.24)",
+        "astropy/io/fits/scripts/fitsheader.py::print_headers_as_table|support, skeleton"
+      ],
+      "stillRenderedAtHigher": [
+        "astropy/io/ascii/cds.py::Cds.read",
+        "astropy/io/ascii/html.py::HTML.read",
+        "astropy/io/ascii/cds.py::Cds",
+        "astropy/io/ascii/core.py::BaseReader.read",
+        "astropy/io/votable/tree.py::Table",
+        "astropy/table/table.py::Table",
+        "astropy/io/ascii/basic.py::CommentedHeader.read",
+        "astropy/io/ascii/fastbasic.py::FastBasic.read",
+        "astropy/io/fits/scripts/fitsheader.py::print_headers_as_table"
+      ],
+      "withheldByAtHigher": "envelope_ladder_slice",
+      "attribution": "metadata_layer:envelope_ladder_slice"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "astropy__astropy-14598",
+      "lower": 2000,
+      "higher": 6400,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "SEMANTIC_ROLE_CHANGED",
+        "RELATED_ITEM_REPLACED"
+      ],
+      "lostEvidence": [
+        "astropy/io/fits/fitsrec.py::FITS_rec|pivot, required",
+        "astropy/config/configuration.py::ConfigurationChangedWarning|pivot, required",
+        "astropy/io/fits/card.py::Card.fromstring|pivot, required",
+        "astropy/io/fits/header.py::Header.fromstring|pivot, required",
+        "astropy/units/format/fits.py::Fits|support, skeleton",
+        "astropy/io/fits/hdu/table.py::FITSTableDumpDialect.quotechar|support, skeleton",
+        "astropy/io/fits/hdu/hdulist.py::HDUList.fromstring|support, skeleton",
+        "astropy/config/configuration.py::ConfigNamespace|support, skeleton",
+        "astropy/io/fits/hdu/base.py::_BaseHDU.fromstring|support, skeleton",
+        "astropy/io/fits/card.py::Card|support, skeleton",
+        "astropy/config/configuration.py::ConfigItem|support, skeleton",
+        "astropy/io/fits/card.py::VALUE_INDICATOR_LEN|support, skeleton"
+      ],
+      "stillRenderedAtHigher": [
+        "astropy/io/fits/fitsrec.py::FITS_rec",
+        "astropy/config/configuration.py::ConfigurationChangedWarning",
+        "astropy/io/fits/card.py::Card.fromstring",
+        "astropy/io/fits/header.py::Header.fromstring",
+        "astropy/units/format/fits.py::Fits",
+        "astropy/io/fits/hdu/table.py::FITSTableDumpDialect.quotechar",
+        "astropy/io/fits/hdu/hdulist.py::HDUList.fromstring",
+        "astropy/config/configuration.py::ConfigNamespace",
+        "astropy/io/fits/hdu/base.py::_BaseHDU.fromstring",
+        "astropy/io/fits/card.py::Card",
+        "astropy/config/configuration.py::ConfigItem",
+        "astropy/io/fits/card.py::VALUE_INDICATOR_LEN"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "astropy__astropy-14598",
+      "lower": 2000,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "SEMANTIC_ROLE_CHANGED",
+        "RELATED_ITEM_REPLACED"
+      ],
+      "lostEvidence": [
+        "astropy/io/fits/fitsrec.py::FITS_rec|pivot, required",
+        "astropy/config/configuration.py::ConfigurationChangedWarning|pivot, required",
+        "astropy/io/fits/card.py::Card.fromstring|pivot, required",
+        "astropy/io/fits/header.py::Header.fromstring|pivot, required",
+        "astropy/units/format/fits.py::Fits|support, skeleton",
+        "astropy/io/fits/hdu/table.py::FITSTableDumpDialect.quotechar|support, skeleton",
+        "astropy/io/fits/hdu/hdulist.py::HDUList.fromstring|support, skeleton",
+        "astropy/config/configuration.py::ConfigNamespace|support, skeleton",
+        "astropy/io/fits/hdu/base.py::_BaseHDU.fromstring|support, skeleton",
+        "astropy/io/fits/card.py::Card|support, skeleton",
+        "astropy/config/configuration.py::ConfigItem|support, skeleton",
+        "astropy/io/fits/card.py::VALUE_INDICATOR_LEN|support, skeleton"
+      ],
+      "stillRenderedAtHigher": [
+        "astropy/io/fits/fitsrec.py::FITS_rec",
+        "astropy/config/configuration.py::ConfigurationChangedWarning",
+        "astropy/io/fits/card.py::Card.fromstring",
+        "astropy/io/fits/header.py::Header.fromstring",
+        "astropy/units/format/fits.py::Fits",
+        "astropy/io/fits/hdu/table.py::FITSTableDumpDialect.quotechar",
+        "astropy/io/fits/hdu/hdulist.py::HDUList.fromstring",
+        "astropy/config/configuration.py::ConfigNamespace",
+        "astropy/io/fits/hdu/base.py::_BaseHDU.fromstring",
+        "astropy/io/fits/card.py::Card",
+        "astropy/config/configuration.py::ConfigItem",
+        "astropy/io/fits/card.py::VALUE_INDICATOR_LEN"
+      ],
+      "withheldByAtHigher": "envelope_ladder_slice",
+      "attribution": "metadata_layer:envelope_ladder_slice"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "astropy__astropy-14598",
+      "lower": 3200,
+      "higher": 6400,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "SEMANTIC_ROLE_CHANGED",
+        "RELATED_ITEM_REPLACED"
+      ],
+      "lostEvidence": [
+        "astropy/io/fits/fitsrec.py::FITS_rec|pivot, required",
+        "astropy/config/configuration.py::ConfigurationChangedWarning|pivot, required",
+        "astropy/io/fits/card.py::Card.fromstring|pivot, required",
+        "astropy/io/fits/header.py::Header.fromstring|pivot, required",
+        "astropy/units/format/fits.py::Fits|support, skeleton",
+        "astropy/io/fits/hdu/table.py::FITSTableDumpDialect.quotechar|support, skeleton",
+        "astropy/io/fits/hdu/hdulist.py::HDUList.fromstring|support, skeleton",
+        "astropy/config/configuration.py::ConfigNamespace|support, skeleton",
+        "astropy/io/fits/hdu/base.py::_BaseHDU.fromstring|support, skeleton",
+        "astropy/io/fits/card.py::Card|support, skeleton",
+        "astropy/config/configuration.py::ConfigItem|support, skeleton",
+        "astropy/io/fits/card.py::VALUE_INDICATOR_LEN|support, skeleton"
+      ],
+      "stillRenderedAtHigher": [
+        "astropy/io/fits/fitsrec.py::FITS_rec",
+        "astropy/config/configuration.py::ConfigurationChangedWarning",
+        "astropy/io/fits/card.py::Card.fromstring",
+        "astropy/io/fits/header.py::Header.fromstring",
+        "astropy/units/format/fits.py::Fits",
+        "astropy/io/fits/hdu/table.py::FITSTableDumpDialect.quotechar",
+        "astropy/io/fits/hdu/hdulist.py::HDUList.fromstring",
+        "astropy/config/configuration.py::ConfigNamespace",
+        "astropy/io/fits/hdu/base.py::_BaseHDU.fromstring",
+        "astropy/io/fits/card.py::Card",
+        "astropy/config/configuration.py::ConfigItem",
+        "astropy/io/fits/card.py::VALUE_INDICATOR_LEN"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "astropy__astropy-14598",
+      "lower": 3200,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "SEMANTIC_ROLE_CHANGED",
+        "RELATED_ITEM_REPLACED"
+      ],
+      "lostEvidence": [
+        "astropy/io/fits/fitsrec.py::FITS_rec|pivot, required",
+        "astropy/config/configuration.py::ConfigurationChangedWarning|pivot, required",
+        "astropy/io/fits/card.py::Card.fromstring|pivot, required",
+        "astropy/io/fits/header.py::Header.fromstring|pivot, required",
+        "astropy/units/format/fits.py::Fits|support, skeleton",
+        "astropy/io/fits/hdu/table.py::FITSTableDumpDialect.quotechar|support, skeleton",
+        "astropy/io/fits/hdu/hdulist.py::HDUList.fromstring|support, skeleton",
+        "astropy/config/configuration.py::ConfigNamespace|support, skeleton",
+        "astropy/io/fits/hdu/base.py::_BaseHDU.fromstring|support, skeleton",
+        "astropy/io/fits/card.py::Card|support, skeleton",
+        "astropy/config/configuration.py::ConfigItem|support, skeleton",
+        "astropy/io/fits/card.py::VALUE_INDICATOR_LEN|support, skeleton"
+      ],
+      "stillRenderedAtHigher": [
+        "astropy/io/fits/fitsrec.py::FITS_rec",
+        "astropy/config/configuration.py::ConfigurationChangedWarning",
+        "astropy/io/fits/card.py::Card.fromstring",
+        "astropy/io/fits/header.py::Header.fromstring",
+        "astropy/units/format/fits.py::Fits",
+        "astropy/io/fits/hdu/table.py::FITSTableDumpDialect.quotechar",
+        "astropy/io/fits/hdu/hdulist.py::HDUList.fromstring",
+        "astropy/config/configuration.py::ConfigNamespace",
+        "astropy/io/fits/hdu/base.py::_BaseHDU.fromstring",
+        "astropy/io/fits/card.py::Card",
+        "astropy/config/configuration.py::ConfigItem",
+        "astropy/io/fits/card.py::VALUE_INDICATOR_LEN"
+      ],
+      "withheldByAtHigher": "envelope_ladder_slice",
+      "attribution": "metadata_layer:envelope_ladder_slice"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "astropy__astropy-7166",
+      "lower": 1600,
+      "higher": 2000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "SEMANTIC_ROLE_CHANGED",
+        "RELATED_ITEM_REPLACED"
+      ],
+      "lostEvidence": [
+        "astropy/stats/lombscargle/_statistics.py::false_alarm_probability|pivot, required",
+        "astropy/table/column.py::FalseArray|pivot, required",
+        "astropy/stats/lombscargle/core.py::LombScargle.false_alarm_probability|pivot, required, impact",
+        "astropy/stats/lombscargle/_statistics.py::false_alarm_level|pivot, required",
+        "astropy/stats/lombscargle/core.py::LombScargle.false_alarm_level|support, skeleton",
+        "astropy/units/quantity.py::Quantity.to_value|support, skeleton",
+        "astropy/units/quantity.py::Quantity.si|support, skeleton",
+        "astropy/modeling/core.py::Model.__call__|support, skeleton"
+      ],
+      "stillRenderedAtHigher": [
+        "astropy/stats/lombscargle/_statistics.py::false_alarm_probability",
+        "astropy/table/column.py::FalseArray",
+        "astropy/stats/lombscargle/core.py::LombScargle.false_alarm_probability",
+        "astropy/stats/lombscargle/_statistics.py::false_alarm_level",
+        "astropy/stats/lombscargle/core.py::LombScargle.false_alarm_level",
+        "astropy/units/quantity.py::Quantity.to_value",
+        "astropy/units/quantity.py::Quantity.si",
+        "astropy/modeling/core.py::Model.__call__"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "astropy__astropy-7166",
+      "lower": 1600,
+      "higher": 3200,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "SEMANTIC_ROLE_CHANGED",
+        "RELATED_ITEM_REPLACED"
+      ],
+      "lostEvidence": [
+        "astropy/stats/lombscargle/_statistics.py::false_alarm_probability|pivot, required",
+        "astropy/table/column.py::FalseArray|pivot, required",
+        "astropy/stats/lombscargle/core.py::LombScargle.false_alarm_probability|pivot, required, impact",
+        "astropy/stats/lombscargle/_statistics.py::false_alarm_level|pivot, required",
+        "astropy/stats/lombscargle/core.py::LombScargle.false_alarm_level|support, skeleton",
+        "astropy/units/quantity.py::Quantity.to_value|support, skeleton",
+        "astropy/units/quantity.py::Quantity.si|support, skeleton",
+        "astropy/modeling/core.py::Model.__call__|support, skeleton",
+        "astropy/io/ascii/misc.py::first_false_index|support, skeleton"
+      ],
+      "stillRenderedAtHigher": [
+        "astropy/stats/lombscargle/_statistics.py::false_alarm_probability",
+        "astropy/table/column.py::FalseArray",
+        "astropy/stats/lombscargle/core.py::LombScargle.false_alarm_probability",
+        "astropy/stats/lombscargle/_statistics.py::false_alarm_level",
+        "astropy/stats/lombscargle/core.py::LombScargle.false_alarm_level",
+        "astropy/units/quantity.py::Quantity.to_value",
+        "astropy/units/quantity.py::Quantity.si",
+        "astropy/modeling/core.py::Model.__call__",
+        "astropy/io/ascii/misc.py::first_false_index"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "astropy__astropy-7166",
+      "lower": 1600,
+      "higher": 6400,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "SEMANTIC_ROLE_CHANGED",
+        "RELATED_ITEM_REPLACED"
+      ],
+      "lostEvidence": [
+        "astropy/stats/lombscargle/_statistics.py::false_alarm_probability|pivot, required",
+        "astropy/table/column.py::FalseArray|pivot, required",
+        "astropy/stats/lombscargle/core.py::LombScargle.false_alarm_probability|pivot, required, impact",
+        "astropy/stats/lombscargle/_statistics.py::false_alarm_level|pivot, required",
+        "astropy/stats/lombscargle/core.py::LombScargle.false_alarm_level|support, skeleton",
+        "astropy/units/quantity.py::Quantity.to_value|support, skeleton",
+        "astropy/units/quantity.py::Quantity.si|support, skeleton",
+        "astropy/modeling/core.py::Model.__call__|support, skeleton",
+        "astropy/io/ascii/misc.py::first_false_index|support, skeleton"
+      ],
+      "stillRenderedAtHigher": [
+        "astropy/stats/lombscargle/_statistics.py::false_alarm_probability",
+        "astropy/table/column.py::FalseArray",
+        "astropy/stats/lombscargle/core.py::LombScargle.false_alarm_probability",
+        "astropy/stats/lombscargle/_statistics.py::false_alarm_level",
+        "astropy/stats/lombscargle/core.py::LombScargle.false_alarm_level",
+        "astropy/units/quantity.py::Quantity.to_value",
+        "astropy/units/quantity.py::Quantity.si",
+        "astropy/modeling/core.py::Model.__call__",
+        "astropy/io/ascii/misc.py::first_false_index"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "astropy__astropy-7166",
+      "lower": 1600,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "SEMANTIC_ROLE_CHANGED",
+        "RELATED_ITEM_REPLACED"
+      ],
+      "lostEvidence": [
+        "astropy/stats/lombscargle/_statistics.py::false_alarm_probability|pivot, required",
+        "astropy/table/column.py::FalseArray|pivot, required",
+        "astropy/stats/lombscargle/core.py::LombScargle.false_alarm_probability|pivot, required, impact",
+        "astropy/stats/lombscargle/_statistics.py::false_alarm_level|pivot, required",
+        "astropy/stats/lombscargle/core.py::LombScargle.false_alarm_level|support, skeleton",
+        "astropy/units/quantity.py::Quantity.to_value|support, skeleton",
+        "astropy/units/quantity.py::Quantity.si|support, skeleton",
+        "astropy/modeling/core.py::Model.__call__|support, skeleton",
+        "astropy/io/ascii/misc.py::first_false_index|support, skeleton"
+      ],
+      "stillRenderedAtHigher": [
+        "astropy/stats/lombscargle/_statistics.py::false_alarm_probability",
+        "astropy/table/column.py::FalseArray",
+        "astropy/stats/lombscargle/core.py::LombScargle.false_alarm_probability",
+        "astropy/stats/lombscargle/_statistics.py::false_alarm_level",
+        "astropy/stats/lombscargle/core.py::LombScargle.false_alarm_level",
+        "astropy/units/quantity.py::Quantity.to_value",
+        "astropy/units/quantity.py::Quantity.si",
+        "astropy/modeling/core.py::Model.__call__",
+        "astropy/io/ascii/misc.py::first_false_index"
+      ],
+      "withheldByAtHigher": "envelope_ladder_slice",
+      "attribution": "metadata_layer:envelope_ladder_slice"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "astropy__astropy-7166",
+      "lower": 2000,
+      "higher": 3200,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "SEMANTIC_ROLE_CHANGED",
+        "RELATED_ITEM_REPLACED"
+      ],
+      "lostEvidence": [
+        "astropy/io/ascii/misc.py::first_false_index|support, skeleton"
+      ],
+      "stillRenderedAtHigher": [
+        "astropy/io/ascii/misc.py::first_false_index"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "astropy__astropy-7166",
+      "lower": 2000,
+      "higher": 6400,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "SEMANTIC_ROLE_CHANGED",
+        "RELATED_ITEM_REPLACED"
+      ],
+      "lostEvidence": [
+        "astropy/io/ascii/misc.py::first_false_index|support, skeleton"
+      ],
+      "stillRenderedAtHigher": [
+        "astropy/io/ascii/misc.py::first_false_index"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "astropy__astropy-7166",
+      "lower": 2000,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "SEMANTIC_ROLE_CHANGED",
+        "RELATED_ITEM_REPLACED"
+      ],
+      "lostEvidence": [
+        "astropy/io/ascii/misc.py::first_false_index|support, skeleton"
+      ],
+      "stillRenderedAtHigher": [
+        "astropy/io/ascii/misc.py::first_false_index"
+      ],
+      "withheldByAtHigher": "envelope_ladder_slice",
+      "attribution": "metadata_layer:envelope_ladder_slice"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-10880",
+      "lower": 1200,
+      "higher": 1600,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "SEMANTIC_ROLE_CHANGED",
+        "RELATED_ITEM_REPLACED"
+      ],
+      "lostEvidence": [
+        "db/models/aggregates.py::Count|support, skeleton",
+        "db/backends/postgresql/features.py::DatabaseFeatures.greatest_least_ignores_nulls|support, skeleton",
+        "db/backends/base/features.py::BaseDatabaseFeatures.greatest_least_ignores_nulls|support, skeleton",
+        "contrib/gis/geos/mutable_list.py::ListMixin.count|support, skeleton"
+      ],
+      "stillRenderedAtHigher": [
+        "db/models/aggregates.py::Count",
+        "db/backends/postgresql/features.py::DatabaseFeatures.greatest_least_ignores_nulls",
+        "db/backends/base/features.py::BaseDatabaseFeatures.greatest_least_ignores_nulls",
+        "contrib/gis/geos/mutable_list.py::ListMixin.count"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-10880",
+      "lower": 1200,
+      "higher": 2000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "SEMANTIC_ROLE_CHANGED",
+        "RELATED_ITEM_REPLACED"
+      ],
+      "lostEvidence": [
+        "db/models/aggregates.py::Count|support, skeleton",
+        "db/backends/postgresql/features.py::DatabaseFeatures.greatest_least_ignores_nulls|support, skeleton",
+        "db/backends/base/features.py::BaseDatabaseFeatures.greatest_least_ignores_nulls|support, skeleton",
+        "contrib/gis/geos/mutable_list.py::ListMixin.count|support, skeleton"
+      ],
+      "stillRenderedAtHigher": [
+        "db/models/aggregates.py::Count",
+        "db/backends/postgresql/features.py::DatabaseFeatures.greatest_least_ignores_nulls",
+        "db/backends/base/features.py::BaseDatabaseFeatures.greatest_least_ignores_nulls",
+        "contrib/gis/geos/mutable_list.py::ListMixin.count"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-10880",
+      "lower": 1200,
+      "higher": 3200,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "SEMANTIC_ROLE_CHANGED",
+        "RELATED_ITEM_REPLACED"
+      ],
+      "lostEvidence": [
+        "db/models/aggregates.py::Count|support, skeleton",
+        "db/backends/postgresql/features.py::DatabaseFeatures.greatest_least_ignores_nulls|support, skeleton",
+        "db/backends/base/features.py::BaseDatabaseFeatures.greatest_least_ignores_nulls|support, skeleton",
+        "contrib/gis/geos/mutable_list.py::ListMixin.count|support, skeleton"
+      ],
+      "stillRenderedAtHigher": [
+        "db/models/aggregates.py::Count",
+        "db/backends/postgresql/features.py::DatabaseFeatures.greatest_least_ignores_nulls",
+        "db/backends/base/features.py::BaseDatabaseFeatures.greatest_least_ignores_nulls",
+        "contrib/gis/geos/mutable_list.py::ListMixin.count"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-10880",
+      "lower": 1200,
+      "higher": 6400,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "SEMANTIC_ROLE_CHANGED",
+        "RELATED_ITEM_REPLACED"
+      ],
+      "lostEvidence": [
+        "db/models/aggregates.py::Count|support, skeleton",
+        "db/backends/postgresql/features.py::DatabaseFeatures.greatest_least_ignores_nulls|support, skeleton",
+        "db/backends/base/features.py::BaseDatabaseFeatures.greatest_least_ignores_nulls|support, skeleton",
+        "contrib/gis/geos/mutable_list.py::ListMixin.count|support, skeleton"
+      ],
+      "stillRenderedAtHigher": [
+        "db/models/aggregates.py::Count",
+        "db/backends/postgresql/features.py::DatabaseFeatures.greatest_least_ignores_nulls",
+        "db/backends/base/features.py::BaseDatabaseFeatures.greatest_least_ignores_nulls",
+        "contrib/gis/geos/mutable_list.py::ListMixin.count"
+      ],
+      "withheldByAtHigher": "none",
+      "attribution": "evidence_layer_or_other"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-10880",
+      "lower": 1200,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "SEMANTIC_ROLE_CHANGED",
+        "RELATED_ITEM_REPLACED"
+      ],
+      "lostEvidence": [
+        "db/models/aggregates.py::Count|support, skeleton",
+        "db/backends/postgresql/features.py::DatabaseFeatures.greatest_least_ignores_nulls|support, skeleton",
+        "db/backends/base/features.py::BaseDatabaseFeatures.greatest_least_ignores_nulls|support, skeleton",
+        "contrib/gis/geos/mutable_list.py::ListMixin.count|support, skeleton"
+      ],
+      "stillRenderedAtHigher": [
+        "db/models/aggregates.py::Count",
+        "db/backends/postgresql/features.py::DatabaseFeatures.greatest_least_ignores_nulls",
+        "db/backends/base/features.py::BaseDatabaseFeatures.greatest_least_ignores_nulls",
+        "contrib/gis/geos/mutable_list.py::ListMixin.count"
+      ],
+      "withheldByAtHigher": "none",
+      "attribution": "evidence_layer_or_other"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-10973",
+      "lower": 1200,
+      "higher": 1600,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "SEMANTIC_ROLE_CHANGED",
+        "RELATED_ITEM_REPLACED"
+      ],
+      "lostEvidence": [
+        "db/backends/mysql/features.py::DatabaseFeatures.allows_auto_pk_0|support, skeleton",
+        "db/backends/base/features.py::BaseDatabaseFeatures.allows_auto_pk_0|support, skeleton",
+        "db/backends/mysql/features.py::DatabaseFeatures.allows_group_by_pk|support, skeleton",
+        "db/backends/base/features.py::BaseDatabaseFeatures.allows_group_by_pk|support, skeleton",
+        "db/backends/base/features.py::BaseDatabaseFeatures.allows_group_by_selected_pks|support, skeleton",
+        "contrib/gis/db/backends/spatialite/base.py::DatabaseWrapper|support, skeleton"
+      ],
+      "stillRenderedAtHigher": [
+        "db/backends/mysql/features.py::DatabaseFeatures.allows_auto_pk_0",
+        "db/backends/base/features.py::BaseDatabaseFeatures.allows_auto_pk_0",
+        "db/backends/mysql/features.py::DatabaseFeatures.allows_group_by_pk",
+        "db/backends/base/features.py::BaseDatabaseFeatures.allows_group_by_pk",
+        "db/backends/base/features.py::BaseDatabaseFeatures.allows_group_by_selected_pks",
+        "contrib/gis/db/backends/spatialite/base.py::DatabaseWrapper"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-10973",
+      "lower": 1200,
+      "higher": 2000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "SEMANTIC_ROLE_CHANGED",
+        "RELATED_ITEM_REPLACED"
+      ],
+      "lostEvidence": [
+        "db/backends/mysql/features.py::DatabaseFeatures.allows_auto_pk_0|support, skeleton",
+        "db/backends/base/features.py::BaseDatabaseFeatures.allows_auto_pk_0|support, skeleton",
+        "db/backends/mysql/features.py::DatabaseFeatures.allows_group_by_pk|support, skeleton",
+        "db/backends/base/features.py::BaseDatabaseFeatures.allows_group_by_pk|support, skeleton",
+        "db/backends/base/features.py::BaseDatabaseFeatures.allows_group_by_selected_pks|support, skeleton",
+        "contrib/gis/db/backends/spatialite/base.py::DatabaseWrapper|support, skeleton"
+      ],
+      "stillRenderedAtHigher": [
+        "db/backends/mysql/features.py::DatabaseFeatures.allows_auto_pk_0",
+        "db/backends/base/features.py::BaseDatabaseFeatures.allows_auto_pk_0",
+        "db/backends/mysql/features.py::DatabaseFeatures.allows_group_by_pk",
+        "db/backends/base/features.py::BaseDatabaseFeatures.allows_group_by_pk",
+        "db/backends/base/features.py::BaseDatabaseFeatures.allows_group_by_selected_pks",
+        "contrib/gis/db/backends/spatialite/base.py::DatabaseWrapper"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-10973",
+      "lower": 1200,
+      "higher": 3200,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "SEMANTIC_ROLE_CHANGED",
+        "RELATED_ITEM_REPLACED"
+      ],
+      "lostEvidence": [
+        "db/backends/mysql/features.py::DatabaseFeatures.allows_auto_pk_0|support, skeleton",
+        "db/backends/base/features.py::BaseDatabaseFeatures.allows_auto_pk_0|support, skeleton",
+        "db/backends/mysql/features.py::DatabaseFeatures.allows_group_by_pk|support, skeleton",
+        "db/backends/base/features.py::BaseDatabaseFeatures.allows_group_by_pk|support, skeleton",
+        "db/backends/base/features.py::BaseDatabaseFeatures.allows_group_by_selected_pks|support, skeleton",
+        "contrib/gis/db/backends/spatialite/base.py::DatabaseWrapper|support, skeleton"
+      ],
+      "stillRenderedAtHigher": [
+        "db/backends/mysql/features.py::DatabaseFeatures.allows_auto_pk_0",
+        "db/backends/base/features.py::BaseDatabaseFeatures.allows_auto_pk_0",
+        "db/backends/mysql/features.py::DatabaseFeatures.allows_group_by_pk",
+        "db/backends/base/features.py::BaseDatabaseFeatures.allows_group_by_pk",
+        "db/backends/base/features.py::BaseDatabaseFeatures.allows_group_by_selected_pks",
+        "contrib/gis/db/backends/spatialite/base.py::DatabaseWrapper"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-10973",
+      "lower": 1200,
+      "higher": 6400,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "SEMANTIC_ROLE_CHANGED",
+        "RELATED_ITEM_REPLACED"
+      ],
+      "lostEvidence": [
+        "db/backends/mysql/features.py::DatabaseFeatures.allows_auto_pk_0|support, skeleton",
+        "db/backends/base/features.py::BaseDatabaseFeatures.allows_auto_pk_0|support, skeleton",
+        "db/backends/mysql/features.py::DatabaseFeatures.allows_group_by_pk|support, skeleton",
+        "db/backends/base/features.py::BaseDatabaseFeatures.allows_group_by_pk|support, skeleton",
+        "db/backends/base/features.py::BaseDatabaseFeatures.allows_group_by_selected_pks|support, skeleton",
+        "contrib/gis/db/backends/spatialite/base.py::DatabaseWrapper|support, skeleton"
+      ],
+      "stillRenderedAtHigher": [
+        "db/backends/mysql/features.py::DatabaseFeatures.allows_auto_pk_0",
+        "db/backends/base/features.py::BaseDatabaseFeatures.allows_auto_pk_0",
+        "db/backends/mysql/features.py::DatabaseFeatures.allows_group_by_pk",
+        "db/backends/base/features.py::BaseDatabaseFeatures.allows_group_by_pk",
+        "db/backends/base/features.py::BaseDatabaseFeatures.allows_group_by_selected_pks",
+        "contrib/gis/db/backends/spatialite/base.py::DatabaseWrapper"
+      ],
+      "withheldByAtHigher": "none",
+      "attribution": "evidence_layer_or_other"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-10973",
+      "lower": 1200,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "SEMANTIC_ROLE_CHANGED",
+        "RELATED_ITEM_REPLACED"
+      ],
+      "lostEvidence": [
+        "db/backends/mysql/features.py::DatabaseFeatures.allows_auto_pk_0|support, skeleton",
+        "db/backends/base/features.py::BaseDatabaseFeatures.allows_auto_pk_0|support, skeleton",
+        "db/backends/mysql/features.py::DatabaseFeatures.allows_group_by_pk|support, skeleton",
+        "db/backends/base/features.py::BaseDatabaseFeatures.allows_group_by_pk|support, skeleton",
+        "db/backends/base/features.py::BaseDatabaseFeatures.allows_group_by_selected_pks|support, skeleton",
+        "contrib/gis/db/backends/spatialite/base.py::DatabaseWrapper|support, skeleton"
+      ],
+      "stillRenderedAtHigher": [
+        "db/backends/mysql/features.py::DatabaseFeatures.allows_auto_pk_0",
+        "db/backends/base/features.py::BaseDatabaseFeatures.allows_auto_pk_0",
+        "db/backends/mysql/features.py::DatabaseFeatures.allows_group_by_pk",
+        "db/backends/base/features.py::BaseDatabaseFeatures.allows_group_by_pk",
+        "db/backends/base/features.py::BaseDatabaseFeatures.allows_group_by_selected_pks",
+        "contrib/gis/db/backends/spatialite/base.py::DatabaseWrapper"
+      ],
+      "withheldByAtHigher": "none",
+      "attribution": "evidence_layer_or_other"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-11133",
+      "lower": 800,
+      "higher": 1600,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "SEMANTIC_ROLE_CHANGED",
+        "RELATED_ITEM_REPLACED"
+      ],
+      "lostEvidence": [
+        "http/response.py::HttpResponseBase|pivot, required",
+        "http/response.py::StreamingHttpResponse.__iter__|pivot, required",
+        "http/response.py::HttpResponse.write|pivot, required",
+        "http/response.py::HttpResponseBase.write|pivot, required",
+        "http/response.py::StreamingHttpResponse|support, skeleton, impact",
+        "http/response.py::HttpResponseBase._content_type_for_repr|support, skeleton"
+      ],
+      "stillRenderedAtHigher": [
+        "http/response.py::HttpResponseBase",
+        "http/response.py::StreamingHttpResponse.__iter__",
+        "http/response.py::HttpResponse.write",
+        "http/response.py::HttpResponseBase.write",
+        "http/response.py::StreamingHttpResponse",
+        "http/response.py::HttpResponseBase._content_type_for_repr"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-11133",
+      "lower": 800,
+      "higher": 2000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "SEMANTIC_ROLE_CHANGED",
+        "RELATED_ITEM_REPLACED"
+      ],
+      "lostEvidence": [
+        "http/response.py::HttpResponseBase|pivot, required",
+        "http/response.py::StreamingHttpResponse.__iter__|pivot, required",
+        "http/response.py::HttpResponse.write|pivot, required",
+        "http/response.py::HttpResponseBase.write|pivot, required",
+        "http/response.py::StreamingHttpResponse|support, skeleton, impact",
+        "http/response.py::HttpResponseBase._content_type_for_repr|support, skeleton"
+      ],
+      "stillRenderedAtHigher": [
+        "http/response.py::HttpResponseBase",
+        "http/response.py::StreamingHttpResponse.__iter__",
+        "http/response.py::HttpResponse.write",
+        "http/response.py::HttpResponseBase.write",
+        "http/response.py::StreamingHttpResponse",
+        "http/response.py::HttpResponseBase._content_type_for_repr"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-11133",
+      "lower": 800,
+      "higher": 3200,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "SEMANTIC_ROLE_CHANGED",
+        "RELATED_ITEM_REPLACED"
+      ],
+      "lostEvidence": [
+        "http/response.py::HttpResponseBase|pivot, required",
+        "http/response.py::StreamingHttpResponse.__iter__|pivot, required",
+        "http/response.py::HttpResponse.write|pivot, required",
+        "http/response.py::HttpResponseBase.write|pivot, required",
+        "http/response.py::StreamingHttpResponse|support, skeleton, impact",
+        "http/response.py::HttpResponseBase._content_type_for_repr|support, skeleton"
+      ],
+      "stillRenderedAtHigher": [
+        "http/response.py::HttpResponseBase",
+        "http/response.py::StreamingHttpResponse.__iter__",
+        "http/response.py::HttpResponse.write",
+        "http/response.py::HttpResponseBase.write",
+        "http/response.py::StreamingHttpResponse",
+        "http/response.py::HttpResponseBase._content_type_for_repr"
+      ],
+      "withheldByAtHigher": "envelope_ladder_slice",
+      "attribution": "metadata_layer:envelope_ladder_slice"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-11133",
+      "lower": 800,
+      "higher": 6400,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "SEMANTIC_ROLE_CHANGED",
+        "RELATED_ITEM_REPLACED"
+      ],
+      "lostEvidence": [
+        "http/response.py::HttpResponseBase|pivot, required",
+        "http/response.py::StreamingHttpResponse.__iter__|pivot, required",
+        "http/response.py::HttpResponse.write|pivot, required",
+        "http/response.py::HttpResponseBase.write|pivot, required",
+        "http/response.py::StreamingHttpResponse|support, skeleton, impact",
+        "http/response.py::HttpResponseBase._content_type_for_repr|support, skeleton"
+      ],
+      "stillRenderedAtHigher": [
+        "http/response.py::HttpResponseBase",
+        "http/response.py::StreamingHttpResponse.__iter__",
+        "http/response.py::HttpResponse.write",
+        "http/response.py::HttpResponseBase.write",
+        "http/response.py::StreamingHttpResponse",
+        "http/response.py::HttpResponseBase._content_type_for_repr"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-11133",
+      "lower": 800,
+      "higher": 8000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "SEMANTIC_ROLE_CHANGED",
+        "RELATED_ITEM_REPLACED"
+      ],
+      "lostEvidence": [
+        "http/response.py::HttpResponseBase|pivot, required",
+        "http/response.py::StreamingHttpResponse.__iter__|pivot, required",
+        "http/response.py::HttpResponse.write|pivot, required",
+        "http/response.py::HttpResponseBase.write|pivot, required",
+        "http/response.py::StreamingHttpResponse|support, skeleton, impact",
+        "http/response.py::HttpResponseBase._content_type_for_repr|support, skeleton"
+      ],
+      "stillRenderedAtHigher": [
+        "http/response.py::HttpResponseBase",
+        "http/response.py::StreamingHttpResponse.__iter__",
+        "http/response.py::HttpResponse.write",
+        "http/response.py::HttpResponseBase.write",
+        "http/response.py::StreamingHttpResponse",
+        "http/response.py::HttpResponseBase._content_type_for_repr"
+      ],
+      "withheldByAtHigher": "envelope_ladder_slice",
+      "attribution": "metadata_layer:envelope_ladder_slice"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-11133",
+      "lower": 1000,
+      "higher": 1600,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "SEMANTIC_ROLE_CHANGED",
+        "RELATED_ITEM_REPLACED"
+      ],
+      "lostEvidence": [
+        "http/response.py::HttpResponseBase|pivot, required",
+        "http/response.py::StreamingHttpResponse.__iter__|pivot, required",
+        "http/response.py::HttpResponse.write|pivot, required",
+        "http/response.py::HttpResponseBase.write|pivot, required",
+        "http/response.py::StreamingHttpResponse|support, skeleton, impact",
+        "http/response.py::HttpResponseBase._content_type_for_repr|support, skeleton"
+      ],
+      "stillRenderedAtHigher": [
+        "http/response.py::HttpResponseBase",
+        "http/response.py::StreamingHttpResponse.__iter__",
+        "http/response.py::HttpResponse.write",
+        "http/response.py::HttpResponseBase.write",
+        "http/response.py::StreamingHttpResponse",
+        "http/response.py::HttpResponseBase._content_type_for_repr"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-11133",
+      "lower": 1000,
+      "higher": 2000,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "SEMANTIC_ROLE_CHANGED",
+        "RELATED_ITEM_REPLACED"
+      ],
+      "lostEvidence": [
+        "http/response.py::HttpResponseBase|pivot, required",
+        "http/response.py::StreamingHttpResponse.__iter__|pivot, required",
+        "http/response.py::HttpResponse.write|pivot, required",
+        "http/response.py::HttpResponseBase.write|pivot, required",
+        "http/response.py::StreamingHttpResponse|support, skeleton, impact",
+        "http/response.py::HttpResponseBase._content_type_for_repr|support, skeleton"
+      ],
+      "stillRenderedAtHigher": [
+        "http/response.py::HttpResponseBase",
+        "http/response.py::StreamingHttpResponse.__iter__",
+        "http/response.py::HttpResponse.write",
+        "http/response.py::HttpResponseBase.write",
+        "http/response.py::StreamingHttpResponse",
+        "http/response.py::HttpResponseBase._content_type_for_repr"
+      ],
+      "withheldByAtHigher": "mandatory_collapse",
+      "attribution": "metadata_layer:mandatory_collapse"
+    },
+    {
+      "corpus": "broad100a",
+      "instanceId": "django__django-11133",
+      "lower": 1000,
+      "higher": 3200,
+      "m179Classes": [
+        "ITEM_LOSS_WITH_NORMAL_RESPONSE"
+      ],
+      "m180Classes": [
+        "SEMANTIC_ROLE_CHANGED",
+        "RELATED_ITEM_REPLACED"
+      ],
+      "lostEvidence": [
+        "http/response.py::HttpResponseBase|pivot, required",
+        "http/response.py::StreamingHttpResponse.__iter__|pivot, required",
+        "http/response.py::HttpResponse.write|pivot, required",
+        "http/response.py::HttpResponseBase.write|pivot, required",
+        "http/response.py::StreamingHttpResponse|support, skeleton, impact",
+        "http/response.py::HttpResponseBase._content_type_for_repr|support, skeleton"
+      ],
+      "stillRenderedAtHigher": [
+        "http/response.py::HttpResponseBase",
+        "http/response.py::StreamingHttpResponse.__iter__",
+        "http/response.py::HttpResponse.write",
+        "http/response.py::HttpResponseBase.write",
+        "http/response.py::StreamingHttpResponse",
+        "http/response.py::HttpResponseBase._content_type_for_repr"
+      ],
+      "withheldByAtHigher": "envelope_ladder_slice",
+      "attribution": "metadata_layer:envelope_ladder_slice"
+    }
+  ],
+  "note": "scored with M179's `symbol|claim-wording` identity, which counts a claim getting stronger as a loss; see stage5_m180_final_report.md. The M180 preservation scoring is in stage5_m180_candidate_c_authoritative_supply_channel.json.",
+  "violationsRetained": 40
+}
