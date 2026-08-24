@@ -33,8 +33,14 @@ import path from "node:path";
 
 // The post-split envelope, from this checkout.
 import { compactImpactProductResponse as compactAfter } from "../../src/impact/impactResponseEnvelope";
-// The pre-split envelope, from a detached worktree at the M177 HEAD.
-import { compactImpactProductResponse as compactBefore } from "/home/calvin/bench/vtrace-m178/pre-split/src/impact/impactResponseEnvelope";
+// The pre-split envelope lives in a detached worktree at the M177 HEAD, created
+// on demand by the command in the header and removed once M178 closed. A STATIC
+// import of that path is a permanent build dependency on a temporary directory:
+// it resolved while the worktree existed and has failed `typecheck:benchmarks`
+// ever since it was removed, even though `main` already guards the run with
+// `existsSync` below. Loaded through a computed specifier instead, so the
+// pre-existing runtime guard is the only thing that decides whether this script
+// can run. M179's cross-checkout loader does the same, for the same reason.
 
 import type { ImpactGraphOutput } from "../../src/impact/getImpactGraph";
 import { authoritativeImpact, openWorkspace } from "./m177ImpactEnvelope";
@@ -77,6 +83,9 @@ async function main(): Promise<void> {
   if (!existsSync(PRE_SPLIT_WORKTREE)) {
     throw new Error(`pre-split worktree missing: ${PRE_SPLIT_WORKTREE}. See the header for the git command.`);
   }
+  const { compactImpactProductResponse: compactBefore } = await import(
+    `${PRE_SPLIT_WORKTREE}/src/impact/impactResponseEnvelope`
+  ) as { compactImpactProductResponse: unknown };
   const out = argOf("--out", path.resolve(import.meta.dir, "results"));
   mkdirSync(out, { recursive: true });
   const db = openWorkspace(REPO);
