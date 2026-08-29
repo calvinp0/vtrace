@@ -1,0 +1,75 @@
+{
+  "schemaVersion": "stage5.m183.spend-model.v1",
+  "milestone": "M183",
+  "workstream": "M183-B",
+  "frozenBefore": "any M183 live run existed",
+  "estimateBasis": {
+    "source": "M173's OWN twelve observed paired live runs (stage5_m183 does not re-use M168's estimates, which M173 then measured against)",
+    "baselineArm": {
+      "n": 11,
+      "sumUsd": 5.5876,
+      "meanUsd": 0.508,
+      "medianUsd": 0.2681,
+      "p90Usd": 1.0545,
+      "maxUsd": 1.4959
+    },
+    "treatmentArmM173": {
+      "n": 12,
+      "sumUsd": 9.2276,
+      "meanUsd": 0.769,
+      "medianUsd": 0.4081,
+      "p90Usd": 1.4388,
+      "maxUsd": 2.2105
+    },
+    "note": "M173's arm B carried a mandate and an MCP tool inventory; M183's carries neither, and its orientation arrives pre-paid in the prompt rather than through a tool round trip. Using M173's arm B mean for M183's arm B is therefore expected to OVERSTATE the treatment cost, which is the direction a spend model should err in.",
+    "censored": "pylint-dev__pylint-4551's M173 baseline has no costUsd and is excluded from the baseline statistics rather than imputed.",
+    "meanPairUsd": 1.277,
+    "p90PairUsd": 2.4933
+  },
+  "perInstanceCeilings": {
+    "costLimitUsd": 3,
+    "maxTurns": 250,
+    "source": "vexp-swe-bench/src/cli.ts defaults, unchanged and identical in both arms (\u00a724)",
+    "consequence": "a pair cannot cost more than $6, which is what makes the spend guard exact rather than extrapolated (\u00a725)"
+  },
+  "candidates": [
+    {
+      "pairs": 24,
+      "arms": 48,
+      "expectedBaselineUsd": 12.19,
+      "expectedTreatmentUsd": 18.46,
+      "expectedTotalUsd": 30.65,
+      "p90WeightedTotalUsd": 59.84,
+      "unguardedHardMaximumUsd": 144
+    },
+    {
+      "pairs": 30,
+      "arms": 60,
+      "expectedBaselineUsd": 15.24,
+      "expectedTreatmentUsd": 23.07,
+      "expectedTotalUsd": 38.31,
+      "p90WeightedTotalUsd": 74.8,
+      "unguardedHardMaximumUsd": 180
+    },
+    {
+      "pairs": 40,
+      "arms": 80,
+      "expectedBaselineUsd": 20.32,
+      "expectedTreatmentUsd": 30.76,
+      "expectedTotalUsd": 51.08,
+      "p90WeightedTotalUsd": 99.73,
+      "unguardedHardMaximumUsd": 240
+    }
+  ],
+  "selected": {
+    "pairs": 30,
+    "arms": 60,
+    "expectedTotalUsd": 38.31,
+    "p90WeightedTotalUsd": 74.8,
+    "hardCapUsd": 80.0,
+    "maximumPossibleSpendUsd": 80.0,
+    "whyThisN": "M183 is a requalification, not the publication benchmark (\u00a716). Thirty pairs is 2.5x M173's twelve \u2014 enough to move a discordant-pair count out of the single digits where one task decides the sign, and enough to report a repository breakdown \u2014 while stopping well short of the hundred-task expenditure \u00a716 forbids jumping to. The twelve M173 tasks are inside it, so \u00a7129's historical comparison is free rather than a separate run.",
+    "whatThisNCannotDo": "Thirty paired binary outcomes cannot resolve a small resolution difference. A one- or two-task difference will be reported as an observed count with its exact uncertainty and NOT as an improvement (\u00a741/\u00a743)."
+  },
+  "maximumPossibleSpendDerivation": "The guard starts a pair only when (cap - spent) >= $6. The worst case is a pair started at spent = $74.00 which then hits both arms' $3 ceilings, for exactly $80.00. There is no path above the cap."
+}

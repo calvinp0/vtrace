@@ -1,0 +1,45 @@
+{
+  "schemaVersion": "stage5.m183.start-state.v1",
+  "milestone": "M183",
+  "workstream": "M183-A",
+  "capturedAt": "2026-08-29T09:27:19.386Z",
+  "product": {
+    "head": "9517ccce6c63342ab4883131463ed294169e22af",
+    "branch": "main",
+    "trackedFilesDirty": 2,
+    "trackedDirtyPaths": [
+      "enchmarks/stage5_vexp_swe_bench_smoke/results/stage5_outcome_ledger.json",
+      "benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_outcome_ledger.md"
+    ],
+    "note": "Untracked benchmark output and the user's own working files are preserved and deliberately not counted (§153/§154)."
+  },
+  "inheritedGates": {
+    "typecheck": "PASS",
+    "typecheckBenchmarks": "PASS",
+    "gitDiffCheck": "PASS (clean)",
+    "bunTest": {
+      "pass": 5523,
+      "skip": 49,
+      "fail": 0,
+      "files": 353
+    },
+    "capturedBefore": "any M183 source file existed"
+  },
+  "liveEnvironment": {
+    "agentExecutable": "claude CLI credentials at ~/.claude/.credentials.json (ANTHROPIC_API_KEY unset)",
+    "grader": "docker",
+    "dockerAvailable": true,
+    "vexpSweBenchDir": "/home/calvin/code/vexp-swe-bench",
+    "dataset": "results/_m160_corpus/swe_bench_verified.jsonl (500 SWE-bench Verified rows)",
+    "expectedTestbedPrefix": "/home/calvin/miniforge3/envs/vexp_swebench",
+    "envGuard": "MANDATORY (M89): --stage5-env-guard --stage5-env-drift-check --expected-testbed-prefix",
+    "shellGuard": "MANDATORY (M90A): --stage5-agent-shell-guard --stage5-host-pip-firewall"
+  },
+  "treatment": {
+    "shape": "one automatically delivered compact orientation packet, injected as the last prompt section through VTRACE_TASK_TRIGGER_FILE",
+    "source": "structuredContent.result.output of a real default run_pipeline call over this instance's freshly indexed orientation workspace",
+    "mcpToolsGivenToTheAgent": 0,
+    "mandate": null,
+    "whyNotMcpAtRunTime": "§6 holds the tool environment fixed across arms, and M164 measured 0 voluntary reuse: an uncoerced tool arm would deliver orientation on approximately no task, which measures adoption rather than utility and leaves §82's delivery witness unsatisfiable."
+  }
+}

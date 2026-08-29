@@ -1,0 +1,23 @@
+{
+  "schemaVersion": "stage5.m183.cost-authorization.v1",
+  "milestone": "M183",
+  "workstream": "M183-B",
+  "authorizedAt": "2026-08-29T12:24:11.986510+03:00",
+  "authorizedBy": "the repository owner, in response to the M183-A/B estimate (sample size and ceiling chosen from the three candidates in stage5_m183_spend_model.json)",
+  "hardCapUsd": 80.0,
+  "plannedPairs": 30,
+  "plannedArms": 60,
+  "expectedTotalUsd": 38.31,
+  "enforcement": {
+    "where": "run_stage5_m183_driver.sh task_cost_guard, evaluated BEFORE every TASK (never between a task's two arms)",
+    "against": "actual recorded costUsd across completed m183_* result rows",
+    "rule": "start a pair only when (cap - spent) >= $6, the external harness's enforced per-instance ceiling doubled",
+    "whyNotAProjection": "\u00a725 \u2014 M173's guard extrapolated a running average and stopped the sweep after a single expensive pair, from a sample of one. This guard extrapolates nothing: $6 is a limit the external harness enforces, not a forecast, so the sweep stops exactly when the cap can no longer guarantee a whole pair.",
+    "onBreach": "the sweep stops between tasks and writes a progress row; the cap is never raised by any code path",
+    "withoutThisFile": "the driver refuses to spawn a paid agent at all"
+  },
+  "increaseWithoutNewAuthorization": "FORBIDDEN",
+  "capHistoryUsd": [
+    80.0
+  ]
+}

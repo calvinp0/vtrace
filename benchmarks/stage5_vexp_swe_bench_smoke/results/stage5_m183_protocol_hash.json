@@ -1,0 +1,37 @@
+{
+  "schemaVersion": "stage5.m183.protocol-hash.v1",
+  "milestone": "M183",
+  "workstream": "M183-A",
+  "productHead": "9517ccce6c63342ab4883131463ed294169e22af",
+  "productAncestry": {
+    "m181Closure": "95a2a9d492fc1ab1eb08dcab5caa875810da9e25",
+    "m182Evidence": "c17329dce00c4af3b879c2d2c447c62d650ce86d",
+    "m182Closure": "9517ccce6c63342ab4883131463ed294169e22af",
+    "headIsM182Closure": true
+  },
+  "sourceHashes": {
+    "benchmarks/stage5_vexp_swe_bench_smoke/m183Treatment.ts": "9be3e5d679095405345f14f906c7901bb7a8bff31f5af89eabe6a075d67d0154",
+    "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m183_orientation.ts": "316ffa7e099174d3a032cc1a4a5e958f1ca24c1a28cb89c7e31f84de7d15e0d0",
+    "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m183_arm_wiring.ts": "a4b1f30f21c8d27ef5768746f5b1ac186c93b626e6491bfb78e7416190f26fe1",
+    "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m183_driver.sh": "1e1d4da2095eaed6dc457dbea779476e01645007ac2ddad8a236adc85925ada6",
+    "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m183_prepare.ts": "401c35bd26922af452a75e02d42d75ee69c4dd40fa7dd3b64db0f82c3ebe5b5a",
+    "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m183_sample.ts": "3f2b4342a8905225e91d75a53ec0286efe5530f9f5f9f5e591688913a0a1de76",
+    "benchmarks/stage5_vexp_swe_bench_smoke/stage5_task_derivation.ts": "379a9e8dedabf99125b7e9d76c92432599407ac0a7586166723c2f0482554d95",
+    "src/runPipeline/orientationProjection.ts": "e5c14ec4c3dbe57b015a7ad3492235dc3af295a120984b8a4d4f950f8bd232ab",
+    "src/runPipeline/orientationDecline.ts": "f8a00d1c4b33487465e61d040cff1967c36235e1064ad9632aedf0d5590354ab",
+    "src/mcp/tools.ts": "f86dd3113afc9b763049adc9c2fba0e4b3693237e0df9c7c1e081c6e3afd4afc"
+  },
+  "documentHashes": {
+    "stage5_m183_sample_manifest.json": "6c4c63dc82c2e7f8860b667a668f9425a67e170f26266b8c0380ca7bba43baa1",
+    "stage5_m183_sample_hash.json": "d119d8a9dda9eb1c487d2c63d901e5907ac4766a7d0f1ebcebd96206e9ec352a",
+    "stage5_m183_pair_order.json": "523b1c13081d48ad53a889b02b24f5e939ecac9ed2a0c1473535322a9c8646c1",
+    "stage5_m183_spend_model.json": "fb2c687e2c7cd61306bbc10542efcbf1f04e255a6ddfac7a300cb78f6ef53d2a",
+    "stage5_m183_cost_authorization.json": "ffc260e7b65c55a26eba6a9af32d8bf2ab9ad71ff53afd08164ee06bab70ea23",
+    "stage5_m183_token_accounting_contract.md": "345a04be0721a82856283eb3843bb7b8e06b01323ba080bcd0050651f236ad2b",
+    "stage5_m183_cost_accounting_contract.md": "28ce3d8b8cc8411f12e31d49fe14a61cd9d2e33f9addddff34597530dd94ad97",
+    "stage5_m183_grader_contract.md": "ec2a8224daf54c5c1ddb1b39ee9953ea439825be153bfd290310faa6de48d648",
+    "stage5_m183_invalidity_policy.md": "eb19ba42ab45f4cceff7d7f9313193e275999c765dafbf30903f53e4fe13767d"
+  },
+  "protocolHash": "d749d0855fbdd0272e8ec933933a562f03397b1996b05330e9523cd4e5cd607f",
+  "meaning": "§62/§63 — after the first live arm, a change to any hash above means the treatment under test is not the treatment that was frozen. Benchmark-only ANALYSIS scripts are deliberately excluded: they cannot reach the agent."
+}

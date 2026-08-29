@@ -1,0 +1,127 @@
+{
+  "schemaVersion": "stage5.m183.arm-equivalence.v1",
+  "milestone": "M183",
+  "workstream": "M183-A",
+  "probeInstance": "pallets__flask-5014",
+  "model": {
+    "provider": "Anthropic, through the `claude` CLI credentials (NOT ANTHROPIC_API_KEY, which is unset here)",
+    "identifier": "claude-opus-4-5-20251101",
+    "source": "vexp-swe-bench/src/cli.ts --model default, unchanged and identical in both arms",
+    "maxTurns": 250,
+    "costLimitUsd": 3,
+    "settings": "harness defaults; M183 sets no temperature, no reasoning configuration and no tool configuration of its own"
+  },
+  "emittedEnvironment": {
+    "baseline": {},
+    "vtrace_orientation": {
+      "VTRACE_TASK_TRIGGER_FILE": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m183_orientation/pallets__flask-5014.trigger.md"
+    }
+  },
+  "environmentDifferences": [
+    "VTRACE_TASK_TRIGGER_FILE"
+  ],
+  "environmentDifferenceIsTreatmentActivationOnly": true,
+  "armContracts": {
+    "baseline": {
+      "arm": "baseline",
+      "label": "BASELINE",
+      "orientationInjected": false,
+      "mcpToolsPresent": false,
+      "mandatesPipelineFirst": false,
+      "prohibitionText": false,
+      "searchGuard": false,
+      "antiLoopDiscipline": false,
+      "ordinaryToolsDenied": false,
+      "disclosure": "NONE"
+    },
+    "vtrace_orientation": {
+      "arm": "vtrace_orientation",
+      "label": "VTRACE_ORIENTATION",
+      "orientationInjected": true,
+      "mcpToolsPresent": false,
+      "mandatesPipelineFirst": false,
+      "prohibitionText": false,
+      "searchGuard": false,
+      "antiLoopDiscipline": false,
+      "ordinaryToolsDenied": false,
+      "disclosure": "M172_COMPACT_ORIENTATION_DEFAULT"
+    }
+  },
+  "contractDifferences": [
+    "arm",
+    "label",
+    "orientationInjected",
+    "disclosure"
+  ],
+  "contractDifferencesAreIdentityAndDisclosureOnly": true,
+  "driverCommand": {
+    "commandArrayOccurrences": 1,
+    "armConditionalsInsideCommand": [],
+    "commandIsArmIndependent": true,
+    "protocolValues": [
+      "baseline"
+    ],
+    "protocolIsSingleAndLiteral": true,
+    "flagCount": 20,
+    "flags": [
+      "--mode",
+      "--protocol",
+      "--vexp-swe-bench-dir",
+      "--instances",
+      "--run-label",
+      "--swe-bench-data",
+      "--vexp-run-data",
+      "--context-policy",
+      "--disable-token-discipline",
+      "--disable-tool-use-discipline",
+      "--disable-pivot-check",
+      "--disable-edit-guard",
+      "--disable-patch-verify",
+      "--disable-context-instruction",
+      "--stage5-env-guard",
+      "--stage5-env-drift-check",
+      "--expected-testbed-prefix",
+      "--stage5-agent-shell-guard",
+      "--stage5-host-pip-firewall",
+      "--out"
+    ],
+    "armReferenceLinesInRunArm": [
+      "local label; label=\"$(label_for \"$arm\" \"$inst\")\"",
+      "log treat \"$inst\" \"$arm\" \"$label\" 0 skip_existing",
+      "if ! wiring_out=\"$(cd \"$ROOT\" && bun \"$WIRING\" \"$arm\" \"$label\" \"$inst\" 2>\"$LOGDIR/${label}.wiring.stderr.log\")\"; then",
+      "log treat \"$inst\" \"$arm\" \"$label\" 0 wiring_failed",
+      "if [ \"$arm\" != \"baseline\" ] && [ ${#envassign[@]} -eq 0 ]; then",
+      "log treat \"$inst\" \"$arm\" \"$label\" 0 empty_wiring",
+      "if [ \"$arm\" = \"baseline\" ] && [ ${#envassign[@]} -ne 0 ]; then",
+      "log treat \"$inst\" \"$arm\" \"$label\" 0 baseline_leakage",
+      "log treat \"$inst\" \"$arm\" \"$label\" \"$attempt\" start",
+      "log treat \"$inst\" \"$arm\" \"$label\" \"$attempt\" done",
+      "log treat \"$inst\" \"$arm\" \"$label\" \"$attempt\" infra_retry",
+      "log treat \"$inst\" \"$arm\" \"$label\" \"$attempt\" failed",
+      "log treat \"$inst\" \"$arm\" \"$label\" \"$attempt\" exhausted"
+    ],
+    "armBranchesInRunArm": [
+      "if [ \"$arm\" != \"baseline\" ] && [ ${#envassign[@]} -eq 0 ]; then",
+      "if [ \"$arm\" = \"baseline\" ] && [ ${#envassign[@]} -ne 0 ]; then"
+    ],
+    "armBranchesAreWiringGuardsOnly": true,
+    "mcpConfigEmitted": false
+  },
+  "toolEnvironment": {
+    "baseline": "the harness's ordinary tool whitelist",
+    "treatment": "the harness's ordinary tool whitelist — IDENTICAL",
+    "mcpServersInEitherArm": 0,
+    "toolsDeniedInEitherArm": 0,
+    "note": "§6 holds the tool environment fixed and §7 forbids denying ordinary tools. M183 adds no MCP server to either arm, so the treatment cannot act through tool availability."
+  },
+  "policyText": {
+    "baseline": null,
+    "treatment": "one section: a provenance sentence plus the packet, with no imperative addressed to the agent (asserted in m183Treatment.test.ts)",
+    "mandate": false,
+    "prohibition": false,
+    "searchGuard": false,
+    "antiLoopDiscipline": false,
+    "differsFromM173": "M173's arm B carried M168_MANDATE_TEXT ('call run_pipeline FIRST', 'ALWAYS FIRST') and an MCP tool inventory. §7 forbids the first; §6 holds the second fixed. Neither is present."
+  },
+  "verdict": "ARM_DIFFERENCE_IS_TREATMENT_ACTIVATION_ONLY"
+}

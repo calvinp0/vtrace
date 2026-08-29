@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "stage5.m183.pilot-pair.v1",
+  "milestone": "M183",
+  "workstream": "M183-B",
+  "selectedBeforeAnyOutcome": true,
+  "selectionRule": "the FIRST instance in the frozen execution order. Not chosen for cost, difficulty or familiarity: any rule that picked a task on its properties would let the pilot be selected to look a certain way.",
+  "instanceId": "astropy__astropy-14369",
+  "repo": "astropy/astropy",
+  "difficulty": "1-4 hours",
+  "stratum": "replication",
+  "armOrder": [
+    "baseline",
+    "vtrace_orientation"
+  ],
+  "remainsInTheSample": true,
+  "whatItValidates": [
+    "billing telemetry \u2014 costUsd is present and inside the $3 per-instance ceiling",
+    "token accounting \u2014 all four components present on both arms",
+    "treatment delivery \u2014 stage5M163TriggerInjected is true on the treatment arm and absent on the baseline",
+    "worktree isolation \u2014 the harness reset the checkout between arms",
+    "artifact capture \u2014 result row, run meta, tool calls and stream all written",
+    "the grader \u2014 the pair grades without infrastructure error"
+  ],
+  "whatItMayNotDo": {
+    "rule": "\u00a767 \u2014 its SOLVE OUTCOME may not change the protocol, and its COST may not be extrapolated into a stop.",
+    "why": "M173 did exactly that: a running-average projection from a single pair stopped its sweep before task 2 of 12, and the pair it extrapolated from was astropy-14369, the second-priciest in M168. The only pilot signal that may halt M183 is hard spend-model invalidity \u2014 a pair cost exceeding the enforced $6 ceiling, which would mean a configuration mistake rather than an expensive task.",
+    "note": "This pilot IS astropy__astropy-14369, M173's expensive one. That is a consequence of the selection rule, and the rule is kept rather than adjusted to avoid it."
+  }
+}
