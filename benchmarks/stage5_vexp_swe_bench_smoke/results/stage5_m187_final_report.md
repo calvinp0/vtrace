@@ -269,6 +269,10 @@ that disagreed with the transcript would fail the script.
 | `run_stage5_m187_probes.ts` | 11/11 agree, control fires |
 | `run_stage5_m187_symmetry.ts` | `VALIDATION_CAPABILITY_EQUIVALENT` |
 
+Functional commit: `c9a477de85820678d7e2411488dec10944c72542`, on `main`, not pushed. The
+pre-existing dirt (`stage5_outcome_ledger.{json,md}` and 201 untracked entries) was left
+exactly as found.
+
 ## 10 — remaining benchmark-validation issues
 
 1. **The testbed is one interpreter, and SWE-bench is many.** `vexp_swebench` is Python 3.12

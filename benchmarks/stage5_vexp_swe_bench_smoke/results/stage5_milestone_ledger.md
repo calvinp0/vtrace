@@ -5935,6 +5935,7 @@ tests             +31 validationExecution, +6 m187ShellGuardSurvival (control mu
                   old layout, and does)
 gates             typecheck PASS  typecheck:benchmarks PASS  bun test 5632/0 fail  diff --check clean
 live              NOT RUN  spend $0.00  docker NOT RUN
+functional commit c9a477de85820678d7e2411488dec10944c72542
 ```
 
 ## M187 standing findings
