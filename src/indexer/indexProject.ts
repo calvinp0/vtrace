@@ -24,6 +24,7 @@ import { deleteMechanismFactsForFile } from "../db/repositories/mechanismFactsRe
 import { replaceDocumentChunksForFile } from "../db/repositories/documentsRepository";
 import { persistParseResult } from "../db/persistParseResult";
 import { listAllSymbols } from "../db/repositories/symbolsRepository";
+import { evaluateMaterializedGraph } from "./materializationAuthority";
 import { buildSymbolBodyLiterals } from "./extractBodyLiterals";
 import { buildSymbolMechanismFacts } from "./extractMechanismFacts";
 import {
@@ -167,8 +168,24 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
       ? { incompatibilityReason: options.incompatibilityReason ?? (registryIncompatible ? "parser_incompatible" : "schema_incompatible") }
       : {}),
   });
-  if (plan.mode === "noop" && options.hasExistingGraph === false) {
-    plan = { ...plan, mode: "incremental", affectedClosureFiles: [] };
+  // M184. `plan.mode === "noop"` is the only path that never enters the persist
+  // transaction below, so no-op eligibility is the whole attack surface for a
+  // silently empty index. The planner proved the SOURCE has not changed; it
+  // cannot prove this workspace still HOLDS the graph that snapshot describes.
+  // Ask the database directly, and degrade to the incremental path when it does
+  // not — that path re-persists every file (the transaction rewrites the graph
+  // wholesale for both modes) while still reusing the parse cache, so recovery
+  // costs a re-materialization rather than a full reparse.
+  const materialization = plan.mode === "noop"
+    ? evaluateMaterializedGraph(options.db, options.previousSnapshot, options.hasExistingGraph)
+    : undefined;
+  if (materialization !== undefined && !materialization.usable) {
+    plan = {
+      ...plan,
+      mode: "incremental",
+      affectedClosureFiles: [],
+      fullRebuildReason: "materialization_missing",
+    };
   }
   timings.planning = performance.now() - planningStarted;
 

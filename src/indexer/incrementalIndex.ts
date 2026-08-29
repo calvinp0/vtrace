@@ -25,6 +25,8 @@ export type FullRebuildReason =
   | "closure_uncertain"
   | "change_set_too_large"
   | "graph_validation_failed"
+  /** M184: the source was unchanged but this workspace no longer holds the graph. */
+  | "materialization_missing"
   | "repository_mismatch"
   | "unknown";
 
