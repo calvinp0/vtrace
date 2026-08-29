@@ -5818,7 +5818,7 @@ product changed   NO      retrieval NO   ranking NO   index format NO
 tests             +3 lifecycle regressions (14 -> 17), all known-positive detectors
 gates             typecheck PASS  typecheck:benchmarks PASS  bun test 5595/0 fail  diff --check clean
 live              NOT RUN  spend $0.00   docker NOT RUN
-evidence commits  <this commit>
+evidence commits  beecc7074803d05a836c7befaa9bfecfa1d92eb8
 ```
 
 ```text
