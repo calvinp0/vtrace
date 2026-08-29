@@ -134,6 +134,15 @@ async function main(): Promise<void> {
   const inner = sc !== null && typeof sc.result === "object" && sc.result !== null
     ? (sc.result as Record<string, unknown>) : null;
   const packet = inner === null ? null : inner.output ?? null;
+  // When the tool itself fails there is no `output`, and the witness would say
+  // ABSENT without saying why. The envelope is kept so a blocked arm names its
+  // own cause instead of being an unexplained refusal.
+  const toolEnvelope = inner === null ? null : {
+    ok: inner.ok ?? null,
+    hasOutput: inner.output !== undefined && inner.output !== null,
+    error: inner.error ?? null,
+    keys: Object.keys(inner),
+  };
 
   const witness = orientationWitness(packet);
   const section = witness.deliveryState === "ORIENTATION_ABSENT" ? null : renderOrientationSection(packet);
@@ -168,6 +177,7 @@ async function main(): Promise<void> {
       arguments: { task: "<taskText>", repo_root: repoRoot, saveObservation: false },
       detailArgument: "ABSENT — the shipped default IS the treatment",
       isError: call.isError,
+      toolEnvelope,
     },
     transport: {
       // §36: measured, not assumed. If these agree, the duplicate is a transport

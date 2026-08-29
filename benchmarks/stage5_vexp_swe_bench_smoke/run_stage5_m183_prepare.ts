@@ -35,6 +35,8 @@
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
+import { Database } from "bun:sqlite";
+
 import {
   prepareWorkspaceForInstance,
   type ProcessResult,
@@ -65,6 +67,17 @@ const run: ProcessRunner = async (command, args, options) => {
 };
 
 const sleep = (ms: number): Promise<void> => new Promise((resolve) => setTimeout(resolve, ms));
+
+/** Symbols actually persisted. Read from the database, not from the manifest. */
+function countIndexedSymbols(dbPath: string): number {
+  try {
+    const db = new Database(dbPath, { readonly: true });
+    try {
+      const row = db.query("select count(*) as n from symbols").get() as { n: number } | null;
+      return row?.n ?? 0;
+    } finally { db.close(); }
+  } catch { return -1; }
+}
 
 interface CorpusRow {
   readonly instance_id: string; readonly repo: string; readonly base_commit: string;
@@ -125,9 +138,23 @@ async function main(): Promise<void> {
       const dirty = (await run("git", ["status", "--porcelain"], { cwd: workspace })).stdout
         .split("\n").filter((l) => l.trim() !== "" && !l.includes(".vtrace"));
 
-      // Always rebuilt. A "fresh" verdict over an index whose provenance cannot
-      // be established is exactly the silent failure §12 names.
+      // Always rebuilt — and "always" needs BOTH stores.
+      //
+      // Deleting only `.vtrace` does not force a rebuild. The reusable-snapshot
+      // registry lives at `<gitCommonDir>/vtrace/repositories/<id>/snapshots`,
+      // i.e. INSIDE `.git`, where neither `rm -rf .vtrace` nor `git clean -fdx`
+      // reaches. With a surviving snapshot at the same head the differ finds
+      // nothing changed, returns `mode: noop`, parses zero files and leaves the
+      // brand-new database EMPTY — while reporting success and writing a
+      // manifest whose every file says `indexOutcome: "indexed"`.
+      //
+      // Measured here, not inferred: flask-5014 re-prepared this way produced
+      // 0 symbols over 91 "unchanged" files; removing `.git/vtrace` as well
+      // produced full_rebuild, 91 parsed files and 1,165 symbols. Recorded as a
+      // product defect in stage5_m183_outstanding_defects.md and NOT repaired
+      // here — M183 does not change the product (§62/§120).
       rmSync(path.join(workspace, ".vtrace"), { recursive: true, force: true });
+      rmSync(path.join(workspace, ".git", "vtrace"), { recursive: true, force: true });
       const indexResult = await run("bun", [path.join(ROOT, "src/cli/index.ts"), "index", workspace]);
       if (indexResult.exitCode !== 0) {
         throw new Error(`index failed (${indexResult.exitCode}): ${indexResult.stderr.slice(-400)}`);
@@ -136,6 +163,19 @@ async function main(): Promise<void> {
       if (!existsSync(metaPath)) throw new Error("index produced no index.meta.json");
       const metaRaw = readFileSync(metaPath, "utf8");
       const meta = JSON.parse(metaRaw) as Record<string, unknown>;
+
+      // The gate that would have caught the above on its own. An index is not
+      // "built" because the command exited 0; it is built when it contains
+      // symbols and says it parsed the repository.
+      const performance = ((meta.manifest as Record<string, unknown> | undefined)
+        ?.performance ?? {}) as Record<string, unknown>;
+      const symbolCount = countIndexedSymbols(path.join(workspace, ".vtrace", "index.sqlite"));
+      if (performance.mode !== "full_rebuild") {
+        throw new Error(`index mode was ${String(performance.mode)}, expected full_rebuild (a reused snapshot suppressed the rebuild)`);
+      }
+      if (symbolCount <= 0) {
+        throw new Error(`index contains ${symbolCount} symbols after a reported success`);
+      }
 
       record = {
         instanceId: target.instanceId,
@@ -147,6 +187,10 @@ async function main(): Promise<void> {
         prep: { reused: prep.reused, resetToBaseCommit: prep.resetToBaseCommit, cleaned: prep.cleaned, gitRetryCount: prep.gitRetryCount, fallbackUsed: prep.fallbackUsed, recreatedAfterFailure: prep.recreatedAfterFailure },
         index: {
           rebuilt: true,
+          mode: performance.mode,
+          parsedFiles: performance.parsedFiles,
+          totalCurrentFiles: performance.totalCurrentFiles,
+          symbolCount,
           metaHash: sha256(metaRaw),
           indexFormatVersion: meta.index_format_version,
           schemaVersion: meta.schema_version,
@@ -189,11 +233,28 @@ async function main(): Promise<void> {
   };
   const productHead = (await run("git", ["rev-parse", "HEAD"], { cwd: ROOT })).stdout.trim();
 
+  // §63 — `vtrace_commit` in the index meta is git HEAD, which a BENCHMARK-only
+  // commit moves even though nothing that determines retrieval did. The property
+  // that actually matters is that the product source is unchanged since the
+  // frozen state, so it is measured rather than argued.
+  const M182_CLOSURE = "9517ccce6c63342ab4883131463ed294169e22af";
+  const srcDiff = (await run("git", ["diff", "--name-only", M182_CLOSURE, "HEAD", "--", "src/"], { cwd: ROOT })).stdout.trim();
+  const allDiff = (await run("git", ["diff", "--name-only", M182_CLOSURE, "HEAD"], { cwd: ROOT })).stdout
+    .split("\n").filter((l) => l.trim() !== "");
+
   const doc = {
     schemaVersion: "stage5.m183.index-authority.v1",
     milestone: "M183",
     workstream: "M183-B",
     productHead,
+    productIdentity: {
+      m182ClosureCommit: M182_CLOSURE,
+      productSourceChangedSinceFreeze: srcDiff !== "",
+      changedSourcePaths: srcDiff === "" ? [] : srcDiff.split("\n"),
+      changedPathsSinceFreeze: allDiff,
+      allChangesAreBenchmarkOnly: allDiff.every((p) => p.startsWith("benchmarks/")),
+      meaning: "§63 — the treatment is determined by src/, not by HEAD. A benchmark-only commit moves index.meta.json's vtrace_commit without changing what run_pipeline returns, and this record is what distinguishes the two.",
+    },
     workspaceRoot: path.relative(ROOT, WORKSPACES),
     prepared: prepared.length,
     failed: failures,
@@ -209,6 +270,7 @@ async function main(): Promise<void> {
   console.log(`\nprepared ${prepared.length}/${targets.length}  failed ${failures}`);
   console.log(`  fingerprints uniform: ${doc.fingerprintsUniform}`);
   console.log(`  index built at product HEAD (${productHead.slice(0, 8)}): ${doc.indexBuiltAtProductHead}`);
+  console.log(`  product source unchanged since the M182 freeze: ${!doc.productIdentity.productSourceChangedSinceFreeze}`);
   console.log("  wrote results/stage5_m183_index_authority.json");
   if (failures > 0) process.exit(1);
 }

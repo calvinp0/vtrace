@@ -35,19 +35,44 @@ const i = (v: unknown): string =>
  * NEUTRAL or MIXED cost verdict is neither, and lands on parity or on
  * NOT_RESOLVED rather than being rounded toward the friendlier neighbour.
  */
-function productVerdict(resolution: string, cost: string): string {
-  const better = resolution === "OBSERVED_RESOLUTION_IMPROVEMENT";
-  const worse = resolution === "OBSERVED_RESOLUTION_REGRESSION";
-  const parity = resolution === "OBSERVED_RESOLUTION_PARITY";
-  const cheaper = cost === "REDUCTION_CONFIRMED";
-  const dearer = cost === "INCREASE_CONFIRMED";
-  if (resolution === "RESOLUTION_NOT_MEASURABLE" || cost === "NOT_MEASURABLE") return "CURRENT_PRODUCT_EFFECT_NOT_RESOLVED";
-  if (better && cheaper) return "QUALITY_AND_ECONOMICS_WIN";
-  if (parity && cheaper) return "ECONOMIC_WIN_WITH_QUALITY_PARITY";
-  if (better && dearer) return "QUALITY_GAIN_WITH_COST_PREMIUM";
-  if (parity && !cheaper && !dearer) return "CURRENT_PRODUCT_UTILITY_NEUTRAL";
-  if (worse || (!better && dearer)) return "CURRENT_PRODUCT_NOT_COMPETITIVE";
-  return "CURRENT_PRODUCT_EFFECT_NOT_RESOLVED";
+function productVerdict(resolution: string, statistical: string, cost: string): {
+  verdict: string; qualityAxis: string; costAxis: string; cell: string;
+} {
+  // THE QUALITY AXIS IS GATED ON STATISTICAL SUPPORT, NOT ON THE OBSERVED SIGN.
+  //
+  // §41 forbids calling a one- or two-task difference an improvement in solve
+  // rate. A product verdict driven by the observed direction alone would do
+  // exactly that, because at thirty pairs the observed direction is almost
+  // always non-zero and almost never resolved. So an unresolved difference
+  // enters the matrix as PARITY, and the observed direction is reported beside
+  // it rather than inside it.
+  const qualityAxis =
+    statistical === "RESOLUTION_ADVANTAGE_STATISTICALLY_SUPPORTED" ? "BETTER"
+    : statistical === "RESOLUTION_REGRESSION_STATISTICALLY_SUPPORTED" ? "WORSE"
+    : resolution === "RESOLUTION_NOT_MEASURABLE" ? "NOT_MEASURABLE"
+    : "PARITY_NOT_RESOLVED";
+  const costAxis =
+    cost === "NOT_MEASURABLE" ? "NOT_MEASURABLE"
+    : cost === "REDUCTION_CONFIRMED" ? "CHEAPER"
+    : cost === "INCREASE_CONFIRMED" ? "DEARER" : "NEUTRAL";
+
+  if (qualityAxis === "NOT_MEASURABLE" || costAxis === "NOT_MEASURABLE") {
+    return { verdict: "CURRENT_PRODUCT_EFFECT_NOT_RESOLVED", qualityAxis, costAxis,
+      cell: "an axis could not be measured at all" };
+  }
+  const cells: Record<string, { verdict: string; cell: string }> = {
+    "BETTER|CHEAPER": { verdict: "QUALITY_AND_ECONOMICS_WIN", cell: "§110 A — solves more AND costs less" },
+    "BETTER|NEUTRAL": { verdict: "QUALITY_GAIN_WITH_COST_PREMIUM", cell: "a supported quality gain with NO economic benefit. §110 has no cell for it; the nearest honest member is C, read as 'quality gain, economics did not win' rather than as an observed premium." },
+    "BETTER|DEARER": { verdict: "QUALITY_GAIN_WITH_COST_PREMIUM", cell: "§110 C — solves more, costs more" },
+    "PARITY_NOT_RESOLVED|CHEAPER": { verdict: "ECONOMIC_WIN_WITH_QUALITY_PARITY", cell: "§110 B — the defensible VEXP-style proposition" },
+    "PARITY_NOT_RESOLVED|NEUTRAL": { verdict: "CURRENT_PRODUCT_UTILITY_NEUTRAL", cell: "§110 D / §125 — a meaningful negative result, not a measurement failure" },
+    "PARITY_NOT_RESOLVED|DEARER": { verdict: "CURRENT_PRODUCT_NOT_COMPETITIVE", cell: "§110 E — no supported quality gain and it costs more" },
+    "WORSE|CHEAPER": { verdict: "CURRENT_PRODUCT_NOT_COMPETITIVE", cell: "§110 E — a supported regression is not bought back by cost" },
+    "WORSE|NEUTRAL": { verdict: "CURRENT_PRODUCT_NOT_COMPETITIVE", cell: "§110 E" },
+    "WORSE|DEARER": { verdict: "CURRENT_PRODUCT_NOT_COMPETITIVE", cell: "§110 E — worse and dearer" },
+  };
+  const hit = cells[`${qualityAxis}|${costAxis}`]!;
+  return { verdict: hit.verdict, qualityAxis, costAxis, cell: hit.cell };
 }
 
 function main(): void {
@@ -77,7 +102,8 @@ function main(): void {
   const costV = cost.verdict as string;
   const tokenVerdict = { REDUCTION_CONFIRMED: "WHOLE_RUN_TOKEN_REDUCTION_CONFIRMED", NEUTRAL: "WHOLE_RUN_TOKEN_USAGE_NEUTRAL", INCREASE_CONFIRMED: "WHOLE_RUN_TOKEN_INCREASE_CONFIRMED", MIXED: "WHOLE_RUN_TOKEN_EFFECT_MIXED", NOT_MEASURABLE: "WHOLE_RUN_TOKENS_NOT_MEASURABLE" }[tokenV] ?? "WHOLE_RUN_TOKENS_NOT_MEASURABLE";
   const costVerdict = { REDUCTION_CONFIRMED: "WHOLE_RUN_COST_REDUCTION_CONFIRMED", NEUTRAL: "WHOLE_RUN_COST_NEUTRAL", INCREASE_CONFIRMED: "WHOLE_RUN_COST_INCREASE_CONFIRMED", MIXED: "WHOLE_RUN_COST_EFFECT_MIXED", NOT_MEASURABLE: "WHOLE_RUN_COST_NOT_MEASURABLE" }[costV] ?? "WHOLE_RUN_COST_NOT_MEASURABLE";
-  const product = productVerdict(resolutionV, costV);
+  const productDecision = productVerdict(resolutionV, statisticalV, costV);
+  const product = productDecision.verdict;
 
   const wins = (causal?.classifications ?? []).filter((r: any) => r.winner === "VTRACE");
   const losses = (causal?.classifications ?? []).filter((r: any) => r.winner === "BASELINE");
@@ -106,7 +132,9 @@ function main(): void {
     resolution: resolutionV, statisticalResolution: statisticalV,
     wholeRunToken: tokenVerdict, wholeRunCost: costVerdict,
     product, vtraceCausality: causalV, economicsMechanism: economicsV, vexpClass: vexpV,
-    productVerdictMapping: "computed by productVerdict() in run_stage5_m183_report.ts, written before any outcome existed; CURRENT_PRODUCT_NOT_COMPETITIVE is reachable",
+    productVerdictAxes: { quality: productDecision.qualityAxis, cost: productDecision.costAxis, cell: productDecision.cell },
+    observedResolutionDirection: resolutionV,
+    productVerdictMapping: "computed by productVerdict() in run_stage5_m183_report.ts, written before any outcome existed. The QUALITY axis is gated on STATISTICAL support, not on the observed sign (§41): an unresolved difference enters the matrix as parity, and the observed direction is reported beside it. CURRENT_PRODUCT_NOT_COMPETITIVE and CURRENT_PRODUCT_UTILITY_NEUTRAL are both reachable.",
   };
   writeFileSync(path.join(RESULTS, "stage5_m183_verdicts.json"), `${JSON.stringify(verdicts, null, 2)}\n`);
 
@@ -158,6 +186,8 @@ statistical resolution    ${verdicts.statisticalResolution}
 whole-run token verdict   ${verdicts.wholeRunToken}
 whole-run cost verdict    ${verdicts.wholeRunCost}
 product verdict           ${verdicts.product}
+  quality axis            ${productDecision.qualityAxis}  (observed: ${resolutionV})
+  cost axis               ${productDecision.costAxis}
 VTRACE-causality verdict  ${verdicts.vtraceCausality}
 economics mechanism       ${verdicts.economicsMechanism}
 VEXP-class verdict        ${verdicts.vexpClass}
@@ -240,9 +270,11 @@ ${repoTable || "| (none) | | | | | |"}
 
   console.log("M183-F verdicts");
   for (const [k, v] of Object.entries(verdicts)) {
-    if (k.startsWith("schema") || k.endsWith("Mapping") || k === "milestone" || k === "workstream") continue;
-    console.log(`  ${k.padEnd(24)} ${v}`);
+    if (k.startsWith("schema") || k.endsWith("Mapping") || k.endsWith("Axes") || k === "milestone" || k === "workstream") continue;
+    console.log(`  ${k.padEnd(28)} ${String(v)}`);
   }
+  console.log(`  ${"quality / cost axis".padEnd(28)} ${productDecision.qualityAxis} / ${productDecision.costAxis}`);
+  console.log(`  ${"matrix cell".padEnd(28)} ${productDecision.cell}`);
   console.log("\n  wrote results/stage5_m183_verdicts.json");
   console.log("  wrote results/stage5_m183_final_report.md");
 }

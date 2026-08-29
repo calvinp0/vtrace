@@ -138,9 +138,12 @@ task_cost_guard() {
     return 1
   fi
   read -r spent runs <<< "$(spend_so_far)"
-  headroom="$(python3 -c "print(f'{float('$cap') - float('$spent'):.4f}')")"
+  # Values passed as argv, never interpolated into a Python literal: an f-string
+  # with nested same-quotes only parses on 3.12+, and a spend guard that depends
+  # on the interpreter's minor version is not a guard.
+  headroom="$(python3 -c 'import sys; print("%.4f" % (float(sys.argv[1]) - float(sys.argv[2])))' "$cap" "$spent")"
   echo "  [spend] \$$spent over $runs completed arms; headroom \$$headroom of cap \$$cap; $remaining_tasks tasks remain"
-  if python3 -c "import sys; sys.exit(0 if float('$headroom') >= float('$PAIR_WORST_CASE_USD') else 1)"; then
+  if python3 -c 'import sys; sys.exit(0 if float(sys.argv[1]) >= float(sys.argv[2]) else 1)' "$headroom" "$PAIR_WORST_CASE_USD"; then
     return 0
   fi
   echo "  [STOP ] headroom \$$headroom cannot guarantee one more pair at the enforced worst case \$$PAIR_WORST_CASE_USD"

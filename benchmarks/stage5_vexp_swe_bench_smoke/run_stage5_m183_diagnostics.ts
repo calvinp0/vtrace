@@ -30,7 +30,7 @@ const RESULTS = path.resolve("benchmarks/stage5_vexp_swe_bench_smoke/results");
 const CORPUS = path.join(RESULTS, "_m160_corpus/swe_bench_verified.jsonl");
 
 interface ArmSide {
-  valid: boolean; resolved: boolean; costUsd: number | null; numTurns: number | null;
+  valid: boolean; resolved: boolean; graded: boolean; costUsd: number | null; numTurns: number | null;
   totalAgentTokens: number; toolCallCount: number; toolCallsBeforeFirstEdit: number;
   toolCallsByCategory: Record<string, number>; rawDir?: string;
 }
@@ -58,21 +58,45 @@ function goldSymbols(patch: string): ReadonlySet<string> {
   return out;
 }
 
-/** Repository-relative edit targets, from the ordered tool log. */
-function editedPaths(rawDir: string | undefined): readonly string[] {
+function toolCalls(rawDir: string | undefined): readonly ToolCall[] {
   if (rawDir === undefined) return [];
-  let calls: ToolCall[];
-  try { calls = JSON.parse(readFileSync(path.join(path.resolve("."), rawDir, "_tool_calls.json"), "utf8")) as ToolCall[]; }
+  try { return JSON.parse(readFileSync(path.join(path.resolve("."), rawDir, "_tool_calls.json"), "utf8")) as ToolCall[]; }
   catch { return []; }
+}
+
+/** The harness logs absolute paths inside its own checkout; keep the repo-relative tail. */
+const repoRelative = (p: string): string => /\.bench-repos\/[^/]+\/(.+)$/u.exec(p)?.[1] ?? p;
+
+function touchedPaths(calls: readonly ToolCall[], category: string | null): readonly string[] {
   const out = new Set<string>();
   for (const c of calls) {
-    if (c.category !== "edit" || typeof c.path !== "string") continue;
-    // The harness logs absolute paths inside its own checkout; keep the tail
-    // after the repository directory so it compares with a gold path.
-    const m = /\.bench-repos\/[^/]+\/(.+)$/u.exec(c.path);
-    out.add(m === null ? c.path : m[1]!);
+    if (category !== null && c.category !== category) continue;
+    if (typeof c.path !== "string" || c.path === "") continue;
+    out.add(repoRelative(c.path));
   }
   return [...out].sort();
+}
+
+/**
+ * §107 — adoption, measured at the strongest signal each arm can give.
+ *
+ * Editing the focus is a late and rare event; REACHING it is the behaviour an
+ * orientation is supposed to change. `firstTouchIndex` is how many tool calls
+ * the arm made before it first touched any file the orientation named, so
+ * "arrived sooner" is a number rather than an impression — and the baseline gets
+ * the same measurement against the same file set, which is what makes the
+ * comparison mean anything.
+ */
+function adoption(calls: readonly ToolCall[], orientationFiles: readonly string[]): {
+  touchedAny: boolean; firstTouchIndex: number | null; touchedCount: number;
+} {
+  if (orientationFiles.length === 0) return { touchedAny: false, firstTouchIndex: null, touchedCount: 0 };
+  const set = new Set(orientationFiles);
+  const at = calls.findIndex((c) => typeof c.path === "string" && set.has(repoRelative(c.path)));
+  const touched = new Set(calls
+    .filter((c) => typeof c.path === "string" && set.has(repoRelative(c.path)))
+    .map((c) => repoRelative(c.path!)));
+  return { touchedAny: at >= 0, firstTouchIndex: at < 0 ? null : at, touchedCount: touched.size };
 }
 
 const symbolOf = (at: string | null): string | null =>
@@ -88,7 +112,12 @@ function main(): void {
 
   const records = (readFileSync(path.join(RESULTS, "stage5_m183_pair_records.jsonl"), "utf8")
     .split("\n").filter((l) => l.trim() !== "").map((l) => JSON.parse(l) as PairRecord))
-    .filter((r) => r.pairValid);
+    // GRADED, not merely valid — the same filter the outcomes step applies.
+    // An ungraded arm has no resolution, and letting `resolved: false` stand in
+    // for "not yet graded" invents discordant pairs: on a synthetic 30-pair
+    // check this counted 9 where the resolution table counted 8, and the §160
+    // table would have disagreed with the §90 counts it is meant to explain.
+    .filter((r) => r.pairValid && r.baseline.graded && r.treatment.graded);
 
   const rows = records.map((r) => {
     const gold = goldFiles(corpus.get(r.instanceId)?.patch ?? "");
@@ -97,8 +126,10 @@ function main(): void {
     const focusFile = o?.focusFile ?? null;
     const focusSymbol = symbolOf(o?.focusAt ?? null);
     const orientationFiles = [...new Set([focusFile, ...(o?.relatedFiles ?? [])].filter((f): f is string => f !== null))];
-    const baselineEdits = editedPaths(r.baseline.rawDir);
-    const treatmentEdits = editedPaths(r.treatment.rawDir);
+    const baselineCalls = toolCalls(r.baseline.rawDir);
+    const treatmentCalls = toolCalls(r.treatment.rawDir);
+    const baselineEdits = touchedPaths(baselineCalls, "edit");
+    const treatmentEdits = touchedPaths(treatmentCalls, "edit");
 
     return {
       instanceId: r.instanceId, repo: r.repo, stratum: r.stratum, m173Overlap: r.m173Overlap,
@@ -114,6 +145,10 @@ function main(): void {
       treatmentEditedAnyGoldFile: treatmentEdits.some((f) => gold.includes(f)),
       baselineEditedAnyGoldFile: baselineEdits.some((f) => gold.includes(f)),
       baselineReachedOrientationEvidence: baselineEdits.some((f) => orientationFiles.includes(f)),
+      // §107 — did each arm REACH the evidence, and how soon?
+      treatmentAdoption: adoption(treatmentCalls, orientationFiles),
+      baselineAdoption: adoption(baselineCalls, orientationFiles),
+      orientationIgnored: !adoption(treatmentCalls, orientationFiles).touchedAny,
       baselineEdits, treatmentEdits,
       orientationFiles,
       baselineResolved: r.baseline.resolved, treatmentResolved: r.treatment.resolved,
@@ -164,6 +199,7 @@ function main(): void {
     winner: row.outcome === "TREATMENT_ONLY" ? "VTRACE" : "BASELINE",
     focusCorrect: row.focusIsGoldFile,
     orientationUsed: row.treatmentEditedFocus,
+    orientationReached: row.treatmentAdoption.touchedAny,
     goldFileInOrientation: row.goldFileInOrientation,
     baselineEditedAnyGoldFile: row.baselineEditedAnyGoldFile,
     treatmentEditedAnyGoldFile: row.treatmentEditedAnyGoldFile,
@@ -183,6 +219,20 @@ function main(): void {
       treatmentEditedFocus: rate((r) => r.treatmentEditedFocus),
       treatmentEditedAnyGoldFile: rate((r) => r.treatmentEditedAnyGoldFile),
       baselineEditedAnyGoldFile: rate((r) => r.baselineEditedAnyGoldFile),
+      treatmentReachedOrientationEvidence: rate((r) => r.treatmentAdoption.touchedAny),
+      baselineReachedTheSameFiles: rate((r) => r.baselineAdoption.touchedAny),
+      orientationIgnoredEntirely: rate((r) => r.orientationIgnored),
+    },
+    adoption: {
+      note: "§33/§107 — an ignored orientation is a PRODUCT RESULT, not an invalid run. Delivery is what makes the arm valid; adoption is what makes it interesting.",
+      medianToolCallsBeforeTreatmentReachedEvidence: (() => {
+        const xs = rows.map((r) => r.treatmentAdoption.firstTouchIndex).filter((x): x is number => x !== null).sort((a, b) => a - b);
+        return xs.length === 0 ? null : xs[Math.floor((xs.length - 1) / 2)]!;
+      })(),
+      medianToolCallsBeforeBaselineReachedSameFiles: (() => {
+        const xs = rows.map((r) => r.baselineAdoption.firstTouchIndex).filter((x): x is number => x !== null).sort((a, b) => a - b);
+        return xs.length === 0 ? null : xs[Math.floor((xs.length - 1) / 2)]!;
+      })(),
     },
     localizationIsNotResolution: {
       focusWasGoldAndTreatmentStillFailed: rows.filter((r) => r.focusIsGoldFile && !r.treatmentResolved).length,
