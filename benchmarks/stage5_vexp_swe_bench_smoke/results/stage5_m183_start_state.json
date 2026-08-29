@@ -2,14 +2,16 @@
   "schemaVersion": "stage5.m183.start-state.v1",
   "milestone": "M183",
   "workstream": "M183-A",
-  "capturedAt": "2026-08-29T09:27:19.386Z",
+  "capturedAt": "2026-08-29T10:45:02.432Z",
   "product": {
-    "head": "9517ccce6c63342ab4883131463ed294169e22af",
+    "head": "166d07a7d4856ea9c15f7c63601b553a2430b972",
     "branch": "main",
-    "trackedFilesDirty": 2,
+    "trackedFilesDirty": 4,
     "trackedDirtyPaths": [
-      "enchmarks/stage5_vexp_swe_bench_smoke/results/stage5_outcome_ledger.json",
-      "benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_outcome_ledger.md"
+      "enchmarks/stage5_vexp_swe_bench_smoke/results/stage5_m183_outstanding_defects.md",
+      "benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_outcome_ledger.json",
+      "benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_outcome_ledger.md",
+      "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m183_economics.ts"
     ],
     "note": "Untracked benchmark output and the user's own working files are preserved and deliberately not counted (§153/§154)."
   },

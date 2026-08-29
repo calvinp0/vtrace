@@ -2,7 +2,7 @@
   "schemaVersion": "stage5.m183.arm-equivalence.v1",
   "milestone": "M183",
   "workstream": "M183-A",
-  "probeInstance": "pallets__flask-5014",
+  "probeInstance": "astropy__astropy-14369",
   "model": {
     "provider": "Anthropic, through the `claude` CLI credentials (NOT ANTHROPIC_API_KEY, which is unset here)",
     "identifier": "claude-opus-4-5-20251101",
@@ -14,7 +14,7 @@
   "emittedEnvironment": {
     "baseline": {},
     "vtrace_orientation": {
-      "VTRACE_TASK_TRIGGER_FILE": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m183_orientation/pallets__flask-5014.trigger.md"
+      "VTRACE_TASK_TRIGGER_FILE": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m183_orientation/astropy__astropy-14369.trigger.md"
     }
   },
   "environmentDifferences": [

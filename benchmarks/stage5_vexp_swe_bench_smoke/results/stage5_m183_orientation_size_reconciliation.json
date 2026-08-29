@@ -1,0 +1,342 @@
+{
+  "schemaVersion": "stage5.m183.orientation-size-reconciliation.v1",
+  "milestone": "M183",
+  "workstream": "M183-B",
+  "question": "§47/§130 — why is the live default orientation a median of 579 tokens when M182 recorded 1,229?",
+  "finding": "They are different operating points. M182's 1,229 is the `atDefaultBudget` slice of M181's budget ladder, i.e. the rung where max_tokens was passed explicitly as 8,000. A default run_pipeline call passes no max_tokens and does not land on that rung. `defaultBudget` in M181's artifact names the configured budget CONSTANT, not the behaviour of a default call.",
+  "whichIsTheTreatment": "The default. §7 — the shipped default IS the treatment, and arm B passes no max_tokens. The ladder rung is reported beside it for continuity with M181/M182, never in place of it.",
+  "cases": 30,
+  "defaultCall": {
+    "median": 579.5,
+    "p90": 814,
+    "max": 941,
+    "min": 269,
+    "medianRelated": 5
+  },
+  "ladderRung8000": {
+    "median": 1245.5,
+    "p90": 1374,
+    "max": 1607,
+    "min": 240,
+    "medianRelated": 9
+  },
+  "m182Recorded": {
+    "atDefaultBudget": {
+      "count": 167,
+      "median": 1229,
+      "p90": 1527,
+      "max": 1576
+    },
+    "allDeliveringBudgets": {
+      "count": 1380,
+      "median": 542,
+      "p90": 1306,
+      "max": 1576
+    },
+    "note": "M183's live default median sits beside M182's ALL-BUDGETS median (542), not beside its 8,000-rung median (1,229). That is the correct neighbour: the default call is one point on the ladder, not its top rung."
+  },
+  "identicalAtBothPoints": 0,
+  "consequenceForM182StandingFinding": "M182's standing finding says the current default size is 1,229/1,527/1,576 and that this is the treatment a future live benchmark must qualify. That figure describes the 8,000-token rung. The default path a real client takes is materially smaller, and M183 qualifies the default path.",
+  "rows": [
+    {
+      "instanceId": "astropy__astropy-14369",
+      "repo": "astropy/astropy",
+      "defaultTokens": 751,
+      "defaultRelated": 7,
+      "ladderTokens": 1354,
+      "ladderRelated": 10,
+      "identical": false,
+      "deltaTokens": 603
+    },
+    {
+      "instanceId": "astropy__astropy-14539",
+      "repo": "astropy/astropy",
+      "defaultTokens": 682,
+      "defaultRelated": 7,
+      "ladderTokens": 848,
+      "ladderRelated": 9,
+      "identical": false,
+      "deltaTokens": 166
+    },
+    {
+      "instanceId": "django__django-13658",
+      "repo": "django/django",
+      "defaultTokens": 574,
+      "defaultRelated": 5,
+      "ladderTokens": 1391,
+      "ladderRelated": 9,
+      "identical": false,
+      "deltaTokens": 817
+    },
+    {
+      "instanceId": "django__django-11133",
+      "repo": "django/django",
+      "defaultTokens": 628,
+      "defaultRelated": 6,
+      "ladderTokens": 1361,
+      "ladderRelated": 10,
+      "identical": false,
+      "deltaTokens": 733
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-22719",
+      "repo": "matplotlib/matplotlib",
+      "defaultTokens": 467,
+      "defaultRelated": 5,
+      "ladderTokens": 713,
+      "ladderRelated": 8,
+      "identical": false,
+      "deltaTokens": 246
+    },
+    {
+      "instanceId": "django__django-11820",
+      "repo": "django/django",
+      "defaultTokens": 537,
+      "defaultRelated": 6,
+      "ladderTokens": 1607,
+      "ladderRelated": 12,
+      "identical": false,
+      "deltaTokens": 1070
+    },
+    {
+      "instanceId": "mwaskom__seaborn-3187",
+      "repo": "mwaskom/seaborn",
+      "defaultTokens": 482,
+      "defaultRelated": 5,
+      "ladderTokens": 1289,
+      "ladderRelated": 9,
+      "identical": false,
+      "deltaTokens": 807
+    },
+    {
+      "instanceId": "django__django-12273",
+      "repo": "django/django",
+      "defaultTokens": 654,
+      "defaultRelated": 6,
+      "ladderTokens": 946,
+      "ladderRelated": 11,
+      "identical": false,
+      "deltaTokens": 292
+    },
+    {
+      "instanceId": "pallets__flask-5014",
+      "repo": "pallets/flask",
+      "defaultTokens": 941,
+      "defaultRelated": 4,
+      "ladderTokens": 1259,
+      "ladderRelated": 9,
+      "identical": false,
+      "deltaTokens": 318
+    },
+    {
+      "instanceId": "django__django-12325",
+      "repo": "django/django",
+      "defaultTokens": 453,
+      "defaultRelated": 5,
+      "ladderTokens": 843,
+      "ladderRelated": 10,
+      "identical": false,
+      "deltaTokens": 390
+    },
+    {
+      "instanceId": "psf__requests-1724",
+      "repo": "psf/requests",
+      "defaultTokens": 490,
+      "defaultRelated": 6,
+      "ladderTokens": 1249,
+      "ladderRelated": 8,
+      "identical": false,
+      "deltaTokens": 759
+    },
+    {
+      "instanceId": "django__django-13195",
+      "repo": "django/django",
+      "defaultTokens": 595,
+      "defaultRelated": 5,
+      "ladderTokens": 1242,
+      "ladderRelated": 15,
+      "identical": false,
+      "deltaTokens": 647
+    },
+    {
+      "instanceId": "pydata__xarray-6599",
+      "repo": "pydata/xarray",
+      "defaultTokens": 269,
+      "defaultRelated": 1,
+      "ladderTokens": 240,
+      "ladderRelated": 1,
+      "identical": false,
+      "deltaTokens": -29
+    },
+    {
+      "instanceId": "django__django-13513",
+      "repo": "django/django",
+      "defaultTokens": 314,
+      "defaultRelated": 2,
+      "ladderTokens": 532,
+      "ladderRelated": 5,
+      "identical": false,
+      "deltaTokens": 218
+    },
+    {
+      "instanceId": "pylint-dev__pylint-4551",
+      "repo": "pylint-dev/pylint",
+      "defaultTokens": 916,
+      "defaultRelated": 6,
+      "ladderTokens": 1205,
+      "ladderRelated": 10,
+      "identical": false,
+      "deltaTokens": 289
+    },
+    {
+      "instanceId": "django__django-13820",
+      "repo": "django/django",
+      "defaultTokens": 765,
+      "defaultRelated": 5,
+      "ladderTokens": 1365,
+      "ladderRelated": 8,
+      "identical": false,
+      "deltaTokens": 600
+    },
+    {
+      "instanceId": "pytest-dev__pytest-7432",
+      "repo": "pytest-dev/pytest",
+      "defaultTokens": 814,
+      "defaultRelated": 6,
+      "ladderTokens": 1108,
+      "ladderRelated": 11,
+      "identical": false,
+      "deltaTokens": 294
+    },
+    {
+      "instanceId": "django__django-16569",
+      "repo": "django/django",
+      "defaultTokens": 899,
+      "defaultRelated": 6,
+      "ladderTokens": 1264,
+      "ladderRelated": 11,
+      "identical": false,
+      "deltaTokens": 365
+    },
+    {
+      "instanceId": "scikit-learn__scikit-learn-10844",
+      "repo": "scikit-learn/scikit-learn",
+      "defaultTokens": 578,
+      "defaultRelated": 5,
+      "ladderTokens": 1392,
+      "ladderRelated": 9,
+      "identical": false,
+      "deltaTokens": 814
+    },
+    {
+      "instanceId": "django__django-17084",
+      "repo": "django/django",
+      "defaultTokens": 501,
+      "defaultRelated": 5,
+      "ladderTokens": 862,
+      "ladderRelated": 10,
+      "identical": false,
+      "deltaTokens": 361
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-7462",
+      "repo": "sphinx-doc/sphinx",
+      "defaultTokens": 403,
+      "defaultRelated": 4,
+      "ladderTokens": 1259,
+      "ladderRelated": 8,
+      "identical": false,
+      "deltaTokens": 856
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-26466",
+      "repo": "matplotlib/matplotlib",
+      "defaultTokens": 761,
+      "defaultRelated": 5,
+      "ladderTokens": 883,
+      "ladderRelated": 6,
+      "identical": false,
+      "deltaTokens": 122
+    },
+    {
+      "instanceId": "sympy__sympy-13480",
+      "repo": "sympy/sympy",
+      "defaultTokens": 693,
+      "defaultRelated": 5,
+      "ladderTokens": 1374,
+      "ladderRelated": 8,
+      "identical": false,
+      "deltaTokens": 681
+    },
+    {
+      "instanceId": "psf__requests-5414",
+      "repo": "psf/requests",
+      "defaultTokens": 455,
+      "defaultRelated": 5,
+      "ladderTokens": 1286,
+      "ladderRelated": 9,
+      "identical": false,
+      "deltaTokens": 831
+    },
+    {
+      "instanceId": "pydata__xarray-4695",
+      "repo": "pydata/xarray",
+      "defaultTokens": 535,
+      "defaultRelated": 5,
+      "ladderTokens": 1021,
+      "ladderRelated": 13,
+      "identical": false,
+      "deltaTokens": 486
+    },
+    {
+      "instanceId": "pytest-dev__pytest-6197",
+      "repo": "pytest-dev/pytest",
+      "defaultTokens": 581,
+      "defaultRelated": 5,
+      "ladderTokens": 1118,
+      "ladderRelated": 14,
+      "identical": false,
+      "deltaTokens": 537
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-9320",
+      "repo": "sphinx-doc/sphinx",
+      "defaultTokens": 719,
+      "defaultRelated": 7,
+      "ladderTokens": 1017,
+      "ladderRelated": 12,
+      "identical": false,
+      "deltaTokens": 298
+    },
+    {
+      "instanceId": "sympy__sympy-12419",
+      "repo": "sympy/sympy",
+      "defaultTokens": 576,
+      "defaultRelated": 5,
+      "ladderTokens": 1268,
+      "ladderRelated": 13,
+      "identical": false,
+      "deltaTokens": 692
+    },
+    {
+      "instanceId": "sympy__sympy-13372",
+      "repo": "sympy/sympy",
+      "defaultTokens": 455,
+      "defaultRelated": 5,
+      "ladderTokens": 1089,
+      "ladderRelated": 6,
+      "identical": false,
+      "deltaTokens": 634
+    },
+    {
+      "instanceId": "sympy__sympy-13974",
+      "repo": "sympy/sympy",
+      "defaultTokens": 587,
+      "defaultRelated": 5,
+      "ladderTokens": 1300,
+      "ladderRelated": 8,
+      "identical": false,
+      "deltaTokens": 713
+    }
+  ]
+}

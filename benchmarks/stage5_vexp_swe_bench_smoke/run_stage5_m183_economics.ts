@@ -166,11 +166,16 @@ function main(): void {
     declined: orientations.filter((o) => o.deliveryState === "ORIENTATION_DECLINED").length,
     packetTokens: { median: median(orientationTokens), p90: quantile(orientationTokens, 0.9), max: orientationTokens.length === 0 ? null : Math.max(...orientationTokens), mean: mean(orientationTokens), n: orientationTokens.length },
     injectedSectionTokens: { median: median(sectionTokens), p90: quantile(sectionTokens, 0.9), max: sectionTokens.length === 0 ? null : Math.max(...sectionTokens) },
-    m182OfflineComparison: {
-      m182Median: 1229, m182P90: 1527, m182Max: 1576,
-      liveMedian: median(orientationTokens), liveP90: quantile(orientationTokens, 0.9),
-      liveMax: orientationTokens.length === 0 ? null : Math.max(...orientationTokens),
-      note: "§47/§130 — M182's figures are over 167 Broad default-budget orientations; M183's are over its own 30-instance manifest. A different sample legitimately gives a different median. A materially LARGER live packet would be the thing to investigate.",
+    m182Comparison: {
+      liveDefaultMedian: median(orientationTokens), liveDefaultP90: quantile(orientationTokens, 0.9),
+      liveDefaultMax: orientationTokens.length === 0 ? null : Math.max(...orientationTokens),
+      m182AtDefaultBudget: { median: 1229, p90: 1527, max: 1576, count: 167 },
+      m182AllDeliveringBudgets: { median: 542, p90: 1306, max: 1576, count: 1380 },
+      // §47/§130, investigated rather than asserted. See
+      // stage5_m183_orientation_size_reconciliation.json.
+      reconciliation: "M182's 1,229 is the rung of M181's budget LADDER where max_tokens was passed explicitly as 8,000; a default run_pipeline call passes no max_tokens and does not land there. Measured on all 30 manifest cases: default median 579.5 / p90 814 / max 941 against the same sample's 8,000 rung at median 1,245.5 / p90 1,374 / max 1,607. The rung measurement REPRODUCES M182's 1,229 on a different sample; the default does not, because it is a different operating point. The ladder was larger on 29 of 30 cases and the two never agreed.",
+      whichIsTheTreatment: "the default (§7 — the shipped default IS the treatment; arm B passes no max_tokens)",
+      correctNeighbour: "M182's all-budgets median of 542, not its 8,000-rung median of 1,229",
     },
     ceilingNote: "§131 — the ~2k ceiling is a maximum, not a target. A packet below it is `enough, then stop`, not a broken treatment.",
     breakEven: {

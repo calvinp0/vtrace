@@ -77,3 +77,40 @@ not affect live experiment validity.
 It does not represent all model-visible content. M183 does not rely on it and
 does not rename it (§138). Token authority is the harness result row, per
 `stage5_m183_token_accounting_contract.md`.
+
+## 5. M182's "current default orientation size" is the 8,000 rung, not the default
+
+**Severity: medium. Not a code defect — a measurement-labelling error in an
+inherited standing finding, and one that would have made M183 report a phantom
+regression.**
+
+M182's standing finding states that the current default size is **1,229 median /
+1,527 p90 / 1,576 max** model-facing tokens and that "this is the treatment a
+future live benchmark must qualify". That figure is the `atDefaultBudget` slice
+of M181's budget LADDER — the rung where `max_tokens` was passed **explicitly**
+as 8,000. `defaultBudget` there names the configured budget CONSTANT, not the
+behaviour of a default call.
+
+A default `run_pipeline` call passes no `max_tokens` and does not land on that
+rung. Measured on all thirty M183 manifest cases (`run_stage5_m183_orientation_size.ts`):
+
+| operating point | median | p90 | max | median related |
+|---|---|---|---|---|
+| default call (no `max_tokens`) | **579.5** | 814 | 941 | 5 |
+| explicit `max_tokens = 8000` | **1,245.5** | 1,374 | 1,607 | 9 |
+| M182 recorded as "default" | 1,229 | 1,527 | 1,576 | — |
+
+The 8,000 rung **reproduces M182's figure on a different sample** (1,245.5 vs
+1,229); the default does not, because it is a different operating point. The
+ladder was larger on 29 of 30 cases, smaller on 1, and the two never produced the
+same packet.
+
+**Consequence.** M183 qualifies the DEFAULT path, which is correct — §7 says the
+shipped default is the treatment and arm B passes no `max_tokens`. But comparing
+the live median against M182's 1,229 would have shown a ~50% shrinkage that never
+happened. The correct neighbour for the live default is M182's own
+all-delivering-budgets median of **542**.
+
+**Recommended follow-up (not licensed here).** M182's standing finding should be
+corrected where it is recorded, and `atDefaultBudget` renamed to something that
+does not read as "what a default call returns".
