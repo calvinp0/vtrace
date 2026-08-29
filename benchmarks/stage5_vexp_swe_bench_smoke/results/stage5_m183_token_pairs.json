@@ -1,0 +1,291 @@
+{
+  "schemaVersion": "stage5.m183.token-pairs.v1",
+  "milestone": "M183",
+  "workstream": "M183-E",
+  "definition": "TOTAL_AGENT_TOKENS = input + output + cacheRead + cacheCreation, from the harness result row (stage5_m183_token_accounting_contract.md)",
+  "pairs": 30,
+  "baselineMedian": 1112527.5,
+  "treatmentMedian": 1031586.5,
+  "pairedDelta": {
+    "n": 30,
+    "median": -4302,
+    "mean": -69708.3,
+    "trimmedMean10": -97742.375,
+    "p10": -858128.6,
+    "p90": 527489.0000000003,
+    "min": -1567919,
+    "max": 1634203,
+    "sum": -2091249,
+    "negative": 15,
+    "positive": 15,
+    "zero": 0
+  },
+  "reduction": {
+    "medianPairedPercent": -0.29672750162777595,
+    "pooledPercent": 5.264096281166234,
+    "medianAbsoluteDelta": 4302,
+    "meanAbsoluteDelta": 69708.3,
+    "pooledBaseline": 39726648,
+    "pooledTreatment": 37635399,
+    "pairsWithUsableRatio": 30
+  },
+  "interval": {
+    "statistic": "median paired saving (baseline - treatment)",
+    "seed": "M183-tokens/v1",
+    "point": 4302,
+    "lower": -166319.5,
+    "upper": 242363,
+    "resamples": 10000
+  },
+  "verdict": "NEUTRAL",
+  "components": {
+    "inputTokens": {
+      "baselineMedian": 300,
+      "treatmentMedian": 267,
+      "baselinePooled": 9647,
+      "treatmentPooled": 8755,
+      "pairedMedianDelta": -8
+    },
+    "outputTokens": {
+      "baselineMedian": 74.5,
+      "treatmentMedian": 69.5,
+      "baselinePooled": 2653,
+      "treatmentPooled": 2477,
+      "pairedMedianDelta": -1
+    },
+    "cacheReadTokens": {
+      "baselineMedian": 1063268.5,
+      "treatmentMedian": 970356.5,
+      "baselinePooled": 37870075,
+      "treatmentPooled": 35788400,
+      "pairedMedianDelta": -5476
+    },
+    "cacheCreationTokens": {
+      "baselineMedian": 51334,
+      "treatmentMedian": 50976.5,
+      "baselinePooled": 1844273,
+      "treatmentPooled": 1835767,
+      "pairedMedianDelta": -2569.5
+    },
+    "note": "§71 — cache components are reported because a cost movement without a token movement is a cache effect and must be visible as one."
+  },
+  "turns": {
+    "baselineMedian": 37,
+    "treatmentMedian": 33,
+    "baselinePooled": 1192,
+    "treatmentPooled": 1082,
+    "pairedMedianDelta": -1
+  },
+  "perPair": [
+    {
+      "instanceId": "astropy__astropy-14369",
+      "repo": "astropy/astropy",
+      "baseline": 1396531,
+      "treatment": 2125368,
+      "delta": 728837
+    },
+    {
+      "instanceId": "astropy__astropy-14539",
+      "repo": "astropy/astropy",
+      "baseline": 2249432,
+      "treatment": 1118004,
+      "delta": -1131428
+    },
+    {
+      "instanceId": "django__django-13658",
+      "repo": "django/django",
+      "baseline": 445582,
+      "treatment": 259225,
+      "delta": -186357
+    },
+    {
+      "instanceId": "django__django-11133",
+      "repo": "django/django",
+      "baseline": 463417,
+      "treatment": 591224,
+      "delta": 127807
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-22719",
+      "repo": "matplotlib/matplotlib",
+      "baseline": 598868,
+      "treatment": 1014413,
+      "delta": 415545
+    },
+    {
+      "instanceId": "django__django-11820",
+      "repo": "django/django",
+      "baseline": 1132743,
+      "treatment": 476750,
+      "delta": -655993
+    },
+    {
+      "instanceId": "mwaskom__seaborn-3187",
+      "repo": "mwaskom/seaborn",
+      "baseline": 2870265,
+      "treatment": 1994860,
+      "delta": -875405
+    },
+    {
+      "instanceId": "django__django-12273",
+      "repo": "django/django",
+      "baseline": 1980198,
+      "treatment": 1139880,
+      "delta": -840318
+    },
+    {
+      "instanceId": "pallets__flask-5014",
+      "repo": "pallets/flask",
+      "baseline": 274717,
+      "treatment": 336137,
+      "delta": 61420
+    },
+    {
+      "instanceId": "django__django-12325",
+      "repo": "django/django",
+      "baseline": 3094965,
+      "treatment": 1527046,
+      "delta": -1567919
+    },
+    {
+      "instanceId": "psf__requests-1724",
+      "repo": "psf/requests",
+      "baseline": 525004,
+      "treatment": 566965,
+      "delta": 41961
+    },
+    {
+      "instanceId": "django__django-13195",
+      "repo": "django/django",
+      "baseline": 1198032,
+      "treatment": 512285,
+      "delta": -685747
+    },
+    {
+      "instanceId": "pydata__xarray-6599",
+      "repo": "pydata/xarray",
+      "baseline": 1092312,
+      "treatment": 1297144,
+      "delta": 204832
+    },
+    {
+      "instanceId": "django__django-13513",
+      "repo": "django/django",
+      "baseline": 1456691,
+      "treatment": 1326031,
+      "delta": -130660
+    },
+    {
+      "instanceId": "pylint-dev__pylint-4551",
+      "repo": "pylint-dev/pylint",
+      "baseline": 2929065,
+      "treatment": 4395345,
+      "delta": 1466280
+    },
+    {
+      "instanceId": "django__django-13820",
+      "repo": "django/django",
+      "baseline": 1077773,
+      "treatment": 221564,
+      "delta": -856209
+    },
+    {
+      "instanceId": "pytest-dev__pytest-7432",
+      "repo": "pytest-dev/pytest",
+      "baseline": 1303624,
+      "treatment": 921976,
+      "delta": -381648
+    },
+    {
+      "instanceId": "django__django-16569",
+      "repo": "django/django",
+      "baseline": 347289,
+      "treatment": 360676,
+      "delta": 13387
+    },
+    {
+      "instanceId": "scikit-learn__scikit-learn-10844",
+      "repo": "scikit-learn/scikit-learn",
+      "baseline": 324606,
+      "treatment": 203384,
+      "delta": -121222
+    },
+    {
+      "instanceId": "django__django-17084",
+      "repo": "django/django",
+      "baseline": 2024888,
+      "treatment": 3659091,
+      "delta": 1634203
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-7462",
+      "repo": "sphinx-doc/sphinx",
+      "baseline": 674310,
+      "treatment": 652319,
+      "delta": -21991
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-26466",
+      "repo": "matplotlib/matplotlib",
+      "baseline": 950114,
+      "treatment": 1182727,
+      "delta": 232613
+    },
+    {
+      "instanceId": "sympy__sympy-13480",
+      "repo": "sympy/sympy",
+      "baseline": 553560,
+      "treatment": 891749,
+      "delta": 338189
+    },
+    {
+      "instanceId": "psf__requests-5414",
+      "repo": "psf/requests",
+      "baseline": 1676249,
+      "treatment": 1031126,
+      "delta": -645123
+    },
+    {
+      "instanceId": "pydata__xarray-4695",
+      "repo": "pydata/xarray",
+      "baseline": 1019629,
+      "treatment": 1318248,
+      "delta": 298619
+    },
+    {
+      "instanceId": "pytest-dev__pytest-6197",
+      "repo": "pytest-dev/pytest",
+      "baseline": 1876135,
+      "treatment": 1981181,
+      "delta": 105046
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-9320",
+      "repo": "sphinx-doc/sphinx",
+      "baseline": 772641,
+      "treatment": 553623,
+      "delta": -219018
+    },
+    {
+      "instanceId": "sympy__sympy-12419",
+      "repo": "sympy/sympy",
+      "baseline": 3319004,
+      "treatment": 3824121,
+      "delta": 505117
+    },
+    {
+      "instanceId": "sympy__sympy-13372",
+      "repo": "sympy/sympy",
+      "baseline": 801249,
+      "treatment": 1120890,
+      "delta": 319641
+    },
+    {
+      "instanceId": "sympy__sympy-13974",
+      "repo": "sympy/sympy",
+      "baseline": 1297755,
+      "treatment": 1032047,
+      "delta": -265708
+    }
+  ]
+}

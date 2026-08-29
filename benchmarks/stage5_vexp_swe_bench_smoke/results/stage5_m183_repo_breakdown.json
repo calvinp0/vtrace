@@ -1,0 +1,91 @@
+{
+  "schemaVersion": "stage5.m183.repo-breakdown.v1",
+  "milestone": "M183",
+  "note": "§128 — every participating repository with its pair count, so no single repository can carry the headline silently.",
+  "repositories": {
+    "astropy/astropy": {
+      "pairs": 2,
+      "baselineResolved": 1,
+      "treatmentResolved": 2,
+      "aggregateBaselineCost": 1.899851,
+      "aggregateTreatmentCost": 1.690682
+    },
+    "django/django": {
+      "pairs": 10,
+      "baselineResolved": 5,
+      "treatmentResolved": 6,
+      "aggregateBaselineCost": 6.100468000000001,
+      "aggregateTreatmentCost": 5.216724
+    },
+    "matplotlib/matplotlib": {
+      "pairs": 2,
+      "baselineResolved": 1,
+      "treatmentResolved": 1,
+      "aggregateBaselineCost": 0.7472874999999999,
+      "aggregateTreatmentCost": 1.00789
+    },
+    "mwaskom/seaborn": {
+      "pairs": 1,
+      "baselineResolved": 0,
+      "treatmentResolved": 0,
+      "aggregateBaselineCost": 1.132431,
+      "aggregateTreatmentCost": 0.8226955
+    },
+    "pallets/flask": {
+      "pairs": 1,
+      "baselineResolved": 1,
+      "treatmentResolved": 1,
+      "aggregateBaselineCost": 0.244534,
+      "aggregateTreatmentCost": 0.1766465
+    },
+    "psf/requests": {
+      "pairs": 2,
+      "baselineResolved": 2,
+      "treatmentResolved": 1,
+      "aggregateBaselineCost": 1.0280019999999999,
+      "aggregateTreatmentCost": 0.7604805000000001
+    },
+    "pydata/xarray": {
+      "pairs": 2,
+      "baselineResolved": 2,
+      "treatmentResolved": 2,
+      "aggregateBaselineCost": 0.9577205000000001,
+      "aggregateTreatmentCost": 1.140591
+    },
+    "pylint-dev/pylint": {
+      "pairs": 1,
+      "baselineResolved": 0,
+      "treatmentResolved": 0,
+      "aggregateBaselineCost": 1.6097467500000002,
+      "aggregateTreatmentCost": 3.0272245
+    },
+    "pytest-dev/pytest": {
+      "pairs": 2,
+      "baselineResolved": 2,
+      "treatmentResolved": 1,
+      "aggregateBaselineCost": 1.6042224999999999,
+      "aggregateTreatmentCost": 1.5952099999999998
+    },
+    "scikit-learn/scikit-learn": {
+      "pairs": 1,
+      "baselineResolved": 1,
+      "treatmentResolved": 1,
+      "aggregateBaselineCost": 0.21289899999999998,
+      "aggregateTreatmentCost": 0.1382855
+    },
+    "sphinx-doc/sphinx": {
+      "pairs": 2,
+      "baselineResolved": 1,
+      "treatmentResolved": 1,
+      "aggregateBaselineCost": 0.856007,
+      "aggregateTreatmentCost": 0.651331
+    },
+    "sympy/sympy": {
+      "pairs": 4,
+      "baselineResolved": 3,
+      "treatmentResolved": 3,
+      "aggregateBaselineCost": 2.7515615,
+      "aggregateTreatmentCost": 2.9578839999999995
+    }
+  }
+}

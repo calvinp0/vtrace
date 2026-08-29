@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "stage5.m183.context-vs-whole-run.v1",
+  "note": "§162 — three reduction concepts, three denominators, never merged.",
+  "rows": [
+    {
+      "concept": "Repository context / orientation",
+      "baselineDenominator": "NOT MEASURABLE",
+      "why": "§98/§145 — the baseline arm has no repository-context artifact to measure. It investigates with Read and Grep, which is not a context payload with a token count. Inventing a 'full repository' or 'naive full-file' denominator here would be the VEXP-style marketing figure §5 forbids. The product's own `estimatedNaiveFullFileTokens` is a compression claim about selected files, not a claim about what the baseline agent actually spent.",
+      "treatmentNumerator": 579.5,
+      "reduction": "NOT MEASURABLE"
+    },
+    {
+      "concept": "Complete agent tokens",
+      "baselineDenominator": 39726648,
+      "treatmentNumerator": 37635399,
+      "reductionPooledPercent": 5.264096281166234,
+      "reductionMedianPairedPercent": -0.29672750162777595
+    },
+    {
+      "concept": "Complete agent cost",
+      "baselineDenominator": 19.14473075,
+      "treatmentNumerator": 19.185644500000002,
+      "reductionPooledPercent": -0.21370762814202238,
+      "reductionMedianPairedPercent": 10.419407483630657
+    }
+  ]
+}

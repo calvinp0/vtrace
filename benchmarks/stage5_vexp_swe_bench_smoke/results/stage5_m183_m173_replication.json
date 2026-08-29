@@ -1,0 +1,141 @@
+{
+  "schemaVersion": "stage5.m183.m173-replication.v1",
+  "milestone": "M183",
+  "available": true,
+  "instances": 12,
+  "note": "§129 — M173's arm B carried a mandate and an MCP tool inventory and a ~629-token packet; M183's carries none of those and a larger packet. A changed outcome is not thereby caused by the product change: the model is stochastic and the treatment shape differs in more than one way.",
+  "rows": [
+    {
+      "instanceId": "astropy__astropy-14369",
+      "m173BaselineResolved": false,
+      "m173TreatmentResolved": false,
+      "m183BaselineResolved": false,
+      "m183TreatmentResolved": true,
+      "m173BaselineCost": 1.4958585,
+      "m173TreatmentCost": 2.2104995,
+      "m183BaselineCost": 0.9363504999999999,
+      "m183TreatmentCost": 1.027781
+    },
+    {
+      "instanceId": "django__django-13658",
+      "m173BaselineResolved": true,
+      "m173TreatmentResolved": true,
+      "m183BaselineResolved": true,
+      "m183TreatmentResolved": true,
+      "m173BaselineCost": 0.1878255,
+      "m173TreatmentCost": 0.26486,
+      "m183BaselineCost": 0.2325335,
+      "m183TreatmentCost": 0.16422399999999998
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-22719",
+      "m173BaselineResolved": true,
+      "m173TreatmentResolved": true,
+      "m183BaselineResolved": true,
+      "m183TreatmentResolved": true,
+      "m173BaselineCost": 0.3737555000000001,
+      "m173TreatmentCost": 0.4029205,
+      "m183BaselineCost": 0.3476814999999999,
+      "m183TreatmentCost": 0.5055989999999999
+    },
+    {
+      "instanceId": "mwaskom__seaborn-3187",
+      "m173BaselineResolved": false,
+      "m173TreatmentResolved": false,
+      "m183BaselineResolved": false,
+      "m183TreatmentResolved": false,
+      "m173BaselineCost": 1.0545375000000001,
+      "m173TreatmentCost": 0.9905285,
+      "m183BaselineCost": 1.132431,
+      "m183TreatmentCost": 0.8226955
+    },
+    {
+      "instanceId": "pallets__flask-5014",
+      "m173BaselineResolved": true,
+      "m173TreatmentResolved": true,
+      "m183BaselineResolved": true,
+      "m183TreatmentResolved": true,
+      "m173BaselineCost": 0.24868949999999998,
+      "m173TreatmentCost": 0.21426499999999998,
+      "m183BaselineCost": 0.244534,
+      "m183TreatmentCost": 0.1766465
+    },
+    {
+      "instanceId": "psf__requests-1724",
+      "m173BaselineResolved": false,
+      "m173TreatmentResolved": false,
+      "m183BaselineResolved": true,
+      "m183TreatmentResolved": true,
+      "m173BaselineCost": 0.23571049999999996,
+      "m173TreatmentCost": 0.7286710000000001,
+      "m183BaselineCost": 0.2798175,
+      "m183TreatmentCost": 0.2632465
+    },
+    {
+      "instanceId": "pydata__xarray-6599",
+      "m173BaselineResolved": true,
+      "m173TreatmentResolved": true,
+      "m183BaselineResolved": true,
+      "m183TreatmentResolved": true,
+      "m173BaselineCost": 0.8564505000000001,
+      "m173TreatmentCost": 1.586579,
+      "m183BaselineCost": 0.5137685000000001,
+      "m183TreatmentCost": 0.5745509999999999
+    },
+    {
+      "instanceId": "pylint-dev__pylint-4551",
+      "m173BaselineResolved": false,
+      "m173TreatmentResolved": false,
+      "m183BaselineResolved": false,
+      "m183TreatmentResolved": false,
+      "m173BaselineCost": null,
+      "m173TreatmentCost": 1.4387984999999996,
+      "m183BaselineCost": 1.6097467500000002,
+      "m183TreatmentCost": 3.0272245
+    },
+    {
+      "instanceId": "pytest-dev__pytest-7432",
+      "m173BaselineResolved": true,
+      "m173TreatmentResolved": true,
+      "m183BaselineResolved": true,
+      "m183TreatmentResolved": true,
+      "m173BaselineCost": 0.3697885,
+      "m173TreatmentCost": 0.38561700000000004,
+      "m183BaselineCost": 0.627794,
+      "m183TreatmentCost": 0.435717
+    },
+    {
+      "instanceId": "scikit-learn__scikit-learn-10844",
+      "m173BaselineResolved": true,
+      "m173TreatmentResolved": true,
+      "m183BaselineResolved": true,
+      "m183TreatmentResolved": true,
+      "m173BaselineCost": 0.251031,
+      "m173TreatmentCost": 0.26721300000000003,
+      "m183BaselineCost": 0.21289899999999998,
+      "m183TreatmentCost": 0.1382855
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-7462",
+      "m173BaselineResolved": false,
+      "m173TreatmentResolved": false,
+      "m183BaselineResolved": false,
+      "m183TreatmentResolved": false,
+      "m173BaselineCost": 0.268135,
+      "m173TreatmentCost": 0.3244345,
+      "m183BaselineCost": 0.3800385,
+      "m183TreatmentCost": 0.32315249999999995
+    },
+    {
+      "instanceId": "sympy__sympy-13480",
+      "m173BaselineResolved": true,
+      "m173TreatmentResolved": true,
+      "m183BaselineResolved": true,
+      "m183TreatmentResolved": true,
+      "m173BaselineCost": 0.2458635,
+      "m173TreatmentCost": 0.413186,
+      "m183BaselineCost": 0.2853585,
+      "m183TreatmentCost": 0.39496850000000006
+    }
+  ]
+}

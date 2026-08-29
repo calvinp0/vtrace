@@ -1,0 +1,20 @@
+{
+  "schemaVersion": "stage5.m183.verdicts.v1",
+  "milestone": "M183",
+  "workstream": "M183-F",
+  "resolution": "OBSERVED_RESOLUTION_PARITY",
+  "statisticalResolution": "RESOLUTION_DIFFERENCE_NOT_STATISTICALLY_RESOLVED",
+  "wholeRunToken": "WHOLE_RUN_TOKEN_USAGE_NEUTRAL",
+  "wholeRunCost": "WHOLE_RUN_COST_EFFECT_MIXED",
+  "product": "CURRENT_PRODUCT_UTILITY_NEUTRAL",
+  "vtraceCausality": "NO_CLEAR_VTRACE_CAUSAL_UTILITY_EVIDENCE",
+  "economicsMechanism": "TAILS_DOMINATE_ECONOMIC_EFFECT",
+  "vexpClass": "VEXP_CLASS_VALUE_PROPOSITION_NOT_YET_SUPPORTED",
+  "productVerdictAxes": {
+    "quality": "PARITY_NOT_RESOLVED",
+    "cost": "NEUTRAL",
+    "cell": "§110 D / §125 — a meaningful negative result, not a measurement failure"
+  },
+  "observedResolutionDirection": "OBSERVED_RESOLUTION_PARITY",
+  "productVerdictMapping": "computed by productVerdict() in run_stage5_m183_report.ts, written before any outcome existed. The QUALITY axis is gated on STATISTICAL support, not on the observed sign (§41): an unresolved difference enters the matrix as parity, and the observed direction is reported beside it. CURRENT_PRODUCT_NOT_COMPETITIVE and CURRENT_PRODUCT_UTILITY_NEUTRAL are both reachable."
+}

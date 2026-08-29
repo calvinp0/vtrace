@@ -1,0 +1,47 @@
+{
+  "schemaVersion": "stage5.m183.orientation-economics.v1",
+  "milestone": "M183",
+  "workstream": "M183-E",
+  "delivered": 30,
+  "declined": 0,
+  "packetTokens": {
+    "median": 579.5,
+    "p90": 822.5000000000001,
+    "max": 941,
+    "mean": 602.5,
+    "n": 30
+  },
+  "injectedSectionTokens": {
+    "median": 629.5,
+    "p90": 873.5000000000001,
+    "max": 992
+  },
+  "m182Comparison": {
+    "liveDefaultMedian": 579.5,
+    "liveDefaultP90": 822.5000000000001,
+    "liveDefaultMax": 941,
+    "m182AtDefaultBudget": {
+      "median": 1229,
+      "p90": 1527,
+      "max": 1576,
+      "count": 167
+    },
+    "m182AllDeliveringBudgets": {
+      "median": 542,
+      "p90": 1306,
+      "max": 1576,
+      "count": 1380
+    },
+    "reconciliation": "M182's 1,229 is the rung of M181's budget LADDER where max_tokens was passed explicitly as 8,000; a default run_pipeline call passes no max_tokens and does not land there. Measured on all 30 manifest cases: default median 579.5 / p90 814 / max 941 against the same sample's 8,000 rung at median 1,245.5 / p90 1,374 / max 1,607. The rung measurement REPRODUCES M182's 1,229 on a different sample; the default does not, because it is a different operating point. The ladder was larger on 29 of 30 cases and the two never agreed.",
+    "whichIsTheTreatment": "the default (§7 — the shipped default IS the treatment; arm B passes no max_tokens)",
+    "correctNeighbour": "M182's all-budgets median of 542, not its 8,000-rung median of 1,229"
+  },
+  "ceilingNote": "§131 — the ~2k ceiling is a maximum, not a target. A packet below it is `enough, then stop`, not a broken treatment.",
+  "breakEven": {
+    "question": "§99 — does the downstream saving exceed the orientation overhead?",
+    "medianOrientationTokens": 579.5,
+    "medianPairedTokenSaving": 4302,
+    "recoveredOnMedian": true,
+    "warning": "The orientation tokens are ALREADY inside the treatment arm's whole-run total. This comparison is a mechanism note; subtracting it from the whole-run delta would double-count (§99)."
+  }
+}

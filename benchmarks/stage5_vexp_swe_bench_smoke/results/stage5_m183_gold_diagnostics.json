@@ -1,0 +1,1411 @@
+{
+  "schemaVersion": "stage5.m183.gold-diagnostics.v1",
+  "milestone": "M183",
+  "workstream": "M183-E",
+  "computedAfterGrading": true,
+  "goldFileDefinition": "a file changed by the SWE-bench reference patch (§53). It does not mean solved.",
+  "goldSymbolProxy": "an identifier introduced by a `def`/`class` line inside the reference patch's own changed lines. Coarse by construction and labelled as a proxy.",
+  "pairs": 30,
+  "rates": {
+    "goldFileInOrientation": "21/30",
+    "goldSymbolInOrientation": "2/30",
+    "focusIsGoldFile": "19/30",
+    "treatmentEditedFocus": "17/30",
+    "treatmentEditedAnyGoldFile": "28/30",
+    "baselineEditedAnyGoldFile": "27/30",
+    "treatmentReachedOrientationEvidence": "22/30",
+    "baselineReachedTheSameFiles": "21/30",
+    "orientationIgnoredEntirely": "8/30"
+  },
+  "adoption": {
+    "note": "§33/§107 — an ignored orientation is a PRODUCT RESULT, not an invalid run. Delivery is what makes the arm valid; adoption is what makes it interesting.",
+    "medianToolCallsBeforeTreatmentReachedEvidence": 0,
+    "medianToolCallsBeforeBaselineReachedSameFiles": 1
+  },
+  "localizationIsNotResolution": {
+    "focusWasGoldAndTreatmentStillFailed": 6,
+    "focusWasNotGoldAndTreatmentSolvedAnyway": 6,
+    "note": "§147 — these two counts are why the headline metric is `resolved` and not `focusIsGoldFile`."
+  },
+  "rows": [
+    {
+      "instanceId": "astropy__astropy-14369",
+      "repo": "astropy/astropy",
+      "stratum": "replication",
+      "m173Overlap": true,
+      "goldFiles": [
+        "astropy/units/format/cds.py",
+        "astropy/units/format/cds_parsetab.py"
+      ],
+      "goldFileCount": 2,
+      "orientationDelivered": true,
+      "focusAt": "astropy/io/ascii/cds.py::Cds",
+      "focusFile": "astropy/io/ascii/cds.py",
+      "goldFileInOrientation": false,
+      "goldSymbolInOrientation": false,
+      "focusIsGoldFile": false,
+      "treatmentEditedFocus": false,
+      "treatmentEditedAnyGoldFile": true,
+      "baselineEditedAnyGoldFile": true,
+      "baselineReachedOrientationEvidence": false,
+      "treatmentAdoption": {
+        "touchedAny": true,
+        "firstTouchIndex": 0,
+        "touchedCount": 1
+      },
+      "baselineAdoption": {
+        "touchedAny": false,
+        "firstTouchIndex": null,
+        "touchedCount": 0
+      },
+      "orientationIgnored": false,
+      "baselineEdits": [
+        "astropy/units/format/cds.py"
+      ],
+      "treatmentEdits": [
+        "astropy/units/format/cds.py"
+      ],
+      "orientationFiles": [
+        "astropy/io/ascii/cds.py",
+        "astropy/units/format/cds_lextab.py",
+        "astropy/table/table.py",
+        "astropy/io/ascii/tests/test_cds_header_from_readme.py"
+      ],
+      "baselineResolved": false,
+      "treatmentResolved": true,
+      "outcome": "TREATMENT_ONLY"
+    },
+    {
+      "instanceId": "astropy__astropy-14539",
+      "repo": "astropy/astropy",
+      "stratum": "extension",
+      "m173Overlap": false,
+      "goldFiles": [
+        "astropy/io/fits/diff.py"
+      ],
+      "goldFileCount": 1,
+      "orientationDelivered": true,
+      "focusAt": "astropy/io/fits/diff.py::_BaseDiff.identical",
+      "focusFile": "astropy/io/fits/diff.py",
+      "goldFileInOrientation": true,
+      "goldSymbolInOrientation": false,
+      "focusIsGoldFile": true,
+      "treatmentEditedFocus": true,
+      "treatmentEditedAnyGoldFile": true,
+      "baselineEditedAnyGoldFile": true,
+      "baselineReachedOrientationEvidence": true,
+      "treatmentAdoption": {
+        "touchedAny": true,
+        "firstTouchIndex": 0,
+        "touchedCount": 1
+      },
+      "baselineAdoption": {
+        "touchedAny": true,
+        "firstTouchIndex": 2,
+        "touchedCount": 1
+      },
+      "orientationIgnored": false,
+      "baselineEdits": [
+        "astropy/io/fits/diff.py"
+      ],
+      "treatmentEdits": [
+        "astropy/io/fits/diff.py"
+      ],
+      "orientationFiles": [
+        "astropy/io/fits/diff.py",
+        "astropy/io/fits/connect.py",
+        "astropy/io/fits/tests/test_diff.py"
+      ],
+      "baselineResolved": true,
+      "treatmentResolved": true,
+      "outcome": "BOTH"
+    },
+    {
+      "instanceId": "django__django-13658",
+      "repo": "django/django",
+      "stratum": "replication",
+      "m173Overlap": true,
+      "goldFiles": [
+        "django/core/management/__init__.py"
+      ],
+      "goldFileCount": 1,
+      "orientationDelivered": true,
+      "focusAt": "django/core/management/__init__.py::ManagementUtility",
+      "focusFile": "django/core/management/__init__.py",
+      "goldFileInOrientation": true,
+      "goldSymbolInOrientation": false,
+      "focusIsGoldFile": true,
+      "treatmentEditedFocus": true,
+      "treatmentEditedAnyGoldFile": true,
+      "baselineEditedAnyGoldFile": true,
+      "baselineReachedOrientationEvidence": true,
+      "treatmentAdoption": {
+        "touchedAny": true,
+        "firstTouchIndex": 0,
+        "touchedCount": 1
+      },
+      "baselineAdoption": {
+        "touchedAny": true,
+        "firstTouchIndex": 1,
+        "touchedCount": 1
+      },
+      "orientationIgnored": false,
+      "baselineEdits": [
+        "django/core/management/__init__.py"
+      ],
+      "treatmentEdits": [
+        "django/core/management/__init__.py"
+      ],
+      "orientationFiles": [
+        "django/core/management/__init__.py",
+        "django/core/management/commands/inspectdb.py",
+        "tests/bash_completion/tests.py",
+        "tests/user_commands/tests.py"
+      ],
+      "baselineResolved": true,
+      "treatmentResolved": true,
+      "outcome": "BOTH"
+    },
+    {
+      "instanceId": "django__django-11133",
+      "repo": "django/django",
+      "stratum": "extension",
+      "m173Overlap": false,
+      "goldFiles": [
+        "django/http/response.py"
+      ],
+      "goldFileCount": 1,
+      "orientationDelivered": true,
+      "focusAt": "django/http/response.py::HttpResponse",
+      "focusFile": "django/http/response.py",
+      "goldFileInOrientation": true,
+      "goldSymbolInOrientation": false,
+      "focusIsGoldFile": true,
+      "treatmentEditedFocus": true,
+      "treatmentEditedAnyGoldFile": true,
+      "baselineEditedAnyGoldFile": true,
+      "baselineReachedOrientationEvidence": true,
+      "treatmentAdoption": {
+        "touchedAny": true,
+        "firstTouchIndex": 0,
+        "touchedCount": 1
+      },
+      "baselineAdoption": {
+        "touchedAny": true,
+        "firstTouchIndex": 1,
+        "touchedCount": 1
+      },
+      "orientationIgnored": false,
+      "baselineEdits": [
+        "django/http/response.py"
+      ],
+      "treatmentEdits": [
+        "django/http/response.py"
+      ],
+      "orientationFiles": [
+        "django/http/response.py",
+        "django/db/backends/base/creation.py",
+        "django/db/models/fields/__init__.py",
+        "django/contrib/admindocs/middleware.py",
+        "django/contrib/flatpages/views.py",
+        "django/contrib/gis/shortcuts.py"
+      ],
+      "baselineResolved": true,
+      "treatmentResolved": true,
+      "outcome": "BOTH"
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-22719",
+      "repo": "matplotlib/matplotlib",
+      "stratum": "replication",
+      "m173Overlap": true,
+      "goldFiles": [
+        "lib/matplotlib/category.py"
+      ],
+      "goldFileCount": 1,
+      "orientationDelivered": true,
+      "focusAt": "lib/matplotlib/units.py::ConversionError",
+      "focusFile": "lib/matplotlib/units.py",
+      "goldFileInOrientation": true,
+      "goldSymbolInOrientation": false,
+      "focusIsGoldFile": false,
+      "treatmentEditedFocus": false,
+      "treatmentEditedAnyGoldFile": true,
+      "baselineEditedAnyGoldFile": true,
+      "baselineReachedOrientationEvidence": true,
+      "treatmentAdoption": {
+        "touchedAny": true,
+        "firstTouchIndex": 0,
+        "touchedCount": 2
+      },
+      "baselineAdoption": {
+        "touchedAny": true,
+        "firstTouchIndex": 0,
+        "touchedCount": 1
+      },
+      "orientationIgnored": false,
+      "baselineEdits": [
+        "lib/matplotlib/category.py"
+      ],
+      "treatmentEdits": [
+        "lib/matplotlib/category.py"
+      ],
+      "orientationFiles": [
+        "lib/matplotlib/units.py",
+        "lib/matplotlib/category.py",
+        "lib/matplotlib/tests/test_rcparams.py",
+        "lib/matplotlib/axis.py"
+      ],
+      "baselineResolved": true,
+      "treatmentResolved": true,
+      "outcome": "BOTH"
+    },
+    {
+      "instanceId": "django__django-11820",
+      "repo": "django/django",
+      "stratum": "extension",
+      "m173Overlap": false,
+      "goldFiles": [
+        "django/db/models/base.py"
+      ],
+      "goldFileCount": 1,
+      "orientationDelivered": true,
+      "focusAt": "django/db/models/base.py::Model._check_ordering",
+      "focusFile": "django/db/models/base.py",
+      "goldFileInOrientation": true,
+      "goldSymbolInOrientation": false,
+      "focusIsGoldFile": true,
+      "treatmentEditedFocus": true,
+      "treatmentEditedAnyGoldFile": true,
+      "baselineEditedAnyGoldFile": true,
+      "baselineReachedOrientationEvidence": true,
+      "treatmentAdoption": {
+        "touchedAny": true,
+        "firstTouchIndex": 0,
+        "touchedCount": 1
+      },
+      "baselineAdoption": {
+        "touchedAny": true,
+        "firstTouchIndex": 2,
+        "touchedCount": 1
+      },
+      "orientationIgnored": false,
+      "baselineEdits": [
+        "django/db/models/base.py"
+      ],
+      "treatmentEdits": [
+        "django/db/models/base.py"
+      ],
+      "orientationFiles": [
+        "django/db/models/base.py",
+        "django/db/models/fields/reverse_related.py",
+        "django/core/checks/messages.py",
+        "django/core/exceptions.py",
+        "django/db/models/constants.py"
+      ],
+      "baselineResolved": false,
+      "treatmentResolved": false,
+      "outcome": "NEITHER"
+    },
+    {
+      "instanceId": "mwaskom__seaborn-3187",
+      "repo": "mwaskom/seaborn",
+      "stratum": "replication",
+      "m173Overlap": true,
+      "goldFiles": [
+        "seaborn/_core/scales.py",
+        "seaborn/utils.py"
+      ],
+      "goldFileCount": 2,
+      "orientationDelivered": true,
+      "focusAt": "seaborn/utils.py::move_legend",
+      "focusFile": "seaborn/utils.py",
+      "goldFileInOrientation": true,
+      "goldSymbolInOrientation": false,
+      "focusIsGoldFile": true,
+      "treatmentEditedFocus": false,
+      "treatmentEditedAnyGoldFile": true,
+      "baselineEditedAnyGoldFile": true,
+      "baselineReachedOrientationEvidence": true,
+      "treatmentAdoption": {
+        "touchedAny": true,
+        "firstTouchIndex": 4,
+        "touchedCount": 1
+      },
+      "baselineAdoption": {
+        "touchedAny": true,
+        "firstTouchIndex": 4,
+        "touchedCount": 1
+      },
+      "orientationIgnored": false,
+      "baselineEdits": [
+        "seaborn/_core/plot.py",
+        "seaborn/_core/scales.py"
+      ],
+      "treatmentEdits": [
+        "seaborn/_core/plot.py",
+        "seaborn/_core/scales.py"
+      ],
+      "orientationFiles": [
+        "seaborn/utils.py",
+        "seaborn/_core/plot.py",
+        "tests/test_utils.py"
+      ],
+      "baselineResolved": false,
+      "treatmentResolved": false,
+      "outcome": "NEITHER"
+    },
+    {
+      "instanceId": "django__django-12273",
+      "repo": "django/django",
+      "stratum": "extension",
+      "m173Overlap": false,
+      "goldFiles": [
+        "django/db/models/base.py"
+      ],
+      "goldFileCount": 1,
+      "orientationDelivered": true,
+      "focusAt": "django/forms/models.py::BaseModelFormSet.save",
+      "focusFile": "django/forms/models.py",
+      "goldFileInOrientation": false,
+      "goldSymbolInOrientation": false,
+      "focusIsGoldFile": false,
+      "treatmentEditedFocus": false,
+      "treatmentEditedAnyGoldFile": true,
+      "baselineEditedAnyGoldFile": true,
+      "baselineReachedOrientationEvidence": false,
+      "treatmentAdoption": {
+        "touchedAny": false,
+        "firstTouchIndex": null,
+        "touchedCount": 0
+      },
+      "baselineAdoption": {
+        "touchedAny": false,
+        "firstTouchIndex": null,
+        "touchedCount": 0
+      },
+      "orientationIgnored": true,
+      "baselineEdits": [
+        "django/db/models/base.py"
+      ],
+      "treatmentEdits": [
+        "django/db/models/base.py"
+      ],
+      "orientationFiles": [
+        "django/forms/models.py",
+        "django/db/models/fields/__init__.py"
+      ],
+      "baselineResolved": false,
+      "treatmentResolved": false,
+      "outcome": "NEITHER"
+    },
+    {
+      "instanceId": "pallets__flask-5014",
+      "repo": "pallets/flask",
+      "stratum": "replication",
+      "m173Overlap": true,
+      "goldFiles": [
+        "src/flask/blueprints.py"
+      ],
+      "goldFileCount": 1,
+      "orientationDelivered": true,
+      "focusAt": "src/flask/blueprints.py::Blueprint",
+      "focusFile": "src/flask/blueprints.py",
+      "goldFileInOrientation": true,
+      "goldSymbolInOrientation": false,
+      "focusIsGoldFile": true,
+      "treatmentEditedFocus": true,
+      "treatmentEditedAnyGoldFile": true,
+      "baselineEditedAnyGoldFile": true,
+      "baselineReachedOrientationEvidence": true,
+      "treatmentAdoption": {
+        "touchedAny": true,
+        "firstTouchIndex": 0,
+        "touchedCount": 1
+      },
+      "baselineAdoption": {
+        "touchedAny": true,
+        "firstTouchIndex": 1,
+        "touchedCount": 1
+      },
+      "orientationIgnored": false,
+      "baselineEdits": [
+        "src/flask/blueprints.py"
+      ],
+      "treatmentEdits": [
+        "src/flask/blueprints.py"
+      ],
+      "orientationFiles": [
+        "src/flask/blueprints.py",
+        "src/flask/app.py",
+        "tests/test_async.py",
+        "tests/test_basic.py"
+      ],
+      "baselineResolved": true,
+      "treatmentResolved": true,
+      "outcome": "BOTH"
+    },
+    {
+      "instanceId": "django__django-12325",
+      "repo": "django/django",
+      "stratum": "extension",
+      "m173Overlap": false,
+      "goldFiles": [
+        "django/db/models/base.py",
+        "django/db/models/options.py"
+      ],
+      "goldFileCount": 2,
+      "orientationDelivered": true,
+      "focusAt": "django/core/exceptions.py::ImproperlyConfigured",
+      "focusFile": "django/core/exceptions.py",
+      "goldFileInOrientation": false,
+      "goldSymbolInOrientation": false,
+      "focusIsGoldFile": false,
+      "treatmentEditedFocus": false,
+      "treatmentEditedAnyGoldFile": true,
+      "baselineEditedAnyGoldFile": true,
+      "baselineReachedOrientationEvidence": false,
+      "treatmentAdoption": {
+        "touchedAny": false,
+        "firstTouchIndex": null,
+        "touchedCount": 0
+      },
+      "baselineAdoption": {
+        "touchedAny": false,
+        "firstTouchIndex": null,
+        "touchedCount": 0
+      },
+      "orientationIgnored": true,
+      "baselineEdits": [
+        "django/db/models/base.py"
+      ],
+      "treatmentEdits": [
+        "django/db/models/base.py"
+      ],
+      "orientationFiles": [
+        "django/core/exceptions.py",
+        "django/db/models/sql/query.py",
+        "django/apps/config.py",
+        "django/apps/registry.py",
+        "django/conf/__init__.py"
+      ],
+      "baselineResolved": false,
+      "treatmentResolved": true,
+      "outcome": "TREATMENT_ONLY"
+    },
+    {
+      "instanceId": "psf__requests-1724",
+      "repo": "psf/requests",
+      "stratum": "replication",
+      "m173Overlap": true,
+      "goldFiles": [
+        "requests/sessions.py"
+      ],
+      "goldFileCount": 1,
+      "orientationDelivered": true,
+      "focusAt": "requests/sessions.py::Session.send",
+      "focusFile": "requests/sessions.py",
+      "goldFileInOrientation": true,
+      "goldSymbolInOrientation": false,
+      "focusIsGoldFile": true,
+      "treatmentEditedFocus": false,
+      "treatmentEditedAnyGoldFile": false,
+      "baselineEditedAnyGoldFile": false,
+      "baselineReachedOrientationEvidence": false,
+      "treatmentAdoption": {
+        "touchedAny": false,
+        "firstTouchIndex": null,
+        "touchedCount": 0
+      },
+      "baselineAdoption": {
+        "touchedAny": false,
+        "firstTouchIndex": null,
+        "touchedCount": 0
+      },
+      "orientationIgnored": true,
+      "baselineEdits": [
+        "requests/models.py"
+      ],
+      "treatmentEdits": [
+        "requests/models.py"
+      ],
+      "orientationFiles": [
+        "requests/sessions.py",
+        "requests/packages/urllib3/response.py",
+        "requests/cookies.py",
+        "requests/hooks.py"
+      ],
+      "baselineResolved": true,
+      "treatmentResolved": true,
+      "outcome": "BOTH"
+    },
+    {
+      "instanceId": "django__django-13195",
+      "repo": "django/django",
+      "stratum": "extension",
+      "m173Overlap": false,
+      "goldFiles": [
+        "django/contrib/messages/storage/cookie.py",
+        "django/contrib/sessions/middleware.py",
+        "django/http/response.py"
+      ],
+      "goldFileCount": 3,
+      "orientationDelivered": true,
+      "focusAt": "django/http/response.py::HttpResponseBase.delete_cookie",
+      "focusFile": "django/http/response.py",
+      "goldFileInOrientation": true,
+      "goldSymbolInOrientation": true,
+      "focusIsGoldFile": true,
+      "treatmentEditedFocus": true,
+      "treatmentEditedAnyGoldFile": true,
+      "baselineEditedAnyGoldFile": true,
+      "baselineReachedOrientationEvidence": true,
+      "treatmentAdoption": {
+        "touchedAny": true,
+        "firstTouchIndex": 0,
+        "touchedCount": 1
+      },
+      "baselineAdoption": {
+        "touchedAny": true,
+        "firstTouchIndex": 1,
+        "touchedCount": 1
+      },
+      "orientationIgnored": false,
+      "baselineEdits": [
+        "django/contrib/messages/storage/cookie.py",
+        "django/contrib/sessions/middleware.py",
+        "django/http/response.py"
+      ],
+      "treatmentEdits": [
+        "django/contrib/messages/storage/cookie.py",
+        "django/contrib/sessions/middleware.py",
+        "django/http/response.py"
+      ],
+      "orientationFiles": [
+        "django/http/response.py",
+        "django/http/cookie.py"
+      ],
+      "baselineResolved": false,
+      "treatmentResolved": false,
+      "outcome": "NEITHER"
+    },
+    {
+      "instanceId": "pydata__xarray-6599",
+      "repo": "pydata/xarray",
+      "stratum": "replication",
+      "m173Overlap": true,
+      "goldFiles": [
+        "xarray/core/computation.py"
+      ],
+      "goldFileCount": 1,
+      "orientationDelivered": true,
+      "focusAt": "xarray/core/computation.py::polyval",
+      "focusFile": "xarray/core/computation.py",
+      "goldFileInOrientation": true,
+      "goldSymbolInOrientation": false,
+      "focusIsGoldFile": true,
+      "treatmentEditedFocus": true,
+      "treatmentEditedAnyGoldFile": true,
+      "baselineEditedAnyGoldFile": true,
+      "baselineReachedOrientationEvidence": true,
+      "treatmentAdoption": {
+        "touchedAny": true,
+        "firstTouchIndex": 0,
+        "touchedCount": 1
+      },
+      "baselineAdoption": {
+        "touchedAny": true,
+        "firstTouchIndex": 1,
+        "touchedCount": 1
+      },
+      "orientationIgnored": false,
+      "baselineEdits": [
+        "xarray/core/computation.py"
+      ],
+      "treatmentEdits": [
+        "xarray/core/computation.py"
+      ],
+      "orientationFiles": [
+        "xarray/core/computation.py",
+        "asv_bench/benchmarks/polyfit.py"
+      ],
+      "baselineResolved": true,
+      "treatmentResolved": true,
+      "outcome": "BOTH"
+    },
+    {
+      "instanceId": "django__django-13513",
+      "repo": "django/django",
+      "stratum": "extension",
+      "m173Overlap": false,
+      "goldFiles": [
+        "django/views/debug.py"
+      ],
+      "goldFileCount": 1,
+      "orientationDelivered": true,
+      "focusAt": "django/views/generic/__init__.py::GenericViewError",
+      "focusFile": "django/views/generic/__init__.py",
+      "goldFileInOrientation": true,
+      "goldSymbolInOrientation": false,
+      "focusIsGoldFile": false,
+      "treatmentEditedFocus": false,
+      "treatmentEditedAnyGoldFile": false,
+      "baselineEditedAnyGoldFile": false,
+      "baselineReachedOrientationEvidence": false,
+      "treatmentAdoption": {
+        "touchedAny": true,
+        "firstTouchIndex": 1,
+        "touchedCount": 1
+      },
+      "baselineAdoption": {
+        "touchedAny": true,
+        "firstTouchIndex": 1,
+        "touchedCount": 1
+      },
+      "orientationIgnored": false,
+      "baselineEdits": [],
+      "treatmentEdits": [],
+      "orientationFiles": [
+        "django/views/generic/__init__.py",
+        "django/views/debug.py"
+      ],
+      "baselineResolved": false,
+      "treatmentResolved": false,
+      "outcome": "NEITHER"
+    },
+    {
+      "instanceId": "pylint-dev__pylint-4551",
+      "repo": "pylint-dev/pylint",
+      "stratum": "replication",
+      "m173Overlap": true,
+      "goldFiles": [
+        "pylint/pyreverse/diagrams.py",
+        "pylint/pyreverse/inspector.py",
+        "pylint/pyreverse/utils.py",
+        "pylint/pyreverse/writer.py"
+      ],
+      "goldFileCount": 4,
+      "orientationDelivered": true,
+      "focusAt": "pylint/lint/pylinter.py::PyLinter.python3_porting_mode",
+      "focusFile": "pylint/lint/pylinter.py",
+      "goldFileInOrientation": false,
+      "goldSymbolInOrientation": false,
+      "focusIsGoldFile": false,
+      "treatmentEditedFocus": false,
+      "treatmentEditedAnyGoldFile": true,
+      "baselineEditedAnyGoldFile": true,
+      "baselineReachedOrientationEvidence": false,
+      "treatmentAdoption": {
+        "touchedAny": false,
+        "firstTouchIndex": null,
+        "touchedCount": 0
+      },
+      "baselineAdoption": {
+        "touchedAny": false,
+        "firstTouchIndex": null,
+        "touchedCount": 0
+      },
+      "orientationIgnored": true,
+      "baselineEdits": [
+        "pylint/pyreverse/diagrams.py",
+        "pylint/pyreverse/inspector.py"
+      ],
+      "treatmentEdits": [
+        "pylint/pyreverse/diagrams.py",
+        "pylint/pyreverse/inspector.py"
+      ],
+      "orientationFiles": [
+        "pylint/lint/pylinter.py",
+        "pylint/checkers/python3.py",
+        "pylint/config/option_manager_mixin.py",
+        "pylint/message/message_handler_mix_in.py"
+      ],
+      "baselineResolved": false,
+      "treatmentResolved": false,
+      "outcome": "NEITHER"
+    },
+    {
+      "instanceId": "django__django-13820",
+      "repo": "django/django",
+      "stratum": "extension",
+      "m173Overlap": false,
+      "goldFiles": [
+        "django/db/migrations/loader.py"
+      ],
+      "goldFileCount": 1,
+      "orientationDelivered": true,
+      "focusAt": "django/db/migrations/loader.py::MigrationLoader",
+      "focusFile": "django/db/migrations/loader.py",
+      "goldFileInOrientation": true,
+      "goldSymbolInOrientation": false,
+      "focusIsGoldFile": true,
+      "treatmentEditedFocus": true,
+      "treatmentEditedAnyGoldFile": true,
+      "baselineEditedAnyGoldFile": true,
+      "baselineReachedOrientationEvidence": true,
+      "treatmentAdoption": {
+        "touchedAny": true,
+        "firstTouchIndex": 0,
+        "touchedCount": 1
+      },
+      "baselineAdoption": {
+        "touchedAny": true,
+        "firstTouchIndex": 1,
+        "touchedCount": 1
+      },
+      "orientationIgnored": false,
+      "baselineEdits": [
+        "django/db/migrations/loader.py"
+      ],
+      "treatmentEdits": [
+        "django/db/migrations/loader.py"
+      ],
+      "orientationFiles": [
+        "django/db/migrations/loader.py",
+        "django/db/migrations/migration.py",
+        "django/db/migrations/state.py",
+        "django/core/management/commands/makemigrations.py",
+        "django/core/management/commands/squashmigrations.py",
+        "django/core/management/commands/showmigrations.py"
+      ],
+      "baselineResolved": true,
+      "treatmentResolved": true,
+      "outcome": "BOTH"
+    },
+    {
+      "instanceId": "pytest-dev__pytest-7432",
+      "repo": "pytest-dev/pytest",
+      "stratum": "replication",
+      "m173Overlap": true,
+      "goldFiles": [
+        "src/_pytest/skipping.py"
+      ],
+      "goldFileCount": 1,
+      "orientationDelivered": true,
+      "focusAt": "src/_pytest/skipping.py::evaluate_skip_marks",
+      "focusFile": "src/_pytest/skipping.py",
+      "goldFileInOrientation": true,
+      "goldSymbolInOrientation": false,
+      "focusIsGoldFile": true,
+      "treatmentEditedFocus": true,
+      "treatmentEditedAnyGoldFile": true,
+      "baselineEditedAnyGoldFile": true,
+      "baselineReachedOrientationEvidence": true,
+      "treatmentAdoption": {
+        "touchedAny": true,
+        "firstTouchIndex": 0,
+        "touchedCount": 1
+      },
+      "baselineAdoption": {
+        "touchedAny": true,
+        "firstTouchIndex": 0,
+        "touchedCount": 1
+      },
+      "orientationIgnored": false,
+      "baselineEdits": [
+        "src/_pytest/skipping.py"
+      ],
+      "treatmentEdits": [
+        "src/_pytest/skipping.py"
+      ],
+      "orientationFiles": [
+        "src/_pytest/skipping.py",
+        ".github/labels.toml",
+        "testing/test_skipping.py"
+      ],
+      "baselineResolved": true,
+      "treatmentResolved": true,
+      "outcome": "BOTH"
+    },
+    {
+      "instanceId": "django__django-16569",
+      "repo": "django/django",
+      "stratum": "extension",
+      "m173Overlap": false,
+      "goldFiles": [
+        "django/forms/formsets.py"
+      ],
+      "goldFileCount": 1,
+      "orientationDelivered": true,
+      "focusAt": "django/forms/formsets.py::BaseFormSet.add_fields",
+      "focusFile": "django/forms/formsets.py",
+      "goldFileInOrientation": true,
+      "goldSymbolInOrientation": false,
+      "focusIsGoldFile": true,
+      "treatmentEditedFocus": true,
+      "treatmentEditedAnyGoldFile": true,
+      "baselineEditedAnyGoldFile": true,
+      "baselineReachedOrientationEvidence": true,
+      "treatmentAdoption": {
+        "touchedAny": true,
+        "firstTouchIndex": 0,
+        "touchedCount": 1
+      },
+      "baselineAdoption": {
+        "touchedAny": true,
+        "firstTouchIndex": 0,
+        "touchedCount": 1
+      },
+      "orientationIgnored": false,
+      "baselineEdits": [
+        "django/forms/formsets.py"
+      ],
+      "treatmentEdits": [
+        "django/forms/formsets.py"
+      ],
+      "orientationFiles": [
+        "django/forms/formsets.py",
+        "django/forms/models.py",
+        "tests/auth_tests/test_auth_backends.py",
+        "tests/model_formsets_regress/tests.py"
+      ],
+      "baselineResolved": true,
+      "treatmentResolved": true,
+      "outcome": "BOTH"
+    },
+    {
+      "instanceId": "scikit-learn__scikit-learn-10844",
+      "repo": "scikit-learn/scikit-learn",
+      "stratum": "replication",
+      "m173Overlap": true,
+      "goldFiles": [
+        "sklearn/metrics/cluster/supervised.py"
+      ],
+      "goldFileCount": 1,
+      "orientationDelivered": true,
+      "focusAt": "sklearn/metrics/cluster/supervised.py::fowlkes_mallows_score",
+      "focusFile": "sklearn/metrics/cluster/supervised.py",
+      "goldFileInOrientation": true,
+      "goldSymbolInOrientation": false,
+      "focusIsGoldFile": true,
+      "treatmentEditedFocus": true,
+      "treatmentEditedAnyGoldFile": true,
+      "baselineEditedAnyGoldFile": true,
+      "baselineReachedOrientationEvidence": true,
+      "treatmentAdoption": {
+        "touchedAny": true,
+        "firstTouchIndex": 0,
+        "touchedCount": 1
+      },
+      "baselineAdoption": {
+        "touchedAny": true,
+        "firstTouchIndex": 1,
+        "touchedCount": 1
+      },
+      "orientationIgnored": false,
+      "baselineEdits": [
+        "sklearn/metrics/cluster/supervised.py"
+      ],
+      "treatmentEdits": [
+        "sklearn/metrics/cluster/supervised.py"
+      ],
+      "orientationFiles": [
+        "sklearn/metrics/cluster/supervised.py",
+        "sklearn/learning_curve.py",
+        "sklearn/metrics/cluster/tests/test_supervised.py"
+      ],
+      "baselineResolved": true,
+      "treatmentResolved": true,
+      "outcome": "BOTH"
+    },
+    {
+      "instanceId": "django__django-17084",
+      "repo": "django/django",
+      "stratum": "extension",
+      "m173Overlap": false,
+      "goldFiles": [
+        "django/db/models/sql/query.py"
+      ],
+      "goldFileCount": 1,
+      "orientationDelivered": true,
+      "focusAt": "django/db/models/functions/window.py::LastValue",
+      "focusFile": "django/db/models/functions/window.py",
+      "goldFileInOrientation": false,
+      "goldSymbolInOrientation": false,
+      "focusIsGoldFile": false,
+      "treatmentEditedFocus": false,
+      "treatmentEditedAnyGoldFile": true,
+      "baselineEditedAnyGoldFile": true,
+      "baselineReachedOrientationEvidence": false,
+      "treatmentAdoption": {
+        "touchedAny": true,
+        "firstTouchIndex": 2,
+        "touchedCount": 2
+      },
+      "baselineAdoption": {
+        "touchedAny": true,
+        "firstTouchIndex": 9,
+        "touchedCount": 1
+      },
+      "orientationIgnored": false,
+      "baselineEdits": [
+        "django/db/models/sql/query.py"
+      ],
+      "treatmentEdits": [
+        "django/db/models/sql/query.py"
+      ],
+      "orientationFiles": [
+        "django/db/models/functions/window.py",
+        "django/db/models/expressions.py",
+        "tests/expressions_window/tests.py"
+      ],
+      "baselineResolved": true,
+      "treatmentResolved": true,
+      "outcome": "BOTH"
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-7462",
+      "repo": "sphinx-doc/sphinx",
+      "stratum": "replication",
+      "m173Overlap": true,
+      "goldFiles": [
+        "sphinx/domains/python.py",
+        "sphinx/pycode/ast.py"
+      ],
+      "goldFileCount": 2,
+      "orientationDelivered": true,
+      "focusAt": "sphinx/domains/python.py::_parse_annotation",
+      "focusFile": "sphinx/domains/python.py",
+      "goldFileInOrientation": true,
+      "goldSymbolInOrientation": false,
+      "focusIsGoldFile": true,
+      "treatmentEditedFocus": true,
+      "treatmentEditedAnyGoldFile": true,
+      "baselineEditedAnyGoldFile": true,
+      "baselineReachedOrientationEvidence": true,
+      "treatmentAdoption": {
+        "touchedAny": true,
+        "firstTouchIndex": 0,
+        "touchedCount": 1
+      },
+      "baselineAdoption": {
+        "touchedAny": true,
+        "firstTouchIndex": 0,
+        "touchedCount": 1
+      },
+      "orientationIgnored": false,
+      "baselineEdits": [
+        "sphinx/domains/python.py"
+      ],
+      "treatmentEdits": [
+        "sphinx/domains/python.py"
+      ],
+      "orientationFiles": [
+        "sphinx/domains/python.py",
+        "tests/test_domain_py.py",
+        "sphinx/addnodes.py"
+      ],
+      "baselineResolved": false,
+      "treatmentResolved": false,
+      "outcome": "NEITHER"
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-26466",
+      "repo": "matplotlib/matplotlib",
+      "stratum": "extension",
+      "m173Overlap": false,
+      "goldFiles": [
+        "lib/matplotlib/text.py"
+      ],
+      "goldFileCount": 1,
+      "orientationDelivered": true,
+      "focusAt": "lib/matplotlib/transforms.py::Bbox.update_from_data_xy",
+      "focusFile": "lib/matplotlib/transforms.py",
+      "goldFileInOrientation": false,
+      "goldSymbolInOrientation": false,
+      "focusIsGoldFile": false,
+      "treatmentEditedFocus": false,
+      "treatmentEditedAnyGoldFile": true,
+      "baselineEditedAnyGoldFile": true,
+      "baselineReachedOrientationEvidence": false,
+      "treatmentAdoption": {
+        "touchedAny": false,
+        "firstTouchIndex": null,
+        "touchedCount": 0
+      },
+      "baselineAdoption": {
+        "touchedAny": false,
+        "firstTouchIndex": null,
+        "touchedCount": 0
+      },
+      "orientationIgnored": true,
+      "baselineEdits": [
+        "lib/matplotlib/text.py"
+      ],
+      "treatmentEdits": [
+        "lib/matplotlib/text.py"
+      ],
+      "orientationFiles": [
+        "lib/matplotlib/transforms.py",
+        "lib/matplotlib/backend_bases.py",
+        "lib/matplotlib/path.py"
+      ],
+      "baselineResolved": false,
+      "treatmentResolved": false,
+      "outcome": "NEITHER"
+    },
+    {
+      "instanceId": "sympy__sympy-13480",
+      "repo": "sympy/sympy",
+      "stratum": "replication",
+      "m173Overlap": true,
+      "goldFiles": [
+        "sympy/functions/elementary/hyperbolic.py"
+      ],
+      "goldFileCount": 1,
+      "orientationDelivered": true,
+      "focusAt": "sympy/functions/elementary/hyperbolic.py::coth",
+      "focusFile": "sympy/functions/elementary/hyperbolic.py",
+      "goldFileInOrientation": true,
+      "goldSymbolInOrientation": false,
+      "focusIsGoldFile": true,
+      "treatmentEditedFocus": true,
+      "treatmentEditedAnyGoldFile": true,
+      "baselineEditedAnyGoldFile": true,
+      "baselineReachedOrientationEvidence": true,
+      "treatmentAdoption": {
+        "touchedAny": true,
+        "firstTouchIndex": 0,
+        "touchedCount": 1
+      },
+      "baselineAdoption": {
+        "touchedAny": true,
+        "firstTouchIndex": 0,
+        "touchedCount": 1
+      },
+      "orientationIgnored": false,
+      "baselineEdits": [
+        "sympy/functions/elementary/hyperbolic.py"
+      ],
+      "treatmentEdits": [
+        "sympy/functions/elementary/hyperbolic.py"
+      ],
+      "orientationFiles": [
+        "sympy/functions/elementary/hyperbolic.py",
+        "sympy/functions/elementary/exponential.py"
+      ],
+      "baselineResolved": true,
+      "treatmentResolved": true,
+      "outcome": "BOTH"
+    },
+    {
+      "instanceId": "psf__requests-5414",
+      "repo": "psf/requests",
+      "stratum": "extension",
+      "m173Overlap": false,
+      "goldFiles": [
+        "requests/models.py"
+      ],
+      "goldFileCount": 1,
+      "orientationDelivered": true,
+      "focusAt": "requests/models.py::PreparedRequest.prepare_url",
+      "focusFile": "requests/models.py",
+      "goldFileInOrientation": true,
+      "goldSymbolInOrientation": false,
+      "focusIsGoldFile": true,
+      "treatmentEditedFocus": true,
+      "treatmentEditedAnyGoldFile": true,
+      "baselineEditedAnyGoldFile": true,
+      "baselineReachedOrientationEvidence": true,
+      "treatmentAdoption": {
+        "touchedAny": true,
+        "firstTouchIndex": 0,
+        "touchedCount": 2
+      },
+      "baselineAdoption": {
+        "touchedAny": true,
+        "firstTouchIndex": 2,
+        "touchedCount": 1
+      },
+      "orientationIgnored": false,
+      "baselineEdits": [
+        "requests/models.py"
+      ],
+      "treatmentEdits": [
+        "requests/models.py"
+      ],
+      "orientationFiles": [
+        "requests/models.py",
+        "requests/exceptions.py",
+        "requests/_internal_utils.py"
+      ],
+      "baselineResolved": true,
+      "treatmentResolved": false,
+      "outcome": "BASELINE_ONLY"
+    },
+    {
+      "instanceId": "pydata__xarray-4695",
+      "repo": "pydata/xarray",
+      "stratum": "extension",
+      "m173Overlap": false,
+      "goldFiles": [
+        "xarray/core/dataarray.py"
+      ],
+      "goldFileCount": 1,
+      "orientationDelivered": true,
+      "focusAt": "xarray/backends/api.py::_get_backend_cls",
+      "focusFile": "xarray/backends/api.py",
+      "goldFileInOrientation": false,
+      "goldSymbolInOrientation": false,
+      "focusIsGoldFile": false,
+      "treatmentEditedFocus": false,
+      "treatmentEditedAnyGoldFile": true,
+      "baselineEditedAnyGoldFile": true,
+      "baselineReachedOrientationEvidence": false,
+      "treatmentAdoption": {
+        "touchedAny": false,
+        "firstTouchIndex": null,
+        "touchedCount": 0
+      },
+      "baselineAdoption": {
+        "touchedAny": false,
+        "firstTouchIndex": null,
+        "touchedCount": 0
+      },
+      "orientationIgnored": true,
+      "baselineEdits": [
+        "xarray/core/dataarray.py"
+      ],
+      "treatmentEdits": [
+        "xarray/core/dataarray.py"
+      ],
+      "orientationFiles": [
+        "xarray/backends/api.py",
+        "xarray/core/variable.py",
+        "xarray/backends/apiv2.py"
+      ],
+      "baselineResolved": true,
+      "treatmentResolved": true,
+      "outcome": "BOTH"
+    },
+    {
+      "instanceId": "pytest-dev__pytest-6197",
+      "repo": "pytest-dev/pytest",
+      "stratum": "extension",
+      "m173Overlap": false,
+      "goldFiles": [
+        "src/_pytest/python.py"
+      ],
+      "goldFileCount": 1,
+      "orientationDelivered": true,
+      "focusAt": "src/_pytest/assertion/__init__.py::pytest_collection",
+      "focusFile": "src/_pytest/assertion/__init__.py",
+      "goldFileInOrientation": false,
+      "goldSymbolInOrientation": true,
+      "focusIsGoldFile": false,
+      "treatmentEditedFocus": false,
+      "treatmentEditedAnyGoldFile": true,
+      "baselineEditedAnyGoldFile": false,
+      "baselineReachedOrientationEvidence": false,
+      "treatmentAdoption": {
+        "touchedAny": false,
+        "firstTouchIndex": null,
+        "touchedCount": 0
+      },
+      "baselineAdoption": {
+        "touchedAny": false,
+        "firstTouchIndex": null,
+        "touchedCount": 0
+      },
+      "orientationIgnored": true,
+      "baselineEdits": [
+        "src/_pytest/main.py"
+      ],
+      "treatmentEdits": [
+        "src/_pytest/python.py"
+      ],
+      "orientationFiles": [
+        "src/_pytest/assertion/__init__.py",
+        "CODE_OF_CONDUCT.md"
+      ],
+      "baselineResolved": true,
+      "treatmentResolved": false,
+      "outcome": "BASELINE_ONLY"
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-9320",
+      "repo": "sphinx-doc/sphinx",
+      "stratum": "extension",
+      "m173Overlap": false,
+      "goldFiles": [
+        "sphinx/cmd/quickstart.py"
+      ],
+      "goldFileCount": 1,
+      "orientationDelivered": true,
+      "focusAt": "sphinx/cmd/quickstart.py::QuickstartRenderer._has_custom_template",
+      "focusFile": "sphinx/cmd/quickstart.py",
+      "goldFileInOrientation": true,
+      "goldSymbolInOrientation": false,
+      "focusIsGoldFile": true,
+      "treatmentEditedFocus": true,
+      "treatmentEditedAnyGoldFile": true,
+      "baselineEditedAnyGoldFile": true,
+      "baselineReachedOrientationEvidence": true,
+      "treatmentAdoption": {
+        "touchedAny": true,
+        "firstTouchIndex": 0,
+        "touchedCount": 1
+      },
+      "baselineAdoption": {
+        "touchedAny": true,
+        "firstTouchIndex": 2,
+        "touchedCount": 1
+      },
+      "orientationIgnored": false,
+      "baselineEdits": [
+        "sphinx/cmd/quickstart.py"
+      ],
+      "treatmentEdits": [
+        "sphinx/cmd/quickstart.py"
+      ],
+      "orientationFiles": [
+        "sphinx/cmd/quickstart.py",
+        "sphinx/util/cfamily.py",
+        "sphinx/ext/napoleon/__init__.py"
+      ],
+      "baselineResolved": true,
+      "treatmentResolved": true,
+      "outcome": "BOTH"
+    },
+    {
+      "instanceId": "sympy__sympy-12419",
+      "repo": "sympy/sympy",
+      "stratum": "extension",
+      "m173Overlap": false,
+      "goldFiles": [
+        "sympy/matrices/expressions/matexpr.py"
+      ],
+      "goldFileCount": 1,
+      "orientationDelivered": true,
+      "focusAt": "sympy/physics/quantum/identitysearch.py::is_scalar_sparse_matrix",
+      "focusFile": "sympy/physics/quantum/identitysearch.py",
+      "goldFileInOrientation": false,
+      "goldSymbolInOrientation": false,
+      "focusIsGoldFile": false,
+      "treatmentEditedFocus": false,
+      "treatmentEditedAnyGoldFile": true,
+      "baselineEditedAnyGoldFile": true,
+      "baselineReachedOrientationEvidence": false,
+      "treatmentAdoption": {
+        "touchedAny": false,
+        "firstTouchIndex": null,
+        "touchedCount": 0
+      },
+      "baselineAdoption": {
+        "touchedAny": false,
+        "firstTouchIndex": null,
+        "touchedCount": 0
+      },
+      "orientationIgnored": true,
+      "baselineEdits": [
+        "sympy/matrices/expressions/matexpr.py"
+      ],
+      "treatmentEdits": [
+        "sympy/assumptions/sathandlers.py",
+        "sympy/core/basic.py",
+        "sympy/matrices/expressions/diagonal.py",
+        "sympy/matrices/expressions/matexpr.py",
+        "sympy/plotting/plot.py"
+      ],
+      "orientationFiles": [
+        "sympy/physics/quantum/identitysearch.py",
+        "sympy/assumptions/handlers/matrices.py",
+        "sympy/physics/quantum/tests/test_identitysearch.py",
+        "sympy/physics/quantum/represent.py"
+      ],
+      "baselineResolved": true,
+      "treatmentResolved": true,
+      "outcome": "BOTH"
+    },
+    {
+      "instanceId": "sympy__sympy-13372",
+      "repo": "sympy/sympy",
+      "stratum": "extension",
+      "m173Overlap": false,
+      "goldFiles": [
+        "sympy/core/evalf.py"
+      ],
+      "goldFileCount": 1,
+      "orientationDelivered": true,
+      "focusAt": "sympy/core/evalf.py::evalf",
+      "focusFile": "sympy/core/evalf.py",
+      "goldFileInOrientation": true,
+      "goldSymbolInOrientation": false,
+      "focusIsGoldFile": true,
+      "treatmentEditedFocus": true,
+      "treatmentEditedAnyGoldFile": true,
+      "baselineEditedAnyGoldFile": true,
+      "baselineReachedOrientationEvidence": true,
+      "treatmentAdoption": {
+        "touchedAny": true,
+        "firstTouchIndex": 0,
+        "touchedCount": 1
+      },
+      "baselineAdoption": {
+        "touchedAny": true,
+        "firstTouchIndex": 0,
+        "touchedCount": 1
+      },
+      "orientationIgnored": false,
+      "baselineEdits": [
+        "sympy/core/evalf.py"
+      ],
+      "treatmentEdits": [
+        "sympy/core/evalf.py"
+      ],
+      "orientationFiles": [
+        "sympy/core/evalf.py"
+      ],
+      "baselineResolved": true,
+      "treatmentResolved": true,
+      "outcome": "BOTH"
+    },
+    {
+      "instanceId": "sympy__sympy-13974",
+      "repo": "sympy/sympy",
+      "stratum": "extension",
+      "m173Overlap": false,
+      "goldFiles": [
+        "sympy/physics/quantum/tensorproduct.py"
+      ],
+      "goldFileCount": 1,
+      "orientationDelivered": true,
+      "focusAt": "sympy/physics/quantum/tensorproduct.py::tensor_product_simp",
+      "focusFile": "sympy/physics/quantum/tensorproduct.py",
+      "goldFileInOrientation": true,
+      "goldSymbolInOrientation": false,
+      "focusIsGoldFile": true,
+      "treatmentEditedFocus": true,
+      "treatmentEditedAnyGoldFile": true,
+      "baselineEditedAnyGoldFile": true,
+      "baselineReachedOrientationEvidence": true,
+      "treatmentAdoption": {
+        "touchedAny": true,
+        "firstTouchIndex": 0,
+        "touchedCount": 1
+      },
+      "baselineAdoption": {
+        "touchedAny": true,
+        "firstTouchIndex": 2,
+        "touchedCount": 1
+      },
+      "orientationIgnored": false,
+      "baselineEdits": [
+        "sympy/physics/quantum/tensorproduct.py"
+      ],
+      "treatmentEdits": [
+        "sympy/physics/quantum/tensorproduct.py"
+      ],
+      "orientationFiles": [
+        "sympy/physics/quantum/tensorproduct.py",
+        "sympy/core/expr.py",
+        "sympy/physics/quantum/density.py",
+        "sympy/physics/quantum/tests/test_tensorproduct.py",
+        "sympy/physics/quantum/anticommutator.py"
+      ],
+      "baselineResolved": false,
+      "treatmentResolved": false,
+      "outcome": "NEITHER"
+    }
+  ]
+}

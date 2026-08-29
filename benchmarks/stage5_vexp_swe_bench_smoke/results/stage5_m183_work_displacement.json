@@ -1,0 +1,42 @@
+{
+  "schemaVersion": "stage5.m183.work-displacement.v1",
+  "milestone": "M183",
+  "workstream": "M183-E",
+  "pairs": 30,
+  "definitionOfFirstMeaningfulEdit": "the first tool call the harness categorised as `edit` whose target is a repository path; frozen in run_stage5_m183_pair_records.ts before any outcome was seen (§49)",
+  "reachedAnEdit": {
+    "baseline": 29,
+    "treatment": 29,
+    "of": 30
+  },
+  "preEditToolCalls": {
+    "baselineMedian": 6,
+    "treatmentMedian": 4,
+    "pairedMedianDelta": -1,
+    "distribution": {
+      "n": 30,
+      "median": -1,
+      "mean": -1.2,
+      "trimmedMean10": -1,
+      "p10": -5.1,
+      "p90": 2.1000000000000014,
+      "min": -14,
+      "max": 12,
+      "sum": -36,
+      "negative": 16,
+      "positive": 7,
+      "zero": 7
+    }
+  },
+  "preEditSearches": {
+    "baselineMedian": 2.5,
+    "treatmentMedian": 1,
+    "pairedMedianDelta": -1
+  },
+  "preEditReads": {
+    "baselineMedian": 2,
+    "treatmentMedian": 2,
+    "pairedMedianDelta": 0
+  },
+  "whyNotWallClock": "§48 — elapsed time is provider- and machine-noise dominated; requests and tool calls before the first edit are the countable quantity."
+}

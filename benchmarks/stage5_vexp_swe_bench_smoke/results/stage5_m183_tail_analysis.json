@@ -1,0 +1,175 @@
+{
+  "schemaVersion": "stage5.m183.tail-analysis.v1",
+  "milestone": "M183",
+  "workstream": "M183-E",
+  "note": "§101/§161 — the five largest paired deltas in each direction, so a pooled headline cannot hide them.",
+  "largestTreatmentPremium": [
+    {
+      "instanceId": "pylint-dev__pylint-4551",
+      "repo": "pylint-dev/pylint",
+      "outcome": "NEITHER_SOLVED",
+      "costDelta": 1.4174777499999998,
+      "baselineCost": 1.6097467500000002,
+      "treatmentCost": 3.0272245,
+      "tokenDelta": 1466280,
+      "baselineTurns": 81,
+      "treatmentTurns": 94,
+      "baselineToolCalls": 44,
+      "treatmentToolCalls": 40
+    },
+    {
+      "instanceId": "django__django-17084",
+      "repo": "django/django",
+      "outcome": "BOTH_SOLVED",
+      "costDelta": 0.6265049999999996,
+      "baselineCost": 0.8417780000000001,
+      "treatmentCost": 1.4682829999999998,
+      "tokenDelta": 1634203,
+      "baselineTurns": 57,
+      "treatmentTurns": 87,
+      "baselineToolCalls": 24,
+      "treatmentToolCalls": 42
+    },
+    {
+      "instanceId": "pytest-dev__pytest-6197",
+      "repo": "pytest-dev/pytest",
+      "outcome": "BASELINE_ONLY_WIN",
+      "costDelta": 0.18306449999999996,
+      "baselineCost": 0.9764284999999999,
+      "treatmentCost": 1.1594929999999999,
+      "tokenDelta": 105046,
+      "baselineTurns": 55,
+      "treatmentTurns": 54,
+      "baselineToolCalls": 23,
+      "treatmentToolCalls": 23
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-22719",
+      "repo": "matplotlib/matplotlib",
+      "outcome": "BOTH_SOLVED",
+      "costDelta": 0.1579175,
+      "baselineCost": 0.3476814999999999,
+      "treatmentCost": 0.5055989999999999,
+      "tokenDelta": 415545,
+      "baselineTurns": 20,
+      "treatmentTurns": 30,
+      "baselineToolCalls": 7,
+      "treatmentToolCalls": 11
+    },
+    {
+      "instanceId": "sympy__sympy-12419",
+      "repo": "sympy/sympy",
+      "outcome": "BOTH_SOLVED",
+      "costDelta": 0.13984949999999974,
+      "baselineCost": 1.321987,
+      "treatmentCost": 1.4618364999999998,
+      "tokenDelta": 505117,
+      "baselineTurns": 82,
+      "treatmentTurns": 93,
+      "baselineToolCalls": 34,
+      "treatmentToolCalls": 38
+    }
+  ],
+  "largestTreatmentSaving": [
+    {
+      "instanceId": "django__django-12273",
+      "repo": "django/django",
+      "outcome": "NEITHER_SOLVED",
+      "costDelta": -0.43691749999999985,
+      "baselineCost": 1.23916,
+      "treatmentCost": 0.8022425000000002,
+      "tokenDelta": -840318,
+      "baselineTurns": 51,
+      "treatmentTurns": 33,
+      "baselineToolCalls": 22,
+      "treatmentToolCalls": 13
+    },
+    {
+      "instanceId": "django__django-12325",
+      "repo": "django/django",
+      "outcome": "TREATMENT_ONLY_WIN",
+      "costDelta": -0.4185834999999999,
+      "baselineCost": 1.1869895,
+      "treatmentCost": 0.768406,
+      "tokenDelta": -1567919,
+      "baselineTurns": 85,
+      "treatmentTurns": 48,
+      "baselineToolCalls": 36,
+      "treatmentToolCalls": 17
+    },
+    {
+      "instanceId": "mwaskom__seaborn-3187",
+      "repo": "mwaskom/seaborn",
+      "outcome": "NEITHER_SOLVED",
+      "costDelta": -0.30973549999999994,
+      "baselineCost": 1.132431,
+      "treatmentCost": 0.8226955,
+      "tokenDelta": -875405,
+      "baselineTurns": 76,
+      "treatmentTurns": 55,
+      "baselineToolCalls": 31,
+      "treatmentToolCalls": 21
+    },
+    {
+      "instanceId": "astropy__astropy-14539",
+      "repo": "astropy/astropy",
+      "outcome": "BOTH_SOLVED",
+      "costDelta": -0.30059950000000013,
+      "baselineCost": 0.9635005000000001,
+      "treatmentCost": 0.662901,
+      "tokenDelta": -1131428,
+      "baselineTurns": 48,
+      "treatmentTurns": 23,
+      "baselineToolCalls": 20,
+      "treatmentToolCalls": 7
+    },
+    {
+      "instanceId": "django__django-13820",
+      "repo": "django/django",
+      "outcome": "BOTH_SOLVED",
+      "costDelta": -0.27456450000000004,
+      "baselineCost": 0.5055905,
+      "treatmentCost": 0.231026,
+      "tokenDelta": -856209,
+      "baselineTurns": 37,
+      "treatmentTurns": 8,
+      "baselineToolCalls": 14,
+      "treatmentToolCalls": 2
+    }
+  ],
+  "shareOfAggregateDeltaInTheseTenPairs": 19.172374812868874,
+  "byOutcome": {
+    "BOTH_SOLVED": {
+      "pairs": 17,
+      "medianCostDelta": 0.050750999999999935,
+      "aggregateCostDelta": 0.239260999999999,
+      "medianTokenDelta": 61420,
+      "aggregateBaselineCost": 8.165601500000001,
+      "aggregateTreatmentCost": 8.404862499999998
+    },
+    "TREATMENT_ONLY_WIN": {
+      "pairs": 2,
+      "medianCostDelta": -0.16357649999999985,
+      "aggregateCostDelta": -0.3271529999999997,
+      "medianTokenDelta": -419541,
+      "aggregateBaselineCost": 2.12334,
+      "aggregateTreatmentCost": 1.7961870000000002
+    },
+    "BASELINE_ONLY_WIN": {
+      "pairs": 2,
+      "medianCostDelta": -0.033942999999999945,
+      "aggregateCostDelta": -0.06788599999999989,
+      "medianTokenDelta": -270038.5,
+      "aggregateBaselineCost": 1.7246129999999997,
+      "aggregateTreatmentCost": 1.656727
+    },
+    "NEITHER_SOLVED": {
+      "pairs": 9,
+      "medianCostDelta": -0.10645249999999995,
+      "aggregateCostDelta": 0.19669174999999983,
+      "medianTokenDelta": -265708,
+      "aggregateBaselineCost": 7.131176250000001,
+      "aggregateTreatmentCost": 7.327868000000001
+    }
+  }
+}

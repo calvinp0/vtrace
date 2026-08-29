@@ -5501,3 +5501,98 @@ real default MCP framed stdio
   the stale M171 five-entry-cap and pre-M179 non-monotonicity claims. M182 records
   them in its tracked audit-status artifact but does not take ownership of the
   user's untracked file.
+
+## M183 — Current-Product Live SWE-bench Requalification
+
+```text
+overall           MIXED (A/B/C/D/E PASS; F closes on a negative result)
+resolution        OBSERVED_RESOLUTION_PARITY            19/30 vs 19/30
+statistical       RESOLUTION_DIFFERENCE_NOT_STATISTICALLY_RESOLVED  exact McNemar p=1.000
+whole-run tokens  WHOLE_RUN_TOKEN_USAGE_NEUTRAL         5.26% pooled, CI spans zero
+whole-run cost    WHOLE_RUN_COST_EFFECT_MIXED           median -$0.037, aggregate +0.21%
+product           CURRENT_PRODUCT_UTILITY_NEUTRAL       §110 D / §125
+causality         NO_CLEAR_VTRACE_CAUSAL_UTILITY_EVIDENCE
+economics mech    TAILS_DOMINATE_ECONOMIC_EFFECT
+VEXP class        VEXP_CLASS_VALUE_PROPOSITION_NOT_YET_SUPPORTED
+publication       PRODUCT_FOLLOWUP_REQUIRED_BEFORE_SCALE
+product changed   NO      retrieval NO   ranking NO   fit NO   ownership NO
+live              RUN     60/60 arms, 30/30 valid pairs, spend $38.33 of an $80 cap
+evidence commits  7d6245b3  166d07a7  ce44c804
+```
+
+```text
+paired outcome                    apparatus
+  both solved            17         arms completed              60/60
+  VTRACE-only wins        2         valid pairs                 30/30
+  baseline-only wins      2         orientation delivered       30/30
+  neither solved          9         baseline trigger present     0/30
+                                    failures / infra retries    0 / 0
+
+orientation (the DEFAULT path)    displacement (paired medians)
+  median          579.5 tokens      tool calls before 1st edit   6 -> 4
+  p90             814               searches before 1st edit   2.5 -> 1
+  max             941               reads before 1st edit        2 -> 2
+
+localization                      economics
+  focus is gold file    19/30       baseline median cost   $0.5097
+  gold file in packet   21/30       VTRACE  median cost    $0.4998
+  edited the focus      17/30       aggregate B / V   $19.14 / $19.19
+  orientation ignored    8/30       tail share of aggregate delta   19x
+```
+
+## M183 standing findings
+
+- **Exact parity, and the localization was fine.** 19/30 both arms, 4 discordant
+  pairs split 2-2, p = 1.000. The orientation named a gold file on 21/30 and its
+  focus was a gold file on 19/30, yet **6 tasks had a correct focus and still
+  failed** while **6 solved with a focus that was not a gold file**. Knowing where
+  to look is not what separated a solve from a failure on this sample. The
+  measured bottleneck is repair and validation, not retrieval.
+
+- **The baseline reached the same files anyway.** Baseline touched the
+  orientation-named files on 21/30 against the treatment's 22/30. The packet
+  arrived sooner — median 0 tool calls to first contact against 1 — but it was not
+  carrying information the agent could not get for itself. This is M164's shape
+  repeated with a delivered, correct, compact packet instead of an ignored tool.
+
+- **Displacement happened and did not pay.** Pre-edit tool calls fell 6 -> 4 and
+  searches 2.5 -> 1. Whole-run cost still came out $19.19 against $19.14. M169
+  priced early investigation at fractions of a cent against runs of ~1.1M tokens;
+  M183 confirms that removing a search is real and immaterial.
+
+- **`WHOLE_RUN_COST_EFFECT_MIXED` is literal, not a hedge.** The paired median
+  favours VTRACE (-$0.0367) and the pooled aggregate favours baseline (+0.21%).
+  Both are reported because they answer different questions, and the ten tail
+  pairs carry 19x the aggregate delta — a $0.05 difference on $19 is tail noise,
+  not an economic effect.
+
+- **M182's "current default orientation size" is the top rung of a budget
+  ladder.** Its 1,229/1,527/1,576 is the slice where `max_tokens` was passed
+  explicitly as 8,000; a default `run_pipeline` call does not land there.
+  Measured on all 30 manifest cases: default 579.5/814/941 against the same
+  sample's 8,000 rung at 1,245.5/1,374/1,607 — the rung REPRODUCES M182's number
+  on a different sample, which is what makes this a diagnosis. M183 qualifies the
+  default path, and the live median's correct neighbour is M182's own all-budgets
+  median of 542.
+
+- **A rebuild that does not rebuild, and reports success.** `rm -rf .vtrace` then
+  `vtrace index` leaves the reusable-snapshot registry alive inside
+  `<gitCommonDir>/vtrace/.../snapshots`, so the differ returns `noop`, parses zero
+  files and leaves an EMPTY database while exiting 0 with a manifest whose every
+  file says `indexOutcome: "indexed"`. flask-5014: 0 symbols over 91 "unchanged"
+  files; clearing both stores gave 1,165. User-reachable and invisible at every
+  surface a caller checks. Worked around in the benchmark (clear both stores, gate
+  on `full_rebuild && symbols > 0`); NOT repaired — it needs the retrieval
+  no-change proof.
+
+- **An empty patch is a determinate unresolved, not an ungraded arm.**
+  django-13513 produced no patch on BOTH arms after 51 and 47 turns of real work.
+  The grader writes no `_eval.meta.json` for such a run, and keying `graded` on
+  that file alone would have silently dropped the pair and shrunk N to 29.
+
+- **Next-step recommendation: no further live spend, and no retrieval work.**
+  `PRODUCT_FOLLOWUP_REQUIRED_BEFORE_SCALE`. A larger benchmark buys precision on
+  an effect that measured zero. Do not enlarge the packet to chase the 6
+  correct-focus failures (§124): the evidence says they are repair failures. If a
+  milestone follows, it should look at repair and validation, and it should first
+  fix the indexer defect above, which is worth more than another benchmark.

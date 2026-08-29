@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "stage5.m183.unique-wins.v1",
+  "milestone": "M183",
+  "count": 2,
+  "attributionStandard": "§105 — a unique win is labelled VTRACE_CAUSALLY_PLAUSIBLE only when the orientation named the gold file, the treatment arm edited it, and the baseline never reached a gold file. Winning is not evidence of causation.",
+  "wins": [
+    {
+      "instanceId": "astropy__astropy-14369",
+      "repo": "astropy/astropy",
+      "winner": "VTRACE",
+      "focusCorrect": false,
+      "orientationUsed": false,
+      "orientationReached": true,
+      "goldFileInOrientation": false,
+      "baselineEditedAnyGoldFile": true,
+      "treatmentEditedAnyGoldFile": true,
+      "classification": "NOT_DETERMINABLE",
+      "mechanism": "the treatment arm won without a traceable evidence advantage",
+      "causal": "NO_CLEAR_VTRACE_CAUSALITY"
+    },
+    {
+      "instanceId": "django__django-12325",
+      "repo": "django/django",
+      "winner": "VTRACE",
+      "focusCorrect": false,
+      "orientationUsed": false,
+      "orientationReached": false,
+      "goldFileInOrientation": false,
+      "baselineEditedAnyGoldFile": true,
+      "treatmentEditedAnyGoldFile": true,
+      "classification": "NOT_DETERMINABLE",
+      "mechanism": "the treatment arm won without a traceable evidence advantage",
+      "causal": "NO_CLEAR_VTRACE_CAUSALITY"
+    }
+  ]
+}

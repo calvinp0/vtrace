@@ -120,7 +120,20 @@ function armRecord(arm: M183Arm, instanceId: string): Record<string, unknown> {
     model: row.model ?? null,
     timestamp: row.timestamp ?? null,
     resolved: row.resolved === true,
-    graded: evalMeta !== null,
+    // An EMPTY PATCH is a determinate unresolved, not a missing measurement.
+    //
+    // The grader refuses a run with no patch ("JSONL found but contains no
+    // patch/model output") and writes no _eval.meta.json, so keying `graded` on
+    // that file alone would drop the pair from the resolution table and silently
+    // shrink N. django-13513 is exactly this case on BOTH arms: 51 and 47 turns
+    // of real work, ~$0.67 each, and no edit that survived into a patch. §27
+    // calls that a RESULT, so it is scored as unresolved and counted.
+    emptyPatch: typeof row.modelPatch !== "string" || row.modelPatch.length === 0,
+    graded: evalMeta !== null
+      || typeof row.modelPatch !== "string" || row.modelPatch.length === 0,
+    resolutionSource: evalMeta !== null ? "docker_grader"
+      : (typeof row.modelPatch !== "string" || row.modelPatch.length === 0)
+        ? "empty_patch_is_unresolved" : "UNGRADED",
     evaluationRan: evalMeta?.evaluationRan ?? null,
     resolvedCount: evalMeta?.resolvedCount ?? null,
     costUsd: typeof row.costUsd === "number" ? row.costUsd : null,

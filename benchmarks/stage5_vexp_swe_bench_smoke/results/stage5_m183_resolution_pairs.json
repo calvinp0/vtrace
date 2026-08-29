@@ -1,0 +1,613 @@
+{
+  "schemaVersion": "stage5.m183.resolution-pairs.v1",
+  "milestone": "M183",
+  "workstream": "M183-D",
+  "grader": "official Docker grading path (stage5_m183_grader_contract.md)",
+  "manifestInstances": 30,
+  "validPairs": 30,
+  "gradedPairs": 30,
+  "ungradedValidPairs": [],
+  "invalidPairs": [],
+  "pairs": [
+    {
+      "instanceId": "astropy__astropy-14369",
+      "repo": "astropy/astropy",
+      "difficulty": "1-4 hours",
+      "stratum": "replication",
+      "m173Overlap": true,
+      "armOrder": [
+        "baseline",
+        "vtrace_orientation"
+      ],
+      "baselineResolved": false,
+      "treatmentResolved": true,
+      "outcome": "TREATMENT_ONLY",
+      "orientationDelivered": true,
+      "orientationState": "ORIENTATION_DELIVERED",
+      "baselineCostLimitHit": false,
+      "treatmentCostLimitHit": false,
+      "baselineTurnLimitHit": false,
+      "treatmentTurnLimitHit": false
+    },
+    {
+      "instanceId": "astropy__astropy-14539",
+      "repo": "astropy/astropy",
+      "difficulty": "15 min - 1 hour",
+      "stratum": "extension",
+      "m173Overlap": false,
+      "armOrder": [
+        "vtrace_orientation",
+        "baseline"
+      ],
+      "baselineResolved": true,
+      "treatmentResolved": true,
+      "outcome": "BOTH",
+      "orientationDelivered": true,
+      "orientationState": "ORIENTATION_DELIVERED",
+      "baselineCostLimitHit": false,
+      "treatmentCostLimitHit": false,
+      "baselineTurnLimitHit": false,
+      "treatmentTurnLimitHit": false
+    },
+    {
+      "instanceId": "django__django-13658",
+      "repo": "django/django",
+      "difficulty": "15 min - 1 hour",
+      "stratum": "replication",
+      "m173Overlap": true,
+      "armOrder": [
+        "baseline",
+        "vtrace_orientation"
+      ],
+      "baselineResolved": true,
+      "treatmentResolved": true,
+      "outcome": "BOTH",
+      "orientationDelivered": true,
+      "orientationState": "ORIENTATION_DELIVERED",
+      "baselineCostLimitHit": false,
+      "treatmentCostLimitHit": false,
+      "baselineTurnLimitHit": false,
+      "treatmentTurnLimitHit": false
+    },
+    {
+      "instanceId": "django__django-11133",
+      "repo": "django/django",
+      "difficulty": "<15 min fix",
+      "stratum": "extension",
+      "m173Overlap": false,
+      "armOrder": [
+        "vtrace_orientation",
+        "baseline"
+      ],
+      "baselineResolved": true,
+      "treatmentResolved": true,
+      "outcome": "BOTH",
+      "orientationDelivered": true,
+      "orientationState": "ORIENTATION_DELIVERED",
+      "baselineCostLimitHit": false,
+      "treatmentCostLimitHit": false,
+      "baselineTurnLimitHit": false,
+      "treatmentTurnLimitHit": false
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-22719",
+      "repo": "matplotlib/matplotlib",
+      "difficulty": "<15 min fix",
+      "stratum": "replication",
+      "m173Overlap": true,
+      "armOrder": [
+        "baseline",
+        "vtrace_orientation"
+      ],
+      "baselineResolved": true,
+      "treatmentResolved": true,
+      "outcome": "BOTH",
+      "orientationDelivered": true,
+      "orientationState": "ORIENTATION_DELIVERED",
+      "baselineCostLimitHit": false,
+      "treatmentCostLimitHit": false,
+      "baselineTurnLimitHit": false,
+      "treatmentTurnLimitHit": false
+    },
+    {
+      "instanceId": "django__django-11820",
+      "repo": "django/django",
+      "difficulty": "<15 min fix",
+      "stratum": "extension",
+      "m173Overlap": false,
+      "armOrder": [
+        "vtrace_orientation",
+        "baseline"
+      ],
+      "baselineResolved": false,
+      "treatmentResolved": false,
+      "outcome": "NEITHER",
+      "orientationDelivered": true,
+      "orientationState": "ORIENTATION_DELIVERED",
+      "baselineCostLimitHit": false,
+      "treatmentCostLimitHit": false,
+      "baselineTurnLimitHit": false,
+      "treatmentTurnLimitHit": false
+    },
+    {
+      "instanceId": "mwaskom__seaborn-3187",
+      "repo": "mwaskom/seaborn",
+      "difficulty": "15 min - 1 hour",
+      "stratum": "replication",
+      "m173Overlap": true,
+      "armOrder": [
+        "baseline",
+        "vtrace_orientation"
+      ],
+      "baselineResolved": false,
+      "treatmentResolved": false,
+      "outcome": "NEITHER",
+      "orientationDelivered": true,
+      "orientationState": "ORIENTATION_DELIVERED",
+      "baselineCostLimitHit": false,
+      "treatmentCostLimitHit": false,
+      "baselineTurnLimitHit": false,
+      "treatmentTurnLimitHit": false
+    },
+    {
+      "instanceId": "django__django-12273",
+      "repo": "django/django",
+      "difficulty": "15 min - 1 hour",
+      "stratum": "extension",
+      "m173Overlap": false,
+      "armOrder": [
+        "vtrace_orientation",
+        "baseline"
+      ],
+      "baselineResolved": false,
+      "treatmentResolved": false,
+      "outcome": "NEITHER",
+      "orientationDelivered": true,
+      "orientationState": "ORIENTATION_DELIVERED",
+      "baselineCostLimitHit": false,
+      "treatmentCostLimitHit": false,
+      "baselineTurnLimitHit": false,
+      "treatmentTurnLimitHit": false
+    },
+    {
+      "instanceId": "pallets__flask-5014",
+      "repo": "pallets/flask",
+      "difficulty": "<15 min fix",
+      "stratum": "replication",
+      "m173Overlap": true,
+      "armOrder": [
+        "baseline",
+        "vtrace_orientation"
+      ],
+      "baselineResolved": true,
+      "treatmentResolved": true,
+      "outcome": "BOTH",
+      "orientationDelivered": true,
+      "orientationState": "ORIENTATION_DELIVERED",
+      "baselineCostLimitHit": false,
+      "treatmentCostLimitHit": false,
+      "baselineTurnLimitHit": false,
+      "treatmentTurnLimitHit": false
+    },
+    {
+      "instanceId": "django__django-12325",
+      "repo": "django/django",
+      "difficulty": "1-4 hours",
+      "stratum": "extension",
+      "m173Overlap": false,
+      "armOrder": [
+        "vtrace_orientation",
+        "baseline"
+      ],
+      "baselineResolved": false,
+      "treatmentResolved": true,
+      "outcome": "TREATMENT_ONLY",
+      "orientationDelivered": true,
+      "orientationState": "ORIENTATION_DELIVERED",
+      "baselineCostLimitHit": false,
+      "treatmentCostLimitHit": false,
+      "baselineTurnLimitHit": false,
+      "treatmentTurnLimitHit": false
+    },
+    {
+      "instanceId": "psf__requests-1724",
+      "repo": "psf/requests",
+      "difficulty": "<15 min fix",
+      "stratum": "replication",
+      "m173Overlap": true,
+      "armOrder": [
+        "baseline",
+        "vtrace_orientation"
+      ],
+      "baselineResolved": true,
+      "treatmentResolved": true,
+      "outcome": "BOTH",
+      "orientationDelivered": true,
+      "orientationState": "ORIENTATION_DELIVERED",
+      "baselineCostLimitHit": false,
+      "treatmentCostLimitHit": false,
+      "baselineTurnLimitHit": false,
+      "treatmentTurnLimitHit": false
+    },
+    {
+      "instanceId": "django__django-13195",
+      "repo": "django/django",
+      "difficulty": "15 min - 1 hour",
+      "stratum": "extension",
+      "m173Overlap": false,
+      "armOrder": [
+        "vtrace_orientation",
+        "baseline"
+      ],
+      "baselineResolved": false,
+      "treatmentResolved": false,
+      "outcome": "NEITHER",
+      "orientationDelivered": true,
+      "orientationState": "ORIENTATION_DELIVERED",
+      "baselineCostLimitHit": false,
+      "treatmentCostLimitHit": false,
+      "baselineTurnLimitHit": false,
+      "treatmentTurnLimitHit": false
+    },
+    {
+      "instanceId": "pydata__xarray-6599",
+      "repo": "pydata/xarray",
+      "difficulty": "15 min - 1 hour",
+      "stratum": "replication",
+      "m173Overlap": true,
+      "armOrder": [
+        "baseline",
+        "vtrace_orientation"
+      ],
+      "baselineResolved": true,
+      "treatmentResolved": true,
+      "outcome": "BOTH",
+      "orientationDelivered": true,
+      "orientationState": "ORIENTATION_DELIVERED",
+      "baselineCostLimitHit": false,
+      "treatmentCostLimitHit": false,
+      "baselineTurnLimitHit": false,
+      "treatmentTurnLimitHit": false
+    },
+    {
+      "instanceId": "django__django-13513",
+      "repo": "django/django",
+      "difficulty": "15 min - 1 hour",
+      "stratum": "extension",
+      "m173Overlap": false,
+      "armOrder": [
+        "vtrace_orientation",
+        "baseline"
+      ],
+      "baselineResolved": false,
+      "treatmentResolved": false,
+      "outcome": "NEITHER",
+      "orientationDelivered": true,
+      "orientationState": "ORIENTATION_DELIVERED",
+      "baselineCostLimitHit": false,
+      "treatmentCostLimitHit": false,
+      "baselineTurnLimitHit": false,
+      "treatmentTurnLimitHit": false
+    },
+    {
+      "instanceId": "pylint-dev__pylint-4551",
+      "repo": "pylint-dev/pylint",
+      "difficulty": "1-4 hours",
+      "stratum": "replication",
+      "m173Overlap": true,
+      "armOrder": [
+        "baseline",
+        "vtrace_orientation"
+      ],
+      "baselineResolved": false,
+      "treatmentResolved": false,
+      "outcome": "NEITHER",
+      "orientationDelivered": true,
+      "orientationState": "ORIENTATION_DELIVERED",
+      "baselineCostLimitHit": false,
+      "treatmentCostLimitHit": true,
+      "baselineTurnLimitHit": false,
+      "treatmentTurnLimitHit": false
+    },
+    {
+      "instanceId": "django__django-13820",
+      "repo": "django/django",
+      "difficulty": "15 min - 1 hour",
+      "stratum": "extension",
+      "m173Overlap": false,
+      "armOrder": [
+        "vtrace_orientation",
+        "baseline"
+      ],
+      "baselineResolved": true,
+      "treatmentResolved": true,
+      "outcome": "BOTH",
+      "orientationDelivered": true,
+      "orientationState": "ORIENTATION_DELIVERED",
+      "baselineCostLimitHit": false,
+      "treatmentCostLimitHit": false,
+      "baselineTurnLimitHit": false,
+      "treatmentTurnLimitHit": false
+    },
+    {
+      "instanceId": "pytest-dev__pytest-7432",
+      "repo": "pytest-dev/pytest",
+      "difficulty": "<15 min fix",
+      "stratum": "replication",
+      "m173Overlap": true,
+      "armOrder": [
+        "baseline",
+        "vtrace_orientation"
+      ],
+      "baselineResolved": true,
+      "treatmentResolved": true,
+      "outcome": "BOTH",
+      "orientationDelivered": true,
+      "orientationState": "ORIENTATION_DELIVERED",
+      "baselineCostLimitHit": false,
+      "treatmentCostLimitHit": false,
+      "baselineTurnLimitHit": false,
+      "treatmentTurnLimitHit": false
+    },
+    {
+      "instanceId": "django__django-16569",
+      "repo": "django/django",
+      "difficulty": "<15 min fix",
+      "stratum": "extension",
+      "m173Overlap": false,
+      "armOrder": [
+        "vtrace_orientation",
+        "baseline"
+      ],
+      "baselineResolved": true,
+      "treatmentResolved": true,
+      "outcome": "BOTH",
+      "orientationDelivered": true,
+      "orientationState": "ORIENTATION_DELIVERED",
+      "baselineCostLimitHit": false,
+      "treatmentCostLimitHit": false,
+      "baselineTurnLimitHit": false,
+      "treatmentTurnLimitHit": false
+    },
+    {
+      "instanceId": "scikit-learn__scikit-learn-10844",
+      "repo": "scikit-learn/scikit-learn",
+      "difficulty": "15 min - 1 hour",
+      "stratum": "replication",
+      "m173Overlap": true,
+      "armOrder": [
+        "baseline",
+        "vtrace_orientation"
+      ],
+      "baselineResolved": true,
+      "treatmentResolved": true,
+      "outcome": "BOTH",
+      "orientationDelivered": true,
+      "orientationState": "ORIENTATION_DELIVERED",
+      "baselineCostLimitHit": false,
+      "treatmentCostLimitHit": false,
+      "baselineTurnLimitHit": false,
+      "treatmentTurnLimitHit": false
+    },
+    {
+      "instanceId": "django__django-17084",
+      "repo": "django/django",
+      "difficulty": "15 min - 1 hour",
+      "stratum": "extension",
+      "m173Overlap": false,
+      "armOrder": [
+        "vtrace_orientation",
+        "baseline"
+      ],
+      "baselineResolved": true,
+      "treatmentResolved": true,
+      "outcome": "BOTH",
+      "orientationDelivered": true,
+      "orientationState": "ORIENTATION_DELIVERED",
+      "baselineCostLimitHit": false,
+      "treatmentCostLimitHit": false,
+      "baselineTurnLimitHit": false,
+      "treatmentTurnLimitHit": false
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-7462",
+      "repo": "sphinx-doc/sphinx",
+      "difficulty": "<15 min fix",
+      "stratum": "replication",
+      "m173Overlap": true,
+      "armOrder": [
+        "baseline",
+        "vtrace_orientation"
+      ],
+      "baselineResolved": false,
+      "treatmentResolved": false,
+      "outcome": "NEITHER",
+      "orientationDelivered": true,
+      "orientationState": "ORIENTATION_DELIVERED",
+      "baselineCostLimitHit": false,
+      "treatmentCostLimitHit": false,
+      "baselineTurnLimitHit": false,
+      "treatmentTurnLimitHit": false
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-26466",
+      "repo": "matplotlib/matplotlib",
+      "difficulty": "15 min - 1 hour",
+      "stratum": "extension",
+      "m173Overlap": false,
+      "armOrder": [
+        "vtrace_orientation",
+        "baseline"
+      ],
+      "baselineResolved": false,
+      "treatmentResolved": false,
+      "outcome": "NEITHER",
+      "orientationDelivered": true,
+      "orientationState": "ORIENTATION_DELIVERED",
+      "baselineCostLimitHit": false,
+      "treatmentCostLimitHit": false,
+      "baselineTurnLimitHit": false,
+      "treatmentTurnLimitHit": false
+    },
+    {
+      "instanceId": "sympy__sympy-13480",
+      "repo": "sympy/sympy",
+      "difficulty": "<15 min fix",
+      "stratum": "replication",
+      "m173Overlap": true,
+      "armOrder": [
+        "baseline",
+        "vtrace_orientation"
+      ],
+      "baselineResolved": true,
+      "treatmentResolved": true,
+      "outcome": "BOTH",
+      "orientationDelivered": true,
+      "orientationState": "ORIENTATION_DELIVERED",
+      "baselineCostLimitHit": false,
+      "treatmentCostLimitHit": false,
+      "baselineTurnLimitHit": false,
+      "treatmentTurnLimitHit": false
+    },
+    {
+      "instanceId": "psf__requests-5414",
+      "repo": "psf/requests",
+      "difficulty": "<15 min fix",
+      "stratum": "extension",
+      "m173Overlap": false,
+      "armOrder": [
+        "vtrace_orientation",
+        "baseline"
+      ],
+      "baselineResolved": true,
+      "treatmentResolved": false,
+      "outcome": "BASELINE_ONLY",
+      "orientationDelivered": true,
+      "orientationState": "ORIENTATION_DELIVERED",
+      "baselineCostLimitHit": false,
+      "treatmentCostLimitHit": false,
+      "baselineTurnLimitHit": false,
+      "treatmentTurnLimitHit": false
+    },
+    {
+      "instanceId": "pydata__xarray-4695",
+      "repo": "pydata/xarray",
+      "difficulty": "15 min - 1 hour",
+      "stratum": "extension",
+      "m173Overlap": false,
+      "armOrder": [
+        "baseline",
+        "vtrace_orientation"
+      ],
+      "baselineResolved": true,
+      "treatmentResolved": true,
+      "outcome": "BOTH",
+      "orientationDelivered": true,
+      "orientationState": "ORIENTATION_DELIVERED",
+      "baselineCostLimitHit": false,
+      "treatmentCostLimitHit": false,
+      "baselineTurnLimitHit": false,
+      "treatmentTurnLimitHit": false
+    },
+    {
+      "instanceId": "pytest-dev__pytest-6197",
+      "repo": "pytest-dev/pytest",
+      "difficulty": "1-4 hours",
+      "stratum": "extension",
+      "m173Overlap": false,
+      "armOrder": [
+        "vtrace_orientation",
+        "baseline"
+      ],
+      "baselineResolved": true,
+      "treatmentResolved": false,
+      "outcome": "BASELINE_ONLY",
+      "orientationDelivered": true,
+      "orientationState": "ORIENTATION_DELIVERED",
+      "baselineCostLimitHit": false,
+      "treatmentCostLimitHit": false,
+      "baselineTurnLimitHit": false,
+      "treatmentTurnLimitHit": false
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-9320",
+      "repo": "sphinx-doc/sphinx",
+      "difficulty": "<15 min fix",
+      "stratum": "extension",
+      "m173Overlap": false,
+      "armOrder": [
+        "baseline",
+        "vtrace_orientation"
+      ],
+      "baselineResolved": true,
+      "treatmentResolved": true,
+      "outcome": "BOTH",
+      "orientationDelivered": true,
+      "orientationState": "ORIENTATION_DELIVERED",
+      "baselineCostLimitHit": false,
+      "treatmentCostLimitHit": false,
+      "baselineTurnLimitHit": false,
+      "treatmentTurnLimitHit": false
+    },
+    {
+      "instanceId": "sympy__sympy-12419",
+      "repo": "sympy/sympy",
+      "difficulty": "15 min - 1 hour",
+      "stratum": "extension",
+      "m173Overlap": false,
+      "armOrder": [
+        "vtrace_orientation",
+        "baseline"
+      ],
+      "baselineResolved": true,
+      "treatmentResolved": true,
+      "outcome": "BOTH",
+      "orientationDelivered": true,
+      "orientationState": "ORIENTATION_DELIVERED",
+      "baselineCostLimitHit": false,
+      "treatmentCostLimitHit": false,
+      "baselineTurnLimitHit": false,
+      "treatmentTurnLimitHit": false
+    },
+    {
+      "instanceId": "sympy__sympy-13372",
+      "repo": "sympy/sympy",
+      "difficulty": "<15 min fix",
+      "stratum": "extension",
+      "m173Overlap": false,
+      "armOrder": [
+        "baseline",
+        "vtrace_orientation"
+      ],
+      "baselineResolved": true,
+      "treatmentResolved": true,
+      "outcome": "BOTH",
+      "orientationDelivered": true,
+      "orientationState": "ORIENTATION_DELIVERED",
+      "baselineCostLimitHit": false,
+      "treatmentCostLimitHit": false,
+      "baselineTurnLimitHit": false,
+      "treatmentTurnLimitHit": false
+    },
+    {
+      "instanceId": "sympy__sympy-13974",
+      "repo": "sympy/sympy",
+      "difficulty": "15 min - 1 hour",
+      "stratum": "extension",
+      "m173Overlap": false,
+      "armOrder": [
+        "vtrace_orientation",
+        "baseline"
+      ],
+      "baselineResolved": false,
+      "treatmentResolved": false,
+      "outcome": "NEITHER",
+      "orientationDelivered": true,
+      "orientationState": "ORIENTATION_DELIVERED",
+      "baselineCostLimitHit": false,
+      "treatmentCostLimitHit": false,
+      "baselineTurnLimitHit": false,
+      "treatmentTurnLimitHit": false
+    }
+  ]
+}
