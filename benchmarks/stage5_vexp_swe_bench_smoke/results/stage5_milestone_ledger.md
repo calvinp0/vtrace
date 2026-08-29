@@ -5703,7 +5703,7 @@ authority         60/60 arm seals verified, 30/30 gold file sets recomputed from
 cohorts           A 6  B 13  C 6  G 5   D 2  E 2  F 9  both-solved 17   all reconcile with M183
 product changed   NO      retrieval NO   ranking NO   orientation NO   index NO
 live              NOT RUN  spend $0.00   docker NOT RUN
-evidence commits  <M185-1>
+evidence commits  53445592
 ```
 
 ```text
