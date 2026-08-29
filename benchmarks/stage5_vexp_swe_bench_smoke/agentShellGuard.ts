@@ -466,6 +466,12 @@ export interface AgentShellGuardMetadataInput {
   readonly pipResolution: string | null;
   readonly blockedCommands: readonly BlockedCommand[];
   readonly failureReason: string | null;
+  /**
+   * M187 — did the wrapper bin still exist when the agent finished? Readiness is necessarily
+   * checked BEFORE spawn; this is the only observation that can catch a firewall removed
+   * afterwards. `null` = not observed (bypassed run, or a caller that predates the check).
+   */
+  readonly wrapperBinSurvivedRun?: boolean | null;
 }
 
 export interface AgentShellGuardMetadata {
@@ -482,6 +488,8 @@ export interface AgentShellGuardMetadata {
   readonly stage5_blocked_host_package_command_count: number;
   readonly stage5_agent_shell_guard_failure_reason: string | null;
   readonly stage5_agent_shell_guard_mandatory_since: string;
+  /** M187 — wrapper-bin liveness observed AFTER the agent ran; null when not observed. */
+  readonly stage5_agent_shell_guard_wrapper_bin_survived_run: boolean | null;
 }
 
 export function buildAgentShellGuardMetadata(input: AgentShellGuardMetadataInput): AgentShellGuardMetadata {
@@ -500,5 +508,6 @@ export function buildAgentShellGuardMetadata(input: AgentShellGuardMetadataInput
     stage5_blocked_host_package_command_count: blocked.length,
     stage5_agent_shell_guard_failure_reason: input.failureReason,
     stage5_agent_shell_guard_mandatory_since: STAGE5_AGENT_SHELL_GUARD_MANDATORY_SINCE,
+    stage5_agent_shell_guard_wrapper_bin_survived_run: input.wrapperBinSurvivedRun ?? null,
   };
 }

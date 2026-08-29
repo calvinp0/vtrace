@@ -61,6 +61,14 @@ export interface EnrichedToolCall {
   outputSummary: string | null;
   /** Process exit code when the stream exposes one (rare) — else null. */
   exitCode: number | null;
+  /**
+   * M187 — WHERE `exitCode` came from, so a consumer can tell an unknown exit status from a
+   * known one. `stream_field` is a structured `exit_code`/`status` key on the tool_result
+   * block; `output_prefix` is the shell tool's own `Exit code N` first line (the only surface
+   * that carries it under MCP protocol 2024-11-05, which has no exit-status field at all);
+   * `null` means genuinely unknown. NEVER synthesized: a missing prefix is not read as 0.
+   */
+  exitCodeSource: ExitCodeSource;
   /** Success from the stream's `is_error` flag (success = !is_error) — else null. */
   success: boolean | null;
   /** True when `output` was clipped to the byte bound. */
@@ -122,12 +130,30 @@ export function clipToBytes(text: string, maxBytes: number): { value: string; tr
   return { value: clipped, truncated: true };
 }
 
+/** Provenance of a captured `exitCode`. `null` = no exit status was observable at all. */
+export type ExitCodeSource = "stream_field" | "output_prefix" | null;
+
 function exitCodeFrom(block: Record<string, unknown>): number | null {
   for (const key of ["exit_code", "exitCode", "returncode", "return_code", "status"]) {
     const v = block[key];
     if (typeof v === "number" && Number.isFinite(v)) return v;
   }
   return null;
+}
+
+// M187 — the shell tool prints `Exit code N` as the FIRST line of its tool_result content when
+// a command exits non-zero, and prints no such line when it exits 0. That text is the only
+// place a real exit status appears: a tool_result block carries `{tool_use_id, type, content,
+// is_error}` and nothing else, so `exitCodeFrom` above is structurally always null for shell
+// calls. Anchored at position 0 so a command that merely PRINTS "Exit code 3" cannot be read
+// as having exited 3. Returns null when the line is absent — absence is NOT evidence of 0,
+// because a refused/never-launched command has no prefix either.
+const EXIT_CODE_PREFIX = /^Exit code (\d{1,3})(?:\n|$)/;
+
+export function exitCodeFromOutputPrefix(output: string | null): number | null {
+  if (output === null) return null;
+  const m = EXIT_CODE_PREFIX.exec(output);
+  return m === null ? null : Number(m[1]);
 }
 
 interface PendingCall extends EnrichedToolCall {
@@ -148,6 +174,7 @@ function pushToolUse(calls: PendingCall[], block: Record<string, unknown>, phase
     output: null,
     outputSummary: null,
     exitCode: null,
+    exitCodeSource: null,
     success: null,
     truncated: false,
     toolUseId: typeof block.id === "string" ? block.id : null,
@@ -171,7 +198,18 @@ function attachResult(calls: PendingCall[], block: Record<string, unknown>): voi
   target.output = full.value;
   target.truncated = full.truncated;
   target.outputSummary = summary.value;
-  target.exitCode = exitCodeFrom(block);
+  // M187 — prefer a structured field; fall back to the shell tool's own `Exit code N` line,
+  // recording WHICH surface answered. The prefix is read from the FULL text, not the clipped
+  // copy, so an 8k clip can never lose it (it is the first line either way).
+  const structured = exitCodeFrom(block);
+  if (structured !== null) {
+    target.exitCode = structured;
+    target.exitCodeSource = "stream_field";
+  } else {
+    const fromPrefix = exitCodeFromOutputPrefix(text);
+    target.exitCode = fromPrefix;
+    target.exitCodeSource = fromPrefix === null ? null : "output_prefix";
+  }
   if (typeof block.is_error === "boolean") target.success = !block.is_error;
 }
 

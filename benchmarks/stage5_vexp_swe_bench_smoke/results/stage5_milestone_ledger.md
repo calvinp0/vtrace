@@ -5882,3 +5882,119 @@ M183 sequence, measured on both arms          pre-M184 (142ad112)   HEAD (e9c98c
   lifecycle was never the thing M183 measured, so this repair is not evidence that
   rerunning it would land differently. Phase 1B, if it happens, is a separate
   milestone with its own authorization.
+
+## M187 — Benchmark Validation Environment Truthfulness and Executability
+
+```text
+overall           PASS (Phase 1B benchmark infrastructure only; no product/retrieval work)
+M185 reproduction M185_CLASSIFICATION_REPRODUCED   60 arms / 14 attempting / 5 executing / 9 prevented
+                  51 attempts, 36 env refusals — and 6 attempts M185 counted but never named
+exitCode = null   NOT a parser defect. tool_result carries {tool_use_id,type,content,is_error}
+                  and nothing else; MCP 2024-11-05 has no exit-status field. Recovered from the
+                  shell tool's own `Exit code N` first line: 144/335 non-zero, 190/335 exit 0,
+                  1/335 tool-policy refusal. Bijective with is_error across all 335.
+pipeline caveat   190 calls report success=true while the command failed — `cmd | head` returns
+                  head's status. readExitStatus returns known:false for a piped success.
+root cause        ONE seam. runCondition materialized the M90A firewall into rawConditionDir and
+                  passed that same dir to the external harness as --output; the harness opens
+                  every run with cleanPreviousRun(outputDir) which rmSyncs it.
+                  All 60 arms logged `Cleaned 1 file(s)` — 30 baseline, 30 treatment.
+consequence       PATH sanitization survived (env var), wrappers did not (files). Agent got
+                  /usr/bin/python 3.14 with no packages; pip existed only in the stripped conda
+                  prefix -> 28x exit 127. Firewall fired 0 times in 60 arms; guard still said pass,
+                  because readiness is checked pre-spawn and the wipe happens after.
+taxonomy (23 prevented attempts across the 9 arms)
+                  DEPENDENCY_ENVIRONMENT_UNAVAILABLE 10   TEST_RUNNER_UNAVAILABLE 6
+                  COMMAND_OR_TARGET_MISSING 4            undetermined 3
+                  ownership: 10 benchmark-owned, 13 uncertain, 0 external-tool-only
+repair            agentShellGuardDir() — guard materializes OUTSIDE the harness output dir;
+                  post-run wrapper-bin liveness observed; a vanished firewall degrades the
+                  recorded status instead of reporting pass
+                  stage5_agent_shell_guard_wrapper_bin_survived_run: boolean | null
+reclassification  arm states 46 NOT_ATTEMPTED / 9 ATTEMPTED_NOT_STARTED / 3 STARTED_PASSED /
+                  1 STARTED_FAILED / 1 STARTED_INFRA_FAILURE / 0 UNKNOWN
+                  attempts (47) 34 not-started / 7 passed / 1 failed / 1 infra / 4 unknown
+                  arm partition UNCHANGED from M185 (46/9/5); 3 movers, all attempt-count only
+                  4 M185 false positives dropped (a heredoc WRITING a test file, a pip install
+                  whose cwd was .../pytest-dev__pytest, 2 import probes — \bpytest\b matched the
+                  repository PATH); 1 missed attempt recovered (python src/pytest.py)
+agreement control 47/47 PASS — every STARTED_* has a runner literal on screen, every
+                  ATTEMPTED_NOT_STARTED has none
+probes            11/11 agree across 4 independent repos (seaborn, requests, sympy, django),
+                  no agent spawned, $0.00. G1: django-13820's own M183 command replayed on the
+                  repaired path -> `Ran 27 tests ... OK`. Z1 CONTROL: the M183 layout, wiped by
+                  the same cleaner -> ATTEMPTED_NOT_STARTED. E1: firewall blocks again.
+                  D2 preregistered expectation REVISED post-run and recorded as revised.
+symmetry          VALIDATION_CAPABILITY_EQUIVALENT  30/30 pairs, 0 asymmetric,
+                  0 unexpected treatment-only env keys; treatment witness cited so equivalence
+                  is not misread as identity
+product changed   NO   retrieval NO   ranking NO   orientation NO   prompts NO   index format NO
+src/ touched      src/capsule/toolOutputCapture.ts ONLY (owner of the exitCode field; an island
+                  unreachable from src/mcp, src/retrieval, src/capsuleV2, src/indexer)
+tests             +31 validationExecution, +6 m187ShellGuardSurvival (control must destroy the
+                  old layout, and does)
+gates             typecheck PASS  typecheck:benchmarks PASS  bun test 5632/0 fail  diff --check clean
+live              NOT RUN  spend $0.00  docker NOT RUN
+```
+
+## M187 standing findings
+
+- **The guard destroyed its own foundation, and its verification could not see it.**
+  `evaluateMandatoryAgentShellGuard` consults `wrapperBinReady` before spawn — the one
+  moment it is necessarily true — and the external harness deletes the wrapper bin after
+  that check and before the agent's first turn. Sixty arms recorded
+  `stage5_agent_shell_guard_status: "pass"` for a firewall that was physically absent, and
+  the corroborating evidence was sitting in the same directory the whole time:
+  `stage5_blocked_host_package_command_count: 0` across every arm of a benchmark whose agents
+  attempted `pip install` twenty-eight times. Any future guard whose readiness is established
+  before an external process runs needs a liveness observation after it, not a stronger
+  pre-check.
+
+- **PATH sanitization and its compensating wrappers have different lifetimes.** The env
+  override is a string that survives anything; the wrappers are files that survive only as
+  long as their directory. A guard built from both halves degrades asymmetrically — it keeps
+  the half that takes capability away and loses the half that gives it back. M183 paid the
+  guard's entire cost and received none of its protection. This is worth stating as a shape,
+  not an incident: any protection implemented as "remove the dangerous thing from PATH, add a
+  safe replacement" fails open on cost and closed on benefit when the replacement goes missing.
+
+- **`exitCode: null` was a true statement, and that is exactly why it was dangerous.**
+  Nothing was parsed wrongly: the transport has no exit-status field. The defect was
+  downstream, in M185's first detector reading `exitCode === 0` as meaningful, and the field
+  was honest enough to be trusted. A field that is *always* null is indistinguishable from a
+  field that is *legitimately* null, so `exitCodeSource` now records which surface answered.
+  The corollary matters more: even the recovered exit code is untrustworthy alone, because
+  190 of 335 calls report success from a pipeline's last stage rather than the command under
+  test.
+
+- **Attempt detection is where a validation audit quietly goes wrong.** M185's `\bpytest\b`
+  matched the repository *path* — every command run inside `.bench-repos/pytest-dev__pytest`
+  looked like a test attempt, including a `pip install` and a heredoc that *wrote* a test
+  file. Four of its 51 attempts were not attempts. The correction is small and the arm-level
+  partition survives it, but the general point does not: whether an agent tried is a property
+  of the command alone, and it must be decided by a parser that knows what a runner is, not by
+  a substring that appears in a directory name.
+
+- **The nine refusals are one mechanism, and the taxonomy is still worth keeping split.**
+  All 23 prevented attempts descend from the same PATH collapse, so a single repair addresses
+  them. But 10 are benchmark-owned outright and 13 remain uncertain, because the residue —
+  per-task dependency provisioning — is genuinely a different problem with a different owner.
+  The G1/G2 probe pair measures exactly where the line falls: django's own M183 command runs
+  27 tests on the repaired path, and the same command without `PYTHONPATH` still does not,
+  because that part was always the agent's job.
+
+- **M183 stays a valid comparison and stops being a valid description.** Both arms were
+  deprived identically — 30/30 symmetric, same driver, same flag array, same wipe — so the
+  paired result is unaffected and M185's conclusion is untouched. What it cannot be called is
+  a measurement of an edit→test→revise loop: in 55 of 60 arms no test runner ever started, and
+  in 9 of those the agent tried and was prevented. M185's finding that winning runs read less
+  should be read against that, not as evidence that validation does not matter.
+
+- **Next-step recommendation: none licensed from here.** M187 closes Phase 1 correctness and
+  authorizes no Phase 2 implementation. `NO_FURTHER_AGENT_UTILITY_PRODUCT_WORK_LICENSED`
+  stands. A repaired validation environment is not a reason to rerun M183 — the repair makes a
+  future experiment interpretable, it does not make the previous one wrong. The open
+  infrastructure work, if it is ever taken up, is per-task dependency environments (the
+  SWE-bench Docker images already exist for this) and the editable installs of benchmark
+  repositories accumulating in the external harness's shared `.venv`, which is outside this
+  repository's tree.

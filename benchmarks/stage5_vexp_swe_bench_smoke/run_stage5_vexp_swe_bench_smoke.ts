@@ -1446,6 +1446,29 @@ export function rawConditionDir(outDir: string, condition: Stage5Condition, runL
   return path.join(root, "raw", condition);
 }
 
+/**
+ * M187 — where the M90A agent-shell guard materializes its wrapper bin.
+ *
+ * This MUST NOT be `rawConditionDir`. That directory is handed to the external harness as
+ * `--output`, and the harness opens every fresh run with `cleanPreviousRun(outputDir)`, which
+ * `rmSync`s each entry in it. M183 materialized the firewall wrappers there and the harness
+ * deleted them before the agent's first turn — all 60 arms logged `Cleaned 1 file(s)`. The
+ * agent then ran with a sanitized PATH (conda stripped, so no `pip` and no testbed
+ * interpreter) whose first entry was a directory that no longer existed, and the guard still
+ * reported `status: pass` because readiness was checked before the wipe.
+ *
+ * A sibling under `raw/` is outside the harness's output dir, stays inside the run's own
+ * evidence tree, and is per-condition so two conditions under one label cannot collide.
+ */
+export function agentShellGuardDir(
+  outDir: string,
+  condition: Stage5Condition,
+  runLabel: string | null = null,
+): string {
+  const root = runLabel === null ? outDir : path.join(outDir, "runs", runLabel);
+  return path.join(root, "raw", `_shell_guard_${condition}`);
+}
+
 export function buildRunArgs(
   config: CliConfig,
   instances: readonly string[],
@@ -8268,8 +8291,10 @@ async function runCondition(
       failureReason: "unguarded live env (escape hatch) — agent shell guard bypassed (NOT benchmark-valid)",
     };
   } else {
+    // M187 — NOT `dir`: the external harness wipes its own --output directory on every fresh
+    // run, which is what silently disarmed this firewall for all of M183. See agentShellGuardDir.
     shellMat = (deps.materializeAgentShellGuardFn ?? materializeAgentShellGuard)({
-      runDir: dir,
+      runDir: agentShellGuardDir(config.out, condition, config.runLabel),
       expectedTestbedPrefix: expectedResolution.prefix,
     });
     Object.assign(agentShellOverrides, shellMat.shellEnv.overrides);
@@ -8347,9 +8372,28 @@ async function runCondition(
   // firewall refused during this run) and fold the counts into the shell-guard metadata. Empty
   // when the guard was bypassed or nothing was blocked. Best-effort; never throws.
   const blockedHostPackageCommands = shellMat ? readBlockedCommandLog(shellMat.blockLogPath) : [];
+  // M187 — did the firewall SURVIVE the run? Readiness is checked before spawn, and before
+  // spawn is exactly when it is always true; the external harness cleans its output directory
+  // after that check and before the agent's first turn. M183's 60 arms all recorded
+  // `status: pass` for wrappers that were deleted seconds later, so the agent inherited a
+  // PATH pointing at nothing and fell through to a bare system interpreter. A guard whose
+  // absence is invisible is not a guard, so its liveness is now an observed fact and a
+  // vanished wrapper bin degrades the recorded status instead of being reported as a pass.
+  const wrapperBinSurvived =
+    shellMat === null ? null : await pathExists(path.join(shellMat.wrapperBin, "python"));
+  const shellGuardMetaAfterRun =
+    wrapperBinSurvived === false
+      ? {
+          ...shellGuardMetaInput,
+          status: "fail" as const,
+          failureReason:
+            "agent shell guard wrapper bin did not survive the run — the wrappers were removed after the pre-spawn readiness check, so the agent ran with a sanitized PATH and no firewall/testbed interpreter",
+        }
+      : shellGuardMetaInput;
   const agentShellGuardMeta: AgentShellGuardMetadata = buildAgentShellGuardMetadata({
-    ...shellGuardMetaInput,
+    ...shellGuardMetaAfterRun,
     blockedCommands: blockedHostPackageCommands,
+    wrapperBinSurvivedRun: wrapperBinSurvived,
   });
   // M75 tool-loop guard (DEFAULT-OFF). When --tool-loop-guard is set, run the PURE
   // detector in OBSERVE mode over the just-persisted tool-call stream (rich
