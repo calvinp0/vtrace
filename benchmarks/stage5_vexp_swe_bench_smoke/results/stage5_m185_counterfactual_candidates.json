@@ -1,0 +1,86 @@
+{
+  "schemaVersion": "stage5.m185.counterfactual-candidates.v1",
+  "milestone": "M185",
+  "workstream": "M185-E",
+  "supportCounts": {
+    "WEAK_COUNTERFACTUAL_SUPPORT": 4,
+    "NO_COUNTERFACTUAL_SUPPORT": 2
+  },
+  "mechanisms": [
+    {
+      "mechanism": "MISSING_TEST_CONTRACT",
+      "breadth": {
+        "tasks": 1,
+        "repositories": 1
+      },
+      "tasks": [
+        "psf__requests-5414"
+      ],
+      "repositories": [
+        "psf/requests"
+      ],
+      "repeatedByThreshold": false,
+      "threshold": "at least 3 tasks across at least 2 repositories (§43 — two near-identical tasks in one repository are weak)",
+      "coverageOfCorrectFocusFailures": "1 / 6",
+      "bestCounterfactualSupport": "WEAK_COUNTERFACTUAL_SUPPORT",
+      "currentlyDerivable": [],
+      "successWitnessed": false
+    },
+    {
+      "mechanism": "MISSING_MIRROR_IMPLEMENTATION_RULE",
+      "breadth": {
+        "tasks": 1,
+        "repositories": 1
+      },
+      "tasks": [
+        "django__django-11820"
+      ],
+      "repositories": [
+        "django/django"
+      ],
+      "repeatedByThreshold": false,
+      "threshold": "at least 3 tasks across at least 2 repositories (§43 — two near-identical tasks in one repository are weak)",
+      "coverageOfCorrectFocusFailures": "1 / 6",
+      "bestCounterfactualSupport": "WEAK_COUNTERFACTUAL_SUPPORT",
+      "currentlyDerivable": [],
+      "successWitnessed": false
+    },
+    {
+      "mechanism": "MISSING_PARALLEL_IMPLEMENTATION_SITE",
+      "breadth": {
+        "tasks": 2,
+        "repositories": 2
+      },
+      "tasks": [
+        "mwaskom__seaborn-3187",
+        "sphinx-doc__sphinx-7462"
+      ],
+      "repositories": [
+        "mwaskom/seaborn",
+        "sphinx-doc/sphinx"
+      ],
+      "repeatedByThreshold": false,
+      "threshold": "at least 3 tasks across at least 2 repositories (§43 — two near-identical tasks in one repository are weak)",
+      "coverageOfCorrectFocusFailures": "2 / 6",
+      "bestCounterfactualSupport": "WEAK_COUNTERFACTUAL_SUPPORT",
+      "currentlyDerivable": [
+        "mwaskom__seaborn-3187",
+        "sphinx-doc__sphinx-7462"
+      ],
+      "successWitnessed": false
+    }
+  ],
+  "witnessRule": "§18/§19 — STRONG requires a successful comparator whose transcript shows it RECOVERING and USING the fact. A patch that merely happens to respect an invariant is COMPATIBLE_ONLY and does not support an intervention.",
+  "observedUseWitnesses": [],
+  "gates": {
+    "repeated": false,
+    "downstreamOfCorrectLocalization": true,
+    "repositoryDerived": true,
+    "currentlyVtraceDerivable": true,
+    "successWitnessed": false,
+    "causallyPlausible": true,
+    "narrowlyIntervenable": true
+  },
+  "verdict": "NO_COUNTERFACTUAL_INTERVENTION_LICENSED",
+  "gateNote": "§83 — all seven or downgrade. successWitnessed is false for every case in the cohort, which is decisive on its own."
+}

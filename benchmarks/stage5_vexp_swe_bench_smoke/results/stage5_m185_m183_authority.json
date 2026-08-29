@@ -1,0 +1,1155 @@
+{
+  "schemaVersion": "stage5.m185.m183-authority.v1",
+  "milestone": "M185",
+  "workstream": "M185-A",
+  "m183ProtocolHash": {
+    "schemaVersion": "stage5.m183.protocol-hash.v1",
+    "milestone": "M183",
+    "workstream": "M183-A",
+    "productHead": "166d07a7d4856ea9c15f7c63601b553a2430b972",
+    "productAncestry": {
+      "m181Closure": "95a2a9d492fc1ab1eb08dcab5caa875810da9e25",
+      "m182Evidence": "c17329dce00c4af3b879c2d2c447c62d650ce86d",
+      "m182Closure": "9517ccce6c63342ab4883131463ed294169e22af",
+      "headIsM182Closure": false
+    },
+    "sourceHashes": {
+      "benchmarks/stage5_vexp_swe_bench_smoke/m183Treatment.ts": "9be3e5d679095405345f14f906c7901bb7a8bff31f5af89eabe6a075d67d0154",
+      "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m183_orientation.ts": "b0cea22d6bcdae6d7c318f1482175075b2801a9793f56a60412496187fcab727",
+      "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m183_arm_wiring.ts": "a4b1f30f21c8d27ef5768746f5b1ac186c93b626e6491bfb78e7416190f26fe1",
+      "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m183_driver.sh": "dff072f0b6dac302807062a47b9ea7c9c047bc72e3032c0f58bf22eb4584511d",
+      "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m183_prepare.ts": "1d0d45dcbf0ea493ae03380ca6962537e88ce67a7a73904a66b85a144be26733",
+      "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m183_sample.ts": "3f2b4342a8905225e91d75a53ec0286efe5530f9f5f9f5e591688913a0a1de76",
+      "benchmarks/stage5_vexp_swe_bench_smoke/stage5_task_derivation.ts": "379a9e8dedabf99125b7e9d76c92432599407ac0a7586166723c2f0482554d95",
+      "src/runPipeline/orientationProjection.ts": "e5c14ec4c3dbe57b015a7ad3492235dc3af295a120984b8a4d4f950f8bd232ab",
+      "src/runPipeline/orientationDecline.ts": "f8a00d1c4b33487465e61d040cff1967c36235e1064ad9632aedf0d5590354ab",
+      "src/mcp/tools.ts": "f86dd3113afc9b763049adc9c2fba0e4b3693237e0df9c7c1e081c6e3afd4afc"
+    },
+    "documentHashes": {
+      "stage5_m183_sample_manifest.json": "6c4c63dc82c2e7f8860b667a668f9425a67e170f26266b8c0380ca7bba43baa1",
+      "stage5_m183_sample_hash.json": "d119d8a9dda9eb1c487d2c63d901e5907ac4766a7d0f1ebcebd96206e9ec352a",
+      "stage5_m183_pair_order.json": "523b1c13081d48ad53a889b02b24f5e939ecac9ed2a0c1473535322a9c8646c1",
+      "stage5_m183_spend_model.json": "fb2c687e2c7cd61306bbc10542efcbf1f04e255a6ddfac7a300cb78f6ef53d2a",
+      "stage5_m183_cost_authorization.json": "ffc260e7b65c55a26eba6a9af32d8bf2ab9ad71ff53afd08164ee06bab70ea23",
+      "stage5_m183_token_accounting_contract.md": "345a04be0721a82856283eb3843bb7b8e06b01323ba080bcd0050651f236ad2b",
+      "stage5_m183_cost_accounting_contract.md": "28ce3d8b8cc8411f12e31d49fe14a61cd9d2e33f9addddff34597530dd94ad97",
+      "stage5_m183_grader_contract.md": "ec2a8224daf54c5c1ddb1b39ee9953ea439825be153bfd290310faa6de48d648",
+      "stage5_m183_invalidity_policy.md": "eb19ba42ab45f4cceff7d7f9313193e275999c765dafbf30903f53e4fe13767d"
+    },
+    "protocolHash": "960e8f414e0625ee5183e66b4094d3e725b794c0e020e32f77ac217ffa7bb3fc",
+    "meaning": "§62/§63 — after the first live arm, a change to any hash above means the treatment under test is not the treatment that was frozen. Benchmark-only ANALYSIS scripts are deliberately excluded: they cannot reach the agent."
+  },
+  "pairs": 30,
+  "validPairs": 30,
+  "arms": 60,
+  "armsFullyVerified": 60,
+  "armsWithMismatch": [],
+  "armsWithMissing": [],
+  "armsWithToolOutputs": 60,
+  "transcriptLinesTotal": 10908,
+  "datasetPath": "benchmarks/stage5_vexp_swe_bench_smoke/results/_m160_corpus/swe_bench_verified.jsonl",
+  "datasetRows": 500,
+  "goldAuthority": [
+    {
+      "instanceId": "astropy__astropy-14369",
+      "datasetPresent": true,
+      "baseCommit": "fa4e8d1cd279acf9b24560813c8652494ccd5922",
+      "patchSha256": "f58ccaa7b95c38a3d9ee7c950a51e98e34ca30e9f778e74338f4fadc450ad055",
+      "declaredGoldFiles": [
+        "astropy/units/format/cds.py",
+        "astropy/units/format/cds_parsetab.py"
+      ],
+      "recomputedGoldFiles": [
+        "astropy/units/format/cds.py",
+        "astropy/units/format/cds_parsetab.py"
+      ],
+      "goldFilesAgree": true,
+      "failToPass": 3
+    },
+    {
+      "instanceId": "astropy__astropy-14539",
+      "datasetPresent": true,
+      "baseCommit": "c0a24c1dc957a3b565294213f435fefb2ec99714",
+      "patchSha256": "6df2a31458ccb6444253ea103006830eeb96f9a89eb9db2959f46060a28fe691",
+      "declaredGoldFiles": [
+        "astropy/io/fits/diff.py"
+      ],
+      "recomputedGoldFiles": [
+        "astropy/io/fits/diff.py"
+      ],
+      "goldFilesAgree": true,
+      "failToPass": 2
+    },
+    {
+      "instanceId": "django__django-13658",
+      "datasetPresent": true,
+      "baseCommit": "0773837e15bb632afffb6848a58c59a791008fa1",
+      "patchSha256": "667081efc6e0e867f91fe6549e1b73d5de3cc02a95d1659d476040c4c96d47f5",
+      "declaredGoldFiles": [
+        "django/core/management/__init__.py"
+      ],
+      "recomputedGoldFiles": [
+        "django/core/management/__init__.py"
+      ],
+      "goldFilesAgree": true,
+      "failToPass": 1
+    },
+    {
+      "instanceId": "django__django-11133",
+      "datasetPresent": true,
+      "baseCommit": "879cc3da6249e920b8d54518a0ae06de835d7373",
+      "patchSha256": "a0fd6d0a4a1c733a1c6f98cbb524604ea24e643c26c5fcb152be4bfb29fb1c3d",
+      "declaredGoldFiles": [
+        "django/http/response.py"
+      ],
+      "recomputedGoldFiles": [
+        "django/http/response.py"
+      ],
+      "goldFilesAgree": true,
+      "failToPass": 1
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-22719",
+      "datasetPresent": true,
+      "baseCommit": "a2a1b0a11b993fe5f8fab64b6161e99243a6393c",
+      "patchSha256": "4d9894b021f03db20ff4ae1afeedb8934d3640ed88d084f57ddd64e7edeb1217",
+      "declaredGoldFiles": [
+        "lib/matplotlib/category.py"
+      ],
+      "recomputedGoldFiles": [
+        "lib/matplotlib/category.py"
+      ],
+      "goldFilesAgree": true,
+      "failToPass": 1
+    },
+    {
+      "instanceId": "django__django-11820",
+      "datasetPresent": true,
+      "baseCommit": "c2678e49759e5c4c329bff0eeca2886267005d21",
+      "patchSha256": "30807ea49320fe21c5e54933a8c371bf107f95453d126084ffacbe6ac6740958",
+      "declaredGoldFiles": [
+        "django/db/models/base.py"
+      ],
+      "recomputedGoldFiles": [
+        "django/db/models/base.py"
+      ],
+      "goldFilesAgree": true,
+      "failToPass": 2
+    },
+    {
+      "instanceId": "mwaskom__seaborn-3187",
+      "datasetPresent": true,
+      "baseCommit": "22cdfb0c93f8ec78492d87edb810f10cb7f57a31",
+      "patchSha256": "578f98370810261561a8936dd7202e8c6644ef8d9ae52a54578a680f3cb4fc1f",
+      "declaredGoldFiles": [
+        "seaborn/_core/scales.py",
+        "seaborn/utils.py"
+      ],
+      "recomputedGoldFiles": [
+        "seaborn/_core/scales.py",
+        "seaborn/utils.py"
+      ],
+      "goldFilesAgree": true,
+      "failToPass": 2
+    },
+    {
+      "instanceId": "django__django-12273",
+      "datasetPresent": true,
+      "baseCommit": "927c903f3cd25c817c21738328b53991c035b415",
+      "patchSha256": "97ebd53485bbd8c351c8cd1f63f55ba5cc8997e1401ce305dc8040ad351abaeb",
+      "declaredGoldFiles": [
+        "django/db/models/base.py"
+      ],
+      "recomputedGoldFiles": [
+        "django/db/models/base.py"
+      ],
+      "goldFilesAgree": true,
+      "failToPass": 2
+    },
+    {
+      "instanceId": "pallets__flask-5014",
+      "datasetPresent": true,
+      "baseCommit": "7ee9ceb71e868944a46e1ff00b506772a53a4f1d",
+      "patchSha256": "087d51d66413bfa35111ac0eca31f1db1636572702cfd967c428049b453f451d",
+      "declaredGoldFiles": [
+        "src/flask/blueprints.py"
+      ],
+      "recomputedGoldFiles": [
+        "src/flask/blueprints.py"
+      ],
+      "goldFilesAgree": true,
+      "failToPass": 1
+    },
+    {
+      "instanceId": "django__django-12325",
+      "datasetPresent": true,
+      "baseCommit": "29c126bb349526b5f1cd78facbe9f25906f18563",
+      "patchSha256": "88a576600f625378c478021c4415421bda24b1146750e27616b7f4b47d855384",
+      "declaredGoldFiles": [
+        "django/db/models/base.py",
+        "django/db/models/options.py"
+      ],
+      "recomputedGoldFiles": [
+        "django/db/models/base.py",
+        "django/db/models/options.py"
+      ],
+      "goldFilesAgree": true,
+      "failToPass": 2
+    },
+    {
+      "instanceId": "psf__requests-1724",
+      "datasetPresent": true,
+      "baseCommit": "1ba83c47ce7b177efe90d5f51f7760680f72eda0",
+      "patchSha256": "f02e7cb27f931afc59887bcd31705b7d8ad9a226b187b398262f202f605365df",
+      "declaredGoldFiles": [
+        "requests/sessions.py"
+      ],
+      "recomputedGoldFiles": [
+        "requests/sessions.py"
+      ],
+      "goldFilesAgree": true,
+      "failToPass": 6
+    },
+    {
+      "instanceId": "django__django-13195",
+      "datasetPresent": true,
+      "baseCommit": "156a2138db20abc89933121e4ff2ee2ce56a173a",
+      "patchSha256": "72c9740f89e88304565d49a9aa1c37d38633215b9fd69aaca3a9f277821b02cf",
+      "declaredGoldFiles": [
+        "django/contrib/messages/storage/cookie.py",
+        "django/contrib/sessions/middleware.py",
+        "django/http/response.py"
+      ],
+      "recomputedGoldFiles": [
+        "django/contrib/messages/storage/cookie.py",
+        "django/contrib/sessions/middleware.py",
+        "django/http/response.py"
+      ],
+      "goldFilesAgree": true,
+      "failToPass": 5
+    },
+    {
+      "instanceId": "pydata__xarray-6599",
+      "datasetPresent": true,
+      "baseCommit": "6bb2b855498b5c68d7cca8cceb710365d58e6048",
+      "patchSha256": "e0e07b260b2c110dee0e67d86f9009906cdf21a2dbbd6e2b8871052881695464",
+      "declaredGoldFiles": [
+        "xarray/core/computation.py"
+      ],
+      "recomputedGoldFiles": [
+        "xarray/core/computation.py"
+      ],
+      "goldFilesAgree": true,
+      "failToPass": 1
+    },
+    {
+      "instanceId": "django__django-13513",
+      "datasetPresent": true,
+      "baseCommit": "6599608c4d0befdcb820ddccce55f183f247ae4f",
+      "patchSha256": "86c49e25f321f44a32b87fca0b77743d92c977b1fd3f076c8c860b3cfb933f10",
+      "declaredGoldFiles": [
+        "django/views/debug.py"
+      ],
+      "recomputedGoldFiles": [
+        "django/views/debug.py"
+      ],
+      "goldFilesAgree": true,
+      "failToPass": 1
+    },
+    {
+      "instanceId": "pylint-dev__pylint-4551",
+      "datasetPresent": true,
+      "baseCommit": "99589b08de8c5a2c6cc61e13a37420a868c80599",
+      "patchSha256": "06a5ae87f8794dff30b6733c4427cf46fed7ae67c545449b3168977be5cf215c",
+      "declaredGoldFiles": [
+        "pylint/pyreverse/diagrams.py",
+        "pylint/pyreverse/inspector.py",
+        "pylint/pyreverse/utils.py",
+        "pylint/pyreverse/writer.py"
+      ],
+      "recomputedGoldFiles": [
+        "pylint/pyreverse/diagrams.py",
+        "pylint/pyreverse/inspector.py",
+        "pylint/pyreverse/utils.py",
+        "pylint/pyreverse/writer.py"
+      ],
+      "goldFilesAgree": true,
+      "failToPass": 10
+    },
+    {
+      "instanceId": "django__django-13820",
+      "datasetPresent": true,
+      "baseCommit": "98ad327864aed8df245fd19ea9d2743279e11643",
+      "patchSha256": "0b1fce9290e4e0ba7cb493a33fa2ef34f2cc6d96f2faaccb8e8cf4a285558205",
+      "declaredGoldFiles": [
+        "django/db/migrations/loader.py"
+      ],
+      "recomputedGoldFiles": [
+        "django/db/migrations/loader.py"
+      ],
+      "goldFilesAgree": true,
+      "failToPass": 1
+    },
+    {
+      "instanceId": "pytest-dev__pytest-7432",
+      "datasetPresent": true,
+      "baseCommit": "e6e300e729dd33956e5448d8be9a0b1540b4e53a",
+      "patchSha256": "fe1bcec846085b964928724c5e75591b1e0280ef37dd9cdb7faf31a89cfcf062",
+      "declaredGoldFiles": [
+        "src/_pytest/skipping.py"
+      ],
+      "recomputedGoldFiles": [
+        "src/_pytest/skipping.py"
+      ],
+      "goldFilesAgree": true,
+      "failToPass": 1
+    },
+    {
+      "instanceId": "django__django-16569",
+      "datasetPresent": true,
+      "baseCommit": "278881e37619278789942513916acafaa88d26f3",
+      "patchSha256": "eb5a0870aadb582a6041459234b101790f5e8d2c4fa32522d86cda964e9ea5bc",
+      "declaredGoldFiles": [
+        "django/forms/formsets.py"
+      ],
+      "recomputedGoldFiles": [
+        "django/forms/formsets.py"
+      ],
+      "goldFilesAgree": true,
+      "failToPass": 2
+    },
+    {
+      "instanceId": "scikit-learn__scikit-learn-10844",
+      "datasetPresent": true,
+      "baseCommit": "97523985b39ecde369d83352d7c3baf403b60a22",
+      "patchSha256": "6b23af07d11343fd59602be794f7e7b6dba69127d5898f87d8e5760b6a531271",
+      "declaredGoldFiles": [
+        "sklearn/metrics/cluster/supervised.py"
+      ],
+      "recomputedGoldFiles": [
+        "sklearn/metrics/cluster/supervised.py"
+      ],
+      "goldFilesAgree": true,
+      "failToPass": 1
+    },
+    {
+      "instanceId": "django__django-17084",
+      "datasetPresent": true,
+      "baseCommit": "f8c43aca467b7b0c4bb0a7fa41362f90b610b8df",
+      "patchSha256": "70b2cc8c10a81279292067a2212d64e653a150e2e3ba2008b8a8f9eb073a008b",
+      "declaredGoldFiles": [
+        "django/db/models/sql/query.py"
+      ],
+      "recomputedGoldFiles": [
+        "django/db/models/sql/query.py"
+      ],
+      "goldFilesAgree": true,
+      "failToPass": 1
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-7462",
+      "datasetPresent": true,
+      "baseCommit": "b3e26a6c851133b82b50f4b68b53692076574d13",
+      "patchSha256": "13cebe1d1a9993e2bbb9707a9c85bf4e98fab0563d8305e446147266f7274fae",
+      "declaredGoldFiles": [
+        "sphinx/domains/python.py",
+        "sphinx/pycode/ast.py"
+      ],
+      "recomputedGoldFiles": [
+        "sphinx/domains/python.py",
+        "sphinx/pycode/ast.py"
+      ],
+      "goldFilesAgree": true,
+      "failToPass": 2
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-26466",
+      "datasetPresent": true,
+      "baseCommit": "3dd06a46750d174f821df5377996f493f1af4ebb",
+      "patchSha256": "68c08bc0c00a0c47b63c8392a8c940903ff7461e84479dd4706aba7fe383435f",
+      "declaredGoldFiles": [
+        "lib/matplotlib/text.py"
+      ],
+      "recomputedGoldFiles": [
+        "lib/matplotlib/text.py"
+      ],
+      "goldFilesAgree": true,
+      "failToPass": 1
+    },
+    {
+      "instanceId": "sympy__sympy-13480",
+      "datasetPresent": true,
+      "baseCommit": "f57fe3f4b3f2cab225749e1b3b38ae1bf80b62f0",
+      "patchSha256": "41082dc7d7056649551b032017765a96f3ed2c46811c320637843292f2460cf5",
+      "declaredGoldFiles": [
+        "sympy/functions/elementary/hyperbolic.py"
+      ],
+      "recomputedGoldFiles": [
+        "sympy/functions/elementary/hyperbolic.py"
+      ],
+      "goldFilesAgree": true,
+      "failToPass": 1
+    },
+    {
+      "instanceId": "psf__requests-5414",
+      "datasetPresent": true,
+      "baseCommit": "39d0fdd9096f7dceccbc8f82e1eda7dd64717a8e",
+      "patchSha256": "41e9433ac5e2cdb17a3972bec818a1118ea4a3f2b7485cd11fff7e27f6f3f680",
+      "declaredGoldFiles": [
+        "requests/models.py"
+      ],
+      "recomputedGoldFiles": [
+        "requests/models.py"
+      ],
+      "goldFilesAgree": true,
+      "failToPass": 1
+    },
+    {
+      "instanceId": "pydata__xarray-4695",
+      "datasetPresent": true,
+      "baseCommit": "51ef2a66c4e0896eab7d2b03e3dfb3963e338e3c",
+      "patchSha256": "c8f80ca2ab218e0728eb1b216f6d2c3c84588164291aa57387159a8e56c9901c",
+      "declaredGoldFiles": [
+        "xarray/core/dataarray.py"
+      ],
+      "recomputedGoldFiles": [
+        "xarray/core/dataarray.py"
+      ],
+      "goldFilesAgree": true,
+      "failToPass": 1
+    },
+    {
+      "instanceId": "pytest-dev__pytest-6197",
+      "datasetPresent": true,
+      "baseCommit": "e856638ba086fcf5bebf1bebea32d5cf78de87b4",
+      "patchSha256": "3d3810c1b37044c2fcc9a165a02db5ef99dfc26c1c677479ebd66f3ebd8862ac",
+      "declaredGoldFiles": [
+        "src/_pytest/python.py"
+      ],
+      "recomputedGoldFiles": [
+        "src/_pytest/python.py"
+      ],
+      "goldFilesAgree": true,
+      "failToPass": 2
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-9320",
+      "datasetPresent": true,
+      "baseCommit": "e05cef574b8f23ab1b57f57e7da6dee509a4e230",
+      "patchSha256": "af65b22541beffc8349c79a6557b7e592b4f1bebe9ed1527c47fc5b20b0ddb98",
+      "declaredGoldFiles": [
+        "sphinx/cmd/quickstart.py"
+      ],
+      "recomputedGoldFiles": [
+        "sphinx/cmd/quickstart.py"
+      ],
+      "goldFilesAgree": true,
+      "failToPass": 1
+    },
+    {
+      "instanceId": "sympy__sympy-12419",
+      "datasetPresent": true,
+      "baseCommit": "479939f8c65c8c2908bbedc959549a257a7c0b0b",
+      "patchSha256": "18794d75ba41397df2db6f4bad1c870a0d15be216987b0f594d5fdf11ded7f99",
+      "declaredGoldFiles": [
+        "sympy/matrices/expressions/matexpr.py"
+      ],
+      "recomputedGoldFiles": [
+        "sympy/matrices/expressions/matexpr.py"
+      ],
+      "goldFilesAgree": true,
+      "failToPass": 1
+    },
+    {
+      "instanceId": "sympy__sympy-13372",
+      "datasetPresent": true,
+      "baseCommit": "30379ea6e225e37833a764ac2da7b7fadf5fe374",
+      "patchSha256": "bdf98c99ee7104a0c32dee4be320f5bf2b043efd7877febed4ae5b6ee6650101",
+      "declaredGoldFiles": [
+        "sympy/core/evalf.py"
+      ],
+      "recomputedGoldFiles": [
+        "sympy/core/evalf.py"
+      ],
+      "goldFilesAgree": true,
+      "failToPass": 1
+    },
+    {
+      "instanceId": "sympy__sympy-13974",
+      "datasetPresent": true,
+      "baseCommit": "84c125972ad535b2dfb245f8d311d347b45e5b8a",
+      "patchSha256": "5c23095f179d1d4418b930ed0164d819bb5df206789c78bee49033f1881dfb56",
+      "declaredGoldFiles": [
+        "sympy/physics/quantum/tensorproduct.py"
+      ],
+      "recomputedGoldFiles": [
+        "sympy/physics/quantum/tensorproduct.py"
+      ],
+      "goldFilesAgree": true,
+      "failToPass": 1
+    }
+  ],
+  "goldFilesAgreeCount": 30,
+  "sealChecks": [
+    {
+      "label": "m183_baseline_astropy__astropy_14369",
+      "arm": "baseline",
+      "instanceId": "astropy__astropy-14369",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 283
+    },
+    {
+      "label": "m183_vtrace_orientation_astropy__astropy_14369",
+      "arm": "treatment",
+      "instanceId": "astropy__astropy-14369",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 312
+    },
+    {
+      "label": "m183_baseline_astropy__astropy_14539",
+      "arm": "baseline",
+      "instanceId": "astropy__astropy-14539",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 201
+    },
+    {
+      "label": "m183_vtrace_orientation_astropy__astropy_14539",
+      "arm": "treatment",
+      "instanceId": "astropy__astropy-14539",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 107
+    },
+    {
+      "label": "m183_baseline_django__django_13658",
+      "arm": "baseline",
+      "instanceId": "django__django-13658",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 60
+    },
+    {
+      "label": "m183_vtrace_orientation_django__django_13658",
+      "arm": "treatment",
+      "instanceId": "django__django-13658",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 46
+    },
+    {
+      "label": "m183_baseline_django__django_11133",
+      "arm": "baseline",
+      "instanceId": "django__django-11133",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 71
+    },
+    {
+      "label": "m183_vtrace_orientation_django__django_11133",
+      "arm": "treatment",
+      "instanceId": "django__django-11133",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 93
+    },
+    {
+      "label": "m183_baseline_matplotlib__matplotlib_22719",
+      "arm": "baseline",
+      "instanceId": "matplotlib__matplotlib-22719",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 83
+    },
+    {
+      "label": "m183_vtrace_orientation_matplotlib__matplotlib_22719",
+      "arm": "treatment",
+      "instanceId": "matplotlib__matplotlib-22719",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 129
+    },
+    {
+      "label": "m183_baseline_django__django_11820",
+      "arm": "baseline",
+      "instanceId": "django__django-11820",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 176
+    },
+    {
+      "label": "m183_vtrace_orientation_django__django_11820",
+      "arm": "treatment",
+      "instanceId": "django__django-11820",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 91
+    },
+    {
+      "label": "m183_baseline_mwaskom__seaborn_3187",
+      "arm": "baseline",
+      "instanceId": "mwaskom__seaborn-3187",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 357
+    },
+    {
+      "label": "m183_vtrace_orientation_mwaskom__seaborn_3187",
+      "arm": "treatment",
+      "instanceId": "mwaskom__seaborn-3187",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 259
+    },
+    {
+      "label": "m183_baseline_django__django_12273",
+      "arm": "baseline",
+      "instanceId": "django__django-12273",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 493
+    },
+    {
+      "label": "m183_vtrace_orientation_django__django_12273",
+      "arm": "treatment",
+      "instanceId": "django__django-12273",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 285
+    },
+    {
+      "label": "m183_baseline_pallets__flask_5014",
+      "arm": "baseline",
+      "instanceId": "pallets__flask-5014",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 45
+    },
+    {
+      "label": "m183_vtrace_orientation_pallets__flask_5014",
+      "arm": "treatment",
+      "instanceId": "pallets__flask-5014",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 50
+    },
+    {
+      "label": "m183_baseline_django__django_12325",
+      "arm": "baseline",
+      "instanceId": "django__django-12325",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 338
+    },
+    {
+      "label": "m183_vtrace_orientation_django__django_12325",
+      "arm": "treatment",
+      "instanceId": "django__django-12325",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 281
+    },
+    {
+      "label": "m183_baseline_psf__requests_1724",
+      "arm": "baseline",
+      "instanceId": "psf__requests-1724",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 76
+    },
+    {
+      "label": "m183_vtrace_orientation_psf__requests_1724",
+      "arm": "treatment",
+      "instanceId": "psf__requests-1724",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 86
+    },
+    {
+      "label": "m183_baseline_django__django_13195",
+      "arm": "baseline",
+      "instanceId": "django__django-13195",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 157
+    },
+    {
+      "label": "m183_vtrace_orientation_django__django_13195",
+      "arm": "treatment",
+      "instanceId": "django__django-13195",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 76
+    },
+    {
+      "label": "m183_baseline_pydata__xarray_6599",
+      "arm": "baseline",
+      "instanceId": "pydata__xarray-6599",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 190
+    },
+    {
+      "label": "m183_vtrace_orientation_pydata__xarray_6599",
+      "arm": "treatment",
+      "instanceId": "pydata__xarray-6599",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 192
+    },
+    {
+      "label": "m183_baseline_django__django_13513",
+      "arm": "baseline",
+      "instanceId": "django__django-13513",
+      "checked": 4,
+      "matched": 4,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 303
+    },
+    {
+      "label": "m183_vtrace_orientation_django__django_13513",
+      "arm": "treatment",
+      "instanceId": "django__django-13513",
+      "checked": 4,
+      "matched": 4,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 261
+    },
+    {
+      "label": "m183_baseline_pylint_dev__pylint_4551",
+      "arm": "baseline",
+      "instanceId": "pylint-dev__pylint-4551",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 302
+    },
+    {
+      "label": "m183_vtrace_orientation_pylint_dev__pylint_4551",
+      "arm": "treatment",
+      "instanceId": "pylint-dev__pylint-4551",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 384
+    },
+    {
+      "label": "m183_baseline_django__django_13820",
+      "arm": "baseline",
+      "instanceId": "django__django-13820",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 198
+    },
+    {
+      "label": "m183_vtrace_orientation_django__django_13820",
+      "arm": "treatment",
+      "instanceId": "django__django-13820",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 54
+    },
+    {
+      "label": "m183_baseline_pytest_dev__pytest_7432",
+      "arm": "baseline",
+      "instanceId": "pytest-dev__pytest-7432",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 182
+    },
+    {
+      "label": "m183_vtrace_orientation_pytest_dev__pytest_7432",
+      "arm": "treatment",
+      "instanceId": "pytest-dev__pytest-7432",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 128
+    },
+    {
+      "label": "m183_baseline_django__django_16569",
+      "arm": "baseline",
+      "instanceId": "django__django-16569",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 53
+    },
+    {
+      "label": "m183_vtrace_orientation_django__django_16569",
+      "arm": "treatment",
+      "instanceId": "django__django-16569",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 53
+    },
+    {
+      "label": "m183_baseline_scikit_learn__scikit_learn_10844",
+      "arm": "baseline",
+      "instanceId": "scikit-learn__scikit-learn-10844",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 61
+    },
+    {
+      "label": "m183_vtrace_orientation_scikit_learn__scikit_learn_10844",
+      "arm": "treatment",
+      "instanceId": "scikit-learn__scikit-learn-10844",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 40
+    },
+    {
+      "label": "m183_baseline_django__django_17084",
+      "arm": "baseline",
+      "instanceId": "django__django-17084",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 274
+    },
+    {
+      "label": "m183_vtrace_orientation_django__django_17084",
+      "arm": "treatment",
+      "instanceId": "django__django-17084",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 360
+    },
+    {
+      "label": "m183_baseline_sphinx_doc__sphinx_7462",
+      "arm": "baseline",
+      "instanceId": "sphinx-doc__sphinx-7462",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 118
+    },
+    {
+      "label": "m183_vtrace_orientation_sphinx_doc__sphinx_7462",
+      "arm": "treatment",
+      "instanceId": "sphinx-doc__sphinx-7462",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 94
+    },
+    {
+      "label": "m183_baseline_matplotlib__matplotlib_26466",
+      "arm": "baseline",
+      "instanceId": "matplotlib__matplotlib-26466",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 125
+    },
+    {
+      "label": "m183_vtrace_orientation_matplotlib__matplotlib_26466",
+      "arm": "treatment",
+      "instanceId": "matplotlib__matplotlib-26466",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 135
+    },
+    {
+      "label": "m183_baseline_sympy__sympy_13480",
+      "arm": "baseline",
+      "instanceId": "sympy__sympy-13480",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 93
+    },
+    {
+      "label": "m183_vtrace_orientation_sympy__sympy_13480",
+      "arm": "treatment",
+      "instanceId": "sympy__sympy-13480",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 118
+    },
+    {
+      "label": "m183_baseline_psf__requests_5414",
+      "arm": "baseline",
+      "instanceId": "psf__requests-5414",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 254
+    },
+    {
+      "label": "m183_vtrace_orientation_psf__requests_5414",
+      "arm": "treatment",
+      "instanceId": "psf__requests-5414",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 141
+    },
+    {
+      "label": "m183_baseline_pydata__xarray_4695",
+      "arm": "baseline",
+      "instanceId": "pydata__xarray-4695",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 143
+    },
+    {
+      "label": "m183_vtrace_orientation_pydata__xarray_4695",
+      "arm": "treatment",
+      "instanceId": "pydata__xarray-4695",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 173
+    },
+    {
+      "label": "m183_baseline_pytest_dev__pytest_6197",
+      "arm": "baseline",
+      "instanceId": "pytest-dev__pytest-6197",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 345
+    },
+    {
+      "label": "m183_vtrace_orientation_pytest_dev__pytest_6197",
+      "arm": "treatment",
+      "instanceId": "pytest-dev__pytest-6197",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 374
+    },
+    {
+      "label": "m183_baseline_sphinx_doc__sphinx_9320",
+      "arm": "baseline",
+      "instanceId": "sphinx-doc__sphinx-9320",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 147
+    },
+    {
+      "label": "m183_vtrace_orientation_sphinx_doc__sphinx_9320",
+      "arm": "treatment",
+      "instanceId": "sphinx-doc__sphinx-9320",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 85
+    },
+    {
+      "label": "m183_baseline_sympy__sympy_12419",
+      "arm": "baseline",
+      "instanceId": "sympy__sympy-12419",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 347
+    },
+    {
+      "label": "m183_vtrace_orientation_sympy__sympy_12419",
+      "arm": "treatment",
+      "instanceId": "sympy__sympy-12419",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 328
+    },
+    {
+      "label": "m183_baseline_sympy__sympy_13372",
+      "arm": "baseline",
+      "instanceId": "sympy__sympy-13372",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 208
+    },
+    {
+      "label": "m183_vtrace_orientation_sympy__sympy_13372",
+      "arm": "treatment",
+      "instanceId": "sympy__sympy-13372",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 134
+    },
+    {
+      "label": "m183_baseline_sympy__sympy_13974",
+      "arm": "baseline",
+      "instanceId": "sympy__sympy-13974",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 201
+    },
+    {
+      "label": "m183_vtrace_orientation_sympy__sympy_13974",
+      "arm": "treatment",
+      "instanceId": "sympy__sympy-13974",
+      "checked": 5,
+      "matched": 5,
+      "mismatched": [],
+      "missing": [],
+      "toolCallsWithOutputsPresent": true,
+      "transcriptLines": 155
+    }
+  ]
+}

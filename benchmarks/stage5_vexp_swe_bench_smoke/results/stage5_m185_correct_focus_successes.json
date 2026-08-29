@@ -1,0 +1,235 @@
+{
+  "schemaVersion": "stage5.m185.correct-focus-successes.v1",
+  "milestone": "M185",
+  "workstream": "M185-C",
+  "question": "§98 — what repository evidence did successful runs recover after localization that failed runs did not?",
+  "medianDistinctFilesRead": 1,
+  "armsReadingExactlyOneFile": 11,
+  "armsReadingATestFile": 1,
+  "answer": "nothing. Eleven of thirteen read exactly one file, one of thirteen read a test file, and their median tool-call count is seven against fifteen and a half for unresolved arms. Successful runs recovered LESS evidence, not more.",
+  "cases": [
+    {
+      "instanceId": "astropy__astropy-14539",
+      "repo": "astropy/astropy",
+      "focus": "astropy/io/fits/diff.py::_BaseDiff.identical",
+      "filesRead": [
+        "astropy/io/fits/diff.py"
+      ],
+      "distinctFilesRead": 1,
+      "readAnyTestFile": false,
+      "toolCalls": 7,
+      "goldFiles": [
+        "astropy/io/fits/diff.py"
+      ],
+      "treatmentEdits": [
+        "astropy/io/fits/diff.py"
+      ]
+    },
+    {
+      "instanceId": "django__django-13658",
+      "repo": "django/django",
+      "focus": "django/core/management/__init__.py::ManagementUtility",
+      "filesRead": [
+        "django/core/management/__init__.py"
+      ],
+      "distinctFilesRead": 1,
+      "readAnyTestFile": false,
+      "toolCalls": 3,
+      "goldFiles": [
+        "django/core/management/__init__.py"
+      ],
+      "treatmentEdits": [
+        "django/core/management/__init__.py"
+      ]
+    },
+    {
+      "instanceId": "django__django-11133",
+      "repo": "django/django",
+      "focus": "django/http/response.py::HttpResponse",
+      "filesRead": [
+        "django/http/response.py"
+      ],
+      "distinctFilesRead": 1,
+      "readAnyTestFile": false,
+      "toolCalls": 8,
+      "goldFiles": [
+        "django/http/response.py"
+      ],
+      "treatmentEdits": [
+        "django/http/response.py"
+      ]
+    },
+    {
+      "instanceId": "pallets__flask-5014",
+      "repo": "pallets/flask",
+      "focus": "src/flask/blueprints.py::Blueprint",
+      "filesRead": [
+        "src/flask/blueprints.py"
+      ],
+      "distinctFilesRead": 1,
+      "readAnyTestFile": false,
+      "toolCalls": 4,
+      "goldFiles": [
+        "src/flask/blueprints.py"
+      ],
+      "treatmentEdits": [
+        "src/flask/blueprints.py"
+      ]
+    },
+    {
+      "instanceId": "psf__requests-1724",
+      "repo": "psf/requests",
+      "focus": "requests/sessions.py::Session.send",
+      "filesRead": [
+        "requests/models.py",
+        "requests/utils.py"
+      ],
+      "distinctFilesRead": 2,
+      "readAnyTestFile": false,
+      "toolCalls": 8,
+      "goldFiles": [
+        "requests/sessions.py"
+      ],
+      "treatmentEdits": [
+        "requests/models.py"
+      ]
+    },
+    {
+      "instanceId": "pydata__xarray-6599",
+      "repo": "pydata/xarray",
+      "focus": "xarray/core/computation.py::polyval",
+      "filesRead": [
+        "xarray/core/computation.py",
+        "xarray/core/duck_array_ops.py"
+      ],
+      "distinctFilesRead": 2,
+      "readAnyTestFile": false,
+      "toolCalls": 18,
+      "goldFiles": [
+        "xarray/core/computation.py"
+      ],
+      "treatmentEdits": [
+        "xarray/core/computation.py"
+      ]
+    },
+    {
+      "instanceId": "django__django-13820",
+      "repo": "django/django",
+      "focus": "django/db/migrations/loader.py::MigrationLoader",
+      "filesRead": [
+        "django/db/migrations/loader.py"
+      ],
+      "distinctFilesRead": 1,
+      "readAnyTestFile": false,
+      "toolCalls": 2,
+      "goldFiles": [
+        "django/db/migrations/loader.py"
+      ],
+      "treatmentEdits": [
+        "django/db/migrations/loader.py"
+      ]
+    },
+    {
+      "instanceId": "pytest-dev__pytest-7432",
+      "repo": "pytest-dev/pytest",
+      "focus": "src/_pytest/skipping.py::evaluate_skip_marks",
+      "filesRead": [
+        "src/_pytest/skipping.py"
+      ],
+      "distinctFilesRead": 1,
+      "readAnyTestFile": true,
+      "toolCalls": 12,
+      "goldFiles": [
+        "src/_pytest/skipping.py"
+      ],
+      "treatmentEdits": [
+        "src/_pytest/skipping.py"
+      ]
+    },
+    {
+      "instanceId": "django__django-16569",
+      "repo": "django/django",
+      "focus": "django/forms/formsets.py::BaseFormSet.add_fields",
+      "filesRead": [
+        "django/forms/formsets.py"
+      ],
+      "distinctFilesRead": 1,
+      "readAnyTestFile": false,
+      "toolCalls": 4,
+      "goldFiles": [
+        "django/forms/formsets.py"
+      ],
+      "treatmentEdits": [
+        "django/forms/formsets.py"
+      ]
+    },
+    {
+      "instanceId": "scikit-learn__scikit-learn-10844",
+      "repo": "scikit-learn/scikit-learn",
+      "focus": "sklearn/metrics/cluster/supervised.py::fowlkes_mallows_score",
+      "filesRead": [
+        "sklearn/metrics/cluster/supervised.py"
+      ],
+      "distinctFilesRead": 1,
+      "readAnyTestFile": false,
+      "toolCalls": 2,
+      "goldFiles": [
+        "sklearn/metrics/cluster/supervised.py"
+      ],
+      "treatmentEdits": [
+        "sklearn/metrics/cluster/supervised.py"
+      ]
+    },
+    {
+      "instanceId": "sympy__sympy-13480",
+      "repo": "sympy/sympy",
+      "focus": "sympy/functions/elementary/hyperbolic.py::coth",
+      "filesRead": [
+        "sympy/functions/elementary/hyperbolic.py"
+      ],
+      "distinctFilesRead": 1,
+      "readAnyTestFile": false,
+      "toolCalls": 14,
+      "goldFiles": [
+        "sympy/functions/elementary/hyperbolic.py"
+      ],
+      "treatmentEdits": [
+        "sympy/functions/elementary/hyperbolic.py"
+      ]
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-9320",
+      "repo": "sphinx-doc/sphinx",
+      "focus": "sphinx/cmd/quickstart.py::QuickstartRenderer._has_custom_template",
+      "filesRead": [
+        "sphinx/cmd/quickstart.py"
+      ],
+      "distinctFilesRead": 1,
+      "readAnyTestFile": false,
+      "toolCalls": 6,
+      "goldFiles": [
+        "sphinx/cmd/quickstart.py"
+      ],
+      "treatmentEdits": [
+        "sphinx/cmd/quickstart.py"
+      ]
+    },
+    {
+      "instanceId": "sympy__sympy-13372",
+      "repo": "sympy/sympy",
+      "focus": "sympy/core/evalf.py::evalf",
+      "filesRead": [
+        "sympy/core/evalf.py"
+      ],
+      "distinctFilesRead": 1,
+      "readAnyTestFile": false,
+      "toolCalls": 16,
+      "goldFiles": [
+        "sympy/core/evalf.py"
+      ],
+      "treatmentEdits": [
+        "sympy/core/evalf.py"
+      ]
+    }
+  ]
+}

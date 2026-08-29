@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "stage5.m185.start-state.v1",
+  "milestone": "M185",
+  "workstream": "M185-A",
+  "capturedAt": "2026-08-29T20:23:58.000Z",
+  "product": {
+    "head": "df74cf93d1e5d84aaff764b21c16aaf2b6b50797",
+    "branch": "main",
+    "trackedDirtyPathsBeforeM185": [
+      "benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_outcome_ledger.json",
+      "benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_outcome_ledger.md"
+    ],
+    "note": "Both predate M185 and are left untouched (CLAUDE.md). Untracked benchmark output, VTRACE_TOOLING_AUDIT.md, AGENTS.md and all user worktrees are preserved and deliberately not counted."
+  },
+  "inheritedFromM184": {
+    "evidenceCommits": ["7b10dcd06bcf036c1b85ce475dcf23d630b93d5e", "141947678d620b6b95e7bb3d7856849952112d6b", "df74cf93d1e5d84aaff764b21c16aaf2b6b50797"],
+    "m183Validity": "M183_INDEX_CONTAMINATION_NOT_OBSERVED",
+    "nextWork": "M183_FAILURE_STAGE_AUDIT_LICENSED"
+  },
+  "m183Authority": {
+    "protocolHash": "960e8f414e0625ee5183e66b4094d3e725b794c0e020e32f77ac217ffa7bb3fc",
+    "productHeadAtRun": "166d07a7d4856ea9c15f7c63601b553a2430b972",
+    "pairs": 30,
+    "arms": 60,
+    "liveSpend": "$38.33"
+  },
+  "m185Scope": {
+    "productChangeExpected": "NONE",
+    "liveWork": "NOT RUN",
+    "liveSpend": "$0.00",
+    "dockerGrading": "NOT RUN — the audit reads M183's preserved grader reports",
+    "offlineIndexing": "three SWE-bench repositories materialised at their base commits into the session scratchpad via git archive; no bench repository mutated, no git worktree created or removed"
+  }
+}

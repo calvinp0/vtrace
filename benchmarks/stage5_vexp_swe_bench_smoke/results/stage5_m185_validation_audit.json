@@ -1,0 +1,60 @@
+{
+  "schemaVersion": "stage5.m185.validation-audit.v1",
+  "milestone": "M185",
+  "workstream": "M185-C",
+  "executionCriterion": "the tool OUTPUT carries a runner banner or a pass/fail summary. exitCode is null for all 335 Bash calls in M183 and cannot be used.",
+  "armsTotal": 60,
+  "armsAttemptingSuite": 14,
+  "armsExecutingSuite": 5,
+  "armsNeverAttempting": 46,
+  "attemptsTotal": 51,
+  "attemptsRefusedByEnvironment": 36,
+  "executingArms": [
+    {
+      "instanceId": "django__django-12325",
+      "arm": "baseline",
+      "resolved": false,
+      "attempts": 7,
+      "executions": 3
+    },
+    {
+      "instanceId": "pytest-dev__pytest-7432",
+      "arm": "baseline",
+      "resolved": true,
+      "attempts": 9,
+      "executions": 1
+    },
+    {
+      "instanceId": "sympy__sympy-12419",
+      "arm": "baseline",
+      "resolved": true,
+      "attempts": 4,
+      "executions": 3
+    },
+    {
+      "instanceId": "sympy__sympy-13974",
+      "arm": "baseline",
+      "resolved": false,
+      "attempts": 2,
+      "executions": 1
+    },
+    {
+      "instanceId": "sympy__sympy-13974",
+      "arm": "treatment",
+      "resolved": false,
+      "attempts": 2,
+      "executions": 1
+    }
+  ],
+  "byOutcome": {
+    "resolved": {
+      "arms": 38,
+      "executingSuite": 2
+    },
+    "unresolved": {
+      "arms": 22,
+      "executingSuite": 3
+    }
+  },
+  "finding": "Validation against the repository's own tests is absent from BOTH arms and is therefore not what separates success from failure in M183. Where it was attempted it was refused by the environment, not declined by the agent."
+}

@@ -1,0 +1,53 @@
+{
+  "schemaVersion": "stage5.m185.failure-stage-counts.v1",
+  "milestone": "M185",
+  "workstream": "M185-B",
+  "population": "the six correct-focus VTRACE failures (cohort A)",
+  "stageCounts": [
+    {
+      "stage": "S3_CROSS_FILE_CONTRACT",
+      "count": 4,
+      "repositories": [
+        "django/django",
+        "mwaskom/seaborn",
+        "psf/requests",
+        "sphinx-doc/sphinx"
+      ],
+      "tasks": [
+        "psf__requests-5414",
+        "django__django-11820",
+        "mwaskom__seaborn-3187",
+        "sphinx-doc__sphinx-7462"
+      ],
+      "repositoryAddressable": "PARTIAL"
+    },
+    {
+      "stage": "S4_IMPLEMENTATION",
+      "count": 1,
+      "repositories": [
+        "django/django"
+      ],
+      "tasks": [
+        "django__django-13195"
+      ],
+      "repositoryAddressable": "NO"
+    },
+    {
+      "stage": "S2_REPAIR_HYPOTHESIS",
+      "count": 1,
+      "repositories": [
+        "sympy/sympy"
+      ],
+      "tasks": [
+        "sympy__sympy-13974"
+      ],
+      "repositoryAddressable": "NO"
+    }
+  ],
+  "evidenceCounts": {
+    "EVIDENCE_NOT_ACQUIRED": 4,
+    "EVIDENCE_ACQUIRED_AND_UNDERSTOOD_BUT_BAD_REPAIR": 1,
+    "EVIDENCE_ACQUIRED_BUT_MISUNDERSTOOD": 1
+  },
+  "firstDecisiveDivergenceRule": "the earliest stage whose predicate holds wins; S3 is ordered before S2 so a concrete second-file obligation is never absorbed into a generic bad-repair bucket"
+}

@@ -5688,3 +5688,115 @@ adversarial matrix                            tests
   successful runs recover equivalent evidence, and a narrow counterfactual
   intervention can be specified. Do not continue on "give the model more context
   and hope". No retrieval work and no live spend are licensed by M184.
+
+## M185 — M183 Failure-Stage Audit: Does Repository Intelligence Matter After Correct Localization?
+
+```text
+overall           PASS (A/B/C/D/E/F PASS)
+bottleneck        DOWNSTREAM_REPOSITORY_INFORMATION_BOTTLENECK_PARTIAL
+failure stage     CROSS_FILE_CONTRACT_DOMINANT            4 of 6, across 4 repositories
+addressability    CURRENT_VTRACE_AUTHORITY_PARTIALLY_ADDRESSES_FAILURE_MODE   2 of 6
+counterfactual    NO_COUNTERFACTUAL_INTERVENTION_LICENSED  0 cases have a success witness
+agent utility     VTRACE_AGENT_UTILITY_HYPOTHESIS_WEAKENED
+product work      NO_FURTHER_AGENT_UTILITY_PRODUCT_WORK_LICENSED
+authority         60/60 arm seals verified, 30/30 gold file sets recomputed from the dataset
+cohorts           A 6  B 13  C 6  G 5   D 2  E 2  F 9  both-solved 17   all reconcile with M183
+product changed   NO      retrieval NO   ranking NO   orientation NO   index NO
+live              NOT RUN  spend $0.00   docker NOT RUN
+evidence commits  <M185-1>
+```
+
+```text
+correct-focus SUCCESSES (13)              correct-focus FAILURES (6)
+  median distinct files read   1            first decisive divergence
+  read exactly one file       11/13           S3 cross-file contract        4
+  opened a test file           1/13           S2 repair synthesis           1
+  median tool calls            7              S4 implementation             1
+                                            evidence never acquired         4
+resolved arms        median calls 11         evidence on screen, misread     2
+unresolved arms      median calls 15.5       success witness (OBSERVED_USE)  0
+
+validation across all 60 arms             discordant pairs (4)
+  attempted the repo's suite    14           winner had MORE evidence        2
+  actually executed it           5           evidence equal on both sides    2
+  refused by the environment      9          orientation causal              0
+```
+
+## M185 standing findings
+
+- **The successful runs read less, not more.** The thirteen correct-focus
+  successes read a median of **one** file; eleven of thirteen read exactly one and
+  one of thirteen opened a test file, against a median of 15.5 tool calls for
+  unresolved arms. This is the finding that decides M185. A repository fact whose
+  absence explains a failure must be a fact some winner used; across sixty arms no
+  run recovered any of the four candidate facts. Whatever separates a correct
+  repair from an incorrect one in M183, it is not evidence supply.
+
+- **Three cases show the evidence was never the constraint.** In
+  `django__django-13195` both arms read `set_cookie(..., samesite=None)` twenty
+  lines above their edit and both wrote `samesite='Lax'`, producing byte-identical
+  patches. In `sympy__sympy-13974` the treatment had `tensor_product_simp_Mul`'s
+  own TODO on screen three times and the baseline never did — and the arm with the
+  extra evidence added an `is_Integer` guard that made its patch strictly worse.
+  In `psf__requests-5414` the *winning* arm explicitly considered the losing arm's
+  exact patch and rejected it because it "might have performance implications".
+
+- **The one real authority-versus-projection gap is in seaborn, and it is a
+  localization gap.** `seaborn/utils.py::locator_to_legend_entries` is indexed, sits
+  in the **same file as the delivered focus**, carries an incoming call edge and a
+  test caller, and comes back as a *pivot* for three queries derivable from the
+  issue text — while the delivered default packet spent its same-file slot on
+  `seaborn/utils.py::__all__`, annotated "no indexed relationship to it". With
+  `sphinx-doc__sphinx-7462` (a second `unparse` in `sphinx/pycode/ast.py` carrying
+  the identical defect) that is a `MISSING_PARALLEL_IMPLEMENTATION_SITE` mechanism
+  at 2 tasks / 2 repositories — below the 3-task threshold, with no success witness,
+  and it is a *second edit site*, which is the localization hypothesis M183 already
+  measured at zero. Recorded; not licensed.
+
+- **Presence in the authority is not selectability.** For `psf__requests-5414` the
+  decisive test is reverse-reachable from the focus at hop 4 — by which point the
+  frontier is 92 symbols — and no shipped tool or issue-derived query returns it
+  (`impact-graph --depth 3` misses it; three capsule phrasings miss it). An
+  intervention that emits everything four hops out is the "send all callers, all
+  tests, all paths" failure mode the audit was told to rule out in advance.
+
+- **`focusIsGoldFile` overstates localization.** `mwaskom__seaborn-3187` counts as a
+  correct focus because `seaborn/utils.py` is a gold file — but the focused symbol
+  was `move_legend` (relocating a legend) while the task needed
+  `locator_to_legend_entries` in the same file. The metric credited a lexical
+  coincidence on the word "legend". Quote M183's 2/30 gold-symbol rate beside the
+  19/30 file rate, always.
+
+- **Correct focus is neither necessary nor sufficient.** Six tasks were solved
+  without one — three with the packet **entirely ignored** — and
+  `pytest-dev__pytest-6197` was solved by editing `src/_pytest/main.py`, outside the
+  reference patch's file set. Six tasks were lost with one.
+
+- **M183's harness could not run the repositories' own tests, and this blocks a
+  whole class of future experiment.** Only **5 of 60** arms executed a test suite;
+  14 tried and 9 attempts were refused by the environment (`No module named
+  pytest`, `pip: command not found`). Validation behaviour in M183 is a property of
+  the harness, not an agent choice, so no validation-stage intervention is
+  evaluable on it. Fix this before designing any successor experiment. Related trap:
+  `exitCode` is `null` for all 335 captured Bash calls, so any "did it succeed"
+  metric keyed on it silently reports zero — the same family as M164's
+  truncated-output classifier failing open.
+
+- **The M184 "506 failures" count is not reproducible as parse failures.** Indexing
+  `django/django` at base commit `156a2138` (2,687 files, same product HEAD) gives
+  `totalParseFailures 0`, `filesFailed 0`, and 35 JavaScript files correctly
+  reported as `unregistered_language`/`skipped`. Recorded as
+  `INDEX_CLI_FAILURE_COUNT_SEMANTICS_STALE_OR_MISLEADING`; not fixed, and not
+  expanded into parser work. What matters for this audit is verified directly:
+  every candidate-evidence symbol it depended on was present in the offline index.
+
+- **Next-step recommendation: stop this thesis, and change something structural
+  before spending again.** `NO_FURTHER_AGENT_UTILITY_PRODUCT_WORK_LICENSED`. Two
+  measurements now point the same way — M183 found no effect from supplying the
+  right place, M185 finds no repeated fact whose absence explains the failures. Do
+  not enlarge the packet, retune ranking, add graph hops, or build a new analyzer
+  on the strength of the seaborn observation. If a milestone follows, it should
+  change the thesis rather than the retrieval: a different task distribution, a
+  working test environment so validation is measurable at all, or a product that
+  reasons about candidate repairs rather than supplying facts — which is a
+  different kind of system and needs its own authorization.

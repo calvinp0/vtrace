@@ -1,0 +1,296 @@
+{
+  "schemaVersion": "stage5.m185.controls.v1",
+  "milestone": "M185",
+  "workstream": "M185-B",
+  "readSetOverlap": [
+    {
+      "instanceId": "django__django-17084",
+      "jaccard": 0.14285714285714285,
+      "baselineOnly": [
+        "docs/releases/4.2.txt"
+      ],
+      "treatmentOnly": [
+        "django/db/models/aggregates.py",
+        "django/db/models/expressions.py",
+        "django/db/models/query.py",
+        "django/db/models/sql/compiler.py",
+        "tests/runtests.py"
+      ],
+      "outcomeCohort": "BOTH_SOLVED"
+    },
+    {
+      "instanceId": "sympy__sympy-12419",
+      "jaccard": 0.14285714285714285,
+      "baselineOnly": [
+        "sympy/functions/special/tensor_functions.py",
+        "sympy/matrices/expressions/tests/test_indexing.py"
+      ],
+      "treatmentOnly": [
+        "sympy/assumptions/sathandlers.py",
+        "sympy/core/basic.py",
+        "sympy/matrices/expressions/diagonal.py",
+        "sympy/plotting/plot.py"
+      ],
+      "outcomeCohort": "BOTH_SOLVED"
+    },
+    {
+      "instanceId": "django__django-13820",
+      "jaccard": 0.25,
+      "baselineOnly": [
+        "django/apps/config.py",
+        "django/db/migrations/questioner.py",
+        "django/utils/module_loading.py"
+      ],
+      "treatmentOnly": [],
+      "outcomeCohort": "BOTH_SOLVED"
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-22719",
+      "jaccard": 0.3333333333333333,
+      "baselineOnly": [],
+      "treatmentOnly": [
+        "lib/matplotlib/tests/test_category.py",
+        "lib/matplotlib/units.py"
+      ],
+      "outcomeCohort": "BOTH_SOLVED"
+    },
+    {
+      "instanceId": "django__django-12273",
+      "jaccard": 0.3333333333333333,
+      "baselineOnly": [
+        "django/db/models/fields/related_descriptors.py",
+        "django/db/models/options.py"
+      ],
+      "treatmentOnly": [],
+      "outcomeCohort": "F_BOTH_FAIL"
+    },
+    {
+      "instanceId": "psf__requests-1724",
+      "jaccard": 0.3333333333333333,
+      "baselineOnly": [
+        "requests/compat.py"
+      ],
+      "treatmentOnly": [
+        "requests/utils.py"
+      ],
+      "outcomeCohort": "BOTH_SOLVED"
+    },
+    {
+      "instanceId": "psf__requests-5414",
+      "jaccard": 0.3333333333333333,
+      "baselineOnly": [
+        "requests/adapters.py"
+      ],
+      "treatmentOnly": [
+        "requests/exceptions.py"
+      ],
+      "outcomeCohort": "E_BASELINE_ONLY_WIN"
+    },
+    {
+      "instanceId": "astropy__astropy-14369",
+      "jaccard": 0.4,
+      "baselineOnly": [
+        "astropy/units/format/ogip.py"
+      ],
+      "treatmentOnly": [
+        "astropy/io/ascii/cds.py",
+        "astropy/utils/parsing.py"
+      ],
+      "outcomeCohort": "D_VTRACE_ONLY_WIN"
+    },
+    {
+      "instanceId": "django__django-11820",
+      "jaccard": 0.5,
+      "baselineOnly": [
+        "tests/invalid_models_tests/test_models.py"
+      ],
+      "treatmentOnly": [],
+      "outcomeCohort": "F_BOTH_FAIL"
+    },
+    {
+      "instanceId": "pydata__xarray-6599",
+      "jaccard": 0.5,
+      "baselineOnly": [],
+      "treatmentOnly": [
+        "xarray/core/duck_array_ops.py"
+      ],
+      "outcomeCohort": "BOTH_SOLVED"
+    },
+    {
+      "instanceId": "pylint-dev__pylint-4551",
+      "jaccard": 0.6,
+      "baselineOnly": [
+        "pylint/pyreverse/diadefslib.py",
+        "pylint/pyreverse/writer.py"
+      ],
+      "treatmentOnly": [
+        "pylint/checkers/utils.py",
+        "tests/unittest_pyreverse_diadefs.py"
+      ],
+      "outcomeCohort": "F_BOTH_FAIL"
+    },
+    {
+      "instanceId": "pydata__xarray-4695",
+      "jaccard": 0.6666666666666666,
+      "baselineOnly": [],
+      "treatmentOnly": [
+        "xarray/core/indexing.py"
+      ],
+      "outcomeCohort": "BOTH_SOLVED"
+    },
+    {
+      "instanceId": "django__django-12325",
+      "jaccard": 0.75,
+      "baselineOnly": [
+        "tests/model_inheritance_regress/models.py"
+      ],
+      "treatmentOnly": [],
+      "outcomeCohort": "D_VTRACE_ONLY_WIN"
+    },
+    {
+      "instanceId": "astropy__astropy-14539",
+      "jaccard": 1,
+      "baselineOnly": [],
+      "treatmentOnly": [],
+      "outcomeCohort": "BOTH_SOLVED"
+    },
+    {
+      "instanceId": "django__django-13658",
+      "jaccard": 1,
+      "baselineOnly": [],
+      "treatmentOnly": [],
+      "outcomeCohort": "BOTH_SOLVED"
+    },
+    {
+      "instanceId": "django__django-11133",
+      "jaccard": 1,
+      "baselineOnly": [],
+      "treatmentOnly": [],
+      "outcomeCohort": "BOTH_SOLVED"
+    },
+    {
+      "instanceId": "mwaskom__seaborn-3187",
+      "jaccard": 1,
+      "baselineOnly": [],
+      "treatmentOnly": [],
+      "outcomeCohort": "F_BOTH_FAIL"
+    },
+    {
+      "instanceId": "pallets__flask-5014",
+      "jaccard": 1,
+      "baselineOnly": [],
+      "treatmentOnly": [],
+      "outcomeCohort": "BOTH_SOLVED"
+    },
+    {
+      "instanceId": "django__django-13195",
+      "jaccard": 1,
+      "baselineOnly": [],
+      "treatmentOnly": [],
+      "outcomeCohort": "F_BOTH_FAIL"
+    },
+    {
+      "instanceId": "django__django-13513",
+      "jaccard": 1,
+      "baselineOnly": [],
+      "treatmentOnly": [],
+      "outcomeCohort": "F_BOTH_FAIL"
+    },
+    {
+      "instanceId": "pytest-dev__pytest-7432",
+      "jaccard": 1,
+      "baselineOnly": [],
+      "treatmentOnly": [],
+      "outcomeCohort": "BOTH_SOLVED"
+    },
+    {
+      "instanceId": "django__django-16569",
+      "jaccard": 1,
+      "baselineOnly": [],
+      "treatmentOnly": [],
+      "outcomeCohort": "BOTH_SOLVED"
+    },
+    {
+      "instanceId": "scikit-learn__scikit-learn-10844",
+      "jaccard": 1,
+      "baselineOnly": [],
+      "treatmentOnly": [],
+      "outcomeCohort": "BOTH_SOLVED"
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-7462",
+      "jaccard": 1,
+      "baselineOnly": [],
+      "treatmentOnly": [],
+      "outcomeCohort": "F_BOTH_FAIL"
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-26466",
+      "jaccard": 1,
+      "baselineOnly": [],
+      "treatmentOnly": [],
+      "outcomeCohort": "F_BOTH_FAIL"
+    },
+    {
+      "instanceId": "sympy__sympy-13480",
+      "jaccard": 1,
+      "baselineOnly": [],
+      "treatmentOnly": [],
+      "outcomeCohort": "BOTH_SOLVED"
+    },
+    {
+      "instanceId": "pytest-dev__pytest-6197",
+      "jaccard": 1,
+      "baselineOnly": [],
+      "treatmentOnly": [],
+      "outcomeCohort": "E_BASELINE_ONLY_WIN"
+    },
+    {
+      "instanceId": "sphinx-doc__sphinx-9320",
+      "jaccard": 1,
+      "baselineOnly": [],
+      "treatmentOnly": [],
+      "outcomeCohort": "BOTH_SOLVED"
+    },
+    {
+      "instanceId": "sympy__sympy-13372",
+      "jaccard": 1,
+      "baselineOnly": [],
+      "treatmentOnly": [],
+      "outcomeCohort": "BOTH_SOLVED"
+    },
+    {
+      "instanceId": "sympy__sympy-13974",
+      "jaccard": 1,
+      "baselineOnly": [],
+      "treatmentOnly": [],
+      "outcomeCohort": "F_BOTH_FAIL"
+    }
+  ],
+  "medianJaccardByOutcome": {
+    "BOTH_SOLVED": 1,
+    "F_BOTH_FAIL": 1,
+    "D_VTRACE_ONLY_WIN": 0.575,
+    "E_BASELINE_ONLY_WIN": 0.6666666666666666
+  },
+  "knownPositive": {
+    "instanceId": "pytest-dev__pytest-6197",
+    "fact": "Module.__init__ sets _ALLOW_MARKERS = False for __init__.py, and PyobjMixin.obj consumes it — the mechanism that makes package __init__ files collectible.",
+    "witness": "src/_pytest/python.py (class Module, PyobjMixin)",
+    "preFilter": "selected mechanically as a discordant pair with low read-set overlap, before either transcript was read",
+    "treatmentOnScreen": 2,
+    "baselineOnScreen": 0,
+    "treatmentEdited": "src/_pytest/python.py",
+    "baselineEdited": "src/_pytest/main.py",
+    "expectation": "the arm that acquired the fact edits the file the fact lives in; the arm that did not, does not"
+  },
+  "knownNegative": {
+    "instanceId": "django__django-12325",
+    "fact": "the parent-link flag lives at field.remote_field.parent_link",
+    "witness": "django/db/models/fields/related.py",
+    "preFilter": "selected mechanically as a discordant pair, before either transcript was read",
+    "treatmentOnScreen": 6,
+    "baselineOnScreen": 5,
+    "expectation": "identical decisive evidence on both sides and divergent outcomes — the classifier must return NO_MISSING_REPOSITORY_FACT rather than invent one"
+  }
+}
