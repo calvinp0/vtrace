@@ -1,0 +1,203 @@
+{
+  "schemaVersion": "stage5.m184.materialization-matrix.v1",
+  "milestone": "M184",
+  "workstream": "M184-C/E",
+  "fixture": {
+    "kind": "synthetic generic git repository",
+    "files": [
+      "src/alpha.py",
+      "src/beta.py",
+      "src/util.ts",
+      "README.md"
+    ],
+    "healthyIndex": {
+      "scannedFiles": 3,
+      "graphFiles": 3,
+      "symbols": 11,
+      "edges": 11
+    },
+    "note": "generic, path-independent, not ARC and not vtrace-specific (\u00a784, \u00a785)"
+  },
+  "falseHealthyNoopStatesBefore": 7,
+  "falseHealthyNoopStatesAfter": 0,
+  "columns": [
+    "case",
+    "startingState",
+    "sourceChanged",
+    "registryOrManifestValid",
+    "materializationValid",
+    "beforeBehavior",
+    "afterBehavior",
+    "note"
+  ],
+  "rows": [
+    {
+      "case": "A",
+      "startingState": "healthy unchanged",
+      "sourceChanged": "no",
+      "registryOrManifestValid": "yes",
+      "materializationValid": "yes",
+      "beforeBehavior": "noop / exit 0 / 3 files / 11 symbols",
+      "afterBehavior": "noop / exit 0 / 3 files / 11 symbols",
+      "note": "control: legitimate no-op preserved"
+    },
+    {
+      "case": "B",
+      "startingState": ".vtrace deleted (registry survives)",
+      "sourceChanged": "no",
+      "registryOrManifestValid": "yes",
+      "materializationValid": "no",
+      "beforeBehavior": "noop / exit 0 / 0 files / 0 symbols",
+      "afterBehavior": "incremental / exit 0 / 3 files / 11 symbols",
+      "note": "THE REPORTED DEFECT"
+    },
+    {
+      "case": "C",
+      "startingState": "index.sqlite removed, dir+manifest remain",
+      "sourceChanged": "no",
+      "registryOrManifestValid": "yes",
+      "materializationValid": "no",
+      "beforeBehavior": "noop / exit 0 / 0 files / 0 symbols",
+      "afterBehavior": "incremental / exit 0 / 3 files / 11 symbols",
+      "note": "manifest path \u2014 NOT in the M183 report"
+    },
+    {
+      "case": "D",
+      "startingState": "zero-byte DB placeholder",
+      "sourceChanged": "no",
+      "registryOrManifestValid": "yes",
+      "materializationValid": "no",
+      "beforeBehavior": "noop / exit 0 / 0 files / 0 symbols",
+      "afterBehavior": "incremental / exit 0 / 3 files / 11 symbols",
+      "note": "existence is not validity (\u00a720)"
+    },
+    {
+      "case": "D2",
+      "startingState": "foreign-schema DB",
+      "sourceChanged": "no",
+      "registryOrManifestValid": "yes",
+      "materializationValid": "no",
+      "beforeBehavior": "noop / exit 0 / 0 files / 0 symbols",
+      "afterBehavior": "incremental / exit 0 / 3 files / 11 symbols",
+      "note": "migrations create empty tables"
+    },
+    {
+      "case": "C2",
+      "startingState": "empty .vtrace directory",
+      "sourceChanged": "no",
+      "registryOrManifestValid": "yes",
+      "materializationValid": "no",
+      "beforeBehavior": "noop / exit 0 / 0 files / 0 symbols",
+      "afterBehavior": "incremental / exit 0 / 3 files / 11 symbols",
+      "note": ""
+    },
+    {
+      "case": "E",
+      "startingState": "graph tables emptied, manifest intact",
+      "sourceChanged": "no",
+      "registryOrManifestValid": "yes",
+      "materializationValid": "no",
+      "beforeBehavior": "noop / exit 0 / 0 files / 0 symbols",
+      "afterBehavior": "incremental / exit 0 / 3 files / 11 symbols",
+      "note": ""
+    },
+    {
+      "case": "F",
+      "startingState": "incompatible schema_version",
+      "sourceChanged": "no",
+      "registryOrManifestValid": "no",
+      "materializationValid": "n/a",
+      "beforeBehavior": "full_rebuild / exit 0 / 3 files / 11 symbols",
+      "afterBehavior": "full_rebuild / exit 0 / 3 files / 11 symbols",
+      "note": "control: already correct, unchanged"
+    },
+    {
+      "case": "G",
+      "startingState": "valid DB, manifest absent",
+      "sourceChanged": "no",
+      "registryOrManifestValid": "yes",
+      "materializationValid": "yes",
+      "beforeBehavior": "noop / exit 0 / 3 files / 11 symbols",
+      "afterBehavior": "noop / exit 0 / 3 files / 11 symbols",
+      "note": "control: registry + healthy graph = valid no-op"
+    },
+    {
+      "case": "H",
+      "startingState": "corrupt DB bytes",
+      "sourceChanged": "no",
+      "registryOrManifestValid": "yes",
+      "materializationValid": "no",
+      "beforeBehavior": "exit 1, truthful failure",
+      "afterBehavior": "exit 1, truthful failure",
+      "note": "control: already truthful, unchanged"
+    },
+    {
+      "case": "I",
+      "startingState": "real source change",
+      "sourceChanged": "yes",
+      "registryOrManifestValid": "yes",
+      "materializationValid": "yes",
+      "beforeBehavior": "incremental / exit 0 / 3 files / 11 symbols",
+      "afterBehavior": "incremental / exit 0 / 3 files / 11 symbols",
+      "note": "control: incremental semantics preserved"
+    },
+    {
+      "case": "J",
+      "startingState": "file added",
+      "sourceChanged": "yes",
+      "registryOrManifestValid": "yes",
+      "materializationValid": "yes",
+      "beforeBehavior": "full_rebuild / 4 files / 13 symbols",
+      "afterBehavior": "full_rebuild / 4 files / 13 symbols",
+      "note": "control (closure_uncertain, pre-existing)"
+    },
+    {
+      "case": "K",
+      "startingState": "file deleted",
+      "sourceChanged": "yes",
+      "registryOrManifestValid": "yes",
+      "materializationValid": "yes",
+      "beforeBehavior": "full_rebuild / 3 files / 11 symbols",
+      "afterBehavior": "full_rebuild / 3 files / 11 symbols",
+      "note": "control"
+    },
+    {
+      "case": "L",
+      "startingState": "empty repository, .vtrace deleted",
+      "sourceChanged": "no",
+      "registryOrManifestValid": "yes",
+      "materializationValid": "valid-empty",
+      "beforeBehavior": "noop / 0 files / 0 symbols",
+      "afterBehavior": "noop / 0 files / 0 symbols",
+      "note": "\u00a748: an empty index is VALID and must stay a no-op"
+    },
+    {
+      "case": "M",
+      "startingState": "supported files, zero definitions, .vtrace deleted",
+      "sourceChanged": "no",
+      "registryOrManifestValid": "yes",
+      "materializationValid": "no",
+      "beforeBehavior": "(not separately measured pre-fix)",
+      "afterBehavior": "incremental / 2 files / 2 symbols",
+      "note": "\u00a749"
+    },
+    {
+      "case": "N",
+      "startingState": "never-indexed sibling worktree, `vtrace index`",
+      "sourceChanged": "no",
+      "registryOrManifestValid": "yes (sibling's)",
+      "materializationValid": "no",
+      "beforeBehavior": "noop / exit 0 / 0 files / 0 symbols",
+      "afterBehavior": "incremental / exit 0 / 3 files / 11 symbols",
+      "note": "\u00a735 cross-worktree authority"
+    }
+  ],
+  "controls": {
+    "knownPositive": "case B \u2014 invalid no-op before, recovery after",
+    "knownNegative": "case A \u2014 legitimate no-op before AND after; the repair does not disable no-op",
+    "identityControl": "three consecutive indexes on healthy unchanged state: noop, noop, noop; semantics identical to clean full",
+    "deleteRebuildIdempotence": "three delete+index cycles, each semantically identical to the clean full index",
+    "emptyRepositoryControl": "case L \u2014 a symbolCount>0 rule would have failed this"
+  },
+  "liveSpendUsd": 0.0
+}

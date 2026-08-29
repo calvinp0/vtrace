@@ -5596,3 +5596,95 @@ localization                      economics
   correct-focus failures (§124): the evidence says they are repair failures. If a
   milestone follows, it should look at repair and validation, and it should first
   fix the indexer defect above, which is worth more than another benchmark.
+
+## M184 — Index Materialization Authority and Truthful No-op Semantics
+
+```text
+overall           PASS (A/B/C/D/E/F PASS)
+root cause        NOOP_PREDICATE_OMITS_MATERIALIZATION_VALIDITY
+repair            INDEX_MATERIALIZATION_REPAIR_VALIDATED
+no-op             TRUTHFUL_NOOP_SEMANTICS_VALIDATED     7 false-healthy states -> 0
+index equivalence REMATERIALIZED_INDEX_SEMANTIC_EQUIVALENCE_VALIDATED  22,105-row dump identical
+retrieval         RETRIEVAL_SEMANTICS_PRESERVED         32/32 packets, paired per-arm indexes
+M183 validity     M183_INDEX_CONTAMINATION_NOT_OBSERVED 30/30 arms full_rebuild, DB-read symbols
+product           KEEP_INDEXER_WITH_MATERIALIZATION_AUTHORITY_FIX
+truthfulness      INDEX_STATUS_TRUTHFULNESS_PRESERVED_OR_STRENGTHENED
+performance       INDEX_REPAIR_PERFORMANCE_ACCEPTABLE   no-op flat; recovery 1.8s vs 10.6s rebuild
+next              M183_FAILURE_STAGE_AUDIT_LICENSED
+product changed   YES     retrieval NO   ranking NO   index format NO   lifecycle YES
+live              NOT RUN  spend $0.00
+evidence commits  <backfilled below>
+```
+
+```text
+headline (1,257 scanned / 747 indexable)      no-op control (same repo)
+  rm -rf .vtrace && vtrace index                healthy unchanged, vtrace index
+  BEFORE  exit 0, "indexed", noop                 BEFORE  noop, 0 parsed, 378-398 ms
+          0 files, 0 symbols                      AFTER   noop, 0 parsed, 372-399 ms
+          query: "Repo not indexed"               empty repo after rm -rf: still noop
+  AFTER   exit 0, incremental
+          747 files, 5,128 symbols              recovery cost
+          query: pivot delivered                  747 cache hits, 0 reparsed, 1.8 s
+                                                  full rebuild it replaces: 10.6 s
+adversarial matrix                            tests
+  false-healthy states before      7            new tests                14
+  false-healthy states after       0            known-positive detectors  5
+  already-correct controls         4            controls passing both     9
+  unchanged by the repair          4            suite  5574 pass / 49 skip / 0 fail
+```
+
+## M184 standing findings
+
+- **The guard existed and was dead.** `indexProject` already degraded a no-op when
+  `options.hasExistingGraph === false` — but **only `src/setup/initRepo.ts` ever
+  passed that option**. `reindexRepoAndRefreshState`, the path behind `vtrace
+  index`, never did. So `vtrace init` was safe in a fresh worktree while `vtrace
+  index` was not, which is exactly the shape that lets a defect survive review: the
+  correct condition is present in the code and unreachable from the CLI.
+
+- **The defect was broader than reported.** M183 recorded it as the durable
+  registry under `<gitCommonDir>/vtrace` surviving `rm -rf .vtrace`. Measured
+  generically, **seven** states produced a healthy no-op over an empty graph, and
+  two are not registry cases at all: `.vtrace/index.meta.json` intact with only
+  `index.sqlite` deleted (the manifest alone certifies an empty database), and a
+  **never-indexed sibling worktree** whose first `vtrace index` adopted another
+  worktree's snapshot because the registry is keyed by the shared `repositoryId`.
+
+- **`noop` is the only mode that skips the persist transaction.** That transaction
+  `DELETE`s `files`/`symbols`/`edges` and every FTS table and re-inserts all parse
+  results for `incremental` and `full_rebuild` alike — "incremental" is a *parse*
+  optimization, not a partial-graph mutation. This is why no-op eligibility is the
+  entire attack surface, and why degrading a false no-op to `incremental` is a full
+  re-materialization that still costs only a cache read: 747 hits, 0 reparses.
+
+- **The validity predicate must be structural, never content-count.** `symbolCount
+  > 0` would call a legitimately empty repository broken. Comparing the snapshot's
+  **indexed subset** against the `files` table by path and content hash is
+  coherence between two surfaces the same transaction writes: an empty repository
+  matches an empty graph and stays a valid no-op, and a graph attached to the wrong
+  source state is caught for free. Validated on a mixed repository where 506
+  `failed` and 4 `skipped` entries are correctly excluded and the indexed set
+  matches the graph exactly.
+
+- **A paired product comparison must give each arm its own index.** M184's first
+  retrieval proof was confounded: reverting product source to build the predecessor
+  arm moved `indexer_fingerprint`, so that arm correctly refused an index built by
+  the other and reported `capsuleMode: no_context`. That is M141/M146 working, not
+  a retrieval change — but it would read as a catastrophic regression to anyone
+  comparing a stored baseline. CLAUDE.md's rule that each side generate its own
+  index against the same immutable corpus is load-bearing, not ceremony.
+
+- **M183 is not reinterpreted.** All 30 counted treatment arms are authoritatively
+  clean, on a witness M183 built for this exact purpose during its own preparation.
+  `CURRENT_PRODUCT_UTILITY_NEUTRAL` stands. The index defect was real and
+  user-reachable and it did not touch the benchmark.
+
+- **Next-step recommendation: the M183 failure-stage audit, and nothing else yet.**
+  `M183_FAILURE_STAGE_AUDIT_LICENSED`. It must begin with no product hypothesis and
+  no code changes, and the standing threshold from the M184 prompt applies: continue
+  VTRACE coding-agent utility work only if the audit finds a repeated mechanism
+  where localization was already correct, failure occurred downstream, a concrete
+  repository fact was missing, that fact is derivable from VTRACE authority,
+  successful runs recover equivalent evidence, and a narrow counterfactual
+  intervention can be specified. Do not continue on "give the model more context
+  and hope". No retrieval work and no live spend are licensed by M184.
