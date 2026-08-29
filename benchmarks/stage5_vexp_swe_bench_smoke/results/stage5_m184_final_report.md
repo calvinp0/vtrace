@@ -27,6 +27,9 @@ index lifecycle   YES
 
 live spend        $0.00
 live work         NOT RUN
+commits           7b10dcd06bcf036c1b85ce475dcf23d630b93d5e  (product repair + tests)
+                  141947678d620b6b95e7bb3d7856849952112d6b  (evidence + closure)
+                  <this commit>                              (SHA backfill)
 pushed            NO
 ```
 

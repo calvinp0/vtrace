@@ -5613,7 +5613,7 @@ performance       INDEX_REPAIR_PERFORMANCE_ACCEPTABLE   no-op flat; recovery 1.8
 next              M183_FAILURE_STAGE_AUDIT_LICENSED
 product changed   YES     retrieval NO   ranking NO   index format NO   lifecycle YES
 live              NOT RUN  spend $0.00
-evidence commits  <backfilled below>
+evidence commits  7b10dcd0  14194767
 ```
 
 ```text
