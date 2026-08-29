@@ -1,0 +1,194 @@
+{
+  "milestone": "M186",
+  "probe": "fixtures/python copied into an isolated git repository; each row independently indexed",
+  "arms": {
+    "head": "e9c98c495ec81fd3b31423d65fb6ad472e533d48",
+    "preM184": "142ad112d66c636968b291ba4409160619ab821c (7b10dcd0~1)"
+  },
+  "summary": {
+    "rows": 9,
+    "pass": 9,
+    "falseHealthyOnHead": 0,
+    "falseHealthyOnPreM184": 5,
+    "discriminatingRows": [
+      "R2",
+      "R3",
+      "R5a",
+      "R5b",
+      "R7"
+    ]
+  },
+  "rows": [
+    {
+      "case": "R1",
+      "scenario": "unchanged + healthy materialization (expect noop)",
+      "requiredBehavior": "noop",
+      "head": {
+        "mode": "noop",
+        "fallback": "none",
+        "graph": "files=20 symbols=50 edges=21",
+        "runtime": "USABLE"
+      },
+      "preM184": {
+        "mode": "noop",
+        "fallback": "none",
+        "graph": "files=20 symbols=50 edges=21",
+        "runtime": "USABLE"
+      },
+      "discriminating": false,
+      "verdict": "PASS"
+    },
+    {
+      "case": "R2",
+      "scenario": "unchanged + .vtrace removed entirely (expect rebuild)",
+      "requiredBehavior": "rematerialize",
+      "head": {
+        "mode": "incremental",
+        "fallback": "materialization_missing",
+        "graph": "files=20 symbols=50 edges=21",
+        "runtime": "USABLE"
+      },
+      "preM184": {
+        "mode": "noop",
+        "fallback": "none",
+        "graph": "files=0 symbols=0 edges=0",
+        "runtime": "BROKEN"
+      },
+      "discriminating": true,
+      "verdict": "PASS"
+    },
+    {
+      "case": "R3",
+      "scenario": "unchanged + index.sqlite deleted, manifest intact (expect rebuild)",
+      "requiredBehavior": "rematerialize",
+      "head": {
+        "mode": "incremental",
+        "fallback": "materialization_missing",
+        "graph": "files=20 symbols=50 edges=21",
+        "runtime": "USABLE"
+      },
+      "preM184": {
+        "mode": "noop",
+        "fallback": "none",
+        "graph": "files=0 symbols=0 edges=0",
+        "runtime": "BROKEN"
+      },
+      "discriminating": true,
+      "verdict": "PASS"
+    },
+    {
+      "case": "R4",
+      "scenario": "source changed + healthy materialization (expect incremental)",
+      "requiredBehavior": "index",
+      "head": {
+        "mode": "full_rebuild",
+        "fallback": "closure_uncertain",
+        "graph": "files=20 symbols=51 edges=21",
+        "runtime": "USABLE"
+      },
+      "preM184": {
+        "mode": "full_rebuild",
+        "fallback": "closure_uncertain",
+        "graph": "files=20 symbols=51 edges=21",
+        "runtime": "USABLE"
+      },
+      "discriminating": false,
+      "verdict": "PASS"
+    },
+    {
+      "case": "R5a",
+      "scenario": "unchanged + foreign-schema database (expect no false noop)",
+      "requiredBehavior": "rematerialize",
+      "head": {
+        "mode": "incremental",
+        "fallback": "materialization_missing",
+        "graph": "files=20 symbols=50 edges=21",
+        "runtime": "USABLE"
+      },
+      "preM184": {
+        "mode": "noop",
+        "fallback": "none",
+        "graph": "files=0 symbols=0 edges=0",
+        "runtime": "BROKEN"
+      },
+      "discriminating": true,
+      "verdict": "PASS"
+    },
+    {
+      "case": "R5b",
+      "scenario": "unchanged + partial graph, some indexed files dropped (expect no false noop)",
+      "requiredBehavior": "rematerialize",
+      "head": {
+        "mode": "incremental",
+        "fallback": "materialization_missing",
+        "graph": "files=20 symbols=50 edges=21",
+        "runtime": "USABLE"
+      },
+      "preM184": {
+        "mode": "noop",
+        "fallback": "none",
+        "graph": "files=2 symbols=0 edges=21",
+        "runtime": "BROKEN"
+      },
+      "discriminating": true,
+      "verdict": "PASS"
+    },
+    {
+      "case": "R6",
+      "scenario": "unchanged + incompatible indexer fingerprint (expect rebuild, never false noop)",
+      "requiredBehavior": "rematerialize",
+      "head": {
+        "mode": "full_rebuild",
+        "fallback": "derivation_incompatible",
+        "graph": "files=20 symbols=50 edges=21",
+        "runtime": "USABLE"
+      },
+      "preM184": {
+        "mode": "full_rebuild",
+        "fallback": "derivation_incompatible",
+        "graph": "files=20 symbols=50 edges=21",
+        "runtime": "USABLE"
+      },
+      "discriminating": false,
+      "verdict": "PASS"
+    },
+    {
+      "case": "R7",
+      "scenario": "unchanged + graph attached to wrong source state (expect rebuild)",
+      "requiredBehavior": "rematerialize",
+      "head": {
+        "mode": "incremental",
+        "fallback": "materialization_missing",
+        "graph": "files=20 symbols=50 edges=21",
+        "runtime": "USABLE"
+      },
+      "preM184": {
+        "mode": "noop",
+        "fallback": "none",
+        "graph": "files=20 symbols=50 edges=21",
+        "runtime": "USABLE"
+      },
+      "discriminating": true,
+      "verdict": "PASS"
+    },
+    {
+      "case": "R8",
+      "scenario": "fresh repo, no snapshot, no materialization (expect initial index)",
+      "requiredBehavior": "index",
+      "head": {
+        "mode": "full_rebuild",
+        "fallback": "snapshot_missing",
+        "graph": "files=20 symbols=50 edges=21",
+        "runtime": "USABLE"
+      },
+      "preM184": {
+        "mode": "full_rebuild",
+        "fallback": "snapshot_missing",
+        "graph": "files=20 symbols=50 edges=21",
+        "runtime": "USABLE"
+      },
+      "discriminating": false,
+      "verdict": "PASS"
+    }
+  ]
+}

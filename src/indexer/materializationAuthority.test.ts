@@ -351,3 +351,84 @@ test("a worktree that has never been indexed does not inherit a sibling's materi
     "a never-indexed worktree must materialize its own graph",
   );
 });
+
+// ---------------------------------------------------------------------------
+// M186. The lifecycle states the predicate governs that were not yet exercised
+// end-to-end, and the reporting property the M183 specimen actually violated.
+// ---------------------------------------------------------------------------
+
+function materializedFileRows(dbPath: string): ReadonlyArray<{ path: string; contentHash: string }> {
+  const db = openIndexerDatabase(dbPath);
+  try {
+    return db
+      .query("SELECT path AS path, content_hash AS contentHash FROM files")
+      .all() as ReadonlyArray<{ path: string; contentHash: string }>;
+  } finally {
+    db.close();
+  }
+}
+
+test("M186: a completed index never reports more indexed files than the graph materializes", async () => {
+  // The M183 specimen's user-visible lie: exit 0, `status: indexed` over every
+  // file, a manifest whose entries all said `indexOutcome: "indexed"`, and a
+  // database holding nothing. Asserting `mode !== "noop"` catches the planner
+  // defect but not this one — success must not describe work the graph cannot
+  // corroborate, whichever mode produced it.
+  const fixture = await createIndexedRepo(SAMPLE_FILES);
+  await rm(path.join(fixture.repoRoot, ".vtrace"), { recursive: true, force: true });
+
+  const result = await reindexRepoAndRefreshState(reindexInput(fixture));
+
+  const claimed = result.indexResult.files.filter((file) => file.status === "indexed");
+  const materialized = new Map(materializedFileRows(fixture.dbPath).map((row) => [row.path, row.contentHash]));
+  assert.ok(claimed.length > 0, "fixture must claim indexed files for this assertion to bite");
+  assert.equal(result.indexResult.totalFilesSuccessfullyIndexed, claimed.length);
+  for (const file of claimed) {
+    assert.ok(
+      materialized.has(file.path),
+      `reported ${file.path} as indexed but the graph holds no row for it`,
+    );
+  }
+});
+
+test("M186: a database that cannot answer for the graph is not a no-op", async () => {
+  // `.vtrace/index.sqlite` present but holding a foreign schema. The file
+  // existing is not the question the planner needs answered, so a readable
+  // path plus a live registry snapshot must still not certify a no-op.
+  const fixture = await createIndexedRepo(SAMPLE_FILES);
+  const before = graphShape(fixture.dbPath);
+  await rm(fixture.dbPath, { force: true });
+  const foreign = openIndexerDatabase(fixture.dbPath);
+  try {
+    foreign.run("DROP TABLE IF EXISTS files");
+    foreign.run("CREATE TABLE unrelated (x INTEGER)");
+  } finally {
+    foreign.close();
+  }
+
+  const result = await reindexRepoAndRefreshState(reindexInput(fixture));
+
+  assert.notEqual(result.indexResult.performance?.mode, "noop");
+  assert.deepEqual(graphShape(fixture.dbPath), before);
+});
+
+test("M186: a graph materialized from different content than the snapshot records is not a no-op", async () => {
+  // Identity, not availability: every file the snapshot names has a row, so a
+  // presence-only check passes. The rows describe content this source state
+  // never had, which is the shape a graph belonging to another repository,
+  // worktree or commit would take.
+  const fixture = await createIndexedRepo(SAMPLE_FILES);
+  const before = materializedFileRows(fixture.dbPath);
+  assert.ok(before.length > 0, "fixture must materialize files for this assertion to bite");
+  const db = openIndexerDatabase(fixture.dbPath);
+  try {
+    db.run("UPDATE files SET content_hash = 'deadbeef' || substr(content_hash, 9)");
+  } finally {
+    db.close();
+  }
+
+  const result = await reindexRepoAndRefreshState(reindexInput(fixture));
+
+  assert.notEqual(result.indexResult.performance?.mode, "noop");
+  assert.deepEqual(materializedFileRows(fixture.dbPath), before);
+});

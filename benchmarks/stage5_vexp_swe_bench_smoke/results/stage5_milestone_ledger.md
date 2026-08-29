@@ -5800,3 +5800,85 @@ validation across all 60 arms             discordant pairs (4)
   working test environment so validation is measurable at all, or a product that
   reasons about candidate repairs rather than supplying facts — which is a
   different kind of system and needs its own authorization.
+
+## M186 — Materialized Index Lifecycle Correctness
+
+```text
+overall           PASS (case B: current HEAD already contained the repair)
+defect probe      DEFECT_NOT_PRESENT_ON_CURRENT_HEAD
+repaired by       7b10dcd0 (M184); probe validated as known-positive at 7b10dcd0~1 (142ad112)
+invariant         NOOP_ELIGIBLE = SOURCE_STATE_EQUIVALENT && MATERIALIZATION_READY
+state matrix      9 rows x 2 arms   false-healthy no-ops: HEAD 0/9, pre-M184 5/9
+discriminating    R2 R3 R5a R5b R7  (the four already-correct controls R1 R4 R6 R8 agree)
+runtime proof     REMATERIALIZED_INDEX_CONSUMABLE  (impact, capsule, skeleton, run-pipeline, status)
+no-change proof   HEALTHY_SEMANTICS_UNCHANGED  (files/symbols/edges/manifest identical)
+residual field    productContext.repository.indexMode full_rebuild -> incremental (truthful provenance)
+performance       healthy no-op 162-168ms vs pre-M184 159-169ms; recovery 189ms vs 1134ms cold rebuild
+product changed   NO      retrieval NO   ranking NO   index format NO
+tests             +3 lifecycle regressions (14 -> 17), all known-positive detectors
+gates             typecheck PASS  typecheck:benchmarks PASS  bun test 5595/0 fail  diff --check clean
+live              NOT RUN  spend $0.00   docker NOT RUN
+evidence commits  <this commit>
+```
+
+```text
+M183 sequence, measured on both arms          pre-M184 (142ad112)   HEAD (e9c98c49)
+  exit code                                     0                     0
+  refresh mode                                  noop                  incremental
+  fallback reason                               none                  materialization_missing
+  manifest entries claiming indexOutcome        20                    20
+  database files / symbols / edges              0 / 0 / 0             20 / 50 / 21
+  impact-graph on an indexed symbol             unknown_symbol        resolved
+  capsule                                       "Repo not indexed"    pivot delivered
+```
+
+## M186 standing findings
+
+- **The invariant holds on the CLI path, and the probe that proves it can fail.**
+  `evaluateMaterializedGraph` is consulted for every planned no-op in
+  `indexProject` (`src/indexer/indexProject.ts:179`), not only when a caller
+  passes `hasExistingGraph`. That is the whole difference: the pre-M184 guard was
+  correct and unreachable from `vtrace index`, which is why `vtrace init` was safe
+  in a fresh worktree while `vtrace index` was not. Any future audit of this
+  invariant should re-run the matrix against `7b10dcd0~1` rather than trusting a
+  green suite — five rows only discriminate because the control reproduces them.
+
+- **Source-state equivalence has two producers, not one.** The registry under
+  `<gitCommonDir>/vtrace/repositories/<id>/snapshots` is consulted *only* when
+  `.vtrace/index.meta.json` is absent (`reindexRepo.ts`, `localSnapshot ??
+  reusable?.snapshot`). Deleting `.vtrace` wholesale and deleting only
+  `index.sqlite` therefore reach the no-op through different authorities — R2 and
+  R3 in the matrix — and a repair covering only the registry path would leave the
+  manifest path defective. Both are now covered end-to-end.
+
+- **Manifest truthfulness needed its own assertion.** Every pre-existing lifecycle
+  test asserts `mode !== "noop"` and compares graph shape, which catches the
+  planner defect but not the user-visible lie: the M183 specimen reported
+  `status: indexed` over 20 files whose manifest entries all said
+  `indexOutcome: "indexed"` while the database held nothing. The manifest and the
+  graph are written by the same transaction, and the no-op path returns the
+  manifest *without entering* it — so the added regression binds reported success
+  to a graph row per claimed file, whichever mode produced it.
+
+- **Readiness is not `symbolCount > 0`, and the matrix confirms the cost of that
+  choice is nil.** The predicate compares the snapshot's indexed subset against the
+  `files` table by path and content hash, so a repository with no parsable symbols
+  matches an empty graph and stays a legitimate no-op, while a graph attached to a
+  different source state (R7) is caught for free — pre-M184 that state produced a
+  no-op over a stale graph that was *usable*, and therefore invisible to any
+  liveness-based check.
+
+- **The repair is not paid for with rebuilds.** Steady-state healthy no-ops are
+  162-168ms on HEAD against 159-169ms pre-M184; the added read is cheaper than the
+  `listAllSymbols`/`listAllEdges` that branch already performed. Recovery is a
+  re-materialization served from the durable parse cache (189ms, 20 hits, 0
+  reparses) rather than a reparse (1134ms cold). A future change that makes the
+  healthy path measurably slower, or that recovers by forcing `full_rebuild`, is
+  regressing this milestone even if the matrix still passes.
+
+- **Next-step recommendation: none licensed from here.** M186 is lifecycle
+  correctness only and closes on the invariant. M185's
+  `NO_FURTHER_AGENT_UTILITY_PRODUCT_WORK_LICENSED` is unaffected — a working index
+  lifecycle was never the thing M183 measured, so this repair is not evidence that
+  rerunning it would land differently. Phase 1B, if it happens, is a separate
+  milestone with its own authorization.

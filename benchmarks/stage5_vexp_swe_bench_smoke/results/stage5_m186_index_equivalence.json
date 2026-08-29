@@ -1,0 +1,42 @@
+{
+  "milestone": "M186",
+  "claim": "A materialization recovered after `rm -rf .vtrace` reproduces the pre-deletion semantic authority.",
+  "method": "One repository indexed healthy; every surface captured; `.vtrace` deleted; `vtrace index` re-run; the same surfaces re-captured and compared with volatile fields (latency, timestamps, temp paths, run ids) excluded.",
+  "indexAuthority": {
+    "filesIdentical": true,
+    "symbolsIdentical": true,
+    "edgeCountIdentical": true,
+    "tablesIdentical": true,
+    "counts": {
+      "files": {
+        "c": 20
+      },
+      "symbols": {
+        "c": 50
+      },
+      "edges": {
+        "c": 21
+      }
+    },
+    "manifestIdentical": true
+  },
+  "productSurfaces": {
+    "impact": "SEMANTICALLY IDENTICAL",
+    "skeleton": "SEMANTICALLY IDENTICAL",
+    "capsule": "$.productContext.repository.indexMode: \"full_rebuild\"  ->  \"incremental\"",
+    "pipeline": "$.productContext.repository.indexMode: \"full_rebuild\"  ->  \"incremental\"",
+    "status": "SEMANTICALLY IDENTICAL"
+  },
+  "knownVariableFieldsExcluded": [
+    "latencyMs and every *Ms timing field",
+    "timestampMs / createdAt",
+    "absolute temp paths",
+    "responseBudget.serializedCharacters (varies only with the character width of latencyMs; estimatedOutputTokens is identical at 1447)"
+  ],
+  "residualDifference": {
+    "field": "productContext.repository.indexMode",
+    "before": "full_rebuild",
+    "after": "incremental",
+    "assessment": "Truthful provenance describing how the last index run materialized the graph, not a retrieval or ranking semantic. The recovery ran as an incremental re-materialization by design (§10: recover rather than force a full rebuild), so this field is expected to move and reports reality."
+  }
+}
