@@ -6000,7 +6000,7 @@ functional commit c9a477de85820678d7e2411488dec10944c72542
   repositories accumulating in the external harness's shared `.venv`, which is outside this
   repository's tree.
 
-## M188 — Competitor Intervention and Causal-Mechanism Audit (commit pending)
+## M188 — Competitor Intervention and Causal-Mechanism Audit (21940f6a)
 
 ```text
 overall           PASS (Phase 2 strategic discovery; research and evidence synthesis only)
@@ -6075,6 +6075,7 @@ verdicts          I1 CONTRADICTED_OR_WEAKENED   I2 EXTERNALLY_CAUSALLY_SUPPORTED
 new files         run_stage5_m188_vexp_artifact_audit.ts (re-derives every load-bearing number
                   from the pinned external tree) + 6 results artifacts
 gates             typecheck PASS  typecheck:benchmarks PASS  bun test 5632 pass / 0 fail
+functional commit 21940f6ac0bbee142262a1f52caa2507fa344ae8
                   diff --check clean
 ```
 
