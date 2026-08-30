@@ -1,0 +1,255 @@
+{
+  "schemaVersion": "stage5.m193.spend-model.v2",
+  "milestone": "M193",
+  "purpose": "Derive the frozen per-run and total live-spend ceilings from the historical cost distribution of GENUINELY UNTREATED claude-code baseline arms, before any M193/M194 live spend.",
+  "pinnedModel": "claude-opus-4-5-20251101",
+  "population": {
+    "rule": "every captured run row under results/runs/*/raw/baseline/swebench-*.jsonl carrying a numeric costUsd on the pinned model, stratified by the treatment markers each arm recorded about itself in its own _run.meta.json",
+    "totalRowsScanned": 1386,
+    "baselineConditionRows": 334,
+    "pinnedModelRows": 334,
+    "strata": {
+      "UNTREATED_CONFIRMED": 54,
+      "TREATED": 269,
+      "TREATMENT_STATE_UNKNOWN": 11
+    },
+    "capDerivedFrom": "UNTREATED_CONFIRMED",
+    "declaredExclusions": [
+      {
+        "stratum": "TREATED",
+        "rows": 269,
+        "reason": "these arms sit in a directory called baseline but their own meta records an injected tool-use-discipline block, an M163 orientation trigger, or VTRACE context. Their cost is not baseline cost.",
+        "markerCounts": {
+          "stage5ToolUseDisciplineInjected": 239,
+          "stage5M163TriggerInjected": 30
+        }
+      },
+      {
+        "stratum": "TREATMENT_STATE_UNKNOWN",
+        "rows": 11,
+        "reason": "the arm predates the treatment-marker telemetry, so it cannot assert its own condition. Reported, not used to set the cap."
+      }
+    ],
+    "costBasedExclusions": [],
+    "costBasedExclusionNote": "No row is excluded for being expensive. §12 forbids that, and the most expensive untreated arm on record is precisely what the per-run cap is set above."
+  },
+  "costUsd": {
+    "n": 54,
+    "min": 0.1679075,
+    "p50": 0.443952,
+    "p75": 0.9363504999999999,
+    "p90": 1.23916,
+    "p95": 1.4958585,
+    "p99": 3.0131607500000004,
+    "max": 3.03843225,
+    "mean": 0.6603668379629629,
+    "sum": 35.659809249999995
+  },
+  "numTurns": {
+    "n": 54,
+    "min": 10,
+    "p50": 33,
+    "p75": 52,
+    "p90": 76,
+    "p95": 82,
+    "p99": 85,
+    "max": 93,
+    "mean": 36.48148148148148,
+    "sum": 1970
+  },
+  "durationMs": {
+    "n": 54,
+    "min": 22958,
+    "p50": 87016,
+    "p75": 172803,
+    "p90": 226086,
+    "p95": 273711,
+    "p99": 305673,
+    "max": 334341,
+    "mean": 114286,
+    "sum": 6171444
+  },
+  "strataCostComparison": {
+    "UNTREATED_CONFIRMED": {
+      "n": 54,
+      "min": 0.1679075,
+      "p50": 0.443952,
+      "p75": 0.9363504999999999,
+      "p90": 1.23916,
+      "p95": 1.4958585,
+      "p99": 3.0131607500000004,
+      "max": 3.03843225,
+      "mean": 0.6603668379629629,
+      "sum": 35.659809249999995
+    },
+    "TREATED": {
+      "n": 269,
+      "min": 0.13291,
+      "p50": 0.471951,
+      "p75": 0.8478665,
+      "p90": 1.3340774999999998,
+      "p95": 3.00564575,
+      "p99": 3.04107675,
+      "max": 3.0613402499999998,
+      "mean": 0.7020857881040892,
+      "sum": 188.861077
+    },
+    "TREATMENT_STATE_UNKNOWN": {
+      "n": 11,
+      "min": 0.20882475,
+      "p50": 0.5185075,
+      "p75": 1.5550305,
+      "p90": 1.6255705,
+      "p95": 3.0239754999999997,
+      "p99": 3.0239754999999997,
+      "max": 3.0239754999999997,
+      "mean": 0.9092476136363636,
+      "sum": 10.00172375
+    },
+    "ALL_PINNED": {
+      "n": 334,
+      "min": 0.13291,
+      "p50": 0.471951,
+      "p75": 0.8571485,
+      "p90": 1.351091,
+      "p95": 2.0753645,
+      "p99": 3.04107675,
+      "max": 3.0613402499999998,
+      "mean": 0.702163502994012,
+      "sum": 234.52261
+    }
+  },
+  "mostExpensiveUntreated": [
+    {
+      "instanceId": "pylint-dev__pylint-4551",
+      "costUsd": 3.03843225,
+      "numTurns": 93,
+      "runLabel": "m168_baseline_pylint_dev__pylint_4551"
+    },
+    {
+      "instanceId": "pylint-dev__pylint-4551",
+      "costUsd": 3.0131607500000004,
+      "numTurns": 83,
+      "runLabel": "m173_baseline_pylint_dev__pylint_4551"
+    },
+    {
+      "instanceId": "pylint-dev__pylint-4551",
+      "costUsd": 1.6097467500000002,
+      "numTurns": 81,
+      "runLabel": "m183_baseline_pylint_dev__pylint_4551"
+    },
+    {
+      "instanceId": "astropy__astropy-14369",
+      "costUsd": 1.4958585,
+      "numTurns": 46,
+      "runLabel": "m173_baseline_astropy__astropy_14369"
+    },
+    {
+      "instanceId": "sympy__sympy-12419",
+      "costUsd": 1.321987,
+      "numTurns": 82,
+      "runLabel": "m183_baseline_sympy__sympy_12419"
+    },
+    {
+      "instanceId": "django__django-12273",
+      "costUsd": 1.23916,
+      "numTurns": 51,
+      "runLabel": "m183_baseline_django__django_12273"
+    },
+    {
+      "instanceId": "django__django-12325",
+      "costUsd": 1.1869895,
+      "numTurns": 85,
+      "runLabel": "m183_baseline_django__django_12325"
+    },
+    {
+      "instanceId": "mwaskom__seaborn-3187",
+      "costUsd": 1.132431,
+      "numTurns": 76,
+      "runLabel": "m183_baseline_mwaskom__seaborn_3187"
+    }
+  ],
+  "mostExpensiveAnyStratum": [
+    {
+      "instanceId": "django__django-10880",
+      "costUsd": 3.0613402499999998,
+      "numTurns": 112,
+      "runLabel": "eval-m4h-baseline-django-10880-r1",
+      "treatmentState": "TREATED"
+    },
+    {
+      "instanceId": "mwaskom__seaborn-3187",
+      "costUsd": 3.0465925,
+      "numTurns": 103,
+      "runLabel": "eval-bounded20-baseline-seaborn-3187-r1",
+      "treatmentState": "TREATED"
+    },
+    {
+      "instanceId": "astropy__astropy-14369",
+      "costUsd": 3.0462377499999995,
+      "numTurns": 85,
+      "runLabel": "eval-m4r2-baseline-astropy-14369-r1",
+      "treatmentState": "TREATED"
+    },
+    {
+      "instanceId": "astropy__astropy-14598",
+      "costUsd": 3.04107675,
+      "numTurns": 66,
+      "runLabel": "m55y_baseline_astropy_14598",
+      "treatmentState": "TREATED"
+    },
+    {
+      "instanceId": "pylint-dev__pylint-4551",
+      "costUsd": 3.03843225,
+      "numTurns": 93,
+      "runLabel": "m168_baseline_pylint_dev__pylint_4551",
+      "treatmentState": "UNTREATED_CONFIRMED"
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-24627",
+      "costUsd": 3.03230525,
+      "numTurns": 92,
+      "runLabel": "eval-bounded-baseline-mpl-24627-r1",
+      "treatmentState": "TREATED"
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-24627",
+      "costUsd": 3.03167875,
+      "numTurns": 107,
+      "runLabel": "eval-bounded-baseline-mpl-24627-r2",
+      "treatmentState": "TREATED"
+    },
+    {
+      "instanceId": "matplotlib__matplotlib-24627",
+      "costUsd": 3.0303189999999995,
+      "numTurns": 117,
+      "runLabel": "eval-bounded-baseline-mpl-24627-r3",
+      "treatmentState": "TREATED"
+    }
+  ],
+  "frozenCaps": {
+    "perRunCostCapUsd": 3.5,
+    "totalSpendCapUsd": 90,
+    "maxArms": 40,
+    "perRunCapRationale": "Set strictly above the maximum cost ever observed on an untreated arm, and above the maximum across every stratum, so that no arm resembling anything already recorded is truncated. A cap at the untreated p95, or at the VEXP shipped default of $3.00, would have truncated observed runs.",
+    "totalCapRationale": "Covers the pessimistic case in which every one of the maximum arms costs the untreated p95, with headroom, while sitting far below maxArms x perRunCap. It binds only if per-arm cost regresses well beyond anything on record, which is what a total cap is for. Expected spend is roughly the mean projection, not this ceiling.",
+    "armsWouldHaveBeenTruncatedUntreated": 0,
+    "armsWouldHaveBeenTruncatedAnyStratum": 0,
+    "truncationRateUntreated": 0,
+    "truncatedInstances": []
+  },
+  "projectedTotalSpendUsd": {
+    "atUntreatedMean": 26.414673518518516,
+    "atUntreatedP50": 17.75808,
+    "atUntreatedP90": 49.5664,
+    "atUntreatedP95": 59.83434,
+    "atPerRunCap": 140
+  },
+  "worstCaseUnderCaps": {
+    "note": "maxArms x perRunCap exceeds the total cap; the total cap stops the acquisition first.",
+    "maxArmsTimesPerRunCap": 140,
+    "bindingCeiling": 90,
+    "p95EverywhereIsCovered": true
+  },
+  "m193LiveSpendUsd": 0
+}

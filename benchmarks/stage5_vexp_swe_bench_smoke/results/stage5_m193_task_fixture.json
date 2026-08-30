@@ -1,0 +1,785 @@
+{
+  "schemaVersion": "stage5.m193.task-fixture.v1",
+  "milestone": "M193",
+  "experimentId": "M193-BASELINE-OBS-1",
+  "frozenBeforeAnyLiveResult": true,
+  "dataset": "/home/calvin/code/vexp-swe-bench/data/swe-bench-100.jsonl",
+  "datasetSha256": "7bd07d5e50e26f3c51e8813f93be6be840a62f9fac333586f139ac7853971d7d",
+  "datasetInstanceCount": 100,
+  "datasetRepositoryCount": 12,
+  "selectionRule": "Stratified round-robin over repositories: repositories sorted lexicographically, instances sorted lexicographically within a repository, emitted rank-1-of-every-repository first, then rank-2, and so on, truncated at maxArms. Every prefix of the ordering is therefore maximally cross-repository, and §32 has a single deterministic next instance.",
+  "selectionRuleIsOutcomeIndependent": true,
+  "selectionInputsUsed": [
+    "repository",
+    "instance_id",
+    "dataset membership"
+  ],
+  "selectionInputsRefused": [
+    "gold patch topology",
+    "FAIL_TO_PASS size or content",
+    "historical resolution outcome",
+    "M189/M190 attention",
+    "known multi-file tasks",
+    "Docker image already pulled locally",
+    "anything an agent produced"
+  ],
+  "maxArms": 40,
+  "minArms": 20,
+  "armCount": 40,
+  "repositoriesRepresented": 12,
+  "perRepositoryCounts": [
+    {
+      "repo": "astropy/astropy",
+      "arms": 5
+    },
+    {
+      "repo": "django/django",
+      "arms": 5
+    },
+    {
+      "repo": "matplotlib/matplotlib",
+      "arms": 4
+    },
+    {
+      "repo": "mwaskom/seaborn",
+      "arms": 1
+    },
+    {
+      "repo": "pallets/flask",
+      "arms": 1
+    },
+    {
+      "repo": "psf/requests",
+      "arms": 4
+    },
+    {
+      "repo": "pydata/xarray",
+      "arms": 4
+    },
+    {
+      "repo": "pylint-dev/pylint",
+      "arms": 2
+    },
+    {
+      "repo": "pytest-dev/pytest",
+      "arms": 4
+    },
+    {
+      "repo": "scikit-learn/scikit-learn",
+      "arms": 2
+    },
+    {
+      "repo": "sphinx-doc/sphinx",
+      "arms": 4
+    },
+    {
+      "repo": "sympy/sympy",
+      "arms": 4
+    }
+  ],
+  "instances": [
+    {
+      "ordinal": 1,
+      "instanceId": "astropy__astropy-14365",
+      "repo": "astropy/astropy",
+      "baseCommit": "7269fa3e33e8d02485a647da91a5a2a60a06af61",
+      "environmentSetupCommit": "5f74eacbcc7fff707a44d8eb58adaa514cb7dcb5",
+      "version": "5.1",
+      "stratumRank": 1,
+      "instanceImageKey": "swebench/sweb.eval.x86_64.astropy_1776_astropy-14365:latest"
+    },
+    {
+      "ordinal": 2,
+      "instanceId": "django__django-10880",
+      "repo": "django/django",
+      "baseCommit": "838e432e3e5519c5383d12018e6c78f8ec7833c1",
+      "environmentSetupCommit": "419a78300f7cd27611196e1e464d50fd0385ff27",
+      "version": "3.0",
+      "stratumRank": 1,
+      "instanceImageKey": "swebench/sweb.eval.x86_64.django_1776_django-10880:latest"
+    },
+    {
+      "ordinal": 3,
+      "instanceId": "matplotlib__matplotlib-22719",
+      "repo": "matplotlib/matplotlib",
+      "baseCommit": "a2a1b0a11b993fe5f8fab64b6161e99243a6393c",
+      "environmentSetupCommit": "de98877e3dc45de8dd441d008f23d88738dc015d",
+      "version": "3.5",
+      "stratumRank": 1,
+      "instanceImageKey": "swebench/sweb.eval.x86_64.matplotlib_1776_matplotlib-22719:latest"
+    },
+    {
+      "ordinal": 4,
+      "instanceId": "mwaskom__seaborn-3187",
+      "repo": "mwaskom/seaborn",
+      "baseCommit": "22cdfb0c93f8ec78492d87edb810f10cb7f57a31",
+      "environmentSetupCommit": "d25872b0fc99dbf7e666a91f59bd4ed125186aa1",
+      "version": "0.12",
+      "stratumRank": 1,
+      "instanceImageKey": "swebench/sweb.eval.x86_64.mwaskom_1776_seaborn-3187:latest"
+    },
+    {
+      "ordinal": 5,
+      "instanceId": "pallets__flask-5014",
+      "repo": "pallets/flask",
+      "baseCommit": "7ee9ceb71e868944a46e1ff00b506772a53a4f1d",
+      "environmentSetupCommit": "182ce3dd15dfa3537391c3efaf9c3ff407d134d4",
+      "version": "2.3",
+      "stratumRank": 1,
+      "instanceImageKey": "swebench/sweb.eval.x86_64.pallets_1776_flask-5014:latest"
+    },
+    {
+      "ordinal": 6,
+      "instanceId": "psf__requests-1142",
+      "repo": "psf/requests",
+      "baseCommit": "22623bd8c265b78b161542663ee980738441c307",
+      "environmentSetupCommit": "ba25184ed5f0bf9b876dea3cf4312fa35b539a7c",
+      "version": "1.1",
+      "stratumRank": 1,
+      "instanceImageKey": "swebench/sweb.eval.x86_64.psf_1776_requests-1142:latest"
+    },
+    {
+      "ordinal": 7,
+      "instanceId": "pydata__xarray-2905",
+      "repo": "pydata/xarray",
+      "baseCommit": "7c4e2ac83f7b4306296ff9b7b51aaf016e5ad614",
+      "environmentSetupCommit": "1c198a191127c601d091213c4b3292a8bb3054e1",
+      "version": "0.12",
+      "stratumRank": 1,
+      "instanceImageKey": "swebench/sweb.eval.x86_64.pydata_1776_xarray-2905:latest"
+    },
+    {
+      "ordinal": 8,
+      "instanceId": "pylint-dev__pylint-4551",
+      "repo": "pylint-dev/pylint",
+      "baseCommit": "99589b08de8c5a2c6cc61e13a37420a868c80599",
+      "environmentSetupCommit": "c04f92ef68e5ea779a60bfddb91dc677c5470fd0",
+      "version": "2.9",
+      "stratumRank": 1,
+      "instanceImageKey": "swebench/sweb.eval.x86_64.pylint-dev_1776_pylint-4551:latest"
+    },
+    {
+      "ordinal": 9,
+      "instanceId": "pytest-dev__pytest-10051",
+      "repo": "pytest-dev/pytest",
+      "baseCommit": "aa55975c7d3f6c9f6d7f68accc41bb7cadf0eb9a",
+      "environmentSetupCommit": "572b5657d7ca557593418ce0319fabff88800c73",
+      "version": "7.2",
+      "stratumRank": 1,
+      "instanceImageKey": "swebench/sweb.eval.x86_64.pytest-dev_1776_pytest-10051:latest"
+    },
+    {
+      "ordinal": 10,
+      "instanceId": "scikit-learn__scikit-learn-10844",
+      "repo": "scikit-learn/scikit-learn",
+      "baseCommit": "97523985b39ecde369d83352d7c3baf403b60a22",
+      "environmentSetupCommit": "55bf5d93e5674f13a1134d93a11fd0cd11aabcd1",
+      "version": "0.20",
+      "stratumRank": 1,
+      "instanceImageKey": "swebench/sweb.eval.x86_64.scikit-learn_1776_scikit-learn-10844:latest"
+    },
+    {
+      "ordinal": 11,
+      "instanceId": "sphinx-doc__sphinx-7462",
+      "repo": "sphinx-doc/sphinx",
+      "baseCommit": "b3e26a6c851133b82b50f4b68b53692076574d13",
+      "environmentSetupCommit": "5afc77ee27fc01c57165ab260d3a76751f9ddb35",
+      "version": "3.1",
+      "stratumRank": 1,
+      "instanceImageKey": "swebench/sweb.eval.x86_64.sphinx-doc_1776_sphinx-7462:latest"
+    },
+    {
+      "ordinal": 12,
+      "instanceId": "sympy__sympy-12419",
+      "repo": "sympy/sympy",
+      "baseCommit": "479939f8c65c8c2908bbedc959549a257a7c0b0b",
+      "environmentSetupCommit": "50b81f9f6be151014501ffac44e5dc6b2416938f",
+      "version": "1.0",
+      "stratumRank": 1,
+      "instanceImageKey": "swebench/sweb.eval.x86_64.sympy_1776_sympy-12419:latest"
+    },
+    {
+      "ordinal": 13,
+      "instanceId": "astropy__astropy-14369",
+      "repo": "astropy/astropy",
+      "baseCommit": "fa4e8d1cd279acf9b24560813c8652494ccd5922",
+      "environmentSetupCommit": "5f74eacbcc7fff707a44d8eb58adaa514cb7dcb5",
+      "version": "5.1",
+      "stratumRank": 2,
+      "instanceImageKey": "swebench/sweb.eval.x86_64.astropy_1776_astropy-14369:latest"
+    },
+    {
+      "ordinal": 14,
+      "instanceId": "django__django-10973",
+      "repo": "django/django",
+      "baseCommit": "ddb293685235fd09e932805771ae97f72e817181",
+      "environmentSetupCommit": "419a78300f7cd27611196e1e464d50fd0385ff27",
+      "version": "3.0",
+      "stratumRank": 2,
+      "instanceImageKey": "swebench/sweb.eval.x86_64.django_1776_django-10973:latest"
+    },
+    {
+      "ordinal": 15,
+      "instanceId": "matplotlib__matplotlib-24627",
+      "repo": "matplotlib/matplotlib",
+      "baseCommit": "9d22ab09d52d279b125d8770967569de070913b2",
+      "environmentSetupCommit": "73909bcb408886a22e2b84581d6b9e6d9907c813",
+      "version": "3.6",
+      "stratumRank": 2,
+      "instanceImageKey": "swebench/sweb.eval.x86_64.matplotlib_1776_matplotlib-24627:latest"
+    },
+    {
+      "ordinal": 16,
+      "instanceId": "psf__requests-1724",
+      "repo": "psf/requests",
+      "baseCommit": "1ba83c47ce7b177efe90d5f51f7760680f72eda0",
+      "environmentSetupCommit": "4bceb312f1b99d36a25f2985b5606e98b6f0d8cd",
+      "version": "2.0",
+      "stratumRank": 2,
+      "instanceImageKey": "swebench/sweb.eval.x86_64.psf_1776_requests-1724:latest"
+    },
+    {
+      "ordinal": 17,
+      "instanceId": "pydata__xarray-3677",
+      "repo": "pydata/xarray",
+      "baseCommit": "ef6e6a7b86f8479b9a1fecf15ad5b88a2326b31e",
+      "environmentSetupCommit": "1c198a191127c601d091213c4b3292a8bb3054e1",
+      "version": "0.12",
+      "stratumRank": 2,
+      "instanceImageKey": "swebench/sweb.eval.x86_64.pydata_1776_xarray-3677:latest"
+    },
+    {
+      "ordinal": 18,
+      "instanceId": "pylint-dev__pylint-8898",
+      "repo": "pylint-dev/pylint",
+      "baseCommit": "1f8c4d9eb185c16a2c1d881c054f015e1c2eb334",
+      "environmentSetupCommit": "a0ce6e424e3a208f3aed1cbf6e16c40853bec3c0",
+      "version": "3.0",
+      "stratumRank": 2,
+      "instanceImageKey": "swebench/sweb.eval.x86_64.pylint-dev_1776_pylint-8898:latest"
+    },
+    {
+      "ordinal": 19,
+      "instanceId": "pytest-dev__pytest-5262",
+      "repo": "pytest-dev/pytest",
+      "baseCommit": "58e6a09db49f34886ff13f3b7520dd0bcd7063cd",
+      "environmentSetupCommit": "693c3b7f61d4d32f8927a74f34ce8ac56d63958e",
+      "version": "4.5",
+      "stratumRank": 2,
+      "instanceImageKey": "swebench/sweb.eval.x86_64.pytest-dev_1776_pytest-5262:latest"
+    },
+    {
+      "ordinal": 20,
+      "instanceId": "scikit-learn__scikit-learn-11578",
+      "repo": "scikit-learn/scikit-learn",
+      "baseCommit": "dd69361a0d9c6ccde0d2353b00b86e0e7541a3e3",
+      "environmentSetupCommit": "55bf5d93e5674f13a1134d93a11fd0cd11aabcd1",
+      "version": "0.20",
+      "stratumRank": 2,
+      "instanceImageKey": "swebench/sweb.eval.x86_64.scikit-learn_1776_scikit-learn-11578:latest"
+    },
+    {
+      "ordinal": 21,
+      "instanceId": "sphinx-doc__sphinx-7748",
+      "repo": "sphinx-doc/sphinx",
+      "baseCommit": "9988d5ce267bf0df4791770b469431b1fb00dcdd",
+      "environmentSetupCommit": "5afc77ee27fc01c57165ab260d3a76751f9ddb35",
+      "version": "3.1",
+      "stratumRank": 2,
+      "instanceImageKey": "swebench/sweb.eval.x86_64.sphinx-doc_1776_sphinx-7748:latest"
+    },
+    {
+      "ordinal": 22,
+      "instanceId": "sympy__sympy-12481",
+      "repo": "sympy/sympy",
+      "baseCommit": "c807dfe7569692cad24f02a08477b70c1679a4dd",
+      "environmentSetupCommit": "50b81f9f6be151014501ffac44e5dc6b2416938f",
+      "version": "1.0",
+      "stratumRank": 2,
+      "instanceImageKey": "swebench/sweb.eval.x86_64.sympy_1776_sympy-12481:latest"
+    },
+    {
+      "ordinal": 23,
+      "instanceId": "astropy__astropy-14539",
+      "repo": "astropy/astropy",
+      "baseCommit": "c0a24c1dc957a3b565294213f435fefb2ec99714",
+      "environmentSetupCommit": "5f74eacbcc7fff707a44d8eb58adaa514cb7dcb5",
+      "version": "5.1",
+      "stratumRank": 3,
+      "instanceImageKey": "swebench/sweb.eval.x86_64.astropy_1776_astropy-14539:latest"
+    },
+    {
+      "ordinal": 24,
+      "instanceId": "django__django-11095",
+      "repo": "django/django",
+      "baseCommit": "7d49ad76562e8c0597a0eb66046ab423b12888d8",
+      "environmentSetupCommit": "419a78300f7cd27611196e1e464d50fd0385ff27",
+      "version": "3.0",
+      "stratumRank": 3,
+      "instanceImageKey": "swebench/sweb.eval.x86_64.django_1776_django-11095:latest"
+    },
+    {
+      "ordinal": 25,
+      "instanceId": "matplotlib__matplotlib-24870",
+      "repo": "matplotlib/matplotlib",
+      "baseCommit": "6091437be9776139d3672cde28a19cbe6c09dcd5",
+      "environmentSetupCommit": "73909bcb408886a22e2b84581d6b9e6d9907c813",
+      "version": "3.6",
+      "stratumRank": 3,
+      "instanceImageKey": "swebench/sweb.eval.x86_64.matplotlib_1776_matplotlib-24870:latest"
+    },
+    {
+      "ordinal": 26,
+      "instanceId": "psf__requests-1921",
+      "repo": "psf/requests",
+      "baseCommit": "3c88e520da24ae6f736929a750876e7654accc3d",
+      "environmentSetupCommit": "3eb69be879063de4803f7f0152b83738a1c95ca4",
+      "version": "2.3",
+      "stratumRank": 3,
+      "instanceImageKey": "swebench/sweb.eval.x86_64.psf_1776_requests-1921:latest"
+    },
+    {
+      "ordinal": 27,
+      "instanceId": "pydata__xarray-4695",
+      "repo": "pydata/xarray",
+      "baseCommit": "51ef2a66c4e0896eab7d2b03e3dfb3963e338e3c",
+      "environmentSetupCommit": "1c198a191127c601d091213c4b3292a8bb3054e1",
+      "version": "0.12",
+      "stratumRank": 3,
+      "instanceImageKey": "swebench/sweb.eval.x86_64.pydata_1776_xarray-4695:latest"
+    },
+    {
+      "ordinal": 28,
+      "instanceId": "pytest-dev__pytest-6197",
+      "repo": "pytest-dev/pytest",
+      "baseCommit": "e856638ba086fcf5bebf1bebea32d5cf78de87b4",
+      "environmentSetupCommit": "f36ea240fe3579f945bf5d6cc41b5e45a572249d",
+      "version": "5.2",
+      "stratumRank": 3,
+      "instanceImageKey": "swebench/sweb.eval.x86_64.pytest-dev_1776_pytest-6197:latest"
+    },
+    {
+      "ordinal": 29,
+      "instanceId": "sphinx-doc__sphinx-7910",
+      "repo": "sphinx-doc/sphinx",
+      "baseCommit": "27ac10de04697e2372d31db5548e56a7c6d9265d",
+      "environmentSetupCommit": "f92fa6443fe6f457ab0c26d41eb229e825fda5e1",
+      "version": "3.2",
+      "stratumRank": 3,
+      "instanceImageKey": "swebench/sweb.eval.x86_64.sphinx-doc_1776_sphinx-7910:latest"
+    },
+    {
+      "ordinal": 30,
+      "instanceId": "sympy__sympy-13372",
+      "repo": "sympy/sympy",
+      "baseCommit": "30379ea6e225e37833a764ac2da7b7fadf5fe374",
+      "environmentSetupCommit": "ec9e3c0436fbff934fa84e22bf07f1b3ef5bfac3",
+      "version": "1.1",
+      "stratumRank": 3,
+      "instanceImageKey": "swebench/sweb.eval.x86_64.sympy_1776_sympy-13372:latest"
+    },
+    {
+      "ordinal": 31,
+      "instanceId": "astropy__astropy-14598",
+      "repo": "astropy/astropy",
+      "baseCommit": "80c3854a5f4f4a6ab86c03d9db7854767fcd83c1",
+      "environmentSetupCommit": "362f6df12abf9bd769d4915fabf955c993ea22cf",
+      "version": "5.2",
+      "stratumRank": 4,
+      "instanceImageKey": "swebench/sweb.eval.x86_64.astropy_1776_astropy-14598:latest"
+    },
+    {
+      "ordinal": 32,
+      "instanceId": "django__django-11133",
+      "repo": "django/django",
+      "baseCommit": "879cc3da6249e920b8d54518a0ae06de835d7373",
+      "environmentSetupCommit": "419a78300f7cd27611196e1e464d50fd0385ff27",
+      "version": "3.0",
+      "stratumRank": 4,
+      "instanceImageKey": "swebench/sweb.eval.x86_64.django_1776_django-11133:latest"
+    },
+    {
+      "ordinal": 33,
+      "instanceId": "matplotlib__matplotlib-24970",
+      "repo": "matplotlib/matplotlib",
+      "baseCommit": "a3011dfd1aaa2487cce8aa7369475533133ef777",
+      "environmentSetupCommit": "73909bcb408886a22e2b84581d6b9e6d9907c813",
+      "version": "3.6",
+      "stratumRank": 4,
+      "instanceImageKey": "swebench/sweb.eval.x86_64.matplotlib_1776_matplotlib-24970:latest"
+    },
+    {
+      "ordinal": 34,
+      "instanceId": "psf__requests-5414",
+      "repo": "psf/requests",
+      "baseCommit": "39d0fdd9096f7dceccbc8f82e1eda7dd64717a8e",
+      "environmentSetupCommit": "a1a6a549a0143d9b32717dbe3d75cd543ae5a4f6",
+      "version": "2.26",
+      "stratumRank": 4,
+      "instanceImageKey": "swebench/sweb.eval.x86_64.psf_1776_requests-5414:latest"
+    },
+    {
+      "ordinal": 35,
+      "instanceId": "pydata__xarray-6599",
+      "repo": "pydata/xarray",
+      "baseCommit": "6bb2b855498b5c68d7cca8cceb710365d58e6048",
+      "environmentSetupCommit": "d7931f9014a26e712ff5f30c4082cf0261f045d3",
+      "version": "2022.03",
+      "stratumRank": 4,
+      "instanceImageKey": "swebench/sweb.eval.x86_64.pydata_1776_xarray-6599:latest"
+    },
+    {
+      "ordinal": 36,
+      "instanceId": "pytest-dev__pytest-7432",
+      "repo": "pytest-dev/pytest",
+      "baseCommit": "e6e300e729dd33956e5448d8be9a0b1540b4e53a",
+      "environmentSetupCommit": "678c1a0745f1cf175c442c719906a1f13e496910",
+      "version": "5.4",
+      "stratumRank": 4,
+      "instanceImageKey": "swebench/sweb.eval.x86_64.pytest-dev_1776_pytest-7432:latest"
+    },
+    {
+      "ordinal": 37,
+      "instanceId": "sphinx-doc__sphinx-9230",
+      "repo": "sphinx-doc/sphinx",
+      "baseCommit": "567ff22716ac258b9edd2c1711d766b440ac0b11",
+      "environmentSetupCommit": "9a2c3c4a1559e37e95fdee88c128bb116642c897",
+      "version": "4.1",
+      "stratumRank": 4,
+      "instanceImageKey": "swebench/sweb.eval.x86_64.sphinx-doc_1776_sphinx-9230:latest"
+    },
+    {
+      "ordinal": 38,
+      "instanceId": "sympy__sympy-13480",
+      "repo": "sympy/sympy",
+      "baseCommit": "f57fe3f4b3f2cab225749e1b3b38ae1bf80b62f0",
+      "environmentSetupCommit": "ec9e3c0436fbff934fa84e22bf07f1b3ef5bfac3",
+      "version": "1.1",
+      "stratumRank": 4,
+      "instanceImageKey": "swebench/sweb.eval.x86_64.sympy_1776_sympy-13480:latest"
+    },
+    {
+      "ordinal": 39,
+      "instanceId": "astropy__astropy-7166",
+      "repo": "astropy/astropy",
+      "baseCommit": "26d147868f8a891a6009a25cd6a8576d2e1bd747",
+      "environmentSetupCommit": "848c8fa21332abd66b44efe3cb48b72377fb32cc",
+      "version": "1.3",
+      "stratumRank": 5,
+      "instanceImageKey": "swebench/sweb.eval.x86_64.astropy_1776_astropy-7166:latest"
+    },
+    {
+      "ordinal": 40,
+      "instanceId": "django__django-11206",
+      "repo": "django/django",
+      "baseCommit": "571ab44e8a8936014c22e7eebe4948d9611fd7ce",
+      "environmentSetupCommit": "419a78300f7cd27611196e1e464d50fd0385ff27",
+      "version": "3.0",
+      "stratumRank": 5,
+      "instanceImageKey": "swebench/sweb.eval.x86_64.django_1776_django-11206:latest"
+    }
+  ],
+  "replacementReserveOrdering": "On PREFLIGHT_FAILED the next unattempted instance in this reserve list is taken, in order. No manual selection is permitted.",
+  "replacementReserve": [
+    {
+      "ordinal": 41,
+      "instanceId": "matplotlib__matplotlib-25332",
+      "repo": "matplotlib/matplotlib"
+    },
+    {
+      "ordinal": 42,
+      "instanceId": "pydata__xarray-6938",
+      "repo": "pydata/xarray"
+    },
+    {
+      "ordinal": 43,
+      "instanceId": "sphinx-doc__sphinx-9320",
+      "repo": "sphinx-doc/sphinx"
+    },
+    {
+      "ordinal": 44,
+      "instanceId": "sympy__sympy-13974",
+      "repo": "sympy/sympy"
+    },
+    {
+      "ordinal": 45,
+      "instanceId": "django__django-11490",
+      "repo": "django/django"
+    },
+    {
+      "ordinal": 46,
+      "instanceId": "matplotlib__matplotlib-25960",
+      "repo": "matplotlib/matplotlib"
+    },
+    {
+      "ordinal": 47,
+      "instanceId": "pydata__xarray-6992",
+      "repo": "pydata/xarray"
+    },
+    {
+      "ordinal": 48,
+      "instanceId": "sphinx-doc__sphinx-9698",
+      "repo": "sphinx-doc/sphinx"
+    },
+    {
+      "ordinal": 49,
+      "instanceId": "sympy__sympy-15599",
+      "repo": "sympy/sympy"
+    },
+    {
+      "ordinal": 50,
+      "instanceId": "django__django-11728",
+      "repo": "django/django"
+    },
+    {
+      "ordinal": 51,
+      "instanceId": "matplotlib__matplotlib-26466",
+      "repo": "matplotlib/matplotlib"
+    },
+    {
+      "ordinal": 52,
+      "instanceId": "sphinx-doc__sphinx-9711",
+      "repo": "sphinx-doc/sphinx"
+    },
+    {
+      "ordinal": 53,
+      "instanceId": "sympy__sympy-15875",
+      "repo": "sympy/sympy"
+    },
+    {
+      "ordinal": 54,
+      "instanceId": "django__django-11740",
+      "repo": "django/django"
+    },
+    {
+      "ordinal": 55,
+      "instanceId": "sympy__sympy-16597",
+      "repo": "sympy/sympy"
+    },
+    {
+      "ordinal": 56,
+      "instanceId": "django__django-11749",
+      "repo": "django/django"
+    },
+    {
+      "ordinal": 57,
+      "instanceId": "sympy__sympy-16766",
+      "repo": "sympy/sympy"
+    },
+    {
+      "ordinal": 58,
+      "instanceId": "django__django-11815",
+      "repo": "django/django"
+    },
+    {
+      "ordinal": 59,
+      "instanceId": "sympy__sympy-16792",
+      "repo": "sympy/sympy"
+    },
+    {
+      "ordinal": 60,
+      "instanceId": "django__django-11820",
+      "repo": "django/django"
+    },
+    {
+      "ordinal": 61,
+      "instanceId": "sympy__sympy-18189",
+      "repo": "sympy/sympy"
+    },
+    {
+      "ordinal": 62,
+      "instanceId": "django__django-12050",
+      "repo": "django/django"
+    },
+    {
+      "ordinal": 63,
+      "instanceId": "sympy__sympy-19637",
+      "repo": "sympy/sympy"
+    },
+    {
+      "ordinal": 64,
+      "instanceId": "django__django-12273",
+      "repo": "django/django"
+    },
+    {
+      "ordinal": 65,
+      "instanceId": "sympy__sympy-20428",
+      "repo": "sympy/sympy"
+    },
+    {
+      "ordinal": 66,
+      "instanceId": "django__django-12276",
+      "repo": "django/django"
+    },
+    {
+      "ordinal": 67,
+      "instanceId": "sympy__sympy-20801",
+      "repo": "sympy/sympy"
+    },
+    {
+      "ordinal": 68,
+      "instanceId": "django__django-12325",
+      "repo": "django/django"
+    },
+    {
+      "ordinal": 69,
+      "instanceId": "sympy__sympy-23413",
+      "repo": "sympy/sympy"
+    },
+    {
+      "ordinal": 70,
+      "instanceId": "django__django-12774",
+      "repo": "django/django"
+    },
+    {
+      "ordinal": 71,
+      "instanceId": "sympy__sympy-24213",
+      "repo": "sympy/sympy"
+    },
+    {
+      "ordinal": 72,
+      "instanceId": "django__django-12858",
+      "repo": "django/django"
+    },
+    {
+      "ordinal": 73,
+      "instanceId": "sympy__sympy-24562",
+      "repo": "sympy/sympy"
+    },
+    {
+      "ordinal": 74,
+      "instanceId": "django__django-13012",
+      "repo": "django/django"
+    },
+    {
+      "ordinal": 75,
+      "instanceId": "django__django-13112",
+      "repo": "django/django"
+    },
+    {
+      "ordinal": 76,
+      "instanceId": "django__django-13195",
+      "repo": "django/django"
+    },
+    {
+      "ordinal": 77,
+      "instanceId": "django__django-13363",
+      "repo": "django/django"
+    },
+    {
+      "ordinal": 78,
+      "instanceId": "django__django-13512",
+      "repo": "django/django"
+    },
+    {
+      "ordinal": 79,
+      "instanceId": "django__django-13513",
+      "repo": "django/django"
+    },
+    {
+      "ordinal": 80,
+      "instanceId": "django__django-13551",
+      "repo": "django/django"
+    },
+    {
+      "ordinal": 81,
+      "instanceId": "django__django-13590",
+      "repo": "django/django"
+    },
+    {
+      "ordinal": 82,
+      "instanceId": "django__django-13658",
+      "repo": "django/django"
+    },
+    {
+      "ordinal": 83,
+      "instanceId": "django__django-13810",
+      "repo": "django/django"
+    },
+    {
+      "ordinal": 84,
+      "instanceId": "django__django-13820",
+      "repo": "django/django"
+    },
+    {
+      "ordinal": 85,
+      "instanceId": "django__django-14608",
+      "repo": "django/django"
+    },
+    {
+      "ordinal": 86,
+      "instanceId": "django__django-14792",
+      "repo": "django/django"
+    },
+    {
+      "ordinal": 87,
+      "instanceId": "django__django-15037",
+      "repo": "django/django"
+    },
+    {
+      "ordinal": 88,
+      "instanceId": "django__django-15503",
+      "repo": "django/django"
+    },
+    {
+      "ordinal": 89,
+      "instanceId": "django__django-15572",
+      "repo": "django/django"
+    },
+    {
+      "ordinal": 90,
+      "instanceId": "django__django-15695",
+      "repo": "django/django"
+    },
+    {
+      "ordinal": 91,
+      "instanceId": "django__django-15731",
+      "repo": "django/django"
+    },
+    {
+      "ordinal": 92,
+      "instanceId": "django__django-16256",
+      "repo": "django/django"
+    },
+    {
+      "ordinal": 93,
+      "instanceId": "django__django-16263",
+      "repo": "django/django"
+    },
+    {
+      "ordinal": 94,
+      "instanceId": "django__django-16333",
+      "repo": "django/django"
+    },
+    {
+      "ordinal": 95,
+      "instanceId": "django__django-16569",
+      "repo": "django/django"
+    },
+    {
+      "ordinal": 96,
+      "instanceId": "django__django-16667",
+      "repo": "django/django"
+    },
+    {
+      "ordinal": 97,
+      "instanceId": "django__django-16819",
+      "repo": "django/django"
+    },
+    {
+      "ordinal": 98,
+      "instanceId": "django__django-16877",
+      "repo": "django/django"
+    },
+    {
+      "ordinal": 99,
+      "instanceId": "django__django-16938",
+      "repo": "django/django"
+    },
+    {
+      "ordinal": 100,
+      "instanceId": "django__django-17084",
+      "repo": "django/django"
+    }
+  ]
+}
