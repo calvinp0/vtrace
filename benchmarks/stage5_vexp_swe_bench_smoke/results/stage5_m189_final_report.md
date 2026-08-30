@@ -522,10 +522,30 @@ bun src/cli/index.ts index /home/calvin/.cache/m189_trees/<instance_id> --quiet 
 ```
 
 ```text
+typecheck                  PASS
+typecheck:benchmarks       PASS
+bun test                   5658 pass / 49 skip / 0 fail (5707 tests, 360 files)
+git diff --check           clean
+
 live agent runs   0
 live spend        $0
 docker            not used
 bench repos       read only; no checkout, no fetch, no worktree
+```
+
+---
+
+## 10b. Repository state
+
+```text
+branch            main
+starting SHA      08ba50e95185b0d18f3e1b3e39af314ef09f7f19
+functional SHA    12a1056e8f5e2e3319440d6c884eaf1c616c678e
+ahead / behind    0 ahead, 140 behind origin/main (unchanged; nothing pushed)
+pre-existing dirt PRESERVED — stage5_outcome_ledger.{json,md} remain modified exactly as
+                  found, and AGENTS.md, VTRACE_TOOLING_AUDIT.md and the untracked
+                  results/_m*/ working-artifact set were not touched
+pushed            no
 ```
 
 ---

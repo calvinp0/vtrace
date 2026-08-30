@@ -6221,6 +6221,8 @@ new files         m189Evidence.ts (+ .test.ts, 26 tests), run_stage5_m189_corpus
                   run_stage5_m189_controls.ts + 12 results artifacts
 gates             typecheck PASS  typecheck:benchmarks PASS  bun test 5658 pass / 0 fail
 live spend        $0 — no live agent, no Docker; bench repos read-only via git archive
+functional commit 12a1056e8f5e2e3319440d6c884eaf1c616c678e
+                  starting SHA 08ba50e95185b0d18f3e1b3e39af314ef09f7f19; diff --check clean
 ```
 
 ## M189 standing findings
