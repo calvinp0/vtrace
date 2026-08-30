@@ -109,15 +109,72 @@ describe("§22 shell termination and semantic result are independent", () => {
   });
 });
 
+describe("§22 terse runner output is still a result", () => {
+  // `pytest -q --no-header` prints no session banner and no `=` decoration.
+  // An earlier classifier required the decoration and reported three dry-run
+  // repositories as UNKNOWN while their tests had plainly run.
+  const quiet = (s: string) => ({ stdout: s, stderr: "", mergedStream: null, mergedStreamComplete: false });
+
+  test("quiet-mode pass", () => {
+    const s = quiet(".                                          [100%]\n1 passed in 0.04s\n");
+    expect(runnerStarted(s)).toBe(true);
+    expect(semanticTestResult(s)).toBe("PASSED");
+  });
+
+  test("quiet-mode failure with a warning count", () => {
+    const s = quiet("F                                          [100%]\n1 failed, 1 warning in 0.03s\n");
+    expect(runnerStarted(s)).toBe(true);
+    expect(semanticTestResult(s)).toBe("FAILED");
+  });
+
+  test("quiet-mode mixed", () => {
+    const s = quiet("..F                                        [100%]\n1 failed, 2 passed in 0.33s\n");
+    expect(semanticTestResult(s)).toBe("MIXED");
+  });
+
+  test("quiet-mode no tests", () => {
+    expect(semanticTestResult(quiet("no tests ran in 0.01s\n"))).toBe("NO_TESTS_RAN");
+  });
+
+  test("prose that merely contains a duration is not a test result", () => {
+    const s = quiet("Rebuilt the extension in 3.2s\nDone.\n");
+    expect(runnerStarted(s)).toBe(false);
+    expect(semanticTestResult(s)).toBe("UNKNOWN");
+  });
+
+  test("decorated and undecorated summaries agree", () => {
+    const dec = quiet("============================== 3 passed in 0.42s ===============================\n");
+    const und = quiet("3 passed in 0.42s\n");
+    expect(semanticTestResult(dec)).toBe(semanticTestResult(und));
+  });
+});
+
 describe("§23 stream demultiplexing trap", () => {
   test("the runner banner on stderr with results on stdout is still seen", () => {
     expect(runnerStarted(DEMUX_TRAP_STREAMS)).toBe(true);
     expect(semanticTestResult(DEMUX_TRAP_STREAMS)).toBe("MIXED");
   });
 
-  test("a classifier reading stdout alone would lose the execution", () => {
-    const stdoutOnly = { stdout: DEMUX_TRAP_STREAMS.stdout, stderr: "", mergedStream: null, mergedStreamComplete: false };
-    expect(runnerStarted(stdoutOnly)).toBe(false);
+  test("a classifier reading one stream alone loses half the evidence", () => {
+    // stderr carries the banner but no counts: the runner started and the
+    // result is unknown.
+    const stderrOnly = { stdout: "", stderr: DEMUX_TRAP_STREAMS.stderr, mergedStream: null, mergedStreamComplete: false };
+    expect(runnerStarted(stderrOnly)).toBe(true);
+    expect(semanticTestResult(stderrOnly)).toBe("UNKNOWN");
+
+    // Only the union carries both.
+    expect(semanticTestResult(DEMUX_TRAP_STREAMS)).toBe("MIXED");
+  });
+
+  test("a runner reporting everything on stderr is still seen", () => {
+    const stderrRunner = {
+      stdout: "",
+      stderr: "collected 2 items\n1 failed, 1 passed in 0.10s\n",
+      mergedStream: null,
+      mergedStreamComplete: false,
+    };
+    expect(runnerStarted(stderrRunner)).toBe(true);
+    expect(semanticTestResult(stderrRunner)).toBe("MIXED");
   });
 
   test("falls back to the concatenated raw streams when the merged tee is incomplete", () => {

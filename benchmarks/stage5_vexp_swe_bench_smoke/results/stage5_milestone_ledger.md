@@ -6683,3 +6683,140 @@ authorizations    OBSERVATIONAL_CORPUS_SUBSTRATE_READY
   to buy that corpus, M191's observation still stands: the natural validation-attempt rate in
   the healthy pre-guard population was 318/807 arms, and it is not obvious that beating it is
   worth the money. Do not build bespoke environments; do not resurrect I5; I6 stays unlicensed.
+
+## M193 — baseline observational corpus preregistration
+
+```text
+verdict           M193 - FAIL (§60: a live model was invoked)
+                  readiness LIVE_ACQUISITION_READY, 15/15 gates
+                  BASELINE_OBSERVATIONAL_ACQUISITION_DESIGN_READY
+
+the FAIL           one accidental `claude -p "say OK"` in /tmp, issued to test whether the
+                  CLI still accepts --max-turns after it vanished from --help. $0.1204
+                  (20 in / 62 out / 27226 cache-read / 16822 cache-write). Touched no
+                  benchmark repo, produced no outcome-like evidence, influenced neither
+                  fixture nor caps nor classifier. §6 admits no de minimis exception, and
+                  §60 says FAIL if a live model is invoked, so it is recorded as FAIL
+                  rather than argued down. The correct method - `strings` on the CLI
+                  binary - answered the same question for $0 minutes later.
+
+acquisition spend live-agent runs 0, live model spend $0.
+
+M192 reverified   HEAD 28f521f4 matches M192's reported SHA. 24/24 m192Substrate tests
+                  pass; the harness-authority re-run is BYTE-IDENTICAL (73 .py checked,
+                  0 modified). All three depended-on properties re-measured live: 11/12
+                  images have a clean /testbed (psf/requests carries untracked build/);
+                  image HEAD is a DESCENDANT of base_commit, so the base must be checked
+                  out at run time; psf/requests still resolves site-packages from a
+                  neutral cwd and /testbed with the cwd pinned.
+
+frozen            experiment M193-BASELINE-OBS-1
+                  manifest  7a85d25df322940e20b5f8075e696547fa0362022ad4ae0c5867187b478c2c98
+                  fixture   e79843d3b93d4c77551911a92eed9b316c57b5045ff7e7ef75018efb2e9aaca4
+                  40 instances / 12 repositories, stratified round-robin, outcome-blind
+                  claude-opus-4-5-20251101 on Claude Code CLI 2.1.251, maxTurns 250
+                  per-run cap $3.50, total cap $90, arms 20..40, concurrency 3
+
+cost basis        of 334 historical arms in directories named "baseline", 269 record an
+                  injected tool-use-discipline block or M163 trigger in their OWN meta.
+                  The untreated stratum is 54: median $0.4440 p90 $1.2392 p95 $1.4959
+                  max $3.0384. $3.50 truncates 0/54 and 0/334. Projected total over 40
+                  arms $26.41 at the mean, $59.83 at p95-everywhere.
+
+architecture      ONE authoritative tree: /testbed extracted to the host and bind-mounted
+                  back at /testbed, so host file tools and the container interpreter
+                  address the same inodes at the same path. ALL agent Bash routes into the
+                  container with the workdir passed explicitly; §25's hybrid is refused
+                  because a command classifier would leave the agent reasoning about two
+                  filesystems.
+
+dry run           5 repositories (requests/flask/pytest/sympy/django), container -> edit ->
+                  FAILED -> revision -> PASSED -> gold -> official evaluator -> cleanup.
+                  10 post-edit validations, 10 runner starts, 10 usable events,
+                  5 post-validation revisions, 0 wrong-source, 0 ambiguous, 8 snapshots/arm.
+                  Patch identity IDENTICAL_STRICT 5/5 (interactive == prediction ==
+                  evaluator patch.diff) and resolved 5/5. Evaluator 46s.
+
+5 defects found   by running it, not describing it - four in M193's own instrument:
+                  1. the image's base interpreter CANNOT import the project; swebench's
+                     per-instance conda activation is mandatory or every validation in the
+                     corpus is a false negative.
+                  2. `git add -A` (vexp's capturePatch) stages psf/requests' untracked
+                     build/ into the model patch; the untracked set is now recorded before
+                     the agent exists and excluded.
+                  3. the workdir pin defeated the probe meant to detect its absence -
+                     the first preflight called psf/requests EDITABLE_INSTALL, which is
+                     false. pin_cwd=False. An instrument must be able to step outside the
+                     guarantee it verifies.
+                  4. CPython validates .pyc on (mtime_seconds, size), so a same-size
+                     same-second edit is INVISIBLE to the interpreter while every path
+                     witness still says EDITED_CHECKOUT_CONFIRMED. A fourth failure mode
+                     beside M192's three. Measured per instance (3/5 hazardous), NOT
+                     suppressed: PYTHONDONTWRITEBYTECODE would change the baseline
+                     environment.
+                  5. `pytest -q --no-header` prints "1 passed in 0.04s" with no banner and
+                     no = decoration; the first classifier scored 3/5 repos UNKNOWN while
+                     their tests had plainly run. §23's failure arriving through terseness.
+                     Fixed + 6 regression tests; 7 runner starts -> 10, 4 usable -> 10.
+
+treatment         1 BLOCKING: ~/.claude/CLAUDE.md (978B) is loaded into EVERY session
+                  regardless of cwd. Acquisition is conditional on a private
+                  CLAUDE_CONFIG_DIR per arm. 9 other routes closed by construction.
+
+artifacts         m193Acquisition.ts + m193Fixtures.ts + .test.ts (74 tests),
+                  m193_container_adapter.py, run_stage5_m193_{preflight,dry_run}.py,
+                  run_stage5_m193_{manifest,spend_model,treatment_audit,analyze}.ts,
+                  preregistration, manifest, task fixture, spend model, execution contract,
+                  telemetry contract, treatment audit, dry-run ledger, patch identity,
+                  synthetic fixtures, readiness (json+md), final report
+src/ changed      NONE (0 files). No VTRACE product behaviour was added or altered.
+gates             typecheck PASS  typecheck:benchmarks PASS  bun test 5756 pass 0 fail
+                  git diff --check clean
+prereg commit     402f2a71 (fixture + manifest + classifier + caps, before any evidence)
+authorizations    BASELINE_OBSERVATIONAL_ACQUISITION_DESIGN_READY
+                  NO_VTRACE_I6_PRODUCT_IMPLEMENTATION_AUTHORIZED
+                  NO_RUNTIME_REPAIR_INTERVENTION_AUTHORIZED
+                  I5_REMAINS_CLOSED
+```
+
+## M193 standing findings
+
+- **The historical "baseline" population is not a baseline.** 269 of 334 arms in
+  directories named `baseline` carry an injected tool-use-discipline block or M163
+  trigger recorded in their own metadata. Any future milestone deriving cost, turn counts
+  or behaviour rates from "baseline" runs must stratify on the arms' self-reported
+  treatment markers first. M193's caps would have been ~$0.02/arm higher and derived from
+  treated runs otherwise.
+
+- **A path witness cannot see a stale bytecode cache.** M192 established that path
+  provenance and execution provenance are independent and both required. There is a third
+  gap: CPython validates `.pyc` on `(mtime_seconds, size)`, so an edit preserving size
+  within one second is invisible to the interpreter while `__file__` still points at the
+  edited checkout. It fooled M193's own dry run before it was found. It is measured, not
+  suppressed — suppressing it would change the environment the baseline agent faces — and
+  3 of 5 dry-run repositories are hazardous.
+
+- **Terseness loses evidence exactly the way stream separation does.** §23 warns that a
+  marker on stderr with results on stdout can make a test execution disappear. The same
+  disappearance happened through `pytest -q --no-header`, which prints no banner and no
+  `=` decoration. Any classifier reading runner output must match the summary
+  structurally, and must be tested against the terse form, because terse is what an agent
+  actually types.
+
+- **The instrument must be able to step outside the guarantee it verifies.** The command
+  wrapper's unconditional `cd /testbed` is correct for agent commands and fatal for the
+  probe that measures what happens without it: the first preflight reported psf/requests
+  as `EDITABLE_INSTALL`, contradicting M192, purely because the probe inherited the pin.
+
+- **Still zero agents have ever run on a repaired path.** M192 said this and it remains
+  true. M193 makes the corpus buyable and proves the data path end to end without an LLM,
+  but it buys nothing. The largest evidential gap in the Phase-2B programme is untouched.
+
+- **Next-step recommendation.** Present the frozen fixture, model, arm bounds, per-run and
+  total caps and stopping rule to the project owner and ask for an explicit spend
+  authorisation of up to $90 (expected ~$26). If authorised, M194 executes
+  `stage5_m193_manifest.json` exactly and reports only the preregistered accounting — no
+  I6 analysis, no runtime-repair analysis. If not authorised, the design costs nothing to
+  hold, and M191's observation still stands: the natural validation-attempt rate in the
+  healthy pre-guard population was 318/807, and it is not obvious that beating it is worth
+  the money. Do not reopen I5. Do not implement I6.

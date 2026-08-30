@@ -1,0 +1,362 @@
+{
+  "schemaVersion": "stage5.m193.synthetic-fixtures.v1",
+  "milestone": "M193",
+  "purpose": "Every lifecycle shape the live corpus can produce, with its classification frozen before live data exists. M194 may not change a classifier without justifying a change here.",
+  "fixtureCount": 12,
+  "agreeing": 12,
+  "disagreeing": 0,
+  "fixtures": [
+    {
+      "id": "F01_EDIT_NO_VALIDATION",
+      "description": "edit → no validation → final. A valid run; the agent is allowed not to test (§39).",
+      "expected": {
+        "validity": "RUN_VALID",
+        "i6Usable": false,
+        "i6UnusableReason": "NO_POST_EDIT_VALIDATION_ATTEMPT",
+        "runtimeDiagnosisUsable": false,
+        "postEditValidationAttempts": 0,
+        "usableValidationEvents": 0,
+        "postValidationRevisions": 0,
+        "wrongSourceEvents": 0
+      },
+      "actual": {
+        "validity": "RUN_VALID",
+        "i6Usable": false,
+        "i6UnusableReason": "NO_POST_EDIT_VALIDATION_ATTEMPT",
+        "runtimeDiagnosisUsable": false,
+        "postEditValidationAttempts": 0,
+        "usableValidationEvents": 0,
+        "postValidationRevisions": 0,
+        "wrongSourceEvents": 0
+      },
+      "agrees": true,
+      "mismatchedFields": []
+    },
+    {
+      "id": "F02_EDIT_VALIDATION_PASS",
+      "description": "edit → validation pass → final.",
+      "expected": {
+        "validity": "RUN_VALID",
+        "i6Usable": true,
+        "i6UnusableReason": null,
+        "runtimeDiagnosisUsable": false,
+        "postEditValidationAttempts": 1,
+        "usableValidationEvents": 1,
+        "postValidationRevisions": 0,
+        "wrongSourceEvents": 0
+      },
+      "actual": {
+        "validity": "RUN_VALID",
+        "i6Usable": true,
+        "i6UnusableReason": null,
+        "runtimeDiagnosisUsable": false,
+        "postEditValidationAttempts": 1,
+        "usableValidationEvents": 1,
+        "postValidationRevisions": 0,
+        "wrongSourceEvents": 0
+      },
+      "agrees": true,
+      "mismatchedFields": []
+    },
+    {
+      "id": "F03_FAIL_REVISE_PASS",
+      "description": "edit → validation fail → revision → validation pass. The shape I6 exists to study.",
+      "expected": {
+        "validity": "RUN_VALID",
+        "i6Usable": true,
+        "i6UnusableReason": null,
+        "runtimeDiagnosisUsable": true,
+        "postEditValidationAttempts": 2,
+        "usableValidationEvents": 2,
+        "postValidationRevisions": 1,
+        "wrongSourceEvents": 0
+      },
+      "actual": {
+        "validity": "RUN_VALID",
+        "i6Usable": true,
+        "i6UnusableReason": null,
+        "runtimeDiagnosisUsable": true,
+        "postEditValidationAttempts": 2,
+        "usableValidationEvents": 2,
+        "postValidationRevisions": 1,
+        "wrongSourceEvents": 0
+      },
+      "agrees": true,
+      "mismatchedFields": []
+    },
+    {
+      "id": "F04_FAIL_NO_REVISION",
+      "description": "edit → validation fail → no revision → final. Usable, and a negative repair observation.",
+      "expected": {
+        "validity": "RUN_VALID",
+        "i6Usable": true,
+        "i6UnusableReason": null,
+        "runtimeDiagnosisUsable": true,
+        "postEditValidationAttempts": 1,
+        "usableValidationEvents": 1,
+        "postValidationRevisions": 0,
+        "wrongSourceEvents": 0
+      },
+      "actual": {
+        "validity": "RUN_VALID",
+        "i6Usable": true,
+        "i6UnusableReason": null,
+        "runtimeDiagnosisUsable": true,
+        "postEditValidationAttempts": 1,
+        "usableValidationEvents": 1,
+        "postValidationRevisions": 0,
+        "wrongSourceEvents": 0
+      },
+      "agrees": true,
+      "mismatchedFields": []
+    },
+    {
+      "id": "F05_RUNNER_NOT_STARTED",
+      "description": "validation attempted but the runner never started. Attempt counted; result is not.",
+      "expected": {
+        "validity": "RUN_VALID",
+        "i6Usable": false,
+        "i6UnusableReason": "NO_TRUSTWORTHY_VALIDATION_RESULT",
+        "runtimeDiagnosisUsable": false,
+        "postEditValidationAttempts": 1,
+        "usableValidationEvents": 0,
+        "postValidationRevisions": 0,
+        "wrongSourceEvents": 0
+      },
+      "actual": {
+        "validity": "RUN_VALID",
+        "i6Usable": false,
+        "i6UnusableReason": "NO_TRUSTWORTHY_VALIDATION_RESULT",
+        "runtimeDiagnosisUsable": false,
+        "postEditValidationAttempts": 1,
+        "usableValidationEvents": 0,
+        "postValidationRevisions": 0,
+        "wrongSourceEvents": 0
+      },
+      "agrees": true,
+      "mismatchedFields": []
+    },
+    {
+      "id": "F06_WRONG_SOURCE",
+      "description": "M191/M192's failure: tests pass loudly against an installed copy. Never a usable result (§20).",
+      "expected": {
+        "validity": "RUN_VALID",
+        "i6Usable": false,
+        "i6UnusableReason": "NO_TRUSTWORTHY_VALIDATION_RESULT",
+        "runtimeDiagnosisUsable": false,
+        "postEditValidationAttempts": 1,
+        "usableValidationEvents": 0,
+        "postValidationRevisions": 0,
+        "wrongSourceEvents": 1
+      },
+      "actual": {
+        "validity": "RUN_VALID",
+        "i6Usable": false,
+        "i6UnusableReason": "NO_TRUSTWORTHY_VALIDATION_RESULT",
+        "runtimeDiagnosisUsable": false,
+        "postEditValidationAttempts": 1,
+        "usableValidationEvents": 0,
+        "postValidationRevisions": 0,
+        "wrongSourceEvents": 1
+      },
+      "agrees": true,
+      "mismatchedFields": []
+    },
+    {
+      "id": "F07_TIMEOUT",
+      "description": "validation timed out. No exit code is invented (§17); the episode is not usable.",
+      "expected": {
+        "validity": "RUN_VALID",
+        "i6Usable": false,
+        "i6UnusableReason": "NO_TRUSTWORTHY_VALIDATION_RESULT",
+        "runtimeDiagnosisUsable": false,
+        "postEditValidationAttempts": 1,
+        "usableValidationEvents": 0,
+        "postValidationRevisions": 0,
+        "wrongSourceEvents": 0
+      },
+      "actual": {
+        "validity": "RUN_VALID",
+        "i6Usable": false,
+        "i6UnusableReason": "NO_TRUSTWORTHY_VALIDATION_RESULT",
+        "runtimeDiagnosisUsable": false,
+        "postEditValidationAttempts": 1,
+        "usableValidationEvents": 0,
+        "postValidationRevisions": 0,
+        "wrongSourceEvents": 0
+      },
+      "agrees": true,
+      "mismatchedFields": []
+    },
+    {
+      "id": "F08_INFRA_FAILURE",
+      "description": "the container died mid-run. An experiment outcome, never a coding failure (§38).",
+      "expected": {
+        "validity": "RUN_INVALID",
+        "i6Usable": false,
+        "i6UnusableReason": "RUN_INVALID",
+        "runtimeDiagnosisUsable": false,
+        "postEditValidationAttempts": 0,
+        "usableValidationEvents": 0,
+        "postValidationRevisions": 0,
+        "wrongSourceEvents": 0
+      },
+      "actual": {
+        "validity": "RUN_INVALID",
+        "i6Usable": false,
+        "i6UnusableReason": "RUN_INVALID",
+        "runtimeDiagnosisUsable": false,
+        "postEditValidationAttempts": 0,
+        "usableValidationEvents": 0,
+        "postValidationRevisions": 0,
+        "wrongSourceEvents": 0
+      },
+      "agrees": true,
+      "mismatchedFields": []
+    },
+    {
+      "id": "F09_EMPTY_PATCH",
+      "description": "the agent produced nothing. A truthful empty patch is a VALID run (§39).",
+      "expected": {
+        "validity": "RUN_VALID",
+        "i6Usable": false,
+        "i6UnusableReason": "NO_SOURCE_EDIT",
+        "runtimeDiagnosisUsable": false,
+        "postEditValidationAttempts": 0,
+        "usableValidationEvents": 0,
+        "postValidationRevisions": 0,
+        "wrongSourceEvents": 0
+      },
+      "actual": {
+        "validity": "RUN_VALID",
+        "i6Usable": false,
+        "i6UnusableReason": "NO_SOURCE_EDIT",
+        "runtimeDiagnosisUsable": false,
+        "postEditValidationAttempts": 0,
+        "usableValidationEvents": 0,
+        "postValidationRevisions": 0,
+        "wrongSourceEvents": 0
+      },
+      "agrees": true,
+      "mismatchedFields": []
+    },
+    {
+      "id": "F10_MULTIPLE_CYCLES",
+      "description": "three validation cycles with two revisions, and the runner banner split across streams (§23).",
+      "expected": {
+        "validity": "RUN_VALID",
+        "i6Usable": true,
+        "i6UnusableReason": null,
+        "runtimeDiagnosisUsable": true,
+        "postEditValidationAttempts": 3,
+        "usableValidationEvents": 3,
+        "postValidationRevisions": 2,
+        "wrongSourceEvents": 0
+      },
+      "actual": {
+        "validity": "RUN_VALID",
+        "i6Usable": true,
+        "i6UnusableReason": null,
+        "runtimeDiagnosisUsable": true,
+        "postEditValidationAttempts": 3,
+        "usableValidationEvents": 3,
+        "postValidationRevisions": 2,
+        "wrongSourceEvents": 0
+      },
+      "agrees": true,
+      "mismatchedFields": []
+    },
+    {
+      "id": "F11_AMBIGUOUS_UNPINNED_WORKDIR",
+      "description": "a CWD_DEPENDENT repository validated from outside the checkout root. Path says checkout, but nothing proves it would have won — AMBIGUOUS, not confirmed (§20/§21).",
+      "expected": {
+        "validity": "RUN_VALID",
+        "i6Usable": false,
+        "i6UnusableReason": "NO_TRUSTWORTHY_VALIDATION_RESULT",
+        "runtimeDiagnosisUsable": false,
+        "postEditValidationAttempts": 1,
+        "usableValidationEvents": 0,
+        "postValidationRevisions": 0,
+        "wrongSourceEvents": 0
+      },
+      "actual": {
+        "validity": "RUN_VALID",
+        "i6Usable": false,
+        "i6UnusableReason": "NO_TRUSTWORTHY_VALIDATION_RESULT",
+        "runtimeDiagnosisUsable": false,
+        "postEditValidationAttempts": 1,
+        "usableValidationEvents": 0,
+        "postValidationRevisions": 0,
+        "wrongSourceEvents": 0
+      },
+      "agrees": true,
+      "mismatchedFields": []
+    },
+    {
+      "id": "F12_TREATMENT_CONTAMINATION",
+      "description": "an otherwise clean run whose startup audit found VTRACE exposure. Invalid regardless of quality (§33).",
+      "expected": {
+        "validity": "RUN_INVALID",
+        "i6Usable": false,
+        "i6UnusableReason": "RUN_INVALID",
+        "runtimeDiagnosisUsable": false,
+        "postEditValidationAttempts": 1,
+        "usableValidationEvents": 1,
+        "postValidationRevisions": 0,
+        "wrongSourceEvents": 0
+      },
+      "actual": {
+        "validity": "RUN_INVALID",
+        "i6Usable": false,
+        "i6UnusableReason": "RUN_INVALID",
+        "runtimeDiagnosisUsable": false,
+        "postEditValidationAttempts": 1,
+        "usableValidationEvents": 1,
+        "postValidationRevisions": 0,
+        "wrongSourceEvents": 0
+      },
+      "agrees": true,
+      "mismatchedFields": []
+    }
+  ],
+  "corpusExpectation": {
+    "validRuns": 10,
+    "i6UsableArms": 4,
+    "runtimeDiagnosisUsableArms": 3,
+    "adequacy": "INADEQUATE"
+  },
+  "corpusActual": {
+    "validRuns": 10,
+    "i6UsableArms": 4,
+    "runtimeDiagnosisUsableArms": 3,
+    "adequacy": "INADEQUATE"
+  },
+  "corpusAgrees": true,
+  "fullAccounting": {
+    "armsAttempted": 12,
+    "validRuns": 10,
+    "invalidRuns": 2,
+    "invalidByCategory": {
+      "PATCH_EXTRACTION_FAILURE": 1,
+      "EVALUATOR_DID_NOT_RUN": 1,
+      "HARNESS_CRASH": 1,
+      "TREATMENT_CONTAMINATION": 1
+    },
+    "runsWithEdit": 9,
+    "postEditValidationAttempts": 11,
+    "runnerStarts": 10,
+    "validationPasses": 3,
+    "validationFailures": 4,
+    "postValidationRevisions": 3,
+    "multipleValidationCycleArms": 2,
+    "i6UsableArms": 4,
+    "runtimeDiagnosisUsableArms": 3,
+    "validButI6UnusableArms": 6,
+    "repositoriesRepresented": 11,
+    "repositoriesAmongI6Usable": 4,
+    "wrongSourceEvents": 1,
+    "ambiguousSourceEvents": 1,
+    "spendUsd": 0,
+    "resolvedCount": 0
+  }
+}

@@ -144,13 +144,62 @@ const RUNNER_BANNERS = [
   />>>>> Start Test Output/,            // swebench's own eval.sh markers
 ];
 
-const PYTEST_TAIL = /^=+ (.+?) (?:in|at) [\d.]+s?.*=+$/gm;
+/**
+ * A pytest counts summary, decorated or not.
+ *
+ * `pytest -q --no-header` prints `1 passed, 1 warning in 0.02s` with no `=`
+ * decoration and no session-start banner at all. An earlier version of this
+ * classifier required the decoration and reported three of the five dry-run
+ * repositories as UNKNOWN while their tests had plainly run — the same class of
+ * defect §23 warns about, arriving through terseness instead of through stream
+ * separation. Quiet mode is a completely ordinary thing for an agent to use, so
+ * the summary is matched structurally: an optional `=` frame, a counts body, and
+ * a duration.
+ */
 const UNITTEST_TAIL = /^(OK|FAILED)(?:\s*\(.*\))?\s*$/m;
+
+const SUMMARY_LINE = /^=*\s*(.*?)\s+(?:in|at)\s+[\d.]+m?s(?:\s|=|$).*$/;
+
+interface SummaryCounts {
+  passed: number;
+  failed: number;
+  errored: number;
+  noTests: boolean;
+  sawSummary: boolean;
+}
+
+function scanSummaries(text: string): SummaryCounts {
+  const out: SummaryCounts = { passed: 0, failed: 0, errored: 0, noTests: false, sawSummary: false };
+  for (const raw of text.split("\n")) {
+    const m = SUMMARY_LINE.exec(raw.replace(/=+\s*$/, "").trimEnd());
+    if (!m) continue;
+    const body = m[1] ?? "";
+    if (/no tests ran/i.test(body)) {
+      out.noTests = true;
+      out.sawSummary = true;
+      continue;
+    }
+    // Require at least one "<n> <word>" pair, so prose lines that happen to
+    // contain "in 1.0s" cannot be read as a test result.
+    if (!/\d+ [a-z]+/.test(body)) continue;
+    out.sawSummary = true;
+    const f = /(\d+) failed/.exec(body);
+    const p = /(\d+) passed/.exec(body);
+    const e = /(\d+) errors?/.exec(body);
+    if (f) out.failed += Number(f[1]);
+    if (p) out.passed += Number(p[1]);
+    if (e) out.errored += Number(e[1]);
+  }
+  return out;
+}
 
 /** Did a *test runner* actually start, as distinct from the shell succeeding? */
 export function runnerStarted(c: StreamCapture): boolean {
   const text = classificationText(c);
-  return RUNNER_BANNERS.some((re) => re.test(text));
+  if (RUNNER_BANNERS.some((re) => re.test(text))) return true;
+  // A counts summary is itself proof the runner ran, and under `-q --no-header`
+  // it is the only proof there is.
+  return scanSummaries(text).sawSummary;
 }
 
 /**
@@ -164,23 +213,10 @@ export function semanticTestResult(c: StreamCapture): SemanticTestResult {
   const text = classificationText(c);
   if (!runnerStarted(c)) return "UNKNOWN";
 
-  let failed = 0;
-  let passed = 0;
-  let errored = 0;
-  let noTests = false;
-  let sawSummary = false;
-
-  for (const m of text.matchAll(PYTEST_TAIL)) {
-    const body = m[1];
-    sawSummary = true;
-    const f = /(\d+) failed/.exec(body);
-    const p = /(\d+) passed/.exec(body);
-    const e = /(\d+) errors?/.exec(body);
-    if (f) failed += Number(f[1]);
-    if (p) passed += Number(p[1]);
-    if (e) errored += Number(e[1]);
-    if (/no tests ran/i.test(body)) noTests = true;
-  }
+  const s = scanSummaries(text);
+  let { passed, failed, errored } = s;
+  let noTests = s.noTests;
+  let sawSummary = s.sawSummary;
 
   // unittest. `Ran 0 tests ... OK` is a vacuous pass and must not be credited
   // as one, so the ran-count is read BEFORE the OK/FAILED verdict.

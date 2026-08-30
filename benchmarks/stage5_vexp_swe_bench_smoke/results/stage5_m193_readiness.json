@@ -1,0 +1,225 @@
+{
+  "schemaVersion": "stage5.m193.readiness.v1",
+  "milestone": "M193",
+  "experimentId": "M193-BASELINE-OBS-1",
+  "manifestHash": "7a85d25df322940e20b5f8075e696547fa0362022ad4ae0c5867187b478c2c98",
+  "taskFixtureSha256": "e79843d3b93d4c77551911a92eed9b316c57b5045ff7e7ef75018efb2e9aaca4",
+  "liveAgentRuns": 0,
+  "gates": [
+    {
+      "id": "G1_m192_substrate_reverified",
+      "ok": true,
+      "note": "24/24 m192Substrate tests pass on current HEAD and the swebench 4.1.0 install audit is byte-identical"
+    },
+    {
+      "id": "G2_task_fixture_frozen",
+      "ok": true,
+      "note": "40 arms across 12 repositories, sha256 e79843d3b93d4c77"
+    },
+    {
+      "id": "G3_model_and_agent_pinned",
+      "ok": true,
+      "note": "claude-opus-4-5-20251101 on Claude Code 2.1.251"
+    },
+    {
+      "id": "G4_spend_caps_frozen",
+      "ok": true,
+      "note": "per-run $3.5, total $90, truncates 0 historical arms"
+    },
+    {
+      "id": "G5_stopping_rule_frozen",
+      "ok": true,
+      "note": "After each completed arm, continue unless: total spend has reached the total cap"
+    },
+    {
+      "id": "G6_preflight_replacement_retry_frozen",
+      "ok": true,
+      "note": "14 preflight checks; replacement NEXT_IN_FROZEN_ORDER"
+    },
+    {
+      "id": "G7_telemetry_contract_frozen",
+      "ok": true,
+      "note": "stage5_m193_telemetry_contract.md"
+    },
+    {
+      "id": "G8_intermediate_diff_capture_proven",
+      "ok": true,
+      "note": "40 snapshots across 5 dry-run arms"
+    },
+    {
+      "id": "G9_validation_provenance_proven",
+      "ok": true,
+      "note": "0 wrong-source, 0 ambiguous across 10 post-edit validations"
+    },
+    {
+      "id": "G10_workdir_pinning_proven",
+      "ok": true,
+      "note": "every validation ran with workdir == /testbed"
+    },
+    {
+      "id": "G11_patch_identity_proven",
+      "ok": true,
+      "note": "5/5 identical through the official evaluator"
+    },
+    {
+      "id": "G12_fake_agent_lifecycle_works",
+      "ok": true,
+      "note": "5 repositories, 5 exhibiting fail-then-pass"
+    },
+    {
+      "id": "G13_synthetic_classification_works",
+      "ok": true,
+      "note": "12/12 fixtures agree with the frozen expectation"
+    },
+    {
+      "id": "G14_corpus_adequacy_code_frozen",
+      "ok": true,
+      "note": "{\"i6UsableArms\":12,\"repositoriesAmongI6Usable\":6,\"validRuns\":30}"
+    },
+    {
+      "id": "G15_clean_untreated_baseline",
+      "ok": true,
+      "note": "1 blocking finding(s), each closed by a stated per-arm precondition"
+    }
+  ],
+  "gatesPassed": 15,
+  "gatesTotal": 15,
+  "readinessVerdict": "LIVE_ACQUISITION_READY",
+  "licenses": [
+    "BASELINE_OBSERVATIONAL_ACQUISITION_DESIGN_READY"
+  ],
+  "standingProhibitions": [
+    "NO_VTRACE_I6_PRODUCT_IMPLEMENTATION_AUTHORIZED",
+    "NO_RUNTIME_REPAIR_INTERVENTION_AUTHORIZED",
+    "I5_REMAINS_CLOSED"
+  ],
+  "dryRunAccounting": {
+    "armsAttempted": 5,
+    "validRuns": 5,
+    "invalidRuns": 0,
+    "invalidByCategory": {},
+    "runsWithEdit": 5,
+    "postEditValidationAttempts": 10,
+    "runnerStarts": 10,
+    "validationPasses": 5,
+    "validationFailures": 5,
+    "postValidationRevisions": 5,
+    "multipleValidationCycleArms": 5,
+    "i6UsableArms": 5,
+    "runtimeDiagnosisUsableArms": 5,
+    "validButI6UnusableArms": 0,
+    "repositoriesRepresented": 5,
+    "repositoriesAmongI6Usable": 5,
+    "wrongSourceEvents": 0,
+    "ambiguousSourceEvents": 0,
+    "spendUsd": 0,
+    "resolvedCount": 5
+  },
+  "dryRunLifecycles": [
+    {
+      "armId": "dryrun_django__django-10880",
+      "instanceId": "django__django-10880",
+      "repo": "django/django",
+      "validity": "RUN_VALID",
+      "invalidReasons": [],
+      "hasSourceEdit": true,
+      "postEditValidationAttempts": 2,
+      "runnerStarts": 2,
+      "usableValidationEvents": 2,
+      "validationPasses": 1,
+      "validationFailures": 1,
+      "postValidationRevisions": 1,
+      "validationCycles": 2,
+      "wrongSourceEvents": 0,
+      "ambiguousSourceEvents": 0,
+      "i6Usable": true,
+      "i6UnusableReason": null,
+      "runtimeDiagnosisUsable": true,
+      "resolved": true
+    },
+    {
+      "armId": "dryrun_pallets__flask-5014",
+      "instanceId": "pallets__flask-5014",
+      "repo": "pallets/flask",
+      "validity": "RUN_VALID",
+      "invalidReasons": [],
+      "hasSourceEdit": true,
+      "postEditValidationAttempts": 2,
+      "runnerStarts": 2,
+      "usableValidationEvents": 2,
+      "validationPasses": 1,
+      "validationFailures": 1,
+      "postValidationRevisions": 1,
+      "validationCycles": 2,
+      "wrongSourceEvents": 0,
+      "ambiguousSourceEvents": 0,
+      "i6Usable": true,
+      "i6UnusableReason": null,
+      "runtimeDiagnosisUsable": true,
+      "resolved": true
+    },
+    {
+      "armId": "dryrun_psf__requests-1142",
+      "instanceId": "psf__requests-1142",
+      "repo": "psf/requests",
+      "validity": "RUN_VALID",
+      "invalidReasons": [],
+      "hasSourceEdit": true,
+      "postEditValidationAttempts": 2,
+      "runnerStarts": 2,
+      "usableValidationEvents": 2,
+      "validationPasses": 1,
+      "validationFailures": 1,
+      "postValidationRevisions": 1,
+      "validationCycles": 2,
+      "wrongSourceEvents": 0,
+      "ambiguousSourceEvents": 0,
+      "i6Usable": true,
+      "i6UnusableReason": null,
+      "runtimeDiagnosisUsable": true,
+      "resolved": true
+    },
+    {
+      "armId": "dryrun_pytest-dev__pytest-10051",
+      "instanceId": "pytest-dev__pytest-10051",
+      "repo": "pytest-dev/pytest",
+      "validity": "RUN_VALID",
+      "invalidReasons": [],
+      "hasSourceEdit": true,
+      "postEditValidationAttempts": 2,
+      "runnerStarts": 2,
+      "usableValidationEvents": 2,
+      "validationPasses": 1,
+      "validationFailures": 1,
+      "postValidationRevisions": 1,
+      "validationCycles": 2,
+      "wrongSourceEvents": 0,
+      "ambiguousSourceEvents": 0,
+      "i6Usable": true,
+      "i6UnusableReason": null,
+      "runtimeDiagnosisUsable": true,
+      "resolved": true
+    },
+    {
+      "armId": "dryrun_sympy__sympy-12419",
+      "instanceId": "sympy__sympy-12419",
+      "repo": "sympy/sympy",
+      "validity": "RUN_VALID",
+      "invalidReasons": [],
+      "hasSourceEdit": true,
+      "postEditValidationAttempts": 2,
+      "runnerStarts": 2,
+      "usableValidationEvents": 2,
+      "validationPasses": 1,
+      "validationFailures": 1,
+      "postValidationRevisions": 1,
+      "validationCycles": 2,
+      "wrongSourceEvents": 0,
+      "ambiguousSourceEvents": 0,
+      "i6Usable": true,
+      "i6UnusableReason": null,
+      "runtimeDiagnosisUsable": true,
+      "resolved": true
+    }
+  ]
+}

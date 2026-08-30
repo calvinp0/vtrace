@@ -310,7 +310,7 @@
   "frozenSources": [
     {
       "path": "benchmarks/stage5_vexp_swe_bench_smoke/m193Acquisition.ts",
-      "gitBlobSha1": "c6f7ea81b2aa666d539f57196b1ff1e9548225b8"
+      "gitBlobSha1": "8077c3f6b4f820056e54bae03b265fe395fba85b"
     },
     {
       "path": "benchmarks/stage5_vexp_swe_bench_smoke/m193Fixtures.ts",
@@ -318,7 +318,7 @@
     },
     {
       "path": "benchmarks/stage5_vexp_swe_bench_smoke/m193Acquisition.test.ts",
-      "gitBlobSha1": "2c743a03148454dfc5ec4fefab9a733264037f7b"
+      "gitBlobSha1": "6c9dfa8dce29e5ec175d0da7b256f5a567718ee8"
     },
     {
       "path": "benchmarks/stage5_vexp_swe_bench_smoke/m193_container_adapter.py",
@@ -389,6 +389,6 @@
       "django__django-11206"
     ]
   },
-  "manifestHash": "577c59bbbf4316a1f4de0f8a4ed23b7ca700defbbfec44b51cb40de4a90c38a0",
+  "manifestHash": "7a85d25df322940e20b5f8075e696547fa0362022ad4ae0c5867187b478c2c98",
   "manifestHashRule": "sha256 over the canonical (recursively key-sorted) JSON of every field except manifestHash and manifestHashRule"
 }
