@@ -29,7 +29,7 @@
  * replication rather than silently analysed as an empty repository.
  */
 
-import { execFileSync, execSync } from "node:child_process";
+import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
@@ -72,7 +72,15 @@ interface PrepareRow {
 
 const benchRepoDir = (repo: string): string => path.join(BENCH_REPOS, repo.replace("/", "__"));
 
-function prepareOne(inst: ManifestArm): PrepareRow {
+/**
+ * The indexer is spawned ASYNCHRONOUSLY. An earlier version of this script used
+ * `execFileSync` inside notionally-parallel workers, which is a comfortable way to write a
+ * concurrent-looking loop that runs strictly serially: a synchronous spawn blocks the single
+ * JS thread, so `--jobs 5` bought nothing. Indexing 71 trees is the milestone's only
+ * expensive step and M190 has to finish it in-session (§37), so the parallelism has to be
+ * real.
+ */
+async function prepareOne(inst: ManifestArm): Promise<PrepareRow> {
   const started = Date.now();
   const row: PrepareRow = {
     instanceId: inst.instanceId, repo: inst.repo, baseCommit: inst.baseCommit,
@@ -99,24 +107,20 @@ function prepareOne(inst: ManifestArm): PrepareRow {
   // repository and produce candidates from a graph that never existed. Start clean.
   rmSync(treeDir, { recursive: true, force: true });
   mkdirSync(treeDir, { recursive: true });
-  try {
-    execSync(
-      `git -C ${JSON.stringify(repoDir)} archive ${JSON.stringify(inst.baseCommit)} | tar -x -C ${JSON.stringify(treeDir)}`,
-      { stdio: ["ignore", "ignore", "pipe"], shell: "/bin/bash" },
-    );
-  } catch (e) {
-    return finish("ARCHIVE_FAILED", (e as Error).message.slice(0, 200));
-  }
+  const archive = Bun.spawn(["/bin/bash", "-c",
+    `git -C ${JSON.stringify(repoDir)} archive ${JSON.stringify(inst.baseCommit)} | tar -x -C ${JSON.stringify(treeDir)}`,
+  ], { stdout: "ignore", stderr: "pipe" });
+  const archiveErr = await new Response(archive.stderr).text();
+  if ((await archive.exited) !== 0) return finish("ARCHIVE_FAILED", archiveErr.slice(0, 200));
 
-  let out = "";
-  try {
-    out = execFileSync("bun", [path.join(REPO_ROOT, "src/cli/index.ts"), "index", treeDir, "--quiet", "--json"], {
-      cwd: REPO_ROOT, encoding: "utf8", maxBuffer: 64 * 1024 * 1024,
-      env: { ...process.env, VTRACE_PROGRESS: "0" },
-    });
-  } catch (e) {
-    return finish("INDEX_FAILED", (e as Error).message.slice(0, 300));
-  }
+  const proc = Bun.spawn(["bun", path.join(REPO_ROOT, "src/cli/index.ts"), "index", treeDir, "--quiet", "--json"], {
+    cwd: REPO_ROOT, stdout: "pipe", stderr: "pipe",
+    env: { ...process.env, VTRACE_PROGRESS: "0" },
+  });
+  const out = await new Response(proc.stdout).text();
+  const err = await new Response(proc.stderr).text();
+  const code = await proc.exited;
+  if (code !== 0) return finish("INDEX_FAILED", `exit ${code}: ${err.slice(0, 300)}`);
 
   const dbPath = path.join(treeDir, ".vtrace/index.sqlite");
   if (!existsSync(dbPath)) return finish("INDEX_FAILED", "no index.sqlite produced");
@@ -159,14 +163,13 @@ async function worker(): Promise<void> {
     const i = cursor++;
     if (i >= queue.length) return;
     const inst = queue[i]!;
-    const row = prepareOne(inst);
+    const row = await prepareOne(inst);
     rows.push(row);
     done += 1;
     process.stdout.write(
       `[${String(done).padStart(3)}/${queue.length}] ${row.outcome.padEnd(28)} ${inst.instanceId}` +
       `  files=${row.files ?? "-"} symbols=${row.symbols ?? "-"} edges=${row.edges ?? "-"} ${(row.elapsedMs / 1000).toFixed(1)}s\n`,
     );
-    await Promise.resolve();
   }
 }
 await Promise.all(Array.from({ length: Math.min(jobs, queue.length) }, () => worker()));

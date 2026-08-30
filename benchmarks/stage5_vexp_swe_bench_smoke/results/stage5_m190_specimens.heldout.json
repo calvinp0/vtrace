@@ -1,0 +1,5304 @@
+{
+  "schemaVersion": "stage5.m189.specimens.v1",
+  "milestone": "M189",
+  "workstream": "M189-C",
+  "population": {
+    "armsAnalysed": 314,
+    "failures": 126,
+    "successes": 188,
+    "repositories": [
+      "astropy/astropy",
+      "django/django",
+      "matplotlib/matplotlib",
+      "psf/requests",
+      "pydata/xarray",
+      "pytest-dev/pytest",
+      "scikit-learn/scikit-learn",
+      "sphinx-doc/sphinx",
+      "sympy/sympy"
+    ],
+    "i5Arms": 314,
+    "i6Arms": 0
+  },
+  "mechanismTable": [
+    {
+      "hypothesis": "I5",
+      "mechanism": "I5_AFFECTED_CONSUMER_MISS",
+      "specimens": 5,
+      "repositories": [
+        "matplotlib/matplotlib",
+        "sympy/sympy"
+      ],
+      "repositoryCount": 2,
+      "tasks": [
+        "matplotlib__matplotlib-24870",
+        "sympy__sympy-13091"
+      ],
+      "taskCount": 2,
+      "meetsThreshold": false
+    },
+    {
+      "hypothesis": "I5",
+      "mechanism": "I5_NO_REPOSITORY_DERIVABLE_OBLIGATION",
+      "specimens": 14,
+      "repositories": [
+        "django/django",
+        "matplotlib/matplotlib",
+        "pydata/xarray",
+        "sympy/sympy"
+      ],
+      "repositoryCount": 4,
+      "tasks": [
+        "django__django-13512",
+        "matplotlib__matplotlib-24870",
+        "pydata__xarray-6992",
+        "sympy__sympy-16597"
+      ],
+      "taskCount": 4,
+      "meetsThreshold": true
+    },
+    {
+      "hypothesis": "I5",
+      "mechanism": "I5_REACHABLE_BUT_NOT_NAMED_BY_DERIVATION",
+      "specimens": 6,
+      "repositories": [
+        "django/django",
+        "sphinx-doc/sphinx"
+      ],
+      "repositoryCount": 2,
+      "tasks": [
+        "django__django-16256",
+        "sphinx-doc__sphinx-10673"
+      ],
+      "taskCount": 2,
+      "meetsThreshold": false
+    },
+    {
+      "hypothesis": "I5",
+      "mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "specimens": 93,
+      "repositories": [
+        "astropy/astropy",
+        "django/django",
+        "matplotlib/matplotlib",
+        "psf/requests",
+        "scikit-learn/scikit-learn",
+        "sphinx-doc/sphinx",
+        "sympy/sympy"
+      ],
+      "repositoryCount": 7,
+      "tasks": [
+        "astropy__astropy-13033",
+        "astropy__astropy-13977",
+        "astropy__astropy-14365",
+        "astropy__astropy-14598",
+        "astropy__astropy-7166",
+        "django__django-10973",
+        "django__django-11206",
+        "django__django-12406",
+        "django__django-16667",
+        "matplotlib__matplotlib-24870",
+        "psf__requests-1921",
+        "scikit-learn__scikit-learn-14087",
+        "sphinx-doc__sphinx-10435",
+        "sphinx-doc__sphinx-10614",
+        "sphinx-doc__sphinx-7440",
+        "sphinx-doc__sphinx-7748",
+        "sphinx-doc__sphinx-9711",
+        "sympy__sympy-12489",
+        "sympy__sympy-13798",
+        "sympy__sympy-15599"
+      ],
+      "taskCount": 20,
+      "meetsThreshold": true
+    },
+    {
+      "hypothesis": "I5",
+      "mechanism": "OTHER",
+      "specimens": 8,
+      "repositories": [
+        "django/django",
+        "matplotlib/matplotlib",
+        "sphinx-doc/sphinx"
+      ],
+      "repositoryCount": 3,
+      "tasks": [
+        "django__django-11477",
+        "matplotlib__matplotlib-20826",
+        "matplotlib__matplotlib-23476",
+        "sphinx-doc__sphinx-9229"
+      ],
+      "taskCount": 4,
+      "meetsThreshold": true
+    },
+    {
+      "hypothesis": "I6",
+      "mechanism": "I6_VALIDATION_SELECTED_BUT_NOT_EXECUTED",
+      "specimens": 2,
+      "repositories": [
+        "sphinx-doc/sphinx"
+      ],
+      "repositoryCount": 1,
+      "tasks": [
+        "sphinx-doc__sphinx-9711"
+      ],
+      "taskCount": 1,
+      "meetsThreshold": false
+    },
+    {
+      "hypothesis": "I6",
+      "mechanism": "INSUFFICIENT_TRACE",
+      "specimens": 124,
+      "repositories": [
+        "astropy/astropy",
+        "django/django",
+        "matplotlib/matplotlib",
+        "psf/requests",
+        "pydata/xarray",
+        "scikit-learn/scikit-learn",
+        "sphinx-doc/sphinx",
+        "sympy/sympy"
+      ],
+      "repositoryCount": 8,
+      "tasks": [
+        "astropy__astropy-13033",
+        "astropy__astropy-13977",
+        "astropy__astropy-14365",
+        "astropy__astropy-14598",
+        "astropy__astropy-7166",
+        "django__django-10973",
+        "django__django-11206",
+        "django__django-11477",
+        "django__django-12406",
+        "django__django-13512",
+        "django__django-16256",
+        "django__django-16667",
+        "matplotlib__matplotlib-20826",
+        "matplotlib__matplotlib-23476",
+        "matplotlib__matplotlib-24870",
+        "psf__requests-1921",
+        "pydata__xarray-6992",
+        "scikit-learn__scikit-learn-14087",
+        "sphinx-doc__sphinx-10435",
+        "sphinx-doc__sphinx-10614",
+        "sphinx-doc__sphinx-10673",
+        "sphinx-doc__sphinx-7440",
+        "sphinx-doc__sphinx-7748",
+        "sphinx-doc__sphinx-9229",
+        "sphinx-doc__sphinx-9711",
+        "sympy__sympy-12489",
+        "sympy__sympy-13091",
+        "sympy__sympy-13798",
+        "sympy__sympy-15599",
+        "sympy__sympy-16597"
+      ],
+      "taskCount": 30,
+      "meetsThreshold": true
+    }
+  ],
+  "specimens": [
+    {
+      "runLabel": "m161_baseline_astropy__astropy_13033",
+      "family": "m161",
+      "instanceId": "astropy__astropy-13033",
+      "repo": "astropy/astropy",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "astropy/timeseries/core.py"
+      ],
+      "finalPatchFiles": [
+        "astropy/timeseries/core.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m161_vtrace_astropy__astropy_13033",
+      "family": "m161",
+      "instanceId": "astropy__astropy-13033",
+      "repo": "astropy/astropy",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "astropy/timeseries/core.py"
+      ],
+      "finalPatchFiles": [
+        "astropy/timeseries/core.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m162_baseline_astropy__astropy_13977",
+      "family": "m162",
+      "instanceId": "astropy__astropy-13977",
+      "repo": "astropy/astropy",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "astropy/units/quantity.py"
+      ],
+      "finalPatchFiles": [
+        "astropy/units/quantity.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 3
+    },
+    {
+      "runLabel": "m162_callable_astropy__astropy_13977",
+      "family": "m162",
+      "instanceId": "astropy__astropy-13977",
+      "repo": "astropy/astropy",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "astropy/units/quantity.py"
+      ],
+      "finalPatchFiles": [
+        "astropy/units/quantity.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m162_static_astropy__astropy_13977",
+      "family": "m162",
+      "instanceId": "astropy__astropy-13977",
+      "repo": "astropy/astropy",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "astropy/units/quantity.py"
+      ],
+      "finalPatchFiles": [
+        "astropy/coordinates/spectral_quantity.py",
+        "astropy/units/quantity.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m163_tools_neutral_policy_astropy__astropy_13977",
+      "family": "m163",
+      "instanceId": "astropy__astropy-13977",
+      "repo": "astropy/astropy",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "astropy/units/quantity.py"
+      ],
+      "finalPatchFiles": [
+        "astropy/units/quantity.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m163_tools_only_astropy__astropy_13977",
+      "family": "m163",
+      "instanceId": "astropy__astropy-13977",
+      "repo": "astropy/astropy",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "astropy/units/quantity.py"
+      ],
+      "finalPatchFiles": [
+        "astropy/units/quantity.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m163_tools_task_trigger_astropy__astropy_13977",
+      "family": "m163",
+      "instanceId": "astropy__astropy-13977",
+      "repo": "astropy/astropy",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "astropy/units/quantity.py"
+      ],
+      "finalPatchFiles": [
+        "astropy/units/quantity.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m164_tools_neutral_policy_astropy__astropy_13977",
+      "family": "m164",
+      "instanceId": "astropy__astropy-13977",
+      "repo": "astropy/astropy",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "astropy/units/quantity.py"
+      ],
+      "finalPatchFiles": [
+        "astropy/units/quantity.py",
+        "uv.lock"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m164_tools_task_trigger_astropy__astropy_13977",
+      "family": "m164",
+      "instanceId": "astropy__astropy-13977",
+      "repo": "astropy/astropy",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "astropy/units/quantity.py"
+      ],
+      "finalPatchFiles": [
+        "astropy/units/quantity.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "eval-bounded20-baseline-astropy-14365-r1",
+      "family": "other",
+      "instanceId": "astropy__astropy-14365",
+      "repo": "astropy/astropy",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "astropy/io/ascii/qdp.py"
+      ],
+      "finalPatchFiles": [
+        "astropy/io/ascii/qdp.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "eval-bounded20-baseline-astropy-14365-r2",
+      "family": "other",
+      "instanceId": "astropy__astropy-14365",
+      "repo": "astropy/astropy",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "astropy/io/ascii/qdp.py"
+      ],
+      "finalPatchFiles": [
+        "astropy/io/ascii/qdp.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "eval-bounded20-current-clean-astropy-14365-r2",
+      "family": "other",
+      "instanceId": "astropy__astropy-14365",
+      "repo": "astropy/astropy",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "astropy/io/ascii/qdp.py"
+      ],
+      "finalPatchFiles": [
+        "astropy/io/ascii/qdp.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m155_vtrace_astropy__astropy_14365",
+      "family": "m155",
+      "instanceId": "astropy__astropy-14365",
+      "repo": "astropy/astropy",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "astropy/io/ascii/qdp.py"
+      ],
+      "finalPatchFiles": [
+        "astropy/io/ascii/qdp.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m55y_vtrace_digest_astropy_14365",
+      "family": "m55y",
+      "instanceId": "astropy__astropy-14365",
+      "repo": "astropy/astropy",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "astropy/io/ascii/qdp.py"
+      ],
+      "finalPatchFiles": [
+        "astropy/io/ascii/qdp.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 3
+    },
+    {
+      "runLabel": "m60_structured_bounded_astropy_14365",
+      "family": "m60",
+      "instanceId": "astropy__astropy-14365",
+      "repo": "astropy/astropy",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "astropy/io/ascii/qdp.py"
+      ],
+      "finalPatchFiles": [
+        "astropy/io/ascii/qdp.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 3
+    },
+    {
+      "runLabel": "m60c_structured_bounded_astropy_14365",
+      "family": "m60c",
+      "instanceId": "astropy__astropy-14365",
+      "repo": "astropy/astropy",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "astropy/io/ascii/qdp.py"
+      ],
+      "finalPatchFiles": [
+        "astropy/io/ascii/qdp.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 3
+    },
+    {
+      "runLabel": "m62_structured_bounded_astropy_14365",
+      "family": "m62",
+      "instanceId": "astropy__astropy-14365",
+      "repo": "astropy/astropy",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "astropy/io/ascii/qdp.py"
+      ],
+      "finalPatchFiles": [
+        "astropy/io/ascii/qdp.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 3
+    },
+    {
+      "runLabel": "m62c_structured_bounded_compact_astropy_astropy_14365",
+      "family": "m62c",
+      "instanceId": "astropy__astropy-14365",
+      "repo": "astropy/astropy",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "astropy/io/ascii/qdp.py"
+      ],
+      "finalPatchFiles": [
+        "astropy/io/ascii/qdp.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m68b_pivot_confidence_astropy_14365",
+      "family": "m68b",
+      "instanceId": "astropy__astropy-14365",
+      "repo": "astropy/astropy",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "astropy/io/ascii/qdp.py"
+      ],
+      "finalPatchFiles": [
+        "astropy/io/ascii/qdp.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m69_pivot_confidence_24_astropy_14365",
+      "family": "m69",
+      "instanceId": "astropy__astropy-14365",
+      "repo": "astropy/astropy",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "astropy/io/ascii/qdp.py"
+      ],
+      "finalPatchFiles": [
+        "astropy/io/ascii/qdp.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m71_stage_a_pivot_confidence_astropy_14365",
+      "family": "m71",
+      "instanceId": "astropy__astropy-14365",
+      "repo": "astropy/astropy",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "astropy/io/ascii/qdp.py"
+      ],
+      "finalPatchFiles": [
+        "astropy/io/ascii/qdp.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m90_v4_c7d_envguard50_astropy__astropy_14365_",
+      "family": "m90",
+      "instanceId": "astropy__astropy-14365",
+      "repo": "astropy/astropy",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "astropy/io/ascii/qdp.py"
+      ],
+      "finalPatchFiles": [
+        "astropy/io/ascii/qdp.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m92_core_reduction50_astropy__astropy_14365_",
+      "family": "m92",
+      "instanceId": "astropy__astropy-14365",
+      "repo": "astropy/astropy",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "astropy/io/ascii/qdp.py"
+      ],
+      "finalPatchFiles": [
+        "astropy/io/ascii/qdp.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m107_live_ext_astropy__astropy_14598_",
+      "family": "m107",
+      "instanceId": "astropy__astropy-14598",
+      "repo": "astropy/astropy",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "astropy/io/fits/card.py"
+      ],
+      "finalPatchFiles": [
+        "astropy/io/fits/card.py",
+        "uv.lock"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m55y_baseline_astropy_14598",
+      "family": "m55y",
+      "instanceId": "astropy__astropy-14598",
+      "repo": "astropy/astropy",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "astropy/io/fits/card.py"
+      ],
+      "finalPatchFiles": [
+        "astropy/io/fits/card.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m55y_vtrace_digest_astropy_14598",
+      "family": "m55y",
+      "instanceId": "astropy__astropy-14598",
+      "repo": "astropy/astropy",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "astropy/io/fits/card.py"
+      ],
+      "finalPatchFiles": [
+        "astropy/io/fits/card.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 3
+    },
+    {
+      "runLabel": "m60_structured_bounded_astropy_14598",
+      "family": "m60",
+      "instanceId": "astropy__astropy-14598",
+      "repo": "astropy/astropy",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "astropy/io/fits/card.py"
+      ],
+      "finalPatchFiles": [
+        "astropy/io/fits/card.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m60c_structured_bounded_astropy_14598",
+      "family": "m60c",
+      "instanceId": "astropy__astropy-14598",
+      "repo": "astropy/astropy",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "astropy/io/fits/card.py"
+      ],
+      "finalPatchFiles": [
+        "astropy/io/fits/card.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m62_structured_bounded_astropy_14598",
+      "family": "m62",
+      "instanceId": "astropy__astropy-14598",
+      "repo": "astropy/astropy",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "astropy/io/fits/card.py"
+      ],
+      "finalPatchFiles": [
+        "astropy/io/fits/card.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 3
+    },
+    {
+      "runLabel": "m62c_structured_bounded_compact_astropy_astropy_14598",
+      "family": "m62c",
+      "instanceId": "astropy__astropy-14598",
+      "repo": "astropy/astropy",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "astropy/io/fits/card.py"
+      ],
+      "finalPatchFiles": [
+        "astropy/io/fits/card.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 3
+    },
+    {
+      "runLabel": "m66_optional_impact_24_astropy_14598",
+      "family": "m66",
+      "instanceId": "astropy__astropy-14598",
+      "repo": "astropy/astropy",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "astropy/io/fits/card.py"
+      ],
+      "finalPatchFiles": [
+        "astropy/io/fits/card.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m69_pivot_confidence_24_astropy_14598",
+      "family": "m69",
+      "instanceId": "astropy__astropy-14598",
+      "repo": "astropy/astropy",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "astropy/io/fits/card.py"
+      ],
+      "finalPatchFiles": [
+        "astropy/io/fits/card.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 3
+    },
+    {
+      "runLabel": "m77_tool_loop_guard_inject_astropy__astropy_14598_",
+      "family": "m77",
+      "instanceId": "astropy__astropy-14598",
+      "repo": "astropy/astropy",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "astropy/io/fits/card.py"
+      ],
+      "finalPatchFiles": [
+        "astropy/io/fits/card.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m80_tool_loop_guard_v4_astropy__astropy_14598",
+      "family": "m80",
+      "instanceId": "astropy__astropy-14598",
+      "repo": "astropy/astropy",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "astropy/io/fits/card.py"
+      ],
+      "finalPatchFiles": [
+        "astropy/io/fits/card.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m82_v4_c7_guard_astropy__astropy_14598_",
+      "family": "m82",
+      "instanceId": "astropy__astropy-14598",
+      "repo": "astropy/astropy",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "astropy/io/fits/card.py"
+      ],
+      "finalPatchFiles": [
+        "astropy/io/fits/card.py",
+        "uv.lock"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m85_v4_c7d_guard_astropy__astropy_14598_",
+      "family": "m85",
+      "instanceId": "astropy__astropy-14598",
+      "repo": "astropy/astropy",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "astropy/io/fits/card.py"
+      ],
+      "finalPatchFiles": [
+        "astropy/io/fits/card.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 3
+    },
+    {
+      "runLabel": "m88_v4_c7d_envguard_astropy__astropy_14598_",
+      "family": "m88",
+      "instanceId": "astropy__astropy-14598",
+      "repo": "astropy/astropy",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "astropy/io/fits/card.py"
+      ],
+      "finalPatchFiles": [
+        "astropy/io/fits/card.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m106_live_ext_astropy__astropy_7166_",
+      "family": "m106",
+      "instanceId": "astropy__astropy-7166",
+      "repo": "astropy/astropy",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "astropy/utils/misc.py"
+      ],
+      "finalPatchFiles": [
+        "astropy/utils/misc.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m155_baseline_django__django_10973",
+      "family": "m155",
+      "instanceId": "django__django-10973",
+      "repo": "django/django",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": true,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "django/db/backends/postgresql/client.py"
+      ],
+      "finalPatchFiles": [
+        "django/db/backends/postgresql/client.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m73_stage_c_baseline_django_10973",
+      "family": "m73",
+      "instanceId": "django__django-10973",
+      "repo": "django/django",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": true,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "django/db/backends/postgresql/client.py"
+      ],
+      "finalPatchFiles": [
+        "django/db/backends/postgresql/client.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m155_baseline_django__django_11206",
+      "family": "m155",
+      "instanceId": "django__django-11206",
+      "repo": "django/django",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": true,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "django/utils/numberformat.py"
+      ],
+      "finalPatchFiles": [
+        "django/utils/numberformat.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m161_baseline_django__django_11477",
+      "family": "m161",
+      "instanceId": "django__django-11477",
+      "repo": "django/django",
+      "i5Mechanism": "OTHER",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": true,
+        "missedGoldFiles": [
+          "django/urls/resolvers.py"
+        ],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": true,
+        "anyMissedGoldReachable": true,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": true,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "django/urls/resolvers.py"
+      ],
+      "finalPatchFiles": [
+        "django/urls/base.py"
+      ],
+      "missedGold": [
+        "django/urls/resolvers.py"
+      ],
+      "missedGoldReachability": [
+        {
+          "file": "django/urls/resolvers.py",
+          "reachable": true,
+          "depth": 2,
+          "direction": "dependency",
+          "alreadyInspected": true
+        }
+      ],
+      "reachableOnlyBeyondDerivationDepth": true,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 3
+    },
+    {
+      "runLabel": "m161_vtrace_django__django_11477",
+      "family": "m161",
+      "instanceId": "django__django-11477",
+      "repo": "django/django",
+      "i5Mechanism": "OTHER",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": true,
+        "missedGoldFiles": [
+          "django/urls/resolvers.py"
+        ],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": true,
+        "anyMissedGoldReachable": true,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": true,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "django/urls/resolvers.py"
+      ],
+      "finalPatchFiles": [
+        "django/urls/base.py"
+      ],
+      "missedGold": [
+        "django/urls/resolvers.py"
+      ],
+      "missedGoldReachability": [
+        {
+          "file": "django/urls/resolvers.py",
+          "reachable": true,
+          "depth": 2,
+          "direction": "dependency",
+          "alreadyInspected": true
+        }
+      ],
+      "reachableOnlyBeyondDerivationDepth": true,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 1
+    },
+    {
+      "runLabel": "m161_baseline_django__django_12406",
+      "family": "m161",
+      "instanceId": "django__django-12406",
+      "repo": "django/django",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [
+          "django/db/models/fields/related.py"
+        ],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": true,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "django/db/models/fields/related.py",
+        "django/forms/models.py"
+      ],
+      "finalPatchFiles": [
+        "django/forms/models.py"
+      ],
+      "missedGold": [
+        "django/db/models/fields/related.py"
+      ],
+      "missedGoldReachability": [
+        {
+          "file": "django/db/models/fields/related.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": true
+        }
+      ],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m161_vtrace_django__django_12406",
+      "family": "m161",
+      "instanceId": "django__django-12406",
+      "repo": "django/django",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [
+          "django/db/models/fields/related.py"
+        ],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": true,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "django/db/models/fields/related.py",
+        "django/forms/models.py"
+      ],
+      "finalPatchFiles": [
+        "django/forms/models.py"
+      ],
+      "missedGold": [
+        "django/db/models/fields/related.py"
+      ],
+      "missedGoldReachability": [
+        {
+          "file": "django/db/models/fields/related.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": true
+        }
+      ],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m107_live_ext_django__django_13512_",
+      "family": "m107",
+      "instanceId": "django__django-13512",
+      "repo": "django/django",
+      "i5Mechanism": "I5_NO_REPOSITORY_DERIVABLE_OBLIGATION",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [
+          "django/forms/fields.py"
+        ],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": true,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "django/contrib/admin/utils.py",
+        "django/forms/fields.py"
+      ],
+      "finalPatchFiles": [
+        "django/contrib/admin/utils.py"
+      ],
+      "missedGold": [
+        "django/forms/fields.py"
+      ],
+      "missedGoldReachability": [
+        {
+          "file": "django/forms/fields.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": false
+        }
+      ],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m72_stage_b_pivot_confidence_django_13512",
+      "family": "m72",
+      "instanceId": "django__django-13512",
+      "repo": "django/django",
+      "i5Mechanism": "I5_NO_REPOSITORY_DERIVABLE_OBLIGATION",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [
+          "django/contrib/admin/utils.py"
+        ],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "django/contrib/admin/utils.py",
+        "django/forms/fields.py"
+      ],
+      "finalPatchFiles": [
+        "django/forms/fields.py"
+      ],
+      "missedGold": [
+        "django/contrib/admin/utils.py"
+      ],
+      "missedGoldReachability": [
+        {
+          "file": "django/contrib/admin/utils.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": false
+        }
+      ],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m73_stage_c_baseline_django_13512",
+      "family": "m73",
+      "instanceId": "django__django-13512",
+      "repo": "django/django",
+      "i5Mechanism": "I5_NO_REPOSITORY_DERIVABLE_OBLIGATION",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [
+          "django/contrib/admin/utils.py"
+        ],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "django/contrib/admin/utils.py",
+        "django/forms/fields.py"
+      ],
+      "finalPatchFiles": [
+        "django/forms/fields.py"
+      ],
+      "missedGold": [
+        "django/contrib/admin/utils.py"
+      ],
+      "missedGoldReachability": [
+        {
+          "file": "django/contrib/admin/utils.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": false
+        }
+      ],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m105_small_live_django__django_16256_",
+      "family": "m105",
+      "instanceId": "django__django-16256",
+      "repo": "django/django",
+      "i5Mechanism": "I5_REACHABLE_BUT_NOT_NAMED_BY_DERIVATION",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [
+          "django/contrib/contenttypes/fields.py"
+        ],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": true,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "django/contrib/contenttypes/fields.py",
+        "django/db/models/fields/related_descriptors.py"
+      ],
+      "finalPatchFiles": [
+        "django/db/models/fields/related_descriptors.py"
+      ],
+      "missedGold": [
+        "django/contrib/contenttypes/fields.py"
+      ],
+      "missedGoldReachability": [
+        {
+          "file": "django/contrib/contenttypes/fields.py",
+          "reachable": true,
+          "depth": 3,
+          "direction": "dependent",
+          "alreadyInspected": false
+        }
+      ],
+      "reachableOnlyBeyondDerivationDepth": true,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m72_stage_b_pivot_confidence_django_16256",
+      "family": "m72",
+      "instanceId": "django__django-16256",
+      "repo": "django/django",
+      "i5Mechanism": "I5_REACHABLE_BUT_NOT_NAMED_BY_DERIVATION",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [
+          "django/contrib/contenttypes/fields.py"
+        ],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": true,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "django/contrib/contenttypes/fields.py",
+        "django/db/models/fields/related_descriptors.py"
+      ],
+      "finalPatchFiles": [
+        "django/db/models/fields/related_descriptors.py"
+      ],
+      "missedGold": [
+        "django/contrib/contenttypes/fields.py"
+      ],
+      "missedGoldReachability": [
+        {
+          "file": "django/contrib/contenttypes/fields.py",
+          "reachable": true,
+          "depth": 3,
+          "direction": "dependent",
+          "alreadyInspected": false
+        }
+      ],
+      "reachableOnlyBeyondDerivationDepth": true,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m73_stage_c_baseline_django_16256",
+      "family": "m73",
+      "instanceId": "django__django-16256",
+      "repo": "django/django",
+      "i5Mechanism": "I5_REACHABLE_BUT_NOT_NAMED_BY_DERIVATION",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [
+          "django/contrib/contenttypes/fields.py"
+        ],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": true,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "django/contrib/contenttypes/fields.py",
+        "django/db/models/fields/related_descriptors.py"
+      ],
+      "finalPatchFiles": [
+        "django/db/models/fields/related_descriptors.py"
+      ],
+      "missedGold": [
+        "django/contrib/contenttypes/fields.py"
+      ],
+      "missedGoldReachability": [
+        {
+          "file": "django/contrib/contenttypes/fields.py",
+          "reachable": true,
+          "depth": 3,
+          "direction": "dependent",
+          "alreadyInspected": false
+        }
+      ],
+      "reachableOnlyBeyondDerivationDepth": true,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m90_v4_c7d_envguard50_django__django_16256_",
+      "family": "m90",
+      "instanceId": "django__django-16256",
+      "repo": "django/django",
+      "i5Mechanism": "I5_REACHABLE_BUT_NOT_NAMED_BY_DERIVATION",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [
+          "django/contrib/contenttypes/fields.py"
+        ],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": true,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "django/contrib/contenttypes/fields.py",
+        "django/db/models/fields/related_descriptors.py"
+      ],
+      "finalPatchFiles": [
+        "django/db/models/fields/related_descriptors.py"
+      ],
+      "missedGold": [
+        "django/contrib/contenttypes/fields.py"
+      ],
+      "missedGoldReachability": [
+        {
+          "file": "django/contrib/contenttypes/fields.py",
+          "reachable": true,
+          "depth": 3,
+          "direction": "dependent",
+          "alreadyInspected": false
+        }
+      ],
+      "reachableOnlyBeyondDerivationDepth": true,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m92_core_reduction50_django__django_16256_",
+      "family": "m92",
+      "instanceId": "django__django-16256",
+      "repo": "django/django",
+      "i5Mechanism": "I5_REACHABLE_BUT_NOT_NAMED_BY_DERIVATION",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [
+          "django/contrib/contenttypes/fields.py"
+        ],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": true,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "django/contrib/contenttypes/fields.py",
+        "django/db/models/fields/related_descriptors.py"
+      ],
+      "finalPatchFiles": [
+        "django/db/models/fields/related_descriptors.py"
+      ],
+      "missedGold": [
+        "django/contrib/contenttypes/fields.py"
+      ],
+      "missedGoldReachability": [
+        {
+          "file": "django/contrib/contenttypes/fields.py",
+          "reachable": true,
+          "depth": 3,
+          "direction": "dependent",
+          "alreadyInspected": false
+        }
+      ],
+      "reachableOnlyBeyondDerivationDepth": true,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m107_live_ext_django__django_16667_",
+      "family": "m107",
+      "instanceId": "django__django-16667",
+      "repo": "django/django",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "django/forms/widgets.py"
+      ],
+      "finalPatchFiles": [
+        "django/forms/widgets.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m73_stage_c_baseline_django_16667",
+      "family": "m73",
+      "instanceId": "django__django-16667",
+      "repo": "django/django",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "django/forms/widgets.py"
+      ],
+      "finalPatchFiles": [
+        "django/forms/widgets.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m90_v4_c7d_envguard50_django__django_16667_",
+      "family": "m90",
+      "instanceId": "django__django-16667",
+      "repo": "django/django",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "django/forms/widgets.py"
+      ],
+      "finalPatchFiles": [
+        "django/forms/widgets.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m161_baseline_matplotlib__matplotlib_20826",
+      "family": "m161",
+      "instanceId": "matplotlib__matplotlib-20826",
+      "repo": "matplotlib/matplotlib",
+      "i5Mechanism": "OTHER",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": true,
+        "missedGoldFiles": [
+          "lib/matplotlib/axis.py"
+        ],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "lib/matplotlib/axis.py"
+      ],
+      "finalPatchFiles": [
+        "lib/matplotlib/axes/_base.py"
+      ],
+      "missedGold": [
+        "lib/matplotlib/axis.py"
+      ],
+      "missedGoldReachability": [
+        {
+          "file": "lib/matplotlib/axis.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": false
+        }
+      ],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m161_vtrace_matplotlib__matplotlib_20826",
+      "family": "m161",
+      "instanceId": "matplotlib__matplotlib-20826",
+      "repo": "matplotlib/matplotlib",
+      "i5Mechanism": "OTHER",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": true,
+        "missedGoldFiles": [
+          "lib/matplotlib/axis.py"
+        ],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": true,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "lib/matplotlib/axis.py"
+      ],
+      "finalPatchFiles": [
+        "lib/matplotlib/axes/_base.py"
+      ],
+      "missedGold": [
+        "lib/matplotlib/axis.py"
+      ],
+      "missedGoldReachability": [
+        {
+          "file": "lib/matplotlib/axis.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": true
+        }
+      ],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m161_baseline_matplotlib__matplotlib_23476",
+      "family": "m161",
+      "instanceId": "matplotlib__matplotlib-23476",
+      "repo": "matplotlib/matplotlib",
+      "i5Mechanism": "OTHER",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": true,
+        "missedGoldFiles": [
+          "lib/matplotlib/figure.py"
+        ],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": true,
+        "anyMissedGoldReachable": true,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "lib/matplotlib/figure.py"
+      ],
+      "finalPatchFiles": [
+        "lib/matplotlib/backend_bases.py"
+      ],
+      "missedGold": [
+        "lib/matplotlib/figure.py"
+      ],
+      "missedGoldReachability": [
+        {
+          "file": "lib/matplotlib/figure.py",
+          "reachable": true,
+          "depth": 2,
+          "direction": "dependent",
+          "alreadyInspected": true
+        }
+      ],
+      "reachableOnlyBeyondDerivationDepth": true,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 1
+    },
+    {
+      "runLabel": "m161_vtrace_matplotlib__matplotlib_23476",
+      "family": "m161",
+      "instanceId": "matplotlib__matplotlib-23476",
+      "repo": "matplotlib/matplotlib",
+      "i5Mechanism": "OTHER",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": true,
+        "missedGoldFiles": [
+          "lib/matplotlib/figure.py"
+        ],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": true,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "lib/matplotlib/figure.py"
+      ],
+      "finalPatchFiles": [
+        "lib/matplotlib/backend_bases.py"
+      ],
+      "missedGold": [
+        "lib/matplotlib/figure.py"
+      ],
+      "missedGoldReachability": [
+        {
+          "file": "lib/matplotlib/figure.py",
+          "reachable": true,
+          "depth": 2,
+          "direction": "dependent",
+          "alreadyInspected": false
+        }
+      ],
+      "reachableOnlyBeyondDerivationDepth": true,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m106_live_ext_matplotlib__matplotlib_24870_",
+      "family": "m106",
+      "instanceId": "matplotlib__matplotlib-24870",
+      "repo": "matplotlib/matplotlib",
+      "i5Mechanism": "I5_NO_REPOSITORY_DERIVABLE_OBLIGATION",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [
+          "lib/matplotlib/tri/_tricontour.py"
+        ],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "lib/matplotlib/contour.py",
+        "lib/matplotlib/tri/_tricontour.py"
+      ],
+      "finalPatchFiles": [
+        "lib/matplotlib/contour.py"
+      ],
+      "missedGold": [
+        "lib/matplotlib/tri/_tricontour.py"
+      ],
+      "missedGoldReachability": [
+        {
+          "file": "lib/matplotlib/tri/_tricontour.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": false
+        }
+      ],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m155_baseline_matplotlib__matplotlib_24870",
+      "family": "m155",
+      "instanceId": "matplotlib__matplotlib-24870",
+      "repo": "matplotlib/matplotlib",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "lib/matplotlib/contour.py",
+        "lib/matplotlib/tri/_tricontour.py"
+      ],
+      "finalPatchFiles": [
+        "lib/matplotlib/contour.py",
+        "lib/matplotlib/tri/_tricontour.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m155_vtrace_matplotlib__matplotlib_24870",
+      "family": "m155",
+      "instanceId": "matplotlib__matplotlib-24870",
+      "repo": "matplotlib/matplotlib",
+      "i5Mechanism": "I5_NO_REPOSITORY_DERIVABLE_OBLIGATION",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [
+          "lib/matplotlib/tri/_tricontour.py"
+        ],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "lib/matplotlib/contour.py",
+        "lib/matplotlib/tri/_tricontour.py"
+      ],
+      "finalPatchFiles": [
+        "lib/matplotlib/contour.py"
+      ],
+      "missedGold": [
+        "lib/matplotlib/tri/_tricontour.py"
+      ],
+      "missedGoldReachability": [
+        {
+          "file": "lib/matplotlib/tri/_tricontour.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": false
+        }
+      ],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m71_stage_a_pivot_confidence_matplotlib_24870",
+      "family": "m71",
+      "instanceId": "matplotlib__matplotlib-24870",
+      "repo": "matplotlib/matplotlib",
+      "i5Mechanism": "I5_AFFECTED_CONSUMER_MISS",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [
+          "lib/matplotlib/tri/_tricontour.py"
+        ],
+        "candidateNamedMissedGold": true,
+        "namedByDependentArm": true,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": true,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "lib/matplotlib/contour.py",
+        "lib/matplotlib/tri/_tricontour.py"
+      ],
+      "finalPatchFiles": [
+        "lib/matplotlib/contour.py"
+      ],
+      "missedGold": [
+        "lib/matplotlib/tri/_tricontour.py"
+      ],
+      "missedGoldReachability": [
+        {
+          "file": "lib/matplotlib/tri/_tricontour.py",
+          "reachable": true,
+          "depth": 1,
+          "direction": "dependent",
+          "alreadyInspected": false
+        }
+      ],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": true,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m73_stage_c_baseline_matplotlib_24870",
+      "family": "m73",
+      "instanceId": "matplotlib__matplotlib-24870",
+      "repo": "matplotlib/matplotlib",
+      "i5Mechanism": "I5_AFFECTED_CONSUMER_MISS",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [
+          "lib/matplotlib/tri/_tricontour.py"
+        ],
+        "candidateNamedMissedGold": true,
+        "namedByDependentArm": true,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": true,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "lib/matplotlib/contour.py",
+        "lib/matplotlib/tri/_tricontour.py"
+      ],
+      "finalPatchFiles": [
+        "lib/matplotlib/contour.py"
+      ],
+      "missedGold": [
+        "lib/matplotlib/tri/_tricontour.py"
+      ],
+      "missedGoldReachability": [
+        {
+          "file": "lib/matplotlib/tri/_tricontour.py",
+          "reachable": true,
+          "depth": 1,
+          "direction": "dependent",
+          "alreadyInspected": false
+        }
+      ],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": true,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m90_v4_c7d_envguard50_matplotlib__matplotlib_24870_",
+      "family": "m90",
+      "instanceId": "matplotlib__matplotlib-24870",
+      "repo": "matplotlib/matplotlib",
+      "i5Mechanism": "I5_NO_REPOSITORY_DERIVABLE_OBLIGATION",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [
+          "lib/matplotlib/tri/_tricontour.py"
+        ],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "lib/matplotlib/contour.py",
+        "lib/matplotlib/tri/_tricontour.py"
+      ],
+      "finalPatchFiles": [
+        "lib/matplotlib/contour.py"
+      ],
+      "missedGold": [
+        "lib/matplotlib/tri/_tricontour.py"
+      ],
+      "missedGoldReachability": [
+        {
+          "file": "lib/matplotlib/tri/_tricontour.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": false
+        }
+      ],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m92_core_reduction50_matplotlib__matplotlib_24870_",
+      "family": "m92",
+      "instanceId": "matplotlib__matplotlib-24870",
+      "repo": "matplotlib/matplotlib",
+      "i5Mechanism": "I5_AFFECTED_CONSUMER_MISS",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [
+          "lib/matplotlib/tri/_tricontour.py"
+        ],
+        "candidateNamedMissedGold": true,
+        "namedByDependentArm": true,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": true,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "lib/matplotlib/contour.py",
+        "lib/matplotlib/tri/_tricontour.py"
+      ],
+      "finalPatchFiles": [
+        "lib/matplotlib/contour.py"
+      ],
+      "missedGold": [
+        "lib/matplotlib/tri/_tricontour.py"
+      ],
+      "missedGoldReachability": [
+        {
+          "file": "lib/matplotlib/tri/_tricontour.py",
+          "reachable": true,
+          "depth": 1,
+          "direction": "dependent",
+          "alreadyInspected": false
+        }
+      ],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": true,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m107_live_ext_psf__requests_1921_",
+      "family": "m107",
+      "instanceId": "psf__requests-1921",
+      "repo": "psf/requests",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "requests/sessions.py"
+      ],
+      "finalPatchFiles": [
+        "requests/sessions.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m71_stage_a_pivot_confidence_requests_1921",
+      "family": "m71",
+      "instanceId": "psf__requests-1921",
+      "repo": "psf/requests",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "requests/sessions.py"
+      ],
+      "finalPatchFiles": [
+        "requests/sessions.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m73_stage_c_baseline_requests_1921",
+      "family": "m73",
+      "instanceId": "psf__requests-1921",
+      "repo": "psf/requests",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "requests/sessions.py"
+      ],
+      "finalPatchFiles": [
+        "requests/sessions.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m88_v4_c7d_envguard_psf__requests_1921_",
+      "family": "m88",
+      "instanceId": "psf__requests-1921",
+      "repo": "psf/requests",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "requests/sessions.py"
+      ],
+      "finalPatchFiles": [
+        "requests/sessions.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m90_v4_c7d_envguard50_psf__requests_1921_",
+      "family": "m90",
+      "instanceId": "psf__requests-1921",
+      "repo": "psf/requests",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "requests/sessions.py"
+      ],
+      "finalPatchFiles": [
+        "requests/sessions.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m92_core_reduction50_psf__requests_1921_",
+      "family": "m92",
+      "instanceId": "psf__requests-1921",
+      "repo": "psf/requests",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "requests/sessions.py"
+      ],
+      "finalPatchFiles": [
+        "requests/sessions.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m106_live_ext_pydata__xarray_6992_",
+      "family": "m106",
+      "instanceId": "pydata__xarray-6992",
+      "repo": "pydata/xarray",
+      "i5Mechanism": "I5_NO_REPOSITORY_DERIVABLE_OBLIGATION",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [
+          "xarray/core/indexes.py"
+        ],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "xarray/core/dataset.py",
+        "xarray/core/indexes.py"
+      ],
+      "finalPatchFiles": [
+        "xarray/core/dataset.py"
+      ],
+      "missedGold": [
+        "xarray/core/indexes.py"
+      ],
+      "missedGoldReachability": [
+        {
+          "file": "xarray/core/indexes.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": false
+        }
+      ],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m71_stage_a_pivot_confidence_xarray_6992",
+      "family": "m71",
+      "instanceId": "pydata__xarray-6992",
+      "repo": "pydata/xarray",
+      "i5Mechanism": "I5_NO_REPOSITORY_DERIVABLE_OBLIGATION",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [
+          "xarray/core/indexes.py"
+        ],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "xarray/core/dataset.py",
+        "xarray/core/indexes.py"
+      ],
+      "finalPatchFiles": [
+        "xarray/core/dataset.py"
+      ],
+      "missedGold": [
+        "xarray/core/indexes.py"
+      ],
+      "missedGoldReachability": [
+        {
+          "file": "xarray/core/indexes.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": false
+        }
+      ],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m73_stage_c_baseline_xarray_6992",
+      "family": "m73",
+      "instanceId": "pydata__xarray-6992",
+      "repo": "pydata/xarray",
+      "i5Mechanism": "I5_NO_REPOSITORY_DERIVABLE_OBLIGATION",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [
+          "xarray/core/indexes.py"
+        ],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "xarray/core/dataset.py",
+        "xarray/core/indexes.py"
+      ],
+      "finalPatchFiles": [
+        "xarray/core/dataset.py"
+      ],
+      "missedGold": [
+        "xarray/core/indexes.py"
+      ],
+      "missedGoldReachability": [
+        {
+          "file": "xarray/core/indexes.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": false
+        }
+      ],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m162_baseline_scikit_learn__scikit_learn_14087",
+      "family": "m162",
+      "instanceId": "scikit-learn__scikit-learn-14087",
+      "repo": "scikit-learn/scikit-learn",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "sklearn/linear_model/logistic.py"
+      ],
+      "finalPatchFiles": [
+        "sklearn/linear_model/logistic.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m162_callable_scikit_learn__scikit_learn_14087",
+      "family": "m162",
+      "instanceId": "scikit-learn__scikit-learn-14087",
+      "repo": "scikit-learn/scikit-learn",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "sklearn/linear_model/logistic.py"
+      ],
+      "finalPatchFiles": [
+        "sklearn/linear_model/logistic.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m162_static_scikit_learn__scikit_learn_14087",
+      "family": "m162",
+      "instanceId": "scikit-learn__scikit-learn-14087",
+      "repo": "scikit-learn/scikit-learn",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "sklearn/linear_model/logistic.py"
+      ],
+      "finalPatchFiles": [
+        "sklearn/linear_model/logistic.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m163_tools_neutral_policy_scikit_learn__scikit_learn_14087",
+      "family": "m163",
+      "instanceId": "scikit-learn__scikit-learn-14087",
+      "repo": "scikit-learn/scikit-learn",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "sklearn/linear_model/logistic.py"
+      ],
+      "finalPatchFiles": [
+        "sklearn/linear_model/logistic.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m163_tools_only_scikit_learn__scikit_learn_14087",
+      "family": "m163",
+      "instanceId": "scikit-learn__scikit-learn-14087",
+      "repo": "scikit-learn/scikit-learn",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "sklearn/linear_model/logistic.py"
+      ],
+      "finalPatchFiles": [
+        "sklearn/linear_model/logistic.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m163_tools_task_trigger_scikit_learn__scikit_learn_14087",
+      "family": "m163",
+      "instanceId": "scikit-learn__scikit-learn-14087",
+      "repo": "scikit-learn/scikit-learn",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "sklearn/linear_model/logistic.py"
+      ],
+      "finalPatchFiles": [
+        "sklearn/linear_model/logistic.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m164_tools_neutral_policy_scikit_learn__scikit_learn_14087",
+      "family": "m164",
+      "instanceId": "scikit-learn__scikit-learn-14087",
+      "repo": "scikit-learn/scikit-learn",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "sklearn/linear_model/logistic.py"
+      ],
+      "finalPatchFiles": [
+        "sklearn/linear_model/logistic.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m164_tools_task_trigger_scikit_learn__scikit_learn_14087",
+      "family": "m164",
+      "instanceId": "scikit-learn__scikit-learn-14087",
+      "repo": "scikit-learn/scikit-learn",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "sklearn/linear_model/logistic.py"
+      ],
+      "finalPatchFiles": [
+        "sklearn/linear_model/logistic.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m161_baseline_sphinx_doc__sphinx_10435",
+      "family": "m161",
+      "instanceId": "sphinx-doc__sphinx-10435",
+      "repo": "sphinx-doc/sphinx",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "sphinx/writers/latex.py"
+      ],
+      "finalPatchFiles": [
+        "sphinx/writers/latex.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m161_vtrace_sphinx_doc__sphinx_10435",
+      "family": "m161",
+      "instanceId": "sphinx-doc__sphinx-10435",
+      "repo": "sphinx-doc/sphinx",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "sphinx/writers/latex.py"
+      ],
+      "finalPatchFiles": [
+        "sphinx/writers/latex.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m161_baseline_sphinx_doc__sphinx_10614",
+      "family": "m161",
+      "instanceId": "sphinx-doc__sphinx-10614",
+      "repo": "sphinx-doc/sphinx",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "sphinx/ext/inheritance_diagram.py"
+      ],
+      "finalPatchFiles": [
+        "sphinx/ext/inheritance_diagram.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m161_vtrace_sphinx_doc__sphinx_10614",
+      "family": "m161",
+      "instanceId": "sphinx-doc__sphinx-10614",
+      "repo": "sphinx-doc/sphinx",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "sphinx/ext/inheritance_diagram.py"
+      ],
+      "finalPatchFiles": [
+        "sphinx/ext/inheritance_diagram.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m161_vtrace_sphinx_doc__sphinx_10673",
+      "family": "m161",
+      "instanceId": "sphinx-doc__sphinx-10673",
+      "repo": "sphinx-doc/sphinx",
+      "i5Mechanism": "I5_REACHABLE_BUT_NOT_NAMED_BY_DERIVATION",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [
+          "sphinx/environment/collectors/toctree.py"
+        ],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": true,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "sphinx/directives/other.py",
+        "sphinx/environment/adapters/toctree.py",
+        "sphinx/environment/collectors/toctree.py"
+      ],
+      "finalPatchFiles": [
+        "sphinx/directives/other.py",
+        "sphinx/environment/adapters/toctree.py"
+      ],
+      "missedGold": [
+        "sphinx/environment/collectors/toctree.py"
+      ],
+      "missedGoldReachability": [
+        {
+          "file": "sphinx/environment/collectors/toctree.py",
+          "reachable": true,
+          "depth": 2,
+          "direction": "dependent",
+          "alreadyInspected": false
+        }
+      ],
+      "reachableOnlyBeyondDerivationDepth": true,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 3
+    },
+    {
+      "runLabel": "m163_tools_only_sphinx_doc__sphinx_7440",
+      "family": "m163",
+      "instanceId": "sphinx-doc__sphinx-7440",
+      "repo": "sphinx-doc/sphinx",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "sphinx/domains/std.py"
+      ],
+      "finalPatchFiles": [
+        "sphinx/domains/std.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 3
+    },
+    {
+      "runLabel": "eval-bounded-baseline-sphinx-7748-r2",
+      "family": "other",
+      "instanceId": "sphinx-doc__sphinx-7748",
+      "repo": "sphinx-doc/sphinx",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "sphinx/ext/autodoc/__init__.py"
+      ],
+      "finalPatchFiles": [
+        "sphinx/ext/autodoc/__init__.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "eval-bounded-baseline-sphinx-7748-r3",
+      "family": "other",
+      "instanceId": "sphinx-doc__sphinx-7748",
+      "repo": "sphinx-doc/sphinx",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "sphinx/ext/autodoc/__init__.py"
+      ],
+      "finalPatchFiles": [
+        "sphinx/ext/autodoc/__init__.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "eval-bounded-current-clean-sphinx-7748-r1",
+      "family": "other",
+      "instanceId": "sphinx-doc__sphinx-7748",
+      "repo": "sphinx-doc/sphinx",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "sphinx/ext/autodoc/__init__.py"
+      ],
+      "finalPatchFiles": [
+        "sphinx/ext/autodoc/__init__.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "eval-bounded-current-clean-sphinx-7748-r2",
+      "family": "other",
+      "instanceId": "sphinx-doc__sphinx-7748",
+      "repo": "sphinx-doc/sphinx",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "sphinx/ext/autodoc/__init__.py"
+      ],
+      "finalPatchFiles": [
+        "sphinx/ext/autodoc/__init__.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 3
+    },
+    {
+      "runLabel": "eval-bounded-current-clean-sphinx-7748-r3",
+      "family": "other",
+      "instanceId": "sphinx-doc__sphinx-7748",
+      "repo": "sphinx-doc/sphinx",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "sphinx/ext/autodoc/__init__.py"
+      ],
+      "finalPatchFiles": [
+        "sphinx/ext/autodoc/__init__.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m106_live_ext_sphinx_doc__sphinx_7748_",
+      "family": "m106",
+      "instanceId": "sphinx-doc__sphinx-7748",
+      "repo": "sphinx-doc/sphinx",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "sphinx/ext/autodoc/__init__.py"
+      ],
+      "finalPatchFiles": [
+        "sphinx/ext/autodoc/__init__.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 3
+    },
+    {
+      "runLabel": "m72_stage_b_pivot_confidence_sphinx_7748",
+      "family": "m72",
+      "instanceId": "sphinx-doc__sphinx-7748",
+      "repo": "sphinx-doc/sphinx",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "sphinx/ext/autodoc/__init__.py"
+      ],
+      "finalPatchFiles": [
+        "sphinx/ext/autodoc/__init__.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 3
+    },
+    {
+      "runLabel": "m90_v4_c7d_envguard50_sphinx_doc__sphinx_7748_",
+      "family": "m90",
+      "instanceId": "sphinx-doc__sphinx-7748",
+      "repo": "sphinx-doc/sphinx",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "sphinx/ext/autodoc/__init__.py"
+      ],
+      "finalPatchFiles": [
+        "sphinx/ext/autodoc/__init__.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m92_core_reduction50_sphinx_doc__sphinx_7748_",
+      "family": "m92",
+      "instanceId": "sphinx-doc__sphinx-7748",
+      "repo": "sphinx-doc/sphinx",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "sphinx/ext/autodoc/__init__.py"
+      ],
+      "finalPatchFiles": [
+        "sphinx/ext/autodoc/__init__.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 3
+    },
+    {
+      "runLabel": "m161_baseline_sphinx_doc__sphinx_9229",
+      "family": "m161",
+      "instanceId": "sphinx-doc__sphinx-9229",
+      "repo": "sphinx-doc/sphinx",
+      "i5Mechanism": "OTHER",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": true,
+        "missedGoldFiles": [
+          "sphinx/ext/autodoc/__init__.py"
+        ],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": true,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "sphinx/ext/autodoc/__init__.py"
+      ],
+      "finalPatchFiles": [
+        "sphinx/pycode/parser.py"
+      ],
+      "missedGold": [
+        "sphinx/ext/autodoc/__init__.py"
+      ],
+      "missedGoldReachability": [
+        {
+          "file": "sphinx/ext/autodoc/__init__.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": true
+        }
+      ],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m161_vtrace_sphinx_doc__sphinx_9229",
+      "family": "m161",
+      "instanceId": "sphinx-doc__sphinx-9229",
+      "repo": "sphinx-doc/sphinx",
+      "i5Mechanism": "OTHER",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": true,
+        "missedGoldFiles": [
+          "sphinx/ext/autodoc/__init__.py"
+        ],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": true,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "sphinx/ext/autodoc/__init__.py"
+      ],
+      "finalPatchFiles": [
+        "sphinx/pycode/parser.py"
+      ],
+      "missedGold": [
+        "sphinx/ext/autodoc/__init__.py"
+      ],
+      "missedGoldReachability": [
+        {
+          "file": "sphinx/ext/autodoc/__init__.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": true
+        }
+      ],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m107_live_ext_sphinx_doc__sphinx_9711_",
+      "family": "m107",
+      "instanceId": "sphinx-doc__sphinx-9711",
+      "repo": "sphinx-doc/sphinx",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "sphinx/extension.py"
+      ],
+      "finalPatchFiles": [
+        "sphinx/extension.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m71_stage_a_pivot_confidence_sphinx_9711",
+      "family": "m71",
+      "instanceId": "sphinx-doc__sphinx-9711",
+      "repo": "sphinx-doc/sphinx",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "I6_VALIDATION_SELECTED_BUT_NOT_EXECUTED",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": true,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": true
+      },
+      "goldFiles": [
+        "sphinx/extension.py"
+      ],
+      "finalPatchFiles": [
+        "sphinx/extension.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 4
+    },
+    {
+      "runLabel": "m73_stage_c_baseline_sphinx_9711",
+      "family": "m73",
+      "instanceId": "sphinx-doc__sphinx-9711",
+      "repo": "sphinx-doc/sphinx",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "sphinx/extension.py"
+      ],
+      "finalPatchFiles": [
+        "sphinx/extension.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m90_v4_c7d_envguard50_sphinx_doc__sphinx_9711_",
+      "family": "m90",
+      "instanceId": "sphinx-doc__sphinx-9711",
+      "repo": "sphinx-doc/sphinx",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "I6_VALIDATION_SELECTED_BUT_NOT_EXECUTED",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": true,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": true
+      },
+      "goldFiles": [
+        "sphinx/extension.py"
+      ],
+      "finalPatchFiles": [
+        "sphinx/extension.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 4
+    },
+    {
+      "runLabel": "m92_core_reduction50_sphinx_doc__sphinx_9711_",
+      "family": "m92",
+      "instanceId": "sphinx-doc__sphinx-9711",
+      "repo": "sphinx-doc/sphinx",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "sphinx/extension.py"
+      ],
+      "finalPatchFiles": [
+        "sphinx/extension.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 3
+    },
+    {
+      "runLabel": "m161_baseline_sympy__sympy_12489",
+      "family": "m161",
+      "instanceId": "sympy__sympy-12489",
+      "repo": "sympy/sympy",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "sympy/combinatorics/permutations.py"
+      ],
+      "finalPatchFiles": [
+        "sympy/combinatorics/permutations.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m161_vtrace_sympy__sympy_12489",
+      "family": "m161",
+      "instanceId": "sympy__sympy-12489",
+      "repo": "sympy/sympy",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "sympy/combinatorics/permutations.py"
+      ],
+      "finalPatchFiles": [
+        "sympy/combinatorics/permutations.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m161_baseline_sympy__sympy_13091",
+      "family": "m161",
+      "instanceId": "sympy__sympy-13091",
+      "repo": "sympy/sympy",
+      "i5Mechanism": "I5_AFFECTED_CONSUMER_MISS",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [
+          "sympy/core/exprtools.py",
+          "sympy/core/numbers.py",
+          "sympy/geometry/entity.py",
+          "sympy/physics/optics/medium.py",
+          "sympy/physics/vector/dyadic.py",
+          "sympy/physics/vector/frame.py",
+          "sympy/physics/vector/vector.py",
+          "sympy/polys/agca/modules.py",
+          "sympy/polys/domains/domain.py",
+          "sympy/polys/domains/expressiondomain.py",
+          "sympy/polys/domains/pythonrational.py",
+          "sympy/polys/domains/quotientring.py",
+          "sympy/polys/fields.py",
+          "sympy/polys/monomials.py",
+          "sympy/polys/polyclasses.py",
+          "sympy/polys/polytools.py",
+          "sympy/polys/rings.py",
+          "sympy/polys/rootoftools.py",
+          "sympy/tensor/array/ndim_array.py",
+          "sympy/utilities/enumerative.py"
+        ],
+        "candidateNamedMissedGold": true,
+        "namedByDependentArm": true,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": true,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "sympy/core/basic.py",
+        "sympy/core/exprtools.py",
+        "sympy/core/numbers.py",
+        "sympy/geometry/entity.py",
+        "sympy/physics/optics/medium.py",
+        "sympy/physics/vector/dyadic.py",
+        "sympy/physics/vector/frame.py",
+        "sympy/physics/vector/vector.py",
+        "sympy/polys/agca/modules.py",
+        "sympy/polys/domains/domain.py",
+        "sympy/polys/domains/expressiondomain.py",
+        "sympy/polys/domains/pythonrational.py",
+        "sympy/polys/domains/quotientring.py",
+        "sympy/polys/fields.py",
+        "sympy/polys/monomials.py",
+        "sympy/polys/polyclasses.py",
+        "sympy/polys/polytools.py",
+        "sympy/polys/rings.py",
+        "sympy/polys/rootoftools.py",
+        "sympy/tensor/array/ndim_array.py",
+        "sympy/utilities/enumerative.py"
+      ],
+      "finalPatchFiles": [
+        "sympy/core/basic.py",
+        "sympy/core/expr.py"
+      ],
+      "missedGold": [
+        "sympy/core/exprtools.py",
+        "sympy/core/numbers.py",
+        "sympy/geometry/entity.py",
+        "sympy/physics/optics/medium.py",
+        "sympy/physics/vector/dyadic.py",
+        "sympy/physics/vector/frame.py",
+        "sympy/physics/vector/vector.py",
+        "sympy/polys/agca/modules.py",
+        "sympy/polys/domains/domain.py",
+        "sympy/polys/domains/expressiondomain.py",
+        "sympy/polys/domains/pythonrational.py",
+        "sympy/polys/domains/quotientring.py",
+        "sympy/polys/fields.py",
+        "sympy/polys/monomials.py",
+        "sympy/polys/polyclasses.py",
+        "sympy/polys/polytools.py",
+        "sympy/polys/rings.py",
+        "sympy/polys/rootoftools.py",
+        "sympy/tensor/array/ndim_array.py",
+        "sympy/utilities/enumerative.py"
+      ],
+      "missedGoldReachability": [
+        {
+          "file": "sympy/core/exprtools.py",
+          "reachable": true,
+          "depth": 2,
+          "direction": "dependent",
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/core/numbers.py",
+          "reachable": true,
+          "depth": 1,
+          "direction": "dependent",
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/geometry/entity.py",
+          "reachable": true,
+          "depth": 1,
+          "direction": "dependent",
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/physics/optics/medium.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/physics/vector/dyadic.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/physics/vector/frame.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/physics/vector/vector.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/polys/agca/modules.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/polys/domains/domain.py",
+          "reachable": true,
+          "depth": 2,
+          "direction": "dependent",
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/polys/domains/expressiondomain.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/polys/domains/pythonrational.py",
+          "reachable": true,
+          "depth": 3,
+          "direction": "dependent",
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/polys/domains/quotientring.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/polys/fields.py",
+          "reachable": true,
+          "depth": 2,
+          "direction": "dependent",
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/polys/monomials.py",
+          "reachable": true,
+          "depth": 3,
+          "direction": "dependent",
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/polys/polyclasses.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/polys/polytools.py",
+          "reachable": true,
+          "depth": 2,
+          "direction": "dependent",
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/polys/rings.py",
+          "reachable": true,
+          "depth": 2,
+          "direction": "dependent",
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/polys/rootoftools.py",
+          "reachable": true,
+          "depth": 2,
+          "direction": "dependent",
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/tensor/array/ndim_array.py",
+          "reachable": true,
+          "depth": 2,
+          "direction": "dependent",
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/utilities/enumerative.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": false
+        }
+      ],
+      "reachableOnlyBeyondDerivationDepth": true,
+      "reachableAtDerivationDepth": true,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m161_vtrace_sympy__sympy_13091",
+      "family": "m161",
+      "instanceId": "sympy__sympy-13091",
+      "repo": "sympy/sympy",
+      "i5Mechanism": "I5_AFFECTED_CONSUMER_MISS",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [
+          "sympy/core/exprtools.py",
+          "sympy/core/numbers.py",
+          "sympy/geometry/entity.py",
+          "sympy/physics/optics/medium.py",
+          "sympy/physics/vector/dyadic.py",
+          "sympy/physics/vector/frame.py",
+          "sympy/physics/vector/vector.py",
+          "sympy/polys/agca/modules.py",
+          "sympy/polys/domains/domain.py",
+          "sympy/polys/domains/expressiondomain.py",
+          "sympy/polys/domains/pythonrational.py",
+          "sympy/polys/domains/quotientring.py",
+          "sympy/polys/fields.py",
+          "sympy/polys/monomials.py",
+          "sympy/polys/polyclasses.py",
+          "sympy/polys/polytools.py",
+          "sympy/polys/rings.py",
+          "sympy/polys/rootoftools.py",
+          "sympy/tensor/array/ndim_array.py",
+          "sympy/utilities/enumerative.py"
+        ],
+        "candidateNamedMissedGold": true,
+        "namedByDependentArm": true,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": true,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "sympy/core/basic.py",
+        "sympy/core/exprtools.py",
+        "sympy/core/numbers.py",
+        "sympy/geometry/entity.py",
+        "sympy/physics/optics/medium.py",
+        "sympy/physics/vector/dyadic.py",
+        "sympy/physics/vector/frame.py",
+        "sympy/physics/vector/vector.py",
+        "sympy/polys/agca/modules.py",
+        "sympy/polys/domains/domain.py",
+        "sympy/polys/domains/expressiondomain.py",
+        "sympy/polys/domains/pythonrational.py",
+        "sympy/polys/domains/quotientring.py",
+        "sympy/polys/fields.py",
+        "sympy/polys/monomials.py",
+        "sympy/polys/polyclasses.py",
+        "sympy/polys/polytools.py",
+        "sympy/polys/rings.py",
+        "sympy/polys/rootoftools.py",
+        "sympy/tensor/array/ndim_array.py",
+        "sympy/utilities/enumerative.py"
+      ],
+      "finalPatchFiles": [
+        "sympy/core/basic.py",
+        "sympy/core/expr.py"
+      ],
+      "missedGold": [
+        "sympy/core/exprtools.py",
+        "sympy/core/numbers.py",
+        "sympy/geometry/entity.py",
+        "sympy/physics/optics/medium.py",
+        "sympy/physics/vector/dyadic.py",
+        "sympy/physics/vector/frame.py",
+        "sympy/physics/vector/vector.py",
+        "sympy/polys/agca/modules.py",
+        "sympy/polys/domains/domain.py",
+        "sympy/polys/domains/expressiondomain.py",
+        "sympy/polys/domains/pythonrational.py",
+        "sympy/polys/domains/quotientring.py",
+        "sympy/polys/fields.py",
+        "sympy/polys/monomials.py",
+        "sympy/polys/polyclasses.py",
+        "sympy/polys/polytools.py",
+        "sympy/polys/rings.py",
+        "sympy/polys/rootoftools.py",
+        "sympy/tensor/array/ndim_array.py",
+        "sympy/utilities/enumerative.py"
+      ],
+      "missedGoldReachability": [
+        {
+          "file": "sympy/core/exprtools.py",
+          "reachable": true,
+          "depth": 2,
+          "direction": "dependent",
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/core/numbers.py",
+          "reachable": true,
+          "depth": 1,
+          "direction": "dependent",
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/geometry/entity.py",
+          "reachable": true,
+          "depth": 1,
+          "direction": "dependent",
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/physics/optics/medium.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/physics/vector/dyadic.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/physics/vector/frame.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/physics/vector/vector.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/polys/agca/modules.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/polys/domains/domain.py",
+          "reachable": true,
+          "depth": 2,
+          "direction": "dependent",
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/polys/domains/expressiondomain.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/polys/domains/pythonrational.py",
+          "reachable": true,
+          "depth": 3,
+          "direction": "dependent",
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/polys/domains/quotientring.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/polys/fields.py",
+          "reachable": true,
+          "depth": 2,
+          "direction": "dependent",
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/polys/monomials.py",
+          "reachable": true,
+          "depth": 3,
+          "direction": "dependent",
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/polys/polyclasses.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/polys/polytools.py",
+          "reachable": true,
+          "depth": 2,
+          "direction": "dependent",
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/polys/rings.py",
+          "reachable": true,
+          "depth": 2,
+          "direction": "dependent",
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/polys/rootoftools.py",
+          "reachable": true,
+          "depth": 2,
+          "direction": "dependent",
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/tensor/array/ndim_array.py",
+          "reachable": true,
+          "depth": 2,
+          "direction": "dependent",
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/utilities/enumerative.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": false
+        }
+      ],
+      "reachableOnlyBeyondDerivationDepth": true,
+      "reachableAtDerivationDepth": true,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m162_baseline_sympy__sympy_13798",
+      "family": "m162",
+      "instanceId": "sympy__sympy-13798",
+      "repo": "sympy/sympy",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": true,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "sympy/printing/latex.py"
+      ],
+      "finalPatchFiles": [
+        "sympy/printing/latex.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m162_callable_sympy__sympy_13798",
+      "family": "m162",
+      "instanceId": "sympy__sympy-13798",
+      "repo": "sympy/sympy",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": true,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "sympy/printing/latex.py"
+      ],
+      "finalPatchFiles": [
+        "sympy/printing/latex.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m162_static_sympy__sympy_13798",
+      "family": "m162",
+      "instanceId": "sympy__sympy-13798",
+      "repo": "sympy/sympy",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "sympy/printing/latex.py"
+      ],
+      "finalPatchFiles": [
+        "sympy/printing/latex.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m163_tools_neutral_policy_sympy__sympy_13798",
+      "family": "m163",
+      "instanceId": "sympy__sympy-13798",
+      "repo": "sympy/sympy",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": true,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "sympy/printing/latex.py"
+      ],
+      "finalPatchFiles": [
+        "sympy/printing/latex.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m163_tools_only_sympy__sympy_13798",
+      "family": "m163",
+      "instanceId": "sympy__sympy-13798",
+      "repo": "sympy/sympy",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": true,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "sympy/printing/latex.py"
+      ],
+      "finalPatchFiles": [
+        "sympy/printing/latex.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m163_tools_task_trigger_sympy__sympy_13798",
+      "family": "m163",
+      "instanceId": "sympy__sympy-13798",
+      "repo": "sympy/sympy",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": true,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "sympy/printing/latex.py"
+      ],
+      "finalPatchFiles": [
+        "sympy/printing/latex.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m164_tools_neutral_policy_sympy__sympy_13798",
+      "family": "m164",
+      "instanceId": "sympy__sympy-13798",
+      "repo": "sympy/sympy",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "sympy/printing/latex.py"
+      ],
+      "finalPatchFiles": [
+        "sympy/printing/latex.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m164_tools_task_trigger_sympy__sympy_13798",
+      "family": "m164",
+      "instanceId": "sympy__sympy-13798",
+      "repo": "sympy/sympy",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": true,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "sympy/printing/latex.py"
+      ],
+      "finalPatchFiles": [
+        "sympy/printing/latex.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m108_live_ext_sympy__sympy_15599_",
+      "family": "m108",
+      "instanceId": "sympy__sympy-15599",
+      "repo": "sympy/sympy",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "sympy/core/mod.py"
+      ],
+      "finalPatchFiles": [
+        "sympy/core/mod.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m92_core_reduction50_sympy__sympy_15599_",
+      "family": "m92",
+      "instanceId": "sympy__sympy-15599",
+      "repo": "sympy/sympy",
+      "i5Mechanism": "MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "sympy/core/mod.py"
+      ],
+      "finalPatchFiles": [
+        "sympy/core/mod.py"
+      ],
+      "missedGold": [],
+      "missedGoldReachability": [],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m107_live_ext_sympy__sympy_16597_",
+      "family": "m107",
+      "instanceId": "sympy__sympy-16597",
+      "repo": "sympy/sympy",
+      "i5Mechanism": "I5_NO_REPOSITORY_DERIVABLE_OBLIGATION",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [
+          "sympy/assumptions/ask.py",
+          "sympy/assumptions/ask_generated.py",
+          "sympy/core/power.py",
+          "sympy/printing/tree.py",
+          "sympy/tensor/indexed.py"
+        ],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "sympy/assumptions/ask.py",
+        "sympy/assumptions/ask_generated.py",
+        "sympy/core/assumptions.py",
+        "sympy/core/power.py",
+        "sympy/printing/tree.py",
+        "sympy/tensor/indexed.py"
+      ],
+      "finalPatchFiles": [
+        "sympy/core/assumptions.py"
+      ],
+      "missedGold": [
+        "sympy/assumptions/ask.py",
+        "sympy/assumptions/ask_generated.py",
+        "sympy/core/power.py",
+        "sympy/printing/tree.py",
+        "sympy/tensor/indexed.py"
+      ],
+      "missedGoldReachability": [
+        {
+          "file": "sympy/assumptions/ask.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/assumptions/ask_generated.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/core/power.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/printing/tree.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/tensor/indexed.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": false
+        }
+      ],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m71_stage_a_pivot_confidence_sympy_16597",
+      "family": "m71",
+      "instanceId": "sympy__sympy-16597",
+      "repo": "sympy/sympy",
+      "i5Mechanism": "I5_NO_REPOSITORY_DERIVABLE_OBLIGATION",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [
+          "sympy/assumptions/ask.py",
+          "sympy/assumptions/ask_generated.py",
+          "sympy/core/power.py",
+          "sympy/printing/tree.py",
+          "sympy/tensor/indexed.py"
+        ],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "sympy/assumptions/ask.py",
+        "sympy/assumptions/ask_generated.py",
+        "sympy/core/assumptions.py",
+        "sympy/core/power.py",
+        "sympy/printing/tree.py",
+        "sympy/tensor/indexed.py"
+      ],
+      "finalPatchFiles": [
+        "sympy/core/assumptions.py"
+      ],
+      "missedGold": [
+        "sympy/assumptions/ask.py",
+        "sympy/assumptions/ask_generated.py",
+        "sympy/core/power.py",
+        "sympy/printing/tree.py",
+        "sympy/tensor/indexed.py"
+      ],
+      "missedGoldReachability": [
+        {
+          "file": "sympy/assumptions/ask.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/assumptions/ask_generated.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/core/power.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/printing/tree.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/tensor/indexed.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": false
+        }
+      ],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m73_stage_c_baseline_sympy_16597",
+      "family": "m73",
+      "instanceId": "sympy__sympy-16597",
+      "repo": "sympy/sympy",
+      "i5Mechanism": "I5_NO_REPOSITORY_DERIVABLE_OBLIGATION",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [
+          "sympy/assumptions/ask.py",
+          "sympy/assumptions/ask_generated.py",
+          "sympy/core/power.py",
+          "sympy/printing/tree.py",
+          "sympy/tensor/indexed.py"
+        ],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "sympy/assumptions/ask.py",
+        "sympy/assumptions/ask_generated.py",
+        "sympy/core/assumptions.py",
+        "sympy/core/power.py",
+        "sympy/printing/tree.py",
+        "sympy/tensor/indexed.py"
+      ],
+      "finalPatchFiles": [
+        "sympy/core/assumptions.py"
+      ],
+      "missedGold": [
+        "sympy/assumptions/ask.py",
+        "sympy/assumptions/ask_generated.py",
+        "sympy/core/power.py",
+        "sympy/printing/tree.py",
+        "sympy/tensor/indexed.py"
+      ],
+      "missedGoldReachability": [
+        {
+          "file": "sympy/assumptions/ask.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/assumptions/ask_generated.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/core/power.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/printing/tree.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/tensor/indexed.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": false
+        }
+      ],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 3
+    },
+    {
+      "runLabel": "m90_v4_c7d_envguard50_sympy__sympy_16597_",
+      "family": "m90",
+      "instanceId": "sympy__sympy-16597",
+      "repo": "sympy/sympy",
+      "i5Mechanism": "I5_NO_REPOSITORY_DERIVABLE_OBLIGATION",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [
+          "sympy/assumptions/ask.py",
+          "sympy/assumptions/ask_generated.py",
+          "sympy/core/power.py",
+          "sympy/printing/tree.py",
+          "sympy/tensor/indexed.py"
+        ],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "sympy/assumptions/ask.py",
+        "sympy/assumptions/ask_generated.py",
+        "sympy/core/assumptions.py",
+        "sympy/core/power.py",
+        "sympy/printing/tree.py",
+        "sympy/tensor/indexed.py"
+      ],
+      "finalPatchFiles": [
+        "sympy/core/assumptions.py"
+      ],
+      "missedGold": [
+        "sympy/assumptions/ask.py",
+        "sympy/assumptions/ask_generated.py",
+        "sympy/core/power.py",
+        "sympy/printing/tree.py",
+        "sympy/tensor/indexed.py"
+      ],
+      "missedGoldReachability": [
+        {
+          "file": "sympy/assumptions/ask.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/assumptions/ask_generated.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/core/power.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/printing/tree.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/tensor/indexed.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": false
+        }
+      ],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    },
+    {
+      "runLabel": "m92_core_reduction50_sympy__sympy_16597_",
+      "family": "m92",
+      "instanceId": "sympy__sympy-16597",
+      "repo": "sympy/sympy",
+      "i5Mechanism": "I5_NO_REPOSITORY_DERIVABLE_OBLIGATION",
+      "i6Mechanism": "INSUFFICIENT_TRACE",
+      "evidence": {
+        "touchedNoGoldFile": false,
+        "missedGoldFiles": [
+          "sympy/assumptions/ask.py",
+          "sympy/assumptions/ask_generated.py",
+          "sympy/core/power.py",
+          "sympy/printing/tree.py",
+          "sympy/tensor/indexed.py"
+        ],
+        "candidateNamedMissedGold": false,
+        "namedByDependentArm": false,
+        "allMissedGoldAlreadyInspected": false,
+        "anyMissedGoldReachable": false,
+        "i6Usable": false,
+        "ranReferenceTest": false,
+        "derivedUnrunReferenceTest": false,
+        "validationAttemptedNeverStarted": false
+      },
+      "goldFiles": [
+        "sympy/assumptions/ask.py",
+        "sympy/assumptions/ask_generated.py",
+        "sympy/core/assumptions.py",
+        "sympy/core/power.py",
+        "sympy/printing/tree.py",
+        "sympy/tensor/indexed.py"
+      ],
+      "finalPatchFiles": [
+        "sympy/core/assumptions.py"
+      ],
+      "missedGold": [
+        "sympy/assumptions/ask.py",
+        "sympy/assumptions/ask_generated.py",
+        "sympy/core/power.py",
+        "sympy/printing/tree.py",
+        "sympy/tensor/indexed.py"
+      ],
+      "missedGoldReachability": [
+        {
+          "file": "sympy/assumptions/ask.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/assumptions/ask_generated.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/core/power.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/printing/tree.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": false
+        },
+        {
+          "file": "sympy/tensor/indexed.py",
+          "reachable": false,
+          "depth": null,
+          "direction": null,
+          "alreadyInspected": false
+        }
+      ],
+      "reachableOnlyBeyondDerivationDepth": false,
+      "reachableAtDerivationDepth": false,
+      "decisionPoints": 2
+    }
+  ],
+  "boundedness": {
+    "note": "candidate counts BEFORE any analyst filtering (§35), one row per decision point",
+    "failures": {
+      "i5Dependents": {
+        "n": 273,
+        "mean": 0.57,
+        "median": 0,
+        "p90": 1,
+        "max": 10,
+        "zero": 222
+      },
+      "i5DependentsTaskRelevant": {
+        "n": 273,
+        "mean": 0.31,
+        "median": 0,
+        "p90": 1,
+        "max": 7,
+        "zero": 241
+      },
+      "i5Dependencies": {
+        "n": 273,
+        "mean": 1.33,
+        "median": 1,
+        "p90": 5,
+        "max": 8,
+        "zero": 134
+      },
+      "i6TestFilesDepth1": {
+        "n": 273,
+        "mean": 0.18,
+        "median": 0,
+        "p90": 0,
+        "max": 6,
+        "zero": 256
+      },
+      "i6TestFilesDepth2": {
+        "n": 273,
+        "mean": 1.18,
+        "median": 0,
+        "p90": 2,
+        "max": 19,
+        "zero": 188
+      }
+    },
+    "successes": {
+      "i5Dependents": {
+        "n": 376,
+        "mean": 0.96,
+        "median": 0,
+        "p90": 1,
+        "max": 37,
+        "zero": 254
+      },
+      "i5DependentsTaskRelevant": {
+        "n": 376,
+        "mean": 0.49,
+        "median": 0,
+        "p90": 0,
+        "max": 37,
+        "zero": 342
+      },
+      "i5Dependencies": {
+        "n": 376,
+        "mean": 1.31,
+        "median": 1,
+        "p90": 3,
+        "max": 8,
+        "zero": 172
+      },
+      "i6TestFilesDepth1": {
+        "n": 376,
+        "mean": 0.56,
+        "median": 0,
+        "p90": 1,
+        "max": 19,
+        "zero": 301
+      },
+      "i6TestFilesDepth2": {
+        "n": 376,
+        "mean": 2.85,
+        "median": 1,
+        "p90": 11,
+        "max": 24,
+        "zero": 131
+      }
+    }
+  },
+  "falsePositive": {
+    "cleanSuccessArms": 181,
+    "armsEmittingAnyI5Candidate": 121,
+    "totalUnnecessaryI5Candidates": 818,
+    "byDerivation": {
+      "DEPENDENTS": {
+        "armsEmittingAnyCandidate": 59,
+        "totalCandidates": 346
+      },
+      "DEPENDENTS_TASK_RELEVANT": {
+        "armsEmittingAnyCandidate": 16,
+        "totalCandidates": 174
+      },
+      "DEPENDENCIES": {
+        "armsEmittingAnyCandidate": 96,
+        "totalCandidates": 472
+      }
+    },
+    "armsEmittingAnyI6Candidate": 34,
+    "totalUnnecessaryI6CandidatesDepth1": 206,
+    "totalUnnecessaryI6CandidatesDepth2": 1058
+  },
+  "successWitness": {
+    "successArms": 188,
+    "armsWhereDerivationNamedSomething": 128,
+    "armsWhereAgentLaterInspectedANamedFile": 5,
+    "armsWhereAgentLaterEditedANamedFile": 0,
+    "failureArmsWhereAgentLaterInspectedANamedFile": 4,
+    "i6SuccessArmsRunningAReferenceTest": 0,
+    "i6SuccessArms": 0,
+    "i6FailureArmsRunningAReferenceTest": 0,
+    "i6FailureArms": 0,
+    "successArmsOpeningANewFileAfterFirstEdit": 23,
+    "failureArmsOpeningANewFileAfterFirstEdit": 19,
+    "novelFilesOpenedAfterFirstEditBySuccesses": 33,
+    "novelFilesOpenedAfterFirstEditByFailures": 33
+  },
+  "mechanismSuccessWitness": [],
+  "editSetMissByTask": {},
+  "derivationBlindness": {
+    "structuralNote": "DecisionPointEvidence has no goldFiles, no resolved and no call with index >= atIndex; sliceAtDecisionPoint truncation makes the future unrepresentable rather than merely off-limits",
+    "decisionPointsTotal": 649,
+    "decisionPointsNamingAnyGoldFile": 8,
+    "decisionPointsNamingAnUnaddressedGoldFile": 8
+  },
+  "fullThreshold": {
+    "mechanism": "I5_EDIT_SET_MISS",
+    "specimenArms": 0,
+    "specimenTasks": 0,
+    "specimenRepositories": 0,
+    "tasksRefutedByTheirOwnSuccesses": [],
+    "tasksWithNoSuccessfulArmAnywhere": [],
+    "witnessedTasks": [],
+    "witnessedTaskCount": 0,
+    "witnessedRepositoryCount": 0,
+    "criteria": {
+      "atLeastThreeSpecimenTasks": false,
+      "atLeastThreeRepositories": false,
+      "successWitnessExists": false,
+      "derivableWithoutGold": true,
+      "availableAtTheDecisionPoint": true,
+      "boundedOutput": true,
+      "falsePositivePressureAcceptable": false,
+      "notMerelyMoreContext": true
+    },
+    "falsePositiveNote": "the DEPENDENCIES arm — the one that produced every specimen — emits an obligation on 262 of 435 successful arms that needed none, 1168 candidates in total",
+    "verdict": "FULL_THRESHOLD_NOT_MET"
+  },
+  "thresholdOutcome": {
+    "rule": "§21 — >=3 specimens across >=3 repositories sharing ONE mechanism, with a success witness, a gold-free derivation, and a bounded output",
+    "i5MechanismsMeetingCountAndRepoBar": [],
+    "i6MechanismsMeetingCountAndRepoBar": []
+  }
+}

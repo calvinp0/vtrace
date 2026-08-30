@@ -6281,3 +6281,124 @@ functional commit 12a1056e8f5e2e3319440d6c884eaf1c616c678e
   precision first (60% of successful runs currently receive an obligation they did not need).
   If it does not repeat, the agent-utility direction has no live hypothesis worth funding and
   the correct action is the one M185 and M188 already reached.
+
+## M190 — frozen I5 out-of-sample replication
+
+```text
+verdict           M190 — PASS (the milestone succeeded; the hypothesis it tested failed)
+question          when the exact frozen M189 I5 derivation is applied to arms it was never
+                  fitted to, does the success-witnessed edit-set mechanism reproduce across
+                  new tasks and repositories?
+answer            No. Not once, in 71 unseen tasks across 9 repositories.
+
+freeze            M189 blobset 6916b9f4cbce93d27019a224b3e685f0bf43ecb7fc1625dc1bda798f39a498ac
+                  manifest hash f6f5a2ed297c3d11f1b77752b664ee38dbb0ab0e1b44a5024ca981f20dd83855
+                  manifest committed 3859259f BEFORE indexing; scripts committed f7124abd
+                  BEFORE any held-out outcome was read. Derivation semantics changed: NONE.
+                  M190 contains no derivation — it spawns M189-B/C/D as executables.
+
+held-out set      314 arms, 71 tasks (all unseen by M189), 9 repositories (7 never witnessed).
+                  Membership from committed M189 artifacts, never the filesystem, because the
+                  M189 driver's own predicate asks "is this indexed NOW" and M190 indexes it.
+execution         71/71 instances indexed (89.9 CPU-min, git archive at base_commit),
+                  314/314 arms replayed, 649 decision points, 0 unfaithful replays,
+                  0 technical exclusions of any category.
+
+PRIMARY RESULT    I5_EDIT_SET_MISS   0 arms  0 tasks  0 repos   (M189: 62 / 4 / 4)
+                  witnessed 0, refuted 0, failure-only 0 — the class produced no specimen,
+                  so §17's witness question could not be posed.
+the key number    DEPENDENCIES (the arm that produced EVERY M189 specimen) still fires on
+                  73/126 held-out failing arms but named an unaddressed reference file at
+                  0/649 decision points. It failed to be RIGHT, not to RUN.
+arm inversion     discovery: DEPENDENTS 0 hits / DEPENDENCIES 62 hits (390 failing arms)
+                  held-out:  DEPENDENTS 5 hits / DEPENDENCIES  0 hits (126 failing arms)
+                  The two arms trade places between strata — the signature of a
+                  stratum-specific coincidence, which is what M189 §7 disclosed as the risk.
+
+what DID replicate  false-positive pressure. DEPENDENCIES fires on 96/181 held-out clean
+                  successes (53.0%) vs 262/435 (60.2%) in discovery. Boundedness also
+                  replicates: median 0-1, p90 <= 3, max 8.
+enrichment (task) failing tasks with witnessed signal    0/30   = 0.0%
+                  clean-success tasks firing needlessly 23/44   = 52.3%   RR 0.0
+absence check     P(0 specimen tasks in 71 | discovery rate 4/69) = 0.014 (tasks as
+                  independent draws — generous to the hypothesis, not to this conclusion)
+counterexamples   101/188 successful arms received a candidate and resolved without it;
+                  5/188 later opened a named file; 0/188 ever EDITED one.
+                  93/126 failures (74%) edited every reference file and failed anyway.
+
+controls          gold+outcome-hidden: 649 held-out fingerprints, 0 differ (M190_BLIND=1)
+                  future-action: structurally enforced by truncation
+                  discovery reproduction: M189's 2182 committed fingerprints re-derived
+                  BYTE-IDENTICAL by this pipeline (sha ebef9303...)
+                  instance leak between strata: 0
+
+pooled (secondary) I5_EDIT_SET_MISS unchanged at 62 arms / 4 tasks / 4 repos, 2 witnessed
+                  tasks in 2 repositories. Adding 314 arms and 649 decision points moved the
+                  §21 threshold by exactly zero. FULL_THRESHOLD_NOT_MET.
+
+verdicts          I5_OUT_OF_SAMPLE_NOT_REPLICATED
+                  NO_NEW_INTERVENTION_AUTHORIZED
+
+new files         run_stage5_m190_manifest.ts, run_stage5_m190_prepare.ts,
+                  run_stage5_m190_replication.ts + held-out manifest, prepare ledger,
+                  replication report, specimen ledgers (heldout/pooled), controls,
+                  fingerprints, stage5_m190_final_report.md
+gates             typecheck PASS  typecheck:benchmarks PASS  bun test 5658 pass / 0 fail
+live spend        $0 — no live agent, no Docker; bench repos read-only via git archive
+functional commit see final SHA below; starting SHA dc66a9afe17fbcec4f4ebd65ebbc5aa17dcd901f
+                  0 ahead / 142 behind origin/main; diff --check clean; nothing pushed
+```
+
+## M190 standing findings
+
+- **The I5 direction is closed, and the closure is evidential rather than budgetary.** M189
+  ended with a real mechanism two repositories short of its bar and named the exact cheap
+  experiment that would settle it. That experiment has now been run, at $0, on the stratum M189
+  itself identified, with the derivation frozen by blob id before a single held-out arm was
+  indexed. It returns zero. §42's default applies: stop I5 development, do not tune it. Nothing
+  in this result should be read as "the derivation needs better ranking" — §32 exists precisely
+  to forbid that reading, and §22 forbade fixing the false positives that did replicate.
+
+- **The arm inversion is the finding, not the zero.** A derivation that had simply gone quiet
+  out of sample would be weak evidence. This one fires on 73 of 126 held-out failing arms and on
+  96 of 181 held-out clean successes — it is as talkative as ever — and it never once names a
+  reference file the agent missed. Meanwhile `DEPENDENTS`, which produced 0 of M189's specimens
+  across 390 discovery failures, produces all 5 held-out hits. Each arm scores only where the
+  other did not. That is what a post-hoc arm added on the stratum it then explains looks like
+  when it is finally tested somewhere else, and M189 §7 predicted this specific failure mode in
+  writing before the data existed.
+
+- **False-positive pressure is the property that generalises.** 53% held-out against 60%
+  discovery for `DEPENDENCIES`; 67% against 72% for the union. A deterministic repository
+  relationship between a changed symbol and another file is common — that is what a code graph
+  is for — and commonness is exactly what transfers between corpora. Reference-relevance does
+  not. §33's disjunction resolves to its second branch: on this evidence the apparent mechanism
+  is common graph connectivity that happened to correlate with gold on one stratum, and no
+  pre-decision evidence available here separates a necessary candidate from a harmless one.
+
+- **The strongest anti-I5 datum is 0 of 188.** Not one successful held-out arm, in 9
+  repositories, ever went on to edit a file the frozen derivation had named — while 101 of them
+  were given a candidate and solved the task anyway. M189's corpus-wide equivalent was 1 of 476.
+  Pooled, that is 1 successful arm in 664 doing the thing the intervention would have told it to
+  do. An obligation nobody's winning trace ever performs is not an obligation.
+
+- **M185's conclusion reproduces for the fourth time, on data never used to argue it.** 93 of
+  126 held-out failures (74%, against M189's 60%) edited every reference file and still failed.
+  There is nothing for a repository-derived obligation to point at in three quarters of the
+  failures this corpus contains. Any future agent-utility hypothesis has to start by explaining
+  that class, not by improving what to show an agent that already had everything open.
+
+- **What this milestone did NOT establish.** It did not test I5 against unfamiliar codebases —
+  all 9 held-out repositories were already indexed by M189, and no preserved corpus here can
+  supply that. It did not touch I6, whose validation→repair loop remains under-observed at 30
+  arms in 1,293 and confounded by the July 2026 environment collapse. And it did not, and must
+  not be read to have, evaluated whether some *different* diff-derived hypothesis might work;
+  it tested one frozen derivation and falsified it.
+
+- **Next-step recommendation: none in this direction.** `NO_FURTHER_AGENT_UTILITY_PRODUCT_WORK_LICENSED`
+  stands, M190 does not lift it, and M190 explicitly does not license M191-style I5 ranking,
+  relevance, test-signal or graph-filtering work. Only genuinely new external or observational
+  evidence — not a re-analysis of this corpus — should reopen the I5 hypothesis. The one
+  remaining unobserved question in the whole Phase 2B programme is I6's validation→repair loop,
+  which needs new baseline-only observation under a repaired test environment and is separately
+  unlicensed.

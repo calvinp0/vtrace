@@ -352,6 +352,111 @@ const counterexamples = {
     specimenRows.filter((s) => s.i5Mechanism === "I5_REACHABLE_BUT_NOT_NAMED_BY_DERIVATION").length,
 };
 
+/**
+ * Did the derivation FIRE and miss, or did it fall silent? A replication that reports "zero
+ * specimens" without separating those two is unreadable: an arm that emits nothing has not
+ * been tested, while an arm that emits a bounded candidate set which simply never names the
+ * file the agent needed has been tested and has failed. This is computed on both strata with
+ * the same expressions so the comparison is like for like.
+ */
+const armDiagnostics = (rows: readonly Arm[]): Record<string, number> => {
+  const f = rows.filter((a) => !a.resolved);
+  return {
+    failingArms: f.length,
+    failingTasks: uniq(f.map((a) => a.instanceId)).length,
+    failingArmsWhereDEPENDENCIESEmittedAnything: f.filter((a) => a.decisions.some((d) => d.i5Dependencies > 0)).length,
+    failingArmsWhereDEPENDENTSEmittedAnything: f.filter((a) => a.decisions.some((d) => d.i5Dependents > 0)).length,
+    failingArmsWhereDEPENDENCIESNamedAnUnaddressedReferenceFile:
+      f.filter((a) => a.decisions.some((d) => d.i5DependenciesScore.unaddressedGoldHits.length > 0)).length,
+    failingArmsWhereDEPENDENTSNamedAnUnaddressedReferenceFile:
+      f.filter((a) => a.decisions.some((d) => d.i5DependentsScore.unaddressedGoldHits.length > 0)).length,
+    decisionPoints: dps(f).length,
+    decisionPointsWhereDEPENDENCIESNamedAnUnaddressedReferenceFile:
+      dps(f).filter((d) => d.i5DependenciesScore.unaddressedGoldHits.length > 0).length,
+  };
+};
+const derivationArmDiagnostics = {
+  note:
+    "DEPENDENCIES is the arm that produced every M189 specimen; DEPENDENTS is the preregistered " +
+    "arm that produced none. Both are reported so that silence on gold can be told apart from silence.",
+  discovery: armDiagnostics(discovery),
+  heldOut: armDiagnostics(heldOut),
+};
+
+/**
+ * §16C asks for a success witness on every held-out task producing a serious I5 specimen. The
+ * primary class produced none, so the question is asked of the OTHER frozen I5 specimen class
+ * present in the held-out data — `I5_AFFECTED_CONSUMER_MISS`, the PREREGISTERED consumer arm.
+ * This is a reporting extension, not a derivation change: the witness rule, the specimen class
+ * and the candidate sets are all M189's, and the result can only weaken the I5 case or leave it
+ * unchanged. It is reported as supplementary and never as the replication of M189's mechanism,
+ * which was `I5_EDIT_SET_MISS`.
+ *
+ * Success availability is checked against the WHOLE 1,293-arm corpus, not the analysed set: a
+ * task whose successful arms were merely I5-unusable would be a corpus limitation, whereas a
+ * task with no successful arm anywhere is a fact about the task.
+ */
+interface CorpusRow { instanceId: string; resolved: boolean; usableForI5: boolean }
+const corpusRows: CorpusRow[] = readFileSync(path.join(RESULTS, "stage5_m189_corpus_ledger.jsonl"), "utf8")
+  .split("\n").filter((l) => l.trim()).map((l) => JSON.parse(l) as CorpusRow);
+
+const consumerSpecimenTasks = uniq(specimenRows.filter((s) => s.i5Mechanism === "I5_AFFECTED_CONSUMER_MISS").map((s) => s.instanceId)).sort();
+const supplementaryWitness = {
+  class: "I5_AFFECTED_CONSUMER_MISS — the PREREGISTERED consumer arm, not the class M189 witnessed",
+  status: "SUPPLEMENTARY — does not contribute to the M190 replication verdict",
+  tasks: consumerSpecimenTasks.map((instanceId) => {
+    const failing = heldOut.filter((a) => a.instanceId === instanceId && !a.resolved);
+    const missed = uniq(failing.flatMap((a) => a.goldFilesMissedByFinalPatch)).sort();
+    const named = uniq(failing.flatMap((a) => a.decisions.flatMap((d) => d.i5DependentsScore.unaddressedGoldHits))).sort();
+    const corpusArms = corpusRows.filter((r) => r.instanceId === instanceId);
+    const succ = heldOut.filter((a) => a.instanceId === instanceId && a.resolved);
+    const edited = succ.filter((a) => named.some((f) => a.finalPatchFiles.includes(f)));
+    return {
+      instanceId,
+      repo: heldOut.find((a) => a.instanceId === instanceId)!.repo,
+      failingArms: failing.length,
+      referenceFilesMissed: missed.length,
+      referenceFilesNamedByTheDerivation: named,
+      successfulArmsInTheHeldOutSet: succ.length,
+      successfulArmsAnywhereInTheCorpus: corpusArms.filter((r) => r.resolved).length,
+      corpusArmsForThisTask: corpusArms.length,
+      successfulArmsThatEditedANamedFile: edited.length,
+      witnessVerdict: succ.length === 0 ? "NO_SUCCESSFUL_ARM_EXISTS" : edited.length === 0 ? "SUCCESSES_ALSO_SKIPPED_IT" : "MIXED",
+      taskVerdict: succ.length === 0 ? "FAILURE_ONLY_NO_SUCCESS_WITNESS" : edited.length === 0 ? "REFUTED" : "WITNESSED",
+    };
+  }),
+};
+
+/**
+ * §23's transparent quantity for an ABSENCE. The held-out set produced no specimen of the
+ * replicated class; the question a reader will ask is whether it was simply too small to. The
+ * answer is given as raw counts plus the crudest possible model — if held-out tasks were draws
+ * from the discovery specimen rate, how often would zero come back — with its unit and its
+ * assumption stated, because the assumption (independence across tasks) is generous to the
+ * hypothesis M190 is testing rather than to M190's conclusion.
+ */
+const m189SpecimenTasks = 4;
+const m189AnalysedTasks = uniq(discovery.map((a) => a.instanceId)).length;
+const m189SpecimenArms = 62;
+const m189FailingArms = discovery.filter((a) => !a.resolved).length;
+const absenceCheck = {
+  unit: "TASK (primary) and failing ARM (secondary, not independent — reported for completeness only)",
+  m189SpecimenTasksOverAnalysedTasks: `${m189SpecimenTasks}/${m189AnalysedTasks}`,
+  m189TaskRate: Number((m189SpecimenTasks / m189AnalysedTasks).toFixed(4)),
+  heldOutTasks: uniq(heldOut.map((a) => a.instanceId)).length,
+  heldOutSpecimenTasks: 0,
+  probabilityOfZeroHeldOutSpecimenTasksAtTheDiscoveryRate:
+    Number(((1 - m189SpecimenTasks / m189AnalysedTasks) ** uniq(heldOut.map((a) => a.instanceId)).length).toFixed(4)),
+  m189SpecimenArmsOverFailingArms: `${m189SpecimenArms}/${m189FailingArms}`,
+  heldOutFailingArms: hoFailures.length,
+  probabilityOfZeroHeldOutSpecimenArmsAtTheDiscoveryRate:
+    Number(((1 - m189SpecimenArms / m189FailingArms) ** hoFailures.length).toExponential(3)),
+  assumption:
+    "tasks treated as independent Bernoulli draws at the discovery rate. Arms are NOT independent " +
+    "(59 of M189's 62 specimen arms are one task), so the arm-level figure is reported as an upper " +
+    "bound on surprise and the task-level figure is the one to read.",
+};
+
 /** §21 — false-positive pressure, computed by M189-C's frozen rule on the two strata. */
 const m189Committed = JSON.parse(readFileSync(path.join(RESULTS, "stage5_m189_specimen_ledger.json"), "utf8")) as
   { falsePositive: Record<string, unknown>; mechanismTable: unknown[] };
@@ -397,6 +502,9 @@ const report = {
   generalisation,
   enrichment,
   counterexamples,
+  derivationArmDiagnostics,
+  supplementaryWitness,
+  absenceCheck,
   falsePositive,
   pooled: {
     label: "SECONDARY — M189 discovery stratum + M190 held-out stratum, reported only after the held-out result was frozen (§18)",
@@ -433,6 +541,9 @@ process.stdout.write([
   ...taskVerdicts.map((t) => `  task ${t.instanceId.padEnd(30)} ${t.taskVerdict.padEnd(32)} missed=${t.fileTheFailuresMissed.join(",")} succ=${t.successfulArms} editedIt=${t.successfulArmsThatEditedIt} withoutIt=${t.successfulArmsThatResolvedWithoutIt}`),
   `  §19 repository gate       ${generalisation.repositoryGate}  new repos: ${generalisation.newWitnessedRepositories.join(", ") || "none"}`,
   `  §20 task gate             ${generalisation.taskGate}  new tasks: ${generalisation.newWitnessedTasks.join(", ") || "none"}`,
+  `  DEPENDENCIES fires on      ${derivationArmDiagnostics.heldOut.failingArmsWhereDEPENDENCIESEmittedAnything}/${derivationArmDiagnostics.heldOut.failingArms} held-out failing arms; names an unaddressed reference file on ${derivationArmDiagnostics.heldOut.failingArmsWhereDEPENDENCIESNamedAnUnaddressedReferenceFile}`,
+  `  absence check (task)      P(0 specimen tasks in ${absenceCheck.heldOutTasks} at the discovery rate ${absenceCheck.m189TaskRate}) = ${absenceCheck.probabilityOfZeroHeldOutSpecimenTasksAtTheDiscoveryRate}`,
+  ...supplementaryWitness.tasks.map((t) => `  supp ${t.instanceId.padEnd(30)} ${t.taskVerdict.padEnd(32)} named=${t.referenceFilesNamedByTheDerivation.length}/${t.referenceFilesMissed} missed, successes anywhere in corpus=${t.successfulArmsAnywhereInTheCorpus}`),
   `  enrichment (task level)   failing ${enrichment.failingTasksWithWitnessedI5Signal}/${enrichment.failingTasks} = ${enrichment.fractionFailingTasksWitnessed}   clean-success ${enrichment.cleanSuccessTasksWithUnnecessarySignal}/${enrichment.cleanSuccessTasks} = ${enrichment.fractionCleanSuccessTasksFiring}   RR ${enrichment.riskRatio ?? "n/a"}`,
   "",
 ].join("\n"));
