@@ -6515,6 +6515,7 @@ live spend        $0 - 0 live agents, 0 Docker evaluations. Bench repos read via
                   and never checked out, mutated or left dirty.
 prereg commit     43d56a44 (design + gate, before the first probe)
 analysis commit   803bb02b
+evidence commit   7b3b1f57 (7b3b1f575dfc2d11509b7ba82cc19f3cd363bbf3)
                   starting SHA b55b2dc49a375d93cf85cd01f8ac3e3d293add3c
                   149 AHEAD / 0 behind origin/main; diff --check clean; nothing pushed
 ```

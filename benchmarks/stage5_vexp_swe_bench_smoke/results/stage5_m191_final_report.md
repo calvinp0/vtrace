@@ -255,6 +255,11 @@ exist.
 | live agents | **0** |
 | live spend | **$0** |
 
+Commits, on `main`, nothing pushed: `43d56a44` (preregistration, before the first probe),
+`803bb02b` (analysis scripts and artifacts), `7b3b1f57` (reports and ledger).
+Starting SHA `b55b2dc4`; 150 ahead of `origin/main`, 0 behind. Pre-existing dirt restored to
+203 entries, the two tracked `stage5_outcome_ledger.*` files left exactly as found.
+
 ## 9 — remaining observational limitations
 
 These are evidence limitations, not product proposals.
