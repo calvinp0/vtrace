@@ -584,6 +584,8 @@ branch                 main
 starting SHA           dc66a9afe17fbcec4f4ebd65ebbc5aa17dcd901f
 freeze commit          3859259f9506c1e5cc375a1c3a4651d5678fe56f  (manifest, pre-indexing)
 pre-registration       f7124abdd69d8e5504a4d677bd66833fb4ab892e  (scripts, pre-results)
+evidence commit        5540a92421d39b876ed2c595d537e2fdbe9650af  (results, report, ledger)
+final SHA              recorded by the follow-up commit that adds this line
 ahead / behind         0 ahead, 142 behind origin/main
 pre-existing dirt      PRESERVED — stage5_outcome_ledger.{json,md} remain modified exactly
                        as found; AGENTS.md, VTRACE_TOOLING_AUDIT.md and the untracked

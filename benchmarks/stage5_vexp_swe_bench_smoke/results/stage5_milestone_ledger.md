@@ -6345,7 +6345,10 @@ new files         run_stage5_m190_manifest.ts, run_stage5_m190_prepare.ts,
                   fingerprints, stage5_m190_final_report.md
 gates             typecheck PASS  typecheck:benchmarks PASS  bun test 5658 pass / 0 fail
 live spend        $0 — no live agent, no Docker; bench repos read-only via git archive
-functional commit see final SHA below; starting SHA dc66a9afe17fbcec4f4ebd65ebbc5aa17dcd901f
+freeze commit     3859259f9506c1e5cc375a1c3a4651d5678fe56f (manifest, pre-indexing)
+prereg commit     f7124abdd69d8e5504a4d677bd66833fb4ab892e (scripts, pre-results)
+functional commit 5540a92421d39b876ed2c595d537e2fdbe9650af
+                  starting SHA dc66a9afe17fbcec4f4ebd65ebbc5aa17dcd901f
                   0 ahead / 142 behind origin/main; diff --check clean; nothing pushed
 ```
 
