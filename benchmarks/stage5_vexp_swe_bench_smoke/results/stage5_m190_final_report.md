@@ -586,7 +586,7 @@ freeze commit          3859259f9506c1e5cc375a1c3a4651d5678fe56f  (manifest, pre-
 pre-registration       f7124abdd69d8e5504a4d677bd66833fb4ab892e  (scripts, pre-results)
 evidence commit        5540a92421d39b876ed2c595d537e2fdbe9650af  (results, report, ledger)
 final SHA              recorded by the follow-up commit that adds this line
-ahead / behind         0 ahead, 142 behind origin/main
+ahead / behind         142 AHEAD, 0 behind origin/main at the start; 146 ahead at the end
 pre-existing dirt      PRESERVED — stage5_outcome_ledger.{json,md} remain modified exactly
                        as found; AGENTS.md, VTRACE_TOOLING_AUDIT.md and the untracked
                        results/_m*/ working set were not touched
@@ -595,9 +595,21 @@ M189 artifacts         restored byte-identically after every borrowed-path run; 
 pushed                 no
 ```
 
-M189 reported 0 ahead / 140 behind. The observed relation is now **0 ahead / 142 behind**,
-consistent with M189's own two commits and with nothing having been fetched. Nothing was pulled,
-merged, rebased, reset or pushed.
+**M189 reported this relation backwards, and §7 was right to say not to trust it.** M189 recorded
+"0 ahead, 140 behind origin/main". Measured unambiguously rather than from the columns of
+`git rev-list --left-right --count`, which are easy to read the wrong way round:
+
+```text
+git rev-list --count origin/main..HEAD    146   commits in main that origin/main lacks
+git rev-list --count HEAD..origin/main      0   commits in origin/main that main lacks
+git status -sb                            ## main...origin/main [ahead 146]
+origin/main tip                           bcdd962e  Record the M152 store-separation evidence
+```
+
+Local `main` is **146 ahead and 0 behind** — 142 ahead when M190 began, plus M190's four commits.
+The remote is simply stale at M152; local history is a strict superset of it and has diverged
+from nothing. This corrects the record rather than changing the situation, and §7's prohibition
+applies unchanged: nothing was pulled, merged, rebased, reset, force-updated or pushed.
 
 ---
 

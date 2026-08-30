@@ -6349,7 +6349,9 @@ freeze commit     3859259f9506c1e5cc375a1c3a4651d5678fe56f (manifest, pre-indexi
 prereg commit     f7124abdd69d8e5504a4d677bd66833fb4ab892e (scripts, pre-results)
 functional commit 5540a92421d39b876ed2c595d537e2fdbe9650af
                   starting SHA dc66a9afe17fbcec4f4ebd65ebbc5aa17dcd901f
-                  0 ahead / 142 behind origin/main; diff --check clean; nothing pushed
+                  146 AHEAD / 0 behind origin/main (M189's "140 behind" was the
+                  --left-right columns read backwards; remote is stale at M152 and local
+                  history is a strict superset). diff --check clean; nothing pushed
 ```
 
 ## M190 standing findings
