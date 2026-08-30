@@ -1,0 +1,1933 @@
+{
+  "schemaVersion": "stage5.m189.corpus-adequacy.v1",
+  "sourceRegister": [
+    {
+      "priority": 1,
+      "source": "M183 preserved live artifacts (results/runs/m183_*/raw/*)",
+      "searched": true,
+      "contributed": "60 arms: ordered tool calls with full Edit payloads, agent stream, result rows, eval meta",
+      "role": "primary I5 stratum; the frozen default-path corpus"
+    },
+    {
+      "priority": 2,
+      "source": "M185 derived failure corpus (stage5_m185_*.json)",
+      "searched": true,
+      "contributed": "cohort definitions and the six correct-focus failures, used to cross-check this milestone's failure population",
+      "role": "reconciliation only — M189 re-derives its own cohorts from the raw traces"
+    },
+    {
+      "priority": 3,
+      "source": "M187 validation artifacts + validationExecution.ts",
+      "searched": true,
+      "contributed": "the shared, outcome-blind validation-execution classifier reused verbatim; M183's 14 attempts / 5 runner starts reproduced",
+      "role": "the I6 adequacy predicate is M187's attributability condition"
+    },
+    {
+      "priority": 4,
+      "source": "M188 competitor research artifacts (stage5_m188_*.json)",
+      "searched": true,
+      "contributed": "the I5/I6 hypothesis statements and the warning that the M183 corpus cannot witness a post-validation mechanism",
+      "role": "motivation for which mechanism to inspect; no evidence weight (§28)"
+    },
+    {
+      "priority": 5,
+      "source": "every other preserved live-agent trace under results/runs/",
+      "searched": true,
+      "contributed": "1233 further arms across 37 milestone families, 12 repositories, one model",
+      "role": "decisive — it is the ONLY source in this repository that contains observed test-runner execution at scale"
+    },
+    {
+      "priority": 6,
+      "source": "external traces captured by M188",
+      "searched": true,
+      "contributed": "nothing usable: the audited external artifacts carry published resolved-id sets and per-task summaries, not ordered tool calls or edit payloads",
+      "role": "cannot witness a decision point; excluded"
+    },
+    {
+      "priority": 7,
+      "source": "committed benchmark artifacts outside results/runs/",
+      "searched": true,
+      "contributed": "nothing usable: derived reports and scorecards, no per-call chronology",
+      "role": "excluded"
+    }
+  ],
+  "milestone": "M189",
+  "workstream": "M189-A",
+  "goldRead": false,
+  "outcomeReachesAdequacyPredicate": false,
+  "populationRule": "every directory results/runs/<label>/raw/<condition>/ carrying _tool_calls.json and a swebench-*.jsonl row whose instanceId is in SWE-bench Verified",
+  "i5UsabilityRule": "ordered trace AND >=1 replayable mutation AND base revision resolvable AND every mutation applies cleanly to the base tree AND a final patch exists",
+  "i6UsabilityRule": "I5-usable AND >=1 validation attempt AND >=1 observed runner start AND >=1 observed pass/fail result — the attributability condition of M187",
+  "strata": {
+    "ALL": {
+      "candidateArms": 1293,
+      "repositories": 12,
+      "tasks": 143,
+      "withOrderedTrace": 1293,
+      "withAtLeastOneEdit": 1277,
+      "withCompleteEditChronology": 1277,
+      "withBaseTree": 1293,
+      "withReplayableDiff": 1187,
+      "i5Usable": 1180,
+      "i5UsableFailures": 516,
+      "i5UsableSuccesses": 664,
+      "i5UsableFailureRepositories": 12,
+      "validationAttempted": 472,
+      "validationRunnerStarted": 216,
+      "validationResultObserved": 178,
+      "validationResultThenEdit": 30,
+      "i6Usable": 159,
+      "i6UsableFailures": 63,
+      "i6UsableRepositories": 8
+    },
+    "m183": {
+      "candidateArms": 60,
+      "repositories": 12,
+      "tasks": 30,
+      "withOrderedTrace": 60,
+      "withAtLeastOneEdit": 58,
+      "withCompleteEditChronology": 58,
+      "withBaseTree": 60,
+      "withReplayableDiff": 58,
+      "i5Usable": 58,
+      "i5UsableFailures": 20,
+      "i5UsableSuccesses": 38,
+      "i5UsableFailureRepositories": 9,
+      "validationAttempted": 14,
+      "validationRunnerStarted": 5,
+      "validationResultObserved": 4,
+      "validationResultThenEdit": 0,
+      "i6Usable": 4,
+      "i6UsableFailures": 3,
+      "i6UsableRepositories": 2
+    }
+  },
+  "i5BlockerCounts": {
+    "DIFF_NOT_REPLAYABLE": 90,
+    "NO_FINAL_PATCH": 26,
+    "NO_EDIT": 16
+  },
+  "i6BlockerCounts": {
+    "NO_VALIDATION_ATTEMPT": 821,
+    "I5_UNUSABLE": 113,
+    "NO_RUNNER_START": 256,
+    "NO_VALIDATION_RESULT": 38
+  },
+  "byMonth": {
+    "2026-06": {
+      "arms": 857,
+      "models": [
+        "claude-opus-4-5-20251101"
+      ],
+      "i5Usable": 769,
+      "validationAttempted": 402,
+      "runnerStarted": 206,
+      "i6Usable": 151
+    },
+    "2026-07": {
+      "arms": 97,
+      "models": [
+        "claude-opus-4-5-20251101"
+      ],
+      "i5Usable": 93,
+      "validationAttempted": 26,
+      "runnerStarted": 0,
+      "i6Usable": 0
+    },
+    "2026-08": {
+      "arms": 339,
+      "models": [
+        "claude-opus-4-5-20251101"
+      ],
+      "i5Usable": 318,
+      "validationAttempted": 44,
+      "runnerStarted": 10,
+      "i6Usable": 8
+    }
+  },
+  "byFamily": {
+    "m105": {
+      "arms": 14,
+      "i5Usable": 13,
+      "i6Usable": 0
+    },
+    "m106": {
+      "arms": 10,
+      "i5Usable": 10,
+      "i6Usable": 0
+    },
+    "m107": {
+      "arms": 26,
+      "i5Usable": 26,
+      "i6Usable": 0
+    },
+    "m108": {
+      "arms": 47,
+      "i5Usable": 44,
+      "i6Usable": 0
+    },
+    "m155": {
+      "arms": 59,
+      "i5Usable": 55,
+      "i6Usable": 0
+    },
+    "m161": {
+      "arms": 62,
+      "i5Usable": 60,
+      "i6Usable": 0
+    },
+    "m162": {
+      "arms": 36,
+      "i5Usable": 33,
+      "i6Usable": 1
+    },
+    "m163": {
+      "arms": 36,
+      "i5Usable": 33,
+      "i6Usable": 1
+    },
+    "m164": {
+      "arms": 24,
+      "i5Usable": 22,
+      "i6Usable": 1
+    },
+    "m168": {
+      "arms": 36,
+      "i5Usable": 35,
+      "i6Usable": 1
+    },
+    "m173": {
+      "arms": 24,
+      "i5Usable": 20,
+      "i6Usable": 0
+    },
+    "m183": {
+      "arms": 60,
+      "i5Usable": 58,
+      "i6Usable": 4
+    },
+    "m55x": {
+      "arms": 4,
+      "i5Usable": 2,
+      "i6Usable": 0
+    },
+    "m55y": {
+      "arms": 27,
+      "i5Usable": 25,
+      "i6Usable": 9
+    },
+    "m56c": {
+      "arms": 6,
+      "i5Usable": 6,
+      "i6Usable": 2
+    },
+    "m57b": {
+      "arms": 3,
+      "i5Usable": 3,
+      "i6Usable": 2
+    },
+    "m58b": {
+      "arms": 3,
+      "i5Usable": 3,
+      "i6Usable": 2
+    },
+    "m59b": {
+      "arms": 9,
+      "i5Usable": 6,
+      "i6Usable": 4
+    },
+    "m60": {
+      "arms": 15,
+      "i5Usable": 13,
+      "i6Usable": 2
+    },
+    "m60c": {
+      "arms": 14,
+      "i5Usable": 12,
+      "i6Usable": 3
+    },
+    "m62": {
+      "arms": 21,
+      "i5Usable": 20,
+      "i6Usable": 4
+    },
+    "m62c": {
+      "arms": 24,
+      "i5Usable": 24,
+      "i6Usable": 7
+    },
+    "m65b": {
+      "arms": 8,
+      "i5Usable": 8,
+      "i6Usable": 2
+    },
+    "m65c": {
+      "arms": 6,
+      "i5Usable": 5,
+      "i6Usable": 3
+    },
+    "m66": {
+      "arms": 24,
+      "i5Usable": 23,
+      "i6Usable": 6
+    },
+    "m68b": {
+      "arms": 5,
+      "i5Usable": 4,
+      "i6Usable": 2
+    },
+    "m69": {
+      "arms": 24,
+      "i5Usable": 24,
+      "i6Usable": 7
+    },
+    "m71": {
+      "arms": 50,
+      "i5Usable": 47,
+      "i6Usable": 15
+    },
+    "m72": {
+      "arms": 49,
+      "i5Usable": 40,
+      "i6Usable": 20
+    },
+    "m73": {
+      "arms": 73,
+      "i5Usable": 65,
+      "i6Usable": 10
+    },
+    "m77": {
+      "arms": 10,
+      "i5Usable": 8,
+      "i6Usable": 4
+    },
+    "m80": {
+      "arms": 10,
+      "i5Usable": 7,
+      "i6Usable": 4
+    },
+    "m82": {
+      "arms": 10,
+      "i5Usable": 9,
+      "i6Usable": 2
+    },
+    "m85": {
+      "arms": 10,
+      "i5Usable": 10,
+      "i6Usable": 5
+    },
+    "m88": {
+      "arms": 24,
+      "i5Usable": 23,
+      "i6Usable": 7
+    },
+    "m90": {
+      "arms": 49,
+      "i5Usable": 49,
+      "i6Usable": 17
+    },
+    "m92": {
+      "arms": 50,
+      "i5Usable": 48,
+      "i6Usable": 2
+    },
+    "other": {
+      "arms": 331,
+      "i5Usable": 287,
+      "i6Usable": 10
+    }
+  },
+  "i6UsableArms": [
+    {
+      "runLabel": "eval-m32-product-baseline-django-11728-r1",
+      "instanceId": "django__django-11728",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 3,
+      "starts": 3,
+      "results": 2,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "eval-m32-product-baseline-django-11728-r3",
+      "instanceId": "django__django-11728",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 6,
+      "starts": 4,
+      "results": 3,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "eval-m32-product-baseline-seaborn-3187-r3",
+      "instanceId": "mwaskom__seaborn-3187",
+      "repo": "mwaskom/seaborn",
+      "resolved": false,
+      "attempts": 3,
+      "starts": 3,
+      "results": 2,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "eval-m32-product-vtrace-django-10880-r1",
+      "instanceId": "django__django-10880",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 4,
+      "starts": 3,
+      "results": 2,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "eval-m32-product-vtrace-django-11728-r1",
+      "instanceId": "django__django-11728",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 4,
+      "starts": 3,
+      "results": 2,
+      "editsAfterValidationStart": 1
+    },
+    {
+      "runLabel": "eval-m32-product-vtrace-django-11728-r2",
+      "instanceId": "django__django-11728",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 4,
+      "starts": 3,
+      "results": 2,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "eval-m32-product-vtrace-django-11728-r3",
+      "instanceId": "django__django-11728",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 3,
+      "starts": 2,
+      "results": 1,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "eval-m32-product-vtrace-seaborn-3187-r2",
+      "instanceId": "mwaskom__seaborn-3187",
+      "repo": "mwaskom/seaborn",
+      "resolved": true,
+      "attempts": 4,
+      "starts": 4,
+      "results": 2,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "eval-m36-control-seaborn-3187-r1",
+      "instanceId": "mwaskom__seaborn-3187",
+      "repo": "mwaskom/seaborn",
+      "resolved": true,
+      "attempts": 10,
+      "starts": 10,
+      "results": 9,
+      "editsAfterValidationStart": 2
+    },
+    {
+      "runLabel": "eval-m36-control-seaborn-3187-r3",
+      "instanceId": "mwaskom__seaborn-3187",
+      "repo": "mwaskom/seaborn",
+      "resolved": true,
+      "attempts": 6,
+      "starts": 5,
+      "results": 4,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m162_callable_sympy__sympy_14976",
+      "instanceId": "sympy__sympy-14976",
+      "repo": "sympy/sympy",
+      "resolved": true,
+      "attempts": 3,
+      "starts": 2,
+      "results": 2,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m163_tools_only_sphinx_doc__sphinx_11445",
+      "instanceId": "sphinx-doc__sphinx-11445",
+      "repo": "sphinx-doc/sphinx",
+      "resolved": true,
+      "attempts": 4,
+      "starts": 3,
+      "results": 3,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m164_tools_neutral_policy_sympy__sympy_14976",
+      "instanceId": "sympy__sympy-14976",
+      "repo": "sympy/sympy",
+      "resolved": true,
+      "attempts": 8,
+      "starts": 6,
+      "results": 5,
+      "editsAfterValidationStart": 1
+    },
+    {
+      "runLabel": "m168_vtrace_clean_pydata__xarray_6599",
+      "instanceId": "pydata__xarray-6599",
+      "repo": "pydata/xarray",
+      "resolved": false,
+      "attempts": 1,
+      "starts": 1,
+      "results": 1,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m183_baseline_django__django_12325",
+      "instanceId": "django__django-12325",
+      "repo": "django/django",
+      "resolved": false,
+      "attempts": 7,
+      "starts": 3,
+      "results": 3,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m183_baseline_sympy__sympy_12419",
+      "instanceId": "sympy__sympy-12419",
+      "repo": "sympy/sympy",
+      "resolved": true,
+      "attempts": 4,
+      "starts": 3,
+      "results": 3,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m183_baseline_sympy__sympy_13974",
+      "instanceId": "sympy__sympy-13974",
+      "repo": "sympy/sympy",
+      "resolved": false,
+      "attempts": 2,
+      "starts": 1,
+      "results": 1,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m183_vtrace_orientation_sympy__sympy_13974",
+      "instanceId": "sympy__sympy-13974",
+      "repo": "sympy/sympy",
+      "resolved": false,
+      "attempts": 2,
+      "starts": 1,
+      "results": 1,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m55y_baseline_django_11820",
+      "instanceId": "django__django-11820",
+      "repo": "django/django",
+      "resolved": false,
+      "attempts": 6,
+      "starts": 3,
+      "results": 2,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m55y_vtrace_digest_django_10880",
+      "instanceId": "django__django-10880",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 2,
+      "starts": 1,
+      "results": 1,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m55y_vtrace_digest_django_11095",
+      "instanceId": "django__django-11095",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 5,
+      "starts": 3,
+      "results": 3,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m55y_vtrace_digest_django_11740",
+      "instanceId": "django__django-11740",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 6,
+      "starts": 4,
+      "results": 4,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m55y_vtrace_digest_django_11820",
+      "instanceId": "django__django-11820",
+      "repo": "django/django",
+      "resolved": false,
+      "attempts": 2,
+      "starts": 2,
+      "results": 2,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m55y_vtrace_digest_matplotlib_25960",
+      "instanceId": "matplotlib__matplotlib-25960",
+      "repo": "matplotlib/matplotlib",
+      "resolved": true,
+      "attempts": 3,
+      "starts": 3,
+      "results": 2,
+      "editsAfterValidationStart": 2
+    },
+    {
+      "runLabel": "m55y_vtrace_digest_pylint_8898",
+      "instanceId": "pylint-dev__pylint-8898",
+      "repo": "pylint-dev/pylint",
+      "resolved": true,
+      "attempts": 3,
+      "starts": 3,
+      "results": 3,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m55y_vtrace_digest_seaborn_3187",
+      "instanceId": "mwaskom__seaborn-3187",
+      "repo": "mwaskom/seaborn",
+      "resolved": false,
+      "attempts": 1,
+      "starts": 1,
+      "results": 1,
+      "editsAfterValidationStart": 1
+    },
+    {
+      "runLabel": "m55y_vtrace_digest_xarray_3677",
+      "instanceId": "pydata__xarray-3677",
+      "repo": "pydata/xarray",
+      "resolved": true,
+      "attempts": 3,
+      "starts": 3,
+      "results": 2,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m56c_vtrace_digest_impact_django_11820",
+      "instanceId": "django__django-11820",
+      "repo": "django/django",
+      "resolved": false,
+      "attempts": 4,
+      "starts": 2,
+      "results": 2,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m56c_vtrace_digest_impact_django_13195",
+      "instanceId": "django__django-13195",
+      "repo": "django/django",
+      "resolved": false,
+      "attempts": 6,
+      "starts": 4,
+      "results": 4,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m57b_vtrace_digest_contract_django_11820",
+      "instanceId": "django__django-11820",
+      "repo": "django/django",
+      "resolved": false,
+      "attempts": 3,
+      "starts": 2,
+      "results": 2,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m57b_vtrace_digest_contract_django_13195",
+      "instanceId": "django__django-13195",
+      "repo": "django/django",
+      "resolved": false,
+      "attempts": 3,
+      "starts": 2,
+      "results": 2,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m58b_vtrace_bounded_contract_django_11820",
+      "instanceId": "django__django-11820",
+      "repo": "django/django",
+      "resolved": false,
+      "attempts": 3,
+      "starts": 2,
+      "results": 2,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m58b_vtrace_bounded_contract_django_13195",
+      "instanceId": "django__django-13195",
+      "repo": "django/django",
+      "resolved": false,
+      "attempts": 6,
+      "starts": 3,
+      "results": 3,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m59b_structured_bounded_django_11820_r1",
+      "instanceId": "django__django-11820",
+      "repo": "django/django",
+      "resolved": false,
+      "attempts": 4,
+      "starts": 2,
+      "results": 2,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m59b_structured_bounded_django_11820_r2",
+      "instanceId": "django__django-11820",
+      "repo": "django/django",
+      "resolved": false,
+      "attempts": 4,
+      "starts": 2,
+      "results": 2,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m59b_structured_bounded_django_11820_r3",
+      "instanceId": "django__django-11820",
+      "repo": "django/django",
+      "resolved": false,
+      "attempts": 3,
+      "starts": 1,
+      "results": 1,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m59b_structured_bounded_django_13195_r3",
+      "instanceId": "django__django-13195",
+      "repo": "django/django",
+      "resolved": false,
+      "attempts": 5,
+      "starts": 3,
+      "results": 3,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m60_structured_bounded_django_10880",
+      "instanceId": "django__django-10880",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 7,
+      "starts": 4,
+      "results": 4,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m60_structured_bounded_django_11820",
+      "instanceId": "django__django-11820",
+      "repo": "django/django",
+      "resolved": false,
+      "attempts": 5,
+      "starts": 2,
+      "results": 2,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m60c_structured_bounded_django_10880",
+      "instanceId": "django__django-10880",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 2,
+      "starts": 1,
+      "results": 1,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m60c_structured_bounded_django_11820",
+      "instanceId": "django__django-11820",
+      "repo": "django/django",
+      "resolved": false,
+      "attempts": 3,
+      "starts": 2,
+      "results": 2,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m60c_structured_bounded_django_13195",
+      "instanceId": "django__django-13195",
+      "repo": "django/django",
+      "resolved": false,
+      "attempts": 4,
+      "starts": 2,
+      "results": 2,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m62_structured_bounded_django_10880",
+      "instanceId": "django__django-10880",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 6,
+      "starts": 3,
+      "results": 3,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m62_structured_bounded_django_11095",
+      "instanceId": "django__django-11095",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 6,
+      "starts": 3,
+      "results": 3,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m62_structured_bounded_django_11740",
+      "instanceId": "django__django-11740",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 3,
+      "starts": 2,
+      "results": 2,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m62_structured_bounded_django_11820",
+      "instanceId": "django__django-11820",
+      "repo": "django/django",
+      "resolved": false,
+      "attempts": 4,
+      "starts": 2,
+      "results": 2,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m62c_structured_bounded_compact_django_django_10880",
+      "instanceId": "django__django-10880",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 3,
+      "starts": 3,
+      "results": 2,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m62c_structured_bounded_compact_django_django_11740",
+      "instanceId": "django__django-11740",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 4,
+      "starts": 4,
+      "results": 3,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m62c_structured_bounded_compact_django_django_11820",
+      "instanceId": "django__django-11820",
+      "repo": "django/django",
+      "resolved": false,
+      "attempts": 4,
+      "starts": 4,
+      "results": 4,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m62c_structured_bounded_compact_mwaskom_seaborn_3187",
+      "instanceId": "mwaskom__seaborn-3187",
+      "repo": "mwaskom/seaborn",
+      "resolved": false,
+      "attempts": 4,
+      "starts": 4,
+      "results": 2,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m62c_structured_bounded_compact_pydata_xarray_3677",
+      "instanceId": "pydata__xarray-3677",
+      "repo": "pydata/xarray",
+      "resolved": true,
+      "attempts": 3,
+      "starts": 3,
+      "results": 2,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m62c_structured_bounded_compact_pytest_dev_pytest_7432",
+      "instanceId": "pytest-dev__pytest-7432",
+      "repo": "pytest-dev/pytest",
+      "resolved": true,
+      "attempts": 2,
+      "starts": 2,
+      "results": 1,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m62c_structured_bounded_compact_sympy_sympy_16766",
+      "instanceId": "sympy__sympy-16766",
+      "repo": "sympy/sympy",
+      "resolved": true,
+      "attempts": 2,
+      "starts": 2,
+      "results": 2,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m65b_optional_impact_django__django_11740",
+      "instanceId": "django__django-11740",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 2,
+      "starts": 2,
+      "results": 1,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m65b_optional_impact_mwaskom__seaborn_3187",
+      "instanceId": "mwaskom__seaborn-3187",
+      "repo": "mwaskom/seaborn",
+      "resolved": false,
+      "attempts": 3,
+      "starts": 3,
+      "results": 1,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m65c_optional_impact_variance_seaborn_3187_r1",
+      "instanceId": "mwaskom__seaborn-3187",
+      "repo": "mwaskom/seaborn",
+      "resolved": false,
+      "attempts": 3,
+      "starts": 3,
+      "results": 2,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m65c_optional_impact_variance_seaborn_3187_r2",
+      "instanceId": "mwaskom__seaborn-3187",
+      "repo": "mwaskom/seaborn",
+      "resolved": false,
+      "attempts": 3,
+      "starts": 3,
+      "results": 2,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m65c_optional_impact_variance_seaborn_3187_r3",
+      "instanceId": "mwaskom__seaborn-3187",
+      "repo": "mwaskom/seaborn",
+      "resolved": false,
+      "attempts": 3,
+      "starts": 3,
+      "results": 2,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m66_optional_impact_24_django_10880",
+      "instanceId": "django__django-10880",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 2,
+      "starts": 2,
+      "results": 1,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m66_optional_impact_24_django_11740",
+      "instanceId": "django__django-11740",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 2,
+      "starts": 2,
+      "results": 1,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m66_optional_impact_24_django_11820",
+      "instanceId": "django__django-11820",
+      "repo": "django/django",
+      "resolved": false,
+      "attempts": 3,
+      "starts": 3,
+      "results": 3,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m66_optional_impact_24_seaborn_3187",
+      "instanceId": "mwaskom__seaborn-3187",
+      "repo": "mwaskom/seaborn",
+      "resolved": false,
+      "attempts": 3,
+      "starts": 3,
+      "results": 2,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m66_optional_impact_24_sympy_16766",
+      "instanceId": "sympy__sympy-16766",
+      "repo": "sympy/sympy",
+      "resolved": true,
+      "attempts": 1,
+      "starts": 1,
+      "results": 1,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m66_optional_impact_24_xarray_3677",
+      "instanceId": "pydata__xarray-3677",
+      "repo": "pydata/xarray",
+      "resolved": true,
+      "attempts": 5,
+      "starts": 5,
+      "results": 4,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m68b_pivot_confidence_django_11740",
+      "instanceId": "django__django-11740",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 7,
+      "starts": 4,
+      "results": 3,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m68b_pivot_confidence_sympy_12419",
+      "instanceId": "sympy__sympy-12419",
+      "repo": "sympy/sympy",
+      "resolved": true,
+      "attempts": 5,
+      "starts": 5,
+      "results": 5,
+      "editsAfterValidationStart": 2
+    },
+    {
+      "runLabel": "m69_pivot_confidence_24_django_10880",
+      "instanceId": "django__django-10880",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 4,
+      "starts": 4,
+      "results": 3,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m69_pivot_confidence_24_django_11095",
+      "instanceId": "django__django-11095",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 3,
+      "starts": 2,
+      "results": 1,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m69_pivot_confidence_24_django_11820",
+      "instanceId": "django__django-11820",
+      "repo": "django/django",
+      "resolved": false,
+      "attempts": 5,
+      "starts": 3,
+      "results": 3,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m69_pivot_confidence_24_matplotlib_24627",
+      "instanceId": "matplotlib__matplotlib-24627",
+      "repo": "matplotlib/matplotlib",
+      "resolved": true,
+      "attempts": 4,
+      "starts": 4,
+      "results": 3,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m69_pivot_confidence_24_matplotlib_25960",
+      "instanceId": "matplotlib__matplotlib-25960",
+      "repo": "matplotlib/matplotlib",
+      "resolved": true,
+      "attempts": 1,
+      "starts": 1,
+      "results": 1,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m69_pivot_confidence_24_pylint_8898",
+      "instanceId": "pylint-dev__pylint-8898",
+      "repo": "pylint-dev/pylint",
+      "resolved": true,
+      "attempts": 1,
+      "starts": 1,
+      "results": 1,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m69_pivot_confidence_24_xarray_3677",
+      "instanceId": "pydata__xarray-3677",
+      "repo": "pydata/xarray",
+      "resolved": true,
+      "attempts": 4,
+      "starts": 4,
+      "results": 3,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m71_stage_a_pivot_confidence_django_12858",
+      "instanceId": "django__django-12858",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 2,
+      "starts": 2,
+      "results": 1,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m71_stage_a_pivot_confidence_django_13112",
+      "instanceId": "django__django-13112",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 3,
+      "starts": 3,
+      "results": 2,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m71_stage_a_pivot_confidence_django_13590",
+      "instanceId": "django__django-13590",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 4,
+      "starts": 4,
+      "results": 3,
+      "editsAfterValidationStart": 1
+    },
+    {
+      "runLabel": "m71_stage_a_pivot_confidence_django_15572",
+      "instanceId": "django__django-15572",
+      "repo": "django/django",
+      "resolved": false,
+      "attempts": 3,
+      "starts": 3,
+      "results": 2,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m71_stage_a_pivot_confidence_matplotlib_24627",
+      "instanceId": "matplotlib__matplotlib-24627",
+      "repo": "matplotlib/matplotlib",
+      "resolved": true,
+      "attempts": 5,
+      "starts": 4,
+      "results": 2,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m71_stage_a_pivot_confidence_pylint_8898",
+      "instanceId": "pylint-dev__pylint-8898",
+      "repo": "pylint-dev/pylint",
+      "resolved": true,
+      "attempts": 4,
+      "starts": 3,
+      "results": 1,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m71_stage_a_pivot_confidence_pytest_10051",
+      "instanceId": "pytest-dev__pytest-10051",
+      "repo": "pytest-dev/pytest",
+      "resolved": false,
+      "attempts": 4,
+      "starts": 4,
+      "results": 3,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m71_stage_a_pivot_confidence_pytest_6197",
+      "instanceId": "pytest-dev__pytest-6197",
+      "repo": "pytest-dev/pytest",
+      "resolved": true,
+      "attempts": 5,
+      "starts": 1,
+      "results": 1,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m71_stage_a_pivot_confidence_sphinx_9698",
+      "instanceId": "sphinx-doc__sphinx-9698",
+      "repo": "sphinx-doc/sphinx",
+      "resolved": true,
+      "attempts": 1,
+      "starts": 1,
+      "results": 1,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m71_stage_a_pivot_confidence_sympy_20428",
+      "instanceId": "sympy__sympy-20428",
+      "repo": "sympy/sympy",
+      "resolved": false,
+      "attempts": 3,
+      "starts": 3,
+      "results": 2,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m71_stage_a_pivot_confidence_sympy_24213",
+      "instanceId": "sympy__sympy-24213",
+      "repo": "sympy/sympy",
+      "resolved": true,
+      "attempts": 3,
+      "starts": 3,
+      "results": 2,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m71_stage_a_pivot_confidence_xarray_3677",
+      "instanceId": "pydata__xarray-3677",
+      "repo": "pydata/xarray",
+      "resolved": true,
+      "attempts": 6,
+      "starts": 6,
+      "results": 5,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m71_stage_a_pivot_confidence_xarray_4695",
+      "instanceId": "pydata__xarray-4695",
+      "repo": "pydata/xarray",
+      "resolved": true,
+      "attempts": 1,
+      "starts": 1,
+      "results": 1,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m71_stage_a_pivot_confidence_xarray_6599",
+      "instanceId": "pydata__xarray-6599",
+      "repo": "pydata/xarray",
+      "resolved": false,
+      "attempts": 2,
+      "starts": 2,
+      "results": 2,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m71_stage_a_pivot_confidence_xarray_6938",
+      "instanceId": "pydata__xarray-6938",
+      "repo": "pydata/xarray",
+      "resolved": true,
+      "attempts": 9,
+      "starts": 9,
+      "results": 8,
+      "editsAfterValidationStart": 1
+    },
+    {
+      "runLabel": "m72_stage_b_pivot_confidence_django_10880",
+      "instanceId": "django__django-10880",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 2,
+      "starts": 2,
+      "results": 1,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m72_stage_b_pivot_confidence_django_11490",
+      "instanceId": "django__django-11490",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 4,
+      "starts": 4,
+      "results": 3,
+      "editsAfterValidationStart": 2
+    },
+    {
+      "runLabel": "m72_stage_b_pivot_confidence_django_11740",
+      "instanceId": "django__django-11740",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 4,
+      "starts": 4,
+      "results": 3,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m72_stage_b_pivot_confidence_django_11749",
+      "instanceId": "django__django-11749",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 9,
+      "starts": 8,
+      "results": 7,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m72_stage_b_pivot_confidence_django_12273",
+      "instanceId": "django__django-12273",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 2,
+      "starts": 2,
+      "results": 1,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m72_stage_b_pivot_confidence_django_12774",
+      "instanceId": "django__django-12774",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 5,
+      "starts": 5,
+      "results": 4,
+      "editsAfterValidationStart": 1
+    },
+    {
+      "runLabel": "m72_stage_b_pivot_confidence_django_13551",
+      "instanceId": "django__django-13551",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 2,
+      "starts": 2,
+      "results": 1,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m72_stage_b_pivot_confidence_django_13810",
+      "instanceId": "django__django-13810",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 5,
+      "starts": 4,
+      "results": 3,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m72_stage_b_pivot_confidence_django_13820",
+      "instanceId": "django__django-13820",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 2,
+      "starts": 2,
+      "results": 1,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m72_stage_b_pivot_confidence_django_15037",
+      "instanceId": "django__django-15037",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 4,
+      "starts": 3,
+      "results": 2,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m72_stage_b_pivot_confidence_django_15695",
+      "instanceId": "django__django-15695",
+      "repo": "django/django",
+      "resolved": false,
+      "attempts": 3,
+      "starts": 3,
+      "results": 2,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m72_stage_b_pivot_confidence_django_15731",
+      "instanceId": "django__django-15731",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 2,
+      "starts": 2,
+      "results": 1,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m72_stage_b_pivot_confidence_django_16819",
+      "instanceId": "django__django-16819",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 2,
+      "starts": 2,
+      "results": 1,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m72_stage_b_pivot_confidence_django_16938",
+      "instanceId": "django__django-16938",
+      "repo": "django/django",
+      "resolved": false,
+      "attempts": 3,
+      "starts": 2,
+      "results": 1,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m72_stage_b_pivot_confidence_django_17084",
+      "instanceId": "django__django-17084",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 3,
+      "starts": 3,
+      "results": 2,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m72_stage_b_pivot_confidence_sympy_16766",
+      "instanceId": "sympy__sympy-16766",
+      "repo": "sympy/sympy",
+      "resolved": true,
+      "attempts": 1,
+      "starts": 1,
+      "results": 1,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m72_stage_b_pivot_confidence_sympy_19637",
+      "instanceId": "sympy__sympy-19637",
+      "repo": "sympy/sympy",
+      "resolved": true,
+      "attempts": 1,
+      "starts": 1,
+      "results": 1,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m72_stage_b_pivot_confidence_sympy_20801",
+      "instanceId": "sympy__sympy-20801",
+      "repo": "sympy/sympy",
+      "resolved": true,
+      "attempts": 1,
+      "starts": 1,
+      "results": 1,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m72_stage_b_pivot_confidence_sympy_23413",
+      "instanceId": "sympy__sympy-23413",
+      "repo": "sympy/sympy",
+      "resolved": true,
+      "attempts": 1,
+      "starts": 1,
+      "results": 1,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m72_stage_b_pivot_confidence_sympy_24562",
+      "instanceId": "sympy__sympy-24562",
+      "repo": "sympy/sympy",
+      "resolved": false,
+      "attempts": 7,
+      "starts": 7,
+      "results": 5,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m73_stage_c_baseline_django_11133",
+      "instanceId": "django__django-11133",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 4,
+      "starts": 3,
+      "results": 3,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m73_stage_c_baseline_django_12325",
+      "instanceId": "django__django-12325",
+      "repo": "django/django",
+      "resolved": false,
+      "attempts": 4,
+      "starts": 4,
+      "results": 3,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m73_stage_c_baseline_django_14792",
+      "instanceId": "django__django-14792",
+      "repo": "django/django",
+      "resolved": false,
+      "attempts": 2,
+      "starts": 2,
+      "results": 1,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m73_stage_c_baseline_django_15037",
+      "instanceId": "django__django-15037",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 8,
+      "starts": 6,
+      "results": 5,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m73_stage_c_baseline_django_16263",
+      "instanceId": "django__django-16263",
+      "repo": "django/django",
+      "resolved": false,
+      "attempts": 9,
+      "starts": 8,
+      "results": 7,
+      "editsAfterValidationStart": 3
+    },
+    {
+      "runLabel": "m73_stage_c_baseline_django_16819",
+      "instanceId": "django__django-16819",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 3,
+      "starts": 3,
+      "results": 2,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m73_stage_c_baseline_django_17084",
+      "instanceId": "django__django-17084",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 4,
+      "starts": 4,
+      "results": 3,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m73_stage_c_baseline_pytest_10051",
+      "instanceId": "pytest-dev__pytest-10051",
+      "repo": "pytest-dev/pytest",
+      "resolved": false,
+      "attempts": 2,
+      "starts": 1,
+      "results": 1,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m73_stage_c_baseline_xarray_2905",
+      "instanceId": "pydata__xarray-2905",
+      "repo": "pydata/xarray",
+      "resolved": true,
+      "attempts": 6,
+      "starts": 6,
+      "results": 6,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m73_stage_c_baseline_xarray_6938",
+      "instanceId": "pydata__xarray-6938",
+      "repo": "pydata/xarray",
+      "resolved": false,
+      "attempts": 6,
+      "starts": 5,
+      "results": 5,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m77_tool_loop_guard_inject_django__django_10880_",
+      "instanceId": "django__django-10880",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 4,
+      "starts": 2,
+      "results": 2,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m77_tool_loop_guard_inject_django__django_12273_",
+      "instanceId": "django__django-12273",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 4,
+      "starts": 2,
+      "results": 2,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m77_tool_loop_guard_inject_django__django_15503_",
+      "instanceId": "django__django-15503",
+      "repo": "django/django",
+      "resolved": false,
+      "attempts": 4,
+      "starts": 2,
+      "results": 2,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m77_tool_loop_guard_inject_django__django_16263_",
+      "instanceId": "django__django-16263",
+      "repo": "django/django",
+      "resolved": false,
+      "attempts": 3,
+      "starts": 2,
+      "results": 2,
+      "editsAfterValidationStart": 2
+    },
+    {
+      "runLabel": "m80_tool_loop_guard_v4_django__django_10880",
+      "instanceId": "django__django-10880",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 2,
+      "starts": 1,
+      "results": 1,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m80_tool_loop_guard_v4_django__django_12273",
+      "instanceId": "django__django-12273",
+      "repo": "django/django",
+      "resolved": false,
+      "attempts": 4,
+      "starts": 2,
+      "results": 2,
+      "editsAfterValidationStart": 5
+    },
+    {
+      "runLabel": "m80_tool_loop_guard_v4_django__django_15503",
+      "instanceId": "django__django-15503",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 9,
+      "starts": 6,
+      "results": 6,
+      "editsAfterValidationStart": 4
+    },
+    {
+      "runLabel": "m80_tool_loop_guard_v4_django__django_16263",
+      "instanceId": "django__django-16263",
+      "repo": "django/django",
+      "resolved": false,
+      "attempts": 8,
+      "starts": 7,
+      "results": 7,
+      "editsAfterValidationStart": 1
+    },
+    {
+      "runLabel": "m82_v4_c7_guard_django__django_12273_",
+      "instanceId": "django__django-12273",
+      "repo": "django/django",
+      "resolved": false,
+      "attempts": 4,
+      "starts": 2,
+      "results": 2,
+      "editsAfterValidationStart": 1
+    },
+    {
+      "runLabel": "m82_v4_c7_guard_sympy__sympy_12419_",
+      "instanceId": "sympy__sympy-12419",
+      "repo": "sympy/sympy",
+      "resolved": true,
+      "attempts": 2,
+      "starts": 1,
+      "results": 1,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m85_v4_c7d_guard_django__django_10880_",
+      "instanceId": "django__django-10880",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 5,
+      "starts": 3,
+      "results": 3,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m85_v4_c7d_guard_django__django_11815_",
+      "instanceId": "django__django-11815",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 2,
+      "starts": 1,
+      "results": 1,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m85_v4_c7d_guard_django__django_12273_",
+      "instanceId": "django__django-12273",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 3,
+      "starts": 2,
+      "results": 2,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m85_v4_c7d_guard_django__django_15503_",
+      "instanceId": "django__django-15503",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 14,
+      "starts": 11,
+      "results": 9,
+      "editsAfterValidationStart": 2
+    },
+    {
+      "runLabel": "m85_v4_c7d_guard_django__django_16263_",
+      "instanceId": "django__django-16263",
+      "repo": "django/django",
+      "resolved": false,
+      "attempts": 6,
+      "starts": 5,
+      "results": 4,
+      "editsAfterValidationStart": 4
+    },
+    {
+      "runLabel": "m88_v4_c7d_envguard_django__django_11815_",
+      "instanceId": "django__django-11815",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 2,
+      "starts": 2,
+      "results": 1,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m88_v4_c7d_envguard_django__django_12273_",
+      "instanceId": "django__django-12273",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 3,
+      "starts": 3,
+      "results": 2,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m88_v4_c7d_envguard_django__django_15572_",
+      "instanceId": "django__django-15572",
+      "repo": "django/django",
+      "resolved": false,
+      "attempts": 3,
+      "starts": 2,
+      "results": 2,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m88_v4_c7d_envguard_django__django_16263_",
+      "instanceId": "django__django-16263",
+      "repo": "django/django",
+      "resolved": false,
+      "attempts": 7,
+      "starts": 6,
+      "results": 5,
+      "editsAfterValidationStart": 2
+    },
+    {
+      "runLabel": "m88_v4_c7d_envguard_django__django_16938_",
+      "instanceId": "django__django-16938",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 5,
+      "starts": 4,
+      "results": 3,
+      "editsAfterValidationStart": 2
+    },
+    {
+      "runLabel": "m88_v4_c7d_envguard_sympy__sympy_15875_",
+      "instanceId": "sympy__sympy-15875",
+      "repo": "sympy/sympy",
+      "resolved": false,
+      "attempts": 2,
+      "starts": 2,
+      "results": 2,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m88_v4_c7d_envguard_sympy__sympy_24562_",
+      "instanceId": "sympy__sympy-24562",
+      "repo": "sympy/sympy",
+      "resolved": true,
+      "attempts": 6,
+      "starts": 6,
+      "results": 4,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m90_v4_c7d_envguard50_django__django_11820_",
+      "instanceId": "django__django-11820",
+      "repo": "django/django",
+      "resolved": false,
+      "attempts": 3,
+      "starts": 3,
+      "results": 3,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m90_v4_c7d_envguard50_django__django_12273_",
+      "instanceId": "django__django-12273",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 3,
+      "starts": 2,
+      "results": 2,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m90_v4_c7d_envguard50_django__django_12774_",
+      "instanceId": "django__django-12774",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 4,
+      "starts": 3,
+      "results": 2,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m90_v4_c7d_envguard50_django__django_13590_",
+      "instanceId": "django__django-13590",
+      "repo": "django/django",
+      "resolved": true,
+      "attempts": 3,
+      "starts": 3,
+      "results": 2,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m90_v4_c7d_envguard50_django__django_15503_",
+      "instanceId": "django__django-15503",
+      "repo": "django/django",
+      "resolved": false,
+      "attempts": 11,
+      "starts": 8,
+      "results": 7,
+      "editsAfterValidationStart": 4
+    },
+    {
+      "runLabel": "m90_v4_c7d_envguard50_django__django_15572_",
+      "instanceId": "django__django-15572",
+      "repo": "django/django",
+      "resolved": false,
+      "attempts": 4,
+      "starts": 3,
+      "results": 2,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m90_v4_c7d_envguard50_django__django_15695_",
+      "instanceId": "django__django-15695",
+      "repo": "django/django",
+      "resolved": false,
+      "attempts": 3,
+      "starts": 3,
+      "results": 2,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m90_v4_c7d_envguard50_django__django_16263_",
+      "instanceId": "django__django-16263",
+      "repo": "django/django",
+      "resolved": false,
+      "attempts": 5,
+      "starts": 4,
+      "results": 3,
+      "editsAfterValidationStart": 4
+    },
+    {
+      "runLabel": "m90_v4_c7d_envguard50_django__django_16938_",
+      "instanceId": "django__django-16938",
+      "repo": "django/django",
+      "resolved": false,
+      "attempts": 3,
+      "starts": 2,
+      "results": 1,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m90_v4_c7d_envguard50_pydata__xarray_2905_",
+      "instanceId": "pydata__xarray-2905",
+      "repo": "pydata/xarray",
+      "resolved": true,
+      "attempts": 3,
+      "starts": 3,
+      "results": 3,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m90_v4_c7d_envguard50_pydata__xarray_6599_",
+      "instanceId": "pydata__xarray-6599",
+      "repo": "pydata/xarray",
+      "resolved": false,
+      "attempts": 2,
+      "starts": 2,
+      "results": 2,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m90_v4_c7d_envguard50_pydata__xarray_6938_",
+      "instanceId": "pydata__xarray-6938",
+      "repo": "pydata/xarray",
+      "resolved": true,
+      "attempts": 4,
+      "starts": 4,
+      "results": 3,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m90_v4_c7d_envguard50_pytest_dev__pytest_10051_",
+      "instanceId": "pytest-dev__pytest-10051",
+      "repo": "pytest-dev/pytest",
+      "resolved": false,
+      "attempts": 6,
+      "starts": 6,
+      "results": 4,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m90_v4_c7d_envguard50_sphinx_doc__sphinx_9698_",
+      "instanceId": "sphinx-doc__sphinx-9698",
+      "repo": "sphinx-doc/sphinx",
+      "resolved": true,
+      "attempts": 1,
+      "starts": 1,
+      "results": 1,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m90_v4_c7d_envguard50_sympy__sympy_15875_",
+      "instanceId": "sympy__sympy-15875",
+      "repo": "sympy/sympy",
+      "resolved": false,
+      "attempts": 5,
+      "starts": 5,
+      "results": 4,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m90_v4_c7d_envguard50_sympy__sympy_20428_",
+      "instanceId": "sympy__sympy-20428",
+      "repo": "sympy/sympy",
+      "resolved": false,
+      "attempts": 6,
+      "starts": 5,
+      "results": 3,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m90_v4_c7d_envguard50_sympy__sympy_24562_",
+      "instanceId": "sympy__sympy-24562",
+      "repo": "sympy/sympy",
+      "resolved": true,
+      "attempts": 3,
+      "starts": 2,
+      "results": 1,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m92_core_reduction50_django__django_16263_",
+      "instanceId": "django__django-16263",
+      "repo": "django/django",
+      "resolved": false,
+      "attempts": 4,
+      "starts": 2,
+      "results": 2,
+      "editsAfterValidationStart": 0
+    },
+    {
+      "runLabel": "m92_core_reduction50_sympy__sympy_24562_",
+      "instanceId": "sympy__sympy-24562",
+      "repo": "sympy/sympy",
+      "resolved": true,
+      "attempts": 6,
+      "starts": 5,
+      "results": 2,
+      "editsAfterValidationStart": 0
+    }
+  ],
+  "strataNote": "ALL/m183"
+}

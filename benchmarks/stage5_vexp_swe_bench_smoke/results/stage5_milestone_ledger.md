@@ -6169,3 +6169,113 @@ functional commit 21940f6ac0bbee142262a1f52caa2507fa344ae8
   conclusion is the narrower one: **external evidence does not license a new VTRACE
   intervention, and it removes any remaining basis for believing VTRACE is missing
   something its competitors have demonstrated.**
+
+---
+
+## M189 — diff-derived change / validation witness feasibility
+
+```text
+verdict           M189 — PASS (a strong result, mostly negative, with one real positive)
+question          can the evidence already in this repository support or falsify
+                  current diff + repository authority + observed validation state
+                  -> post-edit decision support?
+answer            I5: yes, and the mechanism is real but two repositories short.
+                  I6: partly, and the mechanism it posits does not exist here.
+
+corpus            1293 preserved live-agent arms with ordered tool calls and a
+                  SWE-bench Verified instance; 1180 I5-usable (12 repos, 516 failures);
+                  159 I6-usable (8 repos, 63 failures). 866 arms analysed end to end,
+                  2182 decision points reconstructed, 0 unfaithful partial replays.
+era split         same model throughout. runner starts 206/857 (2026-06), 0/97 (2026-07),
+                  10/339 (2026-08). M183 contributes 4 I6-usable arms; June contributes 151.
+
+I5 specimens      I5_EDIT_SET_MISS            62 arms   4 tasks  4 repos
+                  ...of which witnessed        —        2 tasks  2 repos
+                  MODEL_REASONING_FAILURE_WITH_EVIDENCE_VISIBLE 235 arms 36 tasks 11 repos
+I5 witness        sphinx-7462: 9/9 successful arms edited sphinx/pycode/ast.py,
+                  59 failing arms did not. xarray-6938: 3/3. django-12325 REFUTED
+                  (4 successes resolved without the file). pylint-4551 no success exists.
+I5 threshold      FULL_THRESHOLD_NOT_MET — fails >=3 tasks, >=3 repos, and precision
+                  (DEPENDENCIES fires on 262 of 435 successes that needed nothing).
+
+I6 specimens      I6_RELEVANT_VALIDATION_NOT_SELECTED = 0.
+                  41/63 failing and 56/96 succeeding I6-usable arms already ran the
+                  reference test module. Test obligations are empty at depth 1
+                  (706/992 DPs) and explosive at depth 2 (max 233 files).
+
+controls          gold-hidden + outcome-hidden: 2182 fingerprints, 0 differ (executable,
+                  M189_BLIND=1). future-action: structurally enforced by truncation.
+                  boundedness: I5 median 0-1, p90 1-4, max 6.
+rule revisions    DEPENDENCIES arm and I5_REACHABLE_BUT_NOT_NAMED added after a 78-arm
+                  pilot; stratum widened 213 -> 866 to let the success-witness search see
+                  the successes. All three disclosed in the report; the taxonomy addition
+                  LOWERS the specimen count.
+
+verdicts          I5_CORPUS_ADEQUATE   I6_CORPUS_PARTIAL
+                  I5_INTERVENTION_MECHANISM_PARTIAL
+                  I6_NO_INTERVENTION_MECHANISM_WITNESSED
+                  NO_NEW_INTERVENTION_AUTHORIZED
+
+new files         m189Evidence.ts (+ .test.ts, 26 tests), run_stage5_m189_corpus.ts,
+                  run_stage5_m189_mechanism.ts, run_stage5_m189_specimens.ts,
+                  run_stage5_m189_controls.ts + 12 results artifacts
+gates             typecheck PASS  typecheck:benchmarks PASS  bun test 5658 pass / 0 fail
+live spend        $0 — no live agent, no Docker; bench repos read-only via git archive
+```
+
+## M189 standing findings
+
+- **The corpus was never the problem for I5, and the analysis stratum nearly was.** M189 began
+  where §8's priority ordering points — M183 plus the arms that can witness validation, 213
+  arms — and on that stratum `I5_EDIT_SET_MISS` had 3 arms in 2 tasks and the success witness
+  was 2 of 92. Widening to every I5-usable arm with an indexed base tree, 866 arms, turned the
+  same derivation into 62 arms in 4 tasks with **twelve successful arms across two repositories
+  all editing the exact file the failing arms skipped**. Nothing about the derivation changed.
+  The narrow stratum simply could not see the successes of the tasks its own specimens came
+  from, and a success-witness search that cannot see the successes is not one. Any future
+  milestone that reports "no witness" must first state which successes its stratum contained.
+
+- **`sphinx-7462` is the strongest single piece of evidence Phase 2B has produced, and it is
+  one task.** Fifty-nine failing arms across a dozen milestones all edit `_parse_annotation` in
+  `sphinx/domains/python.py` and never open `sphinx/pycode/ast.py`; the product's own impact
+  graph names `pycode/ast.py` as a depth-1 dependency of the edited symbol, in a two-item
+  candidate set, at the ordinal immediately after the first edit; and all nine successful arms
+  edit it. That is a complete mechanism — deterministic, pre-gold, bounded, witnessed. It is
+  also 59 of the 62 specimen arms, which is why M189 counts tasks and not arms, and why the
+  verdict is PARTIAL. The cheapest way to learn whether it repeats is offline: 314 I5-usable
+  arms across 71 further tasks have never had their base trees indexed.
+
+- **Derivability and utility come apart, and the corpus shows both directions.** `django-12325`
+  is derivable and useless twice over — `options.py` is a depth-1 dependency of the changed
+  symbol, the failing agent had already read it at tool call 3, and four successful arms
+  resolved the task without touching it at all. `django-13195` is the opposite ceiling: two
+  reference files unreachable from the changed symbol at depth 3 in either direction, so the
+  fact was not available to be derived, while five other arms of the same task edited all three
+  reference files and still failed. A future milestone must score a candidate against *both*
+  questions; a mechanism that only passes derivability is M185's finding wearing a graph.
+
+- **The I6 hypothesis is not blocked by the corpus, it is answered by it.** M187 warned that
+  M183 could not witness a post-validation mechanism, and that is true — but the June 2026 era
+  can, with 151 I6-usable arms across 8 repositories, and it returns
+  `I6_RELEVANT_VALIDATION_NOT_SELECTED = 0`. Sixty-five per cent of failing arms and fifty-eight
+  per cent of succeeding arms already ran the module the grader uses. Validation selection is
+  not what separates them, an obligation naming that module would be telling agents what they
+  had done, and the only lane the index offers is empty at depth 1 and 233 files wide at depth
+  2. The one I6 question still genuinely unobserved is what an agent does *after* a validation
+  result it dislikes: 30 arms in 1,293, none in the frozen default path.
+
+- **The test environment degraded in July 2026 and nothing has repaired it.** Runner starts go
+  206/857 → 0/97 → 10/339 on an identical model. This is M187's finding with a date on it, and
+  it is now a standing infrastructure fact rather than an M183 anecdote: every milestone since
+  M105 has been measuring agents that could not run tests, and none of them said so, because
+  none of them looked at the June corpus for comparison.
+
+- **Next-step recommendation: one offline extension, then stop or pay.**
+  `NO_FURTHER_AGENT_UTILITY_PRODUCT_WORK_LICENSED` stands and M189 does not lift it. The single
+  cheapest piece of evidence left is Gap A in `stage5_m189_evidence_acquisition.md` — index the
+  71 remaining instances and re-run the same committed derivation, ~2 hours of background CPU
+  and $0. If `I5_EDIT_SET_MISS` gains witnessed specimens in a third and fourth repository, the
+  next milestone designs the smallest causal experiment for that one hypothesis and must solve
+  precision first (60% of successful runs currently receive an obligation they did not need).
+  If it does not repeat, the agent-utility direction has no live hypothesis worth funding and
+  the correct action is the one M185 and M188 already reached.
