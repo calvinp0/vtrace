@@ -25,11 +25,24 @@ function git(args: string[]): string {
   return r.status === 0 ? (r.stdout ?? "") : "";
 }
 
+/**
+ * M191's OWN artifacts are excluded from the search corpus.
+ *
+ * Not tidiness — correctness. This script reads the repository it writes into, so once its
+ * report is committed the next execution searches its own prose, which necessarily discusses
+ * dollar caps and observational acquisition in the same sentences. A milestone cannot
+ * authorize itself, and an audit that can find its own words is not evidence about anything.
+ * The exclusion is recorded in the artifact so the negative stays auditable.
+ */
+const SELF = /stage5_m191_/u;
+
 /** Every committed text file that could carry an acquisition design, at HEAD. */
-const trackedDocs = git(["ls-files", "--", "*.md", "*.json", "*.jsonl"])
+const allTracked = git(["ls-files", "--", "*.md", "*.json", "*.jsonl"])
   .split("\n")
   .map((l) => l.trim())
   .filter((l) => l.length > 0 && (l.startsWith("benchmarks/") || l.startsWith("docs/") || !l.includes("/")));
+const selfExcluded = allTracked.filter((f) => SELF.test(f));
+const trackedDocs = allTracked.filter((f) => !SELF.test(f));
 
 interface Hit {
   readonly file: string;
@@ -174,6 +187,11 @@ const artifact = {
   question: "Does COMMITTED project evidence already authorize a specific amount of live spend for an I6 observational acquisition?",
   source: "git show HEAD:<path> — committed content only; the working tree is deliberately not read",
   committedDocsSearched: trackedDocs.length,
+  selfExcludedFromSearch: {
+    count: selfExcluded.length,
+    files: selfExcluded,
+    why: "a milestone cannot authorize itself; this script reads the repository it writes into",
+  },
   designDocumentsLocated: designCandidates,
   designLocatedBy: "content signature, because no file named stage5_m189_eer is tracked",
   elements: elementResults,

@@ -3,7 +3,19 @@
   "milestone": "M191",
   "question": "Does COMMITTED project evidence already authorize a specific amount of live spend for an I6 observational acquisition?",
   "source": "git show HEAD:<path> — committed content only; the working tree is deliberately not read",
-  "committedDocsSearched": 2028,
+  "committedDocsSearched": 2027,
+  "selfExcludedFromSearch": {
+    "count": 6,
+    "files": [
+      "benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_m191_environment_eras.json",
+      "benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_m191_final_report.md",
+      "benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_m191_readiness_prereg.md",
+      "benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_m191_readiness_probes.json",
+      "benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_m191_readiness_report.md",
+      "benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_m191_spend_authorization.json"
+    ],
+    "why": "a milestone cannot authorize itself; this script reads the repository it writes into"
+  },
   "designDocumentsLocated": [
     "benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_m189_evidence_acquisition.md",
     "benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_m189_final_report.md",

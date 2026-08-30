@@ -200,6 +200,15 @@ The repository does contain committed dollar caps — `$0.40` for a generated-pa
 it did is exactly the inference §10 forbids. They are recorded in the artifact as
 `unscopedDollarCapsFound` so the negative is auditable.
 
+M191's own artifacts are excluded from the search corpus (`selfExcludedFromSearch`, 6 files).
+That is correctness rather than tidiness: this script reads the repository it writes into, and
+once its report is committed the next execution would search its own prose — which necessarily
+discusses dollar caps and observational acquisition in the same sentences. A milestone cannot
+authorize itself. The shared milestone ledger is deliberately *not* excluded, because a real
+authorization recorded there must remain findable; the scope qualifier is what keeps M191's own
+row in it from qualifying. With the exclusion in place the audit is deterministic: identical
+output hash across consecutive executions.
+
 ### The design's own precondition also fails
 
 Independently of the missing cap, the committed Gap-B design conditions itself:
