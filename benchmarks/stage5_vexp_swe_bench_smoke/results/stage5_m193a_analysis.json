@@ -1,0 +1,354 @@
+{
+  "schemaVersion": "stage5.m193a.analysis.v1",
+  "milestone": "M193A",
+  "liveModelCalls": 0,
+  "liveModelSpendUsd": 0,
+  "fixtures": {
+    "count": 16,
+    "agreeing": 16,
+    "rows": [
+      {
+        "id": "F01_EDIT_NO_VALIDATION",
+        "description": "edit → no validation → final. A valid run; the agent is allowed not to test (§39).",
+        "mismatches": [],
+        "agrees": true
+      },
+      {
+        "id": "F02_EDIT_VALIDATION_PASS",
+        "description": "edit → validation pass → final.",
+        "mismatches": [],
+        "agrees": true
+      },
+      {
+        "id": "F03_FAIL_REVISE_PASS",
+        "description": "edit → validation fail → revision → validation pass. The shape I6 exists to study.",
+        "mismatches": [],
+        "agrees": true
+      },
+      {
+        "id": "F04_FAIL_NO_REVISION",
+        "description": "edit → validation fail → no revision → final. Usable, and a negative repair observation.",
+        "mismatches": [],
+        "agrees": true
+      },
+      {
+        "id": "F05_RUNNER_NOT_STARTED",
+        "description": "validation attempted but the runner never started. Attempt counted; result is not.",
+        "mismatches": [],
+        "agrees": true
+      },
+      {
+        "id": "F06_WRONG_SOURCE",
+        "description": "M191/M192's failure: tests pass loudly against an installed copy. Never a usable result (§20).",
+        "mismatches": [],
+        "agrees": true
+      },
+      {
+        "id": "F07_TIMEOUT",
+        "description": "validation timed out. No exit code is invented (§17); the episode is not usable.",
+        "mismatches": [],
+        "agrees": true
+      },
+      {
+        "id": "F08_INFRA_FAILURE",
+        "description": "the container died mid-run. An experiment outcome, never a coding failure (§38).",
+        "mismatches": [],
+        "agrees": true
+      },
+      {
+        "id": "F09_EMPTY_PATCH",
+        "description": "the agent produced nothing. A truthful empty patch is a VALID run (§39).",
+        "mismatches": [],
+        "agrees": true
+      },
+      {
+        "id": "F10_MULTIPLE_CYCLES",
+        "description": "three validation cycles with two revisions, and the runner banner split across streams (§23).",
+        "mismatches": [],
+        "agrees": true
+      },
+      {
+        "id": "F11_AMBIGUOUS_UNPINNED_WORKDIR",
+        "description": "a CWD_DEPENDENT repository validated from outside the checkout root. Path says checkout, but nothing proves it would have won — AMBIGUOUS, not confirmed (§20/§21).",
+        "mismatches": [],
+        "agrees": true
+      },
+      {
+        "id": "F12_TREATMENT_CONTAMINATION",
+        "description": "an otherwise clean run whose startup audit found VTRACE exposure. Invalid regardless of quality (§33).",
+        "mismatches": [],
+        "agrees": true
+      },
+      {
+        "id": "F13_SOURCE_VERSION_AMBIGUOUS",
+        "description": "M193A's finding: the right file, a runner that started, a result that reads normally — and a bytecode cache that could have carried the previous compilation into it. RUN_VALID, and never I6-usable (§8).",
+        "mismatches": [],
+        "agrees": true
+      },
+      {
+        "id": "F14_SOURCE_VERSION_CONFIRMED",
+        "description": "the same shape with freshness positively established. A classifier that only ever abstains would fail here, so this fixture is what stops the new axis from being free (§12).",
+        "mismatches": [],
+        "agrees": true
+      },
+      {
+        "id": "F15_STALE_EXECUTION_WRONG_PATH",
+        "description": "M192's poisoned copy carrying the current bytes forward: the source-version witness is satisfied by the shadow, and the PATH witness is the only thing that catches it. The two axes must both hold, and neither may stand in for the other (§13).",
+        "mismatches": [],
+        "agrees": true
+      },
+      {
+        "id": "F16_STALE_EXECUTION_CONFIRMED",
+        "description": "the hazard caught red-handed rather than merely suspected: the probe proved the interpreter accepted a cache that is not the current source. Reported as its own event class so it can never be folded into ordinary ambiguity (§17).",
+        "mismatches": [],
+        "agrees": true
+      }
+    ],
+    "accounting": {
+      "armsAttempted": 16,
+      "validRuns": 14,
+      "invalidRuns": 2,
+      "invalidByCategory": {
+        "PATCH_EXTRACTION_FAILURE": 1,
+        "EVALUATOR_DID_NOT_RUN": 1,
+        "HARNESS_CRASH": 1,
+        "TREATMENT_CONTAMINATION": 1
+      },
+      "runsWithEdit": 13,
+      "postEditValidationAttempts": 16,
+      "runnerStarts": 15,
+      "validationPasses": 4,
+      "validationFailures": 5,
+      "postValidationRevisions": 4,
+      "multipleValidationCycleArms": 3,
+      "i6UsableArms": 5,
+      "runtimeDiagnosisUsableArms": 4,
+      "validButI6UnusableArms": 9,
+      "repositoriesRepresented": 11,
+      "repositoriesAmongI6Usable": 4,
+      "wrongSourceEvents": 2,
+      "ambiguousSourceEvents": 1,
+      "sourceVersionAmbiguousEvents": 1,
+      "staleExecutionEvents": 1,
+      "sourceVersionUnknownEvents": 0,
+      "validButI6UnusableSourceVersionArms": 2,
+      "spendUsd": 0,
+      "resolvedCount": 0
+    },
+    "adequacy": "INADEQUATE",
+    "frozenExpectation": {
+      "validRuns": 14,
+      "i6UsableArms": 5,
+      "runtimeDiagnosisUsableArms": 4,
+      "adequacy": "INADEQUATE"
+    },
+    "frozenExpectationHolds": true
+  },
+  "dryRun": {
+    "count": 5,
+    "rows": [
+      {
+        "instanceId": "django__django-10880",
+        "repo": "django/django",
+        "lifecycleVerdict": "DRY_RUN_LIFECYCLE_OK",
+        "validation1SourceVersion": "CURRENT_EDITED_STATE_CONFIRMED",
+        "validation2SourceVersion": "CURRENT_EDITED_STATE_CONFIRMED",
+        "unconfirmedFileReasons": [],
+        "controls": {
+          "stale": {
+            "expected": "CACHE_STALE_AND_ACCEPTED",
+            "actual": "CACHE_STALE_AND_ACCEPTED",
+            "staleExecutionObserved": [
+              "111"
+            ],
+            "agrees": true
+          },
+          "healthy": {
+            "expectedIn": [
+              "CACHE_MATCHES_CURRENT_SOURCE",
+              "COMPILED_FROM_CURRENT_SOURCE"
+            ],
+            "actual": "CACHE_MATCHES_CURRENT_SOURCE",
+            "agrees": true
+          },
+          "poisonedCopy": {
+            "copied": true,
+            "moduleFileFromNeutralCwd": "/opt/miniconda3/envs/testbed/lib/python3.6/site-packages/django/__init__.py",
+            "agrees": true
+          }
+        },
+        "patchIdentity": {
+          "verdict": "IDENTICAL_STRICT",
+          "interactiveNormalizedSha256": "228e2c04b809343c14f0d2b52b9dd0b49e274b3c859e01f5e92cd1bf451a36b0",
+          "evaluatorNormalizedSha256": "228e2c04b809343c14f0d2b52b9dd0b49e274b3c859e01f5e92cd1bf451a36b0",
+          "resolved": true
+        }
+      },
+      {
+        "instanceId": "pallets__flask-5014",
+        "repo": "pallets/flask",
+        "lifecycleVerdict": "DRY_RUN_LIFECYCLE_OK",
+        "validation1SourceVersion": "CURRENT_EDITED_STATE_CONFIRMED",
+        "validation2SourceVersion": "SOURCE_VERSION_AMBIGUOUS",
+        "unconfirmedFileReasons": [
+          "/testbed/m193_dry_run_test.py: INDETERMINATE — a third-party import cache (pytest's assertion rewriter) would be accepted, and its rewritten code cannot be compared against a plain compilation"
+        ],
+        "controls": {
+          "stale": {
+            "expected": "CACHE_STALE_AND_ACCEPTED",
+            "actual": "CACHE_STALE_AND_ACCEPTED",
+            "staleExecutionObserved": [
+              "111"
+            ],
+            "agrees": true
+          },
+          "healthy": {
+            "expectedIn": [
+              "CACHE_MATCHES_CURRENT_SOURCE",
+              "COMPILED_FROM_CURRENT_SOURCE"
+            ],
+            "actual": "CACHE_MATCHES_CURRENT_SOURCE",
+            "agrees": true
+          },
+          "poisonedCopy": {
+            "copied": true,
+            "moduleFileFromNeutralCwd": "/opt/miniconda3/envs/testbed/lib/python3.11/site-packages/flask/__init__.py",
+            "agrees": true
+          }
+        },
+        "patchIdentity": {
+          "verdict": "IDENTICAL_STRICT",
+          "interactiveNormalizedSha256": "f0e6d1dad1b3574ecfe8d416cf5ec6b49b5a64d217c65e25b29a89c3c0945383",
+          "evaluatorNormalizedSha256": "f0e6d1dad1b3574ecfe8d416cf5ec6b49b5a64d217c65e25b29a89c3c0945383",
+          "resolved": true
+        }
+      },
+      {
+        "instanceId": "psf__requests-1142",
+        "repo": "psf/requests",
+        "lifecycleVerdict": "DRY_RUN_LIFECYCLE_OK",
+        "validation1SourceVersion": "CURRENT_EDITED_STATE_CONFIRMED",
+        "validation2SourceVersion": "SOURCE_VERSION_AMBIGUOUS",
+        "unconfirmedFileReasons": [
+          "/testbed/m193_dry_run_test.py: INDETERMINATE — a third-party import cache (pytest's assertion rewriter) would be accepted, and its rewritten code cannot be compared against a plain compilation"
+        ],
+        "controls": {
+          "stale": {
+            "expected": "CACHE_STALE_AND_ACCEPTED",
+            "actual": "CACHE_STALE_AND_ACCEPTED",
+            "staleExecutionObserved": [
+              "111"
+            ],
+            "agrees": true
+          },
+          "healthy": {
+            "expectedIn": [
+              "CACHE_MATCHES_CURRENT_SOURCE",
+              "COMPILED_FROM_CURRENT_SOURCE"
+            ],
+            "actual": "CACHE_MATCHES_CURRENT_SOURCE",
+            "agrees": true
+          },
+          "poisonedCopy": {
+            "copied": true,
+            "moduleFileFromNeutralCwd": "/opt/miniconda3/envs/testbed/lib/python3.9/site-packages/requests/__init__.py",
+            "agrees": true
+          }
+        },
+        "patchIdentity": {
+          "verdict": "IDENTICAL_STRICT",
+          "interactiveNormalizedSha256": "7fee122fc360bf1db26a2849e333042c0e90e4e614683ff18c0ed5594d925c79",
+          "evaluatorNormalizedSha256": "7fee122fc360bf1db26a2849e333042c0e90e4e614683ff18c0ed5594d925c79",
+          "resolved": true
+        }
+      },
+      {
+        "instanceId": "pytest-dev__pytest-10051",
+        "repo": "pytest-dev/pytest",
+        "lifecycleVerdict": "DRY_RUN_LIFECYCLE_OK",
+        "validation1SourceVersion": "CURRENT_EDITED_STATE_CONFIRMED",
+        "validation2SourceVersion": "SOURCE_VERSION_AMBIGUOUS",
+        "unconfirmedFileReasons": [
+          "/testbed/m193_dry_run_test.py: INDETERMINATE — a third-party import cache (pytest's assertion rewriter) would be accepted, and its rewritten code cannot be compared against a plain compilation"
+        ],
+        "controls": {
+          "stale": {
+            "expected": "CACHE_STALE_AND_ACCEPTED",
+            "actual": "CACHE_STALE_AND_ACCEPTED",
+            "staleExecutionObserved": [
+              "111"
+            ],
+            "agrees": true
+          },
+          "healthy": {
+            "expectedIn": [
+              "CACHE_MATCHES_CURRENT_SOURCE",
+              "COMPILED_FROM_CURRENT_SOURCE"
+            ],
+            "actual": "CACHE_MATCHES_CURRENT_SOURCE",
+            "agrees": true
+          },
+          "poisonedCopy": {
+            "copied": true,
+            "moduleFileFromNeutralCwd": "/opt/miniconda3/envs/testbed/lib/python3.9/site-packages/_pytest/__init__.py",
+            "agrees": true
+          }
+        },
+        "patchIdentity": {
+          "verdict": "IDENTICAL_STRICT",
+          "interactiveNormalizedSha256": "5027a6ff0cd247be24d02c5d405dbef216238deba41e1e3b55e776ade5363503",
+          "evaluatorNormalizedSha256": "5027a6ff0cd247be24d02c5d405dbef216238deba41e1e3b55e776ade5363503",
+          "resolved": true
+        }
+      },
+      {
+        "instanceId": "sympy__sympy-12419",
+        "repo": "sympy/sympy",
+        "lifecycleVerdict": "DRY_RUN_LIFECYCLE_OK",
+        "validation1SourceVersion": "CURRENT_EDITED_STATE_CONFIRMED",
+        "validation2SourceVersion": "CURRENT_EDITED_STATE_CONFIRMED",
+        "unconfirmedFileReasons": [],
+        "controls": {
+          "stale": {
+            "expected": "CACHE_STALE_AND_ACCEPTED",
+            "actual": "CACHE_STALE_AND_ACCEPTED",
+            "staleExecutionObserved": [
+              "111"
+            ],
+            "agrees": true
+          },
+          "healthy": {
+            "expectedIn": [
+              "CACHE_MATCHES_CURRENT_SOURCE",
+              "COMPILED_FROM_CURRENT_SOURCE"
+            ],
+            "actual": "CACHE_MATCHES_CURRENT_SOURCE",
+            "agrees": true
+          },
+          "poisonedCopy": {
+            "copied": true,
+            "moduleFileFromNeutralCwd": "/opt/miniconda3/envs/testbed/lib/python3.9/site-packages/sympy/__init__.py",
+            "agrees": true
+          }
+        },
+        "patchIdentity": {
+          "verdict": "IDENTICAL_STRICT",
+          "interactiveNormalizedSha256": "18794d75ba41397df2db6f4bad1c870a0d15be216987b0f594d5fdf11ded7f99",
+          "evaluatorNormalizedSha256": "18794d75ba41397df2db6f4bad1c870a0d15be216987b0f594d5fdf11ded7f99",
+          "resolved": true
+        }
+      }
+    ]
+  },
+  "gates": {
+    "G6_i6_requires_source_version": true,
+    "G11_dry_run_lifecycle": true,
+    "G12_patch_identity_strict": true,
+    "G13_existing_fixtures_unchanged": true,
+    "stale_control_agrees": true,
+    "healthy_control_agrees": true,
+    "poisoned_copy_control_agrees": true,
+    "evaluator_resolved_all": true
+  },
+  "allGatesPass": true
+}

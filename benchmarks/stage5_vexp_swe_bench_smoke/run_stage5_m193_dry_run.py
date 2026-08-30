@@ -7,8 +7,14 @@ Per repository it drives the complete future lifecycle with a scripted
 sequence and no LLM:
 
     preflight -> container -> inspection -> edit -> diff snapshot
-    -> validation (FAILS) -> provenance -> revision -> validation (PASSES)
-    -> gold applied -> final patch extracted -> official evaluator -> cleanup
+    -> validation (FAILS) -> path provenance -> SOURCE-VERSION provenance
+    -> revision -> validation (PASSES) -> gold applied -> final patch extracted
+    -> official evaluator -> cleanup
+
+M193A adds the source-version witness to every validation and, after the
+lifecycle, a constructed stale-cache falsification against the same running
+container (§30): the classifier is exercised on the real runtime path, not only
+on synthetic records.
 
 The two validations are not decorative. The fake agent writes a value into the
 package the interpreter will import and asserts a different value; the first run
@@ -106,7 +112,8 @@ class Ledger:
 
 
 def _cmd_event(led: Ledger, rec: Any, tool: str, is_validation: bool, state_hash: str | None,
-               module_file: str | None = None, robustness: str | None = None) -> dict[str, Any]:
+               module_file: str | None = None, robustness: str | None = None,
+               source_version: dict[str, Any] | None = None) -> dict[str, Any]:
     validation = {
         "isValidationAttempt": is_validation,
         "workdir": rec.cwd,
@@ -126,6 +133,7 @@ def _cmd_event(led: Ledger, rec: Any, tool: str, is_validation: bool, state_hash
         },
         "moduleFile": module_file,
         "provenanceRobustness": robustness,
+        "sourceVersionEvidence": source_version,
     }
     return led.add(
         "tool_call",
@@ -238,6 +246,7 @@ def dry_run_instance(row: dict[str, Any], work_root: str) -> dict[str, Any]:
         # demands 2, and the interpreter reads this tree.
         led.snapshot("BEFORE_VALIDATION", p1)
         runner_cmd = f"python -m pytest {TEST_FILENAME} -q --no-header -p no:cacheprovider"
+        v1_started_at = time.time()
         v1 = box.exec_raw(runner_cmd, 600, "validation_1")
         used_unittest = False
         if "No module named pytest" in (v1.merged_stream or "") or "no module named pytest" in (v1.merged_stream or "").lower():
@@ -250,7 +259,17 @@ def dry_run_instance(row: dict[str, Any], work_root: str) -> dict[str, Any]:
                 "validation_1_fallback",
             )
         mf1 = box.module_witness()
-        _cmd_event(led, v1, "Bash", True, s1["diffHash"], module_file=mf1, robustness=robustness)
+        # The tree is re-read rather than assumed: the probe runs after the
+        # command, so it only describes what the command saw if nothing moved.
+        p1_after, _ = box.capture_diff()
+        sv1 = box.source_version_evidence(
+            is_validation_attempt=True,
+            runner_started=True,
+            state_hash_before=s1["diffHash"],
+            state_hash_after=f"sha256:{sha256_text(normalize_patch(p1_after))}",
+            since_epoch=v1_started_at,
+        )
+        _cmd_event(led, v1, "Bash", True, s1["diffHash"], module_file=mf1, robustness=robustness, source_version=sv1)
         out["phases"]["validation1"] = {
             "command": runner_cmd,
             "usedUnittestFallback": used_unittest,
@@ -261,6 +280,7 @@ def dry_run_instance(row: dict[str, Any], work_root: str) -> dict[str, Any]:
             "provenanceRobustness": robustness,
             "moduleFileNeutralCwd": neutral,
             "bytecodeCacheCount": box.bytecode_cache_count(),
+            "sourceVersionEvidence": sv1,
             "workdir": v1.cwd,
             "tail": (v1.merged_stream or "").strip().splitlines()[-3:],
         }
@@ -280,6 +300,7 @@ def dry_run_instance(row: dict[str, Any], work_root: str) -> dict[str, Any]:
         # Phase 6 — second validation. Expected to PASS, and it can only pass if
         # the running interpreter read the edited checkout.
         led.snapshot("BEFORE_VALIDATION", p2)
+        v2_started_at = time.time()
         if used_unittest:
             v2 = box.exec_raw(
                 f"python -c \"import {import_name} as m; assert m.M193_DRY_RUN_VALUE == 222\" "
@@ -290,15 +311,98 @@ def dry_run_instance(row: dict[str, Any], work_root: str) -> dict[str, Any]:
         else:
             v2 = box.exec_raw(f"python -m pytest {TEST_FILENAME} -q --no-header -p no:cacheprovider", 600, "validation_2")
         mf2 = box.module_witness()
-        _cmd_event(led, v2, "Bash", True, s2["diffHash"], module_file=mf2, robustness=robustness)
+        p2_after, _ = box.capture_diff()
+        sv2 = box.source_version_evidence(
+            is_validation_attempt=True,
+            runner_started=True,
+            state_hash_before=s2["diffHash"],
+            state_hash_after=f"sha256:{sha256_text(normalize_patch(p2_after))}",
+            since_epoch=v2_started_at,
+        )
+        _cmd_event(led, v2, "Bash", True, s2["diffHash"], module_file=mf2, robustness=robustness, source_version=sv2)
         out["phases"]["validation2"] = {
             "shellExitCode": v2.exit_code,
             "timedOut": v2.timed_out,
             "moduleFile": mf2,
+            "sourceVersionEvidence": sv2,
             "workdir": v2.cwd,
             "tail": (v2.merged_stream or "").strip().splitlines()[-3:],
         }
         led.snapshot("AFTER_VALIDATION", p2)
+
+        # Phase 6b — the source-version falsification, on the SAME running
+        # container the lifecycle just used (§30). A classifier proven only
+        # against synthetic records has not been proven against the runtime.
+        #
+        # Three arms, and the third is the one that matters: M192's poisoned
+        # copy carries the CURRENT bytes into a shadowing package, so the
+        # source-version witness is satisfied and only the PATH witness can
+        # refuse it. Neither axis may stand in for the other.
+        falsification: dict[str, Any] = {}
+        try:
+            with open(host_module, "w") as fh:
+                fh.write(original_module + "\n\nM193A_CONTROL = 111\n")
+            box.exec_raw(
+                f"python -c \"import {import_name} as _m; print(_m.M193A_CONTROL)\"", 120, "control_prime"
+            )
+            primed = os.stat(host_module)
+            with open(host_module, "w") as fh:
+                fh.write(original_module + "\n\nM193A_CONTROL = 222\n")
+            os.utime(host_module, (primed.st_atime, primed.st_mtime))
+            stale_read = box.exec_raw(
+                f"python -c \"import {import_name} as _m; print(_m.M193A_CONTROL)\"", 120, "control_stale_read"
+            )
+            stale_sv = box.source_version_probe([module_file])
+            falsification["staleCacheControl"] = {
+                "valueOnDisk": "222",
+                "valueExecuted": (stale_read.stdout or "").strip().splitlines()[-1:] or None,
+                "pathWitness": box.module_witness(),
+                "expectedSourceVersion": "CACHE_STALE_AND_ACCEPTED",
+                "actualSourceVersion": (stale_sv.get("files") or [{}])[0].get("verdict"),
+                "evidence": (stale_sv.get("files") or [{}])[0],
+            }
+
+            with open(host_module, "w") as fh:
+                fh.write(original_module + "\n\nM193A_CONTROL = 3333333\n")
+            healthy_read = box.exec_raw(
+                f"python -c \"import {import_name} as _m; print(_m.M193A_CONTROL)\"", 120, "control_healthy_read"
+            )
+            healthy_sv = box.source_version_probe([module_file])
+            falsification["healthyControl"] = {
+                "valueOnDisk": "3333333",
+                "valueExecuted": (healthy_read.stdout or "").strip().splitlines()[-1:] or None,
+                "pathWitness": box.module_witness(),
+                "expectedSourceVersionIn": ["CACHE_MATCHES_CURRENT_SOURCE", "COMPILED_FROM_CURRENT_SOURCE"],
+                "actualSourceVersion": (healthy_sv.get("files") or [{}])[0].get("verdict"),
+                "evidence": (healthy_sv.get("files") or [{}])[0],
+            }
+
+            poison = box.exec_raw(
+                "python -c \"import site,sys;print([p for p in sys.path if p.endswith('site-packages')][0])\"",
+                120,
+                "control_site_packages",
+            )
+            site_dir = (poison.stdout or "").strip().splitlines()[-1] if poison.stdout.strip() else ""
+            pkg_root = os.path.dirname(module_file)
+            if site_dir.startswith("/"):
+                cp = box.exec_raw(
+                    f"cp -r {pkg_root} {site_dir}/ && echo COPIED", 300, "control_poison_install"
+                )
+                neutral = box.module_witness(workdir="/", pin_cwd=False)
+                falsification["poisonedCopyControl"] = {
+                    "sitePackages": site_dir,
+                    "copied": "COPIED" in cp.stdout,
+                    "moduleFileFromNeutralCwd": neutral,
+                    "carriedCurrentBytesForward": True,
+                    "expectedPathProvenance": "INSTALLED_COPY_CONFIRMED or AMBIGUOUS_SOURCE",
+                    "resolvesOutsideCheckout": bool(neutral) and not neutral.startswith(CHECKOUT_ROOT + "/"),
+                }
+                box.exec_raw(
+                    f"rm -rf {site_dir}/{os.path.basename(pkg_root)} && echo REMOVED", 300, "control_poison_remove"
+                )
+        except Exception as exc:  # noqa: BLE001
+            falsification["error"] = f"{type(exc).__name__}: {exc}"
+        out["phases"]["sourceVersionFalsification"] = falsification
 
         # Phase 7 — restore, then apply gold, so the final patch is a real
         # candidate solution and the evaluator has something to grade.
@@ -478,7 +582,13 @@ def main() -> int:
         fh.write(json.dumps(doc, indent=2) + "\n")
     print(f"wrote {args.out}")
     for r in results:
-        print(f"  {r['instanceId']:<34} {r['verdict']:<24} errors={r.get('errors')}")
+        fals = (r.get("phases") or {}).get("sourceVersionFalsification") or {}
+        stale = (fals.get("staleCacheControl") or {}).get("actualSourceVersion")
+        healthy = (fals.get("healthyControl") or {}).get("actualSourceVersion")
+        print(
+            f"  {r['instanceId']:<34} {r['verdict']:<24} stale={str(stale):<26} healthy={str(healthy):<28} "
+            f"errors={r.get('errors')}"
+        )
     shutil.rmtree(args.work_root, ignore_errors=True)
     return 0
 

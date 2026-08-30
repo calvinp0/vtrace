@@ -1,0 +1,176 @@
+{
+  "schemaVersion": "stage5.m193a.isolation-evidence.v1",
+  "milestone": "M193A",
+  "liveModelCalls": 0,
+  "liveModelSpendUsd": 0,
+  "method": "`claude mcp list` and `claude --version` resolve configuration and exit without a provider request, so the CLI's own answer is used rather than a reconstruction of its precedence rules (§28).",
+  "cli": {
+    "binary": "/home/calvin/.local/bin/claude",
+    "versionRaw": "2.1.251 (Claude Code)",
+    "version": "2.1.251",
+    "pinnedVersion": "2.1.251"
+  },
+  "hostConfigExposure": {
+    "configDir": "/home/calvin/.claude",
+    "entryCount": 32,
+    "userMemoryPresent": true,
+    "userMemoryBytes": 978,
+    "settingsKeys": [
+      "agentPushNotifEnabled",
+      "autoMode",
+      "effortLevel",
+      "enabledPlugins",
+      "env",
+      "extraKnownMarketplaces",
+      "model",
+      "permissions",
+      "skipDangerousModePermissionPrompt",
+      "skipWorkflowUsageWarning",
+      "statusLine",
+      "tui"
+    ],
+    "globalConfigPath": "/home/calvin/.claude.json",
+    "registeredMcpServers": [
+      "sequential-thinking",
+      "codex"
+    ],
+    "pluginsDirPresent": true,
+    "commandsDirPresent": true
+  },
+  "inheritedConfiguration": {
+    "description": "what an arm launched without a private configuration directory resolves",
+    "mcpServerCount": 5,
+    "mcpServerNames": [
+      "claude.ai Zoom for Claude",
+      "claude.ai Slack",
+      "claude.ai Google Drive",
+      "sequential-thinking",
+      "codex"
+    ],
+    "commandSucceeded": true
+  },
+  "credentialsOnlyConfiguration": {
+    "description": "M193's stated precondition, implemented literally: a private directory containing credentials only. This is the arm that shows the precondition was insufficient.",
+    "mcpServerCount": 3,
+    "mcpServerNames": [
+      "claude.ai Zoom for Claude",
+      "claude.ai Slack",
+      "claude.ai Google Drive"
+    ],
+    "withStrictMcpConfig": {
+      "description": "the same directory with an empty --mcp-config and --strict-mcp-config, which M193's manifest describes as a guarantee that no MCP server can reach the agent",
+      "mcpServerCount": 3,
+      "mcpServerNames": [
+        "claude.ai Zoom for Claude",
+        "claude.ai Slack",
+        "claude.ai Google Drive"
+      ]
+    },
+    "finding": "FALSIFIED: --strict-mcp-config closes file-based registrations only. The claude.ai account connectors arrive with the authenticated account and survive it."
+  },
+  "constructedArm": {
+    "configDir": "/tmp/m193a-arms-MEfcO1/claude-config-isolation-evidence-evidence",
+    "configDirFreshlyCreated": true,
+    "allowedFilesCopied": [
+      ".credentials.json"
+    ],
+    "filesPresentAtConstruction": [
+      ".credentials.json",
+      "settings.json"
+    ],
+    "filesPresentAfterCliUse": [
+      ".claude.json",
+      ".credentials.json",
+      "backups",
+      "settings.json"
+    ],
+    "mcpServerCount": 0,
+    "mcpServerNames": [],
+    "envKeys": [
+      "CLAUDE_CONFIG_DIR",
+      "HOME",
+      "LANG",
+      "LOGNAME",
+      "PATH",
+      "SHELL",
+      "TERM",
+      "USER"
+    ],
+    "argv": [
+      "--strict-mcp-config",
+      "--mcp-config",
+      "{\"mcpServers\":{}}"
+    ],
+    "status": "TREATMENT_ISOLATION_CONSTRUCTED",
+    "mayLaunchModel": true,
+    "baselineContentsHash": "2e44c6a87d9697ddf5c7e28b1cf52e00a00dd320ce56aa8e1362df52e5f42029"
+  },
+  "preLaunchAudit": {
+    "configDirExists": true,
+    "filesPresent": [
+      ".claude.json",
+      ".credentials.json",
+      "backups/",
+      "backups/.claude.json.backup.1788125820114",
+      "settings.json"
+    ],
+    "unexpectedFiles": [],
+    "contaminatingEntries": [],
+    "forbiddenEnvKeys": [],
+    "configDirRedirected": true,
+    "strictMcpConfig": true,
+    "effectiveMcpServerCount": 0,
+    "findings": [],
+    "clean": true
+  },
+  "launchRecord": {
+    "armId": "isolation-evidence",
+    "instanceId": "n/a",
+    "cliVersion": "2.1.251",
+    "cliBinary": "/home/calvin/.local/bin/claude",
+    "model": "claude-opus-4-5-20251101",
+    "configDir": "/tmp/m193a-arms-MEfcO1/claude-config-isolation-evidence-evidence",
+    "configDirFreshlyCreated": true,
+    "baselineContentsHash": "2e44c6a87d9697ddf5c7e28b1cf52e00a00dd320ce56aa8e1362df52e5f42029",
+    "allowedFilesCopied": [
+      ".credentials.json"
+    ],
+    "strictMcpConfig": true,
+    "claudeAiConnectorsDisabled": true,
+    "effectiveMcpServerCount": 0,
+    "experimentalHooksPresent": false,
+    "experimentalInstructionFilePresent": false,
+    "allowedTools": [
+      "Edit",
+      "Write",
+      "Bash",
+      "Read",
+      "Glob",
+      "Grep",
+      "TodoWrite"
+    ],
+    "envKeys": [
+      "CLAUDE_CONFIG_DIR",
+      "HOME",
+      "LANG",
+      "LOGNAME",
+      "PATH",
+      "SHELL",
+      "TERM",
+      "USER"
+    ],
+    "treatmentIsolationStatus": "TREATMENT_ISOLATION_CONSTRUCTED"
+  },
+  "gates": {
+    "G8_private_config_constructed_automatically": true,
+    "G9_contaminated_parent_cannot_leak": true,
+    "G10_isolation_failure_blocks_launch": true,
+    "cli_version_matches_pin": true
+  },
+  "verdict": "TREATMENT_ISOLATION_GUARANTEED_BY_CONSTRUCTION",
+  "notes": [
+    "The CLI writes its own .claude.json into the private directory on first use. That file appearing there rather than at $HOME is what makes the relocation total; it is tolerated by name and by location only.",
+    "The inherited-configuration arm is reported as a measurement of this host at this moment, not as a stable property. Its value is that it is not zero.",
+    "No credential bytes are hashed or recorded. The baseline contents hash covers file names and sizes only (§23)."
+  ]
+}

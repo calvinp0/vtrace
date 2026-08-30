@@ -1,0 +1,1138 @@
+{
+  "schemaVersion": "stage5.m193a.bytecode-reproduction.v1",
+  "milestone": "M193A",
+  "liveModelCalls": 0,
+  "liveModelSpendUsd": 0,
+  "question": "Does a same-size same-second edit still execute stale bytecode while every path witness says otherwise?",
+  "dataset": "/home/calvin/code/vexp-swe-bench/data/swe-bench-100.jsonl",
+  "specimenCount": 5,
+  "naturalHazardInstances": [
+    "django__django-10880",
+    "pallets__flask-5014",
+    "psf__requests-1142",
+    "pytest-dev__pytest-10051"
+  ],
+  "naturalHazardCount": 4,
+  "m193ReportedHazardousCount": 3,
+  "m193ReportedHazardousInstances": [
+    "psf__requests-1142",
+    "pytest-dev__pytest-10051",
+    "sympy__sympy-12419"
+  ],
+  "forcedCollisionSetupCleanInstances": [
+    "django__django-10880",
+    "pallets__flask-5014",
+    "psf__requests-1142",
+    "pytest-dev__pytest-10051",
+    "sympy__sympy-12419"
+  ],
+  "forcedCollisionStaleInstances": [
+    "django__django-10880",
+    "pallets__flask-5014",
+    "psf__requests-1142",
+    "pytest-dev__pytest-10051",
+    "sympy__sympy-12419"
+  ],
+  "forcedCollisionClassifiedStaleInstances": [
+    "django__django-10880",
+    "pallets__flask-5014",
+    "psf__requests-1142",
+    "pytest-dev__pytest-10051",
+    "sympy__sympy-12419"
+  ],
+  "healthyControlConfirmedInstances": [
+    "django__django-10880",
+    "pallets__flask-5014",
+    "psf__requests-1142",
+    "pytest-dev__pytest-10051",
+    "sympy__sympy-12419"
+  ],
+  "attributionNote": "The natural arm is a race against the wall clock, not a property of a repository. Whether an edit lands in the same whole second as the cache's recorded mtime decides it, so the affected set is expected to differ between runs on identical repositories. The forced arm removes the race and is the reproducible measurement.",
+  "results": [
+    {
+      "instanceId": "django__django-10880",
+      "repo": "django/django",
+      "verdict": "REPRODUCTION_OK",
+      "errors": [],
+      "containerStarted": true,
+      "interpreter": {
+        "version": "3.6.13",
+        "cacheTag": "cpython-36",
+        "magic": "330d0d0a",
+        "dontWriteBytecode": false,
+        "pycachePrefix": null,
+        "optimize": 0,
+        "executable": "/opt/miniconda3/envs/testbed/bin/python"
+      },
+      "probeInstalled": true,
+      "moduleWitness": "/testbed/django/__init__.py",
+      "preEditFileState": {
+        "source": "/testbed/django/__init__.py",
+        "sourceSize": 799,
+        "sourceMtime": 1788125173,
+        "pycPath": "/testbed/django/__pycache__/__init__.cpython-36.pyc",
+        "pycExists": true,
+        "pycSize": 934,
+        "pycHeaderHex": "330d0d0af59f946a1f030000e3000000"
+      },
+      "bytecodeCacheCountBefore": 3,
+      "scenario": {
+        "s0": {
+          "state": {
+            "source": "/testbed/django/__init__.py",
+            "sourceSize": 822,
+            "sourceMtime": 1788125175,
+            "pycPath": "/testbed/django/__pycache__/__init__.cpython-36.pyc",
+            "pycExists": true,
+            "pycSize": 934,
+            "pycHeaderHex": "330d0d0af59f946a1f030000e3000000"
+          },
+          "read": {
+            "label": "read_S0",
+            "executionWitnessFired": true,
+            "value": "1",
+            "exitCode": 0,
+            "durationMs": 168
+          },
+          "stateAfterRead": {
+            "source": "/testbed/django/__init__.py",
+            "sourceSize": 822,
+            "sourceMtime": 1788125175,
+            "pycPath": "/testbed/django/__pycache__/__init__.cpython-36.pyc",
+            "pycExists": true,
+            "pycSize": 964,
+            "pycHeaderHex": "330d0d0af79f946a36030000e3000000"
+          }
+        },
+        "s1": {
+          "state": {
+            "source": "/testbed/django/__init__.py",
+            "sourceSize": 822,
+            "sourceMtime": 1788125175,
+            "pycPath": "/testbed/django/__pycache__/__init__.cpython-36.pyc",
+            "pycExists": true,
+            "pycSize": 964,
+            "pycHeaderHex": "330d0d0af79f946a36030000e3000000"
+          },
+          "read": {
+            "label": "read_S1",
+            "executionWitnessFired": true,
+            "value": "1",
+            "exitCode": 0,
+            "durationMs": 169
+          }
+        },
+        "sameMtimeSecond": true,
+        "sameSize": true,
+        "cacheAcceptedDespiteEdit": true
+      },
+      "sourceVersionProbe": {
+        "path": "/testbed/django/__init__.py",
+        "sourceSize": 822,
+        "sourceMtime": 1788125175,
+        "sourceMtimeNs": 1788125175894856610,
+        "sourceSha256": "064cce3ec8b9a54353b0b35187bc887a23f86ce85d4cbb6976f077853fbdad92",
+        "pycPath": "/testbed/django/__pycache__/__init__.cpython-36.pyc",
+        "pycExists": true,
+        "pycHeader": {
+          "headerBytes": 964,
+          "magic": "330d0d0a",
+          "magicMatchesInterpreter": true,
+          "flags": null,
+          "invalidationMode": "TIMESTAMP",
+          "checkSource": null,
+          "headerMtime": 1788125175,
+          "headerSize": 822,
+          "bodyOffset": 12
+        },
+        "headerMatchesSourceMtime": true,
+        "headerMatchesSourceSize": true,
+        "cacheWouldBeUsed": true,
+        "cachedCodeFingerprint": "5c7bf5b7b9add27893ada1adbaf75093ec68a992d08c6d540e40404fbf5494ac",
+        "freshCodeFingerprint": "5ff541bc42c6cbd6dd3d52addf6e2ea3678192f5ef6562c68993ff43eaf5e3d3",
+        "marshalBytesEqual": false,
+        "verdict": "CACHE_STALE_AND_ACCEPTED",
+        "reason": "the interpreter would accept a cache that is NOT the current source"
+      },
+      "pathWitnessAfterStaleRead": "/testbed/django/__init__.py",
+      "executionWitnessFired": true,
+      "observedSemantics": "read S0 while the file on disk held S1",
+      "hazardReproduced": true,
+      "sourceVersionVerdict": "CACHE_STALE_AND_ACCEPTED",
+      "bytecodeCacheCountAfter": 3,
+      "forcedCollision": {
+        "s0Read": {
+          "label": "forced_read_S0",
+          "executionWitnessFired": true,
+          "value": "111",
+          "exitCode": 0,
+          "durationMs": 177
+        },
+        "s1State": {
+          "source": "/testbed/django/__init__.py",
+          "sourceSize": 824,
+          "sourceMtime": 1788125176,
+          "pycPath": "/testbed/django/__pycache__/__init__.cpython-36.pyc",
+          "pycExists": true,
+          "pycSize": 964,
+          "pycHeaderHex": "330d0d0af89f946a38030000e3000000"
+        },
+        "s1Read": {
+          "label": "forced_read_S1",
+          "executionWitnessFired": true,
+          "value": "111",
+          "exitCode": 0,
+          "durationMs": 175
+        },
+        "pathWitness": "/testbed/django/__init__.py",
+        "setupRecompiledAsExpected": true,
+        "staleExecutionObserved": true,
+        "currentSourceValueOnDisk": "222",
+        "sourceVersionVerdict": "CACHE_STALE_AND_ACCEPTED",
+        "sourceVersionReason": "the interpreter would accept a cache that is NOT the current source",
+        "evidence": {
+          "path": "/testbed/django/__init__.py",
+          "sourceSize": 824,
+          "sourceMtime": 1788125176,
+          "sourceMtimeNs": 1788125176748570919,
+          "sourceSha256": "a9cebfd8b44d85ebd88e1b1182f6fb9633311de90d92bf64f65f8ed78925e4b7",
+          "pycPath": "/testbed/django/__pycache__/__init__.cpython-36.pyc",
+          "pycExists": true,
+          "pycHeader": {
+            "headerBytes": 964,
+            "magic": "330d0d0a",
+            "magicMatchesInterpreter": true,
+            "flags": null,
+            "invalidationMode": "TIMESTAMP",
+            "checkSource": null,
+            "headerMtime": 1788125176,
+            "headerSize": 824,
+            "bodyOffset": 12
+          },
+          "headerMatchesSourceMtime": true,
+          "headerMatchesSourceSize": true,
+          "cacheWouldBeUsed": true,
+          "cachedCodeFingerprint": "51c77a13daea58cee9e532e3614366cfcc43eec81ece488633725da2485b795c",
+          "freshCodeFingerprint": "2b8c497c34b62c1c1a1cf181d32af9f5455041c852fdbab555da012b3a256c6b",
+          "marshalBytesEqual": false,
+          "verdict": "CACHE_STALE_AND_ACCEPTED",
+          "reason": "the interpreter would accept a cache that is NOT the current source"
+        }
+      },
+      "healthyControl": {
+        "read": {
+          "label": "healthy_read",
+          "executionWitnessFired": true,
+          "value": "33333",
+          "exitCode": 0,
+          "durationMs": 170
+        },
+        "currentSourceObserved": true,
+        "sourceVersionVerdict": "CACHE_MATCHES_CURRENT_SOURCE",
+        "sourceVersionReason": "the accepted cache compiles to the same program as the current source",
+        "evidence": {
+          "path": "/testbed/django/__init__.py",
+          "sourceSize": 826,
+          "sourceMtime": 1788125177,
+          "sourceMtimeNs": 1788125177606338350,
+          "sourceSha256": "89c8da031b547b009da9ae47a2ffc82828d9d95d171b542a39272d6b277e03f8",
+          "pycPath": "/testbed/django/__pycache__/__init__.cpython-36.pyc",
+          "pycExists": true,
+          "pycHeader": {
+            "headerBytes": 964,
+            "magic": "330d0d0a",
+            "magicMatchesInterpreter": true,
+            "flags": null,
+            "invalidationMode": "TIMESTAMP",
+            "checkSource": null,
+            "headerMtime": 1788125177,
+            "headerSize": 826,
+            "bodyOffset": 12
+          },
+          "headerMatchesSourceMtime": true,
+          "headerMatchesSourceSize": true,
+          "cacheWouldBeUsed": true,
+          "cachedCodeFingerprint": "556a8eeba27e90e0678facea8127493812fb5e3073d04b06f7bd9ee34c30c419",
+          "freshCodeFingerprint": "556a8eeba27e90e0678facea8127493812fb5e3073d04b06f7bd9ee34c30c419",
+          "marshalBytesEqual": false,
+          "verdict": "CACHE_MATCHES_CURRENT_SOURCE",
+          "reason": "the accepted cache compiles to the same program as the current source"
+        }
+      },
+      "restored": true,
+      "cleanup": {
+        "containerRemoved": true,
+        "mountRemoved": true
+      },
+      "durationMs": 5452
+    },
+    {
+      "instanceId": "pallets__flask-5014",
+      "repo": "pallets/flask",
+      "verdict": "REPRODUCTION_OK",
+      "errors": [],
+      "containerStarted": true,
+      "interpreter": {
+        "version": "3.11.10",
+        "cacheTag": "cpython-311",
+        "magic": "a70d0d0a",
+        "dontWriteBytecode": false,
+        "pycachePrefix": null,
+        "optimize": 0,
+        "executable": "/opt/miniconda3/envs/testbed/bin/python"
+      },
+      "probeInstalled": true,
+      "moduleWitness": "/testbed/src/flask/__init__.py",
+      "preEditFileState": {
+        "source": "/testbed/src/flask/__init__.py",
+        "sourceSize": 3495,
+        "sourceMtime": 1788125164,
+        "pycPath": "/testbed/src/flask/__pycache__/__init__.cpython-311.pyc",
+        "pycExists": true,
+        "pycSize": 3809,
+        "pycHeaderHex": "a70d0d0a00000000ec9f946aa70d0000"
+      },
+      "bytecodeCacheCountBefore": 18,
+      "scenario": {
+        "s0": {
+          "state": {
+            "source": "/testbed/src/flask/__init__.py",
+            "sourceSize": 3518,
+            "sourceMtime": 1788125166,
+            "pycPath": "/testbed/src/flask/__pycache__/__init__.cpython-311.pyc",
+            "pycExists": true,
+            "pycSize": 3809,
+            "pycHeaderHex": "a70d0d0a00000000ec9f946aa70d0000"
+          },
+          "read": {
+            "label": "read_S0",
+            "executionWitnessFired": true,
+            "value": "1",
+            "exitCode": 0,
+            "durationMs": 220
+          },
+          "stateAfterRead": {
+            "source": "/testbed/src/flask/__init__.py",
+            "sourceSize": 3518,
+            "sourceMtime": 1788125166,
+            "pycPath": "/testbed/src/flask/__pycache__/__init__.cpython-311.pyc",
+            "pycExists": true,
+            "pycSize": 3837,
+            "pycHeaderHex": "a70d0d0a00000000ee9f946abe0d0000"
+          }
+        },
+        "s1": {
+          "state": {
+            "source": "/testbed/src/flask/__init__.py",
+            "sourceSize": 3518,
+            "sourceMtime": 1788125166,
+            "pycPath": "/testbed/src/flask/__pycache__/__init__.cpython-311.pyc",
+            "pycExists": true,
+            "pycSize": 3837,
+            "pycHeaderHex": "a70d0d0a00000000ee9f946abe0d0000"
+          },
+          "read": {
+            "label": "read_S1",
+            "executionWitnessFired": true,
+            "value": "1",
+            "exitCode": 0,
+            "durationMs": 223
+          }
+        },
+        "sameMtimeSecond": true,
+        "sameSize": true,
+        "cacheAcceptedDespiteEdit": true
+      },
+      "sourceVersionProbe": {
+        "path": "/testbed/src/flask/__init__.py",
+        "sourceSize": 3518,
+        "sourceMtime": 1788125166,
+        "sourceMtimeNs": 1788125166560403399,
+        "sourceSha256": "59925b125d7ce969096bc6e731e596d654bbe0882c693df846b048f545ca855f",
+        "pycPath": "/testbed/src/flask/__pycache__/__init__.cpython-311.pyc",
+        "pycExists": true,
+        "pycHeader": {
+          "headerBytes": 3837,
+          "magic": "a70d0d0a",
+          "magicMatchesInterpreter": true,
+          "flags": 0,
+          "invalidationMode": "TIMESTAMP",
+          "checkSource": null,
+          "headerMtime": 1788125166,
+          "headerSize": 3518,
+          "bodyOffset": 16
+        },
+        "headerMatchesSourceMtime": true,
+        "headerMatchesSourceSize": true,
+        "cacheWouldBeUsed": true,
+        "cachedCodeFingerprint": "54ca5d902a4aa9a35a9d79012cad842811055c1181c306d1db608794445ddccd",
+        "freshCodeFingerprint": "e1386422ae9facb90cc2f0672b051f2ba1a512d5624fa92b8917e80ecd83c71c",
+        "marshalBytesEqual": false,
+        "verdict": "CACHE_STALE_AND_ACCEPTED",
+        "reason": "the interpreter would accept a cache that is NOT the current source"
+      },
+      "pathWitnessAfterStaleRead": "/testbed/src/flask/__init__.py",
+      "executionWitnessFired": true,
+      "observedSemantics": "read S0 while the file on disk held S1",
+      "hazardReproduced": true,
+      "sourceVersionVerdict": "CACHE_STALE_AND_ACCEPTED",
+      "bytecodeCacheCountAfter": 18,
+      "forcedCollision": {
+        "s0Read": {
+          "label": "forced_read_S0",
+          "executionWitnessFired": true,
+          "value": "111",
+          "exitCode": 0,
+          "durationMs": 220
+        },
+        "s1State": {
+          "source": "/testbed/src/flask/__init__.py",
+          "sourceSize": 3520,
+          "sourceMtime": 1788125167,
+          "pycPath": "/testbed/src/flask/__pycache__/__init__.cpython-311.pyc",
+          "pycExists": true,
+          "pycSize": 3842,
+          "pycHeaderHex": "a70d0d0a00000000ef9f946ac00d0000"
+        },
+        "s1Read": {
+          "label": "forced_read_S1",
+          "executionWitnessFired": true,
+          "value": "111",
+          "exitCode": 0,
+          "durationMs": 225
+        },
+        "pathWitness": "/testbed/src/flask/__init__.py",
+        "setupRecompiledAsExpected": true,
+        "staleExecutionObserved": true,
+        "currentSourceValueOnDisk": "222",
+        "sourceVersionVerdict": "CACHE_STALE_AND_ACCEPTED",
+        "sourceVersionReason": "the interpreter would accept a cache that is NOT the current source",
+        "evidence": {
+          "path": "/testbed/src/flask/__init__.py",
+          "sourceSize": 3520,
+          "sourceMtime": 1788125167,
+          "sourceMtimeNs": 1788125167466627597,
+          "sourceSha256": "3d6c6cf1f0e14a9ea6658cee7589dff957b3a5516ee5d5865521c4fe1e0b667f",
+          "pycPath": "/testbed/src/flask/__pycache__/__init__.cpython-311.pyc",
+          "pycExists": true,
+          "pycHeader": {
+            "headerBytes": 3842,
+            "magic": "a70d0d0a",
+            "magicMatchesInterpreter": true,
+            "flags": 0,
+            "invalidationMode": "TIMESTAMP",
+            "checkSource": null,
+            "headerMtime": 1788125167,
+            "headerSize": 3520,
+            "bodyOffset": 16
+          },
+          "headerMatchesSourceMtime": true,
+          "headerMatchesSourceSize": true,
+          "cacheWouldBeUsed": true,
+          "cachedCodeFingerprint": "3acd08b55bc5707b107461c0ffd496cd83c3340148ea413429257edb732b507a",
+          "freshCodeFingerprint": "37a59ae869e5a911b4bb0fec8e7b2602493773a35bfd1afdc7caec31bd61ec0a",
+          "marshalBytesEqual": false,
+          "verdict": "CACHE_STALE_AND_ACCEPTED",
+          "reason": "the interpreter would accept a cache that is NOT the current source"
+        }
+      },
+      "healthyControl": {
+        "read": {
+          "label": "healthy_read",
+          "executionWitnessFired": true,
+          "value": "33333",
+          "exitCode": 0,
+          "durationMs": 229
+        },
+        "currentSourceObserved": true,
+        "sourceVersionVerdict": "CACHE_MATCHES_CURRENT_SOURCE",
+        "sourceVersionReason": "the accepted cache compiles to the same program as the current source",
+        "evidence": {
+          "path": "/testbed/src/flask/__init__.py",
+          "sourceSize": 3522,
+          "sourceMtime": 1788125168,
+          "sourceMtimeNs": 1788125168463286075,
+          "sourceSha256": "1212b636c732fe35a634b6996735b5c318d970491df821fc3effc96ed9554604",
+          "pycPath": "/testbed/src/flask/__pycache__/__init__.cpython-311.pyc",
+          "pycExists": true,
+          "pycHeader": {
+            "headerBytes": 3842,
+            "magic": "a70d0d0a",
+            "magicMatchesInterpreter": true,
+            "flags": 0,
+            "invalidationMode": "TIMESTAMP",
+            "checkSource": null,
+            "headerMtime": 1788125168,
+            "headerSize": 3522,
+            "bodyOffset": 16
+          },
+          "headerMatchesSourceMtime": true,
+          "headerMatchesSourceSize": true,
+          "cacheWouldBeUsed": true,
+          "cachedCodeFingerprint": "7d383b5a52e923dccad022931461ad7639b7cece89bb85fcdb2682d7fa282e09",
+          "freshCodeFingerprint": "7d383b5a52e923dccad022931461ad7639b7cece89bb85fcdb2682d7fa282e09",
+          "marshalBytesEqual": true,
+          "verdict": "CACHE_MATCHES_CURRENT_SOURCE",
+          "reason": "the accepted cache compiles to the same program as the current source"
+        }
+      },
+      "restored": true,
+      "cleanup": {
+        "containerRemoved": true,
+        "mountRemoved": true
+      },
+      "durationMs": 5009
+    },
+    {
+      "instanceId": "psf__requests-1142",
+      "repo": "psf/requests",
+      "verdict": "REPRODUCTION_OK",
+      "errors": [],
+      "containerStarted": true,
+      "interpreter": {
+        "version": "3.9.20",
+        "cacheTag": "cpython-39",
+        "magic": "610d0d0a",
+        "dontWriteBytecode": false,
+        "pycachePrefix": null,
+        "optimize": 0,
+        "executable": "/opt/miniconda3/envs/testbed/bin/python"
+      },
+      "probeInstalled": true,
+      "moduleWitness": "/testbed/requests/__init__.py",
+      "preEditFileState": {
+        "source": "/testbed/requests/__init__.py",
+        "sourceSize": 1678,
+        "sourceMtime": 1788125164,
+        "pycPath": "/testbed/requests/__pycache__/__init__.cpython-39.pyc",
+        "pycExists": true,
+        "pycSize": 2027,
+        "pycHeaderHex": "610d0d0a00000000ec9f946a8e060000"
+      },
+      "bytecodeCacheCountBefore": 28,
+      "scenario": {
+        "s0": {
+          "state": {
+            "source": "/testbed/requests/__init__.py",
+            "sourceSize": 1701,
+            "sourceMtime": 1788125165,
+            "pycPath": "/testbed/requests/__pycache__/__init__.cpython-39.pyc",
+            "pycExists": true,
+            "pycSize": 2027,
+            "pycHeaderHex": "610d0d0a00000000ec9f946a8e060000"
+          },
+          "read": {
+            "label": "read_S0",
+            "executionWitnessFired": true,
+            "value": "1",
+            "exitCode": 0,
+            "durationMs": 180
+          },
+          "stateAfterRead": {
+            "source": "/testbed/requests/__init__.py",
+            "sourceSize": 1701,
+            "sourceMtime": 1788125165,
+            "pycPath": "/testbed/requests/__pycache__/__init__.cpython-39.pyc",
+            "pycExists": true,
+            "pycSize": 2052,
+            "pycHeaderHex": "610d0d0a00000000ed9f946aa5060000"
+          }
+        },
+        "s1": {
+          "state": {
+            "source": "/testbed/requests/__init__.py",
+            "sourceSize": 1701,
+            "sourceMtime": 1788125165,
+            "pycPath": "/testbed/requests/__pycache__/__init__.cpython-39.pyc",
+            "pycExists": true,
+            "pycSize": 2052,
+            "pycHeaderHex": "610d0d0a00000000ed9f946aa5060000"
+          },
+          "read": {
+            "label": "read_S1",
+            "executionWitnessFired": true,
+            "value": "1",
+            "exitCode": 0,
+            "durationMs": 184
+          }
+        },
+        "sameMtimeSecond": true,
+        "sameSize": true,
+        "cacheAcceptedDespiteEdit": true
+      },
+      "sourceVersionProbe": {
+        "path": "/testbed/requests/__init__.py",
+        "sourceSize": 1701,
+        "sourceMtime": 1788125165,
+        "sourceMtimeNs": 1788125165924250125,
+        "sourceSha256": "c894ad5ab2feeb4f9e35de0e845f022851a754d45d6332ce2e2ddb397fa97991",
+        "pycPath": "/testbed/requests/__pycache__/__init__.cpython-39.pyc",
+        "pycExists": true,
+        "pycHeader": {
+          "headerBytes": 2052,
+          "magic": "610d0d0a",
+          "magicMatchesInterpreter": true,
+          "flags": 0,
+          "invalidationMode": "TIMESTAMP",
+          "checkSource": null,
+          "headerMtime": 1788125165,
+          "headerSize": 1701,
+          "bodyOffset": 16
+        },
+        "headerMatchesSourceMtime": true,
+        "headerMatchesSourceSize": true,
+        "cacheWouldBeUsed": true,
+        "cachedCodeFingerprint": "eb8e29d8efdc2a083b0af834cf2c795cf5de0904853e40b453e099cc1f8e74de",
+        "freshCodeFingerprint": "d33407c0e8da4b9970abf08a4fb049d00b3c4fd8d392ee357bcdb095467c2bbc",
+        "marshalBytesEqual": false,
+        "verdict": "CACHE_STALE_AND_ACCEPTED",
+        "reason": "the interpreter would accept a cache that is NOT the current source"
+      },
+      "pathWitnessAfterStaleRead": "/testbed/requests/__init__.py",
+      "executionWitnessFired": true,
+      "observedSemantics": "read S0 while the file on disk held S1",
+      "hazardReproduced": true,
+      "sourceVersionVerdict": "CACHE_STALE_AND_ACCEPTED",
+      "bytecodeCacheCountAfter": 28,
+      "forcedCollision": {
+        "s0Read": {
+          "label": "forced_read_S0",
+          "executionWitnessFired": true,
+          "value": "111",
+          "exitCode": 0,
+          "durationMs": 181
+        },
+        "s1State": {
+          "source": "/testbed/requests/__init__.py",
+          "sourceSize": 1703,
+          "sourceMtime": 1788125166,
+          "pycPath": "/testbed/requests/__pycache__/__init__.cpython-39.pyc",
+          "pycExists": true,
+          "pycSize": 2057,
+          "pycHeaderHex": "610d0d0a00000000ee9f946aa7060000"
+        },
+        "s1Read": {
+          "label": "forced_read_S1",
+          "executionWitnessFired": true,
+          "value": "111",
+          "exitCode": 0,
+          "durationMs": 176
+        },
+        "pathWitness": "/testbed/requests/__init__.py",
+        "setupRecompiledAsExpected": true,
+        "staleExecutionObserved": true,
+        "currentSourceValueOnDisk": "222",
+        "sourceVersionVerdict": "CACHE_STALE_AND_ACCEPTED",
+        "sourceVersionReason": "the interpreter would accept a cache that is NOT the current source",
+        "evidence": {
+          "path": "/testbed/requests/__init__.py",
+          "sourceSize": 1703,
+          "sourceMtime": 1788125166,
+          "sourceMtimeNs": 1788125166752826213,
+          "sourceSha256": "d0ed71631a1af3da0e4c158b5436400b862cb0a29a73addf95250f20a83edf28",
+          "pycPath": "/testbed/requests/__pycache__/__init__.cpython-39.pyc",
+          "pycExists": true,
+          "pycHeader": {
+            "headerBytes": 2057,
+            "magic": "610d0d0a",
+            "magicMatchesInterpreter": true,
+            "flags": 0,
+            "invalidationMode": "TIMESTAMP",
+            "checkSource": null,
+            "headerMtime": 1788125166,
+            "headerSize": 1703,
+            "bodyOffset": 16
+          },
+          "headerMatchesSourceMtime": true,
+          "headerMatchesSourceSize": true,
+          "cacheWouldBeUsed": true,
+          "cachedCodeFingerprint": "2eb55e0141128d86dafb9c558803a5e25fe13eae167568c33972b57e09ecbe22",
+          "freshCodeFingerprint": "8b62f8f3170302d9fdbc442190576958875aaf95d19142b1b1f53c28ee613c55",
+          "marshalBytesEqual": false,
+          "verdict": "CACHE_STALE_AND_ACCEPTED",
+          "reason": "the interpreter would accept a cache that is NOT the current source"
+        }
+      },
+      "healthyControl": {
+        "read": {
+          "label": "healthy_read",
+          "executionWitnessFired": true,
+          "value": "33333",
+          "exitCode": 0,
+          "durationMs": 183
+        },
+        "currentSourceObserved": true,
+        "sourceVersionVerdict": "CACHE_MATCHES_CURRENT_SOURCE",
+        "sourceVersionReason": "the accepted cache compiles to the same program as the current source",
+        "evidence": {
+          "path": "/testbed/requests/__init__.py",
+          "sourceSize": 1705,
+          "sourceMtime": 1788125167,
+          "sourceMtimeNs": 1788125167617701917,
+          "sourceSha256": "910eb1c02f649cc8d710073c9e8f2e38a2f0f18c9486e1fa21d5d9063bea9c64",
+          "pycPath": "/testbed/requests/__pycache__/__init__.cpython-39.pyc",
+          "pycExists": true,
+          "pycHeader": {
+            "headerBytes": 2057,
+            "magic": "610d0d0a",
+            "magicMatchesInterpreter": true,
+            "flags": 0,
+            "invalidationMode": "TIMESTAMP",
+            "checkSource": null,
+            "headerMtime": 1788125167,
+            "headerSize": 1705,
+            "bodyOffset": 16
+          },
+          "headerMatchesSourceMtime": true,
+          "headerMatchesSourceSize": true,
+          "cacheWouldBeUsed": true,
+          "cachedCodeFingerprint": "9cbc7e0aca2af19f871e5384cf9f63c535021ab6c45f2a942f53fb8cc183836b",
+          "freshCodeFingerprint": "9cbc7e0aca2af19f871e5384cf9f63c535021ab6c45f2a942f53fb8cc183836b",
+          "marshalBytesEqual": false,
+          "verdict": "CACHE_MATCHES_CURRENT_SOURCE",
+          "reason": "the accepted cache compiles to the same program as the current source"
+        }
+      },
+      "restored": true,
+      "cleanup": {
+        "containerRemoved": true,
+        "mountRemoved": true
+      },
+      "durationMs": 4620
+    },
+    {
+      "instanceId": "pytest-dev__pytest-10051",
+      "repo": "pytest-dev/pytest",
+      "verdict": "REPRODUCTION_OK",
+      "errors": [],
+      "containerStarted": true,
+      "interpreter": {
+        "version": "3.9.20",
+        "cacheTag": "cpython-39",
+        "magic": "610d0d0a",
+        "dontWriteBytecode": false,
+        "pycachePrefix": null,
+        "optimize": 0,
+        "executable": "/opt/miniconda3/envs/testbed/bin/python"
+      },
+      "probeInstalled": true,
+      "moduleWitness": "/testbed/src/_pytest/__init__.py",
+      "preEditFileState": {
+        "source": "/testbed/src/_pytest/__init__.py",
+        "sourceSize": 356,
+        "sourceMtime": 1788125168,
+        "pycPath": "/testbed/src/_pytest/__pycache__/__init__.cpython-39.pyc",
+        "pycExists": true,
+        "pycSize": 308,
+        "pycHeaderHex": "610d0d0a00000000f09f946a64010000"
+      },
+      "bytecodeCacheCountBefore": 2,
+      "scenario": {
+        "s0": {
+          "state": {
+            "source": "/testbed/src/_pytest/__init__.py",
+            "sourceSize": 379,
+            "sourceMtime": 1788125170,
+            "pycPath": "/testbed/src/_pytest/__pycache__/__init__.cpython-39.pyc",
+            "pycExists": true,
+            "pycSize": 308,
+            "pycHeaderHex": "610d0d0a00000000f09f946a64010000"
+          },
+          "read": {
+            "label": "read_S0",
+            "executionWitnessFired": true,
+            "value": "1",
+            "exitCode": 0,
+            "durationMs": 147
+          },
+          "stateAfterRead": {
+            "source": "/testbed/src/_pytest/__init__.py",
+            "sourceSize": 379,
+            "sourceMtime": 1788125170,
+            "pycPath": "/testbed/src/_pytest/__pycache__/__init__.cpython-39.pyc",
+            "pycExists": true,
+            "pycSize": 333,
+            "pycHeaderHex": "610d0d0a00000000f29f946a7b010000"
+          }
+        },
+        "s1": {
+          "state": {
+            "source": "/testbed/src/_pytest/__init__.py",
+            "sourceSize": 379,
+            "sourceMtime": 1788125170,
+            "pycPath": "/testbed/src/_pytest/__pycache__/__init__.cpython-39.pyc",
+            "pycExists": true,
+            "pycSize": 333,
+            "pycHeaderHex": "610d0d0a00000000f29f946a7b010000"
+          },
+          "read": {
+            "label": "read_S1",
+            "executionWitnessFired": true,
+            "value": "1",
+            "exitCode": 0,
+            "durationMs": 150
+          }
+        },
+        "sameMtimeSecond": true,
+        "sameSize": true,
+        "cacheAcceptedDespiteEdit": true
+      },
+      "sourceVersionProbe": {
+        "path": "/testbed/src/_pytest/__init__.py",
+        "sourceSize": 379,
+        "sourceMtime": 1788125170,
+        "sourceMtimeNs": 1788125170518596067,
+        "sourceSha256": "76b10b5a689b7cfe859d06022e20f746e3617d95f44383c64f18beceff4805ef",
+        "pycPath": "/testbed/src/_pytest/__pycache__/__init__.cpython-39.pyc",
+        "pycExists": true,
+        "pycHeader": {
+          "headerBytes": 333,
+          "magic": "610d0d0a",
+          "magicMatchesInterpreter": true,
+          "flags": 0,
+          "invalidationMode": "TIMESTAMP",
+          "checkSource": null,
+          "headerMtime": 1788125170,
+          "headerSize": 379,
+          "bodyOffset": 16
+        },
+        "headerMatchesSourceMtime": true,
+        "headerMatchesSourceSize": true,
+        "cacheWouldBeUsed": true,
+        "cachedCodeFingerprint": "f70b6b09839e234b857c7a74384bd69b9e97a3b38b4e0fe4a696fb4acc1cd9e8",
+        "freshCodeFingerprint": "9ff894aaeba486fdf0a3976f6af16c76e7cb27beeadf3f04c9da5a7e5c61ad0b",
+        "marshalBytesEqual": false,
+        "verdict": "CACHE_STALE_AND_ACCEPTED",
+        "reason": "the interpreter would accept a cache that is NOT the current source"
+      },
+      "pathWitnessAfterStaleRead": "/testbed/src/_pytest/__init__.py",
+      "executionWitnessFired": true,
+      "observedSemantics": "read S0 while the file on disk held S1",
+      "hazardReproduced": true,
+      "sourceVersionVerdict": "CACHE_STALE_AND_ACCEPTED",
+      "bytecodeCacheCountAfter": 2,
+      "forcedCollision": {
+        "s0Read": {
+          "label": "forced_read_S0",
+          "executionWitnessFired": true,
+          "value": "111",
+          "exitCode": 0,
+          "durationMs": 150
+        },
+        "s1State": {
+          "source": "/testbed/src/_pytest/__init__.py",
+          "sourceSize": 381,
+          "sourceMtime": 1788125171,
+          "pycPath": "/testbed/src/_pytest/__pycache__/__init__.cpython-39.pyc",
+          "pycExists": true,
+          "pycSize": 338,
+          "pycHeaderHex": "610d0d0a00000000f39f946a7d010000"
+        },
+        "s1Read": {
+          "label": "forced_read_S1",
+          "executionWitnessFired": true,
+          "value": "111",
+          "exitCode": 0,
+          "durationMs": 149
+        },
+        "pathWitness": "/testbed/src/_pytest/__init__.py",
+        "setupRecompiledAsExpected": true,
+        "staleExecutionObserved": true,
+        "currentSourceValueOnDisk": "222",
+        "sourceVersionVerdict": "CACHE_STALE_AND_ACCEPTED",
+        "sourceVersionReason": "the interpreter would accept a cache that is NOT the current source",
+        "evidence": {
+          "path": "/testbed/src/_pytest/__init__.py",
+          "sourceSize": 381,
+          "sourceMtime": 1788125171,
+          "sourceMtimeNs": 1788125171276605606,
+          "sourceSha256": "cabf7936d85be5f7fdc743ae311a7c77d7350af53676f428102e2c599163a577",
+          "pycPath": "/testbed/src/_pytest/__pycache__/__init__.cpython-39.pyc",
+          "pycExists": true,
+          "pycHeader": {
+            "headerBytes": 338,
+            "magic": "610d0d0a",
+            "magicMatchesInterpreter": true,
+            "flags": 0,
+            "invalidationMode": "TIMESTAMP",
+            "checkSource": null,
+            "headerMtime": 1788125171,
+            "headerSize": 381,
+            "bodyOffset": 16
+          },
+          "headerMatchesSourceMtime": true,
+          "headerMatchesSourceSize": true,
+          "cacheWouldBeUsed": true,
+          "cachedCodeFingerprint": "f9e9420b80894d67d446566d9eae2c476bd82bbf5dc7da025eaa296c776fa3f3",
+          "freshCodeFingerprint": "3a337d88c7d9c096f18d1fe252bb214cf212974e23e1bab948339252432d41b6",
+          "marshalBytesEqual": false,
+          "verdict": "CACHE_STALE_AND_ACCEPTED",
+          "reason": "the interpreter would accept a cache that is NOT the current source"
+        }
+      },
+      "healthyControl": {
+        "read": {
+          "label": "healthy_read",
+          "executionWitnessFired": true,
+          "value": "33333",
+          "exitCode": 0,
+          "durationMs": 161
+        },
+        "currentSourceObserved": true,
+        "sourceVersionVerdict": "CACHE_MATCHES_CURRENT_SOURCE",
+        "sourceVersionReason": "the accepted cache compiles to the same program as the current source",
+        "evidence": {
+          "path": "/testbed/src/_pytest/__init__.py",
+          "sourceSize": 383,
+          "sourceMtime": 1788125172,
+          "sourceMtimeNs": 1788125172053640728,
+          "sourceSha256": "17330800d52d63b6319a4cecdda79a69ad5067e2de3c2d9d926052ad1b3db627",
+          "pycPath": "/testbed/src/_pytest/__pycache__/__init__.cpython-39.pyc",
+          "pycExists": true,
+          "pycHeader": {
+            "headerBytes": 338,
+            "magic": "610d0d0a",
+            "magicMatchesInterpreter": true,
+            "flags": 0,
+            "invalidationMode": "TIMESTAMP",
+            "checkSource": null,
+            "headerMtime": 1788125172,
+            "headerSize": 383,
+            "bodyOffset": 16
+          },
+          "headerMatchesSourceMtime": true,
+          "headerMatchesSourceSize": true,
+          "cacheWouldBeUsed": true,
+          "cachedCodeFingerprint": "1c12b4e054e7d81694b4008a60eb1515ba7d19af7448708027aea528966ac1cd",
+          "freshCodeFingerprint": "1c12b4e054e7d81694b4008a60eb1515ba7d19af7448708027aea528966ac1cd",
+          "marshalBytesEqual": false,
+          "verdict": "CACHE_MATCHES_CURRENT_SOURCE",
+          "reason": "the accepted cache compiles to the same program as the current source"
+        }
+      },
+      "restored": true,
+      "cleanup": {
+        "containerRemoved": true,
+        "mountRemoved": true
+      },
+      "durationMs": 4414
+    },
+    {
+      "instanceId": "sympy__sympy-12419",
+      "repo": "sympy/sympy",
+      "verdict": "REPRODUCTION_OK",
+      "errors": [],
+      "containerStarted": true,
+      "interpreter": {
+        "version": "3.9.20",
+        "cacheTag": "cpython-39",
+        "magic": "610d0d0a",
+        "dontWriteBytecode": false,
+        "pycachePrefix": null,
+        "optimize": 0,
+        "executable": "/opt/miniconda3/envs/testbed/bin/python"
+      },
+      "probeInstalled": true,
+      "moduleWitness": "/testbed/sympy/__init__.py",
+      "preEditFileState": {
+        "source": "/testbed/sympy/__init__.py",
+        "sourceSize": 2731,
+        "sourceMtime": 1788125169,
+        "pycPath": "/testbed/sympy/__pycache__/__init__.cpython-39.pyc",
+        "pycExists": true,
+        "pycSize": 2691,
+        "pycHeaderHex": "610d0d0a00000000f19f946aab0a0000"
+      },
+      "bytecodeCacheCountBefore": 309,
+      "scenario": {
+        "s0": {
+          "state": {
+            "source": "/testbed/sympy/__init__.py",
+            "sourceSize": 2754,
+            "sourceMtime": 1788125171,
+            "pycPath": "/testbed/sympy/__pycache__/__init__.cpython-39.pyc",
+            "pycExists": true,
+            "pycSize": 2691,
+            "pycHeaderHex": "610d0d0a00000000f19f946aab0a0000"
+          },
+          "read": {
+            "label": "read_S0",
+            "executionWitnessFired": true,
+            "value": "1",
+            "exitCode": 0,
+            "durationMs": 340
+          },
+          "stateAfterRead": {
+            "source": "/testbed/sympy/__init__.py",
+            "sourceSize": 2754,
+            "sourceMtime": 1788125171,
+            "pycPath": "/testbed/sympy/__pycache__/__init__.cpython-39.pyc",
+            "pycExists": true,
+            "pycSize": 2716,
+            "pycHeaderHex": "610d0d0a00000000f39f946ac20a0000"
+          }
+        },
+        "s1": {
+          "state": {
+            "source": "/testbed/sympy/__init__.py",
+            "sourceSize": 2754,
+            "sourceMtime": 1788125172,
+            "pycPath": "/testbed/sympy/__pycache__/__init__.cpython-39.pyc",
+            "pycExists": true,
+            "pycSize": 2716,
+            "pycHeaderHex": "610d0d0a00000000f39f946ac20a0000"
+          },
+          "read": {
+            "label": "read_S1",
+            "executionWitnessFired": true,
+            "value": "2",
+            "exitCode": 0,
+            "durationMs": 328
+          }
+        },
+        "sameMtimeSecond": false,
+        "sameSize": true,
+        "cacheAcceptedDespiteEdit": false
+      },
+      "sourceVersionProbe": {
+        "path": "/testbed/sympy/__init__.py",
+        "sourceSize": 2754,
+        "sourceMtime": 1788125172,
+        "sourceMtimeNs": 1788125172378500208,
+        "sourceSha256": "2a708f84b03cf963138c9c50d19da1dce7593b105bc626ac9cbb4b414cfb1241",
+        "pycPath": "/testbed/sympy/__pycache__/__init__.cpython-39.pyc",
+        "pycExists": true,
+        "pycHeader": {
+          "headerBytes": 2716,
+          "magic": "610d0d0a",
+          "magicMatchesInterpreter": true,
+          "flags": 0,
+          "invalidationMode": "TIMESTAMP",
+          "checkSource": null,
+          "headerMtime": 1788125172,
+          "headerSize": 2754,
+          "bodyOffset": 16
+        },
+        "headerMatchesSourceMtime": true,
+        "headerMatchesSourceSize": true,
+        "cacheWouldBeUsed": true,
+        "cachedCodeFingerprint": "29a48146f90ea78db8b6d32bd2950cf859b363cfefc8bf99e70bd49ef8250858",
+        "freshCodeFingerprint": "29a48146f90ea78db8b6d32bd2950cf859b363cfefc8bf99e70bd49ef8250858",
+        "marshalBytesEqual": false,
+        "verdict": "CACHE_MATCHES_CURRENT_SOURCE",
+        "reason": "the accepted cache compiles to the same program as the current source"
+      },
+      "pathWitnessAfterStaleRead": "/testbed/sympy/__init__.py",
+      "executionWitnessFired": true,
+      "observedSemantics": "read S1, matching the file on disk",
+      "hazardReproduced": false,
+      "sourceVersionVerdict": "CACHE_MATCHES_CURRENT_SOURCE",
+      "bytecodeCacheCountAfter": 309,
+      "forcedCollision": {
+        "s0Read": {
+          "label": "forced_read_S0",
+          "executionWitnessFired": true,
+          "value": "111",
+          "exitCode": 0,
+          "durationMs": 325
+        },
+        "s1State": {
+          "source": "/testbed/sympy/__init__.py",
+          "sourceSize": 2756,
+          "sourceMtime": 1788125173,
+          "pycPath": "/testbed/sympy/__pycache__/__init__.cpython-39.pyc",
+          "pycExists": true,
+          "pycSize": 2721,
+          "pycHeaderHex": "610d0d0a00000000f59f946ac40a0000"
+        },
+        "s1Read": {
+          "label": "forced_read_S1",
+          "executionWitnessFired": true,
+          "value": "111",
+          "exitCode": 0,
+          "durationMs": 313
+        },
+        "pathWitness": "/testbed/sympy/__init__.py",
+        "setupRecompiledAsExpected": true,
+        "staleExecutionObserved": true,
+        "currentSourceValueOnDisk": "222",
+        "sourceVersionVerdict": "CACHE_STALE_AND_ACCEPTED",
+        "sourceVersionReason": "the interpreter would accept a cache that is NOT the current source",
+        "evidence": {
+          "path": "/testbed/sympy/__init__.py",
+          "sourceSize": 2756,
+          "sourceMtime": 1788125173,
+          "sourceMtimeNs": 1788125173502320289,
+          "sourceSha256": "1935c534ff87283c4a1481caca8d6b2d03434f7741267dbac35a8ad53e655017",
+          "pycPath": "/testbed/sympy/__pycache__/__init__.cpython-39.pyc",
+          "pycExists": true,
+          "pycHeader": {
+            "headerBytes": 2721,
+            "magic": "610d0d0a",
+            "magicMatchesInterpreter": true,
+            "flags": 0,
+            "invalidationMode": "TIMESTAMP",
+            "checkSource": null,
+            "headerMtime": 1788125173,
+            "headerSize": 2756,
+            "bodyOffset": 16
+          },
+          "headerMatchesSourceMtime": true,
+          "headerMatchesSourceSize": true,
+          "cacheWouldBeUsed": true,
+          "cachedCodeFingerprint": "556904f5e8b5a7f0b742c2562971c8d292854d7a4f7c4622ee20fd982ae9c85a",
+          "freshCodeFingerprint": "c74c9b8a5199e001f5e3745141818db4db2d818e199e3d6085514ac59f42bd38",
+          "marshalBytesEqual": false,
+          "verdict": "CACHE_STALE_AND_ACCEPTED",
+          "reason": "the interpreter would accept a cache that is NOT the current source"
+        }
+      },
+      "healthyControl": {
+        "read": {
+          "label": "healthy_read",
+          "executionWitnessFired": true,
+          "value": "33333",
+          "exitCode": 0,
+          "durationMs": 309
+        },
+        "currentSourceObserved": true,
+        "sourceVersionVerdict": "CACHE_MATCHES_CURRENT_SOURCE",
+        "sourceVersionReason": "the accepted cache compiles to the same program as the current source",
+        "evidence": {
+          "path": "/testbed/sympy/__init__.py",
+          "sourceSize": 2758,
+          "sourceMtime": 1788125174,
+          "sourceMtimeNs": 1788125174784432248,
+          "sourceSha256": "5cb3f0af92353d8dd630de5ad64ffd07a557972a66dbe9896589513a1858accd",
+          "pycPath": "/testbed/sympy/__pycache__/__init__.cpython-39.pyc",
+          "pycExists": true,
+          "pycHeader": {
+            "headerBytes": 2721,
+            "magic": "610d0d0a",
+            "magicMatchesInterpreter": true,
+            "flags": 0,
+            "invalidationMode": "TIMESTAMP",
+            "checkSource": null,
+            "headerMtime": 1788125174,
+            "headerSize": 2758,
+            "bodyOffset": 16
+          },
+          "headerMatchesSourceMtime": true,
+          "headerMatchesSourceSize": true,
+          "cacheWouldBeUsed": true,
+          "cachedCodeFingerprint": "83c3564cda0ea4b254837be0406aed72cdbb2e91d0e331687e976479554b5edb",
+          "freshCodeFingerprint": "83c3564cda0ea4b254837be0406aed72cdbb2e91d0e331687e976479554b5edb",
+          "marshalBytesEqual": false,
+          "verdict": "CACHE_MATCHES_CURRENT_SOURCE",
+          "reason": "the accepted cache compiles to the same program as the current source"
+        }
+      },
+      "restored": true,
+      "cleanup": {
+        "containerRemoved": true,
+        "mountRemoved": true
+      },
+      "durationMs": 6388
+    }
+  ]
+}

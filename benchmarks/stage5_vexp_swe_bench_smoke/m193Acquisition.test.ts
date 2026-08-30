@@ -7,6 +7,7 @@ import {
   assessAdequacy,
   classifyArmLifecycle,
   classifyRunValidity,
+  classifySourceVersion,
   classifyValidationProvenance,
   classificationText,
   comparePatchIdentity,
@@ -16,12 +17,14 @@ import {
   runnerStarted,
   selectFixture,
   semanticTestResult,
+  sourceVersionIsUsable,
   stopDecision,
   terminationIsInfrastructure,
   traceOrderingIsWellFormed,
   tracePrefix,
   workdirIsPinned,
   type DatasetRow,
+  type SourceVersionEvidence,
 } from "./m193Acquisition";
 import {
   DEMUX_TRAP_STREAMS,
@@ -403,6 +406,98 @@ describe("§39/§40 run validity", () => {
 
 // ── §51 synthetic lifecycle fixtures, frozen ────────────────────────
 
+// ── M193A source-version authority ──────────────────────────────────
+
+function sv(over: Partial<SourceVersionEvidence> = {}): SourceVersionEvidence {
+  return {
+    isValidationAttempt: true,
+    runnerStarted: true,
+    probeRan: true,
+    stateStableAcrossValidation: true,
+    changedSourceFileCount: 2,
+    fileVerdicts: ["CACHE_MATCHES_CURRENT_SOURCE", "COMPILED_FROM_CURRENT_SOURCE"],
+    ...over,
+  };
+}
+
+describe("M193A source-version provenance", () => {
+  test("a recompiled or provably-matching cache confirms the current edited state", () => {
+    expect(classifySourceVersion(sv())).toBe("CURRENT_EDITED_STATE_CONFIRMED");
+    expect(
+      classifySourceVersion(sv({ changedSourceFileCount: 1, fileVerdicts: ["COMPILED_FROM_CURRENT_SOURCE"] })),
+    ).toBe("CURRENT_EDITED_STATE_CONFIRMED");
+  });
+
+  test("one demonstrated stale acceptance convicts the whole event", () => {
+    expect(
+      classifySourceVersion(
+        sv({ changedSourceFileCount: 3, fileVerdicts: ["CACHE_MATCHES_CURRENT_SOURCE", "CACHE_STALE_AND_ACCEPTED", "COMPILED_FROM_CURRENT_SOURCE"] }),
+      ),
+    ).toBe("STALE_EXECUTION_CONFIRMED");
+  });
+
+  test("a proven stale read is reported even when the tree moved underneath", () => {
+    // Ambiguity must not be allowed to launder the strongest fact available.
+    expect(
+      classifySourceVersion(
+        sv({ stateStableAcrossValidation: false, changedSourceFileCount: 1, fileVerdicts: ["CACHE_STALE_AND_ACCEPTED"] }),
+      ),
+    ).toBe("STALE_EXECUTION_CONFIRMED");
+  });
+
+  test("a tree that moved under the probe is ambiguous, never confirmed", () => {
+    expect(classifySourceVersion(sv({ stateStableAcrossValidation: false }))).toBe("SOURCE_VERSION_AMBIGUOUS");
+  });
+
+  test("an unreadable file or an unwitnessable build artifact abstains", () => {
+    expect(
+      classifySourceVersion(sv({ changedSourceFileCount: 2, fileVerdicts: ["CACHE_MATCHES_CURRENT_SOURCE", "INDETERMINATE"] })),
+    ).toBe("SOURCE_VERSION_AMBIGUOUS");
+    expect(
+      classifySourceVersion(sv({ changedSourceFileCount: 2, fileVerdicts: ["CACHE_MATCHES_CURRENT_SOURCE", "COMPILED_ARTIFACT_REQUIRED"] })),
+    ).toBe("SOURCE_VERSION_AMBIGUOUS");
+  });
+
+  test("a non-Python asset is fresh by construction — it is read from disk when the program runs", () => {
+    expect(
+      classifySourceVersion(sv({ changedSourceFileCount: 2, fileVerdicts: ["NON_CACHED_ASSET", "NON_CACHED_ASSET"] })),
+    ).toBe("CURRENT_EDITED_STATE_CONFIRMED");
+  });
+
+  test("a probe that did not run is UNKNOWN, which is not the same as NOT_APPLICABLE (§15)", () => {
+    expect(classifySourceVersion(sv({ probeRan: false }))).toBe("UNKNOWN");
+    expect(classifySourceVersion(sv({ isValidationAttempt: false }))).toBe("NOT_APPLICABLE");
+    expect(classifySourceVersion(sv({ runnerStarted: false }))).toBe("NOT_APPLICABLE");
+  });
+
+  test("a truncated or over-long verdict list cannot be read as agreement", () => {
+    expect(classifySourceVersion(sv({ changedSourceFileCount: 3 }))).toBe("SOURCE_VERSION_AMBIGUOUS");
+    expect(classifySourceVersion(sv({ changedSourceFileCount: 0, fileVerdicts: [] }))).toBe("SOURCE_VERSION_AMBIGUOUS");
+  });
+
+  test("only the confirmed state is usable, and every other state fails closed (§8)", () => {
+    expect(sourceVersionIsUsable("CURRENT_EDITED_STATE_CONFIRMED")).toBe(true);
+    for (const s of ["SOURCE_VERSION_AMBIGUOUS", "STALE_EXECUTION_CONFIRMED", "NOT_APPLICABLE", "UNKNOWN"] as const) {
+      expect(sourceVersionIsUsable(s)).toBe(false);
+    }
+  });
+
+  test("the path axis and the version axis are independent, and both bind (§13)", () => {
+    // The poisoned copy of M192: current bytes, wrong file. Confirming freshness
+    // must not rescue it, and rejecting the path must not be reported as staleness.
+    const poisoned = classifyValidationProvenance({
+      isValidationAttempt: true,
+      runnerStarted: true,
+      workdir: "/",
+      checkoutRoot: "/testbed",
+      moduleFile: "/opt/miniconda3/envs/testbed/lib/python3.11/site-packages/flask/__init__.py",
+      robustness: "CWD_DEPENDENT",
+    });
+    expect(poisoned).toBe("INSTALLED_COPY_CONFIRMED");
+    expect(classifySourceVersion(sv())).toBe("CURRENT_EDITED_STATE_CONFIRMED");
+  });
+});
+
 describe("§51 synthetic lifecycle fixtures classify exactly as frozen", () => {
   for (const f of syntheticFixtures()) {
     test(f.id, () => {
@@ -415,6 +510,8 @@ describe("§51 synthetic lifecycle fixtures classify exactly as frozen", () => {
       expect(l.usableValidationEvents).toBe(f.expect.usableValidationEvents);
       expect(l.postValidationRevisions).toBe(f.expect.postValidationRevisions);
       expect(l.wrongSourceEvents).toBe(f.expect.wrongSourceEvents);
+      expect(l.sourceVersionAmbiguousEvents).toBe(f.expect.sourceVersionAmbiguousEvents);
+      expect(l.staleExecutionEvents).toBe(f.expect.staleExecutionEvents);
     });
   }
 
@@ -430,8 +527,19 @@ describe("§51 synthetic lifecycle fixtures classify exactly as frozen", () => {
   test("wrong-source and ambiguous events never reach the usable count", () => {
     const lifecycles = syntheticFixtures().map((f) => classifyArmLifecycle(f.arm));
     const acc = accountCorpus(lifecycles, 0);
-    expect(acc.wrongSourceEvents).toBe(1);
+    // Two since M193A: F06's installed copy, and F15's poisoned copy that
+    // carries the CURRENT bytes forward and is still rejected on the path axis.
+    expect(acc.wrongSourceEvents).toBe(2);
     expect(acc.ambiguousSourceEvents).toBe(1);
+    expect(acc.sourceVersionAmbiguousEvents).toBe(1);
+    expect(acc.staleExecutionEvents).toBe(1);
+    expect(acc.validButI6UnusableSourceVersionArms).toBe(2);
+    for (const l of lifecycles.filter((x) => x.staleExecutionEvents > 0 || x.sourceVersionAmbiguousEvents > 0)) {
+      expect(l.usableValidationEvents).toBe(0);
+      expect(l.i6Usable).toBe(false);
+      // §17 — losing the episode must not lose the run.
+      expect(l.validity).toBe("RUN_VALID");
+    }
     const wrongSourceArm = lifecycles.find((l) => l.wrongSourceEvents > 0)!;
     expect(wrongSourceArm.usableValidationEvents).toBe(0);
     expect(wrongSourceArm.i6Usable).toBe(false);

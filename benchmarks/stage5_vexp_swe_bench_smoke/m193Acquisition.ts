@@ -14,6 +14,9 @@
  *   path provenance          vs  execution provenance   (M192: a shadowing copy
  *                                                        carried the edit forward)
  *   run validity             vs  task resolution        (§40)
+ *   source PATH              vs  source VERSION         (M193A: a cached .pyc
+ *                                                        can execute yesterday's
+ *                                                        code from today's file)
  */
 
 export const M193_SCHEMA_VERSION = "stage5.m193.acquisition.v1";
@@ -302,6 +305,96 @@ export function provenanceIsUsable(p: ProvenanceState): boolean {
   return p === "EDITED_CHECKOUT_CONFIRMED";
 }
 
+// ── M193A source VERSION provenance ─────────────────────────────────
+
+/**
+ * Which version of the program a validation event actually executed.
+ *
+ * Path provenance answers "which file did the interpreter resolve"; it cannot
+ * answer "which bytes of that file did it run". CPython validates a
+ * timestamp-based `.pyc` against the source's `(mtime_seconds, size)` alone, so
+ * an edit that preserves the size within one whole second leaves both fields
+ * untouched and the interpreter executes the PREVIOUS compilation while
+ * `__file__` still, truthfully, names the edited checkout.
+ *
+ * M193A reproduced this on the real substrate across CPython 3.6, 3.9 and 3.11:
+ * with the clock race removed, all five dry-run repositories executed stale code
+ * while every path witness said EDITED_CHECKOUT_CONFIRMED.
+ */
+export type SourceVersionState =
+  | "CURRENT_EDITED_STATE_CONFIRMED"
+  | "SOURCE_VERSION_AMBIGUOUS"
+  | "STALE_EXECUTION_CONFIRMED"
+  | "NOT_APPLICABLE"
+  | "UNKNOWN";
+
+/**
+ * Per changed file, as reported by the out-of-band in-container probe.
+ *
+ * `NON_CACHED_ASSET` is fresh by construction — a template or a JSON fixture is
+ * read from disk when the program runs and nothing can shadow it. A
+ * `COMPILED_ARTIFACT_REQUIRED` file is the opposite: its runtime form is a build
+ * output this milestone cannot witness, so it is never claimed fresh (§15).
+ */
+export type ChangedFileFreshness =
+  | "COMPILED_FROM_CURRENT_SOURCE"
+  | "CACHE_MATCHES_CURRENT_SOURCE"
+  | "CACHE_STALE_AND_ACCEPTED"
+  | "NON_CACHED_ASSET"
+  | "COMPILED_ARTIFACT_REQUIRED"
+  | "INDETERMINATE";
+
+export interface SourceVersionEvidence {
+  isValidationAttempt: boolean;
+  runnerStarted: boolean;
+  /** Did the out-of-band probe run and return parseable output at all? */
+  probeRan: boolean;
+  /**
+   * The probe necessarily runs AFTER the command, so it describes what the
+   * command saw only if nothing rewrote the tree in between. The harness
+   * compares the BEFORE_VALIDATION and AFTER_VALIDATION diff hashes; when they
+   * disagree the honest answer is that freshness was not established.
+   */
+  stateStableAcrossValidation: boolean;
+  /** §16 — the minimum set whose freshness matters: everything the working tree
+   *  currently differs by. Not the whole repository. */
+  changedSourceFileCount: number;
+  fileVerdicts: ChangedFileFreshness[];
+}
+
+/**
+ * Fails closed, exactly like `classifyValidationProvenance`.
+ *
+ * The only route to CURRENT_EDITED_STATE_CONFIRMED is a probe that ran, a tree
+ * that did not move under it, and every changed file in scope demonstrably
+ * either recompiled or backed by a cache that provably equals the current
+ * source. One stale acceptance is enough to convict; one unreadable file is
+ * enough to abstain.
+ */
+export function classifySourceVersion(ev: SourceVersionEvidence): SourceVersionState {
+  if (!ev.isValidationAttempt) return "NOT_APPLICABLE";
+  if (!ev.runnerStarted) return "NOT_APPLICABLE";
+  if (!ev.probeRan) return "UNKNOWN";
+
+  // A demonstrated stale acceptance is reported even when other evidence is
+  // missing: it is the strongest thing that can be known and the least safe to
+  // round away.
+  if (ev.fileVerdicts.includes("CACHE_STALE_AND_ACCEPTED")) return "STALE_EXECUTION_CONFIRMED";
+
+  if (!ev.stateStableAcrossValidation) return "SOURCE_VERSION_AMBIGUOUS";
+  if (ev.fileVerdicts.length !== ev.changedSourceFileCount) return "SOURCE_VERSION_AMBIGUOUS";
+  if (ev.changedSourceFileCount === 0) return "SOURCE_VERSION_AMBIGUOUS";
+  if (ev.fileVerdicts.some((v) => v === "INDETERMINATE" || v === "COMPILED_ARTIFACT_REQUIRED")) {
+    return "SOURCE_VERSION_AMBIGUOUS";
+  }
+  return "CURRENT_EDITED_STATE_CONFIRMED";
+}
+
+/** §8 — the frozen usability half of the source-version authority. */
+export function sourceVersionIsUsable(s: SourceVersionState): boolean {
+  return s === "CURRENT_EDITED_STATE_CONFIRMED";
+}
+
 // ── §19 ordered trace + §18 diff snapshots ──────────────────────────
 
 export type PatchBoundary =
@@ -337,6 +430,8 @@ export interface ValidationRecord {
   runnerStarted: boolean;
   semanticTestResult: SemanticTestResult;
   provenance: ProvenanceState;
+  /** M193A — independent of `provenance`, and both are required (§13). */
+  sourceVersion: SourceVersionState;
   moduleFile: string | null;
 }
 
@@ -538,6 +633,10 @@ export interface ArmLifecycle {
   validationCycles: number;
   wrongSourceEvents: number;
   ambiguousSourceEvents: number;
+  /** M193A — kept separate from the path axis so neither can absorb the other. */
+  sourceVersionAmbiguousEvents: number;
+  staleExecutionEvents: number;
+  sourceVersionUnknownEvents: number;
   i6Usable: boolean;
   i6UnusableReason: string | null;
   runtimeDiagnosisUsable: boolean;
@@ -560,11 +659,17 @@ export function classifyArmLifecycle(a: ArmOutcome): ArmLifecycle {
   const postEdit = validationEvents.filter((e) => editOrd !== null && e.ordinal > editOrd);
 
   const runnerStarts = postEdit.filter((e) => e.validation!.runnerStarted).length;
-  const usable = postEdit.filter(
+
+  // Two nested filters, deliberately not one. `pathTrustworthy` is M192/M193's
+  // bar: the right file, and a result worth reading. `usable` adds M193A's:
+  // the right BYTES of that file. Keeping them apart is what lets the ledger
+  // say which of the two a lost episode was lost to.
+  const pathTrustworthy = postEdit.filter(
     (e) =>
       provenanceIsUsable(e.validation!.provenance) &&
       e.validation!.semanticTestResult !== "UNKNOWN",
   );
+  const usable = pathTrustworthy.filter((e) => sourceVersionIsUsable(e.validation!.sourceVersion));
   const passes = usable.filter((e) => e.validation!.semanticTestResult === "PASSED").length;
   const failures = usable.filter(
     (e) => e.validation!.semanticTestResult === "FAILED" || e.validation!.semanticTestResult === "MIXED",
@@ -572,6 +677,9 @@ export function classifyArmLifecycle(a: ArmOutcome): ArmLifecycle {
 
   const wrongSource = postEdit.filter((e) => e.validation!.provenance === "INSTALLED_COPY_CONFIRMED").length;
   const ambiguous = postEdit.filter((e) => e.validation!.provenance === "AMBIGUOUS_SOURCE").length;
+  const sourceVersionAmbiguous = postEdit.filter((e) => e.validation!.sourceVersion === "SOURCE_VERSION_AMBIGUOUS").length;
+  const staleExecution = postEdit.filter((e) => e.validation!.sourceVersion === "STALE_EXECUTION_CONFIRMED").length;
+  const sourceVersionUnknown = postEdit.filter((e) => e.validation!.sourceVersion === "UNKNOWN").length;
 
   // A revision is an AFTER_EDIT snapshot whose diff hash differs from the
   // snapshot standing at the last validation, and which occurs after it.
@@ -586,7 +694,8 @@ export function classifyArmLifecycle(a: ArmOutcome): ArmLifecycle {
   if (validity !== "RUN_VALID") i6UnusableReason = "RUN_INVALID";
   else if (!hasSourceEdit) i6UnusableReason = "NO_SOURCE_EDIT";
   else if (postEdit.length === 0) i6UnusableReason = "NO_POST_EDIT_VALIDATION_ATTEMPT";
-  else if (usable.length === 0) i6UnusableReason = "NO_TRUSTWORTHY_VALIDATION_RESULT";
+  else if (pathTrustworthy.length === 0) i6UnusableReason = "NO_TRUSTWORTHY_VALIDATION_RESULT";
+  else if (usable.length === 0) i6UnusableReason = "I6_UNUSABLE_SOURCE_VERSION";
   else if (!traceOrderingIsWellFormed(a.events)) i6UnusableReason = "TRACE_ORDERING_CORRUPT";
 
   const i6Usable = i6UnusableReason === null;
@@ -623,6 +732,9 @@ export function classifyArmLifecycle(a: ArmOutcome): ArmLifecycle {
     validationCycles: usable.length,
     wrongSourceEvents: wrongSource,
     ambiguousSourceEvents: ambiguous,
+    sourceVersionAmbiguousEvents: sourceVersionAmbiguous,
+    staleExecutionEvents: staleExecution,
+    sourceVersionUnknownEvents: sourceVersionUnknown,
     i6Usable,
     i6UnusableReason,
     runtimeDiagnosisUsable,
@@ -651,6 +763,11 @@ export interface CorpusAccounting {
   repositoriesAmongI6Usable: number;
   wrongSourceEvents: number;
   ambiguousSourceEvents: number;
+  sourceVersionAmbiguousEvents: number;
+  staleExecutionEvents: number;
+  sourceVersionUnknownEvents: number;
+  /** §17 — a RUN_VALID arm lost solely to the source-version axis stays visible. */
+  validButI6UnusableSourceVersionArms: number;
   spendUsd: number;
   resolvedCount: number;
 }
@@ -682,6 +799,10 @@ export function accountCorpus(lifecycles: ArmLifecycle[], spendUsd: number): Cor
     repositoriesAmongI6Usable: new Set(lifecycles.filter((l) => l.i6Usable).map((l) => l.repo)).size,
     wrongSourceEvents: lifecycles.reduce((n, l) => n + l.wrongSourceEvents, 0),
     ambiguousSourceEvents: lifecycles.reduce((n, l) => n + l.ambiguousSourceEvents, 0),
+    sourceVersionAmbiguousEvents: lifecycles.reduce((n, l) => n + l.sourceVersionAmbiguousEvents, 0),
+    staleExecutionEvents: lifecycles.reduce((n, l) => n + l.staleExecutionEvents, 0),
+    sourceVersionUnknownEvents: lifecycles.reduce((n, l) => n + l.sourceVersionUnknownEvents, 0),
+    validButI6UnusableSourceVersionArms: valid.filter((l) => l.i6UnusableReason === "I6_UNUSABLE_SOURCE_VERSION").length,
     spendUsd,
     resolvedCount: lifecycles.filter((l) => l.resolved === true).length,
   };

@@ -15,6 +15,7 @@ import {
   type ProvenanceState,
   type RunValidity,
   type SemanticTestResult,
+  type SourceVersionState,
   type StreamCapture,
   type TraceEvent,
   type ValidationRecord,
@@ -70,6 +71,10 @@ function validation(over: Partial<ValidationRecord> = {}): ValidationRecord {
     runnerStarted: true,
     semanticTestResult: "PASSED",
     provenance: "EDITED_CHECKOUT_CONFIRMED",
+    // M193A: the healthy default. Every pre-existing fixture keeps its frozen
+    // classification because a validation whose freshness is confirmed behaves
+    // exactly as it did before the axis existed.
+    sourceVersion: "CURRENT_EDITED_STATE_CONFIRMED",
     moduleFile: `${CHECKOUT}/pkg/__init__.py`,
     ...over,
   };
@@ -146,6 +151,8 @@ export interface FixtureExpectation {
     usableValidationEvents: number;
     postValidationRevisions: number;
     wrongSourceEvents: number;
+    sourceVersionAmbiguousEvents: number;
+    staleExecutionEvents: number;
   };
 }
 
@@ -171,6 +178,8 @@ export function syntheticFixtures(): FixtureExpectation[] {
         usableValidationEvents: 0,
         postValidationRevisions: 0,
         wrongSourceEvents: 0,
+        sourceVersionAmbiguousEvents: 0,
+        staleExecutionEvents: 0,
       },
     },
     {
@@ -188,6 +197,8 @@ export function syntheticFixtures(): FixtureExpectation[] {
         usableValidationEvents: 1,
         postValidationRevisions: 0,
         wrongSourceEvents: 0,
+        sourceVersionAmbiguousEvents: 0,
+        staleExecutionEvents: 0,
       },
     },
     {
@@ -214,6 +225,8 @@ export function syntheticFixtures(): FixtureExpectation[] {
         usableValidationEvents: 2,
         postValidationRevisions: 1,
         wrongSourceEvents: 0,
+        sourceVersionAmbiguousEvents: 0,
+        staleExecutionEvents: 0,
       },
     },
     {
@@ -236,6 +249,8 @@ export function syntheticFixtures(): FixtureExpectation[] {
         usableValidationEvents: 1,
         postValidationRevisions: 0,
         wrongSourceEvents: 0,
+        sourceVersionAmbiguousEvents: 0,
+        staleExecutionEvents: 0,
       },
     },
     {
@@ -265,6 +280,8 @@ export function syntheticFixtures(): FixtureExpectation[] {
         usableValidationEvents: 0,
         postValidationRevisions: 0,
         wrongSourceEvents: 0,
+        sourceVersionAmbiguousEvents: 0,
+        staleExecutionEvents: 0,
       },
     },
     {
@@ -290,6 +307,8 @@ export function syntheticFixtures(): FixtureExpectation[] {
         usableValidationEvents: 0,
         postValidationRevisions: 0,
         wrongSourceEvents: 1,
+        sourceVersionAmbiguousEvents: 0,
+        staleExecutionEvents: 0,
       },
     },
     {
@@ -317,6 +336,8 @@ export function syntheticFixtures(): FixtureExpectation[] {
         usableValidationEvents: 0,
         postValidationRevisions: 0,
         wrongSourceEvents: 0,
+        sourceVersionAmbiguousEvents: 0,
+        staleExecutionEvents: 0,
       },
     },
     {
@@ -338,6 +359,8 @@ export function syntheticFixtures(): FixtureExpectation[] {
         usableValidationEvents: 0,
         postValidationRevisions: 0,
         wrongSourceEvents: 0,
+        sourceVersionAmbiguousEvents: 0,
+        staleExecutionEvents: 0,
       },
     },
     {
@@ -359,6 +382,8 @@ export function syntheticFixtures(): FixtureExpectation[] {
         usableValidationEvents: 0,
         postValidationRevisions: 0,
         wrongSourceEvents: 0,
+        sourceVersionAmbiguousEvents: 0,
+        staleExecutionEvents: 0,
       },
     },
     {
@@ -389,6 +414,8 @@ export function syntheticFixtures(): FixtureExpectation[] {
         usableValidationEvents: 3,
         postValidationRevisions: 2,
         wrongSourceEvents: 0,
+        sourceVersionAmbiguousEvents: 0,
+        staleExecutionEvents: 0,
       },
     },
     {
@@ -412,6 +439,8 @@ export function syntheticFixtures(): FixtureExpectation[] {
         usableValidationEvents: 0,
         postValidationRevisions: 0,
         wrongSourceEvents: 0,
+        sourceVersionAmbiguousEvents: 0,
+        staleExecutionEvents: 0,
       },
     },
     {
@@ -433,6 +462,117 @@ export function syntheticFixtures(): FixtureExpectation[] {
         usableValidationEvents: 1,
         postValidationRevisions: 0,
         wrongSourceEvents: 0,
+        sourceVersionAmbiguousEvents: 0,
+        staleExecutionEvents: 0,
+      },
+    },
+    // ── M193A §18 — the source-version axis ─────────────────────────
+    {
+      id: "F13_SOURCE_VERSION_AMBIGUOUS",
+      description:
+        "M193A's finding: the right file, a runner that started, a result that reads normally — and a bytecode cache that could have carried the previous compilation into it. RUN_VALID, and never I6-usable (§8).",
+      arm: build("F13", "psf__requests-1142", "psf/requests", [
+        SETUP,
+        EDIT("sha256:m1"),
+        PRE_VAL,
+        VAL(validation({ sourceVersion: "SOURCE_VERSION_AMBIGUOUS" })),
+        POST_VAL,
+        END,
+      ]),
+      expect: {
+        validity: "RUN_VALID",
+        i6Usable: false,
+        i6UnusableReason: "I6_UNUSABLE_SOURCE_VERSION",
+        runtimeDiagnosisUsable: false,
+        postEditValidationAttempts: 1,
+        usableValidationEvents: 0,
+        postValidationRevisions: 0,
+        wrongSourceEvents: 0,
+        sourceVersionAmbiguousEvents: 1,
+        staleExecutionEvents: 0,
+      },
+    },
+    {
+      id: "F14_SOURCE_VERSION_CONFIRMED",
+      description:
+        "the same shape with freshness positively established. A classifier that only ever abstains would fail here, so this fixture is what stops the new axis from being free (§12).",
+      arm: build("F14", "sympy__sympy-12419", "sympy/sympy", [
+        SETUP,
+        EDIT("sha256:n1"),
+        PRE_VAL,
+        VAL(validation({ streams: PYTEST_FAIL, semanticTestResult: "MIXED", shell: { processStarted: true, exitCode: 1, timedOut: false, signal: null, durationMs: 640 } })),
+        POST_VAL,
+        EDIT("sha256:n2"),
+        PRE_VAL,
+        VAL(validation()),
+        POST_VAL,
+        END,
+      ]),
+      expect: {
+        validity: "RUN_VALID",
+        i6Usable: true,
+        i6UnusableReason: null,
+        runtimeDiagnosisUsable: true,
+        postEditValidationAttempts: 2,
+        usableValidationEvents: 2,
+        postValidationRevisions: 1,
+        wrongSourceEvents: 0,
+        sourceVersionAmbiguousEvents: 0,
+        staleExecutionEvents: 0,
+      },
+    },
+    {
+      id: "F15_STALE_EXECUTION_WRONG_PATH",
+      description:
+        "M192's poisoned copy carrying the current bytes forward: the source-version witness is satisfied by the shadow, and the PATH witness is the only thing that catches it. The two axes must both hold, and neither may stand in for the other (§13).",
+      arm: build("F15", "pallets__flask-5014", "pallets/flask", [
+        SETUP,
+        EDIT("sha256:o1"),
+        PRE_VAL,
+        VAL(validation({
+          provenance: "INSTALLED_COPY_CONFIRMED",
+          moduleFile: "/opt/miniconda3/envs/testbed/lib/python3.11/site-packages/flask/__init__.py",
+          sourceVersion: "CURRENT_EDITED_STATE_CONFIRMED",
+        })),
+        POST_VAL,
+        END,
+      ]),
+      expect: {
+        validity: "RUN_VALID",
+        i6Usable: false,
+        i6UnusableReason: "NO_TRUSTWORTHY_VALIDATION_RESULT",
+        runtimeDiagnosisUsable: false,
+        postEditValidationAttempts: 1,
+        usableValidationEvents: 0,
+        postValidationRevisions: 0,
+        wrongSourceEvents: 1,
+        sourceVersionAmbiguousEvents: 0,
+        staleExecutionEvents: 0,
+      },
+    },
+    {
+      id: "F16_STALE_EXECUTION_CONFIRMED",
+      description:
+        "the hazard caught red-handed rather than merely suspected: the probe proved the interpreter accepted a cache that is not the current source. Reported as its own event class so it can never be folded into ordinary ambiguity (§17).",
+      arm: build("F16", "django__django-10880", "django/django", [
+        SETUP,
+        EDIT("sha256:p1"),
+        PRE_VAL,
+        VAL(validation({ sourceVersion: "STALE_EXECUTION_CONFIRMED" })),
+        POST_VAL,
+        END,
+      ]),
+      expect: {
+        validity: "RUN_VALID",
+        i6Usable: false,
+        i6UnusableReason: "I6_UNUSABLE_SOURCE_VERSION",
+        runtimeDiagnosisUsable: false,
+        postEditValidationAttempts: 1,
+        usableValidationEvents: 0,
+        postValidationRevisions: 0,
+        wrongSourceEvents: 0,
+        sourceVersionAmbiguousEvents: 0,
+        staleExecutionEvents: 1,
       },
     },
   ];
@@ -445,9 +585,9 @@ export const FIXTURE_CORPUS_EXPECTATION: {
   runtimeDiagnosisUsableArms: number;
   adequacy: CorpusAdequacy;
 } = {
-  validRuns: 10,
-  i6UsableArms: 4,
-  runtimeDiagnosisUsableArms: 3,
+  validRuns: 14,
+  i6UsableArms: 5,
+  runtimeDiagnosisUsableArms: 4,
   adequacy: "INADEQUATE",
 };
 
@@ -461,6 +601,13 @@ export const FIXTURE_PROVENANCE_STATES: readonly ProvenanceState[] = Object.free
   "AMBIGUOUS_SOURCE",
   "RUNNER_NOT_STARTED",
   "NOT_APPLICABLE",
+]);
+export const FIXTURE_SOURCE_VERSION_STATES: readonly SourceVersionState[] = Object.freeze([
+  "CURRENT_EDITED_STATE_CONFIRMED",
+  "SOURCE_VERSION_AMBIGUOUS",
+  "STALE_EXECUTION_CONFIRMED",
+  "NOT_APPLICABLE",
+  "UNKNOWN",
 ]);
 export const FIXTURE_SEMANTIC_STATES: readonly SemanticTestResult[] = Object.freeze([
   "PASSED",

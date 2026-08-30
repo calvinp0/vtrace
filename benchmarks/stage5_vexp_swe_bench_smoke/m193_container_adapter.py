@@ -30,6 +30,7 @@ by an earlier milestone:
 
 from __future__ import annotations
 
+import base64
 import hashlib
 import json
 import os
@@ -44,6 +45,11 @@ from typing import Any
 import docker
 
 CHECKOUT_ROOT = "/testbed"
+
+# The probe travels into the container's /tmp, never into the checkout: anything
+# written under /testbed would enter the model patch and every diff snapshot.
+SOURCE_VERSION_PROBE_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "m193a_source_version_probe.py")
+CONTAINER_PROBE_PATH = "/tmp/m193a_source_version_probe.py"
 
 # The exact activation swebench's own eval script performs. Reproduced rather
 # than approximated: with the base interpreter the package is simply absent.
@@ -127,6 +133,7 @@ class M193Container:
         self.client = docker.from_env()
         self.container = None
         self.preexisting_untracked: list[str] = []
+        self._probe_installed = False
         self.name = M193_RESOURCE_PREFIX + re.sub(r"[^a-zA-Z0-9_.-]", "-", spec.instance_id)
 
     # ── lifecycle ───────────────────────────────────────────────────
@@ -437,6 +444,123 @@ class M193Container:
             return int(rec.stdout.strip().splitlines()[-1])
         except Exception:
             return -1
+
+    # ── M193A source-version witness (§7, §10, §16) ─────────────────
+
+    def changed_source_paths(self) -> list[str]:
+        """The changed-source set whose freshness matters (§16).
+
+        Everything the working tree currently differs by, as absolute container
+        paths. A whole-repository freshness proof is neither necessary nor
+        affordable; what a validation event is evidence ABOUT is the edited
+        program, and the edited program is exactly this set. Read from git
+        rather than from our own snapshot bookkeeping so it cannot drift from
+        what the checkout really holds.
+        """
+        excl = self._exclusion_pathspec()
+        rec = self.exec_raw(
+            f"git -c core.fileMode=false add -A -- . {excl} >/dev/null 2>&1; "
+            f"git -c core.fileMode=false diff --cached --name-only; "
+            f"git reset -q >/dev/null 2>&1",
+            timeout=300,
+            label="changed_source_paths",
+        )
+        out: list[str] = []
+        for line in rec.stdout.splitlines():
+            rel = line.strip()
+            if rel:
+                out.append(os.path.join(CHECKOUT_ROOT, rel))
+        return sorted(set(out))
+
+    def _install_source_version_probe(self) -> bool:
+        """Copy the probe into the container's own /tmp, never into the checkout.
+
+        Writing it under /testbed would put the instrument into the model patch
+        and into every diff snapshot. /tmp inside the container is not
+        bind-mounted, so the checkout stays exactly what the agent made it.
+        """
+        if self._probe_installed:
+            return True
+        try:
+            with open(SOURCE_VERSION_PROBE_PATH, "rb") as fh:
+                blob = base64.b64encode(fh.read()).decode()
+        except OSError:
+            return False
+        rec = self.exec_raw(
+            f"printf %s {blob} | base64 -d > {CONTAINER_PROBE_PATH} && echo INSTALLED",
+            timeout=120,
+            label="install_source_version_probe",
+        )
+        self._probe_installed = "INSTALLED" in rec.stdout
+        return self._probe_installed
+
+    def source_version_probe(self, paths: list[str] | None = None, since_epoch: float | None = None) -> dict[str, Any]:
+        """Ask the container's own interpreter whether the caches on disk agree
+        with the bytes on disk.
+
+        Runs AFTER the agent's command, as a separate process, and never imports
+        the files it is judging — importing one would write or refresh the very
+        cache whose staleness is the evidence (§6, §45).
+        """
+        targets = self.changed_source_paths() if paths is None else list(paths)
+        out: dict[str, Any] = {"probeRan": False, "requestedPaths": targets}
+        if not self._install_source_version_probe():
+            out["error"] = "probe not installed"
+            return out
+        # base64 rather than shell quoting: a path is arbitrary bytes and the
+        # command crosses two shells before it reaches the interpreter.
+        payload = base64.b64encode(
+            json.dumps({"paths": targets, "sinceEpoch": None if since_epoch is None else int(since_epoch)}).encode()
+        ).decode()
+        rec = self.exec_raw(
+            f"printf %s {payload} | base64 -d | python {CONTAINER_PROBE_PATH}",
+            timeout=300,
+            label="source_version_probe",
+        )
+        out["exitCode"] = rec.exit_code
+        text = (rec.stdout or "").strip()
+        line = text.splitlines()[-1] if text else ""
+        try:
+            out.update(json.loads(line))
+            out["probeRan"] = True
+        except Exception as exc:  # noqa: BLE001
+            out["error"] = f"probe output unparseable: {exc}"
+            out["rawTail"] = text[-600:]
+            out["stderrTail"] = (rec.stderr or "")[-600:]
+        return out
+
+    def source_version_evidence(
+        self,
+        *,
+        is_validation_attempt: bool,
+        runner_started: bool,
+        state_hash_before: str | None,
+        state_hash_after: str | None,
+        paths: list[str] | None = None,
+        since_epoch: float | None = None,
+    ) -> dict[str, Any]:
+        """The compact record the TypeScript classifier consumes.
+
+        `stateStableAcrossValidation` is load-bearing: the probe necessarily runs
+        after the command, so it only describes what the command saw if nothing
+        rewrote the tree in between. When the two snapshots disagree the honest
+        answer is that freshness was not established, not that it was fine.
+        """
+        probe = self.source_version_probe(paths, since_epoch)
+        files = probe.get("files") or []
+        return {
+            "probeRan": bool(probe.get("probeRan")),
+            "isValidationAttempt": is_validation_attempt,
+            "runnerStarted": runner_started,
+            "stateStableAcrossValidation": (
+                state_hash_before is not None and state_hash_before == state_hash_after
+            ),
+            "changedSourceFileCount": len(files),
+            "fileVerdicts": [f.get("verdict", "INDETERMINATE") for f in files],
+            "interpreter": probe.get("interpreter"),
+            "files": files,
+            "error": probe.get("error"),
+        }
 
     def bytecode_staleness_hazard(self) -> dict[str, Any]:
         """Does a same-size, same-second edit go unseen on THIS instance?"""

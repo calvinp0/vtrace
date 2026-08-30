@@ -6820,3 +6820,165 @@ authorizations    BASELINE_OBSERVATIONAL_ACQUISITION_DESIGN_READY
   hold, and M191's observation still stands: the natural validation-attempt rate in the
   healthy pre-guard population was 318/807, and it is not obvious that beating it is worth
   the money. Do not reopen I5. Do not implement I6.
+
+---
+
+## M193A — validation source-version authority and treatment-isolation closure
+
+```text
+verdict           M193A - PASS
+                  readiness M194_ACQUISITION_INTEGRITY_READY, 15/15 gates
+                  live-agent runs 0, live model spend $0
+
+scope             the two hazards M193 discovered and did not close. Nothing else.
+                  No product code, no retrieval, no I5, no I6, no runtime repair.
+
+start / end       start dac2db26632337dbc5d08c5ae336fcc822471fff (M193's truncated
+                  final SHA, recovered mechanically), 2 tracked + 203 untracked
+                  pre-existing dirt, preserved.
+
+hazard A          M193 reported bytecode staleness as a property of 3 of 5 dry-run
+re-attributed     repositories. It is a property of an edit's TIMING. The affected set
+                  moved across three runs of the same probe on the same repositories -
+                  M193 requests/pytest/sympy, M193A first run django/flask/requests,
+                  M193A committed run django/flask/requests/pytest - and in every case
+                  the hazard occurred exactly when the two writes shared a whole second.
+                  With the race removed, 5 of 5 execute stale code, across CPython
+                  3.6.13 / 3.9.20 / 3.11.10, all timestamp mode. There is no safe
+                  repository in the fixture.
+
+source-version    a fourth axis alongside M192's three, kept independent of all of them:
+authority         CURRENT_EDITED_STATE_CONFIRMED / SOURCE_VERSION_AMBIGUOUS /
+                  STALE_EXECUTION_CONFIRMED / NOT_APPLICABLE / UNKNOWN. Established by
+                  an out-of-band in-container probe that reads the source and its caches
+                  and never imports what it judges. Two questions: would CPython have
+                  accepted this cache (reconstructed from the header fields CPython
+                  itself compares, with an explicit branch for the pre-3.7 12-byte
+                  header), and if so does the cached code object equal a fresh compile.
+                  Scope = the working tree's own diff, read from git.
+
+I6 rule           I6-usable now requires path provenance EDITED_CHECKOUT_CONFIRMED AND
+                  source-version CURRENT_EDITED_STATE_CONFIRMED. Two nested filters, not
+                  one, so the ledger can say which axis an episode was lost to. A run
+                  losing every episode to the new axis stays RUN_VALID and is counted in
+                  validButI6UnusableSourceVersionArms. Adequacy threshold UNCHANGED.
+
+hazard B          M193's manifest claims an empty --mcp-config with --strict-mcp-config
+falsified         "guarantees no MCP server, VTRACE's included, can reach the agent".
+                  Measured on this host: inherited 5 servers -> credentials-only private
+                  dir (M193's stated precondition) 3 -> the same WITH the strict flags
+                  still 3 -> constructed arm 0. The three survivors are claude.ai account
+                  connectors; they arrive with the authenticated account and follow
+                  .credentials.json into any private directory. No file can be withheld
+                  to stop them. disableClaudeAiConnectors does.
+
+isolation by      constructArmEnvironment(): a private 0700 directory that did not exist
+construction      a moment earlier, unique per arm; exactly [".credentials.json"] copied;
+                  {"disableClaudeAiConnectors": true} WRITTEN not inherited; the process
+                  environment built from an allow-list (a denylist is only as complete as
+                  the last person to think about it); an audit of directory + env + argv +
+                  measured MCP count. mayLaunchModel is the whole interface to anything
+                  that costs money, and is false for 7 tested failure shapes.
+
+controls          forced stale 5/5 CACHE_STALE_AND_ACCEPTED; healthy 5/5 confirmed;
+                  natural first validation 5/5 confirmed; poisoned copy 5/5 resolved
+                  outside the checkout with current bytes carried forward, refused on the
+                  path axis alone (M192's control preserved, F15 encodes it).
+
+instrument        two defects in M193A's OWN instrument, both found by running it: the
+defects           forced control's priming write shared a length with the natural arm's,
+                  so on pytest-dev/pytest the priming read was itself stale and the
+                  control reported a false negative; and the probe used
+                  `from __future__ import annotations`, which does not exist before 3.7,
+                  so it failed silently on django/django (3.6.13). Both fixed, both
+                  documented in the source that carries them.
+
+marshal finding   raw marshal bytes are NOT a code identity test. marshal.dumps(compile())
+                  differed from a byte-identical file's cached body on every interpreter
+                  measured, because of reference-sharing encoding. A byte comparison
+                  would have reported staleness on every file in the corpus. The
+                  comparison is a recursive structural fingerprint; marshal equality is
+                  recorded as a weaker witness expected to be false.
+
+fixtures          12/12 M193 fixtures classify IDENTICALLY. Four added: F13 ambiguous,
+                  F14 confirmed, F15 poisoned copy carrying current bytes, F16 stale
+                  proven. Corpus expectation 10 valid/4 usable -> 14/5 by addition only.
+
+dry run           re-run on the same 5 repositories with source-version at every
+                  validation and the controls against the same running container. 5/5
+                  lifecycles OK, evaluator rc=0 in 45s, 5/5 resolved, patch identity
+                  IDENTICAL_STRICT 5/5. Three second-validations report AMBIGUOUS, all
+                  from pytest's assertion-rewrite cache on the fake agent's OWN test
+                  file; the two CONFIRMED are the two that fell back to a plain
+                  assertion.
+
+re-frozen         old M193  manifest 7a85d25df322940e20b5f8075e696547fa0362022ad4ae0c5867187b478c2c98
+                  new M193A manifest b356e2114eb6b79698b9999e7c94eb734142760d6203ec8fc4bff933c30b4796
+                  fixture   e79843d3b93d4c77551911a92eed9b316c57b5045ff7e7ef75018efb2e9aaca4 UNCHANGED
+                  derived from the committed M193 manifest with its hash verified first,
+                  then every leaf of both canonical forms diffed: 41 added, 4 changed,
+                  0 removed, 0 outside the integrity scope, 15/15 invariants hold.
+                  model / CLI / turns / caps / arm bounds / concurrency / stopping rule /
+                  adequacy / prompt / tool set all UNCHANGED.
+
+artifacts         m193a_source_version_probe.py, m193aArmEnvironment.ts + .test.ts,
+                  run_stage5_m193a_{bytecode_reproduction.py, isolation_evidence.ts,
+                  analyze.ts, manifest.ts, readiness.ts}; amended m193Acquisition.ts,
+                  m193Fixtures.ts, m193Acquisition.test.ts, m193_container_adapter.py,
+                  run_stage5_m193_dry_run.py; results: bytecode_reproduction,
+                  dry_run_ledger, analysis, isolation_evidence, manifest, manifest_diff,
+                  readiness, integrity_design.md, final_report.md
+src/ changed      NONE (0 files). No VTRACE product behaviour was added or altered.
+gates             typecheck PASS  typecheck:benchmarks PASS  bun test 5787 pass 0 fail
+                  git diff --check clean
+authorizations    M194_ACQUISITION_INTEGRITY_READY
+                  NO_VTRACE_I6_PRODUCT_IMPLEMENTATION_AUTHORIZED
+                  NO_RUNTIME_REPAIR_INTERVENTION_AUTHORIZED
+                  I5_REMAINS_CLOSED
+```
+
+## M193A standing findings
+
+- **A hazard reported per repository may be a hazard per event.** M193 measured
+  bytecode staleness five times and named three repositories. Re-measured, the set
+  moved twice without the repositories changing, and the forced control convicts all
+  five. Any future finding of the form "N of M repositories exhibit X" must be
+  re-derived at least once before it is carried, and if its set is unstable the
+  attribution is wrong, not the measurement.
+
+- **`--strict-mcp-config` closes files, not accounts.** M193's manifest asserted a
+  guarantee that had never been measured against a running CLI, and three claude.ai
+  connectors survived it because they follow the credential rather than a config
+  file. Any future claim that a tool surface is closed must be measured in the
+  configuration an arm will actually launch with, not reasoned about from precedence
+  rules. The measurement costs nothing: `claude mcp list` resolves configuration and
+  exits without a provider request.
+
+- **An instrument that only ever abstains is worth as little as one that only ever
+  confirms.** M192's standing lesson was the second half; M193A needed the first.
+  The healthy control exists precisely so the source-version axis cannot buy safety
+  by refusing to answer, and it is why `NOT_APPLICABLE` and `UNKNOWN` are separate
+  states rather than one convenient one.
+
+- **The instrument was bitten twice by its own subject matter.** The forced stale
+  control's setup write was itself served from a stale cache, and the freshness probe
+  could not run on the oldest interpreter in the fixture. Both were invisible in
+  prose and immediate on execution. The pattern from M192 and M193 holds: every
+  defect in this programme's measurement chain has been found by running the thing,
+  never by describing it.
+
+- **The margin got thinner, deliberately.** M193 projected ~15 I6-usable episodes
+  against a target of 12. Every source-version abstention subtracts from that, the
+  threshold was not lowered to absorb it, and `PARTIAL` is now a more likely outcome
+  than it was. That is the intended cost of measuring truthfully rather than the
+  price of a mistake.
+
+- **Next-step recommendation.** Present the re-frozen parameters — 40 instances
+  across 12 repositories, `claude-opus-4-5-20251101` on Claude Code CLI 2.1.251, 250
+  turns, $3.50 per run, $90 total, 20..40 arms, concurrency 3, manifest
+  `b356e211…` — to the project owner and ask for an explicit spend authorisation of
+  up to $90 (expected ~$26). M193's own next-step recommendation is unchanged and
+  still stands, including its caveat that beating M191's 318/807 natural
+  validation-attempt rate may not be worth the money. If authorised, M194 executes
+  `stage5_m193a_manifest.json` exactly and reports only the preregistered accounting.
+  Do not reopen I5. Do not implement I6.
