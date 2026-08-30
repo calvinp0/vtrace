@@ -6407,3 +6407,160 @@ functional commit 5540a92421d39b876ed2c595d537e2fdbe9650af
   remaining unobserved question in the whole Phase 2B programme is I6's validation→repair loop,
   which needs new baseline-only observation under a repaired test environment and is separately
   unlicensed.
+
+## M191 — validation-loop observational readiness and evidence acquisition
+
+```text
+verdict           M191 — PASS (§37 branches B and C together: Stage B correctly blocked,
+                  for two independent reasons, both established mechanically)
+question          can we acquire a clean baseline-only corpus of natural
+                  edit -> validation -> result -> revision episodes, and is the environment
+                  and the authorization there to buy one?
+answer            No, on both counts, and the second answer would have blocked it even if
+                  the first had not.
+
+STAGE A GATE      VALIDATION_ENVIRONMENT_NOT_READY
+                  prereg 43d56a44, committed BEFORE the first probe ran.
+                  R1 P-probe STARTED_PASSED >= 3 repos ......... 4   pass
+                  R2 F-probe STARTED_FAILED >= 3 repos ......... 3   pass
+                  R3 both on one instance >= 1 repo ............ 3   pass
+                  R4 Z1 pre-M187 control does not start ........ ok  pass
+                  R5 no privileged bypass ...................... 0   pass
+                  R6 >= 4 repositories validation-ready ........ 3   FAIL
+                  Mechanism healthy, breadth not. Identical verdicts across 3 executions.
+
+probe design      the benchmark's own ground truth, not tests chosen here: PASS_TO_PASS must
+                  pass at base_commit, FAIL_TO_PASS must fail there. The failing probe is
+                  therefore NATURAL - no source altered (§8). A repo is credited only when one
+                  environment yields both, which is what makes "tests failed" distinguishable
+                  from "the runner never started". Instances selected first-by-id, blind to
+                  outcome, all 12 repositories probed, none excluded in advance.
+
+breadth           3/12 REPO_VALIDATION_READY   django, seaborn, xarray
+                  7/12 REPO_RUNNER_ONLY        matplotlib flask requests pylint pytest
+                                               scikit-learn sympy
+                  2/12 REPO_NOT_RUNNABLE       astropy sphinx
+                  causes are unbuilt C extensions, uninstalled packages, 3.12-vs-old-pin.
+                  None of them is the execution mechanism.
+
+WORSE THAN A      pytest-dev/pytest returned STARTED_PASSED on a FAIL_TO_PASS test. A
+REFUSAL           post-hoc source-provenance diagnostic (outside the gate, and unable to move
+                  it) shows _pytest resolving to site-packages pytest 9.0.3, not the repo's
+                  src/_pytest. matplotlib does the same. Those runs answer truthfully about
+                  code the agent did not edit, and nothing in a transcript marks it. This is
+                  M187 §10.2's unrepaired editable-install hazard, observed directly. All 3
+                  ready repositories resolve to their checked-out source.
+
+M187 RECONCILED   telemetry/classification repair ......... LANDED (c9a477de)
+                  execution mechanism repair ............. LANDED, and reproduces here 11/11
+                  per-task dependency provisioning ....... NOT LANDED (M187 §10.1 says so)
+                  shared-venv editable installs .......... NOT LANDED (M187 §10.2 says so)
+                  M187's committed probe artifact was re-run and restored byte-identical.
+
+ERA -> EXPOSURE   M189 reported the collapse by calendar month. Re-bucketing all 1293
+                  preserved arms on the flag each arm recorded about ITSELF
+                  (stage5_agent_shell_guard_enabled) turns the era into an exposure:
+                    guard absent (807 arms, all 2026-06): 318 attempts, 204 runner starts
+                    guard on, unrepaired (486 arms)     :  92 attempts,  12 runner starts
+                    guard on, REPAIRED                  :   0 arms
+                  start-given-attempt 64.1% vs 13.0%. 486/486 guarded arms carry
+                  "Cleaned N file(s) from .../raw/<condition>/" in their own stdout - the
+                  wipe M187 traced. June holds BOTH populations, so it tracks the flag and
+                  not the date.
+THE ZERO          M187's execution repair has NEVER been exercised by a live agent. Every
+                  conclusion in this repository about agent validation behaviour - M185's,
+                  M189's, M190's - comes from arms that ran before the guard or under the
+                  unrepaired guard.
+
+STAGE B GATE      LIVE_SPEND_NOT_AUTHORIZED
+                  No file named stage5_m189_eer is tracked; the committed equivalent was
+                  located by CONTENT signature: stage5_m189_evidence_acquisition.md, Gap B.
+                  Audit reads `git show HEAD:` only, so a document drafted this session
+                  cannot authorize this session's spending. 2028 committed docs searched.
+                    task fixture ....... ABSENT (criteria exist, no enumerated instance set)
+                    model .............. ABSENT
+                    turn limit ......... ABSENT
+                    per-run cost limit . ABSENT
+                    total spend cap .... ABSENT (98 candidate dollar-ceiling lines, 0 scoped;
+                                         the repo's real caps are $0.40 parser-repair and
+                                         $0.75 live-critic, neither authorizes this)
+                    stopping rule ...... ABSENT (only "roughly 60-80 arms" as a size estimate)
+                  No cap was invented. §10's default applied.
+
+THIRD BLOCKER     the committed Gap-B design makes itself contingent: "treat Gap B as
+                  contingent on Gap A finding that the I5 mechanism repeats. If I5 does not
+                  repeat ... the agent-utility direction has no live hypothesis worth paying
+                  for." M190 ran Gap A: I5_OUT_OF_SAMPLE_NOT_REPLICATED. The design states
+                  the condition under which it should not be bought, and it is met.
+
+corpus verdict    I6_OBSERVATIONAL_CORPUS_NOT_ACQUIRED  (§25, both stated grounds)
+licenses          NO_VTRACE_I6_PRODUCT_IMPLEMENTATION_AUTHORIZED
+                  NO_I6_MECHANISM_AUDIT_LICENSED
+                  M185's NO_FURTHER_AGENT_UTILITY_PRODUCT_WORK_LICENSED stands unchanged.
+
+external harness  vexp-swe-bench d658e345, 2758 dirty entries. Methodological claims read
+                  `git show HEAD:`. The one dirty file that matters, dist/agents/claude-code.js
+                  (+109 lines), is entirely VTRACE's own env-gated Stage 5 patches: with the
+                  VTRACE_* vars unset - the baseline-arm condition - prompt and argv are
+                  byte-identical to HEAD. Recorded, not assumed, and nothing rests on it.
+
+new files         run_stage5_m191_readiness.ts, run_stage5_m191_authorization.ts,
+                  run_stage5_m191_environment_eras.ts + readiness prereg, readiness report,
+                  readiness probes, spend authorization, environment eras,
+                  stage5_m191_final_report.md
+src/ changed      NONE (0 files). Product semantics untouched; no treatment arm exists.
+gates             typecheck PASS  typecheck:benchmarks PASS  bun test 5658 pass / 0 fail
+                  git diff --check clean
+live spend        $0 - 0 live agents, 0 Docker evaluations. Bench repos read via git archive
+                  and never checked out, mutated or left dirty.
+prereg commit     43d56a44 (design + gate, before the first probe)
+analysis commit   803bb02b
+                  starting SHA b55b2dc49a375d93cf85cd01f8ac3e3d293add3c
+                  149 AHEAD / 0 behind origin/main; diff --check clean; nothing pushed
+```
+
+## M191 standing findings
+
+- **The mechanism is fixed and the environment is still not usable.** These are not the same
+  claim and M191 exists because the repository had started treating them as one. M187's repair
+  is real, lands, and reproduces 11/11 here — and 9 of 12 benchmark repositories still cannot
+  run their own tests, for reasons that have nothing to do with it. A milestone that had
+  assumed "M187 happened, therefore the environment is healthy" would have spent live budget
+  into an environment where three quarters of the corpus cannot validate at all.
+
+- **A validation environment can fail by answering.** The `pytest` and `matplotlib` rows are
+  the most important thing Stage A found. Both start a runner, both terminate cleanly, both are
+  classified truthfully by `validationExecution.ts` — and both describe an installed copy of the
+  package rather than the source under edit. Every refusal taxonomy in this repository was built
+  to catch runs that *don't* happen. Nothing catches a run that happens against the wrong code,
+  and an observational study of validation decisions would have ingested those as clean
+  evidence. M187 §10.2 predicted the mechanism; this is the first time it has been measured.
+
+- **The "environment era" was never a time period.** Bucketing on the arm's own recorded guard
+  flag rather than its date converts M189's calendar story into an exposure with a 5× effect on
+  start-given-attempt and a 100% wipe signature in the exposed group. This matters beyond
+  bookkeeping: it means the collapse has an identified, fixed cause, and that the July/August
+  arms are not evidence about agent behaviour at all.
+
+- **Nothing has ever run on the repaired path.** Zero arms. Every statement this repository
+  holds about whether agents validate, and what they do with a validation result, was measured
+  either before the guard existed or while it was silently destroying the interpreter. That is
+  the single largest evidential gap in the Phase-2B programme, and it cannot be closed by
+  re-analysis of anything preserved here.
+
+- **Three independent gates said no, and the weakest of them is the environment.** The missing
+  authorization is not a formality that a future prompt can wave through: no committed evidence
+  anywhere names a task set, a model, a turn limit, a cost limit, a cap or a stopping rule for
+  this acquisition. And the design that would have supplied them disqualified itself in advance
+  by making Gap B contingent on a Gap A result that M190 has since returned negative. Any future
+  attempt to buy this corpus needs a fresh, explicit authorization from the project — not an
+  inference from M189.
+
+- **Next-step recommendation: infrastructure correctness, or nothing.** §39 is explicit that a
+  NOT_READY environment makes the next work infrastructure, not I6 research. The concrete,
+  bounded items are per-task dependency provisioning (the SWE-bench Docker images are where this
+  belongs) and the shared `.bench-repos` venv whose editable installs cause the wrong-source
+  problem. Neither is I6 work and neither is licensed here. If instead the project wants the I6
+  question closed cheaply, the honest observation is that even the healthy pre-guard population
+  attempted validation in only 318 of 807 arms — the natural rate a paid acquisition would have
+  to beat is not obviously high enough to be worth buying.
