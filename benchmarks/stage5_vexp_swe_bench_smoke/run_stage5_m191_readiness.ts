@@ -117,6 +117,66 @@ function buildCommand(repo: string, testId: string, testFiles: readonly string[]
 }
 
 // ---------------------------------------------------------------------------------------
+// SOURCE-PROVENANCE DIAGNOSTIC — post-hoc, and deliberately OUTSIDE the preregistered gate.
+//
+// Added after the first probe run, because pytest-dev/pytest returned STARTED_PASSED on a test
+// SWE-bench guarantees FAILS at the base commit. The cause is not the runner: `python -m pytest`
+// in that tree imports `_pytest` from the testbed's site-packages (pytest 9.0.3), not from the
+// repository's own `src/_pytest`. The runner starts, reports truthfully, and describes code the
+// agent did not edit.
+//
+// This is recorded rather than acted upon. It CANNOT move the gate: under the rule committed
+// before any probe ran, a repository whose F-probe passes is REPO_RUNNER_ONLY either way, so
+// pytest-dev/pytest is not validation-ready with or without this diagnostic. It is here because
+// a validation environment that answers about the wrong source is a worse readiness fact than
+// one that refuses, and M187 §10.2 already flagged the shared-venv editable installs behind it.
+// ---------------------------------------------------------------------------------------
+
+/** The import name whose resolved __file__ tells us whose source a test actually exercised. */
+const TOP_LEVEL_MODULE: Readonly<Record<string, string>> = {
+  "astropy/astropy": "astropy",
+  "django/django": "django",
+  "matplotlib/matplotlib": "matplotlib",
+  "mwaskom/seaborn": "seaborn",
+  "pallets/flask": "flask",
+  "psf/requests": "requests",
+  "pydata/xarray": "xarray",
+  "pylint-dev/pylint": "pylint",
+  "pytest-dev/pytest": "_pytest",
+  "scikit-learn/scikit-learn": "sklearn",
+  "sphinx-doc/sphinx": "sphinx",
+  "sympy/sympy": "sympy",
+};
+
+interface SourceProvenance {
+  readonly module: string | null;
+  readonly resolvedFile: string | null;
+  readonly resolvesToRepositoryUnderTest: boolean | null;
+  readonly note: string;
+}
+
+function probeSourceProvenance(repo: string, cwd: string, env: Record<string, string>): SourceProvenance {
+  const mod = TOP_LEVEL_MODULE[repo] ?? null;
+  if (mod === null) return { module: null, resolvedFile: null, resolvesToRepositoryUnderTest: null, note: "no top-level module mapped" };
+  const r = spawnSync("bash", ["-c", `python -c "import ${mod}, sys; print(getattr(${mod}, '__file__', '') or '')"`], {
+    cwd, env, encoding: "utf8", timeout: 120_000, maxBuffer: 4 * 1024 * 1024,
+  });
+  const resolved = (r.stdout ?? "").trim().split("\n").pop() ?? "";
+  if (r.status !== 0 || resolved.length === 0) {
+    return { module: mod, resolvedFile: null, resolvesToRepositoryUnderTest: null, note: "the module could not be imported at all" };
+  }
+  const inTree = path.resolve(resolved).startsWith(path.resolve(cwd) + path.sep);
+  return {
+    module: mod,
+    resolvedFile: resolved,
+    resolvesToRepositoryUnderTest: inTree,
+    note: inTree
+      ? "tests exercise the checked-out source"
+      : "tests exercise an INSTALLED copy — a validation result here does not describe the repository under edit",
+  };
+}
+
+// ---------------------------------------------------------------------------------------
 // probe execution
 // ---------------------------------------------------------------------------------------
 
@@ -311,6 +371,7 @@ try {
     const fRow = runProbe(`F_${dirName}`, "F", sel.repo, work, fCmd.command, env, { ...meta, testId: sel.f2p, shape: fCmd.shape });
     rows.push(pRow, fRow);
 
+    const provenance = probeSourceProvenance(sel.repo, work, env);
     const verdict =
       pRow.observedState === "STARTED_PASSED" && fRow.observedState === "STARTED_FAILED"
         ? "REPO_VALIDATION_READY"
@@ -324,6 +385,7 @@ try {
       testPatchApplied: applied.ok,
       pProbe: pRow.observedState,
       fProbe: fRow.observedState,
+      sourceProvenance: provenance,
       verdict,
     });
     console.log(`${verdict.padEnd(22)} ${sel.repo.padEnd(28)} P=${pRow.observedState.padEnd(22)} F=${fRow.observedState}`);
