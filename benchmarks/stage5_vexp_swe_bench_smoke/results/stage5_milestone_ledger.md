@@ -5999,3 +5999,172 @@ functional commit c9a477de85820678d7e2411488dec10944c72542
   SWE-bench Docker images already exist for this) and the editable installs of benchmark
   repositories accumulating in the external harness's shared `.venv`, which is outside this
   repository's tree.
+
+## M188 — Competitor Intervention and Causal-Mechanism Audit (commit pending)
+
+```text
+overall           PASS (Phase 2 strategic discovery; research and evidence synthesis only)
+product changed   NO   retrieval NO   ranking NO   orientation NO   prompts NO   src/ NOT TOUCHED
+live              NOT RUN   docker NOT RUN   spend $0.00
+VEXP ablation     PARTIAL_ABLATION_ONLY
+M183 contradiction VEXP_DOES_NOT_CAUSALLY_CONTRADICT_M183
+phase-2 rec       SPECIFIC_INTERVENTION_CLASS_WORTH_INVESTIGATING (I5/I6), blocked by M187
+sources           15 registered, pinned by commit / package version / access date 2026-08-30
+artifact pinned   Vexp-ai/vexp-swe-bench@d658e345 read via `git show HEAD:`; upstream HEAD
+                  9e3d06d5 (2026-05-02) adds a Gemini adapter and no results/telemetry/ablation
+                  vexp-mcp 1.2.29 (benchmark-time) and 3.0.1 (current) read from npm tarballs
+
+the benchmark has no I1
+                  buildPrompt(instance) = repo name + "fix this issue" + problem_statement.
+                  No repository context is injected anywhere. What the harness applies is
+                  a CLAUDE.md mandate (I7b) + a PreToolUse Grep|Glob deny (I7a) + an MCP
+                  server the agent may call (I2). VTRACE spent milestones matching an
+                  orientation intervention the competitor's benchmark never ran.
+treatment fired   run_pipeline 5/100 tasks (4 bare + 1 mcp__vexp-mcp__, neither matching the
+                  committed server key `vexp`); Grep/Glob 79/100 under a mandate forbidding
+                  them; vexpMetrics null 100/100; 0 calls to impact / flow / skeleton / memory
+                  95/100 tasks used no repository-intelligence tool at all; 69 of those resolved
+competitor arms   NEVER RUN. data/external/*-resolved.json are the arms' own published
+                  full-500 resolvedIds (Nov/Dec 2025 swe-bench/experiments submissions);
+                  72/70/70 are set-intersections with the 100-subset, reproduced exactly.
+                  Full-500 those systems score 79.2/77.6/79.2. The $3/250-turn budget
+                  bounds the vexp arm only. Live-SWE-agent rewrites its own scaffold at runtime.
+accounting        published $0.6721/task vs $0.8298 repriced from the same rows with the
+                  harness's own price table = 23.5%. The 5 rows that reprice exactly are
+                  exactly the 5 killed above $3, which never emit the `result` event.
+provenance        100 rows on ONE exact 300s delta over a 29,700s span while their own
+                  durations sum to 16,927s; unreachable from `new Date()` per row
+VEXP's own A/B    v3.0.0 changelog, 2026-08-27: 25 SWE-bench Pro tasks, same agent/model/day,
+                  paired with and without vexp, 24/25 vs 22/25, "the two tasks that flipped
+                  both flipped in vexp's favor". 2 discordant pairs one way = exact two-sided
+                  McNemar p = 0.5. M183 was 19/30 vs 19/30, 2 each way, p = 1.000.
+                  Same design, same power, opposite sign on two tasks. No artifacts released.
+the reversal      v2.4.0 unblocked native search ("vexp used to insist on being consulted for
+                  everything"); v3.0.1 run_pipeline says "if the task already names the files
+                  to touch, skip this"; v3.0.0 made the completion gate, coupling hints, read
+                  substitution and shell cap ALL OPT-IN, keeping only "orientation at turn
+                  zero" + a catalogue cut 1,030->351 tokens, because "one extra turn costs
+                  more than almost any amount of clever context can save".
+                  M169, M166 and M172 reached those three conclusions independently.
+external causal   SuperCoder arXiv:2606.22417 — index ON 50.4% vs OFF 41.9%, paired Wilcoxon
+                  p=0.003, n=80, same harness, baseline KEEPS grep/glob; acc@5 84.5% vs 44.3%
+                  p<0.0001; cost/solve $2.30 vs $2.84. Cross-harness vs an independent grep
+                  harness: +6.0pp at p=0.087 — which is the comparison M183 ran.
+                  Cursor: +12.5% offline QA accuracy; live A/B +0.3% retention overall,
+                  +2.6% on codebases >1000 files.
+the new class     TDAD arXiv:2603.17973 — git diff -> source/test graph -> the tests at risk,
+                  before commit. n=100 SWE-bench Verified: test-level regression 6.08% ->
+                  1.82%, RESOLUTION 31% -> 29%, instance-level regression 30.2% -> 33.3%,
+                  empty-patch 14% -> 26%. The mechanism is real and moves an axis SWE-bench
+                  does not score. TDD Prompting Paradox: procedural mandate WITHOUT the
+                  targeted obligation raised regressions to 9.94%, worse than nothing.
+mandates          CONTRADICTED on four independent lines: M168-E (0/5 where it bound, lost 2
+                  won 0), arXiv:2602.11988 (-3%/-0.5% at +19-23% cost, n=438),
+                  arXiv:2607.27250 (p=1.00 / p=0.66, n=291), TDAD's paradox.
+M185 corroborated ContextBench arXiv:2602.05892 (n=1,136, 66 repos): agents retrieve gold
+                  context at intermediate steps and fail to carry it into the final patch;
+                  retention and consolidation, not retrieval, is the bottleneck.
+                  Khatri: failures were implementation skill, "not missing repository
+                  knowledge"; the real AGENTS.md never converted a near-miss to a pass.
+diff awareness    DIFF_AWARE_PRODUCT_LOOP: vexp verify_done (working tree) and TDAD only.
+                  NO_DIFF_AWARENESS: Cursor, Augment, Aider, Claude Code, SuperCoder, VTRACE.
+verdicts          I1 CONTRADICTED_OR_WEAKENED   I2 EXTERNALLY_CAUSALLY_SUPPORTED
+                  I3 INSUFFICIENT_PUBLIC_EVIDENCE   I4 EXTERNALLY_PLAUSIBLE_ONLY
+                  I5 CAUSALLY_SUPPORTED_ON_REGRESSIONS_ONLY   I6 EXTERNALLY_PLAUSIBLE_ONLY
+                  I7a / I7b CONTRADICTED_OR_WEAKENED   I8 NO_SUPPORT_FOUND
+new files         run_stage5_m188_vexp_artifact_audit.ts (re-derives every load-bearing number
+                  from the pinned external tree) + 6 results artifacts
+gates             typecheck PASS  typecheck:benchmarks PASS  bun test 5632 pass / 0 fail
+                  diff --check clean
+```
+
+## M188 standing findings
+
+- **VTRACE was competing with a description, not a treatment.** The single most
+  consequential thing in this audit is four lines of `src/harness/loader.ts`:
+  `buildPrompt` is the repository name, one sentence of instruction, and the problem
+  statement. The competitor's published benchmark injects no repository context at any
+  point. Everything VTRACE built and measured as "the VEXP-class value proposition" —
+  an automatic compact orientation delivered before the agent acts — is an intervention
+  that benchmark never applied. What it applied was a written mandate and a conditional
+  hook, and its own telemetry says the mandate was ignored on 79 of 100 tasks and the
+  mandated tool fired on 5. The 73% is real and Docker-graded; it is a number produced
+  by Claude Code with a `CLAUDE.md` telling it not to grep, and it grepped. Any future
+  competitive framing must name the *intervention* it is matching and check the
+  competitor's telemetry that the intervention fired, before it budgets a response.
+
+- **The competitor ran M183 and got M183's answer.** vexp 3.0.0 reports a paired
+  same-agent with/without ablation: 24 of 25 against 22 of 25, two discordant tasks,
+  both one way. That is an exact two-sided McNemar *p* = 0.5 against M183's 19/30
+  versus 19/30 at *p* = 1.000 — the same design, the same power, and a sign difference
+  worth two tasks. In the same release they report "the agent reaches its first edit
+  about 20 percent sooner", which is M183's behavioural finding restated, and it
+  converted no better for them than for us. The correct conclusion is not that VTRACE
+  lost; it is that **one-shot orientation is an intervention whose behavioural effect
+  is easy to measure and whose outcome effect nobody has demonstrated at this power** —
+  including the vendor whose product is built on it.
+
+- **When a vendor changes its defaults, that is the ablation talking.** vexp 2.4.0
+  unblocked the native search tools it had spent a release denying. 3.0.1 tells the
+  model to skip the pipeline when the task already names the files. 3.0.0 moved the
+  completion gate, the coupling hints, the read substitution and the shell cap to
+  opt-in and cut the tool catalogue from 1,030 to 351 tokens, on the stated arithmetic
+  that "one extra turn costs more than almost any amount of clever context can save".
+  Those are M169's, M172's and M166's conclusions, reached independently, and they
+  arrived as *defaults* rather than as claims. A competitor's changelog is weak
+  evidence for what works and unusually strong evidence for what they measured and
+  stopped doing.
+
+- **A mandate without a specific obligation is not a weak intervention, it is a harmful
+  one.** Four independent lines now converge: M168-E lost two tasks and won none where
+  coercion bound; two academic ablations find context files null on correctness at
+  +19–23% inference cost, with LLM-generated ones net negative; and TDAD's TDD
+  Prompting Paradox is the cleanest statement of the mechanism — instructing an agent
+  to do test-driven development *without* naming which tests raised its regression rate
+  from 6.08% to 9.94%, worse than saying nothing at all, while naming the tests cut it
+  to 1.82%. The lever is the specific obligation, and the instruction wrapped around it
+  is a cost. This is the strongest negative result in the audit and it should end any
+  future proposal to ship VTRACE guidance as workflow enforcement.
+
+- **There is exactly one intervention class VTRACE lacks, and its evidence is on the
+  wrong axis.** `verify_done` and TDAD both read the *current change* — the working
+  tree or the diff — and derive from it what VTRACE derives only from the base tree:
+  dependents of changed symbols that were left untouched, imports broken by a partial
+  rename, task constraints violated, and the tests the change put at risk. TDAD is the
+  only controlled evidence, and it is precise about what it bought: test-level
+  regressions fell 70%, **resolution fell two points**, instance-level regressions rose
+  slightly, and the agent produced empty patches nearly twice as often because the test
+  map told it the change was risky. The mechanism is real and it does not buy SWE-bench
+  resolution. If VTRACE ever pursues it, `PASS_TO_PASS` is the outcome variable, the
+  Docker harness already collects it, and this ledger has never scored it.
+
+- **M187's repair is now a precondition, not a postscript.** The §34 threshold needs a
+  successful-side witness in the preserved failure traces. In M183's corpus a test
+  runner started in 5 of 60 arms. A mechanism that intervenes between the edit and the
+  validation cannot have a witness where the validation did not occur, so Phase 2B run
+  against those traces would return "no witness" for the one class this audit
+  recommends, for a reason that has nothing to do with whether the mechanism is real.
+  Any counterfactual-discovery milestone must declare which mechanisms its corpus is
+  *capable* of witnessing before it is allowed to count absences as evidence.
+
+- **The bottleneck two independent papers name is downstream of everything anybody
+  built.** ContextBench, at n = 1,136 across 66 repositories with human-verified gold
+  contexts, finds that agents retrieve the right code at intermediate steps and then
+  fail to condition the final patch on it — retention and consolidation, not retrieval,
+  is the primary constraint — and adds that "sophisticated agent scaffolding does not
+  necessarily improve context retrieval performance". Khatri's failure analysis reaches
+  the same place from the other end: tasks failed on implementation skill, not missing
+  repository knowledge. Both are M185 restated by people with no stake in this
+  repository. No system in this audit, VTRACE included, has an intervention for it.
+
+- **Next-step recommendation: none licensed, one class flagged, one prerequisite
+  named.** `NO_FURTHER_AGENT_UTILITY_PRODUCT_WORK_LICENSED` stands and M188 could not
+  lift it (§33). The class worth investigating is I5/I6 — diff-derived validation and
+  edit-set obligations — and it is worth investigating precisely because the audit
+  found competitors have *not* proven it either: vexp shipped it and demoted it to
+  opt-in, and TDAD measured it and got regressions rather than resolution. The
+  prerequisite is per-task dependency environments, which M187 already identified as
+  the open infrastructure work. If that is not taken up, the correct standing
+  conclusion is the narrower one: **external evidence does not license a new VTRACE
+  intervention, and it removes any remaining basis for believing VTRACE is missing
+  something its competitors have demonstrated.**

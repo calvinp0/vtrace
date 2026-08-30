@@ -1,0 +1,156 @@
+{
+  "milestone": "M188",
+  "accessDate": "2026-08-30",
+  "evidenceClasses": {
+    "DIRECTLY_DOCUMENTED": "stated by the vendor/authors in official documentation, changelog or paper",
+    "INFERRED_FROM_IMPLEMENTATION": "read out of shipped source, package contents or committed artifacts",
+    "INFERRED_FROM_TELEMETRY": "computed from published run rows or logs",
+    "MARKETING_CLAIM_ONLY": "asserted on a product surface with no released underlying evidence",
+    "UNKNOWN": "not established by any source we reached"
+  },
+  "evidenceTiers": {
+    "A": "same agent, same scaffold, same tasks, same budgets, only the intervention differs",
+    "B": "controlled component ablation with minor secondary differences",
+    "C": "paired behavioral evidence without an isolated outcome effect",
+    "D": "cross-system benchmark comparison",
+    "E": "anecdote or demo",
+    "F": "marketing assertion with no underlying ablation"
+  },
+  "sources": [
+    {
+      "id": "S1",
+      "system": "VEXP",
+      "kind": "official repository, committed artifacts",
+      "url": "https://github.com/Vexp-ai/vexp-swe-bench",
+      "pin": "d658e3457b82b5cb041f586093cc5002008a8cea (2026-03-22); upstream HEAD 9e3d06d5 (2026-05-02) adds only a Gemini CLI adapter",
+      "usedFor": "harness source (enhancer.ts, orchestrator.ts, loader.ts, claude-code.ts, stream-parser.ts, pricing.ts, leaderboard/compare.ts), the 100-task subset, the published result rows, the three data/external/*-resolved.json competitor files",
+      "class": "INFERRED_FROM_IMPLEMENTATION + INFERRED_FROM_TELEMETRY"
+    },
+    {
+      "id": "S2",
+      "system": "VEXP",
+      "kind": "official benchmark page",
+      "url": "https://vexp.dev/benchmark",
+      "usedFor": "the 73/72/70/70 leaderboard, the $3 / 250-turn budget, 'All four agents run the same model', 'The only variable was the context layer', 'External resolution data from swe-bench/experiments. Cost data from each agent's published benchmarks.'",
+      "class": "MARKETING_CLAIM_ONLY for the causal framing; DIRECTLY_DOCUMENTED for the data provenance sentence"
+    },
+    {
+      "id": "S3",
+      "system": "VEXP",
+      "kind": "official changelog",
+      "url": "https://vexp.dev/changelog",
+      "usedFor": "v2.4.0 ambient orientation (2026-07-31), v2.5.0 verify_done + Claude Code stop-time check (2026-08-05), v2.6.0 impacted tests + 300-rollout SWE-bench Pro campaign (2026-08-12), v2.7.0 headline-keyed retrieval eval on 121 issues (2026-08-22), v3.0.0 paired with/without ablation and interventions-off-by-default (2026-08-27)",
+      "class": "DIRECTLY_DOCUMENTED for feature behaviour; MARKETING_CLAIM_ONLY for the measurement numbers, which are stated without released artifacts"
+    },
+    {
+      "id": "S4",
+      "system": "VEXP",
+      "kind": "shipped npm package contents",
+      "url": "https://registry.npmjs.org/vexp-mcp",
+      "pin": "1.2.29 (2026-03-21, the version npx would have resolved at benchmark time) and 3.0.1 (2026-08-27, current)",
+      "usedFor": "the complete model-facing tool catalogue and descriptions in both eras; the absence of verify_done at benchmark time; the reversal of run_pipeline from 'ALWAYS FIRST' to 'skip this if the task already names the files'; the vendor's own source comments about verify_done having been instructed but unimplemented on the Node surface",
+      "class": "INFERRED_FROM_IMPLEMENTATION"
+    },
+    {
+      "id": "S5",
+      "system": "SuperCoder / SuperAGI Research",
+      "kind": "published paper",
+      "url": "https://arxiv.org/abs/2606.22417",
+      "citation": "Bhola, Krishnan, Kurmala, NS. 'Code Isn't Memory: A Structural Codebase Index Inside a Coding Agent'. arXiv:2606.22417, 2026-06-21.",
+      "usedFor": "the strongest external index-on/index-off ablation: SC-ON 50.4% vs SC-OFF 41.9%, paired Wilcoxon p=0.003, n=80; localization acc@5 84.5% vs 44.3%, p<0.0001; cross-harness SC-ON vs OpenCode 50.4% vs 45.3%, p=0.087; cost per solve $2.30 vs $2.84; per-cell cost null p=0.73",
+      "tier": "B",
+      "class": "DIRECTLY_DOCUMENTED",
+      "conflictOfInterest": "authors are the vendor of the harness under test"
+    },
+    {
+      "id": "S6",
+      "system": "Cursor",
+      "kind": "maintainer-authored technical blog",
+      "url": "https://cursor.com/blog/semsearch",
+      "usedFor": "tool-set ablation (agent with vs without semantic search): +12.5% mean accuracy offline (6.5-23.5% by model); live A/B with real users: +0.3% code retention overall, +2.6% on codebases over 1000 files, 2.2% more dissatisfied follow-up requests without semantic search",
+      "tier": "B offline, A-shaped online",
+      "class": "DIRECTLY_DOCUMENTED"
+    },
+    {
+      "id": "S7",
+      "system": "Augment Code",
+      "kind": "vendor blog",
+      "url": "https://www.augmentcode.com/blog/auggie-tops-swe-bench-pro",
+      "usedFor": "Auggie 51.80% / Cursor 50.21% / Claude Code 49.75% on 731 SWE-bench Pro tasks, all Claude Opus 4.5; the claim that the gap 'comes from agent architecture' and 'what context the agent sees before it starts writing code'",
+      "tier": "D",
+      "class": "MARKETING_CLAIM_ONLY for causality; no with/without context-engine ablation of the same agent is reported"
+    },
+    {
+      "id": "S8",
+      "system": "Aider",
+      "kind": "official documentation",
+      "url": "https://aider.chat/docs/repomap.html",
+      "usedFor": "the repo map is documented in detail; no published ablation isolates its contribution from the rest of the Aider stack",
+      "class": "UNKNOWN (negative evidence: searched, none found)"
+    },
+    {
+      "id": "S9",
+      "system": "coding agents generally",
+      "kind": "published paper",
+      "url": "https://arxiv.org/abs/2602.05892",
+      "citation": "Li, Zhu, Zhang, Feng, Wang, Pan, Barr, Sarro, Chu, Ye. 'ContextBench: A Benchmark for Context Retrieval in Coding Agents'. arXiv:2602.05892v3, 2026-02-11. Nanjing University; University College London.",
+      "usedFor": "1,136 tasks, 66 repositories, human-verified gold contexts; agents retrieve gold context at intermediate steps and fail to carry it into final patch generation; conclusion that retention and consolidation, not retrieval, is the primary bottleneck; 'sophisticated agent scaffolding does not necessarily improve context retrieval performance'",
+      "tier": "C",
+      "class": "DIRECTLY_DOCUMENTED"
+    },
+    {
+      "id": "S10",
+      "system": "context files (AGENTS.md / CLAUDE.md)",
+      "kind": "published paper",
+      "url": "https://arxiv.org/abs/2602.11988",
+      "citation": "Gloaguen, Mundler, Muller, Raychev, Vechev. 'Evaluating AGENTS.md: Are Repository-Level Context Files Helpful for Coding Agents?'. arXiv:2602.11988v1, 2026-02-12. ETH Zurich; LogicStar.ai.",
+      "usedFor": "438 instances, 4 agent/model pairs, arms none/LLM-generated/human-written; LLM-generated context files -3% on AGENTbench and -0.5% on SWE-bench Lite; human-written +4% on AGENTbench; inference cost +19-23%",
+      "tier": "B",
+      "class": "DIRECTLY_DOCUMENTED"
+    },
+    {
+      "id": "S11",
+      "system": "context files (AGENTS.md / CLAUDE.md)",
+      "kind": "published paper",
+      "url": "https://arxiv.org/abs/2607.27250",
+      "citation": "Khatri. 'Do Context Files Help Coding Agents? A Two-Agent Ablation Study on Real Repositories'. arXiv:2607.27250v1, 2026-07-28.",
+      "usedFor": "291 runs, Claude Code (Sonnet 4.6) and Codex (GPT-5.5), 3 Python repositories, arms none/always_on/selective; correctness differences under 2.3pp (Claude) and 5.9pp (Codex), omnibus permutation p=1.00 and p=0.66; efficiency effects only; failures attributed to implementation skill rather than missing repository knowledge",
+      "tier": "B",
+      "class": "DIRECTLY_DOCUMENTED"
+    },
+    {
+      "id": "S12",
+      "system": "TDAD",
+      "kind": "published paper",
+      "url": "https://arxiv.org/abs/2603.17973",
+      "citation": "Alonso, Yovine, Braberman. 'TDAD: Test-Driven Agentic Development - Reducing Code Regressions in AI Coding Agents via Graph-Based Impact Analysis'. arXiv:2603.17973v2, 2026-03-19. Universidad ORT Uruguay; DC, UBA.",
+      "usedFor": "the only controlled evidence found for a diff-derived validation obligation. Phase 1, 100 SWE-bench Verified instances, Qwen3-Coder 30B 4-bit: vanilla / TDD-prompt / GraphRAG+TDD resolution 31% / 31% / 29%, test-level regression 6.08% / 9.94% / 1.82%, instance-level regression 30.2% / 33.3% / 33.3%, empty-patch rate 14% vs 26%. Phase 2, 25 instances, different model and framework: resolution 24% to 32%",
+      "tier": "B",
+      "class": "DIRECTLY_DOCUMENTED"
+    },
+    {
+      "id": "S13",
+      "system": "Live-SWE-agent",
+      "kind": "published paper",
+      "url": "https://arxiv.org/abs/2511.13646",
+      "usedFor": "the scaffold of one of VEXP's three comparison arms: starts from a bash-only minimal scaffold and rewrites its own implementation at runtime. Establishes that the compared systems do not share an agent loop",
+      "class": "DIRECTLY_DOCUMENTED"
+    },
+    {
+      "id": "S14",
+      "system": "Claude Code",
+      "kind": "vendor position, reported",
+      "url": "https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents",
+      "usedFor": "the deliberate absence of a persistent repository index: Claude Code retrieves just-in-time with glob/grep/read rather than maintaining an embedding index; vector search was removed in 2025",
+      "class": "DIRECTLY_DOCUMENTED for the design position; the accompanying 'outperformed everything' quotation is MARKETING_CLAIM_ONLY"
+    },
+    {
+      "id": "S15",
+      "system": "swe-bench/experiments",
+      "kind": "primary benchmark artifact repository",
+      "url": "https://github.com/swe-bench/experiments/tree/main/evaluation/verified",
+      "usedFor": "the origin of the three competitor arms' resolvedIds that VEXP projects onto its 100-task subset: 20251215_livesweagent_claude-opus-4-5, 20251127_openhands_claude-opus-4-5, 20251205_sonar-foundation-agent_claude-opus-4-5",
+      "class": "DIRECTLY_DOCUMENTED"
+    }
+  ]
+}
