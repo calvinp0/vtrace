@@ -7,7 +7,7 @@
   "vexpCheckout": {
     "path": "/home/calvin/code/vexp-swe-bench",
     "head": "d658e3457b82b5cb041f586093cc5002008a8cea",
-    "dirtyEntries": 2759,
+    "dirtyEntries": 2760,
     "agentShimPatched": true
   },
   "findings": [
@@ -43,7 +43,7 @@
       "id": "T5_vexp_agent_shim",
       "severity": "MITIGATED",
       "what": "the vexp-swe-bench agent adapter carries VTRACE's Stage 5 injection patches",
-      "evidence": "/home/calvin/code/vexp-swe-bench/dist/agents/claude-code.js contains STAGE5_VTRACE patch markers; vexp HEAD d658e3457b82 with 2759 dirty entries",
+      "evidence": "/home/calvin/code/vexp-swe-bench/dist/agents/claude-code.js contains STAGE5_VTRACE patch markers; vexp HEAD d658e3457b82 with 2760 dirty entries",
       "mitigation": "The acquisition does NOT run through vexp-swe-bench. It spawns the installed Claude Code CLI directly, so the patched adapter is never loaded. The patches are env-gated and inert without VTRACE_* variables, but the acquisition does not rely on that: it does not execute this file at all."
     },
     {
@@ -71,7 +71,7 @@
       "id": "T9_vtrace_daemon_sockets",
       "severity": "INFORMATIONAL",
       "what": "a reachable VTRACE daemon socket or state directory",
-      "evidence": "/tmp/vtrace-r5r-bench-BajoJ0, /tmp/vtrace-r5r-swe-NQ5Dbd, /tmp/vtrace-r5r-resolve-APAyIB, /tmp/stage5-vtrace-env-mUvLUl, /tmp/stage5-run-vtrace2-v1U0Wz",
+      "evidence": "/tmp/stage5-run-vtrace-*, /tmp/stage5-run-vtrace2-*, /tmp/stage5-vtrace-discipline-*, /tmp/stage5-vtrace-env-*, /tmp/stage5-vtrace-telemetry-*",
       "mitigation": "Unreachable from the agent regardless: the agent has no MCP server and every command it runs executes inside a container with no host socket bind-mounted."
     },
     {
@@ -96,5 +96,9 @@
     "assert the Claude Code CLI version before launching",
     "record any benchmark-native instruction file separately from experimental injection"
   ],
+  "liveObservationFields": [
+    "vexpCheckout.dirtyEntries — a real measurement of a working tree that changes as other work touches it; it is reported, not asserted stable"
+  ],
+  "reproducibility": "Every field except vexpCheckout.dirtyEntries (and the same count quoted in T5) is stable across re-runs on an unchanged host. Socket names are reported by prefix because their random suffixes carry no information.",
   "enforcement": "The launcher must re-run these checks per arm and refuse to spawn the model if any precondition is unmet. An arm whose audit fails is recorded TREATMENT_CONTAMINATION and is RUN_INVALID; it is not rerunnable."
 }

@@ -176,11 +176,20 @@ add({
 
 // ── 7. VTRACE daemon / sockets ──────────────────────────────────────
 
+/**
+ * Reported by name PREFIX, not by full path. These are mkdtemp-style names whose
+ * random suffix changes on every run and carries no information; including it
+ * would make this audit differ from itself on a re-run for no reason.
+ */
 function findSockets(dir: string): string[] {
   try {
-    return readdirSync(dir)
-      .filter((f) => f.toLowerCase().includes("vtrace"))
-      .map((f) => join(dir, f));
+    return [
+      ...new Set(
+        readdirSync(dir)
+          .filter((f) => f.toLowerCase().includes("vtrace"))
+          .map((f) => join(dir, f.replace(/-[A-Za-z0-9]{6,}$/, "-*"))),
+      ),
+    ].sort();
   } catch {
     return [];
   }
@@ -231,6 +240,11 @@ const doc = {
     "assert the Claude Code CLI version before launching",
     "record any benchmark-native instruction file separately from experimental injection",
   ],
+  liveObservationFields: [
+    "vexpCheckout.dirtyEntries — a real measurement of a working tree that changes as other work touches it; it is reported, not asserted stable",
+  ],
+  reproducibility:
+    "Every field except vexpCheckout.dirtyEntries (and the same count quoted in T5) is stable across re-runs on an unchanged host. Socket names are reported by prefix because their random suffixes carry no information.",
   enforcement:
     "The launcher must re-run these checks per arm and refuse to spawn the model if any precondition is unmet. An arm whose audit fails is recorded TREATMENT_CONTAMINATION and is RUN_INVALID; it is not rerunnable.",
 };
