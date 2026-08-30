@@ -1,0 +1,50 @@
+{
+  "milestone": "M192",
+  "swebenchDistInfo": "swebench-4.1.0.dist-info",
+  "swebenchSitePackages": "/home/calvin/code/vexp-swe-bench/.venv/lib/python3.12/site-packages",
+  "installedPyFilesChecked": 73,
+  "installedPyFilesModified": 0,
+  "modifiedFiles": [],
+  "auditedFiles": {
+    "swebench/harness/constants/__init__.py": {
+      "matchesWheel": true,
+      "sha256_b64": "wS_iZx_Yt9ivj1xxH86yymhCVOLBtM3kSEIqRLjQTjU"
+    },
+    "swebench/harness/docker_build.py": {
+      "matchesWheel": true,
+      "sha256_b64": "UniEK2Cn04JW-V-TyRXchN4ri08obpuq4bGSgPdo5IQ"
+    },
+    "swebench/harness/docker_utils.py": {
+      "matchesWheel": true,
+      "sha256_b64": "ILpjXIPRxbdc37MD6DeMTOgr7gA797Y-N07-qswVWyE"
+    },
+    "swebench/harness/grading.py": {
+      "matchesWheel": true,
+      "sha256_b64": "iPxQDrr2kqU0VxSc7CTc-C36LUj5gCGolKCH0nX2HfQ"
+    },
+    "swebench/harness/run_evaluation.py": {
+      "matchesWheel": true,
+      "sha256_b64": "aVnwtOTq-Xl3H1KbiOPp3x2qf-hrxCkf7sLn0yC_fy4"
+    },
+    "swebench/harness/test_spec/python.py": {
+      "matchesWheel": true,
+      "sha256_b64": "u2b2B9GTLbmVoR_W1twvHIamlSVzhbyI-YQJWCwMRpo"
+    },
+    "swebench/harness/test_spec/test_spec.py": {
+      "matchesWheel": true,
+      "sha256_b64": "-as2gJG1dw0qtuhC59VhYfh-cKIFGVdnMcEi4xCCD0o"
+    }
+  },
+  "auditedFilesAllIntact": true,
+  "productionEnvironmentPath": "swebench.harness.run_evaluation invoked as `<vexp>/.venv/bin/python -m swebench.harness.run_evaluation` by vexp-swe-bench src/evaluate/evaluator.ts",
+  "vexpCheckout": {
+    "path": "/home/calvin/code/vexp-swe-bench",
+    "head": "d658e3457b82b5cb041f586093cc5002008a8cea",
+    "dirtEntries": 2758,
+    "vtraceModifiedHarnessFiles": [
+      "M dist/agents/claude-code.js",
+      "?? dist/agents/claude-code.js.stage5-vtrace-backup"
+    ],
+    "note": "The VEXP working tree is dirty and carries VTRACE's own agent shim. No M192 claim is derived from it; it is recorded only to show what was deliberately NOT treated as upstream truth."
+  }
+}

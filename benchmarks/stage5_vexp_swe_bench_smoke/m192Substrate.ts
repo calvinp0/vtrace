@@ -221,6 +221,27 @@ export function classifyProvenance(ev: ProvenanceEvidence): ProvenanceState {
   return "AMBIGUOUS_SOURCE";
 }
 
+/**
+ * How *robustly* the checkout wins the import, measured by resolving the package
+ * from a neutral working directory.
+ *
+ * `EDITABLE_INSTALL` — the checkout resolves even with no cwd advantage, so no
+ * command can accidentally validate a copy.
+ * `CWD_DEPENDENT` — an installed copy exists and the checkout only wins because
+ * the runner happens to `cd /testbed` first. Validation is correct today and
+ * silently wrong the moment something runs from elsewhere. This is M191's
+ * failure mode surviving into the per-instance images.
+ */
+export type ProvenanceRobustness = "EDITABLE_INSTALL" | "CWD_DEPENDENT" | "UNKNOWN";
+
+export function classifyProvenanceRobustness(
+  moduleFileNeutralCwd: string | null | undefined,
+  checkoutRoot: string,
+): ProvenanceRobustness {
+  if (!moduleFileNeutralCwd) return "UNKNOWN";
+  return moduleFileNeutralCwd.startsWith(`${checkoutRoot}/`) ? "EDITABLE_INSTALL" : "CWD_DEPENDENT";
+}
+
 // ── Repository readiness (V1..V12) ──────────────────────────────────
 
 export interface ReadinessChecks {
@@ -229,8 +250,12 @@ export interface ReadinessChecks {
   v3SourceWritable: boolean;
   v4MutationPersists: boolean;
   v5TestRunnerStarts: boolean;
-  v6PassingObservable: boolean;
-  v7FailingObservable: boolean | null; // null when the contract offers no F-probe
+  // Both are null when the benchmark contract declares no such test for this
+  // instance. SWE-bench has FAIL_ONLY instances with an empty PASS_TO_PASS set
+  // (pylint-dev__pylint-4551 is one), and "the contract offers no passing test"
+  // is not the same claim as "the environment could not produce one".
+  v6PassingObservable: boolean | null;
+  v7FailingObservable: boolean | null;
   v8SourceProvenance: ProvenanceState;
   v9MutationAffectsValidation: boolean;
   v10SourceRestored: boolean;
@@ -261,8 +286,9 @@ export function assessRepository(c: ReadinessChecks): RepositoryState {
   if (c.v8SourceProvenance === "INSTALLED_COPY_CONFIRMED") return "WRONG_SOURCE";
   if (!c.v11TelemetryTruthful || !c.v12NoPrivilegedBypass) return "TELEMETRY_FAILURE";
   if (!c.v5TestRunnerStarts) return "DEPENDENCY_FAILURE";
-  if (!c.v6PassingObservable) return "RUNNER_ONLY";
+  if (c.v6PassingObservable === false) return "RUNNER_ONLY";
   if (c.v7FailingObservable === false) return "RUNNER_ONLY";
+  if (c.v6PassingObservable === null && c.v7FailingObservable === null) return "RUNNER_ONLY";
   if (c.v8SourceProvenance !== "EDITED_CHECKOUT_CONFIRMED") return "OTHER";
   if (!c.v9MutationAffectsValidation) return "WRONG_SOURCE";
   if (!c.v10SourceRestored) return "OTHER";

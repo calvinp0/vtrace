@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
   assessRepository,
+  classifyProvenanceRobustness,
   breadthGate,
   classifyExecution,
   classifyProvenance,
@@ -130,6 +131,29 @@ describe("source provenance is independent of test pass/fail", () => {
   });
 });
 
+describe("provenance robustness is measured, not assumed", () => {
+  test("a checkout that wins from a neutral cwd is an editable install", () => {
+    expect(classifyProvenanceRobustness("/testbed/django/__init__.py", "/testbed"))
+      .toBe("EDITABLE_INSTALL");
+  });
+
+  test("a checkout that only wins from inside itself is cwd-dependent", () => {
+    // psf/requests: correct under the benchmark runner, wrong the moment any
+    // command runs from elsewhere.
+    expect(
+      classifyProvenanceRobustness(
+        "/opt/miniconda3/envs/testbed/lib/python3.9/site-packages/requests/__init__.py",
+        "/testbed",
+      ),
+    ).toBe("CWD_DEPENDENT");
+  });
+
+  test("an unmeasured neutral-cwd resolution is not a clean bill of health", () => {
+    expect(classifyProvenanceRobustness(null, "/testbed")).toBe("UNKNOWN");
+    expect(classifyProvenanceRobustness(undefined, "/testbed")).toBe("UNKNOWN");
+  });
+});
+
 describe("repository readiness", () => {
   test("all checks green is READY", () => {
     expect(assessRepository(checks())).toBe("READY");
@@ -153,9 +177,18 @@ describe("repository readiness", () => {
     expect(assessRepository(checks({ v6PassingObservable: false }))).toBe("RUNNER_ONLY");
   });
 
-  test("an absent F-probe does not disqualify, an observed non-failure does", () => {
+  test("an absent probe does not disqualify, an observed non-result does", () => {
     expect(assessRepository(checks({ v7FailingObservable: null }))).toBe("READY");
     expect(assessRepository(checks({ v7FailingObservable: false }))).toBe("RUNNER_ONLY");
+    // FAIL_ONLY instances declare no PASS_TO_PASS at all.
+    expect(assessRepository(checks({ v6PassingObservable: null }))).toBe("READY");
+    expect(assessRepository(checks({ v6PassingObservable: false }))).toBe("RUNNER_ONLY");
+  });
+
+  test("an instance offering neither probe proves nothing about validation", () => {
+    expect(
+      assessRepository(checks({ v6PassingObservable: null, v7FailingObservable: null })),
+    ).toBe("RUNNER_ONLY");
   });
 
   test("non-persistent state and unwritable source are distinguished", () => {

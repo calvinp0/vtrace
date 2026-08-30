@@ -6565,3 +6565,121 @@ evidence commit   7b3b1f57 (7b3b1f575dfc2d11509b7ba82cc19f3cd363bbf3)
   question closed cheaply, the honest observation is that even the healthy pre-guard population
   attempted validation in only 318 of 807 arms — the natural rate a paid acquisition would have
   to beat is not obviously high enough to be worth buying.
+
+## M192 — per-instance SWE-bench validation substrate audit
+
+```text
+verdict           M192 — PASS
+substrate         PER_INSTANCE_SUBSTRATE_VIABLE
+architecture      HOST_AGENT_CONTAINER_EXECUTION_PREFERRED
+question          can SWE-bench's own per-instance Docker environment be the authoritative
+                  interactive edit-and-validate substrate, such that a test process provably
+                  executes the exact source state an agent just edited?
+answer            Yes. 12/12 repositories REPO_INTERACTIVE_VALIDATION_READY against a
+                  preregistered gate of 8/12, zero wrong-source executions, and the
+                  interactive shape did not have to be built: swebench 4.1.0's own evaluator
+                  already drives a persistent container with repeated exec_run calls.
+
+BREADTH GATE      >= 8/12 READY with zero WRONG_SOURCE among them
+                  prereg 88d5c0ee, committed BEFORE the first container was created.
+                  READY ....................................... 12   pass
+                  WRONG_SOURCE ................................  0   pass
+                  EDITED_CHECKOUT_CONFIRMED ................... 12/12
+                  gold control closed (F fails pre-repair,
+                    passes post-repair, same container) ....... 12/12
+                  images built ................................  0  (all twelve prebuilt)
+
+harness authority swebench==4.1.0 read from the INSTALLED WHEEL, not a working tree:
+                  73/73 installed .py match their RECORD hashes, 0 modified. The
+                  vexp-swe-bench checkout (d658e345, 2758 dirty entries) carries VTRACE's
+                  own agent shim and no M192 claim is derived from it.
+
+architecture      3 image layers, per-instance image PULLED not built; source at /testbed
+                  chmod 777 by design; deps in a baked conda env; container is created
+                  detached with `tail -f /dev/null` and driven by exec_run. Divergence from
+                  final evaluation is the model patch only (M192 edits in place); image,
+                  container args, platform, user, workdir, test patch and test command match.
+
+the finding       psf/requests is NOT an editable install. From a neutral cwd it resolves to
+                  site-packages; it is correct today only because the eval script cd's into
+                  /testbed first. M191's failure mode is alive inside an official image.
+                  11/12 are genuine editable installs. Recorded as CWD_DEPENDENT, not
+                  rounded off.
+
+falsification     the sweep returns 12/12 after FIVE author corrections, so the instrument
+                  was tested against a manufactured wrong-source condition: one container,
+                  one command text, only cwd and a shadowing copy differ.
+                  arm A EDITED_CHECKOUT_CONFIRMED -> READY ..... 3/3
+                  arm B INSTALLED_COPY_CONFIRMED -> WRONG_SOURCE 3/3
+                  In 2/3 poisoned arms the sentinel still FIRED (the copy carried the edit
+                  forward). The execution witness alone would have been fooled; the path
+                  witness caught it. Both are required.
+
+telemetry         exit 42 preserved as 42; timeout -> timed_out with exit_code None (no
+                  invented code); missing cwd -> 127 / OCI runtime exec failed. TRAP: the
+                  eval script's exit code carries NO test semantics (it ends with git
+                  checkout and exits 0 while the F-probe fails).
+
+cost              0 builds, ~34.6 GB disk for 11 pulled images, container start median 628ms,
+                  repeat command 22ms, full benchmark validation median 3s (2-29s),
+                  12 repositories three-way parallel in 122s.
+
+runtime capability RUNTIME_OBSERVATION_CAPABLE (tracebacks, trace, sys.settrace, writable
+                  source, outbound network). Inventory only.
+
+artifacts         m192Substrate.ts + .test.ts (24 tests), run_stage5_m192_manifest.ts,
+                  run_stage5_m192_harness_authority.py, run_stage5_m192_probes.py,
+                  run_stage5_m192_analyze.ts, run_stage5_m192_wrong_source_control.py,
+                  run_stage5_m192_control_verify.ts, preregistration, probe manifest,
+                  readiness ledger (json+md), control verdict, final report
+src/ changed      NONE (0 files). No VTRACE treatment of any kind was applied.
+gates             typecheck PASS  typecheck:benchmarks PASS  bun test PASS
+                  git diff --check clean
+live spend        $0 - 0 live agents, 0 model calls. Docker execution only, as authorized.
+prereg commit     88d5c0ee (manifest + gate + classifier, before the first container)
+authorizations    OBSERVATIONAL_CORPUS_SUBSTRATE_READY
+                  NO_VTRACE_I6_PRODUCT_IMPLEMENTATION_AUTHORIZED
+                  NO_RUNTIME_REPAIR_INTERVENTION_AUTHORIZED
+```
+
+## M192 standing findings
+
+- **The interactive substrate already existed; nobody had looked.** M191 spent a milestone
+  establishing that the shared `.bench-repos` environment cannot validate, and the repository
+  had begun treating "per-task dependency provisioning" as unsolved work. It is solved
+  upstream: twelve prebuilt per-instance images exist, none needed building, and swebench's
+  own `build_container` creates a persistent container it then drives with repeated
+  `exec_run`. The wrapper M192 was authorized to scope turned out to be unnecessary.
+
+- **`psf/requests` is the M191 mechanism surviving into an official image.** Eleven of twelve
+  repositories are genuine editable installs whose checkout wins the import from any working
+  directory. `requests` is not: an installed copy shadows it, and validation is correct only
+  because the eval script happens to `cd /testbed`. Any future harness must pin the working
+  directory rather than trust it, and must keep measuring this per repository — it is not a
+  property of SWE-bench, it is a property of each image.
+
+- **A copy can carry the edit forward, so an execution witness is not enough.** The
+  falsification control's most useful output was an accident: in two of three poisoned arms
+  the sentinel fired from the *shadowing copy*. SWE-bench's eval script re-runs `install`
+  before every test run, so this is a live mechanism here and not a contrivance. Path
+  provenance and execution provenance are independent, and a proof needs both.
+
+- **Five corrections moved 7/12 to 12/12, and that is the part to distrust.** Every one was a
+  case where the code failed to implement the frozen prose or upstream semantics — V2 ancestry,
+  merged log capture, swebench's own `test_passed`/`test_failed`, V10's disjunction, and V6 on
+  a FAIL_ONLY instance. The instance set and the gate were never touched. But the honest
+  summary is that the first instrument was wrong five times, so the result rests on the
+  falsification control rather than on the sweep agreeing with itself.
+
+- **Nothing about agents has been learned.** M192 establishes only that future validation
+  evidence can be trusted. Zero agents have still ever run on a repaired path, which remains
+  the largest evidential gap in the Phase-2B programme and is untouched by this milestone.
+
+- **Next-step recommendation.** The substrate is ready and the acquisition is still not
+  authorized. If the project wants the I6 question answered, the next milestone is a
+  *preregistered, explicitly funded* baseline-only observational acquisition naming its task
+  fixture, model, turn limit, per-run and total cost caps and stopping rule — and it should
+  pin the container working directory because of `psf/requests`. If the project does not want
+  to buy that corpus, M191's observation still stands: the natural validation-attempt rate in
+  the healthy pre-guard population was 318/807 arms, and it is not obvious that beating it is
+  worth the money. Do not build bespoke environments; do not resurrect I5; I6 stays unlicensed.
