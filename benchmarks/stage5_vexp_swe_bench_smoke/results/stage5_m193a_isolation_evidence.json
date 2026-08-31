@@ -69,7 +69,7 @@
     "finding": "FALSIFIED: --strict-mcp-config closes file-based registrations only. The claude.ai account connectors arrive with the authenticated account and survive it."
   },
   "constructedArm": {
-    "configDir": "/tmp/m193a-arms-MEfcO1/claude-config-isolation-evidence-evidence",
+    "configDir": "/tmp/m193a-arms-pGDsQR/claude-config-isolation-evidence-evidence",
     "configDirFreshlyCreated": true,
     "allowedFilesCopied": [
       ".credentials.json"
@@ -111,7 +111,7 @@
       ".claude.json",
       ".credentials.json",
       "backups/",
-      "backups/.claude.json.backup.1788125820114",
+      "backups/.claude.json.backup.1788175630920",
       "settings.json"
     ],
     "unexpectedFiles": [],
@@ -129,7 +129,7 @@
     "cliVersion": "2.1.251",
     "cliBinary": "/home/calvin/.local/bin/claude",
     "model": "claude-opus-4-5-20251101",
-    "configDir": "/tmp/m193a-arms-MEfcO1/claude-config-isolation-evidence-evidence",
+    "configDir": "/tmp/m193a-arms-pGDsQR/claude-config-isolation-evidence-evidence",
     "configDirFreshlyCreated": true,
     "baselineContentsHash": "2e44c6a87d9697ddf5c7e28b1cf52e00a00dd320ce56aa8e1362df52e5f42029",
     "allowedFilesCopied": [

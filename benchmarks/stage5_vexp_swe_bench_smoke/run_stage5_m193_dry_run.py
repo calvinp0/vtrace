@@ -49,6 +49,10 @@ from m193_container_adapter import (  # noqa: E402
     normalize_patch_ignoring_hunk_context,
     sha256_text,
 )
+from m193c_patch_snapshot import (  # noqa: E402
+    PATCH_SNAPSHOT_AUTHORITY_VERSION,
+    repository_state_differences,
+)
 from run_stage5_m193_preflight import IMPORT_NAMES, instance_image_key, preflight_instance  # noqa: E402
 
 DATASET = "/home/calvin/code/vexp-swe-bench/data/swe-bench-100.jsonl"
@@ -73,6 +77,51 @@ TEST_SOURCE = """import {pkg}
 def test_m193_dry_run_value():
     assert {pkg}.M193_DRY_RUN_VALUE == 222
 """
+
+
+class PurityLog:
+    """M193C §13 — every observation, and everything it moved.
+
+    The snapshot is bracketed by two repository fingerprints. A telemetry read
+    that changes the subject shows up here as a non-empty `moved` list, so the
+    claim "observation is read-only" is measured on the real container at every
+    boundary rather than asserted once in a synthetic fixture.
+    """
+
+    def __init__(self) -> None:
+        self.rows: list[dict[str, Any]] = []
+
+    def observe(self, box: Any, boundary: str) -> str:
+        before = box.capture_repository_state()
+        snap, _rec = box.capture_patch_snapshot()
+        after = box.capture_repository_state()
+        moved = repository_state_differences(before, after)
+        self.rows.append(
+            {
+                "boundary": boundary,
+                "status": snap["status"],
+                "ok": snap["ok"],
+                "moved": moved,
+                "pure": not moved,
+                "trackedCount": snap["trackedCount"],
+                "untrackedCount": snap["untrackedCount"],
+                "gitState": snap["gitState"],
+                "binaryPaths": snap["binaryPaths"],
+                "error": snap["error"],
+            }
+        )
+        return snap["patch"]
+
+    def report(self) -> dict[str, Any]:
+        return {
+            "authority": PATCH_SNAPSHOT_AUTHORITY_VERSION,
+            "observations": len(self.rows),
+            "impure": [r for r in self.rows if not r["pure"]],
+            "refusals": [r for r in self.rows if not r["ok"]],
+            "allPure": all(r["pure"] for r in self.rows),
+            "allAnswered": all(r["ok"] for r in self.rows),
+            "rows": self.rows,
+        }
 
 
 def host_path(mount: str, container_path: str) -> str:
@@ -177,6 +226,7 @@ def dry_run_instance(row: dict[str, Any], work_root: str) -> dict[str, Any]:
         return out
 
     box = M193Container(spec, os.path.join(work_root, iid))
+    purity = PurityLog()
     try:
         # Phase 1 — container + authoritative checkout.
         setup = box.setup()
@@ -198,7 +248,7 @@ def dry_run_instance(row: dict[str, Any], work_root: str) -> dict[str, Any]:
             return out
 
         led.add("agent_start", stateHash=None, toolInput={"instanceId": iid})
-        base_patch, _ = box.capture_diff()
+        base_patch = purity.observe(box, "SETUP")
         led.snapshot("SETUP", base_patch)
         out["phases"]["setupDiffEmpty"] = normalize_patch(base_patch) == ""
 
@@ -233,13 +283,41 @@ def dry_run_instance(row: dict[str, Any], work_root: str) -> dict[str, Any]:
         with open(os.path.join(mount, TEST_FILENAME), "w") as fh:
             fh.write(TEST_SOURCE.format(pkg=import_name))
         led.add("tool_call", toolName="Edit", toolInput={"file_path": module_file}, stateHash=None)
-        p1, _ = box.capture_diff()
+        p1 = purity.observe(box, "AFTER_EDIT_1")
         s1 = led.snapshot("AFTER_EDIT", p1)
         out["phases"]["firstEdit"] = {
             "targetFile": module_file,
             "diffHash": s1["diffHash"],
             "diffNonEmpty": normalize_patch(p1) != "",
             "hostWriteVisibleInContainer": None,
+        }
+
+        # Phase 3b — the agent STAGES, deliberately (M193C §22).
+        #
+        # Every earlier fake agent left the index empty, which is why M193A and
+        # M193B both shipped an instrument that silently wiped it: the synthetic
+        # subject could not do the thing that would have exposed the defect. A
+        # Claude Code arm has Bash and can stage, so this one does. From here to
+        # the end of the run the index holds the FIRST edit while the worktree
+        # goes on to hold the second, which is the §14 state arising from the
+        # lifecycle rather than constructed for a fixture.
+        stage = box.exec_raw(
+            f"git add -- {module_file} {TEST_FILENAME} && git status --porcelain && "
+            f"echo '--INDEX--' && git diff --cached --name-only",
+            120,
+            "agent_git_add",
+        )
+        _cmd_event(led, stage, "Bash", False, s1["diffHash"])
+        intended = box.exec_raw(
+            "git status --porcelain=v2; echo '--LS--'; git ls-files -s", 120, "agent_intended_state"
+        )
+        out["phases"]["agentStagedState"] = {
+            "command": f"git add -- {module_file} {TEST_FILENAME}",
+            "ok": stage.exit_code == 0,
+            "stagedPaths": [
+                ln for ln in (stage.stdout or "").split("--INDEX--")[-1].strip().splitlines() if ln.strip()
+            ],
+            "statusAfterStaging": (stage.stdout or "").split("--INDEX--")[0].strip().splitlines(),
         }
 
         # Phase 4 — first validation. Expected to FAIL: the value is 1, the test
@@ -261,7 +339,7 @@ def dry_run_instance(row: dict[str, Any], work_root: str) -> dict[str, Any]:
         mf1 = box.module_witness()
         # The tree is re-read rather than assumed: the probe runs after the
         # command, so it only describes what the command saw if nothing moved.
-        p1_after, _ = box.capture_diff()
+        p1_after = purity.observe(box, "AFTER_VALIDATION_1")
         sv1 = box.source_version_evidence(
             is_validation_attempt=True,
             runner_started=True,
@@ -290,11 +368,53 @@ def dry_run_instance(row: dict[str, Any], work_root: str) -> dict[str, Any]:
         with open(host_module, "w") as fh:
             fh.write(original_module + "\n\nM193_DRY_RUN_VALUE = 222\n")
         led.add("tool_call", toolName="Edit", toolInput={"file_path": module_file}, stateHash=None)
-        p2, _ = box.capture_diff()
+        p2 = purity.observe(box, "AFTER_EDIT_2")
         s2 = led.snapshot("AFTER_EDIT", p2)
         out["phases"]["secondEdit"] = {
             "diffHash": s2["diffHash"],
             "differsFromFirst": s2["diffHash"] != s1["diffHash"],
+        }
+
+        # Phase 5b — the agent reads back the state it created (M193C §22).
+        #
+        # The index still holds the FIRST edit; the worktree holds the second.
+        # Several telemetry observations have happened in between. If any of them
+        # had written, this is where an arm would notice, so the comparison is
+        # against the bytes recorded BEFORE those observations rather than against
+        # an expectation written here.
+        observed = box.exec_raw(
+            "git status --porcelain=v2; echo '--LS--'; git ls-files -s", 120, "agent_observed_state"
+        )
+        _cmd_event(led, observed, "Bash", False, s2["diffHash"])
+        rel_module = os.path.relpath(module_file, CHECKOUT_ROOT)
+        staged_blob = box.exec_raw(f"git rev-parse :{rel_module}", 120, "agent_staged_blob")
+        worktree_blob = box.exec_raw(f"git hash-object {module_file}", 120, "agent_worktree_blob")
+        sb = ((staged_blob.stdout or "").strip().splitlines() or [""])[-1]
+        wb = ((worktree_blob.stdout or "").strip().splitlines() or [""])[-1]
+        # The INDEX is the operand, not the whole status. The agent made an
+        # unstaged edit of its own between the two reads, so `git status` is
+        # SUPPOSED to differ; comparing it whole would be a check that can never
+        # pass, which is no more useful than one that can never fail. Nothing
+        # touched the index after `git add`, so the index must be byte-identical.
+        def _index_half(text: str) -> str:
+            return text.split("--LS--", 1)[-1]
+
+        def _status_half(text: str) -> str:
+            return text.split("--LS--", 1)[0]
+
+        out["phases"]["agentStatePreserved"] = {
+            "intendedIndexHash": f"sha256:{sha256_text(_index_half(intended.stdout))}",
+            "observedIndexHash": f"sha256:{sha256_text(_index_half(observed.stdout))}",
+            "indexIdentical": _index_half(intended.stdout) == _index_half(observed.stdout),
+            # expected to differ, and only because of the agent's own Phase 5 edit
+            "statusChanged": _status_half(intended.stdout) != _status_half(observed.stdout),
+            "statusChangeAttributableToAgentEdit": "M193_DRY_RUN_VALUE = 222" in p2,
+            "stagedBlob": sb,
+            "worktreeBlob": wb,
+            # §14: the index still holds S1 while the captured patch holds S2
+            "indexStillHoldsFirstEdit": bool(sb) and bool(wb) and sb != wb,
+            "capturedPatchHoldsSecondEdit": "M193_DRY_RUN_VALUE = 222" in p2,
+            "capturedPatchDoesNotHoldFirstEdit": "+M193_DRY_RUN_VALUE = 1\n" not in p2,
         }
 
         # Phase 6 — second validation. Expected to PASS, and it can only pass if
@@ -311,7 +431,7 @@ def dry_run_instance(row: dict[str, Any], work_root: str) -> dict[str, Any]:
         else:
             v2 = box.exec_raw(f"python -m pytest {TEST_FILENAME} -q --no-header -p no:cacheprovider", 600, "validation_2")
         mf2 = box.module_witness()
-        p2_after, _ = box.capture_diff()
+        p2_after = purity.observe(box, "AFTER_VALIDATION_2")
         sv2 = box.source_version_evidence(
             is_validation_attempt=True,
             runner_started=True,
@@ -424,7 +544,7 @@ def dry_run_instance(row: dict[str, Any], work_root: str) -> dict[str, Any]:
         out["phases"]["goldApplied"] = {"ok": "RC=0" in ap.stdout, "tail": ap.stdout.strip().splitlines()[-2:]}
 
         # Phase 8 — final patch extraction.
-        final_patch, _ = box.capture_diff()
+        final_patch = purity.observe(box, "BEFORE_SUBMIT")
         s3 = led.snapshot("BEFORE_SUBMIT", final_patch)
         led.add("agent_end", stateHash=s3["diffHash"])
         out["phases"]["finalPatch"] = {
@@ -439,6 +559,7 @@ def dry_run_instance(row: dict[str, Any], work_root: str) -> dict[str, Any]:
             ),
             "containsBinaryPatch": "GIT binary patch" in final_patch,
         }
+        out["phases"]["observationPurity"] = purity.report()
         out["finalPatch"] = final_patch
         out["goldPatchNormalizedSha256"] = sha256_text(normalize_patch(gold))
         out["interactiveFinalDiffNormalizedSha256"] = sha256_text(normalize_patch(final_patch))

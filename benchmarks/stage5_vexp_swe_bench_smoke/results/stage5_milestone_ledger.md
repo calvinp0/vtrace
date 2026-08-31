@@ -7128,3 +7128,143 @@ authorizations    M194_CHANGED_SOURCE_AUTHORITY_READY
   executes `stage5_m193b_manifest.json` exactly. Do not reopen I5. Do not implement
   I6. Do not extend the non-staging property to `capture_diff()` as a side effect of
   M194; if it is wanted, it is its own milestone with its own patch-identity proof.
+
+## M193C — non-invasive patch snapshot authority closure
+
+```text
+verdict           M193C - PASS
+                  readiness M194_PATCH_OBSERVATION_READY
+                  live-agent runs 0, live model spend $0
+
+scope             the one residual M193B recorded rather than fixed: capture_diff()
+                  still staged and reset. Make patch/diff observation read-only and
+                  prove it. No M194 execution, no product code, no I5, no I6.
+
+start / end       start 858b93027ddb3441306f9c09f67dd42fbef363c6, 2 tracked + 203
+                  untracked pre-existing dirt, preserved.
+
+the defect        capture_diff() ran `git add -A -- . <excl>` -> `git diff --cached`
+                  -> `git reset -q`. Same staging-as-a-query idiom M193B removed from
+                  the changed-source authority, left in place at the patch boundary on
+                  the belief that staging is REQUIRED to get untracked files into a
+                  unified diff. That belief was false, and the cost was real: a mixed
+                  reset, so every diff snapshot emptied the agent's index. Reproduced
+                  mechanically - A.py 0555510(S1) -> d4c0a80(HEAD), staged deletion and
+                  staged rename destroyed, E_new.py reclassified to untracked.
+
+the replacement   m193c_patch_snapshot.py, stage5.m193c.patch-snapshot-authority.v1.
+                  `git diff --no-renames HEAD` (base vs WORKING TREE, so staged-S1 +
+                  unstaged-S2 reports S2 while S1 stays in the index) merged in git's
+                  own path order with a per-file
+                  `git diff --no-index -- /dev/null <path>` untracked lane. git
+                  special-cases /dev/null and emits the canonical `diff --git a/P b/P`
+                  + `new file mode` header - byte-for-byte what staging produced - so
+                  the untracked half costs no index write and no object write. Verb set
+                  is asserted to be exactly diff/ls-files/rev-parse/status.
+
+byte difference   vs the superseded capture, on identical pristine fixtures: untracked
+                  files interleave in path order instead of appending; a rename is
+                  delete+add instead of R100 (permitted, and it carries the new file's
+                  content, which R100 does not); executable bit CLAMPED to preserve
+                  the old core.fileMode=false behaviour, real mode recorded not erased.
+                  Everything else byte-identical. Both patches applied to the base
+                  produce identical trees and identical modes.
+
+final extraction  converged onto the SAME read-only authority rather than keeping the
+                  weaker post-agent constraint 27 allows. The final patch is
+                  index-independent and the dry run proves it: the fake agent leaves a
+                  staged blob AND a staged add-of-a-deleted-file in the index through
+                  to submission, and the final patch is unaffected.
+
+proof             synthetic P1-P7 matrix + 16 more controls, 23 tests / 119 assertions,
+                  each case fingerprinted either side of the observation. Real
+                  containers psf__requests-1142 and pallets__flask-5014: 0 mutations
+                  for the new authority, 6 for the superseded one on the identical
+                  tree, all 7 state classes represented, pre-agent build/ excluded.
+                  Fake agent now STAGES deliberately (22) and the 5-instance lifecycle
+                  gives 30 observations, 0 impure, 0 refusals, index byte-identical.
+
+regression        stage5_m193c_analysis.json is BYTE-IDENTICAL to stage5_m193b_analysis
+                  .json on every field - dryRun, fixtures, gates, allGatesPass. Fixtures
+                  16/16, stale 5/5, healthy 5/5, poisoned agrees, IDENTICAL_STRICT 5/5,
+                  evaluator resolved all, treatment isolation unchanged. All five final
+                  patch hashes byte-identical to M193/M193A/M193B.
+
+inventory         26 mutating-verb occurrences across 9 acquisition sources: 8
+                  documentation, 5 report text, 1 setup, 8 agent action, 4 falsification
+                  control, 0 observation, 0 unclassified. The zero is a measurement: a
+                  synthetic `git add`/`git reset` under label="capture_diff" is pushed
+                  through the same classifier and lands in "observation"
+                  (gateCanFail true).
+
+manifest          M193B c544fba670e4466fc3e6034c7bf518328c1f736c52c6d83c1e053345592de8ca
+                  (verified before deriving)
+                  M193C f735786bf7d3437a095abdcc7e8704cb6769fd32eb46b37ad8fc373850282204
+                  25 added, 7 changed, 0 removed, 0 leaves outside integrity scope;
+                  21/21 frozen-experiment invariants hold, including an explicit
+                  re-assertion that the whole sourceVersionAuthority block, runValidity
+                  and corpusAdequacy are byte-identical.
+
+residual          binary files still cannot ride in the model patch (no --binary, true
+                  before M193C too - now VISIBLE via binaryPaths rather than silent);
+                  quoted paths still refused by the changed-source authority; submodules
+                  not modelled; a snapshot is not atomic against a concurrently running
+                  agent, but a tree that moves mid-capture is refused by the chunk/name
+                  cross-check rather than mis-reported.
+
+files             new m193c_patch_snapshot.py, m193cPatchSnapshot.test.ts,
+                  run_stage5_m193c_container_control.py, run_stage5_m193c_inventory.ts,
+                  run_stage5_m193c_manifest.ts; amended m193_container_adapter.py
+                  (capture_patch_snapshot / capture_repository_state; capture_diff now a
+                  thin accessor) and run_stage5_m193_dry_run.py (PurityLog, deliberate
+                  agent staging, index-preservation readback);
+                  results: container_control, dry_run_ledger, analysis, manifest,
+                  manifest_diff, observation_inventory, patch_observation_design.md,
+                  final_report.md
+src/ changed      NONE (0 files). No VTRACE product behaviour was added or altered.
+gates             typecheck PASS  typecheck:benchmarks PASS
+                  bun test 5842 pass 49 skip 0 fail  git diff --check clean
+authorizations    M194_PATCH_OBSERVATION_READY
+                  M194_CHANGED_SOURCE_AUTHORITY_READY (M193B, unchanged)
+                  M194_ACQUISITION_INTEGRITY_READY (M193A, unchanged)
+                  NO_VTRACE_I6_PRODUCT_IMPLEMENTATION_AUTHORIZED
+                  NO_RUNTIME_REPAIR_INTERVENTION_AUTHORIZED
+                  I5_REMAINS_CLOSED
+```
+
+## M193C standing findings
+
+- **A residual is a claim, and it decays like one.** M193B recorded that
+  `capture_diff()` "must stage to get untracked files into a unified diff". That
+  sentence was the reason the patch boundary was left invasive, and it was
+  wrong: `git diff --no-index -- /dev/null <path>` produces the identical header
+  git produces for a staged new file. The residual was not a measurement, it was
+  an assumption written down in the place where measurements go. Before
+  inheriting a scoping decision from a prior milestone, check whether its stated
+  obstacle still reproduces.
+
+- **The clamp is the interesting part of "no behaviour change".** Moving to a
+  read-only lane made the capture MORE truthful about file modes — it started
+  reporting `100755` for an executable the old path recorded as `100644`. More
+  truthful was the wrong answer here: `core.fileMode=false` is a declaration that
+  the filesystem's executable bit is not to be trusted, and the tracked lane
+  still honours it. A change of authority should not smuggle in a change of
+  policy; where the two disagree, keep the policy and record the observation.
+
+- **Fix the check, not the number.** The first version of the staged-state
+  readback compared whole `git status` output before and after, and reported
+  `identical: false` on all five instances. The instrument was wrong, not the
+  system: the agent makes its own unstaged edit between the two reads, so status
+  is SUPPOSED to differ. A check that can never pass is exactly as useless as one
+  that can never fail. The operand is the index, which nothing touched after
+  `git add`, and it is byte-identical 5/5.
+
+- **Next-step recommendation.** Unchanged in substance from M193A and M193B,
+  with the corrected patch authority bound in: present the frozen parameters —
+  40 instances across 12 repositories, `claude-opus-4-5-20251101` on Claude Code
+  CLI 2.1.251, 250 turns, $3.50 per run, $90 total, 20..40 arms, concurrency 3,
+  manifest `f735786b…` — and ask for an explicit spend authorisation of up to $90
+  (expected ~$26). If authorised, M194 executes `stage5_m193c_manifest.json`
+  exactly. Do not reopen I5. Do not implement I6. All four acquisition-integrity
+  authorities are now READY; there is no further integrity milestone queued, so
+  the next decision is the spend, not more instrumentation.

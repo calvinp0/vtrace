@@ -48,8 +48,16 @@ from m193b_changed_source import (
     CHANGED_SOURCE_AUTHORITY_VERSION,
     build_source_version_evidence,
     changed_source_command,
-    exclusion_pathspec,
+    exclusion_pathspec,  # re-exported: run_stage5_m193b_container_control imports it from here
     parse_changed_source_output,
+)
+from m193c_patch_snapshot import (
+    PATCH_SNAPSHOT_AUTHORITY_VERSION,
+    parse_patch_snapshot_output,
+    parse_repository_state_output,
+    patch_snapshot_command,
+    repository_state_command,
+    repository_state_differences,
 )
 
 CHECKOUT_ROOT = "/testbed"
@@ -141,6 +149,7 @@ class M193Container:
         self.client = docker.from_env()
         self.container = None
         self.preexisting_untracked: list[str] = []
+        self.last_patch_snapshot: dict[str, Any] = {}
         self._probe_installed = False
         self.name = M193_RESOURCE_PREFIX + re.sub(r"[^a-zA-Z0-9_.-]", "-", spec.instance_id)
 
@@ -409,26 +418,49 @@ class M193Container:
 
     # ── patch capture (§18, §27) ────────────────────────────────────
 
-    def _exclusion_pathspec(self) -> str:
-        return exclusion_pathspec(self.preexisting_untracked)
-
-    def capture_diff(self) -> tuple[str, CommandRecord]:
+    def capture_patch_snapshot(self) -> tuple[dict[str, Any], CommandRecord]:
         """The interactive diff, with the environment's own build output excluded.
 
-        A naive `git add -A` would stage whatever the image left untracked in the
-        checkout. psf/requests ships an untracked `build/` directory, so that
-        would put environment artifacts into the model patch. Paths untracked
-        *before the agent existed* are excluded; anything the agent creates is
-        kept, because SWE-bench permits new source files.
+        Read-only (M193C §8). Until M193C this was `git add -A` -> `git diff
+        --cached` -> `git reset`, which produced the right bytes by writing to
+        the index and then wiping it: a mixed reset unstages EVERYTHING, so an
+        agent that had deliberately staged work found its index emptied by the
+        instrument measuring it, and a staged rename came back as an untracked
+        file. Observation must not change the subject (§1), so the patch is now
+        assembled from `diff --no-renames HEAD` plus a per-file
+        `diff --no-index -- /dev/null <path>` untracked lane, neither of which
+        writes anything.
+
+        The exclusion is unchanged. A naive `add -A` would have staged whatever
+        the image left untracked in the checkout -- psf/requests ships an
+        untracked `build/` -- so paths untracked BEFORE the agent existed are
+        excluded and anything the agent creates is kept, because SWE-bench
+        permits new source files.
         """
-        excl = self._exclusion_pathspec()
-        cmd = (
-            f"git -c core.fileMode=false add -A -- . {excl} >/dev/null 2>&1; "
-            f"git -c core.fileMode=false diff --cached; "
-            f"rc=$?; git reset -q >/dev/null 2>&1; exit $rc"
+        rec = self.exec_raw(
+            patch_snapshot_command(self.preexisting_untracked), timeout=300, label="capture_diff"
         )
-        rec = self.exec_raw(cmd, timeout=300, label="capture_diff")
-        return rec.stdout, rec
+        snap = parse_patch_snapshot_output(rec.stdout, CHECKOUT_ROOT)
+        self.last_patch_snapshot = snap
+        return snap, rec
+
+    def capture_diff(self) -> tuple[str, CommandRecord]:
+        """The patch alone, for callers that only need the bytes.
+
+        A refusal yields an empty patch, which is why every caller that can act
+        on the difference should read `capture_patch_snapshot()` instead: an
+        empty patch and a snapshot that did not answer are the same string and
+        must not be the same conclusion (§30).
+        """
+        snap, rec = self.capture_patch_snapshot()
+        return snap["patch"], rec
+
+    def capture_repository_state(self) -> dict[str, Any]:
+        """The purity instrument (§13): enough Git state to detect that an
+        observation wrote something. Whole-repository on purpose -- purity is
+        also a claim about the regions the snapshot is supposed to ignore."""
+        rec = self.exec_raw(repository_state_command(), timeout=300, label="repository_state")
+        return parse_repository_state_output(rec.stdout)
 
     def capture_diff_hash(self) -> tuple[str, str]:
         patch, _ = self.capture_diff()
