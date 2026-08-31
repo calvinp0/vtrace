@@ -29,8 +29,13 @@ import {
 import { FIXTURE_CORPUS_EXPECTATION, syntheticFixtures } from "./m193Fixtures";
 
 const RESULTS = join(import.meta.dir, "results");
-const DRY_RUN = join(RESULTS, "stage5_m193a_dry_run_ledger.json");
-const OUT = join(RESULTS, "stage5_m193a_analysis.json");
+// M193B re-ran the frozen lifecycle against the repaired changed-source
+// authority. `--ledger <name>` points the same analysis at that rerun without
+// forking the analyser, so the two are compared by construction.
+const LEDGER_ARG = process.argv.indexOf("--ledger");
+const LEDGER_STEM = LEDGER_ARG > -1 ? (process.argv[LEDGER_ARG + 1] ?? "m193a") : "m193a";
+const DRY_RUN = join(RESULTS, `stage5_${LEDGER_STEM}_dry_run_ledger.json`);
+const OUT = join(RESULTS, `stage5_${LEDGER_STEM}_analysis.json`);
 
 function sha256(s: string): string {
   return createHash("sha256").update(s).digest("hex");

@@ -44,6 +44,14 @@ from typing import Any
 
 import docker
 
+from m193b_changed_source import (
+    CHANGED_SOURCE_AUTHORITY_VERSION,
+    build_source_version_evidence,
+    changed_source_command,
+    exclusion_pathspec,
+    parse_changed_source_output,
+)
+
 CHECKOUT_ROOT = "/testbed"
 
 # The probe travels into the container's /tmp, never into the checkout: anything
@@ -402,7 +410,7 @@ class M193Container:
     # ── patch capture (§18, §27) ────────────────────────────────────
 
     def _exclusion_pathspec(self) -> str:
-        return " ".join(f"':(exclude){p}'" for p in self.preexisting_untracked)
+        return exclusion_pathspec(self.preexisting_untracked)
 
     def capture_diff(self) -> tuple[str, CommandRecord]:
         """The interactive diff, with the environment's own build output excluded.
@@ -445,10 +453,11 @@ class M193Container:
         except Exception:
             return -1
 
-    # ── M193A source-version witness (§7, §10, §16) ─────────────────
+    # ── M193A source-version witness (§7, §10, §16), M193B authority ──
 
-    def changed_source_paths(self) -> list[str]:
-        """The changed-source set whose freshness matters (§16).
+    def changed_source_state(self) -> dict[str, Any]:
+        """The changed-source set whose freshness matters (§16), and whether it
+        was actually established.
 
         Everything the working tree currently differs by, as absolute container
         paths. A whole-repository freshness proof is neither necessary nor
@@ -457,20 +466,17 @@ class M193Container:
         rather than from our own snapshot bookkeeping so it cannot drift from
         what the checkout really holds.
         """
-        excl = self._exclusion_pathspec()
         rec = self.exec_raw(
-            f"git -c core.fileMode=false add -A -- . {excl} >/dev/null 2>&1; "
-            f"git -c core.fileMode=false diff --cached --name-only; "
-            f"git reset -q >/dev/null 2>&1",
+            changed_source_command(self.preexisting_untracked),
             timeout=300,
-            label="changed_source_paths",
+            label="changed_source_state",
         )
-        out: list[str] = []
-        for line in rec.stdout.splitlines():
-            rel = line.strip()
-            if rel:
-                out.append(os.path.join(CHECKOUT_ROOT, rel))
-        return sorted(set(out))
+        return parse_changed_source_output(rec.stdout, CHECKOUT_ROOT)
+
+    def changed_source_paths(self) -> list[str]:
+        """The paths alone. Empty when enumeration failed, so callers that care
+        about the difference must use `changed_source_state`."""
+        return self.changed_source_state()["paths"]
 
     def _install_source_version_probe(self) -> bool:
         """Copy the probe into the container's own /tmp, never into the checkout.
@@ -502,8 +508,21 @@ class M193Container:
         the files it is judging — importing one would write or refresh the very
         cache whose staleness is the evidence (§6, §45).
         """
-        targets = self.changed_source_paths() if paths is None else list(paths)
-        out: dict[str, Any] = {"probeRan": False, "requestedPaths": targets}
+        out: dict[str, Any] = {"probeRan": False}
+        if paths is None:
+            state = self.changed_source_state()
+            out["changedSourceState"] = {k: v for k, v in state.items() if k != "paths"}
+            if not state["ok"]:
+                # An enumeration that did not complete cannot be reported as an
+                # empty changed set: that would read as "nothing to check" and
+                # confirm freshness for a tree nobody enumerated (§2).
+                out["requestedPaths"] = []
+                out["error"] = f"changed-source enumeration failed: {state['error']}"
+                return out
+            targets = state["paths"]
+        else:
+            targets = list(paths)
+        out["requestedPaths"] = targets
         if not self._install_source_version_probe():
             out["error"] = "probe not installed"
             return out
@@ -539,28 +558,14 @@ class M193Container:
         paths: list[str] | None = None,
         since_epoch: float | None = None,
     ) -> dict[str, Any]:
-        """The compact record the TypeScript classifier consumes.
-
-        `stateStableAcrossValidation` is load-bearing: the probe necessarily runs
-        after the command, so it only describes what the command saw if nothing
-        rewrote the tree in between. When the two snapshots disagree the honest
-        answer is that freshness was not established, not that it was fine.
-        """
-        probe = self.source_version_probe(paths, since_epoch)
-        files = probe.get("files") or []
-        return {
-            "probeRan": bool(probe.get("probeRan")),
-            "isValidationAttempt": is_validation_attempt,
-            "runnerStarted": runner_started,
-            "stateStableAcrossValidation": (
-                state_hash_before is not None and state_hash_before == state_hash_after
-            ),
-            "changedSourceFileCount": len(files),
-            "fileVerdicts": [f.get("verdict", "INDETERMINATE") for f in files],
-            "interpreter": probe.get("interpreter"),
-            "files": files,
-            "error": probe.get("error"),
-        }
+        """The compact record the TypeScript classifier consumes (M193B)."""
+        return build_source_version_evidence(
+            self.source_version_probe(paths, since_epoch),
+            is_validation_attempt=is_validation_attempt,
+            runner_started=runner_started,
+            state_hash_before=state_hash_before,
+            state_hash_after=state_hash_after,
+        )
 
     def bytecode_staleness_hazard(self) -> dict[str, Any]:
         """Does a same-size, same-second edit go unseen on THIS instance?"""

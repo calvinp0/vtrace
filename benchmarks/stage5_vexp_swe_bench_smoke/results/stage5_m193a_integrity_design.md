@@ -134,8 +134,13 @@ the first is ever benign.
 
 The changed-source set is every path in the working tree's current diff against
 the base commit, excluding the environment's own pre-agent untracked output. It
-is read from `git diff --cached --name-only` in the checkout, not from the
-harness's own snapshot bookkeeping, so the two cannot drift apart.
+is read from git in the checkout, not from the harness's own snapshot
+bookkeeping, so the two cannot drift apart.
+
+> **M193B correction.** The command named here was `git diff --cached
+> --name-only`, which was only the middle line of `git add -A` → that →
+> `git reset -q`. M193B replaced it with a non-mutating enumeration that also
+> keeps both sides of a rename. See `stage5_m193b_final_report.md`.
 
 A whole-repository freshness proof is neither necessary nor affordable. What a
 validation event is evidence *about* is the edited program, and the edited

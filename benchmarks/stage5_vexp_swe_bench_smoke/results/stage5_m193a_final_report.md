@@ -80,8 +80,19 @@ Two defects were found in M193A's own instrument, both by running it:
 Full design: `stage5_m193a_integrity_design.md`.
 
 Current source state is defined from the working tree's own diff against the base
-commit, read with `git diff --cached --name-only` rather than from the harness's
-snapshot bookkeeping. Each changed file is judged by an out-of-band probe that
+commit, read from the checkout rather than from the harness's snapshot
+bookkeeping.
+
+> **M193B correction.** This paragraph originally named the command as
+> `git diff --cached --name-only`. That was the middle line of a three-line
+> shell: the committed implementation was `git add -A` → that command →
+> `git reset -q`, which used staging as a *query*. M193B audited it and found
+> two defects — the observation wrote (the mixed reset destroyed whatever the
+> agent had staged) and a detected rename lost its vacated path — and replaced
+> it with a non-mutating `git diff --no-renames --name-only HEAD` unioned with
+> `git ls-files --others --exclude-standard`. See
+> `stage5_m193b_final_report.md`; the frozen lifecycle re-runs to identical
+> per-instance verdicts. Each changed file is judged by an out-of-band probe that
 runs inside the container after the agent's command and never imports what it
 judges.
 

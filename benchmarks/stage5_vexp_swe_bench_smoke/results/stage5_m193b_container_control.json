@@ -1,0 +1,212 @@
+{
+  "schemaVersion": "stage5.m193b.container-control.v1",
+  "milestone": "M193B",
+  "liveModelCalls": 0,
+  "liveModelSpendUsd": 0,
+  "dataset": "/home/calvin/code/vexp-swe-bench/data/swe-bench-100.jsonl",
+  "results": [
+    {
+      "instanceId": "psf__requests-1142",
+      "repo": "psf/requests",
+      "verdict": "CONTROL_PASSED",
+      "errors": [],
+      "preexistingUntracked": [
+        "build"
+      ],
+      "headAfterCheckout": "22623bd8c265b78b161542663ee980738441c307",
+      "targets": {
+        "c1": "docs/_themes/flask_theme_support.py",
+        "c2": "docs/conf.py",
+        "c3": "requests/__init__.py",
+        "c5": "requests/adapters.py",
+        "c6": "requests/api.py"
+      },
+      "cleanTree": {
+        "ok": true,
+        "paths": [],
+        "error": null
+      },
+      "changeClasses": {
+        "C1_unstaged_modification": {
+          "path": "docs/_themes/flask_theme_support.py",
+          "discovered": true
+        },
+        "C2_staged_modification": {
+          "path": "docs/conf.py",
+          "discovered": true
+        },
+        "C3_staged_plus_unstaged": {
+          "path": "requests/__init__.py",
+          "discovered": true
+        },
+        "C4_untracked_new_source": {
+          "path": "m193b_agent_created.py",
+          "discovered": true
+        },
+        "C5_deletion": {
+          "path": "requests/adapters.py",
+          "discovered": true
+        },
+        "C6_rename_new_path": {
+          "path": "requests/m193b_renamed.py",
+          "discovered": true
+        },
+        "C6_rename_vacated_path": {
+          "path": "requests/api.py",
+          "discovered": true
+        }
+      },
+      "enumeration": {
+        "ok": true,
+        "error": null,
+        "count": 7,
+        "paths": [
+          "docs/_themes/flask_theme_support.py",
+          "docs/conf.py",
+          "m193b_agent_created.py",
+          "requests/__init__.py",
+          "requests/adapters.py",
+          "requests/api.py",
+          "requests/m193b_renamed.py"
+        ],
+        "authority": "stage5.m193b.changed-source-authority.v1"
+      },
+      "nonMutating": {
+        "statusUnchanged": true,
+        "stagedUnchanged": true,
+        "stagedPathsStillPresent": [
+          "docs/conf.py",
+          "requests/__init__.py",
+          "requests/m193b_renamed.py"
+        ]
+      },
+      "currentByteProof": {
+        "path": "/testbed/requests/__init__.py",
+        "stagedBlobSha256": "bc3ff6050c8c441491452a29bcf808bba7756d66a9c46bab61114ee5f07335be",
+        "worktreeSha256": "0488746608058640a79bc5aa4f47b960510ce81fc20f2aa1662b20a077bb744b",
+        "probeSourceSha256": "0488746608058640a79bc5aa4f47b960510ce81fc20f2aa1662b20a077bb744b",
+        "probeSawWorktreeBytes": true
+      },
+      "sourceVersionEvidence": {
+        "probeRan": true,
+        "changedSourceFileCount": 7,
+        "fileVerdictCount": 7,
+        "countsAgree": true,
+        "verdicts": [
+          "COMPILED_FROM_CURRENT_SOURCE"
+        ],
+        "error": null
+      },
+      "supersededAuthority": {
+        "command": "git add -A -- . <excl>; git diff --cached --name-only; git reset -q",
+        "count": 6,
+        "missedRenameVacatedPath": true,
+        "sawRenameNewPath": true,
+        "destroyedAgentStaging": true
+      },
+      "failedChecks": [],
+      "durationMs": 6071
+    },
+    {
+      "instanceId": "pallets__flask-5014",
+      "repo": "pallets/flask",
+      "verdict": "CONTROL_PASSED",
+      "errors": [],
+      "preexistingUntracked": [],
+      "headAfterCheckout": "7ee9ceb71e868944a46e1ff00b506772a53a4f1d",
+      "targets": {
+        "c1": "docs/conf.py",
+        "c2": "examples/celery/make_celery.py",
+        "c3": "examples/celery/src/task_app/__init__.py",
+        "c5": "examples/celery/src/task_app/tasks.py",
+        "c6": "examples/celery/src/task_app/views.py"
+      },
+      "cleanTree": {
+        "ok": true,
+        "paths": [],
+        "error": null
+      },
+      "changeClasses": {
+        "C1_unstaged_modification": {
+          "path": "docs/conf.py",
+          "discovered": true
+        },
+        "C2_staged_modification": {
+          "path": "examples/celery/make_celery.py",
+          "discovered": true
+        },
+        "C3_staged_plus_unstaged": {
+          "path": "examples/celery/src/task_app/__init__.py",
+          "discovered": true
+        },
+        "C4_untracked_new_source": {
+          "path": "m193b_agent_created.py",
+          "discovered": true
+        },
+        "C5_deletion": {
+          "path": "examples/celery/src/task_app/tasks.py",
+          "discovered": true
+        },
+        "C6_rename_new_path": {
+          "path": "examples/celery/src/task_app/m193b_renamed.py",
+          "discovered": true
+        },
+        "C6_rename_vacated_path": {
+          "path": "examples/celery/src/task_app/views.py",
+          "discovered": true
+        }
+      },
+      "enumeration": {
+        "ok": true,
+        "error": null,
+        "count": 7,
+        "paths": [
+          "docs/conf.py",
+          "examples/celery/make_celery.py",
+          "examples/celery/src/task_app/__init__.py",
+          "examples/celery/src/task_app/m193b_renamed.py",
+          "examples/celery/src/task_app/tasks.py",
+          "examples/celery/src/task_app/views.py",
+          "m193b_agent_created.py"
+        ],
+        "authority": "stage5.m193b.changed-source-authority.v1"
+      },
+      "nonMutating": {
+        "statusUnchanged": true,
+        "stagedUnchanged": true,
+        "stagedPathsStillPresent": [
+          "examples/celery/make_celery.py",
+          "examples/celery/src/task_app/__init__.py",
+          "examples/celery/src/task_app/m193b_renamed.py"
+        ]
+      },
+      "currentByteProof": {
+        "path": "/testbed/examples/celery/src/task_app/__init__.py",
+        "stagedBlobSha256": "4d4f03e30b9144db6cc35f9b9011dad809539a3271ded553843fb41ae5c1c42c",
+        "worktreeSha256": "df71e19c05b77bc48f91d3f756c06033bcffb409deeaeea0d84318245b74d5d8",
+        "probeSourceSha256": "df71e19c05b77bc48f91d3f756c06033bcffb409deeaeea0d84318245b74d5d8",
+        "probeSawWorktreeBytes": true
+      },
+      "sourceVersionEvidence": {
+        "probeRan": true,
+        "changedSourceFileCount": 7,
+        "fileVerdictCount": 7,
+        "countsAgree": true,
+        "verdicts": [
+          "COMPILED_FROM_CURRENT_SOURCE"
+        ],
+        "error": null
+      },
+      "supersededAuthority": {
+        "command": "git add -A -- . <excl>; git diff --cached --name-only; git reset -q",
+        "count": 6,
+        "missedRenameVacatedPath": true,
+        "sawRenameNewPath": true,
+        "destroyedAgentStaging": true
+      },
+      "failedChecks": [],
+      "durationMs": 6050
+    }
+  ],
+  "verdict": "ALL_CONTROLS_PASSED"
+}

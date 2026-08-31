@@ -6982,3 +6982,149 @@ authorizations    M194_ACQUISITION_INTEGRITY_READY
   validation-attempt rate may not be worth the money. If authorised, M194 executes
   `stage5_m193a_manifest.json` exactly and reports only the preregistered accounting.
   Do not reopen I5. Do not implement I6.
+
+## M193B — changed-source authority closure
+
+```text
+verdict           M193B - PASS
+                  readiness M194_CHANGED_SOURCE_AUTHORITY_READY
+                  live-agent runs 0, live model spend $0
+
+scope             one load-bearing statement in M193A's evidence: does the committed
+                  changed-source authority enumerate every source change a normal
+                  future Claude Code arm can produce at a validation boundary. No
+                  redesign of M193A, no M194 execution, no product code, no I5, no I6.
+
+start / end       start 8ee8bc2e2bb0e1d1d6401ca1b4d2fedd6e035702, 2 tracked + ~230
+                  untracked pre-existing dirt, preserved.
+
+report vs code    BOTH were wrong, in different ways. M193A's report and design named
+                  the set as `git diff --cached --name-only`. The implementation -
+                  M193Container.changed_source_paths() - was `git add -A -- . <excl>`,
+                  then that command, then `git reset -q`. Staging was being used as a
+                  QUERY, which is why the report quoted only the middle line and why
+                  the enumeration was mostly right.
+
+defect 1          the observation WROTE. `git reset` is a mixed reset, so every
+                  enumeration destroyed whatever the agent had staged. Reproduced on
+                  both real containers: 3 staged paths -> 0. A Claude Code arm has Bash
+                  and can stage. Prohibited by design (do not stage to observe).
+
+defect 2          RENAMES LOST THEIR VACATED PATH. diff.renames has defaulted true
+                  since git 2.9, so a move is R100 and --name-only prints only the
+                  destination. The old path left the changed set, so the probe's
+                  "source gone but a sourceless .pyc still stands in for it" branch
+                  could never run where it matters. Reproduced on both containers:
+                  superseded 6 paths vs repaired 7.
+
+defect 3          classifySourceVersion's per-file completeness guard was DEAD.
+                  source_version_evidence() set changedSourceFileCount to
+                  len(probe["files"]), the same array fileVerdicts is built from, so
+                  the guard compared a list against itself. Now read from the
+                  ENUMERATED set (requestedPaths); falsifiable for the first time.
+
+repair            m193b_changed_source.py (PURE, no Docker SDK, so bun test executes
+                  the exact bytes production runs):
+                    git diff --no-renames --name-only HEAD -- . <excl>
+                    git ls-files --others --exclude-standard -- . <excl>
+                  each half echoing its own exit status. Non-mutating. --no-renames is
+                  what keeps both halves of a move. HEAD is the base commit setup()
+                  checks out with -f and verifies. Untracked bounded by
+                  --exclude-standard (gitignore) plus the frozen pre-agent snapshot
+                  pathspec, both unchanged from M193A. Fails closed: an enumeration
+                  that did not demonstrably complete yields probeRan=false -> UNKNOWN,
+                  never an empty changed set reading as nothing-to-check.
+
+controls          m193bChangedSource.test.ts, 32 controls, real git repositories:
+                  C1..C7 all discovered exactly once; cached-only anti-control misses
+                  C1/C4/C5 and the vacated rename path (3 of 7); superseded
+                  implementation replayed on a throwaway copy and shown to lose the
+                  rename and empty the index; current bytes = S2 not staged S1, proven
+                  through the real probe; pre-agent untracked and gitignored files
+                  excluded; index and worktree byte-identical across an observation.
+
+real containers   run_stage5_m193b_container_control.py, no LLM. psf__requests-1142
+                  (the mandated control: its image ships an untracked build/) and
+                  pallets__flask-5014. Both CONTROL_PASSED on all 7 checks: clean tree
+                  enumerates to nothing, 7/7 change classes found, build/ excluded,
+                  git status unchanged, agent staging survives, probe hashed the
+                  worktree bytes, count == verdict count.
+
+regression        frozen fake-agent lifecycle re-run in full (5 instances) against the
+                  repaired authority and analysed by the same analyser (--ledger m193b):
+                  per-instance source-version verdicts IDENTICAL to M193A including the
+                  three SOURCE_VERSION_AMBIGUOUS v2 events and their reasons; stale 5/5,
+                  healthy 5/5, poisoned-copy agrees, patch identity IDENTICAL_STRICT 5/5,
+                  evaluator resolved all, fixtures 16/16, all 8 gates pass.
+                  The fake agent never calls git add, so its lifecycle is already an
+                  unstaged control - proven mechanically, trackedCount 1 / untrackedCount
+                  1 on all five. Treatment isolation re-run unchanged.
+
+manifest          M193A b356e2114eb6b79698b9999e7c94eb734142760d6203ec8fc4bff933c30b4796
+                  (verified before deriving)
+                  M193B c544fba670e4466fc3e6034c7bf518328c1f736c52c6d83c1e053345592de8ca
+                  11 added, 10 changed, 0 removed, 0 leaves outside changed-source
+                  scope; 19/19 frozen-experiment invariants hold, including explicit
+                  re-assertions that the I6 usability rule, the treatment-isolation
+                  construction and the source-version verdict enums are byte-identical.
+
+residual          capture_diff() still stages and resets. That is the PATCH boundary,
+                  not the changed-source authority - it must stage to get untracked
+                  files into a unified diff - and changing it would change what the
+                  model patch is. Out of scope, recorded rather than fixed. Also: a
+                  path git has to quote is refused rather than mis-split; submodules
+                  are not modelled.
+
+files             new m193b_changed_source.py, m193bChangedSource.test.ts,
+                  run_stage5_m193b_container_control.py, run_stage5_m193b_manifest.ts;
+                  amended m193_container_adapter.py, run_stage5_m193a_analyze.ts
+                  (--ledger), stage5_m193a_final_report.md and
+                  stage5_m193a_integrity_design.md (M193B correction notes);
+                  results: container_control, dry_run_ledger, analysis, manifest,
+                  manifest_diff, final_report.md
+src/ changed      NONE (0 files). No VTRACE product behaviour was added or altered.
+gates             typecheck PASS  typecheck:benchmarks PASS  bun test 5819 pass 0 fail
+                  git diff --check clean
+authorizations    M194_CHANGED_SOURCE_AUTHORITY_READY
+                  M194_ACQUISITION_INTEGRITY_READY (M193A, unchanged)
+                  NO_VTRACE_I6_PRODUCT_IMPLEMENTATION_AUTHORIZED
+                  NO_RUNTIME_REPAIR_INTERVENTION_AUTHORIZED
+                  I5_REMAINS_CLOSED
+```
+
+## M193B standing findings
+
+- **A quoted command in a report is a claim about code, and it decays like one.**
+  M193A's `git diff --cached --name-only` was the middle line of a three-line
+  shell. Nothing was lying; the sentence was written about the line that answered
+  the question and dropped the two that made the answer possible. The two dropped
+  lines were where both defects lived. Any evidence document that quotes a command
+  should quote the whole invocation, or name the function and let the reader read it.
+
+- **Staging is a write, and using it as a read is a contamination.** `add -A` /
+  `diff --cached` / `reset` is a common idiom for "show me everything including
+  untracked", and it silently empties the subject's index. It survived M193A because
+  the fake agent never stages — the instrumentation happened to differ from the thing
+  it was standing in for, in exactly the direction that hid the defect. When a
+  synthetic subject passes, ask what the real subject can do that the synthetic one
+  cannot.
+
+- **A guard whose two operands come from the same array is not a guard.**
+  `fileVerdicts.length !== changedSourceFileCount` was written to catch a probe that
+  dropped a file, and the adapter fed both sides from `probe["files"]`. It read as a
+  check in review and could not fail in execution. A check whose failure mode nobody
+  can construct on demand has not been tested.
+
+- **Git's defaults are part of the authority.** `diff.renames` defaulting to true
+  since 2.9 is what turned a delete-plus-add into a single `R100` and dropped a path.
+  A command's behaviour here is a function of the git in the image, not only of the
+  flags written down. `--no-renames` states the intent instead of inheriting it.
+
+- **Next-step recommendation.** Unchanged from M193A, with the corrected authority
+  bound in: present the frozen parameters — 40 instances across 12 repositories,
+  `claude-opus-4-5-20251101` on Claude Code CLI 2.1.251, 250 turns, $3.50 per run,
+  $90 total, 20..40 arms, concurrency 3, manifest `c544fba6…` — and ask for an
+  explicit spend authorisation of up to $90 (expected ~$26). If authorised, M194
+  executes `stage5_m193b_manifest.json` exactly. Do not reopen I5. Do not implement
+  I6. Do not extend the non-staging property to `capture_diff()` as a side effect of
+  M194; if it is wanted, it is its own milestone with its own patch-identity proof.
