@@ -8005,3 +8005,136 @@ verification      bun run typecheck, bun run typecheck:benchmarks, bun test
   strategic question M196A raises: if the median strong-agent task reads one file,
   is a general repository context compiler solving a problem large enough to
   justify VTRACE? Do not lower B0 to make the answer yes.
+
+## M197A — VTRACE versus VEXP deterministic engine reproduction (PASS)
+
+```
+milestone         M197A
+verdict           PASS  (a statement about the measurement, not the score)
+spend             0 live-agent runs, $0, 0 network requests, 0 VEXP processes
+scope             Execute the frozen 15-claim Track-A comparison against
+                  vexp-cli 2.0.24. No context-compiler work, no Track B, no
+                  product behaviour change, no threshold weakened, no capability
+                  built to make a benchmark pass.
+
+result            VTRACE_VEXP_ENGINE_PARITY_THRESHOLD_NOT_MET
+                  MATCH 2  EXCEED 3  BELOW 10  NOT_COMPARABLE 0  INSUFFICIENT 0
+                  match-or-exceed 5/15 (threshold 10)
+                  A8 minimum coverage 100% (veto 99%)
+                  structural violations 0
+
+robustness        invariant to every judgement call available:
+                  least-contended timings instead of frozen statistic -> 5
+                  A15 on the logic-flow surface instead of impact      -> 6
+                  both together                                        -> 6
+
+authority         preregistration sha256 736e8a9b...6f697d8f0 verified;
+                  G1 "10 of 15" and G8 "99%" wording present verbatim;
+                  claim ledger 24 claims @ vexp-cli 2.0.24, 9/9 cited claims
+                  present; M196A parser repair still in tree; corpora verified
+                  C-SMALL 21 @ d658e345, C-MED 492 @ 4ab01a72,
+                  C-LARGE 276 @ 826144342 (+699 nested worktrees excluded).
+                  15/15 authority checks pass; instrument exits non-zero on any
+                  mismatch.
+
+EXCEEDS           A4 no-op freshness (0.010/0.182/0.298 s, 0 files reparsed)
+                  A7 flow latency (p90 104 ms)
+                  A8 ingestion completeness (100/100/100%, 0 unexplained)
+MATCHES           A6 impact latency (p90 424 ms)
+                  A9 skeleton reduction (93.2% C-MED / 87.2% C-LARGE median)
+BELOW             A1 languages (3 parser-backed vs 30)
+                  A2 throughput (27.4 / 8.8 files/s vs 15 bar; C-LARGE misses)
+                  A3 incremental (k=1 aborted on edges.id, k=3 ratio 1.83)
+                  A5 query latency (p90 407/1111/1422 ms; 247/648/989 best-case)
+                  A10 signature preservation (41.1% C-MED source-truth valid)
+                  A11 budget utilisation (38/31/16/8.5/7.2% at 1k-16k)
+                  A12 representation classes (2 in the default response)
+                  A13 degradation (2/20 size violations + 3/20 focus swaps)
+                  A14 per-item accounting (0 of 1,008 items)
+                  A15 call-site rendering (impact surface 0%)
+
+determinism       STABLE. 5 repetitions per query per tool, identical semantic
+                  hashes; 3 index repeats per corpus, 0 non-identical runs;
+                  A8/A9/A10/A12/A14/A15 bit-identical across five full runs
+                  spanning machine load 15 to 37 on 20 CPUs.
+
+truthfulness      invented structural claims 0 (136/136 declared call-site spans
+                  genuinely contain the callee); strengthened structural claims
+                  24 (misrendered call lines, C-MED 23/48, C-LARGE 0/50).
+
+controls          F1-F8 all pass, executed by both the test suite and the report.
+
+instruments       m197aParity.ts (+test), m197aScoring.ts (+test),
+                  m197aFixtures.ts, run_stage5_m197a_{authority,indexing,
+                  engine,report}.ts
+artifacts         stage5_m197a_{design,final_report}.md,
+                  stage5_m197a_{authority,indexing,engine,claim_ledger}.json
+```
+
+## M197A standing findings
+
+- **The comparison is reproducible and unfavourable, not non-reproducible.** All
+  15 claims scored: 6 `REPRODUCED`, 9 `REPRODUCED_WITH_INTERPRETATION`, 0
+  `INSUFFICIENTLY_SPECIFIED`, 0 `NOT_COMPARABLE`. Five of fifteen is not parity,
+  and no scoring choice available to this milestone moves it past six.
+
+- **TypeScript signature emission is malformed in 53.8% of C-MED files, and M196
+  could not have seen it.** M196 asked whether a `signature` field was populated
+  and got 100%. Against source truth — verbatim occurrence, identifier-aligned
+  boundaries, closed brackets — only 41.1% of C-MED declarations survive. The
+  shape is a window in the wrong place: `t function editedFilesFromPatch(patch:
+  string): string[` where `export` was cut to `t ` and the parameter list never
+  closes. Python is 100% clean, because `pythonParser` builds signatures from
+  CPython's `ast` instead of slicing bytes. A9's 93.2% reduction is real only
+  because control F4 excludes malformed files rather than rewarding them for
+  being short.
+
+- **The call-site data is right and its rendering is wrong.** 136 of 136 sampled
+  declared spans genuinely contain the callee. But `sourceExcerpt` is sliced from
+  `start_byte` (which includes an attached leading comment) and labelled with
+  `start_line` (which does not) — across 3,244 C-MED symbols the two agree 40.4%
+  of the time. `persistedOccurrence` then indexes into that excerpt by
+  `site.startLine - excerpt.startLine` and lands short. 24 of 132 renderings name
+  something other than the callee. A wrong source line is worse than bare
+  coordinates: the reader cannot tell it is wrong without opening the file. Not
+  repaired (§38).
+
+- **A15 has two surfaces and they disagree completely.** The impact surface —
+  where a caller list is actually consumed — renders 0% of call sites as
+  expressions, only `file:line`. The logic-flow surface renders 50/50 correctly
+  on C-LARGE. M196's "0% rendered" prior was set on the impact surface and is
+  correct there. Both are published; scoring A15 on the flow surface moves the
+  aggregate from 5 to 6 and changes nothing else.
+
+- **Five instrument defects were found and fixed before any number was reported,
+  and three of them would have understated VTRACE.** Reopening the index with a
+  bare `new Database` (skipping `PRAGMA foreign_keys` and schema init) made every
+  incremental refresh abort on `edge_call_sites` — a product failure the harness
+  caused. A `//` comment appended to a Python file made it fail to parse, so the
+  incremental defect could not fire — a probe that hides what it probes for.
+  Counting angle brackets flagged every signature containing `=>`. Requiring a
+  signature on M140's `<module>` symbol scored all 250 C-LARGE files malformed.
+  Hashing latency-derived size counters made every impact and flow query look
+  non-deterministic. A benchmark's own bugs are the cheapest way to publish a
+  false finding about the product.
+
+- **The machine was contended and it did not matter.** An unrelated MLIP job held
+  ~11 cores throughout, driving load to 15–37 on 20 CPUs. Verdicts use the frozen
+  statistic (median/p90); the least-contended observation is published beside
+  every timing row along with the aggregate it would produce. Both give 5/15.
+  A2 on C-LARGE is 8.8 files/s frozen and 9.0 best-case, so contention is not
+  what put it below the 15 files/s bar.
+
+- **Engine parity would not have bought product utility anyway.** Tool-schema
+  cost reconfirms at exactly 5,521 prompt-prefix tokens against a median
+  untreated successful arm reading ~2,605 repository-evidence tokens (M196A).
+  Closing every gap listed above does not change the workload finding, because
+  the gaps are not what the workload is short of.
+
+- **Next-step recommendation.** None issued. M197A is the last milestone in this
+  research line: the deterministic VEXP comparison is complete, and the product
+  question it was meant to inform was already answered `NOT_READY` by M196A. Do
+  not repair the A1/A3/A10/A11/A12/A13/A14/A15 gaps by default — each requires
+  independent evidence that the missing capability solves a material workload,
+  which M196A looked for across 1,078 arms and 44 repositories and did not find.
+  No M198, no I7, no runtime detour, no retrieval tuning.
