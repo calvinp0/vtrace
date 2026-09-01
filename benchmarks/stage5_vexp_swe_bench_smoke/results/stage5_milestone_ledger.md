@@ -7731,3 +7731,152 @@ held-out          untouched. 6 unrun M193 fixture instances across 6 repositorie
   runtime-grounded repair, still a separate and unauthorised hypothesis. If the
   scaffold question is ever pursued, it needs its own preregistration, its own cost
   model and a treatment experiment, not a reuse of this evidence.
+
+## M196 — context-compiler architecture audit and VEXP claim reproduction plan
+
+```text
+verdict           M196 - PASS
+                  CONTEXT_COMPILER_ARCHITECTURE_WORTH_TESTING
+                  M197_CONTEXT_COMPRESSION_PROOF_LICENSED
+                  rebuild judgment SUBSTANTIAL_RESTRUCTURE_IN_PLACE
+                  live-agent runs 0, live model spend $0
+
+scope             product-architecture reassessment, not another intervention. Audit
+                  what VTRACE implements, what the AUTHORITATIVE path routes, what
+                  VEXP claims in artefacts we hold locally, and design the M197 proof.
+                  No product behaviour changed. No retrieval tuning. No new tool, no
+                  orientation packet, no validation feature, no I7.
+
+start / end       start e3ec0ae4f050450a051659ee8f905acaa706f55c, main, 167 ahead /
+                  0 behind, 2 tracked + 204 untracked pre-existing dirt, preserved.
+
+evidence          two generated artefacts, both re-runnable and both $0:
+                  run_stage5_m196_capability_audit.ts  -> registry, static routing
+                  reachability, ingestion probe, skeleton reduction, budget curve,
+                  M194 consumption; run_stage5_m196_vexp_claim_ledger.ts -> 24 VEXP
+                  claims, each re-found in its own artefact before it is admitted
+                  (24/24 witnessed). Sources: vexp-cli 2.0.24 mcp-server.cjs and
+                  README, @vexp/core-linux-x64 binary strings, vexp-swe-bench README.
+                  No vexp process was executed and no network access was used.
+
+what VTRACE is    a retrieval engine with a bounded structural graph, whose DEFAULT
+                  product surface is an orientation card, containing an unshipped
+                  context-compiler core behind detail=debug. get_code_context returns
+                  run_pipeline.orientation/1: ONE focus symbol with source, plus
+                  related[] carrying at/file/lines/how and - over 18 responses across
+                  3 tasks and 6 budgets - never any code. Skeletons, impact, flow,
+                  provenance and accounting are all computed and then projected away.
+
+ingestion defect  node tree-sitter 0.21.1 refuses input over 32,767 characters. The
+                  TS parser is invoked with a knownFiles map, so an oversized IMPORTED
+                  file fails its IMPORTERS too. Bare 456/492 parse; as the product
+                  invokes it 287/492 = 58.3%, deterministic over 3 runs (failure sets
+                  identical, symmetric difference 0). Casualties include EVERY core
+                  module of the product path: runPipelineOrchestrator, buildCapsuleV2,
+                  assembleProductContext, searchSymbolsShared, getImpactGraph,
+                  searchLogicFlow, typescriptParser, tools.ts. A probe query about
+                  TypeScript import-edge extraction returns domain/types.ts because
+                  the 39,977-char file that answers it was never indexed. Python is
+                  unaffected: it shells out to CPython ast, 975/975 with 279 files
+                  over the same limit.
+
+denominator       reconstructed from the raw M194 transcripts. 23 resolved arms:
+                  median 1 file read, 1 edited, 2,619 repository-evidence tokens
+                  (p90 8,302). 10 unresolved: 7,317 median - losers read 3x more,
+                  replicating M185 on a new corpus with a new instrument. VTRACE's
+                  own 14 visible tool schemas cost 5,521 prompt-prefix tokens: the
+                  catalogue is 2.1x the reading it exists to displace.
+
+budget is a tier  max_tokens selects a discrete capsule tier; the tier's item caps
+                  bind, not the budget. Budgets 2k/4k/8k produce byte-identical
+                  capsules at 360 estimated tokens = 4.5% utilisation at 8k. On 1 of
+                  3 probe tasks raising 1k->2k SWAPPED the focus symbol and cut
+                  delivered source 445 -> 41 tokens. M195A's invariant in a new place.
+
+vs VEXP           skeleton reduction 88.9% TS / 90.0% Py median at standard detail,
+                  inside VEXP's published 70-90% band, with 100%/91.6% signature
+                  coverage - rough parity. Call sites stored with line AND column
+                  (14,433 sites, 88.3% single-line, 0 span-collapsed), finer than
+                  VEXP's own rendering, and never rendered as source text. Below
+                  claim on: languages (4 vs 30), incremental index (112-163 s for a
+                  1-3 file change vs 55 s cold), skeleton bodies, per-item token
+                  accounting, budget binding, representation classes in the default
+                  response, graceful degradation, prose compression, savings ledger,
+                  cross-repo edges (crossRepo is a type-level literal false).
+                  73% pass@1 stays NOT_COMPARABLE per M188 and is NOT the M197 target.
+
+duplication       two impact lanes, two model-facing schemas by detail, five
+                  renderers, two capsule engines, and two token-accounting
+                  authorities reporting 59.64% and 94.72% reduction on the SAME
+                  denominator in the same response.
+
+M197 frozen       stage5_m196_m197_preregistration.md. Track A: 15 VEXP claims with
+                  MATCH/EXCEED rules derived from VEXP's numbers; 9 not reproduced
+                  and named. Track B: two-phase hash barrier, E1-E4 taxonomy,
+                  denominator fixed at the measured Read/Grep/Glob result tokens.
+                  Gates G1-G7 plus G8 VETO (ingestion <99%, any invented claim, any
+                  non-determinism). B0 materiality gate runs FIRST and M194 already
+                  FAILS it at 2,619 vs the required 20,000 - if no corpus clears B0,
+                  Track B returns TRACK_B_CORPUS_INADEQUATE, which is a stop.
+
+authorizations    M197_CONTEXT_COMPRESSION_PROOF_LICENSED
+                  NO_CONTEXT_COMPILER_PRODUCT_RESTRUCTURE_AUTHORIZED
+                  NO_VTRACE_I6_PRODUCT_IMPLEMENTATION_AUTHORIZED
+                  NO_VALIDATION_SCAFFOLD_IMPLEMENTATION_AUTHORIZED
+                  NO_RUNTIME_REPAIR_INTERVENTION_AUTHORIZED
+                  I5_REMAINS_CLOSED
+                  I6_VALIDATION_SELECTION_REMAINS_CLOSED
+
+verification      bun run typecheck, bun run typecheck:benchmarks, bun test,
+                  git diff --check. Probe corpora built under the session scratchpad;
+                  the repository's own .vtrace was never written to. 0 live calls, $0.
+```
+
+## M196 standing findings
+
+- **An index that silently drops 42% of a repository is not a context engine, and
+  the drop is concentrated exactly where a compiler must work.** The 32,767-char
+  tree-sitter limit costs 36 files directly and 169 more through `knownFiles`
+  import propagation, and the casualties are the largest, most-imported, most
+  central files — including every module of VTRACE's own product path. Coverage
+  was never a gate in any prior milestone, so forty milestones of retrieval work
+  were tuned on a corpus the engine could only half see. Make ingestion
+  completeness a first-class veto, not a diagnostic.
+
+- **The compression denominator is 2,619 tokens, and that is the whole argument.**
+  Successful M194 arms read one file. VTRACE's tool schemas alone cost 5,521
+  prompt-prefix tokens. Any proof of "we save 70% of the repository reading" on
+  SWE-bench-shaped work is arithmetically capped at ~1,800 tokens per task before
+  the compiler's own output is subtracted. The thesis is not refuted by this — it
+  is *unmeasurable* on the evidence VTRACE holds, which is why M197 opens with a
+  materiality gate that M194 already fails.
+
+- **A budget that selects a tier is not a budget.** Three different budgets
+  produced byte-identical capsules at 4.5% utilisation, and one task delivered
+  *less* source at a higher budget because the tier change swapped the focus
+  symbol. This is M195A's "output boundedness ≠ derivation selectivity" restated:
+  there, a cap upstream of the gate made the gate unfalsifiable; here, a tier
+  upstream of the budget makes the budget inert. Check what actually binds before
+  believing a number that a bound produced.
+
+- **Two numbers describing the same thing means neither is authoritative.** The
+  same response reports 59.64% and 94.72% reduction against an identical 9,211-token
+  denominator, because two modules compute a numerator differently and both call
+  it "reduction". M180 established that publishing a value creates an owner;
+  publishing two creates none.
+
+- **The primitives are better than the product that uses them.** Exact call-site
+  columns, a five-member content-mode vocabulary, a single budget authority with a
+  whole-response ceiling and a truthful decline, skeleton reduction inside the
+  competitor's published band — all present, none reaching the default response.
+  The gap list is dominated by *unrouted primitives and rendering steps*, not by
+  missing capability, which is precisely why the verdict is restructure and not
+  rebuild.
+
+- **Next-step recommendation.** Run M197 exactly as frozen, and run the B0
+  materiality gate before anything else — it is the cheapest way to end the
+  programme honestly if the programme should end. Do not fix the parser limit as
+  part of M197's measurement: measure it, report it as A8, and let the veto do its
+  work. Do not tune retrieval on a 58%-visible corpus. Do not treat M197's Track A
+  passes on latency and skeleton reduction as product validation; they are
+  component facts about an engine whose default output uses neither.
