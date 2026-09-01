@@ -1,0 +1,63 @@
+{
+  "schemaVersion": "stage5.m195.held-out-plan.v1",
+  "milestone": "M195",
+  "purpose": "identify a genuinely held-out corpus for M196; nothing here was scored",
+  "scored": false,
+  "primaryCandidate": {
+    "source": "M193 task fixture entries the M194 stopping rule never reached",
+    "instances": [
+      {
+        "instanceId": "pydata__xarray-6599",
+        "repo": "pydata/xarray"
+      },
+      {
+        "instanceId": "pytest-dev__pytest-7432",
+        "repo": "pytest-dev/pytest"
+      },
+      {
+        "instanceId": "sphinx-doc__sphinx-9230",
+        "repo": "sphinx-doc/sphinx"
+      },
+      {
+        "instanceId": "sympy__sympy-13480",
+        "repo": "sympy/sympy"
+      },
+      {
+        "instanceId": "astropy__astropy-7166",
+        "repo": "astropy/astropy"
+      },
+      {
+        "instanceId": "django__django-11206",
+        "repo": "django/django"
+      }
+    ],
+    "count": 6,
+    "repositories": [
+      "astropy/astropy",
+      "django/django",
+      "pydata/xarray",
+      "pytest-dev/pytest",
+      "sphinx-doc/sphinx",
+      "sympy/sympy"
+    ],
+    "why": "selected by M193's frozen outcome-independent stratified rule, never acquired, never inspected"
+  },
+  "secondaryCandidate": {
+    "source": "M193 replacement reserve entries never acquired",
+    "count": 59,
+    "repositories": [
+      "django/django",
+      "matplotlib/matplotlib",
+      "pydata/xarray",
+      "sphinx-doc/sphinx",
+      "sympy/sympy"
+    ],
+    "caution": "concentrated in django/django; breadth must be stratified, not taken in reserve order"
+  },
+  "totalNeverObservedInstances": 65,
+  "prohibitions": [
+    "M195 did not score any held-out instance",
+    "the frozen derivation must not be tuned before M196",
+    "M196 must separate the validation-scaffold hypothesis from the validation-selection hypothesis"
+  ]
+}

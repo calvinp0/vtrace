@@ -7434,3 +7434,140 @@ authorizations    OFFLINE_I6_MECHANISM_AUDIT_LICENSED
   and the product-authorization threshold. M190 falsified I5 out of sample after
   it looked real in sample; the same discipline applies here. Do not buy more
   arms. Do not implement I6. Do not implement runtime repair.
+
+## M195 — gold-blind I6 validation-decision mechanism audit
+
+```text
+verdict           M195 - PASS
+                  mechanism I6_INTERVENTION_MECHANISM_WITNESSED (frozen gates, applied
+                  mechanically) - but see "what the witness is made of" below
+                  live-agent runs 0, live model spend $0
+
+scope             one offline question: was a bounded, pre-decision, repository-derived
+                  validation obligation derivable before each M194 agent chose how to
+                  validate, and does the same rule show success-side evidence. No
+                  product implementation, no runtime-repair analysis, no new arms.
+
+start / end       start 495cc0c67cbcd35fd75740a37f2031351ead8c42, main, 162 ahead /
+                  0 behind, 2 tracked + 203 untracked pre-existing dirt, preserved.
+
+preregistration   8655851af27e4630161254ec30ed811563f9d090, committed BEFORE any
+                  candidate rule met any arm. It fixes the decision-point rule, the
+                  four families and the fact that there is no fifth, the bound of 3,
+                  the credit window, the relevance oracle (test_patch or FAIL_TO_PASS;
+                  PASS_TO_PASS deliberately excluded), and nine numbered gates. Moved
+                  to its correct path in c213bf9e; bytes unchanged.
+
+corpus authority  M195_CORPUS_AUTHORITY_VERIFIED, 14/14. 698 raw artefacts hashed.
+                  M194's own accounting re-run over the preserved runs tree through a
+                  scratch symlink and diffed: 0 field differences across 13 compared
+                  sections including all 33 lifecycles. 35 arm dirs, 2 unlaunched, 33
+                  paid, 13 I6-usable, 8 I6 repositories, 7 runtime-usable, 23 resolved.
+                  No historical M183/M189/M190 arm entered the primary set.
+
+source authority  33/33 instance base states materialised read-only from the frozen
+                  SWE-bench images; observed HEAD equals the arm's declared baseCommit
+                  in every case. An independent second materialisation reproduced all
+                  33 fact bundles to the byte.
+
+blindness         deriveCandidates() takes an I6DecisionPointEvidence built by copying
+                  a whitelist into a fresh object; the gold patch, the test patch, the
+                  resolution, the next validation command and every event at or after
+                  the decision point are absent, not merely unread. Each of the 59
+                  points was additionally re-derived from a bundle written to disk with
+                  all of that physically removed.
+                  DERIVATION_IS_GOLD_OUTCOME_AND_FUTURE_ACTION_BLIND, 0 differing
+                  fingerprints of 59.
+
+population        59 decision points over 33 arms / 33 tasks / 12 repositories;
+                  40 DP_EDIT, 19 DP_POST_FAILED_VALIDATION. Union fires at all 59.
+
+gates             I6-A, I6-B, I6-C and the union row pass all nine. I6-D fails five.
+
+what the witness  ALL 14 union selection-miss specimens are NO_VALIDATION. ZERO are
+  is made of      DIFFERENT_VALIDATION. Not one agent in this corpus started a runner
+                  against the wrong target while a bounded relevant target existed;
+                  13 of the 14 are arms that never started a runner anywhere. §71
+                  forbids merging validation-selection with a "always test after an
+                  edit" scaffold, and the passing gates are carried entirely by the
+                  scaffold. 11 of the 14 miss tasks RESOLVED ANYWAY. 14 resolved arms
+                  started no runner at all. 6 arms ran a relevant trustworthy
+                  validation, saw the result, and still failed. 5 success witnesses
+                  across 5 repositories are genuine but 0 are STRONG: nowhere does a
+                  derived validation fail, visibly drive a revision, and resolve.
+                  Union redundancy 54.2%, intervention rate on resolved arms 100%.
+
+instrument        23 of 268 Bash calls across 14 arms have a bash_pre and no bash_post.
+  defects found   Pairing first threw the agent's SELECTION away with the missing
+                  result and manufactured a "different validation" where the agent had
+                  in fact run the exact candidate file twice. Selection is a pre-event
+                  fact; only the result is a post-event fact. Second: relateOne did not
+                  gate BROADER/DIFFERENT on runnerStarted, so a `python -c` reproduction
+                  scored as a different validation rather than as none - both fixed to
+                  the frozen §10 text before any verdict was read. Third: the corpus
+                  gate first failed closed because the manifest canonicaliser was
+                  written one-level instead of recursive.
+
+verification      reproduction byte-identical across a full second pass of all three
+                  scripts (6 artefacts); 43 new unit tests; typecheck clean;
+                  typecheck:benchmarks clean; bun test full suite; git diff --check
+                  clean; 0 live calls.
+
+authorizations    HELD_OUT_I6_REPLICATION_LICENSED
+                  NO_VTRACE_I6_PRODUCT_IMPLEMENTATION_AUTHORIZED
+                  NO_RUNTIME_REPAIR_INTERVENTION_AUTHORIZED
+                  I5_REMAINS_CLOSED
+
+held-out          identified, never scored: 6 M193 fixture instances the stopping rule
+                  never reached, across 6 repositories, plus a 59-instance replacement
+                  reserve concentrated in django. 65 never-observed instances total.
+```
+
+## M195 standing findings
+
+- **A preregistered gate can pass on the wrong evidence, and that is still the
+  gate's answer.** M195's §12 defined a selection miss as a confirmed-relevant
+  candidate the agent did not aim at — whether or not it aimed anywhere. Every
+  one of the 14 misses turned out to be an agent that aimed nowhere. Three
+  families therefore clear a *selection* threshold on *scaffold* evidence. The
+  preregistration is reported exactly as it computes, because a threshold that
+  is renegotiated once the data is in is not a threshold; the correction belongs
+  in M196's design, which must separate `NO_VALIDATION` from
+  `DIFFERENT_VALIDATION` before scoring rather than after.
+
+- **The agents were not aiming badly. They were not aiming.** Across 33 arms
+  there is no observed instance of a test runner pointed at the wrong target
+  while a bounded, repository-derivable, relevant target existed. This is the
+  strongest single fact in the milestone and it falsifies the mechanism that I6
+  was actually about. Everything a richer index could contribute — VTRACE's
+  symbol graph included — would add candidates to a set whose problem was never
+  that it was empty.
+
+- **Both directions of the counterfactual are unfavourable.** Where agents
+  skipped the derived validation they resolved anyway 11 times out of 14; where
+  they ran a relevant validation and saw a trustworthy result they still failed
+  6 times. A selection accelerator needs the skip to hurt and the run to help,
+  and neither is visible here.
+
+- **A cap can disguise an unbounded rule.** G2 measures the candidate count
+  *after* the bound of 3 truncates it, so it can never fail. The honest figure is
+  the pre-cap set, which reaches 15 for I6-D and 12 for I6-B: at that width the
+  family is sampling, not selecting. Any future boundedness gate must be written
+  against the pre-truncation set.
+
+- **Selection is observable where the result is not.** 23 of 268 Bash calls have
+  a `bash_pre` and no `bash_post`. Pairing them first — which M194's accounting
+  does correctly for its own question — silently discards what the agent chose,
+  and in one arm turned two runs of the exact candidate file into a "different
+  validation". When two facts live in different events, decide which event owns
+  which question before joining them.
+
+- **Next-step recommendation.** The frozen derivation must not be tuned. If I6 is
+  pursued at all, M196 tests the frozen rule on the identified held-out corpus
+  under a preregistration that scores validation-selection and validation-scaffold
+  as separate hypotheses; on this corpus the selection hypothesis has 0
+  specimens and would fail G3/G4 outright. The more defensible reading is that
+  the validation-selection intervention class is exhausted and the residual
+  signal — 6 arms that validated relevantly and still failed — belongs to
+  runtime-grounded repair, which remains a separate, unauthorised hypothesis. Do
+  not buy more arms. Do not implement I6.
