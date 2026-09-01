@@ -1,0 +1,427 @@
+{
+  "schemaVersion": "stage5.m194.frozen-authority-verification.v1",
+  "milestone": "M194",
+  "experimentId": "M193-BASELINE-OBS-1",
+  "verdict": "M194_FROZEN_AUTHORITY_VERIFIED",
+  "manifest": {
+    "path": "benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_m193c_manifest.json",
+    "expectedSha256": "f735786bf7d3437a095abdcc7e8704cb6769fd32eb46b37ad8fc373850282204",
+    "declaredSha256": "f735786bf7d3437a095abdcc7e8704cb6769fd32eb46b37ad8fc373850282204",
+    "recomputedSha256": "f735786bf7d3437a095abdcc7e8704cb6769fd32eb46b37ad8fc373850282204",
+    "hashRule": "sha256 over canonical key-sorted JSON of every field except manifestHash and manifestHashRule",
+    "matches": true
+  },
+  "taskFixture": {
+    "path": "benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_m193_task_fixture.json",
+    "expectedSha256": "e79843d3b93d4c77551911a92eed9b316c57b5045ff7e7ef75018efb2e9aaca4",
+    "observedSha256": "e79843d3b93d4c77551911a92eed9b316c57b5045ff7e7ef75018efb2e9aaca4",
+    "matches": true,
+    "armCount": 40,
+    "repositories": 12
+  },
+  "liveParameters": {
+    "model": "claude-opus-4-5-20251101",
+    "cliVersionPinned": "2.1.251",
+    "cliVersionedBinary": "/home/calvin/.local/share/claude/versions/2.1.251",
+    "cliVersionedBinaryReports": "2.1.251",
+    "cliSymlinkReports": "2.1.252",
+    "cliSymlinkMatchesPin": false,
+    "maxTurns": 250,
+    "perRunCostCapUsd": 3.5,
+    "totalSpendCapUsd": 90,
+    "minArms": 20,
+    "maxArms": 40,
+    "concurrency": 3
+  },
+  "frozenSources": {
+    "count": 24,
+    "drifted": []
+  },
+  "repository": {
+    "branch": "main",
+    "headSha": "2ae73e3810d094132614eda414a703b96cf5839a",
+    "trackedDirtCount": 3,
+    "trackedDirt": [
+      "M .gitignore",
+      " M benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_outcome_ledger.json",
+      " M benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_outcome_ledger.md"
+    ],
+    "untrackedCount": 213
+  },
+  "gates": [
+    {
+      "id": "M1_manifest_present",
+      "what": "the committed M193C manifest exists",
+      "expected": "true",
+      "observed": "true",
+      "pass": true
+    },
+    {
+      "id": "M2_manifest_self_consistent",
+      "what": "the manifest's declared hash matches its own body",
+      "expected": "f735786bf7d3437a095abdcc7e8704cb6769fd32eb46b37ad8fc373850282204",
+      "observed": "f735786bf7d3437a095abdcc7e8704cb6769fd32eb46b37ad8fc373850282204",
+      "pass": true
+    },
+    {
+      "id": "M3_manifest_is_frozen",
+      "what": "the manifest body hashes to the authority M194 was given",
+      "expected": "f735786bf7d3437a095abdcc7e8704cb6769fd32eb46b37ad8fc373850282204",
+      "observed": "f735786bf7d3437a095abdcc7e8704cb6769fd32eb46b37ad8fc373850282204",
+      "pass": true
+    },
+    {
+      "id": "M4_experiment_id",
+      "what": "the experiment identity is unchanged",
+      "expected": "M193-BASELINE-OBS-1",
+      "observed": "M193-BASELINE-OBS-1",
+      "pass": true
+    },
+    {
+      "id": "M5_frozen_before_results",
+      "what": "the manifest was frozen before any live result",
+      "expected": "true",
+      "observed": "true",
+      "pass": true
+    },
+    {
+      "id": "M6_no_live_spend_in_m193",
+      "what": "M193 recorded zero live spend",
+      "expected": "0",
+      "observed": "0",
+      "pass": true
+    },
+    {
+      "id": "F1_fixture_file_hash",
+      "what": "the task fixture file hashes to the frozen value",
+      "expected": "e79843d3b93d4c77551911a92eed9b316c57b5045ff7e7ef75018efb2e9aaca4",
+      "observed": "e79843d3b93d4c77551911a92eed9b316c57b5045ff7e7ef75018efb2e9aaca4",
+      "pass": true
+    },
+    {
+      "id": "F2_manifest_agrees",
+      "what": "the manifest names the same fixture hash",
+      "expected": "e79843d3b93d4c77551911a92eed9b316c57b5045ff7e7ef75018efb2e9aaca4",
+      "observed": "e79843d3b93d4c77551911a92eed9b316c57b5045ff7e7ef75018efb2e9aaca4",
+      "pass": true
+    },
+    {
+      "id": "F3_arm_count",
+      "what": "the fixture holds 40 arms",
+      "expected": "40",
+      "observed": "40",
+      "pass": true
+    },
+    {
+      "id": "F4_manifest_arm_count",
+      "what": "the manifest agrees on 40 arms",
+      "expected": "40",
+      "observed": "40",
+      "pass": true
+    },
+    {
+      "id": "F5_repositories",
+      "what": "the fixture spans 12 repositories",
+      "expected": "12",
+      "observed": "12",
+      "pass": true
+    },
+    {
+      "id": "F6_frozen_before_results",
+      "what": "the fixture was frozen before any live result",
+      "expected": "true",
+      "observed": "true",
+      "pass": true
+    },
+    {
+      "id": "F7_outcome_independent",
+      "what": "the selection rule refused outcome inputs",
+      "expected": "true",
+      "observed": "true",
+      "pass": true
+    },
+    {
+      "id": "F8_ordinals_dense",
+      "what": "arm ordinals are dense and 1-based",
+      "expected": "true",
+      "observed": "true",
+      "pass": true
+    },
+    {
+      "id": "F9_prefix_cross_repository",
+      "what": "the first 12 arms span 12 repositories",
+      "expected": "12",
+      "observed": "12",
+      "pass": true
+    },
+    {
+      "id": "P1_model",
+      "what": "the model is the frozen one",
+      "expected": "claude-opus-4-5-20251101",
+      "observed": "claude-opus-4-5-20251101",
+      "pass": true
+    },
+    {
+      "id": "P2_cli_version",
+      "what": "the manifest pins the frozen CLI version",
+      "expected": "2.1.251",
+      "observed": "2.1.251",
+      "pass": true
+    },
+    {
+      "id": "P3_max_turns",
+      "what": "the turn limit is unchanged",
+      "expected": "250",
+      "observed": "250",
+      "pass": true
+    },
+    {
+      "id": "P4_per_run_cap",
+      "what": "the per-run cost ceiling is unchanged",
+      "expected": "3.5",
+      "observed": "3.5",
+      "pass": true
+    },
+    {
+      "id": "P5_total_cap",
+      "what": "the total live-spend ceiling is unchanged",
+      "expected": "90",
+      "observed": "90",
+      "pass": true
+    },
+    {
+      "id": "P6_min_arms",
+      "what": "the minimum arm count is unchanged",
+      "expected": "20",
+      "observed": "20",
+      "pass": true
+    },
+    {
+      "id": "P7_max_arms",
+      "what": "the maximum arm count is unchanged",
+      "expected": "40",
+      "observed": "40",
+      "pass": true
+    },
+    {
+      "id": "P8_concurrency",
+      "what": "concurrency is unchanged",
+      "expected": "3",
+      "observed": "3",
+      "pass": true
+    },
+    {
+      "id": "P9_max_replacements",
+      "what": "the replacement ceiling is unchanged",
+      "expected": "15",
+      "observed": "15",
+      "pass": true
+    },
+    {
+      "id": "C1_code_per_run_cap",
+      "what": "m193Acquisition agrees on the per-run cap",
+      "expected": "3.5",
+      "observed": "3.5",
+      "pass": true
+    },
+    {
+      "id": "C2_code_total_cap",
+      "what": "m193Acquisition agrees on the total cap",
+      "expected": "90",
+      "observed": "90",
+      "pass": true
+    },
+    {
+      "id": "C3_code_min_arms",
+      "what": "m193Acquisition agrees on minArms",
+      "expected": "20",
+      "observed": "20",
+      "pass": true
+    },
+    {
+      "id": "C4_code_max_arms",
+      "what": "m193Acquisition agrees on maxArms",
+      "expected": "40",
+      "observed": "40",
+      "pass": true
+    },
+    {
+      "id": "C5_code_concurrency",
+      "what": "m193Acquisition agrees on concurrency",
+      "expected": "3",
+      "observed": "3",
+      "pass": true
+    },
+    {
+      "id": "C6_adequate_i6",
+      "what": "the ADEQUATE I6 threshold is unchanged",
+      "expected": "12",
+      "observed": "12",
+      "pass": true
+    },
+    {
+      "id": "C7_adequate_repos",
+      "what": "the ADEQUATE repository threshold is unchanged",
+      "expected": "6",
+      "observed": "6",
+      "pass": true
+    },
+    {
+      "id": "C8_adequate_valid",
+      "what": "the ADEQUATE valid-run threshold is unchanged",
+      "expected": "30",
+      "observed": "30",
+      "pass": true
+    },
+    {
+      "id": "C9_partial_i6",
+      "what": "the PARTIAL I6 threshold is unchanged",
+      "expected": "6",
+      "observed": "6",
+      "pass": true
+    },
+    {
+      "id": "C10_partial_repos",
+      "what": "the PARTIAL repository threshold is unchanged",
+      "expected": "4",
+      "observed": "4",
+      "pass": true
+    },
+    {
+      "id": "C11_partial_valid",
+      "what": "the PARTIAL valid-run threshold is unchanged",
+      "expected": "15",
+      "observed": "15",
+      "pass": true
+    },
+    {
+      "id": "T1_single_arm",
+      "what": "exactly one arm is declared",
+      "expected": "BASELINE_ONLY",
+      "observed": "BASELINE_ONLY",
+      "pass": true
+    },
+    {
+      "id": "T2_no_treatment_arms",
+      "what": "no treatment arm is declared",
+      "expected": "0",
+      "observed": "0",
+      "pass": true
+    },
+    {
+      "id": "T3_prompt_has_no_validation_instruction",
+      "what": "the frozen prompt does not ask the agent to validate",
+      "expected": "false",
+      "observed": "false",
+      "pass": true
+    },
+    {
+      "id": "T4_prompt_has_no_orientation",
+      "what": "the frozen prompt carries no orientation",
+      "expected": "false",
+      "observed": "false",
+      "pass": true
+    },
+    {
+      "id": "T5_tools_unrestricted",
+      "what": "the frozen tool set is vexp's default and is not narrowed",
+      "expected": "Bash,Edit,Glob,Grep,Read,TodoWrite,Write",
+      "observed": "Bash,Edit,Glob,Grep,Read,TodoWrite,Write",
+      "pass": true
+    },
+    {
+      "id": "B1_pinned_binary_present",
+      "what": "the pinned CLI binary exists on this host",
+      "expected": "true",
+      "observed": "true",
+      "pass": true
+    },
+    {
+      "id": "B2_pinned_binary_version",
+      "what": "the pinned binary reports the frozen version",
+      "expected": "2.1.251",
+      "observed": "2.1.251",
+      "pass": true
+    },
+    {
+      "id": "S1_frozen_sources_unchanged",
+      "what": "every frozen source still hashes to its recorded blob",
+      "expected": "0",
+      "observed": "0",
+      "pass": true
+    },
+    {
+      "id": "S2_frozen_source_count",
+      "what": "the frozen source set is the recorded size",
+      "expected": "24",
+      "observed": "24",
+      "pass": true
+    },
+    {
+      "id": "A1_acquisition_integrity",
+      "what": "M194_ACQUISITION_INTEGRITY_READY is still declared in stage5_m193a_final_report.md",
+      "expected": "true",
+      "observed": "true",
+      "pass": true
+    },
+    {
+      "id": "A2_treatment_isolation",
+      "what": "TREATMENT_ISOLATION_GUARANTEED_BY_CONSTRUCTION is still declared in stage5_m193a_isolation_evidence.json",
+      "expected": "true",
+      "observed": "true",
+      "pass": true
+    },
+    {
+      "id": "A3_changed_source",
+      "what": "M194_CHANGED_SOURCE_AUTHORITY_READY is still declared in stage5_m193b_final_report.md",
+      "expected": "true",
+      "observed": "true",
+      "pass": true
+    },
+    {
+      "id": "A4_patch_observation",
+      "what": "M194_PATCH_OBSERVATION_READY is still declared in stage5_m193c_final_report.md",
+      "expected": "true",
+      "observed": "true",
+      "pass": true
+    },
+    {
+      "id": "A5_source_version_authority",
+      "what": "the frozen source-version authority is present",
+      "expected": "true",
+      "observed": "true",
+      "pass": true
+    },
+    {
+      "id": "A6_source_version_probe_frozen",
+      "what": "the source-version probe is a frozen source",
+      "expected": "true",
+      "observed": "true",
+      "pass": true
+    },
+    {
+      "id": "A7_changed_source_frozen",
+      "what": "the changed-source authority is a frozen source",
+      "expected": "true",
+      "observed": "true",
+      "pass": true
+    },
+    {
+      "id": "A8_patch_snapshot_frozen",
+      "what": "the patch-snapshot authority is a frozen source",
+      "expected": "true",
+      "observed": "true",
+      "pass": true
+    },
+    {
+      "id": "R1_branch",
+      "what": "work is on main",
+      "expected": "main",
+      "observed": "main",
+      "pass": true
+    }
+  ],
+  "gatesPassed": 53,
+  "gatesFailed": 0,
+  "failedGates": []
+}

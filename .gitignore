@@ -22,3 +22,7 @@ benchmarks/stage5_vexp_swe_bench_smoke/results/precheck/
 # a large raw log; the normalized `_tool_calls.json` is derived from it. Not
 # tracked by default (the per-run raw artifacts are untracked too).
 _agent_stream.jsonl
+
+# M194 raw acquisition evidence: per-arm transcripts, snapshots and patches.
+# Preserved on disk (§35) and never staged.
+benchmarks/stage5_vexp_swe_bench_smoke/results/m194/
