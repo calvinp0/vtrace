@@ -42,12 +42,24 @@ A phase-2 process that can reach a phase-1 input fails the run closed.
 |---|---|---|---|---|
 | `C-SMALL` | `vexp-swe-bench/src` | TypeScript | 21 | `Vexp-ai/vexp-swe-bench@d658e345` |
 | `C-MED` | VTRACE `src/` at the M197 commit | TypeScript | 492 | this repository |
-| `C-LARGE` | ARC `*.py` tree | Python | 975 | `/home/calvin/code/ARC`, copied read-only |
+| `C-LARGE` | ARC `*.py` tree | Python | 276 (346 eligible incl. `.pyx`/`.pxd`/`.yml`/`.toml`) | `/home/calvin/code/ARC`, copied read-only |
 | `C-TRAJ` | M194 arms | mixed | 33 arms / 12 repositories | `results/m194/runs/` |
 
 `C-LARGE` is the largest genuinely substantial repository VTRACE holds. **No
-5,000-file claim will be reproduced and no 975-file measurement will be
+5,000-file claim will be reproduced and no 276-file measurement will be
 extrapolated to one** (§47, §65).
+
+> **M196A correction (§45, factual extraction error only).** This table read
+> `975` for C-LARGE. ARC contains 975 `.py` files on disk, but 699 of them live
+> under `.claude/worktrees/agent-*` — nested git worktrees that ARC's own
+> `.gitignore` excludes with `.claude/*`, i.e. duplicate copies of the same
+> repository. The corpus is **276** `.py` files (346 files across every language
+> the indexer enumerates). Evidence: `stage5_m196a_ingestion_audit.json`
+> (`C-LARGE.exclusionJustification.WORKTREE_EXCLUDED = 699`, itemised) and
+> `git -C /home/calvin/code/ARC worktree list`. Consequently M196's
+> "cold index, 975 Python files ≈ 55 s" timed 276 files, and the A2/A3 priors
+> below are re-stated from M196A's own measurement. **No threshold, gate, veto or
+> VEXP claim is changed by this correction.**
 
 Every reported figure carries `n`, repositories, languages, median and p90.
 
@@ -79,13 +91,13 @@ rather than approximated.
 | id | Claim under test | Corpus | Measurement | MATCH | EXCEED | Declared M196 prior |
 |---|---|---|---|---|---|---|
 | A1 | 30 languages | code | parsers × detected extensions | ≥ 30 | > 30 | **4 families — FAILS** |
-| A2 | index throughput | C-MED, C-LARGE | files/s cold, 3× | ≥ 15 files/s | ≥ 30 | 18 files/s (C-LARGE) |
-| A3 | incremental beats cold | C-LARGE | `t(k=1,3,10)` vs `t(cold)` | ratio ≤ 0.25 | ≤ 0.05 | **2.0–3.0 — FAILS** |
-| A4 | no-op freshness | C-LARGE | `t(k=0)` | ≤ 3 s | ≤ 1 s | 1.0 s — passes |
+| A2 | index throughput | C-MED, C-LARGE | files/s cold, 3× | ≥ 15 files/s | ≥ 30 | 15.3 files/s C-LARGE, 56.3 C-MED (M196A) |
+| A3 | incremental beats cold | C-LARGE | `t(k=1,3,10)` vs `t(cold)` | ratio ≤ 0.25 | ≤ 0.05 | **0.31 C-MED / 1.45 C-LARGE — FAILS** |
+| A4 | no-op freshness | C-LARGE | `t(k=0)` | ≤ 3 s | ≤ 1 s | 0.16 s (M196A) — passes |
 | A5 | query latency | all | `get_code_context` warm, 5× | p90 ≤ 500 ms | p90 ≤ 200 ms | 113–221 ms — passes |
 | A6 | impact latency | C-LARGE | `get_impact_graph` depth 3, 5× | p90 ≤ 500 ms | ≤ 200 ms | 159 ms — passes |
 | A7 | flow latency | C-LARGE | `search_logic_flow`, 5× | p90 ≤ 500 ms | ≤ 200 ms | 5.3 ms — passes |
-| A8 | **ingestion completeness** | C-SMALL, C-MED, C-LARGE | indexed ÷ eligible | ≥ 99% | 100% | **58.3% TS / 100% Py — FAILS** |
+| A8 | **ingestion completeness** | C-SMALL, C-MED, C-LARGE | indexed ÷ eligible | ≥ 99% | 100% | 100% / 100% / 100% after the M196A repair — **PASSES** |
 | A9 | skeleton reduction (V-C1) | C-MED, C-LARGE | skeleton ÷ full file, per file | median ≥ 70% | ≥ 90% | 88.9% / 90.0% — passes |
 | A10 | skeleton preservation (V-C1) | 30 sampled symbols | signature, return type, docstring, member retention | ≥ 95% signatures, ≥ 90% members | 100% | 100% / 91.6% signatures |
 | A11 | budget binds (V-C5) | C-MED | delivered ÷ requested across 1k–32k | ≥ 60% utilisation at every budget | ≥ 80% | **4.5% at 8k — FAILS** |
@@ -167,6 +179,20 @@ TRACK_B_CORPUS_INADEQUATE
 which is **not** a pass and **not** a neutral result. It means the thesis cannot
 be proven on any evidence VTRACE holds, and §7 of the verdict rule applies.
 Declared prior: **M194 gives 2,619 — B0 FAILS on M194.**
+
+> **M196A materiality evidence (§45, Track B corpus identity only).** B0 was run
+> over **every** preserved trajectory VTRACE holds, not just M194: 1,078 arms,
+> 619 successful, 44 repositories, 40 milestone corpora
+> (`stage5_m196a_materiality.json`). **No corpus clears B0.** Pooled untreated
+> arms — the §19 primary corpus — give median 2,605 evidence tokens at a 5.7%
+> share; pooled over everything, 1,919 at 3.4%. The best corpus with ≥ 10
+> successful arms (M163) reaches 3,580 tokens and 7.7%. Four corpora clear the
+> 25% arm only against a transcript reconstruction that cannot see the system
+> prompt, and fall to 6.6–16.1% on the cache-corrected provider denominator §22
+> requires. A synthetic huge-read corpus *does* clear B0 (control C2), so the
+> gate is live and the silence is a fact about the workloads. Verdict:
+> `M197_MATERIAL_CORPUS_NOT_READY`,
+> `NO_OBSERVED_FERRARI_SIZED_REPOSITORY_CONSUMPTION`. **B0 itself is unchanged.**
 
 ### 4.4 Metrics
 

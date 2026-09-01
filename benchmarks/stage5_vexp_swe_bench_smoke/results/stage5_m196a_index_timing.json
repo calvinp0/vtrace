@@ -1,0 +1,78 @@
+{
+  "milestone": "M196A",
+  "note": "descriptive only; no performance tuning performed (§14)",
+  "a3Threshold": {
+    "match": 0.25,
+    "exceed": 0.05
+  },
+  "corpora": [
+    {
+      "id": "C-MED",
+      "filesIndexed": 492,
+      "coldMs": 8745,
+      "noopMs": 80,
+      "incrementalMs": {
+        "k=1": 2681,
+        "k=3": 2709
+      },
+      "incrementalWork": {
+        "k=1": {
+          "touched": [
+            "access/indexAccessLifecycle.test.ts"
+          ],
+          "filesAttemptedForParse": 492,
+          "filesIndexed": 492,
+          "reparsedExactlyTheChangedFiles": false
+        },
+        "k=3": {
+          "touched": [
+            "access/indexAccessLifecycle.test.ts",
+            "access/indexAccessLifecycle.ts",
+            "access/symbolNameAccessPath.test.ts"
+          ],
+          "filesAttemptedForParse": 492,
+          "filesIndexed": 492,
+          "reparsedExactlyTheChangedFiles": false
+        }
+      },
+      "filesPerSecondCold": 56.3,
+      "incrementalRatio": {
+        "k=1": 0.307,
+        "k=3": 0.31
+      }
+    },
+    {
+      "id": "C-LARGE",
+      "filesIndexed": 346,
+      "coldMs": 22675,
+      "noopMs": 160,
+      "incrementalMs": {
+        "k=3": 32807
+      },
+      "incrementalWork": {
+        "k=1": {
+          "touched": [
+            "ARC.py"
+          ],
+          "failed": true,
+          "error": "UNIQUE constraint failed: edges.id",
+          "preExisting": "reproduced with the M196A parser repair reverted; not caused by it"
+        },
+        "k=3": {
+          "touched": [
+            "ARC.py",
+            "ARC_test.py",
+            "arc/__init__.py"
+          ],
+          "filesAttemptedForParse": 346,
+          "filesIndexed": 346,
+          "reparsedExactlyTheChangedFiles": false
+        }
+      },
+      "filesPerSecondCold": 15.3,
+      "incrementalRatio": {
+        "k=3": 1.447
+      }
+    }
+  ]
+}

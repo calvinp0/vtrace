@@ -1,0 +1,148 @@
+{
+  "milestone": "M196A",
+  "controls": [
+    {
+      "id": "F1",
+      "name": "below-boundary TypeScript file parses and indexes",
+      "pass": true,
+      "detail": {
+        "chars": 20000,
+        "before": {
+          "ok": true,
+          "error": null
+        },
+        "after": {
+          "ok": true,
+          "symbolCount": 2,
+          "headFound": true,
+          "tailFound": true,
+          "tailSpanExact": true,
+          "tailStartLine": 330,
+          "tailEndLine": 332
+        }
+      }
+    },
+    {
+      "id": "F2",
+      "name": "boundary-adjacent sizes exercise the old 32767 threshold",
+      "pass": true,
+      "oldBoundaryFirstFailingChars": 32768,
+      "detail": [
+        {
+          "chars": 32766,
+          "preRepair": true,
+          "postRepair": true,
+          "tailFound": true
+        },
+        {
+          "chars": 32767,
+          "preRepair": true,
+          "postRepair": true,
+          "tailFound": true
+        },
+        {
+          "chars": 32768,
+          "preRepair": false,
+          "postRepair": true,
+          "tailFound": true
+        },
+        {
+          "chars": 32769,
+          "preRepair": false,
+          "postRepair": true,
+          "tailFound": true
+        },
+        {
+          "chars": 40000,
+          "preRepair": false,
+          "postRepair": true,
+          "tailFound": true
+        }
+      ]
+    },
+    {
+      "id": "F3",
+      "name": "real files omitted before the repair are represented after it",
+      "pass": true,
+      "detail": [
+        {
+          "path": "src/mcp/tools.ts",
+          "chars": 441752,
+          "preRepair": false,
+          "preRepairError": "Invalid argument",
+          "postRepair": {
+            "ok": true,
+            "chars": 441752,
+            "symbols": 160,
+            "edges": 179,
+            "spanMismatches": 0
+          }
+        },
+        {
+          "path": "src/capsule/toolOutputCapture.test.ts",
+          "chars": 51479,
+          "preRepair": false,
+          "preRepairError": "Invalid argument",
+          "postRepair": {
+            "ok": true,
+            "chars": 51479,
+            "symbols": 4,
+            "edges": 0,
+            "spanMismatches": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "F4",
+      "name": "symbol spans in an over-boundary file resolve to the real source",
+      "pass": true,
+      "detail": [
+        {
+          "path": "src/mcp/tools.ts",
+          "chars": 441752,
+          "symbols": 160,
+          "spanMismatches": 0
+        },
+        {
+          "path": "src/capsule/toolOutputCapture.test.ts",
+          "chars": 51479,
+          "symbols": 4,
+          "spanMismatches": 0
+        }
+      ]
+    },
+    {
+      "id": "F5",
+      "name": "repeated parses of an over-boundary file are identical",
+      "pass": true,
+      "distinctShapes": 1,
+      "symbolCount": 2
+    },
+    {
+      "id": "F6",
+      "name": "a failing file cannot be reclassified into an excluded reason",
+      "pass": true,
+      "detail": {
+        "failureReasonsGuardedByStatus": true,
+        "exclusionsOnlyWhenUnenumerated": true,
+        "overBoundaryStillClassifiable": true,
+        "legitimateExclusionReasons": [
+          "EXCLUDED_BY_POLICY_GITIGNORE",
+          "EXCLUDED_BY_POLICY_DIRECTORY",
+          "WORKTREE_EXCLUDED"
+        ],
+        "failureReasons": [
+          "PARSER_FAILURE",
+          "SIZE_BOUNDARY",
+          "READ_FAILURE",
+          "PERSISTENCE_FAILURE",
+          "UNSUPPORTED_SYNTAX",
+          "NOT_ENUMERATED_BY_PRODUCT_SCAN",
+          "OTHER"
+        ]
+      }
+    }
+  ],
+  "verdict": "PARSER_CONTROLS_PASS"
+}

@@ -78,7 +78,7 @@ function parseTypeScriptWithContext(
   const parser = new Parser();
   parser.setLanguage(getTreeSitterLanguage(input.path));
 
-  const tree = parser.parse(input.content);
+  const tree = parseSource(parser, input.content);
   const extracted = extractTopLevelSymbols(input.path, input.content, tree.rootNode);
   const importEdges = extractImportEdges({
     filePath: input.path,
@@ -105,6 +105,23 @@ function parseTypeScriptWithContext(
     edges: [...extracted.edges, ...importEdges, ...callReferenceEdges],
     diagnostics: collectDiagnostics(tree.rootNode),
   };
+}
+
+/**
+ * `node-tree-sitter` 0.21.1 converts a string input into a chunk callback and
+ * writes the returned chunk into a fixed buffer whose default size is 32768
+ * UTF-16 code units. A source longer than 32767 units overflows that buffer and
+ * the native binding throws `Invalid argument` instead of reading in chunks, so
+ * the file is lost from the index entirely — and, via `getExportIndex`, so is
+ * every file that imports it. Sizing the buffer to the source removes the limit
+ * without truncating, chunking or otherwise altering what the parser sees.
+ */
+const TREE_SITTER_DEFAULT_BUFFER_UNITS = 32768;
+
+function parseSource(parser: Parser, content: string) {
+  return parser.parse(content, undefined, {
+    bufferSize: Math.max(TREE_SITTER_DEFAULT_BUFFER_UNITS, content.length + 1),
+  });
 }
 
 function getTreeSitterLanguage(filePath: string): unknown {
@@ -459,7 +476,7 @@ function getExportIndex(filePath: string, content: string): ExportIndex {
   const parser = new Parser();
   parser.setLanguage(getTreeSitterLanguage(filePath));
 
-  const tree = parser.parse(content);
+  const tree = parseSource(parser, content);
 
   if (tree.rootNode.hasError) {
     return { namedExports: new Map() };

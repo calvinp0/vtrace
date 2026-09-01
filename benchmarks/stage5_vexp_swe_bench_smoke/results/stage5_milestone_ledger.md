@@ -7880,3 +7880,128 @@ verification      bun run typecheck, bun run typecheck:benchmarks, bun test,
   work. Do not tune retrieval on a 58%-visible corpus. Do not treat M197's Track A
   passes on latency and skeleton reduction as product validation; they are
   component facts about an engine whose default output uses neither.
+
+---
+
+## M196A — ingestion authority and material-corpus qualification (PASS)
+
+```
+milestone         M196A
+verdict           PASS
+spend             0 live-agent runs, $0
+scope             $0 readiness closure for M197. Repair the ingestion defect
+                  M196 measured; qualify a Track B corpus against frozen B0.
+                  No compiler implemented, no product restructure, no hypothesis
+                  reopened, no threshold weakened.
+
+Q1 ingestion      M197_A8_INGESTION_READY
+                  C-SMALL 21/21, C-MED 492/492, C-LARGE 276/276 = 100% each,
+                  0 unexplained missing, 0 non-deterministic runs over 3 repeats.
+                  Product's own coverage complete: 21/21, 492/492, 346/346,
+                  filesFailed=0, filesSkipped=0.
+
+Q2 corpus         M197_MATERIAL_CORPUS_NOT_READY
+                  NO_OBSERVED_FERRARI_SIZED_REPOSITORY_CONSUMPTION
+                  1,078 arms / 619 successful / 44 repositories / 40 corpora.
+                  Untreated primary: median 2,605 evidence tokens, 5.7% share.
+                  0 of 40 corpora clear B0. M194 control reproduced exactly
+                  (23 successful, median 2,619, p90 8,302, max 19,122) = FAIL.
+
+readiness         M197_CONTEXT_COMPRESSION_PROOF_NOT_READY
+                  M197_TRACK_A_ENGINEERING_REPRODUCTION_ONLY
+                  SWEBENCH_CONTEXT_COMPILER_MATERIALITY_NOT_SUPPORTED
+                  VEXP_CORPUS_B0_NOT_MEASURABLE
+                  CONTEXT_COMPILER_PRODUCT_PROBLEM_NOT_YET_OBSERVED
+
+repair            src/parsers/typescriptParser.ts only — parseSource() sizes the
+                  node-tree-sitter input buffer to the source at both parse
+                  sites. No truncation, no chunking, no benchmark special case.
+
+controls          F1-F6 PASS (parser truth, boundary, span truth, determinism,
+                  denominator integrity); C1-C5 PASS (M194 control, artificial
+                  materiality fires, outlier rejected, no contamination, no
+                  post-VTRACE selection leakage).
+
+retrieval         Python index byte-identical pre/post (sha256 829d67a0…).
+                  Paired retrieval eval: 0 verdict changes over 105 rows;
+                  7 diagnostic-label changes only.
+
+prereg            4c46df38…907488 -> 736e8a9b…97d8f0. Allowed changes only:
+                  C-LARGE corpus identity (975 -> 276; 699 gitignored nested
+                  worktrees), A2/A3/A4/A8 declared priors, §4.3 materiality
+                  evidence. Out-of-scope changes: 0.
+
+artifacts         stage5_m196a_design.md, stage5_m196a_final_report.md,
+                  stage5_m196a_ingestion_audit.json, stage5_m196a_parser_controls.json,
+                  stage5_m196a_materiality.json, stage5_m196a_materiality_arms.jsonl,
+                  stage5_m196a_materiality_controls.json, stage5_m196a_index_timing.json
+
+authorization     NO_CONTEXT_COMPILER_PRODUCT_RESTRUCTURE_AUTHORIZED
+                  NO_VTRACE_I6_PRODUCT_IMPLEMENTATION_AUTHORIZED
+                  NO_VALIDATION_SCAFFOLD_IMPLEMENTATION_AUTHORIZED
+                  NO_RUNTIME_REPAIR_INTERVENTION_AUTHORIZED
+                  I5_REMAINS_CLOSED
+                  I6_VALIDATION_SELECTION_REMAINS_CLOSED
+
+verification      bun run typecheck, bun run typecheck:benchmarks, bun test
+                  (5995 tests / 368 files), git diff --check. 0 live calls, $0.
+```
+
+## M196A standing findings
+
+- **A `catch {}` turned a coincidence into a cause, and the cause was somewhere
+  else entirely.** M196 counted 36 parse losses, saw 36 files over 32,767
+  characters, and named a "tree-sitter 0.21.1 parser limit". The exception it
+  never read says `Invalid argument` and comes from the *binding*: 0.21.1's
+  `Parser.prototype.parse` converts a string into a callback returning the whole
+  remainder, and the native side writes it into a 32,768-**UTF-16-code-unit**
+  default buffer. Not bytes — 32,767 two-byte characters (65,522 bytes) parse
+  fine. Fixed upstream by 0.25.1; VTRACE pins 0.21.1. Sizing the buffer to the
+  source repairs it without touching grammar or AST.
+
+- **The lost files were mostly small ones.** 36 files exceed the limit; 205 fail
+  the parse the product actually performs. The extra 169 are 1,597–32,726
+  characters and fail only because `getExportIndex` re-parses each imported file,
+  so one oversized module takes down every importer. Coverage defects propagate
+  along the import graph, which is exactly where a context engine works.
+
+- **M196's "Python 100%" was never measured.** `ingestionProbe` parses only when
+  `ext === ".ts"`; the JSON has no Python coverage field. The claim is true, for a
+  reason M196 did not give: `pythonParser` shells out to CPython's `ast` and never
+  reaches the binding. An unmeasured claim that happens to be right is still
+  unmeasured — and this one sat under a veto.
+
+- **The C-LARGE corpus was 3.5× smaller than its manifest.** 699 of ARC's 975
+  `.py` files are nested agent worktrees that ARC's own `.gitignore` excludes:
+  duplicate copies of the same repository. M196's "cold index, 975 Python files
+  ≈ 55 s" timed 276 files. Publish coverage against both denominators and itemise
+  every removal, or a shrinking denominator reads as rising coverage.
+
+- **The denominator decides B0, and the wrong one flips four corpora.** Measured
+  against a transcript reconstruction, M183/M162/M65C/M68B clear the 25% arm at
+  26–54%. The reconstruction cannot see the system or task prompt. Against the
+  cache-corrected provider denominator the preregistration requires, they are
+  14.1%/15.9%/41.0%/22.4%, the last two on two arms each — and **0 of 40 corpora
+  clear B0**. Same trajectories, opposite verdict, one accounting choice.
+
+- **The workload is not there, and this is now a measurement rather than an
+  estimate.** 1,078 arms, 619 successful, 44 repositories: the median untreated
+  successful arm reads 2,605 repository tokens — one file — against a
+  20,000-token bar, at a 5.7% share against a 25% bar. A synthetic huge-read
+  corpus *does* clear B0, so the gate is live. Seventy percent of 2,605 is 1,824
+  tokens; VTRACE's tool schemas alone cost 5,521. A perfect compiler is net
+  negative on every workload this project has ever observed.
+
+- **Incremental indexing has no incremental path.** A one-file change re-parses
+  492/492 files on C-MED and 346/346 on C-LARGE, and a single-file Python
+  incremental aborts with `UNIQUE constraint failed: edges.id`. Both reproduce
+  with the M196A repair reverted. Left unfixed on purpose (§14/§15); A3 fails
+  honestly.
+
+- **Next-step recommendation.** Do not run M197 Track B — it has no corpus, and
+  building one means buying workloads unlike anything VTRACE has measured. Track A
+  is now worth running *as an engineering reproduction only*, and must never be
+  reported as product validation. Before any further investment, answer the
+  strategic question M196A raises: if the median strong-agent task reads one file,
+  is a general repository context compiler solving a problem large enough to
+  justify VTRACE? Do not lower B0 to make the answer yes.
