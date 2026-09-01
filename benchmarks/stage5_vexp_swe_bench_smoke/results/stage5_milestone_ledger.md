@@ -7571,3 +7571,163 @@ held-out          identified, never scored: 6 M193 fixture instances the stoppin
   signal — 6 arms that validated relevantly and still failed — belongs to
   runtime-grounded repair, which remains a separate, unauthorised hypothesis. Do
   not buy more arms. Do not implement I6.
+
+## M195A — validation-selection vs validation-scaffold separation
+
+```text
+verdict           M195A - PASS
+                  Axis A VALIDATION_SELECTION_MECHANISM_NOT_WITNESSED
+                  Axis B VALIDATION_SCAFFOLD_OPPORTUNITY_OBSERVED
+                  G2     M195_G2_OUTPUT_BOUND_ONLY
+                  live-agent runs 0, live model spend $0
+
+scope             zero-spend interpretive closure of M195. Two questions only: after
+                  separating NO_VALIDATION from actual target choice, how many genuine
+                  validation-selection opportunities remain; and how selective is each
+                  frozen family BEFORE the bound of 3 truncates it. No new mechanism,
+                  no ranking change, no new family, no held-out data, no live model.
+
+start / end       start 002a1ef138420eb32a7a7d4d616e2c1a37547c63, main, 165 ahead /
+                  0 behind, 2 tracked + 204 untracked pre-existing dirt, preserved.
+
+preregistration   45c39d9acd3b1880338436eb201af35a4c4a8138, committed BEFORE any
+                  reclassification was computed. It fixes the seven-class taxonomy and
+                  its evaluation order, the six-clause GENUINE_I6_SELECTION_MISS
+                  predicate, the scaffold definition, the selection-specific witness
+                  rule, the four-gate Axis A threshold (>=3 tasks, >=3 repos, >=2
+                  selection witnesses over >=2 repos, exactly as the charter states),
+                  and the descriptive selectivity rule. The selectivity threshold is
+                  not invented: it is M195's own G2 requirement (p90 <= 3) applied to
+                  the pre-truncation set G2 should have been reading, plus a 10% cap
+                  on the fraction over the bound.
+
+authority         all three M195 artefacts reproduce BYTE-FOR-BYTE from the frozen
+                  driver over the preserved M194 tree (58 229 / 146 454 / 46 417 B).
+                  Blindness replay reproduced: 0 differing fingerprints of 59.
+                  m195Mechanism.ts and m195Evaluation.ts were NOT edited; derivation,
+                  ranking, the bound, the oracle, the equivalence rules, decision-point
+                  extraction and the credit window are all inherited unchanged. No
+                  fifth family. Held-out corpus not scored and not inspected.
+
+additive probe    M195A needed two per-row facts M195 published only in aggregate
+                  (credit-window trustworthiness, runner-outcome observability). The
+                  probe that recovers them fails closed unless it reproduces M195's
+                  own numbers: attemptsInCreditWindow 59/59 exact, unpaired bash_pre
+                  23 events over 14 arms exact. It did.
+
+the separation    relateOne already gated BROADER/DIFFERENT behind runnerStarted, so
+                  bestRelation NO_VALIDATION IS a proof that no runner started in the
+                  window and DIFFERENT_VALIDATION IS a proof that one started and
+                  aimed elsewhere. M195 recorded the distinction and then OR'd it away
+                  one line later in classifyDecisionPoint. No new evidence was needed
+                  to undo that; the split is downstream of the frozen candidate set.
+
+14-miss partition genuine target-selection misses 0; scaffold opportunities 13;
+                  credit-window-only 1 (xarray-2905#45); runner/instrument edge cases
+                  0; other 0. Sum 14, nothing lost. 12 of 14 issued no validation
+                  command at all in the window; the 2 that did started no runner
+                  (the python -c shape M195's §10 correction already refuses). ZERO
+                  rest on an unpaired bash_pre, so none of it is an instrument artefact.
+
+selection side    exactly ONE S1 row exists in the whole corpus:
+                  m194-18-pylint-dev__pylint-8898#52 (I6-D, raw 10 -> delivered 3,
+                  unresolved), withheld by prereg §5.3 as untrustworthy. The verdict
+                  is insensitive to that clause: admitting it gives 1 task / 1 repo
+                  and still fails A1, A2, A3 and A4.
+
+witnesses         26 rows -> 0 selection, 23 scaffold, 3 neither, 0 strong. The union's
+                  5 tasks / 5 repos are exactly M195's; only their TYPE changed. A
+                  selection witness needs the failed analogue to aim elsewhere, and in
+                  this corpus the failed side never aims. Structural limit: 33 arms
+                  over 33 DISTINCT instances, so no within-task analogue pair exists
+                  anywhere - the contrast is not merely absent, it is unconstructible.
+
+counterexamples   candidate skipped yet task resolved 11/14 miss tasks; candidate run
+                  with a useful failure seen yet task failed 6 arms; resolved arms that
+                  never started any runner 14; already-selected yet failed 7 tasks.
+                  Unfavourable in both directions, for both readings.
+
+selectivity       I6-A SELECTIVE (p90 1, max 2, 0% over bound). I6-B, I6-C, I6-D and
+                  the union all BROAD. I6-B is the sharpest: p90 11, max 12, 20% over
+                  the bound, 70 candidates discarded over 10 points. Widest raw sets
+                  pytest-10051 15, sympy-12481 12, matplotlib-24970 12. matplotlib
+                  alone discards 51. I6-A discards nothing.
+
+dead gate         G2 reads counts cap() has already clamped into {0,1,2,3} - the exact
+                  domain observed across all 295 rows - and an exhaustive sweep of that
+                  domain finds NO failing input. Real control: pytest-10051#20 raw 15,
+                  delivered 3, G2 PASS. Scored on the raw counts instead, I6-D FAILS
+                  (median 1, p90 4). G2 measured output boundedness, never selectivity.
+
+no score exists   §21 has no answer to give: the mechanism attaches no score to a
+                  candidate. rank is the index after a coarse tier sort with an
+                  alphabetical or insertion-order tie-break. Truncation binds at 20
+                  points and at 17 of those every delivered candidate shares one rule,
+                  so the cut falls inside a homogeneous tier and is settled
+                  alphabetically. The discarded tail's CONTENT is unobservable - cap()
+                  runs inside derive*(), so only preCapCount survives - and recovering
+                  it would mean raising top-k, which §26 forbids.
+
+verification      37 new falsification/unit tests (F1-F5 plus taxonomy totality,
+                  partition exhaustiveness, witness typing, both verdict axes);
+                  driver fails closed on artefact drift and on probe disagreement;
+                  typecheck clean; typecheck:benchmarks clean; bun test full suite;
+                  git diff --check clean; 0 live calls, $0.
+
+authorizations    NO_HELD_OUT_I6_SELECTION_REPLICATION_LICENSED
+                  I6_VALIDATION_SELECTION_CLOSE_RECOMMENDED
+                  NO_VTRACE_I6_PRODUCT_IMPLEMENTATION_AUTHORIZED
+                  NO_VALIDATION_SCAFFOLD_IMPLEMENTATION_AUTHORIZED
+                  NO_RUNTIME_REPAIR_INTERVENTION_AUTHORIZED
+                  I5_REMAINS_CLOSED
+
+held-out          untouched. 6 unrun M193 fixture instances across 6 repositories plus
+                  the 59-instance django-weighted reserve remain available for a future
+                  unrelated hypothesis.
+```
+
+## M195A standing findings
+
+- **A cap upstream of the measurement makes the gate unfalsifiable.** `cap()` runs
+  inside each `derive*()` before it returns, so G2 could only ever see `{0,1,2,3}`.
+  This is stronger than "G2 did not fail" — G2 *cannot* fail, and an exhaustive
+  sweep of its domain proves it. Any gate whose observable is bounded by the thing
+  it is supposed to police is decoration. Write boundedness gates against the
+  pre-truncation set, and record that set's contents, not just its cardinality.
+
+- **The distinction M195 needed was already in its own data.** `relateOne` gates
+  `BROADER`/`DIFFERENT` behind `runnerStarted`, so the difference between "aimed
+  wrong" and "did not aim" was computed, stored, and then destroyed by a single
+  `||` in `classifyDecisionPoint`. M195A needed no new derivation to recover it.
+  When a classifier ORs two conditions into one class, check first whether the
+  hypothesis being tested distinguishes them.
+
+- **Witness type is a separate question from witness count, and it is the one that
+  matters.** M195's 5 witnesses over 5 repositories are real and unchanged. All 5
+  are scaffold-shaped. A witness for a *selection* mechanism must instantiate a
+  contrast about choice — the failed analogue aiming elsewhere — and one arm per
+  task means that contrast is not constructible from this corpus at all. Count the
+  witnesses after typing them, never before.
+
+- **The evidence clause did not decide the verdict, and that is worth stating.**
+  The lone S1 specimen was withheld by a trustworthiness clause, which invites the
+  suspicion that the clause did the work. It did not: admitting it yields 1 task in
+  1 repository and still fails every Axis A gate. Report the robustness check
+  whenever a single specimen sits on a definitional boundary.
+
+- **Retiring a hypothesis is not retiring its neighbours.** Repository-derived
+  validation-*target selection* is closed: agents in this corpus do not mis-aim
+  tests. Whether an agent should be nudged to validate *at all* is a different
+  hypothesis with 14 observed episodes and no evidence either way, and it inherits
+  none of I6's authorisation — nor an exemption from M188's finding that extra
+  lifecycle turns cost money and forced workflows can regress resolution. 14
+  resolved arms in this very corpus never started a runner.
+
+- **Next-step recommendation.** Do not run M196 as an I6-selection replication; it
+  has 0 specimens and would fail A1–A4 before it began. Do not tune the frozen
+  derivation, and do not add a fifth family. The held-out corpus stays untouched.
+  The residual signal remains where M195 left it — the 6 arms that validated
+  relevantly, saw a trustworthy result and still failed — which belongs to
+  runtime-grounded repair, still a separate and unauthorised hypothesis. If the
+  scaffold question is ever pursued, it needs its own preregistration, its own cost
+  model and a treatment experiment, not a reuse of this evidence.

@@ -1,0 +1,750 @@
+{
+  "schemaVersion": "stage5.m195a.separation.v1",
+  "milestone": "M195A",
+  "preregistration": "results/stage5_m195a_preregistration.md",
+  "parent": "results/stage5_m195_preregistration.md",
+  "liveAgentRuns": 0,
+  "liveModelSpendUsd": 0,
+  "authority": {
+    "artefacts": [
+      {
+        "artefact": "stage5_m195_audit.json",
+        "bytes": 58229,
+        "identical": true
+      },
+      {
+        "artefact": "stage5_m195_candidates.jsonl",
+        "bytes": 146454,
+        "identical": true
+      },
+      {
+        "artefact": "stage5_m195_decision_points.jsonl",
+        "bytes": 46417,
+        "identical": true
+      }
+    ],
+    "allByteIdentical": true,
+    "population": {
+      "arms": 33,
+      "tasks": 33,
+      "repositories": 12,
+      "decisionPoints": 59,
+      "byKind": {
+        "DP_EDIT": 40,
+        "DP_POST_FAILED_VALIDATION": 19
+      },
+      "armsWithDecisionPoints": 33,
+      "candidateProducingPoints": 59,
+      "emptyPoints": 0
+    },
+    "m195MechanismVerdict": "I6_INTERVENTION_MECHANISM_WITNESSED",
+    "m195UnionSelectionMisses": 14,
+    "heldOutInspected": false,
+    "candidateFamiliesChanged": false,
+    "probeControl": {
+      "attemptsInCreditWindowReproduced": 59,
+      "attemptsInCreditWindowTotal": 59,
+      "attemptMismatches": [],
+      "unpairedBashPreTotalProbed": 23,
+      "unpairedBashPreTotalPublished": 23,
+      "unpairedBashPreArmsProbed": 14,
+      "unpairedBashPreArmsPublished": 14,
+      "pass": true
+    }
+  },
+  "blindness": {
+    "decisionPoints": 59,
+    "differingFingerprints": 0,
+    "verdict": "DERIVATION_IS_GOLD_OUTCOME_AND_FUTURE_ACTION_BLIND",
+    "reproducedFromByteIdenticalArtefacts": true
+  },
+  "separation": {
+    "unionMissPartition": {
+      "SCAFFOLD_OPPORTUNITY": 13,
+      "CREDIT_WINDOW_ONLY": 1
+    },
+    "unionMissPartitionSum": 14,
+    "genuineSelectionMiss": {
+      "rows": 0,
+      "arms": 0,
+      "tasks": 0,
+      "repositories": 0,
+      "resolved": 0,
+      "unresolved": 0,
+      "families": []
+    },
+    "scaffoldOpportunity": {
+      "rows": 14,
+      "arms": 14,
+      "tasks": 14,
+      "repositories": 8,
+      "resolved": 11,
+      "unresolved": 3,
+      "families": [
+        "I6-UNION"
+      ]
+    },
+    "genuineSelectionMissAllFamilies": {
+      "rows": 0,
+      "arms": 0,
+      "tasks": 0,
+      "repositories": 0,
+      "resolved": 0,
+      "unresolved": 0,
+      "families": []
+    },
+    "scaffoldOpportunityAllFamilies": {
+      "rows": 39,
+      "arms": 14,
+      "tasks": 14,
+      "repositories": 8,
+      "resolved": 32,
+      "unresolved": 7,
+      "families": [
+        "I6-A",
+        "I6-B",
+        "I6-C",
+        "I6-UNION"
+      ]
+    },
+    "creditWindowEdgeCases": [
+      "m194-07-pydata__xarray-2905#45"
+    ],
+    "unionMissesWithAnyAttemptInWindow": 2,
+    "unionMissesRestingOnUnobservableRunner": 0,
+    "selectionOpportunitySpecimens": [
+      {
+        "decisionPointId": "m194-18-pylint-dev__pylint-8898#52",
+        "familyKey": "I6-D",
+        "repo": "pylint-dev/pylint",
+        "resolved": false,
+        "preCapCount": 10,
+        "candidateCount": 3,
+        "trustworthyInWindow": false,
+        "runnerEvidenceObservable": true,
+        "genuineSelectionMiss": false,
+        "withheldBy": "prereg §5.3 no trustworthy validation in the credit window"
+      }
+    ]
+  },
+  "witnesses": {
+    "total": 26,
+    "byType": {
+      "SCAFFOLD_WITNESS": 23,
+      "NEITHER": 3
+    },
+    "strong": 0,
+    "unionSelectionWitnesses": 0,
+    "rows": [
+      {
+        "familyKey": "I6-B",
+        "decisionPointId": "m194-04-mwaskom__seaborn-3187#38",
+        "instanceId": "mwaskom__seaborn-3187",
+        "repo": "mwaskom/seaborn",
+        "relation": "EXACT_MATCH",
+        "strong": false,
+        "failedAnalogueChoseDifferentTarget": false,
+        "failedAnaloguePerformedNoValidation": true,
+        "type": "SCAFFOLD_WITNESS"
+      },
+      {
+        "familyKey": "I6-UNION",
+        "decisionPointId": "m194-04-mwaskom__seaborn-3187#38",
+        "instanceId": "mwaskom__seaborn-3187",
+        "repo": "mwaskom/seaborn",
+        "relation": "EXACT_MATCH",
+        "strong": false,
+        "failedAnalogueChoseDifferentTarget": false,
+        "failedAnaloguePerformedNoValidation": true,
+        "type": "SCAFFOLD_WITNESS"
+      },
+      {
+        "familyKey": "I6-A",
+        "decisionPointId": "m194-07-pydata__xarray-2905#6",
+        "instanceId": "pydata__xarray-2905",
+        "repo": "pydata/xarray",
+        "relation": "EXACT_MATCH",
+        "strong": false,
+        "failedAnalogueChoseDifferentTarget": false,
+        "failedAnaloguePerformedNoValidation": true,
+        "type": "SCAFFOLD_WITNESS"
+      },
+      {
+        "familyKey": "I6-B",
+        "decisionPointId": "m194-07-pydata__xarray-2905#6",
+        "instanceId": "pydata__xarray-2905",
+        "repo": "pydata/xarray",
+        "relation": "EXACT_MATCH",
+        "strong": false,
+        "failedAnalogueChoseDifferentTarget": false,
+        "failedAnaloguePerformedNoValidation": true,
+        "type": "SCAFFOLD_WITNESS"
+      },
+      {
+        "familyKey": "I6-C",
+        "decisionPointId": "m194-07-pydata__xarray-2905#6",
+        "instanceId": "pydata__xarray-2905",
+        "repo": "pydata/xarray",
+        "relation": "EXACT_MATCH",
+        "strong": false,
+        "failedAnalogueChoseDifferentTarget": false,
+        "failedAnaloguePerformedNoValidation": true,
+        "type": "SCAFFOLD_WITNESS"
+      },
+      {
+        "familyKey": "I6-UNION",
+        "decisionPointId": "m194-07-pydata__xarray-2905#6",
+        "instanceId": "pydata__xarray-2905",
+        "repo": "pydata/xarray",
+        "relation": "EXACT_MATCH",
+        "strong": false,
+        "failedAnalogueChoseDifferentTarget": false,
+        "failedAnaloguePerformedNoValidation": true,
+        "type": "SCAFFOLD_WITNESS"
+      },
+      {
+        "familyKey": "I6-B",
+        "decisionPointId": "m194-09-pytest-dev__pytest-10051#1",
+        "instanceId": "pytest-dev__pytest-10051",
+        "repo": "pytest-dev/pytest",
+        "relation": "EXACT_MATCH",
+        "strong": false,
+        "failedAnalogueChoseDifferentTarget": false,
+        "failedAnaloguePerformedNoValidation": true,
+        "type": "SCAFFOLD_WITNESS"
+      },
+      {
+        "familyKey": "I6-UNION",
+        "decisionPointId": "m194-09-pytest-dev__pytest-10051#1",
+        "instanceId": "pytest-dev__pytest-10051",
+        "repo": "pytest-dev/pytest",
+        "relation": "EXACT_MATCH",
+        "strong": false,
+        "failedAnalogueChoseDifferentTarget": false,
+        "failedAnaloguePerformedNoValidation": true,
+        "type": "SCAFFOLD_WITNESS"
+      },
+      {
+        "familyKey": "I6-B",
+        "decisionPointId": "m194-09-pytest-dev__pytest-10051#17",
+        "instanceId": "pytest-dev__pytest-10051",
+        "repo": "pytest-dev/pytest",
+        "relation": "EXACT_MATCH",
+        "strong": false,
+        "failedAnalogueChoseDifferentTarget": false,
+        "failedAnaloguePerformedNoValidation": true,
+        "type": "SCAFFOLD_WITNESS"
+      },
+      {
+        "familyKey": "I6-UNION",
+        "decisionPointId": "m194-09-pytest-dev__pytest-10051#17",
+        "instanceId": "pytest-dev__pytest-10051",
+        "repo": "pytest-dev/pytest",
+        "relation": "EXACT_MATCH",
+        "strong": false,
+        "failedAnalogueChoseDifferentTarget": false,
+        "failedAnaloguePerformedNoValidation": true,
+        "type": "SCAFFOLD_WITNESS"
+      },
+      {
+        "familyKey": "I6-C",
+        "decisionPointId": "m194-16-matplotlib__matplotlib-25332#3",
+        "instanceId": "matplotlib__matplotlib-25332",
+        "repo": "matplotlib/matplotlib",
+        "relation": "EXACT_MATCH",
+        "strong": false,
+        "failedAnalogueChoseDifferentTarget": false,
+        "failedAnaloguePerformedNoValidation": true,
+        "type": "SCAFFOLD_WITNESS"
+      },
+      {
+        "familyKey": "I6-C",
+        "decisionPointId": "m194-16-matplotlib__matplotlib-25332#15",
+        "instanceId": "matplotlib__matplotlib-25332",
+        "repo": "matplotlib/matplotlib",
+        "relation": "EXACT_MATCH",
+        "strong": false,
+        "failedAnalogueChoseDifferentTarget": false,
+        "failedAnaloguePerformedNoValidation": true,
+        "type": "SCAFFOLD_WITNESS"
+      },
+      {
+        "familyKey": "I6-D",
+        "decisionPointId": "m194-16-matplotlib__matplotlib-25332#15",
+        "instanceId": "matplotlib__matplotlib-25332",
+        "repo": "matplotlib/matplotlib",
+        "relation": "EXACT_MATCH",
+        "strong": false,
+        "failedAnalogueChoseDifferentTarget": false,
+        "failedAnaloguePerformedNoValidation": false,
+        "type": "NEITHER"
+      },
+      {
+        "familyKey": "I6-C",
+        "decisionPointId": "m194-16-matplotlib__matplotlib-25332#33",
+        "instanceId": "matplotlib__matplotlib-25332",
+        "repo": "matplotlib/matplotlib",
+        "relation": "EXACT_MATCH",
+        "strong": false,
+        "failedAnalogueChoseDifferentTarget": false,
+        "failedAnaloguePerformedNoValidation": true,
+        "type": "SCAFFOLD_WITNESS"
+      },
+      {
+        "familyKey": "I6-D",
+        "decisionPointId": "m194-16-matplotlib__matplotlib-25332#33",
+        "instanceId": "matplotlib__matplotlib-25332",
+        "repo": "matplotlib/matplotlib",
+        "relation": "EXACT_MATCH",
+        "strong": false,
+        "failedAnalogueChoseDifferentTarget": false,
+        "failedAnaloguePerformedNoValidation": false,
+        "type": "NEITHER"
+      },
+      {
+        "familyKey": "I6-A",
+        "decisionPointId": "m194-20-scikit-learn__scikit-learn-11578#1",
+        "instanceId": "scikit-learn__scikit-learn-11578",
+        "repo": "scikit-learn/scikit-learn",
+        "relation": "EXACT_MATCH",
+        "strong": false,
+        "failedAnalogueChoseDifferentTarget": false,
+        "failedAnaloguePerformedNoValidation": true,
+        "type": "SCAFFOLD_WITNESS"
+      },
+      {
+        "familyKey": "I6-B",
+        "decisionPointId": "m194-20-scikit-learn__scikit-learn-11578#1",
+        "instanceId": "scikit-learn__scikit-learn-11578",
+        "repo": "scikit-learn/scikit-learn",
+        "relation": "EXACT_MATCH",
+        "strong": false,
+        "failedAnalogueChoseDifferentTarget": false,
+        "failedAnaloguePerformedNoValidation": true,
+        "type": "SCAFFOLD_WITNESS"
+      },
+      {
+        "familyKey": "I6-C",
+        "decisionPointId": "m194-20-scikit-learn__scikit-learn-11578#1",
+        "instanceId": "scikit-learn__scikit-learn-11578",
+        "repo": "scikit-learn/scikit-learn",
+        "relation": "EXACT_MATCH",
+        "strong": false,
+        "failedAnalogueChoseDifferentTarget": false,
+        "failedAnaloguePerformedNoValidation": true,
+        "type": "SCAFFOLD_WITNESS"
+      },
+      {
+        "familyKey": "I6-UNION",
+        "decisionPointId": "m194-20-scikit-learn__scikit-learn-11578#1",
+        "instanceId": "scikit-learn__scikit-learn-11578",
+        "repo": "scikit-learn/scikit-learn",
+        "relation": "EXACT_MATCH",
+        "strong": false,
+        "failedAnalogueChoseDifferentTarget": false,
+        "failedAnaloguePerformedNoValidation": true,
+        "type": "SCAFFOLD_WITNESS"
+      },
+      {
+        "familyKey": "I6-A",
+        "decisionPointId": "m194-33-matplotlib__matplotlib-24970#3",
+        "instanceId": "matplotlib__matplotlib-24970",
+        "repo": "matplotlib/matplotlib",
+        "relation": "EXACT_MATCH",
+        "strong": false,
+        "failedAnalogueChoseDifferentTarget": false,
+        "failedAnaloguePerformedNoValidation": true,
+        "type": "SCAFFOLD_WITNESS"
+      },
+      {
+        "familyKey": "I6-C",
+        "decisionPointId": "m194-33-matplotlib__matplotlib-24970#3",
+        "instanceId": "matplotlib__matplotlib-24970",
+        "repo": "matplotlib/matplotlib",
+        "relation": "EXACT_MATCH",
+        "strong": false,
+        "failedAnalogueChoseDifferentTarget": false,
+        "failedAnaloguePerformedNoValidation": true,
+        "type": "SCAFFOLD_WITNESS"
+      },
+      {
+        "familyKey": "I6-UNION",
+        "decisionPointId": "m194-33-matplotlib__matplotlib-24970#3",
+        "instanceId": "matplotlib__matplotlib-24970",
+        "repo": "matplotlib/matplotlib",
+        "relation": "EXACT_MATCH",
+        "strong": false,
+        "failedAnalogueChoseDifferentTarget": false,
+        "failedAnaloguePerformedNoValidation": true,
+        "type": "SCAFFOLD_WITNESS"
+      },
+      {
+        "familyKey": "I6-A",
+        "decisionPointId": "m194-33-matplotlib__matplotlib-24970#12",
+        "instanceId": "matplotlib__matplotlib-24970",
+        "repo": "matplotlib/matplotlib",
+        "relation": "EXACT_MATCH",
+        "strong": false,
+        "failedAnalogueChoseDifferentTarget": false,
+        "failedAnaloguePerformedNoValidation": true,
+        "type": "SCAFFOLD_WITNESS"
+      },
+      {
+        "familyKey": "I6-C",
+        "decisionPointId": "m194-33-matplotlib__matplotlib-24970#12",
+        "instanceId": "matplotlib__matplotlib-24970",
+        "repo": "matplotlib/matplotlib",
+        "relation": "EXACT_MATCH",
+        "strong": false,
+        "failedAnalogueChoseDifferentTarget": false,
+        "failedAnaloguePerformedNoValidation": true,
+        "type": "SCAFFOLD_WITNESS"
+      },
+      {
+        "familyKey": "I6-D",
+        "decisionPointId": "m194-33-matplotlib__matplotlib-24970#12",
+        "instanceId": "matplotlib__matplotlib-24970",
+        "repo": "matplotlib/matplotlib",
+        "relation": "EXACT_MATCH",
+        "strong": false,
+        "failedAnalogueChoseDifferentTarget": false,
+        "failedAnaloguePerformedNoValidation": false,
+        "type": "NEITHER"
+      },
+      {
+        "familyKey": "I6-UNION",
+        "decisionPointId": "m194-33-matplotlib__matplotlib-24970#12",
+        "instanceId": "matplotlib__matplotlib-24970",
+        "repo": "matplotlib/matplotlib",
+        "relation": "EXACT_MATCH",
+        "strong": false,
+        "failedAnalogueChoseDifferentTarget": false,
+        "failedAnaloguePerformedNoValidation": true,
+        "type": "SCAFFOLD_WITNESS"
+      }
+    ]
+  },
+  "counterexamples": {
+    "candidateSkippedButTaskResolved": {
+      "tasks": 11,
+      "ofMissTasks": 14
+    },
+    "candidateRunUsefulFailureSeenTaskStillFailed": 6,
+    "resolvedArmsThatNeverStartedAnyRunner": 14,
+    "alreadySelectedButTaskFailed": 7
+  },
+  "selectivity": [
+    {
+      "family": "I6-A",
+      "stats": {
+        "points": 23,
+        "rawMedian": 1,
+        "rawP90": 1,
+        "rawMax": 2,
+        "fractionOver3Pct": 0,
+        "fractionOver5Pct": 0,
+        "fractionOver10Pct": 0,
+        "deliveredMedian": 1,
+        "deliveredMax": 2
+      },
+      "verdict": "PRE_TRUNCATION_DERIVATION_SELECTIVE"
+    },
+    {
+      "family": "I6-B",
+      "stats": {
+        "points": 50,
+        "rawMedian": 2,
+        "rawP90": 11,
+        "rawMax": 12,
+        "fractionOver3Pct": 20,
+        "fractionOver5Pct": 20,
+        "fractionOver10Pct": 12,
+        "deliveredMedian": 2,
+        "deliveredMax": 3
+      },
+      "verdict": "PRE_TRUNCATION_DERIVATION_BROAD"
+    },
+    {
+      "family": "I6-C",
+      "stats": {
+        "points": 32,
+        "rawMedian": 2,
+        "rawP90": 4,
+        "rawMax": 8,
+        "fractionOver3Pct": 21.9,
+        "fractionOver5Pct": 6.3,
+        "fractionOver10Pct": 0,
+        "deliveredMedian": 2,
+        "deliveredMax": 3
+      },
+      "verdict": "PRE_TRUNCATION_DERIVATION_BROAD"
+    },
+    {
+      "family": "I6-D",
+      "stats": {
+        "points": 19,
+        "rawMedian": 1,
+        "rawP90": 4,
+        "rawMax": 15,
+        "fractionOver3Pct": 15.8,
+        "fractionOver5Pct": 10.5,
+        "fractionOver10Pct": 5.3,
+        "deliveredMedian": 1,
+        "deliveredMax": 3
+      },
+      "verdict": "PRE_TRUNCATION_DERIVATION_BROAD"
+    },
+    {
+      "family": "I6-UNION",
+      "stats": {
+        "points": 59,
+        "rawMedian": 3,
+        "rawP90": 6,
+        "rawMax": 10,
+        "fractionOver3Pct": 32.2,
+        "fractionOver5Pct": 13.6,
+        "fractionOver10Pct": 0,
+        "deliveredMedian": 3,
+        "deliveredMax": 3
+      },
+      "verdict": "PRE_TRUNCATION_DERIVATION_BROAD"
+    }
+  ],
+  "concentration": {
+    "largestTaskRawCandidateCount": [
+      {
+        "instanceId": "pytest-dev__pytest-10051",
+        "raw": 15
+      },
+      {
+        "instanceId": "sympy__sympy-12481",
+        "raw": 12
+      },
+      {
+        "instanceId": "matplotlib__matplotlib-24970",
+        "raw": 12
+      },
+      {
+        "instanceId": "matplotlib__matplotlib-25332",
+        "raw": 11
+      },
+      {
+        "instanceId": "pylint-dev__pylint-8898",
+        "raw": 10
+      }
+    ],
+    "largestRepoDiscardedContribution": [
+      {
+        "repo": "matplotlib/matplotlib",
+        "discarded": 51
+      },
+      {
+        "repo": "pytest-dev/pytest",
+        "discarded": 13
+      },
+      {
+        "repo": "astropy/astropy",
+        "discarded": 9
+      },
+      {
+        "repo": "sympy/sympy",
+        "discarded": 9
+      },
+      {
+        "repo": "django/django",
+        "discarded": 8
+      }
+    ],
+    "familiesCausingExpansion": [
+      {
+        "family": "I6-A",
+        "pointsOverBound": 0,
+        "totalDiscarded": 0
+      },
+      {
+        "family": "I6-B",
+        "pointsOverBound": 10,
+        "totalDiscarded": 70
+      },
+      {
+        "family": "I6-C",
+        "pointsOverBound": 7,
+        "totalDiscarded": 14
+      },
+      {
+        "family": "I6-D",
+        "pointsOverBound": 3,
+        "totalDiscarded": 20
+      }
+    ]
+  },
+  "rankSupport": {
+    "note": "The frozen mechanism attaches no score to a candidate. `rank` is the index after a coarse tier sort with an alphabetical or insertion-order tie-break (I6-A tier then path, I6-B tier then path, I6-C explicit before derived, I6-D regex match order). There is therefore no scalar in which a gap between rank 1, 2, 3 and the first discarded candidate could be expressed.",
+    "scoresAreComparable": false,
+    "discardedCandidatesObservable": false,
+    "discardedObservabilityNote": "cap() is applied inside each derive*() before it returns, so only the cardinality of the discarded tail survives as preCapCount. Recovering its contents would mean raising top-k, which §26 forbids.",
+    "pointsWhereTruncationBinds": 20,
+    "pointsWhereAllDeliveredShareOneRule": 17
+  },
+  "deadGate": {
+    "rawCandidateCount": 15,
+    "deliveredCandidateCount": 3,
+    "g2Observed": "median 3, p90 3",
+    "g2Pass": true,
+    "verdict": "M195_G2_OUTPUT_BOUND_ONLY",
+    "specimen": "m194-09-pytest-dev__pytest-10051#20",
+    "specimenFamily": "I6-D",
+    "syntheticRaw10": {
+      "rawCandidateCount": 10,
+      "deliveredCandidateCount": 3,
+      "g2Observed": "median 3, p90 3",
+      "g2Pass": true,
+      "verdict": "M195_G2_OUTPUT_BOUND_ONLY"
+    },
+    "g2HasAnyFailingInputInItsDomain": false,
+    "g2WouldFailOnRawCounts": {
+      "rawCandidateCount": 15,
+      "deliveredCandidateCount": 15,
+      "g2Observed": "median 1, p90 4",
+      "g2Pass": false,
+      "verdict": "M195_G2_MEASURES_SELECTIVITY"
+    },
+    "deliveredCountDomain": [
+      0,
+      1,
+      2,
+      3
+    ]
+  },
+  "matrix": [
+    {
+      "family": "I6-A",
+      "decisionPoints": 59,
+      "genuineSelectionMisses": 0,
+      "selectionOpportunityRowsS1": 0,
+      "scaffoldOpportunities": 8,
+      "alreadySelected": 12,
+      "broader": 2,
+      "unusable": 0,
+      "firedNotConfirmed": 1,
+      "noDerivableTarget": 36,
+      "m195Misses": 8,
+      "rawMedian": 1,
+      "rawP90": 1,
+      "rawMax": 2,
+      "deliveredMax": 2,
+      "selectivityVerdict": "PRE_TRUNCATION_DERIVATION_SELECTIVE"
+    },
+    {
+      "family": "I6-B",
+      "decisionPoints": 59,
+      "genuineSelectionMisses": 0,
+      "selectionOpportunityRowsS1": 0,
+      "scaffoldOpportunities": 9,
+      "alreadySelected": 26,
+      "broader": 6,
+      "unusable": 1,
+      "firedNotConfirmed": 8,
+      "noDerivableTarget": 9,
+      "m195Misses": 9,
+      "rawMedian": 2,
+      "rawP90": 11,
+      "rawMax": 12,
+      "deliveredMax": 3,
+      "selectivityVerdict": "PRE_TRUNCATION_DERIVATION_BROAD"
+    },
+    {
+      "family": "I6-C",
+      "decisionPoints": 59,
+      "genuineSelectionMisses": 0,
+      "selectionOpportunityRowsS1": 0,
+      "scaffoldOpportunities": 8,
+      "alreadySelected": 18,
+      "broader": 2,
+      "unusable": 1,
+      "firedNotConfirmed": 3,
+      "noDerivableTarget": 27,
+      "m195Misses": 8,
+      "rawMedian": 2,
+      "rawP90": 4,
+      "rawMax": 8,
+      "deliveredMax": 3,
+      "selectivityVerdict": "PRE_TRUNCATION_DERIVATION_BROAD"
+    },
+    {
+      "family": "I6-D",
+      "decisionPoints": 59,
+      "genuineSelectionMisses": 0,
+      "selectionOpportunityRowsS1": 1,
+      "scaffoldOpportunities": 0,
+      "alreadySelected": 11,
+      "broader": 5,
+      "unusable": 1,
+      "firedNotConfirmed": 1,
+      "noDerivableTarget": 40,
+      "m195Misses": 1,
+      "rawMedian": 1,
+      "rawP90": 4,
+      "rawMax": 15,
+      "deliveredMax": 3,
+      "selectivityVerdict": "PRE_TRUNCATION_DERIVATION_BROAD"
+    },
+    {
+      "family": "I6-UNION",
+      "decisionPoints": 59,
+      "genuineSelectionMisses": 0,
+      "selectionOpportunityRowsS1": 0,
+      "scaffoldOpportunities": 14,
+      "alreadySelected": 32,
+      "broader": 6,
+      "unusable": 1,
+      "firedNotConfirmed": 6,
+      "noDerivableTarget": 0,
+      "m195Misses": 14,
+      "rawMedian": 3,
+      "rawP90": 6,
+      "rawMax": 10,
+      "deliveredMax": 3,
+      "selectivityVerdict": "PRE_TRUNCATION_DERIVATION_BROAD"
+    }
+  ],
+  "selectionGate": [
+    {
+      "id": "A1",
+      "requirement": "genuine selection misses span >= 3 distinct tasks",
+      "observed": "0",
+      "pass": false
+    },
+    {
+      "id": "A2",
+      "requirement": "genuine selection misses span >= 3 distinct repositories",
+      "observed": "0",
+      "pass": false
+    },
+    {
+      "id": "A3",
+      "requirement": ">= 2 success-side SELECTION witnesses",
+      "observed": "0",
+      "pass": false
+    },
+    {
+      "id": "A4",
+      "requirement": "those witnesses span >= 2 distinct repositories",
+      "observed": "0",
+      "pass": false
+    }
+  ],
+  "verdicts": {
+    "axisA": "VALIDATION_SELECTION_MECHANISM_NOT_WITNESSED",
+    "axisB": "VALIDATION_SCAFFOLD_OPPORTUNITY_OBSERVED",
+    "replication": "NO_HELD_OUT_I6_SELECTION_REPLICATION_LICENSED",
+    "closure": "I6_VALIDATION_SELECTION_CLOSE_RECOMMENDED",
+    "standing": [
+      "NO_VTRACE_I6_PRODUCT_IMPLEMENTATION_AUTHORIZED",
+      "NO_VALIDATION_SCAFFOLD_IMPLEMENTATION_AUTHORIZED",
+      "NO_RUNTIME_REPAIR_INTERVENTION_AUTHORIZED",
+      "I5_REMAINS_CLOSED"
+    ],
+    "runtimeGroundedRepair": "NOT ANALYSED"
+  }
+}

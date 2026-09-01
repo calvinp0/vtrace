@@ -266,3 +266,36 @@ I5_REMAINS_CLOSED
 
 live-agent runs: 0
 live model spend: $0
+
+---
+
+## Addendum — M195A interpretive correction (2026-09-01)
+
+Nothing above is rewritten. M195's gate computed exactly what its preregistration
+told it to compute, and its verdict stands as the answer that preregistration gives.
+M195A ([`stage5_m195a_final_report.md`](./stage5_m195a_final_report.md), preregistered
+at `45c39d9a`) re-read that result without changing a single rule, and reports:
+
+```text
+M195 mechanical gate result:
+  I6_INTERVENTION_MECHANISM_WITNESSED
+
+M195A semantic decomposition:
+  VALIDATION_SELECTION_MECHANISM_NOT_WITNESSED
+  VALIDATION_SCAFFOLD_OPPORTUNITY_OBSERVED
+  M195_G2_OUTPUT_BOUND_ONLY
+```
+
+- The 14 `I6_VALIDATION_SELECTION_MISS` specimens partition into **13 scaffold
+  opportunities, 1 credit-window-only case, and 0 genuine target-selection misses**.
+- All 26 success-side witnesses are scaffold-shaped or neither; **0** are selection
+  witnesses, and **0** are strong — unchanged from §14 above.
+- G2 is shown to be unfalsifiable in its own domain: it reads counts `cap()` has
+  already clamped into `{0,1,2,3}`. On the pre-truncation sets it was meant to be
+  about, three of the four families and the union are `PRE_TRUNCATION_DERIVATION_BROAD`.
+
+All three artefacts of this milestone reproduce byte-for-byte under M195A's replay,
+and `m195Mechanism.ts` / `m195Evaluation.ts` were not edited. The held-out corpus
+remains untouched. `HELD_OUT_I6_REPLICATION_LICENSED` above is superseded for the
+*selection* hypothesis by `NO_HELD_OUT_I6_SELECTION_REPLICATION_LICENSED` and
+`I6_VALIDATION_SELECTION_CLOSE_RECOMMENDED`.
