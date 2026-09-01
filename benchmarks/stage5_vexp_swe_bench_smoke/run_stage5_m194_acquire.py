@@ -329,12 +329,20 @@ def launch_agent(prompt: str, host_mount: str, env: dict[str, str], argv_extra: 
         pass
 
     out["toolUses"] = tool_uses
+    # §13 — the condition is the UNRESTRICTED tool set. Recorded rather than
+    # assumed: the CLI's registry is wider than --allowedTools, so what the
+    # agent actually reached for, and what it was refused, are both observations
+    # about the condition rather than facts about the flags.
+    out["toolNamesUsed"] = sorted({t.get("name") for t in tool_uses if t.get("name")})
+    out["toolsOutsideFrozenSet"] = sorted(set(out["toolNamesUsed"]) - set(ALLOWED_TOOLS))
     if result_event:
         out["costUsd"] = result_event.get("total_cost_usd")
         out["numTurns"] = result_event.get("num_turns")
         out["usage"] = result_event.get("usage")
         out["resultSubtype"] = result_event.get("subtype")
         out["resultIsError"] = bool(result_event.get("is_error"))
+        out["permissionDenials"] = result_event.get("permission_denials")
+        out["stopReason"] = result_event.get("stop_reason")
 
     # The frozen termination categories, read from what actually happened.
     if out["timedOut"]:
@@ -411,6 +419,23 @@ def run_arm(entry: dict[str, Any], row: dict[str, Any], manifest: dict[str, Any]
     repo = entry["repo"]
     arm_id = f"m194-{entry['ordinal']:02d}-{instance_id}" + (f"-r{attempt}" if attempt > 1 else "")
     arm_root = os.path.join(out_root, "runs", arm_id)
+
+    # A re-attempt gets a clean directory, and the attempt it replaces is moved
+    # aside rather than overwritten. §35 forbids losing a failed attempt from
+    # the record, and an event log that mixed two attempts would be worse than
+    # either of them alone.
+    prior_record = os.path.join(arm_root, "arm.json")
+    if os.path.exists(prior_record):
+        try:
+            prior = json.load(open(prior_record))
+        except Exception:  # noqa: BLE001
+            prior = {}
+        if not prior.get("modelLaunched"):
+            n = 1
+            while os.path.exists(f"{arm_root}.superseded-{n}"):
+                n += 1
+            shutil.move(arm_root, f"{arm_root}.superseded-{n}")
+
     raw = os.path.join(arm_root, "raw")
     os.makedirs(os.path.join(raw, "snapshots"), exist_ok=True)
 

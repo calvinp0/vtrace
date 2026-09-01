@@ -86,8 +86,16 @@ function readJsonl(path: string): RawEvent[] {
 }
 
 /** The agent's own ordering: tool_use ids and assistant turns, in stream order. */
-function streamOrder(path: string): { kind: "assistant" | "tool_use"; id?: string; name?: string; text?: string }[] {
-  const out: { kind: "assistant" | "tool_use"; id?: string; name?: string; text?: string }[] = [];
+interface StreamItem {
+  kind: "assistant" | "tool_use";
+  id?: string;
+  name?: string;
+  text?: string;
+  ts?: string;
+}
+
+function streamOrder(path: string): StreamItem[] {
+  const out: StreamItem[] = [];
   if (!existsSync(path)) return out;
   for (const line of readFileSync(path, "utf8").split("\n")) {
     if (!line.trim()) continue;
@@ -98,10 +106,11 @@ function streamOrder(path: string): { kind: "assistant" | "tool_use"; id?: strin
       continue;
     }
     if (ev.type !== "assistant") continue;
+    const ts = typeof ev.timestamp === "string" ? ev.timestamp : undefined;
     const content = ((ev.message as Record<string, unknown> | undefined)?.content ?? []) as Record<string, unknown>[];
     for (const block of content) {
-      if (block?.type === "text") out.push({ kind: "assistant", text: String(block.text ?? "").slice(0, 4000) });
-      else if (block?.type === "tool_use") out.push({ kind: "tool_use", id: String(block.id ?? ""), name: String(block.name ?? "") });
+      if (block?.type === "text") out.push({ kind: "assistant", ts, text: String(block.text ?? "").slice(0, 4000) });
+      else if (block?.type === "tool_use") out.push({ kind: "tool_use", ts, id: String(block.id ?? ""), name: String(block.name ?? "") });
     }
   }
   return out;
@@ -131,8 +140,26 @@ function buildOutcome(runDir: string): { outcome: ArmOutcome; diagnostics: Recor
   const trace: TraceEvent[] = [];
   const snapshots: PatchSnapshot[] = [];
   let stateHash: string | null = null;
+
+  /**
+   * Every trace event carries a real observed timestamp.
+   *
+   * `traceOrderingIsWellFormed` requires one, and it is right to: an event with
+   * no time is an event whose position in the record rests on nothing but the
+   * order someone assembled it in. The adapter stamps its own events; the CLI
+   * stamps its assistant turns. The few structural events that neither side
+   * timestamps — the agent's start and end — take the time of the nearest
+   * observation on the correct side of them, which is a real measured instant
+   * rather than an invented one.
+   */
+  let lastTs = bySeq.find((e) => typeof e.ts === "string" && e.ts)?.ts ?? "";
+  const at = (ts?: string | null): string => {
+    if (typeof ts === "string" && ts.length > 0) lastTs = ts;
+    return lastTs;
+  };
+
   const push = (t: Omit<TraceEvent, "ordinal">) => {
-    trace.push({ ...t, ordinal: trace.length } as TraceEvent);
+    trace.push({ ...t, ts: at(t.ts), ordinal: trace.length } as TraceEvent);
   };
   const pushSnapshot = (e: RawEvent) => {
     stateHash = e.diffHash ?? stateHash;
@@ -147,8 +174,7 @@ function buildOutcome(runDir: string): { outcome: ArmOutcome; diagnostics: Recor
     push({ ts: e.ts ?? "", type: "patch_snapshot", stateHash, snapshot: snap });
   };
 
-  push({ ts: arm.phases?.containerStart ? "" : "", type: "agent_start", stateHash: null,
-         toolInput: { instanceId: arm.instanceId } });
+  push({ ts: lastTs, type: "agent_start", stateHash: null, toolInput: { instanceId: arm.instanceId } });
   for (const e of unattached.filter((x) => x.boundary === "SETUP")) pushSnapshot(e);
 
   const robustness = (arm.phases?.provenanceRobustness?.robustness ?? "UNKNOWN") as
@@ -157,7 +183,7 @@ function buildOutcome(runDir: string): { outcome: ArmOutcome; diagnostics: Recor
 
   for (const item of stream) {
     if (item.kind === "assistant") {
-      push({ ts: "", type: "assistant_text", stateHash, toolInput: { text: item.text } });
+      push({ ts: item.ts ?? "", type: "assistant_text", stateHash, toolInput: { text: item.text } });
       continue;
     }
     const group = byToolUse.get(item.id ?? "") ?? [];
@@ -223,7 +249,7 @@ function buildOutcome(runDir: string): { outcome: ArmOutcome; diagnostics: Recor
         },
       });
     } else if (group.length || item.name) {
-      push({ ts: "", type: "tool_call", toolName: item.name, toolInput: {}, stateHash });
+      push({ ts: item.ts ?? "", type: "tool_call", toolName: item.name, toolInput: {}, stateHash });
     }
 
     for (const e of group.filter(
@@ -236,7 +262,7 @@ function buildOutcome(runDir: string): { outcome: ArmOutcome; diagnostics: Recor
   for (const e of unattached.filter((x) => x.kind === "patch_snapshot" && x.boundary === "BEFORE_SUBMIT")) {
     pushSnapshot(e);
   }
-  push({ ts: "", type: "agent_end", stateHash });
+  push({ ts: "", type: "agent_end", stateHash });  // the last observed instant
 
   const ev = arm.phases?.evaluator ?? {};
   const finalPatch = arm.phases?.finalPatch ?? {};
@@ -278,6 +304,8 @@ function buildOutcome(runDir: string): { outcome: ArmOutcome; diagnostics: Recor
       costUsd: arm.costUsd,
       termination: arm.termination,
       traceEvents: trace.length,
+      traceWellFormed: traceOrderingIsWellFormed(trace),
+      eventsMissingTimestamp: trace.filter((e) => !e.ts).length,
       snapshots: snapshots.length,
       validationAttempts,
       bashToolUses: routing.bashToolUses ?? 0,

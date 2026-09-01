@@ -1,0 +1,114 @@
+{
+  "schemaVersion": "stage5.m194.falsification.v1",
+  "checks": [
+    {
+      "id": "manifest_hash_matched",
+      "claim": "manifest hash matched before the first paid call",
+      "observed": "f735786bf7d3437a095abdcc7e8704cb6769fd32eb46b37ad8fc373850282204",
+      "pass": true
+    },
+    {
+      "id": "fixture_hash_matched",
+      "claim": "task fixture hash matched",
+      "observed": "e79843d3b93d4c77551911a92eed9b316c57b5045ff7e7ef75018efb2e9aaca4",
+      "pass": true
+    },
+    {
+      "id": "model_matched",
+      "claim": "model exactly matched",
+      "observed": "claude-opus-4-5-20251101",
+      "pass": true
+    },
+    {
+      "id": "cli_matched",
+      "claim": "CLI version exactly matched",
+      "observed": "2.1.251",
+      "pass": true
+    },
+    {
+      "id": "turn_limit_unchanged",
+      "claim": "turn limit unchanged",
+      "observed": "250",
+      "pass": true
+    },
+    {
+      "id": "per_run_cap",
+      "claim": "per-run cost cap never exceeded",
+      "observed": "max $2.7134 of $3.5000",
+      "pass": true
+    },
+    {
+      "id": "total_cap",
+      "claim": "total spend <= $90",
+      "observed": "$24.7218",
+      "pass": true
+    },
+    {
+      "id": "arm_cap",
+      "claim": "max paid arms <= 40",
+      "observed": "33",
+      "pass": true
+    },
+    {
+      "id": "no_contamination",
+      "claim": "treatment contamination = 0 among valid runs",
+      "observed": "0",
+      "pass": true
+    },
+    {
+      "id": "all_bash_routed",
+      "claim": "every Bash call routed into the container",
+      "observed": "0 unrouted",
+      "pass": true
+    },
+    {
+      "id": "no_adapter_errors",
+      "claim": "adapter recorded no internal failures",
+      "observed": "0 errors",
+      "pass": true
+    },
+    {
+      "id": "manual_replacement",
+      "claim": "manual task replacement = 0",
+      "observed": "1 replacements, all NEXT_IN_FROZEN_ORDER",
+      "pass": true
+    },
+    {
+      "id": "manual_retry",
+      "claim": "manual retry = 0",
+      "observed": "0",
+      "pass": true
+    },
+    {
+      "id": "vtrace_arms",
+      "claim": "VTRACE treatment arms = 0",
+      "observed": "0",
+      "pass": true
+    },
+    {
+      "id": "patch_identity",
+      "claim": "the extracted patch is the patch the evaluator applied",
+      "observed": "33 identical, 0 differing, 0 empty",
+      "pass": true
+    },
+    {
+      "id": "tools_within_frozen_set",
+      "claim": "the agent used no tool outside the frozen set",
+      "observed": "none",
+      "pass": true
+    },
+    {
+      "id": "no_permission_denials",
+      "claim": "no tool call was refused by the permission layer",
+      "observed": "0",
+      "pass": true
+    },
+    {
+      "id": "threshold_changes",
+      "claim": "post-result threshold changes = 0",
+      "observed": "adequate 12/6/30",
+      "pass": true
+    }
+  ],
+  "allPass": true
+}

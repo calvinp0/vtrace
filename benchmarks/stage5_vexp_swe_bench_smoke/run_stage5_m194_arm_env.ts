@@ -20,7 +20,7 @@
  */
 
 import { execFileSync } from "node:child_process";
-import { existsSync } from "node:fs";
+import { existsSync, readdirSync, rmdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 import { auditArmEnvironment, constructArmEnvironment, launchRecord } from "./m193aArmEnvironment";
 
@@ -112,6 +112,41 @@ while (existsSync(LOCK) && lockWaitMs < 10_000) {
   lockWaitMs += 100;
 }
 
+/**
+ * A lock that outlives the process that took it.
+ *
+ * Measured on this host: run three CLIs at once, each against its own private
+ * configuration directory, and one of them leaves `.claude.json.lock` behind
+ * permanently. It is a mkdir mutex — an empty directory, no pid, no content —
+ * abandoned rather than held, and waiting for it is waiting for nothing.
+ *
+ * It is removed only when it is empty, and only after the wait, because that is
+ * the case in which it is provably this measurement's own litter rather than
+ * anything belonging to the arm. A lock with content is left exactly where it
+ * is and the audit fails on it, which is the right outcome for a state nobody
+ * here understands.
+ *
+ * The audit's rules are untouched. What changes is that the instrument cleans
+ * up after itself before asking whether the directory is clean — the same
+ * discipline that keeps the source-version probe in the container's /tmp
+ * instead of in the checkout it is judging.
+ */
+let staleLockRemoved = false;
+let lockRemovalError: string | null = null;
+if (existsSync(LOCK)) {
+  try {
+    if (statSync(LOCK).isDirectory() && readdirSync(LOCK).length === 0) {
+      // rmdirSync, not rmSync: it refuses anything that is not an empty
+      // directory, so the "only when empty" condition is enforced by the call
+      // itself rather than only by the check in front of it.
+      rmdirSync(LOCK);
+      staleLockRemoved = true;
+    }
+  } catch (e) {
+    lockRemovalError = String(e).slice(0, 200);
+  }
+}
+
 // Re-audited with the MEASURED count, because the constructor could only assume
 // it. This is the audit the launch gate reads.
 const audit = auditArmEnvironment(arm.configDir, arm.env, arm.argv, measured.count);
@@ -142,6 +177,8 @@ console.log(
       audit,
       measuredMcp: { ...measured, error: mcpError },
       configLockWaitMs: lockWaitMs,
+      staleConfigLockRemoved: staleLockRemoved,
+      staleConfigLockRemovalError: lockRemovalError,
       cliReportedVersion: cliReported,
       launchRecord: record,
       failures,

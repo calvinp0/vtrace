@@ -39,14 +39,17 @@
   },
   "repository": {
     "branch": "main",
-    "headSha": "2ae73e3810d094132614eda414a703b96cf5839a",
-    "trackedDirtCount": 3,
+    "headSha": "f76fd1b7e10e6a641a721fc540083142ac30fd67",
+    "trackedDirtCount": 6,
     "trackedDirt": [
-      "M .gitignore",
+      "M benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_m194_frozen_authority.json",
       " M benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_outcome_ledger.json",
-      " M benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_outcome_ledger.md"
+      " M benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_outcome_ledger.md",
+      " M benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m194_account.ts",
+      " M benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m194_acquire.py",
+      " M benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m194_arm_env.ts"
     ],
-    "untrackedCount": 213
+    "untrackedCount": 211
   },
   "gates": [
     {

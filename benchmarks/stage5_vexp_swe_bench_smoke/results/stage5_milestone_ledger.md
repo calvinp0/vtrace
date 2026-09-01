@@ -7268,3 +7268,169 @@ authorizations    M194_PATCH_OBSERVATION_READY
   exactly. Do not reopen I5. Do not implement I6. All four acquisition-integrity
   authorities are now READY; there is no further integrity milestone queued, so
   the next decision is the spend, not more instrumentation.
+
+## M194 — frozen baseline observational acquisition
+
+```text
+verdict           M194 - PASS
+                  corpus I6_OBSERVATIONAL_CORPUS_ADEQUATE
+                  live-agent runs 33 paid arms, live model spend $24.7218 of a $90 cap
+
+scope             execute the experiment M193C froze, exactly, and stop. No redesign,
+                  no I6 analysis, no I6 implementation, no runtime-grounded repair, no
+                  VTRACE treatment arm. Acquisition only.
+
+start / end       start 2ae73e3810d094132614eda414a703b96cf5839a, 2 tracked + 203
+                  untracked pre-existing dirt, re-measured and preserved.
+
+frozen authority  manifest recomputed to f735786bf7d3437a095abdcc7e8704cb6769fd32eb46
+                  b37ad8fc373850282204 under its own hash rule (sha256 over canonical
+                  key-sorted JSON excluding manifestHash/manifestHashRule),
+                  reimplemented in the verifier rather than imported from the generator
+                  so a drifted generator could not certify itself. Task fixture
+                  e79843d3...aaca4. 53/53 gates, 0 drift across 24 frozen sources.
+                  The `claude` symlink had moved to 2.1.252; the manifest pins a
+                  VERSIONED BINARY, so arms launched
+                  ~/.local/share/claude/versions/2.1.251 directly and asserted its
+                  self-reported version. Using the symlink would have run a different
+                  CLI than the frozen one, silently.
+
+what M194 built   the execution seam M193 described but never built: m194_adapter_hooks
+                  .py (PreToolUse Bash router into the instance container, PostToolUse
+                  /Stop snapshot recorder, per-validation provenance probes),
+                  run_stage5_m194_arm_env.ts (per-arm isolation construction + measured
+                  MCP count), run_stage5_m194_acquire.py (driver), m194Lifecycle.ts
+                  (the one classification rule M193 could not freeze), and
+                  run_stage5_m194_{verify,account,report,final_report}.ts.
+
+fail-open hazard  the CLI, given a hook that returns no usable updatedInput, "falls
+                  back to original tool input" - the agent's pytest would then run on
+                  the HOST, where the package under test is absent, and every arm would
+                  record a natural-looking validation failure the agent never caused.
+                  Every path through the router therefore ends in a routed command or
+                  an explicit deny, and the accounting separately proves every Bash
+                  call in the transcript had a routed pre-event: 0 unrouted across 33
+                  arms.
+
+path unity        the contract claims "a single tree visible at the same path from both
+                  sides"; it nearly was. The agent runs in a bwrap mount namespace with
+                  the arm's tree bound at /testbed, so pwd, a traceback, Grep and Read
+                  cannot disagree. No privilege taken, container untouched, one
+                  namespace per arm.
+
+proven before     28-check adapter control on a real container, $0: wrapper
+  spending        byte-identical to the frozen one, package imports under it, streams
+                  separated, host paths translated, unroutable calls denied, repository
+                  state (HEAD + full index + content hashes) byte-identical either side
+                  of every observation.
+
+acquisition       fixture 40; 35 preflight attempts; 1 preflight failure
+                  (psf__requests-1724: P9_import_resolves_under_checkout /
+                  P11_edited_checkout_is_what_executes - the M192 wrong-source hazard,
+                  caught before spending); 1 replacement, NEXT_IN_FROZEN_ORDER; 1
+                  pre-launch isolation refusal (see defects); 33 paid arms; 0 retries;
+                  12 repositories represented.
+
+validity          33/33 RUN_VALID, 0 invalid, 0 contamination, 0 tools outside the
+                  frozen set, 0 permission denials, 0 adapter errors. Patch identity
+                  33/33: the patch M193C's read-only authority extracted is
+                  byte-identical, under M193's normalisation, to the patch the official
+                  evaluator applied.
+
+behaviour         33 runs with a source edit; 117 post-edit validation attempts; 76
+  (descriptive)   runner starts; 57 trustworthy results; 37 passes, 19 failures; 8
+                  post-validation revisions; 10 arms with multiple validation cycles.
+                  13 arms never attempted a post-edit validation at all.
+
+provenance        57 usable (EDITED_CHECKOUT_CONFIRMED + CURRENT_EDITED_STATE_CONFIRMED),
+                  2 wrong-source, 0 ambiguous-source, 5 SOURCE_VERSION_AMBIGUOUS, 4
+                  STALE_EXECUTION_CONFIRMED, 0 instrument failures. M193A's bytecode
+                  hazard is not hypothetical: four validation events in this corpus
+                  provably executed a previous compilation while every path witness
+                  truthfully named the edited checkout.
+
+i6 / runtime      13 I6-usable arms over 8 repositories. Non-usable reasons: 13
+                  NO_POST_EDIT_VALIDATION_ATTEMPT, 7 NO_TRUSTWORTHY_VALIDATION_RESULT.
+                  7 runtime-diagnosis-usable arms over 5 repositories - a capability
+                  label only, not analysed, authorising nothing.
+
+resolution        23 resolved / 10 unresolved of 33 valid = 69.7%. Descriptive only;
+                  deliberately not compared against VTRACE.
+
+spend             total $24.7218; median $0.4452; p90 $1.9581; max $2.7134 against a
+                  $3.50 per-run cap. 0 per-run violations, 0 total-cap violation.
+                  Projected-at-mean was $26.41; actual landed inside it.
+
+stopping rule     STOP_TARGET_MET fired at arm 31 (>=20 arms, >=12 I6-usable, >=6
+                  repositories). Two already-launched arms completed after it, which
+                  the frozen concurrency semantics permit and which cannot breach the
+                  cap. The rule read only armsLaunched, spendUsd, i6UsableArms and
+                  repositoriesAmongI6Usable.
+
+gates             typecheck PASS  typecheck:benchmarks PASS
+                  bun test 5866 pass 49 skip 0 fail  git diff --check clean
+                  frozen authority 53/53  falsification checks 18/18
+
+src/ changed      NONE (0 files). No VTRACE product behaviour was added or altered.
+
+authorizations    OFFLINE_I6_MECHANISM_AUDIT_LICENSED
+                  NO_VTRACE_I6_PRODUCT_IMPLEMENTATION_AUTHORIZED
+                  NO_RUNTIME_REPAIR_INTERVENTION_AUTHORIZED
+                  I5_REMAINS_CLOSED
+```
+
+## M194 standing findings
+
+- **A fail-open seam is worse than a broken one.** The CLI falls back to the
+  original tool input when a PreToolUse hook returns nothing usable. A router
+  that merely usually worked would not have announced itself; it would have run
+  the agent's `pytest` on the host and filed the resulting `ModuleNotFoundError`
+  as the agent's own failed validation, in every arm, forever. The defence is
+  not care, it is structure: deny on every path that cannot route, and prove
+  after the fact that every Bash call in the transcript had a routed pre-event.
+  Build the audit that would catch the silent failure, not just the code that
+  avoids it.
+
+- **A gate that fails closed can still cost you.** Three concurrent CLIs, each
+  against its own private configuration directory, leave an empty
+  `.claude.json.lock` mkdir-mutex behind, and the frozen isolation audit
+  correctly refused the arm. The audit was right and was not relaxed; what
+  changed is that the instrument now removes its own litter before asking
+  whether the directory is clean. The error direction matters: this gate could
+  never admit a contaminated run, only refuse a clean one, so it cost coverage
+  (one arm) rather than integrity. Classify a defect by which way it can be
+  wrong before deciding what it threatens.
+
+- **`rmSync` on a directory throws.** The first version of that cleanup used it
+  without `recursive`, so the fix silently did nothing and the gate kept
+  failing. `rmdirSync` refuses anything that is not an empty directory, which
+  puts the "only when empty" condition inside the call rather than only in the
+  check in front of it. Found by forcing the race rather than by waiting for it
+  - a fix for a rare condition that is only ever exercised by the rare condition
+  is not a fix yet.
+
+- **An empty timestamp is not a timestamp.** The first live arm classified
+  TRACE_ORDERING_CORRUPT because the accounting stamped structural events with
+  `""`, and M193's well-formedness rule requires a real instant. The rule was
+  right. Because the accounting is a pure function of preserved raw artefacts,
+  the arm was reclassified without re-spending a cent - which is the whole
+  argument for keeping classification out of the live path and in a
+  regenerable-from-evidence step.
+
+- **The agents mostly do not run the suite.** 13 of 33 arms never attempted a
+  post-edit validation at all, and a further 7 attempted something that started
+  no recognisable runner - typically an ad-hoc `python -c` reproduction script
+  rather than a test invocation. This is recorded, not interpreted: M194 is
+  forbidden from asking which test should have been run. It is, however, the
+  reason the I6-usable yield is 13 of 33 rather than 33 of 33, and any later
+  milestone should expect the denominator, not the corpus, to be the constraint.
+
+- **Next-step recommendation.** The corpus is ADEQUATE, so an offline I6
+  mechanism audit is licensed - and must not be started casually. A future
+  milestone must first freeze, in writing and before looking: the I6 mechanism
+  definitions, the decision-point evidence, gold blindness, outcome blindness,
+  future-action blindness, the success-witness criteria, the failure
+  classification, the false-positive accounting, the cross-repository threshold
+  and the product-authorization threshold. M190 falsified I5 out of sample after
+  it looked real in sample; the same discipline applies here. Do not buy more
+  arms. Do not implement I6. Do not implement runtime repair.
