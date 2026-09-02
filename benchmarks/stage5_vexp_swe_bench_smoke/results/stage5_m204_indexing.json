@@ -1,0 +1,312 @@
+{
+  "milestone": "M197A",
+  "instrument": "run_stage5_m197a_indexing.ts",
+  "claims": [
+    "A2",
+    "A3",
+    "A4",
+    "A8"
+  ],
+  "repeats": 3,
+  "hardware": {
+    "cpus": 20,
+    "scratch": "/tmp/m204-frozen",
+    "loadAverageAtStart": [
+      3.48,
+      4.8,
+      4.29
+    ],
+    "loadAverageAtEnd": [
+      3.7,
+      4.3,
+      4.16
+    ],
+    "note": "scratch is tmpfs; index build is RAM-backed and not comparable to unstated VEXP hardware"
+  },
+  "ingestion": [
+    {
+      "id": "C-SMALL",
+      "language": "TypeScript",
+      "source": "/home/calvin/code/vexp-swe-bench/src",
+      "sourceFilesOnDisk": 21,
+      "legitimatelyExcluded": 0,
+      "eligible": 21,
+      "frozenEligible": 21,
+      "eligibleMatchesFrozen": true,
+      "represented": 21,
+      "unexplainedMissing": 0,
+      "coveragePercent": 100,
+      "coverageAgainstRawDisk": 100,
+      "productCoverage": {
+        "filesEligible": 21,
+        "filesIndexed": 21,
+        "filesFailed": 0,
+        "filesSkipped": 0,
+        "complete": true,
+        "failedLanguages": []
+      },
+      "exclusionJustification": {},
+      "unexplainedMissingFiles": [],
+      "totalSymbols": 98,
+      "totalEdges": 61,
+      "determinism": {
+        "repeats": 3,
+        "nonIdenticalRuns": 0,
+        "symbolCounts": [
+          98,
+          98,
+          98
+        ],
+        "edgeCounts": [
+          61,
+          61,
+          61
+        ]
+      }
+    },
+    {
+      "id": "C-MED",
+      "language": "TypeScript",
+      "source": "/home/calvin/code/vtrace/src",
+      "sourceFilesOnDisk": 502,
+      "legitimatelyExcluded": 0,
+      "eligible": 502,
+      "frozenEligible": 502,
+      "eligibleMatchesFrozen": true,
+      "represented": 502,
+      "unexplainedMissing": 0,
+      "coveragePercent": 100,
+      "coverageAgainstRawDisk": 100,
+      "productCoverage": {
+        "filesEligible": 502,
+        "filesIndexed": 502,
+        "filesFailed": 0,
+        "filesSkipped": 0,
+        "complete": true,
+        "failedLanguages": []
+      },
+      "exclusionJustification": {},
+      "unexplainedMissingFiles": [],
+      "totalSymbols": 4703,
+      "totalEdges": 10243,
+      "determinism": {
+        "repeats": 3,
+        "nonIdenticalRuns": 0,
+        "symbolCounts": [
+          4703,
+          4703,
+          4703
+        ],
+        "edgeCounts": [
+          10243,
+          10243,
+          10243
+        ]
+      }
+    },
+    {
+      "id": "C-LARGE",
+      "language": "Python",
+      "source": "/home/calvin/code/ARC",
+      "sourceFilesOnDisk": 975,
+      "legitimatelyExcluded": 699,
+      "eligible": 276,
+      "frozenEligible": 276,
+      "eligibleMatchesFrozen": true,
+      "represented": 276,
+      "unexplainedMissing": 0,
+      "coveragePercent": 100,
+      "coverageAgainstRawDisk": 28.31,
+      "productCoverage": {
+        "filesEligible": 372,
+        "filesIndexed": 372,
+        "filesFailed": 0,
+        "filesSkipped": 0,
+        "complete": true,
+        "failedLanguages": []
+      },
+      "exclusionJustification": {
+        "WORKTREE_EXCLUDED": {
+          "count": 699,
+          "examples": [
+            ".claude/worktrees/agent-a8f24b3ade8a83d93/ARC.py",
+            ".claude/worktrees/agent-a8f24b3ade8a83d93/arc/__init__.py",
+            ".claude/worktrees/agent-a8f24b3ade8a83d93/arc/checks/__init__.py"
+          ]
+        }
+      },
+      "unexplainedMissingFiles": [],
+      "totalSymbols": 10345,
+      "totalEdges": 24887,
+      "determinism": {
+        "repeats": 3,
+        "nonIdenticalRuns": 0,
+        "symbolCounts": [
+          10345,
+          10345,
+          10345
+        ],
+        "edgeCounts": [
+          24887,
+          24887,
+          24887
+        ]
+      }
+    }
+  ],
+  "indexing": [
+    {
+      "id": "C-SMALL",
+      "language": "TypeScript",
+      "eligibleFiles": 21,
+      "filesIndexed": 21,
+      "cold": {
+        "n": 3,
+        "median": 89.4,
+        "p90": 99.2,
+        "p95": 99.2,
+        "max": 99.2,
+        "min": 89,
+        "filesPerSecondMedian": 234.93
+      },
+      "noop": {
+        "n": 3,
+        "median": 6.4,
+        "p90": 8.1,
+        "p95": 8.1,
+        "max": 8.1,
+        "min": 5.2
+      },
+      "noopFilesAttemptedForParse": 0,
+      "incremental": {
+        "k1": {
+          "changedFiles": 1,
+          "elapsedMs": 18,
+          "filesAttemptedForParse": 21,
+          "filesIndexed": 21,
+          "ratioToColdMedian": 0.201,
+          "failureMode": null
+        },
+        "k3": {
+          "changedFiles": 3,
+          "elapsedMs": 20.2,
+          "filesAttemptedForParse": 21,
+          "filesIndexed": 21,
+          "ratioToColdMedian": 0.226,
+          "failureMode": null
+        }
+      },
+      "singleRefreshSequence": {
+        "status": "OK",
+        "changedFiles": 1,
+        "target": "agents/adapter.ts",
+        "filesAttemptedForParse": 21
+      },
+      "symbols": 98,
+      "edges": 61,
+      "indexBytes": 471040
+    },
+    {
+      "id": "C-MED",
+      "language": "TypeScript",
+      "eligibleFiles": 502,
+      "filesIndexed": 502,
+      "cold": {
+        "n": 3,
+        "median": 7945.3,
+        "p90": 8017.8,
+        "p95": 8017.8,
+        "max": 8017.8,
+        "min": 7944.8,
+        "filesPerSecondMedian": 63.18
+      },
+      "noop": {
+        "n": 3,
+        "median": 99.2,
+        "p90": 123.3,
+        "p95": 123.3,
+        "max": 123.3,
+        "min": 81.9
+      },
+      "noopFilesAttemptedForParse": 0,
+      "incremental": {
+        "k1": {
+          "changedFiles": 1,
+          "elapsedMs": 241.1,
+          "filesAttemptedForParse": 502,
+          "filesIndexed": 502,
+          "ratioToColdMedian": 0.03,
+          "failureMode": null
+        },
+        "k3": {
+          "changedFiles": 3,
+          "elapsedMs": 221.8,
+          "filesAttemptedForParse": 502,
+          "filesIndexed": 502,
+          "ratioToColdMedian": 0.028,
+          "failureMode": null
+        }
+      },
+      "singleRefreshSequence": {
+        "status": "OK",
+        "changedFiles": 1,
+        "target": "access/indexAccessLifecycle.test.ts",
+        "filesAttemptedForParse": 502
+      },
+      "symbols": 4703,
+      "edges": 10243,
+      "indexBytes": 18857984
+    },
+    {
+      "id": "C-LARGE",
+      "language": "Python",
+      "eligibleFiles": 276,
+      "filesIndexed": 372,
+      "cold": {
+        "n": 3,
+        "median": 11394.7,
+        "p90": 11409,
+        "p95": 11409,
+        "max": 11409,
+        "min": 11331.3,
+        "filesPerSecondMedian": 32.65
+      },
+      "noop": {
+        "n": 3,
+        "median": 175.7,
+        "p90": 225.5,
+        "p95": 225.5,
+        "max": 225.5,
+        "min": 157.5
+      },
+      "noopFilesAttemptedForParse": 0,
+      "incremental": {
+        "k1": {
+          "changedFiles": 1,
+          "elapsedMs": 592.8,
+          "filesAttemptedForParse": 372,
+          "filesIndexed": 372,
+          "ratioToColdMedian": 0.052,
+          "failureMode": null
+        },
+        "k3": {
+          "changedFiles": 3,
+          "elapsedMs": 1528.7,
+          "filesAttemptedForParse": 372,
+          "filesIndexed": 372,
+          "ratioToColdMedian": 0.134,
+          "failureMode": null
+        }
+      },
+      "singleRefreshSequence": {
+        "status": "OK",
+        "changedFiles": 1,
+        "target": "ARC.py",
+        "filesAttemptedForParse": 372
+      },
+      "symbols": 10345,
+      "edges": 24887,
+      "indexBytes": 49459200
+    }
+  ]
+}

@@ -34,6 +34,10 @@ const engine = read("stage5_m204_engine.json");
 const m203Ledger = read("stage5_m203_claim_ledger.json");
 const m203Engine = read("stage5_m203_engine.json");
 const equivalence = read("stage5_m204_equivalence.json");
+// The repaired product run against the PRE-change corpus copy: C-MED is this
+// repository's src/, so the corpus moved with the product; this run separates
+// the two.
+const postPreCorpus = read("stage5_m204_utilization_post_precorpus.json", false);
 
 const cm = (u: any) => u.corpora.find((c: any) => c.id === "C-MED");
 const preC = cm(pre); const postC = cm(post);
@@ -108,6 +112,16 @@ const equivalenceByBudget = post.corpora.find((c: any) => c.id === "C-MED").budg
 });
 const focusChanges = postRows.filter((r) => preBy.get(keyOf(r))?.focusAt !== r.focusAt).map((r) => ({ key: keyOf(r), before: preBy.get(keyOf(r))?.focusAt ?? null, after: r.focusAt }));
 const differingPackets = postRows.filter((r) => preBy.get(keyOf(r))?.packetSha !== r.packetSha).map(keyOf);
+const sameCorpus = postPreCorpus === null ? null : (() => {
+  const rows: any[] = cm(postPreCorpus).responses;
+  const differing = rows.filter((r) => preBy.get(keyOf(r))?.packetSha !== r.packetSha);
+  return { product: postPreCorpus.product, corpus: "the pre-change C-MED copy and index", responses: rows.length,
+    byteIdentical: rows.length - differing.length,
+    differing: differing.map((r) => ({ key: keyOf(r), preRejected: preBy.get(keyOf(r))?.analysis?.supply?.rejectedForCeiling ?? null,
+      preCeiling: preBy.get(keyOf(r))?.analysis?.effectiveCeilingTokens ?? null, postCeiling: r.analysis?.effectiveCeilingTokens ?? null })),
+    // Every difference on the same corpus must be a response the fixed ceiling had bound.
+    allDifferencesWereCeilingBound: differing.every((r) => (preBy.get(keyOf(r))?.analysis?.supply?.rejectedForCeiling ?? 0) > 0) };
+})();
 
 // ------------------------------------------------------------ tail cases
 const tail = preC.tail.map((t: any) => {
@@ -156,6 +170,7 @@ const gates = [
   { id: "G4", statement: "every underutilised response carries a binding reason", pass: postRows.every((r) => r.analysis === null || typeof r.analysis.bindingReason === "string") },
   { id: "G5", statement: "no-supply separated from policy-cap underutilisation", pass: Object.keys(postC.bindingReasonsOverFrozen).length >= 1 && postRows.every((r) => r.analysis === null || typeof r.analysis.supplyExhausted === "boolean") },
   { id: "G6", statement: "one budget authority: the ledger ceiling equals the product rule on every response", pass: postRows.every((r) => r.analysis === null || r.analysis.gates.find((g: any) => g.id === "ceiling_is_the_rule")?.pass === true) },
+  { id: "G6b", statement: "same corpus, same effective outcome: every pre/post difference on the pre-change corpus was ceiling-bound under the predecessor", pass: sameCorpus !== null && sameCorpus.allDifferencesWereCeilingBound },
   { id: "G7", statement: "fixed-ceiling defect repaired: caller budget reaches admission (F1, F8)", pass: falsification.controls.find((c: any) => c.id === "F1")?.pass === true && falsification.controls.find((c: any) => c.id === "F8")?.pass === true },
   { id: "G8", statement: "no filler (F2, F3, F4; analyzer gates on every response)", pass: ["F2", "F3", "F4"].every((id) => falsification.controls.find((c: any) => c.id === id)?.pass === true) && postC.integrity.failures === 0 },
   { id: "G9", statement: "hard bounds preserved (F5)", pass: falsification.controls.find((c: any) => c.id === "F5")?.pass === true },
@@ -185,8 +200,10 @@ const out = {
   budgetStack: { before: stackPre, after: stackPost },
   byBudget,
   bindingReasonsOverFrozen: { before: preC.bindingReasonsOverFrozen, after: postC.bindingReasonsOverFrozen },
-  equivalence: { byBudget: equivalenceByBudget, differingPackets, focusChanges,
-    frozenFifteenQueries: { verdict: equivalence.verdict ?? null, semanticEqual: equivalence.summary ?? equivalence.equivalence ?? null } },
+  equivalence: { byBudget: equivalenceByBudget, differingPackets, focusChanges, sameCorpus,
+    frozenFifteenQueries: { verdict: equivalence.verdict ?? null, compared: equivalence.compared ?? null,
+      selectionEqual: equivalence.selectionEqual ?? null, orderEqual: equivalence.orderEqual ?? null,
+      strippedByteEqual: equivalence.strippedByteEqual ?? null, deliveredByteEqual: equivalence.deliveredByteEqual ?? null } },
   tail,
   a13,
   falsification: { verdict: falsification.verdict, controls: falsification.controls.map((c: any) => ({ id: c.id, pass: c.pass, statement: c.statement, detail: c.detail })) },
@@ -234,7 +251,8 @@ md.push(`Binding reasons over the 100 frozen responses: before ${JSON.stringify(
 md.push(`## Output equivalence`, "");
 md.push(`| budget | responses | same effective ceiling | byte-identical | requirement met |`, `| ---: | ---: | ---: | ---: | --- |`);
 for (const e of equivalenceByBudget) md.push(`| ${e.budget} | ${e.responses} | ${e.sameEffectiveCeiling} | ${e.byteIdentical} | ${e.requirementMet} |`);
-md.push("", `Packets that differ pre/post: ${differingPackets.length}. Focus changes: ${focusChanges.length}. Frozen fifteen-query equivalence: ${JSON.stringify(out.equivalence.frozenFifteenQueries)}.`, "");
+md.push("", `Packets that differ pre/post on the moving corpus: ${differingPackets.length}. Focus changes: ${focusChanges.length}. Frozen fifteen-query equivalence: ${JSON.stringify(out.equivalence.frozenFifteenQueries)}.`, "");
+if (sameCorpus) md.push(`Repaired product on the pre-change corpus copy: ${sameCorpus.byteIdentical} of ${sameCorpus.responses} byte-identical to the predecessor; differing ${JSON.stringify(sameCorpus.differing)}; all differences were ceiling-bound under the predecessor: ${sameCorpus.allDifferencesWereCeilingBound}.`, "");
 md.push(`## Tail (ten worst pre-change responses)`, "");
 md.push(`| task | budget | util before | util after | binding before | binding after | supply discarded upstream | withheld body chars |`, `| --- | ---: | ---: | ---: | --- | --- | ---: | ---: |`);
 for (const t of tail) md.push(`| ${t.task} | ${t.budget} | ${t.utilisationPercent}% | ${t.afterUtilisationPercent}% | ${t.bindingReason} | ${t.afterBindingReason} | ${t.upstreamDiscarded} | ${t.representationWithheldCharacters} |`);
@@ -257,6 +275,6 @@ md.push(`## Gates`, "", `| gate | pass | statement |`, `| --- | --- | --- |`);
 for (const g of gates) md.push(`| ${g.id} | ${g.pass ? "pass" : "FAIL"} | ${g.statement} |`);
 md.push("", `## Authority`, "", `\`${authority.verdict}\`; C-MED ${cmedAuthority.eligibleFiles} files (expected ${cmedAuthority.expected}); identity advanced: ${out.authority.identityAdvanced}.`, "");
 md.push(`## Boundary`, "", ...out.boundary.map((b: string) => `- ${b}`), "");
-writeFileSync(path.join(RESULTS, "stage5_m204_final_report.md"), `${md.join("\n")}\n`);
+writeFileSync(path.join(RESULTS, "stage5_m204_final_report.md"), `${md.join("\n").trimEnd()}\n`);
 console.log(`${out.verdicts.a11}; frozen A11 ${short(out.verdicts.frozenA11Verdict)}; parity ${out.verdicts.parity.m203}/15 -> ${out.verdicts.parity.m204}/15; gates ${out.verdicts.gatesPassed}/${out.verdicts.gatesTotal}`);
 for (const g of gates.filter((g) => !g.pass)) console.log(`  FAIL ${g.id} ${g.statement}`);

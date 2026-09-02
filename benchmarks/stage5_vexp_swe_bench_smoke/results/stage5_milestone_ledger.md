@@ -8999,3 +8999,185 @@ evidence          results/stage5_m203_final_report.{md,json} and the
   rejected, what the upstream budget left unused) without a second
   instrumentation pass; nothing here authorises changing them.
   `CONTEXT_COMPILER_PRODUCT_UTILITY_NOT_ESTABLISHED` still governs.
+
+## M204 — budget-utilization authority and frozen A11 (PASS, A11 not closed)
+
+```
+milestone         M204
+verdict           PASS
+parity            A11_PARITY_NOT_CLOSED
+spend             0 live-agent runs, $0, 0 VEXP processes
+scope             A11 only. Trace every budget between the caller's max_tokens
+                  and the delivered orientation packet, find which layer binds,
+                  repair the fixed internal ceiling so the caller's budget
+                  reaches admission, and rerun the unmodified frozen scorer.
+                  No work on A12, A13, A15; no ranking, selection, representation
+                  or retrieval change.
+
+result            VTRACE_VEXP_ENGINE_PARITY_THRESHOLD_MET
+                  MATCH 6  EXCEED 5  BELOW 4   match-or-exceed 11/15 (threshold 10)
+                  A8 minimum coverage 100% (veto 99%); structural violations 0
+                  determinism stable; invented structural claims 0
+                  frozen controls: F1-F5, F7, F8 pass; F6 FAILS on its stale
+                  `a14PerItem === 0` conjunct only (its other conjuncts pass);
+                  not modified, per the M203 standing finding.
+
+frozen A11        VEXP V-C5 "run_pipeline takes a whole-output token budget,
+                  default 10000". Metric: median over the 20 C-MED A13 tasks of
+                  100 x ceil(chars/4 of the WHOLE default get_code_context
+                  output) / max_tokens at 1000/2000/4000/8000/16000; wrapper and
+                  the per-item tokens fields count. MATCHES at >= 60% on every
+                  budget; EXCEEDS at >= 80%. M203 committed, pre-change
+                  reproduction (worktree at e4ab9aea), post-change reproduction
+                  and the M204 frozen rerun all read 40.55 / 34.05 / 17.02 /
+                  9.34 / 7.54 %, BELOW.
+
+budget stack      caller max_tokens (chars/4, any non-negative integer, no upper
+                  bound) -> capsule retrieval budget x4 characters ->
+                  allocateBudget tier caps (micro 1/1 below 1500, standard 2/4
+                  below 12000, full 5/10) -> evidence budget: progressive
+                  context bounds modelVisibleContext to max_tokens ->
+                  complete-response ceiling max_tokens + max(1000, 15%) ->
+                  orientation ceiling (was 2000 packet tokens fixed) -> focus
+                  head bound 1800 chars; related entries relationship-only.
+                  Eleven layers, twenty symbols verified from source
+                  (run_stage5_m204_budget_stack.ts).
+
+binding           Per frozen response, from recorded decisions: 94/100 stopped
+                  by the capsule tier's item cap (at 16000 a median of 20 ranked
+                  candidates discarded "beyond full support budget (max 10)"
+                  with 12960 of 16000 evidence tokens unused; at 2000-8000 the
+                  standard tier delivers the identical 12-item selection), 3 by
+                  the evidence budget at 1000-2000, 3 by supply, 0 by the
+                  orientation ceiling, which rejected nothing on C-MED (one
+                  C-LARGE response at 16000 was ceiling-bound). Once items are
+                  exhausted the token-binding layer is representation: related
+                  entries carry no body, and the bodies the upstream rendered
+                  for them are a median of 4375 characters at 16000.
+
+the ceiling       Never engaged on C-MED, yet it made MATCH unreachable by
+                  arithmetic: 2000 packet tokens is 6301 characters is 1576
+                  chars/4 tokens, at most 39.4 / 19.7 / 9.85 % at 4000 / 8000 /
+                  16000 whatever the supply (F9). It was M171's R2000 rung,
+                  frozen by M172 as a product default on agent economics; no
+                  transport or product bound stands behind the number.
+
+repair            orientationCeilingTokens(requested_context_tokens): the
+                  caller's chars/4 evidence budget stated in the packet's unit
+                  (requested x 4 characters x 0.3174 tokens per character), so
+                  an evidence packet within the ceiling is within the budget the
+                  caller stated, measured the caller's way. 2000 remains the
+                  default, applied only when no budget reached the projector;
+                  the ledger's ceilingDerivation says which. One reading of the
+                  budget serves the ceiling and evidenceBudget.requestedTokens.
+                  Admission is the same prefix of the same order; focus and
+                  notes never evicted; head bound unchanged; accounting fields
+                  ride above the ceiling as in M203. No hard maximum invented:
+                  the packet is bounded in fact by supply (tier caps 5/10 plus
+                  neighbourhood 2x4) and by the head bound (F5).
+
+equivalence       Repaired product on the pre-change corpus copy: 180/180
+                  C-MED packets byte-identical to the predecessor (all nine
+                  budgets). On the moving corpus 7/180 differ: one support pick
+                  for the "response envelope" task at every budget >= 2000,
+                  because C-MED is this repository's src/ and the edited
+                  projector module now scores differently for that query; 0
+                  focus changes; 0 ceiling rejections either side. Frozen
+                  15-query M201 equivalence: M203_EVIDENCE_EQUIVALENT,
+                  selection 15/15, stripped bytes 15/15.
+
+supply vs A11     At 16000 the authoritative rendered context itself is a
+                  median of 3040 chars/4 tokens, 19% of the budget; the MATCH
+                  line is 9600. A projection that carried every upstream-
+                  rendered character verbatim would reach ~20%. A11 therefore
+                  cannot close on this corpus without (a) the capsule filling
+                  the caller's budget past its full-tier count caps and (b) the
+                  packet carrying bodies for related items — the first is a
+                  candidate-selection policy, the second is A12's
+                  representation class. Neither is authorised here.
+
+falsification     M204 F1-F12 all pass: fixed ceiling underutilises (56 of 300
+                  related at 16000, 10.9%) where the repair delivers 300;
+                  no-supply keeps 98% unused and is byte-identical to the 2000
+                  packet; duplicate, no-claim filler, wrong cost rejected; a
+                  ten-million budget respects head bound and supply; 5 repeats
+                  one hash; 7331 follows the rule with prefix order; every new
+                  item traces to supply; A5 MATCHES after; a focus swap stays an
+                  A13 violation while utilisation passes.
+
+determinism       180 C-MED responses x 3 repeats (plus C-SMALL, C-LARGE):
+                  packets and ledgers stable; 0 accounting-integrity failures
+                  on 180 + 180 packets; frozen A14 1002/1002.
+
+A13, observed     3 size violations / 5 focus swaps at M203, pre, post and the
+                  frozen rerun; order relations across adjacent frozen budgets
+                  prefix 42 / subsequence 17 / neither 21; effective-budget
+                  monotonicity violations 0. Measured, not optimised; this is
+                  M205's baseline.
+
+cost              Frozen A5 p90 45.14 / 211.06 / 342.79 ms (M203 46.49 / 208.71
+                  / 334.76), MATCHES; A5 harness 46.37 / 205.9 / 357.16 ms
+                  (M203 42.49 / 200.9 / 340.06), MATCHES. Largest packet 6420
+                  bytes, 21 items; peak RSS 784 MB over the sweep; no new
+                  allocation, no DB table, no schema change. Tool schema
+                  unchanged.
+
+corpus identity   C-MED 502/502, no source file added under src/; authority
+                  verified without re-freezing.
+
+commits           5e6506a1  budget-stack audit, utilisation analyzer, sweep
+                            driver, pre-change evidence
+                  95f1664f  caller-derived orientation ceiling, unit tests,
+                            falsification controls, report assembler
+                  (evidence, frozen rerun and this row follow)
+
+evidence          results/stage5_m204_final_report.{md,json} and the
+                  stage5_m204_*.{json,jsonl} artefacts beside it;
+                  stage5_m201_a5_m204_post.json.
+```
+
+## M204 standing findings
+
+- **The orientation ceiling was not A11's bottleneck; it was A11's upper
+  bound.** It rejected nothing on C-MED, and it capped every packet at 1576
+  chars/4 tokens. Both are now recorded per response. The layers that do bind
+  are the capsule allocator's per-tier item caps and the relationship-only
+  representation of related entries, in that order.
+
+- **The allocator's own comment is false on this corpus.** `budgetAllocator.ts`
+  says the full tier's caps are "generous ceilings — the token budget is the
+  real bound there"; at 16000 on C-MED the count caps bind with 81% of the
+  evidence budget unused and a median of 20 ranked candidates discarded for the
+  cap. Whether that is policy or defect is a candidate-selection question with
+  a retrieval no-change proof attached; it is not decided here.
+
+- **A11 is coupled to A12.** Even the authoritative rendered context is 19% of
+  the budget at 16000; no projection of it reaches 60%. Closing A11 under the
+  frozen scorer needs both more upstream supply and a body-carrying related
+  representation, which is A12's class. Any A11 work that avoids that
+  conclusion is measuring something else.
+
+- **The corpus moves with the product.** Editing `orientationProjection.ts`
+  changed one support pick for the query about the response envelope at every
+  budget above 1575. The same-corpus control (repaired product on the
+  pre-change copy, 180/180 identical) is the instrument that separates that
+  from a product change; use it before reading any C-MED diff as behaviour.
+
+- **Supply facts need the direct build.** The `detail=debug` response drops the
+  capsule block entirely at budgets <= 2000 and compacts its arrays below 6000,
+  so the sweep reads discard reasons from `buildAuthoritativeProductRetrieval`
+  with the request's own resolved preset and character budget. The two agreed
+  on `discardedTotal` on 55 of 63 responses where both were readable and
+  disagreed on 8 at 2000-4000 (0 at >= 6000); recorded, not explained.
+
+- **The stale F6 control still fails by construction**, as M203 recorded, and
+  the M204 report distinguishes it from a regression by re-evaluating its other
+  conjuncts. A later milestone wanting a clean exit code must amend the control
+  with a recorded reason, not quietly.
+
+- **Next-step recommendation.** No further projector-side A11 work is licensed:
+  the caller's budget now reaches admission and there is nothing left for it to
+  admit. Movement on A11 requires a decision on the capsule's full-tier caps
+  (selection policy, paired retrieval proof required) and on A12's
+  representation class; A13's baseline for M205 is 3 size violations / 5 focus
+  swaps. `CONTEXT_COMPILER_PRODUCT_UTILITY_NOT_ESTABLISHED` still governs.
