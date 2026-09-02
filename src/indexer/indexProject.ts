@@ -9,7 +9,7 @@ import { EdgeType, normalizeFilePath, type EdgeRecord, type ParseResult } from "
 import { scanRepo } from "../fs/scanRepo";
 import { resolveWorktreeExclusions, summarizeWorktreeExclusions } from "../fs/worktreeExclusions";
 import { listGitBlobShas, listGitStatusEntries } from "../fs/git";
-import { insertEdges } from "../db/repositories/edgesRepository";
+import { deleteEdgesTouchingFileSymbols, insertEdges } from "../db/repositories/edgesRepository";
 import { listAllEdges } from "../db/repositories/edgesRepository";
 import {
   deleteFileByPath,
@@ -23,7 +23,7 @@ import { deleteBodyLiteralsForFile } from "../db/repositories/bodyLiteralsReposi
 import { deleteMechanismFactsForFile } from "../db/repositories/mechanismFactsRepository";
 import { replaceDocumentChunksForFile } from "../db/repositories/documentsRepository";
 import { persistParseResult } from "../db/persistParseResult";
-import { listAllSymbols } from "../db/repositories/symbolsRepository";
+import { deleteSymbolsForFile, listAllSymbols } from "../db/repositories/symbolsRepository";
 import { evaluateMaterializedGraph } from "./materializationAuthority";
 import { buildSymbolBodyLiterals } from "./extractBodyLiterals";
 import { buildSymbolMechanismFacts } from "./extractMechanismFacts";
@@ -173,9 +173,14 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
   // silently empty index. The planner proved the SOURCE has not changed; it
   // cannot prove this workspace still HOLDS the graph that snapshot describes.
   // Ask the database directly, and degrade to the incremental path when it does
-  // not — that path re-persists every file (the transaction rewrites the graph
-  // wholesale for both modes) while still reusing the parse cache, so recovery
-  // costs a re-materialization rather than a full reparse.
+  // not — that path reuses the parse cache, so recovery costs a
+  // re-materialization rather than a full reparse.
+  //
+  // It is also the one incremental plan that must still write the WHOLE graph:
+  // an incremental plan normally rewrites only the files it invalidated, and
+  // here nothing was invalidated while everything is missing. `resolvePersistenceScope`
+  // reads `fullRebuildReason` for exactly this case, so the recovery keeps
+  // working after persistence stopped being wholesale.
   const materialization = plan.mode === "noop"
     ? evaluateMaterializedGraph(options.db, options.previousSnapshot, options.hasExistingGraph)
     : undefined;
@@ -390,7 +395,15 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
     };
   });
 
-  const persistedResults: ParseResult[] = [];
+  // Every successful result describes the graph after this run, whether or not
+  // this run is the one that wrote it: the snapshot, the symbol totals and the
+  // file-count validation are all statements about the whole repository, and a
+  // bounded refresh does not make them statements about the changed files.
+  const persistedResults: ParseResult[] = [...successfulResults];
+  const persistenceScope = resolvePersistenceScope(plan, successfulResults);
+  const resultsToPersist = persistenceScope.kind === "whole_repository"
+    ? successfulResults
+    : successfulResults.filter((result) => persistenceScope.paths.has(normalizeFilePath(result.file.path)));
   // Raw file content by path, so the persist loop can extract body literals
   // (symbols carry byte ranges, not text). The full content set is already held
   // in memory by `readableFiles` for the whole run.
@@ -400,22 +413,34 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
     kind: "phase_begin",
     phase: "persist",
     label: "Persisting parse results",
-    total: successfulResults.length,
+    total: resultsToPersist.length,
   });
   const graphTransaction = options.db.transaction(() => {
     const invalidationStarted = performance.now();
-    options.db.run("DELETE FROM symbol_search_fts");
-    options.db.run("DELETE FROM symbol_body_literals_fts");
-    options.db.run("DELETE FROM symbol_mechanism_facts");
-    options.db.run("DELETE FROM document_search_fts");
-    options.db.run("DELETE FROM document_chunks");
-    options.db.run("DELETE FROM edges");
-    options.db.run("DELETE FROM symbols");
-    options.db.run("DELETE FROM files");
+    if (persistenceScope.kind === "whole_repository") {
+      options.db.run("DELETE FROM symbol_search_fts");
+      options.db.run("DELETE FROM symbol_body_literals_fts");
+      options.db.run("DELETE FROM symbol_mechanism_facts");
+      options.db.run("DELETE FROM document_search_fts");
+      options.db.run("DELETE FROM document_chunks");
+      options.db.run("DELETE FROM edges");
+      options.db.run("DELETE FROM symbols");
+      options.db.run("DELETE FROM files");
+    } else {
+      // Driven by the INVALIDATED paths, not by the results about to be written.
+      // The two agree today only because a file that stops parsing also changes
+      // the repository's semantic surface and sends the whole run to a full
+      // rebuild — a coincidence of another guard, not a property of this one.
+      // Invalidating what the plan invalidated is what makes the scope correct
+      // on its own terms.
+      for (const filePath of persistenceScope.paths) {
+        invalidatePersistedFile(options.db, filePath);
+      }
+    }
     timings.invalidation = performance.now() - invalidationStarted;
     const persistenceStarted = performance.now();
-    for (let index = 0; index < successfulResults.length; index += 1) {
-      const parseResult = successfulResults[index]!;
+    for (let index = 0; index < resultsToPersist.length; index += 1) {
+      const parseResult = resultsToPersist[index]!;
       const fileLocalResult = { ...parseResult, edges: parseResult.edges.filter((edge) => !isDeferredEdgeType(edge.edgeType)) };
       const fileContent = contentByPath.get(parseResult.file.path) ?? "";
       const bodyLiterals = buildSymbolBodyLiterals(fileLocalResult.symbols, fileContent);
@@ -438,12 +463,15 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
             : [],
         );
       }
-      persistedResults.push(parseResult);
-      progress.report({ kind: "phase_progress", phase: "persist", index: index + 1, total: successfulResults.length, item: parseResult.file.path });
+      progress.report({ kind: "phase_progress", phase: "persist", index: index + 1, total: resultsToPersist.length, item: parseResult.file.path });
     }
     timings.persistence = performance.now() - persistenceStarted;
     const linkingStarted = performance.now();
-    persistResolvableInterFileEdges(options.db, persistedResults);
+    persistResolvableInterFileEdges(
+      options.db,
+      persistedResults,
+      persistenceScope.kind === "whole_repository" ? undefined : persistenceScope.rewrittenSymbolIds,
+    );
     timings.linking = performance.now() - linkingStarted;
     const validationStarted = performance.now();
     try {
@@ -1008,9 +1036,95 @@ function isDeferredEdgeType(edgeType: EdgeType): boolean {
     || edgeType === EdgeType.References;
 }
 
+/**
+ * Which files' persisted rows a run rewrites.
+ *
+ * An incremental plan has already proved two things the wholesale path could
+ * not: no file was added, deleted or renamed, and the repository's semantic
+ * surface — every symbol's path, name, kind, signature and export status, plus
+ * every package surface's content — is unchanged (`semanticContextHash`). What
+ * is left to write is therefore confined to the files that changed and to the
+ * edges that touch their symbols, because nothing else in the graph can differ.
+ *
+ * The one incremental plan that is NOT confined is M184's materialization
+ * recovery: it keeps the incremental parse plan while the graph itself is
+ * missing, so it invalidated nothing and must write everything. It is
+ * recognisable by carrying a `fullRebuildReason` on an incremental mode, and
+ * any future plan that does the same is treated the same way — the test is
+ * "does this plan claim something a changed-file closure cannot describe",
+ * which fails safe towards writing more.
+ */
+type PersistenceScope =
+  | { readonly kind: "whole_repository" }
+  | {
+      readonly kind: "affected_files";
+      readonly paths: ReadonlySet<string>;
+      /** Symbols the run rewrites; the edges that may be written are those touching one. */
+      readonly rewrittenSymbolIds: ReadonlySet<string>;
+    };
+
+function resolvePersistenceScope(
+  plan: { readonly mode: string; readonly affectedClosureFiles: readonly string[]; readonly fullRebuildReason?: string },
+  successfulResults: readonly ParseResult[],
+): PersistenceScope {
+  if (plan.mode !== "incremental" || plan.fullRebuildReason !== undefined) {
+    return { kind: "whole_repository" };
+  }
+
+  const paths = new Set(plan.affectedClosureFiles.map((filePath) => normalizeFilePath(filePath)));
+  const rewrittenSymbolIds = new Set<string>();
+
+  for (const result of successfulResults) {
+    if (!paths.has(normalizeFilePath(result.file.path))) continue;
+    for (const symbol of result.symbols) rewrittenSymbolIds.add(symbol.id);
+  }
+
+  return { kind: "affected_files", paths, rewrittenSymbolIds };
+}
+
+/**
+ * Remove everything the graph holds for one file.
+ *
+ * Edges are found through the symbols they touch, so they go first; and they are
+ * removed from BOTH directions, because an edge whose target lives in this file
+ * is owned by the file at its other end and would otherwise be left pointing at
+ * a symbol id this refresh is about to replace. Restoring those inbound edges is
+ * `persistResolvableInterFileEdges`'s job, and it is given the same symbol set
+ * this function deleted against.
+ *
+ * The file id is read from the row rather than recomputed, so this cannot
+ * silently miss rows written under a different id derivation.
+ */
+function invalidatePersistedFile(db: Database, filePath: string): void {
+  const normalizedPath = normalizeFilePath(filePath);
+  const row = db.query("SELECT id FROM files WHERE path = ?").get(normalizedPath) as { id: string } | null;
+
+  if (row !== null) {
+    deleteEdgesTouchingFileSymbols(db, row.id);
+    db.run("DELETE FROM document_search_fts WHERE file_id = ?", [row.id]);
+    db.run("DELETE FROM document_chunks WHERE file_id = ?", [row.id]);
+  }
+
+  // Keyed by path, not by file id: these three carry the raw path and no foreign
+  // key, so they survive a file row that was never written.
+  deleteMechanismFactsForFile(db, { path: normalizedPath });
+  deleteBodyLiteralsForFile(db, { path: normalizedPath });
+  deleteSymbolSearchIndexForFile(db, { path: normalizedPath });
+
+  if (row !== null) deleteSymbolsForFile(db, row.id);
+  deleteFileByPath(db, normalizedPath);
+}
+
+/**
+ * @param rewrittenSymbolIds When present, the run rewrote only part of the graph
+ * and only edges touching one of these symbols were invalidated. Every other
+ * resolvable edge is already persisted and unchanged, so writing it again would
+ * collide on the edge primary key rather than record anything new.
+ */
 function persistResolvableInterFileEdges(
   db: Database,
   parseResults: readonly ParseResult[],
+  rewrittenSymbolIds?: ReadonlySet<string>,
 ): void {
   const persistedSymbolIds = new Set<string>();
 
@@ -1028,6 +1142,11 @@ function persistResolvableInterFileEdges(
         isDeferredEdgeType(edge.edgeType)
         && persistedSymbolIds.has(edge.srcSymbolId)
         && persistedSymbolIds.has(edge.dstSymbolId)
+        && (
+          rewrittenSymbolIds === undefined
+          || rewrittenSymbolIds.has(edge.srcSymbolId)
+          || rewrittenSymbolIds.has(edge.dstSymbolId)
+        )
       ) {
         deferredEdgesById.set(edge.id, edge);
       }

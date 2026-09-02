@@ -234,9 +234,11 @@ export function planIncrementalRefresh(input: {
     };
   }
 
-  // Cost model: persistence/relinking is currently full-worktree in both modes;
-  // parsing is the variable term. If every file must be parsed, incremental
-  // work cannot beat a clean full rebuild.
+  // Cost model: an incremental refresh writes only the files it invalidated, so
+  // both parsing and persistence scale with the change set. What does not scale
+  // is the change set itself — once every file is in it there is nothing left
+  // for incremental bookkeeping to save, and a clean rebuild is the simpler way
+  // to arrive at the same graph.
   if (modified.length >= current.length) {
     return {
       mode: "full_rebuild",
