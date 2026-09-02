@@ -87,7 +87,15 @@ const stage = (result: any) => {
     parsing: +(t.parsing ?? 0).toFixed(1), invalidation: +(t.invalidation ?? 0).toFixed(1),
     linking: +(t.linking ?? 0).toFixed(1), persistence: +(t.persistence ?? 0).toFixed(1),
     retrievalIndex: +(t.retrievalIndex ?? 0).toFixed(1), validation: +(t.validation ?? 0).toFixed(1),
+    bookkeeping: +(t.bookkeeping ?? 0).toFixed(1), commit: +(t.commit ?? 0).toFixed(1),
     total: +(t.total ?? 0).toFixed(1),
+    // §5: the categories must account for the total. What they do not account
+    // for is published rather than absorbed into the nearest stage.
+    unattributed: +((t.total ?? 0) - (
+      (t.discovery ?? 0) + (t.planning ?? 0) + (t.parsing ?? 0) + (t.invalidation ?? 0)
+      + (t.linking ?? 0) + (t.persistence ?? 0) + (t.retrievalIndex ?? 0) + (t.validation ?? 0)
+      + (t.bookkeeping ?? 0) + (t.commit ?? 0)
+    )).toFixed(1),
   };
 };
 
@@ -151,20 +159,39 @@ for (const spec of specs) {
 
   const scanned = (await scanRepo(timingWork)).map((f) => f.path)
     .filter((p) => spec.exts.some((e) => p.endsWith(e))).sort();
+  // §26/§27: repeated, because one refresh is a sample and A3 is a ratio between
+  // two numbers taken on a machine somebody else is also using. The frozen A3
+  // instrument measures each k once; this reports the spread that single
+  // measurement is drawn from.
   const incremental: Record<string, unknown> = {};
   for (const k of [1, 3]) {
-    for (const rel of scanned.slice(0, k)) appendProbe(path.join(timingWork, rel), marker, `k${k}`);
-    try {
-      const [result, ms] = await timed(() => indexProject({ repoRoot: timingWork, db, parserVersion: DEFAULT_PARSER_VERSION,
-        ...(snapshot === undefined ? {} : { previousSnapshot: snapshot }), hasExistingGraph: true }));
-      snapshot = (result as any).snapshot ?? snapshot;
-      incremental[`k${k}`] = { changedFiles: k, elapsedMs: +ms.toFixed(1),
-        ratioToColdMedian: +(ms / coldMedian).toFixed(3), stages: stage(result),
-        ...modeOf(result), failureMode: null };
-    } catch (error: any) {
-      incremental[`k${k}`] = { changedFiles: k, elapsedMs: null, ratioToColdMedian: null,
-        failureMode: String(error?.message ?? error).slice(0, 200) };
+    const runs: any[] = [];
+    for (let repeat = 0; repeat < REPEATS; repeat += 1) {
+      for (const rel of scanned.slice(0, k)) appendProbe(path.join(timingWork, rel), marker, `k${k}r${repeat}`);
+      try {
+        const [result, ms] = await timed(() => indexProject({ repoRoot: timingWork, db, parserVersion: DEFAULT_PARSER_VERSION,
+          ...(snapshot === undefined ? {} : { previousSnapshot: snapshot }), hasExistingGraph: true }));
+        snapshot = (result as any).snapshot ?? snapshot;
+        runs.push({ elapsedMs: +ms.toFixed(1), ratioToColdMedian: +(ms / coldMedian).toFixed(3),
+          stages: stage(result), ...modeOf(result), failureMode: null });
+      } catch (error: any) {
+        runs.push({ elapsedMs: null, ratioToColdMedian: null,
+          failureMode: String(error?.message ?? error).slice(0, 200) });
+      }
     }
+    const elapsed = runs.map((r) => r.elapsedMs).filter((v): v is number => v !== null);
+    incremental[`k${k}`] = {
+      changedFiles: k, repeats: runs.length, runs,
+      medianElapsedMs: elapsed.length === 0 ? null : +median(elapsed).toFixed(1),
+      medianRatioToColdMedian: elapsed.length === 0 ? null : +(median(elapsed) / coldMedian).toFixed(3),
+      // The first repeat is the one the frozen A3 sequence takes.
+      elapsedMs: runs[0]?.elapsedMs ?? null,
+      ratioToColdMedian: runs[0]?.ratioToColdMedian ?? null,
+      stages: runs[0]?.stages ?? null,
+      mode: runs[0]?.mode, fallbackReason: runs[0]?.fallbackReason ?? null,
+      parsedFiles: runs[0]?.parsedFiles,
+      failureMode: runs.find((r) => r.failureMode !== null)?.failureMode ?? null,
+    };
   }
   db.close();
   rmSync(timingWork, { recursive: true, force: true });
@@ -234,7 +261,8 @@ for (const spec of specs) {
 
   const k1 = incremental.k1 as any; const k3 = incremental.k3 as any;
   console.log(`${spec.id.padEnd(8)} cold ${coldMedian.toFixed(0)} ms | noop ${median(noopMs).toFixed(0)} ms `
-    + `| k=1 ratio ${k1?.ratioToColdMedian} (${k1?.mode}) | k=3 ratio ${k3?.ratioToColdMedian} (${k3?.mode})`);
+    + `| k=1 ratio ${k1?.ratioToColdMedian} (median ${k1?.medianRatioToColdMedian}, ${k1?.mode}) `
+    + `| k=3 ratio ${k3?.ratioToColdMedian} (median ${k3?.medianRatioToColdMedian}, ${k3?.mode})`);
 }
 
 const out = {

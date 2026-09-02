@@ -480,15 +480,24 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
       throw new GraphValidationError(error);
     }
     timings.validation = performance.now() - validationStarted;
+    const bookkeepingStarted = performance.now();
     // Written INSIDE the graph transaction, after validation, so the failed set
     // and the successful set are committed together or not at all. A failed file
-    // contributes no symbols, edges, facts, chunks or FTS rows — the wholesale
-    // DELETE above already removed anything a previous run had for it (§14, §36).
+    // contributes no symbols, edges, facts, chunks or FTS rows — invalidation
+    // already removed anything a previous run had for it (§14, §36).
     replaceFileIndexFailures(options.db, failureRecords);
     recordIndexRunState(options.db, scannedFiles, persistedResults.flatMap((result) => result.symbols));
+    timings.bookkeeping = performance.now() - bookkeepingStarted;
   });
+  const transactionStarted = performance.now();
   try {
     graphTransaction();
+    // What the transaction cost beyond the work it was timed doing: the commit
+    // itself. Derived rather than measured because the commit happens as the
+    // transaction function returns, where no statement can be wrapped.
+    timings.commit = Math.max(0, (performance.now() - transactionStarted) - (
+      timings.invalidation + timings.persistence + timings.linking
+      + timings.validation + timings.bookkeeping));
     graphRowsInserted = countLiveGraphRows(options.db);
   } catch (error) {
     for (const parseResult of successfulResults) {

@@ -114,6 +114,15 @@ export interface IndexTimings {
   persistence: number;
   retrievalIndex: number;
   validation: number;
+  /**
+   * M199. Per-run history: the failed-file set and the file/symbol run states
+   * the run-to-run diff is computed from. Repository-scale by contract — a
+   * partial snapshot would make every unindexed file look removed — and, until
+   * it was timed, the largest unattributed term in an incremental refresh.
+   */
+  bookkeeping: number;
+  /** M199. Committing the graph transaction, once its body has finished. */
+  commit: number;
   total: number;
 }
 
@@ -339,7 +348,7 @@ export function isValidSnapshotSet(value: unknown): value is IndexedFileSnapshot
 }
 
 export function emptyTimings(): IndexTimings {
-  return { discovery: 0, planning: 0, parsing: 0, invalidation: 0, linking: 0, persistence: 0, retrievalIndex: 0, validation: 0, total: 0 };
+  return { discovery: 0, planning: 0, parsing: 0, invalidation: 0, linking: 0, persistence: 0, retrievalIndex: 0, validation: 0, bookkeeping: 0, commit: 0, total: 0 };
 }
 
 function isPackageSurfacePath(filePath: string): boolean {
