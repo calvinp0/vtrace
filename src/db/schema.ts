@@ -276,6 +276,68 @@ export function initializeSchema(db: Database): void {
 
     CREATE INDEX IF NOT EXISTS idx_symbol_mechanism_facts_path
       ON symbol_mechanism_facts(file_path_raw);
+
+    -- M200 module binding authority. Two tables, because the forward and reverse
+    -- questions are different questions.
+    --
+    -- "module_bindings" is what a module PUBLISHES: one row per importable name,
+    -- and where that name resolves. It is the persisted old surface an
+    -- incremental refresh compares its freshly parsed one against, which is how a
+    -- package edit that changes no binding stops being global invalidation.
+    --
+    -- "import_descriptors" is what a file DEPENDS ON: one row per import
+    -- statement, carrying what the parser's own resolver made of it. The graph
+    -- cannot answer this: an "imports" edge is written only when both ends
+    -- resolve to a symbol, and a consumer whose resolution is about to move is
+    -- exactly the case where it does not.
+    --
+    -- Keyed by raw path rather than file id, and with no foreign key to "files",
+    -- for the reason "file_index_failures" has none: these rows describe a path's
+    -- import structure and must survive independently of whether that path
+    -- currently owns a "files" row.
+    CREATE TABLE IF NOT EXISTS module_bindings (
+      file_path TEXT NOT NULL,
+      local_name TEXT NOT NULL,
+      binding_kind TEXT NOT NULL CHECK (binding_kind IN ('definition', 're_export', 'module_alias')),
+      imported_name TEXT,
+      target_path TEXT,
+      PRIMARY KEY (file_path, local_name, binding_kind)
+    );
+
+    -- The reverse lookup a re-export walk makes once per visited module.
+    CREATE INDEX IF NOT EXISTS idx_module_bindings_target
+      ON module_bindings(target_path, file_path);
+
+    -- One row per file, carrying the two facts about a surface that are not
+    -- expressible as a binding: that it exists at all (so absence can be
+    -- distinguished from "publishes nothing"), and that a wildcard makes it
+    -- unenumerable.
+    CREATE TABLE IF NOT EXISTS module_binding_surfaces (
+      file_path TEXT PRIMARY KEY,
+      is_package_surface INTEGER NOT NULL CHECK (is_package_surface IN (0, 1)),
+      unbounded_names INTEGER NOT NULL CHECK (unbounded_names IN (0, 1)),
+      surface_digest TEXT NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS import_descriptors (
+      file_path TEXT NOT NULL,
+      ordinal INTEGER NOT NULL CHECK (ordinal >= 0),
+      form TEXT NOT NULL CHECK (form IN ('from_import', 'import_module')),
+      requested_module TEXT NOT NULL,
+      relative_level INTEGER NOT NULL CHECK (relative_level >= 0),
+      imported_name TEXT,
+      local_name TEXT,
+      resolved_target_path TEXT,
+      resolution_status TEXT NOT NULL
+        CHECK (resolution_status IN ('resolved', 'unresolved', 'wildcard', 'ambiguous')),
+      PRIMARY KEY (file_path, ordinal)
+    );
+
+    -- The reverse-consumer query. Leading column is the target because that is
+    -- what the closure walks by; "resolution_status" follows it so the wildcard
+    -- probe reads the same index rather than adding a second one.
+    CREATE INDEX IF NOT EXISTS idx_import_descriptors_target
+      ON import_descriptors(resolved_target_path, resolution_status, file_path);
   `);
 
   ensureColumnExists(db, "symbols", "decorators", "TEXT");

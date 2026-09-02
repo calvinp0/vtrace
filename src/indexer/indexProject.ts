@@ -19,6 +19,14 @@ import { insertFileRunStates } from "../db/repositories/fileRunStatesRepository"
 import { createIndexRun } from "../db/repositories/indexRunsRepository";
 import { insertSymbolRunStates } from "../db/repositories/symbolRunStatesRepository";
 import { deleteSymbolSearchIndexForFile } from "../db/repositories/symbolSearchFtsRepository";
+import {
+  countPersistedSurfaces,
+  deleteModuleBindingsForFile,
+  importersOfTarget,
+  readPersistedSurfaces,
+  reExportsThrough,
+  wildcardImportersOfTarget,
+} from "../db/persistParseResult";
 import { deleteBodyLiteralsForFile } from "../db/repositories/bodyLiteralsRepository";
 import { deleteMechanismFactsForFile } from "../db/repositories/mechanismFactsRepository";
 import { replaceDocumentChunksForFile } from "../db/repositories/documentsRepository";
@@ -59,7 +67,12 @@ import {
   computeSnapshotHash,
   computeSemanticContextHash,
   emptyTimings,
+  isPackageSurfacePath,
   planIncrementalRefresh,
+  MAX_BINDING_CLOSURE_FRACTION,
+  bindingSurfaceDigest,
+  deriveBindingClosure,
+  type BindingClosureDiagnostics,
   type IndexedFileSnapshot,
   type IndexedFileSnapshotSet,
   type IndexPerformanceDiagnostics,
@@ -328,32 +341,81 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
   progress.report({ kind: "phase_end", phase: "parse" });
   timings.parsing = performance.now() - parseStarted;
 
+  let bindingClosureDiagnostics: BindingClosureDiagnostics | undefined;
   if (plan.mode === "incremental") {
     const candidateSemanticHash = computeSemanticContextHash(successfulResults);
     if (candidateSemanticHash !== options.previousSnapshot?.semanticContextHash) {
-      // IDs, signatures, exports, package surfaces, or path membership changed.
-      // The existing graph cannot prove the complete reverse closure because
-      // unresolved descriptors are not persisted, so rebuild every parse result.
-      plan = { ...plan, mode: "full_rebuild", fullRebuildReason: "closure_uncertain", affectedClosureFiles: scannedFiles.map((file) => file.path) };
-      successfulResults = [];
-      summariesByPath.clear();
-      parseCacheHits = 0;
-      parseCacheMisses = readableFiles.length;
-      parsedFiles = 0;
-      unsupportedFilesCarriedForward = 0;
-      const fallbackParseStarted = performance.now();
-      for (const fileContent of readableFiles) {
-        const parsed = isDocumentLanguage(fileContent.file.language)
-          ? { ok: true as const, result: emptyDocumentParseResult(fileContent) }
-          : await parseFile(registry, fileContent);
-        parsedFiles += 1;
-        if (!parsed.ok) summariesByPath.set(fileContent.file.path, summaryForParserError(fileContent, parsed.error));
-        else {
-          successfulResults.push(parsed.result);
-          summariesByPath.set(fileContent.file.path, { path: parsed.result.file.path, language: parsed.result.file.language, status: "indexed", diagnostics: parsed.result.diagnostics });
+      // M200. Something in the repository's semantic surface moved. Before
+      // asking for a rebuild, find out whether the movement is confined to
+      // module BINDINGS — what files publish and where those names resolve —
+      // because that is the one kind of movement whose reverse consumers this
+      // index can now name.
+      const binding = resolveBindingSurfaceChange({
+        db: options.db,
+        plan,
+        results: successfulResults,
+        previousSemanticContextHash: options.previousSnapshot?.semanticContextHash,
+        repositoryFileCount: scannedFiles.length,
+      });
+      bindingClosureDiagnostics = binding.diagnostics;
+
+      if (binding.kind === "bounded") {
+        // Consumers whose resolutions may have moved were NOT in the parse plan,
+        // so their results are the ones the cache just handed back — computed
+        // against the old surface, with edges pointing at the old target. They
+        // have to be parsed again; reusing them is precisely the stale-binding
+        // failure the closure exists to prevent.
+        const reparseStarted = performance.now();
+        const closurePaths = new Set(binding.closureFiles);
+        const byPath = new Map(successfulResults.map((result) => [result.file.path, result]));
+        for (const fileContent of readableFiles) {
+          if (!closurePaths.has(fileContent.file.path)) continue;
+          if (plan.modified.some((change) => change.relativePath === fileContent.file.path)) continue;
+          const parsed = isDocumentLanguage(fileContent.file.language)
+            ? { ok: true as const, result: emptyDocumentParseResult(fileContent) }
+            : await parseFile(registry, fileContent);
+          parsedFiles += 1;
+          parseCacheHits = Math.max(0, parseCacheHits - (byPath.has(fileContent.file.path) ? 1 : 0));
+          parseCacheMisses += 1;
+          if (!parsed.ok) {
+            byPath.delete(fileContent.file.path);
+            summariesByPath.set(fileContent.file.path, summaryForParserError(fileContent, parsed.error));
+            continue;
+          }
+          byPath.set(fileContent.file.path, parsed.result);
+          summariesByPath.set(fileContent.file.path, {
+            path: parsed.result.file.path, language: parsed.result.file.language,
+            status: "indexed", diagnostics: parsed.result.diagnostics,
+          });
         }
+        successfulResults = [...byPath.values()];
+        const closure = [...new Set([...plan.affectedClosureFiles, ...binding.closureFiles])].sort();
+        plan = { ...plan, affectedClosureFiles: closure };
+        timings.parsing += performance.now() - reparseStarted;
+      } else {
+        // IDs, signatures, exports, or path membership changed, or the binding
+        // movement could not be bounded. Rebuild every parse result.
+        plan = { ...plan, mode: "full_rebuild", fullRebuildReason: "closure_uncertain", affectedClosureFiles: scannedFiles.map((file) => file.path) };
+        successfulResults = [];
+        summariesByPath.clear();
+        parseCacheHits = 0;
+        parseCacheMisses = readableFiles.length;
+        parsedFiles = 0;
+        unsupportedFilesCarriedForward = 0;
+        const fallbackParseStarted = performance.now();
+        for (const fileContent of readableFiles) {
+          const parsed = isDocumentLanguage(fileContent.file.language)
+            ? { ok: true as const, result: emptyDocumentParseResult(fileContent) }
+            : await parseFile(registry, fileContent);
+          parsedFiles += 1;
+          if (!parsed.ok) summariesByPath.set(fileContent.file.path, summaryForParserError(fileContent, parsed.error));
+          else {
+            successfulResults.push(parsed.result);
+            summariesByPath.set(fileContent.file.path, { path: parsed.result.file.path, language: parsed.result.file.language, status: "indexed", diagnostics: parsed.result.diagnostics });
+          }
+        }
+        timings.parsing += performance.now() - fallbackParseStarted;
       }
-      timings.parsing += performance.now() - fallbackParseStarted;
     }
   }
   if (plan.mode === "incremental") {
@@ -430,6 +492,12 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
       options.db.run("DELETE FROM edges");
       options.db.run("DELETE FROM symbols");
       options.db.run("DELETE FROM files");
+      // M200. Cleared with the rest of the graph: a wholesale rebuild rewrites
+      // the binding authority from source too, and a surviving row would make a
+      // path look like it still publishes a name the repository no longer has.
+      options.db.run("DELETE FROM module_bindings");
+      options.db.run("DELETE FROM module_binding_surfaces");
+      options.db.run("DELETE FROM import_descriptors");
     } else {
       // Driven by the INVALIDATED paths, not by the results about to be written.
       // The two agree today only because a file that stops parsing also changes
@@ -619,7 +687,7 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
     parserRegistryFingerprint,
   };
   timings.total = performance.now() - totalStarted;
-  const performanceDiagnostics = makePerformanceDiagnostics(plan, timings, scannedFiles.length, parseCacheHits, parseCacheMisses, parsedFiles, options, graphRowsDeleted, graphRowsInserted, unsupportedFilesCarriedForward);
+  const performanceDiagnostics = makePerformanceDiagnostics(plan, timings, scannedFiles.length, parseCacheHits, parseCacheMisses, parsedFiles, options, graphRowsDeleted, graphRowsInserted, unsupportedFilesCarriedForward, bindingClosureDiagnostics);
   if (options.parserVersion === undefined) {
     performanceDiagnostics.timingsMs = emptyTimings();
     performanceDiagnostics.graphRowsDeleted = 0;
@@ -773,6 +841,7 @@ function makePerformanceDiagnostics(
   graphRowsDeleted = 0,
   graphRowsInserted = 0,
   unsupportedFilesCarriedForward = 0,
+  bindingClosure: BindingClosureDiagnostics | undefined = undefined,
 ): IndexPerformanceDiagnostics {
   return {
     mode: plan.mode,
@@ -796,6 +865,7 @@ function makePerformanceDiagnostics(
     ...(plan.fullRebuildReason === undefined ? {} : { fallbackReason: plan.fullRebuildReason }),
     previousGraphSnapshotUsedForMutation: plan.mode === "incremental",
     unsupportedFilesCarriedForward,
+    ...(bindingClosure === undefined ? {} : { bindingClosure }),
   };
 }
 
@@ -1076,6 +1146,125 @@ type PersistenceScope =
       readonly rewrittenSymbolIds: ReadonlySet<string>;
     };
 
+/**
+ * Decide whether a semantic difference is confined to module bindings, and if so
+ * which files it can reach (M200 §12, §13).
+ *
+ * The confinement test is the part worth reading. Rather than maintaining a
+ * second per-file surface ledger — which could disagree with the hash it is
+ * meant to explain — it re-asks the SAME hash function one question: would the
+ * repository's semantic hash have matched if the changed binding surfaces had
+ * stayed where they were? If yes, bindings are the only thing that moved. If no,
+ * something this milestone does not model changed too, and the answer is a
+ * rebuild.
+ */
+function resolveBindingSurfaceChange(input: {
+  db: Database;
+  plan: { readonly modified: readonly { readonly relativePath: string }[] };
+  results: readonly ParseResult[];
+  previousSemanticContextHash: string | undefined;
+  repositoryFileCount: number;
+}):
+  | { kind: "bounded"; closureFiles: readonly string[]; diagnostics: BindingClosureDiagnostics }
+  | { kind: "unbounded"; diagnostics: BindingClosureDiagnostics } {
+  const started = performance.now();
+  const modified = new Set(input.plan.modified.map((change) => normalizeFilePath(change.relativePath)));
+  const persisted = readPersistedSurfaces(input.db);
+  const resultsByPath = new Map(input.results.map((result) => [normalizeFilePath(result.file.path), result]));
+
+  const refuse = (
+    refusal: string,
+    detail: string,
+    changedModules: readonly string[] = [],
+  ): { kind: "unbounded"; diagnostics: BindingClosureDiagnostics } => ({
+    kind: "unbounded",
+    diagnostics: {
+      changedModules, closureFiles: [], visitedModules: 0, reparsedForClosure: 0,
+      repositoryFileCount: input.repositoryFileCount,
+      maxClosureFraction: MAX_BINDING_CLOSURE_FRACTION,
+      refusal, refusalDetail: detail,
+      derivationMs: +(performance.now() - started).toFixed(2),
+      filesAFullRebuildWouldParse: input.repositoryFileCount,
+    },
+  });
+
+  // An index written before this authority existed holds no surfaces, and one
+  // holding fewer than the parsers produced is a partial write we cannot reason
+  // from. Both are "cannot say", never "nothing changed".
+  const derivable = input.results.filter((result) => result.bindingSurface !== undefined);
+  if (derivable.length > 0 && persisted.size === 0) {
+    return refuse("descriptors_unavailable", "index holds no persisted binding surfaces");
+  }
+
+  const changedModules: string[] = [];
+  const surfaceless: string[] = [];
+  const unboundedModules: string[] = [];
+  const overrides = new Map<string, string>();
+
+  for (const filePath of [...modified].sort()) {
+    const result = resultsByPath.get(filePath);
+    const previousSurface = persisted.get(filePath);
+    if (result === undefined) continue;
+    if (result.bindingSurface === undefined) {
+      // A modified file this index models no bindings for. It only blocks the
+      // closure if it actually contributes a binding term — a package surface
+      // whose raw content moved — which is the TypeScript `index.ts` case.
+      if (isPackageSurfacePath(filePath)) surfaceless.push(filePath);
+      continue;
+    }
+    const digest = bindingSurfaceDigest(result.bindingSurface);
+    if (previousSurface === undefined) {
+      surfaceless.push(filePath);
+      continue;
+    }
+    if (previousSurface.surfaceDigest === digest) continue;
+    changedModules.push(filePath);
+    overrides.set(result.file.path, previousSurface.surfaceDigest);
+    if (result.bindingSurface.unboundedNames || previousSurface.unboundedNames) {
+      unboundedModules.push(filePath);
+    }
+  }
+
+  // The confinement test.
+  if (computeSemanticContextHash(input.results, overrides) !== input.previousSemanticContextHash) {
+    return refuse("semantic_change_outside_bindings",
+      `${changedModules.length} binding surface(s) changed, and something else did too`,
+      changedModules);
+  }
+
+  const closure = deriveBindingClosure({
+    changedModules, surfaceless, unboundedModules,
+    repositoryFileCount: input.repositoryFileCount,
+    maxClosureFraction: MAX_BINDING_CLOSURE_FRACTION,
+    authority: {
+      isAvailable: () => countPersistedSurfaces(input.db) > 0,
+      importersOf: (target) => importersOfTarget(input.db, target),
+      wildcardImportersOf: (target) => wildcardImportersOfTarget(input.db, target),
+      reExportsThrough: (file, target) => reExportsThrough(input.db, file, target),
+    },
+  });
+
+  if (!closure.ok) {
+    return refuse(closure.refusal, closure.detail, changedModules);
+  }
+
+  const reparsed = closure.files.filter((filePath) => !modified.has(filePath));
+  return {
+    kind: "bounded",
+    closureFiles: closure.files,
+    diagnostics: {
+      changedModules, closureFiles: closure.files,
+      visitedModules: closure.visitedModules.length,
+      reparsedForClosure: reparsed.length,
+      repositoryFileCount: input.repositoryFileCount,
+      maxClosureFraction: MAX_BINDING_CLOSURE_FRACTION,
+      refusal: null,
+      derivationMs: +(performance.now() - started).toFixed(2),
+      filesAFullRebuildWouldParse: input.repositoryFileCount,
+    },
+  };
+}
+
 function resolvePersistenceScope(
   plan: { readonly mode: string; readonly affectedClosureFiles: readonly string[]; readonly fullRebuildReason?: string },
   successfulResults: readonly ParseResult[],
@@ -1123,6 +1312,8 @@ function invalidatePersistedFile(db: Database, filePath: string): void {
   deleteMechanismFactsForFile(db, { path: normalizedPath });
   deleteBodyLiteralsForFile(db, { path: normalizedPath });
   deleteSymbolSearchIndexForFile(db, { path: normalizedPath });
+  // M200: keyed by path for the same reason as the three above.
+  deleteModuleBindingsForFile(db, normalizedPath);
 
   if (row !== null) deleteSymbolsForFile(db, row.id);
   deleteFileByPath(db, normalizedPath);
@@ -1201,6 +1392,7 @@ function pruneRemovedFiles(
       deleteSymbolSearchIndexForFile(db, { path: filePath });
       deleteBodyLiteralsForFile(db, { path: filePath });
       deleteMechanismFactsForFile(db, { path: filePath });
+      deleteModuleBindingsForFile(db, filePath);
       deleteFileByPath(db, filePath);
     }
   });

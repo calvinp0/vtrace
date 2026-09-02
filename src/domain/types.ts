@@ -136,11 +136,98 @@ export interface ParseDiagnostic {
   startByte?: number;
 }
 
+/**
+ * How a parser resolved one import statement.
+ *
+ * `resolved` means the resolver named exactly one in-repository file.
+ * `unresolved` means it named none — a third-party or standard-library module,
+ * or a path this repository does not hold. Both of the remaining two are
+ * REFUSALS rather than answers, and they are recorded because a refusal is what
+ * makes a bounded closure impossible: `wildcard` for `from x import *`, whose
+ * bound names are not knowable without executing the target, and `ambiguous`
+ * for a name two imports could equally have bound, or a module name two files
+ * claim at the same extension precedence.
+ */
+export type ImportResolutionStatus = "resolved" | "unresolved" | "wildcard" | "ambiguous";
+
+/**
+ * One import statement, as the parser's own resolver saw it (M200).
+ *
+ * This is the persisted half of the reverse-dependency authority: the forward
+ * direction is already in the graph as `imports` edges, but an edge is written
+ * only when BOTH ends resolve to a symbol, so the edges alone cannot answer
+ * "which files depend on module M" for a module whose surface is about to
+ * change. Every field is what the resolver actually produced; nothing here is
+ * re-derived from the module name by a second implementation.
+ */
+export interface ImportDescriptor {
+  /** `from x import y` versus `import x`. */
+  readonly form: "from_import" | "import_module";
+  /** The module as written, before relative resolution. `""` for `from . import x`. */
+  readonly requestedModule: string;
+  /** Leading-dot count. 0 for an absolute import. */
+  readonly relativeLevel: number;
+  /** The member requested, `"*"` for a wildcard, null for `import x`. */
+  readonly importedName: string | null;
+  /** The name this import binds locally, alias-aware. Null when nothing is bound. */
+  readonly localName: string | null;
+  /** The in-repository file the resolver chose, or null when it chose none. */
+  readonly resolvedTargetPath: FilePath | null;
+  readonly resolutionStatus: ImportResolutionStatus;
+}
+
+/**
+ * How one name became available in a module's importable surface.
+ *
+ * `definition` — defined here. `re_export` — bound by an exact `from X import y`
+ * and therefore resolving into another file. `module_alias` — bound by
+ * `import x [as y]`, so the name stands for a module rather than a member.
+ */
+export type ModuleBindingKind = "definition" | "re_export" | "module_alias";
+
+export interface ModuleBinding {
+  readonly localName: string;
+  readonly kind: ModuleBindingKind;
+  /** The name in the TARGET module; equals `localName` for a definition. */
+  readonly importedName: string | null;
+  /** Where the name resolves. Null for a definition (it resolves here). */
+  readonly targetPath: FilePath | null;
+}
+
+/**
+ * What a module publishes to anything that imports it (M200).
+ *
+ * The point of this type is that it is derived from parsed structure, never
+ * from bytes. Two files that differ only in comments or formatting have equal
+ * surfaces; two files that bind the same NAME to a different target do not. That
+ * distinction is the whole reason a package-surface edit no longer has to be
+ * treated as global semantic invalidation — and `unboundedNames` is the reason
+ * it can still be: a wildcard import publishes names this parser cannot
+ * enumerate, so a surface carrying one can only be compared conservatively.
+ */
+export interface ModuleBindingSurface {
+  readonly filePath: FilePath;
+  /** True for a Python package `__init__.py`. */
+  readonly isPackageSurface: boolean;
+  /** Sorted by `localName` then `kind`, so the surface has one serialization. */
+  readonly bindings: readonly ModuleBinding[];
+  /** True when a `from x import *` makes this surface unenumerable. */
+  readonly unboundedNames: boolean;
+}
+
 export interface ParseResult {
   file: FileRecord;
   symbols: SymbolRecord[];
   edges: EdgeRecord[];
   diagnostics: ParseDiagnostic[];
+  /**
+   * M200. Present only for parsers that model module bindings (Python today).
+   * Absent means "this parser cannot say", which every consumer must treat as
+   * the conservative case rather than as an empty surface.
+   */
+  bindingSurface?: ModuleBindingSurface;
+  /** M200. Absent for the same reason, and never an empty array standing in for it. */
+  importDescriptors?: readonly ImportDescriptor[];
 }
 
 export function normalizeFilePath(filePath: FilePath): FilePath {

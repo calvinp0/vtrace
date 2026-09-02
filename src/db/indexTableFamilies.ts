@@ -44,6 +44,13 @@ export const REPOSITORY_DERIVED_TABLES: ReadonlySet<string> = new Set([
   "index_runs",
   "file_run_states",
   "symbol_run_states",
+  // M200 §22: the module binding authority is derived from source exactly as
+  // symbols and edges are, and is compared by the full/incremental equivalence
+  // harness for the same reason. A derived table the harness ignores is a table
+  // that can silently diverge.
+  "module_bindings",
+  "module_binding_surfaces",
+  "import_descriptors",
 ]);
 
 /**

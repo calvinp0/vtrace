@@ -11,6 +11,9 @@ import {
   computeSymbolId,
   normalizeFilePath,
   type EdgeRecord,
+  type ImportDescriptor,
+  type ModuleBinding,
+  type ModuleBindingSurface,
   type ParseResult,
   type SymbolRecord,
 } from "../domain/types";
@@ -841,6 +844,12 @@ function parsePythonWithContext(
     context: resolutionContext,
     callPairs,
   });
+  const binding = buildModuleBindingEvidence({
+    filePath: input.path,
+    imports: root.imports,
+    symbols: extracted.symbols,
+    context: resolutionContext,
+  });
 
   return {
     file: {
@@ -853,7 +862,129 @@ function parsePythonWithContext(
     symbols: [moduleSymbol, ...extracted.symbols],
     edges: [...extracted.edges, ...importEdges, ...callEdges, ...referenceEdges],
     diagnostics: [],
+    bindingSurface: binding.surface,
+    importDescriptors: binding.descriptors,
   };
+}
+
+/**
+ * M200. What this module publishes, and what it depends on, taken from the SAME
+ * resolver the edges are built with.
+ *
+ * The point of routing through `buildImportMaps` rather than re-reading the AST
+ * is that a second implementation of "which name does this import bind" would be
+ * a second answer. If the two ever disagreed, the reverse closure would be
+ * bounded against a resolution the graph does not actually use — which is the
+ * shape of a false negative, not of a merely imprecise one.
+ */
+function buildModuleBindingEvidence(input: {
+  filePath: string;
+  imports: readonly PythonAstImport[];
+  symbols: readonly SymbolRecord[];
+  context: PythonParserContext;
+}): { surface: ModuleBindingSurface; descriptors: ImportDescriptor[] } {
+  const topLevelByName = buildTopLevelIndex(input.symbols);
+  const { fromImportsByName, moduleImportsByName, ambiguousNames } = buildImportMaps(
+    input.filePath,
+    input.imports,
+    topLevelByName,
+    input.context,
+  );
+
+  const descriptors: ImportDescriptor[] = [];
+  let unboundedNames = false;
+
+  for (const imported of input.imports) {
+    if (imported.kind === "from_import") {
+      const wildcard = imported.importedName === "*";
+
+      if (wildcard) {
+        unboundedNames = true;
+      }
+
+      const boundName = wildcard ? null : (imported.asName ?? imported.importedName);
+      const targetPath = resolveImportedModulePath(input.filePath, imported, input.context);
+      descriptors.push({
+        form: "from_import",
+        requestedModule: imported.module ?? "",
+        relativeLevel: imported.level,
+        importedName: imported.importedName,
+        localName: boundName,
+        resolvedTargetPath: targetPath ?? null,
+        resolutionStatus: wildcard
+          ? "wildcard"
+          : boundName !== null && ambiguousNames.has(boundName)
+            ? "ambiguous"
+            : targetPath === undefined ? "unresolved" : "resolved",
+      });
+      continue;
+    }
+
+    const boundName = imported.asName ?? imported.module.split(".")[0] ?? null;
+    const targetPath = resolveAbsoluteModulePath(imported.module, input.context);
+    descriptors.push({
+      form: "import_module",
+      requestedModule: imported.module,
+      relativeLevel: 0,
+      importedName: null,
+      localName: boundName === null || boundName.length === 0 ? null : boundName,
+      resolvedTargetPath: targetPath ?? null,
+      resolutionStatus: boundName !== null && ambiguousNames.has(boundName)
+        ? "ambiguous"
+        : targetPath === undefined ? "unresolved" : "resolved",
+    });
+  }
+
+  const bindings: ModuleBinding[] = [];
+
+  // A name defined here shadows any import of the same name, which is exactly
+  // what `buildImportMaps` already encoded by refusing to bind it.
+  for (const symbol of input.symbols) {
+    if (symbol.parentSymbolId !== undefined) continue;
+    bindings.push({
+      localName: symbol.localName,
+      kind: "definition",
+      importedName: symbol.localName,
+      targetPath: null,
+    });
+  }
+
+  for (const [localName, reExport] of fromImportsByName) {
+    bindings.push({
+      localName,
+      kind: "re_export",
+      importedName: reExport.importedName,
+      targetPath: reExport.targetPath,
+    });
+  }
+
+  for (const [localName, moduleImport] of moduleImportsByName) {
+    bindings.push({
+      localName,
+      kind: "module_alias",
+      importedName: null,
+      targetPath: moduleImport.targetPath,
+    });
+  }
+
+  bindings.sort((a, b) => (
+    a.localName.localeCompare(b.localName) || a.kind.localeCompare(b.kind)
+  ));
+
+  return {
+    surface: {
+      filePath: input.filePath,
+      isPackageSurface: isPythonPackageSurfacePath(input.filePath),
+      bindings,
+      unboundedNames,
+    },
+    descriptors,
+  };
+}
+
+/** A Python package's importable surface lives in its `__init__.py`. */
+export function isPythonPackageSurfacePath(filePath: string): boolean {
+  return filePath === "__init__.py" || filePath.endsWith("/__init__.py");
 }
 
 function parsePythonAst(
@@ -2107,6 +2238,14 @@ function resolveReferenceTarget(
 interface ImportMaps {
   fromImportsByName: Map<string, { importedName: string; targetPath: string }>;
   moduleImportsByName: Map<string, { targetPath: string }>;
+  /**
+   * M200. Names this file's imports could have bound and the resolver refused
+   * to, because two statements (or a statement and a local definition) claim the
+   * same name. Previously these were only DELETED, so a caller could not tell an
+   * ambiguous name from one that was never imported — and a binding surface that
+   * cannot distinguish the two would let ambiguity look like absence.
+   */
+  ambiguousNames: Set<string>;
 }
 
 function buildImportMaps(
@@ -2191,7 +2330,11 @@ function buildImportMaps(
     moduleImportsByName.delete(name);
   }
 
-  return { fromImportsByName, moduleImportsByName };
+  return {
+    fromImportsByName,
+    moduleImportsByName,
+    ambiguousNames: new Set([...fromImportsAmbiguous, ...moduleImportsAmbiguous]),
+  };
 }
 
 function buildTopLevelIndex(

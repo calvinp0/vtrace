@@ -41,6 +41,22 @@ export function fullSemanticProjection(db: Database): FullProjection {
       fileFailures: db.query(`
         SELECT path, language, status, failure_class, message, content_hash, size_bytes
         FROM file_index_failures ORDER BY path`).all(),
+      // M200 §22. The binding authority is derived from source like everything
+      // above it, so it is compared like everything above it. A table the
+      // equivalence harness does not read is a table that can diverge between a
+      // bounded refresh and a rebuild without anything saying so — and this one
+      // decides whether future refreshes are bounded at all, so a divergence
+      // here would compound rather than stay local.
+      moduleBindingSurfaces: db.query(`
+        SELECT file_path, is_package_surface, unbounded_names, surface_digest
+        FROM module_binding_surfaces ORDER BY file_path`).all(),
+      moduleBindings: db.query(`
+        SELECT file_path, local_name, binding_kind, imported_name, target_path
+        FROM module_bindings ORDER BY file_path, local_name, binding_kind`).all(),
+      importDescriptors: db.query(`
+        SELECT file_path, ordinal, form, requested_module, relative_level,
+               imported_name, local_name, resolved_target_path, resolution_status
+        FROM import_descriptors ORDER BY file_path, ordinal`).all(),
     },
     normalizedGraphHash: normalizedGraphHash(db),
   };

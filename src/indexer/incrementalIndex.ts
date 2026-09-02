@@ -1,6 +1,13 @@
 import { createHash } from "node:crypto";
 
-import { Language, type FileRecord, type ParseResult } from "../domain/types";
+import {
+  Language,
+  type FilePath,
+  type FileRecord,
+  type ModuleBinding,
+  type ModuleBindingSurface,
+  type ParseResult,
+} from "../domain/types";
 
 // Bumped to 5 by M156: `indexOutcome` gained `failed`, so a snapshot written
 // before M156 cannot express which files the run refused. Reading one as though
@@ -103,6 +110,19 @@ export interface IncrementalRefreshPlan {
   readonly initiallyInvalidatedFiles: readonly string[];
   readonly affectedClosureFiles: readonly string[];
   readonly fullRebuildReason?: FullRebuildReason;
+  /**
+   * M200. Modified files that publish an importable surface, and therefore carry
+   * a question this planner cannot answer.
+   *
+   * Before M200 the presence of one of these WAS the answer: a package-surface
+   * modification meant `closure_uncertain` and a full rebuild. But whether such
+   * an edit changed anything importable is a fact about parsed bindings, and
+   * this planner runs before parsing — it holds content hashes, and a content
+   * hash cannot tell a redirected re-export from an added comment. So the
+   * question is carried forward to the post-parse resolver, which has both
+   * surfaces and the persisted reverse authority to answer it with.
+   */
+  readonly packageSurfaceCandidates: readonly string[];
 }
 
 export interface IndexTimings {
@@ -158,6 +178,39 @@ export interface IndexPerformanceDiagnostics {
   fallbackReason?: FullRebuildReason;
   previousGraphSnapshotUsedForMutation: boolean;
   unsupportedFilesCarriedForward: number;
+  /**
+   * M200. Present only on a refresh that had a module-binding question to
+   * answer — a modified file whose importable surface may have moved.
+   *
+   * Published because `MAX_BINDING_CLOSURE_FRACTION` is a cost policy set at a
+   * conservative 0.20 and not yet an evidence-derived crossover. These are the
+   * numbers a later milestone needs to replace it with a measured one: how big
+   * the closure actually was, how much work it implied, and what the rebuild it
+   * displaced would have cost. Absent means no binding surface changed, which is
+   * itself the answer for the frozen A3 fixture.
+   */
+  bindingClosure?: BindingClosureDiagnostics;
+}
+
+export interface BindingClosureDiagnostics {
+  /** Modified files whose derived surface differs from the persisted one. */
+  changedModules: readonly string[];
+  /** Consumers the reverse walk reached, before the cap was applied. */
+  closureFiles: readonly string[];
+  /** Modules the walk visited, including those reached through re-export chains. */
+  visitedModules: number;
+  /** Files this refresh reparsed because the closure named them. */
+  reparsedForClosure: number;
+  /** The denominator the cap is taken against. */
+  repositoryFileCount: number;
+  maxClosureFraction: number;
+  /** Null when the closure was derived; the refusal that forced a rebuild otherwise. */
+  refusal: string | null;
+  refusalDetail?: string;
+  /** Wall time spent deciding, so the derivation cannot hide its own cost. */
+  derivationMs: number;
+  /** Files a full rebuild would have reparsed instead. The saving, when bounded. */
+  filesAFullRebuildWouldParse: number;
 }
 
 export function planIncrementalRefresh(input: {
@@ -174,7 +227,7 @@ export function planIncrementalRefresh(input: {
   const empty = { added: [], modified: [], deleted: [], renamed: [], unchanged: [] };
 
   if (input.requestedMode === "full") {
-    return { mode: "full_rebuild", ...empty, initiallyInvalidatedFiles: current.map((f) => f.path), affectedClosureFiles: current.map((f) => f.path) };
+    return { mode: "full_rebuild", ...empty, initiallyInvalidatedFiles: current.map((f) => f.path), affectedClosureFiles: current.map((f) => f.path), packageSurfaceCandidates: [] };
   }
   if (!input.compatible) {
     return {
@@ -183,6 +236,7 @@ export function planIncrementalRefresh(input: {
       initiallyInvalidatedFiles: current.map((f) => f.path),
       affectedClosureFiles: current.map((f) => f.path),
       fullRebuildReason: input.incompatibilityReason ?? "unknown",
+      packageSurfaceCandidates: [],
     };
   }
   if (previous === undefined) {
@@ -192,6 +246,7 @@ export function planIncrementalRefresh(input: {
       initiallyInvalidatedFiles: current.map((f) => f.path),
       affectedClosureFiles: current.map((f) => f.path),
       fullRebuildReason: "snapshot_missing",
+      packageSurfaceCandidates: [],
     };
   }
 
@@ -232,13 +287,21 @@ export function planIncrementalRefresh(input: {
   const invalidated = [...modified.map((change) => change.relativePath), ...actualAdded.map((change) => change.relativePath), ...actualDeleted.map((change) => change.relativePath), ...renames.flatMap((rename) => [rename.from, rename.to])].sort();
 
   if (invalidated.length === 0) {
-    return { mode: "noop", added: actualAdded, modified, deleted: actualDeleted, renamed: renames, unchanged, initiallyInvalidatedFiles: [], affectedClosureFiles: [] };
+    return { mode: "noop", added: actualAdded, modified, deleted: actualDeleted, renamed: renames, unchanged, initiallyInvalidatedFiles: [], affectedClosureFiles: [], packageSurfaceCandidates: [] };
   }
 
-  // The current graph omits unresolved descriptors. Adds/deletes/renames can
-  // therefore change old resolutions without a queryable reverse dependency.
-  const uncertain = actualAdded.length > 0 || actualDeleted.length > 0 || renames.length > 0
-    || modified.some((change) => isPackageSurfacePath(change.relativePath));
+  // Adds, deletes and renames can change old resolutions without a queryable
+  // reverse dependency: a new file can claim a module name an existing import
+  // already resolved elsewhere, and a deleted one can strand resolutions the
+  // graph never recorded as edges. M200 did not make those derivable and does
+  // not claim to — only the package-surface case moved, and it moved because a
+  // modification leaves the file set intact, so the persisted descriptors
+  // describe the same repository the new parse does.
+  const uncertain = actualAdded.length > 0 || actualDeleted.length > 0 || renames.length > 0;
+  const packageSurfaceCandidates = modified
+    .map((change) => change.relativePath)
+    .filter((relativePath) => isPackageSurfacePath(relativePath))
+    .sort();
   if (uncertain) {
     return {
       mode: "full_rebuild",
@@ -250,6 +313,7 @@ export function planIncrementalRefresh(input: {
       initiallyInvalidatedFiles: invalidated,
       affectedClosureFiles: current.map((file) => file.path),
       fullRebuildReason: "closure_uncertain",
+      packageSurfaceCandidates,
     };
   }
 
@@ -269,6 +333,7 @@ export function planIncrementalRefresh(input: {
       initiallyInvalidatedFiles: invalidated,
       affectedClosureFiles: current.map((file) => file.path),
       fullRebuildReason: "change_set_too_large",
+      packageSurfaceCandidates,
     };
   }
   const lightweightOnly = modified.every((change) => (
@@ -285,6 +350,7 @@ export function planIncrementalRefresh(input: {
       initiallyInvalidatedFiles: invalidated,
       affectedClosureFiles: current.map((file) => file.path),
       fullRebuildReason: "change_set_too_large",
+      packageSurfaceCandidates,
     };
   }
 
@@ -297,10 +363,48 @@ export function planIncrementalRefresh(input: {
     unchanged,
     initiallyInvalidatedFiles: invalidated,
     affectedClosureFiles: invalidated,
+    packageSurfaceCandidates,
   };
 }
 
-export function computeBindingContextHash(results: readonly ParseResult[]): string {
+/**
+ * The binding term a context hash contributes for one file (M200).
+ *
+ * Three cases, and the distinction between the last two is the milestone:
+ *
+ *   - a parser that models bindings -> the DERIVED surface digest. Comments and
+ *     formatting do not appear in it; a redirected re-export does.
+ *   - a package surface from a parser that does not (TypeScript `index.ts`,
+ *     Cython) -> the raw content hash, exactly as before M200. Nothing here
+ *     knows what those files publish, and inventing a derivation for them would
+ *     be the false-negative this module is built to avoid.
+ *   - anything else -> no term.
+ *
+ * `overrides` substitutes a PERSISTED digest for a freshly derived one. It has
+ * exactly one caller: the post-parse resolver asking "would this hash have
+ * matched if the binding surfaces had not moved?", which is how it decides
+ * whether a semantic difference is confined to bindings without maintaining a
+ * second per-file surface ledger that could disagree with this one.
+ */
+function bindingTermFor(
+  result: ParseResult,
+  digestOf: (surface: NonNullable<ParseResult["bindingSurface"]>) => string,
+  overrides?: ReadonlyMap<string, string>,
+): string[] {
+  if (result.bindingSurface !== undefined) {
+    const digest = overrides?.get(result.file.path) ?? digestOf(result.bindingSurface);
+    return [`binding\0${result.file.path}\0${digest}`];
+  }
+  if (isPackageSurfacePath(result.file.path)) {
+    return [`package\0${result.file.path}\0${result.file.contentHash}`];
+  }
+  return [];
+}
+
+export function computeBindingContextHash(
+  results: readonly ParseResult[],
+  overrides?: ReadonlyMap<string, string>,
+): string {
   const surface = results.flatMap((result) => [
     `file\0${result.file.path}\0${result.file.language}`,
     ...result.symbols.map((symbol) => [
@@ -312,12 +416,15 @@ export function computeBindingContextHash(results: readonly ParseResult[]): stri
       symbol.exported ? "1" : "0",
       symbol.parentSymbolId ?? "",
     ].join("\0")),
-    ...(isPackageSurfacePath(result.file.path) ? [`package\0${result.file.path}\0${result.file.contentHash}`] : []),
+    ...bindingTermFor(result, bindingSurfaceDigest, overrides),
   ]).sort();
   return sha256(surface.join("\n"));
 }
 
-export function computeSemanticContextHash(results: readonly ParseResult[]): string {
+export function computeSemanticContextHash(
+  results: readonly ParseResult[],
+  overrides?: ReadonlyMap<string, string>,
+): string {
   const surface = results.flatMap((result) => [
     `file\0${result.file.path}\0${result.file.language}`,
     ...result.symbols.map((symbol) => [
@@ -329,7 +436,7 @@ export function computeSemanticContextHash(results: readonly ParseResult[]): str
       symbol.signature,
       symbol.exported ? "1" : "0",
     ].join("\0")),
-    ...(isPackageSurfacePath(result.file.path) ? [`package\0${result.file.path}\0${result.file.contentHash}`] : []),
+    ...bindingTermFor(result, bindingSurfaceDigest, overrides),
   ]).sort();
   return sha256(surface.join("\n"));
 }
@@ -361,10 +468,213 @@ export function emptyTimings(): IndexTimings {
   return { discovery: 0, read: 0, planning: 0, parsing: 0, invalidation: 0, linking: 0, persistence: 0, retrievalIndex: 0, validation: 0, bookkeeping: 0, parseCacheWrite: 0, commit: 0, total: 0 };
 }
 
-function isPackageSurfacePath(filePath: string): boolean {
+/**
+ * A file that publishes an importable surface for a whole directory: a Python
+ * package `__init__.py`, or a JS/TS `index` module. Shared with the indexer so
+ * the planner and the post-parse resolver cannot disagree about which files
+ * carry a package question.
+ */
+export function isPackageSurfacePath(filePath: string): boolean {
   return /(^|\/)(__init__\.py|index\.[cm]?[jt]sx?)$/.test(filePath);
 }
 
 function sha256(value: string): string {
   return createHash("sha256").update(value).digest("hex");
+}
+
+// ---------------------------------------------------------------------------
+// M200 — deriving which files a module-binding change can reach.
+//
+// The problem this solves is stated most clearly by what it replaced. Before
+// M200, a modification to a package `__init__.py` was `closure_uncertain`: the
+// planner could not name the files whose import resolutions would change, so it
+// invalidated all of them. That was correct and, on the frozen C-LARGE k=3
+// fixture, cost a whole rebuild for an appended comment.
+//
+// Two things had to become derivable for that to stop being the only safe
+// answer. First, whether a package's importable surface changed AT ALL, which is
+// a question about parsed bindings and not about bytes (`ModuleBindingSurface`).
+// Second, when it did change, which files resolve through it — which is a
+// reverse query the graph could not answer, because an `imports` edge exists
+// only when both ends resolve to a symbol, and the interesting consumers are
+// exactly the ones whose resolution is about to move.
+//
+// The closure over-approximates on purpose. §13: a false positive costs a
+// reparse, a false negative leaves a stale edge pointing at a symbol that no
+// longer answers for the name. Every refusal below returns `full_rebuild`
+// rather than a smaller closure.
+// ---------------------------------------------------------------------------
+
+
+/** Why a bounded closure could not be derived, and a rebuild is the answer. */
+export type ClosureRefusal =
+  /** A changed module publishes names through `from x import *`. */
+  | "wildcard_surface"
+  /** A consumer reaches a changed module through `from x import *`. */
+  | "wildcard_consumer"
+  /** A file changed that no parser models bindings for (TypeScript, Cython, documents). */
+  | "surface_not_derivable"
+  /** The index predates persisted descriptors, or holds none for a file it should. */
+  | "descriptors_unavailable"
+  /** The closure reached the size at which a rebuild is the cheaper way to the same graph. */
+  | "closure_too_large";
+
+export type BindingClosure =
+  | { readonly ok: true; readonly files: readonly FilePath[]; readonly visitedModules: readonly FilePath[] }
+  | { readonly ok: false; readonly refusal: ClosureRefusal; readonly detail: string };
+
+/**
+ * The serialization a surface is compared by.
+ *
+ * Deliberately total over the type: a field added to `ModuleBinding` that is not
+ * hashed here would be a semantic difference the comparison cannot see, so the
+ * bindings are written out field by field rather than through `JSON.stringify`,
+ * whose output would silently follow a shape change without anyone deciding it
+ * should.
+ */
+export function bindingSurfaceDigest(surface: ModuleBindingSurface): string {
+  const lines = [
+    `path\0${surface.filePath}`,
+    `package\0${surface.isPackageSurface ? "1" : "0"}`,
+    // A surface with unenumerable names is never equal to one without, even if
+    // the names it CAN enumerate match.
+    `unbounded\0${surface.unboundedNames ? "1" : "0"}`,
+    ...surface.bindings.map((binding: ModuleBinding) => [
+      "bind", binding.localName, binding.kind, binding.importedName ?? "", binding.targetPath ?? "",
+    ].join("\0")),
+  ];
+  return createHash("sha256").update(lines.join("\n")).digest("hex");
+}
+
+/**
+ * The reverse half of the authority, as the closure needs to consult it.
+ *
+ * An interface rather than a concrete query so the closure can be exercised
+ * against an in-memory authority in tests and against SQLite in production,
+ * without the derivation itself knowing which it has.
+ */
+export interface ReverseBindingAuthority {
+  /**
+   * Files holding at least one import descriptor that resolved to `target`.
+   * Must include module-form importers (`import pkg`), whose descriptors name no
+   * member and can therefore reach any name the target publishes.
+   */
+  importersOf(target: FilePath): readonly FilePath[];
+  /**
+   * Files that reach `target` through a wildcard import. These are the consumers
+   * whose bound names cannot be enumerated, so their dependence on a particular
+   * name of `target` cannot be decided.
+   */
+  wildcardImportersOf(target: FilePath): readonly FilePath[];
+  /**
+   * True when `file` republishes any name that resolves into `target`, which
+   * makes `file`'s own surface change when `target`'s does, and so extends the
+   * walk to `file`'s importers (§11).
+   */
+  reExportsThrough(file: FilePath, target: FilePath): boolean;
+  /** False when this index holds no descriptor authority at all. */
+  isAvailable(): boolean;
+}
+
+/**
+ * The fraction of the repository a binding closure may reach before a full
+ * rebuild is taken instead.
+ *
+ * This is a COST boundary, not a correctness one. Everything below the cap and
+ * everything above it produce the same graph; the cap only decides which way of
+ * arriving there is cheaper, exactly as `MEASURED_LIGHTWEIGHT_PARSER_CHANGE_RATIO`
+ * does for the parser-cost rule it is deliberately set equal to. A closure that
+ * exceeds it is refused truthfully as `closure_too_large` — never silently
+ * trimmed, which would be the one failure mode this whole module exists to
+ * prevent.
+ *
+ * 0.20 is a conservative initial policy and not yet an evidence-derived
+ * crossover. `IndexPerformanceDiagnostics.bindingClosure` publishes the closure
+ * size and the work it implied on every refresh that computes one, so the
+ * threshold can later be justified or replaced by a measured crossover rather
+ * than re-argued. It was NOT chosen to make any frozen claim pass: the frozen
+ * C-LARGE k=3 fixture changes no binding surface, so no closure is derived for
+ * it and the cap is never consulted.
+ */
+export const MAX_BINDING_CLOSURE_FRACTION = 0.20;
+
+export interface BindingClosureInput {
+  /** Modules whose binding surface differs from the persisted one. */
+  readonly changedModules: readonly FilePath[];
+  /** Changed files no parser could produce a surface for. */
+  readonly surfaceless: readonly FilePath[];
+  /** Changed modules whose new or old surface carries `unboundedNames`. */
+  readonly unboundedModules: readonly FilePath[];
+  readonly authority: ReverseBindingAuthority;
+  /** Files the repository holds, the cap is taken against. */
+  readonly repositoryFileCount: number;
+  readonly maxClosureFraction: number;
+}
+
+/**
+ * Walk consumers outward from the changed modules.
+ *
+ * The walk is transitive because a re-export chain is: a consumer of `pkg` whose
+ * name resolves through `pkg/__init__.py` into `pkg/a.py` and on into
+ * `pkg/b.py` depends on every step, and only the first step is a direct
+ * importer. The `visited` set makes a cyclic chain terminate (§11) rather than
+ * being detected and refused — a cycle is a real Python shape, and refusing it
+ * would rebuild the repository for an ordinary edit.
+ */
+export function deriveBindingClosure(input: BindingClosureInput): BindingClosure {
+  if (!input.authority.isAvailable()) {
+    return { ok: false, refusal: "descriptors_unavailable", detail: "no persisted import descriptors" };
+  }
+  if (input.surfaceless.length > 0) {
+    return {
+      ok: false, refusal: "surface_not_derivable",
+      detail: `${input.surfaceless.length} changed file(s) have no binding surface: `
+        + `${[...input.surfaceless].sort().slice(0, 5).join(", ")}`,
+    };
+  }
+  if (input.unboundedModules.length > 0) {
+    return {
+      ok: false, refusal: "wildcard_surface",
+      detail: `${[...input.unboundedModules].sort().slice(0, 5).join(", ")}`,
+    };
+  }
+
+  const files = new Set<FilePath>();
+  const visited = new Set<FilePath>();
+  const queue = [...input.changedModules].sort();
+  const cap = Math.max(1, Math.floor(input.repositoryFileCount * input.maxClosureFraction));
+
+  while (queue.length > 0) {
+    const target = queue.shift()!;
+    if (visited.has(target)) continue;
+    visited.add(target);
+
+    const wildcardConsumers = input.authority.wildcardImportersOf(target);
+    if (wildcardConsumers.length > 0) {
+      return {
+        ok: false, refusal: "wildcard_consumer",
+        detail: `${[...wildcardConsumers].sort().slice(0, 5).join(", ")} reach ${target} by wildcard`,
+      };
+    }
+
+    for (const importer of input.authority.importersOf(target)) {
+      if (!files.has(importer)) {
+        files.add(importer);
+        if (files.size > cap) {
+          return {
+            ok: false, refusal: "closure_too_large",
+            detail: `${files.size} files exceeds the cap of ${cap} `
+              + `(${input.maxClosureFraction} of ${input.repositoryFileCount})`,
+          };
+        }
+      }
+      // Only a republisher's own consumers can be reached further out. A file
+      // that merely USES a name from the changed module ends the walk there.
+      if (!visited.has(importer) && input.authority.reExportsThrough(importer, target)) {
+        queue.push(importer);
+      }
+    }
+  }
+
+  return { ok: true, files: [...files].sort(), visitedModules: [...visited].sort() };
 }
