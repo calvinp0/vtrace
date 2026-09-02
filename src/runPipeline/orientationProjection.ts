@@ -43,7 +43,8 @@
  *                             authoritative supply running out and not a budget
  *                             being reached. Holdout supply is a median of 5 and
  *                             a maximum of 9; the ceiling does not engage until
- *                             46.
+ *                             46. A larger budget therefore admits MORE of the
+ *                             same ranked supply and never acquires anything.
  *
  *   VERBATIM OR FROZEN        a claim is never re-worded. Re-wording is how
  *                             "potential caller" becomes "caller" and how "not
@@ -56,6 +57,17 @@
  * gold file and gold symbol delivery identical and the median packet at 621
  * tokens. So the cap is gone and the ceiling is enforced, checked against the
  * assembled packet rather than an estimate of one.
+ *
+ * AND IT IS THE CALLER'S. M172 froze the ceiling at 2000, M171's R2000 rung: a
+ * product default sized on agent economics, applied to every request whatever
+ * `max_tokens` said. M204 traced what that made of a caller's budget: at 16000
+ * the evidence budget upstream delivered its supply with four fifths of the
+ * budget unused, and the fixed ceiling would have stopped admission at 2000
+ * packet tokens — 1575 in the caller's own chars/4 unit — had the supply ever
+ * reached it. A ceiling the caller cannot raise is not a budget. So the ceiling
+ * is now the caller's evidence budget stated in the packet's unit
+ * (`orientationCeilingTokens`), and 2000 remains what it always was, the
+ * default — applied only when no budget reached the projector at all.
  *
  * WHAT THE CEILING MAY NOT EVICT: the focus and the interpretation-critical
  * notes. A claim that cannot be rendered truthfully is omitted rather than
@@ -137,17 +149,62 @@ export const ORIENTATION_SCHEMA_VERSION = "run_pipeline.orientation/1" as const;
  */
 export const ORIENTATION_POLICY = Object.freeze({
   /**
-   * Model-visible token bound on the EVIDENCE packet — the items, in the
-   * packet's framing, before each item's own `tokens` field is attached.
-   * Enforced; governs `related`. The accounting fields then ride above it by a
-   * bounded amount the ledger states (`accountingOverhead`), because testing the
-   * ceiling on the accounted packet would let the description of the evidence
-   * evict the evidence. See orientationAccounting.ts.
+   * The DEFAULT model-visible token bound on the EVIDENCE packet — the items,
+   * in the packet's framing, before each item's own `tokens` field is attached.
+   * Applied only when the response carries no evidence budget for the projector
+   * to read (`orientationCeilingTokens`); every budgeted response is bounded by
+   * its own budget instead. Governs `related`. The accounting fields then ride
+   * above the ceiling by a bounded amount the ledger states
+   * (`accountingOverhead`), because testing the ceiling on the accounted packet
+   * would let the description of the evidence evict the evidence. See
+   * orientationAccounting.ts.
+   *
+   * It is a default and not a safety maximum: M172 took it from M171's R2000
+   * rung on agent economics, and no transport or product bound stands behind
+   * the number itself. The bounds that do stand are the caller's budget, the
+   * upstream tier caps on supply, and the focus head bound below.
    */
   ceilingTokens: 2000,
   /** Head bound on the focus excerpt, in characters, cut on a line boundary. */
   focusCodeCharacters: 1800,
 });
+
+/**
+ * Characters per token of the caller's budget: `max_tokens` is a chars/4 budget
+ * on the model-visible context (src/capsuleV2/tokens.ts, budgetDelivery.ts),
+ * and the packet is the model-visible output of the default path.
+ */
+export const ORIENTATION_CHARACTERS_PER_REQUESTED_TOKEN = 4;
+
+/**
+ * The evidence ceiling for one response, in the packet's own token rule.
+ *
+ * ONE RULE. The caller's evidence budget is `requested_context_tokens` — the
+ * caller's `max_tokens`, or the product default the response was packed
+ * against when the caller gave none — in chars/4 units. The packet's ceiling is
+ * that budget stated in the packet's unit: requested tokens × 4 characters ×
+ * the packet's tokens-per-character. Under the caller's own rule the two are
+ * the same number of characters, so an evidence packet within this ceiling is
+ * within the budget the caller stated, measured the way the caller stated it.
+ *
+ * A budget the projector cannot see falls back to `ORIENTATION_POLICY.ceilingTokens`.
+ * Nothing is reserved here twice: the wrapper is inside the packet the ceiling
+ * tests, the focus and the notes are never evicted by it, and the accounting
+ * fields ride above it by the amount the ledger reports (M203).
+ *
+ * No upper bound is imposed beyond the caller's number, because none exists on
+ * this path that the number would have to respect: `get_code_context` accepts
+ * any non-negative integer, and the packet is bounded in fact by its supply —
+ * the upstream tier caps and the neighbourhood caps — and in code by the focus
+ * head bound. Inventing a maximum would be a second undeclared cap of exactly
+ * the kind this rule replaces.
+ */
+export function orientationCeilingTokens(requestedContextTokens: number | AccountingAbsence): number {
+  if (typeof requestedContextTokens !== "number" || !Number.isFinite(requestedContextTokens) || requestedContextTokens < 0) {
+    return ORIENTATION_POLICY.ceilingTokens;
+  }
+  return orientationTokensOfCharacters(requestedContextTokens * ORIENTATION_CHARACTERS_PER_REQUESTED_TOKEN);
+}
 
 /**
  * M166's measured calibration for serialized tool-result JSON, 0.3174 tokens per
@@ -265,6 +322,22 @@ function assemble<F extends EvidenceFocus, R extends EvidenceRelated>(
 
 const absent = (value: unknown, fallback: AccountingAbsence): number | AccountingAbsence =>
   typeof value === "number" && Number.isFinite(value) ? value : fallback;
+
+/**
+ * The evidence budget this response was packed against, in its own chars/4
+ * units: the envelope's `requested_context_tokens`, or, when the envelope did
+ * not carry it, the product context's own `budgetTokens`. One reading, used by
+ * the ceiling and reported by the ledger, so the two can never disagree.
+ */
+function requestedContextTokensOf(
+  responseBudget: Record<string, unknown>,
+  productContext: Record<string, unknown>,
+): number | AccountingAbsence {
+  const requested = absent(responseBudget.requested_context_tokens, "unavailable");
+  if (requested !== "unavailable") return requested;
+  const accounting = isRecord(productContext.accounting) ? productContext.accounting : {};
+  return absent(accounting.budgetTokens, "unavailable");
+}
 
 /**
  * Project an authoritative `run_pipeline` result into an orientation packet, or
@@ -421,10 +494,16 @@ export function projectRunPipelineOrientation(output: unknown): OrientationPacke
     }
   }
 
-  // Admission, unchanged: a prefix of the admissible list, tested on the
+  // The ceiling for THIS response: the caller's evidence budget in the packet's
+  // unit, read from the same place the ledger reports it, before any admission.
+  const responseBudget = isRecord(output.responseBudget) ? output.responseBudget : {};
+  const requestedContextTokens = requestedContextTokensOf(responseBudget, productContext);
+  const ceilingTokens = orientationCeilingTokens(requestedContextTokens);
+
+  // Admission, unchanged in form: a prefix of the admissible list, tested on the
   // evidence packet. What each test saw is recorded for the ledger and read by
   // nothing else — the loop below is exactly the loop that ran before any
-  // accounting existed.
+  // accounting existed, against a ceiling that is now the caller's.
   const related: EvidenceRelated[] = [];
   const admitted: Candidate[] = [];
   const admissionPacketTokens: number[] = [orientationTokens(assemble(focus, [], notes))];
@@ -432,7 +511,7 @@ export function projectRunPipelineOrientation(output: unknown): OrientationPacke
   for (const [index, candidate] of candidates.entries()) {
     const next = [...related, candidate.entry];
     const packetTokens = orientationTokens(assemble(focus, next, notes));
-    if (packetTokens > ORIENTATION_POLICY.ceilingTokens) {
+    if (packetTokens > ceilingTokens) {
       rejected.push(Object.freeze({
         at: candidate.entry.at, origin: candidate.origin, proposedOrdinal: index + 1,
         estimatedTokens: orientationTokensOfCharacters(JSON.stringify(candidate.entry).length),
@@ -467,7 +546,7 @@ export function projectRunPipelineOrientation(output: unknown): OrientationPacke
     deduplicated: [...proposals.values()].reduce((n, list) => n + list.length - 1, 0),
     droppedNoClaim,
     notReached: candidates.length - admitted.length - rejected.length,
-    productContext, responseBudget: isRecord(output.responseBudget) ? output.responseBudget : {},
+    productContext, responseBudget, requestedContextTokens, ceilingTokens,
   }));
 
   return packet;
@@ -506,6 +585,8 @@ function ledgerFor(input: {
   readonly notReached: number;
   readonly productContext: Record<string, unknown>;
   readonly responseBudget: Record<string, unknown>;
+  readonly requestedContextTokens: number | AccountingAbsence;
+  readonly ceilingTokens: number;
 }): OrientationAccounting {
   const { focus, related } = input;
   const items: OrientationItemAccounting[] = [];
@@ -566,15 +647,21 @@ function ledgerFor(input: {
 
   const delivery = isRecord(input.productContext.delivery) ? input.productContext.delivery : {};
   const accounting = isRecord(input.productContext.accounting) ? input.productContext.accounting : {};
-  const requested = absent(input.responseBudget.requested_context_tokens, "unavailable");
+  const requested = input.requestedContextTokens;
 
   const ledger: OrientationAccounting = {
     tokenRule: { method: "characters_times_tokens_per_character",
       tokensPerCharacter: TOKENS_PER_CHARACTER, rounding: "nearest" },
-    ceilingTokens: ORIENTATION_POLICY.ceilingTokens,
+    ceilingTokens: input.ceilingTokens,
     ceilingAppliesTo: "evidence_packet",
+    ceilingDerivation: {
+      source: typeof requested === "number" ? "requested_context_tokens" : "policy_default",
+      requestedContextTokens: requested,
+      charactersPerRequestedToken: ORIENTATION_CHARACTERS_PER_REQUESTED_TOKEN,
+      defaultCeilingTokens: ORIENTATION_POLICY.ceilingTokens,
+    },
     evidence: { characters: evidenceCharacters, tokens: evidenceTokens,
-      withinCeiling: evidenceTokens <= ORIENTATION_POLICY.ceilingTokens },
+      withinCeiling: evidenceTokens <= input.ceilingTokens },
     packet: { characters: packetCharacters, tokens: packetTokens },
     accountingOverhead: { characters: packetCharacters - evidenceCharacters,
       tokens: packetTokens - evidenceTokens },
@@ -597,7 +684,7 @@ function ledgerFor(input: {
     },
     evidenceBudget: {
       method: "characters_div_4",
-      requestedTokens: requested === "unavailable" ? absent(accounting.budgetTokens, "unavailable") : requested,
+      requestedTokens: requested,
       modelVisibleTokens: absent(delivery.finalModelTokens, "unavailable") === "unavailable"
         ? absent(accounting.usedTokensEstimate, "unavailable") : absent(delivery.finalModelTokens, "unavailable"),
       remainingTokens: absent(accounting.remainingTokensEstimate, "unavailable"),

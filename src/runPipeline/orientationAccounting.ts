@@ -140,8 +140,21 @@ export interface OrientationAccounting {
     readonly tokensPerCharacter: number;
     readonly rounding: "nearest";
   };
+  /** The ceiling THIS response was admitted against, in the packet's rule. */
   readonly ceilingTokens: number;
   readonly ceilingAppliesTo: "evidence_packet";
+  /**
+   * Where the ceiling came from: the caller's evidence budget stated in the
+   * packet's unit (`requested_context_tokens` x characters per requested token
+   * x tokens per character), or the policy default when no budget was visible.
+   * See `orientationCeilingTokens` in orientationProjection.ts.
+   */
+  readonly ceilingDerivation: {
+    readonly source: "requested_context_tokens" | "policy_default";
+    readonly requestedContextTokens: number | AccountingAbsence;
+    readonly charactersPerRequestedToken: number;
+    readonly defaultCeilingTokens: number;
+  };
   /** The packet as tested against the ceiling: no item carries `tokens` yet. */
   readonly evidence: { readonly characters: number; readonly tokens: number; readonly withinCeiling: boolean };
   /** The packet as delivered. */
