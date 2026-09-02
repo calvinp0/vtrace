@@ -58,6 +58,12 @@ export interface SemanticItem {
   readonly contentMode: unknown;
   readonly roles: unknown;
   readonly selectionReasons: unknown;
+  /**
+   * The evidence budget's own chars/4 estimate for the item's delivered body.
+   * Carried so the orientation ledger can state the upstream figure verbatim,
+   * in its own units; the projector reads it for nothing else.
+   */
+  readonly estimatedTokens: unknown;
 }
 
 const SUPPLY = new WeakMap<object, readonly SemanticItem[]>();
@@ -68,6 +74,7 @@ const project = (item: JsonRecord): SemanticItem => Object.freeze({
   path: item.path,
   lineSpan: item.lineSpan,
   contentMode: item.contentMode,
+  estimatedTokens: item.estimatedTokens,
   roles: Array.isArray(item.roles) ? Object.freeze([...item.roles]) : item.roles,
   selectionReasons: Array.isArray(item.selectionReasons)
     ? Object.freeze([...item.selectionReasons])

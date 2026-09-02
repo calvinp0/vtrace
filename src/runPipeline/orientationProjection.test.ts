@@ -19,6 +19,7 @@ import {
   orientationTokens,
   projectRunPipelineOrientation,
 } from "./orientationProjection";
+import { orientationAccountingOf } from "./orientationAccounting";
 
 /** An authoritative result shaped like the real one, with `count` related symbols. */
 function authoritative(count: number, overrides: Record<string, unknown> = {}, bodyChars = 300): Record<string, unknown> {
@@ -86,10 +87,20 @@ describe("the default disclosure is a projection of the authoritative result", (
     expect(projectRunPipelineOrientation(authoritative(9))!.related).toHaveLength(9);
   });
 
-  test("the ceiling bounds the packet when supply is large enough to reach it", () => {
+  test("the ceiling bounds the evidence packet when supply is large enough to reach it", () => {
     const packet = projectRunPipelineOrientation(authoritative(300))!;
     expect(packet.related.length).toBeLessThan(300);
-    expect(orientationTokens(packet)).toBeLessThanOrEqual(ORIENTATION_POLICY.ceilingTokens);
+    // The ceiling is tested on the evidence packet, before any item states its
+    // own cost; the accounting fields ride above it by exactly the amount the
+    // ledger reports, and by nothing else.
+    const ledger = orientationAccountingOf(packet)!;
+    expect(ledger.evidence.tokens).toBeLessThanOrEqual(ORIENTATION_POLICY.ceilingTokens);
+    expect(ledger.evidence.withinCeiling).toBe(true);
+    expect(orientationTokens(packet)).toBe(ledger.evidence.tokens + ledger.accountingOverhead.tokens);
+    // And the overhead is what one integer field per item costs, no more.
+    expect(ledger.accountingOverhead.characters)
+      .toBe(packet.related.length * ",\"tokens\":".length + ",\"tokens\":".length
+        + [packet.focus, ...packet.related].reduce((n, item) => n + String(item.tokens).length, 0));
   });
 
   test("a packet complete below the ceiling is not padded to reach it", () => {

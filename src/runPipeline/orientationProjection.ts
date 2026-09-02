@@ -74,6 +74,18 @@
  */
 
 import { semanticItemSupplyOf } from "../productContext/semanticItemSupply";
+import {
+  ORIENTATION_TOKENS_PER_CHARACTER,
+  orientationTokensOfCharacters,
+  publishOrientationAccounting,
+  tokenDeviationBound,
+  withItemTokens,
+  type AccountingAbsence,
+  type OrientationAccounting,
+  type OrientationItemAccounting,
+  type OrientationItemOrigin,
+  type OrientationRejectedCandidate,
+} from "./orientationAccounting";
 
 /**
  * The single global claim boundary. It appears on EVERY resolved packet, never
@@ -124,7 +136,14 @@ export const ORIENTATION_SCHEMA_VERSION = "run_pipeline.orientation/1" as const;
  * records why each value is what it is.
  */
 export const ORIENTATION_POLICY = Object.freeze({
-  /** Model-visible token bound on the whole packet. Enforced. Governs `related`. */
+  /**
+   * Model-visible token bound on the EVIDENCE packet — the items, in the
+   * packet's framing, before each item's own `tokens` field is attached.
+   * Enforced; governs `related`. The accounting fields then ride above it by a
+   * bounded amount the ledger states (`accountingOverhead`), because testing the
+   * ceiling on the accounted packet would let the description of the evidence
+   * evict the evidence. See orientationAccounting.ts.
+   */
   ceilingTokens: 2000,
   /** Head bound on the focus excerpt, in characters, cut on a line boundary. */
   focusCodeCharacters: 1800,
@@ -133,12 +152,14 @@ export const ORIENTATION_POLICY = Object.freeze({
 /**
  * M166's measured calibration for serialized tool-result JSON, 0.3174 tokens per
  * character over 363 provider-reported samples. `characters / 4` understates this
- * payload materially, which is why the ceiling is applied through it.
+ * payload materially, which is why the ceiling is applied through it. The rule
+ * itself is owned by `orientationAccounting.ts`, so the ceiling and the per-item
+ * accounting can never be stated in different units.
  */
-const TOKENS_PER_CHARACTER = 0.3174032272551657;
+const TOKENS_PER_CHARACTER = ORIENTATION_TOKENS_PER_CHARACTER;
 
 export const orientationTokens = (packet: OrientationPacket): number =>
-  Math.max(0, Math.round(JSON.stringify(packet).length * TOKENS_PER_CHARACTER));
+  orientationTokensOfCharacters(JSON.stringify(packet).length);
 
 export interface OrientationFocus {
   /** `path::Symbol` exactly as the authoritative state spells it. */
@@ -155,6 +176,11 @@ export interface OrientationFocus {
   readonly why: string | null;
   readonly code: string | null;
   readonly codeTruncated: boolean;
+  /**
+   * This item's own serialized cost in the packet, under the packet's token
+   * rule, including this field. Per-item accounting (see orientationAccounting.ts).
+   */
+  readonly tokens: number;
 }
 
 export interface OrientationRelated {
@@ -163,6 +189,8 @@ export interface OrientationRelated {
   readonly lines: string | null;
   /** The authoritative relationship or role string, verbatim. Never strengthened. */
   readonly how: string;
+  /** This item's own serialized cost in the packet, including this field. */
+  readonly tokens: number;
 }
 
 export interface OrientationPacket {
@@ -212,19 +240,31 @@ function headBound(body: string, limit: number): { readonly cut: string; readonl
   return { cut: chosen.trimEnd(), truncated: true };
 }
 
-function assemble(
-  focus: OrientationFocus,
-  related: readonly OrientationRelated[],
+/** The focus and related shapes as they stand at admission: every field but `tokens`. */
+type EvidenceFocus = Omit<OrientationFocus, "tokens">;
+type EvidenceRelated = Omit<OrientationRelated, "tokens">;
+
+/**
+ * Assemble a packet from its parts. Called with the evidence-only shapes while
+ * the ceiling is tested and with the accounted shapes for delivery; the framing
+ * is identical either way, which is what makes the two measurements comparable.
+ */
+function assemble<F extends EvidenceFocus, R extends EvidenceRelated>(
+  focus: F,
+  related: readonly R[],
   notes: readonly string[],
-): OrientationPacket {
+): OrientationPacket & { readonly focus: F; readonly related: readonly R[] } {
   return Object.freeze({
     schemaVersion: ORIENTATION_SCHEMA_VERSION,
     focus,
     related: Object.freeze([...related]),
     boundary: ORIENTATION_BOUNDARY,
     ...(notes.length === 0 ? {} : { notes: Object.freeze([...notes]) }),
-  });
+  }) as OrientationPacket & { readonly focus: F; readonly related: readonly R[] };
 }
+
+const absent = (value: unknown, fallback: AccountingAbsence): number | AccountingAbsence =>
+  typeof value === "number" && Number.isFinite(value) ? value : fallback;
 
 /**
  * Project an authoritative `run_pipeline` result into an orientation packet, or
@@ -270,6 +310,7 @@ export function projectRunPipelineOrientation(output: unknown): OrientationPacke
     .map((item) => {
       const span = isRecord(item.lineSpan) ? item.lineSpan : null;
       return {
+        id: text(item.id),
         fqName: text(item.fqName),
         path: text(item.path),
         lines: span === null ? null : `${text(span.start)}-${text(span.end)}`,
@@ -277,6 +318,9 @@ export function projectRunPipelineOrientation(output: unknown): OrientationPacke
         roles: Array.isArray(item.roles) ? item.roles.map(text) : [],
         reasons: Array.isArray(item.selectionReasons) ? item.selectionReasons.map(text) : [],
         body: bodies.get(text(item.id)) ?? "",
+        // Carried for the ledger only: the evidence budget's own chars/4 figure
+        // for this item, in its own units. Read nowhere in this function.
+        upstreamEstimatedTokens: absent(item.estimatedTokens, "unavailable"),
       };
     });
   if (items.length === 0) return null;
@@ -287,7 +331,7 @@ export function projectRunPipelineOrientation(output: unknown): OrientationPacke
     ?? items[0]!;
 
   const bounded = headBound(focusItem.body, ORIENTATION_POLICY.focusCodeCharacters);
-  const focus: OrientationFocus = Object.freeze({
+  const focus: EvidenceFocus = Object.freeze({
     at: focusItem.fqName,
     file: focusItem.path,
     lines: focusItem.lines,
@@ -317,16 +361,44 @@ export function projectRunPipelineOrientation(output: unknown): OrientationPacke
   // neighbours; admission takes a prefix, which is what keeps a tighter bound's
   // output a subset of a looser one's. No re-ranking, ever.
   const seen = new Set<string>([focusItem.fqName]);
-  const candidates: OrientationRelated[] = [];
-  const consider = (fqName: string, path: string, lines: string | null, how: string): void => {
-    if (fqName === "" || how === "" || seen.has(fqName)) return;
+  // Every route that proposed each identity, in proposal order. The FIRST
+  // proposal is the one that is admitted; later ones are deduplicated and
+  // recorded, never delivered twice. The focus's own proposals are recorded too.
+  const proposals = new Map<string, OrientationItemOrigin[]>();
+  const propose = (fqName: string, origin: OrientationItemOrigin): void => {
+    proposals.set(fqName, [...(proposals.get(fqName) ?? []), origin]);
+  };
+  interface Candidate {
+    readonly entry: EvidenceRelated;
+    readonly origin: OrientationItemOrigin;
+    readonly reasonSource: OrientationItemAccounting["reasonSource"];
+    readonly sourceId: string | AccountingAbsence;
+    readonly upstreamEstimatedTokens: number | AccountingAbsence;
+    readonly bodyCharacters: number | AccountingAbsence;
+  }
+  const candidates: Candidate[] = [];
+  let droppedNoClaim = 0;
+  const consider = (
+    fqName: string, path: string, lines: string | null, how: string,
+    provenance: Omit<Candidate, "entry">,
+  ): void => {
+    if (fqName === "") return;
+    propose(fqName, provenance.origin);
+    if (seen.has(fqName)) return;
+    if (how === "") { droppedNoClaim += 1; return; }
     seen.add(fqName);
-    candidates.push(Object.freeze({ at: fqName, file: path, lines, how }));
+    candidates.push({ entry: Object.freeze({ at: fqName, file: path, lines, how }), ...provenance });
   };
   for (const item of items) {
     // The item's own first selection reason IS the relationship claim the
     // authoritative state makes about it. Reused verbatim; never generalized.
-    consider(item.fqName, item.path, item.lines, item.reasons[0] ?? item.roles.join(", "));
+    consider(item.fqName, item.path, item.lines, item.reasons[0] ?? item.roles.join(", "), {
+      origin: "item_supply",
+      reasonSource: item.reasons[0] === undefined ? "roles" : "selection_reason",
+      sourceId: item.id === "" ? "unavailable" : item.id,
+      upstreamEstimatedTokens: item.upstreamEstimatedTokens,
+      bodyCharacters: item.body.length,
+    });
   }
   for (const neighborhood of asArray(output.pivotNeighborhood)) {
     for (const excerpt of asArray(neighborhood.excerpts)) {
@@ -335,16 +407,208 @@ export function projectRunPipelineOrientation(output: unknown): OrientationPacke
         text(excerpt.filePath),
         `${text(excerpt.startLine)}-${text(excerpt.endLine)}`,
         NEIGHBOR_RELATION_PHRASES[text(excerpt.reason)] ?? "",
+        {
+          origin: "pivot_neighborhood",
+          reasonSource: "neighbor_relation",
+          sourceId: "not_applicable",
+          upstreamEstimatedTokens: "not_applicable",
+          // The excerpt body is stripped before the response leaves the server;
+          // its size survives as `textCharacters` when the envelope recorded it.
+          bodyCharacters: typeof excerpt.text === "string"
+            ? excerpt.text.length : absent(excerpt.textCharacters, "unavailable"),
+        },
       );
     }
   }
 
-  const related: OrientationRelated[] = [];
-  for (const candidate of candidates) {
-    const next = [...related, candidate];
-    if (orientationTokens(assemble(focus, next, notes)) > ORIENTATION_POLICY.ceilingTokens) break;
-    related.push(candidate);
+  // Admission, unchanged: a prefix of the admissible list, tested on the
+  // evidence packet. What each test saw is recorded for the ledger and read by
+  // nothing else — the loop below is exactly the loop that ran before any
+  // accounting existed.
+  const related: EvidenceRelated[] = [];
+  const admitted: Candidate[] = [];
+  const admissionPacketTokens: number[] = [orientationTokens(assemble(focus, [], notes))];
+  const rejected: OrientationRejectedCandidate[] = [];
+  for (const [index, candidate] of candidates.entries()) {
+    const next = [...related, candidate.entry];
+    const packetTokens = orientationTokens(assemble(focus, next, notes));
+    if (packetTokens > ORIENTATION_POLICY.ceilingTokens) {
+      rejected.push(Object.freeze({
+        at: candidate.entry.at, origin: candidate.origin, proposedOrdinal: index + 1,
+        estimatedTokens: orientationTokensOfCharacters(JSON.stringify(candidate.entry).length),
+        admissionPacketTokens: packetTokens, reason: "ceiling",
+      }));
+      break;
+    }
+    related.push(candidate.entry);
+    admitted.push(candidate);
+    admissionPacketTokens.push(packetTokens);
+  }
+  const evidencePacket = assemble(focus, related, notes);
+
+  // Delivery: the same items, in the same order, each now stating its own cost.
+  const accountedFocus = withItemTokens(focus);
+  const accountedRelated = related.map((entry) => withItemTokens(entry));
+  const packet = assemble(accountedFocus, accountedRelated, notes);
+
+  publishOrientationAccounting(packet, ledgerFor({
+    packet, evidencePacket, focus: accountedFocus, related: accountedRelated,
+    focusProvenance: {
+      origin: "item_supply",
+      origins: proposals.get(focusItem.fqName) ?? ["item_supply"],
+      sourceId: focusItem.id === "" ? "unavailable" : focusItem.id,
+      reasonSource: focusItem.reasons[0] === undefined ? "roles" : "selection_reason",
+      upstreamEstimatedTokens: focusItem.upstreamEstimatedTokens,
+      bodyCharacters: focusItem.body.length,
+    },
+    admitted: admitted.map((c) => ({ ...c, origins: proposals.get(c.entry.at) ?? [c.origin] })),
+    admissionPacketTokens, rejected,
+    proposed: [...proposals.values()].reduce((n, list) => n + list.length, 0),
+    deduplicated: [...proposals.values()].reduce((n, list) => n + list.length - 1, 0),
+    droppedNoClaim,
+    notReached: candidates.length - admitted.length - rejected.length,
+    productContext, responseBudget: isRecord(output.responseBudget) ? output.responseBudget : {},
+  }));
+
+  return packet;
+}
+
+/**
+ * Build the ledger from what the projector already decided. Pure bookkeeping:
+ * every number is a measurement of a serialization that exists, or a value
+ * copied from the authoritative result under its own label.
+ */
+function ledgerFor(input: {
+  readonly packet: OrientationPacket;
+  readonly evidencePacket: object;
+  readonly focus: OrientationFocus;
+  readonly related: readonly OrientationRelated[];
+  readonly focusProvenance: {
+    readonly origin: OrientationItemOrigin; readonly origins: readonly OrientationItemOrigin[];
+    readonly sourceId: string | AccountingAbsence;
+    readonly reasonSource: OrientationItemAccounting["reasonSource"];
+    readonly upstreamEstimatedTokens: number | AccountingAbsence;
+    readonly bodyCharacters: number | AccountingAbsence;
+  };
+  readonly admitted: readonly {
+    readonly entry: object; readonly origin: OrientationItemOrigin;
+    readonly origins: readonly OrientationItemOrigin[];
+    readonly reasonSource: OrientationItemAccounting["reasonSource"];
+    readonly sourceId: string | AccountingAbsence;
+    readonly upstreamEstimatedTokens: number | AccountingAbsence;
+    readonly bodyCharacters: number | AccountingAbsence;
+  }[];
+  readonly admissionPacketTokens: readonly number[];
+  readonly rejected: readonly OrientationRejectedCandidate[];
+  readonly proposed: number;
+  readonly deduplicated: number;
+  readonly droppedNoClaim: number;
+  readonly notReached: number;
+  readonly productContext: Record<string, unknown>;
+  readonly responseBudget: Record<string, unknown>;
+}): OrientationAccounting {
+  const { focus, related } = input;
+  const items: OrientationItemAccounting[] = [];
+  let cumulativeCharacters = 0;
+  let cumulativeTokens = 0;
+  const push = (record: Omit<OrientationItemAccounting, "cumulativeCharacters" | "cumulativeTokens">): void => {
+    cumulativeCharacters += record.characters;
+    cumulativeTokens += record.actualTokens;
+    items.push(Object.freeze({ ...record, cumulativeCharacters, cumulativeTokens }));
+  };
+
+  const { tokens: focusTokens, ...focusEvidence } = focus;
+  push({
+    at: focus.at, ordinal: 0, slot: "focus",
+    representation: focus.form ?? "unlabelled",
+    origin: input.focusProvenance.origin, origins: Object.freeze([...input.focusProvenance.origins]),
+    sourceId: input.focusProvenance.sourceId,
+    reason: focus.why ?? "", reasonSource: input.focusProvenance.reasonSource,
+    upstreamEstimatedTokens: input.focusProvenance.upstreamEstimatedTokens,
+    bodyCharacters: input.focusProvenance.bodyCharacters,
+    deliveredCodeCharacters: focus.code?.length ?? 0,
+    codeDelivered: focus.code !== null,
+    truncated: focus.codeTruncated,
+    estimatedTokens: orientationTokensOfCharacters(JSON.stringify(focusEvidence).length),
+    admissionPacketTokens: input.admissionPacketTokens[0]!,
+    characters: JSON.stringify(focus).length,
+    actualTokens: focusTokens,
+  });
+  for (const [index, entry] of related.entries()) {
+    const provenance = input.admitted[index]!;
+    const { tokens, ...evidence } = entry;
+    push({
+      at: entry.at, ordinal: index + 1, slot: "related",
+      representation: "relationship_only",
+      origin: provenance.origin, origins: Object.freeze([...provenance.origins]),
+      sourceId: provenance.sourceId,
+      reason: entry.how, reasonSource: provenance.reasonSource,
+      upstreamEstimatedTokens: provenance.upstreamEstimatedTokens,
+      bodyCharacters: provenance.bodyCharacters,
+      deliveredCodeCharacters: 0,
+      codeDelivered: false,
+      truncated: false,
+      estimatedTokens: orientationTokensOfCharacters(JSON.stringify(evidence).length),
+      admissionPacketTokens: input.admissionPacketTokens[index + 1]!,
+      characters: JSON.stringify(entry).length,
+      actualTokens: tokens,
+    });
   }
 
-  return assemble(focus, related, notes);
+  const packetCharacters = JSON.stringify(input.packet).length;
+  const packetTokens = orientationTokensOfCharacters(packetCharacters);
+  const evidenceCharacters = JSON.stringify(input.evidencePacket).length;
+  const evidenceTokens = orientationTokensOfCharacters(evidenceCharacters);
+  const itemCharacters = cumulativeCharacters;
+  const itemTokens = cumulativeTokens;
+  const wrapperCharacters = packetCharacters - itemCharacters;
+  const wrapperTokens = orientationTokensOfCharacters(wrapperCharacters);
+
+  const delivery = isRecord(input.productContext.delivery) ? input.productContext.delivery : {};
+  const accounting = isRecord(input.productContext.accounting) ? input.productContext.accounting : {};
+  const requested = absent(input.responseBudget.requested_context_tokens, "unavailable");
+
+  const ledger: OrientationAccounting = {
+    tokenRule: { method: "characters_times_tokens_per_character",
+      tokensPerCharacter: TOKENS_PER_CHARACTER, rounding: "nearest" },
+    ceilingTokens: ORIENTATION_POLICY.ceilingTokens,
+    ceilingAppliesTo: "evidence_packet",
+    evidence: { characters: evidenceCharacters, tokens: evidenceTokens,
+      withinCeiling: evidenceTokens <= ORIENTATION_POLICY.ceilingTokens },
+    packet: { characters: packetCharacters, tokens: packetTokens },
+    accountingOverhead: { characters: packetCharacters - evidenceCharacters,
+      tokens: packetTokens - evidenceTokens },
+    wrapper: { characters: wrapperCharacters, tokens: wrapperTokens },
+    reconciliation: {
+      itemCharacters, wrapperCharacters, packetCharacters,
+      charactersExact: itemCharacters + wrapperCharacters === packetCharacters,
+      itemTokens, wrapperTokens, packetTokens,
+      tokenDeviation: Math.abs(packetTokens - (itemTokens + wrapperTokens)),
+      tokenDeviationBound: tokenDeviationBound(items.length + 2),
+    },
+    candidates: {
+      proposed: input.proposed,
+      deduplicated: input.deduplicated,
+      droppedNoClaim: input.droppedNoClaim,
+      admitted: items.length,
+      rejectedForCeiling: input.rejected.length,
+      notReached: input.notReached,
+      rejected: Object.freeze([...input.rejected]),
+    },
+    evidenceBudget: {
+      method: "characters_div_4",
+      requestedTokens: requested === "unavailable" ? absent(accounting.budgetTokens, "unavailable") : requested,
+      modelVisibleTokens: absent(delivery.finalModelTokens, "unavailable") === "unavailable"
+        ? absent(accounting.usedTokensEstimate, "unavailable") : absent(delivery.finalModelTokens, "unavailable"),
+      remainingTokens: absent(accounting.remainingTokensEstimate, "unavailable"),
+      deliveryStatus: typeof delivery.status === "string" ? delivery.status : "unavailable",
+      selectedItemsBeforeBudget: absent(delivery.selectedItemsBeforeBudget, "unavailable"),
+      deliveredItems: absent(delivery.deliveredItems, "unavailable"),
+      droppedForBudget: absent(delivery.droppedForBudget, "unavailable"),
+      compactionStages: Array.isArray(delivery.compactionStages)
+        ? Object.freeze(delivery.compactionStages.map(text)) : "unavailable",
+    },
+    items: Object.freeze(items),
+  };
+  return Object.freeze(ledger);
 }

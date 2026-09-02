@@ -8706,7 +8706,7 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
         [],
       ),
       outputSchema: objectSchema(
-        "run_pipeline output, in one of two shapes selected by `detail`. By DEFAULT the tool returns a bounded orientation — `schemaVersion: run_pipeline.orientation/1`, with `focus`, `related`, `boundary` and optional `notes` — projected from the full authoritative result, which stays server-side. `detail=debug` returns that authoritative orchestration result instead, whose properties are the remainder of this schema. Failure and not-ready states are never projected: they keep their full envelope, reason and nextTool at every detail level.",
+        "run_pipeline output, in one of two shapes selected by `detail`. By DEFAULT the tool returns a bounded orientation — `schemaVersion: run_pipeline.orientation/1`, with `focus`, `related` (each item carrying its own `tokens` cost), `boundary` and optional `notes` — projected from the full authoritative result, which stays server-side. `detail=debug` returns that authoritative orchestration result instead, whose properties are the remainder of this schema. Failure and not-ready states are never projected: they keep their full envelope, reason and nextTool at every detail level.",
         {
           schemaVersion: stringProperty("Orchestration result schema version."),
           workspace: {
@@ -8829,8 +8829,9 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
               why: { type: ["string", "null"], description: "The authoritative selection reason, verbatim." },
               code: { type: ["string", "null"], description: "Source for the focus, head-bounded on a line boundary." },
               codeTruncated: booleanProperty("True when `code` is a prefix of a longer span."),
+              tokens: integerProperty("This item's own serialized cost in the packet, under the packet's token rule, including this field."),
             },
-            required: ["at", "file", "lines", "form", "why", "code", "codeTruncated"],
+            required: ["at", "file", "lines", "form", "why", "code", "codeTruncated", "tokens"],
             additionalProperties: false,
           },
           related: arrayProperty(
@@ -8842,8 +8843,9 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
                 file: stringProperty("Repo-relative path."),
                 lines: { type: ["string", "null"], description: "`start-end` line span, or null." },
                 how: stringProperty("The authoritative relationship or role, verbatim or from the frozen relationship phrase table."),
+                tokens: integerProperty("This item's own serialized cost in the packet, including this field."),
               },
-              ["at", "file", "lines", "how"],
+              ["at", "file", "lines", "how", "tokens"],
             ),
           ),
           boundary: stringProperty(
