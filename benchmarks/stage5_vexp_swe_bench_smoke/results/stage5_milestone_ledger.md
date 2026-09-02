@@ -9371,7 +9371,12 @@ corpus identity   C-MED 502 -> 504: two source files added under src/
                   re-frozen at 504 (stage5_m205_authority_post.json). Claim
                   definitions, thresholds, scorer and corpus root unchanged.
 
-commits           (recorded in the final row of this entry after commit)
+commits           b073c262  frozen A12 recovery, representation analyzer, sweep
+                            driver, VEXP/VTRACE inventories, pre-change evidence
+                  20dc5376  representation authority, routed related bodies,
+                            footer and compaction-label repairs, tests,
+                            falsification controls, report assembler
+                  e8f2d4de  evidence, frozen rerun, this row
 
 evidence          results/stage5_m205_final_report.{md,json} and the
                   stage5_m205_*.{json,jsonl,md} artefacts beside it;
