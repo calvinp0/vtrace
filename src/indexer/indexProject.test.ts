@@ -1470,3 +1470,147 @@ function requireSymbol(
   assert.notEqual(symbol, undefined);
   return symbol!;
 }
+
+/**
+ * M198 C6. A class may define the same method twice — Python and TypeScript both
+ * allow it, and ARC does it thirty times. Two such definitions share every field
+ * of the semantic key `rebindCachedEdgeTargets` maps on, so resolving that key
+ * picked whichever landed last in the map and repointed BOTH `contains` edges at
+ * it. The two edges then hashed to one id and the refresh aborted on
+ * `UNIQUE constraint failed: edges.id`, losing the whole run.
+ */
+test("a duplicated definition does not collide the refresh on edges.id", async () => {
+  await withFixture(async (repoRoot) => {
+    await writeDuplicateDefinitionRepo(repoRoot);
+    const db = openIndexerDatabase();
+
+    try {
+      const cold = await indexProject({ repoRoot, db });
+      const noop = await indexProject({
+        repoRoot, db, previousSnapshot: cold.snapshot, hasExistingGraph: true,
+      });
+
+      await writeFile(
+        path.join(repoRoot, "pkg", "other.py"),
+        "def other():\n    return 2\n",
+      );
+
+      // Before the repair this threw. The assertion is that it returns at all.
+      const refreshed = await indexProject({
+        repoRoot, db, previousSnapshot: noop.snapshot ?? cold.snapshot, hasExistingGraph: true,
+      });
+
+      assert.equal(refreshed.totalPersistenceFailures, 0);
+      // Both definitions keep their own containment edge: a merge would have
+      // silently dropped one, which is the same defect without the crash.
+      const holder = listAllSymbols(db).filter((symbol) => symbol.localName === "dup");
+      assert.equal(holder.length, 2);
+      const contains = listAllEdges(db).filter((edge) => (
+        edge.edgeType === EdgeType.Contains && holder.some((symbol) => symbol.id === edge.dstSymbolId)
+      ));
+      assert.equal(contains.length, 2);
+    } finally {
+      db.close();
+    }
+  });
+});
+
+/**
+ * M198 C7 / C8. The gate the whole incremental path exists to satisfy: whatever
+ * route the index took, the graph must be the one a cold build of the same
+ * source state produces. `normalizedGraphHash` is the product's own equivalence
+ * instrument, so the test cannot pass by comparing a weaker projection.
+ */
+for (const mutation of [
+  {
+    name: "a modified file",
+    apply: async (repoRoot: string) => writeFile(
+      path.join(repoRoot, "pkg", "other.py"), "def other():\n    return 99\n",
+    ),
+  },
+  {
+    name: "an added file",
+    apply: async (repoRoot: string) => writeFile(
+      path.join(repoRoot, "pkg", "added.py"), "def added():\n    return 1\n",
+    ),
+  },
+  {
+    name: "a deleted file",
+    apply: async (repoRoot: string) => rm(path.join(repoRoot, "pkg", "other.py")),
+  },
+  {
+    name: "a renamed file",
+    apply: async (repoRoot: string) => {
+      const from = path.join(repoRoot, "pkg", "other.py");
+      const body = await Bun.file(from).text();
+      await rm(from);
+      await writeFile(path.join(repoRoot, "pkg", "renamed.py"), body);
+    },
+  },
+  {
+    name: "a removed symbol",
+    apply: async (repoRoot: string) => writeFile(
+      path.join(repoRoot, "pkg", "mod.py"),
+      "def target():\n    return 0\n",
+    ),
+  },
+]) {
+  test(`incremental refresh after ${mutation.name} equals a cold index`, async () => {
+    await withFixture(async (incrementalRoot) => {
+      await withFixture(async (coldRoot) => {
+        await writeDuplicateDefinitionRepo(incrementalRoot);
+        await writeDuplicateDefinitionRepo(coldRoot);
+
+        const incrementalDb = openIndexerDatabase();
+        const coldDb = openIndexerDatabase();
+
+        try {
+          const cold = await indexProject({ repoRoot: incrementalRoot, db: incrementalDb });
+          const noop = await indexProject({
+            repoRoot: incrementalRoot, db: incrementalDb,
+            previousSnapshot: cold.snapshot, hasExistingGraph: true,
+          });
+          await mutation.apply(incrementalRoot);
+          await indexProject({
+            repoRoot: incrementalRoot, db: incrementalDb,
+            previousSnapshot: noop.snapshot ?? cold.snapshot, hasExistingGraph: true,
+          });
+
+          await mutation.apply(coldRoot);
+          await indexProject({ repoRoot: coldRoot, db: coldDb });
+
+          assert.equal(normalizedGraphHash(incrementalDb), normalizedGraphHash(coldDb));
+        } finally {
+          incrementalDb.close();
+          coldDb.close();
+        }
+      });
+    });
+  });
+}
+
+/**
+ * A class with two identical definitions of one method, plus an unrelated file
+ * to mutate so the plan has something to be incremental ABOUT.
+ */
+async function writeDuplicateDefinitionRepo(repoRoot: string): Promise<void> {
+  await mkdir(path.join(repoRoot, "pkg"), { recursive: true });
+  await writeFile(
+    path.join(repoRoot, "pkg", "mod.py"),
+    [
+      "def target():",
+      "    return 0",
+      "",
+      "",
+      "class Holder:",
+      "    def dup(self):",
+      "        return target()",
+      "",
+      "    def dup(self):",
+      "        return target()",
+      "",
+    ].join("\n"),
+  );
+  await writeFile(path.join(repoRoot, "pkg", "other.py"), "def other():\n    return 1\n");
+  await writeFile(path.join(repoRoot, "pkg", "extra.py"), "def extra():\n    return 2\n");
+}

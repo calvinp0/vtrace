@@ -763,27 +763,130 @@ function countLiveGraphRows(db: Database): number {
     .reduce((total, table) => total + ((db.query(`SELECT COUNT(*) AS count FROM ${table}`).get() as { count: number }).count), 0);
 }
 
+/**
+ * Repoint cached edges at the symbol ids of the current parse.
+ *
+ * A cached parse result carries the ids that were current when the entry was
+ * written. A symbol that keeps its semantic identity but MOVES within its file
+ * gets a new content-derived id, so every cached edge naming the old one has to
+ * be repointed or it would dangle.
+ *
+ * The mapping is keyed by semantic identity, so it can only be applied where
+ * that identity is unique. Both Python and TypeScript let one class define the
+ * same method twice; ARC does it thirty times. Resolving such a key merged two
+ * distinct definitions into one, which dropped one definition's containment edge
+ * and made `Class contains method` collide with itself on the primary key —
+ * aborting the whole refresh on `UNIQUE constraint failed: edges.id`, and, where
+ * it did not abort, leaving an incremental graph that a cold build would not
+ * produce. An ambiguous key identifies nothing, so it now maps nothing.
+ */
 function rebindCachedEdgeTargets(results: readonly ParseResult[], previousSymbols: readonly ParseResult["symbols"][number][]): ParseResult[] {
-  const currentSymbols = results.flatMap((result) => result.symbols);
-  const currentBySemanticKey = new Map(currentSymbols.map((symbol) => [semanticSymbolKey(symbol), symbol]));
+  const currentByKey = uniqueBySemanticKey(results.flatMap((result) => result.symbols));
+  const previousByKey = uniqueBySemanticKey(previousSymbols);
   const reboundIds = new Map<string, string>();
-  for (const oldSymbol of previousSymbols) {
-    const current = currentBySemanticKey.get(semanticSymbolKey(oldSymbol));
-    if (current !== undefined) reboundIds.set(oldSymbol.id, current.id);
+  for (const [key, previous] of previousByKey) {
+    const current = currentByKey.get(key);
+    if (current !== undefined && current.id !== previous.id) reboundIds.set(previous.id, current.id);
   }
+
+  if (reboundIds.size === 0) {
+    return [...results];
+  }
+
   return results.map((result) => ({
     ...result,
-    edges: result.edges.map((edge) => {
+    edges: mergeEdgesSharingAnId(result.edges.map((edge) => {
       const srcSymbolId = reboundIds.get(edge.srcSymbolId) ?? edge.srcSymbolId;
       const dstSymbolId = reboundIds.get(edge.dstSymbolId) ?? edge.dstSymbolId;
+
+      if (srcSymbolId === edge.srcSymbolId && dstSymbolId === edge.dstSymbolId) {
+        return edge;
+      }
+
       return {
         ...edge,
         id: createHash("sha256").update([srcSymbolId, dstSymbolId, edge.edgeType].join("\0")).digest("hex"),
         srcSymbolId,
         dstSymbolId,
       };
-    }),
+    })),
   }));
+}
+
+/**
+ * Semantic key to symbol, for keys naming exactly one symbol. A key naming two
+ * is DELETED rather than resolved to either: which one it would resolve to is
+ * map-insertion order, and insertion order is not an identity.
+ */
+function uniqueBySemanticKey(
+  symbols: readonly ParseResult["symbols"][number][],
+): Map<string, ParseResult["symbols"][number]> {
+  const byKey = new Map<string, ParseResult["symbols"][number]>();
+  const ambiguous = new Set<string>();
+
+  for (const symbol of symbols) {
+    const key = semanticSymbolKey(symbol);
+    if (byKey.has(key)) ambiguous.add(key);
+    else byKey.set(key, symbol);
+  }
+
+  for (const key of ambiguous) byKey.delete(key);
+
+  return byKey;
+}
+
+/**
+ * Rebinding can legitimately land two edges on one identity — a cached result
+ * naming an old id and a freshly parsed one naming the current id describe the
+ * same relation. The id is a hash of exactly `(src, dst, type)`, so edges
+ * sharing an id are provably the same edge and are MERGED rather than ignored on
+ * insert: `INSERT OR IGNORE` would silently discard occurrences the parser
+ * really observed, and would equally have hidden the ambiguity repaired above.
+ */
+function mergeEdgesSharingAnId(edges: readonly EdgeRecord[]): EdgeRecord[] {
+  const byId = new Map<string, EdgeRecord>();
+  let merged = false;
+
+  for (const edge of edges) {
+    const existing = byId.get(edge.id);
+
+    if (existing === undefined) {
+      byId.set(edge.id, edge);
+      continue;
+    }
+
+    merged = true;
+    byId.set(edge.id, {
+      ...existing,
+      confidence: Math.max(existing.confidence, edge.confidence),
+      ...(existing.callSites === undefined && edge.callSites === undefined
+        ? {}
+        : { callSites: unionCallSites(existing.callSites ?? [], edge.callSites ?? []) }),
+    });
+  }
+
+  return merged ? [...byId.values()] : [...edges];
+}
+
+function unionCallSites(
+  left: readonly NonNullable<EdgeRecord["callSites"]>[number][],
+  right: readonly NonNullable<EdgeRecord["callSites"]>[number][],
+): NonNullable<EdgeRecord["callSites"]> {
+  const byPosition = new Map<string, (typeof left)[number]>();
+
+  for (const site of [...left, ...right]) {
+    byPosition.set(
+      [site.startLine, site.startColumn, site.endLine, site.endColumn, site.precision].join("\0"),
+      site,
+    );
+  }
+
+  return [...byPosition.values()].sort((a, b) => (
+    a.startLine - b.startLine
+    || a.startColumn - b.startColumn
+    || a.endLine - b.endLine
+    || a.endColumn - b.endColumn
+  ));
 }
 
 function semanticSymbolKey(symbol: ParseResult["symbols"][number]): string {
