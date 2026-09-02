@@ -1,0 +1,851 @@
+{
+  "milestone": "M199",
+  "instrument": "run_stage5_m199_equivalence.ts",
+  "repeats": 3,
+  "hardware": {
+    "cpus": 20,
+    "loadAverageAtEnd": [
+      17.93,
+      22.08,
+      21.58
+    ]
+  },
+  "corpora": [
+    {
+      "id": "C-SMALL",
+      "mutations": [
+        {
+          "id": "E1-modify-1",
+          "mode": "incremental",
+          "fallbackReason": null,
+          "parsedFiles": 1,
+          "equal": true,
+          "normalizedGraphHashEqual": true,
+          "rowCounts": {
+            "files": 21,
+            "symbols": 98,
+            "edges": 61,
+            "symbolSearch": 98,
+            "bodyLiterals": 34,
+            "mechanismFacts": 22,
+            "edgeCallSites": 51,
+            "documentChunks": 0,
+            "documentSearch": 0,
+            "fileFailures": 0
+          },
+          "differingSections": []
+        },
+        {
+          "id": "E2-modify-3",
+          "mode": "incremental",
+          "fallbackReason": null,
+          "parsedFiles": 3,
+          "equal": true,
+          "normalizedGraphHashEqual": true,
+          "rowCounts": {
+            "files": 21,
+            "symbols": 98,
+            "edges": 61,
+            "symbolSearch": 98,
+            "bodyLiterals": 34,
+            "mechanismFacts": 22,
+            "edgeCallSites": 51,
+            "documentChunks": 0,
+            "documentSearch": 0,
+            "fileFailures": 0
+          },
+          "differingSections": []
+        },
+        {
+          "id": "E3-add-file",
+          "mode": "full_rebuild",
+          "fallbackReason": "closure_uncertain",
+          "parsedFiles": 22,
+          "equal": true,
+          "normalizedGraphHashEqual": true,
+          "rowCounts": {
+            "files": 22,
+            "symbols": 99,
+            "edges": 61,
+            "symbolSearch": 99,
+            "bodyLiterals": 35,
+            "mechanismFacts": 22,
+            "edgeCallSites": 51,
+            "documentChunks": 0,
+            "documentSearch": 0,
+            "fileFailures": 0
+          },
+          "differingSections": []
+        },
+        {
+          "id": "E4-delete-file",
+          "mode": "full_rebuild",
+          "fallbackReason": "closure_uncertain",
+          "parsedFiles": 20,
+          "equal": true,
+          "normalizedGraphHashEqual": true,
+          "rowCounts": {
+            "files": 20,
+            "symbols": 95,
+            "edges": 59,
+            "symbolSearch": 95,
+            "bodyLiterals": 34,
+            "mechanismFacts": 22,
+            "edgeCallSites": 51,
+            "documentChunks": 0,
+            "documentSearch": 0,
+            "fileFailures": 0
+          },
+          "differingSections": []
+        },
+        {
+          "id": "E5-rename-file",
+          "mode": "full_rebuild",
+          "fallbackReason": "closure_uncertain",
+          "parsedFiles": 21,
+          "equal": true,
+          "normalizedGraphHashEqual": true,
+          "rowCounts": {
+            "files": 21,
+            "symbols": 98,
+            "edges": 61,
+            "symbolSearch": 98,
+            "bodyLiterals": 34,
+            "mechanismFacts": 22,
+            "edgeCallSites": 51,
+            "documentChunks": 0,
+            "documentSearch": 0,
+            "fileFailures": 0
+          },
+          "differingSections": []
+        },
+        {
+          "id": "E6-remove-symbol",
+          "mode": "full_rebuild",
+          "fallbackReason": "closure_uncertain",
+          "parsedFiles": 21,
+          "equal": true,
+          "normalizedGraphHashEqual": true,
+          "rowCounts": {
+            "files": 21,
+            "symbols": 97,
+            "edges": 59,
+            "symbolSearch": 97,
+            "bodyLiterals": 34,
+            "mechanismFacts": 22,
+            "edgeCallSites": 51,
+            "documentChunks": 0,
+            "documentSearch": 0,
+            "fileFailures": 0
+          },
+          "differingSections": []
+        }
+      ],
+      "sequence": {
+        "steps": [
+          {
+            "label": "modify A",
+            "mode": "incremental",
+            "fallbackReason": null,
+            "parsedFiles": 1
+          },
+          {
+            "label": "modify B",
+            "mode": "incremental",
+            "fallbackReason": null,
+            "parsedFiles": 1
+          },
+          {
+            "label": "delete A",
+            "mode": "full_rebuild",
+            "fallbackReason": "closure_uncertain",
+            "parsedFiles": 20
+          },
+          {
+            "label": "add C",
+            "mode": "full_rebuild",
+            "fallbackReason": "closure_uncertain",
+            "parsedFiles": 21
+          },
+          {
+            "label": "modify C",
+            "mode": "incremental",
+            "fallbackReason": null,
+            "parsedFiles": 1
+          }
+        ],
+        "equal": true,
+        "normalizedGraphHashEqual": true,
+        "rowCounts": {
+          "files": 21,
+          "symbols": 96,
+          "edges": 59,
+          "symbolSearch": 96,
+          "bodyLiterals": 35,
+          "mechanismFacts": 22,
+          "edgeCallSites": 51,
+          "documentChunks": 0,
+          "documentSearch": 0,
+          "fileFailures": 0
+        },
+        "differingSections": []
+      }
+    },
+    {
+      "id": "C-MED",
+      "mutations": [
+        {
+          "id": "E1-modify-1",
+          "mode": "incremental",
+          "fallbackReason": null,
+          "parsedFiles": 1,
+          "equal": true,
+          "normalizedGraphHashEqual": true,
+          "rowCounts": {
+            "files": 493,
+            "symbols": 4616,
+            "edges": 10045,
+            "symbolSearch": 4616,
+            "bodyLiterals": 1350,
+            "mechanismFacts": 1044,
+            "edgeCallSites": 5901,
+            "documentChunks": 0,
+            "documentSearch": 0,
+            "fileFailures": 0
+          },
+          "differingSections": []
+        },
+        {
+          "id": "E2-modify-3",
+          "mode": "incremental",
+          "fallbackReason": null,
+          "parsedFiles": 3,
+          "equal": true,
+          "normalizedGraphHashEqual": true,
+          "rowCounts": {
+            "files": 493,
+            "symbols": 4616,
+            "edges": 10045,
+            "symbolSearch": 4616,
+            "bodyLiterals": 1350,
+            "mechanismFacts": 1044,
+            "edgeCallSites": 5901,
+            "documentChunks": 0,
+            "documentSearch": 0,
+            "fileFailures": 0
+          },
+          "differingSections": []
+        },
+        {
+          "id": "E3-add-file",
+          "mode": "full_rebuild",
+          "fallbackReason": "closure_uncertain",
+          "parsedFiles": 494,
+          "equal": true,
+          "normalizedGraphHashEqual": true,
+          "rowCounts": {
+            "files": 494,
+            "symbols": 4617,
+            "edges": 10045,
+            "symbolSearch": 4617,
+            "bodyLiterals": 1351,
+            "mechanismFacts": 1044,
+            "edgeCallSites": 5901,
+            "documentChunks": 0,
+            "documentSearch": 0,
+            "fileFailures": 0
+          },
+          "differingSections": []
+        },
+        {
+          "id": "E4-delete-file",
+          "mode": "full_rebuild",
+          "fallbackReason": "closure_uncertain",
+          "parsedFiles": 492,
+          "equal": true,
+          "normalizedGraphHashEqual": true,
+          "rowCounts": {
+            "files": 492,
+            "symbols": 4609,
+            "edges": 10040,
+            "symbolSearch": 4609,
+            "bodyLiterals": 1345,
+            "mechanismFacts": 1044,
+            "edgeCallSites": 5896,
+            "documentChunks": 0,
+            "documentSearch": 0,
+            "fileFailures": 0
+          },
+          "differingSections": []
+        },
+        {
+          "id": "E5-rename-file",
+          "mode": "full_rebuild",
+          "fallbackReason": "closure_uncertain",
+          "parsedFiles": 493,
+          "equal": true,
+          "normalizedGraphHashEqual": true,
+          "rowCounts": {
+            "files": 493,
+            "symbols": 4616,
+            "edges": 10045,
+            "symbolSearch": 4616,
+            "bodyLiterals": 1350,
+            "mechanismFacts": 1044,
+            "edgeCallSites": 5901,
+            "documentChunks": 0,
+            "documentSearch": 0,
+            "fileFailures": 0
+          },
+          "differingSections": []
+        },
+        {
+          "id": "E6-remove-symbol",
+          "mode": "incremental",
+          "fallbackReason": null,
+          "parsedFiles": 1,
+          "equal": true,
+          "normalizedGraphHashEqual": true,
+          "rowCounts": {
+            "files": 493,
+            "symbols": 4616,
+            "edges": 10045,
+            "symbolSearch": 4616,
+            "bodyLiterals": 1350,
+            "mechanismFacts": 1044,
+            "edgeCallSites": 5901,
+            "documentChunks": 0,
+            "documentSearch": 0,
+            "fileFailures": 0
+          },
+          "differingSections": []
+        }
+      ],
+      "sequence": {
+        "steps": [
+          {
+            "label": "modify A",
+            "mode": "incremental",
+            "fallbackReason": null,
+            "parsedFiles": 1
+          },
+          {
+            "label": "modify B",
+            "mode": "incremental",
+            "fallbackReason": null,
+            "parsedFiles": 1
+          },
+          {
+            "label": "delete A",
+            "mode": "full_rebuild",
+            "fallbackReason": "closure_uncertain",
+            "parsedFiles": 492
+          },
+          {
+            "label": "add C",
+            "mode": "full_rebuild",
+            "fallbackReason": "closure_uncertain",
+            "parsedFiles": 493
+          },
+          {
+            "label": "modify C",
+            "mode": "incremental",
+            "fallbackReason": null,
+            "parsedFiles": 1
+          }
+        ],
+        "equal": true,
+        "normalizedGraphHashEqual": true,
+        "rowCounts": {
+          "files": 493,
+          "symbols": 4610,
+          "edges": 10040,
+          "symbolSearch": 4610,
+          "bodyLiterals": 1346,
+          "mechanismFacts": 1044,
+          "edgeCallSites": 5896,
+          "documentChunks": 0,
+          "documentSearch": 0,
+          "fileFailures": 0
+        },
+        "differingSections": []
+      }
+    },
+    {
+      "id": "C-LARGE",
+      "mutations": [
+        {
+          "id": "E1-modify-1",
+          "mode": "incremental",
+          "fallbackReason": null,
+          "parsedFiles": 1,
+          "equal": true,
+          "normalizedGraphHashEqual": true,
+          "rowCounts": {
+            "files": 346,
+            "symbols": 10309,
+            "edges": 24887,
+            "symbolSearch": 10309,
+            "bodyLiterals": 5457,
+            "mechanismFacts": 2817,
+            "edgeCallSites": 19330,
+            "documentChunks": 550,
+            "documentSearch": 550,
+            "fileFailures": 0
+          },
+          "differingSections": []
+        },
+        {
+          "id": "E2-modify-3",
+          "mode": "full_rebuild",
+          "fallbackReason": "closure_uncertain",
+          "parsedFiles": 346,
+          "equal": true,
+          "normalizedGraphHashEqual": true,
+          "rowCounts": {
+            "files": 346,
+            "symbols": 10309,
+            "edges": 24887,
+            "symbolSearch": 10309,
+            "bodyLiterals": 5457,
+            "mechanismFacts": 2817,
+            "edgeCallSites": 19330,
+            "documentChunks": 550,
+            "documentSearch": 550,
+            "fileFailures": 0
+          },
+          "differingSections": []
+        },
+        {
+          "id": "E3-add-file",
+          "mode": "full_rebuild",
+          "fallbackReason": "closure_uncertain",
+          "parsedFiles": 347,
+          "equal": true,
+          "normalizedGraphHashEqual": true,
+          "rowCounts": {
+            "files": 347,
+            "symbols": 10311,
+            "edges": 24887,
+            "symbolSearch": 10311,
+            "bodyLiterals": 5457,
+            "mechanismFacts": 2817,
+            "edgeCallSites": 19330,
+            "documentChunks": 550,
+            "documentSearch": 550,
+            "fileFailures": 0
+          },
+          "differingSections": []
+        },
+        {
+          "id": "E4-delete-file",
+          "mode": "full_rebuild",
+          "fallbackReason": "closure_uncertain",
+          "parsedFiles": 345,
+          "equal": true,
+          "normalizedGraphHashEqual": true,
+          "rowCounts": {
+            "files": 345,
+            "symbols": 10306,
+            "edges": 24882,
+            "symbolSearch": 10306,
+            "bodyLiterals": 5455,
+            "mechanismFacts": 2816,
+            "edgeCallSites": 19327,
+            "documentChunks": 550,
+            "documentSearch": 550,
+            "fileFailures": 0
+          },
+          "differingSections": []
+        },
+        {
+          "id": "E5-rename-file",
+          "mode": "full_rebuild",
+          "fallbackReason": "closure_uncertain",
+          "parsedFiles": 346,
+          "equal": true,
+          "normalizedGraphHashEqual": true,
+          "rowCounts": {
+            "files": 346,
+            "symbols": 10309,
+            "edges": 24887,
+            "symbolSearch": 10309,
+            "bodyLiterals": 5457,
+            "mechanismFacts": 2817,
+            "edgeCallSites": 19330,
+            "documentChunks": 550,
+            "documentSearch": 550,
+            "fileFailures": 0
+          },
+          "differingSections": []
+        },
+        {
+          "id": "E6-remove-symbol",
+          "mode": "full_rebuild",
+          "fallbackReason": "closure_uncertain",
+          "parsedFiles": 346,
+          "equal": true,
+          "normalizedGraphHashEqual": true,
+          "rowCounts": {
+            "files": 346,
+            "symbols": 10308,
+            "edges": 24884,
+            "symbolSearch": 10308,
+            "bodyLiterals": 5456,
+            "mechanismFacts": 2816,
+            "edgeCallSites": 19327,
+            "documentChunks": 550,
+            "documentSearch": 550,
+            "fileFailures": 0
+          },
+          "differingSections": []
+        }
+      ],
+      "sequence": {
+        "steps": [
+          {
+            "label": "modify A",
+            "mode": "incremental",
+            "fallbackReason": null,
+            "parsedFiles": 1
+          },
+          {
+            "label": "modify B",
+            "mode": "incremental",
+            "fallbackReason": null,
+            "parsedFiles": 1
+          },
+          {
+            "label": "delete A",
+            "mode": "full_rebuild",
+            "fallbackReason": "closure_uncertain",
+            "parsedFiles": 345
+          },
+          {
+            "label": "add C",
+            "mode": "full_rebuild",
+            "fallbackReason": "closure_uncertain",
+            "parsedFiles": 346
+          },
+          {
+            "label": "modify C",
+            "mode": "incremental",
+            "fallbackReason": null,
+            "parsedFiles": 1
+          }
+        ],
+        "equal": true,
+        "normalizedGraphHashEqual": true,
+        "rowCounts": {
+          "files": 346,
+          "symbols": 10308,
+          "edges": 24882,
+          "symbolSearch": 10308,
+          "bodyLiterals": 5455,
+          "mechanismFacts": 2816,
+          "edgeCallSites": 19327,
+          "documentChunks": 550,
+          "documentSearch": 550,
+          "fileFailures": 0
+        },
+        "differingSections": []
+      }
+    }
+  ],
+  "determinism": [
+    {
+      "id": "C-SMALL",
+      "repeats": 3,
+      "normalizedGraphHashes": [
+        "a32a2604c6e42133c60eb8d2c5ab2bce566d2fa155b9e1abd4e4119611a80cd5",
+        "a32a2604c6e42133c60eb8d2c5ab2bce566d2fa155b9e1abd4e4119611a80cd5",
+        "a32a2604c6e42133c60eb8d2c5ab2bce566d2fa155b9e1abd4e4119611a80cd5"
+      ],
+      "hashesIdentical": true,
+      "semanticRowsWritten": [
+        12,
+        12,
+        12
+      ],
+      "writeCountsIdentical": true,
+      "amplifications": [
+        2,
+        2,
+        2
+      ],
+      "noopSemanticRowsWritten": [
+        0,
+        0,
+        0
+      ],
+      "noopIsSilent": true,
+      "k1": {
+        "affectedSemanticRowsBefore": 6,
+        "affectedByTable": {
+          "files": 1,
+          "symbols": 3,
+          "edges": 2,
+          "edge_call_sites": 0,
+          "symbol_mechanism_facts": 0,
+          "document_chunks": 0
+        },
+        "byTable": {
+          "files": {
+            "inserted": 1,
+            "deleted": 1,
+            "updated": 0
+          },
+          "symbols": {
+            "inserted": 3,
+            "deleted": 3,
+            "updated": 0
+          },
+          "edges": {
+            "inserted": 2,
+            "deleted": 2,
+            "updated": 0
+          },
+          "edge_call_sites": {
+            "inserted": 0,
+            "deleted": 0,
+            "updated": 0
+          },
+          "symbol_mechanism_facts": {
+            "inserted": 0,
+            "deleted": 0,
+            "updated": 0
+          },
+          "document_chunks": {
+            "inserted": 0,
+            "deleted": 0,
+            "updated": 0
+          },
+          "file_index_failures": {
+            "inserted": 0,
+            "deleted": 0,
+            "updated": 0
+          },
+          "index_runs": {
+            "inserted": 1,
+            "deleted": 0,
+            "updated": 0
+          },
+          "file_run_states": {
+            "inserted": 21,
+            "deleted": 0,
+            "updated": 0
+          },
+          "symbol_run_states": {
+            "inserted": 98,
+            "deleted": 0,
+            "updated": 0
+          }
+        },
+        "boundedness": {
+          "bounded": true,
+          "amplification": 2,
+          "bound": 3
+        },
+        "mode": "incremental"
+      }
+    },
+    {
+      "id": "C-MED",
+      "repeats": 3,
+      "normalizedGraphHashes": [
+        "4598b30256ded1d330a37403613e198699acf17c28b1e9ed0907042f5484562c",
+        "4598b30256ded1d330a37403613e198699acf17c28b1e9ed0907042f5484562c",
+        "4598b30256ded1d330a37403613e198699acf17c28b1e9ed0907042f5484562c"
+      ],
+      "hashesIdentical": true,
+      "semanticRowsWritten": [
+        36,
+        36,
+        36
+      ],
+      "writeCountsIdentical": true,
+      "amplifications": [
+        2,
+        2,
+        2
+      ],
+      "noopSemanticRowsWritten": [
+        0,
+        0,
+        0
+      ],
+      "noopIsSilent": true,
+      "k1": {
+        "affectedSemanticRowsBefore": 18,
+        "affectedByTable": {
+          "files": 1,
+          "symbols": 7,
+          "edges": 5,
+          "edge_call_sites": 5,
+          "symbol_mechanism_facts": 0,
+          "document_chunks": 0
+        },
+        "byTable": {
+          "files": {
+            "inserted": 1,
+            "deleted": 1,
+            "updated": 0
+          },
+          "symbols": {
+            "inserted": 7,
+            "deleted": 7,
+            "updated": 0
+          },
+          "edges": {
+            "inserted": 5,
+            "deleted": 5,
+            "updated": 0
+          },
+          "edge_call_sites": {
+            "inserted": 5,
+            "deleted": 5,
+            "updated": 0
+          },
+          "symbol_mechanism_facts": {
+            "inserted": 0,
+            "deleted": 0,
+            "updated": 0
+          },
+          "document_chunks": {
+            "inserted": 0,
+            "deleted": 0,
+            "updated": 0
+          },
+          "file_index_failures": {
+            "inserted": 0,
+            "deleted": 0,
+            "updated": 0
+          },
+          "index_runs": {
+            "inserted": 1,
+            "deleted": 0,
+            "updated": 0
+          },
+          "file_run_states": {
+            "inserted": 493,
+            "deleted": 0,
+            "updated": 0
+          },
+          "symbol_run_states": {
+            "inserted": 4616,
+            "deleted": 0,
+            "updated": 0
+          }
+        },
+        "boundedness": {
+          "bounded": true,
+          "amplification": 2,
+          "bound": 3
+        },
+        "mode": "incremental"
+      }
+    },
+    {
+      "id": "C-LARGE",
+      "repeats": 3,
+      "normalizedGraphHashes": [
+        "dc2c8fdb15c1c03ef80a865624d878c00ce7b8c5717682fed6cb7cbb4824909d",
+        "dc2c8fdb15c1c03ef80a865624d878c00ce7b8c5717682fed6cb7cbb4824909d",
+        "dc2c8fdb15c1c03ef80a865624d878c00ce7b8c5717682fed6cb7cbb4824909d"
+      ],
+      "hashesIdentical": true,
+      "semanticRowsWritten": [
+        26,
+        26,
+        26
+      ],
+      "writeCountsIdentical": true,
+      "amplifications": [
+        2,
+        2,
+        2
+      ],
+      "noopSemanticRowsWritten": [
+        0,
+        0,
+        0
+      ],
+      "noopIsSilent": true,
+      "k1": {
+        "affectedSemanticRowsBefore": 13,
+        "affectedByTable": {
+          "files": 1,
+          "symbols": 3,
+          "edges": 5,
+          "edge_call_sites": 3,
+          "symbol_mechanism_facts": 1,
+          "document_chunks": 0
+        },
+        "byTable": {
+          "files": {
+            "inserted": 1,
+            "deleted": 1,
+            "updated": 0
+          },
+          "symbols": {
+            "inserted": 3,
+            "deleted": 3,
+            "updated": 0
+          },
+          "edges": {
+            "inserted": 5,
+            "deleted": 5,
+            "updated": 0
+          },
+          "edge_call_sites": {
+            "inserted": 3,
+            "deleted": 3,
+            "updated": 0
+          },
+          "symbol_mechanism_facts": {
+            "inserted": 1,
+            "deleted": 1,
+            "updated": 0
+          },
+          "document_chunks": {
+            "inserted": 0,
+            "deleted": 0,
+            "updated": 0
+          },
+          "file_index_failures": {
+            "inserted": 0,
+            "deleted": 0,
+            "updated": 0
+          },
+          "index_runs": {
+            "inserted": 1,
+            "deleted": 0,
+            "updated": 0
+          },
+          "file_run_states": {
+            "inserted": 346,
+            "deleted": 0,
+            "updated": 0
+          },
+          "symbol_run_states": {
+            "inserted": 10309,
+            "deleted": 0,
+            "updated": 0
+          }
+        },
+        "boundedness": {
+          "bounded": true,
+          "amplification": 2,
+          "bound": 3
+        },
+        "mode": "incremental"
+      }
+    }
+  ],
+  "controls": {
+    "F1_bounded_semantic_writes": true,
+    "F3_F4_F6_equivalence": true,
+    "F5_noop_writes_nothing": true,
+    "F7_deterministic_graph": true
+  }
+}

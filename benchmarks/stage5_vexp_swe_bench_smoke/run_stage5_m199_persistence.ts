@@ -83,18 +83,20 @@ const appendProbe = (full: string, marker: string, tag: string) =>
 const stage = (result: any) => {
   const t = result?.performance?.timingsMs ?? {};
   return {
-    discovery: +(t.discovery ?? 0).toFixed(1), planning: +(t.planning ?? 0).toFixed(1),
+    discovery: +(t.discovery ?? 0).toFixed(1), read: +(t.read ?? 0).toFixed(1),
+    planning: +(t.planning ?? 0).toFixed(1),
     parsing: +(t.parsing ?? 0).toFixed(1), invalidation: +(t.invalidation ?? 0).toFixed(1),
     linking: +(t.linking ?? 0).toFixed(1), persistence: +(t.persistence ?? 0).toFixed(1),
     retrievalIndex: +(t.retrievalIndex ?? 0).toFixed(1), validation: +(t.validation ?? 0).toFixed(1),
-    bookkeeping: +(t.bookkeeping ?? 0).toFixed(1), commit: +(t.commit ?? 0).toFixed(1),
+    bookkeeping: +(t.bookkeeping ?? 0).toFixed(1),
+    parseCacheWrite: +(t.parseCacheWrite ?? 0).toFixed(1), commit: +(t.commit ?? 0).toFixed(1),
     total: +(t.total ?? 0).toFixed(1),
     // §5: the categories must account for the total. What they do not account
     // for is published rather than absorbed into the nearest stage.
     unattributed: +((t.total ?? 0) - (
-      (t.discovery ?? 0) + (t.planning ?? 0) + (t.parsing ?? 0) + (t.invalidation ?? 0)
-      + (t.linking ?? 0) + (t.persistence ?? 0) + (t.retrievalIndex ?? 0) + (t.validation ?? 0)
-      + (t.bookkeeping ?? 0) + (t.commit ?? 0)
+      (t.discovery ?? 0) + (t.read ?? 0) + (t.planning ?? 0) + (t.parsing ?? 0)
+      + (t.invalidation ?? 0) + (t.linking ?? 0) + (t.persistence ?? 0) + (t.retrievalIndex ?? 0)
+      + (t.validation ?? 0) + (t.bookkeeping ?? 0) + (t.parseCacheWrite ?? 0) + (t.commit ?? 0)
     )).toFixed(1),
   };
 };
@@ -213,7 +215,12 @@ for (const spec of specs) {
         ...(acctSnapshot === undefined ? {} : { previousSnapshot: acctSnapshot }),
         hasExistingGraph: true }));
     acctSnapshot = (value as any).snapshot ?? acctSnapshot;
+    // §35: a bounded refresh writes fewer rows but leaves the pages it freed
+    // behind, so the file it produces is not obviously the file a full rewrite
+    // produces. Reported per refresh rather than assumed.
+    const indexBytesAfter = statSync(path.join(acctWork, ".vtrace/index.sqlite")).size;
     accounting[label] = {
+      indexBytesAfter,
       ...modeOf(value),
       changedPaths,
       liveSemanticRowsBefore: semanticBefore,
@@ -239,6 +246,16 @@ for (const spec of specs) {
 
   // Symbol concentration: the largest single file's share of the graph, which is
   // what any per-file bound has to leave room for (§32 F1).
+  // The same final source, indexed cold in a clean workspace: the storage a
+  // bounded refresh should be compared against.
+  const freshWorkForBytes = freshWork(spec, acctWork, "bytes");
+  rmSync(path.join(freshWorkForBytes, ".vtrace"), { recursive: true, force: true });
+  const bytesDb = openIndexDb(freshWorkForBytes);
+  await indexProject({ repoRoot: freshWorkForBytes, db: bytesDb, parserVersion: DEFAULT_PARSER_VERSION });
+  bytesDb.close();
+  const coldRebuiltIndexBytes = statSync(path.join(freshWorkForBytes, ".vtrace/index.sqlite")).size;
+  rmSync(freshWorkForBytes, { recursive: true, force: true });
+
   const largest = acctDb.query(`SELECT f.path AS path, COUNT(s.id) AS c FROM files f
     JOIN symbols s ON s.file_id = f.id GROUP BY f.id ORDER BY c DESC LIMIT 3`)
     .all() as { path: string; c: number }[];
@@ -255,6 +272,11 @@ for (const spec of specs) {
       stages: noopStages, ...(noopMode ?? {}) },
     incremental,
     accounting,
+    storage: {
+      coldIndexBytes,
+      afterRefreshIndexBytes: (accounting.k3 as any)?.indexBytesAfter ?? null,
+      coldRebuiltFromFinalSourceIndexBytes: coldRebuiltIndexBytes,
+    },
     symbolConcentration: { totalSymbols, largestFiles: largest,
       largestFraction: totalSymbols === 0 ? null : +((largest[0]?.c ?? 0) / totalSymbols).toFixed(4) },
   });

@@ -1,0 +1,638 @@
+{
+  "milestone": "M199",
+  "instrument": "run_stage5_m199_persistence.ts",
+  "purpose": "A3 reproduction (timing pass) and refresh write amplification (accounting pass)",
+  "repeats": 2,
+  "accountedTables": [
+    "files",
+    "symbols",
+    "edges",
+    "edge_call_sites",
+    "symbol_mechanism_facts",
+    "document_chunks",
+    "file_index_failures",
+    "index_runs",
+    "file_run_states",
+    "symbol_run_states"
+  ],
+  "ftsTablesMeasuredByLiveDeltaOnly": [
+    "symbol_search_fts",
+    "symbol_body_literals_fts",
+    "document_search_fts"
+  ],
+  "hardware": {
+    "cpus": 20,
+    "scratch": "/tmp/m199ab-scratch",
+    "loadAverageAtStart": [
+      16.11,
+      15.63,
+      17.31
+    ],
+    "loadAverageAtEnd": [
+      15.89,
+      15.58,
+      17
+    ]
+  },
+  "corpora": [
+    {
+      "id": "C-LARGE",
+      "language": "Python",
+      "filesIndexed": 346,
+      "cold": {
+        "runsMs": [
+          20007.7,
+          14823
+        ],
+        "medianMs": 17415.4,
+        "stages": [
+          {
+            "discovery": 56,
+            "read": 0,
+            "planning": 0.6,
+            "parsing": 14892.3,
+            "invalidation": 0.3,
+            "linking": 563.2,
+            "persistence": 3972.6,
+            "retrievalIndex": 0,
+            "validation": 35.5,
+            "bookkeeping": 0,
+            "parseCacheWrite": 0,
+            "commit": 0,
+            "total": 20006.1,
+            "unattributed": 485.6
+          },
+          {
+            "discovery": 36.4,
+            "read": 0,
+            "planning": 0.1,
+            "parsing": 9231,
+            "invalidation": 0.2,
+            "linking": 776.5,
+            "persistence": 4305.9,
+            "retrievalIndex": 0,
+            "validation": 56.4,
+            "bookkeeping": 0,
+            "parseCacheWrite": 0,
+            "commit": 0,
+            "total": 14822.7,
+            "unattributed": 416.1
+          }
+        ],
+        "indexBytes": 47218688
+      },
+      "noop": {
+        "runsMs": [
+          287.1,
+          264
+        ],
+        "medianMs": 275.5,
+        "stages": [
+          {
+            "discovery": 42.6,
+            "read": 0,
+            "planning": 4.5,
+            "parsing": 0,
+            "invalidation": 0,
+            "linking": 0,
+            "persistence": 0,
+            "retrievalIndex": 0,
+            "validation": 0,
+            "bookkeeping": 0,
+            "parseCacheWrite": 0,
+            "commit": 0,
+            "total": 65,
+            "unattributed": 18
+          },
+          {
+            "discovery": 48.9,
+            "read": 0,
+            "planning": 0.6,
+            "parsing": 0,
+            "invalidation": 0,
+            "linking": 0,
+            "persistence": 0,
+            "retrievalIndex": 0,
+            "validation": 0,
+            "bookkeeping": 0,
+            "parseCacheWrite": 0,
+            "commit": 0,
+            "total": 60.5,
+            "unattributed": 11
+          }
+        ],
+        "mode": "noop",
+        "fallbackReason": null,
+        "parsedFiles": 0,
+        "modifiedFiles": 0,
+        "affectedClosureFiles": 0,
+        "totalSymbols": 10309,
+        "totalRelationships": 24887
+      },
+      "incremental": {
+        "k1": {
+          "changedFiles": 1,
+          "repeats": 2,
+          "runs": [
+            {
+              "elapsedMs": 6666.1,
+              "ratioToColdMedian": 0.383,
+              "stages": {
+                "discovery": 31,
+                "read": 0,
+                "planning": 0.5,
+                "parsing": 390,
+                "invalidation": 395.5,
+                "linking": 783.8,
+                "persistence": 4492.1,
+                "retrievalIndex": 0,
+                "validation": 48.9,
+                "bookkeeping": 0,
+                "parseCacheWrite": 0,
+                "commit": 0,
+                "total": 6665.9,
+                "unattributed": 524
+              },
+              "mode": "incremental",
+              "fallbackReason": null,
+              "parsedFiles": 1,
+              "modifiedFiles": 1,
+              "affectedClosureFiles": 1,
+              "totalSymbols": 10309,
+              "totalRelationships": 24887,
+              "failureMode": null
+            },
+            {
+              "elapsedMs": 6737,
+              "ratioToColdMedian": 0.387,
+              "stages": {
+                "discovery": 52.3,
+                "read": 0,
+                "planning": 0.5,
+                "parsing": 390.3,
+                "invalidation": 424.6,
+                "linking": 821.3,
+                "persistence": 4482.7,
+                "retrievalIndex": 0,
+                "validation": 52.5,
+                "bookkeeping": 0,
+                "parseCacheWrite": 0,
+                "commit": 0,
+                "total": 6736.9,
+                "unattributed": 512.7
+              },
+              "mode": "incremental",
+              "fallbackReason": null,
+              "parsedFiles": 1,
+              "modifiedFiles": 1,
+              "affectedClosureFiles": 1,
+              "totalSymbols": 10309,
+              "totalRelationships": 24887,
+              "failureMode": null
+            }
+          ],
+          "medianElapsedMs": 6701.6,
+          "medianRatioToColdMedian": 0.385,
+          "elapsedMs": 6666.1,
+          "ratioToColdMedian": 0.383,
+          "stages": {
+            "discovery": 31,
+            "read": 0,
+            "planning": 0.5,
+            "parsing": 390,
+            "invalidation": 395.5,
+            "linking": 783.8,
+            "persistence": 4492.1,
+            "retrievalIndex": 0,
+            "validation": 48.9,
+            "bookkeeping": 0,
+            "parseCacheWrite": 0,
+            "commit": 0,
+            "total": 6665.9,
+            "unattributed": 524
+          },
+          "mode": "incremental",
+          "fallbackReason": null,
+          "parsedFiles": 1,
+          "failureMode": null
+        },
+        "k3": {
+          "changedFiles": 3,
+          "repeats": 2,
+          "runs": [
+            {
+              "elapsedMs": 19549.6,
+              "ratioToColdMedian": 1.123,
+              "stages": {
+                "discovery": 51.4,
+                "read": 0,
+                "planning": 0.4,
+                "parsing": 13162.1,
+                "invalidation": 429.2,
+                "linking": 825.9,
+                "persistence": 4527.3,
+                "retrievalIndex": 0,
+                "validation": 51.9,
+                "bookkeeping": 0,
+                "parseCacheWrite": 0,
+                "commit": 0,
+                "total": 19549.3,
+                "unattributed": 501.2
+              },
+              "mode": "full_rebuild",
+              "fallbackReason": "closure_uncertain",
+              "parsedFiles": 346,
+              "modifiedFiles": 3,
+              "affectedClosureFiles": 346,
+              "totalSymbols": 10309,
+              "totalRelationships": 24887,
+              "failureMode": null
+            },
+            {
+              "elapsedMs": 20914.6,
+              "ratioToColdMedian": 1.201,
+              "stages": {
+                "discovery": 52.8,
+                "read": 0,
+                "planning": 0.4,
+                "parsing": 14188.8,
+                "invalidation": 435.9,
+                "linking": 850.5,
+                "persistence": 4815.3,
+                "retrievalIndex": 0,
+                "validation": 53.8,
+                "bookkeeping": 0,
+                "parseCacheWrite": 0,
+                "commit": 0,
+                "total": 20914.2,
+                "unattributed": 516.7
+              },
+              "mode": "full_rebuild",
+              "fallbackReason": "closure_uncertain",
+              "parsedFiles": 346,
+              "modifiedFiles": 3,
+              "affectedClosureFiles": 346,
+              "totalSymbols": 10309,
+              "totalRelationships": 24887,
+              "failureMode": null
+            }
+          ],
+          "medianElapsedMs": 20232.1,
+          "medianRatioToColdMedian": 1.162,
+          "elapsedMs": 19549.6,
+          "ratioToColdMedian": 1.123,
+          "stages": {
+            "discovery": 51.4,
+            "read": 0,
+            "planning": 0.4,
+            "parsing": 13162.1,
+            "invalidation": 429.2,
+            "linking": 825.9,
+            "persistence": 4527.3,
+            "retrievalIndex": 0,
+            "validation": 51.9,
+            "bookkeeping": 0,
+            "parseCacheWrite": 0,
+            "commit": 0,
+            "total": 19549.3,
+            "unattributed": 501.2
+          },
+          "mode": "full_rebuild",
+          "fallbackReason": "closure_uncertain",
+          "parsedFiles": 346,
+          "failureMode": null
+        }
+      },
+      "accounting": {
+        "noop": {
+          "indexBytesAfter": 54259712,
+          "mode": "noop",
+          "fallbackReason": null,
+          "parsedFiles": 0,
+          "modifiedFiles": 0,
+          "affectedClosureFiles": 0,
+          "totalSymbols": 10309,
+          "totalRelationships": 24887,
+          "changedPaths": [],
+          "liveSemanticRowsBefore": 58239,
+          "affectedSemanticRowsBefore": 0,
+          "affectedByTable": {},
+          "boundedness": {
+            "bounded": true,
+            "amplification": null,
+            "bound": 3
+          },
+          "wholeGraphFractionWritten": 0,
+          "byTable": {
+            "files": {
+              "inserted": 0,
+              "deleted": 0,
+              "updated": 0
+            },
+            "symbols": {
+              "inserted": 0,
+              "deleted": 0,
+              "updated": 0
+            },
+            "edges": {
+              "inserted": 0,
+              "deleted": 0,
+              "updated": 0
+            },
+            "edge_call_sites": {
+              "inserted": 0,
+              "deleted": 0,
+              "updated": 0
+            },
+            "symbol_mechanism_facts": {
+              "inserted": 0,
+              "deleted": 0,
+              "updated": 0
+            },
+            "document_chunks": {
+              "inserted": 0,
+              "deleted": 0,
+              "updated": 0
+            },
+            "file_index_failures": {
+              "inserted": 0,
+              "deleted": 0,
+              "updated": 0
+            },
+            "index_runs": {
+              "inserted": 1,
+              "deleted": 0,
+              "updated": 0
+            },
+            "file_run_states": {
+              "inserted": 346,
+              "deleted": 0,
+              "updated": 0
+            },
+            "symbol_run_states": {
+              "inserted": 10309,
+              "deleted": 0,
+              "updated": 0
+            }
+          },
+          "semanticRowsWritten": 0,
+          "bookkeepingRowsWritten": 10656,
+          "ftsLiveRowDelta": {
+            "symbol_search_fts": 0,
+            "symbol_body_literals_fts": 0,
+            "document_search_fts": 0
+          },
+          "liveRowsAfter": {
+            "files": 346,
+            "symbols": 10309,
+            "edges": 24887,
+            "edge_call_sites": 19330,
+            "symbol_mechanism_facts": 2817,
+            "document_chunks": 550,
+            "file_index_failures": 0,
+            "index_runs": 2,
+            "file_run_states": 692,
+            "symbol_run_states": 20618,
+            "symbol_search_fts": 10309,
+            "symbol_body_literals_fts": 5457,
+            "document_search_fts": 550
+          },
+          "totalChangesDelta": 21312
+        },
+        "k1": {
+          "indexBytesAfter": 63238144,
+          "mode": "incremental",
+          "fallbackReason": null,
+          "parsedFiles": 1,
+          "modifiedFiles": 1,
+          "affectedClosureFiles": 1,
+          "totalSymbols": 10309,
+          "totalRelationships": 24887,
+          "changedPaths": [
+            "ARC.py"
+          ],
+          "liveSemanticRowsBefore": 58239,
+          "affectedSemanticRowsBefore": 13,
+          "affectedByTable": {
+            "files": 1,
+            "symbols": 3,
+            "edges": 5,
+            "edge_call_sites": 3,
+            "symbol_mechanism_facts": 1,
+            "document_chunks": 0
+          },
+          "boundedness": {
+            "bounded": false,
+            "amplification": 8959.846,
+            "bound": 3
+          },
+          "wholeGraphFractionWritten": 2,
+          "byTable": {
+            "files": {
+              "inserted": 346,
+              "deleted": 346,
+              "updated": 0
+            },
+            "symbols": {
+              "inserted": 10309,
+              "deleted": 10309,
+              "updated": 0
+            },
+            "edges": {
+              "inserted": 24887,
+              "deleted": 24887,
+              "updated": 0
+            },
+            "edge_call_sites": {
+              "inserted": 19330,
+              "deleted": 19330,
+              "updated": 0
+            },
+            "symbol_mechanism_facts": {
+              "inserted": 2817,
+              "deleted": 2817,
+              "updated": 0
+            },
+            "document_chunks": {
+              "inserted": 550,
+              "deleted": 550,
+              "updated": 0
+            },
+            "file_index_failures": {
+              "inserted": 0,
+              "deleted": 0,
+              "updated": 0
+            },
+            "index_runs": {
+              "inserted": 1,
+              "deleted": 0,
+              "updated": 0
+            },
+            "file_run_states": {
+              "inserted": 346,
+              "deleted": 0,
+              "updated": 0
+            },
+            "symbol_run_states": {
+              "inserted": 10309,
+              "deleted": 0,
+              "updated": 0
+            }
+          },
+          "semanticRowsWritten": 116478,
+          "bookkeepingRowsWritten": 10656,
+          "ftsLiveRowDelta": {
+            "symbol_search_fts": 0,
+            "symbol_body_literals_fts": 0,
+            "document_search_fts": 0
+          },
+          "liveRowsAfter": {
+            "files": 346,
+            "symbols": 10309,
+            "edges": 24887,
+            "edge_call_sites": 19330,
+            "symbol_mechanism_facts": 2817,
+            "document_chunks": 550,
+            "file_index_failures": 0,
+            "index_runs": 3,
+            "file_run_states": 1038,
+            "symbol_run_states": 30927,
+            "symbol_search_fts": 10309,
+            "symbol_body_literals_fts": 5457,
+            "document_search_fts": 550
+          },
+          "totalChangesDelta": 371148
+        },
+        "k3": {
+          "indexBytesAfter": 73023488,
+          "mode": "full_rebuild",
+          "fallbackReason": "closure_uncertain",
+          "parsedFiles": 346,
+          "modifiedFiles": 3,
+          "affectedClosureFiles": 346,
+          "totalSymbols": 10309,
+          "totalRelationships": 24887,
+          "changedPaths": [
+            "ARC.py",
+            "ARC_test.py",
+            "arc/__init__.py"
+          ],
+          "liveSemanticRowsBefore": 58239,
+          "affectedSemanticRowsBefore": 193,
+          "affectedByTable": {
+            "files": 3,
+            "symbols": 34,
+            "edges": 99,
+            "edge_call_sites": 52,
+            "symbol_mechanism_facts": 5,
+            "document_chunks": 0
+          },
+          "boundedness": {
+            "bounded": false,
+            "amplification": 603.513,
+            "bound": 3
+          },
+          "wholeGraphFractionWritten": 2,
+          "byTable": {
+            "files": {
+              "inserted": 346,
+              "deleted": 346,
+              "updated": 0
+            },
+            "symbols": {
+              "inserted": 10309,
+              "deleted": 10309,
+              "updated": 0
+            },
+            "edges": {
+              "inserted": 24887,
+              "deleted": 24887,
+              "updated": 0
+            },
+            "edge_call_sites": {
+              "inserted": 19330,
+              "deleted": 19330,
+              "updated": 0
+            },
+            "symbol_mechanism_facts": {
+              "inserted": 2817,
+              "deleted": 2817,
+              "updated": 0
+            },
+            "document_chunks": {
+              "inserted": 550,
+              "deleted": 550,
+              "updated": 0
+            },
+            "file_index_failures": {
+              "inserted": 0,
+              "deleted": 0,
+              "updated": 0
+            },
+            "index_runs": {
+              "inserted": 1,
+              "deleted": 0,
+              "updated": 0
+            },
+            "file_run_states": {
+              "inserted": 346,
+              "deleted": 0,
+              "updated": 0
+            },
+            "symbol_run_states": {
+              "inserted": 10309,
+              "deleted": 0,
+              "updated": 0
+            }
+          },
+          "semanticRowsWritten": 116478,
+          "bookkeepingRowsWritten": 10656,
+          "ftsLiveRowDelta": {
+            "symbol_search_fts": 0,
+            "symbol_body_literals_fts": 0,
+            "document_search_fts": 0
+          },
+          "liveRowsAfter": {
+            "files": 346,
+            "symbols": 10309,
+            "edges": 24887,
+            "edge_call_sites": 19330,
+            "symbol_mechanism_facts": 2817,
+            "document_chunks": 550,
+            "file_index_failures": 0,
+            "index_runs": 4,
+            "file_run_states": 1384,
+            "symbol_run_states": 41236,
+            "symbol_search_fts": 10309,
+            "symbol_body_literals_fts": 5457,
+            "document_search_fts": 550
+          },
+          "totalChangesDelta": 370631
+        }
+      },
+      "storage": {
+        "coldIndexBytes": 47218688,
+        "afterRefreshIndexBytes": 73023488,
+        "coldRebuiltFromFinalSourceIndexBytes": 47218688
+      },
+      "symbolConcentration": {
+        "totalSymbols": 10309,
+        "largestFiles": [
+          {
+            "path": "arc/tckdb/adapter_test.py",
+            "c": 659
+          },
+          {
+            "path": "arc/output_test.py",
+            "c": 266
+          },
+          {
+            "path": "arc/tckdb/adapter.py",
+            "c": 213
+          }
+        ],
+        "largestFraction": 0.0639
+      }
+    }
+  ]
+}

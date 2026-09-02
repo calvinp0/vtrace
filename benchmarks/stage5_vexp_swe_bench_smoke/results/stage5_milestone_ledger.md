@@ -8245,3 +8245,144 @@ artifacts         stage5_m198_final_report.md,
   incremental persistence (A3) whose value is a benchmark ratio rather than a
   measured workload need. `CONTEXT_COMPILER_PRODUCT_UTILITY_NOT_ESTABLISHED`
   still governs: do not implement any of them by default.
+
+## M199 — bounded incremental persistence (PASS)
+
+```
+milestone         M199
+verdict           PASS
+parity            A3_PARITY_NOT_CLOSED
+spend             0 live-agent runs, $0, 0 network requests, 0 VEXP processes
+scope             A3 only. Make incremental persistence scale with the changed
+                  closure rather than the repository, without weakening any
+                  frozen claim, threshold, corpus, scoring rule or equivalence
+                  gate. No work on A1, A5 or A11-A15.
+
+result            INCREMENTAL_PERSISTENCE_BOUNDED_BY_THE_CHANGED_CLOSURE
+                  VTRACE_VEXP_ENGINE_PARITY_THRESHOLD_NOT_MET
+                  MATCH 4  EXCEED 3  BELOW 8   match-or-exceed 7/15 (threshold 10)
+                  A8 minimum coverage 100% (veto 99%); structural violations 0
+                  determinism stable; F1-F8 all pass
+                  ENGINE QUALITY != CODING-AGENT UTILITY
+
+changed           none of the fifteen classifications moved
+protected         A2 MATCHES, A4 EXCEEDS, A6 MATCHES, A7 EXCEEDS, A8 EXCEEDS,
+                  A9 MATCHES, A10 MATCHES  (all held; zero regressions)
+untouched         A1, A5, A11, A12, A13, A14, A15
+
+A3                C-LARGE k=1  0.399 -> 0.052   (frozen match bar 0.25, exceed 0.05)
+                  C-LARGE k=3  1.12  -> 1.04    package-surface FULL REBUILD
+                  band() needs every value to clear, so A3 stays BELOW
+                  C-MED  k=1 0.029  k=3 0.032   C-SMALL k=1 0.147  k=3 0.203
+
+boundedness       C-LARGE k=1 semantic rows written  116,478 -> 26
+                  affected rows 13; amplification  8,960x -> 2.0x
+                  identical 2.0x on C-SMALL and C-MED
+                  persistence  3,394/4,492 ms -> 8.9/8.6 ms (interleaved A/B)
+                  invalidation   326/396 ms -> 7.4/10.6 ms
+                  linking        454/784 ms -> 8.6/9.7 ms
+                  parsing       383/390 ms -> 377/390 ms   (unchanged; the control)
+                  index bytes after k=1  63,238,144 -> 61,329,408
+
+correctness       incremental == cold   18/18   (6 mutations x 3 corpora)
+                  sequence == cold       3/3    (modify/modify/delete/add/modify)
+                  no-op semantic writes   0     (3 corpora x 3 repeats)
+                  determinism             3/3 identical hashes AND write counts
+                  full suite              5,999 pass / 49 skip / 0 fail
+
+commits           9c60c120 row-write accounting and equivalence instruments
+                  e4cb5aa1 bounded invalidation and persistence
+                  f8f6b908 bookkeeping/commit/read/parse-cache timings
+                  11382073 M199 regressions moved to keep C-MED at 492 files
+artifacts         stage5_m199_final_report.md,
+                  stage5_m199_{before,after,equivalence,query_plans}.json,
+                  stage5_m199_ab_{pre,post}_{1,2}.json,
+                  stage5_m199_{authority,indexing,engine,claim_ledger}.json
+                  (M197A's four frozen JSONs restored byte-identical)
+```
+
+## M199 standing findings
+
+- **A one-file change rewrote the whole graph, and the machinery not to had been
+  there all along.** `indexProject`'s transaction ran eight unqualified DELETEs
+  and re-persisted every parse result whatever the plan said, so a comment
+  appended to one ARC file deleted and reinserted 10,309 symbols, 24,887 edges,
+  19,330 call sites, 2,817 mechanism facts and 550 chunks: 8,960 rows written per
+  row affected, exactly 200% of the live graph. Meanwhile `persistParseResult`
+  already replaced one file's rows, `deleteEdgesTouchingFileSymbols` already
+  removed one file's edges from both directions, and the FTS and mechanism-fact
+  repositories already deleted by path. Ownership was never missing; the caller
+  never asked which files the plan had invalidated.
+
+- **Symbol identity is a byte range, so a definition that merely moves breaks
+  every edge pointing at it.** That is what makes bounded persistence non-trivial.
+  The rows a refresh must repair are not only the changed file's — they are every
+  edge whose TARGET is in it, and those rows are owned by files the refresh does
+  not re-persist. The repair invalidates edges in both directions per file and
+  hands the inter-file link pass the same symbol set invalidation deleted
+  against, so it restores exactly what it removed and can collide with nothing
+  that survived. No `INSERT OR IGNORE`: an edge that would collide is one that
+  was never deleted, and the filter is what makes that impossible.
+
+- **A3's k=3 was never an incremental refresh.** The third `.py` file of ARC by
+  the product's own enumeration is `arc/__init__.py`. A package-surface edit is
+  routed to a full rebuild by two independent guards — `planIncrementalRefresh`
+  before parsing, and `computeSemanticContextHash` hashing the package file's raw
+  content after it — because Python re-export resolution is a real cross-file
+  binding (`fromReExportsByName` resolves `from arc import X` through
+  `__init__.py`) and unresolved import descriptors are not persisted, so no query
+  can name the files whose resolutions would change. A3 is one claim scoring two
+  operations of different kinds: the incremental half is now 0.052, the rebuild
+  half is 1.04. Closing it means giving package identity a semantic derivation
+  and persisting import descriptors — binding-context architecture, not
+  persistence, and §16 says correctness beats A3.
+
+- **M184's materialization recovery is the one incremental plan that must write
+  everything.** It keeps the incremental parse plan while the graph itself is
+  missing, so it invalidated nothing and a scope taken from the change set would
+  have written nothing. Any incremental plan carrying a `fullRebuildReason` is
+  treated as whole-repository, which fails towards writing more, and there is a
+  permanent regression that deletes the graph out from under a no-op and checks
+  the hash comes back.
+
+- **The frozen benchmark measures the tree that measures it.** C-MED is this
+  repository's own `src/`, and its frozen identity is a file count. One new test
+  file made it 493 and `run_stage5_m197a_authority.ts` returned
+  `M197A_AUTHORITY_MISMATCH` before any claim was scored. The check worked; the
+  property is worth knowing before the next milestone adds a source file, because
+  A2, A5, A8 and A10 are all scored on that corpus.
+
+- **Run history is now the largest unbounded term, in time and on disk.** Every
+  refresh, no-op included, writes 10,656 rows on C-LARGE (156 ms, 13% of an
+  incremental refresh) and grows the index file by about 7 MB, because
+  `computeSymbolDiff` compares one run's FULL snapshot against the previous run's
+  and nothing prunes old runs. Repository-scale by contract rather than by
+  accident, which is why M199 left it alone — but it is the clearest remaining
+  candidate, and unlike persistence it is a retention question as much as a
+  scaling one.
+
+- **The parse cache is rekeyed globally on every refresh.** Its key carries a
+  binding-context hash derived from every symbol in the repository, so one symbol
+  moving rekeys every file's entry and an entry just READ from the cache has to
+  be written back under the new key: 345 cache writes for a one-file change, 165
+  ms. It is the same global-binding-context design that forces k=3 to a full
+  rebuild, and it is why `fullParseCacheContextCompatible` is all-or-nothing —
+  three changed files disqualify all 346 from cache reuse in a planner-triggered
+  rebuild.
+
+- **Three FTS deletes became per-file full scans, and that is acceptable.**
+  `file_path_raw` is an FTS5 `UNINDEXED` column and cannot carry an index, so
+  bounded persistence turned three unqualified DELETEs into three scans per
+  changed file: 7 ms on C-LARGE against a 1,160 ms refresh. Measured, reported,
+  and not worth a shadow table at this size. No index was added anywhere in M199.
+
+- **`pruneRemovedFiles` is dead code.** Defined in `indexProject.ts`, called from
+  nowhere. Harmless only because deletions always force a full rebuild, which
+  wipes the tables it would prune. If the deletion closure is ever bounded it
+  becomes load-bearing, and it has never been exercised.
+
+- **Next-step recommendation.** None issued. M199 was scoped to A3 and stops at
+  the frozen rerun. The remaining A3 gap is a binding-context change whose value
+  is a benchmark ratio rather than a measured workload need.
+  `CONTEXT_COMPILER_PRODUCT_UTILITY_NOT_ESTABLISHED` still governs: do not
+  implement any remaining BELOW claim by default.

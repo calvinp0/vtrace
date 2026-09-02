@@ -1,0 +1,638 @@
+{
+  "milestone": "M199",
+  "instrument": "run_stage5_m199_persistence.ts",
+  "purpose": "A3 reproduction (timing pass) and refresh write amplification (accounting pass)",
+  "repeats": 2,
+  "accountedTables": [
+    "files",
+    "symbols",
+    "edges",
+    "edge_call_sites",
+    "symbol_mechanism_facts",
+    "document_chunks",
+    "file_index_failures",
+    "index_runs",
+    "file_run_states",
+    "symbol_run_states"
+  ],
+  "ftsTablesMeasuredByLiveDeltaOnly": [
+    "symbol_search_fts",
+    "symbol_body_literals_fts",
+    "document_search_fts"
+  ],
+  "hardware": {
+    "cpus": 20,
+    "scratch": "/tmp/m199ab-scratch",
+    "loadAverageAtStart": [
+      15.04,
+      15.44,
+      17.54
+    ],
+    "loadAverageAtEnd": [
+      16.11,
+      15.63,
+      17.31
+    ]
+  },
+  "corpora": [
+    {
+      "id": "C-LARGE",
+      "language": "Python",
+      "filesIndexed": 346,
+      "cold": {
+        "runsMs": [
+          18828,
+          17001.5
+        ],
+        "medianMs": 17914.7,
+        "stages": [
+          {
+            "discovery": 57.6,
+            "read": 18.4,
+            "planning": 0.3,
+            "parsing": 13076.5,
+            "invalidation": 0.2,
+            "linking": 666.1,
+            "persistence": 4568.1,
+            "retrievalIndex": 0,
+            "validation": 37.5,
+            "bookkeeping": 105.7,
+            "parseCacheWrite": 211.1,
+            "commit": 2,
+            "total": 18826,
+            "unattributed": 82.5
+          },
+          {
+            "discovery": 75.3,
+            "read": 17.1,
+            "planning": 0.2,
+            "parsing": 11594.8,
+            "invalidation": 0.4,
+            "linking": 576.1,
+            "persistence": 4272.9,
+            "retrievalIndex": 0,
+            "validation": 35.4,
+            "bookkeeping": 141.1,
+            "parseCacheWrite": 190.2,
+            "commit": 1.3,
+            "total": 17001,
+            "unattributed": 96.1
+          }
+        ],
+        "indexBytes": 47218688
+      },
+      "noop": {
+        "runsMs": [
+          234.7,
+          275.3
+        ],
+        "medianMs": 255,
+        "stages": [
+          {
+            "discovery": 46.1,
+            "read": 14.2,
+            "planning": 1.6,
+            "parsing": 0,
+            "invalidation": 0,
+            "linking": 0,
+            "persistence": 0,
+            "retrievalIndex": 0,
+            "validation": 0,
+            "bookkeeping": 0,
+            "parseCacheWrite": 0,
+            "commit": 0,
+            "total": 63.6,
+            "unattributed": 1.6
+          },
+          {
+            "discovery": 50,
+            "read": 27.4,
+            "planning": 0.8,
+            "parsing": 0,
+            "invalidation": 0,
+            "linking": 0,
+            "persistence": 0,
+            "retrievalIndex": 0,
+            "validation": 0,
+            "bookkeeping": 0,
+            "parseCacheWrite": 0,
+            "commit": 0,
+            "total": 79.9,
+            "unattributed": 1.8
+          }
+        ],
+        "mode": "noop",
+        "fallbackReason": null,
+        "parsedFiles": 0,
+        "modifiedFiles": 0,
+        "affectedClosureFiles": 0,
+        "totalSymbols": 10309,
+        "totalRelationships": 24887
+      },
+      "incremental": {
+        "k1": {
+          "changedFiles": 1,
+          "repeats": 2,
+          "runs": [
+            {
+              "elapsedMs": 882,
+              "ratioToColdMedian": 0.049,
+              "stages": {
+                "discovery": 35.8,
+                "read": 21.1,
+                "planning": 0.5,
+                "parsing": 376.9,
+                "invalidation": 7.4,
+                "linking": 8.6,
+                "persistence": 8.9,
+                "retrievalIndex": 0,
+                "validation": 24.5,
+                "bookkeeping": 105.9,
+                "parseCacheWrite": 140.9,
+                "commit": 0.7,
+                "total": 881.8,
+                "unattributed": 150.5
+              },
+              "mode": "incremental",
+              "fallbackReason": null,
+              "parsedFiles": 1,
+              "modifiedFiles": 1,
+              "affectedClosureFiles": 1,
+              "totalSymbols": 10309,
+              "totalRelationships": 24887,
+              "failureMode": null
+            },
+            {
+              "elapsedMs": 985.1,
+              "ratioToColdMedian": 0.055,
+              "stages": {
+                "discovery": 45.4,
+                "read": 17.2,
+                "planning": 0.9,
+                "parsing": 412.8,
+                "invalidation": 7.4,
+                "linking": 12.2,
+                "persistence": 9.2,
+                "retrievalIndex": 0,
+                "validation": 25.6,
+                "bookkeeping": 129.4,
+                "parseCacheWrite": 153.2,
+                "commit": 1.2,
+                "total": 985,
+                "unattributed": 170.5
+              },
+              "mode": "incremental",
+              "fallbackReason": null,
+              "parsedFiles": 1,
+              "modifiedFiles": 1,
+              "affectedClosureFiles": 1,
+              "totalSymbols": 10309,
+              "totalRelationships": 24887,
+              "failureMode": null
+            }
+          ],
+          "medianElapsedMs": 933.5,
+          "medianRatioToColdMedian": 0.052,
+          "elapsedMs": 882,
+          "ratioToColdMedian": 0.049,
+          "stages": {
+            "discovery": 35.8,
+            "read": 21.1,
+            "planning": 0.5,
+            "parsing": 376.9,
+            "invalidation": 7.4,
+            "linking": 8.6,
+            "persistence": 8.9,
+            "retrievalIndex": 0,
+            "validation": 24.5,
+            "bookkeeping": 105.9,
+            "parseCacheWrite": 140.9,
+            "commit": 0.7,
+            "total": 881.8,
+            "unattributed": 150.5
+          },
+          "mode": "incremental",
+          "fallbackReason": null,
+          "parsedFiles": 1,
+          "failureMode": null
+        },
+        "k3": {
+          "changedFiles": 3,
+          "repeats": 2,
+          "runs": [
+            {
+              "elapsedMs": 19138.3,
+              "ratioToColdMedian": 1.068,
+              "stages": {
+                "discovery": 49.2,
+                "read": 16.8,
+                "planning": 0.8,
+                "parsing": 12850.3,
+                "invalidation": 332.7,
+                "linking": 595.9,
+                "persistence": 4846.4,
+                "retrievalIndex": 0,
+                "validation": 32.8,
+                "bookkeeping": 113.9,
+                "parseCacheWrite": 202.4,
+                "commit": 2.9,
+                "total": 19138.1,
+                "unattributed": 93.9
+              },
+              "mode": "full_rebuild",
+              "fallbackReason": "closure_uncertain",
+              "parsedFiles": 346,
+              "modifiedFiles": 3,
+              "affectedClosureFiles": 346,
+              "totalSymbols": 10309,
+              "totalRelationships": 24887,
+              "failureMode": null
+            },
+            {
+              "elapsedMs": 19730.8,
+              "ratioToColdMedian": 1.101,
+              "stages": {
+                "discovery": 46.8,
+                "read": 19.6,
+                "planning": 0.4,
+                "parsing": 12929.3,
+                "invalidation": 523.3,
+                "linking": 1176.4,
+                "persistence": 4374.3,
+                "retrievalIndex": 0,
+                "validation": 67,
+                "bookkeeping": 282.1,
+                "parseCacheWrite": 193.7,
+                "commit": 5.1,
+                "total": 19730.2,
+                "unattributed": 112.2
+              },
+              "mode": "full_rebuild",
+              "fallbackReason": "closure_uncertain",
+              "parsedFiles": 346,
+              "modifiedFiles": 3,
+              "affectedClosureFiles": 346,
+              "totalSymbols": 10309,
+              "totalRelationships": 24887,
+              "failureMode": null
+            }
+          ],
+          "medianElapsedMs": 19434.5,
+          "medianRatioToColdMedian": 1.085,
+          "elapsedMs": 19138.3,
+          "ratioToColdMedian": 1.068,
+          "stages": {
+            "discovery": 49.2,
+            "read": 16.8,
+            "planning": 0.8,
+            "parsing": 12850.3,
+            "invalidation": 332.7,
+            "linking": 595.9,
+            "persistence": 4846.4,
+            "retrievalIndex": 0,
+            "validation": 32.8,
+            "bookkeeping": 113.9,
+            "parseCacheWrite": 202.4,
+            "commit": 2.9,
+            "total": 19138.1,
+            "unattributed": 93.9
+          },
+          "mode": "full_rebuild",
+          "fallbackReason": "closure_uncertain",
+          "parsedFiles": 346,
+          "failureMode": null
+        }
+      },
+      "accounting": {
+        "noop": {
+          "indexBytesAfter": 54259712,
+          "mode": "noop",
+          "fallbackReason": null,
+          "parsedFiles": 0,
+          "modifiedFiles": 0,
+          "affectedClosureFiles": 0,
+          "totalSymbols": 10309,
+          "totalRelationships": 24887,
+          "changedPaths": [],
+          "liveSemanticRowsBefore": 58239,
+          "affectedSemanticRowsBefore": 0,
+          "affectedByTable": {},
+          "boundedness": {
+            "bounded": true,
+            "amplification": null,
+            "bound": 3
+          },
+          "wholeGraphFractionWritten": 0,
+          "byTable": {
+            "files": {
+              "inserted": 0,
+              "deleted": 0,
+              "updated": 0
+            },
+            "symbols": {
+              "inserted": 0,
+              "deleted": 0,
+              "updated": 0
+            },
+            "edges": {
+              "inserted": 0,
+              "deleted": 0,
+              "updated": 0
+            },
+            "edge_call_sites": {
+              "inserted": 0,
+              "deleted": 0,
+              "updated": 0
+            },
+            "symbol_mechanism_facts": {
+              "inserted": 0,
+              "deleted": 0,
+              "updated": 0
+            },
+            "document_chunks": {
+              "inserted": 0,
+              "deleted": 0,
+              "updated": 0
+            },
+            "file_index_failures": {
+              "inserted": 0,
+              "deleted": 0,
+              "updated": 0
+            },
+            "index_runs": {
+              "inserted": 1,
+              "deleted": 0,
+              "updated": 0
+            },
+            "file_run_states": {
+              "inserted": 346,
+              "deleted": 0,
+              "updated": 0
+            },
+            "symbol_run_states": {
+              "inserted": 10309,
+              "deleted": 0,
+              "updated": 0
+            }
+          },
+          "semanticRowsWritten": 0,
+          "bookkeepingRowsWritten": 10656,
+          "ftsLiveRowDelta": {
+            "symbol_search_fts": 0,
+            "symbol_body_literals_fts": 0,
+            "document_search_fts": 0
+          },
+          "liveRowsAfter": {
+            "files": 346,
+            "symbols": 10309,
+            "edges": 24887,
+            "edge_call_sites": 19330,
+            "symbol_mechanism_facts": 2817,
+            "document_chunks": 550,
+            "file_index_failures": 0,
+            "index_runs": 2,
+            "file_run_states": 692,
+            "symbol_run_states": 20618,
+            "symbol_search_fts": 10309,
+            "symbol_body_literals_fts": 5457,
+            "document_search_fts": 550
+          },
+          "totalChangesDelta": 21312
+        },
+        "k1": {
+          "indexBytesAfter": 61329408,
+          "mode": "incremental",
+          "fallbackReason": null,
+          "parsedFiles": 1,
+          "modifiedFiles": 1,
+          "affectedClosureFiles": 1,
+          "totalSymbols": 10309,
+          "totalRelationships": 24887,
+          "changedPaths": [
+            "ARC.py"
+          ],
+          "liveSemanticRowsBefore": 58239,
+          "affectedSemanticRowsBefore": 13,
+          "affectedByTable": {
+            "files": 1,
+            "symbols": 3,
+            "edges": 5,
+            "edge_call_sites": 3,
+            "symbol_mechanism_facts": 1,
+            "document_chunks": 0
+          },
+          "boundedness": {
+            "bounded": true,
+            "amplification": 2,
+            "bound": 3
+          },
+          "wholeGraphFractionWritten": 0.0004,
+          "byTable": {
+            "files": {
+              "inserted": 1,
+              "deleted": 1,
+              "updated": 0
+            },
+            "symbols": {
+              "inserted": 3,
+              "deleted": 3,
+              "updated": 0
+            },
+            "edges": {
+              "inserted": 5,
+              "deleted": 5,
+              "updated": 0
+            },
+            "edge_call_sites": {
+              "inserted": 3,
+              "deleted": 3,
+              "updated": 0
+            },
+            "symbol_mechanism_facts": {
+              "inserted": 1,
+              "deleted": 1,
+              "updated": 0
+            },
+            "document_chunks": {
+              "inserted": 0,
+              "deleted": 0,
+              "updated": 0
+            },
+            "file_index_failures": {
+              "inserted": 0,
+              "deleted": 0,
+              "updated": 0
+            },
+            "index_runs": {
+              "inserted": 1,
+              "deleted": 0,
+              "updated": 0
+            },
+            "file_run_states": {
+              "inserted": 346,
+              "deleted": 0,
+              "updated": 0
+            },
+            "symbol_run_states": {
+              "inserted": 10309,
+              "deleted": 0,
+              "updated": 0
+            }
+          },
+          "semanticRowsWritten": 26,
+          "bookkeepingRowsWritten": 10656,
+          "ftsLiveRowDelta": {
+            "symbol_search_fts": 0,
+            "symbol_body_literals_fts": 0,
+            "document_search_fts": 0
+          },
+          "liveRowsAfter": {
+            "files": 346,
+            "symbols": 10309,
+            "edges": 24887,
+            "edge_call_sites": 19330,
+            "symbol_mechanism_facts": 2817,
+            "document_chunks": 550,
+            "file_index_failures": 0,
+            "index_runs": 3,
+            "file_run_states": 1038,
+            "symbol_run_states": 30927,
+            "symbol_search_fts": 10309,
+            "symbol_body_literals_fts": 5457,
+            "document_search_fts": 550
+          },
+          "totalChangesDelta": 21456
+        },
+        "k3": {
+          "indexBytesAfter": 70311936,
+          "mode": "full_rebuild",
+          "fallbackReason": "closure_uncertain",
+          "parsedFiles": 346,
+          "modifiedFiles": 3,
+          "affectedClosureFiles": 346,
+          "totalSymbols": 10309,
+          "totalRelationships": 24887,
+          "changedPaths": [
+            "ARC.py",
+            "ARC_test.py",
+            "arc/__init__.py"
+          ],
+          "liveSemanticRowsBefore": 58239,
+          "affectedSemanticRowsBefore": 193,
+          "affectedByTable": {
+            "files": 3,
+            "symbols": 34,
+            "edges": 99,
+            "edge_call_sites": 52,
+            "symbol_mechanism_facts": 5,
+            "document_chunks": 0
+          },
+          "boundedness": {
+            "bounded": false,
+            "amplification": 603.513,
+            "bound": 3
+          },
+          "wholeGraphFractionWritten": 2,
+          "byTable": {
+            "files": {
+              "inserted": 346,
+              "deleted": 346,
+              "updated": 0
+            },
+            "symbols": {
+              "inserted": 10309,
+              "deleted": 10309,
+              "updated": 0
+            },
+            "edges": {
+              "inserted": 24887,
+              "deleted": 24887,
+              "updated": 0
+            },
+            "edge_call_sites": {
+              "inserted": 19330,
+              "deleted": 19330,
+              "updated": 0
+            },
+            "symbol_mechanism_facts": {
+              "inserted": 2817,
+              "deleted": 2817,
+              "updated": 0
+            },
+            "document_chunks": {
+              "inserted": 550,
+              "deleted": 550,
+              "updated": 0
+            },
+            "file_index_failures": {
+              "inserted": 0,
+              "deleted": 0,
+              "updated": 0
+            },
+            "index_runs": {
+              "inserted": 1,
+              "deleted": 0,
+              "updated": 0
+            },
+            "file_run_states": {
+              "inserted": 346,
+              "deleted": 0,
+              "updated": 0
+            },
+            "symbol_run_states": {
+              "inserted": 10309,
+              "deleted": 0,
+              "updated": 0
+            }
+          },
+          "semanticRowsWritten": 116478,
+          "bookkeepingRowsWritten": 10656,
+          "ftsLiveRowDelta": {
+            "symbol_search_fts": 0,
+            "symbol_body_literals_fts": 0,
+            "document_search_fts": 0
+          },
+          "liveRowsAfter": {
+            "files": 346,
+            "symbols": 10309,
+            "edges": 24887,
+            "edge_call_sites": 19330,
+            "symbol_mechanism_facts": 2817,
+            "document_chunks": 550,
+            "file_index_failures": 0,
+            "index_runs": 4,
+            "file_run_states": 1384,
+            "symbol_run_states": 41236,
+            "symbol_search_fts": 10309,
+            "symbol_body_literals_fts": 5457,
+            "document_search_fts": 550
+          },
+          "totalChangesDelta": 371080
+        }
+      },
+      "storage": {
+        "coldIndexBytes": 47218688,
+        "afterRefreshIndexBytes": 70311936,
+        "coldRebuiltFromFinalSourceIndexBytes": 47218688
+      },
+      "symbolConcentration": {
+        "totalSymbols": 10309,
+        "largestFiles": [
+          {
+            "path": "arc/tckdb/adapter_test.py",
+            "c": 659
+          },
+          {
+            "path": "arc/output_test.py",
+            "c": 266
+          },
+          {
+            "path": "arc/tckdb/adapter.py",
+            "c": 213
+          }
+        ],
+        "largestFraction": 0.0639
+      }
+    }
+  ]
+}

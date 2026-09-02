@@ -1,0 +1,160 @@
+{
+  "milestone": "M199",
+  "instrument": "run_stage5_m199_queryplans.ts",
+  "corpus": "C-LARGE",
+  "targetPath": "ARC.py",
+  "tableSizes": {
+    "files": 346,
+    "symbols": 10309,
+    "edges": 24887,
+    "edge_call_sites": 19330,
+    "symbol_mechanism_facts": 2817,
+    "document_chunks": 550,
+    "symbol_search_fts": 10309,
+    "symbol_body_literals_fts": 5457,
+    "document_search_fts": 550
+  },
+  "statements": [
+    {
+      "id": "lookup_file_id",
+      "sql": "SELECT id FROM files WHERE path = ?",
+      "plan": [
+        "SEARCH files USING INDEX sqlite_autoindex_files_2 (path=?)"
+      ],
+      "classification": "indexed",
+      "isolatedMs": 0.06
+    },
+    {
+      "id": "delete_call_sites_touching_file",
+      "sql": "DELETE FROM edge_call_sites WHERE edge_id IN ( SELECT id FROM edges WHERE src_symbol_id IN (SELECT id FROM symbols WHERE file_id = ?) OR dst_symbol_id IN (SELECT id FROM symbols WHERE file_id = ?))",
+      "plan": [
+        "SEARCH edge_call_sites USING COVERING INDEX sqlite_autoindex_edge_call_sites_1 (edge_id=?)",
+        "LIST SUBQUERY 3",
+        "MULTI-INDEX OR",
+        "INDEX 1",
+        "LIST SUBQUERY 1",
+        "SEARCH symbols USING COVERING INDEX idx_symbols_file_id_start_byte (file_id=?)",
+        "CREATE BLOOM FILTER",
+        "SEARCH edges USING INDEX idx_edges_src_symbol_id (src_symbol_id=?)",
+        "INDEX 2",
+        "LIST SUBQUERY 2",
+        "SEARCH symbols USING COVERING INDEX idx_symbols_file_id_start_byte (file_id=?)",
+        "CREATE BLOOM FILTER",
+        "SEARCH edges USING INDEX idx_edges_dst_symbol_id (dst_symbol_id=?)",
+        "CREATE BLOOM FILTER"
+      ],
+      "classification": "mixed",
+      "isolatedMs": 0.3
+    },
+    {
+      "id": "delete_edges_touching_file",
+      "sql": "DELETE FROM edges WHERE src_symbol_id IN (SELECT id FROM symbols WHERE file_id = ?) OR dst_symbol_id IN (SELECT id FROM symbols WHERE file_id = ?)",
+      "plan": [
+        "MULTI-INDEX OR",
+        "INDEX 1",
+        "LIST SUBQUERY 1",
+        "SEARCH symbols USING COVERING INDEX idx_symbols_file_id_start_byte (file_id=?)",
+        "CREATE BLOOM FILTER",
+        "SEARCH edges USING INDEX idx_edges_src_symbol_id (src_symbol_id=?)",
+        "INDEX 2",
+        "LIST SUBQUERY 2",
+        "SEARCH symbols USING COVERING INDEX idx_symbols_file_id_start_byte (file_id=?)",
+        "CREATE BLOOM FILTER",
+        "SEARCH edges USING INDEX idx_edges_dst_symbol_id (dst_symbol_id=?)",
+        "SEARCH edge_call_sites USING COVERING INDEX sqlite_autoindex_edge_call_sites_1 (edge_id=?)"
+      ],
+      "classification": "mixed",
+      "isolatedMs": 0.19
+    },
+    {
+      "id": "delete_document_search_for_file",
+      "sql": "DELETE FROM document_search_fts WHERE file_id = ?",
+      "plan": [
+        "SCAN document_search_fts VIRTUAL TABLE INDEX 0:"
+      ],
+      "classification": "full_scan",
+      "isolatedMs": 0.58
+    },
+    {
+      "id": "delete_document_chunks_for_file",
+      "sql": "DELETE FROM document_chunks WHERE file_id = ?",
+      "plan": [
+        "SEARCH document_chunks USING COVERING INDEX idx_document_chunks_file_line (file_id=?)"
+      ],
+      "classification": "indexed",
+      "isolatedMs": 0.07
+    },
+    {
+      "id": "delete_mechanism_facts_for_file",
+      "sql": "DELETE FROM symbol_mechanism_facts WHERE file_path_raw = ?",
+      "plan": [
+        "SEARCH symbol_mechanism_facts USING COVERING INDEX idx_symbol_mechanism_facts_path (file_path_raw=?)"
+      ],
+      "classification": "indexed",
+      "isolatedMs": 0.2
+    },
+    {
+      "id": "delete_body_literals_for_file",
+      "sql": "DELETE FROM symbol_body_literals_fts WHERE file_path_raw = ?",
+      "plan": [
+        "SCAN symbol_body_literals_fts VIRTUAL TABLE INDEX 0:"
+      ],
+      "classification": "full_scan",
+      "isolatedMs": 1.92
+    },
+    {
+      "id": "delete_symbol_search_for_file",
+      "sql": "DELETE FROM symbol_search_fts WHERE file_path_raw = ?",
+      "plan": [
+        "SCAN symbol_search_fts VIRTUAL TABLE INDEX 0:"
+      ],
+      "classification": "full_scan",
+      "isolatedMs": 4.51
+    },
+    {
+      "id": "delete_symbols_for_file",
+      "sql": "DELETE FROM symbols WHERE file_id = ?",
+      "plan": [
+        "SEARCH symbols USING COVERING INDEX idx_symbols_file_id_start_byte (file_id=?)",
+        "SEARCH symbol_mechanism_facts USING COVERING INDEX sqlite_autoindex_symbol_mechanism_facts_1 (symbol_id=?)",
+        "SEARCH edges USING COVERING INDEX idx_edges_dst_symbol_id (dst_symbol_id=?)",
+        "SEARCH edges USING COVERING INDEX idx_edges_src_symbol_id (src_symbol_id=?)",
+        "SEARCH symbols USING COVERING INDEX idx_symbols_parent_symbol_id (parent_symbol_id=?)"
+      ],
+      "classification": "indexed",
+      "isolatedMs": 0.35
+    },
+    {
+      "id": "delete_file_by_path",
+      "sql": "DELETE FROM files WHERE path = ?",
+      "plan": [
+        "SEARCH files USING INDEX sqlite_autoindex_files_2 (path=?)",
+        "SEARCH symbols USING COVERING INDEX idx_symbols_file_id_start_byte (file_id=?)",
+        "SEARCH document_chunks USING COVERING INDEX idx_document_chunks_file_line (file_id=?)"
+      ],
+      "classification": "indexed",
+      "isolatedMs": 0.27
+    },
+    {
+      "id": "validate_dangling_edges",
+      "sql": "SELECT COUNT(*) AS count FROM edges LEFT JOIN symbols src ON src.id = edges.src_symbol_id LEFT JOIN symbols dst ON dst.id = edges.dst_symbol_id WHERE src.id IS NULL OR dst.id IS NULL",
+      "plan": [
+        "SCAN edges",
+        "SEARCH src USING COVERING INDEX sqlite_autoindex_symbols_1 (id=?) LEFT-JOIN",
+        "SEARCH dst USING COVERING INDEX sqlite_autoindex_symbols_1 (id=?) LEFT-JOIN"
+      ],
+      "classification": "full_scan",
+      "isolatedMs": 21.3
+    },
+    {
+      "id": "validate_dangling_search",
+      "sql": "SELECT COUNT(*) AS count FROM symbol_search_fts LEFT JOIN symbols ON symbols.id = symbol_search_fts.symbol_id WHERE symbols.id IS NULL",
+      "plan": [
+        "SCAN symbol_search_fts VIRTUAL TABLE INDEX 0:",
+        "SEARCH symbols USING COVERING INDEX sqlite_autoindex_symbols_1 (id=?) LEFT-JOIN"
+      ],
+      "classification": "full_scan",
+      "isolatedMs": 10.47
+    }
+  ]
+}
