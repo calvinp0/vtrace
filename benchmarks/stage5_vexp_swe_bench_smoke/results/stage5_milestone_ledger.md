@@ -8539,3 +8539,154 @@ evidence          results/stage5_m200_final_report.md and the twelve
 - **Next-step recommendation.** None issued. M200 was scoped to A3 and stops at
   the frozen rerun. `CONTEXT_COMPILER_PRODUCT_UTILITY_NOT_ESTABLISHED` still
   governs: no remaining BELOW claim is authorised by this milestone.
+
+## M201 — frozen A5 query latency (PASS)
+
+```
+milestone         M201
+verdict           PASS
+parity            A5_PARITY_CLOSED
+spend             0 live-agent runs, $0, 0 network requests, 0 VEXP processes
+scope             A5 only. Close the frozen query-latency claim without altering
+                  retrieval semantics, ranking, selection, boundedness, token
+                  accounting, corpus, threshold or scorer. No work on A1 or
+                  A11-A15.
+
+result            M200_A5_BELOW_NOT_REPRODUCED_ON_AN_UNCHANGED_TREE
+                  VTRACE_VEXP_ENGINE_PARITY_THRESHOLD_NOT_MET
+                  MATCH 4  EXCEED 5  BELOW 6   match-or-exceed 9/15 (threshold 10)
+                  A8 minimum coverage 100% (veto 99%); structural violations 0
+                  determinism stable; F1-F8 all pass
+                  ENGINE QUALITY != CODING-AGENT UTILITY
+
+changed           A5  BELOW -> MATCHES   (the target)
+incidental        A2  MATCHES -> EXCEEDS  C-MED 30.45 -> 65.02 files/s
+                  A6  MATCHES -> EXCEEDS  C-LARGE p90 297.63 -> 149.23 ms
+                  Both are the same quiet machine that moved A5, not M201 work.
+                  Neither changes the match-or-exceed count: 8/15 -> 9/15 is A5.
+protected         A3 MATCHES, A4 EXCEEDS, A7 EXCEEDS, A8 EXCEEDS, A9 MATCHES,
+                  A10 MATCHES  (all held; zero regressions)
+untouched         A1, A11, A12, A13, A14, A15
+
+A5                frozen scorer: p90 41.49 / 197.62 / 336.53 ms
+                  (C-SMALL / C-MED / C-LARGE), match bar 500, exceed bar 200
+                  M200 measured 111.08 / 439.18 / 627.30 at load 16.73 of 20
+
+cause             NO SOURCE CHANGE. `git diff --name-only 1801173b..HEAD -- src`
+                  is empty and src is clean, so the tree M200 classified BELOW
+                  is byte-for-byte the tree measured here. Eight independent
+                  captures of the frozen protocol across load 0.78 to 12.89 all
+                  classify MATCHES; the binding corpus C-LARGE spans 325.87 to
+                  431.71, worst case 86% of the threshold. M200's 627.30 was
+                  taken while an unrelated compute job held the machine at 16.73
+                  of 20 cpus, which its own ledger recorded as a caveat.
+                  §5 governs: a quiet run that clears without a product change
+                  means do not optimise. Nothing was optimised.
+
+attribution       C-LARGE, 328 ms/query, 313 attributed:
+                    runPipelineOrchestrator          289.5
+                      buildCapsuleV2                 286.6
+                        hybridRetrieve               268.9
+                          lexicalCandidates          129.7  (queryBroadCandidates 86.6)
+                          conceptOwnerCandidates      91.8  (listAllSymbols 25.7)
+                          assemble                    27.1
+                    assembleProductContext            23.9  (addImpactEvidence 19.1)
+                  residual 14.6 ms is the MCP envelope. SQL is 22-33% of wall
+                  time, not the dominant stage. Two lanes each walk the whole
+                  symbol table ONCE per request; the expensive half of both is
+                  per-symbol string normalisation that no query changes.
+
+no N+1            whole-table scans per request, by subtraction at three layers:
+                  buildAuthoritativeProductRetrieval 1, runReliableContextRetrieval 1,
+                  whole get_code_context request 1. Per query on the frozen
+                  corpora: 2 / 2 / 1 scans and 153 / 340 / 449 executions.
+
+rejected          A repair WAS written and measured: split the query-independent
+                  scan and lowercasing out of the query-keyed broad-candidate
+                  memo in searchSymbols.ts. p90 41.18 / 202.97 / 327.08 against
+                  44.53 / 196.45 / 332.60 without it, and SQL executions
+                  IDENTICAL on all fifteen frozen queries. Reverted.
+
+instrument bug    the motivation was an artefact. `Database.prototype.query` is
+                  implemented on top of `Database.prototype.prepare`, so an
+                  instrument patching both wraps every `query()` statement twice
+                  and counts every execution twice. Uniform doubling is invisible
+                  in a total and decisive in a ratio: one retrieval pass read as
+                  two, and one whole-table scan read as a duplicate. Corrected
+                  with a WeakSet; SQL's share of C-LARGE fell from 66% to 29%
+                  and every apparent duplication disappeared.
+
+gate              an OPERATION-COUNT gate, not a wall-clock one, because work is
+                  what held still across the 627 ms and 332 ms runs of the same
+                  tree. Bounds whole-table scans per request, the worst repeat of
+                  any one statement, and total executions. Three controls prove
+                  it fails: a per-symbol lookup loop, a repeated scan, and a
+                  direct check that one execution counts once.
+
+equivalence       nothing shipped that could move output, and it is measured
+                  anyway: two independent captures 15/15 semantically AND byte
+                  identical. F1/F3 control: reversing the order orientation
+                  admits related candidates is caught on 14 of 15 queries, with
+                  TOKEN COUNTS STILL EQUAL on every corpus — the gate catches it
+                  on the semantic and selection hashes, not on size.
+
+harness           corpora are re-materialised from an immutable snapshot for
+                  every run. Reusing a scratch appends an index run, and
+                  observation staleness then walks a run chain the frozen
+                  measurement never has; an early profile taken that way spent
+                  91 ms/query in a diff path the benchmark does not execute.
+
+storage/memory    no schema, no index, no cache added. DB size delta 0 bytes, 0%.
+                  Peak RSS 1.87 GB over the three-corpus query sweep, recorded as
+                  a baseline for a later milestone that does add one.
+
+commits           ccfcf41d  query-work instruments, corrected counter, op gate
+                  (evidence commit follows)
+
+evidence          results/stage5_m201_final_report.md and the twenty-eight
+                  stage5_m201_*.json artefacts beside it.
+```
+
+## M201 standing findings
+
+- **A latency claim measured on a shared machine is not a property of the code.**
+  The same tree, unchanged, scored 627.30 ms and 332.60 ms p90 on C-LARGE. Every
+  A5-style claim in this matrix inherits that: A6 also moved MATCHES to EXCEEDS
+  between M200 and M201 with no source change, and A2 moved on cold indexing for
+  the same reason. Three of the fifteen classifications are load-sensitive, and
+  a future milestone that reports a green on one of them should report the load
+  beside it or the number means less than it looks.
+
+- **An instrument that doubles uniformly is worse than one that is noisy.** The
+  SQL counter inflated every execution by exactly 2x. Totals still looked
+  plausible, plans were still correct, and the only visible symptom was a RATIO:
+  one retrieval pass presenting as two. It survived a stack-trace attribution
+  (both copies report the same frames) and was caught only when a repair aimed at
+  the duplication measured flat. The general lesson is the check that shipped as
+  a test: an instrument that counts must have a control asserting one event
+  counts once.
+
+- **The C-LARGE query is in-process, single-pass, whole-table work.** 68% of it is
+  two lanes — `lexicalCandidates` and `conceptOwnerCandidates` — each walking all
+  10,309 symbols once and normalising five fields or three token sets per symbol.
+  The expensive half of both is a pure function of the index that no query
+  changes, recomputed per request. That is the real optimisation available here
+  and M201 deliberately did NOT take it: A5 already clears, and the two obvious
+  forms (a cross-request cache keyed by index identity, or a cheaper
+  normalisation) are respectively an M186 lifecycle risk and a change to a path
+  whose semantics cost a deterministic retrieval no-change proof to defend.
+
+- **A5's margin is C-LARGE's alone.** C-SMALL sits at 8% of the threshold and
+  C-MED at 40%; C-LARGE at 67% quiet and 86% under moderate load. `band()`
+  requires every corpus to clear, so A5 is a statement about a 276-file Python
+  corpus and a milestone that grew the corpora would test it first.
+
+- **The frozen corpora are not stable ground for a pre/post comparison.** C-MED is
+  this repository's own `src/`, so any repair to the query path changes the
+  corpus the repair is measured on. M201's harness takes an immutable snapshot
+  once and re-materialises from it; a milestone that edits `src/` and compares
+  against a freshly copied corpus is measuring two changes at once.
+
+- **Next-step recommendation.** None issued. M201 was scoped to A5 and stops at
+  the frozen rerun. `CONTEXT_COMPILER_PRODUCT_UTILITY_NOT_ESTABLISHED` still
+  governs: no remaining BELOW claim is authorised by this milestone.

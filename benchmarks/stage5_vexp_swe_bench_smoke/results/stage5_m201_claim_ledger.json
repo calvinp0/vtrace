@@ -1,0 +1,553 @@
+{
+  "milestone": "M197A",
+  "instrument": "run_stage5_m197a_report.ts",
+  "authorityVerdict": "M197A_AUTHORITY_VERIFIED",
+  "preregistrationSha256": "736e8a9b5beba4a26d29ca068bafa2f4aede973ec50dab53bba6673f6697d8f0",
+  "vexpCliVersion": "2.0.24",
+  "comparisonMode": {
+    "directVexpExecution": false,
+    "networkUsed": false,
+    "modelOrProviderUsed": false,
+    "mode": "CLAIM_TARGET_COMPARISON with VTRACE_LOCAL_ANALOGUE on every latency row",
+    "reason": "no VEXP binary was executed; the local artefacts were read at M196 and are the claim source"
+  },
+  "hardware": {
+    "cpus": 20,
+    "loadAverageAtStart": [
+      1.68,
+      1.71,
+      1.93
+    ],
+    "loadAverageAtEnd": [
+      2.1,
+      1.82,
+      1.95
+    ],
+    "scratch": "/tmp/m201-final"
+  },
+  "claims": [
+    {
+      "id": "A1",
+      "vexpClaim": "30 programming languages supported out of the box",
+      "vexpSource": "V-A1, vexp-cli/README.md",
+      "m196Prior": "4 families — FAILS",
+      "reproduction": "VEXP_CLAIM_REPRODUCED",
+      "measurement": "3 parser-backed families (cython, python, typescript); 6 extension-detected; 8 enum members",
+      "matchThreshold": ">= 30 parser-backed families",
+      "exceedThreshold": "> 30",
+      "verdict": "VTRACE_BELOW_VEXP_CLAIM",
+      "comparabilityCaveat": "VEXP counts rows in a README table; VTRACE counts registered parsers (F7)"
+    },
+    {
+      "id": "A2",
+      "vexpClaim": "practical cold-index throughput on a real repository",
+      "vexpSource": "frozen M196 protocol (VEXP publishes no throughput figure)",
+      "m196Prior": "15.3 files/s C-LARGE, 56.3 C-MED",
+      "reproduction": "VEXP_CLAIM_REPRODUCED_WITH_INTERPRETATION",
+      "measurement": "C-MED 65.02 files/s, C-LARGE 33.14 files/s (median of 3 cold builds)",
+      "matchThreshold": ">= 15 files/s",
+      "exceedThreshold": ">= 30 files/s",
+      "verdict": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "comparabilityCaveat": "machine shared with an unrelated compute job during measurement (load average 1.68 of 20 cpus); VEXP states no hardware, corpus, cache state or tokenizer, so the threshold is preserved but the comparison is a local analogue"
+    },
+    {
+      "id": "A3",
+      "vexpClaim": "incremental refresh is materially cheaper than a cold build",
+      "vexpSource": "frozen M196 protocol",
+      "m196Prior": "0.31 C-MED / 1.45 C-LARGE — FAILS",
+      "reproduction": "VEXP_CLAIM_REPRODUCED_WITH_INTERPRETATION",
+      "measurement": "C-LARGE k=1 ratio 0.054, k=3 ratio 0.141; reparsed 346 of the 346 files the indexer holds for a ONE-file change (the eligible .py denominator is 276; the indexer also enumerates .pyx/.pxd/.yml/.toml)",
+      "matchThreshold": "ratio <= 0.25",
+      "exceedThreshold": "ratio <= 0.05",
+      "verdict": "VTRACE_MATCHES_VEXP_CLAIM",
+      "comparabilityCaveat": "pre-existing: incremental refresh has no incremental path (M196A §14)"
+    },
+    {
+      "id": "A4",
+      "vexpClaim": "a no-change freshness check is fast",
+      "vexpSource": "frozen M196 protocol",
+      "m196Prior": "0.16 s — passes",
+      "reproduction": "VEXP_CLAIM_REPRODUCED_WITH_INTERPRETATION",
+      "measurement": "no-op median 0.005 / 0.092 / 0.145 s (C-SMALL / C-MED / C-LARGE), 0 files reparsed",
+      "matchThreshold": "<= 3 s",
+      "exceedThreshold": "<= 1 s",
+      "verdict": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "comparabilityCaveat": "machine shared with an unrelated compute job during measurement (load average 1.68 of 20 cpus); VEXP states no hardware, corpus, cache state or tokenizer, so the threshold is preserved but the comparison is a local analogue"
+    },
+    {
+      "id": "A5",
+      "vexpClaim": "query time is reported per capsule call in milliseconds",
+      "vexpSource": "V-A5, vexp-cli/mcp/mcp-server.cjs",
+      "m196Prior": "113-221 ms — passes",
+      "reproduction": "VEXP_CLAIM_REPRODUCED_WITH_INTERPRETATION",
+      "measurement": "get_code_context warm p90 41.49 / 197.62 / 336.53 ms (C-SMALL / C-MED / C-LARGE), 5 repetitions; best observed 32.49 / 140.66 / 286.21 ms",
+      "matchThreshold": "p90 <= 500 ms",
+      "exceedThreshold": "p90 <= 200 ms",
+      "verdict": "VTRACE_MATCHES_VEXP_CLAIM",
+      "comparabilityCaveat": "machine shared with an unrelated compute job during measurement (load average 1.68 of 20 cpus); VEXP states no hardware, corpus, cache state or tokenizer, so the threshold is preserved but the comparison is a local analogue; VEXP reports a warm-daemon number on an unspecified corpus"
+    },
+    {
+      "id": "A6",
+      "vexpClaim": "impact graph returns callers, importers and transitive dependents to depth",
+      "vexpSource": "V-B1, vexp-cli/mcp/mcp-server.cjs",
+      "m196Prior": "159 ms — passes",
+      "reproduction": "VEXP_CLAIM_REPRODUCED_WITH_INTERPRETATION",
+      "measurement": "get_impact_graph depth 3 warm p90 149.23 ms on C-LARGE (10 exact-FQN targets x 5)",
+      "matchThreshold": "p90 <= 500 ms",
+      "exceedThreshold": "p90 <= 200 ms",
+      "verdict": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "comparabilityCaveat": "machine shared with an unrelated compute job during measurement (load average 1.68 of 20 cpus); VEXP states no hardware, corpus, cache state or tokenizer, so the threshold is preserved but the comparison is a local analogue; VEXP publishes no impact-latency protocol (V-B1 is INSUFFICIENT_METHOD for correctness)"
+    },
+    {
+      "id": "A7",
+      "vexpClaim": "logic flow finds execution paths between two symbols",
+      "vexpSource": "V-B2, vexp-cli/mcp/mcp-server.cjs",
+      "m196Prior": "5.3 ms — passes",
+      "reproduction": "VEXP_CLAIM_REPRODUCED_WITH_INTERPRETATION",
+      "measurement": "search_logic_flow warm p90 16.39 ms on C-LARGE; path edge counts {\"1\":10}",
+      "matchThreshold": "p90 <= 500 ms",
+      "exceedThreshold": "p90 <= 200 ms",
+      "verdict": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "comparabilityCaveat": "machine shared with an unrelated compute job during measurement (load average 1.68 of 20 cpus); VEXP states no hardware, corpus, cache state or tokenizer, so the threshold is preserved but the comparison is a local analogue; every returned path is one edge long, so this measures single-hop resolution rather than multi-hop traversal"
+    },
+    {
+      "id": "A8",
+      "vexpClaim": "the engine represents the repository it indexes",
+      "vexpSource": "VTRACE veto derived from the frozen M197 gate G8",
+      "m196Prior": "100% / 100% / 100% after the M196A repair — PASSES",
+      "reproduction": "VEXP_CLAIM_REPRODUCED",
+      "measurement": "C-SMALL 100%, C-MED 100%, C-LARGE 100%; unexplained missing 0/0/0",
+      "matchThreshold": ">= 99% on every corpus",
+      "exceedThreshold": "100%",
+      "verdict": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "comparabilityCaveat": null
+    },
+    {
+      "id": "A9",
+      "vexpClaim": "get_skeleton saves 70-90% tokens versus Read",
+      "vexpSource": "V-C1, vexp-cli/mcp/mcp-server.cjs",
+      "m196Prior": "88.9% / 90.0% — passes",
+      "reproduction": "VEXP_CLAIM_REPRODUCED_WITH_INTERPRETATION",
+      "measurement": "median rendered reduction C-MED 92.67%, C-LARGE 87.21% over 437 + 250 structurally valid files; 22 C-MED files excluded as malformed (F4)",
+      "matchThreshold": "median reduction >= 70%",
+      "exceedThreshold": ">= 90%",
+      "verdict": "VTRACE_MATCHES_VEXP_CLAIM",
+      "comparabilityCaveat": "tokenizer is ceil(chars/4) on both sides; VEXP states no tokenizer"
+    },
+    {
+      "id": "A10",
+      "vexpClaim": "the skeleton preserves signatures and members",
+      "vexpSource": "V-C1 structural half",
+      "m196Prior": "100% / 91.6% signatures (presence only)",
+      "reproduction": "VEXP_CLAIM_REPRODUCED",
+      "measurement": "signature retention C-MED 99.47%, C-LARGE 100% (verbatim, token-aligned, bracket-closed slices of source); member retention C-MED 100%, C-LARGE 94.82%. Signature-PRESENCE alone would read 100% / 100%",
+      "matchThreshold": ">= 95% signatures and >= 90% members",
+      "exceedThreshold": "100%",
+      "verdict": "VTRACE_MATCHES_VEXP_CLAIM",
+      "comparabilityCaveat": "§21 requires source truth; a signature sliced mid-identifier fails preservation even though the field is populated"
+    },
+    {
+      "id": "A11",
+      "vexpClaim": "run_pipeline takes a whole-output token budget, default 10000",
+      "vexpSource": "V-C5, vexp-cli/mcp/mcp-server.cjs",
+      "m196Prior": "4.5% at 8k — FAILS",
+      "reproduction": "VEXP_CLAIM_REPRODUCED",
+      "measurement": "C-MED whole-response utilisation by budget: 1000=39.4%, 2000=32.97%, 4000=16.48%, 8000=8.95%, 16000=7.2% over 20 tasks",
+      "matchThreshold": ">= 60% utilisation at every budget",
+      "exceedThreshold": ">= 80%",
+      "verdict": "VTRACE_BELOW_VEXP_CLAIM",
+      "comparabilityCaveat": "fixed per-tier caps bind before the whole-output budget does (M196)"
+    },
+    {
+      "id": "A12",
+      "vexpClaim": "pivots are delivered as full content, supporting files as skeletons",
+      "vexpSource": "V-C6, vexp-core binary",
+      "m196Prior": "2 (FULL x1, RELATIONSHIP_ONLY) — FAILS",
+      "reproduction": "VEXP_CLAIM_REPRODUCED",
+      "measurement": "C-MED default response carries 2 distinct representation classes (FOCUS:focused_source, RELATIONSHIP_ONLY); C-LARGE carries 3",
+      "matchThreshold": ">= 3 distinct classes",
+      "exceedThreshold": "5",
+      "verdict": "VTRACE_BELOW_VEXP_CLAIM",
+      "comparabilityCaveat": "measured on the DEFAULT model-facing response, not debug internals (F6)"
+    },
+    {
+      "id": "A13",
+      "vexpClaim": "pivots degrade to skeletons and support is dropped when the budget binds",
+      "vexpSource": "V-C7, vexp-core binary",
+      "m196Prior": "1/3 tasks violated — FAILS",
+      "reproduction": "VEXP_CLAIM_REPRODUCED",
+      "measurement": "3 of 20 tasks lose focus content as the budget grows, and 5 swap the delivered focus symbol, over 5 budgets",
+      "matchThreshold": "0 monotonicity violations",
+      "exceedThreshold": "0 plus a declared drop order",
+      "verdict": "VTRACE_BELOW_VEXP_CLAIM",
+      "comparabilityCaveat": "a focus swap is counted as a violation: swapping the delivered symbol is a loss the token count alone cannot show"
+    },
+    {
+      "id": "A14",
+      "vexpClaim": "per-symbol token_reduction_pct is reported for each skeleton",
+      "vexpSource": "V-C3, vexp-cli/mcp/mcp-server.cjs",
+      "m196Prior": "absent, 2 disagreeing authorities — FAILS",
+      "reproduction": "VEXP_CLAIM_REPRODUCED",
+      "measurement": "0 of 996 delivered items carry token accounting; no accounting block appears in the default response at all (present at detail=debug only). get_skeleton publishes a per-CALL block whose savings figure differs from an independent measurement of the same output by 38.73 / 6.06 / 17.42 points",
+      "matchThreshold": "present per item and internally consistent",
+      "exceedThreshold": "plus an accumulated ledger",
+      "verdict": "VTRACE_BELOW_VEXP_CLAIM",
+      "comparabilityCaveat": "debug-only presence does not satisfy a default-output claim (F6)"
+    },
+    {
+      "id": "A15",
+      "vexpClaim": "call-site evidence renders the call expression, not just a location",
+      "vexpSource": "V-B1/V-B2 evidence half",
+      "m196Prior": "0% rendered (100% stored) — FAILS",
+      "reproduction": "VEXP_CLAIM_REPRODUCED",
+      "measurement": "C-LARGE, 50 eligible call edges: the impact surface renders 0% as source expressions, the logic-flow surface 100%. On C-MED the flow surface renders 100%",
+      "matchThreshold": ">= 90% of eligible call sites render the expression",
+      "exceedThreshold": "100%",
+      "verdict": "VTRACE_BELOW_VEXP_CLAIM",
+      "comparabilityCaveat": "scored on get_impact_graph; get_code_context's logic-flow surface DOES render expressions and would score EXCEED — see the sensitivity note"
+    }
+  ],
+  "parity": {
+    "claimsScored": 15,
+    "matchOrExceed": 9,
+    "match": 4,
+    "exceed": 5,
+    "below": 6,
+    "notComparable": 0,
+    "insufficientMethod": 0,
+    "a8VetoSatisfied": true,
+    "a8MinimumCoveragePercent": 100,
+    "thresholdMet": false,
+    "verdict": "VTRACE_VEXP_ENGINE_PARITY_THRESHOLD_NOT_MET",
+    "structuralViolations": []
+  },
+  "contentionSensitivity": {
+    "loadAverageDuringMeasurement": [
+      1.68,
+      1.71,
+      1.93
+    ],
+    "cpus": 20,
+    "rule": "verdicts use the frozen statistic; this block shows the least-contended alternative",
+    "rows": [
+      {
+        "id": "A2",
+        "frozen": "median 65.02 / 33.14 files/s",
+        "frozenVerdict": "VTRACE_EXCEEDS_VEXP_CLAIM",
+        "leastContended": [
+          65.9,
+          33.23
+        ],
+        "leastContendedVerdict": "VTRACE_EXCEEDS_VEXP_CLAIM"
+      },
+      {
+        "id": "A5",
+        "frozen": "p90 41.49 / 197.62 / 336.53 ms",
+        "frozenVerdict": "VTRACE_MATCHES_VEXP_CLAIM",
+        "leastContended": [
+          32.49,
+          140.66,
+          286.21
+        ],
+        "leastContendedVerdict": "VTRACE_MATCHES_VEXP_CLAIM"
+      },
+      {
+        "id": "A6",
+        "frozen": "p90 149.23 ms",
+        "frozenVerdict": "VTRACE_EXCEEDS_VEXP_CLAIM",
+        "leastContended": [
+          53.2
+        ],
+        "leastContendedVerdict": "VTRACE_EXCEEDS_VEXP_CLAIM"
+      },
+      {
+        "id": "A7",
+        "frozen": "p90 16.39 ms",
+        "frozenVerdict": "VTRACE_EXCEEDS_VEXP_CLAIM",
+        "leastContended": [
+          6.61
+        ],
+        "leastContendedVerdict": "VTRACE_EXCEEDS_VEXP_CLAIM"
+      }
+    ]
+  },
+  "a15SensitivityIfScoredOnFlowSurface": {
+    "matchOrExceed": 10,
+    "verdict": "VTRACE_VEXP_ENGINE_PARITY_THRESHOLD_MET",
+    "note": "published so the choice of surface for A15 is visible rather than silently decisive"
+  },
+  "aggregateUnderLeastContendedTimings": {
+    "matchOrExceed": 9,
+    "verdict": "VTRACE_VEXP_ENGINE_PARITY_THRESHOLD_NOT_MET"
+  },
+  "partiallyNonReproducible": false,
+  "determinism": {
+    "allDeterministic": true,
+    "perCorpus": [
+      {
+        "corpus": "C-SMALL",
+        "getCodeContext": true,
+        "getImpactGraph": true,
+        "searchLogicFlow": true,
+        "unstable": [],
+        "indexNonIdenticalRuns": 0
+      },
+      {
+        "corpus": "C-MED",
+        "getCodeContext": true,
+        "getImpactGraph": true,
+        "searchLogicFlow": true,
+        "unstable": [],
+        "indexNonIdenticalRuns": 0
+      },
+      {
+        "corpus": "C-LARGE",
+        "getCodeContext": true,
+        "getImpactGraph": true,
+        "searchLogicFlow": true,
+        "unstable": [],
+        "indexNonIdenticalRuns": 0
+      }
+    ]
+  },
+  "truthfulness": {
+    "strengthenedStructuralClaims": 0,
+    "inventedStructuralClaims": 0,
+    "target": 0,
+    "perCorpus": [
+      {
+        "corpus": "C-SMALL",
+        "excerptChecked": 30,
+        "excerptAnchored": 17,
+        "excerptMisanchored": 0,
+        "excerptNotLocated": 13,
+        "excerptAnchorPercentOfConclusive": 100,
+        "excerptStartLineDeltas": {
+          "0": 17,
+          "not_located": 13
+        },
+        "strengthenedCallSiteRenderings": 0,
+        "renderedCallSites": 36,
+        "inventedStructuralClaims": 0
+      },
+      {
+        "corpus": "C-MED",
+        "excerptChecked": 30,
+        "excerptAnchored": 24,
+        "excerptMisanchored": 0,
+        "excerptNotLocated": 6,
+        "excerptAnchorPercentOfConclusive": 100,
+        "excerptStartLineDeltas": {
+          "0": 24,
+          "not_located": 6
+        },
+        "strengthenedCallSiteRenderings": 0,
+        "renderedCallSites": 50,
+        "inventedStructuralClaims": 0
+      },
+      {
+        "corpus": "C-LARGE",
+        "excerptChecked": 30,
+        "excerptAnchored": 23,
+        "excerptMisanchored": 0,
+        "excerptNotLocated": 7,
+        "excerptAnchorPercentOfConclusive": 100,
+        "excerptStartLineDeltas": {
+          "0": 23,
+          "not_located": 7
+        },
+        "strengthenedCallSiteRenderings": 0,
+        "renderedCallSites": 50,
+        "inventedStructuralClaims": 0
+      }
+    ]
+  },
+  "supportingEngineeringMetrics": {
+    "toolSchemaTokens": {
+      "registeredTools": 21,
+      "modelVisibleTools": 14,
+      "estimatedTokens": 5521
+    },
+    "indexBytes": [
+      {
+        "corpus": "C-SMALL",
+        "bytes": 471040,
+        "symbols": 98,
+        "edges": 61
+      },
+      {
+        "corpus": "C-MED",
+        "bytes": 18714624,
+        "symbols": 4642,
+        "edges": 10115
+      },
+      {
+        "corpus": "C-LARGE",
+        "bytes": 49369088,
+        "symbols": 10309,
+        "edges": 24887
+      }
+    ],
+    "knownDefectsPreserved": {
+      "incrementalReparsesWholeCorpus": [
+        {
+          "corpus": "C-SMALL",
+          "eligibleFiles": 21,
+          "filesReparsedForOneChangedFile": 21
+        },
+        {
+          "corpus": "C-MED",
+          "eligibleFiles": 492,
+          "filesReparsedForOneChangedFile": 492
+        },
+        {
+          "corpus": "C-LARGE",
+          "eligibleFiles": 276,
+          "filesReparsedForOneChangedFile": 346
+        }
+      ],
+      "singleRefreshSequence": [
+        {
+          "corpus": "C-SMALL",
+          "status": "OK",
+          "changedFiles": 1,
+          "target": "agents/adapter.ts",
+          "filesAttemptedForParse": 21
+        },
+        {
+          "corpus": "C-MED",
+          "status": "OK",
+          "changedFiles": 1,
+          "target": "access/indexAccessLifecycle.test.ts",
+          "filesAttemptedForParse": 492
+        },
+        {
+          "corpus": "C-LARGE",
+          "status": "OK",
+          "changedFiles": 1,
+          "target": "ARC.py",
+          "filesAttemptedForParse": 346
+        }
+      ],
+      "incrementalCrashDetail": [
+        {
+          "corpus": "C-SMALL",
+          "k1": null,
+          "k3": null,
+          "singleRefresh": {
+            "status": "OK",
+            "changedFiles": 1,
+            "target": "agents/adapter.ts",
+            "filesAttemptedForParse": 21
+          }
+        },
+        {
+          "corpus": "C-MED",
+          "k1": null,
+          "k3": null,
+          "singleRefresh": {
+            "status": "OK",
+            "changedFiles": 1,
+            "target": "access/indexAccessLifecycle.test.ts",
+            "filesAttemptedForParse": 492
+          }
+        },
+        {
+          "corpus": "C-LARGE",
+          "k1": null,
+          "k3": null,
+          "singleRefresh": {
+            "status": "OK",
+            "changedFiles": 1,
+            "target": "ARC.py",
+            "filesAttemptedForParse": 346
+          }
+        }
+      ],
+      "budgetTierBindsBeforeWholeOutputBudget": {
+        "1000": {
+          "median": 39.4
+        },
+        "2000": {
+          "median": 32.97
+        },
+        "4000": {
+          "median": 16.48
+        },
+        "8000": {
+          "median": 8.95
+        },
+        "16000": {
+          "median": 7.2
+        }
+      },
+      "twoTokenAccountingAuthoritiesDisagree": [
+        {
+          "corpus": "C-SMALL",
+          "points": 38.73
+        },
+        {
+          "corpus": "C-MED",
+          "points": 6.06
+        },
+        {
+          "corpus": "C-LARGE",
+          "points": 17.42
+        }
+      ],
+      "noCallSiteExpressionRenderingOnImpactSurface": 0,
+      "noMarkdownIndexing": true,
+      "noCrossRepoEdges": "get_impact_graph types crossRepo as the literal false (M196 V-B3)"
+    }
+  },
+  "falsificationControls": {
+    "allPass": true,
+    "controls": [
+      {
+        "id": "F1",
+        "statement": "fewer than 10 of 15 matches must not meet the threshold",
+        "pass": true
+      },
+      {
+        "id": "F2",
+        "statement": "14 of 15 matches with A8 at 98.9% must still fail",
+        "pass": true
+      },
+      {
+        "id": "F3",
+        "statement": "a NOT_COMPARABLE claim must not increase the match count",
+        "pass": true
+      },
+      {
+        "id": "F4",
+        "statement": "a structurally invalid skeleton must fail A9 and A10",
+        "pass": true
+      },
+      {
+        "id": "F5",
+        "statement": "file:line must not satisfy call-expression rendering",
+        "pass": true
+      },
+      {
+        "id": "F6",
+        "statement": "a debug-only field must not satisfy a default-output claim",
+        "pass": true
+      },
+      {
+        "id": "F7",
+        "statement": "a declared language enum without a parser must not satisfy A1",
+        "pass": true
+      },
+      {
+        "id": "F8",
+        "statement": "a semantically unstable repeated output must fail the measurement",
+        "pass": true
+      }
+    ]
+  },
+  "productUtilityBoundary": [
+    "CONTEXT_COMPILER_PRODUCT_UTILITY_NOT_ESTABLISHED",
+    "NO_OBSERVED_FERRARI_SIZED_REPOSITORY_CONSUMPTION"
+  ],
+  "verdict": "VTRACE_VEXP_ENGINE_PARITY_THRESHOLD_NOT_MET"
+}

@@ -1,0 +1,371 @@
+{
+  "milestone": "M201",
+  "instrument": "run_stage5_m201_report.ts",
+  "scope": "frozen A5 query latency only",
+  "authorityVerdict": "M197A_AUTHORITY_VERIFIED",
+  "a5": {
+    "definition": "p90 <= 500 ms",
+    "measurement": "get_code_context warm p90 41.49 / 197.62 / 336.53 ms (C-SMALL / C-MED / C-LARGE), 5 repetitions; best observed 32.49 / 140.66 / 286.21 ms",
+    "verdict": "VTRACE_MATCHES_VEXP_CLAIM",
+    "parity": "A5_PARITY_CLOSED"
+  },
+  "reproduction": {
+    "verdict": "M200_A5_BELOW_NOT_REPRODUCED_ON_AN_UNCHANGED_TREE",
+    "runs": 8,
+    "loadRange": {
+      "min": 0.78,
+      "max": 12.89,
+      "m200": 16.73
+    },
+    "classifications": {
+      "VTRACE_MATCHES_VEXP_CLAIM": 8
+    },
+    "sourceFilesChangedSinceM200": 0,
+    "bindingCorpusSpread": {
+      "n": 8,
+      "min": 325.87,
+      "max": 431.71,
+      "median": 332.05,
+      "thresholdMs": 500,
+      "worstAsPercentOfThreshold": 86.3,
+      "m200AsPercentOfThreshold": 125.5
+    }
+  },
+  "attribution": {
+    "dominantStageMsPerQuery": [
+      {
+        "stage": "runPipelineOrchestrator",
+        "inclusiveMs": 11580.7,
+        "msPerQuery": 289.52,
+        "percentOfSamples": 44.45
+      },
+      {
+        "stage": "buildAuthoritativeProductRetrieval",
+        "inclusiveMs": 11472.1,
+        "msPerQuery": 286.8,
+        "percentOfSamples": 44.04
+      },
+      {
+        "stage": "buildCapsuleV2",
+        "inclusiveMs": 11464.2,
+        "msPerQuery": 286.61,
+        "percentOfSamples": 44.01
+      },
+      {
+        "stage": "hybridRetrieve",
+        "inclusiveMs": 10756.2,
+        "msPerQuery": 268.91,
+        "percentOfSamples": 41.29
+      },
+      {
+        "stage": "lexicalCandidates",
+        "inclusiveMs": 5189.3,
+        "msPerQuery": 129.73,
+        "percentOfSamples": 19.92
+      },
+      {
+        "stage": "searchSymbolsPlainSql",
+        "inclusiveMs": 4115.3,
+        "msPerQuery": 102.88,
+        "percentOfSamples": 15.8
+      }
+    ],
+    "wholeTableScansPerQuery": {
+      "C-SMALL": 2,
+      "C-MED": 2,
+      "C-LARGE": 1
+    },
+    "sqlExecutionsPerQuery": {
+      "C-SMALL": 153,
+      "C-MED": 340,
+      "C-LARGE": 449
+    },
+    "hottestStatement": {
+      "totalMs": 109.47,
+      "executionsAcrossFiveQueries": 5,
+      "rowsPerExecution": 10309,
+      "plan": [
+        "SCAN symbols USING INDEX idx_symbols_file_id_start_byte",
+        "SEARCH files USING INDEX sqlite_autoindex_files_1 (id=?)",
+        "USE TEMP B-TREE FOR ORDER BY"
+      ]
+    },
+    "scansPerRequestByLayer": [
+      {
+        "task": "how is a reaction scheduled onto the job queue",
+        "buildAuthoritativeProductRetrieval": 1,
+        "runReliableContextRetrieval": 1,
+        "getCodeContextRequest": 1
+      },
+      {
+        "task": "where is the level of theory validated",
+        "buildAuthoritativeProductRetrieval": 1,
+        "runReliableContextRetrieval": 1,
+        "getCodeContextRequest": 1
+      },
+      {
+        "task": "how are species parsed from the input file",
+        "buildAuthoritativeProductRetrieval": 1,
+        "runReliableContextRetrieval": 1,
+        "getCodeContextRequest": 1
+      },
+      {
+        "task": "what determines that a job has converged",
+        "buildAuthoritativeProductRetrieval": 1,
+        "runReliableContextRetrieval": 1,
+        "getCodeContextRequest": 1
+      },
+      {
+        "task": "how is the output of a quantum chemistry job parsed",
+        "buildAuthoritativeProductRetrieval": 1,
+        "runReliableContextRetrieval": 1,
+        "getCodeContextRequest": 1
+      }
+    ],
+    "bindingCorpus": "C-LARGE"
+  },
+  "frozenA5": {
+    "C-SMALL": {
+      "n": 25,
+      "median": 36.92,
+      "p90": 41.49,
+      "p95": 41.5,
+      "max": 42.79,
+      "min": 32.49
+    },
+    "C-MED": {
+      "n": 25,
+      "median": 153.98,
+      "p90": 197.62,
+      "p95": 197.98,
+      "max": 204.91,
+      "min": 140.66
+    },
+    "C-LARGE": {
+      "n": 25,
+      "median": 315.58,
+      "p90": 336.53,
+      "p95": 336.71,
+      "max": 338.91,
+      "min": 286.21
+    }
+  },
+  "determinism": {
+    "before": "base",
+    "after": "base2",
+    "compared": 15,
+    "semanticEqual": 15,
+    "byteEqual": 15,
+    "verdict": "M201_OUTPUT_EQUIVALENT",
+    "frozenEngineDeterministic": true
+  },
+  "falsificationF1": {
+    "perturbation": "orientation related candidates iterated in reverse",
+    "compared": 15,
+    "semanticEqual": 1,
+    "byteEqual": 1,
+    "differences": 14,
+    "tokenCountsStillEqual": true,
+    "verdict": "M201_OUTPUT_DIFFERS"
+  },
+  "storage": {
+    "milestone": "M201",
+    "instrument": "run_stage5_m201_storage.ts",
+    "schemaOrIndexChangesInThisMilestone": [],
+    "newCachesIntroduced": [],
+    "cacheBoundednessNote": "no cache was introduced; the only request-local memo on the query path (HybridRetrievalRequestCache.broadCandidates) predates M201 and is discarded with the request",
+    "peakRssKbAtStart": 105576,
+    "peakRssKbAtEnd": 1871652,
+    "corpora": [
+      {
+        "id": "C-SMALL",
+        "indexBytes": 479232,
+        "sessionBytes": 217088,
+        "peakRssKbAfterIndex": 198368,
+        "peakRssKbAfterQueries": 246188
+      },
+      {
+        "id": "C-MED",
+        "indexBytes": 19111936,
+        "sessionBytes": 237568,
+        "peakRssKbAfterIndex": 1697752,
+        "peakRssKbAfterQueries": 1697752
+      },
+      {
+        "id": "C-LARGE",
+        "indexBytes": 50491392,
+        "sessionBytes": 229376,
+        "peakRssKbAfterIndex": 1871652,
+        "peakRssKbAfterQueries": 1871652
+      }
+    ],
+    "dbSizeDeltaBytes": 0,
+    "dbSizeDeltaPercent": 0
+  },
+  "rejectedCandidate": {
+    "change": "split the query-independent scan and lowercasing out of the query-keyed broad-candidate memo",
+    "motivation": "a doubled statement counter reported the scan running twice per request",
+    "p90WithCandidate": {
+      "C-SMALL": 41.18,
+      "C-MED": 202.97,
+      "C-LARGE": 327.08
+    },
+    "p90WithoutCandidate": {
+      "C-SMALL": 44.53,
+      "C-MED": 196.45,
+      "C-LARGE": 332.6
+    },
+    "sqlExecutionsUnchanged": [
+      304,
+      248,
+      350,
+      232,
+      376,
+      678,
+      798,
+      556,
+      670,
+      718,
+      974,
+      2082,
+      788,
+      714,
+      896
+    ],
+    "outcome": "rejected; no measured effect, and the duplication it removed did not exist"
+  },
+  "matrix": [
+    {
+      "id": "A1",
+      "m200": "VTRACE_BELOW_VEXP_CLAIM",
+      "m201": "VTRACE_BELOW_VEXP_CLAIM",
+      "moved": false
+    },
+    {
+      "id": "A2",
+      "m200": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m201": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "moved": true
+    },
+    {
+      "id": "A3",
+      "m200": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m201": "VTRACE_MATCHES_VEXP_CLAIM",
+      "moved": false
+    },
+    {
+      "id": "A4",
+      "m200": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "m201": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "moved": false
+    },
+    {
+      "id": "A5",
+      "m200": "VTRACE_BELOW_VEXP_CLAIM",
+      "m201": "VTRACE_MATCHES_VEXP_CLAIM",
+      "moved": true
+    },
+    {
+      "id": "A6",
+      "m200": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m201": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "moved": true
+    },
+    {
+      "id": "A7",
+      "m200": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "m201": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "moved": false
+    },
+    {
+      "id": "A8",
+      "m200": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "m201": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "moved": false
+    },
+    {
+      "id": "A9",
+      "m200": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m201": "VTRACE_MATCHES_VEXP_CLAIM",
+      "moved": false
+    },
+    {
+      "id": "A10",
+      "m200": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m201": "VTRACE_MATCHES_VEXP_CLAIM",
+      "moved": false
+    },
+    {
+      "id": "A11",
+      "m200": "VTRACE_BELOW_VEXP_CLAIM",
+      "m201": "VTRACE_BELOW_VEXP_CLAIM",
+      "moved": false
+    },
+    {
+      "id": "A12",
+      "m200": "VTRACE_BELOW_VEXP_CLAIM",
+      "m201": "VTRACE_BELOW_VEXP_CLAIM",
+      "moved": false
+    },
+    {
+      "id": "A13",
+      "m200": "VTRACE_BELOW_VEXP_CLAIM",
+      "m201": "VTRACE_BELOW_VEXP_CLAIM",
+      "moved": false
+    },
+    {
+      "id": "A14",
+      "m200": "VTRACE_BELOW_VEXP_CLAIM",
+      "m201": "VTRACE_BELOW_VEXP_CLAIM",
+      "moved": false
+    },
+    {
+      "id": "A15",
+      "m200": "VTRACE_BELOW_VEXP_CLAIM",
+      "m201": "VTRACE_BELOW_VEXP_CLAIM",
+      "moved": false
+    }
+  ],
+  "parity": {
+    "m200MatchOrExceed": 8,
+    "m201MatchOrExceed": 9,
+    "of": 15,
+    "target": 15,
+    "regressions": [],
+    "moved": [
+      {
+        "id": "A2",
+        "from": "VTRACE_MATCHES_VEXP_CLAIM",
+        "to": "VTRACE_EXCEEDS_VEXP_CLAIM"
+      },
+      {
+        "id": "A5",
+        "from": "VTRACE_BELOW_VEXP_CLAIM",
+        "to": "VTRACE_MATCHES_VEXP_CLAIM"
+      },
+      {
+        "id": "A6",
+        "from": "VTRACE_MATCHES_VEXP_CLAIM",
+        "to": "VTRACE_EXCEEDS_VEXP_CLAIM"
+      }
+    ]
+  },
+  "stillBelow": [
+    "A1",
+    "A11",
+    "A12",
+    "A13",
+    "A14",
+    "A15"
+  ],
+  "productUtilityBoundary": [
+    "ENGINE QUALITY != CODING-AGENT UTILITY",
+    "NO_CONTEXT_COMPILER_PRODUCT_RESTRUCTURE_AUTHORIZED",
+    "NO_VALIDATION_SCAFFOLD_IMPLEMENTATION_AUTHORIZED",
+    "NO_RUNTIME_REPAIR_INTERVENTION_AUTHORIZED",
+    "I5_REMAINS_CLOSED",
+    "I6_VALIDATION_SELECTION_REMAINS_CLOSED"
+  ],
+  "liveAgentRuns": 0,
+  "liveModelSpendUsd": 0
+}

@@ -1,0 +1,130 @@
+{
+  "milestone": "M201",
+  "instrument": "run_stage5_m201_tail.ts",
+  "capture": "pre_a",
+  "profileSource": "pre",
+  "opcountSource": "pre",
+  "rule": "A5 bands each corpus separately, so the decisive tail is each corpus's own slowest decile",
+  "perCorpus": [
+    {
+      "corpus": "C-SMALL",
+      "samples": 25,
+      "p90": 44.53,
+      "p95": 44.57,
+      "median": 37.45,
+      "slowestDecileSize": 3,
+      "slowestDecileMinMs": 44.53,
+      "tailQueries": [
+        {
+          "task": "how are swe-bench instances loaded",
+          "samplesInTail": 1,
+          "medianMs": 41.54,
+          "maxMs": 44.57,
+          "sqlExecutions": 176,
+          "wholeTableScans": 2,
+          "worstStatementRepeat": 55,
+          "rowsReturned": 577,
+          "sqlMs": 2.14,
+          "sqlSharePercent": 6.18,
+          "dominantStage": "in-process retrieval"
+        },
+        {
+          "task": "how is the agent turn loop driven",
+          "samplesInTail": 1,
+          "medianMs": 39.86,
+          "maxMs": 44.53,
+          "sqlExecutions": 153,
+          "wholeTableScans": 2,
+          "worstStatementRepeat": 36,
+          "rowsReturned": 536,
+          "sqlMs": 2.37,
+          "sqlSharePercent": 5.55,
+          "dominantStage": "in-process retrieval"
+        },
+        {
+          "task": "how is a run result written to disk",
+          "samplesInTail": 1,
+          "medianMs": 38.93,
+          "maxMs": 44.99,
+          "sqlExecutions": 189,
+          "wholeTableScans": 2,
+          "worstStatementRepeat": 62,
+          "rowsReturned": 714,
+          "sqlMs": 2.43,
+          "sqlSharePercent": 6.62,
+          "dominantStage": "in-process retrieval"
+        }
+      ]
+    },
+    {
+      "corpus": "C-MED",
+      "samples": 25,
+      "p90": 196.45,
+      "p95": 196.57,
+      "median": 154.15,
+      "slowestDecileSize": 3,
+      "slowestDecileMinMs": 196.45,
+      "tailQueries": [
+        {
+          "task": "how is the impact graph bounded when a symbol has many callers",
+          "samplesInTail": 3,
+          "medianMs": 196.45,
+          "maxMs": 207.49,
+          "sqlExecutions": 336,
+          "wholeTableScans": 2,
+          "worstStatementRepeat": 162,
+          "rowsReturned": 19014,
+          "sqlMs": 50.89,
+          "sqlSharePercent": 25.92,
+          "dominantStage": "in-process retrieval"
+        }
+      ]
+    },
+    {
+      "corpus": "C-LARGE",
+      "samples": 25,
+      "p90": 332.6,
+      "p95": 336.57,
+      "median": 309.39,
+      "slowestDecileSize": 3,
+      "slowestDecileMinMs": 332.6,
+      "tailQueries": [
+        {
+          "task": "how is the output of a quantum chemistry job parsed",
+          "samplesInTail": 2,
+          "medianMs": 330.46,
+          "maxMs": 351.86,
+          "sqlExecutions": 449,
+          "wholeTableScans": 1,
+          "worstStatementRepeat": 237,
+          "rowsReturned": 30724,
+          "sqlMs": 75.31,
+          "sqlSharePercent": 22.44,
+          "dominantStage": "in-process retrieval"
+        },
+        {
+          "task": "where is the level of theory validated",
+          "samplesInTail": 1,
+          "medianMs": 320.14,
+          "maxMs": 336.57,
+          "sqlExecutions": 1042,
+          "wholeTableScans": 1,
+          "worstStatementRepeat": 625,
+          "rowsReturned": 44400,
+          "sqlMs": 104.73,
+          "sqlSharePercent": 33.27,
+          "dominantStage": "in-process retrieval"
+        }
+      ]
+    }
+  ],
+  "pooled": {
+    "samples": 75,
+    "p90": 317.82,
+    "slowestDecileSize": 8,
+    "corporaRepresented": {
+      "C-LARGE": 8
+    }
+  },
+  "bindingCorpus": "C-LARGE"
+}

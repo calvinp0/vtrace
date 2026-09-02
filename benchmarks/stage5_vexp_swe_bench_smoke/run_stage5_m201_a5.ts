@@ -136,10 +136,17 @@ for (const spec of corpusSpecs(REPO)) {
       selectionSha: sha(JSON.stringify(selectionOf(last))),
       serializedCharacters: serialized.length,
       responseTokens: tokens(serialized),
+      // The default response is M172's compact orientation, which publishes no
+      // `responseBudget` block: its bounded shape IS `boundary` plus the item
+      // count, both inside `selection` above. Recorded as null rather than
+      // reconstructed, so a later response that DOES carry a budget shows up as a
+      // difference instead of being quietly normalised into agreement.
       boundedness: {
         responseBudget: last?.responseBudget ?? last?.productContext?.responseBudget ?? null,
         withinDeclaredBudget: last?.responseBudget?.withinBudget
           ?? last?.productContext?.responseBudget?.withinBudget ?? null,
+        boundaryStatementPresent: typeof last?.boundary === "string" && last.boundary.length > 0,
+        deliveredItems: 1 + (last?.related ?? []).length,
       },
       relatedCount: (last?.related ?? []).length,
     });

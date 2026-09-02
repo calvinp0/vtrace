@@ -1,0 +1,34 @@
+{
+  "milestone": "M201",
+  "instrument": "run_stage5_m201_storage.ts",
+  "schemaOrIndexChangesInThisMilestone": [],
+  "newCachesIntroduced": [],
+  "cacheBoundednessNote": "no cache was introduced; the only request-local memo on the query path (HybridRetrievalRequestCache.broadCandidates) predates M201 and is discarded with the request",
+  "peakRssKbAtStart": 105576,
+  "peakRssKbAtEnd": 1871652,
+  "corpora": [
+    {
+      "id": "C-SMALL",
+      "indexBytes": 479232,
+      "sessionBytes": 217088,
+      "peakRssKbAfterIndex": 198368,
+      "peakRssKbAfterQueries": 246188
+    },
+    {
+      "id": "C-MED",
+      "indexBytes": 19111936,
+      "sessionBytes": 237568,
+      "peakRssKbAfterIndex": 1697752,
+      "peakRssKbAfterQueries": 1697752
+    },
+    {
+      "id": "C-LARGE",
+      "indexBytes": 50491392,
+      "sessionBytes": 229376,
+      "peakRssKbAfterIndex": 1871652,
+      "peakRssKbAfterQueries": 1871652
+    }
+  ],
+  "dbSizeDeltaBytes": 0,
+  "dbSizeDeltaPercent": 0
+}

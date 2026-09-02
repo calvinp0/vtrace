@@ -1,0 +1,3255 @@
+{
+  "milestone": "M201",
+  "instrument": "run_stage5_m201_profile.ts",
+  "label": "post1",
+  "repeats": 3,
+  "snapshot": "/tmp/m201-snapshot",
+  "workRoot": "/tmp/m201-work-post1",
+  "hardware": {
+    "cpus": 20,
+    "loadAverage": [
+      1.37,
+      1.64,
+      2.97
+    ]
+  },
+  "corpora": [
+    {
+      "id": "C-SMALL",
+      "corpusPath": "/tmp/m201-work-post1/C-SMALL",
+      "queries": 5,
+      "repeats": 3,
+      "aggregate": {
+        "wallMedian": 35.23,
+        "sqlMsMedian": 4.13,
+        "sqlSharePercentMedian": 11.93,
+        "sqlExecutionsMedian": 304,
+        "distinctStatementsMedian": 52,
+        "stageMedians": {
+          "freshnessMs": 6.32,
+          "retrievalMs": 0,
+          "capsuleBuildMs": 0.04,
+          "impactMs": 0.63,
+          "memoryRulesMs": 0.3,
+          "renderMs": 0.01,
+          "totalMs": 36.54
+        }
+      },
+      "perQuery": [
+        {
+          "task": "how is the agent turn loop driven",
+          "wall": {
+            "n": 3,
+            "median": 48.08,
+            "p90": 56.45,
+            "p95": 56.45,
+            "max": 56.45,
+            "min": 44.26
+          },
+          "productStageClock": {
+            "freshnessMs": 6.756122000000005,
+            "retrievalMs": 0,
+            "capsuleBuildMs": 0.03928999999999405,
+            "impactMs": 0.7976209999999924,
+            "memoryRulesMs": 0.1887850000000526,
+            "renderMs": 0.011439999999993233,
+            "totalMs": 41.326212000000055
+          },
+          "reconciliation": {
+            "stagesSumMs": 7.79,
+            "productTotalMs": 41.33,
+            "unattributedInsideProductMs": 33.54,
+            "debugCallWallMs": 41.77,
+            "outsideProductClockMs": 0.45,
+            "defaultCallMedianMs": 48.08,
+            "debugVsDefaultDeltaMs": -6.31
+          },
+          "sql": {
+            "distinctStatements": 52,
+            "executions": 304,
+            "totalSqlMs": 4.9,
+            "rowsReturned": 1070,
+            "repeatedStatements": 43,
+            "executionsFromRepeatedStatements": 302,
+            "instrumentedCallWallMs": 40.56,
+            "sqlSharePercent": 12.08,
+            "topByTime": [
+              {
+                "executions": 72,
+                "totalMs": 0.52,
+                "rows": 72,
+                "msPerExecution": 0.007,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 2,
+                "totalMs": 0.34,
+                "rows": 196,
+                "msPerExecution": 0.168,
+                "sql": "SELECT symbols.id AS symbol_id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.docstring FROM symbols INNER JOIN files ON files.id = symbols.file_id WHERE symbols.k"
+              },
+              {
+                "executions": 2,
+                "totalMs": 0.33,
+                "rows": 14,
+                "msPerExecution": 0.166,
+                "sql": "SELECT symbols.id AS symbol_id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.docstring FROM symbols INNER JOIN files ON files.id = symbols.file_id WHERE symbols.k"
+              },
+              {
+                "executions": 16,
+                "totalMs": 0.33,
+                "rows": 16,
+                "msPerExecution": 0.021,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 2,
+                "totalMs": 0.32,
+                "rows": 196,
+                "msPerExecution": 0.158,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 4,
+                "totalMs": 0.31,
+                "rows": 36,
+                "msPerExecution": 0.079,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 22,
+                "totalMs": 0.23,
+                "rows": 18,
+                "msPerExecution": 0.01,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 26,
+                "totalMs": 0.2,
+                "rows": 26,
+                "msPerExecution": 0.008,
+                "sql": "SELECT id, path, language, content_hash, size_bytes FROM files WHERE path = ?"
+              },
+              {
+                "executions": 10,
+                "totalMs": 0.19,
+                "rows": 12,
+                "msPerExecution": 0.019,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id = ? OR dst_symbol_id = ? ORDER BY id ASC"
+              },
+              {
+                "executions": 4,
+                "totalMs": 0.15,
+                "rows": 24,
+                "msPerExecution": 0.038,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id IN (?, ?, ?, ?, ?, ?, ?, ?, ?) OR dst_symbol_id IN (?, ?, ?, ?, ?, ?, ?, ?, ?) ORDER BY id ASC"
+              },
+              {
+                "executions": 8,
+                "totalMs": 0.14,
+                "rows": 0,
+                "msPerExecution": 0.017,
+                "sql": "SELECT other_path, edge_type, anchor_name, other_symbol_id, other_name, other_kind FROM ( SELECT edges.id AS edge_id, other_files.path AS other_path, edges.edge_type AS edge_type, anchor_symbols.local_name AS anchor_name"
+              },
+              {
+                "executions": 4,
+                "totalMs": 0.12,
+                "rows": 8,
+                "msPerExecution": 0.03,
+                "sql": "SELECT edges.id, edges.src_symbol_id, edges.dst_symbol_id, edges.edge_type, edges.confidence FROM edges INNER JOIN symbols AS src_symbols ON src_symbols.id = edges.src_symbol_id INNER JOIN files ON files.id = src_symbols"
+              }
+            ],
+            "topByExecutions": [
+              {
+                "executions": 72,
+                "totalMs": 0.52,
+                "rows": 72,
+                "msPerExecution": 0.007,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 26,
+                "totalMs": 0.2,
+                "rows": 26,
+                "msPerExecution": 0.008,
+                "sql": "SELECT id, path, language, content_hash, size_bytes FROM files WHERE path = ?"
+              },
+              {
+                "executions": 22,
+                "totalMs": 0.23,
+                "rows": 18,
+                "msPerExecution": 0.01,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 20,
+                "totalMs": 0.05,
+                "rows": 0,
+                "msPerExecution": 0.002,
+                "sql": "SELECT * FROM project_rules WHERE repo_root = ? AND status IN (?) ORDER BY status ASC, updated_at_ms DESC, id ASC"
+              },
+              {
+                "executions": 16,
+                "totalMs": 0.33,
+                "rows": 16,
+                "msPerExecution": 0.021,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 12,
+                "totalMs": 0.1,
+                "rows": 12,
+                "msPerExecution": 0.008,
+                "sql": "SELECT id, previous_run_id, created_at_ms FROM index_runs ORDER BY id DESC LIMIT 1"
+              },
+              {
+                "executions": 10,
+                "totalMs": 0.19,
+                "rows": 12,
+                "msPerExecution": 0.019,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id = ? OR dst_symbol_id = ? ORDER BY id ASC"
+              },
+              {
+                "executions": 10,
+                "totalMs": 0.1,
+                "rows": 10,
+                "msPerExecution": 0.01,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 8,
+                "totalMs": 0.14,
+                "rows": 0,
+                "msPerExecution": 0.017,
+                "sql": "SELECT other_path, edge_type, anchor_name, other_symbol_id, other_name, other_kind FROM ( SELECT edges.id AS edge_id, other_files.path AS other_path, edges.edge_type AS edge_type, anchor_symbols.local_name AS anchor_name"
+              },
+              {
+                "executions": 8,
+                "totalMs": 0.11,
+                "rows": 10,
+                "msPerExecution": 0.013,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id IN (?) OR dst_symbol_id IN (?) ORDER BY id ASC"
+              },
+              {
+                "executions": 8,
+                "totalMs": 0.1,
+                "rows": 168,
+                "msPerExecution": 0.012,
+                "sql": "SELECT path FROM files ORDER BY path"
+              },
+              {
+                "executions": 6,
+                "totalMs": 0.04,
+                "rows": 6,
+                "msPerExecution": 0.007,
+                "sql": "SELECT id, previous_run_id, created_at_ms FROM index_runs WHERE id = ?"
+              }
+            ]
+          }
+        },
+        {
+          "task": "where is the final patch extracted from the run",
+          "wall": {
+            "n": 3,
+            "median": 35.23,
+            "p90": 37.35,
+            "p95": 37.35,
+            "max": 37.35,
+            "min": 33.69
+          },
+          "productStageClock": {
+            "freshnessMs": 6.319872000000032,
+            "retrievalMs": 0,
+            "capsuleBuildMs": 0.0359489999999596,
+            "impactMs": 0.30419400000005226,
+            "memoryRulesMs": 0.26831400000003214,
+            "renderMs": 0.008616999999958352,
+            "totalMs": 36.538516999999956
+          },
+          "reconciliation": {
+            "stagesSumMs": 6.94,
+            "productTotalMs": 36.54,
+            "unattributedInsideProductMs": 29.6,
+            "debugCallWallMs": 36.79,
+            "outsideProductClockMs": 0.25,
+            "defaultCallMedianMs": 35.23,
+            "debugVsDefaultDeltaMs": 1.57
+          },
+          "sql": {
+            "distinctStatements": 48,
+            "executions": 248,
+            "totalSqlMs": 3.94,
+            "rowsReturned": 994,
+            "repeatedStatements": 39,
+            "executionsFromRepeatedStatements": 246,
+            "instrumentedCallWallMs": 34.99,
+            "sqlSharePercent": 11.26,
+            "topByTime": [
+              {
+                "executions": 2,
+                "totalMs": 0.43,
+                "rows": 2,
+                "msPerExecution": 0.214,
+                "sql": "SELECT symbols.id AS symbol_id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.docstring FROM symbols INNER JOIN files ON files.id = symbols.file_id WHERE symbols.k"
+              },
+              {
+                "executions": 2,
+                "totalMs": 0.35,
+                "rows": 196,
+                "msPerExecution": 0.176,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 52,
+                "totalMs": 0.32,
+                "rows": 52,
+                "msPerExecution": 0.006,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 2,
+                "totalMs": 0.31,
+                "rows": 196,
+                "msPerExecution": 0.156,
+                "sql": "SELECT symbols.id AS symbol_id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.docstring FROM symbols INNER JOIN files ON files.id = symbols.file_id WHERE symbols.k"
+              },
+              {
+                "executions": 12,
+                "totalMs": 0.27,
+                "rows": 12,
+                "msPerExecution": 0.022,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 6,
+                "totalMs": 0.25,
+                "rows": 58,
+                "msPerExecution": 0.042,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 14,
+                "totalMs": 0.13,
+                "rows": 14,
+                "msPerExecution": 0.009,
+                "sql": "SELECT id, path, language, content_hash, size_bytes FROM files WHERE path = ?"
+              },
+              {
+                "executions": 14,
+                "totalMs": 0.13,
+                "rows": 14,
+                "msPerExecution": 0.009,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 12,
+                "totalMs": 0.12,
+                "rows": 12,
+                "msPerExecution": 0.01,
+                "sql": "SELECT id, previous_run_id, created_at_ms FROM index_runs ORDER BY id DESC LIMIT 1"
+              },
+              {
+                "executions": 2,
+                "totalMs": 0.11,
+                "rows": 24,
+                "msPerExecution": 0.055,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) OR dst_symbol_id IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,"
+              },
+              {
+                "executions": 8,
+                "totalMs": 0.1,
+                "rows": 0,
+                "msPerExecution": 0.013,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id = ? OR dst_symbol_id = ? ORDER BY id ASC"
+              },
+              {
+                "executions": 2,
+                "totalMs": 0.1,
+                "rows": 6,
+                "msPerExecution": 0.049,
+                "sql": "SELECT name FROM sqlite_master WHERE type = 'table' AND name IN ('edge_call_sites', 'document_chunks', 'symbol_mechanism_facts')"
+              }
+            ],
+            "topByExecutions": [
+              {
+                "executions": 52,
+                "totalMs": 0.32,
+                "rows": 52,
+                "msPerExecution": 0.006,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 20,
+                "totalMs": 0.06,
+                "rows": 0,
+                "msPerExecution": 0.003,
+                "sql": "SELECT * FROM project_rules WHERE repo_root = ? AND status IN (?) ORDER BY status ASC, updated_at_ms DESC, id ASC"
+              },
+              {
+                "executions": 14,
+                "totalMs": 0.13,
+                "rows": 14,
+                "msPerExecution": 0.009,
+                "sql": "SELECT id, path, language, content_hash, size_bytes FROM files WHERE path = ?"
+              },
+              {
+                "executions": 14,
+                "totalMs": 0.13,
+                "rows": 14,
+                "msPerExecution": 0.009,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 12,
+                "totalMs": 0.27,
+                "rows": 12,
+                "msPerExecution": 0.022,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 12,
+                "totalMs": 0.12,
+                "rows": 12,
+                "msPerExecution": 0.01,
+                "sql": "SELECT id, previous_run_id, created_at_ms FROM index_runs ORDER BY id DESC LIMIT 1"
+              },
+              {
+                "executions": 10,
+                "totalMs": 0.1,
+                "rows": 16,
+                "msPerExecution": 0.01,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id IN (?) OR dst_symbol_id IN (?) ORDER BY id ASC"
+              },
+              {
+                "executions": 8,
+                "totalMs": 0.1,
+                "rows": 0,
+                "msPerExecution": 0.013,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id = ? OR dst_symbol_id = ? ORDER BY id ASC"
+              },
+              {
+                "executions": 8,
+                "totalMs": 0.09,
+                "rows": 168,
+                "msPerExecution": 0.012,
+                "sql": "SELECT path FROM files ORDER BY path"
+              },
+              {
+                "executions": 8,
+                "totalMs": 0.08,
+                "rows": 8,
+                "msPerExecution": 0.01,
+                "sql": "SELECT id, previous_run_id, created_at_ms FROM index_runs WHERE id = ?"
+              },
+              {
+                "executions": 6,
+                "totalMs": 0.25,
+                "rows": 58,
+                "msPerExecution": 0.042,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 6,
+                "totalMs": 0.05,
+                "rows": 12,
+                "msPerExecution": 0.008,
+                "sql": "SELECT observation_id, link_ordinal, file_path FROM observation_file_links WHERE observation_id = ? ORDER BY link_ordinal ASC"
+              }
+            ]
+          }
+        },
+        {
+          "task": "how are swe-bench instances loaded",
+          "wall": {
+            "n": 3,
+            "median": 34.7,
+            "p90": 36.12,
+            "p95": 36.12,
+            "max": 36.12,
+            "min": 32.64
+          },
+          "productStageClock": {
+            "freshnessMs": 6.418210000000045,
+            "retrievalMs": 0,
+            "capsuleBuildMs": 0.13365799999996852,
+            "impactMs": 0.6272209999999632,
+            "memoryRulesMs": 0.2980650000000651,
+            "renderMs": 0.02356000000008862,
+            "totalMs": 35.690380000000005
+          },
+          "reconciliation": {
+            "stagesSumMs": 7.5,
+            "productTotalMs": 35.69,
+            "unattributedInsideProductMs": 28.19,
+            "debugCallWallMs": 35.93,
+            "outsideProductClockMs": 0.24,
+            "defaultCallMedianMs": 34.7,
+            "debugVsDefaultDeltaMs": 1.23
+          },
+          "sql": {
+            "distinctStatements": 52,
+            "executions": 350,
+            "totalSqlMs": 4.13,
+            "rowsReturned": 1152,
+            "repeatedStatements": 43,
+            "executionsFromRepeatedStatements": 348,
+            "instrumentedCallWallMs": 34.61,
+            "sqlSharePercent": 11.93,
+            "topByTime": [
+              {
+                "executions": 110,
+                "totalMs": 0.58,
+                "rows": 110,
+                "msPerExecution": 0.005,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 2,
+                "totalMs": 0.33,
+                "rows": 196,
+                "msPerExecution": 0.166,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 2,
+                "totalMs": 0.32,
+                "rows": 6,
+                "msPerExecution": 0.158,
+                "sql": "SELECT symbols.id AS symbol_id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.docstring FROM symbols INNER JOIN files ON files.id = symbols.file_id WHERE symbols.k"
+              },
+              {
+                "executions": 2,
+                "totalMs": 0.31,
+                "rows": 196,
+                "msPerExecution": 0.155,
+                "sql": "SELECT symbols.id AS symbol_id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.docstring FROM symbols INNER JOIN files ON files.id = symbols.file_id WHERE symbols.k"
+              },
+              {
+                "executions": 8,
+                "totalMs": 0.31,
+                "rows": 78,
+                "msPerExecution": 0.038,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 16,
+                "totalMs": 0.25,
+                "rows": 16,
+                "msPerExecution": 0.016,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 18,
+                "totalMs": 0.14,
+                "rows": 18,
+                "msPerExecution": 0.008,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 24,
+                "totalMs": 0.12,
+                "rows": 24,
+                "msPerExecution": 0.005,
+                "sql": "SELECT id, path, language, content_hash, size_bytes FROM files WHERE path = ?"
+              },
+              {
+                "executions": 2,
+                "totalMs": 0.12,
+                "rows": 30,
+                "msPerExecution": 0.058,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) OR dst_symbol_id IN (?, ?, ?, ?, ?, ?, ?, ?, ?,"
+              },
+              {
+                "executions": 2,
+                "totalMs": 0.11,
+                "rows": 6,
+                "msPerExecution": 0.056,
+                "sql": "SELECT name FROM sqlite_master WHERE type = 'table' AND name IN ('edge_call_sites', 'document_chunks', 'symbol_mechanism_facts')"
+              },
+              {
+                "executions": 10,
+                "totalMs": 0.11,
+                "rows": 10,
+                "msPerExecution": 0.011,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id IN (?) OR dst_symbol_id IN (?) ORDER BY id ASC"
+              },
+              {
+                "executions": 2,
+                "totalMs": 0.09,
+                "rows": 36,
+                "msPerExecution": 0.047,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              }
+            ],
+            "topByExecutions": [
+              {
+                "executions": 110,
+                "totalMs": 0.58,
+                "rows": 110,
+                "msPerExecution": 0.005,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 24,
+                "totalMs": 0.12,
+                "rows": 24,
+                "msPerExecution": 0.005,
+                "sql": "SELECT id, path, language, content_hash, size_bytes FROM files WHERE path = ?"
+              },
+              {
+                "executions": 20,
+                "totalMs": 0.04,
+                "rows": 0,
+                "msPerExecution": 0.002,
+                "sql": "SELECT * FROM project_rules WHERE repo_root = ? AND status IN (?) ORDER BY status ASC, updated_at_ms DESC, id ASC"
+              },
+              {
+                "executions": 18,
+                "totalMs": 0.14,
+                "rows": 18,
+                "msPerExecution": 0.008,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 16,
+                "totalMs": 0.25,
+                "rows": 16,
+                "msPerExecution": 0.016,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 12,
+                "totalMs": 0.09,
+                "rows": 12,
+                "msPerExecution": 0.008,
+                "sql": "SELECT id, previous_run_id, created_at_ms FROM index_runs ORDER BY id DESC LIMIT 1"
+              },
+              {
+                "executions": 10,
+                "totalMs": 0.11,
+                "rows": 10,
+                "msPerExecution": 0.011,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id IN (?) OR dst_symbol_id IN (?) ORDER BY id ASC"
+              },
+              {
+                "executions": 10,
+                "totalMs": 0.08,
+                "rows": 10,
+                "msPerExecution": 0.008,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id = ? OR dst_symbol_id = ? ORDER BY id ASC"
+              },
+              {
+                "executions": 10,
+                "totalMs": 0.07,
+                "rows": 10,
+                "msPerExecution": 0.007,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 8,
+                "totalMs": 0.31,
+                "rows": 78,
+                "msPerExecution": 0.038,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 8,
+                "totalMs": 0.09,
+                "rows": 168,
+                "msPerExecution": 0.011,
+                "sql": "SELECT path FROM files ORDER BY path"
+              },
+              {
+                "executions": 8,
+                "totalMs": 0.05,
+                "rows": 8,
+                "msPerExecution": 0.006,
+                "sql": "SELECT id, previous_run_id, created_at_ms FROM index_runs WHERE id = ?"
+              }
+            ]
+          }
+        },
+        {
+          "task": "what builds the prompt sent to the model",
+          "wall": {
+            "n": 3,
+            "median": 35.06,
+            "p90": 37.31,
+            "p95": 37.31,
+            "max": 37.31,
+            "min": 32.21
+          },
+          "productStageClock": {
+            "freshnessMs": 4.5662569999999505,
+            "retrievalMs": 0,
+            "capsuleBuildMs": 0.046288000000004104,
+            "impactMs": 0.5203579999999874,
+            "memoryRulesMs": 0.5001439999998638,
+            "renderMs": 0.02249100000017279,
+            "totalMs": 33.3370460000001
+          },
+          "reconciliation": {
+            "stagesSumMs": 5.66,
+            "productTotalMs": 33.34,
+            "unattributedInsideProductMs": 27.68,
+            "debugCallWallMs": 33.59,
+            "outsideProductClockMs": 0.26,
+            "defaultCallMedianMs": 35.06,
+            "debugVsDefaultDeltaMs": -1.47
+          },
+          "sql": {
+            "distinctStatements": 45,
+            "executions": 232,
+            "totalSqlMs": 3.03,
+            "rowsReturned": 892,
+            "repeatedStatements": 36,
+            "executionsFromRepeatedStatements": 230,
+            "instrumentedCallWallMs": 31.81,
+            "sqlSharePercent": 9.53,
+            "topByTime": [
+              {
+                "executions": 2,
+                "totalMs": 0.33,
+                "rows": 196,
+                "msPerExecution": 0.164,
+                "sql": "SELECT symbols.id AS symbol_id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.docstring FROM symbols INNER JOIN files ON files.id = symbols.file_id WHERE symbols.k"
+              },
+              {
+                "executions": 2,
+                "totalMs": 0.32,
+                "rows": 0,
+                "msPerExecution": 0.161,
+                "sql": "SELECT symbols.id AS symbol_id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.docstring FROM symbols INNER JOIN files ON files.id = symbols.file_id WHERE symbols.k"
+              },
+              {
+                "executions": 2,
+                "totalMs": 0.3,
+                "rows": 196,
+                "msPerExecution": 0.15,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 32,
+                "totalMs": 0.22,
+                "rows": 32,
+                "msPerExecution": 0.007,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 14,
+                "totalMs": 0.17,
+                "rows": 14,
+                "msPerExecution": 0.012,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 20,
+                "totalMs": 0.13,
+                "rows": 20,
+                "msPerExecution": 0.007,
+                "sql": "SELECT id, path, language, content_hash, size_bytes FROM files WHERE path = ?"
+              },
+              {
+                "executions": 2,
+                "totalMs": 0.13,
+                "rows": 4,
+                "msPerExecution": 0.064,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id IN (?, ?, ?, ?, ?, ?, ?) OR dst_symbol_id IN (?, ?, ?, ?, ?, ?, ?) ORDER BY id ASC"
+              },
+              {
+                "executions": 2,
+                "totalMs": 0.1,
+                "rows": 6,
+                "msPerExecution": 0.051,
+                "sql": "SELECT name FROM sqlite_master WHERE type = 'table' AND name IN ('edge_call_sites', 'document_chunks', 'symbol_mechanism_facts')"
+              },
+              {
+                "executions": 2,
+                "totalMs": 0.1,
+                "rows": 22,
+                "msPerExecution": 0.048,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 8,
+                "totalMs": 0.09,
+                "rows": 168,
+                "msPerExecution": 0.011,
+                "sql": "SELECT path FROM files ORDER BY path"
+              },
+              {
+                "executions": 2,
+                "totalMs": 0.08,
+                "rows": 12,
+                "msPerExecution": 0.041,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 2,
+                "totalMs": 0.08,
+                "rows": 8,
+                "msPerExecution": 0.039,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) OR dst_symbol_id IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ORDER BY id ASC"
+              }
+            ],
+            "topByExecutions": [
+              {
+                "executions": 32,
+                "totalMs": 0.22,
+                "rows": 32,
+                "msPerExecution": 0.007,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 20,
+                "totalMs": 0.13,
+                "rows": 20,
+                "msPerExecution": 0.007,
+                "sql": "SELECT id, path, language, content_hash, size_bytes FROM files WHERE path = ?"
+              },
+              {
+                "executions": 20,
+                "totalMs": 0.04,
+                "rows": 0,
+                "msPerExecution": 0.002,
+                "sql": "SELECT * FROM project_rules WHERE repo_root = ? AND status IN (?) ORDER BY status ASC, updated_at_ms DESC, id ASC"
+              },
+              {
+                "executions": 14,
+                "totalMs": 0.17,
+                "rows": 14,
+                "msPerExecution": 0.012,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 12,
+                "totalMs": 0.07,
+                "rows": 12,
+                "msPerExecution": 0.006,
+                "sql": "SELECT id, previous_run_id, created_at_ms FROM index_runs ORDER BY id DESC LIMIT 1"
+              },
+              {
+                "executions": 12,
+                "totalMs": 0.05,
+                "rows": 12,
+                "msPerExecution": 0.004,
+                "sql": "SELECT id, previous_run_id, created_at_ms FROM index_runs WHERE id = ?"
+              },
+              {
+                "executions": 10,
+                "totalMs": 0.08,
+                "rows": 18,
+                "msPerExecution": 0.008,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 10,
+                "totalMs": 0.07,
+                "rows": 20,
+                "msPerExecution": 0.007,
+                "sql": "SELECT observation_id, link_ordinal, symbol_id, file_path, fq_name, symbol_kind FROM observation_symbol_links WHERE observation_id = ? ORDER BY link_ordinal ASC"
+              },
+              {
+                "executions": 10,
+                "totalMs": 0.03,
+                "rows": 20,
+                "msPerExecution": 0.003,
+                "sql": "SELECT observation_id, link_ordinal, file_path FROM observation_file_links WHERE observation_id = ? ORDER BY link_ordinal ASC"
+              },
+              {
+                "executions": 10,
+                "totalMs": 0.03,
+                "rows": 20,
+                "msPerExecution": 0.003,
+                "sql": "SELECT observation_id, link_ordinal, fq_name FROM observation_fq_name_links WHERE observation_id = ? ORDER BY link_ordinal ASC"
+              },
+              {
+                "executions": 8,
+                "totalMs": 0.09,
+                "rows": 168,
+                "msPerExecution": 0.011,
+                "sql": "SELECT path FROM files ORDER BY path"
+              },
+              {
+                "executions": 8,
+                "totalMs": 0.06,
+                "rows": 0,
+                "msPerExecution": 0.008,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id IN (?) OR dst_symbol_id IN (?) ORDER BY id ASC"
+              }
+            ]
+          }
+        },
+        {
+          "task": "how is a run result written to disk",
+          "wall": {
+            "n": 3,
+            "median": 36.63,
+            "p90": 39.65,
+            "p95": 39.65,
+            "max": 39.65,
+            "min": 35.29
+          },
+          "productStageClock": {
+            "freshnessMs": 5.082358999999997,
+            "retrievalMs": 0,
+            "capsuleBuildMs": 0.03783300000009149,
+            "impactMs": 0.7431750000000648,
+            "memoryRulesMs": 0.35718500000007225,
+            "renderMs": 0.010250999999925625,
+            "totalMs": 39.81624899999997
+          },
+          "reconciliation": {
+            "stagesSumMs": 6.23,
+            "productTotalMs": 39.82,
+            "unattributedInsideProductMs": 33.59,
+            "debugCallWallMs": 40.22,
+            "outsideProductClockMs": 0.4,
+            "defaultCallMedianMs": 36.63,
+            "debugVsDefaultDeltaMs": 3.59
+          },
+          "sql": {
+            "distinctStatements": 53,
+            "executions": 376,
+            "totalSqlMs": 4.71,
+            "rowsReturned": 1426,
+            "repeatedStatements": 44,
+            "executionsFromRepeatedStatements": 374,
+            "instrumentedCallWallMs": 35.55,
+            "sqlSharePercent": 13.25,
+            "topByTime": [
+              {
+                "executions": 124,
+                "totalMs": 0.66,
+                "rows": 124,
+                "msPerExecution": 0.005,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 12,
+                "totalMs": 0.45,
+                "rows": 104,
+                "msPerExecution": 0.038,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 2,
+                "totalMs": 0.37,
+                "rows": 2,
+                "msPerExecution": 0.185,
+                "sql": "SELECT symbols.id AS symbol_id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.docstring FROM symbols INNER JOIN files ON files.id = symbols.file_id WHERE symbols.k"
+              },
+              {
+                "executions": 2,
+                "totalMs": 0.35,
+                "rows": 196,
+                "msPerExecution": 0.173,
+                "sql": "SELECT symbols.id AS symbol_id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.docstring FROM symbols INNER JOIN files ON files.id = symbols.file_id WHERE symbols.k"
+              },
+              {
+                "executions": 2,
+                "totalMs": 0.33,
+                "rows": 196,
+                "msPerExecution": 0.165,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 14,
+                "totalMs": 0.21,
+                "rows": 14,
+                "msPerExecution": 0.015,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 2,
+                "totalMs": 0.15,
+                "rows": 54,
+                "msPerExecution": 0.077,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) OR"
+              },
+              {
+                "executions": 4,
+                "totalMs": 0.15,
+                "rows": 48,
+                "msPerExecution": 0.036,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 2,
+                "totalMs": 0.13,
+                "rows": 54,
+                "msPerExecution": 0.065,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+              },
+              {
+                "executions": 14,
+                "totalMs": 0.12,
+                "rows": 26,
+                "msPerExecution": 0.009,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 2,
+                "totalMs": 0.11,
+                "rows": 36,
+                "msPerExecution": 0.054,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) OR dst_symbol_id IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ORDER"
+              },
+              {
+                "executions": 22,
+                "totalMs": 0.11,
+                "rows": 22,
+                "msPerExecution": 0.005,
+                "sql": "SELECT id, path, language, content_hash, size_bytes FROM files WHERE path = ?"
+              }
+            ],
+            "topByExecutions": [
+              {
+                "executions": 124,
+                "totalMs": 0.66,
+                "rows": 124,
+                "msPerExecution": 0.005,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 22,
+                "totalMs": 0.11,
+                "rows": 22,
+                "msPerExecution": 0.005,
+                "sql": "SELECT id, path, language, content_hash, size_bytes FROM files WHERE path = ?"
+              },
+              {
+                "executions": 20,
+                "totalMs": 0.04,
+                "rows": 0,
+                "msPerExecution": 0.002,
+                "sql": "SELECT * FROM project_rules WHERE repo_root = ? AND status IN (?) ORDER BY status ASC, updated_at_ms DESC, id ASC"
+              },
+              {
+                "executions": 14,
+                "totalMs": 0.21,
+                "rows": 14,
+                "msPerExecution": 0.015,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 14,
+                "totalMs": 0.12,
+                "rows": 26,
+                "msPerExecution": 0.009,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 14,
+                "totalMs": 0.06,
+                "rows": 14,
+                "msPerExecution": 0.004,
+                "sql": "SELECT id, previous_run_id, created_at_ms FROM index_runs WHERE id = ?"
+              },
+              {
+                "executions": 12,
+                "totalMs": 0.45,
+                "rows": 104,
+                "msPerExecution": 0.038,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 12,
+                "totalMs": 0.1,
+                "rows": 12,
+                "msPerExecution": 0.009,
+                "sql": "SELECT id, previous_run_id, created_at_ms FROM index_runs ORDER BY id DESC LIMIT 1"
+              },
+              {
+                "executions": 12,
+                "totalMs": 0.1,
+                "rows": 24,
+                "msPerExecution": 0.008,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id IN (?) OR dst_symbol_id IN (?) ORDER BY id ASC"
+              },
+              {
+                "executions": 12,
+                "totalMs": 0.04,
+                "rows": 24,
+                "msPerExecution": 0.003,
+                "sql": "SELECT observation_id, link_ordinal, symbol_id, file_path, fq_name, symbol_kind FROM observation_symbol_links WHERE observation_id = ? ORDER BY link_ordinal ASC"
+              },
+              {
+                "executions": 12,
+                "totalMs": 0.04,
+                "rows": 24,
+                "msPerExecution": 0.003,
+                "sql": "SELECT observation_id, link_ordinal, file_path FROM observation_file_links WHERE observation_id = ? ORDER BY link_ordinal ASC"
+              },
+              {
+                "executions": 12,
+                "totalMs": 0.03,
+                "rows": 24,
+                "msPerExecution": 0.002,
+                "sql": "SELECT observation_id, link_ordinal, fq_name FROM observation_fq_name_links WHERE observation_id = ? ORDER BY link_ordinal ASC"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "C-MED",
+      "corpusPath": "/tmp/m201-work-post1/C-MED",
+      "queries": 5,
+      "repeats": 3,
+      "aggregate": {
+        "wallMedian": 153.13,
+        "sqlMsMedian": 69.41,
+        "sqlSharePercentMedian": 44.1,
+        "sqlExecutionsMedian": 678,
+        "distinctStatementsMedian": 66,
+        "stageMedians": {
+          "freshnessMs": 6.63,
+          "retrievalMs": 0,
+          "capsuleBuildMs": 0.04,
+          "impactMs": 1.63,
+          "memoryRulesMs": 0.29,
+          "renderMs": 0.01,
+          "totalMs": 157.7
+        }
+      },
+      "perQuery": [
+        {
+          "task": "where are import edges extracted from typescript",
+          "wall": {
+            "n": 3,
+            "median": 156.23,
+            "p90": 184.57,
+            "p95": 184.57,
+            "max": 184.57,
+            "min": 148.74
+          },
+          "productStageClock": {
+            "freshnessMs": 6.626646000000619,
+            "retrievalMs": 0,
+            "capsuleBuildMs": 0.037220000000161235,
+            "impactMs": 1.9071789999998146,
+            "memoryRulesMs": 0.18363900000076683,
+            "renderMs": 0.008960999999544583,
+            "totalMs": 157.70427700000073
+          },
+          "reconciliation": {
+            "stagesSumMs": 8.76,
+            "productTotalMs": 157.7,
+            "unattributedInsideProductMs": 148.94,
+            "debugCallWallMs": 158.09,
+            "outsideProductClockMs": 0.38,
+            "defaultCallMedianMs": 156.23,
+            "debugVsDefaultDeltaMs": 1.86
+          },
+          "sql": {
+            "distinctStatements": 59,
+            "executions": 678,
+            "totalSqlMs": 69.41,
+            "rowsReturned": 33842,
+            "repeatedStatements": 50,
+            "executionsFromRepeatedStatements": 676,
+            "instrumentedCallWallMs": 144.19,
+            "sqlSharePercent": 48.14,
+            "topByTime": [
+              {
+                "executions": 2,
+                "totalMs": 15.99,
+                "rows": 9284,
+                "msPerExecution": 7.993,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 2,
+                "totalMs": 12.92,
+                "rows": 9284,
+                "msPerExecution": 6.458,
+                "sql": "SELECT symbols.id AS symbol_id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.docstring FROM symbols INNER JOIN files ON files.id = symbols.file_id WHERE symbols.k"
+              },
+              {
+                "executions": 2,
+                "totalMs": 12.62,
+                "rows": 192,
+                "msPerExecution": 6.308,
+                "sql": "SELECT symbols.id AS symbol_id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.docstring FROM symbols INNER JOIN files ON files.id = symbols.file_id WHERE symbols.k"
+              },
+              {
+                "executions": 16,
+                "totalMs": 6.02,
+                "rows": 4894,
+                "msPerExecution": 0.376,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 6,
+                "totalMs": 3.53,
+                "rows": 300,
+                "msPerExecution": 0.589,
+                "sql": "SELECT other_path, edge_type, anchor_name, other_symbol_id, other_name, other_kind FROM ( SELECT edges.id AS edge_id, other_files.path AS other_path, edges.edge_type AS edge_type, anchor_symbols.local_name AS anchor_name"
+              },
+              {
+                "executions": 2,
+                "totalMs": 2.48,
+                "rows": 1236,
+                "msPerExecution": 1.24,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,"
+              },
+              {
+                "executions": 388,
+                "totalMs": 2.35,
+                "rows": 388,
+                "msPerExecution": 0.006,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 2,
+                "totalMs": 2.18,
+                "rows": 1200,
+                "msPerExecution": 1.092,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,"
+              },
+              {
+                "executions": 2,
+                "totalMs": 1.79,
+                "rows": 856,
+                "msPerExecution": 0.895,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,"
+              },
+              {
+                "executions": 2,
+                "totalMs": 1.28,
+                "rows": 434,
+                "msPerExecution": 0.641,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 2,
+                "totalMs": 1.15,
+                "rows": 504,
+                "msPerExecution": 0.574,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 2,
+                "totalMs": 1.13,
+                "rows": 430,
+                "msPerExecution": 0.566,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              }
+            ],
+            "topByExecutions": [
+              {
+                "executions": 388,
+                "totalMs": 2.35,
+                "rows": 388,
+                "msPerExecution": 0.006,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 46,
+                "totalMs": 0.31,
+                "rows": 46,
+                "msPerExecution": 0.007,
+                "sql": "SELECT id, path, language, content_hash, size_bytes FROM files WHERE path = ?"
+              },
+              {
+                "executions": 26,
+                "totalMs": 0.51,
+                "rows": 232,
+                "msPerExecution": 0.019,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id IN (?) OR dst_symbol_id IN (?) ORDER BY id ASC"
+              },
+              {
+                "executions": 20,
+                "totalMs": 0.05,
+                "rows": 0,
+                "msPerExecution": 0.003,
+                "sql": "SELECT * FROM project_rules WHERE repo_root = ? AND status IN (?) ORDER BY status ASC, updated_at_ms DESC, id ASC"
+              },
+              {
+                "executions": 18,
+                "totalMs": 0.46,
+                "rows": 298,
+                "msPerExecution": 0.026,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 16,
+                "totalMs": 6.02,
+                "rows": 4894,
+                "msPerExecution": 0.376,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 16,
+                "totalMs": 0.32,
+                "rows": 10,
+                "msPerExecution": 0.02,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 14,
+                "totalMs": 0.1,
+                "rows": 14,
+                "msPerExecution": 0.007,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 12,
+                "totalMs": 0.12,
+                "rows": 12,
+                "msPerExecution": 0.01,
+                "sql": "SELECT id, previous_run_id, created_at_ms FROM index_runs ORDER BY id DESC LIMIT 1"
+              },
+              {
+                "executions": 10,
+                "totalMs": 0.51,
+                "rows": 10,
+                "msPerExecution": 0.051,
+                "sql": "SELECT COUNT(DISTINCT other_path) AS n FROM ( SELECT other_files.path AS other_path FROM files AS anchor_files INNER JOIN symbols AS anchor_symbols ON anchor_symbols.file_id = anchor_files.id INNER JOIN edges ON edges.sr"
+              },
+              {
+                "executions": 6,
+                "totalMs": 3.53,
+                "rows": 300,
+                "msPerExecution": 0.589,
+                "sql": "SELECT other_path, edge_type, anchor_name, other_symbol_id, other_name, other_kind FROM ( SELECT edges.id AS edge_id, other_files.path AS other_path, edges.edge_type AS edge_type, anchor_symbols.local_name AS anchor_name"
+              },
+              {
+                "executions": 6,
+                "totalMs": 0.48,
+                "rows": 2952,
+                "msPerExecution": 0.08,
+                "sql": "SELECT path FROM files ORDER BY path"
+              }
+            ]
+          }
+        },
+        {
+          "task": "how does the indexer decide a file is eligible for parsing",
+          "wall": {
+            "n": 3,
+            "median": 153.13,
+            "p90": 159.04,
+            "p95": 159.04,
+            "max": 159.04,
+            "min": 149.59
+          },
+          "productStageClock": {
+            "freshnessMs": 5.79998599999999,
+            "retrievalMs": 0,
+            "capsuleBuildMs": 0.03594599999996717,
+            "impactMs": 1.6147000000000844,
+            "memoryRulesMs": 0.24309899999934714,
+            "renderMs": 0.01027799999974377,
+            "totalMs": 159.2244040000005
+          },
+          "reconciliation": {
+            "stagesSumMs": 7.7,
+            "productTotalMs": 159.22,
+            "unattributedInsideProductMs": 151.52,
+            "debugCallWallMs": 159.46,
+            "outsideProductClockMs": 0.24,
+            "defaultCallMedianMs": 153.13,
+            "debugVsDefaultDeltaMs": 6.33
+          },
+          "sql": {
+            "distinctStatements": 66,
+            "executions": 798,
+            "totalSqlMs": 66.69,
+            "rowsReturned": 32926,
+            "repeatedStatements": 57,
+            "executionsFromRepeatedStatements": 796,
+            "instrumentedCallWallMs": 151.32,
+            "sqlSharePercent": 44.07,
+            "topByTime": [
+              {
+                "executions": 2,
+                "totalMs": 16.26,
+                "rows": 9284,
+                "msPerExecution": 8.13,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 2,
+                "totalMs": 12.72,
+                "rows": 9284,
+                "msPerExecution": 6.361,
+                "sql": "SELECT symbols.id AS symbol_id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.docstring FROM symbols INNER JOIN files ON files.id = symbols.file_id WHERE symbols.k"
+              },
+              {
+                "executions": 2,
+                "totalMs": 12.12,
+                "rows": 192,
+                "msPerExecution": 6.06,
+                "sql": "SELECT symbols.id AS symbol_id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.docstring FROM symbols INNER JOIN files ON files.id = symbols.file_id WHERE symbols.k"
+              },
+              {
+                "executions": 16,
+                "totalMs": 5.28,
+                "rows": 4166,
+                "msPerExecution": 0.33,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 482,
+                "totalMs": 2.9,
+                "rows": 482,
+                "msPerExecution": 0.006,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 2,
+                "totalMs": 2.27,
+                "rows": 1078,
+                "msPerExecution": 1.135,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,"
+              },
+              {
+                "executions": 2,
+                "totalMs": 1.96,
+                "rows": 1040,
+                "msPerExecution": 0.978,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,"
+              },
+              {
+                "executions": 8,
+                "totalMs": 1.86,
+                "rows": 426,
+                "msPerExecution": 0.233,
+                "sql": "SELECT other_path, edge_type, anchor_name, other_symbol_id, other_name, other_kind FROM ( SELECT edges.id AS edge_id, other_files.path AS other_path, edges.edge_type AS edge_type, anchor_symbols.local_name AS anchor_name"
+              },
+              {
+                "executions": 2,
+                "totalMs": 1.72,
+                "rows": 692,
+                "msPerExecution": 0.859,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,"
+              },
+              {
+                "executions": 2,
+                "totalMs": 1,
+                "rows": 348,
+                "msPerExecution": 0.499,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 2,
+                "totalMs": 0.94,
+                "rows": 338,
+                "msPerExecution": 0.468,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 2,
+                "totalMs": 0.83,
+                "rows": 356,
+                "msPerExecution": 0.414,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              }
+            ],
+            "topByExecutions": [
+              {
+                "executions": 482,
+                "totalMs": 2.9,
+                "rows": 482,
+                "msPerExecution": 0.006,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 38,
+                "totalMs": 0.25,
+                "rows": 38,
+                "msPerExecution": 0.007,
+                "sql": "SELECT id, path, language, content_hash, size_bytes FROM files WHERE path = ?"
+              },
+              {
+                "executions": 22,
+                "totalMs": 0.56,
+                "rows": 310,
+                "msPerExecution": 0.026,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id IN (?) OR dst_symbol_id IN (?) ORDER BY id ASC"
+              },
+              {
+                "executions": 22,
+                "totalMs": 0.41,
+                "rows": 18,
+                "msPerExecution": 0.019,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 22,
+                "totalMs": 0.37,
+                "rows": 164,
+                "msPerExecution": 0.017,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 20,
+                "totalMs": 0.04,
+                "rows": 0,
+                "msPerExecution": 0.002,
+                "sql": "SELECT * FROM project_rules WHERE repo_root = ? AND status IN (?) ORDER BY status ASC, updated_at_ms DESC, id ASC"
+              },
+              {
+                "executions": 16,
+                "totalMs": 5.28,
+                "rows": 4166,
+                "msPerExecution": 0.33,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 16,
+                "totalMs": 0.13,
+                "rows": 16,
+                "msPerExecution": 0.008,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 12,
+                "totalMs": 0.1,
+                "rows": 12,
+                "msPerExecution": 0.008,
+                "sql": "SELECT id, previous_run_id, created_at_ms FROM index_runs ORDER BY id DESC LIMIT 1"
+              },
+              {
+                "executions": 8,
+                "totalMs": 1.86,
+                "rows": 426,
+                "msPerExecution": 0.233,
+                "sql": "SELECT other_path, edge_type, anchor_name, other_symbol_id, other_name, other_kind FROM ( SELECT edges.id AS edge_id, other_files.path AS other_path, edges.edge_type AS edge_type, anchor_symbols.local_name AS anchor_name"
+              },
+              {
+                "executions": 8,
+                "totalMs": 0.13,
+                "rows": 32,
+                "msPerExecution": 0.017,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id = ? OR dst_symbol_id = ? ORDER BY id ASC"
+              },
+              {
+                "executions": 8,
+                "totalMs": 0.04,
+                "rows": 8,
+                "msPerExecution": 0.005,
+                "sql": "SELECT id, previous_run_id, created_at_ms FROM index_runs WHERE id = ?"
+              }
+            ]
+          }
+        },
+        {
+          "task": "budget allocation for capsule items is dropping sections",
+          "wall": {
+            "n": 3,
+            "median": 146.47,
+            "p90": 155.41,
+            "p95": 155.41,
+            "max": 155.41,
+            "min": 146.1
+          },
+          "productStageClock": {
+            "freshnessMs": 5.928224000001137,
+            "retrievalMs": 0,
+            "capsuleBuildMs": 0.05265500000132306,
+            "impactMs": 1.4962059999998019,
+            "memoryRulesMs": 0.46179899999879126,
+            "renderMs": 0.015754999998534913,
+            "totalMs": 152.24039900000025
+          },
+          "reconciliation": {
+            "stagesSumMs": 7.95,
+            "productTotalMs": 152.24,
+            "unattributedInsideProductMs": 144.29,
+            "debugCallWallMs": 152.46,
+            "outsideProductClockMs": 0.22,
+            "defaultCallMedianMs": 146.47,
+            "debugVsDefaultDeltaMs": 5.99
+          },
+          "sql": {
+            "distinctStatements": 54,
+            "executions": 556,
+            "totalSqlMs": 63.16,
+            "rowsReturned": 31608,
+            "repeatedStatements": 45,
+            "executionsFromRepeatedStatements": 554,
+            "instrumentedCallWallMs": 144.83,
+            "sqlSharePercent": 43.61,
+            "topByTime": [
+              {
+                "executions": 2,
+                "totalMs": 14.59,
+                "rows": 9284,
+                "msPerExecution": 7.297,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 2,
+                "totalMs": 14.05,
+                "rows": 192,
+                "msPerExecution": 7.025,
+                "sql": "SELECT symbols.id AS symbol_id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.docstring FROM symbols INNER JOIN files ON files.id = symbols.file_id WHERE symbols.k"
+              },
+              {
+                "executions": 2,
+                "totalMs": 12.76,
+                "rows": 9284,
+                "msPerExecution": 6.381,
+                "sql": "SELECT symbols.id AS symbol_id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.docstring FROM symbols INNER JOIN files ON files.id = symbols.file_id WHERE symbols.k"
+              },
+              {
+                "executions": 10,
+                "totalMs": 4.17,
+                "rows": 3418,
+                "msPerExecution": 0.417,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 2,
+                "totalMs": 2.21,
+                "rows": 1060,
+                "msPerExecution": 1.105,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,"
+              },
+              {
+                "executions": 4,
+                "totalMs": 2.1,
+                "rows": 816,
+                "msPerExecution": 0.525,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 298,
+                "totalMs": 1.88,
+                "rows": 298,
+                "msPerExecution": 0.006,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 6,
+                "totalMs": 1.83,
+                "rows": 6,
+                "msPerExecution": 0.306,
+                "sql": "SELECT COUNT(DISTINCT other_path) AS n FROM ( SELECT other_files.path AS other_path FROM files AS anchor_files INNER JOIN symbols AS anchor_symbols ON anchor_symbols.file_id = anchor_files.id INNER JOIN edges ON edges.sr"
+              },
+              {
+                "executions": 2,
+                "totalMs": 1.78,
+                "rows": 978,
+                "msPerExecution": 0.889,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,"
+              },
+              {
+                "executions": 2,
+                "totalMs": 1.63,
+                "rows": 758,
+                "msPerExecution": 0.816,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,"
+              },
+              {
+                "executions": 2,
+                "totalMs": 0.89,
+                "rows": 424,
+                "msPerExecution": 0.446,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 6,
+                "totalMs": 0.71,
+                "rows": 108,
+                "msPerExecution": 0.119,
+                "sql": "SELECT other_path, edge_type, anchor_name, other_symbol_id, other_name, other_kind FROM ( SELECT edges.id AS edge_id, other_files.path AS other_path, edges.edge_type AS edge_type, anchor_symbols.local_name AS anchor_name"
+              }
+            ],
+            "topByExecutions": [
+              {
+                "executions": 298,
+                "totalMs": 1.88,
+                "rows": 298,
+                "msPerExecution": 0.006,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 32,
+                "totalMs": 0.21,
+                "rows": 32,
+                "msPerExecution": 0.007,
+                "sql": "SELECT id, path, language, content_hash, size_bytes FROM files WHERE path = ?"
+              },
+              {
+                "executions": 20,
+                "totalMs": 0.05,
+                "rows": 0,
+                "msPerExecution": 0.002,
+                "sql": "SELECT * FROM project_rules WHERE repo_root = ? AND status IN (?) ORDER BY status ASC, updated_at_ms DESC, id ASC"
+              },
+              {
+                "executions": 18,
+                "totalMs": 0.27,
+                "rows": 56,
+                "msPerExecution": 0.015,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 14,
+                "totalMs": 0.37,
+                "rows": 14,
+                "msPerExecution": 0.026,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 12,
+                "totalMs": 0.57,
+                "rows": 294,
+                "msPerExecution": 0.047,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id IN (?) OR dst_symbol_id IN (?) ORDER BY id ASC"
+              },
+              {
+                "executions": 12,
+                "totalMs": 0.09,
+                "rows": 12,
+                "msPerExecution": 0.008,
+                "sql": "SELECT id, previous_run_id, created_at_ms FROM index_runs ORDER BY id DESC LIMIT 1"
+              },
+              {
+                "executions": 10,
+                "totalMs": 4.17,
+                "rows": 3418,
+                "msPerExecution": 0.417,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 10,
+                "totalMs": 0.12,
+                "rows": 10,
+                "msPerExecution": 0.012,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 10,
+                "totalMs": 0.05,
+                "rows": 10,
+                "msPerExecution": 0.005,
+                "sql": "SELECT id, previous_run_id, created_at_ms FROM index_runs WHERE id = ?"
+              },
+              {
+                "executions": 8,
+                "totalMs": 0.54,
+                "rows": 3936,
+                "msPerExecution": 0.068,
+                "sql": "SELECT path FROM files ORDER BY path"
+              },
+              {
+                "executions": 8,
+                "totalMs": 0.16,
+                "rows": 32,
+                "msPerExecution": 0.02,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id = ? OR dst_symbol_id = ? ORDER BY id ASC"
+              }
+            ]
+          }
+        },
+        {
+          "task": "how is the impact graph bounded when a symbol has many callers",
+          "wall": {
+            "n": 3,
+            "median": 192.25,
+            "p90": 199.41,
+            "p95": 199.41,
+            "max": 199.41,
+            "min": 191.49
+          },
+          "productStageClock": {
+            "freshnessMs": 8.61484399999972,
+            "retrievalMs": 0,
+            "capsuleBuildMs": 0.03111700000044948,
+            "impactMs": 1.633018999998967,
+            "memoryRulesMs": 0.2871629999990546,
+            "renderMs": 0.012620999999853666,
+            "totalMs": 191.57726300000104
+          },
+          "reconciliation": {
+            "stagesSumMs": 10.58,
+            "productTotalMs": 191.58,
+            "unattributedInsideProductMs": 181,
+            "debugCallWallMs": 191.78,
+            "outsideProductClockMs": 0.2,
+            "defaultCallMedianMs": 192.25,
+            "debugVsDefaultDeltaMs": -0.47
+          },
+          "sql": {
+            "distinctStatements": 67,
+            "executions": 670,
+            "totalSqlMs": 101.19,
+            "rowsReturned": 38026,
+            "repeatedStatements": 58,
+            "executionsFromRepeatedStatements": 668,
+            "instrumentedCallWallMs": 201.5,
+            "sqlSharePercent": 50.22,
+            "topByTime": [
+              {
+                "executions": 4,
+                "totalMs": 18.2,
+                "rows": 688,
+                "msPerExecution": 4.55,
+                "sql": "SELECT symbols.id AS symbol_id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.docstring FROM symbols INNER JOIN files ON files.id = symbols.file_id WHERE symbols.k"
+              },
+              {
+                "executions": 2,
+                "totalMs": 15.53,
+                "rows": 192,
+                "msPerExecution": 7.763,
+                "sql": "SELECT symbols.id AS symbol_id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.docstring FROM symbols INNER JOIN files ON files.id = symbols.file_id WHERE symbols.k"
+              },
+              {
+                "executions": 2,
+                "totalMs": 15.07,
+                "rows": 9284,
+                "msPerExecution": 7.533,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 2,
+                "totalMs": 12.02,
+                "rows": 9284,
+                "msPerExecution": 6.011,
+                "sql": "SELECT symbols.id AS symbol_id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.docstring FROM symbols INNER JOIN files ON files.id = symbols.file_id WHERE symbols.k"
+              },
+              {
+                "executions": 28,
+                "totalMs": 10.24,
+                "rows": 5658,
+                "msPerExecution": 0.366,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 4,
+                "totalMs": 7.31,
+                "rows": 2344,
+                "msPerExecution": 1.827,
+                "sql": "SELECT symbols.id AS symbol_id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.docstring FROM symbol_search_fts INNER JOIN symbols ON symbols.id = symbol_search_fts"
+              },
+              {
+                "executions": 8,
+                "totalMs": 3.32,
+                "rows": 518,
+                "msPerExecution": 0.415,
+                "sql": "SELECT other_path, edge_type, anchor_name, other_symbol_id, other_name, other_kind FROM ( SELECT edges.id AS edge_id, other_files.path AS other_path, edges.edge_type AS edge_type, anchor_symbols.local_name AS anchor_name"
+              },
+              {
+                "executions": 2,
+                "totalMs": 2.52,
+                "rows": 1212,
+                "msPerExecution": 1.258,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,"
+              },
+              {
+                "executions": 324,
+                "totalMs": 2.12,
+                "rows": 324,
+                "msPerExecution": 0.007,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 2,
+                "totalMs": 2.08,
+                "rows": 1106,
+                "msPerExecution": 1.038,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,"
+              },
+              {
+                "executions": 2,
+                "totalMs": 1.69,
+                "rows": 762,
+                "msPerExecution": 0.846,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,"
+              },
+              {
+                "executions": 2,
+                "totalMs": 1.24,
+                "rows": 436,
+                "msPerExecution": 0.622,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              }
+            ],
+            "topByExecutions": [
+              {
+                "executions": 324,
+                "totalMs": 2.12,
+                "rows": 324,
+                "msPerExecution": 0.007,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 32,
+                "totalMs": 0.19,
+                "rows": 32,
+                "msPerExecution": 0.006,
+                "sql": "SELECT id, path, language, content_hash, size_bytes FROM files WHERE path = ?"
+              },
+              {
+                "executions": 28,
+                "totalMs": 10.24,
+                "rows": 5658,
+                "msPerExecution": 0.366,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 28,
+                "totalMs": 0.62,
+                "rows": 290,
+                "msPerExecution": 0.022,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id IN (?) OR dst_symbol_id IN (?) ORDER BY id ASC"
+              },
+              {
+                "executions": 22,
+                "totalMs": 0.5,
+                "rows": 320,
+                "msPerExecution": 0.023,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 20,
+                "totalMs": 0.06,
+                "rows": 0,
+                "msPerExecution": 0.003,
+                "sql": "SELECT * FROM project_rules WHERE repo_root = ? AND status IN (?) ORDER BY status ASC, updated_at_ms DESC, id ASC"
+              },
+              {
+                "executions": 16,
+                "totalMs": 0.33,
+                "rows": 16,
+                "msPerExecution": 0.021,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 14,
+                "totalMs": 0.12,
+                "rows": 14,
+                "msPerExecution": 0.009,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 12,
+                "totalMs": 0.12,
+                "rows": 12,
+                "msPerExecution": 0.01,
+                "sql": "SELECT id, previous_run_id, created_at_ms FROM index_runs ORDER BY id DESC LIMIT 1"
+              },
+              {
+                "executions": 10,
+                "totalMs": 0.62,
+                "rows": 10,
+                "msPerExecution": 0.062,
+                "sql": "SELECT COUNT(DISTINCT other_path) AS n FROM ( SELECT other_files.path AS other_path FROM files AS anchor_files INNER JOIN symbols AS anchor_symbols ON anchor_symbols.file_id = anchor_files.id INNER JOIN edges ON edges.sr"
+              },
+              {
+                "executions": 10,
+                "totalMs": 0.05,
+                "rows": 10,
+                "msPerExecution": 0.005,
+                "sql": "SELECT id, previous_run_id, created_at_ms FROM index_runs WHERE id = ?"
+              },
+              {
+                "executions": 10,
+                "totalMs": 0.03,
+                "rows": 20,
+                "msPerExecution": 0.003,
+                "sql": "SELECT observation_id, link_ordinal, file_path FROM observation_file_links WHERE observation_id = ? ORDER BY link_ordinal ASC"
+              }
+            ]
+          }
+        },
+        {
+          "task": "where does logic flow decide a path is unreachable",
+          "wall": {
+            "n": 3,
+            "median": 151.71,
+            "p90": 162.64,
+            "p95": 162.64,
+            "max": 162.64,
+            "min": 147.67
+          },
+          "productStageClock": {
+            "freshnessMs": 7.594257999999172,
+            "retrievalMs": 0,
+            "capsuleBuildMs": 0.05937599999924714,
+            "impactMs": 3.2850039999993896,
+            "memoryRulesMs": 0.3846269999994547,
+            "renderMs": 0.013521000000764616,
+            "totalMs": 154.40669200000048
+          },
+          "reconciliation": {
+            "stagesSumMs": 11.34,
+            "productTotalMs": 154.41,
+            "unattributedInsideProductMs": 143.07,
+            "debugCallWallMs": 154.69,
+            "outsideProductClockMs": 0.28,
+            "defaultCallMedianMs": 151.71,
+            "debugVsDefaultDeltaMs": 2.97
+          },
+          "sql": {
+            "distinctStatements": 66,
+            "executions": 718,
+            "totalSqlMs": 77.24,
+            "rowsReturned": 36928,
+            "repeatedStatements": 57,
+            "executionsFromRepeatedStatements": 716,
+            "instrumentedCallWallMs": 175.13,
+            "sqlSharePercent": 44.1,
+            "topByTime": [
+              {
+                "executions": 2,
+                "totalMs": 15.6,
+                "rows": 9284,
+                "msPerExecution": 7.798,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 2,
+                "totalMs": 12.98,
+                "rows": 9284,
+                "msPerExecution": 6.489,
+                "sql": "SELECT symbols.id AS symbol_id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.docstring FROM symbols INNER JOIN files ON files.id = symbols.file_id WHERE symbols.k"
+              },
+              {
+                "executions": 2,
+                "totalMs": 12.06,
+                "rows": 192,
+                "msPerExecution": 6.029,
+                "sql": "SELECT symbols.id AS symbol_id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.docstring FROM symbols INNER JOIN files ON files.id = symbols.file_id WHERE symbols.k"
+              },
+              {
+                "executions": 32,
+                "totalMs": 8.36,
+                "rows": 5838,
+                "msPerExecution": 0.261,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 4,
+                "totalMs": 6,
+                "rows": 1590,
+                "msPerExecution": 1.5,
+                "sql": "SELECT symbols.id AS symbol_id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.docstring FROM symbol_search_fts INNER JOIN symbols ON symbols.id = symbol_search_fts"
+              },
+              {
+                "executions": 2,
+                "totalMs": 2.38,
+                "rows": 994,
+                "msPerExecution": 1.188,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,"
+              },
+              {
+                "executions": 2,
+                "totalMs": 2.36,
+                "rows": 1010,
+                "msPerExecution": 1.18,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,"
+              },
+              {
+                "executions": 332,
+                "totalMs": 2.26,
+                "rows": 332,
+                "msPerExecution": 0.007,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 2,
+                "totalMs": 1.74,
+                "rows": 680,
+                "msPerExecution": 0.872,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,"
+              },
+              {
+                "executions": 2,
+                "totalMs": 1.52,
+                "rows": 544,
+                "msPerExecution": 0.762,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 2,
+                "totalMs": 1.12,
+                "rows": 330,
+                "msPerExecution": 0.562,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 2,
+                "totalMs": 1.11,
+                "rows": 326,
+                "msPerExecution": 0.556,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              }
+            ],
+            "topByExecutions": [
+              {
+                "executions": 332,
+                "totalMs": 2.26,
+                "rows": 332,
+                "msPerExecution": 0.007,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 58,
+                "totalMs": 0.37,
+                "rows": 58,
+                "msPerExecution": 0.006,
+                "sql": "SELECT id, path, language, content_hash, size_bytes FROM files WHERE path = ?"
+              },
+              {
+                "executions": 32,
+                "totalMs": 8.36,
+                "rows": 5838,
+                "msPerExecution": 0.261,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 30,
+                "totalMs": 0.54,
+                "rows": 22,
+                "msPerExecution": 0.018,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 28,
+                "totalMs": 0.63,
+                "rows": 242,
+                "msPerExecution": 0.023,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id IN (?) OR dst_symbol_id IN (?) ORDER BY id ASC"
+              },
+              {
+                "executions": 20,
+                "totalMs": 0.05,
+                "rows": 0,
+                "msPerExecution": 0.002,
+                "sql": "SELECT * FROM project_rules WHERE repo_root = ? AND status IN (?) ORDER BY status ASC, updated_at_ms DESC, id ASC"
+              },
+              {
+                "executions": 14,
+                "totalMs": 0.48,
+                "rows": 204,
+                "msPerExecution": 0.034,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 14,
+                "totalMs": 0.07,
+                "rows": 14,
+                "msPerExecution": 0.005,
+                "sql": "SELECT id, previous_run_id, created_at_ms FROM index_runs WHERE id = ?"
+              },
+              {
+                "executions": 12,
+                "totalMs": 0.12,
+                "rows": 12,
+                "msPerExecution": 0.01,
+                "sql": "SELECT id, previous_run_id, created_at_ms FROM index_runs ORDER BY id DESC LIMIT 1"
+              },
+              {
+                "executions": 12,
+                "totalMs": 0.04,
+                "rows": 24,
+                "msPerExecution": 0.003,
+                "sql": "SELECT observation_id, link_ordinal, symbol_id, file_path, fq_name, symbol_kind FROM observation_symbol_links WHERE observation_id = ? ORDER BY link_ordinal ASC"
+              },
+              {
+                "executions": 12,
+                "totalMs": 0.03,
+                "rows": 20,
+                "msPerExecution": 0.003,
+                "sql": "SELECT observation_id, link_ordinal, file_path FROM observation_file_links WHERE observation_id = ? ORDER BY link_ordinal ASC"
+              },
+              {
+                "executions": 12,
+                "totalMs": 0.03,
+                "rows": 26,
+                "msPerExecution": 0.002,
+                "sql": "SELECT observation_id, link_ordinal, fq_name FROM observation_fq_name_links WHERE observation_id = ? ORDER BY link_ordinal ASC"
+              }
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "C-LARGE",
+      "corpusPath": "/tmp/m201-work-post1/C-LARGE",
+      "queries": 5,
+      "repeats": 3,
+      "aggregate": {
+        "wallMedian": 303.18,
+        "sqlMsMedian": 175.13,
+        "sqlSharePercentMedian": 58.16,
+        "sqlExecutionsMedian": 896,
+        "distinctStatementsMedian": 62,
+        "stageMedians": {
+          "freshnessMs": 6.25,
+          "retrievalMs": 0,
+          "capsuleBuildMs": 0.06,
+          "impactMs": 11.82,
+          "memoryRulesMs": 0.25,
+          "renderMs": 0.01,
+          "totalMs": 299.03
+        }
+      },
+      "perQuery": [
+        {
+          "task": "how is a reaction scheduled onto the job queue",
+          "wall": {
+            "n": 3,
+            "median": 301.89,
+            "p90": 314.95,
+            "p95": 314.95,
+            "max": 314.95,
+            "min": 292.37
+          },
+          "productStageClock": {
+            "freshnessMs": 6.157978999999614,
+            "retrievalMs": 0,
+            "capsuleBuildMs": 0.05542799999966519,
+            "impactMs": 11.823828000000503,
+            "memoryRulesMs": 0.2247109999989334,
+            "renderMs": 0.008609999997133855,
+            "totalMs": 286.9334999999992
+          },
+          "reconciliation": {
+            "stagesSumMs": 18.27,
+            "productTotalMs": 286.93,
+            "unattributedInsideProductMs": 268.66,
+            "debugCallWallMs": 287.22,
+            "outsideProductClockMs": 0.29,
+            "defaultCallMedianMs": 301.89,
+            "debugVsDefaultDeltaMs": -14.66
+          },
+          "sql": {
+            "distinctStatements": 63,
+            "executions": 974,
+            "totalSqlMs": 175.13,
+            "rowsReturned": 67284,
+            "repeatedStatements": 54,
+            "executionsFromRepeatedStatements": 972,
+            "instrumentedCallWallMs": 301.1,
+            "sqlSharePercent": 58.16,
+            "topByTime": [
+              {
+                "executions": 2,
+                "totalMs": 45.56,
+                "rows": 20618,
+                "msPerExecution": 22.779,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 2,
+                "totalMs": 30.17,
+                "rows": 20034,
+                "msPerExecution": 15.087,
+                "sql": "SELECT symbols.id AS symbol_id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.docstring FROM symbols INNER JOIN files ON files.id = symbols.file_id WHERE symbols.k"
+              },
+              {
+                "executions": 2,
+                "totalMs": 24.38,
+                "rows": 192,
+                "msPerExecution": 12.189,
+                "sql": "SELECT symbols.id AS symbol_id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.docstring FROM symbols INNER JOIN files ON files.id = symbols.file_id WHERE symbols.k"
+              },
+              {
+                "executions": 34,
+                "totalMs": 15.42,
+                "rows": 34,
+                "msPerExecution": 0.453,
+                "sql": "SELECT COUNT(DISTINCT other_path) AS n FROM ( SELECT other_files.path AS other_path FROM files AS anchor_files INNER JOIN symbols AS anchor_symbols ON anchor_symbols.file_id = anchor_files.id INNER JOIN edges ON edges.sr"
+              },
+              {
+                "executions": 12,
+                "totalMs": 13.44,
+                "rows": 9150,
+                "msPerExecution": 1.12,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 8,
+                "totalMs": 9.91,
+                "rows": 1824,
+                "msPerExecution": 1.238,
+                "sql": "SELECT other_path, edge_type, anchor_name, other_symbol_id, other_name, other_kind FROM ( SELECT edges.id AS edge_id, other_files.path AS other_path, edges.edge_type AS edge_type, anchor_symbols.local_name AS anchor_name"
+              },
+              {
+                "executions": 626,
+                "totalMs": 5.16,
+                "rows": 626,
+                "msPerExecution": 0.008,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 2,
+                "totalMs": 4.32,
+                "rows": 2346,
+                "msPerExecution": 2.158,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,"
+              },
+              {
+                "executions": 2,
+                "totalMs": 3.86,
+                "rows": 1898,
+                "msPerExecution": 1.932,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,"
+              },
+              {
+                "executions": 2,
+                "totalMs": 3.71,
+                "rows": 1250,
+                "msPerExecution": 1.853,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 2,
+                "totalMs": 3.15,
+                "rows": 1562,
+                "msPerExecution": 1.574,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,"
+              },
+              {
+                "executions": 2,
+                "totalMs": 3.11,
+                "rows": 1086,
+                "msPerExecution": 1.554,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              }
+            ],
+            "topByExecutions": [
+              {
+                "executions": 626,
+                "totalMs": 5.16,
+                "rows": 626,
+                "msPerExecution": 0.008,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 96,
+                "totalMs": 0.57,
+                "rows": 96,
+                "msPerExecution": 0.006,
+                "sql": "SELECT id, path, language, content_hash, size_bytes FROM files WHERE path = ?"
+              },
+              {
+                "executions": 34,
+                "totalMs": 15.42,
+                "rows": 34,
+                "msPerExecution": 0.453,
+                "sql": "SELECT COUNT(DISTINCT other_path) AS n FROM ( SELECT other_files.path AS other_path FROM files AS anchor_files INNER JOIN symbols AS anchor_symbols ON anchor_symbols.file_id = anchor_files.id INNER JOIN edges ON edges.sr"
+              },
+              {
+                "executions": 24,
+                "totalMs": 0.98,
+                "rows": 538,
+                "msPerExecution": 0.041,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 20,
+                "totalMs": 0.04,
+                "rows": 0,
+                "msPerExecution": 0.002,
+                "sql": "SELECT * FROM project_rules WHERE repo_root = ? AND status IN (?) ORDER BY status ASC, updated_at_ms DESC, id ASC"
+              },
+              {
+                "executions": 14,
+                "totalMs": 0.37,
+                "rows": 14,
+                "msPerExecution": 0.026,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 12,
+                "totalMs": 13.44,
+                "rows": 9150,
+                "msPerExecution": 1.12,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 12,
+                "totalMs": 0.12,
+                "rows": 12,
+                "msPerExecution": 0.01,
+                "sql": "SELECT id, previous_run_id, created_at_ms FROM index_runs ORDER BY id DESC LIMIT 1"
+              },
+              {
+                "executions": 10,
+                "totalMs": 0.42,
+                "rows": 194,
+                "msPerExecution": 0.042,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id IN (?) OR dst_symbol_id IN (?) ORDER BY id ASC"
+              },
+              {
+                "executions": 8,
+                "totalMs": 9.91,
+                "rows": 1824,
+                "msPerExecution": 1.238,
+                "sql": "SELECT other_path, edge_type, anchor_name, other_symbol_id, other_name, other_kind FROM ( SELECT edges.id AS edge_id, other_files.path AS other_path, edges.edge_type AS edge_type, anchor_symbols.local_name AS anchor_name"
+              },
+              {
+                "executions": 6,
+                "totalMs": 0.44,
+                "rows": 2076,
+                "msPerExecution": 0.074,
+                "sql": "SELECT path FROM files ORDER BY path"
+              },
+              {
+                "executions": 6,
+                "totalMs": 0.27,
+                "rows": 174,
+                "msPerExecution": 0.045,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id = ? OR dst_symbol_id = ? ORDER BY id ASC"
+              }
+            ]
+          }
+        },
+        {
+          "task": "where is the level of theory validated",
+          "wall": {
+            "n": 3,
+            "median": 319.38,
+            "p90": 345.18,
+            "p95": 345.18,
+            "max": 345.18,
+            "min": 315.53
+          },
+          "productStageClock": {
+            "freshnessMs": 7.609448999999586,
+            "retrievalMs": 0,
+            "capsuleBuildMs": 0.06670700000177021,
+            "impactMs": 36.91465600000083,
+            "memoryRulesMs": 0.25134799999796087,
+            "renderMs": 0.019475999997666804,
+            "totalMs": 334.04009999999835
+          },
+          "reconciliation": {
+            "stagesSumMs": 44.86,
+            "productTotalMs": 334.04,
+            "unattributedInsideProductMs": 289.18,
+            "debugCallWallMs": 334.34,
+            "outsideProductClockMs": 0.3,
+            "defaultCallMedianMs": 319.38,
+            "debugVsDefaultDeltaMs": 14.95
+          },
+          "sql": {
+            "distinctStatements": 57,
+            "executions": 2082,
+            "totalSqlMs": 213.35,
+            "rowsReturned": 88798,
+            "repeatedStatements": 48,
+            "executionsFromRepeatedStatements": 2080,
+            "instrumentedCallWallMs": 317.88,
+            "sqlSharePercent": 67.12,
+            "topByTime": [
+              {
+                "executions": 2,
+                "totalMs": 41.66,
+                "rows": 20618,
+                "msPerExecution": 20.831,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 2,
+                "totalMs": 30.53,
+                "rows": 20034,
+                "msPerExecution": 15.266,
+                "sql": "SELECT symbols.id AS symbol_id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.docstring FROM symbols INNER JOIN files ON files.id = symbols.file_id WHERE symbols.k"
+              },
+              {
+                "executions": 2,
+                "totalMs": 20.86,
+                "rows": 68,
+                "msPerExecution": 10.431,
+                "sql": "SELECT symbols.id AS symbol_id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.docstring FROM symbols INNER JOIN files ON files.id = symbols.file_id WHERE symbols.k"
+              },
+              {
+                "executions": 22,
+                "totalMs": 16.34,
+                "rows": 12438,
+                "msPerExecution": 0.743,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 46,
+                "totalMs": 16.22,
+                "rows": 46,
+                "msPerExecution": 0.353,
+                "sql": "SELECT COUNT(DISTINCT other_path) AS n FROM ( SELECT other_files.path AS other_path FROM files AS anchor_files INNER JOIN symbols AS anchor_symbols ON anchor_symbols.file_id = anchor_files.id INNER JOIN edges ON edges.sr"
+              },
+              {
+                "executions": 1250,
+                "totalMs": 11.63,
+                "rows": 1250,
+                "msPerExecution": 0.009,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 2,
+                "totalMs": 9.26,
+                "rows": 3608,
+                "msPerExecution": 4.628,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 2,
+                "totalMs": 8.66,
+                "rows": 4728,
+                "msPerExecution": 4.332,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,"
+              },
+              {
+                "executions": 8,
+                "totalMs": 8.16,
+                "rows": 1264,
+                "msPerExecution": 1.021,
+                "sql": "SELECT other_path, edge_type, anchor_name, other_symbol_id, other_name, other_kind FROM ( SELECT edges.id AS edge_id, other_files.path AS other_path, edges.edge_type AS edge_type, anchor_symbols.local_name AS anchor_name"
+              },
+              {
+                "executions": 2,
+                "totalMs": 7.42,
+                "rows": 2810,
+                "msPerExecution": 3.712,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 2,
+                "totalMs": 7.33,
+                "rows": 2822,
+                "msPerExecution": 3.665,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 2,
+                "totalMs": 7.09,
+                "rows": 4906,
+                "msPerExecution": 3.544,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,"
+              }
+            ],
+            "topByExecutions": [
+              {
+                "executions": 1250,
+                "totalMs": 11.63,
+                "rows": 1250,
+                "msPerExecution": 0.009,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 564,
+                "totalMs": 3.21,
+                "rows": 564,
+                "msPerExecution": 0.006,
+                "sql": "SELECT id, path, language, content_hash, size_bytes FROM files WHERE path = ?"
+              },
+              {
+                "executions": 46,
+                "totalMs": 16.22,
+                "rows": 46,
+                "msPerExecution": 0.353,
+                "sql": "SELECT COUNT(DISTINCT other_path) AS n FROM ( SELECT other_files.path AS other_path FROM files AS anchor_files INNER JOIN symbols AS anchor_symbols ON anchor_symbols.file_id = anchor_files.id INNER JOIN edges ON edges.sr"
+              },
+              {
+                "executions": 24,
+                "totalMs": 0.64,
+                "rows": 250,
+                "msPerExecution": 0.026,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 22,
+                "totalMs": 16.34,
+                "rows": 12438,
+                "msPerExecution": 0.743,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 20,
+                "totalMs": 0.05,
+                "rows": 0,
+                "msPerExecution": 0.003,
+                "sql": "SELECT * FROM project_rules WHERE repo_root = ? AND status IN (?) ORDER BY status ASC, updated_at_ms DESC, id ASC"
+              },
+              {
+                "executions": 12,
+                "totalMs": 0.37,
+                "rows": 12,
+                "msPerExecution": 0.031,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 12,
+                "totalMs": 0.13,
+                "rows": 12,
+                "msPerExecution": 0.011,
+                "sql": "SELECT id, previous_run_id, created_at_ms FROM index_runs ORDER BY id DESC LIMIT 1"
+              },
+              {
+                "executions": 10,
+                "totalMs": 1.4,
+                "rows": 618,
+                "msPerExecution": 0.14,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id IN (?) OR dst_symbol_id IN (?) ORDER BY id ASC"
+              },
+              {
+                "executions": 8,
+                "totalMs": 8.16,
+                "rows": 1264,
+                "msPerExecution": 1.021,
+                "sql": "SELECT other_path, edge_type, anchor_name, other_symbol_id, other_name, other_kind FROM ( SELECT edges.id AS edge_id, other_files.path AS other_path, edges.edge_type AS edge_type, anchor_symbols.local_name AS anchor_name"
+              },
+              {
+                "executions": 8,
+                "totalMs": 0.04,
+                "rows": 8,
+                "msPerExecution": 0.005,
+                "sql": "SELECT id, previous_run_id, created_at_ms FROM index_runs WHERE id = ?"
+              },
+              {
+                "executions": 6,
+                "totalMs": 2.38,
+                "rows": 1590,
+                "msPerExecution": 0.397,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id = ? OR dst_symbol_id = ? ORDER BY id ASC"
+              }
+            ]
+          }
+        },
+        {
+          "task": "how are species parsed from the input file",
+          "wall": {
+            "n": 3,
+            "median": 303.18,
+            "p90": 311.44,
+            "p95": 311.44,
+            "max": 311.44,
+            "min": 301.14
+          },
+          "productStageClock": {
+            "freshnessMs": 6.9637279999988095,
+            "retrievalMs": 0,
+            "capsuleBuildMs": 0.0729989999999816,
+            "impactMs": 3.4461350000019593,
+            "memoryRulesMs": 0.29669899999862537,
+            "renderMs": 0.013975999998365296,
+            "totalMs": 297.1087090000001
+          },
+          "reconciliation": {
+            "stagesSumMs": 10.79,
+            "productTotalMs": 297.11,
+            "unattributedInsideProductMs": 286.32,
+            "debugCallWallMs": 297.38,
+            "outsideProductClockMs": 0.27,
+            "defaultCallMedianMs": 303.18,
+            "debugVsDefaultDeltaMs": -5.8
+          },
+          "sql": {
+            "distinctStatements": 69,
+            "executions": 788,
+            "totalSqlMs": 154.65,
+            "rowsReturned": 63922,
+            "repeatedStatements": 60,
+            "executionsFromRepeatedStatements": 786,
+            "instrumentedCallWallMs": 309.8,
+            "sqlSharePercent": 49.92,
+            "topByTime": [
+              {
+                "executions": 2,
+                "totalMs": 45.66,
+                "rows": 20618,
+                "msPerExecution": 22.828,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 2,
+                "totalMs": 29.78,
+                "rows": 20034,
+                "msPerExecution": 14.888,
+                "sql": "SELECT symbols.id AS symbol_id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.docstring FROM symbols INNER JOIN files ON files.id = symbols.file_id WHERE symbols.k"
+              },
+              {
+                "executions": 2,
+                "totalMs": 28.53,
+                "rows": 192,
+                "msPerExecution": 14.263,
+                "sql": "SELECT symbols.id AS symbol_id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.docstring FROM symbols INNER JOIN files ON files.id = symbols.file_id WHERE symbols.k"
+              },
+              {
+                "executions": 18,
+                "totalMs": 12.71,
+                "rows": 9282,
+                "msPerExecution": 0.706,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 8,
+                "totalMs": 5.47,
+                "rows": 506,
+                "msPerExecution": 0.684,
+                "sql": "SELECT other_path, edge_type, anchor_name, other_symbol_id, other_name, other_kind FROM ( SELECT edges.id AS edge_id, other_files.path AS other_path, edges.edge_type AS edge_type, anchor_symbols.local_name AS anchor_name"
+              },
+              {
+                "executions": 2,
+                "totalMs": 4.27,
+                "rows": 2068,
+                "msPerExecution": 2.135,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,"
+              },
+              {
+                "executions": 456,
+                "totalMs": 3.41,
+                "rows": 456,
+                "msPerExecution": 0.007,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 2,
+                "totalMs": 3.12,
+                "rows": 1564,
+                "msPerExecution": 1.561,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,"
+              },
+              {
+                "executions": 2,
+                "totalMs": 2.72,
+                "rows": 878,
+                "msPerExecution": 1.359,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 2,
+                "totalMs": 2.45,
+                "rows": 1088,
+                "msPerExecution": 1.227,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,"
+              },
+              {
+                "executions": 2,
+                "totalMs": 2.3,
+                "rows": 650,
+                "msPerExecution": 1.149,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 2,
+                "totalMs": 2.15,
+                "rows": 738,
+                "msPerExecution": 1.077,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              }
+            ],
+            "topByExecutions": [
+              {
+                "executions": 456,
+                "totalMs": 3.41,
+                "rows": 456,
+                "msPerExecution": 0.007,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 36,
+                "totalMs": 1.51,
+                "rows": 876,
+                "msPerExecution": 0.042,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id IN (?) OR dst_symbol_id IN (?) ORDER BY id ASC"
+              },
+              {
+                "executions": 36,
+                "totalMs": 0.31,
+                "rows": 36,
+                "msPerExecution": 0.009,
+                "sql": "SELECT id, path, language, content_hash, size_bytes FROM files WHERE path = ?"
+              },
+              {
+                "executions": 24,
+                "totalMs": 1.07,
+                "rows": 496,
+                "msPerExecution": 0.045,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 20,
+                "totalMs": 0.05,
+                "rows": 0,
+                "msPerExecution": 0.002,
+                "sql": "SELECT * FROM project_rules WHERE repo_root = ? AND status IN (?) ORDER BY status ASC, updated_at_ms DESC, id ASC"
+              },
+              {
+                "executions": 18,
+                "totalMs": 12.71,
+                "rows": 9282,
+                "msPerExecution": 0.706,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 14,
+                "totalMs": 0.31,
+                "rows": 14,
+                "msPerExecution": 0.022,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 12,
+                "totalMs": 0.09,
+                "rows": 12,
+                "msPerExecution": 0.007,
+                "sql": "SELECT id, previous_run_id, created_at_ms FROM index_runs ORDER BY id DESC LIMIT 1"
+              },
+              {
+                "executions": 10,
+                "totalMs": 0.05,
+                "rows": 10,
+                "msPerExecution": 0.005,
+                "sql": "SELECT id, previous_run_id, created_at_ms FROM index_runs WHERE id = ?"
+              },
+              {
+                "executions": 8,
+                "totalMs": 5.47,
+                "rows": 506,
+                "msPerExecution": 0.684,
+                "sql": "SELECT other_path, edge_type, anchor_name, other_symbol_id, other_name, other_kind FROM ( SELECT edges.id AS edge_id, other_files.path AS other_path, edges.edge_type AS edge_type, anchor_symbols.local_name AS anchor_name"
+              },
+              {
+                "executions": 8,
+                "totalMs": 0.16,
+                "rows": 24,
+                "msPerExecution": 0.02,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 8,
+                "totalMs": 0.14,
+                "rows": 40,
+                "msPerExecution": 0.017,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id = ? OR dst_symbol_id = ? ORDER BY id ASC"
+              }
+            ]
+          }
+        },
+        {
+          "task": "what determines that a job has converged",
+          "wall": {
+            "n": 3,
+            "median": 297.86,
+            "p90": 300.81,
+            "p95": 300.81,
+            "max": 300.81,
+            "min": 287.98
+          },
+          "productStageClock": {
+            "freshnessMs": 6.254021000000648,
+            "retrievalMs": 0,
+            "capsuleBuildMs": 0.039554999999381835,
+            "impactMs": 0.8879439999982424,
+            "memoryRulesMs": 0.2519140000003972,
+            "renderMs": 0.010270000002492452,
+            "totalMs": 299.0282220000008
+          },
+          "reconciliation": {
+            "stagesSumMs": 7.44,
+            "productTotalMs": 299.03,
+            "unattributedInsideProductMs": 291.59,
+            "debugCallWallMs": 299.36,
+            "outsideProductClockMs": 0.34,
+            "defaultCallMedianMs": 297.86,
+            "debugVsDefaultDeltaMs": 1.5
+          },
+          "sql": {
+            "distinctStatements": 57,
+            "executions": 714,
+            "totalSqlMs": 178,
+            "rowsReturned": 79656,
+            "repeatedStatements": 48,
+            "executionsFromRepeatedStatements": 712,
+            "instrumentedCallWallMs": 288.44,
+            "sqlSharePercent": 61.71,
+            "topByTime": [
+              {
+                "executions": 2,
+                "totalMs": 46.96,
+                "rows": 20618,
+                "msPerExecution": 23.479,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 2,
+                "totalMs": 28.88,
+                "rows": 20034,
+                "msPerExecution": 14.438,
+                "sql": "SELECT symbols.id AS symbol_id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.docstring FROM symbols INNER JOIN files ON files.id = symbols.file_id WHERE symbols.k"
+              },
+              {
+                "executions": 2,
+                "totalMs": 26.75,
+                "rows": 192,
+                "msPerExecution": 13.376,
+                "sql": "SELECT symbols.id AS symbol_id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.docstring FROM symbols INNER JOIN files ON files.id = symbols.file_id WHERE symbols.k"
+              },
+              {
+                "executions": 16,
+                "totalMs": 14.67,
+                "rows": 11002,
+                "msPerExecution": 0.917,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 2,
+                "totalMs": 9.34,
+                "rows": 3526,
+                "msPerExecution": 4.668,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 2,
+                "totalMs": 8.28,
+                "rows": 3118,
+                "msPerExecution": 4.14,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 2,
+                "totalMs": 7.74,
+                "rows": 3062,
+                "msPerExecution": 3.868,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 2,
+                "totalMs": 7.3,
+                "rows": 4538,
+                "msPerExecution": 3.648,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,"
+              },
+              {
+                "executions": 2,
+                "totalMs": 6.29,
+                "rows": 4376,
+                "msPerExecution": 3.145,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,"
+              },
+              {
+                "executions": 2,
+                "totalMs": 5.89,
+                "rows": 4108,
+                "msPerExecution": 2.947,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,"
+              },
+              {
+                "executions": 8,
+                "totalMs": 5.77,
+                "rows": 1380,
+                "msPerExecution": 0.721,
+                "sql": "SELECT other_path, edge_type, anchor_name, other_symbol_id, other_name, other_kind FROM ( SELECT edges.id AS edge_id, other_files.path AS other_path, edges.edge_type AS edge_type, anchor_symbols.local_name AS anchor_name"
+              },
+              {
+                "executions": 394,
+                "totalMs": 3.89,
+                "rows": 394,
+                "msPerExecution": 0.01,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              }
+            ],
+            "topByExecutions": [
+              {
+                "executions": 394,
+                "totalMs": 3.89,
+                "rows": 394,
+                "msPerExecution": 0.01,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 74,
+                "totalMs": 0.49,
+                "rows": 74,
+                "msPerExecution": 0.007,
+                "sql": "SELECT id, path, language, content_hash, size_bytes FROM files WHERE path = ?"
+              },
+              {
+                "executions": 22,
+                "totalMs": 0.55,
+                "rows": 146,
+                "msPerExecution": 0.025,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 20,
+                "totalMs": 0.04,
+                "rows": 0,
+                "msPerExecution": 0.002,
+                "sql": "SELECT * FROM project_rules WHERE repo_root = ? AND status IN (?) ORDER BY status ASC, updated_at_ms DESC, id ASC"
+              },
+              {
+                "executions": 18,
+                "totalMs": 0.36,
+                "rows": 132,
+                "msPerExecution": 0.02,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id IN (?) OR dst_symbol_id IN (?) ORDER BY id ASC"
+              },
+              {
+                "executions": 16,
+                "totalMs": 14.67,
+                "rows": 11002,
+                "msPerExecution": 0.917,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 14,
+                "totalMs": 0.38,
+                "rows": 14,
+                "msPerExecution": 0.027,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 12,
+                "totalMs": 0.09,
+                "rows": 12,
+                "msPerExecution": 0.008,
+                "sql": "SELECT id, previous_run_id, created_at_ms FROM index_runs ORDER BY id DESC LIMIT 1"
+              },
+              {
+                "executions": 10,
+                "totalMs": 0.03,
+                "rows": 20,
+                "msPerExecution": 0.003,
+                "sql": "SELECT observation_id, link_ordinal, file_path FROM observation_file_links WHERE observation_id = ? ORDER BY link_ordinal ASC"
+              },
+              {
+                "executions": 10,
+                "totalMs": 0.03,
+                "rows": 20,
+                "msPerExecution": 0.003,
+                "sql": "SELECT observation_id, link_ordinal, symbol_id, file_path, fq_name, symbol_kind FROM observation_symbol_links WHERE observation_id = ? ORDER BY link_ordinal ASC"
+              },
+              {
+                "executions": 10,
+                "totalMs": 0.02,
+                "rows": 20,
+                "msPerExecution": 0.002,
+                "sql": "SELECT observation_id, link_ordinal, fq_name FROM observation_fq_name_links WHERE observation_id = ? ORDER BY link_ordinal ASC"
+              },
+              {
+                "executions": 8,
+                "totalMs": 5.77,
+                "rows": 1380,
+                "msPerExecution": 0.721,
+                "sql": "SELECT other_path, edge_type, anchor_name, other_symbol_id, other_name, other_kind FROM ( SELECT edges.id AS edge_id, other_files.path AS other_path, edges.edge_type AS edge_type, anchor_symbols.local_name AS anchor_name"
+              }
+            ]
+          }
+        },
+        {
+          "task": "how is the output of a quantum chemistry job parsed",
+          "wall": {
+            "n": 3,
+            "median": 325.44,
+            "p90": 349.09,
+            "p95": 349.09,
+            "max": 349.09,
+            "min": 317.35
+          },
+          "productStageClock": {
+            "freshnessMs": 5.575590999993437,
+            "retrievalMs": 0,
+            "capsuleBuildMs": 0.06489200000214623,
+            "impactMs": 22.65953499999887,
+            "memoryRulesMs": 0.3058939999973518,
+            "renderMs": 0.011171999998623505,
+            "totalMs": 323.72432000000117
+          },
+          "reconciliation": {
+            "stagesSumMs": 28.62,
+            "productTotalMs": 323.72,
+            "unattributedInsideProductMs": 295.1,
+            "debugCallWallMs": 324.04,
+            "outsideProductClockMs": 0.31,
+            "defaultCallMedianMs": 325.44,
+            "debugVsDefaultDeltaMs": -1.41
+          },
+          "sql": {
+            "distinctStatements": 62,
+            "executions": 896,
+            "totalSqlMs": 153.2,
+            "rowsReturned": 61446,
+            "repeatedStatements": 53,
+            "executionsFromRepeatedStatements": 894,
+            "instrumentedCallWallMs": 319.49,
+            "sqlSharePercent": 47.95,
+            "topByTime": [
+              {
+                "executions": 2,
+                "totalMs": 44.6,
+                "rows": 20618,
+                "msPerExecution": 22.301,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 2,
+                "totalMs": 31.38,
+                "rows": 192,
+                "msPerExecution": 15.69,
+                "sql": "SELECT symbols.id AS symbol_id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.docstring FROM symbols INNER JOIN files ON files.id = symbols.file_id WHERE symbols.k"
+              },
+              {
+                "executions": 2,
+                "totalMs": 29.9,
+                "rows": 20034,
+                "msPerExecution": 14.95,
+                "sql": "SELECT symbols.id AS symbol_id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.docstring FROM symbols INNER JOIN files ON files.id = symbols.file_id WHERE symbols.k"
+              },
+              {
+                "executions": 14,
+                "totalMs": 10.68,
+                "rows": 7446,
+                "msPerExecution": 0.763,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 2,
+                "totalMs": 4.52,
+                "rows": 570,
+                "msPerExecution": 2.258,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 474,
+                "totalMs": 4.1,
+                "rows": 474,
+                "msPerExecution": 0.009,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 74,
+                "totalMs": 3.8,
+                "rows": 1842,
+                "msPerExecution": 0.051,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 2,
+                "totalMs": 3.29,
+                "rows": 1652,
+                "msPerExecution": 1.647,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,"
+              },
+              {
+                "executions": 8,
+                "totalMs": 2.98,
+                "rows": 478,
+                "msPerExecution": 0.372,
+                "sql": "SELECT other_path, edge_type, anchor_name, other_symbol_id, other_name, other_kind FROM ( SELECT edges.id AS edge_id, other_files.path AS other_path, edges.edge_type AS edge_type, anchor_symbols.local_name AS anchor_name"
+              },
+              {
+                "executions": 2,
+                "totalMs": 2.63,
+                "rows": 878,
+                "msPerExecution": 1.315,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 2,
+                "totalMs": 2.36,
+                "rows": 998,
+                "msPerExecution": 1.178,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,"
+              },
+              {
+                "executions": 2,
+                "totalMs": 1.86,
+                "rows": 744,
+                "msPerExecution": 0.928,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id IN (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,"
+              }
+            ],
+            "topByExecutions": [
+              {
+                "executions": 474,
+                "totalMs": 4.1,
+                "rows": 474,
+                "msPerExecution": 0.009,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 90,
+                "totalMs": 0.88,
+                "rows": 90,
+                "msPerExecution": 0.01,
+                "sql": "SELECT id, path, language, content_hash, size_bytes FROM files WHERE path = ?"
+              },
+              {
+                "executions": 74,
+                "totalMs": 3.8,
+                "rows": 1842,
+                "msPerExecution": 0.051,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 24,
+                "totalMs": 0.99,
+                "rows": 500,
+                "msPerExecution": 0.041,
+                "sql": "SELECT id, src_symbol_id, dst_symbol_id, edge_type, confidence FROM edges WHERE src_symbol_id IN (?) OR dst_symbol_id IN (?) ORDER BY id ASC"
+              },
+              {
+                "executions": 20,
+                "totalMs": 0.04,
+                "rows": 0,
+                "msPerExecution": 0.002,
+                "sql": "SELECT * FROM project_rules WHERE repo_root = ? AND status IN (?) ORDER BY status ASC, updated_at_ms DESC, id ASC"
+              },
+              {
+                "executions": 14,
+                "totalMs": 10.68,
+                "rows": 7446,
+                "msPerExecution": 0.763,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 14,
+                "totalMs": 0.37,
+                "rows": 14,
+                "msPerExecution": 0.026,
+                "sql": "SELECT symbols.id, files.path AS file_path, symbols.fq_name, symbols.local_name, symbols.kind, symbols.signature, symbols.start_line, symbols.end_line, symbols.start_byte, symbols.end_byte, symbols.parent_symbol_id, symb"
+              },
+              {
+                "executions": 14,
+                "totalMs": 0.06,
+                "rows": 14,
+                "msPerExecution": 0.004,
+                "sql": "SELECT id, previous_run_id, created_at_ms FROM index_runs WHERE id = ?"
+              },
+              {
+                "executions": 12,
+                "totalMs": 0.12,
+                "rows": 12,
+                "msPerExecution": 0.01,
+                "sql": "SELECT id, previous_run_id, created_at_ms FROM index_runs ORDER BY id DESC LIMIT 1"
+              },
+              {
+                "executions": 12,
+                "totalMs": 0.04,
+                "rows": 24,
+                "msPerExecution": 0.003,
+                "sql": "SELECT observation_id, link_ordinal, symbol_id, file_path, fq_name, symbol_kind FROM observation_symbol_links WHERE observation_id = ? ORDER BY link_ordinal ASC"
+              },
+              {
+                "executions": 12,
+                "totalMs": 0.04,
+                "rows": 24,
+                "msPerExecution": 0.003,
+                "sql": "SELECT observation_id, link_ordinal, file_path FROM observation_file_links WHERE observation_id = ? ORDER BY link_ordinal ASC"
+              },
+              {
+                "executions": 12,
+                "totalMs": 0.02,
+                "rows": 24,
+                "msPerExecution": 0.002,
+                "sql": "SELECT observation_id, link_ordinal, fq_name FROM observation_fq_name_links WHERE observation_id = ? ORDER BY link_ordinal ASC"
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
