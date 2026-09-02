@@ -107,6 +107,8 @@ export interface IncrementalRefreshPlan {
 
 export interface IndexTimings {
   discovery: number;
+  /** M199. Reading every scanned file's bytes, which a refresh does whether or not it parses them. */
+  read: number;
   planning: number;
   parsing: number;
   invalidation: number;
@@ -121,6 +123,14 @@ export interface IndexTimings {
    * it was timed, the largest unattributed term in an incremental refresh.
    */
   bookkeeping: number;
+  /**
+   * M199. Writing the parse cache back. Repository-scale on every refresh,
+   * because the cache key carries a binding-context hash derived from every
+   * symbol in the repository: one symbol moving rekeys every file's entry, so
+   * an entry that was just READ from the cache still has to be written under
+   * the new key or the next refresh misses on all of them.
+   */
+  parseCacheWrite: number;
   /** M199. Committing the graph transaction, once its body has finished. */
   commit: number;
   total: number;
@@ -348,7 +358,7 @@ export function isValidSnapshotSet(value: unknown): value is IndexedFileSnapshot
 }
 
 export function emptyTimings(): IndexTimings {
-  return { discovery: 0, planning: 0, parsing: 0, invalidation: 0, linking: 0, persistence: 0, retrievalIndex: 0, validation: 0, bookkeeping: 0, commit: 0, total: 0 };
+  return { discovery: 0, read: 0, planning: 0, parsing: 0, invalidation: 0, linking: 0, persistence: 0, retrievalIndex: 0, validation: 0, bookkeeping: 0, parseCacheWrite: 0, commit: 0, total: 0 };
 }
 
 function isPackageSurfacePath(filePath: string): boolean {

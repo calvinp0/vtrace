@@ -113,6 +113,7 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
     label: "Reading files",
     total: scannedFiles.length,
   });
+  const readStarted = performance.now();
   for (let index = 0; index < scannedFiles.length; index += 1) {
     const file = scannedFiles[index]!;
     const normalizedPath = normalizeFilePath(file.path);
@@ -141,6 +142,7 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
     });
   }
   progress.report({ kind: "phase_end", phase: "read" });
+  timings.read = performance.now() - readStarted;
 
   // M156: a file whose bytes could not be read is a fact about that file. The
   // per-file bookkeeping above already recorded it; throwing here would discard
@@ -371,6 +373,7 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
   }
   const containedFailures = allFileOutcomes.filter((summary) => isRecoverableFileFailure(summary.status));
 
+  const parseCacheWriteStarted = performance.now();
   for (const result of successfulResults) {
     const keyInput = makeCacheKeyInput(result, parserVersion, parserConfigFingerprint, bindingContextHash, contentIdentities.get(result.file.path));
     try {
@@ -380,6 +383,7 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
       // cache must not prevent a correct isolated graph rebuild.
     }
   }
+  timings.parseCacheWrite = performance.now() - parseCacheWriteStarted;
 
   const scannedByPath = new Map(scannedFiles.map((file) => [normalizeFilePath(file.path), file]));
   const failureRecords: FileIndexFailureRecord[] = containedFailures.map((summary) => {
