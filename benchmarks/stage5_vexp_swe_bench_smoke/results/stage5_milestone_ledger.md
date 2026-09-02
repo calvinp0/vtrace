@@ -8138,3 +8138,110 @@ artifacts         stage5_m197a_{design,final_report}.md,
   independent evidence that the missing capability solves a material workload,
   which M196A looked for across 1,078 arms and 44 repositories and did not find.
   No M198, no I7, no runtime detour, no retrieval tuning.
+
+## M198 — core engine correctness and performance (PASS)
+
+```
+milestone         M198
+verdict           PASS
+spend             0 live-agent runs, $0, 0 network requests, 0 VEXP processes
+scope             Repair defects in capabilities VTRACE already claims, and
+                  optimise measured bottlenecks in existing paths. No new
+                  product concept, no language added, no budget or accounting
+                  work, no threshold weakened, no capability built for points.
+
+result            CORE_ENGINE_CORRECTNESS_AND_PERFORMANCE_SUBSTANTIALLY_IMPROVED
+                  VTRACE_VEXP_ENGINE_PARITY_THRESHOLD_NOT_MET
+                  MATCH 4  EXCEED 3  BELOW 8   match-or-exceed 7/15 (threshold 10)
+                  A8 minimum coverage 100% (veto 99%); structural violations 0
+                  determinism stable; F1-F8 all pass
+                  ENGINE QUALITY != CODING-AGENT UTILITY
+
+changed           A2  BELOW -> MATCHES   batched CPython AST extraction
+                  A10 BELOW -> MATCHES   UTF-16 -> UTF-8 span authority
+protected         A4 EXCEEDS, A6 MATCHES, A7 EXCEEDS, A8 EXCEEDS, A9 MATCHES
+untouched         A1, A11, A12, A13, A14 (product scope, not engine correctness)
+
+correctness       TS signature retention  C-MED 41.13% -> 99.47%, C-SMALL 51.32% -> 100%
+                  malformed skeleton files C-MED 247 -> 22, C-SMALL 8 -> 0
+                  excerpt anchoring        C-MED 53.85% -> 100%, C-SMALL 88.24% -> 100%
+                  strengthened claims      24 -> 0        invented claims 0 -> 0
+                  incremental edges.id     CRASH -> OK on all three corpora
+                  incremental == cold      6/6 on ARC over modify/add/delete/
+                                           rename/remove-symbol
+
+performance       C-LARGE cold   8.81 -> 19.47 files/s  (2.2x under load control)
+                  C-MED cold    27.35 -> 36.21 files/s
+                  python spawns    440 -> 79 for 276 files
+                  invalidation  17,978 -> 635 ms
+                  DELETE symbols 19,522 -> 105 ms
+                  A5 p90 1422 -> 713 ms on C-LARGE (machine load, not M198)
+
+commits           4b6256b7 TypeScript span authority
+                  aa417e27 injective symbol rebinding
+                  fcd3caec batched CPython AST extraction
+                  4dd626fb FK index on symbols(parent_symbol_id)
+artifacts         stage5_m198_final_report.md,
+                  stage5_m198_{authority,indexing,engine,claim_ledger}.json
+                  (M197A's four frozen JSONs restored byte-identical)
+```
+
+## M198 standing findings
+
+- **One bug produced both structural defects M197A reported.** `node-tree-sitter`
+  reports node offsets as UTF-16 code-unit indices; `startByte`/`endByte` are
+  UTF-8 byte offsets, which is what `pythonParser` emits and what every consumer
+  slicing a file Buffer assumes. TypeScript stored the former in the latter, so
+  every span below a file's first non-ASCII character landed early by the surplus
+  those characters contribute. That is the corrupted signatures (41.1%) AND the
+  misrendered call lines (53.9% anchored) — not two defects. M197A read the
+  latter as `start_byte` including an attached leading comment; an early span
+  simply reaches back into whatever precedes the declaration, which is usually
+  its comment. Python was always 100% because CPython's `ast` gives real bytes.
+
+- **A benchmark counter that cannot distinguish the thing it is named after.**
+  M197A's "reparsed 346 of 346 files for a ONE-file change" used
+  `totalFilesAttemptedForParse`, which is `readableFiles.length` — files
+  successfully READ — and equals the corpus size in every mode. `parsedFiles` is
+  1. The incremental path was bounded all along; what is unbounded is
+  persistence, which still deletes and rewrites the whole graph for a one-file
+  change. That is the remaining A3 work and it was deliberately not attempted,
+  because it would put the 6/6 equivalence proof at risk for a ratio.
+
+- **A missing index on a self-referencing foreign key cost 96% of an incremental
+  refresh.** `symbols.parent_symbol_id -> symbols.id` had no index on the
+  referencing side, so `DELETE FROM symbols` full-scanned the table once per
+  deleted row: 10,309 symbols, ~106 million row visits, 18.4 s. One index, 12 ms
+  to build, 62 ms of insert cost across 20,000 rows, and the statement drops to
+  105 ms. Any table referencing `symbols.id` that is not already empty when
+  symbols are deleted will pay the same scan.
+
+- **Two callers of one cache wanted opposite orders, and the first design was
+  worse than none.** The indexer walks files sequentially; import resolution
+  reaches for whichever module a file imports. A moving 48-file AST cache served
+  the first and was evicted by the second on every miss — 440 spawns for 276
+  files, worse than the per-file path it replaced. The shipped warm covers every
+  known module once and keeps raw JSON text rather than parsed objects.
+
+- **A15 was left BELOW on purpose, and the instrument defect found was left
+  uncorrected because correcting it would have helped.** A15 is scored on the
+  impact surface, which renders 0% of call sites as expressions on all three
+  corpora including Python, where data and rendering are both correct: the cause
+  is `compactRelation` unconditionally projecting evidence down before any budget
+  pressure — documented M177/M178-B envelope policy, not malformation. Separately,
+  `signatureFaults` validates `raw.indexOf(signature)`, so `interface Capsule` is
+  checked against `interface CapsuleBudget` above it; all 24 residual C-MED
+  faults are that artefact. Fixing it would raise A10 from 99.47% to 100% and
+  could turn MATCHES into EXCEEDS, so the frozen scoring module was not touched.
+
+- **The machine was 2.5x quieter than M197A's and that flatters three claims.**
+  Load 14.5 against 36.3. The A2 gain is defended by a same-session, same-load
+  A/B (6.66-6.94 -> 14.33-15.34 files/s, ~2.2x); A5/A6/A7 improvements are NOT
+  claimed as engine work. A5 remains BELOW even on the quiet machine.
+
+- **Next-step recommendation.** None issued. M198 was scoped to stop at the
+  frozen rerun, and it does. The remaining eight BELOW claims are either product
+  scope (A1, A11-A14), deliberate policy (A15), or one architectural change to
+  incremental persistence (A3) whose value is a benchmark ratio rather than a
+  measured workload need. `CONTEXT_COMPILER_PRODUCT_UTILITY_NOT_ESTABLISHED`
+  still governs: do not implement any of them by default.
