@@ -1,7 +1,7 @@
 {
   "milestone": "M200",
   "purpose": "frozen C-LARGE k=3 closure evidence, package-binding sequence, determinism",
-  "generatedFromCommit": "0edb758f66c2b99397fddf70a09d72b6996ac14d",
+  "generatedFromCommit": "1801173bfd12184399850649ffc6317358537b5f",
   "corpus": "C-LARGE",
   "repeats": 3,
   "frozen": {
@@ -87,7 +87,7 @@
           "repositoryFileCount": 346,
           "maxClosureFraction": 0.2,
           "refusal": null,
-          "derivationMs": 41.36,
+          "derivationMs": 42.35,
           "filesAFullRebuildWouldParse": 346
         },
         "totalSymbols": 10309,
@@ -127,7 +127,7 @@
           "repositoryFileCount": 346,
           "maxClosureFraction": 0.2,
           "refusal": null,
-          "derivationMs": 35.71,
+          "derivationMs": 43,
           "filesAFullRebuildWouldParse": 346
         },
         "totalSymbols": 10309,
@@ -179,7 +179,7 @@
           "repositoryFileCount": 347,
           "maxClosureFraction": 0.2,
           "refusal": null,
-          "derivationMs": 35.85,
+          "derivationMs": 28.78,
           "filesAFullRebuildWouldParse": 347
         },
         "totalSymbols": 10311,
@@ -220,7 +220,7 @@
           "repositoryFileCount": 347,
           "maxClosureFraction": 0.2,
           "refusal": null,
-          "derivationMs": 39.76,
+          "derivationMs": 31.97,
           "filesAFullRebuildWouldParse": 347
         },
         "totalSymbols": 10311,
@@ -268,7 +268,7 @@
           "repositoryFileCount": 347,
           "maxClosureFraction": 0.2,
           "refusal": null,
-          "derivationMs": 29.43,
+          "derivationMs": 32.88,
           "filesAFullRebuildWouldParse": 347
         },
         "totalSymbols": 10311,
@@ -311,7 +311,7 @@
           "repositoryFileCount": 347,
           "maxClosureFraction": 0.2,
           "refusal": null,
-          "derivationMs": 30.87,
+          "derivationMs": 28.31,
           "filesAFullRebuildWouldParse": 347
         },
         "totalSymbols": 10311,
@@ -354,7 +354,7 @@
           "repositoryFileCount": 347,
           "maxClosureFraction": 0.2,
           "refusal": null,
-          "derivationMs": 31.78,
+          "derivationMs": 39.72,
           "filesAFullRebuildWouldParse": 347
         },
         "totalSymbols": 10311,

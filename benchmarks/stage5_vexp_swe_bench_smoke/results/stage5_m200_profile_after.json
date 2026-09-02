@@ -2,17 +2,17 @@
   "milestone": "M200",
   "instrument": "run_stage5_m200_profile.ts",
   "purpose": "stage attribution for the frozen A3 k=1 and k=3 refreshes",
-  "generatedFromCommit": "0edb758f66c2b99397fddf70a09d72b6996ac14d",
+  "generatedFromCommit": "1801173bfd12184399850649ffc6317358537b5f",
   "corpus": "C-LARGE",
   "repeats": 3,
-  "coldMedianMs": 20688,
+  "coldMedianMs": 20299.4,
   "probes": {
     "k1": {
       "targets": [
         "ARC.py"
       ],
-      "elapsedMs": 1208.4,
-      "ratioToColdMedian": 0.058,
+      "elapsedMs": 1126.2,
+      "ratioToColdMedian": 0.055,
       "mode": "incremental",
       "parsedFiles": 1,
       "parseCacheHits": 345,
@@ -22,24 +22,24 @@
       "graphRowsInserted": 54125,
       "bindingClosure": null,
       "stagesMs": {
-        "discovery": 44.1,
-        "read": 20,
-        "planning": 0.5,
-        "parsing": 476.9,
-        "invalidation": 7.2,
-        "linking": 8.3,
-        "persistence": 10.6,
+        "discovery": 36,
+        "read": 14.9,
+        "planning": 0.6,
+        "parsing": 474.1,
+        "invalidation": 8.3,
+        "linking": 11.9,
+        "persistence": 8.8,
         "retrievalIndex": 0,
-        "validation": 34.8,
-        "bookkeeping": 204.7,
-        "parseCacheWrite": 187.8,
-        "commit": 0.8,
-        "total": 1208.2,
-        "unattributed": 212.5
+        "validation": 32.3,
+        "bookkeeping": 191.4,
+        "parseCacheWrite": 156.1,
+        "commit": 1.1,
+        "total": 1126,
+        "unattributed": 190.5
       },
       "dominantStage": [
         "parsing",
-        476.9
+        474.1
       ]
     },
     "k3": {
@@ -48,8 +48,8 @@
         "ARC_test.py",
         "arc/__init__.py"
       ],
-      "elapsedMs": 2819.5,
-      "ratioToColdMedian": 0.136,
+      "elapsedMs": 2545.8,
+      "ratioToColdMedian": 0.125,
       "mode": "incremental",
       "parsedFiles": 3,
       "parseCacheHits": 343,
@@ -59,24 +59,24 @@
       "graphRowsInserted": 54125,
       "bindingClosure": null,
       "stagesMs": {
-        "discovery": 50.5,
-        "read": 17.2,
+        "discovery": 39.5,
+        "read": 20.6,
         "planning": 0.8,
-        "parsing": 2033.1,
-        "invalidation": 27.1,
-        "linking": 14.6,
-        "persistence": 35.3,
+        "parsing": 1831,
+        "invalidation": 32.6,
+        "linking": 11.1,
+        "persistence": 34.2,
         "retrievalIndex": 0,
-        "validation": 49,
-        "bookkeeping": 233.8,
-        "parseCacheWrite": 163.2,
-        "commit": 2,
-        "total": 2819.3,
-        "unattributed": 192.7
+        "validation": 37.3,
+        "bookkeeping": 160.3,
+        "parseCacheWrite": 188.2,
+        "commit": 1,
+        "total": 2545.6,
+        "unattributed": 189
       },
       "dominantStage": [
         "parsing",
-        2033.1
+        1831
       ]
     }
   }

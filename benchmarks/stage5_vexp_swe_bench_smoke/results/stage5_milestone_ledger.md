@@ -8386,3 +8386,156 @@ artifacts         stage5_m199_final_report.md,
   is a benchmark ratio rather than a measured workload need.
   `CONTEXT_COMPILER_PRODUCT_UTILITY_NOT_ESTABLISHED` still governs: do not
   implement any remaining BELOW claim by default.
+
+---
+
+## M200 — incremental package-surface binding closure (PASS)
+
+```
+milestone         M200
+verdict           PASS
+parity            A3_PARITY_CLOSED
+spend             0 live-agent runs, $0, 0 network requests, 0 VEXP processes
+scope             A3 only. Give package identity a semantic derivation and
+                  persist enough import-binding authority to derive a
+                  conservative reverse closure, without weakening any frozen
+                  claim, threshold, corpus, scoring rule or equivalence gate.
+                  No work on A1, A5 or A11-A15.
+
+result            PACKAGE_SURFACE_BINDING_CLOSURE_DERIVABLE_AND_BOUNDED
+                  VTRACE_VEXP_ENGINE_PARITY_THRESHOLD_NOT_MET
+                  MATCH 5  EXCEED 3  BELOW 7   match-or-exceed 8/15 (threshold 10)
+                  A8 minimum coverage 100% (veto 99%); structural violations 0
+                  determinism stable; F1-F8 all pass
+                  ENGINE QUALITY != CODING-AGENT UTILITY
+
+changed           A3  BELOW -> MATCHES   (the only classification that moved)
+protected         A2 MATCHES, A4 EXCEEDS, A6 MATCHES, A7 EXCEEDS, A8 EXCEEDS,
+                  A9 MATCHES, A10 MATCHES  (all held; zero regressions)
+untouched         A1, A5, A11, A12, A13, A14, A15
+
+A3                C-LARGE k=1  0.052 -> 0.062   (frozen match bar 0.25, exceed 0.05)
+                  C-LARGE k=3  1.04  -> 0.141   package surface no longer rebuilds
+                  band() needs every value to clear; both do
+                  C-MED  k=1 0.029  k=3 0.031   C-SMALL k=1 0.199  k=3 0.221
+
+cause             the semantic context hash carried the package file's RAW
+                  content, so an appended comment and a redirected re-export
+                  were the same event; __init__.py emits no symbols for its
+                  imports, so nothing else could tell them apart. The PRE-parse
+                  planner decided it first, and reported the same
+                  fullRebuildReason as the post-parse hash, so the reason alone
+                  named neither.
+
+architecture      ModuleBindingSurface (what a module publishes, and where each
+                  name resolves) and ImportDescriptor (one row per import, as
+                  the resolver saw it), both derived from buildImportMaps -- the
+                  same authority the edges use -- and both persisted, because an
+                  imports edge exists only when both ends resolve to a symbol
+                  and the interesting consumers are exactly where one does not.
+                  Reverse walk is transitive (a re-export chain's first hop is
+                  not its last) and cycle-guarded (a cyclic re-export is a real
+                  Python shape). Every refusal returns a rebuild, never a
+                  smaller closure.
+
+frozen k=3        surface digest before == after (143544f1…); 0 changed
+                  bindings; no closure derived; mode incremental; parsed 3 of
+                  346; equal to a clean rebuild. Nothing tailored to it: the
+                  same derivation catches P2-P12.
+
+fixtures          P1-P14, each asserting the plan AND equality with a clean
+                  rebuild: 14/14 on both. Includes transitive and cyclic
+                  re-export, ambiguous binding, aliased export and consumer,
+                  module-form and aliased-module-form consumers, relative parent
+                  import, an independence control, and a wildcard negative
+                  control that must refuse.
+
+correctness       18/18 existing mutations EQUAL; 3/3 sequences EQUAL; new
+                  package-binding sequence EQUAL; determinism 3/3 identical;
+                  write amplification still 2.0x on all three corpora; no-op
+                  still writes 0 rows including the three new tables.
+                  One mode moved: C-LARGE E2-modify-3 full_rebuild ->
+                  incremental, the target case, still EQUAL.
+
+perf              planner/closure alone: k=3 1.067 -> 0.520.
+                  Profiling then put 8,717 of 9,441 ms in parsing for THREE
+                  files, 8,138 ms of it in a 383-byte __init__.py, because
+                  whichever parse crosses PYTHON_AST_BATCH_WARM_THRESHOLD warms
+                  the AST cache for all 276 modules. The parser is now told the
+                  run's planned parse count: 0.520 -> 0.136. Proven inert by a
+                  paired predecessor/candidate build with the predecessor's
+                  parser checked out by commit -- full projection and
+                  normalizedGraphHash IDENTICAL on C-MED and C-LARGE.
+
+sql/storage       one index added (idx_import_descriptors_target); every binding
+                  statement classified indexed, all under 0.1 ms;
+                  read_persisted_surfaces is a deliberate 276-row scan at
+                  0.056 ms. C-LARGE binding tables 1,994,752 bytes = 4.24% of
+                  the vacuumed index; C-MED 0 bytes and 0%, the control.
+
+commits           9ce85879  reproduction instrument, guard attribution
+                  0edb758f  binding authority, planner closure, P1-P14
+                  d3cc79df  parser cost model + paired inertness proof
+                  1801173b  query-plan and storage-measurement refinement
+                  (evidence commit follows)
+
+evidence          results/stage5_m200_final_report.md and the twelve
+                  stage5_m200_*.json artefacts it lists.
+```
+
+## M200 standing findings
+
+- **The benchmark forbids adding a source file.** C-MED is this repository's own
+  `src/`, and its frozen identity is a file count. Three new modules made it 495
+  and `run_stage5_m197a_authority.ts` returned `M197A_AUTHORITY_MISMATCH` before
+  any claim could be scored — the exact failure M199's ledger predicted for the
+  next milestone that added one. The closure derivation therefore lives in
+  `incrementalIndex.ts` beside `planIncrementalRefresh` and the hash it compares,
+  and the persistence in `persistParseResult.ts`. Both are better homes than the
+  standalone modules they replaced, but the constraint chose them, and the next
+  milestone that needs a new file under `src/` faces the same wall.
+
+- **A cache heuristic was 74% of the A3 gap.** The AST batch warm turned a
+  383-byte file into 8.1 seconds, because its proxy for "this is a bulk run" was
+  a spawn counter. Nothing was wrong with the proxy until an incremental refresh
+  could parse three files that resolve imports — M200 created that case and the
+  proxy misfired on it immediately. Every guard whose premise is "multi-file
+  means full rebuild" is now worth re-reading.
+
+- **`import pkg` consumers cannot be narrowed by name.** A module-form descriptor
+  names no member, so it can reach anything the target publishes and must enter
+  the closure on any surface change of that target. This is why the closure is
+  module-granular rather than name-granular; it is a property of Python, not a
+  decision that could have gone the other way.
+
+- **The persisted binding authority is most of an export index.** Resolution
+  still rebuilds `PythonExportIndex` by re-parsing each imported module, which is
+  what made `arc/__init__.py` expensive and what the warm was papering over.
+  `module_bindings` already holds the re-export half of that structure. Serving
+  export indexes from persistence instead of re-parsing is the obvious follow-on
+  — and it would change symbol resolution, so it needs the deterministic
+  retrieval no-change proof, which puts it outside M200.
+
+- **Adds, deletes and renames remain `closure_uncertain`.** M200 did not make
+  them derivable and does not claim to. A new file can claim a module name an
+  existing import already resolved elsewhere, and a deleted one can strand
+  resolutions the graph never recorded as edges. The package-surface case moved
+  because a modification leaves the file set intact, so the persisted descriptors
+  describe the same repository the new parse does. The real-corpus package
+  sequence shows this honestly: "add consumer" rebuilds, the other four bound.
+
+- **`MAX_BINDING_CLOSURE_FRACTION` is a cost policy, not a correctness one.** Set
+  at 0.20, equal to the existing `MEASURED_LIGHTWEIGHT_PARSER_CHANGE_RATIO`
+  rather than a second tuned number. Both sides of it produce the same graph.
+  `IndexPerformanceDiagnostics.bindingClosure` publishes closure size, the work
+  it implied and what the displaced rebuild would have cost, so a later milestone
+  can replace it with a measured crossover. It played no part in A3: the frozen
+  fixture changes no surface, so no closure is derived and the cap is never
+  consulted.
+
+- **`pruneRemovedFiles` is still dead code**, and now has one more table to
+  prune. M199 recorded it; nothing about it changed.
+
+- **Next-step recommendation.** None issued. M200 was scoped to A3 and stops at
+  the frozen rerun. `CONTEXT_COMPILER_PRODUCT_UTILITY_NOT_ESTABLISHED` still
+  governs: no remaining BELOW claim is authorised by this milestone.
