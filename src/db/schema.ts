@@ -166,6 +166,24 @@ export function initializeSchema(db: Database): void {
     CREATE INDEX IF NOT EXISTS idx_symbols_file_id_start_byte
       ON symbols(file_id, start_byte, id);
 
+    /*
+     * The self-referencing parent FK, indexed on its REFERENCING side.
+     *
+     * SQLite enforces a foreign key by looking for rows that still point at the
+     * one being deleted, and without an index on the referencing column that
+     * lookup is a full table scan PER DELETED ROW. Deleting the 10,309 symbols
+     * of the ARC corpus therefore cost ~106 million row visits: measured at
+     * 19,522 ms, against 105 ms with this index and 12 ms to build it.
+     *
+     * That single statement was 18 of the 26 seconds an incremental refresh
+     * spent on a ONE-file change, because invalidation drops the whole graph
+     * before rewriting it. The hazard generalises: any table referencing
+     * symbols.id that is not already empty when symbols are deleted will pay
+     * the same scan.
+     */
+    CREATE INDEX IF NOT EXISTS idx_symbols_parent_symbol_id
+      ON symbols(parent_symbol_id);
+
     CREATE TABLE IF NOT EXISTS edges (
       id TEXT PRIMARY KEY,
       src_symbol_id TEXT NOT NULL,

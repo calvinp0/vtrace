@@ -159,7 +159,14 @@ test("explored work stays flat as the surrounding graph grows 50x", async () => 
   assert.equal(largest.fetched <= smallest.fetched * 2, true, `fetched grew ${smallest.fetched} -> ${largest.fetched}`);
   assert.equal(largest.relaxed <= smallest.relaxed * 2, true, `relaxed grew ${smallest.relaxed} -> ${largest.relaxed}`);
   assert.equal(largest.queries <= smallest.queries * 2, true, `queries grew ${smallest.queries} -> ${largest.queries}`);
-});
+},
+// This test asserts WORK -- edges fetched, edges relaxed, queries issued -- and
+// none of those depend on the clock. What does take time is its fixtures: three
+// synthetic graphs totalling 122,000 edges, which on a contended machine sit
+// either side of bun's 5 s default and made the suite fail for a reason the test
+// is not about. The budget is explicit so a real regression in the measured
+// quantities is still what fails it.
+30_000);
 
 test("a frontier that outgrows the budget reports the budget, not a missing path", async () => {
   await withSyntheticGraph(
