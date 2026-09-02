@@ -41,6 +41,8 @@ interface PythonParserContext {
    * re-extracting the same Cython module for every Python file that imports it.
    * Shared by reference across `withKnownFile` copies.
    */
+  /** M200. What the run's caller says it will parse; undefined means "cannot say". */
+  plannedParseCount?: () => number | undefined;
   cythonExportIndexCache: Map<string, CrossLanguageExportIndex>;
   /**
    * Parser-instance-wide cache of Python module export indexes, keyed by
@@ -203,6 +205,18 @@ export interface PythonKnownFile {
 export interface PythonParserOptions {
   interpreterCandidates?: readonly string[];
   knownFiles?: readonly PythonKnownFile[];
+  /**
+   * M200. How many files the RUN intends to parse, if its caller knows.
+   *
+   * Read lazily, because the indexer builds its registry before it has a plan:
+   * the fingerprint that decides whether the plan may be incremental is taken
+   * from the registry, so the registry cannot wait for the plan. By the time the
+   * warm decision is made — during parsing — the count is known.
+   *
+   * Returning undefined means "cannot say", which leaves the spawn-count
+   * heuristic in charge exactly as before.
+   */
+  plannedParseCount?: () => number | undefined;
 }
 
 const DEFAULT_INTERPRETER_CANDIDATES = ["python3", "python"] as const;
@@ -222,6 +236,27 @@ const DEFAULT_INTERPRETER_CANDIDATES = ["python3", "python"] as const;
  */
 const PYTHON_AST_BATCH_WARM_THRESHOLD = 4;
 const PYTHON_AST_BATCH_SIZE = 48;
+
+/**
+ * The smallest run that may warm the whole repository (M200).
+ *
+ * The spawn counter above was chosen so the parser would not have to be told
+ * which kind of run it is in. M200 showed the proxy failing on the case it had
+ * just made possible: an incremental refresh of a package `__init__.py` resolves
+ * twenty imports, crosses four spawns while parsing its FIRST file, and warms
+ * 276 modules to serve the twenty-five it needs. Measured on the frozen C-LARGE
+ * k=3 fixture, that one file cost 8,138 ms with the warm and 1,349 ms without.
+ *
+ * So the parser is now told, when the caller knows. The bar is one full batch:
+ * a run that will not parse even `PYTHON_AST_BATCH_SIZE` files of its own is not
+ * the bulk run the warm was built for, and pays per file instead. It is the
+ * existing batch size rather than a second tuned number, and a run whose caller
+ * says nothing behaves exactly as it did before.
+ *
+ * The warm remains a pure optimisation either way: it produces the same ASTs
+ * through the same script, so skipping it can change timing and nothing else.
+ */
+const PYTHON_AST_BATCH_MIN_PLANNED_PARSES = PYTHON_AST_BATCH_SIZE;
 
 /**
  * Source bytes above which a run keeps spawning per file. The warm holds one
@@ -1000,7 +1035,8 @@ function parsePythonAst(
   }
 
   if (!context.pythonAstBatch.exhausted
-    && context.pythonAstBatch.spawns >= PYTHON_AST_BATCH_WARM_THRESHOLD) {
+    && context.pythonAstBatch.spawns >= PYTHON_AST_BATCH_WARM_THRESHOLD
+    && runIsBulkEnoughToWarm(context)) {
     warmPythonAstCache(context);
     const warmed = context.pythonAstCache.get(key);
 
@@ -1030,6 +1066,27 @@ function parsePythonAst(
  * caller falls back to the per-file spawn it would have used anyway. The batch is
  * an optimisation, so it may never be the reason a file fails to parse.
  */
+/**
+ * Whether the run is large enough for a whole-repository warm to be the cheaper
+ * way to serve it. A caller that says nothing leaves the decision where it was.
+ */
+function runIsBulkEnoughToWarm(context: PythonParserContext): boolean {
+  const planned = context.plannedParseCount?.();
+
+  if (planned === undefined) {
+    return true;
+  }
+
+  if (planned >= PYTHON_AST_BATCH_MIN_PLANNED_PARSES) {
+    return true;
+  }
+
+  // Not bulk, and it will not become bulk later in this run: settle it once so
+  // every subsequent spawn does not re-ask.
+  context.pythonAstBatch.exhausted = true;
+  return false;
+}
+
 function warmPythonAstCache(context: PythonParserContext): void {
   const state = context.pythonAstBatch;
   state.exhausted = true;
@@ -2652,6 +2709,7 @@ function makeParserContext(options: PythonParserOptions): PythonParserContext {
     pythonExportIndexCache: new Map(),
     pythonAstCache: new Map(),
     pythonAstBatch: { spawns: 0, pending: null, exhausted: false },
+    plannedParseCount: options.plannedParseCount,
   };
 }
 

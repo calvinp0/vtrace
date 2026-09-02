@@ -162,8 +162,12 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
   // that and take the other N-1 files down with it.
   const parserVersion = options.parserVersion ?? "builtin-parser-v1";
   const parserConfigFingerprint = options.parserConfigFingerprint ?? "default-parser-config-v1";
+  // M200. Set once the parse plan exists; read by the Python parser when it
+  // decides whether a whole-repository AST warm is the cheaper way to serve this
+  // run. Undefined until then, which is the pre-M200 behaviour.
+  let plannedParseCount: number | undefined;
   const registry = options.createParserRegistry === undefined
-    ? createDefaultParserRegistry(readableFiles)
+    ? createDefaultParserRegistry(readableFiles, () => plannedParseCount)
     : options.createParserRegistry(readableFiles);
   const parserRegistryFingerprint = computeParserRegistryFingerprint(registry);
   const registryIncompatible = options.previousSnapshot !== undefined
@@ -285,6 +289,7 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
       ))
       .map((file) => file.file.path));
   parseCacheMisses += initialParsePaths.size;
+  plannedParseCount = initialParsePaths.size;
   for (let index = 0; index < readableFiles.length; index += 1) {
     const fileContent = readableFiles[index]!;
     if (!initialParsePaths.has(fileContent.file.path)) {
@@ -367,6 +372,7 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
         // failure the closure exists to prevent.
         const reparseStarted = performance.now();
         const closurePaths = new Set(binding.closureFiles);
+        plannedParseCount = (plannedParseCount ?? 0) + closurePaths.size;
         const byPath = new Map(successfulResults.map((result) => [result.file.path, result]));
         for (const fileContent of readableFiles) {
           if (!closurePaths.has(fileContent.file.path)) continue;
@@ -400,6 +406,8 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
         summariesByPath.clear();
         parseCacheHits = 0;
         parseCacheMisses = readableFiles.length;
+        // This run turned out to be a whole-repository parse after all.
+        plannedParseCount = readableFiles.length;
         parsedFiles = 0;
         unsupportedFilesCarriedForward = 0;
         const fallbackParseStarted = performance.now();
@@ -1006,6 +1014,11 @@ function semanticSymbolKey(symbol: ParseResult["symbols"][number]): string {
 
 export function createDefaultParserRegistry(
   files: readonly IndexProjectFileContent[],
+  /**
+   * M200. How many files this run will parse, once it knows. Read lazily
+   * because the registry is built before the plan that decides the answer.
+   */
+  plannedParseCount?: () => number | undefined,
 ): ParserRegistry {
   return createParserRegistry([
     createTypeScriptParser({
@@ -1019,6 +1032,7 @@ export function createDefaultParserRegistry(
         path: file.file.path,
         content: file.content,
       })),
+      ...(plannedParseCount === undefined ? {} : { plannedParseCount }),
     }),
     createCythonParser({
       knownFiles: files.map((file) => ({

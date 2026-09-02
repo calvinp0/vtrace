@@ -1,0 +1,368 @@
+{
+  "milestone": "M200",
+  "purpose": "frozen C-LARGE k=3 closure evidence, package-binding sequence, determinism",
+  "generatedFromCommit": "0edb758f66c2b99397fddf70a09d72b6996ac14d",
+  "corpus": "C-LARGE",
+  "repeats": 3,
+  "frozen": {
+    "k1Targets": [
+      "ARC.py"
+    ],
+    "k3Targets": [
+      "ARC.py",
+      "ARC_test.py",
+      "arc/__init__.py"
+    ],
+    "packageTarget": "arc/__init__.py",
+    "k1": {
+      "targets": [
+        "ARC.py"
+      ],
+      "packageSurfaceDigestBefore": "143544f1352a82d52e7639842e34c335bd2cca4cf05bd3a660980a170c71a9ca",
+      "packageSurfaceDigestAfter": "143544f1352a82d52e7639842e34c335bd2cca4cf05bd3a660980a170c71a9ca",
+      "packageSurfaceChanged": false,
+      "mode": "incremental",
+      "fallbackReason": null,
+      "modifiedFiles": 1,
+      "parsedFiles": 1,
+      "affectedClosureFiles": 1,
+      "bindingClosure": null,
+      "totalSymbols": 10309,
+      "totalRelationships": 24887
+    },
+    "k3": {
+      "targets": [
+        "ARC.py",
+        "ARC_test.py",
+        "arc/__init__.py"
+      ],
+      "packageSurfaceDigestBefore": "143544f1352a82d52e7639842e34c335bd2cca4cf05bd3a660980a170c71a9ca",
+      "packageSurfaceDigestAfter": "143544f1352a82d52e7639842e34c335bd2cca4cf05bd3a660980a170c71a9ca",
+      "packageSurfaceChanged": false,
+      "mode": "incremental",
+      "fallbackReason": null,
+      "modifiedFiles": 3,
+      "parsedFiles": 3,
+      "affectedClosureFiles": 3,
+      "bindingClosure": null,
+      "totalSymbols": 10309,
+      "totalRelationships": 24887
+    },
+    "equalToCleanRebuild": true,
+    "unequalSections": []
+  },
+  "packageBindingSequence": {
+    "steps": [
+      {
+        "label": "add re-export",
+        "mode": "incremental",
+        "fallbackReason": null,
+        "modifiedFiles": 1,
+        "parsedFiles": 16,
+        "affectedClosureFiles": 16,
+        "bindingClosure": {
+          "changedModules": [
+            "arc/__init__.py"
+          ],
+          "closureFiles": [
+            "ARC.py",
+            "arc/__init__.py",
+            "arc/checks/nmd_test.py",
+            "arc/job/pipe/pipe_coordinator_test.py",
+            "arc/main.py",
+            "arc/main_test.py",
+            "arc/reaction/reaction_test.py",
+            "arc/scheduler.py",
+            "arc/scheduler_pipe_test.py",
+            "arc/scheduler_qst2_test.py",
+            "arc/scheduler_test.py",
+            "arc/utils/__init__.py",
+            "arc/utils/scale.py",
+            "arc/utils/scale_test.py",
+            "functional/functional_test.py",
+            "functional/restart_test.py"
+          ],
+          "visitedModules": 15,
+          "reparsedForClosure": 15,
+          "repositoryFileCount": 346,
+          "maxClosureFraction": 0.2,
+          "refusal": null,
+          "derivationMs": 41.36,
+          "filesAFullRebuildWouldParse": 346
+        },
+        "totalSymbols": 10309,
+        "totalRelationships": 24888
+      },
+      {
+        "label": "redirect re-export",
+        "mode": "incremental",
+        "fallbackReason": null,
+        "modifiedFiles": 1,
+        "parsedFiles": 16,
+        "affectedClosureFiles": 16,
+        "bindingClosure": {
+          "changedModules": [
+            "arc/__init__.py"
+          ],
+          "closureFiles": [
+            "ARC.py",
+            "arc/__init__.py",
+            "arc/checks/nmd_test.py",
+            "arc/job/pipe/pipe_coordinator_test.py",
+            "arc/main.py",
+            "arc/main_test.py",
+            "arc/reaction/reaction_test.py",
+            "arc/scheduler.py",
+            "arc/scheduler_pipe_test.py",
+            "arc/scheduler_qst2_test.py",
+            "arc/scheduler_test.py",
+            "arc/utils/__init__.py",
+            "arc/utils/scale.py",
+            "arc/utils/scale_test.py",
+            "functional/functional_test.py",
+            "functional/restart_test.py"
+          ],
+          "visitedModules": 15,
+          "reparsedForClosure": 15,
+          "repositoryFileCount": 346,
+          "maxClosureFraction": 0.2,
+          "refusal": null,
+          "derivationMs": 35.71,
+          "filesAFullRebuildWouldParse": 346
+        },
+        "totalSymbols": 10309,
+        "totalRelationships": 24888
+      },
+      {
+        "label": "add consumer",
+        "mode": "full_rebuild",
+        "fallbackReason": "closure_uncertain",
+        "modifiedFiles": 0,
+        "parsedFiles": 347,
+        "affectedClosureFiles": 347,
+        "bindingClosure": null,
+        "totalSymbols": 10311,
+        "totalRelationships": 24890
+      },
+      {
+        "label": "remove export",
+        "mode": "incremental",
+        "fallbackReason": null,
+        "modifiedFiles": 1,
+        "parsedFiles": 17,
+        "affectedClosureFiles": 17,
+        "bindingClosure": {
+          "changedModules": [
+            "arc/__init__.py"
+          ],
+          "closureFiles": [
+            "ARC.py",
+            "arc/__init__.py",
+            "arc/checks/nmd_test.py",
+            "arc/job/pipe/pipe_coordinator_test.py",
+            "arc/main.py",
+            "arc/main_test.py",
+            "arc/reaction/reaction_test.py",
+            "arc/scheduler.py",
+            "arc/scheduler_pipe_test.py",
+            "arc/scheduler_qst2_test.py",
+            "arc/scheduler_test.py",
+            "arc/utils/__init__.py",
+            "arc/utils/scale.py",
+            "arc/utils/scale_test.py",
+            "functional/functional_test.py",
+            "functional/restart_test.py",
+            "m200_seq_consumer.py"
+          ],
+          "visitedModules": 16,
+          "reparsedForClosure": 16,
+          "repositoryFileCount": 347,
+          "maxClosureFraction": 0.2,
+          "refusal": null,
+          "derivationMs": 35.85,
+          "filesAFullRebuildWouldParse": 347
+        },
+        "totalSymbols": 10311,
+        "totalRelationships": 24887
+      },
+      {
+        "label": "restore export",
+        "mode": "incremental",
+        "fallbackReason": null,
+        "modifiedFiles": 1,
+        "parsedFiles": 17,
+        "affectedClosureFiles": 17,
+        "bindingClosure": {
+          "changedModules": [
+            "arc/__init__.py"
+          ],
+          "closureFiles": [
+            "ARC.py",
+            "arc/__init__.py",
+            "arc/checks/nmd_test.py",
+            "arc/job/pipe/pipe_coordinator_test.py",
+            "arc/main.py",
+            "arc/main_test.py",
+            "arc/reaction/reaction_test.py",
+            "arc/scheduler.py",
+            "arc/scheduler_pipe_test.py",
+            "arc/scheduler_qst2_test.py",
+            "arc/scheduler_test.py",
+            "arc/utils/__init__.py",
+            "arc/utils/scale.py",
+            "arc/utils/scale_test.py",
+            "functional/functional_test.py",
+            "functional/restart_test.py",
+            "m200_seq_consumer.py"
+          ],
+          "visitedModules": 16,
+          "reparsedForClosure": 16,
+          "repositoryFileCount": 347,
+          "maxClosureFraction": 0.2,
+          "refusal": null,
+          "derivationMs": 39.76,
+          "filesAFullRebuildWouldParse": 347
+        },
+        "totalSymbols": 10311,
+        "totalRelationships": 24890
+      }
+    ],
+    "equal": true,
+    "unequalSections": []
+  },
+  "determinism": {
+    "deterministic": true,
+    "repeats": [
+      {
+        "attempt": 0,
+        "mode": "incremental",
+        "fallbackReason": null,
+        "modifiedFiles": 1,
+        "parsedFiles": 17,
+        "affectedClosureFiles": 17,
+        "bindingClosure": {
+          "changedModules": [
+            "arc/__init__.py"
+          ],
+          "closureFiles": [
+            "ARC.py",
+            "arc/__init__.py",
+            "arc/checks/nmd_test.py",
+            "arc/job/pipe/pipe_coordinator_test.py",
+            "arc/main.py",
+            "arc/main_test.py",
+            "arc/reaction/reaction_test.py",
+            "arc/scheduler.py",
+            "arc/scheduler_pipe_test.py",
+            "arc/scheduler_qst2_test.py",
+            "arc/scheduler_test.py",
+            "arc/utils/__init__.py",
+            "arc/utils/scale.py",
+            "arc/utils/scale_test.py",
+            "functional/functional_test.py",
+            "functional/restart_test.py",
+            "m200_seq_consumer.py"
+          ],
+          "visitedModules": 16,
+          "reparsedForClosure": 16,
+          "repositoryFileCount": 347,
+          "maxClosureFraction": 0.2,
+          "refusal": null,
+          "derivationMs": 29.43,
+          "filesAFullRebuildWouldParse": 347
+        },
+        "totalSymbols": 10311,
+        "totalRelationships": 24890,
+        "normalizedGraphHash": "6a8ab739affea8c2456170eec08d985130e64cd87fda6ea4649724a608897571",
+        "bindingRowsHash": "902efc21257731e6"
+      },
+      {
+        "attempt": 1,
+        "mode": "incremental",
+        "fallbackReason": null,
+        "modifiedFiles": 1,
+        "parsedFiles": 17,
+        "affectedClosureFiles": 17,
+        "bindingClosure": {
+          "changedModules": [
+            "arc/__init__.py"
+          ],
+          "closureFiles": [
+            "ARC.py",
+            "arc/__init__.py",
+            "arc/checks/nmd_test.py",
+            "arc/job/pipe/pipe_coordinator_test.py",
+            "arc/main.py",
+            "arc/main_test.py",
+            "arc/reaction/reaction_test.py",
+            "arc/scheduler.py",
+            "arc/scheduler_pipe_test.py",
+            "arc/scheduler_qst2_test.py",
+            "arc/scheduler_test.py",
+            "arc/utils/__init__.py",
+            "arc/utils/scale.py",
+            "arc/utils/scale_test.py",
+            "functional/functional_test.py",
+            "functional/restart_test.py",
+            "m200_seq_consumer.py"
+          ],
+          "visitedModules": 16,
+          "reparsedForClosure": 16,
+          "repositoryFileCount": 347,
+          "maxClosureFraction": 0.2,
+          "refusal": null,
+          "derivationMs": 30.87,
+          "filesAFullRebuildWouldParse": 347
+        },
+        "totalSymbols": 10311,
+        "totalRelationships": 24890,
+        "normalizedGraphHash": "6a8ab739affea8c2456170eec08d985130e64cd87fda6ea4649724a608897571",
+        "bindingRowsHash": "902efc21257731e6"
+      },
+      {
+        "attempt": 2,
+        "mode": "incremental",
+        "fallbackReason": null,
+        "modifiedFiles": 1,
+        "parsedFiles": 17,
+        "affectedClosureFiles": 17,
+        "bindingClosure": {
+          "changedModules": [
+            "arc/__init__.py"
+          ],
+          "closureFiles": [
+            "ARC.py",
+            "arc/__init__.py",
+            "arc/checks/nmd_test.py",
+            "arc/job/pipe/pipe_coordinator_test.py",
+            "arc/main.py",
+            "arc/main_test.py",
+            "arc/reaction/reaction_test.py",
+            "arc/scheduler.py",
+            "arc/scheduler_pipe_test.py",
+            "arc/scheduler_qst2_test.py",
+            "arc/scheduler_test.py",
+            "arc/utils/__init__.py",
+            "arc/utils/scale.py",
+            "arc/utils/scale_test.py",
+            "functional/functional_test.py",
+            "functional/restart_test.py",
+            "m200_seq_consumer.py"
+          ],
+          "visitedModules": 16,
+          "reparsedForClosure": 16,
+          "repositoryFileCount": 347,
+          "maxClosureFraction": 0.2,
+          "refusal": null,
+          "derivationMs": 31.78,
+          "filesAFullRebuildWouldParse": 347
+        },
+        "totalSymbols": 10311,
+        "totalRelationships": 24890,
+        "normalizedGraphHash": "6a8ab739affea8c2456170eec08d985130e64cd87fda6ea4649724a608897571",
+        "bindingRowsHash": "902efc21257731e6"
+      }
+    ]
+  },
+  "verdict": "PASS"
+}

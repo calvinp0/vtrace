@@ -1,0 +1,83 @@
+{
+  "milestone": "M200",
+  "instrument": "run_stage5_m200_profile.ts",
+  "purpose": "stage attribution for the frozen A3 k=1 and k=3 refreshes",
+  "generatedFromCommit": "0edb758f66c2b99397fddf70a09d72b6996ac14d",
+  "corpus": "C-LARGE",
+  "repeats": 3,
+  "coldMedianMs": 20688,
+  "probes": {
+    "k1": {
+      "targets": [
+        "ARC.py"
+      ],
+      "elapsedMs": 1208.4,
+      "ratioToColdMedian": 0.058,
+      "mode": "incremental",
+      "parsedFiles": 1,
+      "parseCacheHits": 345,
+      "parseCacheMisses": 1,
+      "affectedClosureFiles": 1,
+      "graphRowsDeleted": 54125,
+      "graphRowsInserted": 54125,
+      "bindingClosure": null,
+      "stagesMs": {
+        "discovery": 44.1,
+        "read": 20,
+        "planning": 0.5,
+        "parsing": 476.9,
+        "invalidation": 7.2,
+        "linking": 8.3,
+        "persistence": 10.6,
+        "retrievalIndex": 0,
+        "validation": 34.8,
+        "bookkeeping": 204.7,
+        "parseCacheWrite": 187.8,
+        "commit": 0.8,
+        "total": 1208.2,
+        "unattributed": 212.5
+      },
+      "dominantStage": [
+        "parsing",
+        476.9
+      ]
+    },
+    "k3": {
+      "targets": [
+        "ARC.py",
+        "ARC_test.py",
+        "arc/__init__.py"
+      ],
+      "elapsedMs": 2819.5,
+      "ratioToColdMedian": 0.136,
+      "mode": "incremental",
+      "parsedFiles": 3,
+      "parseCacheHits": 343,
+      "parseCacheMisses": 3,
+      "affectedClosureFiles": 3,
+      "graphRowsDeleted": 54125,
+      "graphRowsInserted": 54125,
+      "bindingClosure": null,
+      "stagesMs": {
+        "discovery": 50.5,
+        "read": 17.2,
+        "planning": 0.8,
+        "parsing": 2033.1,
+        "invalidation": 27.1,
+        "linking": 14.6,
+        "persistence": 35.3,
+        "retrievalIndex": 0,
+        "validation": 49,
+        "bookkeeping": 233.8,
+        "parseCacheWrite": 163.2,
+        "commit": 2,
+        "total": 2819.3,
+        "unattributed": 192.7
+      },
+      "dominantStage": [
+        "parsing",
+        2033.1
+      ]
+    }
+  }
+}

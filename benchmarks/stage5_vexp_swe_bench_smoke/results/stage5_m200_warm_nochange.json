@@ -1,0 +1,45 @@
+{
+  "milestone": "M200",
+  "instrument": "run_stage5_m200_warm_nochange.ts",
+  "purpose": "paired predecessor/candidate graph identity across the AST batch-warm change",
+  "predecessorCommit": "0edb758f66c2b99397fddf70a09d72b6996ac14d",
+  "candidateCommit": "0edb758f66c2b99397fddf70a09d72b6996ac14d",
+  "candidateTreeDirty": [
+    "M benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_m197a_authority.json",
+    " M benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_m200_package_equivalence.json",
+    " M benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_outcome_ledger.json",
+    " M benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_outcome_ledger.md",
+    " M src/indexer/indexProject.ts",
+    " M src/parsers/pythonParser.ts"
+  ],
+  "corpora": [
+    {
+      "id": "C-MED",
+      "language": "TypeScript",
+      "identical": true,
+      "predecessor": {
+        "projectionHash": "23dd5a7e97a7796b4b8da4a62fc32bb5a131dfe0c0c8551aefc8a58fbf849db1",
+        "normalizedGraphHash": "c8748a185fd8052454610f194311120bd7efe6d342c67e8dce18bac03dda16f1"
+      },
+      "candidate": {
+        "projectionHash": "23dd5a7e97a7796b4b8da4a62fc32bb5a131dfe0c0c8551aefc8a58fbf849db1",
+        "normalizedGraphHash": "c8748a185fd8052454610f194311120bd7efe6d342c67e8dce18bac03dda16f1"
+      }
+    },
+    {
+      "id": "C-LARGE",
+      "language": "Python",
+      "identical": true,
+      "predecessor": {
+        "projectionHash": "70821c32913990f62ec1c34d79f6194133f0eec9bb2dde9ce65d9b3ab772d5a0",
+        "normalizedGraphHash": "64c292bf20f7faa76f994a7f0546cbf3d06bfc0e0824856c05361630ff54a53f"
+      },
+      "candidate": {
+        "projectionHash": "70821c32913990f62ec1c34d79f6194133f0eec9bb2dde9ce65d9b3ab772d5a0",
+        "normalizedGraphHash": "64c292bf20f7faa76f994a7f0546cbf3d06bfc0e0824856c05361630ff54a53f"
+      }
+    }
+  ],
+  "mismatches": 0,
+  "verdict": "M200_WARM_CHANGE_IS_SEMANTICALLY_INERT"
+}
