@@ -8690,3 +8690,159 @@ evidence          results/stage5_m201_final_report.md and the twenty-eight
 - **Next-step recommendation.** None issued. M201 was scoped to A5 and stops at
   the frozen rerun. `CONTEXT_COMPILER_PRODUCT_UTILITY_NOT_ESTABLISHED` still
   governs: no remaining BELOW claim is authorised by this milestone.
+
+## M202 — frozen A1 language-family breadth (PASS)
+
+```
+milestone         M202
+verdict           PASS
+parity            A1_PARITY_CLOSED
+spend             0 live-agent runs, $0, 0 VEXP processes; npm registry reached
+                  once to pin 27 grammar packages (install time, never runtime)
+scope             A1 only. Close the frozen language/parser-breadth claim under
+                  the unmodified M197A scorer without touching retrieval,
+                  ranking, thresholds or the claim wording. No work on A11-A15.
+
+result            VTRACE_VEXP_ENGINE_PARITY_THRESHOLD_MET
+                  MATCH 5  EXCEED 5  BELOW 5   match-or-exceed 10/15 (threshold 10)
+                  A8 minimum coverage 100% (veto 99%); structural violations 0
+                  determinism stable; F1-F8 all pass; invented structural claims 0
+
+changed           A1  BELOW -> MATCHES   (the target; 3 -> 30 parser-backed families)
+protected         A2 EXCEEDS, A3 MATCHES, A4 EXCEEDS, A5 MATCHES, A6 EXCEEDS,
+                  A7 EXCEEDS, A8 EXCEEDS, A9 MATCHES, A10 MATCHES — none moved
+untouched         A11, A12, A13, A14, A15
+
+frozen A1         VEXP: 30 comma-separated names under "Supported Languages (30)"
+                  in vexp-cli/README.md; HTML/CSS, YAML/JSON, Bash/Shell and
+                  HCL/Terraform are ONE name each. VTRACE: Language enum ∩
+                  createDefaultParserRegistry([]).registeredLanguages(), band 30/31.
+                  The closed vexp-core binary leaves tree-sitter external-scanner
+                  symbols for C#, C++, Scala and Bash; every other VEXP family's
+                  technology is unobservable.
+                  Pre: enum 8, detected 6, registered 3 (cython, python, typescript).
+                  Post: enum 31, detected 31, registered 30. Under VEXP's own row
+                  convention VTRACE covers 27/30 names: F# and HCL/Terraform
+                  ship ABI-15 grammars only (core 0.21.1 loads 13-14) and no
+                  Dockerfile grammar is published on npm. Cython is registered
+                  and counted but is not a VEXP name; TOML stays a detection
+                  rule + document chunker and is deliberately NOT made
+                  parser-backed (§41).
+
+architecture      one family table (src/parsers/languageFamilies.ts) owns enum
+                  member, extensions, tier, grammar and parser kind; detection and
+                  the default registry derive from it. One generic iterative
+                  tree-sitter walk over a per-family rule table
+                  (structuralRules.ts / structuralParser.ts) serves 27 families;
+                  the three deep adapters are untouched and never routed to it.
+                  Registration requires the grammar binary on disk. The UTF-16 ->
+                  UTF-8 translator was extracted from the TypeScript adapter into
+                  treeSitterSource.ts so no family can repeat the M198 defect.
+                  Tiers: DEEP_GRAPH 3, STRUCTURAL 23, DOCUMENT 1 (YAML: parsed for
+                  truth, chunked as before), PARSED_NO_STRUCTURE 3 (HTML, CSS,
+                  JSON: parse truth, zero symbols). No generic family emits an
+                  import, call or reference edge. Namespaces, modules, impl
+                  blocks and extensions are scopes, not symbols.
+
+health            27/27 HEALTHY through the production registry: invocation
+                  witnessed, non-ASCII before every first declaration, byte spans
+                  reproduce the declaration, signatures verbatim, malformed
+                  fixtures -> diagnostics (18) or parse_failed (9, root ERROR),
+                  0 invented names, 3 parses 1 hash. F1-F12 all pass; F11
+                  measured in fresh processes after an in-process version
+                  passed vacuously against a warm cache.
+
+mixed corpus      31/31 families discovered over 31 files via indexProject; 0
+                  exclusion leaks (vendor, node_modules, build, gitignored,
+                  secrets, nested worktree); two cold indexes identical;
+                  noop/modify/add/delete/rename each equal a clean full index.
+                  modify..rename run as full_rebuild (closure_uncertain): the
+                  generic families model no bindings, so the planner cannot
+                  bound the closure and does not pretend to.
+
+query outputs     M201 A5 harness on the M201 immutable snapshot, base vs
+                  m202_post: 15/15 semantically AND byte identical, including
+                  C-LARGE whose index now holds ARC's 26 shell scripts.
+
+retrieval proof   paired predecessor (a52b1906 worktree) vs candidate (HEAD),
+                  isolated indexes, provenance valid: expanded 2/20 and
+                  cross_repo_30 3/30 cases moved. Python symbol counts are
+                  identical on both sides in every moved case; the candidate
+                  indexes additionally hold JavaScript (django 183/480, sphinx
+                  1942 symbols) and C/C++ (matplotlib 2073 + 986) that the
+                  predecessor never saw, and those files entered selections
+                  (src/array.h, src/numpy_cpp.h, sphinx/domains/cpp.py). Gold
+                  visibility unchanged in all 5. This is breadth reaching
+                  retrieval, not a retrieval change; the retrieval baselines
+                  were NOT regenerated (they were stale since 7b29882e anyway).
+
+cost              registry creation 1.2 ms, 0 grammars loaded (lazy); first
+                  parse per family median 5.2 ms, max 8.5 ms; RSS 66.6 -> 142
+                  MiB with all 27 grammars loaded; mixed corpus 1184 files/s.
+                  28 grammar packages, 815.7 MiB unpacked (six-platform
+                  prebuilds), 3 compiled by scripts/build_tree_sitter_grammars.ts
+                  at postinstall (node-gyp; Node-API binaries load under Bun).
+                  A2 C-MED 62.5 files/s over 500 files (M201 65.0 over 492),
+                  C-LARGE 33.4 (M201 EXCEEDS margin held).
+
+corpus identity   C-MED is this repository's src/. M202 added eight source
+                  files, so the frozen count 492 no longer describes the corpus
+                  and the unmodified authority replay reported
+                  M197A_AUTHORITY_MISMATCH on corpus_C-MED alone. The identity
+                  count was re-frozen at 500 in run_stage5_m197a_authority.ts
+                  and m197aFixtures.ts with the reason recorded; source path,
+                  extensions, thresholds and scorer are untouched, and the
+                  pre-change replay at 492 is kept (stage5_m202_authority.json).
+                  This is the one edit to a frozen instrument in M202.
+
+environment       the frozen rerun ran at load 7-8 of 20 (unrelated resident
+                  services), recorded in the artefacts. A2/A5/A6 all held their
+                  M201 class regardless.
+
+commits           e8c1c3f5  A1 audit and pre-change inventory
+                  040bf598  family table, generic adapter, 27 families, tests
+                  958a4f53  health/mixed/deps/performance instruments + evidence
+                  (frozen rerun evidence + this ledger row follow)
+
+evidence          results/stage5_m202_final_report.md and the
+                  stage5_m202_*.{json,md} artefacts beside it.
+```
+
+## M202 standing findings
+
+- **The frozen corpus that is the product cannot hold its identity count
+  across a milestone that adds source files.** C-MED's 492 held through four
+  milestones only because none of them created a file under `src/`. The
+  authority check did its job — it failed on the corpus line and nothing else —
+  and the honest response was a recorded re-freeze, not a quiet edit and not a
+  refusal to rerun. A later milestone that adds files will hit it again; the
+  comment beside the constant says what to do.
+
+- **Breadth reaches retrieval without any retrieval change.** The fifteen
+  frozen queries are byte-identical, but 5 of 50 real-repository cases moved
+  because the candidate index now contains JavaScript and C/C++ symbols the
+  predecessor never held, and two C headers were selected for matplotlib tasks.
+  Whether that is better context or noise is a retrieval question M202 did not
+  ask; the retrieval eval baselines remain stale and were not refreshed here.
+
+- **Registered means loadable, and counted means healthy.** The registry only
+  registers a family whose grammar binary is on disk, and the health instrument
+  fails closed if its accepted count and the frozen count disagree. A family
+  can therefore be lost (a failed compile) but never silently invented.
+
+- **The generic families force full rebuilds on change.** The incremental
+  planner reports `closure_uncertain` for any modified file whose parser models
+  no bindings, which is every generic family. A3 is scored on Python and held;
+  a repository that is mostly Go or Java will reparse on every change until a
+  binding model exists for it. Reported, not fixed.
+
+- **Three VEXP names are out of reach on this core.** F# and HCL/Terraform
+  publish ABI-15 grammars only; Dockerfile has no npm grammar at all. Closing
+  the remaining 3/30 rows means upgrading tree-sitter to 0.25 (which changes the
+  input path the M196A/M198 buffer fix depends on) or compiling from git
+  sources. Neither was attempted.
+
+- **Next-step recommendation.** None issued for A1. The frozen aggregate
+  threshold is met at 10/15; A11-A15 remain BELOW and are not authorised by
+  this milestone. `CONTEXT_COMPILER_PRODUCT_UTILITY_NOT_ESTABLISHED` still
+  governs.

@@ -1,0 +1,1468 @@
+{
+  "milestone": "M202",
+  "instrument": "run_stage5_m202_report.ts",
+  "scope": "frozen A1 language/parser breadth only",
+  "authority": {
+    "pre": "M197A_AUTHORITY_VERIFIED",
+    "post": "M197A_AUTHORITY_VERIFIED",
+    "head": "040bf598d09677a5bb45d212ce3d2197efeab3af"
+  },
+  "frozenA1": {
+    "definition": {
+      "claimId": "A1",
+      "vexpClaimId": "V-A1",
+      "claimWording": "30 programming languages supported out of the box",
+      "vexpEvidenceSource": "vexp-cli/README.md, heading 'Supported Languages (30)' (M196 claim ledger, sourceKey cliReadme)",
+      "vexpCountingUnit": "one comma-separated name in the README list; a slash-joined pair such as HTML/CSS is ONE name",
+      "vtraceCountingUnit": "one Language enum member that createDefaultParserRegistry([]) registers a parser for",
+      "deduplicationRule": "extensions never count; detectLanguage aliases collapse onto the enum member they return",
+      "parserBackedCriterion": "registry.registeredLanguages() includes the enum member (control F7)",
+      "aliasesCountSeparately": false,
+      "configurationLanguagesCount": "yes on the VEXP side (YAML/JSON is a listed name); on the VTRACE side only if a parser is registered",
+      "markdownCounts": "no: Markdown is not a Language enum member and the M197A ledger records noMarkdownIndexing",
+      "generatedParserSupportCounts": "no distinction is made by the scorer; only registry membership is counted",
+      "matchThreshold": ">= 30 parser-backed families",
+      "exceedThreshold": "> 30",
+      "scorer": "supportedLanguageCount (m197aScoring.ts) + band([count], 30, 31, 'atLeast') (run_stage5_m197a_report.ts)"
+    },
+    "vexpCount": 30,
+    "vtracePreCount": 3,
+    "vtracePostCount": 30,
+    "scorerMeasurement": "30 parser-backed families (bash, c, clojure, cpp, csharp, css, cython, dart, elixir, go, haskell, html, java, javascript, json, kotlin, lua, objective_c, ocaml, php, python, r, ruby, rust, scala, sql, swift, typescript, yaml, zig); 28 extension-detected; 31 enum members",
+    "verdict": "VTRACE_MATCHES_VEXP_CLAIM",
+    "parity": "A1_PARITY_CLOSED",
+    "vexpRowConvention": {
+      "rowsCovered": 27,
+      "of": 30,
+      "partialRows": [],
+      "registeredFamiliesOutsideVexpList": [
+        "cython"
+      ],
+      "rows": [
+        {
+          "name": "TypeScript",
+          "vtraceLanguages": [
+            "typescript"
+          ],
+          "covered": [
+            "typescript"
+          ],
+          "fully": true,
+          "partially": false
+        },
+        {
+          "name": "JavaScript",
+          "vtraceLanguages": [
+            "javascript"
+          ],
+          "covered": [
+            "javascript"
+          ],
+          "fully": true,
+          "partially": false
+        },
+        {
+          "name": "Python",
+          "vtraceLanguages": [
+            "python"
+          ],
+          "covered": [
+            "python"
+          ],
+          "fully": true,
+          "partially": false
+        },
+        {
+          "name": "Go",
+          "vtraceLanguages": [
+            "go"
+          ],
+          "covered": [
+            "go"
+          ],
+          "fully": true,
+          "partially": false
+        },
+        {
+          "name": "Rust",
+          "vtraceLanguages": [
+            "rust"
+          ],
+          "covered": [
+            "rust"
+          ],
+          "fully": true,
+          "partially": false
+        },
+        {
+          "name": "Java",
+          "vtraceLanguages": [
+            "java"
+          ],
+          "covered": [
+            "java"
+          ],
+          "fully": true,
+          "partially": false
+        },
+        {
+          "name": "C#",
+          "vtraceLanguages": [
+            "csharp"
+          ],
+          "covered": [
+            "csharp"
+          ],
+          "fully": true,
+          "partially": false
+        },
+        {
+          "name": "C",
+          "vtraceLanguages": [
+            "c"
+          ],
+          "covered": [
+            "c"
+          ],
+          "fully": true,
+          "partially": false
+        },
+        {
+          "name": "C++",
+          "vtraceLanguages": [
+            "cpp"
+          ],
+          "covered": [
+            "cpp"
+          ],
+          "fully": true,
+          "partially": false
+        },
+        {
+          "name": "Ruby",
+          "vtraceLanguages": [
+            "ruby"
+          ],
+          "covered": [
+            "ruby"
+          ],
+          "fully": true,
+          "partially": false
+        },
+        {
+          "name": "Kotlin",
+          "vtraceLanguages": [
+            "kotlin"
+          ],
+          "covered": [
+            "kotlin"
+          ],
+          "fully": true,
+          "partially": false
+        },
+        {
+          "name": "Scala",
+          "vtraceLanguages": [
+            "scala"
+          ],
+          "covered": [
+            "scala"
+          ],
+          "fully": true,
+          "partially": false
+        },
+        {
+          "name": "Swift",
+          "vtraceLanguages": [
+            "swift"
+          ],
+          "covered": [
+            "swift"
+          ],
+          "fully": true,
+          "partially": false
+        },
+        {
+          "name": "Dart",
+          "vtraceLanguages": [
+            "dart"
+          ],
+          "covered": [
+            "dart"
+          ],
+          "fully": true,
+          "partially": false
+        },
+        {
+          "name": "Elixir",
+          "vtraceLanguages": [
+            "elixir"
+          ],
+          "covered": [
+            "elixir"
+          ],
+          "fully": true,
+          "partially": false
+        },
+        {
+          "name": "Haskell",
+          "vtraceLanguages": [
+            "haskell"
+          ],
+          "covered": [
+            "haskell"
+          ],
+          "fully": true,
+          "partially": false
+        },
+        {
+          "name": "OCaml",
+          "vtraceLanguages": [
+            "ocaml"
+          ],
+          "covered": [
+            "ocaml"
+          ],
+          "fully": true,
+          "partially": false
+        },
+        {
+          "name": "Lua",
+          "vtraceLanguages": [
+            "lua"
+          ],
+          "covered": [
+            "lua"
+          ],
+          "fully": true,
+          "partially": false
+        },
+        {
+          "name": "R",
+          "vtraceLanguages": [
+            "r"
+          ],
+          "covered": [
+            "r"
+          ],
+          "fully": true,
+          "partially": false
+        },
+        {
+          "name": "PHP",
+          "vtraceLanguages": [
+            "php"
+          ],
+          "covered": [
+            "php"
+          ],
+          "fully": true,
+          "partially": false
+        },
+        {
+          "name": "Zig",
+          "vtraceLanguages": [
+            "zig"
+          ],
+          "covered": [
+            "zig"
+          ],
+          "fully": true,
+          "partially": false
+        },
+        {
+          "name": "HCL/Terraform",
+          "vtraceLanguages": [
+            "hcl"
+          ],
+          "covered": [],
+          "fully": false,
+          "partially": false
+        },
+        {
+          "name": "Objective-C",
+          "vtraceLanguages": [
+            "objective_c"
+          ],
+          "covered": [
+            "objective_c"
+          ],
+          "fully": true,
+          "partially": false
+        },
+        {
+          "name": "Bash/Shell",
+          "vtraceLanguages": [
+            "bash"
+          ],
+          "covered": [
+            "bash"
+          ],
+          "fully": true,
+          "partially": false
+        },
+        {
+          "name": "Dockerfile",
+          "vtraceLanguages": [
+            "dockerfile"
+          ],
+          "covered": [],
+          "fully": false,
+          "partially": false
+        },
+        {
+          "name": "Clojure",
+          "vtraceLanguages": [
+            "clojure"
+          ],
+          "covered": [
+            "clojure"
+          ],
+          "fully": true,
+          "partially": false
+        },
+        {
+          "name": "F#",
+          "vtraceLanguages": [
+            "fsharp"
+          ],
+          "covered": [],
+          "fully": false,
+          "partially": false
+        },
+        {
+          "name": "SQL",
+          "vtraceLanguages": [
+            "sql"
+          ],
+          "covered": [
+            "sql"
+          ],
+          "fully": true,
+          "partially": false
+        },
+        {
+          "name": "HTML/CSS",
+          "vtraceLanguages": [
+            "html",
+            "css"
+          ],
+          "covered": [
+            "html",
+            "css"
+          ],
+          "fully": true,
+          "partially": false
+        },
+        {
+          "name": "YAML/JSON",
+          "vtraceLanguages": [
+            "yaml",
+            "json"
+          ],
+          "covered": [
+            "yaml",
+            "json"
+          ],
+          "fully": true,
+          "partially": false
+        }
+      ]
+    },
+    "registeredOutsideVexpList": [
+      "cython"
+    ],
+    "vexpTechnologyTally": {
+      "UNKNOWN": 26,
+      "TREE_SITTER_STRUCTURAL": 4
+    }
+  },
+  "dependencies": {
+    "grammarPackages": 28,
+    "prebuilt": 25,
+    "compiledAtInstall": 3,
+    "unpackedBytes": 855301484,
+    "unpackedMiB": 815.7,
+    "allPinnedExactly": true,
+    "allAbiCompatible": true,
+    "allArtifactsAvailable": true,
+    "licenses": {
+      "MIT": 26,
+      "Apache-2.0": 1,
+      "CC0-1.0": 1
+    },
+    "core": {
+      "module": "tree-sitter",
+      "version": "0.21.1",
+      "languageVersion": 14,
+      "minCompatibleLanguageVersion": 13
+    },
+    "blocked": [
+      {
+        "vexpRow": "F#",
+        "reason": "tree-sitter-fsharp publishes ABI 15 only (0.3.5-0.3.11); core 0.21.1 loads ABI 13-14"
+      },
+      {
+        "vexpRow": "HCL/Terraform",
+        "reason": "@tree-sitter-grammars/tree-sitter-hcl 1.2.0 is ABI 15; no ABI-14 npm release"
+      },
+      {
+        "vexpRow": "Dockerfile",
+        "reason": "no Dockerfile grammar is published on npm (tree-sitter-dockerfile is a security placeholder)"
+      }
+    ]
+  },
+  "familyHealth": {
+    "verdict": "M202_FAMILY_HEALTH_PASS",
+    "healthy": 27,
+    "unhealthy": [],
+    "controls": [
+      {
+        "id": "F1",
+        "statement": "a family with a name and extensions but no functional parser must not count",
+        "pass": true,
+        "detail": "toml: detected, parser=none, registered=false"
+      },
+      {
+        "id": "F2",
+        "statement": "N extensions for one family must add one family, not N",
+        "pass": true,
+        "detail": "6 C++ extensions → 1 family; frozen count 30"
+      },
+      {
+        "id": "F3",
+        "statement": "a registered parser failing its fixture contract must fail family acceptance",
+        "pass": true,
+        "detail": "go with fixtureParsed=false → accepted=false"
+      },
+      {
+        "id": "F4",
+        "statement": "an identity (UTF-16 as bytes) conversion must fail the excerpt gate",
+        "pass": true,
+        "detail": "converted slice starts with 'func': true; unconverted: false"
+      },
+      {
+        "id": "F5",
+        "statement": "malformed fixtures must not yield invented declarations",
+        "pass": true,
+        "detail": "invented=0, untruthful families=none"
+      },
+      {
+        "id": "F6",
+        "statement": "a perturbed symbol order must fail normalised-output equality",
+        "pass": true,
+        "detail": "baseline 90f17c3551d4 vs reversed ba42fbf621f9"
+      },
+      {
+        "id": "F7",
+        "statement": "a family absent from the production registry must not be described as registered",
+        "pass": true,
+        "detail": "detached registry: registered=[go], frozen count 1"
+      },
+      {
+        "id": "F8",
+        "statement": "a recognised extension with no parser invocation must not count as parser-backed",
+        "pass": true,
+        "detail": "toml recognised, registered=false, empty-registry count=0"
+      },
+      {
+        "id": "F9",
+        "statement": "every counted family's fixture must detect and parse as that family",
+        "pass": true,
+        "detail": "all routed correctly"
+      },
+      {
+        "id": "F10",
+        "statement": "TypeScript/Python/Cython must never route to the generic weaker parser",
+        "pass": true,
+        "detail": "generic parse of .ts refused=true; deep TS parser produced 1 symbols"
+      },
+      {
+        "id": "F11",
+        "statement": "eager initialisation of every grammar must cost measurably more than lazy registry creation (the A2 protection gate can fail)",
+        "pass": true,
+        "detail": "fresh process: lazy registry 1.13 ms vs eager all-grammar dlopen 13.6 ms"
+      },
+      {
+        "id": "F12",
+        "statement": "a hard-coded family count must not be accepted without registry evidence",
+        "pass": true,
+        "detail": "empty registry → 0; production registry → 30 (hard-coded 30 would only agree because the registry does)"
+      }
+    ],
+    "countAuthorityAgrees": true
+  },
+  "mixedCorpus": {
+    "verdict": "M202_MIXED_CORPUS_PASS",
+    "familiesExpected": 31,
+    "familiesDiscovered": 31,
+    "grammarsInvoked": 25,
+    "missing": [],
+    "leaked": [],
+    "duplicates": [],
+    "deterministic": true,
+    "incremental": [
+      {
+        "step": "noop",
+        "mode": "noop",
+        "fallbackReason": null,
+        "parsedFiles": 0,
+        "parseCacheHits": 0,
+        "filesIndexed": 31,
+        "incrementalEqualsClean": true
+      },
+      {
+        "step": "modify",
+        "mode": "full_rebuild",
+        "fallbackReason": "closure_uncertain",
+        "parsedFiles": 31,
+        "parseCacheHits": 0,
+        "filesIndexed": 31,
+        "incrementalEqualsClean": true
+      },
+      {
+        "step": "add",
+        "mode": "full_rebuild",
+        "fallbackReason": "closure_uncertain",
+        "parsedFiles": 32,
+        "parseCacheHits": 0,
+        "filesIndexed": 32,
+        "incrementalEqualsClean": true
+      },
+      {
+        "step": "delete",
+        "mode": "full_rebuild",
+        "fallbackReason": "closure_uncertain",
+        "parsedFiles": 31,
+        "parseCacheHits": 0,
+        "filesIndexed": 31,
+        "incrementalEqualsClean": true
+      },
+      {
+        "step": "rename",
+        "mode": "full_rebuild",
+        "fallbackReason": "closure_uncertain",
+        "parsedFiles": 31,
+        "parseCacheHits": 0,
+        "filesIndexed": 31,
+        "incrementalEqualsClean": true
+      }
+    ]
+  },
+  "performance": {
+    "registryCreationMs": 1.2,
+    "lazy": true,
+    "firstParseMedianMs": 5.2,
+    "firstParseMaxMs": 8.48,
+    "secondParseMedianMs": 0.69,
+    "rssRegistryOnlyMiB": 66.6,
+    "rssAllGrammarsMiB": 142,
+    "mixedCorpusFilesPerSecond": 1183.6,
+    "coldIndexing": [
+      {
+        "corpus": "C-SMALL",
+        "m201FilesPerSecond": 235.02,
+        "m202FilesPerSecond": 242.11
+      },
+      {
+        "corpus": "C-MED",
+        "m201FilesPerSecond": 65.02,
+        "m202FilesPerSecond": 62.5
+      },
+      {
+        "corpus": "C-LARGE",
+        "m201FilesPerSecond": 33.14,
+        "m202FilesPerSecond": 33.39
+      }
+    ],
+    "loadAverage": {
+      "m201Engine": [
+        1.68,
+        1.71,
+        1.93
+      ],
+      "m202Engine": [
+        7.31,
+        7.64,
+        5.55
+      ],
+      "m202Indexing": [
+        8.06,
+        7.64,
+        5.19
+      ]
+    }
+  },
+  "frozenQueryOutputs": {
+    "instrument": "run_stage5_m201_a5.ts base vs m202_post on the M201 immutable snapshot",
+    "compared": 15,
+    "semanticEqual": 15,
+    "byteEqual": 15,
+    "differences": [],
+    "verdict": "M201_OUTPUT_EQUIVALENT",
+    "corpora": [
+      {
+        "id": "C-SMALL",
+        "corpusIdentical": true,
+        "compared": 5,
+        "semanticEqual": 5,
+        "byteEqual": 5,
+        "tokenEqual": 5,
+        "selectionEqual": 5,
+        "boundednessEqual": 5,
+        "p90Before": 44.34,
+        "p90After": 45.46,
+        "medianBefore": 37.79,
+        "medianAfter": 39.67
+      },
+      {
+        "id": "C-MED",
+        "corpusIdentical": true,
+        "compared": 5,
+        "semanticEqual": 5,
+        "byteEqual": 5,
+        "tokenEqual": 5,
+        "selectionEqual": 5,
+        "boundednessEqual": 5,
+        "p90Before": 194,
+        "p90After": 207.58,
+        "medianBefore": 152.61,
+        "medianAfter": 157.86
+      },
+      {
+        "id": "C-LARGE",
+        "corpusIdentical": true,
+        "compared": 5,
+        "semanticEqual": 5,
+        "byteEqual": 5,
+        "tokenEqual": 5,
+        "selectionEqual": 5,
+        "boundednessEqual": 5,
+        "p90Before": 336.05,
+        "p90After": 349.78,
+        "medianBefore": 317.21,
+        "medianAfter": 330.34
+      }
+    ]
+  },
+  "retrievalNoChangeProof": {
+    "protocol": "run_stage5_m134_prepare_targets.ts per side + run_stage5_m134_paired_comparison.ts (predecessor a52b1906 worktree vs candidate HEAD)",
+    "expanded": {
+      "pass": false,
+      "provenanceValid": null,
+      "changedCases": 2,
+      "changed": [
+        {
+          "instanceId": "django__django-11728",
+          "fields": [
+            "roles",
+            "contentModes",
+            "modelVisibleContext",
+            "tokenAccounting"
+          ],
+          "predecessorLead": "django/contrib/admindocs/utils.py",
+          "candidateLead": "django/contrib/admindocs/utils.py",
+          "predecessorSelectedFiles": [
+            "django/contrib/admindocs/utils.py",
+            "django/utils/regex_helper.py",
+            "django/contrib/admindocs/views.py"
+          ],
+          "candidateSelectedFiles": [
+            "django/contrib/admindocs/utils.py",
+            "django/utils/regex_helper.py",
+            "django/contrib/admindocs/views.py"
+          ],
+          "predecessorGoldVisible": true,
+          "candidateGoldVisible": true
+        },
+        {
+          "instanceId": "django__django-12325",
+          "fields": [
+            "selectedFiles",
+            "roles",
+            "contentModes",
+            "modelVisibleContext",
+            "tokenAccounting"
+          ],
+          "predecessorLead": "db/models/sql/query.py",
+          "candidateLead": "db/models/sql/query.py",
+          "predecessorSelectedFiles": [
+            "db/models/sql/query.py",
+            "db/models/options.py",
+            "db/backends/sqlite3/schema.py",
+            "conf/__init__.py",
+            "db/models/sql/compiler.py",
+            "db/migrations/operations/base.py"
+          ],
+          "candidateSelectedFiles": [
+            "db/models/sql/query.py",
+            "db/models/options.py",
+            "db/backends/sqlite3/schema.py",
+            "db/models/sql/compiler.py",
+            "conf/__init__.py",
+            "db/migrations/operations/base.py"
+          ],
+          "predecessorGoldVisible": true,
+          "candidateGoldVisible": true
+        }
+      ],
+      "summary": null
+    },
+    "crossRepo30": {
+      "pass": false,
+      "provenanceValid": null,
+      "changedCases": 3,
+      "changed": [
+        {
+          "instanceId": "matplotlib__matplotlib-22719",
+          "fields": [
+            "selectedFiles",
+            "lead",
+            "roles",
+            "contentModes",
+            "modelVisibleContext",
+            "tokenAccounting",
+            "qualityMetrics"
+          ],
+          "predecessorLead": "lib/matplotlib/units.py",
+          "candidateLead": "lib/matplotlib/_type1font.py",
+          "predecessorSelectedFiles": [
+            "lib/matplotlib/units.py",
+            "lib/matplotlib/_api/deprecation.py",
+            "lib/matplotlib/category.py",
+            "lib/matplotlib/_type1font.py",
+            "lib/matplotlib/axis.py",
+            "lib/matplotlib/axes/_axes.py"
+          ],
+          "candidateSelectedFiles": [
+            "lib/matplotlib/_type1font.py",
+            "lib/matplotlib/category.py",
+            "lib/matplotlib/units.py",
+            "src/array.h",
+            "lib/matplotlib/_api/deprecation.py"
+          ],
+          "predecessorGoldVisible": true,
+          "candidateGoldVisible": true
+        },
+        {
+          "instanceId": "matplotlib__matplotlib-24970",
+          "fields": [
+            "selectedFiles",
+            "lead",
+            "roles",
+            "contentModes",
+            "modelVisibleContext",
+            "tokenAccounting"
+          ],
+          "predecessorLead": "lib/matplotlib/_api/deprecation.py",
+          "candidateLead": "src/numpy_cpp.h",
+          "predecessorSelectedFiles": [
+            "lib/matplotlib/_api/deprecation.py"
+          ],
+          "candidateSelectedFiles": [
+            "src/numpy_cpp.h",
+            "lib/matplotlib/_api/deprecation.py"
+          ],
+          "predecessorGoldVisible": false,
+          "candidateGoldVisible": false
+        },
+        {
+          "instanceId": "sphinx-doc__sphinx-9230",
+          "fields": [
+            "selectedFiles",
+            "lead",
+            "roles",
+            "contentModes",
+            "modelVisibleContext",
+            "tokenAccounting"
+          ],
+          "predecessorLead": "sphinx/pycode/ast.py",
+          "candidateLead": "sphinx/builders/__init__.py",
+          "predecessorSelectedFiles": [
+            "sphinx/pycode/ast.py",
+            "sphinx/util/__init__.py",
+            "sphinx/util/jsdump.py",
+            "sphinx/builders/__init__.py",
+            "sphinx/deprecation.py",
+            "doc/usage/extensions/example_google.py"
+          ],
+          "candidateSelectedFiles": [
+            "sphinx/builders/__init__.py",
+            "sphinx/domains/cpp.py",
+            "sphinx/util/__init__.py",
+            "sphinx/util/cfamily.py",
+            "doc/usage/extensions/example_google.py",
+            "doc/usage/extensions/example_numpy.py"
+          ],
+          "predecessorGoldVisible": false,
+          "candidateGoldVisible": false
+        }
+      ],
+      "summary": null
+    }
+  },
+  "capabilityMatrix": [
+    {
+      "family": "TypeScript",
+      "language": "typescript",
+      "tier": "DEEP_GRAPH",
+      "counted": "yes",
+      "symbols": "yes",
+      "members": "yes",
+      "imports": "yes",
+      "calls": "partial",
+      "refs": "partial",
+      "documents": "no",
+      "incremental": "yes",
+      "exported": "yes"
+    },
+    {
+      "family": "Python",
+      "language": "python",
+      "tier": "DEEP_GRAPH",
+      "counted": "yes",
+      "symbols": "yes",
+      "members": "yes",
+      "imports": "yes",
+      "calls": "yes",
+      "refs": "yes",
+      "documents": "no",
+      "incremental": "yes",
+      "exported": "yes"
+    },
+    {
+      "family": "Cython",
+      "language": "cython",
+      "tier": "DEEP_GRAPH",
+      "counted": "yes",
+      "symbols": "yes",
+      "members": "yes",
+      "imports": "yes",
+      "calls": "partial",
+      "refs": "partial",
+      "documents": "no",
+      "incremental": "yes",
+      "exported": "yes"
+    },
+    {
+      "family": "JavaScript",
+      "language": "javascript",
+      "tier": "STRUCTURAL",
+      "counted": "yes",
+      "symbols": "yes",
+      "members": "yes",
+      "imports": "no",
+      "calls": "no",
+      "refs": "no",
+      "documents": "no",
+      "incremental": "partial (full rebuild, closure_uncertain)",
+      "exported": "partial"
+    },
+    {
+      "family": "Go",
+      "language": "go",
+      "tier": "STRUCTURAL",
+      "counted": "yes",
+      "symbols": "yes",
+      "members": "yes",
+      "imports": "no",
+      "calls": "no",
+      "refs": "no",
+      "documents": "no",
+      "incremental": "partial (full rebuild, closure_uncertain)",
+      "exported": "partial"
+    },
+    {
+      "family": "Rust",
+      "language": "rust",
+      "tier": "STRUCTURAL",
+      "counted": "yes",
+      "symbols": "yes",
+      "members": "yes",
+      "imports": "no",
+      "calls": "no",
+      "refs": "no",
+      "documents": "no",
+      "incremental": "partial (full rebuild, closure_uncertain)",
+      "exported": "partial"
+    },
+    {
+      "family": "Java",
+      "language": "java",
+      "tier": "STRUCTURAL",
+      "counted": "yes",
+      "symbols": "yes",
+      "members": "yes",
+      "imports": "no",
+      "calls": "no",
+      "refs": "no",
+      "documents": "no",
+      "incremental": "partial (full rebuild, closure_uncertain)",
+      "exported": "partial"
+    },
+    {
+      "family": "C#",
+      "language": "csharp",
+      "tier": "STRUCTURAL",
+      "counted": "yes",
+      "symbols": "yes",
+      "members": "yes",
+      "imports": "no",
+      "calls": "no",
+      "refs": "no",
+      "documents": "no",
+      "incremental": "partial (full rebuild, closure_uncertain)",
+      "exported": "partial"
+    },
+    {
+      "family": "C",
+      "language": "c",
+      "tier": "STRUCTURAL",
+      "counted": "yes",
+      "symbols": "yes",
+      "members": "no",
+      "imports": "no",
+      "calls": "no",
+      "refs": "no",
+      "documents": "no",
+      "incremental": "partial (full rebuild, closure_uncertain)",
+      "exported": "no (false)"
+    },
+    {
+      "family": "C++",
+      "language": "cpp",
+      "tier": "STRUCTURAL",
+      "counted": "yes",
+      "symbols": "yes",
+      "members": "yes",
+      "imports": "no",
+      "calls": "no",
+      "refs": "no",
+      "documents": "no",
+      "incremental": "partial (full rebuild, closure_uncertain)",
+      "exported": "no (false)"
+    },
+    {
+      "family": "Ruby",
+      "language": "ruby",
+      "tier": "STRUCTURAL",
+      "counted": "yes",
+      "symbols": "yes",
+      "members": "yes",
+      "imports": "no",
+      "calls": "no",
+      "refs": "no",
+      "documents": "no",
+      "incremental": "partial (full rebuild, closure_uncertain)",
+      "exported": "no (false)"
+    },
+    {
+      "family": "Kotlin",
+      "language": "kotlin",
+      "tier": "STRUCTURAL",
+      "counted": "yes",
+      "symbols": "yes",
+      "members": "yes",
+      "imports": "no",
+      "calls": "no",
+      "refs": "no",
+      "documents": "no",
+      "incremental": "partial (full rebuild, closure_uncertain)",
+      "exported": "no (false)"
+    },
+    {
+      "family": "Scala",
+      "language": "scala",
+      "tier": "STRUCTURAL",
+      "counted": "yes",
+      "symbols": "yes",
+      "members": "yes",
+      "imports": "no",
+      "calls": "no",
+      "refs": "no",
+      "documents": "no",
+      "incremental": "partial (full rebuild, closure_uncertain)",
+      "exported": "no (false)"
+    },
+    {
+      "family": "Swift",
+      "language": "swift",
+      "tier": "STRUCTURAL",
+      "counted": "yes",
+      "symbols": "yes",
+      "members": "yes",
+      "imports": "no",
+      "calls": "no",
+      "refs": "no",
+      "documents": "no",
+      "incremental": "partial (full rebuild, closure_uncertain)",
+      "exported": "no (false)"
+    },
+    {
+      "family": "Dart",
+      "language": "dart",
+      "tier": "STRUCTURAL",
+      "counted": "yes",
+      "symbols": "yes",
+      "members": "yes",
+      "imports": "no",
+      "calls": "no",
+      "refs": "no",
+      "documents": "no",
+      "incremental": "partial (full rebuild, closure_uncertain)",
+      "exported": "no (false)"
+    },
+    {
+      "family": "Elixir",
+      "language": "elixir",
+      "tier": "STRUCTURAL",
+      "counted": "yes",
+      "symbols": "yes",
+      "members": "no",
+      "imports": "no",
+      "calls": "no",
+      "refs": "no",
+      "documents": "no",
+      "incremental": "partial (full rebuild, closure_uncertain)",
+      "exported": "no (false)"
+    },
+    {
+      "family": "Haskell",
+      "language": "haskell",
+      "tier": "STRUCTURAL",
+      "counted": "yes",
+      "symbols": "yes",
+      "members": "no",
+      "imports": "no",
+      "calls": "no",
+      "refs": "no",
+      "documents": "no",
+      "incremental": "partial (full rebuild, closure_uncertain)",
+      "exported": "no (false)"
+    },
+    {
+      "family": "OCaml",
+      "language": "ocaml",
+      "tier": "STRUCTURAL",
+      "counted": "yes",
+      "symbols": "yes",
+      "members": "yes",
+      "imports": "no",
+      "calls": "no",
+      "refs": "no",
+      "documents": "no",
+      "incremental": "partial (full rebuild, closure_uncertain)",
+      "exported": "no (false)"
+    },
+    {
+      "family": "Lua",
+      "language": "lua",
+      "tier": "STRUCTURAL",
+      "counted": "yes",
+      "symbols": "yes",
+      "members": "yes",
+      "imports": "no",
+      "calls": "no",
+      "refs": "no",
+      "documents": "no",
+      "incremental": "partial (full rebuild, closure_uncertain)",
+      "exported": "no (false)"
+    },
+    {
+      "family": "R",
+      "language": "r",
+      "tier": "STRUCTURAL",
+      "counted": "yes",
+      "symbols": "yes",
+      "members": "no",
+      "imports": "no",
+      "calls": "no",
+      "refs": "no",
+      "documents": "no",
+      "incremental": "partial (full rebuild, closure_uncertain)",
+      "exported": "no (false)"
+    },
+    {
+      "family": "PHP",
+      "language": "php",
+      "tier": "STRUCTURAL",
+      "counted": "yes",
+      "symbols": "yes",
+      "members": "yes",
+      "imports": "no",
+      "calls": "no",
+      "refs": "no",
+      "documents": "no",
+      "incremental": "partial (full rebuild, closure_uncertain)",
+      "exported": "partial"
+    },
+    {
+      "family": "Zig",
+      "language": "zig",
+      "tier": "STRUCTURAL",
+      "counted": "yes",
+      "symbols": "yes",
+      "members": "yes",
+      "imports": "no",
+      "calls": "no",
+      "refs": "no",
+      "documents": "no",
+      "incremental": "partial (full rebuild, closure_uncertain)",
+      "exported": "partial"
+    },
+    {
+      "family": "Objective-C",
+      "language": "objective_c",
+      "tier": "STRUCTURAL",
+      "counted": "yes",
+      "symbols": "yes",
+      "members": "yes",
+      "imports": "no",
+      "calls": "no",
+      "refs": "no",
+      "documents": "no",
+      "incremental": "partial (full rebuild, closure_uncertain)",
+      "exported": "no (false)"
+    },
+    {
+      "family": "Bash/Shell",
+      "language": "bash",
+      "tier": "STRUCTURAL",
+      "counted": "yes",
+      "symbols": "yes",
+      "members": "no",
+      "imports": "no",
+      "calls": "no",
+      "refs": "no",
+      "documents": "no",
+      "incremental": "partial (full rebuild, closure_uncertain)",
+      "exported": "no (false)"
+    },
+    {
+      "family": "SQL",
+      "language": "sql",
+      "tier": "STRUCTURAL",
+      "counted": "yes",
+      "symbols": "yes",
+      "members": "no",
+      "imports": "no",
+      "calls": "no",
+      "refs": "no",
+      "documents": "no",
+      "incremental": "partial (full rebuild, closure_uncertain)",
+      "exported": "no (false)"
+    },
+    {
+      "family": "Clojure",
+      "language": "clojure",
+      "tier": "STRUCTURAL",
+      "counted": "yes",
+      "symbols": "yes",
+      "members": "no",
+      "imports": "no",
+      "calls": "no",
+      "refs": "no",
+      "documents": "no",
+      "incremental": "partial (full rebuild, closure_uncertain)",
+      "exported": "no (false)"
+    },
+    {
+      "family": "HTML",
+      "language": "html",
+      "tier": "PARSED_NO_STRUCTURE",
+      "counted": "yes",
+      "symbols": "no",
+      "members": "no",
+      "imports": "no",
+      "calls": "no",
+      "refs": "no",
+      "documents": "no",
+      "incremental": "partial (full rebuild, closure_uncertain)",
+      "exported": "no (false)"
+    },
+    {
+      "family": "CSS",
+      "language": "css",
+      "tier": "PARSED_NO_STRUCTURE",
+      "counted": "yes",
+      "symbols": "no",
+      "members": "no",
+      "imports": "no",
+      "calls": "no",
+      "refs": "no",
+      "documents": "no",
+      "incremental": "partial (full rebuild, closure_uncertain)",
+      "exported": "no (false)"
+    },
+    {
+      "family": "JSON",
+      "language": "json",
+      "tier": "PARSED_NO_STRUCTURE",
+      "counted": "yes",
+      "symbols": "no",
+      "members": "no",
+      "imports": "no",
+      "calls": "no",
+      "refs": "no",
+      "documents": "no",
+      "incremental": "partial (full rebuild, closure_uncertain)",
+      "exported": "no (false)"
+    },
+    {
+      "family": "YAML",
+      "language": "yaml",
+      "tier": "DOCUMENT",
+      "counted": "yes",
+      "symbols": "no",
+      "members": "no",
+      "imports": "no",
+      "calls": "no",
+      "refs": "no",
+      "documents": "yes",
+      "incremental": "partial (full rebuild, closure_uncertain)",
+      "exported": "no (false)"
+    },
+    {
+      "family": "TOML",
+      "language": "toml",
+      "tier": "DOCUMENT",
+      "counted": "no",
+      "symbols": "no",
+      "members": "no",
+      "imports": "no",
+      "calls": "no",
+      "refs": "no",
+      "documents": "yes",
+      "incremental": "yes (document path)",
+      "exported": "no (false)"
+    }
+  ],
+  "protectedClaims": [
+    {
+      "id": "A2",
+      "m201": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "m202": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "regressed": false,
+      "m201Measurement": "C-MED 65.02 files/s, C-LARGE 33.14 files/s (median of 3 cold builds)",
+      "m202Measurement": "C-MED 62.5 files/s, C-LARGE 33.39 files/s (median of 3 cold builds)"
+    },
+    {
+      "id": "A3",
+      "m201": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m202": "VTRACE_MATCHES_VEXP_CLAIM",
+      "regressed": false,
+      "m201Measurement": "C-LARGE k=1 ratio 0.054, k=3 ratio 0.141; reparsed 346 of the 346 files the indexer holds for a ONE-file change (the eligible .py denominator is 276; the indexer also enumerates .pyx/.pxd/.yml/.toml)",
+      "m202Measurement": "C-LARGE k=1 ratio 0.058, k=3 ratio 0.135; reparsed 372 of the 372 files the indexer holds for a ONE-file change (the eligible .py denominator is 276; the indexer also enumerates .pyx/.pxd/.yml/.toml)"
+    },
+    {
+      "id": "A4",
+      "m201": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "m202": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "regressed": false,
+      "m201Measurement": "no-op median 0.005 / 0.092 / 0.145 s (C-SMALL / C-MED / C-LARGE), 0 files reparsed",
+      "m202Measurement": "no-op median 0.006 / 0.075 / 0.160 s (C-SMALL / C-MED / C-LARGE), 0 files reparsed"
+    },
+    {
+      "id": "A5",
+      "m201": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m202": "VTRACE_MATCHES_VEXP_CLAIM",
+      "regressed": false,
+      "m201Measurement": "get_code_context warm p90 41.49 / 197.62 / 336.53 ms (C-SMALL / C-MED / C-LARGE), 5 repetitions; best observed 32.49 / 140.66 / 286.21 ms",
+      "m202Measurement": "get_code_context warm p90 53.48 / 207.01 / 350.56 ms (C-SMALL / C-MED / C-LARGE), 5 repetitions; best observed 34.21 / 147.41 / 297.09 ms"
+    },
+    {
+      "id": "A6",
+      "m201": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "m202": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "regressed": false,
+      "m201Measurement": "get_impact_graph depth 3 warm p90 149.23 ms on C-LARGE (10 exact-FQN targets x 5)",
+      "m202Measurement": "get_impact_graph depth 3 warm p90 155.93 ms on C-LARGE (10 exact-FQN targets x 5)"
+    },
+    {
+      "id": "A7",
+      "m201": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "m202": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "regressed": false,
+      "m201Measurement": "search_logic_flow warm p90 16.39 ms on C-LARGE; path edge counts {\"1\":10}",
+      "m202Measurement": "search_logic_flow warm p90 16.76 ms on C-LARGE; path edge counts {\"1\":10}"
+    },
+    {
+      "id": "A8",
+      "m201": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "m202": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "regressed": false,
+      "m201Measurement": "C-SMALL 100%, C-MED 100%, C-LARGE 100%; unexplained missing 0/0/0",
+      "m202Measurement": "C-SMALL 100%, C-MED 100%, C-LARGE 100%; unexplained missing 0/0/0"
+    },
+    {
+      "id": "A9",
+      "m201": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m202": "VTRACE_MATCHES_VEXP_CLAIM",
+      "regressed": false,
+      "m201Measurement": "median rendered reduction C-MED 92.67%, C-LARGE 87.21% over 437 + 250 structurally valid files; 22 C-MED files excluded as malformed (F4)",
+      "m202Measurement": "median rendered reduction C-MED 92.76%, C-LARGE 87.21% over 445 + 250 structurally valid files; 22 C-MED files excluded as malformed (F4)"
+    },
+    {
+      "id": "A10",
+      "m201": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m202": "VTRACE_MATCHES_VEXP_CLAIM",
+      "regressed": false,
+      "m201Measurement": "signature retention C-MED 99.47%, C-LARGE 100% (verbatim, token-aligned, bracket-closed slices of source); member retention C-MED 100%, C-LARGE 94.82%. Signature-PRESENCE alone would read 100% / 100%",
+      "m202Measurement": "signature retention C-MED 99.48%, C-LARGE 100% (verbatim, token-aligned, bracket-closed slices of source); member retention C-MED 100%, C-LARGE 94.82%. Signature-PRESENCE alone would read 100% / 100%"
+    }
+  ],
+  "matrix": [
+    {
+      "id": "A1",
+      "m201": "VTRACE_BELOW_VEXP_CLAIM",
+      "m202": "VTRACE_MATCHES_VEXP_CLAIM",
+      "moved": true,
+      "cause": "M202 product change (27 families registered)"
+    },
+    {
+      "id": "A2",
+      "m201": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "m202": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "moved": false,
+      "cause": ""
+    },
+    {
+      "id": "A3",
+      "m201": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m202": "VTRACE_MATCHES_VEXP_CLAIM",
+      "moved": false,
+      "cause": ""
+    },
+    {
+      "id": "A4",
+      "m201": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "m202": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "moved": false,
+      "cause": ""
+    },
+    {
+      "id": "A5",
+      "m201": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m202": "VTRACE_MATCHES_VEXP_CLAIM",
+      "moved": false,
+      "cause": ""
+    },
+    {
+      "id": "A6",
+      "m201": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "m202": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "moved": false,
+      "cause": ""
+    },
+    {
+      "id": "A7",
+      "m201": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "m202": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "moved": false,
+      "cause": ""
+    },
+    {
+      "id": "A8",
+      "m201": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "m202": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "moved": false,
+      "cause": ""
+    },
+    {
+      "id": "A9",
+      "m201": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m202": "VTRACE_MATCHES_VEXP_CLAIM",
+      "moved": false,
+      "cause": ""
+    },
+    {
+      "id": "A10",
+      "m201": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m202": "VTRACE_MATCHES_VEXP_CLAIM",
+      "moved": false,
+      "cause": ""
+    },
+    {
+      "id": "A11",
+      "m201": "VTRACE_BELOW_VEXP_CLAIM",
+      "m202": "VTRACE_BELOW_VEXP_CLAIM",
+      "moved": false,
+      "cause": ""
+    },
+    {
+      "id": "A12",
+      "m201": "VTRACE_BELOW_VEXP_CLAIM",
+      "m202": "VTRACE_BELOW_VEXP_CLAIM",
+      "moved": false,
+      "cause": ""
+    },
+    {
+      "id": "A13",
+      "m201": "VTRACE_BELOW_VEXP_CLAIM",
+      "m202": "VTRACE_BELOW_VEXP_CLAIM",
+      "moved": false,
+      "cause": ""
+    },
+    {
+      "id": "A14",
+      "m201": "VTRACE_BELOW_VEXP_CLAIM",
+      "m202": "VTRACE_BELOW_VEXP_CLAIM",
+      "moved": false,
+      "cause": ""
+    },
+    {
+      "id": "A15",
+      "m201": "VTRACE_BELOW_VEXP_CLAIM",
+      "m202": "VTRACE_BELOW_VEXP_CLAIM",
+      "moved": false,
+      "cause": ""
+    }
+  ],
+  "parity": {
+    "m201MatchOrExceed": 9,
+    "m202MatchOrExceed": 10,
+    "of": 15,
+    "target": 15,
+    "regressions": [],
+    "moved": [
+      {
+        "id": "A1",
+        "from": "VTRACE_BELOW_VEXP_CLAIM",
+        "to": "VTRACE_MATCHES_VEXP_CLAIM",
+        "cause": "M202 product change (27 families registered)"
+      }
+    ],
+    "frozenAggregate": {
+      "claimsScored": 15,
+      "matchOrExceed": 10,
+      "match": 5,
+      "exceed": 5,
+      "below": 5,
+      "notComparable": 0,
+      "insufficientMethod": 0,
+      "a8VetoSatisfied": true,
+      "a8MinimumCoveragePercent": 100,
+      "thresholdMet": true,
+      "verdict": "VTRACE_VEXP_ENGINE_PARITY_THRESHOLD_MET",
+      "structuralViolations": []
+    },
+    "frozenAggregateVerdict": "VTRACE_VEXP_ENGINE_PARITY_THRESHOLD_MET"
+  },
+  "stillBelow": [
+    "A11",
+    "A12",
+    "A13",
+    "A14",
+    "A15"
+  ],
+  "productUtilityBoundary": [
+    "ENGINE QUALITY != CODING-AGENT UTILITY",
+    "NO_CONTEXT_COMPILER_PRODUCT_RESTRUCTURE_AUTHORIZED",
+    "NO_VALIDATION_SCAFFOLD_IMPLEMENTATION_AUTHORIZED",
+    "NO_RUNTIME_REPAIR_INTERVENTION_AUTHORIZED",
+    "I5_REMAINS_CLOSED",
+    "I6_VALIDATION_SELECTION_REMAINS_CLOSED"
+  ],
+  "liveAgentRuns": 0,
+  "liveModelSpendUsd": 0
+}

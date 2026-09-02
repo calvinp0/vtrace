@@ -132,7 +132,14 @@ function gitHead(root: string): string {
 const CORPORA = [
   { id: "C-SMALL", source: "/home/calvin/code/vexp-swe-bench/src", exts: [".ts", ".tsx"], expected: 21,
     revisionOf: "/home/calvin/code/vexp-swe-bench", expectedRevisionPrefix: "d658e345" },
-  { id: "C-MED", source: path.join(REPO, "src"), exts: [".ts", ".tsx"], expected: 492,
+  // C-MED is this repository's own src/. Its identity count was frozen at 492
+  // by M197A and held through M198-M201 because none of them ADDED a source
+  // file. M202 added eight (six parser-family modules and two test files), so
+  // the corpus that is the product grew with the product; the count is
+  // re-frozen at 500 on 2026-09-02. Nothing else moves: the source path, the
+  // extensions, every threshold and every scorer are the M197A ones, and the
+  // pre-change replay at 492 is kept as stage5_m202_authority.json.
+  { id: "C-MED", source: path.join(REPO, "src"), exts: [".ts", ".tsx"], expected: 500,
     revisionOf: REPO, expectedRevisionPrefix: null },
   { id: "C-LARGE", source: "/home/calvin/code/ARC", exts: [".py"], expected: 276,
     revisionOf: "/home/calvin/code/ARC", expectedRevisionPrefix: null, excludePrefix: ".claude" },

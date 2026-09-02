@@ -804,7 +804,7 @@ test("index_repo delegates to the real indexing service and returns structured r
   });
 });
 
-test("index_repo preserves structured unsupported-file diagnostics", async () => {
+test("index_repo indexes JavaScript through the structural family and reports no unregistered skip (M202)", async () => {
   await withFixture(async (repoRoot) => {
     await writeMcpFixtureRepo(repoRoot);
     await mkdir(path.join(repoRoot, "frontend"), { recursive: true });
@@ -814,28 +814,21 @@ test("index_repo preserves structured unsupported-file diagnostics", async () =>
 
     const response = await server.handleRequest({
       schema: MCP_SERVER_SCHEMA,
-      requestId: "req-index-unsupported",
+      requestId: "req-index-javascript",
       toolId: McpToolId.IndexRepo,
       input: { mode: "incremental" },
     });
 
     assert.equal(response.result.ok, true);
-    assert.equal(response.result.output.indexSummary.totalSkippedUnregisteredLanguage, 1);
-    assert.deepEqual(
+    assert.equal(response.result.output.indexSummary.totalSkippedUnregisteredLanguage, 0);
+    // fileOutcomes lists only files that were NOT simply indexed; an indexed
+    // JavaScript file therefore has no entry, where it used to carry an
+    // unregistered_language error.
+    assert.equal(
       response.result.output.fileOutcomes.find((file) => file.path === "frontend/eslint.config.js"),
-      {
-        path: "frontend/eslint.config.js",
-        language: "javascript",
-        status: "unregistered_language",
-        diagnostics: [],
-        error: {
-          code: "unregistered_language",
-          message: "No parser registered for language: javascript",
-          filePath: "frontend/eslint.config.js",
-          language: "javascript",
-        },
-      },
+      undefined,
     );
+    assert.ok(response.result.output.indexSummary.totalFilesSuccessfullyIndexed >= 3);
   });
 });
 
@@ -4334,12 +4327,12 @@ test("get_skeleton returns real minimal, standard, and detailed structural outpu
 test("get_skeleton reports not-indexed and missing files explicitly", async () => {
   await withFixture(async (repoRoot) => {
     await writeMcpFixtureRepo(repoRoot);
+    // Fortran has no family: the file exists on disk and is never scanned.
     await writeFile(
-      path.join(repoRoot, "src", "worker.go"),
+      path.join(repoRoot, "src", "worker.f90"),
       [
-        "package main",
-        "",
-        "func main() {}",
+        "program main",
+        "end program main",
         "",
       ].join("\n"),
     );
@@ -4353,7 +4346,7 @@ test("get_skeleton reports not-indexed and missing files explicitly", async () =
       requestId: "req-get-skeleton-unsupported",
       toolId: McpToolId.GetSkeleton,
       input: {
-        files: ["src/worker.go", "src/missing.ts"],
+        files: ["src/worker.f90", "src/missing.ts"],
         detail: "standard",
       },
     });
@@ -4362,7 +4355,7 @@ test("get_skeleton reports not-indexed and missing files explicitly", async () =
     assert.deepEqual(response.result.output.files, [
       {
         status: "not_indexed",
-        filePath: "src/worker.go",
+        filePath: "src/worker.f90",
         language: null,
         message: "File exists on disk but has no indexed structural data.",
         imports: [],

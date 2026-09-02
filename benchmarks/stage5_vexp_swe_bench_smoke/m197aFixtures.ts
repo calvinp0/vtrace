@@ -34,8 +34,10 @@ export function corpusSpecs(repoRoot: string): readonly CorpusSpec[] {
   return [
     { id: "C-SMALL", source: "/home/calvin/code/vexp-swe-bench/src", language: "TypeScript",
       exts: [".ts", ".tsx"], frozenEligible: 21 },
+    // 492 at M197A; 500 since M202 added eight source files to the corpus that
+    // is the product (see run_stage5_m197a_authority.ts, corpus_C-MED).
     { id: "C-MED", source: path.join(repoRoot, "src"), language: "TypeScript",
-      exts: [".ts", ".tsx"], frozenEligible: 492 },
+      exts: [".ts", ".tsx"], frozenEligible: 500 },
     { id: "C-LARGE", source: "/home/calvin/code/ARC", language: "Python",
       exts: [".py"], frozenEligible: 276 },
   ];

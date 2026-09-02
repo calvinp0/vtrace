@@ -120,7 +120,7 @@ test("index command prints phase headers and a human-readable final summary by d
   });
 });
 
-test("index reports unsupported JavaScript as a successful path-rich skip", async () => {
+test("index parses JavaScript through the structural family instead of skipping it (M202)", async () => {
   await withFixture(async ({ repoRoot, dbPath }) => {
     await writeFixtureRepo(repoRoot);
     await mkdir(path.join(repoRoot, "frontend"), { recursive: true });
@@ -128,8 +128,8 @@ test("index reports unsupported JavaScript as a successful path-rich skip", asyn
 
     const human = await runCli(["index", repoRoot, "--mode", "full"], { dbPath });
     assert.equal(human.exitCode, 0);
-    assert.match(human.stdout, /3 parsed, 1 skipped, 0 failed/);
-    assert.match(human.stdout, /frontend\/eslint\.config\.js — javascript\/unregistered_language — No parser registered for language: javascript/);
+    assert.match(human.stdout, /4 parsed, 0 skipped, 0 failed/);
+    assert.doesNotMatch(human.stdout, /unregistered_language/);
 
     const json = await runCli(["index", repoRoot, "--mode", "incremental", "--json"], { dbPath });
     assert.equal(json.exitCode, 0);
@@ -137,14 +137,8 @@ test("index reports unsupported JavaScript as a successful path-rich skip", asyn
     assert.deepEqual(output.files.find((file: { path: string }) => file.path === "frontend/eslint.config.js"), {
       path: "frontend/eslint.config.js",
       language: "javascript",
-      status: "unregistered_language",
+      status: "indexed",
       diagnostics: [],
-      error: {
-        code: "unregistered_language",
-        message: "No parser registered for language: javascript",
-        filePath: "frontend/eslint.config.js",
-        language: "javascript",
-      },
     });
   });
 });

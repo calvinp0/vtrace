@@ -92,7 +92,8 @@ test("enum guards accept only supported Layer 1 enum values", () => {
   assert.equal(isLanguage("cython"), true);
   assert.equal(isLanguage("go"), true);
   assert.equal(isLanguage("rust"), true);
-  assert.equal(isLanguage("ruby"), false);
+  assert.equal(isLanguage("ruby"), true);
+  assert.equal(isLanguage("fortran"), false);
   assert.equal(parseLanguage("javascript"), Language.JavaScript);
   assert.equal(parseLanguage("python"), Language.Python);
   assert.equal(parseLanguage("cython"), Language.Cython);
