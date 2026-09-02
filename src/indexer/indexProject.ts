@@ -30,6 +30,9 @@ import {
 import { deleteBodyLiteralsForFile } from "../db/repositories/bodyLiteralsRepository";
 import { deleteMechanismFactsForFile } from "../db/repositories/mechanismFactsRepository";
 import { replaceDocumentChunksForFile } from "../db/repositories/documentsRepository";
+import { structuralFamilies } from "../parsers/languageFamilies";
+import { createStructuralParser } from "../parsers/structuralParser";
+import { grammarArtifactStatus } from "../parsers/treeSitterGrammars";
 import { persistParseResult } from "../db/persistParseResult";
 import { deleteSymbolsForFile, listAllSymbols } from "../db/repositories/symbolsRepository";
 import { evaluateMaterializedGraph } from "./materializationAuthority";
@@ -318,7 +321,7 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
       parseCacheMisses += 1;
     }
     const parsed = isDocumentLanguage(fileContent.file.language)
-      ? { ok: true as const, result: emptyDocumentParseResult(fileContent) }
+      ? await parseDocumentFile(registry, fileContent)
       : await parseFile(registry, fileContent);
     parsedFiles += 1;
 
@@ -378,7 +381,7 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
           if (!closurePaths.has(fileContent.file.path)) continue;
           if (plan.modified.some((change) => change.relativePath === fileContent.file.path)) continue;
           const parsed = isDocumentLanguage(fileContent.file.language)
-            ? { ok: true as const, result: emptyDocumentParseResult(fileContent) }
+            ? await parseDocumentFile(registry, fileContent)
             : await parseFile(registry, fileContent);
           parsedFiles += 1;
           parseCacheHits = Math.max(0, parseCacheHits - (byPath.has(fileContent.file.path) ? 1 : 0));
@@ -413,7 +416,7 @@ export async function indexProject(options: IndexProjectOptions): Promise<IndexP
         const fallbackParseStarted = performance.now();
         for (const fileContent of readableFiles) {
           const parsed = isDocumentLanguage(fileContent.file.language)
-            ? { ok: true as const, result: emptyDocumentParseResult(fileContent) }
+            ? await parseDocumentFile(registry, fileContent)
             : await parseFile(registry, fileContent);
           parsedFiles += 1;
           if (!parsed.ok) summariesByPath.set(fileContent.file.path, summaryForParserError(fileContent, parsed.error));
@@ -832,6 +835,29 @@ function emptyDocumentParseResult(fileContent: IndexProjectFileContent): ParseRe
   };
 }
 
+/**
+ * M202. A document language (YAML) is chunked for search whatever its syntax
+ * says, exactly as before; but when the registry has a parser for it, that
+ * parser RUNS, so the file's parse truth reaches its diagnostics and the
+ * family is parser-backed in the only sense that counts — in production. A
+ * grammar that rejects the whole file is a diagnostic here, never a lost
+ * document: the chunks are what a document language is indexed for.
+ */
+async function parseDocumentFile(
+  registry: ParserRegistry,
+  fileContent: IndexProjectFileContent,
+): Promise<{ ok: true; result: ParseResult }> {
+  const empty = emptyDocumentParseResult(fileContent);
+  if (registry.getParser(fileContent.file.language) === undefined) {
+    return { ok: true, result: empty };
+  }
+  const parsed = await parseFile(registry, fileContent);
+  if (parsed.ok) {
+    return { ok: true, result: { ...empty, diagnostics: parsed.result.diagnostics } };
+  }
+  return { ok: true, result: { ...empty, diagnostics: [{ message: `document parser failed: ${parsed.error.message}` }] } };
+}
+
 function computeParserRegistryFingerprint(registry: ParserRegistry): string {
   return createHash("sha256")
     .update(JSON.stringify(registry.registeredLanguages()))
@@ -1040,6 +1066,12 @@ export function createDefaultParserRegistry(
         content: file.content,
       })),
     }),
+    // M202: the generic tree-sitter families, registered only when their grammar
+    // binary is present so "registered" always means "can parse". A family whose
+    // artefact is missing is reported by `describeParserFamilies`, not counted.
+    ...structuralFamilies()
+      .filter((family) => family.grammar !== undefined && grammarArtifactStatus(family.grammar).available)
+      .map((family) => createStructuralParser(family.language)),
   ]);
 }
 

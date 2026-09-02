@@ -1,61 +1,33 @@
 import path from "node:path";
 
 import { Language } from "../domain/types";
+import { EXTENSION_TO_LANGUAGE, isParserBackedFamily } from "../parsers/languageFamilies";
 
-const TYPESCRIPT_EXTENSIONS = new Set([".ts", ".tsx"]);
-const JAVASCRIPT_EXTENSIONS = new Set([".js", ".jsx"]);
-const PYTHON_EXTENSIONS = new Set([".py"]);
-const CYTHON_EXTENSIONS = new Set([".pyx", ".pxd", ".pxi"]);
-const YAML_EXTENSIONS = new Set([".yml", ".yaml"]);
-const TOML_EXTENSIONS = new Set([".toml"]);
-
-const INDEXABLE_LANGUAGES = new Set<Language>([
-  Language.TypeScript,
-  Language.Python,
-  Language.Cython,
-]);
-
+/**
+ * File → language family. DERIVED from the family table (M202): an extension
+ * belongs to exactly one family, case-insensitively, and there is no second
+ * list to fall out of step with. A path with no mapped extension is unknown,
+ * which the scanner treats as "not a source file".
+ */
 export function detectLanguage(filePath: string): Language | undefined {
-  const extension = path.extname(filePath).toLowerCase();
-
-  if (TYPESCRIPT_EXTENSIONS.has(extension)) {
-    return Language.TypeScript;
-  }
-
-  if (JAVASCRIPT_EXTENSIONS.has(extension)) {
-    return Language.JavaScript;
-  }
-
-  if (PYTHON_EXTENSIONS.has(extension)) {
-    return Language.Python;
-  }
-
-  if (CYTHON_EXTENSIONS.has(extension)) {
-    return Language.Cython;
-  }
-  if (YAML_EXTENSIONS.has(extension)) {
-    return Language.Yaml;
-  }
-  if (TOML_EXTENSIONS.has(extension)) {
-    return Language.Toml;
-  }
-
-  return undefined;
+  return EXTENSION_TO_LANGUAGE.get(path.extname(filePath).toLowerCase());
 }
 
+/** A file whose family the indexer parses through the registry. */
 export function isIndexableSourceFile(filePath: string): boolean {
   const language = detectLanguage(filePath);
-  return language !== undefined && INDEXABLE_LANGUAGES.has(language);
+  return language !== undefined && isParserBackedFamily(language);
 }
 
 /**
- * Source-like files are discovered even when VTRACE has no parser capability.
- * This lets indexing snapshot and diagnose them without claiming support.
+ * Source-like files are discovered even when VTRACE has no parser capability
+ * (TOML: document-indexed, not parsed). This lets indexing snapshot and
+ * diagnose them without claiming support.
  */
 export function isRecognizedSourceFile(filePath: string): boolean {
   return detectLanguage(filePath) !== undefined;
 }
 
 export function isAdvertisedIndexableLanguage(language: Language): boolean {
-  return INDEXABLE_LANGUAGES.has(language);
+  return isParserBackedFamily(language);
 }

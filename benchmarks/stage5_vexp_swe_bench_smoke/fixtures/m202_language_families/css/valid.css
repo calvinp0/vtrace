@@ -1,0 +1,12 @@
+/* Fixture — café 日本語 before any rule */
+@import url("base.css");
+
+:root { --main-color: #333; }
+
+.main > p {
+  color: var(--main-color);
+}
+
+@media (max-width: 600px) {
+  .main { display: none; }
+}

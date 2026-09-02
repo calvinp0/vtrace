@@ -79,18 +79,18 @@ test("unsupported and unregistered languages are handled predictably", async () 
   });
 
   const unsupported = await registry.parse({
-    path: "src/example.rb",
+    path: "src/example.f90",
     content: "value = 1\n",
-    language: "ruby" as Language,
+    language: "fortran" as Language,
   });
 
   assert.equal(unsupported.ok, false);
   assert.equal(unsupported.error.code, ParserErrorCode.UnsupportedLanguage);
   assert.deepEqual(unsupported.error.toJSON(), {
     code: ParserErrorCode.UnsupportedLanguage,
-    message: "Unsupported parser language: ruby",
-    filePath: "src/example.rb",
-    language: "ruby",
+    message: "Unsupported parser language: fortran",
+    filePath: "src/example.f90",
+    language: "fortran",
   });
 });
 

@@ -37,3 +37,16 @@ export {
   type TypeScriptKnownFile,
   type TypeScriptParserOptions,
 } from "./typescriptParser";
+export {
+  LANGUAGE_FAMILIES,
+  EXTENSION_TO_LANGUAGE,
+  familyOf,
+  isParserBackedFamily,
+  structuralFamilies,
+  type FamilyTier,
+  type GrammarSpec,
+  type LanguageFamilyDescriptor,
+} from "./languageFamilies";
+export { createStructuralParser, parseStructural, MAX_SYMBOLS_PER_FILE } from "./structuralParser";
+export { grammarArtifactStatus, loadGrammar } from "./treeSitterGrammars";
+export { describeParserFamilies, type ParserFamilyDescription } from "./parserFamilies";

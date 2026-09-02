@@ -94,15 +94,19 @@ test("language detection maps supported extensions to domain languages", () => {
   assert.equal(detectLanguage("src/module.pyx"), Language.Cython);
   assert.equal(detectLanguage("src/interface.pxd"), Language.Cython);
   assert.equal(detectLanguage("src/inline.pxi"), Language.Cython);
-  assert.equal(detectLanguage("src/styles.css"), undefined);
+  assert.equal(detectLanguage("src/styles.css"), Language.Css);
+  assert.equal(detectLanguage("src/notes.fortran"), undefined);
 });
 
-test("JavaScript and JSX are recognized without being advertised as indexable", () => {
+test("JavaScript and JSX are indexable through the structural family; TOML is recognized only (M202)", () => {
   assert.equal(isRecognizedSourceFile("frontend/eslint.config.js"), true);
   assert.equal(isRecognizedSourceFile("frontend/component.jsx"), true);
-  assert.equal(isIndexableSourceFile("frontend/eslint.config.js"), false);
-  assert.equal(isIndexableSourceFile("frontend/component.jsx"), false);
-  assert.equal(isAdvertisedIndexableLanguage(Language.JavaScript), false);
+  assert.equal(isIndexableSourceFile("frontend/eslint.config.js"), true);
+  assert.equal(isIndexableSourceFile("frontend/component.jsx"), true);
+  assert.equal(isRecognizedSourceFile("pyproject.toml"), true);
+  assert.equal(isIndexableSourceFile("pyproject.toml"), false);
+  assert.equal(isAdvertisedIndexableLanguage(Language.Toml), false);
+  assert.equal(isAdvertisedIndexableLanguage(Language.JavaScript), true);
   assert.equal(isAdvertisedIndexableLanguage(Language.TypeScript), true);
   assert.equal(isAdvertisedIndexableLanguage(Language.Python), true);
   assert.equal(isAdvertisedIndexableLanguage(Language.Cython), true);

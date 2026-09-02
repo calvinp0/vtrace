@@ -1,0 +1,6 @@
+# Fixture — café 日本語 before any key
+name: fixture
+version: 1
+nested:
+  list: [1, 2, 3]
+  flag: true

@@ -1,5 +1,12 @@
 import { createHash } from "node:crypto";
 
+/**
+ * One member per language FAMILY. A family is the unit `createDefaultParserRegistry`
+ * registers a parser for, and the unit the M202 breadth claim counts; extensions,
+ * dialects and alias filenames map onto a member in `src/parsers/languageFamilies.ts`
+ * and never add one. Members that the registry does not back (`Toml`) are
+ * detection rules, not language support.
+ */
 export enum Language {
   TypeScript = "typescript",
   JavaScript = "javascript",
@@ -9,6 +16,29 @@ export enum Language {
   Toml = "toml",
   Go = "go",
   Rust = "rust",
+  Java = "java",
+  CSharp = "csharp",
+  C = "c",
+  Cpp = "cpp",
+  Ruby = "ruby",
+  Kotlin = "kotlin",
+  Scala = "scala",
+  Swift = "swift",
+  Dart = "dart",
+  Elixir = "elixir",
+  Haskell = "haskell",
+  OCaml = "ocaml",
+  Lua = "lua",
+  R = "r",
+  Php = "php",
+  Zig = "zig",
+  ObjectiveC = "objective_c",
+  Bash = "bash",
+  Html = "html",
+  Css = "css",
+  Json = "json",
+  Sql = "sql",
+  Clojure = "clojure",
 }
 
 export enum SymbolKind {

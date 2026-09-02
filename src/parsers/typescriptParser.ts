@@ -19,6 +19,7 @@ import {
 import { withCallSite } from "./edgeCallSites";
 import { ParserError } from "./errors";
 import type { LanguageParser } from "./LanguageParser";
+import { TREE_SITTER_DEFAULT_BUFFER_UNITS, offsetsFor } from "./treeSitterSource";
 import type { ParseFileInput } from "./types";
 
 type SyntaxNode = Parser.SyntaxNode;
@@ -116,152 +117,13 @@ function parseTypeScriptWithContext(
  * the file is lost from the index entirely — and, via `getExportIndex`, so is
  * every file that imports it. Sizing the buffer to the source removes the limit
  * without truncating, chunking or otherwise altering what the parser sees.
+ * The constant lives in `treeSitterSource.ts` so every tree-sitter family
+ * sizes its buffer the same way.
  */
-const TREE_SITTER_DEFAULT_BUFFER_UNITS = 32768;
-
 function parseSource(parser: Parser, content: string) {
   return parser.parse(content, undefined, {
     bufferSize: Math.max(TREE_SITTER_DEFAULT_BUFFER_UNITS, content.length + 1),
   });
-}
-
-/**
- * `node-tree-sitter` reports every node offset (`startIndex`, `endIndex`) as a
- * UTF-16 code-unit index into the JavaScript string it was handed. The domain
- * contract for `SymbolRecord.startByte`/`endByte` is a UTF-8 BYTE offset — that
- * is what `pythonParser` emits from CPython's `ast`, and what every consumer
- * that slices a file Buffer assumes: `sourceExcerpt`, `extractSymbolContent`,
- * `extractBodyLiterals` and `extractMechanismFacts`.
- *
- * The two agree up to the first non-ASCII character and diverge by a growing
- * constant after it, so one `—` in a header comment shifts every span below it.
- * Slicing a byte buffer at a UTF-16 index lands EARLY by that delta, which is
- * what produced signatures like `t function editedFilesFromPatch(patch: string)`
- * and excerpts whose text began lines above their own declared `startLine`.
- *
- * Translation is exact in both directions at character boundaries, which is all
- * a node offset ever is. Pure-ASCII files — the overwhelming majority — record
- * no entries and translate by identity.
- */
-interface OffsetTranslator {
-  /** UTF-8 byte offset of the character at `utf16Index`. */
-  byteOffsetAt(utf16Index: number): number;
-  /** Inverse: the UTF-16 index of the character starting at `byteOffset`. */
-  utf16IndexAt(byteOffset: number): number;
-}
-
-function createOffsetTranslator(content: string): OffsetTranslator {
-  // `positions[i]` is a UTF-16 index whose character costs more bytes than
-  // units; `deltas[i]` is the cumulative surplus INCLUDING that unit.
-  const positions: number[] = [];
-  const deltas: number[] = [];
-  let delta = 0;
-
-  for (let i = 0; i < content.length;) {
-    const code = content.charCodeAt(i);
-
-    if (code < 0x80) {
-      i += 1;
-      continue;
-    }
-
-    if (code < 0x800) {
-      delta += 1;
-      positions.push(i);
-      deltas.push(delta);
-      i += 1;
-      continue;
-    }
-
-    const next = i + 1 < content.length ? content.charCodeAt(i + 1) : 0;
-
-    if (code >= 0xd800 && code <= 0xdbff && next >= 0xdc00 && next <= 0xdfff) {
-      // A surrogate pair is 2 units and 4 bytes: one surplus byte per unit, so
-      // the running delta stays monotone at either half of the pair.
-      delta += 1;
-      positions.push(i);
-      deltas.push(delta);
-      delta += 1;
-      positions.push(i + 1);
-      deltas.push(delta);
-      i += 2;
-      continue;
-    }
-
-    // A BMP character at or above U+0800, or an unpaired surrogate, which
-    // `Buffer` encodes as the 3-byte replacement character.
-    delta += 2;
-    positions.push(i);
-    deltas.push(delta);
-    i += 1;
-  }
-
-  if (positions.length === 0) {
-    return { byteOffsetAt: (index) => index, utf16IndexAt: (offset) => offset };
-  }
-
-  /** Cumulative surplus contributed by every unit STRICTLY BEFORE `utf16Index`. */
-  const surplusBefore = (utf16Index: number): number => {
-    let low = 0;
-    let high = positions.length - 1;
-    let found = -1;
-
-    while (low <= high) {
-      const mid = (low + high) >> 1;
-
-      if (positions[mid]! < utf16Index) {
-        found = mid;
-        low = mid + 1;
-      } else {
-        high = mid - 1;
-      }
-    }
-
-    return found < 0 ? 0 : deltas[found]!;
-  };
-
-  return {
-    byteOffsetAt: (utf16Index) => utf16Index + surplusBefore(utf16Index),
-    utf16IndexAt: (byteOffset) => {
-      // The largest index whose byte offset does not exceed `byteOffset`. Byte
-      // offsets are strictly increasing in the index, so a binary search over
-      // the recorded positions bounds the answer and the surplus is constant
-      // between them.
-      let low = 0;
-      let high = positions.length - 1;
-      let found = -1;
-
-      while (low <= high) {
-        const mid = (low + high) >> 1;
-
-        if (positions[mid]! + deltas[mid]! <= byteOffset) {
-          found = mid;
-          low = mid + 1;
-        } else {
-          high = mid - 1;
-        }
-      }
-
-      return found < 0 ? byteOffset : byteOffset - deltas[found]!;
-    },
-  };
-}
-
-/**
- * One-entry memo. Parsing is per-file and single-threaded, so the translator for
- * the file being parsed is built once and reused by every symbol and edge in it
- * rather than rebuilt per span.
- */
-let memoizedContent: string | null = null;
-let memoizedTranslator: OffsetTranslator | null = null;
-
-function offsetsFor(content: string): OffsetTranslator {
-  if (memoizedContent !== content || memoizedTranslator === null) {
-    memoizedContent = content;
-    memoizedTranslator = createOffsetTranslator(content);
-  }
-
-  return memoizedTranslator;
 }
 
 function getTreeSitterLanguage(filePath: string): unknown {

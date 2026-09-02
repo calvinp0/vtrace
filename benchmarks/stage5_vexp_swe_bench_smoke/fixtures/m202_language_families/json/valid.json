@@ -1,0 +1,5 @@
+{
+  "name": "fixture — café 日本語",
+  "version": 1,
+  "nested": { "list": [1, 2, 3], "flag": true, "none": null }
+}
