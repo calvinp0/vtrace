@@ -1,0 +1,197 @@
+{
+  "milestone": "M205",
+  "instrument": "run_stage5_m205_vexp_inventory.ts",
+  "method": "byte search over the artefacts the frozen M196 ledger cites; no vexp process executed; no network",
+  "artifacts": {
+    "mcpServer": {
+      "path": "/home/calvin/.npm-global/lib/node_modules/vexp-cli/mcp/mcp-server.cjs",
+      "present": true,
+      "bytes": 1163458,
+      "ledgerBytes": 1163458,
+      "sha256": "2855a48088c462d8002ce511e6b5f28d4854f7405cb8ff6ada3010ac4dc26d11"
+    },
+    "coreBinary": {
+      "path": "/home/calvin/.npm-global/lib/node_modules/vexp-cli/node_modules/@vexp/core-linux-x64/bin/vexp-core",
+      "present": true,
+      "bytes": 68493576,
+      "ledgerBytes": 68493576,
+      "sha256": "f519e55b0967ea8d92e6a2a8e190f8507340809885ee8a56b988f1dc48b3a124"
+    },
+    "cliReadme": {
+      "path": "/home/calvin/.npm-global/lib/node_modules/vexp-cli/README.md",
+      "present": true,
+      "bytes": 4702,
+      "ledgerBytes": 4702,
+      "sha256": "4d6d6a53cae1c0fe97277d85ee57644c98756ffb00612383b10f1b3cc5c4bea3"
+    },
+    "cliPackage": {
+      "path": "/home/calvin/.npm-global/lib/node_modules/vexp-cli/package.json",
+      "present": true,
+      "bytes": 2665,
+      "ledgerBytes": 2665,
+      "sha256": null
+    },
+    "benchReadme": {
+      "path": "/home/calvin/code/vexp-swe-bench/README.md",
+      "present": true,
+      "bytes": 10409,
+      "ledgerBytes": 10409,
+      "sha256": null
+    }
+  },
+  "frozenClaim": {
+    "id": "V-C6",
+    "claim": "pivot files are delivered as full content; supporting files as skeletons",
+    "needle": "## Pivots (Full Content)",
+    "a12MatchThreshold": ">= 3 distinct classes",
+    "a12ExceedThreshold": "5",
+    "representationDefinition": "per delivered item in the DEFAULT get_code_context response: FOCUS:<form> when the focus carries code; RELATED_WITH_CODE when a related entry's code is a string; RELATIONSHIP_ONLY otherwise; distinct classes over all C-MED responses (engine + report, verbatim)"
+  },
+  "inventory": [
+    {
+      "name": "pivot_full_content",
+      "purpose": "the edit target, delivered as its full source",
+      "observableShape": "a `## Pivots (Full Content)` section header in the rendered capsule; `include_file_content` tool option",
+      "vtraceAnalogue": "focus with form focused_source (FOCUS:focused_source)",
+      "countsTowardA12": true,
+      "evidence": "OBSERVED",
+      "structuralBehaviourObservable": false,
+      "note": "the marker proves the renderer HAS this section; when it is chosen, how it is bounded and what it contains are inside the closed binary (UNKNOWN)",
+      "markers": [
+        {
+          "artifact": "coreBinary",
+          "needle": "## Pivots (Full Content)",
+          "occurrences": 1,
+          "context": "keleton(file_path) for related symbols) | supporting_droppedImpactImpact Analysis## Pivots | ## Pivots (Full Content) | ## Pivots (Skeletons> caveman mode: terse. drop filler/articles. fragments OK. code/URL/p"
+        },
+        {
+          "artifact": "mcpServer",
+          "needle": "## Pivot Files (Full Content)",
+          "occurrences": 1,
+          "context": " different description.*\"),e.join(` | `);let a=t.graph_stats.repos_queried.length>1;e.push(\"## Pivot Files (Full Content)\"),e.push(\"\");for(let i of t.pivots){let o=a?`\\`${i.repo}\\` / `:\"\";e.push(`### ${o}\\`${i.f"
+        }
+      ],
+      "claimText": [
+        {
+          "artifact": "mcpServer",
+          "needle": "Include full file content for pivot files",
+          "occurrences": 2
+        }
+      ]
+    },
+    {
+      "name": "pivot_skeleton",
+      "purpose": "the edit target degraded to a skeleton when the budget binds",
+      "observableShape": "a `## Pivots (Skeletons` section header with a `call get_skeleton(file) for body` note",
+      "vtraceAnalogue": "focus with form signature/skeleton (FOCUS:signature observed on C-LARGE)",
+      "countsTowardA12": true,
+      "evidence": "OBSERVED",
+      "structuralBehaviourObservable": false,
+      "note": "the marker proves the renderer HAS this section; when it is chosen, how it is bounded and what it contains are inside the closed binary (UNKNOWN)",
+      "markers": [
+        {
+          "artifact": "coreBinary",
+          "needle": "## Pivots (Skeletons",
+          "occurrences": 2,
+          "context": "dex may still be building.** | Use Grep, Glob, and Read directly until indexing completes. | ## Pivots (Skeletons  |  call get_skeleton(file) for body) | ## Supporting (Skeletons) | ## Project Rules | ## Impac"
+        },
+        {
+          "artifact": "coreBinary",
+          "needle": "call get_skeleton(file) for body",
+          "occurrences": 1,
+          "context": ".** | Use Grep, Glob, and Read directly until indexing completes. | ## Pivots (Skeletons  |  call get_skeleton(file) for body) | ## Supporting (Skeletons) | ## Project Rules | ## Impact Analysis | ## Skipped Steps | Pro featu"
+        }
+      ],
+      "claimText": []
+    },
+    {
+      "name": "supporting_skeleton",
+      "purpose": "supporting files delivered as skeletons",
+      "observableShape": "a `## Supporting (Skeletons)` / `## Supporting Context (Skeletons)` section header; per-file skeleton blocks in the MCP renderer",
+      "vtraceAnalogue": "related entry carrying code in a skeleton/signature/focused_source/excerpt/document_excerpt form (RELATED_WITH_CODE)",
+      "countsTowardA12": true,
+      "evidence": "OBSERVED",
+      "structuralBehaviourObservable": false,
+      "note": "the marker proves the renderer HAS this section; when it is chosen, how it is bounded and what it contains are inside the closed binary (UNKNOWN)",
+      "markers": [
+        {
+          "artifact": "coreBinary",
+          "needle": "## Supporting (Skeletons)",
+          "occurrences": 1,
+          "context": "tly until indexing completes. | ## Pivots (Skeletons  |  call get_skeleton(file) for body) | ## Supporting (Skeletons) | ## Project Rules | ## Impact Analysis | ## Skipped Steps | Pro feature | ###  |  (score:  |   | p | )"
+        },
+        {
+          "artifact": "coreBinary",
+          "needle": "## Supporting Context (Skeletons)",
+          "occurrences": 1,
+          "context": " | p | K |   | p | M | # vexp Context Capsule | **Token budget:**  | / |  used ( |   | p | % saving) | ## Supporting Context (Skeletons) | ###  |  (score:  |   | p | ) | No index found. Run `vexp init` first. |   Total saved:    |   | "
+        }
+      ],
+      "claimText": []
+    },
+    {
+      "name": "supporting_dropped",
+      "purpose": "supporting files omitted when the budget binds, with a pointer to get_skeleton",
+      "observableShape": "a `- (dropped … call get_skeleton(file_path) for related symbols)` line and a `supporting_dropped` field",
+      "vtraceAnalogue": "an absence, not a representation: relationship-only entries and the claim boundary (RELATIONSHIP_ONLY is the nearest delivered class)",
+      "countsTowardA12": false,
+      "evidence": "OBSERVED",
+      "structuralBehaviourObservable": false,
+      "note": "the marker proves the renderer HAS this section; when it is chosen, how it is bounded and what it contains are inside the closed binary (UNKNOWN)",
+      "markers": [
+        {
+          "artifact": "coreBinary",
+          "needle": "supporting_dropped",
+          "occurrences": 1,
+          "context": "Skeletons)## Supporting | - (dropped  |  call get_skeleton(file_path) for related symbols) | supporting_droppedImpactImpact Analysis## Pivots | ## Pivots (Full Content) | ## Pivots (Skeletons> caveman mode"
+        },
+        {
+          "artifact": "coreBinary",
+          "needle": "call get_skeleton(file_path) for related symbols",
+          "occurrences": 1,
+          "context": "memory(<task>) to retrieve) | SupportingSupporting (Skeletons)## Supporting | - (dropped  |  call get_skeleton(file_path) for related symbols) | supporting_droppedImpactImpact Analysis## Pivots | ## Pivots (Full Content) | ## Pivots (Sk"
+        }
+      ],
+      "claimText": []
+    },
+    {
+      "name": "get_skeleton_file_structure",
+      "purpose": "a separate tool: file structure without full content, full bodies for short functions and signatures for long ones",
+      "observableShape": "tool description text; a `# File Skeletons` renderer in the MCP bundle",
+      "vtraceAnalogue": "get_skeleton (A9/A10), outside the run_pipeline response the frozen A12 scores",
+      "countsTowardA12": false,
+      "evidence": "OBSERVED",
+      "structuralBehaviourObservable": false,
+      "note": "the marker proves the renderer HAS this section; when it is chosen, how it is bounded and what it contains are inside the closed binary (UNKNOWN)",
+      "markers": [
+        {
+          "artifact": "mcpServer",
+          "needle": "# File Skeletons",
+          "occurrences": 2,
+          "context": "n);return ZL(a)}function ZL(t){let e=[];if(!Array.isArray(t)||t.length===0)return e.push(\"# File Skeletons\"),e.push(\"\"),e.push(\"*No skeleton data \\u2014 files may not be indexed yet. Run `index_st"
+        },
+        {
+          "artifact": "coreBinary",
+          "needle": "file structure without full content",
+          "occurrences": 1,
+          "context": "`pivot_depth: 3`, `skeleton_detail: \"detailed\"`, `repos: [\"alias\"]` | ### `get_skeleton` - file structure without full content | Returns function/class signatures only (70-90% token reduction). | ``` | get_skeleton(files=["
+        }
+      ],
+      "claimText": [
+        {
+          "artifact": "mcpServer",
+          "needle": "full bodies for short functions, signatures for long ones",
+          "occurrences": 1
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "classes": 5,
+    "observed": 5,
+    "claimed": 0,
+    "unknown": 0,
+    "observedCountingTowardA12": 3,
+    "matchLineExplained": "the frozen MATCH line of 3 equals the 3 OBSERVED classes that count: pivot full content, pivot skeleton, supporting skeleton"
+  }
+}

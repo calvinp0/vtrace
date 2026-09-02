@@ -141,8 +141,11 @@ const CORPORA = [
   // pre-change replay at 492 is kept as stage5_m202_authority.json. M203 added
   // two more (src/runPipeline/orientationAccounting.ts and its test), so the
   // count is re-frozen at 502 on 2026-09-02 by the same rule; the replay at 500
-  // that failed on this line alone is kept as stage5_m203_authority.json.
-  { id: "C-MED", source: path.join(REPO, "src"), exts: [".ts", ".tsx"], expected: 502,
+  // that failed on this line alone is kept as stage5_m203_authority.json. M205
+  // added two more (src/runPipeline/orientationRepresentation.ts and its test),
+  // so the count is re-frozen at 504 on 2026-09-03 by the same rule; the replay
+  // at 502 that failed on this line alone is kept as stage5_m205_authority.json.
+  { id: "C-MED", source: path.join(REPO, "src"), exts: [".ts", ".tsx"], expected: 504,
     revisionOf: REPO, expectedRevisionPrefix: null },
   { id: "C-LARGE", source: "/home/calvin/code/ARC", exts: [".py"], expected: 276,
     revisionOf: "/home/calvin/code/ARC", expectedRevisionPrefix: null, excludePrefix: ".claude" },

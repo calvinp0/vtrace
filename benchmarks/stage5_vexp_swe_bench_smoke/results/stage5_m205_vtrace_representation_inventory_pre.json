@@ -1,0 +1,389 @@
+{
+  "milestone": "M205",
+  "instrument": "run_stage5_m205_vtrace_inventory.ts",
+  "label": "pre",
+  "product": {
+    "root": "/home/calvin/bench/vtrace-m205/pre",
+    "head": "9f0799cfe3637c81b7630f4874ead308f55e9cea"
+  },
+  "pipeline": [
+    "buildCapsuleV2",
+    "assembleProductContext (sourceDraft, renderModelVisibleContext)",
+    "applyProgressiveContextBudget",
+    "compactProductResponse",
+    "projectRunPipelineOrientation (admission, then representation routing)",
+    "withItemTokens / publishOrientationAccounting"
+  ],
+  "rows": [
+    {
+      "stage": "capsule",
+      "classIdentity": "capsule content_mode full / signature / skeleton / document_excerpt / mechanism_slice",
+      "sourceObject": "CapsuleV2Item",
+      "file": "src/capsuleV2/types.ts",
+      "constructionFunction": "buildCapsuleV2 → loadFocusedSource / loadSignature / composeDocumentItem",
+      "symbols": [
+        "enum CapsuleV2ContentMode",
+        "MechanismSlice = \"mechanism_slice\""
+      ],
+      "modelFacingFields": "not model-facing on the default path (authoritative result only)",
+      "bodyBehaviour": "full: extractFullSymbolSource of the indexed symbol span; signature: symbol.signature; document_excerpt: line-bounded excerpts joined",
+      "costRule": "estimated_tokens = estimateTokens(itemBlockText(item)) (chars/4)",
+      "truncationBehaviour": "none at this stage",
+      "routingCondition": "tier caps and role: pivots full, support signature/skeleton (budgetAllocator)",
+      "symbolsVerified": [
+        {
+          "symbol": "enum CapsuleV2ContentMode",
+          "present": true
+        },
+        {
+          "symbol": "MechanismSlice = \"mechanism_slice\"",
+          "present": true
+        }
+      ],
+      "allPresent": true,
+      "applicableToThisTree": true
+    },
+    {
+      "stage": "capsule",
+      "classIdentity": "loadFocusedSource",
+      "sourceObject": "symbol span",
+      "file": "src/capsuleV2/buildCapsuleV2.ts",
+      "constructionFunction": "loadFocusedSourceById → loadSymbolSource + extractFullSymbolSource",
+      "symbols": [
+        "function loadFocusedSourceById",
+        "function loadSignature"
+      ],
+      "modelFacingFields": "item.source",
+      "bodyBehaviour": "verbatim byte span of the indexed symbol",
+      "costRule": "chars/4",
+      "truncationBehaviour": "none",
+      "routingCondition": "role pivot (content_mode full)",
+      "symbolsVerified": [
+        {
+          "symbol": "function loadFocusedSourceById",
+          "present": true
+        },
+        {
+          "symbol": "function loadSignature",
+          "present": true
+        }
+      ],
+      "allPresent": true,
+      "applicableToThisTree": true
+    },
+    {
+      "stage": "product context",
+      "classIdentity": "ProductContextContentMode focused_source / skeleton / signature / summary / document_excerpt",
+      "sourceObject": "ProductContextItem",
+      "file": "src/productContext/assembleProductContext.ts",
+      "constructionFunction": "sourceDraft",
+      "symbols": [
+        "function sourceDraft",
+        "contentMode = \"focused_source\"",
+        "contentMode = \"skeleton\"",
+        "contentMode = \"signature\"",
+        "contentMode = \"summary\""
+      ],
+      "modelFacingFields": "items[].contentMode, items[].content; rendered into modelVisibleContext as `mode:` + body",
+      "bodyBehaviour": "focused_source: item.source; skeleton: renderStructuralSkeleton (index signature + member signatures + docstring); signature: item.signature; summary: no content",
+      "costRule": "estimatedTokens (chars/4) per item; accounting.usedTokensEstimate over the rendering",
+      "truncationBehaviour": "skeleton members capped at 12, docstring compacted to 180",
+      "routingCondition": "capsule content_mode full + source → focused_source; else structural skeleton if the index has the symbol; else signature; else summary",
+      "symbolsVerified": [
+        {
+          "symbol": "function sourceDraft",
+          "present": true
+        },
+        {
+          "symbol": "contentMode = \"focused_source\"",
+          "present": true
+        },
+        {
+          "symbol": "contentMode = \"skeleton\"",
+          "present": true
+        },
+        {
+          "symbol": "contentMode = \"signature\"",
+          "present": true
+        },
+        {
+          "symbol": "contentMode = \"summary\"",
+          "present": true
+        }
+      ],
+      "allPresent": true,
+      "applicableToThisTree": true
+    },
+    {
+      "stage": "product context",
+      "classIdentity": "structural skeleton",
+      "sourceObject": "index symbols + skeleton file result",
+      "file": "src/productContext/assembleProductContext.ts",
+      "constructionFunction": "renderStructuralSkeleton",
+      "symbols": [
+        "function renderStructuralSkeleton",
+        "getIndexedSkeletonFileResult(db, filePath, \"detailed\")"
+      ],
+      "modelFacingFields": "items[].content (mode skeleton)",
+      "bodyBehaviour": "signature line, class members' signatures (<= 12), `# docstring`",
+      "costRule": "chars/4",
+      "truncationBehaviour": "members.slice(0, 12); compact(docstring, 180)",
+      "routingCondition": "item not full and the file is indexed",
+      "symbolsVerified": [
+        {
+          "symbol": "function renderStructuralSkeleton",
+          "present": true
+        },
+        {
+          "symbol": "getIndexedSkeletonFileResult(db, filePath, \"detailed\")",
+          "present": true
+        }
+      ],
+      "allPresent": true,
+      "applicableToThisTree": true
+    },
+    {
+      "stage": "product context",
+      "classIdentity": "impact summary (not source)",
+      "sourceObject": "impact graph relation",
+      "file": "src/productContext/assembleProductContext.ts",
+      "constructionFunction": "addImpactEvidence",
+      "symbols": [
+        "function addImpactEvidence",
+        "contentMode: \"summary\""
+      ],
+      "modelFacingFields": "items[].content = `KIND fqName at path:line [strength]`",
+      "bodyBehaviour": "a relation line, not code",
+      "costRule": "chars/4; MAX_TOTAL_IMPACT_CHARS",
+      "truncationBehaviour": "count and character caps",
+      "routingCondition": "incoming relations of up to MAX_IMPACT_PIVOTS pivots",
+      "symbolsVerified": [
+        {
+          "symbol": "function addImpactEvidence",
+          "present": true
+        },
+        {
+          "symbol": "contentMode: \"summary\"",
+          "present": true
+        }
+      ],
+      "allPresent": true,
+      "applicableToThisTree": true
+    },
+    {
+      "stage": "evidence budget",
+      "classIdentity": "excerpt / signature (budget-compacted)",
+      "sourceObject": "MutableItem",
+      "file": "src/productContext/budgetDelivery.ts",
+      "constructionFunction": "applyProgressiveContextBudget → boundedExcerpt / minimalContent",
+      "symbols": [
+        "export function applyProgressiveContextBudget",
+        "function boundedExcerpt",
+        "function minimalContent",
+        "item.contentMode = \"excerpt\"",
+        "item.contentMode = \"signature\""
+      ],
+      "modelFacingFields": "items[].contentMode rewritten in place; modelVisibleContext re-rendered",
+      "bodyBehaviour": "excerpt: head of the body plus the marker line; signature: the first defining lines (a head slice, NOT the parser signature)",
+      "costRule": "estimateTokens(render) <= max_tokens",
+      "truncationBehaviour": "boundedExcerpt(content, 900); minimalContent <= 8 lines / 480 chars",
+      "routingCondition": "only when the rendering exceeds max_tokens; optional support first, then secondary pivots, then everything",
+      "symbolsVerified": [
+        {
+          "symbol": "export function applyProgressiveContextBudget",
+          "present": true
+        },
+        {
+          "symbol": "function boundedExcerpt",
+          "present": true
+        },
+        {
+          "symbol": "function minimalContent",
+          "present": true
+        },
+        {
+          "symbol": "item.contentMode = \"excerpt\"",
+          "present": true
+        },
+        {
+          "symbol": "item.contentMode = \"signature\"",
+          "present": true
+        }
+      ],
+      "allPresent": true,
+      "applicableToThisTree": true
+    },
+    {
+      "stage": "response envelope",
+      "classIdentity": "neighbourhood excerpt text stripped",
+      "sourceObject": "pivotNeighborhood[].excerpts[]",
+      "file": "src/mcp/responseEnvelope.ts",
+      "constructionFunction": "compactProductResponse (pivotNeighborhood compaction)",
+      "symbols": [
+        "textCharacters: text.length",
+        "pivotNeighborhood[].excerpts[].text"
+      ],
+      "modelFacingFields": "textCharacters only",
+      "bodyBehaviour": "text removed before the projector runs",
+      "costRule": "n/a",
+      "truncationBehaviour": "whole text removed",
+      "routingCondition": "always on the MCP surface",
+      "symbolsVerified": [
+        {
+          "symbol": "textCharacters: text.length",
+          "present": true
+        },
+        {
+          "symbol": "pivotNeighborhood[].excerpts[].text",
+          "present": true
+        }
+      ],
+      "allPresent": true,
+      "applicableToThisTree": true
+    },
+    {
+      "stage": "projection",
+      "classIdentity": "focus: FOCUS:<form>",
+      "sourceObject": "supply item body parsed from modelVisibleContext",
+      "file": "src/runPipeline/orientationProjection.ts",
+      "constructionFunction": "projectRunPipelineOrientation → parseRenderedBodies + headBound",
+      "symbols": [
+        "function parseRenderedBodies",
+        "focusCodeCharacters: 1800",
+        "codeTruncated: bounded.truncated"
+      ],
+      "modelFacingFields": "focus.form, focus.code, focus.codeTruncated, focus.tokens",
+      "bodyBehaviour": "the item's rendered body, head-bounded to 1800 characters on a line boundary",
+      "costRule": "packet rule 0.3174 tokens/char (withItemTokens)",
+      "truncationBehaviour": "headBound on a line boundary; ORIENTATION_TRUNCATION_NOTE",
+      "routingCondition": "leadPivot, else first pivot, else first item",
+      "symbolsVerified": [
+        {
+          "symbol": "function parseRenderedBodies",
+          "present": true
+        },
+        {
+          "symbol": "focusCodeCharacters: 1800",
+          "present": true
+        },
+        {
+          "symbol": "codeTruncated: bounded.truncated",
+          "present": true
+        }
+      ],
+      "allPresent": true,
+      "applicableToThisTree": true
+    },
+    {
+      "stage": "projection",
+      "classIdentity": "related: RELATIONSHIP_ONLY",
+      "sourceObject": "supply items + pivot neighbourhood",
+      "file": "src/runPipeline/orientationProjection.ts",
+      "constructionFunction": "consider → assemble; admission prefix under orientationCeilingTokens",
+      "symbols": [
+        "const consider =",
+        "export function orientationCeilingTokens"
+      ],
+      "modelFacingFields": "at, file, lines, how, tokens",
+      "bodyBehaviour": "no code",
+      "costRule": "packet rule",
+      "truncationBehaviour": "none",
+      "routingCondition": "every admitted related entry (pre-M205: unconditionally)",
+      "symbolsVerified": [
+        {
+          "symbol": "const consider =",
+          "present": true
+        },
+        {
+          "symbol": "export function orientationCeilingTokens",
+          "present": true
+        }
+      ],
+      "allPresent": true,
+      "applicableToThisTree": true
+    },
+    {
+      "stage": "projection",
+      "classIdentity": "related: upstream form delivered (focused_source / skeleton / signature / excerpt / document_excerpt)",
+      "sourceObject": "supply item body",
+      "file": "src/runPipeline/orientationRepresentation.ts",
+      "constructionFunction": "availableRepresentation + headBound; routed in projectRunPipelineOrientation after admission",
+      "symbols": [
+        "export const CODE_BEARING_FORMS",
+        "export function availableRepresentation",
+        "export const RELATED_CODE_CHARACTERS = 600",
+        "export const REPRESENTATION_LADDER"
+      ],
+      "modelFacingFields": "related[].form, related[].code, related[].codeTruncated (present together or not at all)",
+      "bodyBehaviour": "the item's rendered body, head-bounded to 600 characters on a line boundary; label verbatim from upstream",
+      "costRule": "packet rule; tested against the caller's ceiling with later entries compact",
+      "truncationBehaviour": "headBound; codeTruncated per entry",
+      "routingCondition": "origin item_supply, form in CODE_BEARING_FORMS, body non-empty, and the packet with it within the ceiling; else relationship-only with a recorded reason",
+      "m205": true,
+      "symbolsVerified": [
+        {
+          "symbol": "export const CODE_BEARING_FORMS",
+          "present": false
+        },
+        {
+          "symbol": "export function availableRepresentation",
+          "present": false
+        },
+        {
+          "symbol": "export const RELATED_CODE_CHARACTERS = 600",
+          "present": false
+        },
+        {
+          "symbol": "export const REPRESENTATION_LADDER",
+          "present": false
+        }
+      ],
+      "allPresent": false,
+      "applicableToThisTree": false
+    },
+    {
+      "stage": "accounting",
+      "classIdentity": "per-item ledger",
+      "sourceObject": "OrientationItemAccounting",
+      "file": "src/runPipeline/orientationAccounting.ts",
+      "constructionFunction": "publishOrientationAccounting / withItemTokens",
+      "symbols": [
+        "export function withItemTokens",
+        "export function publishOrientationAccounting",
+        "readonly representation: string"
+      ],
+      "modelFacingFields": "tokens per item",
+      "bodyBehaviour": "n/a",
+      "costRule": "measured serialized characters x 0.3174, fixed point on the field",
+      "truncationBehaviour": "n/a",
+      "routingCondition": "every delivered item",
+      "symbolsVerified": [
+        {
+          "symbol": "export function withItemTokens",
+          "present": true
+        },
+        {
+          "symbol": "export function publishOrientationAccounting",
+          "present": true
+        },
+        {
+          "symbol": "readonly representation: string",
+          "present": true
+        }
+      ],
+      "allPresent": true,
+      "applicableToThisTree": true
+    }
+  ],
+  "verified": true,
+  "projectionClasses": [
+    "focus: FOCUS:<form>",
+    "related: RELATIONSHIP_ONLY"
+  ],
+  "frozenA12View": {
+    "countedBy": "FOCUS:<form>, RELATED_WITH_CODE, RELATIONSHIP_ONLY",
+    "preM205": "related entries never carry code, so C-MED delivers FOCUS:focused_source and RELATIONSHIP_ONLY: 2 classes",
+    "whyNotMore": "focus vs related does not count separately beyond the focus form; signature vs skeleton is not distinguished on related entries by the frozen rule; the count is by content class (code present, and the focus's form), not by schema shape or production variant"
+  },
+  "verdict": "M205_VTRACE_INVENTORY_VERIFIED"
+}
