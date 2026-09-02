@@ -1,0 +1,274 @@
+{
+  "milestone": "M202",
+  "instrument": "run_stage5_m202_performance.ts",
+  "loadAverage": [
+    6.32,
+    7.21,
+    5.75
+  ],
+  "cpus": 20,
+  "registryCreation": {
+    "runs": [
+      {
+        "importMs": 22.22,
+        "createMs": 1.21,
+        "registered": 30,
+        "grammarsLoaded": 0,
+        "rssMiB": 67.7
+      },
+      {
+        "importMs": 29.28,
+        "createMs": 2.78,
+        "registered": 30,
+        "grammarsLoaded": 0,
+        "rssMiB": 67.1
+      },
+      {
+        "importMs": 22.71,
+        "createMs": 1.16,
+        "registered": 30,
+        "grammarsLoaded": 0,
+        "rssMiB": 67.2
+      },
+      {
+        "importMs": 22.56,
+        "createMs": 1.16,
+        "registered": 30,
+        "grammarsLoaded": 0,
+        "rssMiB": 66.3
+      },
+      {
+        "importMs": 24.78,
+        "createMs": 1.2,
+        "registered": 30,
+        "grammarsLoaded": 0,
+        "rssMiB": 66.4
+      }
+    ],
+    "createMsMedian": 1.2,
+    "grammarsLoadedAtCreation": 0,
+    "lazy": true
+  },
+  "perFamily": [
+    {
+      "language": "javascript",
+      "fixture": "valid.js",
+      "firstParseMs": 5.2,
+      "secondParseMs": 0.52,
+      "rssDeltaMiB": 4.4
+    },
+    {
+      "language": "go",
+      "fixture": "valid.go",
+      "firstParseMs": 5.22,
+      "secondParseMs": 0.74,
+      "rssDeltaMiB": 5
+    },
+    {
+      "language": "rust",
+      "fixture": "valid.rs",
+      "firstParseMs": 7.02,
+      "secondParseMs": 0.95,
+      "rssDeltaMiB": 6.4
+    },
+    {
+      "language": "java",
+      "fixture": "valid.java",
+      "firstParseMs": 6.53,
+      "secondParseMs": 0.71,
+      "rssDeltaMiB": 5.2
+    },
+    {
+      "language": "csharp",
+      "fixture": "valid.cs",
+      "firstParseMs": 8.13,
+      "secondParseMs": 1.51,
+      "rssDeltaMiB": 9.6
+    },
+    {
+      "language": "c",
+      "fixture": "valid.c",
+      "firstParseMs": 6.06,
+      "secondParseMs": 0.7,
+      "rssDeltaMiB": 5.2
+    },
+    {
+      "language": "cpp",
+      "fixture": "valid.cpp",
+      "firstParseMs": 7.54,
+      "secondParseMs": 0.87,
+      "rssDeltaMiB": 8.3
+    },
+    {
+      "language": "ruby",
+      "fixture": "valid.rb",
+      "firstParseMs": 5.93,
+      "secondParseMs": 0.52,
+      "rssDeltaMiB": 5
+    },
+    {
+      "language": "kotlin",
+      "fixture": "valid.kt",
+      "firstParseMs": 3.12,
+      "secondParseMs": 0.6,
+      "rssDeltaMiB": 4.6
+    },
+    {
+      "language": "scala",
+      "fixture": "valid.scala",
+      "firstParseMs": 7.95,
+      "secondParseMs": 0.81,
+      "rssDeltaMiB": 7.2
+    },
+    {
+      "language": "swift",
+      "fixture": "valid.swift",
+      "firstParseMs": 7.86,
+      "secondParseMs": 1.06,
+      "rssDeltaMiB": 9.7
+    },
+    {
+      "language": "dart",
+      "fixture": "valid.dart",
+      "firstParseMs": 3.76,
+      "secondParseMs": 0.81,
+      "rssDeltaMiB": 4.6
+    },
+    {
+      "language": "elixir",
+      "fixture": "valid.ex",
+      "firstParseMs": 4.61,
+      "secondParseMs": 0.69,
+      "rssDeltaMiB": 5.2
+    },
+    {
+      "language": "haskell",
+      "fixture": "valid.hs",
+      "firstParseMs": 7.7,
+      "secondParseMs": 0.77,
+      "rssDeltaMiB": 8.9
+    },
+    {
+      "language": "ocaml",
+      "fixture": "valid.ml",
+      "firstParseMs": 6.94,
+      "secondParseMs": 0.61,
+      "rssDeltaMiB": 10.7
+    },
+    {
+      "language": "lua",
+      "fixture": "valid.lua",
+      "firstParseMs": 3.78,
+      "secondParseMs": 0.42,
+      "rssDeltaMiB": 3.4
+    },
+    {
+      "language": "r",
+      "fixture": "valid.R",
+      "firstParseMs": 2.88,
+      "secondParseMs": 0.33,
+      "rssDeltaMiB": 2.7
+    },
+    {
+      "language": "php",
+      "fixture": "valid.php",
+      "firstParseMs": 8.48,
+      "secondParseMs": 0.84,
+      "rssDeltaMiB": 6.3
+    },
+    {
+      "language": "zig",
+      "fixture": "valid.zig",
+      "firstParseMs": 3.81,
+      "secondParseMs": 0.77,
+      "rssDeltaMiB": 4.8
+    },
+    {
+      "language": "objective_c",
+      "fixture": "valid.m",
+      "firstParseMs": 6.58,
+      "secondParseMs": 0.55,
+      "rssDeltaMiB": 8.6
+    },
+    {
+      "language": "bash",
+      "fixture": "valid.sh",
+      "firstParseMs": 3.99,
+      "secondParseMs": 0.38,
+      "rssDeltaMiB": 4.4
+    },
+    {
+      "language": "sql",
+      "fixture": "valid.sql",
+      "firstParseMs": 3.09,
+      "secondParseMs": 0.53,
+      "rssDeltaMiB": 5.8
+    },
+    {
+      "language": "clojure",
+      "fixture": "valid.clj",
+      "firstParseMs": 3.6,
+      "secondParseMs": 0.7,
+      "rssDeltaMiB": 4
+    },
+    {
+      "language": "html",
+      "fixture": "valid.html",
+      "firstParseMs": 2.12,
+      "secondParseMs": 0.29,
+      "rssDeltaMiB": 2
+    },
+    {
+      "language": "css",
+      "fixture": "valid.css",
+      "firstParseMs": 2.78,
+      "secondParseMs": 0.27,
+      "rssDeltaMiB": 3.1
+    },
+    {
+      "language": "json",
+      "fixture": "valid.json",
+      "firstParseMs": 2.03,
+      "secondParseMs": 0.28,
+      "rssDeltaMiB": 2.5
+    },
+    {
+      "language": "yaml",
+      "fixture": "valid.yml",
+      "firstParseMs": 1.78,
+      "secondParseMs": 0.23,
+      "rssDeltaMiB": 2.3
+    }
+  ],
+  "perFamilyMedians": {
+    "firstParseMs": 5.2,
+    "secondParseMs": 0.69,
+    "firstParseMaxMs": 8.48,
+    "slowestFirst": [
+      "php:8.48ms",
+      "csharp:8.13ms",
+      "scala:7.95ms"
+    ]
+  },
+  "memory": {
+    "registryOnlyRssMiB": 66.6,
+    "allGrammarsLoadedRssMiB": 142,
+    "grammarsLoaded": 27,
+    "deltaMiB": 75.4,
+    "cacheBound": "one Parser and one language object per (family, export); never evicted; at most 29 entries"
+  },
+  "mixedCorpusThroughput": {
+    "files": 216,
+    "filesPerSecond": [
+      755.1,
+      1200.2,
+      1183.6
+    ],
+    "median": 1183.6
+  },
+  "dependencyFootprint": {
+    "grammarPackages": 28,
+    "unpackedMiB": 815.7,
+    "compiledAtInstall": 3
+  }
+}

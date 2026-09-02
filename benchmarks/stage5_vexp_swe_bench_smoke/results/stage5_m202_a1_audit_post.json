@@ -1,0 +1,1035 @@
+{
+  "milestone": "M202",
+  "instrument": "run_stage5_m202_a1_audit.ts",
+  "label": "post",
+  "frozenDefinition": {
+    "claimId": "A1",
+    "vexpClaimId": "V-A1",
+    "claimWording": "30 programming languages supported out of the box",
+    "vexpEvidenceSource": "vexp-cli/README.md, heading 'Supported Languages (30)' (M196 claim ledger, sourceKey cliReadme)",
+    "vexpCountingUnit": "one comma-separated name in the README list; a slash-joined pair such as HTML/CSS is ONE name",
+    "vtraceCountingUnit": "one Language enum member that createDefaultParserRegistry([]) registers a parser for",
+    "deduplicationRule": "extensions never count; detectLanguage aliases collapse onto the enum member they return",
+    "parserBackedCriterion": "registry.registeredLanguages() includes the enum member (control F7)",
+    "aliasesCountSeparately": false,
+    "configurationLanguagesCount": "yes on the VEXP side (YAML/JSON is a listed name); on the VTRACE side only if a parser is registered",
+    "markdownCounts": "no: Markdown is not a Language enum member and the M197A ledger records noMarkdownIndexing",
+    "generatedParserSupportCounts": "no distinction is made by the scorer; only registry membership is counted",
+    "matchThreshold": ">= 30 parser-backed families",
+    "exceedThreshold": "> 30",
+    "scorer": "supportedLanguageCount (m197aScoring.ts) + band([count], 30, 31, 'atLeast') (run_stage5_m197a_report.ts)"
+  },
+  "vexp": {
+    "readme": "/home/calvin/.npm-global/lib/node_modules/vexp-cli/README.md",
+    "heading": "## Supported Languages (30)",
+    "headlineCount": 30,
+    "namesListed": 30,
+    "ledgerMeasurementDefinition": "count of language names listed in the README table",
+    "coreBinary": "/home/calvin/.npm-global/lib/node_modules/vexp-cli/node_modules/@vexp/core-linux-x64/bin/vexp-core",
+    "coreBinaryPresent": true,
+    "externalScannerSymbols": [
+      "tree_sitter_bash_external_scanner_destroy",
+      "tree_sitter_c_sharp_external_scanner_deserialize",
+      "tree_sitter_cpp_external_scanner_deserialize",
+      "tree_sitter_scala_external_scanner_deserialize"
+    ],
+    "inventory": [
+      {
+        "name": "TypeScript",
+        "parserImplementation": "not observable: closed native binary",
+        "parserTechnology": "UNKNOWN",
+        "structuralCapability": "not observable from the shipped artefacts; no VEXP process was executed",
+        "sourceEvidence": [],
+        "countedByFrozenA1": true,
+        "reason": "listed under the README heading the M196 ledger cites; the frozen measurement is the count of names"
+      },
+      {
+        "name": "JavaScript",
+        "parserImplementation": "not observable: closed native binary",
+        "parserTechnology": "UNKNOWN",
+        "structuralCapability": "not observable from the shipped artefacts; no VEXP process was executed",
+        "sourceEvidence": [
+          "name token 'javascript' present in vexp-core"
+        ],
+        "countedByFrozenA1": true,
+        "reason": "listed under the README heading the M196 ledger cites; the frozen measurement is the count of names"
+      },
+      {
+        "name": "Python",
+        "parserImplementation": "not observable: closed native binary",
+        "parserTechnology": "UNKNOWN",
+        "structuralCapability": "not observable from the shipped artefacts; no VEXP process was executed",
+        "sourceEvidence": [],
+        "countedByFrozenA1": true,
+        "reason": "listed under the README heading the M196 ledger cites; the frozen measurement is the count of names"
+      },
+      {
+        "name": "Go",
+        "parserImplementation": "not observable: closed native binary",
+        "parserTechnology": "UNKNOWN",
+        "structuralCapability": "not observable from the shipped artefacts; no VEXP process was executed",
+        "sourceEvidence": [],
+        "countedByFrozenA1": true,
+        "reason": "listed under the README heading the M196 ledger cites; the frozen measurement is the count of names"
+      },
+      {
+        "name": "Rust",
+        "parserImplementation": "not observable: closed native binary",
+        "parserTechnology": "UNKNOWN",
+        "structuralCapability": "not observable from the shipped artefacts; no VEXP process was executed",
+        "sourceEvidence": [],
+        "countedByFrozenA1": true,
+        "reason": "listed under the README heading the M196 ledger cites; the frozen measurement is the count of names"
+      },
+      {
+        "name": "Java",
+        "parserImplementation": "not observable: closed native binary",
+        "parserTechnology": "UNKNOWN",
+        "structuralCapability": "not observable from the shipped artefacts; no VEXP process was executed",
+        "sourceEvidence": [],
+        "countedByFrozenA1": true,
+        "reason": "listed under the README heading the M196 ledger cites; the frozen measurement is the count of names"
+      },
+      {
+        "name": "C#",
+        "parserImplementation": "tree-sitter grammar with external scanner (symbol present in vexp-core)",
+        "parserTechnology": "TREE_SITTER_STRUCTURAL",
+        "structuralCapability": "not observable from the shipped artefacts; no VEXP process was executed",
+        "sourceEvidence": [
+          "tree_sitter_c_sharp_external_scanner_deserialize"
+        ],
+        "countedByFrozenA1": true,
+        "reason": "listed under the README heading the M196 ledger cites; the frozen measurement is the count of names"
+      },
+      {
+        "name": "C",
+        "parserImplementation": "not observable: closed native binary",
+        "parserTechnology": "UNKNOWN",
+        "structuralCapability": "not observable from the shipped artefacts; no VEXP process was executed",
+        "sourceEvidence": [],
+        "countedByFrozenA1": true,
+        "reason": "listed under the README heading the M196 ledger cites; the frozen measurement is the count of names"
+      },
+      {
+        "name": "C++",
+        "parserImplementation": "tree-sitter grammar with external scanner (symbol present in vexp-core)",
+        "parserTechnology": "TREE_SITTER_STRUCTURAL",
+        "structuralCapability": "not observable from the shipped artefacts; no VEXP process was executed",
+        "sourceEvidence": [
+          "tree_sitter_cpp_external_scanner_deserialize"
+        ],
+        "countedByFrozenA1": true,
+        "reason": "listed under the README heading the M196 ledger cites; the frozen measurement is the count of names"
+      },
+      {
+        "name": "Ruby",
+        "parserImplementation": "not observable: closed native binary",
+        "parserTechnology": "UNKNOWN",
+        "structuralCapability": "not observable from the shipped artefacts; no VEXP process was executed",
+        "sourceEvidence": [],
+        "countedByFrozenA1": true,
+        "reason": "listed under the README heading the M196 ledger cites; the frozen measurement is the count of names"
+      },
+      {
+        "name": "Kotlin",
+        "parserImplementation": "not observable: closed native binary",
+        "parserTechnology": "UNKNOWN",
+        "structuralCapability": "not observable from the shipped artefacts; no VEXP process was executed",
+        "sourceEvidence": [],
+        "countedByFrozenA1": true,
+        "reason": "listed under the README heading the M196 ledger cites; the frozen measurement is the count of names"
+      },
+      {
+        "name": "Scala",
+        "parserImplementation": "tree-sitter grammar with external scanner (symbol present in vexp-core)",
+        "parserTechnology": "TREE_SITTER_STRUCTURAL",
+        "structuralCapability": "not observable from the shipped artefacts; no VEXP process was executed",
+        "sourceEvidence": [
+          "tree_sitter_scala_external_scanner_deserialize"
+        ],
+        "countedByFrozenA1": true,
+        "reason": "listed under the README heading the M196 ledger cites; the frozen measurement is the count of names"
+      },
+      {
+        "name": "Swift",
+        "parserImplementation": "not observable: closed native binary",
+        "parserTechnology": "UNKNOWN",
+        "structuralCapability": "not observable from the shipped artefacts; no VEXP process was executed",
+        "sourceEvidence": [],
+        "countedByFrozenA1": true,
+        "reason": "listed under the README heading the M196 ledger cites; the frozen measurement is the count of names"
+      },
+      {
+        "name": "Dart",
+        "parserImplementation": "not observable: closed native binary",
+        "parserTechnology": "UNKNOWN",
+        "structuralCapability": "not observable from the shipped artefacts; no VEXP process was executed",
+        "sourceEvidence": [],
+        "countedByFrozenA1": true,
+        "reason": "listed under the README heading the M196 ledger cites; the frozen measurement is the count of names"
+      },
+      {
+        "name": "Elixir",
+        "parserImplementation": "not observable: closed native binary",
+        "parserTechnology": "UNKNOWN",
+        "structuralCapability": "not observable from the shipped artefacts; no VEXP process was executed",
+        "sourceEvidence": [],
+        "countedByFrozenA1": true,
+        "reason": "listed under the README heading the M196 ledger cites; the frozen measurement is the count of names"
+      },
+      {
+        "name": "Haskell",
+        "parserImplementation": "not observable: closed native binary",
+        "parserTechnology": "UNKNOWN",
+        "structuralCapability": "not observable from the shipped artefacts; no VEXP process was executed",
+        "sourceEvidence": [],
+        "countedByFrozenA1": true,
+        "reason": "listed under the README heading the M196 ledger cites; the frozen measurement is the count of names"
+      },
+      {
+        "name": "OCaml",
+        "parserImplementation": "not observable: closed native binary",
+        "parserTechnology": "UNKNOWN",
+        "structuralCapability": "not observable from the shipped artefacts; no VEXP process was executed",
+        "sourceEvidence": [],
+        "countedByFrozenA1": true,
+        "reason": "listed under the README heading the M196 ledger cites; the frozen measurement is the count of names"
+      },
+      {
+        "name": "Lua",
+        "parserImplementation": "not observable: closed native binary",
+        "parserTechnology": "UNKNOWN",
+        "structuralCapability": "not observable from the shipped artefacts; no VEXP process was executed",
+        "sourceEvidence": [],
+        "countedByFrozenA1": true,
+        "reason": "listed under the README heading the M196 ledger cites; the frozen measurement is the count of names"
+      },
+      {
+        "name": "R",
+        "parserImplementation": "not observable: closed native binary",
+        "parserTechnology": "UNKNOWN",
+        "structuralCapability": "not observable from the shipped artefacts; no VEXP process was executed",
+        "sourceEvidence": [],
+        "countedByFrozenA1": true,
+        "reason": "listed under the README heading the M196 ledger cites; the frozen measurement is the count of names"
+      },
+      {
+        "name": "PHP",
+        "parserImplementation": "not observable: closed native binary",
+        "parserTechnology": "UNKNOWN",
+        "structuralCapability": "not observable from the shipped artefacts; no VEXP process was executed",
+        "sourceEvidence": [],
+        "countedByFrozenA1": true,
+        "reason": "listed under the README heading the M196 ledger cites; the frozen measurement is the count of names"
+      },
+      {
+        "name": "Zig",
+        "parserImplementation": "not observable: closed native binary",
+        "parserTechnology": "UNKNOWN",
+        "structuralCapability": "not observable from the shipped artefacts; no VEXP process was executed",
+        "sourceEvidence": [],
+        "countedByFrozenA1": true,
+        "reason": "listed under the README heading the M196 ledger cites; the frozen measurement is the count of names"
+      },
+      {
+        "name": "HCL/Terraform",
+        "parserImplementation": "not observable: closed native binary",
+        "parserTechnology": "UNKNOWN",
+        "structuralCapability": "not observable from the shipped artefacts; no VEXP process was executed",
+        "sourceEvidence": [],
+        "countedByFrozenA1": true,
+        "reason": "listed under the README heading the M196 ledger cites; the frozen measurement is the count of names"
+      },
+      {
+        "name": "Objective-C",
+        "parserImplementation": "not observable: closed native binary",
+        "parserTechnology": "UNKNOWN",
+        "structuralCapability": "not observable from the shipped artefacts; no VEXP process was executed",
+        "sourceEvidence": [],
+        "countedByFrozenA1": true,
+        "reason": "listed under the README heading the M196 ledger cites; the frozen measurement is the count of names"
+      },
+      {
+        "name": "Bash/Shell",
+        "parserImplementation": "tree-sitter grammar with external scanner (symbol present in vexp-core)",
+        "parserTechnology": "TREE_SITTER_STRUCTURAL",
+        "structuralCapability": "not observable from the shipped artefacts; no VEXP process was executed",
+        "sourceEvidence": [
+          "tree_sitter_bash_external_scanner_destroy"
+        ],
+        "countedByFrozenA1": true,
+        "reason": "listed under the README heading the M196 ledger cites; the frozen measurement is the count of names"
+      },
+      {
+        "name": "Dockerfile",
+        "parserImplementation": "not observable: closed native binary",
+        "parserTechnology": "UNKNOWN",
+        "structuralCapability": "not observable from the shipped artefacts; no VEXP process was executed",
+        "sourceEvidence": [],
+        "countedByFrozenA1": true,
+        "reason": "listed under the README heading the M196 ledger cites; the frozen measurement is the count of names"
+      },
+      {
+        "name": "Clojure",
+        "parserImplementation": "not observable: closed native binary",
+        "parserTechnology": "UNKNOWN",
+        "structuralCapability": "not observable from the shipped artefacts; no VEXP process was executed",
+        "sourceEvidence": [],
+        "countedByFrozenA1": true,
+        "reason": "listed under the README heading the M196 ledger cites; the frozen measurement is the count of names"
+      },
+      {
+        "name": "F#",
+        "parserImplementation": "not observable: closed native binary",
+        "parserTechnology": "UNKNOWN",
+        "structuralCapability": "not observable from the shipped artefacts; no VEXP process was executed",
+        "sourceEvidence": [],
+        "countedByFrozenA1": true,
+        "reason": "listed under the README heading the M196 ledger cites; the frozen measurement is the count of names"
+      },
+      {
+        "name": "SQL",
+        "parserImplementation": "not observable: closed native binary",
+        "parserTechnology": "UNKNOWN",
+        "structuralCapability": "not observable from the shipped artefacts; no VEXP process was executed",
+        "sourceEvidence": [],
+        "countedByFrozenA1": true,
+        "reason": "listed under the README heading the M196 ledger cites; the frozen measurement is the count of names"
+      },
+      {
+        "name": "HTML/CSS",
+        "parserImplementation": "not observable: closed native binary",
+        "parserTechnology": "UNKNOWN",
+        "structuralCapability": "not observable from the shipped artefacts; no VEXP process was executed",
+        "sourceEvidence": [],
+        "countedByFrozenA1": true,
+        "reason": "listed under the README heading the M196 ledger cites; the frozen measurement is the count of names"
+      },
+      {
+        "name": "YAML/JSON",
+        "parserImplementation": "not observable: closed native binary",
+        "parserTechnology": "UNKNOWN",
+        "structuralCapability": "not observable from the shipped artefacts; no VEXP process was executed",
+        "sourceEvidence": [],
+        "countedByFrozenA1": true,
+        "reason": "listed under the README heading the M196 ledger cites; the frozen measurement is the count of names"
+      }
+    ],
+    "technologyTally": {
+      "UNKNOWN": 26,
+      "TREE_SITTER_STRUCTURAL": 4
+    }
+  },
+  "vtrace": {
+    "declaredEnumMembers": 31,
+    "extensionDetectedFamilies": 31,
+    "registeredParserFamilies": 30,
+    "registered": [
+      "bash",
+      "c",
+      "clojure",
+      "cpp",
+      "csharp",
+      "css",
+      "cython",
+      "dart",
+      "elixir",
+      "go",
+      "haskell",
+      "html",
+      "java",
+      "javascript",
+      "json",
+      "kotlin",
+      "lua",
+      "objective_c",
+      "ocaml",
+      "php",
+      "python",
+      "r",
+      "ruby",
+      "rust",
+      "scala",
+      "sql",
+      "swift",
+      "typescript",
+      "yaml",
+      "zig"
+    ],
+    "frozenA1Count": 30,
+    "independentCount": 30,
+    "classification": "MATCHES",
+    "inventory": [
+      {
+        "language": "typescript",
+        "extensions": [
+          ".ts",
+          ".tsx"
+        ],
+        "registeredParser": true,
+        "advertisedIndexable": true,
+        "countedByFrozenA1": true,
+        "reason": "enum member with a parser registered by createDefaultParserRegistry"
+      },
+      {
+        "language": "javascript",
+        "extensions": [
+          ".js",
+          ".jsx",
+          ".mjs",
+          ".cjs"
+        ],
+        "registeredParser": true,
+        "advertisedIndexable": true,
+        "countedByFrozenA1": true,
+        "reason": "enum member with a parser registered by createDefaultParserRegistry"
+      },
+      {
+        "language": "python",
+        "extensions": [
+          ".py"
+        ],
+        "registeredParser": true,
+        "advertisedIndexable": true,
+        "countedByFrozenA1": true,
+        "reason": "enum member with a parser registered by createDefaultParserRegistry"
+      },
+      {
+        "language": "cython",
+        "extensions": [
+          ".pyx",
+          ".pxd",
+          ".pxi"
+        ],
+        "registeredParser": true,
+        "advertisedIndexable": true,
+        "countedByFrozenA1": true,
+        "reason": "enum member with a parser registered by createDefaultParserRegistry"
+      },
+      {
+        "language": "yaml",
+        "extensions": [
+          ".yml",
+          ".yaml"
+        ],
+        "registeredParser": true,
+        "advertisedIndexable": true,
+        "countedByFrozenA1": true,
+        "reason": "enum member with a parser registered by createDefaultParserRegistry"
+      },
+      {
+        "language": "toml",
+        "extensions": [
+          ".toml"
+        ],
+        "registeredParser": false,
+        "advertisedIndexable": false,
+        "countedByFrozenA1": false,
+        "reason": "detected by extension but no parser registered: a detection rule, not language support (F7)"
+      },
+      {
+        "language": "go",
+        "extensions": [
+          ".go"
+        ],
+        "registeredParser": true,
+        "advertisedIndexable": true,
+        "countedByFrozenA1": true,
+        "reason": "enum member with a parser registered by createDefaultParserRegistry"
+      },
+      {
+        "language": "rust",
+        "extensions": [
+          ".rs"
+        ],
+        "registeredParser": true,
+        "advertisedIndexable": true,
+        "countedByFrozenA1": true,
+        "reason": "enum member with a parser registered by createDefaultParserRegistry"
+      },
+      {
+        "language": "java",
+        "extensions": [
+          ".java"
+        ],
+        "registeredParser": true,
+        "advertisedIndexable": true,
+        "countedByFrozenA1": true,
+        "reason": "enum member with a parser registered by createDefaultParserRegistry"
+      },
+      {
+        "language": "csharp",
+        "extensions": [
+          ".cs"
+        ],
+        "registeredParser": true,
+        "advertisedIndexable": true,
+        "countedByFrozenA1": true,
+        "reason": "enum member with a parser registered by createDefaultParserRegistry"
+      },
+      {
+        "language": "c",
+        "extensions": [
+          ".c",
+          ".h"
+        ],
+        "registeredParser": true,
+        "advertisedIndexable": true,
+        "countedByFrozenA1": true,
+        "reason": "enum member with a parser registered by createDefaultParserRegistry"
+      },
+      {
+        "language": "cpp",
+        "extensions": [
+          ".cpp",
+          ".cc",
+          ".cxx",
+          ".hpp",
+          ".hh",
+          ".hxx"
+        ],
+        "registeredParser": true,
+        "advertisedIndexable": true,
+        "countedByFrozenA1": true,
+        "reason": "enum member with a parser registered by createDefaultParserRegistry"
+      },
+      {
+        "language": "ruby",
+        "extensions": [
+          ".rb"
+        ],
+        "registeredParser": true,
+        "advertisedIndexable": true,
+        "countedByFrozenA1": true,
+        "reason": "enum member with a parser registered by createDefaultParserRegistry"
+      },
+      {
+        "language": "kotlin",
+        "extensions": [
+          ".kt",
+          ".kts"
+        ],
+        "registeredParser": true,
+        "advertisedIndexable": true,
+        "countedByFrozenA1": true,
+        "reason": "enum member with a parser registered by createDefaultParserRegistry"
+      },
+      {
+        "language": "scala",
+        "extensions": [
+          ".scala",
+          ".sc"
+        ],
+        "registeredParser": true,
+        "advertisedIndexable": true,
+        "countedByFrozenA1": true,
+        "reason": "enum member with a parser registered by createDefaultParserRegistry"
+      },
+      {
+        "language": "swift",
+        "extensions": [
+          ".swift"
+        ],
+        "registeredParser": true,
+        "advertisedIndexable": true,
+        "countedByFrozenA1": true,
+        "reason": "enum member with a parser registered by createDefaultParserRegistry"
+      },
+      {
+        "language": "dart",
+        "extensions": [
+          ".dart"
+        ],
+        "registeredParser": true,
+        "advertisedIndexable": true,
+        "countedByFrozenA1": true,
+        "reason": "enum member with a parser registered by createDefaultParserRegistry"
+      },
+      {
+        "language": "elixir",
+        "extensions": [
+          ".ex",
+          ".exs"
+        ],
+        "registeredParser": true,
+        "advertisedIndexable": true,
+        "countedByFrozenA1": true,
+        "reason": "enum member with a parser registered by createDefaultParserRegistry"
+      },
+      {
+        "language": "haskell",
+        "extensions": [
+          ".hs"
+        ],
+        "registeredParser": true,
+        "advertisedIndexable": true,
+        "countedByFrozenA1": true,
+        "reason": "enum member with a parser registered by createDefaultParserRegistry"
+      },
+      {
+        "language": "ocaml",
+        "extensions": [
+          ".ml",
+          ".mli"
+        ],
+        "registeredParser": true,
+        "advertisedIndexable": true,
+        "countedByFrozenA1": true,
+        "reason": "enum member with a parser registered by createDefaultParserRegistry"
+      },
+      {
+        "language": "lua",
+        "extensions": [
+          ".lua"
+        ],
+        "registeredParser": true,
+        "advertisedIndexable": true,
+        "countedByFrozenA1": true,
+        "reason": "enum member with a parser registered by createDefaultParserRegistry"
+      },
+      {
+        "language": "r",
+        "extensions": [
+          ".r",
+          ".R"
+        ],
+        "registeredParser": true,
+        "advertisedIndexable": true,
+        "countedByFrozenA1": true,
+        "reason": "enum member with a parser registered by createDefaultParserRegistry"
+      },
+      {
+        "language": "php",
+        "extensions": [
+          ".php"
+        ],
+        "registeredParser": true,
+        "advertisedIndexable": true,
+        "countedByFrozenA1": true,
+        "reason": "enum member with a parser registered by createDefaultParserRegistry"
+      },
+      {
+        "language": "zig",
+        "extensions": [
+          ".zig"
+        ],
+        "registeredParser": true,
+        "advertisedIndexable": true,
+        "countedByFrozenA1": true,
+        "reason": "enum member with a parser registered by createDefaultParserRegistry"
+      },
+      {
+        "language": "objective_c",
+        "extensions": [
+          ".m"
+        ],
+        "registeredParser": true,
+        "advertisedIndexable": true,
+        "countedByFrozenA1": true,
+        "reason": "enum member with a parser registered by createDefaultParserRegistry"
+      },
+      {
+        "language": "bash",
+        "extensions": [
+          ".sh",
+          ".bash"
+        ],
+        "registeredParser": true,
+        "advertisedIndexable": true,
+        "countedByFrozenA1": true,
+        "reason": "enum member with a parser registered by createDefaultParserRegistry"
+      },
+      {
+        "language": "html",
+        "extensions": [
+          ".html",
+          ".htm"
+        ],
+        "registeredParser": true,
+        "advertisedIndexable": true,
+        "countedByFrozenA1": true,
+        "reason": "enum member with a parser registered by createDefaultParserRegistry"
+      },
+      {
+        "language": "css",
+        "extensions": [
+          ".css"
+        ],
+        "registeredParser": true,
+        "advertisedIndexable": true,
+        "countedByFrozenA1": true,
+        "reason": "enum member with a parser registered by createDefaultParserRegistry"
+      },
+      {
+        "language": "json",
+        "extensions": [
+          ".json"
+        ],
+        "registeredParser": true,
+        "advertisedIndexable": true,
+        "countedByFrozenA1": true,
+        "reason": "enum member with a parser registered by createDefaultParserRegistry"
+      },
+      {
+        "language": "sql",
+        "extensions": [
+          ".sql"
+        ],
+        "registeredParser": true,
+        "advertisedIndexable": true,
+        "countedByFrozenA1": true,
+        "reason": "enum member with a parser registered by createDefaultParserRegistry"
+      },
+      {
+        "language": "clojure",
+        "extensions": [
+          ".clj",
+          ".cljs",
+          ".cljc"
+        ],
+        "registeredParser": true,
+        "advertisedIndexable": true,
+        "countedByFrozenA1": true,
+        "reason": "enum member with a parser registered by createDefaultParserRegistry"
+      }
+    ],
+    "vexpRowConvention": {
+      "rowsCovered": 27,
+      "of": 30,
+      "partialRows": [],
+      "registeredFamiliesOutsideVexpList": [
+        "cython"
+      ],
+      "rows": [
+        {
+          "name": "TypeScript",
+          "vtraceLanguages": [
+            "typescript"
+          ],
+          "covered": [
+            "typescript"
+          ],
+          "fully": true,
+          "partially": false
+        },
+        {
+          "name": "JavaScript",
+          "vtraceLanguages": [
+            "javascript"
+          ],
+          "covered": [
+            "javascript"
+          ],
+          "fully": true,
+          "partially": false
+        },
+        {
+          "name": "Python",
+          "vtraceLanguages": [
+            "python"
+          ],
+          "covered": [
+            "python"
+          ],
+          "fully": true,
+          "partially": false
+        },
+        {
+          "name": "Go",
+          "vtraceLanguages": [
+            "go"
+          ],
+          "covered": [
+            "go"
+          ],
+          "fully": true,
+          "partially": false
+        },
+        {
+          "name": "Rust",
+          "vtraceLanguages": [
+            "rust"
+          ],
+          "covered": [
+            "rust"
+          ],
+          "fully": true,
+          "partially": false
+        },
+        {
+          "name": "Java",
+          "vtraceLanguages": [
+            "java"
+          ],
+          "covered": [
+            "java"
+          ],
+          "fully": true,
+          "partially": false
+        },
+        {
+          "name": "C#",
+          "vtraceLanguages": [
+            "csharp"
+          ],
+          "covered": [
+            "csharp"
+          ],
+          "fully": true,
+          "partially": false
+        },
+        {
+          "name": "C",
+          "vtraceLanguages": [
+            "c"
+          ],
+          "covered": [
+            "c"
+          ],
+          "fully": true,
+          "partially": false
+        },
+        {
+          "name": "C++",
+          "vtraceLanguages": [
+            "cpp"
+          ],
+          "covered": [
+            "cpp"
+          ],
+          "fully": true,
+          "partially": false
+        },
+        {
+          "name": "Ruby",
+          "vtraceLanguages": [
+            "ruby"
+          ],
+          "covered": [
+            "ruby"
+          ],
+          "fully": true,
+          "partially": false
+        },
+        {
+          "name": "Kotlin",
+          "vtraceLanguages": [
+            "kotlin"
+          ],
+          "covered": [
+            "kotlin"
+          ],
+          "fully": true,
+          "partially": false
+        },
+        {
+          "name": "Scala",
+          "vtraceLanguages": [
+            "scala"
+          ],
+          "covered": [
+            "scala"
+          ],
+          "fully": true,
+          "partially": false
+        },
+        {
+          "name": "Swift",
+          "vtraceLanguages": [
+            "swift"
+          ],
+          "covered": [
+            "swift"
+          ],
+          "fully": true,
+          "partially": false
+        },
+        {
+          "name": "Dart",
+          "vtraceLanguages": [
+            "dart"
+          ],
+          "covered": [
+            "dart"
+          ],
+          "fully": true,
+          "partially": false
+        },
+        {
+          "name": "Elixir",
+          "vtraceLanguages": [
+            "elixir"
+          ],
+          "covered": [
+            "elixir"
+          ],
+          "fully": true,
+          "partially": false
+        },
+        {
+          "name": "Haskell",
+          "vtraceLanguages": [
+            "haskell"
+          ],
+          "covered": [
+            "haskell"
+          ],
+          "fully": true,
+          "partially": false
+        },
+        {
+          "name": "OCaml",
+          "vtraceLanguages": [
+            "ocaml"
+          ],
+          "covered": [
+            "ocaml"
+          ],
+          "fully": true,
+          "partially": false
+        },
+        {
+          "name": "Lua",
+          "vtraceLanguages": [
+            "lua"
+          ],
+          "covered": [
+            "lua"
+          ],
+          "fully": true,
+          "partially": false
+        },
+        {
+          "name": "R",
+          "vtraceLanguages": [
+            "r"
+          ],
+          "covered": [
+            "r"
+          ],
+          "fully": true,
+          "partially": false
+        },
+        {
+          "name": "PHP",
+          "vtraceLanguages": [
+            "php"
+          ],
+          "covered": [
+            "php"
+          ],
+          "fully": true,
+          "partially": false
+        },
+        {
+          "name": "Zig",
+          "vtraceLanguages": [
+            "zig"
+          ],
+          "covered": [
+            "zig"
+          ],
+          "fully": true,
+          "partially": false
+        },
+        {
+          "name": "HCL/Terraform",
+          "vtraceLanguages": [
+            "hcl"
+          ],
+          "covered": [],
+          "fully": false,
+          "partially": false
+        },
+        {
+          "name": "Objective-C",
+          "vtraceLanguages": [
+            "objective_c"
+          ],
+          "covered": [
+            "objective_c"
+          ],
+          "fully": true,
+          "partially": false
+        },
+        {
+          "name": "Bash/Shell",
+          "vtraceLanguages": [
+            "bash"
+          ],
+          "covered": [
+            "bash"
+          ],
+          "fully": true,
+          "partially": false
+        },
+        {
+          "name": "Dockerfile",
+          "vtraceLanguages": [
+            "dockerfile"
+          ],
+          "covered": [],
+          "fully": false,
+          "partially": false
+        },
+        {
+          "name": "Clojure",
+          "vtraceLanguages": [
+            "clojure"
+          ],
+          "covered": [
+            "clojure"
+          ],
+          "fully": true,
+          "partially": false
+        },
+        {
+          "name": "F#",
+          "vtraceLanguages": [
+            "fsharp"
+          ],
+          "covered": [],
+          "fully": false,
+          "partially": false
+        },
+        {
+          "name": "SQL",
+          "vtraceLanguages": [
+            "sql"
+          ],
+          "covered": [
+            "sql"
+          ],
+          "fully": true,
+          "partially": false
+        },
+        {
+          "name": "HTML/CSS",
+          "vtraceLanguages": [
+            "html",
+            "css"
+          ],
+          "covered": [
+            "html",
+            "css"
+          ],
+          "fully": true,
+          "partially": false
+        },
+        {
+          "name": "YAML/JSON",
+          "vtraceLanguages": [
+            "yaml",
+            "json"
+          ],
+          "covered": [
+            "yaml",
+            "json"
+          ],
+          "fully": true,
+          "partially": false
+        }
+      ]
+    }
+  }
+}

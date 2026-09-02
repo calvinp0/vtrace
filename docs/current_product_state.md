@@ -88,9 +88,15 @@ merging, or cross-session merging. Durable observations are never consolidated.
 | **Python** | CPython `ast` (subprocess) | ✓ | ✓ | ✓ | ✓ | Strongest — deepest call/ref/member/inheritance evidence. |
 | **TypeScript** | tree-sitter | ✓ | ✓ | ✓ (conservative) | ✓ | Same-file / exactly-imported callables, `this.method`, same-file `ClassName.method`; arbitrary object receivers skipped. |
 | **Cython** | tokenizer (subprocess) | ✓ | ✓ | ✓ (conservative) | ✓ | Top-level `cdef class` + `def/cdef/cpdef` methods; conservative calls/refs. Narrow. |
-| **JavaScript** | none registered | ✗ | ✗ | ✗ | ✗ | Detected by extension (`.js`/`.jsx`) but **no registered parser** → `unregisteredLanguage`; scanned, not parsed. |
-| **Go** | none | — | — | — | — | Dead enum value; never implemented. |
-| **Rust** | none | — | — | — | — | Dead enum value; never implemented. |
+| **23 STRUCTURAL families** (M202): JavaScript, Go, Rust, Java, C#, C, C++, Ruby, Kotlin, Scala, Swift, Dart, Elixir, Haskell, OCaml, Lua, R, PHP, Zig, Objective-C, Bash, SQL, Clojure | tree-sitter, one generic walk over `src/parsers/structuralRules.ts` | ✓ | ✗ | ✗ | ✗ | Named declarations (functions, methods, classes/structs/enums/records, interfaces/traits/protocols, type aliases, module constants/variables) with byte spans, verbatim signatures, leading-comment docstrings and `contains` edges. Namespaces/modules/`impl` blocks are scopes, not symbols. **No import, call or reference edges** — none are derivable from syntax alone and none are invented. Malformed regions yield no declarations; a wholly unparseable file is `parse_failed`. |
+| **YAML** (DOCUMENT) | tree-sitter for parse truth + line-oriented chunker | ✗ | ✗ | ✗ | ✗ | Chunked and searchable as before; syntax errors now surface as diagnostics. |
+| **HTML, CSS, JSON** (PARSED_NO_STRUCTURE) | tree-sitter | ✗ | ✗ | ✗ | ✗ | Parsed for parse truth only: no declaration model, zero symbols, not document-indexed. |
+| **TOML** | none (document chunker only) | ✗ | ✗ | ✗ | ✗ | Detected and chunked; **not parser-backed**, not counted as a family. |
+
+The family table (`src/parsers/languageFamilies.ts`) is the single source of truth for
+enum member ↔ extensions ↔ tier ↔ grammar; `languageDetection.ts` and
+`createDefaultParserRegistry` derive from it. A tier must be read before assuming a
+call graph exists for a family.
 
 Note: TS/Cython **do** now emit `calls` edges (`typescriptParser.ts:634`,
 `cythonParser.ts:1482`) — the older audit's "Python-only calls" claim is stale.
