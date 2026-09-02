@@ -544,3 +544,86 @@ function findSymbol(symbols: readonly SymbolRecord[], localName: string): Symbol
 
   return symbol as SymbolRecord;
 }
+
+/**
+ * M198 C1. `node-tree-sitter` reports node offsets as UTF-16 code-unit indices;
+ * the domain contract for `startByte`/`endByte` is UTF-8 bytes. Slicing the
+ * file's byte buffer at a UTF-16 offset lands EARLY by the surplus the preceding
+ * non-ASCII characters contribute, which is how `export function foo(...)` was
+ * emitted as `t function foo(...` for 58% of this repository's own declarations.
+ *
+ * One em dash is one UTF-16 unit and three UTF-8 bytes, so it skews everything
+ * below it by two.
+ */
+test("signatures are not skewed by non-ASCII source above the declaration", async () => {
+  const content = [
+    "// budget — allocation notes",
+    "export function editedFilesFromPatch(patch: string): string[] {",
+    "  return [patch];",
+    "}",
+    "",
+  ].join("\n");
+
+  const result = await parseFixture(content);
+
+  const symbol = onlySymbolOfKind(result.symbols, SymbolKind.Function);
+  assert.equal(symbol.signature, "function editedFilesFromPatch(patch: string): string[]");
+  // The contract itself, not just its consequence: the recorded span must be a
+  // BYTE span, so slicing the file's bytes with it reproduces the declaration.
+  assert.equal(
+    Buffer.from(content, "utf8").subarray(symbol.startByte, symbol.endByte).toString("utf8"),
+    "function editedFilesFromPatch(patch: string): string[] {\n  return [patch];\n}",
+  );
+});
+
+/**
+ * M198 C2. A signature is the declaration up to its body, however many lines and
+ * type parameters that takes. The failure this guards against is truncation, so
+ * the assertion is on the WHOLE signature rather than on a prefix of it.
+ */
+test("multiline generic signatures are preserved complete", async () => {
+  const content = [
+    "// ünïcödé above, so every offset below is skewed",
+    "export async function collect<TItem extends { id: string }, TOut>(",
+    "  items: readonly TItem[],",
+    "  project: (item: TItem) => Promise<TOut>,",
+    "): Promise<readonly TOut[]> {",
+    "  return Promise.all(items.map(project));",
+    "}",
+    "",
+  ].join("\n");
+
+  const result = await parseFixture(content);
+
+  const symbol = onlySymbolOfKind(result.symbols, SymbolKind.Function);
+  assert.equal(symbol.signature, [
+    "async function collect<TItem extends { id: string }, TOut>(",
+    "  items: readonly TItem[],",
+    "  project: (item: TItem) => Promise<TOut>,",
+    "): Promise<readonly TOut[]>",
+  ].join("\n"));
+  assert.ok(content.includes(symbol.signature));
+});
+
+/**
+ * M198 C2b. Class members are sliced by the same machinery, and a class body is
+ * exactly where the skew accumulates furthest from the file's first non-ASCII
+ * character.
+ */
+test("method signatures below non-ASCII source are preserved", async () => {
+  const content = [
+    "/** Récupère — with two non-ASCII characters. */",
+    "export class Loader {",
+    "  loadAll(paths: readonly string[], budget: number): Map<string, number> {",
+    "    return new Map();",
+    "  }",
+    "}",
+    "",
+  ].join("\n");
+
+  const result = await parseFixture(content);
+
+  const method = findSymbolOfKind(result.symbols, "loadAll", SymbolKind.Method);
+  assert.equal(method.signature, "loadAll(paths: readonly string[], budget: number): Map<string, number>");
+  assert.ok(content.includes(method.signature));
+});

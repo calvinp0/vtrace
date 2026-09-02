@@ -194,3 +194,158 @@ async function withSourceFixture(
     await rm(root, { recursive: true, force: true });
   }
 }
+
+/**
+ * M198 C3 / C4. An excerpt declares `startLine` as the line its text BEGINS on,
+ * and `persistedOccurrence` indexes into the text by `site.startLine -
+ * excerpt.startLine`. If the two disagree the rendered "call site" is some other
+ * line of the file — most often the comment attached above the declaration,
+ * because that is what a span that starts early reaches back into.
+ *
+ * The fixture puts non-ASCII text above the caller (so a byte/unit skew would
+ * show) and a comment immediately above the call (so a skew has something
+ * misleading to land on).
+ */
+test("an excerpt's declared start line is the line its text actually begins on", async () => {
+  await withAnchoringFixture(async (repoRoot) => {
+    const db = openIndexerDatabase();
+
+    try {
+      await indexProject({ repoRoot, db });
+      const caller = listSymbolsByFqName(db, "src/anchor.ts::runPipeline")[0]!;
+      const source = (await import("node:fs")).readFileSync(path.join(repoRoot, "src/anchor.ts"), "utf8").split("\n");
+
+      const excerpt = buildSymbolSourceExcerpt(db, repoRoot, caller.id, { mode: "span" });
+
+      assert.ok(excerpt);
+      const emitted = excerpt.text.split("\n");
+      // A symbol span starts at the DECLARATION, which for an exported symbol is
+      // mid-line (`export ` precedes the node), so the first emitted line is a
+      // suffix of its source line. Every line after it must be exact — that is
+      // the property `persistedOccurrence` indexes on, and the property a
+      // byte/unit skew breaks.
+      assert.ok(source[excerpt.startLine - 1]!.endsWith(emitted[0]!),
+        `line ${excerpt.startLine} is ${JSON.stringify(source[excerpt.startLine - 1])}, excerpt begins ${JSON.stringify(emitted[0])}`);
+      for (let offset = 1; offset < emitted.length; offset += 1) {
+        assert.equal(source[excerpt.startLine - 1 + offset], emitted[offset],
+          `excerpt line ${offset} must be source line ${excerpt.startLine + offset}`);
+      }
+      assert.equal(excerpt.endLine, excerpt.startLine + emitted.length - 1);
+    } finally {
+      db.close();
+    }
+  });
+});
+
+test("a persisted call site renders the call, not the comment above it", async () => {
+  await withAnchoringFixture(async (repoRoot) => {
+    const db = openIndexerDatabase();
+
+    try {
+      await indexProject({ repoRoot, db });
+      const { listAllEdges, listCallSitesForEdges } = await import("../db/repositories/edgesRepository");
+      const { getSymbolById } = await import("../db/repositories/symbolsRepository");
+      const { buildStaticRelationEvidence } = await import("../impact/staticEvidence");
+
+      const caller = listSymbolsByFqName(db, "src/anchor.ts::runPipeline")[0]!;
+      const callee = listSymbolsByFqName(db, "src/anchor.ts::determineAtoms")[0]!;
+      const edge = listAllEdges(db).find((candidate) => (
+        candidate.srcSymbolId === caller.id && candidate.dstSymbolId === callee.id
+      ));
+
+      assert.ok(edge, "the fixture's call must produce an edge");
+      const callSites = listCallSitesForEdges(db, [edge.id]).get(edge.id) ?? [];
+      assert.ok(callSites.length > 0, "the parser must record the occurrence");
+
+      const relation = buildStaticRelationEvidence(db, edge, getSymbolById(db, caller.id)!, getSymbolById(db, callee.id)!, {
+        direction: "outgoing",
+        repoRoot,
+        includeSourceEvidence: true,
+        callSites,
+      });
+
+      const rendered = relation.evidence.sourceText;
+      assert.ok(typeof rendered === "string" && rendered.length > 0, "the call must render as an expression");
+      assert.ok(rendered.includes("determineAtoms"), `rendered text must name the callee, got ${JSON.stringify(rendered)}`);
+      assert.ok(!rendered.trimStart().startsWith("//"), `rendered text must not be the comment, got ${JSON.stringify(rendered)}`);
+
+      // C3 proper: the rendered line is the line the declared coordinates name.
+      const source = (await import("node:fs")).readFileSync(path.join(repoRoot, "src/anchor.ts"), "utf8").split("\n");
+      assert.equal(rendered, source[callSites[0]!.startLine - 1]!.trim());
+    } finally {
+      db.close();
+    }
+  });
+});
+
+async function withAnchoringFixture(
+  run: (repoRoot: string) => Promise<void>,
+): Promise<void> {
+  const root = await mkdtemp(path.join(os.tmpdir(), "vtrace-anchor-"));
+  const repoRoot = path.join(root, "repo");
+
+  try {
+    await mkdir(path.join(repoRoot, "src"), { recursive: true });
+    await writeFile(
+      path.join(repoRoot, "src", "anchor.ts"),
+      [
+        "// Résumé — two non-ASCII characters, so every byte offset below is",
+        "// two greater than its UTF-16 index.",
+        "",
+        "export function determineAtoms(atoms: number, coords: string): string {",
+        "  return `${atoms}:${coords}`;",
+        "}",
+        "",
+        "export function runPipeline(atoms: number): string {",
+        "  // Still try to determine the atoms before giving up.",
+        "  return determineAtoms(atoms, \"xyz\");",
+        "}",
+        "",
+      ].join("\n"),
+    );
+    await run(repoRoot);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+}
+
+/**
+ * M198 C5. Where no call site was persisted, the line can only be found by
+ * scanning the caller's body — and a scan hit is not proof that this occurrence
+ * produced the edge. The rendering must say so rather than present the line as
+ * exact provenance, because a reader cannot tell the difference from the text.
+ */
+test("an unpersisted occurrence is rendered as a scan, never as an exact site", async () => {
+  await withAnchoringFixture(async (repoRoot) => {
+    const db = openIndexerDatabase();
+
+    try {
+      await indexProject({ repoRoot, db });
+      const { listAllEdges } = await import("../db/repositories/edgesRepository");
+      const { getSymbolById } = await import("../db/repositories/symbolsRepository");
+      const { buildStaticRelationEvidence } = await import("../impact/staticEvidence");
+
+      const caller = listSymbolsByFqName(db, "src/anchor.ts::runPipeline")[0]!;
+      const callee = listSymbolsByFqName(db, "src/anchor.ts::determineAtoms")[0]!;
+      const edge = listAllEdges(db).find((candidate) => (
+        candidate.srcSymbolId === caller.id && candidate.dstSymbolId === callee.id
+      ))!;
+
+      const relation = buildStaticRelationEvidence(db, edge, getSymbolById(db, caller.id)!, getSymbolById(db, callee.id)!, {
+        direction: "outgoing",
+        repoRoot,
+        includeSourceEvidence: true,
+        callSites: [],
+      });
+
+      assert.notEqual(relation.evidence.locationKind, "edge_site");
+      assert.equal(relation.evidence.callSites, undefined);
+      assert.ok(
+        relation.limitations.some((limitation) => limitation.includes("not proof")),
+        `an unproven occurrence must be labelled, got ${JSON.stringify(relation.limitations)}`,
+      );
+    } finally {
+      db.close();
+    }
+  });
+});
