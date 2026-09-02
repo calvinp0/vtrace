@@ -138,8 +138,11 @@ const CORPORA = [
   // the corpus that is the product grew with the product; the count is
   // re-frozen at 500 on 2026-09-02. Nothing else moves: the source path, the
   // extensions, every threshold and every scorer are the M197A ones, and the
-  // pre-change replay at 492 is kept as stage5_m202_authority.json.
-  { id: "C-MED", source: path.join(REPO, "src"), exts: [".ts", ".tsx"], expected: 500,
+  // pre-change replay at 492 is kept as stage5_m202_authority.json. M203 added
+  // two more (src/runPipeline/orientationAccounting.ts and its test), so the
+  // count is re-frozen at 502 on 2026-09-02 by the same rule; the replay at 500
+  // that failed on this line alone is kept as stage5_m203_authority.json.
+  { id: "C-MED", source: path.join(REPO, "src"), exts: [".ts", ".tsx"], expected: 502,
     revisionOf: REPO, expectedRevisionPrefix: null },
   { id: "C-LARGE", source: "/home/calvin/code/ARC", exts: [".py"], expected: 276,
     revisionOf: "/home/calvin/code/ARC", expectedRevisionPrefix: null, excludePrefix: ".claude" },

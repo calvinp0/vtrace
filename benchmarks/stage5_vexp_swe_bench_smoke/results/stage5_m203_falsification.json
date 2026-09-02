@@ -1,0 +1,85 @@
+{
+  "milestone": "M203",
+  "instrument": "run_stage5_m203_falsification.ts",
+  "controls": [
+    {
+      "id": "F1",
+      "statement": "one eligible delivered item without accounting fails coverage",
+      "pass": true,
+      "detail": "record removed -> every_item_accounted,identities_match_in_order,ordinals_valid,reason_is_the_packet_claim,tokens_reconcile_within_bound,cumulative_consistent,candidate_arithmetic; field removed -> model_facing_field_per_item,field_equals_actual,field_is_measured,actual_cost_is_measured,characters_reconcile_exactly,tokens_reconcile_within_bound,cumulative_consistent,overhead_charged; frozen count 5/6"
+    },
+    {
+      "id": "F2",
+      "statement": "a reported cost that is not the serializer's cost fails integrity",
+      "pass": true,
+      "detail": "ledger +1 -> field_equals_actual,actual_cost_is_measured,tokens_reconcile_within_bound,cumulative_consistent; packet -1 -> field_equals_actual,field_is_measured"
+    },
+    {
+      "id": "F3",
+      "statement": "one delivered item with two accounting records fails; two routes to one item yield one record",
+      "pass": true,
+      "detail": "duplicated record -> every_item_accounted,identities_match_in_order,no_duplicate_records,ordinals_valid,field_equals_actual,actual_cost_is_measured,estimate_is_admission_time_cost,reason_is_the_packet_claim,tokens_reconcile_within_bound,cumulative_consistent,admission_figures_bounded,candidate_arithmetic; dual-route item delivered 1x, accounted 1x, origins recorded true"
+    },
+    {
+      "id": "F4",
+      "statement": "a random or clock-derived identity fails; identical states hash identically",
+      "pass": true,
+      "detail": "uuid -> identities_match_in_order; timestamp -> identity_is_semantic; repeat hash equal true"
+    },
+    {
+      "id": "F5",
+      "statement": "an admission reason the packet does not make, or a route that did not admit, fails attribution",
+      "pass": true,
+      "detail": "reason swapped -> reason_is_the_packet_claim; origin swapped -> neighbour_reason_is_frozen_phrase"
+    },
+    {
+      "id": "F6",
+      "statement": "a full-object cost, or a denied truncation, for a head-bounded item fails",
+      "pass": true,
+      "detail": "full-body cost -> field_equals_actual,actual_cost_is_measured,tokens_reconcile_within_bound,cumulative_consistent; truncated=false -> truncation_truthful; honest record: body 5000, delivered 1800, tokens 625"
+    },
+    {
+      "id": "F7",
+      "statement": "a result with no delivered items publishes no fabricated accounting item",
+      "pass": true,
+      "detail": "projector declined: true; ledger for a non-packet: none; frozen rule on a decline counts 1 slot / 0 accounted (the 1+ convention, reported as such)"
+    },
+    {
+      "id": "F8",
+      "statement": "unused budget is visible and nothing was added to consume it",
+      "pass": true,
+      "detail": "ceiling 2000, evidence 311, unused 1689; upstream remaining 7100; related delivered 3 of 3, rejected 0"
+    },
+    {
+      "id": "F9",
+      "statement": "a ceiling-exhausted packet reconciles exactly and records the rejection",
+      "pass": true,
+      "detail": "related 56 of 300, evidence 1999 <= 2000, first rejected pkg/mod57.py::Sym57.method at 2031; exact true"
+    },
+    {
+      "id": "F10",
+      "statement": "machine-facing accounting did not alter the model-facing evidence",
+      "pass": true,
+      "detail": "15 frozen queries: selection 15, bytes-with-tokens-removed 15, delivered bytes 0 (15 differ by the tokens field alone)"
+    },
+    {
+      "id": "F11",
+      "statement": "an artificially expensive accounting path fails the frozen A5 gate",
+      "pass": true,
+      "detail": "C-SMALL p90 with the real accounting path 48.27 ms -> VTRACE_EXCEEDS_VEXP_CLAIM; with a ~520 ms accounting path 568.4 ms -> VTRACE_BELOW_VEXP_CLAIM"
+    },
+    {
+      "id": "F12",
+      "statement": "the denominator is derived from delivered responses; a detached count satisfies nothing",
+      "pass": true,
+      "detail": "C-MED 1002/1002 recomputed from 100 responses equals the summary true; product sources naming a frozen count/task: none; a bare {itemsDelivered:1002,...} object scores 0/1"
+    },
+    {
+      "id": "F6-rule",
+      "statement": "the frozen default-output rule is satisfied by a field the default response carries",
+      "pass": true,
+      "detail": "tokens in default packet: true; debug-only presence still fails the rule"
+    }
+  ],
+  "verdict": "M203_FALSIFICATION_CONTROLS_PASS"
+}

@@ -1,0 +1,2839 @@
+{
+  "milestone": "M203",
+  "instrument": "run_stage5_m203_a14.ts",
+  "label": "pre",
+  "product": {
+    "root": "/home/calvin/bench/vtrace-m203/pre",
+    "head": "bf270108206c741a7c4e6a49d705ee7d9e2a88a8",
+    "accountingModulePresent": false
+  },
+  "protocol": {
+    "calls": "get_code_context, default detail, max_tokens at each frozen budget, one index per corpus copy",
+    "tasks": "A13_TASKS (all 20 on C-MED, first 3 elsewhere)",
+    "budgets": [
+      1000,
+      2000,
+      4000,
+      8000,
+      16000
+    ],
+    "numerator": "items where tokens|tokenReductionPercent|rawTokens|savedTokens !== undefined (engine predicate, verbatim)",
+    "denominator": "1 + related.length per response (engine rule, verbatim)",
+    "frozenRule": "MATCHES when the C-MED numerator > 0; EXCEEDS is unreachable in the committed scorer",
+    "tokenizerForWholeResponse": "ceil(characters/4), the frozen fixture"
+  },
+  "hardware": {
+    "cpus": 20,
+    "loadAverageAtEnd": [
+      6.53,
+      3.1,
+      2.34
+    ]
+  },
+  "frozenA14": {
+    "itemsDelivered": 1002,
+    "itemsWithPerItemAccounting": 0,
+    "coveragePercent": 0,
+    "frozenVerdict": "VTRACE_BELOW_VEXP_CLAIM"
+  },
+  "corpora": [
+    {
+      "id": "C-SMALL",
+      "filesIndexed": null,
+      "tasks": 3,
+      "budgets": [
+        1000,
+        2000,
+        4000,
+        8000,
+        16000
+      ],
+      "responseCount": 15,
+      "a14": {
+        "itemsDelivered": 33,
+        "itemsWithPerItemAccounting": 0,
+        "coveragePercent": 0,
+        "frozenVerdict": "VTRACE_BELOW_VEXP_CLAIM"
+      },
+      "representationClasses": {
+        "FOCUS:focused_source": {
+          "eligible": 5,
+          "accounted": 0
+        },
+        "RELATIONSHIP_ONLY": {
+          "eligible": 18,
+          "accounted": 0
+        }
+      },
+      "integrity": {
+        "packets": 0,
+        "failures": 5,
+        "verdict": "NO_LEDGERS"
+      },
+      "reconciliation": null,
+      "determinism": {
+        "repeats": 2,
+        "packetsStable": true,
+        "unstablePackets": [],
+        "ledgersStable": true,
+        "unstableLedgers": []
+      },
+      "latencyMs": {
+        "median": 38.67,
+        "n": 30
+      },
+      "responses": [
+        {
+          "task": "where are import edges extracted from typescript",
+          "budget": 1000,
+          "shape": "run_pipeline.orientation.none/1",
+          "frozen": {
+            "itemsDelivered": 1,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 83,
+            "representationClasses": []
+          },
+          "ledger": "absent",
+          "integrity": null
+        },
+        {
+          "task": "where are import edges extracted from typescript",
+          "budget": 2000,
+          "shape": "run_pipeline.orientation.none/1",
+          "frozen": {
+            "itemsDelivered": 1,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 83,
+            "representationClasses": []
+          },
+          "ledger": "absent",
+          "integrity": null
+        },
+        {
+          "task": "where are import edges extracted from typescript",
+          "budget": 4000,
+          "shape": "run_pipeline.orientation.none/1",
+          "frozen": {
+            "itemsDelivered": 1,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 83,
+            "representationClasses": []
+          },
+          "ledger": "absent",
+          "integrity": null
+        },
+        {
+          "task": "where are import edges extracted from typescript",
+          "budget": 8000,
+          "shape": "run_pipeline.orientation.none/1",
+          "frozen": {
+            "itemsDelivered": 1,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 83,
+            "representationClasses": []
+          },
+          "ledger": "absent",
+          "integrity": null
+        },
+        {
+          "task": "where are import edges extracted from typescript",
+          "budget": 16000,
+          "shape": "run_pipeline.orientation.none/1",
+          "frozen": {
+            "itemsDelivered": 1,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 83,
+            "representationClasses": []
+          },
+          "ledger": "absent",
+          "integrity": null
+        },
+        {
+          "task": "how does the indexer decide a file is eligible for parsing",
+          "budget": 1000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 3,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 275,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how does the indexer decide a file is eligible for parsing",
+          "budget": 2000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 5,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 371,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how does the indexer decide a file is eligible for parsing",
+          "budget": 4000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 5,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 371,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how does the indexer decide a file is eligible for parsing",
+          "budget": 8000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 5,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 371,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how does the indexer decide a file is eligible for parsing",
+          "budget": 16000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 5,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 346,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "budget allocation for capsule items is dropping sections",
+          "budget": 1000,
+          "shape": "run_pipeline.orientation.none/1",
+          "frozen": {
+            "itemsDelivered": 1,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 83,
+            "representationClasses": []
+          },
+          "ledger": "absent",
+          "integrity": null
+        },
+        {
+          "task": "budget allocation for capsule items is dropping sections",
+          "budget": 2000,
+          "shape": "run_pipeline.orientation.none/1",
+          "frozen": {
+            "itemsDelivered": 1,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 83,
+            "representationClasses": []
+          },
+          "ledger": "absent",
+          "integrity": null
+        },
+        {
+          "task": "budget allocation for capsule items is dropping sections",
+          "budget": 4000,
+          "shape": "run_pipeline.orientation.none/1",
+          "frozen": {
+            "itemsDelivered": 1,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 83,
+            "representationClasses": []
+          },
+          "ledger": "absent",
+          "integrity": null
+        },
+        {
+          "task": "budget allocation for capsule items is dropping sections",
+          "budget": 8000,
+          "shape": "run_pipeline.orientation.none/1",
+          "frozen": {
+            "itemsDelivered": 1,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 83,
+            "representationClasses": []
+          },
+          "ledger": "absent",
+          "integrity": null
+        },
+        {
+          "task": "budget allocation for capsule items is dropping sections",
+          "budget": 16000,
+          "shape": "run_pipeline.orientation.none/1",
+          "frozen": {
+            "itemsDelivered": 1,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 83,
+            "representationClasses": []
+          },
+          "ledger": "absent",
+          "integrity": null
+        }
+      ]
+    },
+    {
+      "id": "C-MED",
+      "filesIndexed": null,
+      "tasks": 20,
+      "budgets": [
+        1000,
+        2000,
+        4000,
+        8000,
+        16000
+      ],
+      "responseCount": 100,
+      "a14": {
+        "itemsDelivered": 1002,
+        "itemsWithPerItemAccounting": 0,
+        "coveragePercent": 0,
+        "frozenVerdict": "VTRACE_BELOW_VEXP_CLAIM"
+      },
+      "representationClasses": {
+        "FOCUS:focused_source": {
+          "eligible": 100,
+          "accounted": 0
+        },
+        "RELATIONSHIP_ONLY": {
+          "eligible": 902,
+          "accounted": 0
+        }
+      },
+      "integrity": {
+        "packets": 0,
+        "failures": 100,
+        "verdict": "NO_LEDGERS"
+      },
+      "reconciliation": null,
+      "determinism": {
+        "repeats": 2,
+        "packetsStable": true,
+        "unstablePackets": [],
+        "ledgersStable": true,
+        "unstableLedgers": []
+      },
+      "latencyMs": {
+        "median": 194.58,
+        "n": 200
+      },
+      "responses": [
+        {
+          "task": "where are import edges extracted from typescript",
+          "budget": 1000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 3,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 567,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "where are import edges extracted from typescript",
+          "budget": 2000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 7,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 438,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "where are import edges extracted from typescript",
+          "budget": 4000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 7,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 438,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "where are import edges extracted from typescript",
+          "budget": 8000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 9,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 514,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "where are import edges extracted from typescript",
+          "budget": 16000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 16,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 947,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how does the indexer decide a file is eligible for parsing",
+          "budget": 1000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 4,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 407,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how does the indexer decide a file is eligible for parsing",
+          "budget": 2000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 10,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 717,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how does the indexer decide a file is eligible for parsing",
+          "budget": 4000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 10,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 717,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how does the indexer decide a file is eligible for parsing",
+          "budget": 8000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 10,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 717,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how does the indexer decide a file is eligible for parsing",
+          "budget": 16000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 20,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 1267,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "budget allocation for capsule items is dropping sections",
+          "budget": 1000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 3,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 255,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "budget allocation for capsule items is dropping sections",
+          "budget": 2000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 7,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 467,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "budget allocation for capsule items is dropping sections",
+          "budget": 4000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 7,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 467,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "budget allocation for capsule items is dropping sections",
+          "budget": 8000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 10,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 579,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "budget allocation for capsule items is dropping sections",
+          "budget": 16000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 20,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 1153,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how is the impact graph bounded when a symbol has many callers",
+          "budget": 1000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 3,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 388,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how is the impact graph bounded when a symbol has many callers",
+          "budget": 2000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 7,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 631,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how is the impact graph bounded when a symbol has many callers",
+          "budget": 4000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 7,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 631,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how is the impact graph bounded when a symbol has many callers",
+          "budget": 8000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 7,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 631,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how is the impact graph bounded when a symbol has many callers",
+          "budget": 16000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 17,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 1188,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "where does logic flow decide a path is unreachable",
+          "budget": 1000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 6,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 467,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "where does logic flow decide a path is unreachable",
+          "budget": 2000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 10,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 751,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "where does logic flow decide a path is unreachable",
+          "budget": 4000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 10,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 751,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "where does logic flow decide a path is unreachable",
+          "budget": 8000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 12,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 831,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "where does logic flow decide a path is unreachable",
+          "budget": 16000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 17,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 1149,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how are skeleton declarations built from indexed symbols",
+          "budget": 1000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 2,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 564,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how are skeleton declarations built from indexed symbols",
+          "budget": 2000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 8,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 893,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how are skeleton declarations built from indexed symbols",
+          "budget": 4000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 8,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 893,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how are skeleton declarations built from indexed symbols",
+          "budget": 8000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 8,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 893,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how are skeleton declarations built from indexed symbols",
+          "budget": 16000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 21,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 1542,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "what determines whether the repository index is considered fresh",
+          "budget": 1000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 3,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 359,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "what determines whether the repository index is considered fresh",
+          "budget": 2000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 8,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 657,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "what determines whether the repository index is considered fresh",
+          "budget": 4000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 8,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 657,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "what determines whether the repository index is considered fresh",
+          "budget": 8000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 11,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 792,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "what determines whether the repository index is considered fresh",
+          "budget": 16000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 17,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 1199,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how does hybrid scoring combine lexical and graph signals",
+          "budget": 1000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 4,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 400,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how does hybrid scoring combine lexical and graph signals",
+          "budget": 2000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 9,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 653,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how does hybrid scoring combine lexical and graph signals",
+          "budget": 4000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 9,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 653,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how does hybrid scoring combine lexical and graph signals",
+          "budget": 8000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 9,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 653,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how does hybrid scoring combine lexical and graph signals",
+          "budget": 16000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 16,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 1066,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "where is the MCP tool registry assembled",
+          "budget": 1000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 3,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 426,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "where is the MCP tool registry assembled",
+          "budget": 2000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 8,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 512,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "where is the MCP tool registry assembled",
+          "budget": 4000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 8,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 512,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "where is the MCP tool registry assembled",
+          "budget": 8000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 8,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 512,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "where is the MCP tool registry assembled",
+          "budget": 16000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 17,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 959,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how does the python parser resolve module imports",
+          "budget": 1000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 5,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 440,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how does the python parser resolve module imports",
+          "budget": 2000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 10,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 716,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how does the python parser resolve module imports",
+          "budget": 4000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 10,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 716,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how does the python parser resolve module imports",
+          "budget": 8000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 10,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 716,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how does the python parser resolve module imports",
+          "budget": 16000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 17,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 1120,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "what writes the index manifest after a run",
+          "budget": 1000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 2,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 657,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "what writes the index manifest after a run",
+          "budget": 2000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 7,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 932,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "what writes the index manifest after a run",
+          "budget": 4000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 7,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 932,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "what writes the index manifest after a run",
+          "budget": 8000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 13,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 1194,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "what writes the index manifest after a run",
+          "budget": 16000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 20,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 1209,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how are worktrees excluded from the parent repository index",
+          "budget": 1000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 3,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 465,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how are worktrees excluded from the parent repository index",
+          "budget": 2000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 8,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 776,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how are worktrees excluded from the parent repository index",
+          "budget": 4000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 8,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 776,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how are worktrees excluded from the parent repository index",
+          "budget": 8000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 13,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 1006,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how are worktrees excluded from the parent repository index",
+          "budget": 16000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 19,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 1416,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "where does the product context decide which files are pivots",
+          "budget": 1000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 3,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 263,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "where does the product context decide which files are pivots",
+          "budget": 2000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 9,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 617,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "where does the product context decide which files are pivots",
+          "budget": 4000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 9,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 617,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "where does the product context decide which files are pivots",
+          "budget": 8000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 11,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 715,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "where does the product context decide which files are pivots",
+          "budget": 16000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 16,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 1033,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how does the response envelope shed content under budget pressure",
+          "budget": 1000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 3,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 282,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how does the response envelope shed content under budget pressure",
+          "budget": 2000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 8,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 559,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how does the response envelope shed content under budget pressure",
+          "budget": 4000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 8,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 559,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how does the response envelope shed content under budget pressure",
+          "budget": 8000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 10,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 647,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how does the response envelope shed content under budget pressure",
+          "budget": 16000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 18,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 1087,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "what deduplicates supporting files in the capsule",
+          "budget": 1000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 4,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 346,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "what deduplicates supporting files in the capsule",
+          "budget": 2000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 11,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 715,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "what deduplicates supporting files in the capsule",
+          "budget": 4000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 11,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 715,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "what deduplicates supporting files in the capsule",
+          "budget": 8000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 15,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 888,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "what deduplicates supporting files in the capsule",
+          "budget": 16000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 18,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 1090,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how does cython parsing differ from python parsing",
+          "budget": 1000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 3,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 446,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how does cython parsing differ from python parsing",
+          "budget": 2000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 10,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 754,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how does cython parsing differ from python parsing",
+          "budget": 4000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 10,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 754,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how does cython parsing differ from python parsing",
+          "budget": 8000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 11,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 794,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how does cython parsing differ from python parsing",
+          "budget": 16000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 17,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 1160,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "where are call sites persisted for an edge",
+          "budget": 1000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 5,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 378,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "where are call sites persisted for an edge",
+          "budget": 2000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 9,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 603,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "where are call sites persisted for an edge",
+          "budget": 4000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 9,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 603,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "where are call sites persisted for an edge",
+          "budget": 8000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 9,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 603,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "where are call sites persisted for an edge",
+          "budget": 16000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 18,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 1095,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how does search rank candidate symbols for a task",
+          "budget": 1000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 4,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 381,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how does search rank candidate symbols for a task",
+          "budget": 2000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 10,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 728,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how does search rank candidate symbols for a task",
+          "budget": 4000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 10,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 728,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how does search rank candidate symbols for a task",
+          "budget": 8000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 11,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 772,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how does search rank candidate symbols for a task",
+          "budget": 16000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 20,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 1296,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "what happens when the index schema version is incompatible",
+          "budget": 1000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 6,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 368,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "what happens when the index schema version is incompatible",
+          "budget": 2000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 11,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 606,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "what happens when the index schema version is incompatible",
+          "budget": 4000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 11,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 606,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "what happens when the index schema version is incompatible",
+          "budget": 8000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 13,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 694,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "what happens when the index schema version is incompatible",
+          "budget": 16000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 20,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 1167,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how is a symbol's fully qualified name constructed",
+          "budget": 1000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 5,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 295,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how is a symbol's fully qualified name constructed",
+          "budget": 2000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 9,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 520,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how is a symbol's fully qualified name constructed",
+          "budget": 4000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 9,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 520,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how is a symbol's fully qualified name constructed",
+          "budget": 8000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 13,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 672,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how is a symbol's fully qualified name constructed",
+          "budget": 16000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 19,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 1011,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "id": "C-LARGE",
+      "filesIndexed": null,
+      "tasks": 3,
+      "budgets": [
+        1000,
+        2000,
+        4000,
+        8000,
+        16000
+      ],
+      "responseCount": 15,
+      "a14": {
+        "itemsDelivered": 152,
+        "itemsWithPerItemAccounting": 0,
+        "coveragePercent": 0,
+        "frozenVerdict": "VTRACE_BELOW_VEXP_CLAIM"
+      },
+      "representationClasses": {
+        "FOCUS:focused_source": {
+          "eligible": 14,
+          "accounted": 0
+        },
+        "RELATIONSHIP_ONLY": {
+          "eligible": 137,
+          "accounted": 0
+        },
+        "FOCUS:signature": {
+          "eligible": 1,
+          "accounted": 0
+        }
+      },
+      "integrity": {
+        "packets": 0,
+        "failures": 15,
+        "verdict": "NO_LEDGERS"
+      },
+      "reconciliation": null,
+      "determinism": {
+        "repeats": 2,
+        "packetsStable": true,
+        "unstablePackets": [],
+        "ledgersStable": true,
+        "unstableLedgers": []
+      },
+      "latencyMs": {
+        "median": 317.9,
+        "n": 30
+      },
+      "responses": [
+        {
+          "task": "where are import edges extracted from typescript",
+          "budget": 1000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 4,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 741,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "where are import edges extracted from typescript",
+          "budget": 2000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 8,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 643,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "where are import edges extracted from typescript",
+          "budget": 4000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 8,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 643,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "where are import edges extracted from typescript",
+          "budget": 8000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 8,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 643,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "where are import edges extracted from typescript",
+          "budget": 16000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 15,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 989,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how does the indexer decide a file is eligible for parsing",
+          "budget": 1000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 3,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 690,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how does the indexer decide a file is eligible for parsing",
+          "budget": 2000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 5,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 340,
+            "representationClasses": [
+              "FOCUS:signature",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how does the indexer decide a file is eligible for parsing",
+          "budget": 4000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 12,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 1108,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how does the indexer decide a file is eligible for parsing",
+          "budget": 8000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 12,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 1108,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "how does the indexer decide a file is eligible for parsing",
+          "budget": 16000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 21,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 1572,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "budget allocation for capsule items is dropping sections",
+          "budget": 1000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 5,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 734,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "budget allocation for capsule items is dropping sections",
+          "budget": 2000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 9,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 960,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "budget allocation for capsule items is dropping sections",
+          "budget": 4000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 11,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 1073,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "budget allocation for capsule items is dropping sections",
+          "budget": 8000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 11,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 1073,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        },
+        {
+          "task": "budget allocation for capsule items is dropping sections",
+          "budget": 16000,
+          "shape": "orientation",
+          "frozen": {
+            "itemsDelivered": 20,
+            "itemsWithTokenAccounting": 0,
+            "wholeResponseTokens": 1537,
+            "representationClasses": [
+              "FOCUS:focused_source",
+              "RELATIONSHIP_ONLY"
+            ]
+          },
+          "ledger": "absent",
+          "integrity": {
+            "verdict": "ACCOUNTING_INTEGRITY_FAIL",
+            "failed": [
+              "ledger_present: no ledger for this packet"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

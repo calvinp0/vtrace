@@ -1,0 +1,142 @@
+{
+  "milestone": "M197A",
+  "instrument": "run_stage5_m197a_authority.ts",
+  "gate": "frozen VEXP claim authority and corpus identity verified before any Track-A scoring",
+  "git": {
+    "branch": "main",
+    "head": "bf270108206c741a7c4e6a49d705ee7d9e2a88a8",
+    "trackedDirtCount": 8,
+    "trackedDirt": [
+      " M benchmarks/stage5_vexp_swe_bench_smoke/m197aFixtures.ts",
+      " M benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_outcome_ledger.json",
+      " M benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_outcome_ledger.md",
+      " M benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m197a_authority.ts",
+      " M src/mcp/tools.ts",
+      " M src/productContext/semanticItemSupply.ts",
+      " M src/runPipeline/orientationProjection.test.ts",
+      " M src/runPipeline/orientationProjection.ts"
+    ]
+  },
+  "preregistration": {
+    "path": "benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_m196_m197_preregistration.md",
+    "sha256": "736e8a9b5beba4a26d29ca068bafa2f4aede973ec50dab53bba6673f6697d8f0",
+    "expected": "736e8a9b5beba4a26d29ca068bafa2f4aede973ec50dab53bba6673f6697d8f0"
+  },
+  "claimLedger": {
+    "path": "benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_m196_vexp_claim_ledger.json",
+    "vexpCliVersion": "2.0.24",
+    "claimCount": 24,
+    "citedClaims": [
+      "V-A1",
+      "V-A5",
+      "V-B1",
+      "V-B2",
+      "V-C1",
+      "V-C3",
+      "V-C5",
+      "V-C6",
+      "V-C7"
+    ]
+  },
+  "corpora": [
+    {
+      "id": "C-SMALL",
+      "source": "/home/calvin/code/vexp-swe-bench/src",
+      "revision": "d658e3457b82b5cb041f586093cc5002008a8cea",
+      "eligibleFiles": 21,
+      "expected": 21
+    },
+    {
+      "id": "C-MED",
+      "source": "/home/calvin/code/vtrace/src",
+      "revision": "bf270108206c741a7c4e6a49d705ee7d9e2a88a8",
+      "eligibleFiles": 502,
+      "expected": 502
+    },
+    {
+      "id": "C-LARGE",
+      "source": "/home/calvin/code/ARC",
+      "revision": "826144342ef56c97cdf7985cb17e7c571194d999",
+      "eligibleFiles": 276,
+      "expected": 276
+    }
+  ],
+  "checks": [
+    {
+      "id": "branch_is_main",
+      "ok": true,
+      "detail": "main"
+    },
+    {
+      "id": "m196a_head_is_ancestor",
+      "ok": true,
+      "detail": "HEAD=bf270108206c expected M196A 4ab01a72ef6e at or below"
+    },
+    {
+      "id": "preregistration_sha256",
+      "ok": true,
+      "detail": "736e8a9b5beba4a2… expected 736e8a9b5beba4a2…"
+    },
+    {
+      "id": "threshold_still_10_of_15",
+      "ok": true,
+      "detail": "G1 wording present verbatim"
+    },
+    {
+      "id": "a8_veto_still_99",
+      "ok": true,
+      "detail": "G8 veto wording present verbatim"
+    },
+    {
+      "id": "claim_ledger_present",
+      "ok": true,
+      "detail": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_m196_vexp_claim_ledger.json"
+    },
+    {
+      "id": "vexp_cli_version",
+      "ok": true,
+      "detail": "2.0.24"
+    },
+    {
+      "id": "claim_count",
+      "ok": true,
+      "detail": "24 claims"
+    },
+    {
+      "id": "no_vexp_process_executed",
+      "ok": true,
+      "detail": "local package and binary inspection only; no vexp process was executed; no netwo"
+    },
+    {
+      "id": "cited_claims_present_in_ledger",
+      "ok": true,
+      "detail": "9 cited claims found"
+    },
+    {
+      "id": "m196a_parser_repair_present",
+      "ok": true,
+      "detail": "typescriptParser passes an explicit bufferSize"
+    },
+    {
+      "id": "corpus_C-SMALL",
+      "ok": true,
+      "detail": "21 files (expected 21) @ d658e3457b"
+    },
+    {
+      "id": "corpus_C-MED",
+      "ok": true,
+      "detail": "502 files (expected 502) @ bf27010820"
+    },
+    {
+      "id": "corpus_C-LARGE",
+      "ok": true,
+      "detail": "276 files (expected 276) @ 826144342e"
+    },
+    {
+      "id": "c_large_worktree_exclusion",
+      "ok": true,
+      "detail": "699 .py under .claude/ (expected 699 nested-worktree duplicates)"
+    }
+  ],
+  "verdict": "M197A_AUTHORITY_VERIFIED"
+}

@@ -1,0 +1,791 @@
+{
+  "milestone": "M203",
+  "instrument": "run_stage5_m203_equivalence.ts",
+  "base": "base",
+  "snapshot": "/tmp/m201-snapshot",
+  "rule": "selection, order, item count, and the packet bytes with the per-item tokens field removed must equal the base capture; the delivered bytes are expected to differ by that field alone",
+  "compared": 15,
+  "selectionEqual": 15,
+  "orderEqual": 15,
+  "itemCountEqual": 15,
+  "strippedByteEqual": 15,
+  "strippedSemanticEqual": 15,
+  "strippedTokenCountEqual": 15,
+  "deliveredByteEqual": 0,
+  "differencesExplainedByTokensFieldAlone": 15,
+  "corpora": [
+    {
+      "id": "C-SMALL",
+      "corpusIdentical": true,
+      "compared": 5,
+      "selectionEqual": 5,
+      "strippedByteEqual": 5,
+      "deliveredByteEqual": 0,
+      "perQuery": [
+        {
+          "task": "how is the agent turn loop driven",
+          "base": {
+            "byteSha": [
+              "96c8c3e819b7d0796171d1dc6792f013ba76edec9d5ced047aa6d8ef2108a0bb"
+            ],
+            "semanticSha": [
+              "96c8c3e819b7d0796171d1dc6792f013ba76edec9d5ced047aa6d8ef2108a0bb"
+            ],
+            "selectionSha": "cbe81c9a9b7bc791ef6ffd944bc5d53a20ab481bad272a5b37457abc02651be3",
+            "relatedCount": 3,
+            "responseTokens": 334,
+            "serializedCharacters": 1335
+          },
+          "now": {
+            "deliveredSha": "1d4909d9e6181f0b84690a01fa0e7c3c11113cc60bafdd73eb65a47d1ee4835c",
+            "strippedSha": "96c8c3e819b7d0796171d1dc6792f013ba76edec9d5ced047aa6d8ef2108a0bb",
+            "strippedSemanticSha": "96c8c3e819b7d0796171d1dc6792f013ba76edec9d5ced047aa6d8ef2108a0bb",
+            "selectionSha": "cbe81c9a9b7bc791ef6ffd944bc5d53a20ab481bad272a5b37457abc02651be3",
+            "relatedCount": 3,
+            "deliveredTokens": 346,
+            "strippedTokens": 334,
+            "deliveredCharacters": 1384,
+            "strippedCharacters": 1335,
+            "orderedIds": [
+              "agents/claude-code.ts::spawnAgent",
+              "agents/adapter.ts::AgentRunOptions",
+              "agents/claude-code.ts::ClaudeCodeAdapter.run",
+              "agents/claude-code.ts::ClaudeCodeAdapter"
+            ],
+            "selectionOrder": [
+              "agents/adapter.ts::AgentRunOptions",
+              "agents/claude-code.ts::ClaudeCodeAdapter.run",
+              "agents/claude-code.ts::ClaudeCodeAdapter"
+            ],
+            "ledgerOverheadTokens": 15
+          },
+          "equal": {
+            "selection": true,
+            "order": true,
+            "deliveredBytes": false,
+            "strippedBytes": true,
+            "strippedSemantic": true,
+            "itemCount": true,
+            "strippedTokenCount": true
+          }
+        },
+        {
+          "task": "where is the final patch extracted from the run",
+          "base": {
+            "byteSha": [
+              "15370404e0d524bdbcdd7da79bf89fcd99ab0238fbea6efa2cd557df325b4b55"
+            ],
+            "semanticSha": [
+              "15370404e0d524bdbcdd7da79bf89fcd99ab0238fbea6efa2cd557df325b4b55"
+            ],
+            "selectionSha": "45aa68a51ba2b06d472113ac17ef318e43b3af2142409d3eb6ddc3e34730f035",
+            "relatedCount": 1,
+            "responseTokens": 197,
+            "serializedCharacters": 787
+          },
+          "now": {
+            "deliveredSha": "9fe11434a744e2686cc923428d95aa36ce8842300dd7d1e1b305e2295260abeb",
+            "strippedSha": "15370404e0d524bdbcdd7da79bf89fcd99ab0238fbea6efa2cd557df325b4b55",
+            "strippedSemanticSha": "15370404e0d524bdbcdd7da79bf89fcd99ab0238fbea6efa2cd557df325b4b55",
+            "selectionSha": "45aa68a51ba2b06d472113ac17ef318e43b3af2142409d3eb6ddc3e34730f035",
+            "relatedCount": 1,
+            "deliveredTokens": 203,
+            "strippedTokens": 197,
+            "deliveredCharacters": 812,
+            "strippedCharacters": 787,
+            "orderedIds": [
+              "cli.ts::findPython",
+              "harness/repo.ts::capturePatch"
+            ],
+            "selectionOrder": [
+              "harness/repo.ts::capturePatch"
+            ],
+            "ledgerOverheadTokens": 8
+          },
+          "equal": {
+            "selection": true,
+            "order": true,
+            "deliveredBytes": false,
+            "strippedBytes": true,
+            "strippedSemantic": true,
+            "itemCount": true,
+            "strippedTokenCount": true
+          }
+        },
+        {
+          "task": "how are swe-bench instances loaded",
+          "base": {
+            "byteSha": [
+              "c47e986d1fa36f4becc28b497bf6c4cd1b0bd99ab32ad6657f017e29a9402651"
+            ],
+            "semanticSha": [
+              "c47e986d1fa36f4becc28b497bf6c4cd1b0bd99ab32ad6657f017e29a9402651"
+            ],
+            "selectionSha": "58aacf123bde149a17ebc09fd3abec2dd8a92baab6248999e49c9e938ca69643",
+            "relatedCount": 3,
+            "responseTokens": 379,
+            "serializedCharacters": 1513
+          },
+          "now": {
+            "deliveredSha": "aa2af285d5923cee7df6db7130ee07d989790ea164e66f2137b8402d94a71ea0",
+            "strippedSha": "c47e986d1fa36f4becc28b497bf6c4cd1b0bd99ab32ad6657f017e29a9402651",
+            "strippedSemanticSha": "c47e986d1fa36f4becc28b497bf6c4cd1b0bd99ab32ad6657f017e29a9402651",
+            "selectionSha": "58aacf123bde149a17ebc09fd3abec2dd8a92baab6248999e49c9e938ca69643",
+            "relatedCount": 3,
+            "deliveredTokens": 391,
+            "strippedTokens": 379,
+            "deliveredCharacters": 1562,
+            "strippedCharacters": 1513,
+            "orderedIds": [
+              "harness/loader.ts::loadInstances",
+              "harness/orchestrator.ts::cleanPreviousRun",
+              "harness/loader.ts::loadBundledSubset",
+              "harness/loader.ts::buildPrompt"
+            ],
+            "selectionOrder": [
+              "harness/orchestrator.ts::cleanPreviousRun",
+              "harness/loader.ts::loadBundledSubset",
+              "harness/loader.ts::buildPrompt"
+            ],
+            "ledgerOverheadTokens": 16
+          },
+          "equal": {
+            "selection": true,
+            "order": true,
+            "deliveredBytes": false,
+            "strippedBytes": true,
+            "strippedSemantic": true,
+            "itemCount": true,
+            "strippedTokenCount": true
+          }
+        },
+        {
+          "task": "what builds the prompt sent to the model",
+          "base": {
+            "byteSha": [
+              "a860aed9d810794c07379306b8d22a962a276298b8eefef99271c289bff560c1"
+            ],
+            "semanticSha": [
+              "a860aed9d810794c07379306b8d22a962a276298b8eefef99271c289bff560c1"
+            ],
+            "selectionSha": "3b86330bdb905c85b50ca94064d251a0f543189c5abce4b27f5b3bc3e2856230",
+            "relatedCount": 3,
+            "responseTokens": 329,
+            "serializedCharacters": 1313
+          },
+          "now": {
+            "deliveredSha": "a5f5543d0b52c911d019d1d492b53642c61173ea0b7ea6d27775240b07712ab1",
+            "strippedSha": "a860aed9d810794c07379306b8d22a962a276298b8eefef99271c289bff560c1",
+            "strippedSemanticSha": "a860aed9d810794c07379306b8d22a962a276298b8eefef99271c289bff560c1",
+            "selectionSha": "3b86330bdb905c85b50ca94064d251a0f543189c5abce4b27f5b3bc3e2856230",
+            "relatedCount": 3,
+            "deliveredTokens": 341,
+            "strippedTokens": 329,
+            "deliveredCharacters": 1362,
+            "strippedCharacters": 1313,
+            "orderedIds": [
+              "harness/loader.ts::buildPrompt",
+              "harness/orchestrator.ts::runBenchmark",
+              "harness/loader.ts::loadBundledSubset",
+              "harness/loader.ts::loadInstances"
+            ],
+            "selectionOrder": [
+              "harness/orchestrator.ts::runBenchmark",
+              "harness/loader.ts::loadBundledSubset",
+              "harness/loader.ts::loadInstances"
+            ],
+            "ledgerOverheadTokens": 15
+          },
+          "equal": {
+            "selection": true,
+            "order": true,
+            "deliveredBytes": false,
+            "strippedBytes": true,
+            "strippedSemantic": true,
+            "itemCount": true,
+            "strippedTokenCount": true
+          }
+        },
+        {
+          "task": "how is a run result written to disk",
+          "base": {
+            "byteSha": [
+              "df36c623123836930e0b8f2e0ad6dd4c4aa06611fbba96be37f2620740c23a43"
+            ],
+            "semanticSha": [
+              "df36c623123836930e0b8f2e0ad6dd4c4aa06611fbba96be37f2620740c23a43"
+            ],
+            "selectionSha": "4a56215fba51a5f0e2bb3213e53f9a5ec068b1018dae4d716464ab69009704d8",
+            "relatedCount": 3,
+            "responseTokens": 330,
+            "serializedCharacters": 1319
+          },
+          "now": {
+            "deliveredSha": "1f270430b17567b0907b746427a3a290051c0e5057be67e4c6e07961f1a3b74f",
+            "strippedSha": "df36c623123836930e0b8f2e0ad6dd4c4aa06611fbba96be37f2620740c23a43",
+            "strippedSemanticSha": "df36c623123836930e0b8f2e0ad6dd4c4aa06611fbba96be37f2620740c23a43",
+            "selectionSha": "4a56215fba51a5f0e2bb3213e53f9a5ec068b1018dae4d716464ab69009704d8",
+            "relatedCount": 3,
+            "deliveredTokens": 342,
+            "strippedTokens": 330,
+            "deliveredCharacters": 1368,
+            "strippedCharacters": 1319,
+            "orderedIds": [
+              "agents/adapter.ts::AgentRunResult",
+              "types.ts::RunResult",
+              "agents/adapter.ts::AgentAdapter",
+              "agents/adapter.ts::AgentRunOptions"
+            ],
+            "selectionOrder": [
+              "types.ts::RunResult",
+              "agents/adapter.ts::AgentAdapter",
+              "agents/adapter.ts::AgentRunOptions"
+            ],
+            "ledgerOverheadTokens": 15
+          },
+          "equal": {
+            "selection": true,
+            "order": true,
+            "deliveredBytes": false,
+            "strippedBytes": true,
+            "strippedSemantic": true,
+            "itemCount": true,
+            "strippedTokenCount": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "C-MED",
+      "corpusIdentical": true,
+      "compared": 5,
+      "selectionEqual": 5,
+      "strippedByteEqual": 5,
+      "deliveredByteEqual": 0,
+      "perQuery": [
+        {
+          "task": "where are import edges extracted from typescript",
+          "base": {
+            "byteSha": [
+              "2fd8fe4a9888d82a0247c989feba3198ff48ea17c97178fdcc5349aa1df7dec3"
+            ],
+            "semanticSha": [
+              "2fd8fe4a9888d82a0247c989feba3198ff48ea17c97178fdcc5349aa1df7dec3"
+            ],
+            "selectionSha": "84504b8b687793179a5ba8d8d92699d543e12b766b2cca4684a995a269c97ca7",
+            "relatedCount": 5,
+            "responseTokens": 692,
+            "serializedCharacters": 2768
+          },
+          "now": {
+            "deliveredSha": "6e425cf49bbd669bfe482db75a847c49fe2fbc0d613919059feb1725a29c9b62",
+            "strippedSha": "2fd8fe4a9888d82a0247c989feba3198ff48ea17c97178fdcc5349aa1df7dec3",
+            "strippedSemanticSha": "2fd8fe4a9888d82a0247c989feba3198ff48ea17c97178fdcc5349aa1df7dec3",
+            "selectionSha": "84504b8b687793179a5ba8d8d92699d543e12b766b2cca4684a995a269c97ca7",
+            "relatedCount": 5,
+            "deliveredTokens": 711,
+            "strippedTokens": 692,
+            "deliveredCharacters": 2841,
+            "strippedCharacters": 2768,
+            "orderedIds": [
+              "parsers/typescriptParser.ts::extractImportEdges",
+              "withCallSite",
+              "parsers/typescriptParser.ts::parseTypeScriptWithContext",
+              "parsers/typescriptParser.ts::getExportIndex",
+              "parsers/typescriptParser.ts::getImportModuleSpecifier",
+              "parsers/typescriptParser.ts::getImportSpecifiers"
+            ],
+            "selectionOrder": [
+              "withCallSite",
+              "parsers/typescriptParser.ts::parseTypeScriptWithContext",
+              "parsers/typescriptParser.ts::getExportIndex",
+              "parsers/typescriptParser.ts::getImportModuleSpecifier",
+              "parsers/typescriptParser.ts::getImportSpecifiers"
+            ],
+            "ledgerOverheadTokens": 23
+          },
+          "equal": {
+            "selection": true,
+            "order": true,
+            "deliveredBytes": false,
+            "strippedBytes": true,
+            "strippedSemantic": true,
+            "itemCount": true,
+            "strippedTokenCount": true
+          }
+        },
+        {
+          "task": "how does the indexer decide a file is eligible for parsing",
+          "base": {
+            "byteSha": [
+              "fa759b093cce73f63de6933cedfb2a183d914ff11f1acee22e20722ed1dd9682"
+            ],
+            "semanticSha": [
+              "fa759b093cce73f63de6933cedfb2a183d914ff11f1acee22e20722ed1dd9682"
+            ],
+            "selectionSha": "66fbbccd4ee67f3a2cafb544c30698d02a024cc66a96f52a7488b1d838d492bf",
+            "relatedCount": 4,
+            "responseTokens": 449,
+            "serializedCharacters": 1796
+          },
+          "now": {
+            "deliveredSha": "f47a6a1ea90efd64ae0330efd01d996810ecafb182e84a1d704c35c694feb4ab",
+            "strippedSha": "fa759b093cce73f63de6933cedfb2a183d914ff11f1acee22e20722ed1dd9682",
+            "strippedSemanticSha": "fa759b093cce73f63de6933cedfb2a183d914ff11f1acee22e20722ed1dd9682",
+            "selectionSha": "66fbbccd4ee67f3a2cafb544c30698d02a024cc66a96f52a7488b1d838d492bf",
+            "relatedCount": 4,
+            "deliveredTokens": 465,
+            "strippedTokens": 449,
+            "deliveredCharacters": 1857,
+            "strippedCharacters": 1796,
+            "orderedIds": [
+              "indexer/incrementalIndex.ts::bindingTermFor",
+              "indexer/indexProject.ts::createDefaultParserRegistry",
+              "indexer/incrementalIndex.ts::computeBindingContextHash",
+              "indexer/incrementalIndex.ts::computeSemanticContextHash",
+              "indexer/incrementalIndex.ts::isPackageSurfacePath"
+            ],
+            "selectionOrder": [
+              "indexer/indexProject.ts::createDefaultParserRegistry",
+              "indexer/incrementalIndex.ts::computeBindingContextHash",
+              "indexer/incrementalIndex.ts::computeSemanticContextHash",
+              "indexer/incrementalIndex.ts::isPackageSurfacePath"
+            ],
+            "ledgerOverheadTokens": 19
+          },
+          "equal": {
+            "selection": true,
+            "order": true,
+            "deliveredBytes": false,
+            "strippedBytes": true,
+            "strippedSemantic": true,
+            "itemCount": true,
+            "strippedTokenCount": true
+          }
+        },
+        {
+          "task": "budget allocation for capsule items is dropping sections",
+          "base": {
+            "byteSha": [
+              "b0b2807174a99e8240e5493e7145af261978e0bb7ce972afc05ee1ed56d3219b"
+            ],
+            "semanticSha": [
+              "b0b2807174a99e8240e5493e7145af261978e0bb7ce972afc05ee1ed56d3219b"
+            ],
+            "selectionSha": "adc8c591802f4f1d6580e88a76ec37bf93b6f2ab3334a2a0c5ea4f8b714f049e",
+            "relatedCount": 5,
+            "responseTokens": 368,
+            "serializedCharacters": 1471
+          },
+          "now": {
+            "deliveredSha": "6fed66dd87b75936031f43e38a32894611bf9d1b77ddaf859a5ec72b82a5f921",
+            "strippedSha": "b0b2807174a99e8240e5493e7145af261978e0bb7ce972afc05ee1ed56d3219b",
+            "strippedSemanticSha": "b0b2807174a99e8240e5493e7145af261978e0bb7ce972afc05ee1ed56d3219b",
+            "selectionSha": "adc8c591802f4f1d6580e88a76ec37bf93b6f2ab3334a2a0c5ea4f8b714f049e",
+            "relatedCount": 5,
+            "deliveredTokens": 386,
+            "strippedTokens": 368,
+            "deliveredCharacters": 1544,
+            "strippedCharacters": 1471,
+            "orderedIds": [
+              "capsule/budget.ts::listCapsuleItems",
+              "capsuleV2/budgetAllocator.ts::BudgetAllocation",
+              "capsule/budget.ts::computeTotalCapsuleCost",
+              "capsule/types.ts::Capsule",
+              "capsule/types.ts::CapsuleItem",
+              "capsule/budget.ts::canAddCapsuleItem"
+            ],
+            "selectionOrder": [
+              "capsuleV2/budgetAllocator.ts::BudgetAllocation",
+              "capsule/budget.ts::computeTotalCapsuleCost",
+              "capsule/types.ts::Capsule",
+              "capsule/types.ts::CapsuleItem",
+              "capsule/budget.ts::canAddCapsuleItem"
+            ],
+            "ledgerOverheadTokens": 23
+          },
+          "equal": {
+            "selection": true,
+            "order": true,
+            "deliveredBytes": false,
+            "strippedBytes": true,
+            "strippedSemantic": true,
+            "itemCount": true,
+            "strippedTokenCount": true
+          }
+        },
+        {
+          "task": "how is the impact graph bounded when a symbol has many callers",
+          "base": {
+            "byteSha": [
+              "c166a0f6d6695b308238834f3a676dc3f8ea94e473f28d225a33aeca55dd19ed"
+            ],
+            "semanticSha": [
+              "c166a0f6d6695b308238834f3a676dc3f8ea94e473f28d225a33aeca55dd19ed"
+            ],
+            "selectionSha": "50ecb8e556f2f32023d644fdef2508c224f618978b81a6b24b1259d665d71953",
+            "relatedCount": 4,
+            "responseTokens": 463,
+            "serializedCharacters": 1852
+          },
+          "now": {
+            "deliveredSha": "2d0709c9f315127e20ebee4ca3683901a2279de757ebd42a4ebf009bb9ef5ff8",
+            "strippedSha": "c166a0f6d6695b308238834f3a676dc3f8ea94e473f28d225a33aeca55dd19ed",
+            "strippedSemanticSha": "c166a0f6d6695b308238834f3a676dc3f8ea94e473f28d225a33aeca55dd19ed",
+            "selectionSha": "50ecb8e556f2f32023d644fdef2508c224f618978b81a6b24b1259d665d71953",
+            "relatedCount": 4,
+            "deliveredTokens": 479,
+            "strippedTokens": 463,
+            "deliveredCharacters": 1913,
+            "strippedCharacters": 1852,
+            "orderedIds": [
+              "impact/getImpactGraph.ts::hasInheritedMemberEvidence",
+              "impact/staticEvidence.ts::findGroundedOccurrence",
+              "impact/getImpactGraph.ts::getImpactGraph",
+              "domain/types.ts::SymbolRecord",
+              "impact/getImpactGraph.ts::ImpactEdge"
+            ],
+            "selectionOrder": [
+              "impact/staticEvidence.ts::findGroundedOccurrence",
+              "impact/getImpactGraph.ts::getImpactGraph",
+              "domain/types.ts::SymbolRecord",
+              "impact/getImpactGraph.ts::ImpactEdge"
+            ],
+            "ledgerOverheadTokens": 19
+          },
+          "equal": {
+            "selection": true,
+            "order": true,
+            "deliveredBytes": false,
+            "strippedBytes": true,
+            "strippedSemantic": true,
+            "itemCount": true,
+            "strippedTokenCount": true
+          }
+        },
+        {
+          "task": "where does logic flow decide a path is unreachable",
+          "base": {
+            "byteSha": [
+              "30771f3c1d84f7d59431a84118f7b2b0223b2975c74c9333f8b43075df13ecaa"
+            ],
+            "semanticSha": [
+              "30771f3c1d84f7d59431a84118f7b2b0223b2975c74c9333f8b43075df13ecaa"
+            ],
+            "selectionSha": "2e73fb30ab0477f5fc7bdaa813b98b23bb827a164891647b8e580b26af07262b",
+            "relatedCount": 6,
+            "responseTokens": 509,
+            "serializedCharacters": 2036
+          },
+          "now": {
+            "deliveredSha": "6896e492f271672d9a1befc0a5ce65f54db4dc80ecfc288daccf34f3257748fa",
+            "strippedSha": "30771f3c1d84f7d59431a84118f7b2b0223b2975c74c9333f8b43075df13ecaa",
+            "strippedSemanticSha": "30771f3c1d84f7d59431a84118f7b2b0223b2975c74c9333f8b43075df13ecaa",
+            "selectionSha": "2e73fb30ab0477f5fc7bdaa813b98b23bb827a164891647b8e580b26af07262b",
+            "relatedCount": 6,
+            "deliveredTokens": 531,
+            "strippedTokens": 509,
+            "deliveredCharacters": 2121,
+            "strippedCharacters": 2036,
+            "orderedIds": [
+              "logicFlow/searchLogicFlow.ts::LogicFlowPath",
+              "logicFlow/searchLogicFlow.ts::hasCrossLanguagePythonCythonStep",
+              "logicFlow/searchLogicFlow.ts::attachFlowSourceExcerpts",
+              "logicFlow/searchLogicFlow.ts::buildCoverageNotes",
+              "logicFlow/searchLogicFlow.ts::collectObservedEdgeTypes",
+              "logicFlow/searchLogicFlow.ts::compareLogicFlowPaths",
+              "impact/staticEvidence.ts::StaticEvidenceStrength"
+            ],
+            "selectionOrder": [
+              "logicFlow/searchLogicFlow.ts::hasCrossLanguagePythonCythonStep",
+              "logicFlow/searchLogicFlow.ts::attachFlowSourceExcerpts",
+              "logicFlow/searchLogicFlow.ts::buildCoverageNotes",
+              "logicFlow/searchLogicFlow.ts::collectObservedEdgeTypes",
+              "logicFlow/searchLogicFlow.ts::compareLogicFlowPaths",
+              "impact/staticEvidence.ts::StaticEvidenceStrength"
+            ],
+            "ledgerOverheadTokens": 27
+          },
+          "equal": {
+            "selection": true,
+            "order": true,
+            "deliveredBytes": false,
+            "strippedBytes": true,
+            "strippedSemantic": true,
+            "itemCount": true,
+            "strippedTokenCount": true
+          }
+        }
+      ]
+    },
+    {
+      "id": "C-LARGE",
+      "corpusIdentical": true,
+      "compared": 5,
+      "selectionEqual": 5,
+      "strippedByteEqual": 5,
+      "deliveredByteEqual": 0,
+      "perQuery": [
+        {
+          "task": "how is a reaction scheduled onto the job queue",
+          "base": {
+            "byteSha": [
+              "094703970ab9f428a540575ff2061e13f267c43b7d8457eb941dea46e7321bc5"
+            ],
+            "semanticSha": [
+              "094703970ab9f428a540575ff2061e13f267c43b7d8457eb941dea46e7321bc5"
+            ],
+            "selectionSha": "57c2cdcec13630204943b6fa7077eafde21defb5e44f46613845bb8cf62c02ae",
+            "relatedCount": 5,
+            "responseTokens": 689,
+            "serializedCharacters": 2753
+          },
+          "now": {
+            "deliveredSha": "e35b8b842cf67ab3af54cc704fad8e40336a796ead057e43d0794916a9ffb3bd",
+            "strippedSha": "094703970ab9f428a540575ff2061e13f267c43b7d8457eb941dea46e7321bc5",
+            "strippedSemanticSha": "094703970ab9f428a540575ff2061e13f267c43b7d8457eb941dea46e7321bc5",
+            "selectionSha": "57c2cdcec13630204943b6fa7077eafde21defb5e44f46613845bb8cf62c02ae",
+            "relatedCount": 5,
+            "deliveredTokens": 707,
+            "strippedTokens": 689,
+            "deliveredCharacters": 2826,
+            "strippedCharacters": 2753,
+            "orderedIds": [
+              "arc/scheduler.py::Scheduler.run_job",
+              "arc/job/trsh.py::trsh_job_queue",
+              "arc/scheduler.py::Scheduler.run_composite_job",
+              "arc/scheduler.py::Scheduler._run_a_job",
+              "arc/scheduler.py::Scheduler.parse_opt_geo",
+              "arc/scheduler.py::Scheduler.process_conformers"
+            ],
+            "selectionOrder": [
+              "arc/job/trsh.py::trsh_job_queue",
+              "arc/scheduler.py::Scheduler.run_composite_job",
+              "arc/scheduler.py::Scheduler._run_a_job",
+              "arc/scheduler.py::Scheduler.parse_opt_geo",
+              "arc/scheduler.py::Scheduler.process_conformers"
+            ],
+            "ledgerOverheadTokens": 23
+          },
+          "equal": {
+            "selection": true,
+            "order": true,
+            "deliveredBytes": false,
+            "strippedBytes": true,
+            "strippedSemantic": true,
+            "itemCount": true,
+            "strippedTokenCount": true
+          }
+        },
+        {
+          "task": "where is the level of theory validated",
+          "base": {
+            "byteSha": [
+              "2be2f9a4129b1ac7dc2a86f5facf44696f443a67be9d295e5a5ccfdbf9f7c5b6"
+            ],
+            "semanticSha": [
+              "2be2f9a4129b1ac7dc2a86f5facf44696f443a67be9d295e5a5ccfdbf9f7c5b6"
+            ],
+            "selectionSha": "d43425d7c3511357735bd8f2ed60d1e754c528f30430827c0941ad750c88cd96",
+            "relatedCount": 5,
+            "responseTokens": 699,
+            "serializedCharacters": 2793
+          },
+          "now": {
+            "deliveredSha": "79cca89bfd17b390c3724454848ca8b30b060f5ca7db538063e8ab6222aba74f",
+            "strippedSha": "2be2f9a4129b1ac7dc2a86f5facf44696f443a67be9d295e5a5ccfdbf9f7c5b6",
+            "strippedSemanticSha": "2be2f9a4129b1ac7dc2a86f5facf44696f443a67be9d295e5a5ccfdbf9f7c5b6",
+            "selectionSha": "d43425d7c3511357735bd8f2ed60d1e754c528f30430827c0941ad750c88cd96",
+            "relatedCount": 5,
+            "deliveredTokens": 717,
+            "strippedTokens": 699,
+            "deliveredCharacters": 2866,
+            "strippedCharacters": 2793,
+            "orderedIds": [
+              "arc/level.py::Level",
+              "arc/settings/settings.py::default_levels_of_theory",
+              "arc/checks/nmd_test.py::TestNMD.setUpClass",
+              "arc/checks/nmd_test.py::TestNMD.test_the_scheduler_does_not_switch_a_ts_for_an_unsupported_ess",
+              "arc/checks/ts_test.py::TestTSChecks.setUpClass",
+              "arc/checks/ts_test.py::TestTSChecks.test_check_rxn_e0"
+            ],
+            "selectionOrder": [
+              "arc/settings/settings.py::default_levels_of_theory",
+              "arc/checks/nmd_test.py::TestNMD.setUpClass",
+              "arc/checks/nmd_test.py::TestNMD.test_the_scheduler_does_not_switch_a_ts_for_an_unsupported_ess",
+              "arc/checks/ts_test.py::TestTSChecks.setUpClass",
+              "arc/checks/ts_test.py::TestTSChecks.test_check_rxn_e0"
+            ],
+            "ledgerOverheadTokens": 23
+          },
+          "equal": {
+            "selection": true,
+            "order": true,
+            "deliveredBytes": false,
+            "strippedBytes": true,
+            "strippedSemantic": true,
+            "itemCount": true,
+            "strippedTokenCount": true
+          }
+        },
+        {
+          "task": "how are species parsed from the input file",
+          "base": {
+            "byteSha": [
+              "4feb09a67e1233e5b123d7df48cfaf6a5a8a832a049eb29877279ee8185c818c"
+            ],
+            "semanticSha": [
+              "4feb09a67e1233e5b123d7df48cfaf6a5a8a832a049eb29877279ee8185c818c"
+            ],
+            "selectionSha": "249f6971519df11d92c48a203a2a81bac58ea4d98e7fcf75aaa441495e1f6150",
+            "relatedCount": 5,
+            "responseTokens": 574,
+            "serializedCharacters": 2293
+          },
+          "now": {
+            "deliveredSha": "8fcdb8117438a2bcd4c592f4825a359078f7472104116640d9088308d4a3f9ce",
+            "strippedSha": "4feb09a67e1233e5b123d7df48cfaf6a5a8a832a049eb29877279ee8185c818c",
+            "strippedSemanticSha": "4feb09a67e1233e5b123d7df48cfaf6a5a8a832a049eb29877279ee8185c818c",
+            "selectionSha": "249f6971519df11d92c48a203a2a81bac58ea4d98e7fcf75aaa441495e1f6150",
+            "relatedCount": 5,
+            "deliveredTokens": 592,
+            "strippedTokens": 574,
+            "deliveredCharacters": 2366,
+            "strippedCharacters": 2293,
+            "orderedIds": [
+              "arc/parser/parser.py::parse_1d_scan_energies_from_specific_angle",
+              "arc/species/converter.py::xyz_from_data",
+              "arc/scheduler.py::Scheduler.check_scan_job",
+              "arc/parser/parser.py::parse_1d_scan_energies",
+              "arc/parser/parser.py::_get_lines_from_file",
+              "arc/parser/parser.py::determine_ess"
+            ],
+            "selectionOrder": [
+              "arc/species/converter.py::xyz_from_data",
+              "arc/scheduler.py::Scheduler.check_scan_job",
+              "arc/parser/parser.py::parse_1d_scan_energies",
+              "arc/parser/parser.py::_get_lines_from_file",
+              "arc/parser/parser.py::determine_ess"
+            ],
+            "ledgerOverheadTokens": 23
+          },
+          "equal": {
+            "selection": true,
+            "order": true,
+            "deliveredBytes": false,
+            "strippedBytes": true,
+            "strippedSemantic": true,
+            "itemCount": true,
+            "strippedTokenCount": true
+          }
+        },
+        {
+          "task": "what determines that a job has converged",
+          "base": {
+            "byteSha": [
+              "c638f7b663e0483ad8473c93baa2cd060c82773f100f7fee07ce52fd2b3fb5fa"
+            ],
+            "semanticSha": [
+              "c638f7b663e0483ad8473c93baa2cd060c82773f100f7fee07ce52fd2b3fb5fa"
+            ],
+            "selectionSha": "14340ac9f2973143a3e5075727aebc6c510134e6aa381526e9ac167b9e74cc84",
+            "relatedCount": 5,
+            "responseTokens": 780,
+            "serializedCharacters": 3117
+          },
+          "now": {
+            "deliveredSha": "bb699a946db4897cc96df126ae9d790d8f3a7c7a0a49a630445c88a47a867a33",
+            "strippedSha": "c638f7b663e0483ad8473c93baa2cd060c82773f100f7fee07ce52fd2b3fb5fa",
+            "strippedSemanticSha": "c638f7b663e0483ad8473c93baa2cd060c82773f100f7fee07ce52fd2b3fb5fa",
+            "selectionSha": "14340ac9f2973143a3e5075727aebc6c510134e6aa381526e9ac167b9e74cc84",
+            "relatedCount": 5,
+            "deliveredTokens": 798,
+            "strippedTokens": 780,
+            "deliveredCharacters": 3190,
+            "strippedCharacters": 3117,
+            "orderedIds": [
+              "arc/job/adapters/scripts/ase_script.py::scan_convergence_warning",
+              "arc/main.py::ARC.execute",
+              "arc/job/adapters/scripts/ase_script.py::main",
+              "arc/job/adapters/scripts/ase_script.py::_scan_walk",
+              "arc/job/adapters/scripts/ase_script.py::amu",
+              "arc/job/adapters/scripts/ase_script.py::apply_constraints"
+            ],
+            "selectionOrder": [
+              "arc/main.py::ARC.execute",
+              "arc/job/adapters/scripts/ase_script.py::main",
+              "arc/job/adapters/scripts/ase_script.py::_scan_walk",
+              "arc/job/adapters/scripts/ase_script.py::amu",
+              "arc/job/adapters/scripts/ase_script.py::apply_constraints"
+            ],
+            "ledgerOverheadTokens": 24
+          },
+          "equal": {
+            "selection": true,
+            "order": true,
+            "deliveredBytes": false,
+            "strippedBytes": true,
+            "strippedSemantic": true,
+            "itemCount": true,
+            "strippedTokenCount": true
+          }
+        },
+        {
+          "task": "how is the output of a quantum chemistry job parsed",
+          "base": {
+            "byteSha": [
+              "c86862ccb4b98998aa2ee5b4f3e01658990b98f04eadb0ac663c3c768bc37f10"
+            ],
+            "semanticSha": [
+              "c86862ccb4b98998aa2ee5b4f3e01658990b98f04eadb0ac663c3c768bc37f10"
+            ],
+            "selectionSha": "98437c877bf48eca50ebb46a47ff966b9a2737115a0710d99cfb4a3650df7255",
+            "relatedCount": 6,
+            "responseTokens": 594,
+            "serializedCharacters": 2376
+          },
+          "now": {
+            "deliveredSha": "c5df31bae921ad4ba27eee3cd78fdeff4b4e549910a3b64fb7b91771c9d29dd4",
+            "strippedSha": "c86862ccb4b98998aa2ee5b4f3e01658990b98f04eadb0ac663c3c768bc37f10",
+            "strippedSemanticSha": "c86862ccb4b98998aa2ee5b4f3e01658990b98f04eadb0ac663c3c768bc37f10",
+            "selectionSha": "98437c877bf48eca50ebb46a47ff966b9a2737115a0710d99cfb4a3650df7255",
+            "relatedCount": 6,
+            "deliveredTokens": 616,
+            "strippedTokens": 594,
+            "deliveredCharacters": 2461,
+            "strippedCharacters": 2376,
+            "orderedIds": [
+              "arc/job/adapter.py::JobAdapter.save_output_file",
+              "arc/parser/adapters/cfour.py::CfourParser",
+              "arc/job/adapter.py::JobAdapter",
+              "arc/common.py::read_yaml_file",
+              "arc/common.py::save_yaml_file",
+              "arc/job/adapter.py::JobAdapter.__repr__",
+              "arc/job/adapter.py::JobAdapter._check_job_ess_status"
+            ],
+            "selectionOrder": [
+              "arc/parser/adapters/cfour.py::CfourParser",
+              "arc/job/adapter.py::JobAdapter",
+              "arc/common.py::read_yaml_file",
+              "arc/common.py::save_yaml_file",
+              "arc/job/adapter.py::JobAdapter.__repr__",
+              "arc/job/adapter.py::JobAdapter._check_job_ess_status"
+            ],
+            "ledgerOverheadTokens": 27
+          },
+          "equal": {
+            "selection": true,
+            "order": true,
+            "deliveredBytes": false,
+            "strippedBytes": true,
+            "strippedSemantic": true,
+            "itemCount": true,
+            "strippedTokenCount": true
+          }
+        }
+      ]
+    }
+  ],
+  "differences": [],
+  "verdict": "M203_EVIDENCE_EQUIVALENT"
+}
