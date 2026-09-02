@@ -155,10 +155,17 @@ export function countPersistedSurfaces(db: Database): number {
   return (db.query("SELECT COUNT(*) AS c FROM module_binding_surfaces").get() as { c: number }).c;
 }
 
-/** Files with a descriptor resolving to `target`, excluding wildcard reaches. */
+/**
+ * Files with a descriptor resolving to `target`, excluding wildcard reaches.
+ *
+ * Deliberately NOT `SELECT DISTINCT`: the closure adds these to a set, so the
+ * only thing DISTINCT bought was a `USE TEMP B-TREE FOR DISTINCT` on top of an
+ * already-covering index lookup. One file importing the same module twice is a
+ * duplicate row here and one entry there.
+ */
 export function importersOfTarget(db: Database, target: FilePath): string[] {
   const rows = db.query(
-    `SELECT DISTINCT file_path FROM import_descriptors
+    `SELECT file_path FROM import_descriptors
       WHERE resolved_target_path = ? AND resolution_status <> 'wildcard'`,
   ).all(normalizeFilePath(target)) as { file_path: string }[];
   return rows.map((row) => row.file_path);
@@ -167,7 +174,7 @@ export function importersOfTarget(db: Database, target: FilePath): string[] {
 /** Files reaching `target` through `from target import *`. */
 export function wildcardImportersOfTarget(db: Database, target: FilePath): string[] {
   const rows = db.query(
-    `SELECT DISTINCT file_path FROM import_descriptors
+    `SELECT file_path FROM import_descriptors
       WHERE resolved_target_path = ? AND resolution_status = 'wildcard'`,
   ).all(normalizeFilePath(target)) as { file_path: string }[];
   return rows.map((row) => row.file_path);

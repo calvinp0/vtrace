@@ -1,7 +1,7 @@
 {
   "milestone": "M200",
   "purpose": "P1..P14 package-surface behaviour and full/incremental equality",
-  "generatedFromCommit": "a7eac00e9fef3e7711502f7ba1c1dd28f42ccc25",
+  "generatedFromCommit": "d3cc79dfef5b98672f51f6948154a930cea4e614",
   "fixtures": 14,
   "behaviourFailures": 0,
   "equivalenceFailures": 0,
@@ -99,7 +99,7 @@
           "repositoryFileCount": 34,
           "maxClosureFraction": 0.2,
           "refusal": null,
-          "derivationMs": 0.99,
+          "derivationMs": 3.37,
           "filesAFullRebuildWouldParse": 34
         }
       },
@@ -167,7 +167,7 @@
           "repositoryFileCount": 34,
           "maxClosureFraction": 0.2,
           "refusal": null,
-          "derivationMs": 0.57,
+          "derivationMs": 0.55,
           "filesAFullRebuildWouldParse": 34
         }
       },
@@ -241,7 +241,7 @@
           "repositoryFileCount": 34,
           "maxClosureFraction": 0.2,
           "refusal": null,
-          "derivationMs": 2.9,
+          "derivationMs": 1.37,
           "filesAFullRebuildWouldParse": 34
         }
       },
@@ -314,7 +314,7 @@
           "repositoryFileCount": 34,
           "maxClosureFraction": 0.2,
           "refusal": null,
-          "derivationMs": 0.64,
+          "derivationMs": 1.04,
           "filesAFullRebuildWouldParse": 34
         }
       },
@@ -382,7 +382,7 @@
           "repositoryFileCount": 34,
           "maxClosureFraction": 0.2,
           "refusal": null,
-          "derivationMs": 0.62,
+          "derivationMs": 0.97,
           "filesAFullRebuildWouldParse": 34
         }
       },
@@ -450,7 +450,7 @@
           "repositoryFileCount": 34,
           "maxClosureFraction": 0.2,
           "refusal": null,
-          "derivationMs": 0.9,
+          "derivationMs": 0.39,
           "filesAFullRebuildWouldParse": 34
         }
       },
@@ -518,7 +518,7 @@
           "repositoryFileCount": 34,
           "maxClosureFraction": 0.2,
           "refusal": null,
-          "derivationMs": 0.67,
+          "derivationMs": 0.83,
           "filesAFullRebuildWouldParse": 34
         }
       },
@@ -594,7 +594,7 @@
           "repositoryFileCount": 35,
           "maxClosureFraction": 0.2,
           "refusal": null,
-          "derivationMs": 0.63,
+          "derivationMs": 0.54,
           "filesAFullRebuildWouldParse": 35
         }
       },
@@ -676,7 +676,7 @@
           "repositoryFileCount": 35,
           "maxClosureFraction": 0.2,
           "refusal": null,
-          "derivationMs": 1.01,
+          "derivationMs": 2.13,
           "filesAFullRebuildWouldParse": 35
         }
       },
@@ -753,7 +753,7 @@
           "repositoryFileCount": 35,
           "maxClosureFraction": 0.2,
           "refusal": null,
-          "derivationMs": 0.47,
+          "derivationMs": 1.01,
           "filesAFullRebuildWouldParse": 35
         }
       },
@@ -830,7 +830,7 @@
           "repositoryFileCount": 37,
           "maxClosureFraction": 0.2,
           "refusal": null,
-          "derivationMs": 0.61,
+          "derivationMs": 0.46,
           "filesAFullRebuildWouldParse": 37
         }
       },
@@ -894,7 +894,7 @@
           "maxClosureFraction": 0.2,
           "refusal": "wildcard_consumer",
           "refusalDetail": "wild.py reach pkg/__init__.py by wildcard",
-          "derivationMs": 1.12,
+          "derivationMs": 0.86,
           "filesAFullRebuildWouldParse": 34
         }
       },
@@ -972,7 +972,7 @@
           "repositoryFileCount": 36,
           "maxClosureFraction": 0.2,
           "refusal": null,
-          "derivationMs": 0.82,
+          "derivationMs": 2.33,
           "filesAFullRebuildWouldParse": 36
         }
       },

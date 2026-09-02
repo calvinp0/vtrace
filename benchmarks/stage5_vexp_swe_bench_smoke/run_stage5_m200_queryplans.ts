@@ -88,10 +88,10 @@ for (const spec of corpusSpecs(REPO).filter((s) => ONLY.includes(s.id))) {
 
   const STATEMENTS = [
     { id: "reverse_importers_of_target", params: [target],
-      sql: `SELECT DISTINCT file_path FROM import_descriptors
+      sql: `SELECT file_path FROM import_descriptors
              WHERE resolved_target_path = ? AND resolution_status <> 'wildcard'` },
     { id: "reverse_wildcard_importers_of_target", params: [target],
-      sql: `SELECT DISTINCT file_path FROM import_descriptors
+      sql: `SELECT file_path FROM import_descriptors
              WHERE resolved_target_path = ? AND resolution_status = 'wildcard'` },
     { id: "re_exports_through", params: [someFile, target],
       sql: `SELECT 1 AS hit FROM module_bindings
@@ -131,18 +131,29 @@ for (const spec of corpusSpecs(REPO).filter((s) => ONLY.includes(s.id))) {
 
   // Storage: empty the three tables in a COPY and VACUUM, so the delta is the
   // authority's bytes measured against the same graph rather than another one.
+  // Both sides are VACUUMed, because a VACUUM alone reclaims free pages and a
+  // one-sided comparison would bill that reclamation to the binding tables. On a
+  // corpus with no binding rows at all the two must agree exactly, which is the
+  // check that the measurement is measuring what it says.
   db.close();
-  const strippedPath = path.join(SCRATCH, `stripped-${spec.id}.sqlite`);
-  rmSync(strippedPath, { force: true });
-  cpSync(path.join(work, ".vtrace/index.sqlite"), strippedPath);
-  const stripped = new Database(strippedPath);
-  stripped.run("DELETE FROM import_descriptors");
-  stripped.run("DELETE FROM module_bindings");
-  stripped.run("DELETE FROM module_binding_surfaces");
-  stripped.run("VACUUM");
-  stripped.close();
-  const strippedBytes = statSync(strippedPath).size;
-  rmSync(strippedPath, { force: true });
+  const measure = (tag: string, strip: boolean): number => {
+    const copyPath = path.join(SCRATCH, `${tag}-${spec.id}.sqlite`);
+    rmSync(copyPath, { force: true });
+    cpSync(path.join(work, ".vtrace/index.sqlite"), copyPath);
+    const copy = new Database(copyPath);
+    if (strip) {
+      copy.run("DELETE FROM import_descriptors");
+      copy.run("DELETE FROM module_bindings");
+      copy.run("DELETE FROM module_binding_surfaces");
+    }
+    copy.run("VACUUM");
+    copy.close();
+    const bytes = statSync(copyPath).size;
+    rmSync(copyPath, { force: true });
+    return bytes;
+  };
+  const vacuumedBytes = measure("vacuumed", false);
+  const strippedBytes = measure("stripped", true);
   rmSync(work, { recursive: true, force: true });
 
   const entry = {
@@ -151,9 +162,10 @@ for (const spec of corpusSpecs(REPO).filter((s) => ONLY.includes(s.id))) {
     indexBytes, bindingRowCounts,
     busiestTarget: busiest,
     storage: {
-      withBindingsBytes: indexBytes, withoutBindingsVacuumedBytes: strippedBytes,
-      bindingBytes: indexBytes - strippedBytes,
-      bindingSharePercent: +(100 * (indexBytes - strippedBytes) / indexBytes).toFixed(2),
+      onDiskBytes: indexBytes,
+      vacuumedBytes, strippedAndVacuumedBytes: strippedBytes,
+      bindingBytes: vacuumedBytes - strippedBytes,
+      bindingSharePercent: +(100 * (vacuumedBytes - strippedBytes) / vacuumedBytes).toFixed(2),
     },
     statements,
     anyFullScan: statements.some((s) => s.classification === "full_scan"),
@@ -161,7 +173,7 @@ for (const spec of corpusSpecs(REPO).filter((s) => ONLY.includes(s.id))) {
   corpora.push(entry);
   console.log(`${spec.id}  cold ${entry.coldBuildMedianMs}ms  db ${(indexBytes / 1e6).toFixed(1)}MB  `
     + `binding rows ${JSON.stringify(bindingRowCounts)}  `
-    + `binding bytes ${entry.storage.bindingBytes} (${entry.storage.bindingSharePercent}%)`);
+    + `binding bytes ${entry.storage.bindingBytes} (${entry.storage.bindingSharePercent}% of vacuumed)`);
   for (const s of statements) console.log(`   ${s.classification.padEnd(10)} ${s.ms}ms  ${s.id}`);
 }
 
