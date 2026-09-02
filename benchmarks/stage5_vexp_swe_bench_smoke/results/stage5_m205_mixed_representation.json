@@ -1,0 +1,191 @@
+{
+  "task": "where are import edges extracted from typescript",
+  "budget": 16000,
+  "relatedClasses": [
+    "focused_source",
+    "signature",
+    "skeleton",
+    "relationship_only"
+  ],
+  "items": [
+    {
+      "ordinal": 0,
+      "slot": "focus",
+      "at": "parsers/typescriptParser.ts::ExtractImportEdgesInput",
+      "representation": "focused_source",
+      "reason": "focus_slot",
+      "codeCharacters": 159,
+      "truncated": false,
+      "tokens": 135,
+      "sourceTruth": "ANCHORED_IN_SPAN"
+    },
+    {
+      "ordinal": 1,
+      "slot": "related",
+      "at": "parsers/typescriptParser.ts::extractImportEdges",
+      "representation": "focused_source",
+      "reason": "upstream_form_delivered",
+      "codeCharacters": 562,
+      "truncated": true,
+      "tokens": 267,
+      "sourceTruth": "ANCHORED_IN_SPAN"
+    },
+    {
+      "ordinal": 2,
+      "slot": "related",
+      "at": "parsers/typescriptParser.ts::extractCallAndReferenceEdges",
+      "representation": "focused_source",
+      "reason": "upstream_form_delivered",
+      "codeCharacters": 577,
+      "truncated": true,
+      "tokens": 271,
+      "sourceTruth": "ANCHORED_IN_SPAN"
+    },
+    {
+      "ordinal": 3,
+      "slot": "related",
+      "at": "parsers/cythonParser.ts::extractImportEdges",
+      "representation": "focused_source",
+      "reason": "upstream_form_delivered",
+      "codeCharacters": 589,
+      "truncated": true,
+      "tokens": 271,
+      "sourceTruth": "ANCHORED_IN_SPAN"
+    },
+    {
+      "ordinal": 4,
+      "slot": "related",
+      "at": "parsers/pythonParser.ts::extractImportEdges",
+      "representation": "focused_source",
+      "reason": "upstream_form_delivered",
+      "codeCharacters": 599,
+      "truncated": true,
+      "tokens": 274,
+      "sourceTruth": "ANCHORED_IN_SPAN"
+    },
+    {
+      "ordinal": 5,
+      "slot": "related",
+      "at": "offsetsFor",
+      "representation": "signature",
+      "reason": "upstream_form_delivered",
+      "codeCharacters": 54,
+      "truncated": false,
+      "tokens": 78,
+      "sourceTruth": "PARSER_SIGNATURE"
+    },
+    {
+      "ordinal": 6,
+      "slot": "related",
+      "at": "withCallSite",
+      "representation": "signature",
+      "reason": "upstream_form_delivered",
+      "codeCharacters": 71,
+      "truncated": false,
+      "tokens": 83,
+      "sourceTruth": "PARSER_SIGNATURE"
+    },
+    {
+      "ordinal": 7,
+      "slot": "related",
+      "at": "domain/types.ts::ImportResolutionStatus",
+      "representation": "skeleton",
+      "reason": "upstream_form_delivered",
+      "codeCharacters": 266,
+      "truncated": false,
+      "tokens": 177,
+      "sourceTruth": "SKELETON_MATCHES_INDEX"
+    },
+    {
+      "ordinal": 8,
+      "slot": "related",
+      "at": "parsers/cythonParser.ts::ExtractImportEdgesInput",
+      "representation": "skeleton",
+      "reason": "upstream_form_delivered",
+      "codeCharacters": 33,
+      "truncated": false,
+      "tokens": 105,
+      "sourceTruth": "SKELETON_MATCHES_INDEX"
+    },
+    {
+      "ordinal": 9,
+      "slot": "related",
+      "at": "parsers/pythonParser.ts::ExtractImportEdgesInput",
+      "representation": "relationship_only",
+      "reason": "no_rendered_body",
+      "codeCharacters": 0,
+      "truncated": false,
+      "tokens": 79,
+      "sourceTruth": "NOT_APPLICABLE"
+    },
+    {
+      "ordinal": 10,
+      "slot": "related",
+      "at": "parsers/typescriptParser.ts::CallReferenceResolution",
+      "representation": "skeleton",
+      "reason": "upstream_form_delivered",
+      "codeCharacters": 33,
+      "truncated": false,
+      "tokens": 113,
+      "sourceTruth": "SKELETON_MATCHES_INDEX"
+    },
+    {
+      "ordinal": 11,
+      "slot": "related",
+      "at": "parsers/typescriptParser.ts::TypeScriptParserContext",
+      "representation": "skeleton",
+      "reason": "upstream_form_delivered",
+      "codeCharacters": 33,
+      "truncated": false,
+      "tokens": 112,
+      "sourceTruth": "SKELETON_MATCHES_INDEX"
+    },
+    {
+      "ordinal": 12,
+      "slot": "related",
+      "at": "parsers/typescriptParser.ts::collectBoundNames",
+      "representation": "skeleton",
+      "reason": "upstream_form_delivered",
+      "codeCharacters": 58,
+      "truncated": false,
+      "tokens": 115,
+      "sourceTruth": "SKELETON_MATCHES_INDEX"
+    },
+    {
+      "ordinal": 13,
+      "slot": "related",
+      "at": "parsers/typescriptParser.ts::ExtractedSymbols",
+      "representation": "skeleton",
+      "reason": "upstream_form_delivered",
+      "codeCharacters": 26,
+      "truncated": false,
+      "tokens": 103,
+      "sourceTruth": "SKELETON_MATCHES_INDEX"
+    },
+    {
+      "ordinal": 14,
+      "slot": "related",
+      "at": "parsers/cythonParser.ts::extractCythonCallAndReferenceEdges",
+      "representation": "skeleton",
+      "reason": "upstream_form_delivered",
+      "codeCharacters": 285,
+      "truncated": false,
+      "tokens": 190,
+      "sourceTruth": "SKELETON_MATCHES_INDEX"
+    },
+    {
+      "ordinal": 15,
+      "slot": "related",
+      "at": "parsers/typescriptParser.ts::parseTypeScriptWithContext",
+      "representation": "relationship_only",
+      "reason": "form_not_code_bearing",
+      "codeCharacters": 0,
+      "truncated": false,
+      "tokens": 64,
+      "sourceTruth": "NOT_APPLICABLE"
+    }
+  ],
+  "orderIsOrdinal": true,
+  "tokensSum": 2437,
+  "allPass": true
+}

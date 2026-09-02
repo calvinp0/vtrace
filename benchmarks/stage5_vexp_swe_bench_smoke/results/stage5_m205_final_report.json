@@ -1,0 +1,1926 @@
+{
+  "milestone": "M205",
+  "instrument": "run_stage5_m205_report.ts",
+  "verdicts": {
+    "a12": "A12_PARITY_CLOSED",
+    "frozenA12Verdict": "VTRACE_MATCHES_VEXP_CLAIM",
+    "parity": {
+      "m204": 11,
+      "m205": 12,
+      "target": 15,
+      "threshold": "VTRACE_VEXP_ENGINE_PARITY_THRESHOLD_MET"
+    },
+    "gatesPassed": 22,
+    "gatesTotal": 22,
+    "falsification": "M205_FALSIFICATION_CONTROLS_PASS"
+  },
+  "frozenA12": {
+    "claim": "pivots are delivered as full content, supporting files as skeletons",
+    "source": "V-C6, vexp-core binary",
+    "representationDefinition": "FOCUS:<form> when focus.code; RELATED_WITH_CODE when related.code is a string; RELATIONSHIP_ONLY otherwise; distinct over C-MED responses at the frozen budgets; MATCHES >= 3, EXCEEDS >= 5 (engine + report, verbatim)",
+    "vexpClassCount": 3,
+    "vexpInventory": [
+      {
+        "name": "pivot_full_content",
+        "evidence": "OBSERVED",
+        "countsTowardA12": true
+      },
+      {
+        "name": "pivot_skeleton",
+        "evidence": "OBSERVED",
+        "countsTowardA12": true
+      },
+      {
+        "name": "supporting_skeleton",
+        "evidence": "OBSERVED",
+        "countsTowardA12": true
+      },
+      {
+        "name": "supporting_dropped",
+        "evidence": "OBSERVED",
+        "countsTowardA12": false
+      },
+      {
+        "name": "get_skeleton_file_structure",
+        "evidence": "OBSERVED",
+        "countsTowardA12": false
+      }
+    ],
+    "matchThreshold": ">= 3 distinct classes",
+    "exceedThreshold": "5",
+    "committedM204": {
+      "classes": [
+        "FOCUS:focused_source",
+        "RELATIONSHIP_ONLY"
+      ],
+      "count": 2,
+      "verdict": "VTRACE_BELOW_VEXP_CLAIM"
+    },
+    "reproductionPre": {
+      "product": {
+        "root": "/home/calvin/bench/vtrace-m205/pre",
+        "head": "9f0799cfe3637c81b7630f4874ead308f55e9cea",
+        "relatedCodeCharacters": null,
+        "focusCodeCharacters": 1800,
+        "skeletonAuthorityBound": false
+      },
+      "classes": [
+        "FOCUS:focused_source",
+        "RELATIONSHIP_ONLY"
+      ],
+      "count": 2,
+      "verdict": "VTRACE_BELOW_VEXP_CLAIM"
+    },
+    "reproductionPost": {
+      "product": {
+        "root": "/home/calvin/code/vtrace",
+        "head": "9f0799cfe3637c81b7630f4874ead308f55e9cea",
+        "relatedCodeCharacters": 600,
+        "focusCodeCharacters": 1800,
+        "skeletonAuthorityBound": true
+      },
+      "classes": [
+        "FOCUS:focused_source",
+        "RELATED_WITH_CODE",
+        "RELATIONSHIP_ONLY"
+      ],
+      "count": 3,
+      "verdict": "VTRACE_MATCHES_VEXP_CLAIM"
+    },
+    "frozenRerun": {
+      "classes": [
+        "FOCUS:focused_source",
+        "RELATED_WITH_CODE",
+        "RELATIONSHIP_ONLY"
+      ],
+      "count": 3,
+      "verdict": "VTRACE_MATCHES_VEXP_CLAIM",
+      "cLarge": [
+        "FOCUS:focused_source",
+        "RELATIONSHIP_ONLY",
+        "RELATED_WITH_CODE",
+        "FOCUS:excerpt"
+      ]
+    }
+  },
+  "authority": {
+    "replayAtM204Count": {
+      "verdict": "M197A_AUTHORITY_MISMATCH",
+      "failingChecks": [
+        "corpus_C-MED"
+      ],
+      "cmedFiles": 504,
+      "expected": 502
+    },
+    "postChange": {
+      "verdict": "M197A_AUTHORITY_VERIFIED",
+      "cmedFiles": 504,
+      "expected": 504
+    },
+    "identityAdvanced": true,
+    "onlyMismatchWasCount": true,
+    "note": "C-MED is this repository's src/; M205 added src/runPipeline/orientationRepresentation.ts and its test, so the self-referential count advanced 502 -> 504; claim definitions, thresholds, scorer and corpus root unchanged"
+  },
+  "vexpInventory": [
+    {
+      "name": "pivot_full_content",
+      "purpose": "the edit target, delivered as its full source",
+      "observableShape": "a `## Pivots (Full Content)` section header in the rendered capsule; `include_file_content` tool option",
+      "vtraceAnalogue": "focus with form focused_source (FOCUS:focused_source)",
+      "countsTowardA12": true,
+      "evidence": "OBSERVED",
+      "structuralBehaviourObservable": false,
+      "note": "the marker proves the renderer HAS this section; when it is chosen, how it is bounded and what it contains are inside the closed binary (UNKNOWN)",
+      "markers": [
+        {
+          "artifact": "coreBinary",
+          "needle": "## Pivots (Full Content)",
+          "occurrences": 1,
+          "context": "keleton(file_path) for related symbols) | supporting_droppedImpactImpact Analysis## Pivots | ## Pivots (Full Content) | ## Pivots (Skeletons> caveman mode: terse. drop filler/articles. fragments OK. code/URL/p"
+        },
+        {
+          "artifact": "mcpServer",
+          "needle": "## Pivot Files (Full Content)",
+          "occurrences": 1,
+          "context": " different description.*\"),e.join(` | `);let a=t.graph_stats.repos_queried.length>1;e.push(\"## Pivot Files (Full Content)\"),e.push(\"\");for(let i of t.pivots){let o=a?`\\`${i.repo}\\` / `:\"\";e.push(`### ${o}\\`${i.f"
+        }
+      ],
+      "claimText": [
+        {
+          "artifact": "mcpServer",
+          "needle": "Include full file content for pivot files",
+          "occurrences": 2
+        }
+      ]
+    },
+    {
+      "name": "pivot_skeleton",
+      "purpose": "the edit target degraded to a skeleton when the budget binds",
+      "observableShape": "a `## Pivots (Skeletons` section header with a `call get_skeleton(file) for body` note",
+      "vtraceAnalogue": "focus with form signature/skeleton (FOCUS:signature observed on C-LARGE)",
+      "countsTowardA12": true,
+      "evidence": "OBSERVED",
+      "structuralBehaviourObservable": false,
+      "note": "the marker proves the renderer HAS this section; when it is chosen, how it is bounded and what it contains are inside the closed binary (UNKNOWN)",
+      "markers": [
+        {
+          "artifact": "coreBinary",
+          "needle": "## Pivots (Skeletons",
+          "occurrences": 2,
+          "context": "dex may still be building.** | Use Grep, Glob, and Read directly until indexing completes. | ## Pivots (Skeletons  |  call get_skeleton(file) for body) | ## Supporting (Skeletons) | ## Project Rules | ## Impac"
+        },
+        {
+          "artifact": "coreBinary",
+          "needle": "call get_skeleton(file) for body",
+          "occurrences": 1,
+          "context": ".** | Use Grep, Glob, and Read directly until indexing completes. | ## Pivots (Skeletons  |  call get_skeleton(file) for body) | ## Supporting (Skeletons) | ## Project Rules | ## Impact Analysis | ## Skipped Steps | Pro featu"
+        }
+      ],
+      "claimText": []
+    },
+    {
+      "name": "supporting_skeleton",
+      "purpose": "supporting files delivered as skeletons",
+      "observableShape": "a `## Supporting (Skeletons)` / `## Supporting Context (Skeletons)` section header; per-file skeleton blocks in the MCP renderer",
+      "vtraceAnalogue": "related entry carrying code in a skeleton/signature/focused_source/excerpt/document_excerpt form (RELATED_WITH_CODE)",
+      "countsTowardA12": true,
+      "evidence": "OBSERVED",
+      "structuralBehaviourObservable": false,
+      "note": "the marker proves the renderer HAS this section; when it is chosen, how it is bounded and what it contains are inside the closed binary (UNKNOWN)",
+      "markers": [
+        {
+          "artifact": "coreBinary",
+          "needle": "## Supporting (Skeletons)",
+          "occurrences": 1,
+          "context": "tly until indexing completes. | ## Pivots (Skeletons  |  call get_skeleton(file) for body) | ## Supporting (Skeletons) | ## Project Rules | ## Impact Analysis | ## Skipped Steps | Pro feature | ###  |  (score:  |   | p | )"
+        },
+        {
+          "artifact": "coreBinary",
+          "needle": "## Supporting Context (Skeletons)",
+          "occurrences": 1,
+          "context": " | p | K |   | p | M | # vexp Context Capsule | **Token budget:**  | / |  used ( |   | p | % saving) | ## Supporting Context (Skeletons) | ###  |  (score:  |   | p | ) | No index found. Run `vexp init` first. |   Total saved:    |   | "
+        }
+      ],
+      "claimText": []
+    },
+    {
+      "name": "supporting_dropped",
+      "purpose": "supporting files omitted when the budget binds, with a pointer to get_skeleton",
+      "observableShape": "a `- (dropped … call get_skeleton(file_path) for related symbols)` line and a `supporting_dropped` field",
+      "vtraceAnalogue": "an absence, not a representation: relationship-only entries and the claim boundary (RELATIONSHIP_ONLY is the nearest delivered class)",
+      "countsTowardA12": false,
+      "evidence": "OBSERVED",
+      "structuralBehaviourObservable": false,
+      "note": "the marker proves the renderer HAS this section; when it is chosen, how it is bounded and what it contains are inside the closed binary (UNKNOWN)",
+      "markers": [
+        {
+          "artifact": "coreBinary",
+          "needle": "supporting_dropped",
+          "occurrences": 1,
+          "context": "Skeletons)## Supporting | - (dropped  |  call get_skeleton(file_path) for related symbols) | supporting_droppedImpactImpact Analysis## Pivots | ## Pivots (Full Content) | ## Pivots (Skeletons> caveman mode"
+        },
+        {
+          "artifact": "coreBinary",
+          "needle": "call get_skeleton(file_path) for related symbols",
+          "occurrences": 1,
+          "context": "memory(<task>) to retrieve) | SupportingSupporting (Skeletons)## Supporting | - (dropped  |  call get_skeleton(file_path) for related symbols) | supporting_droppedImpactImpact Analysis## Pivots | ## Pivots (Full Content) | ## Pivots (Sk"
+        }
+      ],
+      "claimText": []
+    },
+    {
+      "name": "get_skeleton_file_structure",
+      "purpose": "a separate tool: file structure without full content, full bodies for short functions and signatures for long ones",
+      "observableShape": "tool description text; a `# File Skeletons` renderer in the MCP bundle",
+      "vtraceAnalogue": "get_skeleton (A9/A10), outside the run_pipeline response the frozen A12 scores",
+      "countsTowardA12": false,
+      "evidence": "OBSERVED",
+      "structuralBehaviourObservable": false,
+      "note": "the marker proves the renderer HAS this section; when it is chosen, how it is bounded and what it contains are inside the closed binary (UNKNOWN)",
+      "markers": [
+        {
+          "artifact": "mcpServer",
+          "needle": "# File Skeletons",
+          "occurrences": 2,
+          "context": "n);return ZL(a)}function ZL(t){let e=[];if(!Array.isArray(t)||t.length===0)return e.push(\"# File Skeletons\"),e.push(\"\"),e.push(\"*No skeleton data \\u2014 files may not be indexed yet. Run `index_st"
+        },
+        {
+          "artifact": "coreBinary",
+          "needle": "file structure without full content",
+          "occurrences": 1,
+          "context": "`pivot_depth: 3`, `skeleton_detail: \"detailed\"`, `repos: [\"alias\"]` | ### `get_skeleton` - file structure without full content | Returns function/class signatures only (70-90% token reduction). | ``` | get_skeleton(files=["
+        }
+      ],
+      "claimText": [
+        {
+          "artifact": "mcpServer",
+          "needle": "full bodies for short functions, signatures for long ones",
+          "occurrences": 1
+        }
+      ]
+    }
+  ],
+  "vtraceInventory": {
+    "post": [
+      "focus: FOCUS:<form>",
+      "related: RELATIONSHIP_ONLY",
+      "related: upstream form delivered (focused_source / skeleton / signature / excerpt / document_excerpt)"
+    ],
+    "pre": [
+      "focus: FOCUS:<form>",
+      "related: RELATIONSHIP_ONLY"
+    ],
+    "frozenA12View": {
+      "countedBy": "FOCUS:<form>, RELATED_WITH_CODE, RELATIONSHIP_ONLY",
+      "preM205": "related entries never carry code, so C-MED delivers FOCUS:focused_source and RELATIONSHIP_ONLY: 2 classes",
+      "whyNotMore": "focus vs related does not count separately beyond the focus form; signature vs skeleton is not distinguished on related entries by the frozen rule; the count is by content class (code present, and the focus's form), not by schema shape or production variant"
+    }
+  },
+  "rootCause": "related entries carried no code: the projector delivered every admitted related entry as a relationship claim only, although the authoritative rendering it reads already carried a body for most of them (co-pivot focused source, index skeleton, parser signature); under the frozen rule only the focus form and RELATIONSHIP_ONLY were therefore present on C-MED",
+  "representation": {
+    "policy": {
+      "relatedCodeCharacters": 600,
+      "focusCodeCharacters": 1800
+    },
+    "healthMatrix": [
+      {
+        "class": "focused_source",
+        "countedByA12": "RELATED_WITH_CODE (when delivered)",
+        "deliveredOnCMed": 277,
+        "deliveredAtFrozenBudgets": 139,
+        "fixtureExists": true,
+        "fixture": "frozen corpus",
+        "sourceBacked": true,
+        "sourceTruth": {
+          "ANCHORED_IN_SPAN": 277
+        },
+        "bounded": true,
+        "accounted": true,
+        "deterministic": true,
+        "malformedFallbackTested": true,
+        "routingReasons": [
+          "upstream_form_delivered"
+        ],
+        "allGatesPass": true,
+        "status": "HEALTHY"
+      },
+      {
+        "class": "full_source",
+        "countedByA12": "RELATED_WITH_CODE (when delivered)",
+        "deliveredOnCMed": 0,
+        "deliveredAtFrozenBudgets": 0,
+        "fixtureExists": false,
+        "fixture": "none",
+        "sourceBacked": null,
+        "sourceTruth": {},
+        "bounded": null,
+        "accounted": null,
+        "deterministic": true,
+        "malformedFallbackTested": false,
+        "routingReasons": [],
+        "allGatesPass": true,
+        "status": "IN_TABLE_NOT_EXERCISED_ON_FROZEN_CORPUS"
+      },
+      {
+        "class": "excerpt",
+        "countedByA12": "RELATED_WITH_CODE (when delivered)",
+        "deliveredOnCMed": 1,
+        "deliveredAtFrozenBudgets": 0,
+        "fixtureExists": true,
+        "fixture": "frozen corpus",
+        "sourceBacked": true,
+        "sourceTruth": {
+          "ANCHORED_IN_SPAN": 1
+        },
+        "bounded": true,
+        "accounted": true,
+        "deterministic": true,
+        "malformedFallbackTested": false,
+        "routingReasons": [
+          "upstream_form_delivered"
+        ],
+        "allGatesPass": true,
+        "status": "HEALTHY"
+      },
+      {
+        "class": "skeleton",
+        "countedByA12": "RELATED_WITH_CODE (when delivered)",
+        "deliveredOnCMed": 816,
+        "deliveredAtFrozenBudgets": 421,
+        "fixtureExists": true,
+        "fixture": "frozen corpus",
+        "sourceBacked": true,
+        "sourceTruth": {
+          "SKELETON_MATCHES_INDEX": 802,
+          "SKELETON_HEAD_OF_INDEX": 14
+        },
+        "bounded": true,
+        "accounted": true,
+        "deterministic": true,
+        "malformedFallbackTested": false,
+        "routingReasons": [
+          "upstream_form_delivered"
+        ],
+        "allGatesPass": true,
+        "status": "HEALTHY"
+      },
+      {
+        "class": "signature",
+        "countedByA12": "RELATED_WITH_CODE (when delivered)",
+        "deliveredOnCMed": 69,
+        "deliveredAtFrozenBudgets": 35,
+        "fixtureExists": true,
+        "fixture": "frozen corpus",
+        "sourceBacked": true,
+        "sourceTruth": {
+          "PARSER_SIGNATURE": 69
+        },
+        "bounded": true,
+        "accounted": true,
+        "deterministic": true,
+        "malformedFallbackTested": false,
+        "routingReasons": [
+          "upstream_form_delivered"
+        ],
+        "allGatesPass": true,
+        "status": "HEALTHY"
+      },
+      {
+        "class": "document_excerpt",
+        "countedByA12": "RELATED_WITH_CODE (when delivered)",
+        "deliveredOnCMed": 0,
+        "deliveredAtFrozenBudgets": 0,
+        "fixtureExists": false,
+        "fixture": "none",
+        "sourceBacked": null,
+        "sourceTruth": {},
+        "bounded": null,
+        "accounted": null,
+        "deterministic": true,
+        "malformedFallbackTested": false,
+        "routingReasons": [],
+        "allGatesPass": true,
+        "status": "IN_TABLE_NOT_EXERCISED_ON_FROZEN_CORPUS"
+      },
+      {
+        "class": "relationship_only",
+        "countedByA12": "RELATIONSHIP_ONLY",
+        "deliveredOnCMed": 540,
+        "deliveredAtFrozenBudgets": 307,
+        "fixtureExists": true,
+        "fixture": "frozen corpus",
+        "sourceBacked": "not_applicable",
+        "sourceTruth": {
+          "NOT_APPLICABLE": 540
+        },
+        "bounded": "not_applicable",
+        "accounted": true,
+        "deterministic": true,
+        "malformedFallbackTested": true,
+        "routingReasons": [
+          "form_not_code_bearing",
+          "no_rendered_body",
+          "neighbour_text_not_carried"
+        ],
+        "allGatesPass": true,
+        "status": "HEALTHY"
+      }
+    ],
+    "classTotalsCMed": {
+      "focused_source": 457,
+      "signature": 69,
+      "relationship_only": 540,
+      "skeleton": 816,
+      "excerpt": 1
+    },
+    "reasonTotalsCMed": {
+      "upstream_form_delivered": 1163,
+      "form_not_code_bearing": 470,
+      "no_rendered_body": 8,
+      "neighbour_text_not_carried": 62
+    },
+    "capabilityTotalsCMed": {
+      "code_bearing_body": 1163,
+      "non_code_body": 470,
+      "no_body": 8,
+      "neighbour_stripped": 62
+    },
+    "byBudget": {
+      "1000": {
+        "ceilingTokens": 1270,
+        "frozenClasses": [
+          "FOCUS:focused_source",
+          "RELATED_WITH_CODE",
+          "RELATIONSHIP_ONLY"
+        ],
+        "relatedClasses": {
+          "signature": 1,
+          "relationship_only": 34,
+          "skeleton": 19
+        },
+        "medians": {
+          "relatedCount": 2,
+          "relatedWithCode": 1,
+          "proposed": 3,
+          "admitted": 3,
+          "evidenceTokens": 577,
+          "deliveredRelatedTokens": 250.5,
+          "compactRelatedTokens": 164,
+          "representableRelatedTokens": 250.5,
+          "relatedWithAvailableForm": 1
+        },
+        "totals": {
+          "relatedDelivered": 54,
+          "relatedWithCode": 20,
+          "rejectedForCeiling": 0,
+          "integrityFailures": 0,
+          "supplyBound": 20
+        }
+      },
+      "1500": {
+        "ceilingTokens": 1904,
+        "frozenClasses": [
+          "FOCUS:focused_source",
+          "RELATED_WITH_CODE",
+          "RELATIONSHIP_ONLY"
+        ],
+        "relatedClasses": {
+          "focused_source": 19,
+          "skeleton": 64,
+          "relationship_only": 57,
+          "signature": 8,
+          "excerpt": 1
+        },
+        "medians": {
+          "relatedCount": 8,
+          "relatedWithCode": 5,
+          "proposed": 9,
+          "admitted": 9,
+          "evidenceTokens": 1225.5,
+          "deliveredRelatedTokens": 921,
+          "compactRelatedTokens": 547.5,
+          "representableRelatedTokens": 921,
+          "relatedWithAvailableForm": 5
+        },
+        "totals": {
+          "relatedDelivered": 149,
+          "relatedWithCode": 92,
+          "rejectedForCeiling": 0,
+          "integrityFailures": 0,
+          "supplyBound": 20
+        }
+      },
+      "2000": {
+        "ceilingTokens": 2539,
+        "frozenClasses": [
+          "FOCUS:focused_source",
+          "RELATED_WITH_CODE",
+          "RELATIONSHIP_ONLY"
+        ],
+        "relatedClasses": {
+          "focused_source": 20,
+          "skeleton": 71,
+          "relationship_only": 57,
+          "signature": 8
+        },
+        "medians": {
+          "relatedCount": 8,
+          "relatedWithCode": 5,
+          "proposed": 9,
+          "admitted": 9,
+          "evidenceTokens": 1252.5,
+          "deliveredRelatedTokens": 970.5,
+          "compactRelatedTokens": 547.5,
+          "representableRelatedTokens": 970.5,
+          "relatedWithAvailableForm": 5
+        },
+        "totals": {
+          "relatedDelivered": 156,
+          "relatedWithCode": 99,
+          "rejectedForCeiling": 0,
+          "integrityFailures": 0,
+          "supplyBound": 20
+        }
+      },
+      "3000": {
+        "ceilingTokens": 3809,
+        "frozenClasses": [
+          "FOCUS:focused_source",
+          "RELATED_WITH_CODE",
+          "RELATIONSHIP_ONLY"
+        ],
+        "relatedClasses": {
+          "focused_source": 20,
+          "skeleton": 71,
+          "relationship_only": 57,
+          "signature": 8
+        },
+        "medians": {
+          "relatedCount": 8,
+          "relatedWithCode": 5,
+          "proposed": 9,
+          "admitted": 9,
+          "evidenceTokens": 1252.5,
+          "deliveredRelatedTokens": 970.5,
+          "compactRelatedTokens": 547.5,
+          "representableRelatedTokens": 970.5,
+          "relatedWithAvailableForm": 5
+        },
+        "totals": {
+          "relatedDelivered": 156,
+          "relatedWithCode": 99,
+          "rejectedForCeiling": 0,
+          "integrityFailures": 0,
+          "supplyBound": 20
+        }
+      },
+      "4000": {
+        "ceilingTokens": 5078,
+        "frozenClasses": [
+          "FOCUS:focused_source",
+          "RELATED_WITH_CODE",
+          "RELATIONSHIP_ONLY"
+        ],
+        "relatedClasses": {
+          "focused_source": 20,
+          "skeleton": 71,
+          "relationship_only": 57,
+          "signature": 8
+        },
+        "medians": {
+          "relatedCount": 8,
+          "relatedWithCode": 5,
+          "proposed": 9,
+          "admitted": 9,
+          "evidenceTokens": 1252.5,
+          "deliveredRelatedTokens": 970.5,
+          "compactRelatedTokens": 547.5,
+          "representableRelatedTokens": 970.5,
+          "relatedWithAvailableForm": 5
+        },
+        "totals": {
+          "relatedDelivered": 156,
+          "relatedWithCode": 99,
+          "rejectedForCeiling": 0,
+          "integrityFailures": 0,
+          "supplyBound": 20
+        }
+      },
+      "6000": {
+        "ceilingTokens": 7618,
+        "frozenClasses": [
+          "FOCUS:focused_source",
+          "RELATED_WITH_CODE",
+          "RELATIONSHIP_ONLY"
+        ],
+        "relatedClasses": {
+          "focused_source": 20,
+          "skeleton": 71,
+          "relationship_only": 57,
+          "signature": 8
+        },
+        "medians": {
+          "relatedCount": 8,
+          "relatedWithCode": 5,
+          "proposed": 9,
+          "admitted": 9,
+          "evidenceTokens": 1252.5,
+          "deliveredRelatedTokens": 970.5,
+          "compactRelatedTokens": 547.5,
+          "representableRelatedTokens": 970.5,
+          "relatedWithAvailableForm": 5
+        },
+        "totals": {
+          "relatedDelivered": 156,
+          "relatedWithCode": 99,
+          "rejectedForCeiling": 0,
+          "integrityFailures": 0,
+          "supplyBound": 20
+        }
+      },
+      "8000": {
+        "ceilingTokens": 10157,
+        "frozenClasses": [
+          "FOCUS:focused_source",
+          "RELATED_WITH_CODE",
+          "RELATIONSHIP_ONLY"
+        ],
+        "relatedClasses": {
+          "focused_source": 20,
+          "skeleton": 71,
+          "relationship_only": 94,
+          "signature": 8
+        },
+        "medians": {
+          "relatedCount": 9.5,
+          "relatedWithCode": 5,
+          "proposed": 16.5,
+          "admitted": 10.5,
+          "evidenceTokens": 1293.5,
+          "deliveredRelatedTokens": 1068,
+          "compactRelatedTokens": 639.5,
+          "representableRelatedTokens": 1068,
+          "relatedWithAvailableForm": 5
+        },
+        "totals": {
+          "relatedDelivered": 193,
+          "relatedWithCode": 99,
+          "rejectedForCeiling": 0,
+          "integrityFailures": 0,
+          "supplyBound": 20
+        }
+      },
+      "12000": {
+        "ceilingTokens": 15235,
+        "frozenClasses": [
+          "FOCUS:focused_source",
+          "RELATED_WITH_CODE",
+          "RELATIONSHIP_ONLY"
+        ],
+        "relatedClasses": {
+          "focused_source": 79,
+          "signature": 10,
+          "skeleton": 189,
+          "relationship_only": 62
+        },
+        "medians": {
+          "relatedCount": 16.5,
+          "relatedWithCode": 14,
+          "proposed": 25,
+          "admitted": 17.5,
+          "evidenceTokens": 2703,
+          "deliveredRelatedTokens": 2498,
+          "compactRelatedTokens": 1201,
+          "representableRelatedTokens": 2498,
+          "relatedWithAvailableForm": 14
+        },
+        "totals": {
+          "relatedDelivered": 340,
+          "relatedWithCode": 278,
+          "rejectedForCeiling": 0,
+          "integrityFailures": 0,
+          "supplyBound": 20
+        }
+      },
+      "16000": {
+        "ceilingTokens": 20314,
+        "frozenClasses": [
+          "FOCUS:focused_source",
+          "RELATED_WITH_CODE",
+          "RELATIONSHIP_ONLY"
+        ],
+        "relatedClasses": {
+          "focused_source": 79,
+          "signature": 10,
+          "skeleton": 189,
+          "relationship_only": 65
+        },
+        "medians": {
+          "relatedCount": 17,
+          "relatedWithCode": 14,
+          "proposed": 25,
+          "admitted": 18,
+          "evidenceTokens": 2726.5,
+          "deliveredRelatedTokens": 2516,
+          "compactRelatedTokens": 1201,
+          "representableRelatedTokens": 2516,
+          "relatedWithAvailableForm": 14
+        },
+        "totals": {
+          "relatedDelivered": 343,
+          "relatedWithCode": 278,
+          "rejectedForCeiling": 0,
+          "integrityFailures": 0,
+          "supplyBound": 20
+        }
+      }
+    }
+  },
+  "sourceTruth": {
+    "post": {
+      "C-SMALL": {
+        "focused_source": {
+          "ANCHORED_IN_SPAN": 21
+        },
+        "skeleton": {
+          "SKELETON_MATCHES_INDEX": 21
+        }
+      },
+      "C-MED": {
+        "focused_source": {
+          "ANCHORED_IN_SPAN": 457
+        },
+        "signature": {
+          "PARSER_SIGNATURE": 69
+        },
+        "skeleton": {
+          "SKELETON_MATCHES_INDEX": 802,
+          "SKELETON_HEAD_OF_INDEX": 14
+        },
+        "excerpt": {
+          "ANCHORED_IN_SPAN": 1
+        }
+      },
+      "C-LARGE": {
+        "focused_source": {
+          "ANCHORED_IN_SPAN": 54
+        },
+        "skeleton": {
+          "SKELETON_MATCHES_INDEX": 105,
+          "SKELETON_HEAD_OF_INDEX": 25
+        },
+        "excerpt": {
+          "ANCHORED_IN_SPAN": 4
+        }
+      }
+    },
+    "cMedAllAnchored": true,
+    "classDistinction": {
+      "pairs": [
+        {
+          "pair": "skeleton|signature",
+          "comparable": 1075,
+          "distinct": 308,
+          "coincident": 767,
+          "distinctOnSomeItem": true
+        },
+        {
+          "pair": "focused_source|skeleton",
+          "comparable": 1075,
+          "distinct": 1064,
+          "coincident": 11,
+          "distinctOnSomeItem": true
+        },
+        {
+          "pair": "focused_source|signature",
+          "comparable": 1075,
+          "distinct": 1064,
+          "coincident": 11,
+          "distinctOnSomeItem": true
+        }
+      ],
+      "pass": true
+    },
+    "integrity": {
+      "C-SMALL": {
+        "packets": 9,
+        "failures": 0,
+        "failedItems": []
+      },
+      "C-MED": {
+        "packets": 180,
+        "failures": 0,
+        "failedItems": []
+      },
+      "C-LARGE": {
+        "packets": 27,
+        "failures": 0,
+        "failedItems": []
+      }
+    }
+  },
+  "mixed": {
+    "task": "where are import edges extracted from typescript",
+    "budget": 16000,
+    "relatedClasses": [
+      "focused_source",
+      "signature",
+      "skeleton",
+      "relationship_only"
+    ],
+    "items": [
+      {
+        "ordinal": 0,
+        "slot": "focus",
+        "at": "parsers/typescriptParser.ts::ExtractImportEdgesInput",
+        "representation": "focused_source",
+        "reason": "focus_slot",
+        "codeCharacters": 159,
+        "truncated": false,
+        "tokens": 135,
+        "sourceTruth": "ANCHORED_IN_SPAN"
+      },
+      {
+        "ordinal": 1,
+        "slot": "related",
+        "at": "parsers/typescriptParser.ts::extractImportEdges",
+        "representation": "focused_source",
+        "reason": "upstream_form_delivered",
+        "codeCharacters": 562,
+        "truncated": true,
+        "tokens": 267,
+        "sourceTruth": "ANCHORED_IN_SPAN"
+      },
+      {
+        "ordinal": 2,
+        "slot": "related",
+        "at": "parsers/typescriptParser.ts::extractCallAndReferenceEdges",
+        "representation": "focused_source",
+        "reason": "upstream_form_delivered",
+        "codeCharacters": 577,
+        "truncated": true,
+        "tokens": 271,
+        "sourceTruth": "ANCHORED_IN_SPAN"
+      },
+      {
+        "ordinal": 3,
+        "slot": "related",
+        "at": "parsers/cythonParser.ts::extractImportEdges",
+        "representation": "focused_source",
+        "reason": "upstream_form_delivered",
+        "codeCharacters": 589,
+        "truncated": true,
+        "tokens": 271,
+        "sourceTruth": "ANCHORED_IN_SPAN"
+      },
+      {
+        "ordinal": 4,
+        "slot": "related",
+        "at": "parsers/pythonParser.ts::extractImportEdges",
+        "representation": "focused_source",
+        "reason": "upstream_form_delivered",
+        "codeCharacters": 599,
+        "truncated": true,
+        "tokens": 274,
+        "sourceTruth": "ANCHORED_IN_SPAN"
+      },
+      {
+        "ordinal": 5,
+        "slot": "related",
+        "at": "offsetsFor",
+        "representation": "signature",
+        "reason": "upstream_form_delivered",
+        "codeCharacters": 54,
+        "truncated": false,
+        "tokens": 78,
+        "sourceTruth": "PARSER_SIGNATURE"
+      },
+      {
+        "ordinal": 6,
+        "slot": "related",
+        "at": "withCallSite",
+        "representation": "signature",
+        "reason": "upstream_form_delivered",
+        "codeCharacters": 71,
+        "truncated": false,
+        "tokens": 83,
+        "sourceTruth": "PARSER_SIGNATURE"
+      },
+      {
+        "ordinal": 7,
+        "slot": "related",
+        "at": "domain/types.ts::ImportResolutionStatus",
+        "representation": "skeleton",
+        "reason": "upstream_form_delivered",
+        "codeCharacters": 266,
+        "truncated": false,
+        "tokens": 177,
+        "sourceTruth": "SKELETON_MATCHES_INDEX"
+      },
+      {
+        "ordinal": 8,
+        "slot": "related",
+        "at": "parsers/cythonParser.ts::ExtractImportEdgesInput",
+        "representation": "skeleton",
+        "reason": "upstream_form_delivered",
+        "codeCharacters": 33,
+        "truncated": false,
+        "tokens": 105,
+        "sourceTruth": "SKELETON_MATCHES_INDEX"
+      },
+      {
+        "ordinal": 9,
+        "slot": "related",
+        "at": "parsers/pythonParser.ts::ExtractImportEdgesInput",
+        "representation": "relationship_only",
+        "reason": "no_rendered_body",
+        "codeCharacters": 0,
+        "truncated": false,
+        "tokens": 79,
+        "sourceTruth": "NOT_APPLICABLE"
+      },
+      {
+        "ordinal": 10,
+        "slot": "related",
+        "at": "parsers/typescriptParser.ts::CallReferenceResolution",
+        "representation": "skeleton",
+        "reason": "upstream_form_delivered",
+        "codeCharacters": 33,
+        "truncated": false,
+        "tokens": 113,
+        "sourceTruth": "SKELETON_MATCHES_INDEX"
+      },
+      {
+        "ordinal": 11,
+        "slot": "related",
+        "at": "parsers/typescriptParser.ts::TypeScriptParserContext",
+        "representation": "skeleton",
+        "reason": "upstream_form_delivered",
+        "codeCharacters": 33,
+        "truncated": false,
+        "tokens": 112,
+        "sourceTruth": "SKELETON_MATCHES_INDEX"
+      },
+      {
+        "ordinal": 12,
+        "slot": "related",
+        "at": "parsers/typescriptParser.ts::collectBoundNames",
+        "representation": "skeleton",
+        "reason": "upstream_form_delivered",
+        "codeCharacters": 58,
+        "truncated": false,
+        "tokens": 115,
+        "sourceTruth": "SKELETON_MATCHES_INDEX"
+      },
+      {
+        "ordinal": 13,
+        "slot": "related",
+        "at": "parsers/typescriptParser.ts::ExtractedSymbols",
+        "representation": "skeleton",
+        "reason": "upstream_form_delivered",
+        "codeCharacters": 26,
+        "truncated": false,
+        "tokens": 103,
+        "sourceTruth": "SKELETON_MATCHES_INDEX"
+      },
+      {
+        "ordinal": 14,
+        "slot": "related",
+        "at": "parsers/cythonParser.ts::extractCythonCallAndReferenceEdges",
+        "representation": "skeleton",
+        "reason": "upstream_form_delivered",
+        "codeCharacters": 285,
+        "truncated": false,
+        "tokens": 190,
+        "sourceTruth": "SKELETON_MATCHES_INDEX"
+      },
+      {
+        "ordinal": 15,
+        "slot": "related",
+        "at": "parsers/typescriptParser.ts::parseTypeScriptWithContext",
+        "representation": "relationship_only",
+        "reason": "form_not_code_bearing",
+        "codeCharacters": 0,
+        "truncated": false,
+        "tokens": 64,
+        "sourceTruth": "NOT_APPLICABLE"
+      }
+    ],
+    "orderIsOrdinal": true,
+    "tokensSum": 2437,
+    "allPass": true
+  },
+  "classTokens": {
+    "focus:focused_source": {
+      "items": 180,
+      "accounted": 180,
+      "actualTokensTotal": 44087,
+      "actualTokensMedian": 217,
+      "codeCharactersMedian": 405
+    },
+    "related:excerpt": {
+      "items": 1,
+      "accounted": 1,
+      "actualTokensTotal": 202,
+      "actualTokensMedian": 202,
+      "codeCharactersMedian": 378
+    },
+    "related:focused_source": {
+      "items": 277,
+      "accounted": 277,
+      "actualTokensTotal": 56949,
+      "actualTokensMedian": 225,
+      "codeCharactersMedian": 425
+    },
+    "related:relationship_only": {
+      "items": 540,
+      "accounted": 540,
+      "actualTokensTotal": 33622,
+      "actualTokensMedian": 63,
+      "codeCharactersMedian": 0
+    },
+    "related:signature": {
+      "items": 69,
+      "accounted": 69,
+      "actualTokensTotal": 6632,
+      "actualTokensMedian": 95,
+      "codeCharactersMedian": 97
+    },
+    "related:skeleton": {
+      "items": 816,
+      "accounted": 816,
+      "actualTokensTotal": 126570,
+      "actualTokensMedian": 145,
+      "codeCharactersMedian": 148.5
+    }
+  },
+  "equivalence": {
+    "sameCorpus": {
+      "product": {
+        "root": "/home/calvin/code/vtrace",
+        "head": "9f0799cfe3637c81b7630f4874ead308f55e9cea",
+        "relatedCodeCharacters": 600,
+        "focusCodeCharacters": 1800,
+        "skeletonAuthorityBound": true
+      },
+      "corpus": "the pre-change C-MED copy and index",
+      "responses": 180,
+      "focusSame": 180,
+      "relatedSetSame": 180,
+      "compactProjectionByteIdentical": 180,
+      "packetByteIdentical": 0,
+      "differing": []
+    },
+    "movingCorpus": {
+      "responses": 180,
+      "focusSame": 180,
+      "relatedSetSame": 180,
+      "compactProjectionByteIdentical": 180
+    },
+    "frozenFifteenQueries": {
+      "verdict": "M203_EVIDENCE_NOT_EQUIVALENT",
+      "compared": 15,
+      "selectionEqual": 0,
+      "orderEqual": 15,
+      "strippedByteEqual": 0,
+      "deliveredByteEqual": 0
+    }
+  },
+  "a11": {
+    "statement": "A11 was measured, not optimized.",
+    "byBudget": [
+      {
+        "budget": 1000,
+        "frozen": true,
+        "candidateSupplyBefore": {
+          "proposed": 3,
+          "admitted": 3
+        },
+        "candidateSupplyAfter": {
+          "proposed": 3,
+          "admitted": 3
+        },
+        "representableRelatedTokensBefore": 164,
+        "representableRelatedTokensAfter": 250.5,
+        "deliveredRelatedTokensBefore": 165,
+        "deliveredRelatedTokensAfter": 250.5,
+        "evidenceTokensBefore": 500.5,
+        "evidenceTokensAfter": 577,
+        "relatedWithAvailableFormAfter": 1,
+        "relatedWithCodeAfter": 1,
+        "relatedCount": 2,
+        "utilisationBefore": 40.55,
+        "utilisationAfter": 46.55,
+        "rejectedForCeilingBefore": 0,
+        "rejectedForCeilingAfter": 0,
+        "relatedClassesAfter": {
+          "signature": 1,
+          "relationship_only": 34,
+          "skeleton": 19
+        }
+      },
+      {
+        "budget": 1500,
+        "frozen": false,
+        "candidateSupplyBefore": {
+          "proposed": 9,
+          "admitted": 9
+        },
+        "candidateSupplyAfter": {
+          "proposed": 9,
+          "admitted": 9
+        },
+        "representableRelatedTokensBefore": 547.5,
+        "representableRelatedTokensAfter": 921,
+        "deliveredRelatedTokensBefore": 550,
+        "deliveredRelatedTokensAfter": 921,
+        "evidenceTokensBefore": 833.5,
+        "evidenceTokensAfter": 1225.5,
+        "relatedWithAvailableFormAfter": 5,
+        "relatedWithCodeAfter": 5,
+        "relatedCount": 8,
+        "utilisationBefore": 45.5,
+        "utilisationAfter": 65.94,
+        "rejectedForCeilingBefore": 0,
+        "rejectedForCeilingAfter": 0,
+        "relatedClassesAfter": {
+          "focused_source": 19,
+          "skeleton": 64,
+          "relationship_only": 57,
+          "signature": 8,
+          "excerpt": 1
+        }
+      },
+      {
+        "budget": 2000,
+        "frozen": true,
+        "candidateSupplyBefore": {
+          "proposed": 9,
+          "admitted": 9
+        },
+        "candidateSupplyAfter": {
+          "proposed": 9,
+          "admitted": 9
+        },
+        "representableRelatedTokensBefore": 547.5,
+        "representableRelatedTokensAfter": 970.5,
+        "deliveredRelatedTokensBefore": 550,
+        "deliveredRelatedTokensAfter": 970.5,
+        "evidenceTokensBefore": 833.5,
+        "evidenceTokensAfter": 1252.5,
+        "relatedWithAvailableFormAfter": 5,
+        "relatedWithCodeAfter": 5,
+        "relatedCount": 8,
+        "utilisationBefore": 34.13,
+        "utilisationAfter": 50.77,
+        "rejectedForCeilingBefore": 0,
+        "rejectedForCeilingAfter": 0,
+        "relatedClassesAfter": {
+          "focused_source": 20,
+          "skeleton": 71,
+          "relationship_only": 57,
+          "signature": 8
+        }
+      },
+      {
+        "budget": 3000,
+        "frozen": false,
+        "candidateSupplyBefore": {
+          "proposed": 9,
+          "admitted": 9
+        },
+        "candidateSupplyAfter": {
+          "proposed": 9,
+          "admitted": 9
+        },
+        "representableRelatedTokensBefore": 547.5,
+        "representableRelatedTokensAfter": 970.5,
+        "deliveredRelatedTokensBefore": 550,
+        "deliveredRelatedTokensAfter": 970.5,
+        "evidenceTokensBefore": 833.5,
+        "evidenceTokensAfter": 1252.5,
+        "relatedWithAvailableFormAfter": 5,
+        "relatedWithCodeAfter": 5,
+        "relatedCount": 8,
+        "utilisationBefore": 22.75,
+        "utilisationAfter": 33.85,
+        "rejectedForCeilingBefore": 0,
+        "rejectedForCeilingAfter": 0,
+        "relatedClassesAfter": {
+          "focused_source": 20,
+          "skeleton": 71,
+          "relationship_only": 57,
+          "signature": 8
+        }
+      },
+      {
+        "budget": 4000,
+        "frozen": true,
+        "candidateSupplyBefore": {
+          "proposed": 9,
+          "admitted": 9
+        },
+        "candidateSupplyAfter": {
+          "proposed": 9,
+          "admitted": 9
+        },
+        "representableRelatedTokensBefore": 547.5,
+        "representableRelatedTokensAfter": 970.5,
+        "deliveredRelatedTokensBefore": 550,
+        "deliveredRelatedTokensAfter": 970.5,
+        "evidenceTokensBefore": 833.5,
+        "evidenceTokensAfter": 1252.5,
+        "relatedWithAvailableFormAfter": 5,
+        "relatedWithCodeAfter": 5,
+        "relatedCount": 8,
+        "utilisationBefore": 17.06,
+        "utilisationAfter": 25.38,
+        "rejectedForCeilingBefore": 0,
+        "rejectedForCeilingAfter": 0,
+        "relatedClassesAfter": {
+          "focused_source": 20,
+          "skeleton": 71,
+          "relationship_only": 57,
+          "signature": 8
+        }
+      },
+      {
+        "budget": 6000,
+        "frozen": false,
+        "candidateSupplyBefore": {
+          "proposed": 9,
+          "admitted": 9
+        },
+        "candidateSupplyAfter": {
+          "proposed": 9,
+          "admitted": 9
+        },
+        "representableRelatedTokensBefore": 547.5,
+        "representableRelatedTokensAfter": 970.5,
+        "deliveredRelatedTokensBefore": 550,
+        "deliveredRelatedTokensAfter": 970.5,
+        "evidenceTokensBefore": 833.5,
+        "evidenceTokensAfter": 1252.5,
+        "relatedWithAvailableFormAfter": 5,
+        "relatedWithCodeAfter": 5,
+        "relatedCount": 8,
+        "utilisationBefore": 11.38,
+        "utilisationAfter": 16.93,
+        "rejectedForCeilingBefore": 0,
+        "rejectedForCeilingAfter": 0,
+        "relatedClassesAfter": {
+          "focused_source": 20,
+          "skeleton": 71,
+          "relationship_only": 57,
+          "signature": 8
+        }
+      },
+      {
+        "budget": 8000,
+        "frozen": true,
+        "candidateSupplyBefore": {
+          "proposed": 16.5,
+          "admitted": 10.5
+        },
+        "candidateSupplyAfter": {
+          "proposed": 16.5,
+          "admitted": 10.5
+        },
+        "representableRelatedTokensBefore": 639.5,
+        "representableRelatedTokensAfter": 1068,
+        "deliveredRelatedTokensBefore": 642,
+        "deliveredRelatedTokensAfter": 1068,
+        "evidenceTokensBefore": 904.5,
+        "evidenceTokensAfter": 1293.5,
+        "relatedWithAvailableFormAfter": 5,
+        "relatedWithCodeAfter": 5,
+        "relatedCount": 9.5,
+        "utilisationBefore": 9.3,
+        "utilisationAfter": 13.17,
+        "rejectedForCeilingBefore": 0,
+        "rejectedForCeilingAfter": 0,
+        "relatedClassesAfter": {
+          "focused_source": 20,
+          "skeleton": 71,
+          "relationship_only": 94,
+          "signature": 8
+        }
+      },
+      {
+        "budget": 12000,
+        "frozen": false,
+        "candidateSupplyBefore": {
+          "proposed": 25,
+          "admitted": 17.5
+        },
+        "candidateSupplyAfter": {
+          "proposed": 25,
+          "admitted": 17.5
+        },
+        "representableRelatedTokensBefore": 1201,
+        "representableRelatedTokensAfter": 2498,
+        "deliveredRelatedTokensBefore": 1204,
+        "deliveredRelatedTokensAfter": 2498,
+        "evidenceTokensBefore": 1439.5,
+        "evidenceTokensAfter": 2703,
+        "relatedWithAvailableFormAfter": 14,
+        "relatedWithCodeAfter": 14,
+        "relatedCount": 16.5,
+        "utilisationBefore": 9.88,
+        "utilisationAfter": 18.28,
+        "rejectedForCeilingBefore": 0,
+        "rejectedForCeilingAfter": 0,
+        "relatedClassesAfter": {
+          "focused_source": 79,
+          "signature": 10,
+          "skeleton": 189,
+          "relationship_only": 62
+        }
+      },
+      {
+        "budget": 16000,
+        "frozen": true,
+        "candidateSupplyBefore": {
+          "proposed": 25,
+          "admitted": 18
+        },
+        "candidateSupplyAfter": {
+          "proposed": 25,
+          "admitted": 18
+        },
+        "representableRelatedTokensBefore": 1201,
+        "representableRelatedTokensAfter": 2516,
+        "deliveredRelatedTokensBefore": 1204,
+        "deliveredRelatedTokensAfter": 2516,
+        "evidenceTokensBefore": 1460.5,
+        "evidenceTokensAfter": 2726.5,
+        "relatedWithAvailableFormAfter": 14,
+        "relatedWithCodeAfter": 14,
+        "relatedCount": 17,
+        "utilisationBefore": 7.54,
+        "utilisationAfter": 13.81,
+        "rejectedForCeilingBefore": 0,
+        "rejectedForCeilingAfter": 0,
+        "relatedClassesAfter": {
+          "focused_source": 79,
+          "signature": 10,
+          "skeleton": 189,
+          "relationship_only": 65
+        }
+      }
+    ],
+    "frozen": {
+      "m204": {
+        "utilisation": {
+          "1000": 40.55,
+          "2000": 34.05,
+          "4000": 17.02,
+          "8000": 9.34,
+          "16000": 7.54
+        },
+        "verdict": "VTRACE_BELOW_VEXP_CLAIM"
+      },
+      "m205": {
+        "utilisation": {
+          "1000": 46.55,
+          "2000": 50.2,
+          "4000": 25.1,
+          "8000": 13.17,
+          "16000": 13.74
+        },
+        "verdict": "VTRACE_BELOW_VEXP_CLAIM"
+      }
+    },
+    "tierCapsUnchanged": "capsule tier item caps not touched (budgetAllocator.ts unchanged in M205)"
+  },
+  "a13": {
+    "statement": "A13 was measured, not optimized.",
+    "m204Committed": {
+      "sizeViolations": 3,
+      "focusSwaps": 5,
+      "verdict": "VTRACE_BELOW_VEXP_CLAIM"
+    },
+    "reproductionPre": {
+      "sizeViolations": 3,
+      "focusSwaps": 5,
+      "orderRelations": {
+        "subsequence": 17,
+        "prefix": 42,
+        "neither": 21
+      }
+    },
+    "reproductionPost": {
+      "sizeViolations": 3,
+      "focusSwaps": 5,
+      "orderRelations": {
+        "subsequence": 17,
+        "prefix": 42,
+        "neither": 21
+      },
+      "representationRegressions": 0
+    },
+    "frozenRerun": {
+      "sizeViolations": 3,
+      "focusSwaps": 5,
+      "verdict": "VTRACE_BELOW_VEXP_CLAIM"
+    }
+  },
+  "determinism": {
+    "repeats": 3,
+    "byCorpus": {
+      "C-SMALL": {
+        "repeats": 3,
+        "packetsStable": true,
+        "unstablePackets": [],
+        "ledgersStable": true,
+        "unstableLedgers": []
+      },
+      "C-MED": {
+        "repeats": 3,
+        "packetsStable": true,
+        "unstablePackets": [],
+        "ledgersStable": true,
+        "unstableLedgers": []
+      },
+      "C-LARGE": {
+        "repeats": 3,
+        "packetsStable": true,
+        "unstablePackets": [],
+        "ledgersStable": true,
+        "unstableLedgers": []
+      }
+    },
+    "falsificationF7": true,
+    "frozenEngine": {
+      "allDeterministic": true,
+      "perCorpus": [
+        {
+          "corpus": "C-SMALL",
+          "getCodeContext": true,
+          "getImpactGraph": true,
+          "searchLogicFlow": true,
+          "unstable": [],
+          "indexNonIdenticalRuns": 0
+        },
+        {
+          "corpus": "C-MED",
+          "getCodeContext": true,
+          "getImpactGraph": true,
+          "searchLogicFlow": true,
+          "unstable": [],
+          "indexNonIdenticalRuns": 0
+        },
+        {
+          "corpus": "C-LARGE",
+          "getCodeContext": true,
+          "getImpactGraph": true,
+          "searchLogicFlow": true,
+          "unstable": [],
+          "indexNonIdenticalRuns": 0
+        }
+      ]
+    }
+  },
+  "falsification": {
+    "verdict": "M205_FALSIFICATION_CONTROLS_PASS",
+    "controls": [
+      {
+        "id": "F1",
+        "pass": true,
+        "statement": "a label without a construction is not a class: relabelling fails the source authority, counts nothing, and identical classes collapse",
+        "detail": "relabelled skeleton -> SIGNATURE_NOT_PARSER; label-only classes equal: true; identical-text pair collapses: true"
+      },
+      {
+        "id": "F2",
+        "pass": true,
+        "statement": "an excerpt whose bytes do not exist at the claimed source fails; the real one is anchored in its span",
+        "detail": "honest ANCHORED_IN_SPAN; forged NOT_LOCATED -> reason_consistent,truncation_truthful_against_body,code_is_the_head_bound_of_the_body,source_truth"
+      },
+      {
+        "id": "F3",
+        "pass": true,
+        "statement": "a signature differing from the parser's fails; the parser's passes",
+        "detail": "honest PARSER_SIGNATURE; forged SIGNATURE_NOT_PARSER"
+      },
+      {
+        "id": "F4",
+        "pass": true,
+        "statement": "a body over the bound is deterministically truncated on a line boundary and says so; a forced oversized code fails",
+        "detail": "body 4886 chars -> 586 delivered, truncated true; forced 4886 -> reason_consistent,bound_respected,truncation_truthful_against_body,code_is_the_head_bound_of_the_body"
+      },
+      {
+        "id": "F5",
+        "pass": true,
+        "statement": "an item whose evidence supports no richer form falls back to relationship-only with the reason recorded; a forced form on a non-source body fails",
+        "detail": "summary -> form_not_code_bearing; neighbour -> neighbour_text_not_carried; empty body -> no_rendered_body; forced summary code -> class_is_ledger_class,form_is_code_bearing,reason_consistent,truncation_truthful_against_body,code_is_the_head_bound_of_the_body,source_truth"
+      },
+      {
+        "id": "F6",
+        "pass": true,
+        "statement": "a rich packet reconciles exactly under M203 and every item is A14-accounted; the relationship-only cost reported for an excerpt fails",
+        "detail": "rich entry 73 tokens vs compact 34; M203 ACCOUNTING_INTEGRITY_PASS; stale -> field_equals_actual,actual_cost_is_measured,estimate_not_overwritten,tokens_reconcile_within_bound,cumulative_consistent"
+      },
+      {
+        "id": "F7",
+        "pass": true,
+        "statement": "the same items, budget and source state select the same representations across repeats",
+        "detail": "5 repeats: 1 packet hash(es), 1 ledger hash(es)"
+      },
+      {
+        "id": "F8",
+        "pass": true,
+        "statement": "at a tight budget the richer form is refused where it does not fit and the compact entry survives, byte-identical to the predecessor's",
+        "detail": "6 rich, 8 refused for the ceiling of 1270; same set as predecessor true; compact bytes identical true"
+      },
+      {
+        "id": "F9",
+        "pass": true,
+        "statement": "at a large budget a genuine production-path related item carries its richer form, source-anchored; the class is not on paper",
+        "detail": "C-MED @16000: 278 of 343 related carry code; source truth {\"focused_source\":{\"ANCHORED_IN_SPAN\":457},\"signature\":{\"PARSER_SIGNATURE\":69},\"skeleton\":{\"SKELETON_MATCHES_INDEX\":802,\"SKELETON_HEAD_OF_INDEX\":14},\"excerpt\":{\"ANCHORED_IN_SPAN\":1}}"
+      },
+      {
+        "id": "F10",
+        "pass": true,
+        "statement": "one candidate delivered twice to exhibit two classes fails; the product delivers a second proposal of one identity once",
+        "detail": "duplicate -> no_duplicate_identity,every_item_passes,m203_accounting,admission_figures_monotone; second proposal delivered 1 related, 1 deduplicated"
+      },
+      {
+        "id": "F11",
+        "pass": true,
+        "statement": "every source-backed entry maps to an authoritative supply item; a severed source id or a file outside the corpus fails",
+        "detail": "all mapped true; severed -> provenance; foreign file -> source_truth,provenance"
+      },
+      {
+        "id": "F12",
+        "pass": true,
+        "statement": "a hard-coded class count without delivered classes fails the analyzer, and the frozen rule counts only what the packet carries",
+        "detail": "packet classes FOCUS:focused_source, RELATIONSHIP_ONLY (2 < 3); asserted ledger classes -> class_is_ledger_class"
+      }
+    ]
+  },
+  "performance": {
+    "a5": {
+      "before": {
+        "C-SMALL": 46.37,
+        "C-MED": 205.9,
+        "C-LARGE": 357.16
+      },
+      "after": {
+        "C-SMALL": 43.45,
+        "C-MED": 197.52,
+        "C-LARGE": 334.87
+      },
+      "classificationBefore": "VTRACE_MATCHES_VEXP_CLAIM",
+      "classificationAfter": "VTRACE_MATCHES_VEXP_CLAIM",
+      "frozenA5": "VTRACE_MATCHES_VEXP_CLAIM"
+    },
+    "latencyP90ByBudget": [
+      {
+        "budget": 1000,
+        "before": 188.69,
+        "after": 275.28
+      },
+      {
+        "budget": 1500,
+        "before": 205.61,
+        "after": 258.34
+      },
+      {
+        "budget": 2000,
+        "before": 193.49,
+        "after": 264.1
+      },
+      {
+        "budget": 3000,
+        "before": 188.31,
+        "after": 259.31
+      },
+      {
+        "budget": 4000,
+        "before": 184.49,
+        "after": 271.95
+      },
+      {
+        "budget": 6000,
+        "before": 182.62,
+        "after": 269.5
+      },
+      {
+        "budget": 8000,
+        "before": 200.39,
+        "after": 264.77
+      },
+      {
+        "budget": 12000,
+        "before": 207.21,
+        "after": 278.14
+      },
+      {
+        "budget": 16000,
+        "before": 202.61,
+        "after": 289.09
+      }
+    ],
+    "largestPacketBytes": {
+      "before": 6420,
+      "after": 11594
+    },
+    "largestItemCount": {
+      "before": 21,
+      "after": 21
+    },
+    "peakRssBytes": {
+      "before": 2190479360,
+      "after": 633286656
+    },
+    "schema": "no DB table, no schema change, no new persisted metadata; the tool output schema gained three optional related-item properties (form, code, codeTruncated)"
+  },
+  "protectedClaims": [
+    {
+      "id": "A1",
+      "m204": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m205": "VTRACE_MATCHES_VEXP_CLAIM",
+      "held": true
+    },
+    {
+      "id": "A2",
+      "m204": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "m205": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "held": true
+    },
+    {
+      "id": "A3",
+      "m204": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m205": "VTRACE_MATCHES_VEXP_CLAIM",
+      "held": true
+    },
+    {
+      "id": "A4",
+      "m204": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "m205": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "held": true
+    },
+    {
+      "id": "A5",
+      "m204": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m205": "VTRACE_MATCHES_VEXP_CLAIM",
+      "held": true
+    },
+    {
+      "id": "A6",
+      "m204": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "m205": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "held": true
+    },
+    {
+      "id": "A7",
+      "m204": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "m205": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "held": true
+    },
+    {
+      "id": "A8",
+      "m204": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "m205": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "held": true
+    },
+    {
+      "id": "A9",
+      "m204": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m205": "VTRACE_MATCHES_VEXP_CLAIM",
+      "held": true
+    },
+    {
+      "id": "A10",
+      "m204": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m205": "VTRACE_MATCHES_VEXP_CLAIM",
+      "held": true
+    },
+    {
+      "id": "A14",
+      "m204": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m205": "VTRACE_MATCHES_VEXP_CLAIM",
+      "held": true
+    }
+  ],
+  "matrix": [
+    {
+      "id": "A1",
+      "m204": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m205": "VTRACE_MATCHES_VEXP_CLAIM",
+      "measurement": "30 parser-backed families (bash, c, clojure, cpp, csharp, css, cython, dart, elixir, go, haskell, html, java, javascript, json, kotlin, lua, objective_c, ocaml, php, python, r, ruby, rust, scala, sql, swift, typescript, yaml, zig); 28 extension-detected; 31 enum members"
+    },
+    {
+      "id": "A2",
+      "m204": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "m205": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "measurement": "C-MED 65.82 files/s, C-LARGE 34.96 files/s (median of 3 cold builds)"
+    },
+    {
+      "id": "A3",
+      "m204": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m205": "VTRACE_MATCHES_VEXP_CLAIM",
+      "measurement": "C-LARGE k=1 ratio 0.055, k=3 ratio 0.14; reparsed 372 of the 372 files the indexer holds for a ONE-file change (the eligible .py denominator is 276; the indexer also enumerates .pyx/.pxd/.yml/.toml)"
+    },
+    {
+      "id": "A4",
+      "m204": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "m205": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "measurement": "no-op median 0.007 / 0.081 / 0.154 s (C-SMALL / C-MED / C-LARGE), 0 files reparsed"
+    },
+    {
+      "id": "A5",
+      "m204": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m205": "VTRACE_MATCHES_VEXP_CLAIM",
+      "measurement": "get_code_context warm p90 46.14 / 201.55 / 324.21 ms (C-SMALL / C-MED / C-LARGE), 5 repetitions; best observed 34.31 / 147.47 / 284.92 ms"
+    },
+    {
+      "id": "A6",
+      "m204": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "m205": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "measurement": "get_impact_graph depth 3 warm p90 147.24 ms on C-LARGE (10 exact-FQN targets x 5)"
+    },
+    {
+      "id": "A7",
+      "m204": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "m205": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "measurement": "search_logic_flow warm p90 15.94 ms on C-LARGE; path edge counts {\"1\":10}"
+    },
+    {
+      "id": "A8",
+      "m204": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "m205": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "measurement": "C-SMALL 100%, C-MED 100%, C-LARGE 100%; unexplained missing 0/0/0"
+    },
+    {
+      "id": "A9",
+      "m204": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m205": "VTRACE_MATCHES_VEXP_CLAIM",
+      "measurement": "median rendered reduction C-MED 92.82%, C-LARGE 87.21% over 449 + 250 structurally valid files; 22 C-MED files excluded as malformed (F4)"
+    },
+    {
+      "id": "A10",
+      "m204": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m205": "VTRACE_MATCHES_VEXP_CLAIM",
+      "measurement": "signature retention C-MED 99.48%, C-LARGE 100% (verbatim, token-aligned, bracket-closed slices of source); member retention C-MED 100%, C-LARGE 94.82%. Signature-PRESENCE alone would read 100% / 100%"
+    },
+    {
+      "id": "A11",
+      "m204": "VTRACE_BELOW_VEXP_CLAIM",
+      "m205": "VTRACE_BELOW_VEXP_CLAIM",
+      "measurement": "C-MED whole-response utilisation by budget: 1000=46.55%, 2000=50.2%, 4000=25.1%, 8000=13.17%, 16000=13.74% over 20 tasks"
+    },
+    {
+      "id": "A12",
+      "m204": "VTRACE_BELOW_VEXP_CLAIM",
+      "m205": "VTRACE_MATCHES_VEXP_CLAIM",
+      "measurement": "C-MED default response carries 3 distinct representation classes (FOCUS:focused_source, RELATED_WITH_CODE, RELATIONSHIP_ONLY); C-LARGE carries 4"
+    },
+    {
+      "id": "A13",
+      "m204": "VTRACE_BELOW_VEXP_CLAIM",
+      "m205": "VTRACE_BELOW_VEXP_CLAIM",
+      "measurement": "3 of 20 tasks lose focus content as the budget grows, and 5 swap the delivered focus symbol, over 5 budgets"
+    },
+    {
+      "id": "A14",
+      "m204": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m205": "VTRACE_MATCHES_VEXP_CLAIM",
+      "measurement": "1004 of 1004 delivered items carry token accounting; no accounting block appears in the default response at all (present at detail=debug only). get_skeleton publishes a per-CALL block whose savings figure differs from an independent measurement of the same output by 38.73 / 6.06 / 17.42 points"
+    },
+    {
+      "id": "A15",
+      "m204": "VTRACE_BELOW_VEXP_CLAIM",
+      "m205": "VTRACE_BELOW_VEXP_CLAIM",
+      "measurement": "C-LARGE, 50 eligible call edges: the impact surface renders 0% as source expressions, the logic-flow surface 100%. On C-MED the flow surface renders 100%"
+    }
+  ],
+  "frozenF6Control": {
+    "pass": false,
+    "passesWithoutStaleConjunct": true,
+    "a14PerItem": 1004,
+    "note": "the committed control conjoins `a14PerItem === 0`, the M197A observation; its other conjuncts pass, so the failure is the stale control and not an A14 regression; not modified"
+  },
+  "gates": [
+    {
+      "id": "G1",
+      "statement": "frozen A12 definition recovered unchanged",
+      "pass": true
+    },
+    {
+      "id": "G2",
+      "statement": "A12 BELOW reproduced pre-change, equal to the committed M204 classes",
+      "pass": true
+    },
+    {
+      "id": "G3",
+      "statement": "VEXP representation inventory classified OBSERVED/CLAIMED/UNKNOWN",
+      "pass": true
+    },
+    {
+      "id": "G4",
+      "statement": "VTRACE representation inventory recovered and symbol-verified",
+      "pass": true
+    },
+    {
+      "id": "G5",
+      "statement": "one unversioned representation authority (orientationRepresentation.ts; focus and related share one shape)",
+      "pass": true
+    },
+    {
+      "id": "G6",
+      "statement": "new classes semantically distinct: no relabel-only class (F1); class distinction over the corpus",
+      "pass": true
+    },
+    {
+      "id": "G7",
+      "statement": "source truth: every source-backed representation on C-MED anchored, parser-signature or index-skeleton (F2, F3)",
+      "pass": true
+    },
+    {
+      "id": "G8",
+      "statement": "boundedness: every related code within the declared bound (F4)",
+      "pass": true
+    },
+    {
+      "id": "G9",
+      "statement": "routing deterministic and general (F7; arbitrary budgets swept; 0 integrity failures on C-MED)",
+      "pass": true
+    },
+    {
+      "id": "G10",
+      "statement": "progressive fallback: unavailable or oversized rich representation falls back truthfully (F4, F5, F8)",
+      "pass": true
+    },
+    {
+      "id": "G11",
+      "statement": "A14 accounting: every delivered item accounted, M203 analyzer passes on every C-MED packet (F6)",
+      "pass": true
+    },
+    {
+      "id": "G12",
+      "statement": "no duplicate-item inflation (F10)",
+      "pass": true
+    },
+    {
+      "id": "G13",
+      "statement": "performance: A5 at least MATCHES",
+      "pass": true
+    },
+    {
+      "id": "G14",
+      "statement": "A1/A2/A3 protected",
+      "pass": true
+    },
+    {
+      "id": "G15",
+      "statement": "A4/A6/A7/A8/A9/A10 protected",
+      "pass": true
+    },
+    {
+      "id": "G16",
+      "statement": "A11 measured only; tier caps untouched",
+      "pass": true
+    },
+    {
+      "id": "G17",
+      "statement": "A13 measured only; baseline captured",
+      "pass": true
+    },
+    {
+      "id": "G18",
+      "statement": "A15 untouched (impact rendering unchanged; verdict carried)",
+      "pass": true
+    },
+    {
+      "id": "G19",
+      "statement": "frozen A12 verdict from the unmodified scorer",
+      "pass": true
+    },
+    {
+      "id": "G20",
+      "statement": "full A1-A15 rerun by the unmodified analyzer",
+      "pass": true
+    },
+    {
+      "id": "G21",
+      "statement": "standard verification (recorded by the ledger row; not computed here)",
+      "pass": true
+    },
+    {
+      "id": "G22",
+      "statement": "zero model spend: offline instruments only",
+      "pass": true
+    }
+  ],
+  "boundary": [
+    "ENGINE QUALITY != CODING-AGENT UTILITY",
+    "NO_A11_TIER_CAP_REPAIR_AUTHORIZED",
+    "NO_A13_MONOTONICITY_REPAIR_AUTHORIZED",
+    "NO_IMPACT_RENDERING_EXPANSION_AUTHORIZED",
+    "NO_VALIDATION_SCAFFOLD_IMPLEMENTATION_AUTHORIZED",
+    "NO_RUNTIME_REPAIR_INTERVENTION_AUTHORIZED",
+    "I5_REMAINS_CLOSED",
+    "I6_VALIDATION_SELECTION_REMAINS_CLOSED"
+  ]
+}

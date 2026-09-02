@@ -1,0 +1,51 @@
+{
+  "corpus": "C-MED",
+  "byClass": {
+    "focus:focused_source": {
+      "items": 180,
+      "accounted": 180,
+      "actualTokensTotal": 44087,
+      "actualTokensMedian": 217,
+      "codeCharactersMedian": 405
+    },
+    "related:excerpt": {
+      "items": 1,
+      "accounted": 1,
+      "actualTokensTotal": 202,
+      "actualTokensMedian": 202,
+      "codeCharactersMedian": 378
+    },
+    "related:focused_source": {
+      "items": 277,
+      "accounted": 277,
+      "actualTokensTotal": 56949,
+      "actualTokensMedian": 225,
+      "codeCharactersMedian": 425
+    },
+    "related:relationship_only": {
+      "items": 540,
+      "accounted": 540,
+      "actualTokensTotal": 33622,
+      "actualTokensMedian": 63,
+      "codeCharactersMedian": 0
+    },
+    "related:signature": {
+      "items": 69,
+      "accounted": 69,
+      "actualTokensTotal": 6632,
+      "actualTokensMedian": 95,
+      "codeCharactersMedian": 97
+    },
+    "related:skeleton": {
+      "items": 816,
+      "accounted": 816,
+      "actualTokensTotal": 126570,
+      "actualTokensMedian": 145,
+      "codeCharactersMedian": 148.5
+    }
+  },
+  "a14": {
+    "frozenRerun": "1004/1004",
+    "verdict": "VTRACE_MATCHES_VEXP_CLAIM"
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "repeats": 3,
+  "byCorpus": {
+    "C-SMALL": {
+      "repeats": 3,
+      "packetsStable": true,
+      "unstablePackets": [],
+      "ledgersStable": true,
+      "unstableLedgers": []
+    },
+    "C-MED": {
+      "repeats": 3,
+      "packetsStable": true,
+      "unstablePackets": [],
+      "ledgersStable": true,
+      "unstableLedgers": []
+    },
+    "C-LARGE": {
+      "repeats": 3,
+      "packetsStable": true,
+      "unstablePackets": [],
+      "ledgersStable": true,
+      "unstableLedgers": []
+    }
+  },
+  "falsificationF7": true,
+  "frozenEngine": {
+    "allDeterministic": true,
+    "perCorpus": [
+      {
+        "corpus": "C-SMALL",
+        "getCodeContext": true,
+        "getImpactGraph": true,
+        "searchLogicFlow": true,
+        "unstable": [],
+        "indexNonIdenticalRuns": 0
+      },
+      {
+        "corpus": "C-MED",
+        "getCodeContext": true,
+        "getImpactGraph": true,
+        "searchLogicFlow": true,
+        "unstable": [],
+        "indexNonIdenticalRuns": 0
+      },
+      {
+        "corpus": "C-LARGE",
+        "getCodeContext": true,
+        "getImpactGraph": true,
+        "searchLogicFlow": true,
+        "unstable": [],
+        "indexNonIdenticalRuns": 0
+      }
+    ]
+  }
+}

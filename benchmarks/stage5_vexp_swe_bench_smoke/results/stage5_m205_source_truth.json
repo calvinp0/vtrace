@@ -1,0 +1,83 @@
+{
+  "post": {
+    "C-SMALL": {
+      "focused_source": {
+        "ANCHORED_IN_SPAN": 21
+      },
+      "skeleton": {
+        "SKELETON_MATCHES_INDEX": 21
+      }
+    },
+    "C-MED": {
+      "focused_source": {
+        "ANCHORED_IN_SPAN": 457
+      },
+      "signature": {
+        "PARSER_SIGNATURE": 69
+      },
+      "skeleton": {
+        "SKELETON_MATCHES_INDEX": 802,
+        "SKELETON_HEAD_OF_INDEX": 14
+      },
+      "excerpt": {
+        "ANCHORED_IN_SPAN": 1
+      }
+    },
+    "C-LARGE": {
+      "focused_source": {
+        "ANCHORED_IN_SPAN": 54
+      },
+      "skeleton": {
+        "SKELETON_MATCHES_INDEX": 105,
+        "SKELETON_HEAD_OF_INDEX": 25
+      },
+      "excerpt": {
+        "ANCHORED_IN_SPAN": 4
+      }
+    }
+  },
+  "cMedAllAnchored": true,
+  "classDistinction": {
+    "pairs": [
+      {
+        "pair": "skeleton|signature",
+        "comparable": 1075,
+        "distinct": 308,
+        "coincident": 767,
+        "distinctOnSomeItem": true
+      },
+      {
+        "pair": "focused_source|skeleton",
+        "comparable": 1075,
+        "distinct": 1064,
+        "coincident": 11,
+        "distinctOnSomeItem": true
+      },
+      {
+        "pair": "focused_source|signature",
+        "comparable": 1075,
+        "distinct": 1064,
+        "coincident": 11,
+        "distinctOnSomeItem": true
+      }
+    ],
+    "pass": true
+  },
+  "integrity": {
+    "C-SMALL": {
+      "packets": 9,
+      "failures": 0,
+      "failedItems": []
+    },
+    "C-MED": {
+      "packets": 180,
+      "failures": 0,
+      "failedItems": []
+    },
+    "C-LARGE": {
+      "packets": 27,
+      "failures": 0,
+      "failedItems": []
+    }
+  }
+}

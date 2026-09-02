@@ -9181,3 +9181,250 @@ evidence          results/stage5_m204_final_report.{md,json} and the
   (selection policy, paired retrieval proof required) and on A12's
   representation class; A13's baseline for M205 is 3 size violations / 5 focus
   swaps. `CONTEXT_COMPILER_PRODUCT_UTILITY_NOT_ESTABLISHED` still governs.
+
+## M205 — representation-class expansion and frozen A12 (PASS, A12 closed)
+
+```
+milestone         M205
+verdict           PASS
+parity            A12_PARITY_CLOSED
+spend             0 live-agent runs, $0, 0 VEXP processes
+scope             A12 only. Recover the frozen representation-class claim,
+                  inventory every representation between the capsule and the
+                  packet, let a related entry carry the body the authoritative
+                  rendering already paid for — under the same three fields the
+                  focus uses, head-bounded, routed within the caller's ceiling
+                  after admission — and rerun the unmodified frozen scorer. No
+                  work on A11, A13, A15; no tier-cap, ranking, selection or
+                  retrieval change.
+
+result            VTRACE_VEXP_ENGINE_PARITY_THRESHOLD_MET
+                  MATCH 7  EXCEED 5  BELOW 3   match-or-exceed 12/15 (threshold 10)
+                  A8 minimum coverage 100% (veto 99%); structural violations 0
+                  determinism stable; invented structural claims 0
+                  frozen controls: F1-F5, F7, F8 pass; F6 FAILS on its stale
+                  `a14PerItem === 0` conjunct only (a14PerItem 1004; its other
+                  conjuncts pass); not modified, per the M203 standing finding.
+
+frozen A12        VEXP V-C6 "pivot files are delivered as full content;
+                  supporting files as skeletons" (vexp-core binary). Rule
+                  (engine + report, verbatim): per DEFAULT get_code_context
+                  response, FOCUS:<form> when the focus carries code,
+                  RELATED_WITH_CODE when a related entry's `code` is a string,
+                  RELATIONSHIP_ONLY otherwise; distinct classes over the 20
+                  C-MED tasks x 5 frozen budgets; MATCHES >= 3, EXCEEDS 5.
+                  M204 committed and pre-change reproduction (worktree at
+                  9f0799cf): 2 (FOCUS:focused_source, RELATIONSHIP_ONLY),
+                  BELOW. Post-change reproduction and M205 frozen rerun: 3
+                  (+ RELATED_WITH_CODE), MATCHES. C-LARGE 4 (also FOCUS:excerpt).
+
+VEXP inventory    Byte search over the artefacts the M196 ledger cites, no
+                  vexp process: pivot full content (`## Pivots (Full
+                  Content)`), pivot skeleton (`## Pivots (Skeletons`, "call
+                  get_skeleton(file) for body"), supporting skeleton
+                  (`## Supporting (Skeletons)`), supporting dropped
+                  (`supporting_dropped`), get_skeleton file structure — all
+                  OBSERVED as rendering markers; the three that count equal the
+                  frozen MATCH line of 3. When a section is chosen and how it
+                  is bounded is UNKNOWN: the binary is closed.
+
+root cause        Every admitted related entry was delivered relationship-only
+                  (at/file/lines/how), although the authoritative rendering the
+                  projector parses already carried a body for most of them:
+                  co-pivot focused source, index-derived structural skeleton,
+                  parser signature. Two classes on C-MED were therefore the
+                  focus's form and relationship-only; the count is by content
+                  class, so focus-vs-related and skeleton-vs-signature never
+                  counted separately.
+
+architecture      src/runPipeline/orientationRepresentation.ts — one authority
+                  for both slots: CODE_BEARING_FORMS (focused_source,
+                  full_source, excerpt, skeleton, signature, document_excerpt;
+                  each with the authority its text is a rendering of; exhaustive
+                  and fails closed — summary/unknown never becomes code),
+                  availableRepresentation, headBound (shared with the focus),
+                  representationClassOf, RELATED_CODE_CHARACTERS 600 (a third of
+                  the focus bound; covers 3/4 of co-pivot bodies, 9/10 of
+                  skeletons, every signature), REPRESENTATION_LADDER [upstream
+                  form, relationship_only] — explicit, two rungs, no tighter
+                  cut. OrientationRelated gains optional form/code/codeTruncated,
+                  present together or not at all, so a relationship-only entry
+                  serializes byte-for-byte as before. Projector: admission
+                  unchanged (relationship-only prefix under the caller's
+                  ceiling), THEN routing over the admitted set in rank order —
+                  each entry offered its upstream form and kept only if the
+                  packet with it stays within the ceiling, later entries still
+                  compact — so an upgrade can never evict an admitted item and
+                  every budget's set equals M204's. Ledger per item:
+                  representation, representationReason (focus_slot,
+                  upstream_form_delivered, ceiling, no_rendered_body,
+                  form_not_code_bearing, neighbour_text_not_carried),
+                  availableRepresentation, availableCodeCharacters,
+                  compactAdmissionPacketTokens beside admissionPacketTokens.
+                  Tool schema: three optional related-item properties.
+
+truth repairs     Two pre-existing defects became load-bearing once related
+                  bodies were delivered, and were fixed at their source.
+                  (1) The rendering's closing line ("Impact entries above are
+                  bounded static structural evidence …") was parsed as the tail
+                  of the last item's body — found inside a delivered skeleton on
+                  C-SMALL. One constant (MODEL_VISIBLE_CONTEXT_FOOTER in
+                  productContext/types.ts) now serves both renderers and the
+                  projector, which strips it. (2) The evidence budget's
+                  compaction rungs relabelled every shortened body `signature`
+                  — a head slice minimalContent produced, 378-433 characters
+                  long, that the parser never emitted (1 C-MED item at 1500, 15
+                  C-LARGE items, and the C-LARGE focus at 2000 since M197A).
+                  compactedContentMode now keeps what the body IS: source forms
+                  become `excerpt`, a skeleton stays a skeleton, a signature a
+                  signature, a summary a summary (never code). Stage names and
+                  counters unchanged; C-MED frozen packets unaffected (no
+                  skeletonisation at the frozen budgets).
+
+routing, C-MED    1703 related entries over 180 responses (9 budgets):
+                  upstream_form_delivered 1163, form_not_code_bearing 470
+                  (impact/memory/rule summaries), neighbour_text_not_carried 62,
+                  no_rendered_body 8, ceiling 0 — the caller's ceiling never
+                  refused a form on this corpus. Delivered classes: skeleton
+                  816, focused_source 277, signature 69, excerpt 1,
+                  relationship_only 540. At 1000 a median 1 of 2 related
+                  entries carries code; at 2000-8000 5 of 8-9.5; at 12000-16000
+                  14 of 16.5-17. Arbitrary budgets 1500/3000/6000/12000 follow
+                  the same rule.
+
+source truth      Every code on C-MED held to the indexed corpus: focused
+                  source 457/457 verbatim within the item's span (focus 180 +
+                  related 277); signature 69/69 equal to the parser's; skeleton
+                  802 equal to the index skeleton + 14 heads of it (projector
+                  bound); excerpt 1/1 in span. 0 integrity failures over 180 +
+                  180 + 9 + 27 packets (M203 accounting analyzer passes inside
+                  every one). Class distinction over 1075 items: focused vs
+                  skeleton distinct on 1064, focused vs signature 1064,
+                  skeleton vs signature 308 (767 leaf functions coincide by
+                  construction, which is a fact about the function).
+
+mixed             "where are import edges extracted from typescript" @16000:
+                  focus focused_source, related in focused_source, signature,
+                  skeleton and relationship_only, ordinal order, every item
+                  accounted and source-anchored.
+
+equivalence       Repaired product on the pre-change corpus copy: 180/180
+                  same focus, same related set in the same order, and
+                  byte-identical after the representation fields are removed;
+                  0/180 whole-packet identical, by design. Moving corpus:
+                  180/180 same set. The frozen 15-query M203 instrument reads
+                  NOT_EQUIVALENT (selection 0/15, item count 15/15, order
+                  15/15): its selection key includes each item's form and code
+                  hash by construction, so a related entry carrying code cannot
+                  match a capture in which none did; the M205 same-corpus
+                  control is the instrument for this milestone.
+
+falsification     F1-F12 all pass: relabelling a skeleton `signature` fails the
+                  parser authority and counts nothing; invented excerpt
+                  NOT_LOCATED; wrong signature SIGNATURE_NOT_PARSER; 4886-char
+                  body cut to 586 on a line boundary and flagged, forced
+                  oversize refused; summary/neighbour/empty bodies fall back
+                  with reasons and a forced summary code is refused; the
+                  relationship-only cost reported for an excerpt fails M203;
+                  5 repeats one hash; at 1000 six rich / eight refused for the
+                  ceiling with the compact bytes identical to the predecessor's
+                  and the same set; 278 of 343 C-MED @16000 related carry
+                  anchored code; a duplicate is refused and a second proposal
+                  delivered once; a severed source id or foreign file fails;
+                  a hard-coded ledger class fails and the packet counts 2.
+
+determinism       3 repeats on every corpus: packets and ledgers stable (180
+                  C-MED responses). One packet was unstable in an earlier sweep
+                  that ran concurrently with the full test suite and is stable
+                  8/8 alone: the response envelope's ladder reads serialized
+                  size, timing digits included; pre-existing, recorded.
+
+A11, observed     Frozen utilisation 46.55 / 50.2 / 25.1 / 13.17 / 13.74 %
+                  (M204 40.55 / 34.05 / 17.02 / 9.34 / 7.54), still BELOW.
+                  Candidate supply unchanged by construction (proposed/admitted
+                  medians 3/3, 9/9, 9/9, 16.5/10.5, 25/18 at the frozen
+                  budgets, identical pre and post). Representable related
+                  tokens (every available form delivered) 1201 -> 2516 at
+                  16000, delivered related tokens 1204 -> 2516: the packet now
+                  delivers everything its supply can represent, and the
+                  ceiling never bound. Measured, not optimised; tier caps
+                  untouched.
+
+A13, observed     3 size violations / 5 focus swaps at M204, pre, post and the
+                  frozen rerun; order relations prefix 42 / subsequence 17 /
+                  neither 21 unchanged; representation regressions across
+                  adjacent budgets 0. Measured, not optimised.
+
+cost              Frozen A5 p90 46.14 / 201.55 / 324.21 ms (M204 45.14 /
+                  211.06 / 342.79), MATCHES; A5 harness 43.45 / 197.52 / 334.87
+                  (M204 46.37 / 205.9 / 357.16), MATCHES. Projector alone, 18
+                  items @16000: 0.23 -> 0.49 ms median (300 synthetic items
+                  20 -> 101 ms: the routing test serializes the packet once per
+                  entry; real supply is capped at ~25 proposals). Largest
+                  packet 6420 -> 11594 bytes, 21 items both; peak RSS 633 MB
+                  over the sweep alone. No DB table, no schema change, no new
+                  persisted metadata.
+
+corpus identity   C-MED 502 -> 504: two source files added under src/
+                  (orientationRepresentation.ts and its test); replay at 502
+                  fails on that check alone (stage5_m205_authority.json);
+                  re-frozen at 504 (stage5_m205_authority_post.json). Claim
+                  definitions, thresholds, scorer and corpus root unchanged.
+
+commits           (recorded in the final row of this entry after commit)
+
+evidence          results/stage5_m205_final_report.{md,json} and the
+                  stage5_m205_*.{json,jsonl,md} artefacts beside it;
+                  stage5_m201_a5_m205_post.json.
+```
+
+## M205 standing findings
+
+- **A12 closed on content, not labels.** The frozen rule reads whether a
+  related entry carries `code`; M205 delivers the body the authoritative
+  rendering already carried, under the upstream form label, head-bounded, and
+  every such body on C-MED is a verbatim span, the parser's signature or the
+  index's skeleton. The count cannot be raised by relabelling (F1, F12) and
+  cannot exceed 3 + the number of distinct focus forms.
+
+- **Two truth defects were upstream of the projector and older than M205.**
+  The rendered footer inside the last body, and `signature` as the label for a
+  budget-compacted head slice, both reached the model before M205 only through
+  the focus; a related class made them visible on every packet. Both are fixed
+  at their source; the compaction stage names still say "skeletonized" and
+  describe the rung, not the content.
+
+- **The caller's ceiling never refused a richer form on C-MED.** Every entry
+  with a code-bearing body received it at every budget, including 1000. What
+  keeps entries relationship-only is their evidence: 470 summaries (impact,
+  memory, rules), 62 neighbourhood entries whose text is stripped before
+  projection, 8 empty bodies. A neighbourhood excerpt class is possible but
+  was not routed: its text is removed by `compactProductResponse` before the
+  projector runs, and M205 kept the minimal set.
+
+- **A11 remains supply-bound, now on the candidate side alone.** The packet
+  delivers everything its supply can represent (representable = delivered at
+  every budget) and utilisation is 13.7% at 16000 against a MATCH line of 60%.
+  Candidate supply — proposed 25, admitted 18 at 16000 — is unchanged by
+  construction and is the tier-cap question M204 named. A11 needs M206's
+  allocation decision; a larger related bound would not reach 60% either
+  (upstream rendered context is ~19% of the budget, M204).
+
+- **The projector's routing test is quadratic in supply.** Each entry's
+  trial serializes the whole packet; at 300 synthetic entries that is 101 ms.
+  Real supply is bounded by the tier caps and neighbourhood caps (largest
+  C-MED packet 21 items, 0.5 ms). If a later milestone raises supply past ~60
+  entries, an incremental cost test should replace the re-serialization.
+
+- **The M203 fifteen-query equivalence instrument is now representation-
+  aware by construction** (its selection key includes form and code hash) and
+  reads NOT_EQUIVALENT against the M201 base for any packet that carries
+  related code. It still certifies item count and order (15/15). A milestone
+  wanting a byte-level control should use the M205 same-corpus comparison
+  (strip form/code/codeTruncated/tokens), or re-base the capture deliberately.
+
+- **Next-step recommendation.** A12 is closed; A11, A13 and A15 remain
+  BELOW. M206 should take A11 at the capsule's full-tier item caps with a
+  paired retrieval no-change proof; A13's baseline is unchanged at 3/5 with
+  order relations 42/17/21 and 0 representation regressions; A15 untouched.
+  `CONTEXT_COMPILER_PRODUCT_UTILITY_NOT_ESTABLISHED` still governs.
