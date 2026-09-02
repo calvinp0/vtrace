@@ -1,5 +1,6 @@
 import { estimateTokens } from "../capsuleV2/tokens";
 import { publishSemanticItemSupply } from "./semanticItemSupply";
+import { MODEL_VISIBLE_CONTEXT_FOOTER } from "./types";
 
 export const DeliveryResultState = Object.freeze({
   Resolved: "resolved",
@@ -172,7 +173,7 @@ export function applyProgressiveContextBudget(
   for (const item of optionalSupport(items)) {
     if (item.content === undefined || item.content.length <= 900) continue;
     item.content = boundedExcerpt(item.content, 900);
-    item.contentMode = "excerpt";
+    item.contentMode = compactedContentMode(item.contentMode);
     excerptsShortened += 1;
     record(CompactionStage.SupportExcerptShortened);
     result = publishIfFit();
@@ -184,7 +185,7 @@ export function applyProgressiveContextBudget(
     const minimal = minimalContent(item.content);
     if (minimal === item.content) continue;
     item.content = minimal;
-    item.contentMode = "signature";
+    item.contentMode = compactedContentMode(item.contentMode);
     skeletonizedItems += 1;
     record(CompactionStage.SupportSkeletonized);
     result = publishIfFit();
@@ -203,7 +204,7 @@ export function applyProgressiveContextBudget(
   for (const item of [...pivots.slice(1)].reverse()) {
     if (item.content !== undefined) {
       item.content = minimalContent(item.content);
-      item.contentMode = "signature";
+      item.contentMode = compactedContentMode(item.contentMode);
       skeletonizedItems += 1;
       record(CompactionStage.SecondaryPivotSkeletonized);
       result = publishIfFit();
@@ -230,7 +231,7 @@ export function applyProgressiveContextBudget(
   for (const item of [...items].sort(compareKeepPriority).reverse()) {
     if (item.content === undefined) continue;
     item.content = minimalContent(item.content);
-    item.contentMode = "signature";
+    item.contentMode = compactedContentMode(item.contentMode);
     item.selectionReasons = [];
     record(item === items[0] ? CompactionStage.LeadExcerptShortened : CompactionStage.MinimalRepresentation);
     result = publishIfFit();
@@ -242,7 +243,7 @@ export function applyProgressiveContextBudget(
   const best = [...items].sort(compareKeepPriority)[0];
   if (best !== undefined) {
     best.content = best.content === undefined ? undefined : minimalContent(best.content);
-    best.contentMode = "signature";
+    best.contentMode = compactedContentMode(best.contentMode);
     best.selectionReasons = [];
     items = [best];
     record(CompactionStage.MinimalRepresentation);
@@ -401,7 +402,7 @@ function render(product: JsonRecord, items: MutableItem[]): string {
     for (const reason of item.selectionReasons) lines.push(`why: ${reason}`);
     if (item.content !== undefined) lines.push("", item.content);
   }
-  lines.push("", "Impact entries above are bounded static structural evidence; they are not dynamic execution flow.");
+  lines.push("", MODEL_VISIBLE_CONTEXT_FOOTER);
   return lines.join("\n");
 }
 
@@ -461,6 +462,34 @@ function boundedExcerpt(content: string, maximumCharacters: number): string {
   return `${head}\n# … excerpt compacted for budget …`;
 }
 
+/**
+ * What a body IS after a rung shortens it (M205). Shortening changes the
+ * length of a rendering, not what it is a rendering of: a source body becomes a
+ * head excerpt of that source; a skeleton stays an (shorter) index-derived
+ * skeleton; a parser signature is unchanged by the rungs that keep defining
+ * lines; a summary — impact line, memory, rule — stays a summary and is never
+ * source. Before M205 every rung relabelled its result `signature`, a label the
+ * parser did not produce, which reached the model as "what `code` is" once the
+ * orientation packet carried related bodies. The compaction stage names
+ * (`*_skeletonized`, `skeletonizedItems`) are accounting names for the rungs
+ * and are unchanged.
+ */
+function compactedContentMode(prior: string): string {
+  switch (prior) {
+    case "focused_source":
+    case "full_source":
+    case "excerpt":
+    case "document_excerpt":
+      return "excerpt";
+    default:
+      return prior;
+  }
+}
+
+/**
+ * The defining lines of a body: at most eight, at most ~480 characters, from the
+ * first line that declares something. A HEAD SLICE of whatever the body was.
+ */
 function minimalContent(content: string): string {
   const lines = content.split("\n");
   const definingIndex = lines.findIndex((line) => /^\s*(?:async\s+def|def|class|function|export\s+(?:async\s+)?function|(?:export\s+)?(?:const|let|var)\s+\w+)/u.test(line));

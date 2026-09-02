@@ -22,6 +22,7 @@ import {
   projectRunPipelineOrientation,
 } from "./orientationProjection";
 import { orientationAccountingOf, orientationTokensOfCharacters } from "./orientationAccounting";
+import { MODEL_VISIBLE_CONTEXT_FOOTER } from "../productContext/types";
 
 /** An authoritative result shaped like the real one, with `count` related symbols. */
 function authoritative(count: number, overrides: Record<string, unknown> = {}, bodyChars = 300): Record<string, unknown> {
@@ -315,5 +316,133 @@ describe("the ceiling is the caller's budget", () => {
   test("the budget the ceiling was derived from is the one the ledger reports upstream", () => {
     const ledger = orientationAccountingOf(projectRunPipelineOrientation(budgeted(3, 4000))!)!;
     expect(ledger.ceilingDerivation.requestedContextTokens).toBe(ledger.evidenceBudget.requestedTokens);
+  });
+});
+
+describe("representation (M205): what an admitted entry carries", () => {
+  /** The fixture with each related item's upstream form set, and an optional per-item body. */
+  const shaped = (
+    forms: readonly string[], requested: number, bodies?: readonly string[],
+  ): Record<string, unknown> => {
+    const state = authoritative(forms.length, { responseBudget: { requested_context_tokens: requested } });
+    const productContext = state.productContext as Record<string, unknown>;
+    const items = productContext.items as Record<string, unknown>[];
+    for (const [k, form] of forms.entries()) items[k + 1]!.contentMode = form;
+    items[0]!.contentMode = "focused_source";
+    if (bodies !== undefined) {
+      productContext.modelVisibleContext = items
+        .map((item, k) => `\n## [${item.id}]\nroles: x\n\n${k === 0 ? "focus body" : bodies[k - 1] ?? ""}`).join("\n");
+    }
+    return state;
+  };
+
+  test("admission is unchanged: the same items in the same order, then each carries its form if it fits", () => {
+    const rich = projectRunPipelineOrientation(shaped(["focused_source", "skeleton", "signature", "summary"], 16000))!;
+    expect(rich.related.map((r) => r.at)).toEqual([
+      "pkg/mod1.py::Sym1.method", "pkg/mod2.py::Sym2.method", "pkg/mod3.py::Sym3.method", "pkg/mod4.py::Sym4.method",
+    ]);
+    expect(rich.related.map((r) => r.form ?? null)).toEqual(["focused_source", "skeleton", "signature", null]);
+    expect(rich.related.slice(0, 3).every((r) => r.code === "x".repeat(300) && r.codeTruncated === false)).toBe(true);
+    expect("code" in rich.related[3]!).toBe(false);
+    const ledger = orientationAccountingOf(rich)!;
+    expect(ledger.items.slice(1).map((i) => i.representation)).toEqual(["focused_source", "skeleton", "signature", "relationship_only"]);
+    expect(ledger.items.slice(1).map((i) => i.representationReason))
+      .toEqual(["upstream_form_delivered", "upstream_form_delivered", "upstream_form_delivered", "form_not_code_bearing"]);
+  });
+
+  test("a relationship-only entry serializes exactly as it did before: no null fields, no placeholders", () => {
+    const packet = projectRunPipelineOrientation(shaped(["summary"], 16000))!;
+    expect(Object.keys(packet.related[0]!)).toEqual(["at", "file", "lines", "how", "tokens"]);
+  });
+
+  test("the code a related entry carries is the upstream body, head-bounded on a line boundary, and says so", () => {
+    const long = Array.from({ length: 80 }, (_, i) => `line ${i}`.padEnd(24, ".")).join("\n");
+    const packet = projectRunPipelineOrientation(shaped(["focused_source"], 16000, [long]))!;
+    const entry = packet.related[0]!;
+    expect(entry.codeTruncated).toBe(true);
+    expect(entry.code!.length).toBeLessThanOrEqual(ORIENTATION_POLICY.relatedCodeCharacters);
+    expect(long.startsWith(entry.code!)).toBe(true);
+    const record = orientationAccountingOf(packet)!.items[1]!;
+    expect(record.truncated).toBe(true);
+    expect(record.bodyCharacters).toBe(long.length);
+    expect(record.deliveredCodeCharacters).toBe(entry.code!.length);
+  });
+
+  test("a tight ceiling keeps the compact entry: the richer form is offered and refused, never forced", () => {
+    // Budget 1000 -> ceiling 1270 packet tokens. Twelve 300-character bodies
+    // cannot all fit; the earliest in rank order are enriched, the rest stay
+    // relationship-only, and the SET is the compact set.
+    const forms = Array.from({ length: 12 }, () => "focused_source");
+    const tight = projectRunPipelineOrientation(shaped(forms, 1000))!;
+    const compact = projectRunPipelineOrientation(shaped(Array.from({ length: 12 }, () => "summary"), 1000))!;
+    expect(tight.related.map((r) => r.at)).toEqual(compact.related.map((r) => r.at));
+    const ledger = orientationAccountingOf(tight)!;
+    const reasons = ledger.items.slice(1).map((i) => i.representationReason);
+    expect(reasons.filter((r) => r === "upstream_form_delivered").length).toBeGreaterThan(0);
+    expect(reasons.filter((r) => r === "ceiling").length).toBeGreaterThan(0);
+    // Rank order: every enriched entry precedes every refused one.
+    const firstRefused = reasons.indexOf("ceiling");
+    expect(reasons.slice(firstRefused).every((r) => r === "ceiling")).toBe(true);
+    expect(ledger.evidence.tokens).toBeLessThanOrEqual(ledger.ceilingTokens);
+    // The refused entries carry the compact bytes, exactly.
+    for (const [k, r] of reasons.entries()) {
+      if (r === "ceiling") expect(Object.keys(tight.related[k]!)).toEqual(["at", "file", "lines", "how", "tokens"]);
+    }
+  });
+
+  test("a larger budget enriches the same set; the compact projection of the rich packet is the compact packet", () => {
+    const forms = Array.from({ length: 12 }, () => "focused_source");
+    const lo = projectRunPipelineOrientation(shaped(forms, 1000))!;
+    const hi = projectRunPipelineOrientation(shaped(forms, 16000))!;
+    expect(hi.related.map((r) => r.at)).toEqual(lo.related.map((r) => r.at));
+    expect(hi.related.every((r) => typeof r.code === "string")).toBe(true);
+    const strip = (r: Record<string, unknown>) => { const { form: _f, code: _c, codeTruncated: _t, tokens: _k, ...rest } = r; return rest; };
+    expect(hi.related.map((r) => strip(r as Record<string, unknown>))).toEqual(lo.related.map((r) => strip(r as Record<string, unknown>)));
+  });
+
+  test("a neighbourhood entry stays relationship-only: its text never reached the projector", () => {
+    const state = shaped(["focused_source"], 16000);
+    (state as Record<string, unknown>).pivotNeighborhood = [{ excerpts: [
+      { fqName: "pkg/n.py::Near", filePath: "pkg/n.py", startLine: 1, endLine: 4, reason: "caller", textCharacters: 120 },
+    ] }];
+    const packet = projectRunPipelineOrientation(state)!;
+    const near = packet.related.find((r) => r.at === "pkg/n.py::Near")!;
+    expect("code" in near).toBe(false);
+    const record = orientationAccountingOf(packet)!.items.find((i) => i.at === "pkg/n.py::Near")!;
+    expect(record.representationReason).toBe("neighbour_text_not_carried");
+    expect(record.availableRepresentation).toBe("not_applicable");
+  });
+
+  test("the ledger records both admission figures: compact, and as the representation was fixed", () => {
+    const packet = projectRunPipelineOrientation(shaped(["focused_source", "skeleton"], 16000))!;
+    const ledger = orientationAccountingOf(packet)!;
+    for (const item of ledger.items) {
+      expect(item.compactAdmissionPacketTokens).toBeLessThanOrEqual(item.admissionPacketTokens);
+      expect(item.admissionPacketTokens).toBeLessThanOrEqual(ledger.ceilingTokens);
+    }
+    expect(ledger.items.at(-1)!.admissionPacketTokens).toBe(ledger.evidence.tokens);
+    const figures = ledger.items.map((i) => i.admissionPacketTokens);
+    expect([...figures].sort((a, b) => a - b)).toEqual(figures);
+  });
+
+  test("it is deterministic across repeats", () => {
+    const forms = ["focused_source", "skeleton", "signature", "summary", "excerpt"];
+    const hashes = new Set(Array.from({ length: 5 }, () => JSON.stringify(projectRunPipelineOrientation(shaped(forms, 3000)))));
+    expect(hashes.size).toBe(1);
+  });
+});
+
+describe("the rendered footer is framing, never a body (M205)", () => {
+  test("the closing line of the rendering is not delivered as the tail of the last item's code", () => {
+    const state = authoritative(2, { responseBudget: { requested_context_tokens: 16000 } });
+    const productContext = state.productContext as Record<string, unknown>;
+    const items = productContext.items as Record<string, unknown>[];
+    for (const item of items) item.contentMode = "skeleton";
+    productContext.modelVisibleContext = `${productContext.modelVisibleContext}\n\n${MODEL_VISIBLE_CONTEXT_FOOTER}`;
+    const packet = projectRunPipelineOrientation(state)!;
+    const last = packet.related.at(-1)!;
+    expect(last.code).toBe("x".repeat(300));
+    expect(JSON.stringify(packet)).not.toContain(MODEL_VISIBLE_CONTEXT_FOOTER);
+    expect(orientationAccountingOf(packet)!.items.at(-1)!.bodyCharacters).toBe(300);
   });
 });

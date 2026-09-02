@@ -46,9 +46,20 @@
  * that does not apply to an item class is `not_applicable`. A zero is a
  * measurement.
  *
+ * REPRESENTATION IS ROUTED AFTER ADMISSION (M205). Admission decides WHICH
+ * items are delivered, on the relationship-only packet, exactly as it did
+ * before any related entry could carry code; representation then decides WHAT
+ * each admitted item carries, in the same order, within the same ceiling. Both
+ * decisions are recorded: `compactAdmissionPacketTokens` is the packet as
+ * admission tested it, `admissionPacketTokens` is the packet as it stood when
+ * the item's representation was fixed, and `representationReason` says why the
+ * item carries what it carries. See orientationRepresentation.ts.
+ *
  * PURE. No I/O, no clock, no randomness. Identity is the item's canonical
  * `path::Symbol` plus its delivery ordinal, both deterministic.
  */
+
+import type { RepresentationReason } from "./orientationRepresentation";
 
 /**
  * M166's measured calibration for serialized tool-result JSON, 0.3174 tokens per
@@ -74,10 +85,24 @@ export interface OrientationItemAccounting {
   readonly slot: "focus" | "related";
   /**
    * What was delivered: the focus carries its authoritative `contentMode`
-   * (`focused_source`, `signature`, ...); a related entry carries a relationship
-   * claim and no code, which is its own representation class.
+   * (`focused_source`, `signature`, ...); a related entry carries the form of
+   * the code it delivers, or `relationship_only` when it delivers none — a
+   * relationship claim and a location, which is its own representation class.
+   * One rule for both slots: `representationClassOf` in orientationRepresentation.ts.
    */
   readonly representation: string;
+  /** Why the item carries this representation and not another. */
+  readonly representationReason: RepresentationReason;
+  /**
+   * The richest form the item's evidence supported, whether or not it was
+   * delivered: the focus's own form; a related entry's upstream form when its
+   * body is code-bearing; `not_applicable` when nothing richer than a
+   * relationship claim existed for it. Recorded for the supply measurement;
+   * appears in no packet.
+   */
+  readonly availableRepresentation: string | AccountingAbsence;
+  /** Characters the available form would deliver under its head bound; `not_applicable` when none. */
+  readonly availableCodeCharacters: number | AccountingAbsence;
   /** The route that admitted the item. The first proposer wins; never re-ranked. */
   readonly origin: OrientationItemOrigin;
   /** Every route that proposed this identity, in proposal order. Length > 1 is a deduplication. */
@@ -100,9 +125,21 @@ export interface OrientationItemAccounting {
   readonly codeDelivered: boolean;
   /** True when delivered code is a head-bounded prefix of the body. */
   readonly truncated: boolean;
-  /** The item's serialized cost WITHOUT its `tokens` field: what admission saw. */
+  /** The item's serialized cost WITHOUT its `tokens` field, in its delivered representation. */
   readonly estimatedTokens: number;
-  /** The whole evidence packet's tokens with this item as the last admitted: the value tested against the ceiling. */
+  /**
+   * The whole evidence packet's tokens as admission tested it: this item as the
+   * last admitted, every entry relationship-only. The figure the ceiling
+   * accepted before any representation was routed; never overwritten.
+   */
+  readonly compactAdmissionPacketTokens: number;
+  /**
+   * The whole evidence packet's tokens as it stood when this item's
+   * representation was fixed: earlier items in their delivered forms, this item
+   * in its delivered form, later items still relationship-only. Every value is
+   * within the ceiling, the sequence is non-decreasing, and the last equals the
+   * evidence packet.
+   */
   readonly admissionPacketTokens: number;
   /** Exact serialized characters of the delivered item, `tokens` field included. */
   readonly characters: number;

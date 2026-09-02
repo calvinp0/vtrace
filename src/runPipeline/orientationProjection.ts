@@ -86,6 +86,7 @@
  */
 
 import { semanticItemSupplyOf } from "../productContext/semanticItemSupply";
+import { MODEL_VISIBLE_CONTEXT_FOOTER } from "../productContext/types";
 import {
   ORIENTATION_TOKENS_PER_CHARACTER,
   orientationTokensOfCharacters,
@@ -98,6 +99,14 @@ import {
   type OrientationItemOrigin,
   type OrientationRejectedCandidate,
 } from "./orientationAccounting";
+import {
+  RELATED_CODE_CHARACTERS,
+  RELATIONSHIP_ONLY,
+  availableRepresentation,
+  headBound,
+  representationClassOf,
+  type RepresentationReason,
+} from "./orientationRepresentation";
 
 /**
  * The single global claim boundary. It appears on EVERY resolved packet, never
@@ -167,6 +176,12 @@ export const ORIENTATION_POLICY = Object.freeze({
   ceilingTokens: 2000,
   /** Head bound on the focus excerpt, in characters, cut on a line boundary. */
   focusCodeCharacters: 1800,
+  /**
+   * Head bound on a related entry's code, in characters, cut on the same line
+   * rule. Owned by orientationRepresentation.ts; stated here so the policy is
+   * one object.
+   */
+  relatedCodeCharacters: RELATED_CODE_CHARACTERS,
 });
 
 /**
@@ -246,6 +261,17 @@ export interface OrientationRelated {
   readonly lines: string | null;
   /** The authoritative relationship or role string, verbatim. Never strengthened. */
   readonly how: string;
+  /**
+   * The same three fields the focus carries, present TOGETHER or not at all
+   * (M205). Absent, the entry is relationship-only and serializes exactly as it
+   * did before any related entry could carry code. Present, `form` is the
+   * upstream content mode verbatim — interpretation-critical for the same
+   * reason as the focus's — and `code` is that form's body, head-bounded to
+   * `ORIENTATION_POLICY.relatedCodeCharacters` on a line boundary.
+   */
+  readonly form?: string;
+  readonly code?: string;
+  readonly codeTruncated?: boolean;
   /** This item's own serialized cost in the packet, including this field. */
   readonly tokens: number;
 }
@@ -276,7 +302,13 @@ const text = (value: unknown): string => (value === null || value === undefined 
 function parseRenderedBodies(rendered: string): ReadonlyMap<string, string> {
   const bodies = new Map<string, string>();
   if (rendered === "") return bodies;
-  for (const section of rendered.split(/\n## /).slice(1)) {
+  // The rendering closes with one framing line after the last item. It is not
+  // part of any body: left in place it became the tail of the last item's code
+  // (M205 found it inside a delivered skeleton), a line no source contains.
+  const footerAt = rendered.lastIndexOf(`\n${MODEL_VISIBLE_CONTEXT_FOOTER}`);
+  const withoutFooter = footerAt >= 0 && rendered.slice(footerAt + 1 + MODEL_VISIBLE_CONTEXT_FOOTER.length).trim() === ""
+    ? rendered.slice(0, footerAt) : rendered;
+  for (const section of withoutFooter.split(/\n## /).slice(1)) {
     const idMatch = /^\[([^\]]+)\]/.exec(section);
     if (idMatch === null) continue;
     const lines = section.split("\n");
@@ -286,15 +318,6 @@ function parseRenderedBodies(rendered: string): ReadonlyMap<string, string> {
     bodies.set(idMatch[1]!, lines.slice(cursor).join("\n").trim());
   }
   return bodies;
-}
-
-/** Head-bound a body on a line boundary, so a truncated excerpt is never a half line. */
-function headBound(body: string, limit: number): { readonly cut: string; readonly truncated: boolean } {
-  if (body.length <= limit) return { cut: body, truncated: false };
-  const slice = body.slice(0, limit);
-  const lastNewline = slice.lastIndexOf("\n");
-  const chosen = lastNewline > limit * 0.4 ? slice.slice(0, lastNewline) : slice;
-  return { cut: chosen.trimEnd(), truncated: true };
 }
 
 /** The focus and related shapes as they stand at admission: every field but `tokens`. */
@@ -448,6 +471,9 @@ export function projectRunPipelineOrientation(output: unknown): OrientationPacke
     readonly sourceId: string | AccountingAbsence;
     readonly upstreamEstimatedTokens: number | AccountingAbsence;
     readonly bodyCharacters: number | AccountingAbsence;
+    /** The upstream content mode and rendered body, read by representation routing only. */
+    readonly form: string;
+    readonly body: string;
   }
   const candidates: Candidate[] = [];
   let droppedNoClaim = 0;
@@ -471,6 +497,8 @@ export function projectRunPipelineOrientation(output: unknown): OrientationPacke
       sourceId: item.id === "" ? "unavailable" : item.id,
       upstreamEstimatedTokens: item.upstreamEstimatedTokens,
       bodyCharacters: item.body.length,
+      form: item.contentMode,
+      body: item.body,
     });
   }
   for (const neighborhood of asArray(output.pivotNeighborhood)) {
@@ -489,6 +517,8 @@ export function projectRunPipelineOrientation(output: unknown): OrientationPacke
           // its size survives as `textCharacters` when the envelope recorded it.
           bodyCharacters: typeof excerpt.text === "string"
             ? excerpt.text.length : absent(excerpt.textCharacters, "unavailable"),
+          form: "",
+          body: "",
         },
       );
     }
@@ -523,11 +553,53 @@ export function projectRunPipelineOrientation(output: unknown): OrientationPacke
     admitted.push(candidate);
     admissionPacketTokens.push(packetTokens);
   }
-  const evidencePacket = assemble(focus, related, notes);
+
+  // Representation (M205): WHAT each admitted entry carries, decided after and
+  // never instead of WHICH entries are admitted. The set and order above are
+  // exactly the pre-M205 set and order — admission tested relationship-only
+  // entries, so a tighter budget still delivers a prefix of a looser one's
+  // items — and this pass walks that set in the same authoritative order,
+  // offering each entry its upstream form, head-bounded, and keeping it only
+  // when the packet with it stays within the caller's ceiling. Later entries
+  // are still relationship-only when an earlier one is tested, so the test is
+  // conservative: an upgrade can never evict an item the ceiling admitted.
+  // The first entry in rank order is offered richness first; nothing here
+  // re-ranks, re-derives a body, or cuts one further than the declared bound.
+  const compactAdmissionPacketTokens = [...admissionPacketTokens];
+  const delivered: EvidenceRelated[] = [...related];
+  const representationRouting: {
+    readonly reason: RepresentationReason;
+    readonly availableRepresentation: string | AccountingAbsence;
+    readonly availableCodeCharacters: number | AccountingAbsence;
+  }[] = [];
+  for (const [index, candidate] of admitted.entries()) {
+    const availability = availableRepresentation({
+      origin: candidate.origin, form: candidate.form, body: candidate.body,
+      bound: ORIENTATION_POLICY.relatedCodeCharacters,
+    });
+    if (availability.available === false) {
+      representationRouting.push({ reason: availability.reason, availableRepresentation: "not_applicable", availableCodeCharacters: "not_applicable" });
+      admissionPacketTokens[index + 1] = orientationTokens(assemble(focus, delivered, notes));
+      continue;
+    }
+    const { form, code, truncated } = availability.candidate;
+    const rich: EvidenceRelated = Object.freeze({ ...candidate.entry, form, code, codeTruncated: truncated });
+    const trial = delivered.map((entry, k) => (k === index ? rich : entry));
+    const trialTokens = orientationTokens(assemble(focus, trial, notes));
+    if (trialTokens <= ceilingTokens) {
+      delivered[index] = rich;
+      representationRouting.push({ reason: "upstream_form_delivered", availableRepresentation: form, availableCodeCharacters: code.length });
+      admissionPacketTokens[index + 1] = trialTokens;
+    } else {
+      representationRouting.push({ reason: "ceiling", availableRepresentation: form, availableCodeCharacters: code.length });
+      admissionPacketTokens[index + 1] = orientationTokens(assemble(focus, delivered, notes));
+    }
+  }
+  const evidencePacket = assemble(focus, delivered, notes);
 
   // Delivery: the same items, in the same order, each now stating its own cost.
   const accountedFocus = withItemTokens(focus);
-  const accountedRelated = related.map((entry) => withItemTokens(entry));
+  const accountedRelated = delivered.map((entry) => withItemTokens(entry));
   const packet = assemble(accountedFocus, accountedRelated, notes);
 
   publishOrientationAccounting(packet, ledgerFor({
@@ -540,8 +612,8 @@ export function projectRunPipelineOrientation(output: unknown): OrientationPacke
       upstreamEstimatedTokens: focusItem.upstreamEstimatedTokens,
       bodyCharacters: focusItem.body.length,
     },
-    admitted: admitted.map((c) => ({ ...c, origins: proposals.get(c.entry.at) ?? [c.origin] })),
-    admissionPacketTokens, rejected,
+    admitted: admitted.map((c, k) => ({ ...c, origins: proposals.get(c.entry.at) ?? [c.origin], routing: representationRouting[k]! })),
+    admissionPacketTokens, compactAdmissionPacketTokens, rejected,
     proposed: [...proposals.values()].reduce((n, list) => n + list.length, 0),
     deduplicated: [...proposals.values()].reduce((n, list) => n + list.length - 1, 0),
     droppedNoClaim,
@@ -576,8 +648,14 @@ function ledgerFor(input: {
     readonly sourceId: string | AccountingAbsence;
     readonly upstreamEstimatedTokens: number | AccountingAbsence;
     readonly bodyCharacters: number | AccountingAbsence;
+    readonly routing: {
+      readonly reason: RepresentationReason;
+      readonly availableRepresentation: string | AccountingAbsence;
+      readonly availableCodeCharacters: number | AccountingAbsence;
+    };
   }[];
   readonly admissionPacketTokens: readonly number[];
+  readonly compactAdmissionPacketTokens: readonly number[];
   readonly rejected: readonly OrientationRejectedCandidate[];
   readonly proposed: number;
   readonly deduplicated: number;
@@ -601,7 +679,10 @@ function ledgerFor(input: {
   const { tokens: focusTokens, ...focusEvidence } = focus;
   push({
     at: focus.at, ordinal: 0, slot: "focus",
-    representation: focus.form ?? "unlabelled",
+    representation: representationClassOf(focus, "focus"),
+    representationReason: "focus_slot",
+    availableRepresentation: representationClassOf(focus, "focus"),
+    availableCodeCharacters: focus.code?.length ?? 0,
     origin: input.focusProvenance.origin, origins: Object.freeze([...input.focusProvenance.origins]),
     sourceId: input.focusProvenance.sourceId,
     reason: focus.why ?? "", reasonSource: input.focusProvenance.reasonSource,
@@ -611,6 +692,7 @@ function ledgerFor(input: {
     codeDelivered: focus.code !== null,
     truncated: focus.codeTruncated,
     estimatedTokens: orientationTokensOfCharacters(JSON.stringify(focusEvidence).length),
+    compactAdmissionPacketTokens: input.compactAdmissionPacketTokens[0]!,
     admissionPacketTokens: input.admissionPacketTokens[0]!,
     characters: JSON.stringify(focus).length,
     actualTokens: focusTokens,
@@ -618,18 +700,23 @@ function ledgerFor(input: {
   for (const [index, entry] of related.entries()) {
     const provenance = input.admitted[index]!;
     const { tokens, ...evidence } = entry;
+    const representation = representationClassOf(entry, "related");
     push({
       at: entry.at, ordinal: index + 1, slot: "related",
-      representation: "relationship_only",
+      representation,
+      representationReason: provenance.routing.reason,
+      availableRepresentation: provenance.routing.availableRepresentation,
+      availableCodeCharacters: provenance.routing.availableCodeCharacters,
       origin: provenance.origin, origins: Object.freeze([...provenance.origins]),
       sourceId: provenance.sourceId,
       reason: entry.how, reasonSource: provenance.reasonSource,
       upstreamEstimatedTokens: provenance.upstreamEstimatedTokens,
       bodyCharacters: provenance.bodyCharacters,
-      deliveredCodeCharacters: 0,
-      codeDelivered: false,
-      truncated: false,
+      deliveredCodeCharacters: representation === RELATIONSHIP_ONLY ? 0 : entry.code!.length,
+      codeDelivered: representation !== RELATIONSHIP_ONLY,
+      truncated: entry.codeTruncated === true,
       estimatedTokens: orientationTokensOfCharacters(JSON.stringify(evidence).length),
+      compactAdmissionPacketTokens: input.compactAdmissionPacketTokens[index + 1]!,
       admissionPacketTokens: input.admissionPacketTokens[index + 1]!,
       characters: JSON.stringify(entry).length,
       actualTokens: tokens,

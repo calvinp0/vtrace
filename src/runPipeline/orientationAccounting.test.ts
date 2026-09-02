@@ -214,10 +214,30 @@ describe("representation truth", () => {
     expect(focus.representation).toBe("focused_source");
   });
 
-  test("a related entry delivers no code and says so", () => {
-    const ledger = orientationAccountingOf(projectRunPipelineOrientation(authoritative(2))!)!;
+  test("a related entry that carries its upstream body is accounted at the code it delivers", () => {
+    // M205: a code-bearing upstream form is delivered when the ceiling allows.
+    const packet = projectRunPipelineOrientation(authoritative(2))!;
+    const ledger = orientationAccountingOf(packet)!;
     const related = ledger.items[1]!;
+    expect(packet.related[0]!.code).toBe("x".repeat(300));
+    expect(related.representation).toBe("focused_source");
+    expect(related.representationReason).toBe("upstream_form_delivered");
+    expect(related.codeDelivered).toBe(true);
+    expect(related.deliveredCodeCharacters).toBe(300);
+    expect(related.bodyCharacters).toBe(300);
+    expect(related.actualTokens).toBe(serializedTokens(packet.related[0]!));
+  });
+
+  test("a related entry whose body is not source delivers no code and says so", () => {
+    const state = authoritative(2);
+    const items = (state.productContext as Record_).items as Record_[];
+    items[1]!.contentMode = "summary";
+    const packet = projectRunPipelineOrientation(state)!;
+    const ledger = orientationAccountingOf(packet)!;
+    const related = ledger.items[1]!;
+    expect("code" in packet.related[0]!).toBe(false);
     expect(related.representation).toBe("relationship_only");
+    expect(related.representationReason).toBe("form_not_code_bearing");
     expect(related.codeDelivered).toBe(false);
     expect(related.deliveredCodeCharacters).toBe(0);
     expect(related.bodyCharacters).toBe(300);

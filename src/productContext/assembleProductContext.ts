@@ -35,6 +35,7 @@ import {
   type ProductContextItem,
   type ProductContextResponse,
   type ProductContextRole,
+  MODEL_VISIBLE_CONTEXT_FOOTER,
 } from "./types";
 
 export const PRODUCT_CONTEXT_BASELINE =
@@ -430,7 +431,7 @@ function sourceDraft(db: Database, item: CapsuleV2ProductItem, roles: ProductCon
   };
 }
 
-function renderStructuralSkeleton(db: Database, filePath: string, symbol: SymbolRecord | undefined): { content?: string; fallback: string } {
+export function renderStructuralSkeleton(db: Database, filePath: string, symbol: SymbolRecord | undefined): { content?: string; fallback: string } {
   if (!symbol) return { fallback: "metadata_only" };
   const file = getIndexedSkeletonFileResult(db, filePath, "detailed");
   if (!file || file.status !== "ok") return symbol.signature ? { content: symbol.signature, fallback: "signature_only" } : { fallback: "metadata_only" };
@@ -690,7 +691,7 @@ function renderModelVisibleContext(task: string, worktreeId: string, intent: str
     for (const reason of item.selectionReasons) lines.push(`why: ${reason}`);
     if (item.content) lines.push("", item.content);
   }
-  lines.push("", "Impact entries above are bounded static structural evidence; they are not dynamic execution flow.");
+  lines.push("", MODEL_VISIBLE_CONTEXT_FOOTER);
   return lines.join("\n");
 }
 

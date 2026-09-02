@@ -1,5 +1,13 @@
 export const PRODUCT_CONTEXT_RESPONSE_VERSION = 2 as const;
 
+/**
+ * The closing line of every rendered `modelVisibleContext`. One authority, because the
+ * orientation projector must recognise it as framing and never as the tail of the last
+ * item's body.
+ */
+export const MODEL_VISIBLE_CONTEXT_FOOTER =
+  "Impact entries above are bounded static structural evidence; they are not dynamic execution flow.";
+
 export const PRODUCT_CONTEXT_ROLES = [
   "pivot",
   "required",
