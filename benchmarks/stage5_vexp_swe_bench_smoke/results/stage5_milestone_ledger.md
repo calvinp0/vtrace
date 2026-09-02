@@ -8846,3 +8846,156 @@ evidence          results/stage5_m202_final_report.md and the
   threshold is met at 10/15; A11-A15 remain BELOW and are not authorised by
   this milestone. `CONTEXT_COMPILER_PRODUCT_UTILITY_NOT_ESTABLISHED` still
   governs.
+
+## M203 — frozen A14 per-item context accounting (PASS)
+
+```
+milestone         M203
+verdict           PASS
+parity            A14_PARITY_CLOSED
+spend             0 live-agent runs, $0, 0 VEXP processes
+scope             A14 only. Give every item the default get_code_context
+                  response delivers truthful, deterministic, machine-readable
+                  accounting, without changing selection, order, content,
+                  budget policy or retrieval. No work on A11, A12, A13, A15.
+
+result            VTRACE_VEXP_ENGINE_PARITY_THRESHOLD_MET
+                  MATCH 6  EXCEED 5  BELOW 4   match-or-exceed 11/15 (threshold 10)
+                  A8 minimum coverage 100% (veto 99%); structural violations 0
+                  determinism stable; invented structural claims 0
+                  frozen controls: F1-F5, F7, F8 pass; F6 FAILS by construction —
+                  the committed control conjoins `a14PerItem === 0`, which
+                  encodes the M197A observation and cannot hold once A14 is
+                  MATCHES. Not modified. The F6 RULE (m197aScoring
+                  .satisfiedByDefaultOutput) passes on the M203 field.
+
+changed           A14  BELOW -> MATCHES   (the target; 0/1002 -> 1002/1002)
+protected         A1 MATCHES, A2 EXCEEDS, A3 MATCHES, A4 EXCEEDS, A5 MATCHES,
+                  A6 EXCEEDS, A7 EXCEEDS, A8 EXCEEDS, A9 MATCHES, A10 MATCHES
+                  — none moved
+untouched         A11, A12, A13, A15 all BELOW. A11 utilisation medians moved
+                  39.4/32.97/16.48/8.95/7.2 -> 40.55/34.05/17.02/9.34/7.54 %
+                  because the packets carry the new field; still BELOW, and
+                  not a policy change. A12 still 2 classes; A15 impact surface
+                  still 0%.
+
+frozen A14        VEXP V-C3 "per-symbol token_reduction_pct is reported for
+                  each skeleton". Unit: the focus slot plus every `related`
+                  entry of the DEFAULT get_code_context response, over C-MED's
+                  20 A13 tasks x 5 budgets (1 + related.length per response).
+                  Predicate: tokens | tokenReductionPercent | rawTokens |
+                  savedTokens !== undefined. Committed scorer: MATCHES when the
+                  numerator > 0; EXCEEDS unreachable. Model-facing by
+                  construction (F6). Pre-change: 0/1002 (M202 committed engine,
+                  and a paired reproduction on a worktree at bf270108 against
+                  the identical corpus copy). Post: 1002/1002 (reproduction,
+                  and the unmodified frozen engine).
+
+architecture      src/runPipeline/orientationAccounting.ts owns the contract
+                  and the token rule (chars x 0.3174, nearest — the ceiling's
+                  own rule). Model-facing: one integer per item, `tokens`, the
+                  item's own serialized cost including the field (fixed
+                  point). Machine-facing: the ledger, published out-of-band on
+                  the packet object (M180 pattern, orientationAccountingOf,
+                  zero bytes) — identity + ordinal, representation, admitting
+                  origin and every proposing origin, verbatim reason and its
+                  source, admission-time cost beside delivered cost, the packet
+                  the ceiling saw, chars/tokens with running totals, wrapper
+                  and accounting overhead, candidate arithmetic (admitted +
+                  deduplicated + no-claim + rejected + not-reached =
+                  proposed), and the upstream chars/4 evidence budget verbatim.
+                  Absent facts are "unavailable" / "not_applicable", never 0.
+                  The ceiling is tested on the evidence packet exactly as
+                  before; the fields ride above it by the reported overhead
+                  (median 35, max 81 tokens on C-MED). Nothing in the ledger
+                  is read by any decision.
+
+coverage          C-MED: FOCUS:focused_source 100/100, RELATIONSHIP_ONLY
+                  902/902. C-LARGE 152/152 incl. FOCUS:signature 1/1. C-SMALL
+                  23/33: ten responses are declines (no packet); the frozen
+                  `1 +` rule counts a focus slot on them. Stated, not
+                  normalised; the scored corpus has no declines.
+
+reconciliation    100/100 C-MED packets: characters exact (items + wrapper =
+                  packet), tokens within ceil((n+2)/2), evidence within the
+                  ceiling, 0 ceiling-bound. 1177 ledger rows (1002 C-MED).
+                  Upstream `remainingTokens` is "unavailable" at max_tokens
+                  <= 2000 because the response envelope compacts the
+                  accounting block there — reported as unavailable.
+
+equivalence       15/15 frozen queries on the M201 snapshot: selection, order,
+                  item count and bytes-with-tokens-removed equal the M201 base
+                  capture; delivered bytes differ on 15/15 by the field alone.
+                  The frozen M201 instrument therefore reports
+                  M201_OUTPUT_DIFFERS (semantic 0/15), which is the A14 field
+                  and nothing else. On the 100 A14 results the predecessor
+                  projector's packet equals the current one minus tokens on
+                  100/100.
+
+falsification     M203 F1-F12 all pass (missing record, wrong cost, duplicate,
+                  unstable identity, wrong objective, truncated cost, zero
+                  items, unused budget, exhausted budget, output equivalence,
+                  expensive path fails A5, detached denominator).
+
+determinism       100 responses x 3 repeats: packets and ledgers stable. One
+                  earlier post run, taken while the full test suite and the
+                  pre-change run shared the machine, had 1/100 keys unstable
+                  (logic-flow task @4000); eight isolated repeats on both trees
+                  were identical and the rerun was 0/100. Not reproduced, not
+                  explained; recorded.
+
+cost              projector median 0.06 -> 0.10 ms (+0.04 ms; +0.09 ms p90);
+                  analyzer 0.04 ms; ledger median 4.95 KB serialized, WeakMap
+                  retention only, no DB table, no schema change. Frozen A5 p90
+                  42.5 / 200.9 / 340.1 ms (M202 45.5 / 207.6 / 349.8), MATCHES.
+                  Tool schema tokens unchanged at 5521.
+
+corpus identity   C-MED is this repository's src/. M203 added two files under
+                  src/runPipeline, so the frozen count 500 no longer described
+                  the corpus and the authority replay reported
+                  M197A_AUTHORITY_MISMATCH on corpus_C-MED alone (kept as
+                  stage5_m203_authority.json). Re-frozen at 502 in
+                  run_stage5_m197a_authority.ts and m197aFixtures.ts with the
+                  reason beside it; nothing else in a frozen instrument moved.
+
+commits           424346c3  per-item tokens + ledger (product + unit tests)
+                  (instruments, evidence, frozen rerun and this row follow)
+
+evidence          results/stage5_m203_final_report.{md,json} and the
+                  stage5_m203_*.{json,jsonl} artefacts beside it;
+                  stage5_m201_a5_m203_post.json.
+```
+
+## M203 standing findings
+
+- **The frozen scorer's F6 control cannot pass once A14 passes.** Its third
+  conjunct is `a14PerItem === 0`, an observation of the M197A state written
+  into a control. The report script therefore exits 1 on the very run that
+  closes A14 while its claim ledger reads 11/15 and THRESHOLD_MET. It was left
+  as committed. A later milestone that wants a clean exit code must amend the
+  control with a recorded reason, the way the corpus count is re-frozen, not
+  quietly.
+
+- **The ceiling now bounds evidence, and the overhead is the price of saying
+  so.** Charging the `tokens` fields inside admission would have evicted
+  evidence in ceiling-bound packets to make room for their own description;
+  none of the 100 C-MED packets was ceiling-bound, so the choice cost nothing
+  here, but it is a choice and it is recorded in the ledger
+  (`ceilingAppliesTo: evidence_packet`, `accountingOverhead`).
+
+- **The upstream budget is only partly visible at tight budgets.** At
+  max_tokens <= 2000 the response envelope compacts the accounting block
+  before the projector runs, so `remainingTokens` is "unavailable" there. A11
+  work that wants the upstream figure at every budget has to read it before
+  compaction or accept the absence.
+
+- **C-SMALL declines are counted as slots by the frozen rule.** `1 +
+  related.length` credits a focus slot to a declined response that has no
+  focus. It does not touch the scored corpus, but it is why C-SMALL reads
+  23/33 rather than 23/23.
+
+- **Next-step recommendation.** None issued for A14. A11 and A13 can now be
+  reasoned about from per-item evidence (which item consumed what, what was
+  rejected, what the upstream budget left unused) without a second
+  instrumentation pass; nothing here authorises changing them.
+  `CONTEXT_COMPILER_PRODUCT_UTILITY_NOT_ESTABLISHED` still governs.

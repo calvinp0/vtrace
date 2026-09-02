@@ -1,0 +1,1067 @@
+{
+  "milestone": "M203",
+  "instrument": "run_stage5_m203_report.ts",
+  "verdicts": {
+    "a14": "A14_PARITY_CLOSED",
+    "frozenA14Verdict": "VTRACE_MATCHES_VEXP_CLAIM",
+    "frozenAggregate": "VTRACE_VEXP_ENGINE_PARITY_THRESHOLD_MET",
+    "matchOrExceed": 11,
+    "regressions": [],
+    "falsification": "M203_FALSIFICATION_CONTROLS_PASS",
+    "equivalence": "M203_EVIDENCE_EQUIVALENT",
+    "integrity": "ACCOUNTING_INTEGRITY_PASS",
+    "determinism": true
+  },
+  "authority": {
+    "preRefreeze": {
+      "verdict": "M197A_AUTHORITY_MISMATCH",
+      "failedChecks": [
+        "corpus_C-MED"
+      ],
+      "cmedFiles": 502,
+      "cmedExpected": 500
+    },
+    "postRefreeze": {
+      "verdict": "M197A_AUTHORITY_VERIFIED",
+      "cmedFiles": 502,
+      "cmedExpected": 502
+    },
+    "unchanged": [
+      "claim wording",
+      "thresholds",
+      "scorers",
+      "corpus root and extensions",
+      "query corpus",
+      "tokenizer",
+      "budgets"
+    ],
+    "changed": [
+      "C-MED self-referential identity count 500 -> 502 (two files under src/runPipeline)"
+    ]
+  },
+  "frozenA14": {
+    "claim": "per-symbol token_reduction_pct is reported for each skeleton",
+    "source": "V-C3, vexp-cli/mcp/mcp-server.cjs",
+    "matchThreshold": "present per item and internally consistent",
+    "exceedThreshold": "plus an accumulated ledger",
+    "scorerRule": "verdict = itemsWithPerItemAccounting > 0 ? MATCHES : BELOW; EXCEEDS is not reachable",
+    "unit": "focus slot + each related entry of the DEFAULT get_code_context response (1 + related.length per response)",
+    "predicate": "tokens | tokenReductionPercent | rawTokens | savedTokens !== undefined on the item",
+    "corpus": "C-MED, 20 A13 tasks x 5 budgets = 100 responses",
+    "modelFacing": true,
+    "committedM202": {
+      "defaultVsDebug": {
+        "accountingInDefaultResponse": false,
+        "accountingInDebugResponse": true,
+        "reductionFieldInDefaultResponse": false,
+        "reductionFieldInDebugResponse": true,
+        "defaultResponseTopLevelKeys": [
+          "schemaVersion",
+          "focus",
+          "related",
+          "boundary"
+        ],
+        "debugResponseTopLevelKeys": [
+          "schemaVersion",
+          "request",
+          "capsuleResult",
+          "authoritativeCapsuleManifestId",
+          "pivotNeighborhood",
+          "inspectFirst",
+          "capsule",
+          "runtime",
+          "intent",
+          "taskSummary",
+          "context",
+          "impact",
+          "flow",
+          "memory",
+          "rules",
+          "diagnostics",
+          "deferred",
+          "productContext",
+          "workspaceRouting",
+          "savedObservation",
+          "accounting",
+          "responseBudget"
+        ],
+        "defaultResponseTokens": 693,
+        "debugResponseTokens": 5852
+      },
+      "skeletonAccounting": {
+        "file": "access/indexAccessLifecycle.test.ts",
+        "perCallAccounting": {
+          "latencyMs": 3.805969000000914,
+          "estimatedOutputTokens": 421,
+          "estimatedNaiveFullFileTokens": 4469,
+          "estimatedTokensSavedVsNaiveFullFile": 4048,
+          "estimatedSavingsPercentVsNaiveFullFile": 90.58,
+          "uniqueFilesCounted": 1,
+          "method": "chars_div_4",
+          "baseline": "full contents of unique files represented in emitted context items"
+        },
+        "perItemAccounting": 0,
+        "declarations": 7,
+        "productReportedSavingsPercent": 90.58,
+        "independentRenderedReductionPercent": 96.64,
+        "authoritiesDisagreeByPoints": 6.06
+      },
+      "itemsWithPerItemAccounting": 0,
+      "itemsDelivered": 1002
+    },
+    "committedM203": {
+      "defaultVsDebug": {
+        "accountingInDefaultResponse": false,
+        "accountingInDebugResponse": true,
+        "reductionFieldInDefaultResponse": false,
+        "reductionFieldInDebugResponse": true,
+        "defaultResponseTopLevelKeys": [
+          "schemaVersion",
+          "focus",
+          "related",
+          "boundary"
+        ],
+        "debugResponseTopLevelKeys": [
+          "schemaVersion",
+          "request",
+          "capsuleResult",
+          "authoritativeCapsuleManifestId",
+          "pivotNeighborhood",
+          "inspectFirst",
+          "capsule",
+          "runtime",
+          "intent",
+          "taskSummary",
+          "context",
+          "impact",
+          "flow",
+          "memory",
+          "rules",
+          "diagnostics",
+          "deferred",
+          "productContext",
+          "workspaceRouting",
+          "savedObservation",
+          "accounting",
+          "responseBudget"
+        ],
+        "defaultResponseTokens": 711,
+        "debugResponseTokens": 5853
+      },
+      "skeletonAccounting": {
+        "file": "access/indexAccessLifecycle.test.ts",
+        "perCallAccounting": {
+          "latencyMs": 3.431508000001486,
+          "estimatedOutputTokens": 421,
+          "estimatedNaiveFullFileTokens": 4469,
+          "estimatedTokensSavedVsNaiveFullFile": 4048,
+          "estimatedSavingsPercentVsNaiveFullFile": 90.58,
+          "uniqueFilesCounted": 1,
+          "method": "chars_div_4",
+          "baseline": "full contents of unique files represented in emitted context items"
+        },
+        "perItemAccounting": 0,
+        "declarations": 7,
+        "productReportedSavingsPercent": 90.58,
+        "independentRenderedReductionPercent": 96.64,
+        "authoritiesDisagreeByPoints": 6.06
+      },
+      "itemsWithPerItemAccounting": 1002,
+      "itemsDelivered": 1002
+    },
+    "reproductionPre": {
+      "product": {
+        "root": "/home/calvin/bench/vtrace-m203/pre",
+        "head": "bf270108206c741a7c4e6a49d705ee7d9e2a88a8",
+        "accountingModulePresent": false
+      },
+      "itemsDelivered": 1002,
+      "itemsWithPerItemAccounting": 0,
+      "coveragePercent": 0,
+      "frozenVerdict": "VTRACE_BELOW_VEXP_CLAIM"
+    },
+    "reproductionPost": {
+      "product": {
+        "root": "/home/calvin/code/vtrace",
+        "head": "bf270108206c741a7c4e6a49d705ee7d9e2a88a8",
+        "accountingModulePresent": true
+      },
+      "itemsDelivered": 1002,
+      "itemsWithPerItemAccounting": 1002,
+      "coveragePercent": 100,
+      "frozenVerdict": "VTRACE_MATCHES_VEXP_CLAIM"
+    },
+    "frozenF6Control": {
+      "pass": false,
+      "statement": "a debug-only field must not satisfy a default-output claim",
+      "note": "the committed control conjoins `a14PerItem === 0`, which encodes the M197A observation; it cannot pass once A14 is MATCHES, and was not modified"
+    }
+  },
+  "pipeline": [
+    {
+      "stage": "candidate creation",
+      "file": "src/capsuleV2/buildCapsuleV2.ts",
+      "symbols": [
+        "buildCapsuleV2"
+      ]
+    },
+    {
+      "stage": "candidate scoring / ranking",
+      "file": "src/capsuleV2/pivotRankingV2.ts",
+      "symbols": [
+        "scorePivot",
+        "comparePivotScoreDesc"
+      ]
+    },
+    {
+      "stage": "capsule budget allocation (tiers, chars/4)",
+      "file": "src/capsuleV2/budgetAllocator.ts",
+      "symbols": [
+        "allocateBudget"
+      ]
+    },
+    {
+      "stage": "objective attribution (selection reasons, roles)",
+      "file": "src/productContext/assembleProductContext.ts",
+      "symbols": [
+        "assembleProductContext",
+        "selectionReasons"
+      ]
+    },
+    {
+      "stage": "deduplication of authoritative items",
+      "file": "src/productContext/assembleProductContext.ts",
+      "symbols": [
+        "deduplicateDrafts"
+      ]
+    },
+    {
+      "stage": "estimated cost of an item (chars/4, renderItem text)",
+      "file": "src/productContext/assembleProductContext.ts",
+      "symbols": [
+        "estimateTokens(renderItem(draft))"
+      ]
+    },
+    {
+      "stage": "evidence budget: representation downgrade / drop, supply publication",
+      "file": "src/productContext/budgetDelivery.ts",
+      "symbols": [
+        "applyProgressiveContextBudget",
+        "publishSemanticItemSupply",
+        "materialize",
+        "compactReasons"
+      ]
+    },
+    {
+      "stage": "authoritative supply (object-keyed, zero bytes)",
+      "file": "src/productContext/semanticItemSupply.ts",
+      "symbols": [
+        "publishSemanticItemSupply",
+        "semanticItemSupplyOf",
+        "estimatedTokens"
+      ]
+    },
+    {
+      "stage": "complete-response envelope (metadata compaction, neighbourhood text stripping)",
+      "file": "src/mcp/responseEnvelope.ts",
+      "symbols": [
+        "compactProductResponse",
+        "textCharacters"
+      ]
+    },
+    {
+      "stage": "projection: focus/related selection, admission prefix, ceiling test",
+      "file": "src/runPipeline/orientationProjection.ts",
+      "symbols": [
+        "projectRunPipelineOrientation",
+        "headBound",
+        "ORIENTATION_POLICY",
+        "orientationTokens"
+      ]
+    },
+    {
+      "stage": "delivery: tokens attached, ledger built and published",
+      "file": "src/runPipeline/orientationProjection.ts",
+      "symbols": [
+        "withItemTokens",
+        "ledgerFor",
+        "publishOrientationAccounting"
+      ]
+    },
+    {
+      "stage": "accounting contract and token rule",
+      "file": "src/runPipeline/orientationAccounting.ts",
+      "symbols": [
+        "OrientationAccounting",
+        "OrientationItemAccounting",
+        "ORIENTATION_TOKENS_PER_CHARACTER",
+        "orientationAccountingOf"
+      ]
+    },
+    {
+      "stage": "tool boundary: default detail returns the packet",
+      "file": "src/mcp/tools.ts",
+      "symbols": [
+        "projectRunPipelineOrientation(authoritativeResult)",
+        "tokens: integerProperty"
+      ]
+    }
+  ],
+  "contract": {
+    "modelFacing": {
+      "field": "tokens",
+      "where": "every focus and related item of the orientation packet",
+      "meaning": "the item's own serialized cost, packet token rule (chars x 0.3174, nearest), including the field (fixed point)"
+    },
+    "machineFacing": {
+      "access": "orientationAccountingOf(packet)",
+      "keyed": "WeakMap on the packet object (M180 pattern), zero serialized bytes",
+      "perItem": [
+        "at",
+        "ordinal",
+        "slot",
+        "representation",
+        "origin",
+        "origins",
+        "sourceId",
+        "reason",
+        "reasonSource",
+        "upstreamEstimatedTokens",
+        "bodyCharacters",
+        "deliveredCodeCharacters",
+        "codeDelivered",
+        "truncated",
+        "estimatedTokens",
+        "admissionPacketTokens",
+        "characters",
+        "actualTokens",
+        "cumulativeCharacters",
+        "cumulativeTokens"
+      ],
+      "perPacket": [
+        "tokenRule",
+        "ceilingTokens",
+        "ceilingAppliesTo",
+        "evidence",
+        "packet",
+        "accountingOverhead",
+        "wrapper",
+        "reconciliation",
+        "candidates",
+        "evidenceBudget",
+        "items"
+      ],
+      "absence": "\"unavailable\" (not observable by the projector) | \"not_applicable\" (does not apply to the item class); 0 is always a measurement"
+    },
+    "costAuthority": {
+      "estimatedTokens": "item serialized WITHOUT tokens, as the ceiling test saw it",
+      "actualTokens": "item serialized WITH tokens (== model-facing field)",
+      "packetRule": "characters x 0.3174032272551657, rounded to nearest (M166 calibration; the ceiling's own rule)",
+      "upstream": "chars/4 estimates from the evidence budget carried verbatim under their own label, never converted",
+      "wrapper": "packet characters - sum(item characters): schemaVersion, boundary, notes, keys, punctuation",
+      "reconciliation": "characters exact; tokens within ceil((items+2)/2) of rounding"
+    },
+    "ceiling": "tested on the evidence packet (items without tokens) exactly as before; the accounting fields ride above it by the reported accountingOverhead; admission unchanged"
+  },
+  "representationCoverage": {
+    "FOCUS:focused_source": {
+      "eligible": 100,
+      "accounted": 100
+    },
+    "RELATIONSHIP_ONLY": {
+      "eligible": 902,
+      "accounted": 902
+    }
+  },
+  "otherCorpora": [
+    {
+      "id": "C-SMALL",
+      "a14": {
+        "itemsDelivered": 33,
+        "itemsWithPerItemAccounting": 23,
+        "coveragePercent": 69.7,
+        "frozenVerdict": "VTRACE_MATCHES_VEXP_CLAIM"
+      },
+      "classes": {
+        "FOCUS:focused_source": {
+          "eligible": 5,
+          "accounted": 5
+        },
+        "RELATIONSHIP_ONLY": {
+          "eligible": 18,
+          "accounted": 18
+        }
+      },
+      "integrity": "ACCOUNTING_INTEGRITY_PASS",
+      "determinism": true
+    },
+    {
+      "id": "C-LARGE",
+      "a14": {
+        "itemsDelivered": 152,
+        "itemsWithPerItemAccounting": 152,
+        "coveragePercent": 100,
+        "frozenVerdict": "VTRACE_MATCHES_VEXP_CLAIM"
+      },
+      "classes": {
+        "FOCUS:focused_source": {
+          "eligible": 14,
+          "accounted": 14
+        },
+        "RELATIONSHIP_ONLY": {
+          "eligible": 137,
+          "accounted": 137
+        },
+        "FOCUS:signature": {
+          "eligible": 1,
+          "accounted": 1
+        }
+      },
+      "integrity": "ACCOUNTING_INTEGRITY_PASS",
+      "determinism": true
+    }
+  ],
+  "reconciliation": {
+    "byBudget": [
+      {
+        "requestedTokens": 1000,
+        "responses": 20,
+        "eligibleItems": 74,
+        "accountedItems": 74,
+        "medianItemTokens": 438,
+        "medianWrapperTokens": 76,
+        "medianPacketTokens": 513.5,
+        "medianAccountingOverheadTokens": 12,
+        "ceilingTokens": 2000,
+        "medianUnusedCeilingTokens": 1499.5,
+        "medianUpstreamModelVisibleTokens": 663,
+        "medianUpstreamRemainingTokens": null,
+        "charactersExact": true,
+        "tokensWithinBound": true,
+        "ceilingBound": 0
+      },
+      {
+        "requestedTokens": 2000,
+        "responses": 20,
+        "eligibleItems": 176,
+        "accountedItems": 176,
+        "medianItemTokens": 786,
+        "medianWrapperTokens": 78,
+        "medianPacketTokens": 864,
+        "medianAccountingOverheadTokens": 34,
+        "ceilingTokens": 2000,
+        "medianUnusedCeilingTokens": 1168.5,
+        "medianUpstreamModelVisibleTokens": 1399.5,
+        "medianUpstreamRemainingTokens": null,
+        "charactersExact": true,
+        "tokensWithinBound": true,
+        "ceilingBound": 0
+      },
+      {
+        "requestedTokens": 4000,
+        "responses": 20,
+        "eligibleItems": 176,
+        "accountedItems": 176,
+        "medianItemTokens": 786,
+        "medianWrapperTokens": 78,
+        "medianPacketTokens": 864,
+        "medianAccountingOverheadTokens": 34,
+        "ceilingTokens": 2000,
+        "medianUnusedCeilingTokens": 1168.5,
+        "medianUpstreamModelVisibleTokens": 1399.5,
+        "medianUpstreamRemainingTokens": 2600.5,
+        "charactersExact": true,
+        "tokensWithinBound": true,
+        "ceilingBound": 0
+      },
+      {
+        "requestedTokens": 8000,
+        "responses": 20,
+        "eligibleItems": 213,
+        "accountedItems": 213,
+        "medianItemTokens": 868,
+        "medianWrapperTokens": 78.5,
+        "medianPacketTokens": 948,
+        "medianAccountingOverheadTokens": 40.5,
+        "ceilingTokens": 2000,
+        "medianUnusedCeilingTokens": 1092,
+        "medianUpstreamModelVisibleTokens": 1399.5,
+        "medianUpstreamRemainingTokens": 6600.5,
+        "charactersExact": true,
+        "tokensWithinBound": true,
+        "ceilingBound": 0
+      },
+      {
+        "requestedTokens": 16000,
+        "responses": 20,
+        "eligibleItems": 363,
+        "accountedItems": 363,
+        "medianItemTokens": 1449.5,
+        "medianWrapperTokens": 81,
+        "medianPacketTokens": 1530.5,
+        "medianAccountingOverheadTokens": 68.5,
+        "ceilingTokens": 2000,
+        "medianUnusedCeilingTokens": 539.5,
+        "medianUpstreamModelVisibleTokens": 3040,
+        "medianUpstreamRemainingTokens": 12960,
+        "charactersExact": true,
+        "tokensWithinBound": true,
+        "ceilingBound": 0
+      }
+    ],
+    "overall": {
+      "allCharactersExact": true,
+      "allTokensWithinBound": true,
+      "allEvidenceWithinCeiling": true,
+      "ceilingBoundResponses": 0,
+      "overheadTokens": {
+        "median": 35,
+        "max": 81
+      },
+      "packetTokens": {
+        "median": 916.5,
+        "max": 2038
+      },
+      "unusedCeilingTokens": {
+        "median": 1133.5,
+        "min": 43
+      },
+      "deduplicatedProposals": 259
+    },
+    "ledgerRows": 1177,
+    "ledgerRowsCMED": 1002
+  },
+  "budgetGrowthPair": {
+    "task": "where are import edges extracted from typescript",
+    "low": {
+      "budget": 1000,
+      "items": 3,
+      "packetTokens": 731,
+      "itemIds": [
+        "parsers/typescriptParser.ts::extractImportEdges",
+        "offsetsFor",
+        "parsers/typescriptParser.ts::parseTypeScriptWithContext"
+      ],
+      "origins": {
+        "item_supply": 3,
+        "pivot_neighborhood": 0
+      },
+      "upstreamModelVisibleTokens": 660,
+      "deliveryStatus": "complete",
+      "compactionStages": []
+    },
+    "high": {
+      "budget": 16000,
+      "items": 16,
+      "packetTokens": 1264,
+      "itemIds": [
+        "parsers/typescriptParser.ts::ExtractImportEdgesInput",
+        "parsers/typescriptParser.ts::extractImportEdges",
+        "parsers/typescriptParser.ts::extractCallAndReferenceEdges",
+        "parsers/cythonParser.ts::extractImportEdges",
+        "parsers/pythonParser.ts::extractImportEdges",
+        "offsetsFor",
+        "withCallSite",
+        "domain/types.ts::ImportResolutionStatus",
+        "parsers/cythonParser.ts::ExtractImportEdgesInput",
+        "parsers/pythonParser.ts::ExtractImportEdgesInput",
+        "parsers/typescriptParser.ts::CallReferenceResolution",
+        "parsers/typescriptParser.ts::TypeScriptParserContext",
+        "parsers/typescriptParser.ts::collectBoundNames",
+        "parsers/typescriptParser.ts::ExtractedSymbols",
+        "parsers/cythonParser.ts::extractCythonCallAndReferenceEdges",
+        "parsers/typescriptParser.ts::parseTypeScriptWithContext"
+      ],
+      "origins": {
+        "item_supply": 16,
+        "pivot_neighborhood": 0
+      },
+      "upstreamModelVisibleTokens": 3295,
+      "deliveryStatus": "complete",
+      "compactionStages": []
+    },
+    "admittedOnlyAtHigh": [
+      "parsers/typescriptParser.ts::ExtractImportEdgesInput",
+      "parsers/typescriptParser.ts::extractCallAndReferenceEdges",
+      "parsers/cythonParser.ts::extractImportEdges",
+      "parsers/pythonParser.ts::extractImportEdges",
+      "withCallSite",
+      "domain/types.ts::ImportResolutionStatus",
+      "parsers/cythonParser.ts::ExtractImportEdgesInput",
+      "parsers/pythonParser.ts::ExtractImportEdgesInput",
+      "parsers/typescriptParser.ts::CallReferenceResolution",
+      "parsers/typescriptParser.ts::TypeScriptParserContext",
+      "parsers/typescriptParser.ts::collectBoundNames",
+      "parsers/typescriptParser.ts::ExtractedSymbols",
+      "parsers/cythonParser.ts::extractCythonCallAndReferenceEdges"
+    ],
+    "admittedOnlyAtLow": []
+  },
+  "attribution": {
+    "reasonSources": {
+      "selection_reason": 951,
+      "roles": 0,
+      "neighbor_relation": 51
+    },
+    "origins": {
+      "item_supply": 951,
+      "pivot_neighborhood": 51
+    },
+    "deduplicatedProposals": 259,
+    "multiOriginItems": 171
+  },
+  "falsification": [
+    {
+      "id": "F1",
+      "pass": true,
+      "statement": "one eligible delivered item without accounting fails coverage"
+    },
+    {
+      "id": "F2",
+      "pass": true,
+      "statement": "a reported cost that is not the serializer's cost fails integrity"
+    },
+    {
+      "id": "F3",
+      "pass": true,
+      "statement": "one delivered item with two accounting records fails; two routes to one item yield one record"
+    },
+    {
+      "id": "F4",
+      "pass": true,
+      "statement": "a random or clock-derived identity fails; identical states hash identically"
+    },
+    {
+      "id": "F5",
+      "pass": true,
+      "statement": "an admission reason the packet does not make, or a route that did not admit, fails attribution"
+    },
+    {
+      "id": "F6",
+      "pass": true,
+      "statement": "a full-object cost, or a denied truncation, for a head-bounded item fails"
+    },
+    {
+      "id": "F7",
+      "pass": true,
+      "statement": "a result with no delivered items publishes no fabricated accounting item"
+    },
+    {
+      "id": "F8",
+      "pass": true,
+      "statement": "unused budget is visible and nothing was added to consume it"
+    },
+    {
+      "id": "F9",
+      "pass": true,
+      "statement": "a ceiling-exhausted packet reconciles exactly and records the rejection"
+    },
+    {
+      "id": "F10",
+      "pass": true,
+      "statement": "machine-facing accounting did not alter the model-facing evidence"
+    },
+    {
+      "id": "F11",
+      "pass": true,
+      "statement": "an artificially expensive accounting path fails the frozen A5 gate"
+    },
+    {
+      "id": "F12",
+      "pass": true,
+      "statement": "the denominator is derived from delivered responses; a detached count satisfies nothing"
+    },
+    {
+      "id": "F6-rule",
+      "pass": true,
+      "statement": "the frozen default-output rule is satisfied by a field the default response carries"
+    }
+  ],
+  "equivalence": {
+    "m203": {
+      "verdict": "M203_EVIDENCE_EQUIVALENT",
+      "compared": 15,
+      "selectionEqual": 15,
+      "orderEqual": 15,
+      "itemCountEqual": 15,
+      "strippedByteEqual": 15,
+      "deliveredByteEqual": 0,
+      "strippedTokenCountEqual": 15,
+      "differencesExplainedByTokensFieldAlone": 15
+    },
+    "frozenM201Instrument": {
+      "verdict": "M201_OUTPUT_DIFFERS",
+      "compared": 15,
+      "semanticEqual": 0,
+      "byteEqual": 0,
+      "note": "the frozen instrument hashes the delivered packet, which now carries tokens; its inequality is the A14 field and nothing else, as the stripped comparison shows"
+    },
+    "a14Corpus": {
+      "authoritativeResults": 100,
+      "strippedPostEqualsPre": 100
+    }
+  },
+  "determinism": {
+    "a14": {
+      "repeats": 3,
+      "responses": 100,
+      "packetsStable": true,
+      "ledgersStable": true,
+      "unstable": []
+    },
+    "frozenEngine": {
+      "allDeterministic": true,
+      "perCorpus": [
+        {
+          "corpus": "C-SMALL",
+          "getCodeContext": true,
+          "getImpactGraph": true,
+          "searchLogicFlow": true,
+          "unstable": [],
+          "indexNonIdenticalRuns": 0
+        },
+        {
+          "corpus": "C-MED",
+          "getCodeContext": true,
+          "getImpactGraph": true,
+          "searchLogicFlow": true,
+          "unstable": [],
+          "indexNonIdenticalRuns": 0
+        },
+        {
+          "corpus": "C-LARGE",
+          "getCodeContext": true,
+          "getImpactGraph": true,
+          "searchLogicFlow": true,
+          "unstable": [],
+          "indexNonIdenticalRuns": 0
+        }
+      ]
+    }
+  },
+  "performance": {
+    "projectorMs": {
+      "before": {
+        "n": 2000,
+        "median": 0.06,
+        "p90": 0.21,
+        "p95": 0.24,
+        "max": 1.49,
+        "min": 0.01
+      },
+      "after": {
+        "n": 2000,
+        "median": 0.1,
+        "p90": 0.3,
+        "p95": 0.34,
+        "max": 0.72,
+        "min": 0.02
+      },
+      "accountingConstructionMedianMs": 0.0409,
+      "accountingConstructionP90Ms": 0.09
+    },
+    "validationMs": {
+      "n": 2000,
+      "median": 0.04,
+      "p90": 0.09,
+      "p95": 0.1,
+      "max": 0.89,
+      "min": 0.01
+    },
+    "memory": {
+      "heapRetainedByPacketsBeforeBytes": 0,
+      "heapRetainedByPacketsAfterBytes": 0,
+      "perPacketDeltaBytes": 0,
+      "ledgerSerializedBytes": {
+        "median": 4954.5,
+        "max": 13288
+      },
+      "packetSerializedBytes": {
+        "median": 2068.5,
+        "max": 6420
+      },
+      "ledgerItems": {
+        "median": 8,
+        "max": 21
+      },
+      "retention": "ledgers live in a WeakMap keyed on the packet; they are collected with it, and nothing accumulates across calls"
+    },
+    "storage": {
+      "databaseTables": 0,
+      "schemaChanges": 0,
+      "persisted": false,
+      "note": "derived at compile time, result-local; nothing is written to index.sqlite or session.sqlite"
+    },
+    "a5": {
+      "before": {
+        "label": "m202_post",
+        "p90ByCorpus": {
+          "C-SMALL": 45.46,
+          "C-MED": 207.58,
+          "C-LARGE": 349.78
+        },
+        "classification": "VTRACE_MATCHES_VEXP_CLAIM",
+        "load": [
+          7.39,
+          7.65,
+          5.74
+        ]
+      },
+      "after": {
+        "label": "m203_post",
+        "p90ByCorpus": {
+          "C-SMALL": 42.49,
+          "C-MED": 200.9,
+          "C-LARGE": 340.06
+        },
+        "classification": "VTRACE_MATCHES_VEXP_CLAIM",
+        "load": [
+          2.1,
+          2.9,
+          2.6
+        ]
+      },
+      "frozenEngineP90": [
+        {
+          "corpus": "C-SMALL",
+          "m202": 53.48,
+          "m203": 46.49
+        },
+        {
+          "corpus": "C-MED",
+          "m202": 207.01,
+          "m203": 208.71
+        },
+        {
+          "corpus": "C-LARGE",
+          "m202": 350.56,
+          "m203": 334.76
+        }
+      ]
+    },
+    "a14WholeCallMedianMs": {
+      "pre": {
+        "median": 194.58,
+        "n": 200
+      },
+      "post": {
+        "median": 190.45,
+        "n": 300
+      }
+    }
+  },
+  "protectedClaims": [
+    {
+      "id": "A1",
+      "m202": "MATCHES",
+      "m203": "MATCHES",
+      "held": true,
+      "measurement": "30 parser-backed families (bash, c, clojure, cpp, csharp, css, cython, dart, elixir, go, haskell, html, java, javascript, json, kotlin, lua, objective_c, ocaml, php, python, r, ruby, rust, scala, sql, swift, typescript, yaml, zig); 28 extension-detected; 31 enum members"
+    },
+    {
+      "id": "A2",
+      "m202": "EXCEEDS",
+      "m203": "EXCEEDS",
+      "held": true,
+      "measurement": "C-MED 64.06 files/s, C-LARGE 33.8 files/s (median of 3 cold builds)"
+    },
+    {
+      "id": "A3",
+      "m202": "MATCHES",
+      "m203": "MATCHES",
+      "held": true,
+      "measurement": "C-LARGE k=1 ratio 0.054, k=3 ratio 0.136; reparsed 372 of the 372 files the indexer holds for a ONE-file change (the eligible .py denominator is 276; the indexer also enumerates .pyx/.pxd/.yml/.toml)"
+    },
+    {
+      "id": "A4",
+      "m202": "EXCEEDS",
+      "m203": "EXCEEDS",
+      "held": true,
+      "measurement": "no-op median 0.006 / 0.083 / 0.154 s (C-SMALL / C-MED / C-LARGE), 0 files reparsed"
+    },
+    {
+      "id": "A5",
+      "m202": "MATCHES",
+      "m203": "MATCHES",
+      "held": true,
+      "measurement": "get_code_context warm p90 46.49 / 208.71 / 334.76 ms (C-SMALL / C-MED / C-LARGE), 5 repetitions; best observed 32.34 / 147.7 / 291.51 ms"
+    },
+    {
+      "id": "A6",
+      "m202": "EXCEEDS",
+      "m203": "EXCEEDS",
+      "held": true,
+      "measurement": "get_impact_graph depth 3 warm p90 149.76 ms on C-LARGE (10 exact-FQN targets x 5)"
+    },
+    {
+      "id": "A7",
+      "m202": "EXCEEDS",
+      "m203": "EXCEEDS",
+      "held": true,
+      "measurement": "search_logic_flow warm p90 15.84 ms on C-LARGE; path edge counts {\"1\":10}"
+    },
+    {
+      "id": "A8",
+      "m202": "EXCEEDS",
+      "m203": "EXCEEDS",
+      "held": true,
+      "measurement": "C-SMALL 100%, C-MED 100%, C-LARGE 100%; unexplained missing 0/0/0"
+    },
+    {
+      "id": "A9",
+      "m202": "MATCHES",
+      "m203": "MATCHES",
+      "held": true,
+      "measurement": "median rendered reduction C-MED 92.67%, C-LARGE 87.21% over 447 + 250 structurally valid files; 22 C-MED files excluded as malformed (F4)"
+    },
+    {
+      "id": "A10",
+      "m202": "MATCHES",
+      "m203": "MATCHES",
+      "held": true,
+      "measurement": "signature retention C-MED 99.48%, C-LARGE 100% (verbatim, token-aligned, bracket-closed slices of source); member retention C-MED 100%, C-LARGE 94.82%. Signature-PRESENCE alone would read 100% / 100%"
+    }
+  ],
+  "matrix": [
+    {
+      "id": "A1",
+      "m202": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m203": "VTRACE_MATCHES_VEXP_CLAIM",
+      "moved": false,
+      "cause": "",
+      "measurement": "30 parser-backed families (bash, c, clojure, cpp, csharp, css, cython, dart, elixir, go, haskell, html, java, javascript, json, kotlin, lua, objective_c, ocaml, php, python, r, ruby, rust, scala, sql, swift, typescript, yaml, zig); 28 extension-detected; 31 enum members"
+    },
+    {
+      "id": "A2",
+      "m202": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "m203": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "moved": false,
+      "cause": "",
+      "measurement": "C-MED 64.06 files/s, C-LARGE 33.8 files/s (median of 3 cold builds)"
+    },
+    {
+      "id": "A3",
+      "m202": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m203": "VTRACE_MATCHES_VEXP_CLAIM",
+      "moved": false,
+      "cause": "",
+      "measurement": "C-LARGE k=1 ratio 0.054, k=3 ratio 0.136; reparsed 372 of the 372 files the indexer holds for a ONE-file change (the eligible .py denominator is 276; the indexer also enumerates .pyx/.pxd/.yml/.toml)"
+    },
+    {
+      "id": "A4",
+      "m202": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "m203": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "moved": false,
+      "cause": "",
+      "measurement": "no-op median 0.006 / 0.083 / 0.154 s (C-SMALL / C-MED / C-LARGE), 0 files reparsed"
+    },
+    {
+      "id": "A5",
+      "m202": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m203": "VTRACE_MATCHES_VEXP_CLAIM",
+      "moved": false,
+      "cause": "",
+      "measurement": "get_code_context warm p90 46.49 / 208.71 / 334.76 ms (C-SMALL / C-MED / C-LARGE), 5 repetitions; best observed 32.34 / 147.7 / 291.51 ms"
+    },
+    {
+      "id": "A6",
+      "m202": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "m203": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "moved": false,
+      "cause": "",
+      "measurement": "get_impact_graph depth 3 warm p90 149.76 ms on C-LARGE (10 exact-FQN targets x 5)"
+    },
+    {
+      "id": "A7",
+      "m202": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "m203": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "moved": false,
+      "cause": "",
+      "measurement": "search_logic_flow warm p90 15.84 ms on C-LARGE; path edge counts {\"1\":10}"
+    },
+    {
+      "id": "A8",
+      "m202": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "m203": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "moved": false,
+      "cause": "",
+      "measurement": "C-SMALL 100%, C-MED 100%, C-LARGE 100%; unexplained missing 0/0/0"
+    },
+    {
+      "id": "A9",
+      "m202": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m203": "VTRACE_MATCHES_VEXP_CLAIM",
+      "moved": false,
+      "cause": "",
+      "measurement": "median rendered reduction C-MED 92.67%, C-LARGE 87.21% over 447 + 250 structurally valid files; 22 C-MED files excluded as malformed (F4)"
+    },
+    {
+      "id": "A10",
+      "m202": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m203": "VTRACE_MATCHES_VEXP_CLAIM",
+      "moved": false,
+      "cause": "",
+      "measurement": "signature retention C-MED 99.48%, C-LARGE 100% (verbatim, token-aligned, bracket-closed slices of source); member retention C-MED 100%, C-LARGE 94.82%. Signature-PRESENCE alone would read 100% / 100%"
+    },
+    {
+      "id": "A11",
+      "m202": "VTRACE_BELOW_VEXP_CLAIM",
+      "m203": "VTRACE_BELOW_VEXP_CLAIM",
+      "moved": false,
+      "cause": "",
+      "measurement": "C-MED whole-response utilisation by budget: 1000=40.55%, 2000=34.05%, 4000=17.02%, 8000=9.34%, 16000=7.54% over 20 tasks"
+    },
+    {
+      "id": "A12",
+      "m202": "VTRACE_BELOW_VEXP_CLAIM",
+      "m203": "VTRACE_BELOW_VEXP_CLAIM",
+      "moved": false,
+      "cause": "",
+      "measurement": "C-MED default response carries 2 distinct representation classes (FOCUS:focused_source, RELATIONSHIP_ONLY); C-LARGE carries 3"
+    },
+    {
+      "id": "A13",
+      "m202": "VTRACE_BELOW_VEXP_CLAIM",
+      "m203": "VTRACE_BELOW_VEXP_CLAIM",
+      "moved": false,
+      "cause": "",
+      "measurement": "3 of 20 tasks lose focus content as the budget grows, and 5 swap the delivered focus symbol, over 5 budgets"
+    },
+    {
+      "id": "A14",
+      "m202": "VTRACE_BELOW_VEXP_CLAIM",
+      "m203": "VTRACE_MATCHES_VEXP_CLAIM",
+      "moved": true,
+      "cause": "M203 product change (per-item tokens in the default packet)",
+      "measurement": "1002 of 1002 delivered items carry token accounting; no accounting block appears in the default response at all (present at detail=debug only). get_skeleton publishes a per-CALL block whose savings figure differs from an independent measurement of the same output by 38.73 / 6.06 / 17.42 points"
+    },
+    {
+      "id": "A15",
+      "m202": "VTRACE_BELOW_VEXP_CLAIM",
+      "m203": "VTRACE_BELOW_VEXP_CLAIM",
+      "moved": false,
+      "cause": "",
+      "measurement": "C-LARGE, 50 eligible call edges: the impact surface renders 0% as source expressions, the logic-flow surface 100%. On C-MED the flow surface renders 100%"
+    }
+  ],
+  "m202Count": 10,
+  "m203Count": 11,
+  "a12a15": {
+    "a12": {
+      "m202": "C-MED default response carries 2 distinct representation classes (FOCUS:focused_source, RELATIONSHIP_ONLY); C-LARGE carries 3",
+      "m203": "C-MED default response carries 2 distinct representation classes (FOCUS:focused_source, RELATIONSHIP_ONLY); C-LARGE carries 3"
+    },
+    "a15": {
+      "m202": "C-LARGE, 50 eligible call edges: the impact surface renders 0% as source expressions, the logic-flow surface 100%. On C-MED the flow surface renders 100%",
+      "m203": "C-LARGE, 50 eligible call edges: the impact surface renders 0% as source expressions, the logic-flow surface 100%. On C-MED the flow surface renders 100%"
+    }
+  },
+  "environment": {
+    "frozenLoad": [
+      1.91,
+      2.07,
+      2.3
+    ],
+    "cpus": 20
+  }
+}
