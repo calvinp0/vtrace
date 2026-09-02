@@ -2389,3 +2389,93 @@ test("a shared imported module is parsed once across many importers (run-level c
   // the importer count (×3 passes). Allow a tiny constant, but it must NOT scale.
   assert.ok(targetSpawns <= 1, `target.py was parsed ${targetSpawns} times; expected <= 1 (cache not effective)`);
 });
+
+// --- batched AST extraction (M198 P6/P7) -------------------------------------
+
+/**
+ * A CPython interpreter costs ~36 ms to start and ~23 ms to run this parser's AST
+ * script over a typical file, so a cold whole-repository index spent more than
+ * half its Python parse budget launching interpreters. Batching amortises that,
+ * and the only thing that makes it legitimate is that it changes nothing else.
+ *
+ * The reference side is `parsePython`, which builds a fresh context per call and
+ * therefore never reaches the batch threshold — it is the pre-M198 code path.
+ */
+test("batched AST extraction is byte-identical to per-file spawns, and spawns far less", async () => {
+  const { mkdtempSync, writeFileSync, readFileSync, chmodSync } = await import("node:fs");
+  const { tmpdir } = await import("node:os");
+  const { parsePython } = await import("./pythonParser");
+  const dir = mkdtempSync(path.join(tmpdir(), "vtrace-pybatch-"));
+  const counter = path.join(dir, "spawns.log");
+  const wrapper = path.join(dir, "py-wrapper.sh");
+  writeFileSync(counter, "");
+  writeFileSync(wrapper, `#!/usr/bin/env bash\nprintf 'spawn\\n' >> '${counter}'\nexec python3 "$@"\n`);
+  chmodSync(wrapper, 0o755);
+
+  // Comfortably past the warm threshold, with imports so the export-index path —
+  // the random-access reader that shares this cache — is exercised too.
+  const knownFiles = Array.from({ length: 20 }, (_unused, index) => ({
+    path: `mod${index}.py`,
+    content: [
+      "from shared import helper",
+      "",
+      "",
+      `class Widget${index}:`,
+      "    def build(self, size: int) -> int:",
+      "        return helper(size)",
+      "",
+      "",
+      `def make${index}(size: int) -> int:`,
+      `    return Widget${index}().build(size)`,
+      "",
+    ].join("\n"),
+  }));
+  knownFiles.push({ path: "shared.py", content: "def helper(size):\n    return size * 2\n" });
+
+  const reference = [];
+  for (const file of knownFiles) {
+    reference.push(parsePython(
+      { path: file.path, content: file.content, language: Language.Python },
+      { knownFiles },
+    ));
+  }
+
+  writeFileSync(counter, "");
+  const batching = createPythonParser({ knownFiles, interpreterCandidates: [wrapper] });
+  const batched = [];
+  for (const file of knownFiles) {
+    batched.push(await batching.parse({
+      path: file.path, content: file.content, language: Language.Python,
+    }));
+  }
+
+  assert.equal(JSON.stringify(batched), JSON.stringify(reference));
+
+  const spawns = readFileSync(counter, "utf8").split("\n").filter(Boolean).length;
+  assert.ok(spawns < knownFiles.length,
+    `batching must spawn fewer interpreters than there are files; ${spawns} for ${knownFiles.length}`);
+});
+
+/**
+ * P7. The batch is a cache, and a cache that answers differently on the second
+ * read is worse than none: identical inputs must yield identical results whether
+ * they arrive before or after the warm.
+ */
+test("repeated parses through one batched parser are identical", async () => {
+  const knownFiles = Array.from({ length: 8 }, (_unused, index) => ({
+    path: `repeat${index}.py`,
+    content: `def value${index}(x: int) -> int:\n    return x + ${index}\n`,
+  }));
+  const parser = createPythonParser({ knownFiles });
+
+  const first = [];
+  for (const file of knownFiles) {
+    first.push(await parser.parse({ path: file.path, content: file.content, language: Language.Python }));
+  }
+  const second = [];
+  for (const file of knownFiles) {
+    second.push(await parser.parse({ path: file.path, content: file.content, language: Language.Python }));
+  }
+
+  assert.equal(JSON.stringify(second), JSON.stringify(first));
+});
