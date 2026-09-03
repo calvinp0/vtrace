@@ -10174,7 +10174,7 @@ commits           e5925662  audit instrumentation, transition ledger, counter-
                             aware ladder, tests, falsification
                   ead16a1c  the plan window is the full tier's cap; renderer
                             flag in the lead order
-                  (evidence commit recorded in the row below)
+                  8fcbab5a  evidence, frozen rerun, retrieval baselines, this row
 
 evidence          results/stage5_m208_final_report.{md,json},
                   stage5_m208_causal_report.{md,json}, stage5_m208_audit_
