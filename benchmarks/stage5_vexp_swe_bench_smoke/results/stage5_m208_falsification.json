@@ -9,19 +9,19 @@
       "id": "F1",
       "statement": "a larger budget keeps every lower-budget related entry that still fits: no lower-budget evidence is evicted across the frozen budgets",
       "pass": true,
-      "detail": "preserved 4/4 transitions; relations subsequence,subsequence,prefix,prefix; related counts 12->24->33->36->36"
+      "detail": "preserved 4/4 transitions; relations prefix,prefix,prefix,prefix; related counts 12->24->33->36->36"
     },
     {
       "id": "F2",
       "statement": "the larger budget adds later evidence behind the preserved evidence instead of replacing it",
       "pass": true,
-      "detail": "transitions with new entries 3; relations subsequence,subsequence,prefix,prefix"
+      "detail": "transitions with new entries 3; relations prefix,prefix,prefix,prefix"
     },
     {
       "id": "F3",
       "statement": "an entry both budgets deliver keeps its representation or gets a richer one; a larger budget never downgrades it",
       "pass": true,
-      "detail": "same 84, richer 21, poorer 0"
+      "detail": "same 83, richer 22, poorer 0"
     },
     {
       "id": "F4",
@@ -45,7 +45,7 @@
       "id": "F7",
       "statement": "adding candidates to the base support lane leaves the existing entries' relative order intact (a subsequence), at 4000 and 16000",
       "pass": true,
-      "detail": "4000: subsequence; 16000: subsequence"
+      "detail": "4000: prefix; 16000: subsequence"
     },
     {
       "id": "F8",

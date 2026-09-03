@@ -37,7 +37,7 @@ import {
   recomputeWithWeakenedLexical,
   STRONG_DIRECT_LEXICAL,
 } from "../retrieval/hybridScoring";
-import { CANDIDATE_POOL_FLOOR, allocateBudget } from "./budgetAllocator";
+import { CANDIDATE_POOL_FLOOR, PIVOT_PLAN_WINDOW, allocateBudget } from "./budgetAllocator";
 import {
   buildNoContextExplanations,
   capOrderedPivots,
@@ -896,16 +896,18 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
         }
       : {};
 
-  // THE PIVOT PLAN (M208). Every pivot-worthy candidate the role layer kept,
-  // ordered by the ONE pivot order; the tier's cap then takes a prefix of it.
-  // Until M208 the cap ran first (in final-score order, inside the role layer)
-  // and the order ran second on the capped set, so widening the cap (micro 1 ->
-  // standard 2 -> full 5) admitted a candidate the order ranked above the old
-  // lead and the delivered focus changed at every tier boundary — all five
-  // frozen A13 swaps and all three focus-size drops (M208 causal report). One
-  // order for both decisions makes the smaller tier's pivots a prefix of the
-  // larger tier's, at every budget, whatever the pool.
-  const pivotCandidates = refined.filter((r) => r.role === CandidateRole.Pivot);
+  // THE PIVOT PLAN (M208). Until M208 the tier's cap ran first (the role
+  // layer's admission order, headed by final score) and the pivot ORDER (anchor
+  // tiers, pivot-ranking v2) ran second on the capped set, so widening the cap
+  // (micro 1 -> standard 2 -> full 5) admitted a candidate the order ranked
+  // above the old lead and the delivered focus changed at every tier boundary —
+  // all five frozen A13 swaps and all three focus-size drops (M208 causal
+  // report). Now the plan is the FULL tier's plan: the first PIVOT_PLAN_WINDOW
+  // candidates by the admission order are ordered once by the pivot order, the
+  // rest follow in admission order, and every tier's cap takes a prefix. The
+  // full tier names the pivots it always named; the smaller tiers name its
+  // first ones; the lead never depends on the budget or the pool.
+  const admissionOrdered = refined.filter((r) => r.role === CandidateRole.Pivot);
 
   // Order the pivot plan. A scoped task objective (explicit task subtree) leads
   // by its affinity rank. Then a file-line anchor target (the issue named it
@@ -924,6 +926,31 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
     entry.signals.is_class_method_expansion_target
       ? classMethodExpansion?.methodScores.get(entry.candidate.symbolId) ?? 0
       : -1;
+  // The admission order is the role layer's historical cap order (debugRoles
+  // capPivots): scoped objective, line anchor, SQL renderer (renderers outrank
+  // non-renderers), class-method expansion, organic final. The plan window is
+  // its head; what follows the window keeps this order.
+  const admissionAnchor = (entry: RefinedRoledCandidate): number => (anchorSymbolIds.has(entry.candidate.symbolId) ? 1 : 0);
+  const admissionRenderer = (entry: RefinedRoledCandidate): number =>
+    entry.signals.is_sql_rendering_implementation && sqlRenderingTrigger.active
+      ? sqlRenderingRelevance(entry.candidate.localName, sqlRenderingTrigger.compositionTerms)
+      : -1;
+  const admissionFinal = (entry: RefinedRoledCandidate): number =>
+    weakDirectIds.has(entry.candidate.symbolId)
+      ? weakOrganicFinalById.get(entry.candidate.symbolId) ?? 0
+      : entry.candidate.scores.final;
+  admissionOrdered.sort(
+    (left, right) =>
+      scopedRank(left) - scopedRank(right)
+      || admissionAnchor(right) - admissionAnchor(left)
+      || admissionRenderer(right) - admissionRenderer(left)
+      || expansionRank(right) - expansionRank(left)
+      || admissionFinal(right) - admissionFinal(left)
+      || left.candidate.fqName.localeCompare(right.candidate.fqName)
+      || left.candidate.symbolId.localeCompare(right.candidate.symbolId),
+  );
+  const pivotCandidates = admissionOrdered.slice(0, PIVOT_PLAN_WINDOW);
+  const beyondPlanWindow = admissionOrdered.slice(PIVOT_PLAN_WINDOW);
   if (
     anchorSymbolIds.size > 0
     || sqlRenderingTrigger.active
@@ -933,9 +960,14 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   ) {
     const anchorRank = (entry: RefinedRoledCandidate): number =>
       anchorSymbolIds.has(entry.candidate.symbolId) ? 1 : 0;
+    // A renderer (the role layer's is_sql_rendering_implementation) outranks a
+    // non-renderer whatever its name says; among renderers, and among the rest,
+    // the composition relevance of the name orders (M208 folds the admission
+    // order's renderer test into the lead order so the two cannot disagree).
     const renderingRank = (entry: RefinedRoledCandidate): number =>
       sqlRenderingTrigger.active
-        ? sqlRenderingRelevance(entry.candidate.localName, sqlRenderingTrigger.compositionTerms)
+        ? (entry.signals.is_sql_rendering_implementation ? 1000 : 0)
+          + sqlRenderingRelevance(entry.candidate.localName, sqlRenderingTrigger.compositionTerms)
         : 0;
     // A weak direct-evidence candidate orders by its ORGANIC (pre-boost) final:
     // a boosted incumbent keeps the rank its own evidence earned; a fresh
@@ -1043,10 +1075,11 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   // The plan's rank of every pivot-worthy candidate, read by the support order
   // below: a cap-demoted pivot is the NEXT pivot a wider tier would name, so it
   // leads support in plan order and its promotion moves nothing else.
-  const planRank = new Map<string, number>(pivotCandidates.map((entry, index) => [entry.candidate.symbolId, index] as const));
-  const cap = capOrderedPivots(pivotCandidates, allocation.maxPivots,
+  const orderedPlan = [...pivotCandidates, ...beyondPlanWindow];
+  const planRank = new Map<string, number>(orderedPlan.map((entry, index) => [entry.candidate.symbolId, index] as const));
+  const cap = capOrderedPivots(orderedPlan, allocation.maxPivots,
     namedAnchorIds.size > 0 ? { symbolIds: namedAnchorIds } : undefined);
-  for (const entry of pivotCandidates) {
+  for (const entry of orderedPlan) {
     if (cap.keep.has(entry.candidate.symbolId)) continue;
     entry.role = CandidateRole.Support;
     entry.roleReason = `strong target but beyond the pivot budget — pivot: ${entry.roleReason}`;

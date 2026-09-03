@@ -161,6 +161,15 @@ export function candidatePoolFor(maxTokens: number): number {
   return Math.max(CANDIDATE_POOL_FLOOR, Math.min(CANDIDATE_POOL_HARD_MAXIMUM, wanted));
 }
 
+/**
+ * The pivot PLAN window (M208): the largest number of edit sites any tier may
+ * name. The capsule orders this many pivot-worthy candidates once, with the
+ * pivot order, and every tier's cap takes a prefix of that plan — so the full
+ * tier's pivots are what they were, the standard tier's are its first two, the
+ * micro tier's its first one, and the lead never depends on the budget.
+ */
+export const PIVOT_PLAN_WINDOW = TIER_POLICY[CapsuleV2Mode.Full].maxPivots;
+
 /** Map a token budget to its sizing tier, pivot cap, support window and candidate allowance. */
 export function allocateBudget(maxTokens: number): BudgetAllocation {
   const tier = maxTokens < MICRO_MAX_TOKENS
