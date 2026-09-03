@@ -1,0 +1,2081 @@
+{
+  "milestone": "M208",
+  "instrument": "run_stage5_m208_transition_audit.ts",
+  "label": "pre_fixed25",
+  "poolMode": "fixed:25",
+  "product": {
+    "root": "/home/calvin/code/vtrace",
+    "head": "b74287688653389eb360f6c420db524af566061a"
+  },
+  "protocol": {
+    "calls": "get_code_context, default detail, max_tokens at each budget, `--repeats` times per request in one process; one direct read-only capsule build with the handler's own preset/intent/maxBudgetCharacters (and the pinned pool when --pool-mode fixed:n); one debug call per task at the top budget for intent/preset; one debug call per frozen budget for the projector-only counterfactual",
+    "tasks": "A13_TASKS (all 20 on C-MED, first 3 elsewhere)",
+    "budgets": [
+      750,
+      1000,
+      1250,
+      1499,
+      1500,
+      2000,
+      2500,
+      3000,
+      4000,
+      5000,
+      6000,
+      8000,
+      10000,
+      11999,
+      12000,
+      16000,
+      20000
+    ],
+    "frozenBudgets": [
+      1000,
+      2000,
+      4000,
+      8000,
+      16000
+    ],
+    "frozenRule": "per task, ascending frozen budgets: size violation = ceil(chars/4 of focus.code) decreases; focus swap = focus.at changes; verdict counts tasks with any violation, MATCH at 0 (run_stage5_m197a_engine.ts + run_stage5_m197a_report.ts, verbatim)",
+    "observationRules": "orderRelation on related ids (m204Utilization); representation regression = a related id whose representation was code-bearing at the lower budget and relationship_only at the higher (M207 sweep rule)",
+    "deliveryFacts": "read from the DEFAULT packet's M203 ledger (evidenceBudget.*), never from the debug envelope"
+  },
+  "hardware": {
+    "cpus": 20,
+    "loadAverageAtEnd": [
+      3.43,
+      4.08,
+      5.26
+    ]
+  },
+  "corpora": [
+    {
+      "id": "C-MED",
+      "filesIndexed": null,
+      "tasks": 20,
+      "budgets": [
+        750,
+        1000,
+        1250,
+        1499,
+        1500,
+        2000,
+        2500,
+        3000,
+        4000,
+        5000,
+        6000,
+        8000,
+        10000,
+        11999,
+        12000,
+        16000,
+        20000
+      ],
+      "poolMode": "fixed:25",
+      "seamIdentity": {
+        "compared": 160,
+        "identical": 160,
+        "differing": []
+      },
+      "frozenA13": {
+        "tasksWithSizeViolation": 3,
+        "tasksWithFocusSwap": 5,
+        "violations": 8,
+        "verdict": "VTRACE_BELOW_VEXP_CLAIM",
+        "swappedTasks": [
+          "where are import edges extracted from typescript",
+          "where does logic flow decide a path is unreachable",
+          "where is the MCP tool registry assembled",
+          "what writes the index manifest after a run",
+          "what happens when the index schema version is incompatible"
+        ],
+        "sizeViolationTasks": [
+          "where are import edges extracted from typescript",
+          "where is the MCP tool registry assembled",
+          "what writes the index manifest after a run"
+        ],
+        "curves": [
+          {
+            "task": "where are import edges extracted from typescript",
+            "points": [
+              {
+                "budget": 1000,
+                "focusAt": "parsers/typescriptParser.ts::extractImportEdges",
+                "focusCodeTokens": 352
+              },
+              {
+                "budget": 2000,
+                "focusAt": "parsers/typescriptParser.ts::ExtractImportEdgesInput",
+                "focusCodeTokens": 40
+              },
+              {
+                "budget": 4000,
+                "focusAt": "parsers/typescriptParser.ts::ExtractImportEdgesInput",
+                "focusCodeTokens": 40
+              },
+              {
+                "budget": 8000,
+                "focusAt": "parsers/typescriptParser.ts::ExtractImportEdgesInput",
+                "focusCodeTokens": 40
+              },
+              {
+                "budget": 16000,
+                "focusAt": "parsers/typescriptParser.ts::ExtractImportEdgesInput",
+                "focusCodeTokens": 40
+              }
+            ],
+            "sizeViolations": 1,
+            "focusSwaps": 1
+          },
+          {
+            "task": "how does the indexer decide a file is eligible for parsing",
+            "points": [
+              {
+                "budget": 1000,
+                "focusAt": "indexer/incrementalIndex.ts::bindingTermFor",
+                "focusCodeTokens": 129
+              },
+              {
+                "budget": 2000,
+                "focusAt": "indexer/incrementalIndex.ts::bindingTermFor",
+                "focusCodeTokens": 129
+              },
+              {
+                "budget": 4000,
+                "focusAt": "indexer/incrementalIndex.ts::bindingTermFor",
+                "focusCodeTokens": 129
+              },
+              {
+                "budget": 8000,
+                "focusAt": "indexer/incrementalIndex.ts::bindingTermFor",
+                "focusCodeTokens": 129
+              },
+              {
+                "budget": 16000,
+                "focusAt": "indexer/incrementalIndex.ts::bindingTermFor",
+                "focusCodeTokens": 129
+              }
+            ],
+            "sizeViolations": 0,
+            "focusSwaps": 0
+          },
+          {
+            "task": "budget allocation for capsule items is dropping sections",
+            "points": [
+              {
+                "budget": 1000,
+                "focusAt": "capsule/budget.ts::listCapsuleItems",
+                "focusCodeTokens": 41
+              },
+              {
+                "budget": 2000,
+                "focusAt": "capsule/budget.ts::listCapsuleItems",
+                "focusCodeTokens": 41
+              },
+              {
+                "budget": 4000,
+                "focusAt": "capsule/budget.ts::listCapsuleItems",
+                "focusCodeTokens": 41
+              },
+              {
+                "budget": 8000,
+                "focusAt": "capsule/budget.ts::listCapsuleItems",
+                "focusCodeTokens": 41
+              },
+              {
+                "budget": 16000,
+                "focusAt": "capsule/budget.ts::listCapsuleItems",
+                "focusCodeTokens": 41
+              }
+            ],
+            "sizeViolations": 0,
+            "focusSwaps": 0
+          },
+          {
+            "task": "how is the impact graph bounded when a symbol has many callers",
+            "points": [
+              {
+                "budget": 1000,
+                "focusAt": "impact/getImpactGraph.ts::hasInheritedMemberEvidence",
+                "focusCodeTokens": 67
+              },
+              {
+                "budget": 2000,
+                "focusAt": "impact/getImpactGraph.ts::hasInheritedMemberEvidence",
+                "focusCodeTokens": 152
+              },
+              {
+                "budget": 4000,
+                "focusAt": "impact/getImpactGraph.ts::hasInheritedMemberEvidence",
+                "focusCodeTokens": 152
+              },
+              {
+                "budget": 8000,
+                "focusAt": "impact/getImpactGraph.ts::hasInheritedMemberEvidence",
+                "focusCodeTokens": 152
+              },
+              {
+                "budget": 16000,
+                "focusAt": "impact/getImpactGraph.ts::hasInheritedMemberEvidence",
+                "focusCodeTokens": 152
+              }
+            ],
+            "sizeViolations": 0,
+            "focusSwaps": 0
+          },
+          {
+            "task": "where does logic flow decide a path is unreachable",
+            "points": [
+              {
+                "budget": 1000,
+                "focusAt": "logicFlow/searchLogicFlow.ts::LogicFlowPath",
+                "focusCodeTokens": 89
+              },
+              {
+                "budget": 2000,
+                "focusAt": "logicFlow/searchLogicFlow.ts::hasCrossLanguagePythonCythonStep",
+                "focusCodeTokens": 143
+              },
+              {
+                "budget": 4000,
+                "focusAt": "logicFlow/searchLogicFlow.ts::hasCrossLanguagePythonCythonStep",
+                "focusCodeTokens": 143
+              },
+              {
+                "budget": 8000,
+                "focusAt": "logicFlow/searchLogicFlow.ts::hasCrossLanguagePythonCythonStep",
+                "focusCodeTokens": 143
+              },
+              {
+                "budget": 16000,
+                "focusAt": "logicFlow/searchLogicFlow.ts::hasCrossLanguagePythonCythonStep",
+                "focusCodeTokens": 143
+              }
+            ],
+            "sizeViolations": 0,
+            "focusSwaps": 1
+          },
+          {
+            "task": "how are skeleton declarations built from indexed symbols",
+            "points": [
+              {
+                "budget": 1000,
+                "focusAt": "skeleton/getSkeleton.ts::buildDeclarations",
+                "focusCodeTokens": 93
+              },
+              {
+                "budget": 2000,
+                "focusAt": "skeleton/getSkeleton.ts::buildDeclarations",
+                "focusCodeTokens": 374
+              },
+              {
+                "budget": 4000,
+                "focusAt": "skeleton/getSkeleton.ts::buildDeclarations",
+                "focusCodeTokens": 374
+              },
+              {
+                "budget": 8000,
+                "focusAt": "skeleton/getSkeleton.ts::buildDeclarations",
+                "focusCodeTokens": 374
+              },
+              {
+                "budget": 16000,
+                "focusAt": "skeleton/getSkeleton.ts::buildDeclarations",
+                "focusCodeTokens": 374
+              }
+            ],
+            "sizeViolations": 0,
+            "focusSwaps": 0
+          },
+          {
+            "task": "what determines whether the repository index is considered fresh",
+            "points": [
+              {
+                "budget": 1000,
+                "focusAt": "db/repositories/fileIndexFailuresRepository.ts::findFileIndexFailure",
+                "focusCodeTokens": 109
+              },
+              {
+                "budget": 2000,
+                "focusAt": "db/repositories/fileIndexFailuresRepository.ts::findFileIndexFailure",
+                "focusCodeTokens": 109
+              },
+              {
+                "budget": 4000,
+                "focusAt": "db/repositories/fileIndexFailuresRepository.ts::findFileIndexFailure",
+                "focusCodeTokens": 109
+              },
+              {
+                "budget": 8000,
+                "focusAt": "db/repositories/fileIndexFailuresRepository.ts::findFileIndexFailure",
+                "focusCodeTokens": 109
+              },
+              {
+                "budget": 16000,
+                "focusAt": "db/repositories/fileIndexFailuresRepository.ts::findFileIndexFailure",
+                "focusCodeTokens": 109
+              }
+            ],
+            "sizeViolations": 0,
+            "focusSwaps": 0
+          },
+          {
+            "task": "how does hybrid scoring combine lexical and graph signals",
+            "points": [
+              {
+                "budget": 1000,
+                "focusAt": "retrieval/hybridScoring.ts::combineFinalScore",
+                "focusCodeTokens": 126
+              },
+              {
+                "budget": 2000,
+                "focusAt": "retrieval/hybridScoring.ts::combineFinalScore",
+                "focusCodeTokens": 126
+              },
+              {
+                "budget": 4000,
+                "focusAt": "retrieval/hybridScoring.ts::combineFinalScore",
+                "focusCodeTokens": 126
+              },
+              {
+                "budget": 8000,
+                "focusAt": "retrieval/hybridScoring.ts::combineFinalScore",
+                "focusCodeTokens": 126
+              },
+              {
+                "budget": 16000,
+                "focusAt": "retrieval/hybridScoring.ts::combineFinalScore",
+                "focusCodeTokens": 126
+              }
+            ],
+            "sizeViolations": 0,
+            "focusSwaps": 0
+          },
+          {
+            "task": "where is the MCP tool registry assembled",
+            "points": [
+              {
+                "budget": 1000,
+                "focusAt": "mcp/tools.ts::createRestrictedMcpToolRegistry",
+                "focusCodeTokens": 207
+              },
+              {
+                "budget": 2000,
+                "focusAt": "mcp/registry.ts::McpToolRegistry",
+                "focusCodeTokens": 60
+              },
+              {
+                "budget": 4000,
+                "focusAt": "mcp/registry.ts::McpToolRegistry",
+                "focusCodeTokens": 60
+              },
+              {
+                "budget": 8000,
+                "focusAt": "mcp/registry.ts::McpToolRegistry",
+                "focusCodeTokens": 60
+              },
+              {
+                "budget": 16000,
+                "focusAt": "mcp/registry.ts::McpToolRegistry",
+                "focusCodeTokens": 60
+              }
+            ],
+            "sizeViolations": 1,
+            "focusSwaps": 1
+          },
+          {
+            "task": "how does the python parser resolve module imports",
+            "points": [
+              {
+                "budget": 1000,
+                "focusAt": "parsers/pythonParser.ts::resolveImportedModulePath",
+                "focusCodeTokens": 117
+              },
+              {
+                "budget": 2000,
+                "focusAt": "parsers/pythonParser.ts::resolveImportedModulePath",
+                "focusCodeTokens": 117
+              },
+              {
+                "budget": 4000,
+                "focusAt": "parsers/pythonParser.ts::resolveImportedModulePath",
+                "focusCodeTokens": 117
+              },
+              {
+                "budget": 8000,
+                "focusAt": "parsers/pythonParser.ts::resolveImportedModulePath",
+                "focusCodeTokens": 117
+              },
+              {
+                "budget": 16000,
+                "focusAt": "parsers/pythonParser.ts::resolveImportedModulePath",
+                "focusCodeTokens": 117
+              }
+            ],
+            "sizeViolations": 0,
+            "focusSwaps": 0
+          },
+          {
+            "task": "what writes the index manifest after a run",
+            "points": [
+              {
+                "budget": 1000,
+                "focusAt": "cli/index.ts::runCli",
+                "focusCodeTokens": 446
+              },
+              {
+                "budget": 2000,
+                "focusAt": "cli/index.ts::runCli",
+                "focusCodeTokens": 446
+              },
+              {
+                "budget": 4000,
+                "focusAt": "cli/index.ts::runCli",
+                "focusCodeTokens": 446
+              },
+              {
+                "budget": 8000,
+                "focusAt": "cli/index.ts::runCli",
+                "focusCodeTokens": 446
+              },
+              {
+                "budget": 16000,
+                "focusAt": "db/sqlite.ts::openIndexerDatabase",
+                "focusCodeTokens": 43
+              }
+            ],
+            "sizeViolations": 1,
+            "focusSwaps": 1
+          },
+          {
+            "task": "how are worktrees excluded from the parent repository index",
+            "points": [
+              {
+                "budget": 1000,
+                "focusAt": "indexer/worktreeIdentity.ts::RepositoryIdentity",
+                "focusCodeTokens": 236
+              },
+              {
+                "budget": 2000,
+                "focusAt": "indexer/worktreeIdentity.ts::RepositoryIdentity",
+                "focusCodeTokens": 236
+              },
+              {
+                "budget": 4000,
+                "focusAt": "indexer/worktreeIdentity.ts::RepositoryIdentity",
+                "focusCodeTokens": 236
+              },
+              {
+                "budget": 8000,
+                "focusAt": "indexer/worktreeIdentity.ts::RepositoryIdentity",
+                "focusCodeTokens": 236
+              },
+              {
+                "budget": 16000,
+                "focusAt": "indexer/worktreeIdentity.ts::RepositoryIdentity",
+                "focusCodeTokens": 236
+              }
+            ],
+            "sizeViolations": 0,
+            "focusSwaps": 0
+          },
+          {
+            "task": "where does the product context decide which files are pivots",
+            "points": [
+              {
+                "budget": 1000,
+                "focusAt": "productContext/assembleProductContext.ts::isRequiredPivot",
+                "focusCodeTokens": 42
+              },
+              {
+                "budget": 2000,
+                "focusAt": "productContext/assembleProductContext.ts::isRequiredPivot",
+                "focusCodeTokens": 42
+              },
+              {
+                "budget": 4000,
+                "focusAt": "productContext/assembleProductContext.ts::isRequiredPivot",
+                "focusCodeTokens": 42
+              },
+              {
+                "budget": 8000,
+                "focusAt": "productContext/assembleProductContext.ts::isRequiredPivot",
+                "focusCodeTokens": 42
+              },
+              {
+                "budget": 16000,
+                "focusAt": "productContext/assembleProductContext.ts::isRequiredPivot",
+                "focusCodeTokens": 42
+              }
+            ],
+            "sizeViolations": 0,
+            "focusSwaps": 0
+          },
+          {
+            "task": "how does the response envelope shed content under budget pressure",
+            "points": [
+              {
+                "budget": 1000,
+                "focusAt": "impact/impactResponseEnvelope.ts::impactResponseMeetsEvidenceBudget",
+                "focusCodeTokens": 40
+              },
+              {
+                "budget": 2000,
+                "focusAt": "impact/impactResponseEnvelope.ts::impactResponseMeetsEvidenceBudget",
+                "focusCodeTokens": 40
+              },
+              {
+                "budget": 4000,
+                "focusAt": "impact/impactResponseEnvelope.ts::impactResponseMeetsEvidenceBudget",
+                "focusCodeTokens": 40
+              },
+              {
+                "budget": 8000,
+                "focusAt": "impact/impactResponseEnvelope.ts::impactResponseMeetsEvidenceBudget",
+                "focusCodeTokens": 40
+              },
+              {
+                "budget": 16000,
+                "focusAt": "impact/impactResponseEnvelope.ts::impactResponseMeetsEvidenceBudget",
+                "focusCodeTokens": 40
+              }
+            ],
+            "sizeViolations": 0,
+            "focusSwaps": 0
+          },
+          {
+            "task": "what deduplicates supporting files in the capsule",
+            "points": [
+              {
+                "budget": 1000,
+                "focusAt": "capsule/types.ts::CapsuleSupportingCandidate",
+                "focusCodeTokens": 60
+              },
+              {
+                "budget": 2000,
+                "focusAt": "capsule/types.ts::CapsuleSupportingCandidate",
+                "focusCodeTokens": 60
+              },
+              {
+                "budget": 4000,
+                "focusAt": "capsule/types.ts::CapsuleSupportingCandidate",
+                "focusCodeTokens": 60
+              },
+              {
+                "budget": 8000,
+                "focusAt": "capsule/types.ts::CapsuleSupportingCandidate",
+                "focusCodeTokens": 60
+              },
+              {
+                "budget": 16000,
+                "focusAt": "capsule/types.ts::CapsuleSupportingCandidate",
+                "focusCodeTokens": 60
+              }
+            ],
+            "sizeViolations": 0,
+            "focusSwaps": 0
+          },
+          {
+            "task": "how does cython parsing differ from python parsing",
+            "points": [
+              {
+                "budget": 1000,
+                "focusAt": "parsers/pythonParser.ts::getCythonBackedExportIndex",
+                "focusCodeTokens": 75
+              },
+              {
+                "budget": 2000,
+                "focusAt": "parsers/pythonParser.ts::getCythonBackedExportIndex",
+                "focusCodeTokens": 213
+              },
+              {
+                "budget": 4000,
+                "focusAt": "parsers/pythonParser.ts::getCythonBackedExportIndex",
+                "focusCodeTokens": 213
+              },
+              {
+                "budget": 8000,
+                "focusAt": "parsers/pythonParser.ts::getCythonBackedExportIndex",
+                "focusCodeTokens": 213
+              },
+              {
+                "budget": 16000,
+                "focusAt": "parsers/pythonParser.ts::getCythonBackedExportIndex",
+                "focusCodeTokens": 213
+              }
+            ],
+            "sizeViolations": 0,
+            "focusSwaps": 0
+          },
+          {
+            "task": "where are call sites persisted for an edge",
+            "points": [
+              {
+                "budget": 1000,
+                "focusAt": "parsers/edgeCallSites.ts::withCallSite",
+                "focusCodeTokens": 73
+              },
+              {
+                "budget": 2000,
+                "focusAt": "parsers/edgeCallSites.ts::withCallSite",
+                "focusCodeTokens": 73
+              },
+              {
+                "budget": 4000,
+                "focusAt": "parsers/edgeCallSites.ts::withCallSite",
+                "focusCodeTokens": 73
+              },
+              {
+                "budget": 8000,
+                "focusAt": "parsers/edgeCallSites.ts::withCallSite",
+                "focusCodeTokens": 73
+              },
+              {
+                "budget": 16000,
+                "focusAt": "parsers/edgeCallSites.ts::withCallSite",
+                "focusCodeTokens": 73
+              }
+            ],
+            "sizeViolations": 0,
+            "focusSwaps": 0
+          },
+          {
+            "task": "how does search rank candidate symbols for a task",
+            "points": [
+              {
+                "budget": 1000,
+                "focusAt": "retrieval/searchSymbolsShared.ts::rankSearchCandidates",
+                "focusCodeTokens": 102
+              },
+              {
+                "budget": 2000,
+                "focusAt": "retrieval/searchSymbolsShared.ts::rankSearchCandidates",
+                "focusCodeTokens": 102
+              },
+              {
+                "budget": 4000,
+                "focusAt": "retrieval/searchSymbolsShared.ts::rankSearchCandidates",
+                "focusCodeTokens": 102
+              },
+              {
+                "budget": 8000,
+                "focusAt": "retrieval/searchSymbolsShared.ts::rankSearchCandidates",
+                "focusCodeTokens": 102
+              },
+              {
+                "budget": 16000,
+                "focusAt": "retrieval/searchSymbolsShared.ts::rankSearchCandidates",
+                "focusCodeTokens": 102
+              }
+            ],
+            "sizeViolations": 0,
+            "focusSwaps": 0
+          },
+          {
+            "task": "what happens when the index schema version is incompatible",
+            "points": [
+              {
+                "budget": 1000,
+                "focusAt": "handoff/metadata.ts::HandoffSchemaVersion",
+                "focusCodeTokens": 15
+              },
+              {
+                "budget": 2000,
+                "focusAt": "handoff/metadata.ts::HandoffSchemaVersion",
+                "focusCodeTokens": 15
+              },
+              {
+                "budget": 4000,
+                "focusAt": "handoff/metadata.ts::HandoffSchemaVersion",
+                "focusCodeTokens": 15
+              },
+              {
+                "budget": 8000,
+                "focusAt": "handoff/metadata.ts::HandoffSchemaVersion",
+                "focusCodeTokens": 15
+              },
+              {
+                "budget": 16000,
+                "focusAt": "indexer/indexReadiness.ts::maxStoredFormatVersion",
+                "focusCodeTokens": 94
+              }
+            ],
+            "sizeViolations": 0,
+            "focusSwaps": 1
+          },
+          {
+            "task": "how is a symbol's fully qualified name constructed",
+            "points": [
+              {
+                "budget": 1000,
+                "focusAt": "domain/types.ts::FullyQualifiedName",
+                "focusCodeTokens": 9
+              },
+              {
+                "budget": 2000,
+                "focusAt": "domain/types.ts::FullyQualifiedName",
+                "focusCodeTokens": 9
+              },
+              {
+                "budget": 4000,
+                "focusAt": "domain/types.ts::FullyQualifiedName",
+                "focusCodeTokens": 9
+              },
+              {
+                "budget": 8000,
+                "focusAt": "domain/types.ts::FullyQualifiedName",
+                "focusCodeTokens": 9
+              },
+              {
+                "budget": 16000,
+                "focusAt": "domain/types.ts::FullyQualifiedName",
+                "focusCodeTokens": 9
+              }
+            ],
+            "sizeViolations": 0,
+            "focusSwaps": 0
+          }
+        ]
+      },
+      "frozenSummary": {
+        "transitions": 80,
+        "relations": {
+          "neither": 36,
+          "subsequence": 30,
+          "prefix": 14
+        },
+        "focusAdjustedRelations": {
+          "neither": 36,
+          "subsequence": 30,
+          "prefix": 14
+        },
+        "firstDivergenceByMechanism": {
+          "SUBSEQUENCE_NEW_ITEMS_INTERLEAVED": 26,
+          "PIVOT_CAP_ROLE_PROMOTION": 25,
+          "NONE": 14,
+          "EVIDENCE_BUDGET_DROP:graph_neighbour_anchoring": 4,
+          "PIVOT_CAP_LEAD_RESELECTION": 3,
+          "SUPPORT_LANE_PLACEMENT:coedit_rescued_medium": 2,
+          "SUPPORT_WINDOW_PARTITION:coedit_displacement:window_changed": 2,
+          "CAPSULE_PACKING:packing_over_budget": 1,
+          "REPRESENTATION_ROUTING:ceiling": 1,
+          "ROLE_RECLASSIFICATION:discard->support": 1,
+          "SUPPORT_LANE_PLACEMENT:coedit_injected_high": 1
+        },
+        "firstDivergenceByStage": {
+          "none": 40,
+          "S2_role_assignment": 26,
+          "S4b_support_order": 5,
+          "S7_evidence_budget": 4,
+          "S4a_pivot_order": 3,
+          "S5_packing": 1,
+          "S9_projector": 1
+        },
+        "lostItems": 19,
+        "lostItemsByMechanism": {
+          "EVIDENCE_BUDGET_DROP:graph_neighbour_anchoring": 7,
+          "EVIDENCE_BUDGET_DROP:impact_evidence(inferred)": 6,
+          "PIVOT_CAP_LEAD_RESELECTION": 3,
+          "CAPSULE_PACKING:packing_over_budget": 1,
+          "EVIDENCE_BUDGET_DROP:budget_demoted_pivot": 1,
+          "EVIDENCE_BUDGET_DROP:coedit_injected_high": 1
+        },
+        "movedItems": 111,
+        "movedItemsByMechanism": {
+          "PIVOT_CAP_ROLE_PROMOTION": 62,
+          "SUPPORT_WINDOW_PARTITION:coedit_displacement:window_changed": 33,
+          "SUPPORT_LANE_PLACEMENT:coedit_rescued_medium": 6,
+          "SUPPORT_LANE_PLACEMENT:coedit_injected_medium": 4,
+          "SUPPORT_LANE_PLACEMENT:coedit_injected_high": 3,
+          "REPRESENTATION_ROUTING:ceiling": 1,
+          "ROLE_RECLASSIFICATION:discard->support": 1,
+          "SUPPORT_LANE_PLACEMENT:coedit_rescued_high": 1
+        },
+        "focusSwaps": 5,
+        "focusSwapsByClass": {
+          "tier_cap_widened_then_v2_reordered": 4,
+          "tier_cap_widened_then_anchor_tier_reordered": 1
+        },
+        "sizeViolations": 3,
+        "sizeViolationsByCause": {
+          "focus_swap": 3
+        },
+        "representationRegressions": 1,
+        "representationRegressionsByClass": {
+          "avoidable_admission_first_crowding": 1
+        },
+        "representationRegressionsByReason": {
+          "ceiling": 1
+        },
+        "unattributedTransitions": [],
+        "unaccountedItems": [],
+        "alignmentFailures": [],
+        "gate": "A13_CAUSAL_ATTRIBUTION_COMPLETE"
+      },
+      "denseSummary": {
+        "transitions": 320,
+        "relations": {
+          "prefix": 168,
+          "subsequence": 97,
+          "neither": 55
+        },
+        "focusAdjustedRelations": {
+          "prefix": 169,
+          "subsequence": 96,
+          "neither": 55
+        },
+        "firstDivergenceByMechanism": {
+          "NONE": 168,
+          "SUBSEQUENCE_NEW_ITEMS_INTERLEAVED": 94,
+          "PIVOT_CAP_ROLE_PROMOTION": 30,
+          "EVIDENCE_BUDGET_DROP:graph_neighbour_anchoring": 10,
+          "EVIDENCE_BUDGET_DROP:budget_demoted_pivot": 6,
+          "CAPSULE_PACKING:packing_over_budget": 3,
+          "PIVOT_CAP_LEAD_RESELECTION": 3,
+          "EVIDENCE_BUDGET_DROP:coedit_injected_high": 2,
+          "REPRESENTATION_ROUTING:ceiling": 2,
+          "EVIDENCE_BUDGET_DROP:base_support_tier_1": 1,
+          "SUPPORT_WINDOW_PARTITION:coedit_displacement:window_changed": 1
+        },
+        "firstDivergenceByStage": {
+          "none": 262,
+          "S2_role_assignment": 30,
+          "S7_evidence_budget": 19,
+          "S4a_pivot_order": 3,
+          "S5_packing": 3,
+          "S9_projector": 2,
+          "S4b_support_order": 1
+        },
+        "lostItems": 80,
+        "lostItemsByMechanism": {
+          "CAPSULE_PACKING:packing_over_budget": 24,
+          "EVIDENCE_BUDGET_DROP:budget_demoted_pivot": 16,
+          "EVIDENCE_BUDGET_DROP:graph_neighbour_anchoring": 12,
+          "EVIDENCE_BUDGET_DROP:base_support_tier_1": 11,
+          "EVIDENCE_BUDGET_DROP:impact_evidence(inferred)": 6,
+          "EVIDENCE_BUDGET_DROP:coedit_injected_high": 4,
+          "PIVOT_CAP_LEAD_RESELECTION": 4,
+          "EVIDENCE_BUDGET_DROP:coedit_rescued_high": 2,
+          "EVIDENCE_BUDGET_DROP:coedit_rescued_medium": 1
+        },
+        "movedItems": 126,
+        "movedItemsByMechanism": {
+          "PIVOT_CAP_ROLE_PROMOTION": 67,
+          "SUPPORT_WINDOW_PARTITION:coedit_displacement:window_changed": 36,
+          "REPRESENTATION_ROUTING:ceiling": 9,
+          "SUPPORT_LANE_PLACEMENT:coedit_rescued_medium": 6,
+          "SUPPORT_LANE_PLACEMENT:coedit_injected_medium": 5,
+          "SUPPORT_LANE_PLACEMENT:coedit_injected_high": 2,
+          "SUPPORT_LANE_PLACEMENT:coedit_rescued_high": 1
+        },
+        "focusSwaps": 5,
+        "focusSwapsByClass": {
+          "tier_cap_widened_then_v2_reordered": 4,
+          "tier_cap_widened_then_anchor_tier_reordered": 1
+        },
+        "sizeViolations": 4,
+        "sizeViolationsByCause": {
+          "focus_swap": 3,
+          "same_focus_body_shrank": 1
+        },
+        "representationRegressions": 9,
+        "representationRegressionsByClass": {
+          "necessary_ceiling": 6,
+          "avoidable_admission_first_crowding": 3
+        },
+        "representationRegressionsByReason": {
+          "ceiling": 9
+        },
+        "unattributedTransitions": [],
+        "unaccountedItems": [],
+        "alignmentFailures": [],
+        "gate": "A13_CAUSAL_ATTRIBUTION_COMPLETE"
+      },
+      "frozenA11": {
+        "1000": 85.05,
+        "2000": 94.78,
+        "4000": 101.73,
+        "8000": 55.45,
+        "16000": 27.88
+      },
+      "byBudget": {
+        "750": {
+          "tier": [
+            "micro"
+          ],
+          "allowance": 25,
+          "poolWidthUsed": 25,
+          "medianPool": 31,
+          "medianDelivered": 5,
+          "medianWholeTokens": 654.5,
+          "medianUtilisation": 87.27,
+          "overBudget": 2,
+          "evidenceOverBudget": 0,
+          "medianAccountingOverheadTokens": 16,
+          "deliveryStatus": {
+            "compacted": 20
+          },
+          "latency": {
+            "n": 20,
+            "median": 283.6,
+            "p90": 352.3,
+            "p95": 405.5,
+            "max": 890.2,
+            "min": 257.6
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 120.1,
+            "p90": 140.1,
+            "p95": 154.7,
+            "max": 690.3,
+            "min": 106.2
+          },
+          "debugDeliveryMatchesDefault": 0,
+          "debugDeliveryDiffers": 0
+        },
+        "1000": {
+          "tier": [
+            "micro"
+          ],
+          "allowance": 25,
+          "poolWidthUsed": 25,
+          "medianPool": 31,
+          "medianDelivered": 8,
+          "medianWholeTokens": 850.5,
+          "medianUtilisation": 85.05,
+          "overBudget": 4,
+          "evidenceOverBudget": 0,
+          "medianAccountingOverheadTokens": 25,
+          "deliveryStatus": {
+            "compacted": 20
+          },
+          "latency": {
+            "n": 20,
+            "median": 286.55,
+            "p90": 334.7,
+            "p95": 402,
+            "max": 877.8,
+            "min": 266.4
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 119.25,
+            "p90": 137.8,
+            "p95": 156,
+            "max": 701.2,
+            "min": 105
+          },
+          "debugDeliveryMatchesDefault": 0,
+          "debugDeliveryDiffers": 20
+        },
+        "1250": {
+          "tier": [
+            "micro"
+          ],
+          "allowance": 25,
+          "poolWidthUsed": 25,
+          "medianPool": 31,
+          "medianDelivered": 10,
+          "medianWholeTokens": 1114,
+          "medianUtilisation": 89.12,
+          "overBudget": 2,
+          "evidenceOverBudget": 0,
+          "medianAccountingOverheadTokens": 32,
+          "deliveryStatus": {
+            "compacted": 20
+          },
+          "latency": {
+            "n": 20,
+            "median": 294.4,
+            "p90": 341.4,
+            "p95": 398.9,
+            "max": 875.6,
+            "min": 261.7
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 120.25,
+            "p90": 138.4,
+            "p95": 149.9,
+            "max": 694.2,
+            "min": 106.5
+          },
+          "debugDeliveryMatchesDefault": 0,
+          "debugDeliveryDiffers": 0
+        },
+        "1499": {
+          "tier": [
+            "micro"
+          ],
+          "allowance": 25,
+          "poolWidthUsed": 25,
+          "medianPool": 31,
+          "medianDelivered": 12,
+          "medianWholeTokens": 1402.5,
+          "medianUtilisation": 93.56,
+          "overBudget": 4,
+          "evidenceOverBudget": 0,
+          "medianAccountingOverheadTokens": 39,
+          "deliveryStatus": {
+            "compacted": 20
+          },
+          "latency": {
+            "n": 20,
+            "median": 296.9,
+            "p90": 355.3,
+            "p95": 386.9,
+            "max": 881.7,
+            "min": 281
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 120.85,
+            "p90": 129,
+            "p95": 150.6,
+            "max": 698.8,
+            "min": 106.2
+          },
+          "debugDeliveryMatchesDefault": 0,
+          "debugDeliveryDiffers": 0
+        },
+        "1500": {
+          "tier": [
+            "standard"
+          ],
+          "allowance": 25,
+          "poolWidthUsed": 25,
+          "medianPool": 31,
+          "medianDelivered": 12,
+          "medianWholeTokens": 1342,
+          "medianUtilisation": 89.47,
+          "overBudget": 6,
+          "evidenceOverBudget": 0,
+          "medianAccountingOverheadTokens": 38,
+          "deliveryStatus": {
+            "compacted": 20
+          },
+          "latency": {
+            "n": 20,
+            "median": 301.55,
+            "p90": 336.1,
+            "p95": 394.3,
+            "max": 875,
+            "min": 277.7
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 118.2,
+            "p90": 129.9,
+            "p95": 145.7,
+            "max": 697,
+            "min": 107.4
+          },
+          "debugDeliveryMatchesDefault": 0,
+          "debugDeliveryDiffers": 0
+        },
+        "2000": {
+          "tier": [
+            "standard"
+          ],
+          "allowance": 25,
+          "poolWidthUsed": 25,
+          "medianPool": 31,
+          "medianDelivered": 16.5,
+          "medianWholeTokens": 1895.5,
+          "medianUtilisation": 94.78,
+          "overBudget": 5,
+          "evidenceOverBudget": 0,
+          "medianAccountingOverheadTokens": 53.5,
+          "deliveryStatus": {
+            "compacted": 20
+          },
+          "latency": {
+            "n": 20,
+            "median": 301,
+            "p90": 343.5,
+            "p95": 437.9,
+            "max": 886.9,
+            "min": 269
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 120.05,
+            "p90": 136.3,
+            "p95": 152,
+            "max": 713.9,
+            "min": 102.3
+          },
+          "debugDeliveryMatchesDefault": 0,
+          "debugDeliveryDiffers": 20
+        },
+        "2500": {
+          "tier": [
+            "standard"
+          ],
+          "allowance": 25,
+          "poolWidthUsed": 25,
+          "medianPool": 31,
+          "medianDelivered": 20,
+          "medianWholeTokens": 2474,
+          "medianUtilisation": 98.96,
+          "overBudget": 8,
+          "evidenceOverBudget": 0,
+          "medianAccountingOverheadTokens": 65,
+          "deliveryStatus": {
+            "compacted": 20
+          },
+          "latency": {
+            "n": 20,
+            "median": 299.85,
+            "p90": 371.4,
+            "p95": 409.5,
+            "max": 883.9,
+            "min": 282.4
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 120.1,
+            "p90": 130,
+            "p95": 149.8,
+            "max": 693.8,
+            "min": 99.9
+          },
+          "debugDeliveryMatchesDefault": 0,
+          "debugDeliveryDiffers": 0
+        },
+        "3000": {
+          "tier": [
+            "standard"
+          ],
+          "allowance": 25,
+          "poolWidthUsed": 25,
+          "medianPool": 31,
+          "medianDelivered": 25,
+          "medianWholeTokens": 3021.5,
+          "medianUtilisation": 100.72,
+          "overBudget": 12,
+          "evidenceOverBudget": 0,
+          "medianAccountingOverheadTokens": 81,
+          "deliveryStatus": {
+            "compacted": 20
+          },
+          "latency": {
+            "n": 20,
+            "median": 307.75,
+            "p90": 352.8,
+            "p95": 399,
+            "max": 907.5,
+            "min": 271.9
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 122.1,
+            "p90": 139.5,
+            "p95": 147.6,
+            "max": 704.5,
+            "min": 100.1
+          },
+          "debugDeliveryMatchesDefault": 0,
+          "debugDeliveryDiffers": 0
+        },
+        "4000": {
+          "tier": [
+            "standard"
+          ],
+          "allowance": 34,
+          "poolWidthUsed": 25,
+          "medianPool": 31,
+          "medianDelivered": 33,
+          "medianWholeTokens": 4069.5,
+          "medianUtilisation": 101.73,
+          "overBudget": 13,
+          "evidenceOverBudget": 0,
+          "medianAccountingOverheadTokens": 106,
+          "deliveryStatus": {
+            "compacted": 19,
+            "complete": 1
+          },
+          "latency": {
+            "n": 20,
+            "median": 301.95,
+            "p90": 362.2,
+            "p95": 381.4,
+            "max": 893.1,
+            "min": 283.7
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 119.85,
+            "p90": 132.5,
+            "p95": 150.9,
+            "max": 713.1,
+            "min": 109.3
+          },
+          "debugDeliveryMatchesDefault": 0,
+          "debugDeliveryDiffers": 20
+        },
+        "5000": {
+          "tier": [
+            "standard"
+          ],
+          "allowance": 42,
+          "poolWidthUsed": 25,
+          "medianPool": 31,
+          "medianDelivered": 36,
+          "medianWholeTokens": 4368,
+          "medianUtilisation": 87.36,
+          "overBudget": 0,
+          "evidenceOverBudget": 0,
+          "medianAccountingOverheadTokens": 116.5,
+          "deliveryStatus": {
+            "complete": 8,
+            "compacted": 12
+          },
+          "latency": {
+            "n": 20,
+            "median": 306.7,
+            "p90": 341.4,
+            "p95": 392.3,
+            "max": 898.8,
+            "min": 280.1
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 119.95,
+            "p90": 147.1,
+            "p95": 150.9,
+            "max": 703.4,
+            "min": 108.9
+          },
+          "debugDeliveryMatchesDefault": 0,
+          "debugDeliveryDiffers": 0
+        },
+        "6000": {
+          "tier": [
+            "standard"
+          ],
+          "allowance": 50,
+          "poolWidthUsed": 25,
+          "medianPool": 31,
+          "medianDelivered": 36,
+          "medianWholeTokens": 4436.5,
+          "medianUtilisation": 73.94,
+          "overBudget": 0,
+          "evidenceOverBudget": 0,
+          "medianAccountingOverheadTokens": 116.5,
+          "deliveryStatus": {
+            "complete": 17,
+            "compacted": 3
+          },
+          "latency": {
+            "n": 20,
+            "median": 307.1,
+            "p90": 357.3,
+            "p95": 396,
+            "max": 880.6,
+            "min": 278.6
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 120.55,
+            "p90": 136.5,
+            "p95": 149.1,
+            "max": 702.5,
+            "min": 103.9
+          },
+          "debugDeliveryMatchesDefault": 0,
+          "debugDeliveryDiffers": 0
+        },
+        "8000": {
+          "tier": [
+            "standard"
+          ],
+          "allowance": 67,
+          "poolWidthUsed": 25,
+          "medianPool": 31,
+          "medianDelivered": 36,
+          "medianWholeTokens": 4436.5,
+          "medianUtilisation": 55.45,
+          "overBudget": 0,
+          "evidenceOverBudget": 0,
+          "medianAccountingOverheadTokens": 116.5,
+          "deliveryStatus": {
+            "complete": 20
+          },
+          "latency": {
+            "n": 20,
+            "median": 299.35,
+            "p90": 341.6,
+            "p95": 397.9,
+            "max": 881.8,
+            "min": 274.5
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 119.1,
+            "p90": 134.5,
+            "p95": 150.3,
+            "max": 693,
+            "min": 105.9
+          },
+          "debugDeliveryMatchesDefault": 0,
+          "debugDeliveryDiffers": 20
+        },
+        "10000": {
+          "tier": [
+            "standard"
+          ],
+          "allowance": 84,
+          "poolWidthUsed": 25,
+          "medianPool": 31,
+          "medianDelivered": 36,
+          "medianWholeTokens": 4436.5,
+          "medianUtilisation": 44.37,
+          "overBudget": 0,
+          "evidenceOverBudget": 0,
+          "medianAccountingOverheadTokens": 116.5,
+          "deliveryStatus": {
+            "complete": 20
+          },
+          "latency": {
+            "n": 20,
+            "median": 296.3,
+            "p90": 374.5,
+            "p95": 399.2,
+            "max": 880.8,
+            "min": 271.3
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 119.25,
+            "p90": 143.7,
+            "p95": 167.2,
+            "max": 699.6,
+            "min": 107.1
+          },
+          "debugDeliveryMatchesDefault": 0,
+          "debugDeliveryDiffers": 0
+        },
+        "11999": {
+          "tier": [
+            "standard"
+          ],
+          "allowance": 100,
+          "poolWidthUsed": 25,
+          "medianPool": 31,
+          "medianDelivered": 36,
+          "medianWholeTokens": 4436.5,
+          "medianUtilisation": 36.97,
+          "overBudget": 0,
+          "evidenceOverBudget": 0,
+          "medianAccountingOverheadTokens": 116.5,
+          "deliveryStatus": {
+            "complete": 20
+          },
+          "latency": {
+            "n": 20,
+            "median": 298.25,
+            "p90": 371.7,
+            "p95": 388.5,
+            "max": 882.5,
+            "min": 270.8
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 120,
+            "p90": 147.9,
+            "p95": 149.2,
+            "max": 700.4,
+            "min": 104.8
+          },
+          "debugDeliveryMatchesDefault": 0,
+          "debugDeliveryDiffers": 0
+        },
+        "12000": {
+          "tier": [
+            "full"
+          ],
+          "allowance": 100,
+          "poolWidthUsed": 25,
+          "medianPool": 31,
+          "medianDelivered": 37,
+          "medianWholeTokens": 4459.5,
+          "medianUtilisation": 37.16,
+          "overBudget": 0,
+          "evidenceOverBudget": 0,
+          "medianAccountingOverheadTokens": 119,
+          "deliveryStatus": {
+            "complete": 20
+          },
+          "latency": {
+            "n": 20,
+            "median": 303.25,
+            "p90": 361.3,
+            "p95": 393.3,
+            "max": 873.4,
+            "min": 272.2
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 120.5,
+            "p90": 134.7,
+            "p95": 149.9,
+            "max": 698.5,
+            "min": 102.1
+          },
+          "debugDeliveryMatchesDefault": 0,
+          "debugDeliveryDiffers": 0
+        },
+        "16000": {
+          "tier": [
+            "full"
+          ],
+          "allowance": 134,
+          "poolWidthUsed": 25,
+          "medianPool": 31,
+          "medianDelivered": 37,
+          "medianWholeTokens": 4459.5,
+          "medianUtilisation": 27.88,
+          "overBudget": 0,
+          "evidenceOverBudget": 0,
+          "medianAccountingOverheadTokens": 119,
+          "deliveryStatus": {
+            "complete": 20
+          },
+          "latency": {
+            "n": 20,
+            "median": 295.8,
+            "p90": 337.7,
+            "p95": 386.5,
+            "max": 896,
+            "min": 262.1
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 118.5,
+            "p90": 134.4,
+            "p95": 148.8,
+            "max": 701,
+            "min": 108.5
+          },
+          "debugDeliveryMatchesDefault": 1,
+          "debugDeliveryDiffers": 19
+        },
+        "20000": {
+          "tier": [
+            "full"
+          ],
+          "allowance": 167,
+          "poolWidthUsed": 25,
+          "medianPool": 31,
+          "medianDelivered": 37,
+          "medianWholeTokens": 4459.5,
+          "medianUtilisation": 22.3,
+          "overBudget": 0,
+          "evidenceOverBudget": 0,
+          "medianAccountingOverheadTokens": 119,
+          "deliveryStatus": {
+            "complete": 20
+          },
+          "latency": {
+            "n": 20,
+            "median": 293.95,
+            "p90": 335.5,
+            "p95": 396.2,
+            "max": 879.4,
+            "min": 269.4
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 123.05,
+            "p90": 131.2,
+            "p95": 153.9,
+            "max": 695.7,
+            "min": 102.3
+          },
+          "debugDeliveryMatchesDefault": 0,
+          "debugDeliveryDiffers": 0
+        }
+      },
+      "projectorOnly": [
+        {
+          "task": "where are import edges extracted from typescript",
+          "from": 1000,
+          "to": 2000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "where are import edges extracted from typescript",
+          "from": 2000,
+          "to": 4000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "where are import edges extracted from typescript",
+          "from": 4000,
+          "to": 8000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "where are import edges extracted from typescript",
+          "from": 8000,
+          "to": 16000,
+          "measured": true,
+          "sameFocus": true,
+          "relation": "prefix",
+          "lowerRelated": 37,
+          "higherRelated": 37,
+          "representationRegressions": 0
+        },
+        {
+          "task": "how does the indexer decide a file is eligible for parsing",
+          "from": 1000,
+          "to": 2000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "how does the indexer decide a file is eligible for parsing",
+          "from": 2000,
+          "to": 4000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "how does the indexer decide a file is eligible for parsing",
+          "from": 4000,
+          "to": 8000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "how does the indexer decide a file is eligible for parsing",
+          "from": 8000,
+          "to": 16000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "budget allocation for capsule items is dropping sections",
+          "from": 1000,
+          "to": 2000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "budget allocation for capsule items is dropping sections",
+          "from": 2000,
+          "to": 4000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "budget allocation for capsule items is dropping sections",
+          "from": 4000,
+          "to": 8000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "budget allocation for capsule items is dropping sections",
+          "from": 8000,
+          "to": 16000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "how is the impact graph bounded when a symbol has many callers",
+          "from": 1000,
+          "to": 2000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "how is the impact graph bounded when a symbol has many callers",
+          "from": 2000,
+          "to": 4000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "how is the impact graph bounded when a symbol has many callers",
+          "from": 4000,
+          "to": 8000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "how is the impact graph bounded when a symbol has many callers",
+          "from": 8000,
+          "to": 16000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "where does logic flow decide a path is unreachable",
+          "from": 1000,
+          "to": 2000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "where does logic flow decide a path is unreachable",
+          "from": 2000,
+          "to": 4000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "where does logic flow decide a path is unreachable",
+          "from": 4000,
+          "to": 8000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "where does logic flow decide a path is unreachable",
+          "from": 8000,
+          "to": 16000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "how are skeleton declarations built from indexed symbols",
+          "from": 1000,
+          "to": 2000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "how are skeleton declarations built from indexed symbols",
+          "from": 2000,
+          "to": 4000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "how are skeleton declarations built from indexed symbols",
+          "from": 4000,
+          "to": 8000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "how are skeleton declarations built from indexed symbols",
+          "from": 8000,
+          "to": 16000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "what determines whether the repository index is considered fresh",
+          "from": 1000,
+          "to": 2000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "what determines whether the repository index is considered fresh",
+          "from": 2000,
+          "to": 4000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "what determines whether the repository index is considered fresh",
+          "from": 4000,
+          "to": 8000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "what determines whether the repository index is considered fresh",
+          "from": 8000,
+          "to": 16000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "how does hybrid scoring combine lexical and graph signals",
+          "from": 1000,
+          "to": 2000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "how does hybrid scoring combine lexical and graph signals",
+          "from": 2000,
+          "to": 4000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "how does hybrid scoring combine lexical and graph signals",
+          "from": 4000,
+          "to": 8000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "how does hybrid scoring combine lexical and graph signals",
+          "from": 8000,
+          "to": 16000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "where is the MCP tool registry assembled",
+          "from": 1000,
+          "to": 2000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "where is the MCP tool registry assembled",
+          "from": 2000,
+          "to": 4000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "where is the MCP tool registry assembled",
+          "from": 4000,
+          "to": 8000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "where is the MCP tool registry assembled",
+          "from": 8000,
+          "to": 16000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "how does the python parser resolve module imports",
+          "from": 1000,
+          "to": 2000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "how does the python parser resolve module imports",
+          "from": 2000,
+          "to": 4000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "how does the python parser resolve module imports",
+          "from": 4000,
+          "to": 8000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "how does the python parser resolve module imports",
+          "from": 8000,
+          "to": 16000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "what writes the index manifest after a run",
+          "from": 1000,
+          "to": 2000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "what writes the index manifest after a run",
+          "from": 2000,
+          "to": 4000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "what writes the index manifest after a run",
+          "from": 4000,
+          "to": 8000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "what writes the index manifest after a run",
+          "from": 8000,
+          "to": 16000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "how are worktrees excluded from the parent repository index",
+          "from": 1000,
+          "to": 2000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "how are worktrees excluded from the parent repository index",
+          "from": 2000,
+          "to": 4000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "how are worktrees excluded from the parent repository index",
+          "from": 4000,
+          "to": 8000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "how are worktrees excluded from the parent repository index",
+          "from": 8000,
+          "to": 16000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "where does the product context decide which files are pivots",
+          "from": 1000,
+          "to": 2000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "where does the product context decide which files are pivots",
+          "from": 2000,
+          "to": 4000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "where does the product context decide which files are pivots",
+          "from": 4000,
+          "to": 8000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "where does the product context decide which files are pivots",
+          "from": 8000,
+          "to": 16000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "how does the response envelope shed content under budget pressure",
+          "from": 1000,
+          "to": 2000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "how does the response envelope shed content under budget pressure",
+          "from": 2000,
+          "to": 4000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "how does the response envelope shed content under budget pressure",
+          "from": 4000,
+          "to": 8000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "how does the response envelope shed content under budget pressure",
+          "from": 8000,
+          "to": 16000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "what deduplicates supporting files in the capsule",
+          "from": 1000,
+          "to": 2000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "what deduplicates supporting files in the capsule",
+          "from": 2000,
+          "to": 4000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "what deduplicates supporting files in the capsule",
+          "from": 4000,
+          "to": 8000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "what deduplicates supporting files in the capsule",
+          "from": 8000,
+          "to": 16000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "how does cython parsing differ from python parsing",
+          "from": 1000,
+          "to": 2000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "how does cython parsing differ from python parsing",
+          "from": 2000,
+          "to": 4000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "how does cython parsing differ from python parsing",
+          "from": 4000,
+          "to": 8000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "how does cython parsing differ from python parsing",
+          "from": 8000,
+          "to": 16000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "where are call sites persisted for an edge",
+          "from": 1000,
+          "to": 2000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "where are call sites persisted for an edge",
+          "from": 2000,
+          "to": 4000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "where are call sites persisted for an edge",
+          "from": 4000,
+          "to": 8000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "where are call sites persisted for an edge",
+          "from": 8000,
+          "to": 16000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "how does search rank candidate symbols for a task",
+          "from": 1000,
+          "to": 2000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "how does search rank candidate symbols for a task",
+          "from": 2000,
+          "to": 4000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "how does search rank candidate symbols for a task",
+          "from": 4000,
+          "to": 8000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "how does search rank candidate symbols for a task",
+          "from": 8000,
+          "to": 16000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "what happens when the index schema version is incompatible",
+          "from": 1000,
+          "to": 2000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "what happens when the index schema version is incompatible",
+          "from": 2000,
+          "to": 4000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "what happens when the index schema version is incompatible",
+          "from": 4000,
+          "to": 8000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "what happens when the index schema version is incompatible",
+          "from": 8000,
+          "to": 16000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "how is a symbol's fully qualified name constructed",
+          "from": 1000,
+          "to": 2000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "how is a symbol's fully qualified name constructed",
+          "from": 2000,
+          "to": 4000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "how is a symbol's fully qualified name constructed",
+          "from": 4000,
+          "to": 8000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        },
+        {
+          "task": "how is a symbol's fully qualified name constructed",
+          "from": 8000,
+          "to": 16000,
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
+        }
+      ],
+      "determinism": {
+        "repeats": 1,
+        "packetsStable": true,
+        "unstablePackets": [],
+        "ledgersStable": true,
+        "unstableLedgers": []
+      },
+      "consistency": {
+        "directBuildInconsistent": [],
+        "assemblyMisaligned": []
+      }
+    }
+  ]
+}
