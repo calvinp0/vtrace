@@ -300,6 +300,8 @@ export interface CapsuleV2Diagnostics {
   strategy: IntentStrategy;
   /** Total candidates the role gate ran over (post-retrieval, pre-roles). */
   candidate_count: number;
+  /** The candidate allowance retrieval was asked for (M207: derived from the budget). */
+  candidate_pool_size: number;
   /** Ordered pre-role candidates with reproducible component attribution. */
   candidate_scores?: CandidateScoreDiagnostic[];
   /** True only when an empty normal hybrid pool used M121 bounded rescue. */

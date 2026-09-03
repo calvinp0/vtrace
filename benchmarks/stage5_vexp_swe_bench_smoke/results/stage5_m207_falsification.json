@@ -1,0 +1,115 @@
+{
+  "milestone": "M207",
+  "instrument": "run_stage5_m207_falsification.ts",
+  "predecessor": {
+    "root": "/home/calvin/bench/vtrace-m207/pre",
+    "head": "b150fcb95f2e3a376170daff62a5e038c305a58f",
+    "pool": 25
+  },
+  "product": {
+    "floor": 25,
+    "hardMaximum": 400,
+    "tokensPerDeliveredCandidate": 120,
+    "allowance": {
+      "1000": 25,
+      "2000": 25,
+      "4000": 34,
+      "8000": 67,
+      "16000": 134
+    }
+  },
+  "fixture": "abundantFixture: one edit target, N support-worthy resolvers in distinct files, optional test tail, unrelated billing symbols and same-signature twins; built by the production buildCapsuleV2 and, for the historical pool, by the predecessor worktree's on the same in-memory index",
+  "controls": [
+    {
+      "id": "F1",
+      "statement": "the historical fixed pool truncates an abundant truthful universe; the budget-derived pool exposes more of the same ranked stream and delivers it",
+      "pass": true,
+      "detail": "predecessor pool 25 (constant 25), support 20; product pool 62 (allowance 134), support 57; newly exposed 37, all resolvers true"
+    },
+    {
+      "id": "F2",
+      "statement": "a huge caller budget over a small truthful universe leaves the budget unused: no filler, no relaxed relevance, every delivered identity in the ranked stream",
+      "pass": true,
+      "detail": "allowance 134, pool 5, delivered 5; utilisation 3.44% at 16000; supply exhausted true"
+    },
+    {
+      "id": "F3",
+      "statement": "broadening the allowance makes nothing eligible that was not: test symbols stay out at the role gate and symbols with no evidence never enter the pool",
+      "pass": true,
+      "detail": "allowance 134, pool 24; billing symbols in pool 0/40; tests delivered 0, role-gate discards 16"
+    },
+    {
+      "id": "F4",
+      "statement": "one semantic symbol proposed through several routes is one candidate after dedupe, one delivered item and one accounting record",
+      "pass": true,
+      "detail": "twins delivered 1, redundant 1; pool ids unique; projector delivered 1x with origins [\"item_supply\",\"pivot_neighborhood\"], deduplicated 1"
+    },
+    {
+      "id": "F5",
+      "statement": "equal-score candidates around the old pool boundary keep one stable order across repeated builds and across widths: the narrow pool is a prefix of the wide pool",
+      "pass": true,
+      "detail": "4 builds -> 1 hash(es); predecessor pool 25 is a prefix of product pool 62: true; equal finals present true"
+    },
+    {
+      "id": "F6",
+      "statement": "a large newly exposed support universe never replaces a required pivot: pivot set, lead and cap identical to the predecessor at every budget",
+      "pass": true,
+      "detail": "8000: pivots [\"widgets/registry.py::WidgetRegistry.resolve_widget_handler\",\"widgets/registry.py::WidgetRegistry\"] same true, cap 2, support 23 -> 60; 16000: pivots [\"widgets/registry.py::WidgetRegistry.resolve_widget_handler\",\"widgets/resolvers/resolver_0.py::resolve_widget_handler_0\",\"widgets/resolvers/resolver_1.py::resolve_widget_handler_1\",\"widgets/resolvers/resolver_10.py::resolve_widget_handler_10\",\"widgets/registry.py::WidgetRegistry\"] same true, cap 5, support 20 -> 57"
+    },
+    {
+      "id": "F7",
+      "statement": "arbitrary caller budgets follow one general policy: allowance = clamp(ceil(budget / expected cost), floor, hard maximum), monotone, no frozen-rung special case, and the capsule's pool follows it",
+      "pass": true,
+      "detail": "grid 1:25 100:25 500:25 1000:25 1500:25 2000:25 2500:25 3000:25 3300:28 4000:34 5000:42 6000:50 7000:59 8000:67 9000:75 12000:100 13000:109 16000:134 20000:167 48000:400 100000:400 1000000:400; agree true, monotone true, bounded true, capsule pool = min(universe 62, allowance) at 1500/3000/6000/12000 true"
+    },
+    {
+      "id": "F8",
+      "statement": "a very large candidate-producing repository stays deterministically bounded: the pool never exceeds the hard maximum, the 16000 pool never exceeds its allowance, and time and memory stay controlled",
+      "pass": true,
+      "detail": "500 candidates -> pool 106 at 1e6 tokens (hard max 400) in 22 ms; pool 106 at 16000 (allowance 134) in 22 ms; rss delta 7 MB"
+    },
+    {
+      "id": "F9",
+      "statement": "every newly admitted item reconciles through M203: the expanded packet is fully A14-accounted, and a corrupted or missing cost on a tail item fails the analyzer",
+      "pass": true,
+      "detail": "honest ACCOUNTING_INTEGRITY_PASS (62/62 accounted, 61 related); forged ACCOUNTING_INTEGRITY_FAIL; missing cost accounted 61/62"
+    },
+    {
+      "id": "F10",
+      "statement": "a newly admitted tail candidate carries only a representation its source supports: the expanded packet passes M205 and a fabricated tail body fails",
+      "pass": true,
+      "detail": "honest REPRESENTATION_INTEGRITY_PASS, 61 of 61 related carry code; forged tail #61 REPRESENTATION_INTEGRITY_FAIL (SIGNATURE_NOT_PARSER)"
+    },
+    {
+      "id": "F11",
+      "statement": "broader retrieval can raise supply while a focus swap between budgets stays an A13 violation: the utilisation analyzer passes both packets and the swap is counted separately",
+      "pass": true,
+      "detail": "analyzer UTILIZATION_INTEGRITY_PASS/UTILIZATION_INTEGRITY_PASS; related 33 -> 61; product focus stable true; constructed swap counted true"
+    },
+    {
+      "id": "F12",
+      "statement": "A11 moves without any A15 rendering: no impact or call-site entry at either width, and every added entry is an existing representation of a newly exposed candidate",
+      "pass": true,
+      "detail": "related 24 -> 61; impact-like entries 0/0; forms after [\"focused_source\",\"signature\"]"
+    },
+    {
+      "id": "F13",
+      "statement": "no competitor-derived or benchmark-derived constant governs the pool: no 423, no 'top 12 because VEXP', no frozen-rung case, no A11 threshold in the product change",
+      "pass": true,
+      "detail": "added product lines 119; competitor hits 0; rung-keyed pool lines 0; threshold-keyed lines 0; 423 in pool sources false"
+    },
+    {
+      "id": "F14",
+      "statement": "with the pool pinned to the historical constant the product reproduces the predecessor exactly; only the unpinned pool moves the outcome",
+      "pass": true,
+      "detail": "2000: pinned==predecessor true; free pool 25 vs 25; 8000: pinned==predecessor true; free pool 62 vs 25; 16000: pinned==predecessor true; free pool 62 vs 25"
+    },
+    {
+      "id": "F15",
+      "statement": "the evidence-budget ladder drops ordinary support from the tail until it fits but collapses to one item when every support is answer-bearing: a downstream hazard the pool policy stays clear of, documented and not repaired here",
+      "pass": true,
+      "detail": "1200-token budget over 1 pivot + 40 supports: ordinary support -> 19 items [\"selection_reasons_compacted\",\"support_skeletonized\",\"support_dropped\"]; all answer-bearing -> 1 item(s) [\"selection_reasons_compacted\",\"support_skeletonized\",\"minimal_representation\",\"lead_excerpt_shortened\"]"
+    }
+  ],
+  "verdict": "M207_FALSIFICATION_CONTROLS_PASS"
+}

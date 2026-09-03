@@ -37,7 +37,7 @@ import {
   recomputeWithWeakenedLexical,
   STRONG_DIRECT_LEXICAL,
 } from "../retrieval/hybridScoring";
-import { allocateBudget } from "./budgetAllocator";
+import { CANDIDATE_POOL_FLOOR, allocateBudget } from "./budgetAllocator";
 import {
   buildNoContextExplanations,
   collectIssueTokens,
@@ -174,21 +174,23 @@ export interface BuildCapsuleV2Input {
    * bound — the lexical row budget, the backfill lanes' own search windows, the
    * role gate, the pivot cap, the token budget — stays at its product value, so
    * a sweep over this input varies retrieval breadth alone. Defaults to the
-   * product pool. Never set on a request path; the MCP server carries it only
-   * as a construction-time instrumentation field.
+   * budget's candidate allowance (`allocateBudget(maxTokens).candidatePool`).
+   * Never set on a request path; the MCP server carries it only as a
+   * construction-time instrumentation field.
    */
   candidatePoolSize?: number;
 }
 
-// The candidate pool retrieval ranks before role assignment. Generous so the
-// failing-test/graph routes can pull in a target lexical search alone missed;
-// the budget allocator and role gate trim it back down.
-const CANDIDATE_POOL_SIZE = 25;
-// The lexical lane's row budget is derived from the PRODUCT pool, not from a
-// counterfactual width: the lane's BM25 idf and every max-normalised component
-// are functions of the rows it returns, so holding it fixed is what keeps a
-// pool-width sweep a sweep over breadth alone.
-const LEXICAL_POOL_SIZE = lexicalPoolSizeFor(CANDIDATE_POOL_SIZE);
+// The candidate pool retrieval ranks before role assignment is sized by the
+// caller's budget (M207): `allocateBudget(maxTokens).candidatePool`, the number
+// of ranked candidates the budget could deliver at the product's measured cost
+// per delivered entry, floored at the historical pool and capped by a hard
+// maximum. See budgetAllocator.ts for the measurement and the rule. The
+// lexical lane's row budget and the backfill lanes' search windows stay sized
+// from the FLOOR: they are generator windows, and widening the lexical one
+// changes BM25 idf and every max-normalised score — a ranking change, not a
+// breadth change — so it is held where the ranking was proven.
+const LEXICAL_POOL_SIZE = lexicalPoolSizeFor(CANDIDATE_POOL_FLOOR);
 // Cap on how many evidence lines a pivot carries — enough to justify the edit
 // target without flooding the capsule.
 const MAX_PIVOT_EVIDENCE = 6;
@@ -249,7 +251,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   // fixed keys, so it is not directly a Record<string, number>).
   const weightsRecord: Record<string, number> = Object.fromEntries(Object.entries(weights));
   const allocation = allocateBudget(input.maxTokens);
-  const candidatePoolSize = input.candidatePoolSize ?? CANDIDATE_POOL_SIZE;
+  const candidatePoolSize = input.candidatePoolSize ?? allocation.candidatePool;
   const taskDerivationMs = performance.now() - taskDerivationStarted;
 
   const symbolSeeds = deriveSymbolSeeds(shaped);
@@ -364,8 +366,8 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
         weights,
         task: input.task,
         issueTokens: collectIssueTokens(shaped),
-        // The lane's own search window: the product pool, not the counterfactual width.
-        poolSize: CANDIDATE_POOL_SIZE,
+        // The lane's own search window, not the budget's allowance.
+        poolSize: CANDIDATE_POOL_FLOOR,
       });
       classMethodExpansionUsed = backfill.classMethodExpansionUsed;
       classMethodExpansion = backfill.expansion;
@@ -398,7 +400,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       db: input.db,
       shaped,
       weights,
-      poolSize: CANDIDATE_POOL_SIZE,
+      poolSize: CANDIDATE_POOL_FLOOR,
     });
     if (sqlCandidates.length > 0) {
       sqlRenderingBackfillUsed = true;
@@ -1052,6 +1054,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       plan,
       maxTokens: input.maxTokens,
       candidateCount: candidates.length,
+      candidatePoolSize,
       supportCount: supportCandidates.length,
       discarded: [
         ...supportCandidates.map((r) => toDiscarded(r, "support-only: no actionable edit target")),
@@ -1809,6 +1812,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       intent_confidence: plan.intent_confidence,
       strategy: plan.strategy,
       candidate_count: candidates.length,
+      candidate_pool_size: candidatePoolSize,
       candidate_scores: candidateScoreDiagnostics(candidates),
       ...(compoundTaskRescueUsed ? { compound_task_rescue_used: true } : {}),
       ...pathCompletionDiagnostics(
@@ -2364,6 +2368,7 @@ interface NoContextInput {
   plan: IntentPlan;
   maxTokens: number;
   candidateCount: number;
+  candidatePoolSize: number;
   supportCount: number;
   discarded: CapsuleV2Discarded[];
   weights: Record<string, number>;
@@ -2389,6 +2394,7 @@ function noContextResult(input: NoContextInput): CapsuleV2Result {
       intent_confidence: input.plan.intent_confidence,
       strategy: input.plan.strategy,
       candidate_count: input.candidateCount,
+      candidate_pool_size: input.candidatePoolSize,
       ...(input.compoundTaskRescueUsed ? { compound_task_rescue_used: true } : {}),
       pivot_count: 0,
       support_count: 0,

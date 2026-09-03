@@ -54,6 +54,12 @@ export interface BudgetAllocation {
    * and the ranked stream (M206).
    */
   supportWindow: number;
+  /**
+   * The CANDIDATE ALLOWANCE: how many ranked candidates retrieval returns to
+   * role assignment for this budget. Budget-derived, not tiered; see
+   * `candidatePoolFor`.
+   */
+  candidatePool: number;
 }
 
 // --- Tier thresholds (the tunable policy) ------------------------------------
@@ -77,7 +83,64 @@ const TIER_POLICY = {
   [CapsuleV2Mode.Full]: { maxPivots: 5, supportWindow: 10 },
 } as const;
 
-/** Map a token budget to its sizing tier, pivot cap and support window. */
+// --- The candidate allowance (M207) ------------------------------------------
+//
+// THE POOL IS SIZED BY THE BUDGET, NOT BY A CONSTANT. Until M207 the capsule
+// asked retrieval for a fixed 25 ranked candidates whatever the caller's
+// budget (CANDIDATE_POOL_SIZE, from the first capsule commit f099c3b1, whose
+// comment called it "generous" input the allocator and role gate would trim).
+// Once M206 made support delivery budget-bound, that constant became the
+// binding stage of the frozen A11 sweep at 8000 and 16000: the ranked stream
+// ended at the pool while most of the caller's budget stood unused (39 of 100
+// responses). The M207 pool-width sweep — the same product path, the same
+// lexical universe and scores, only the pool varied — measured the supply
+// curve on C-MED: whole-output utilisation at 16000 rose 27.9% -> 44.2% -> 73.9%
+// -> 94.7% at widths 25 / 50 / 100 / uncapped, with pivot sets identical at
+// every width and the universe exhausting at a median of 130 candidates.
+//
+// The rule: the number of ranked candidates the caller's budget could deliver
+// at the product's own measured cost per delivered support entry, never below
+// the historical pool (so no budget receives less than it did) and never above
+// an independent hard maximum (so a pathological budget cannot turn retrieval
+// into a repository scan). It grows monotonically with the budget, carries no
+// tier or rung, and knows nothing about any benchmark threshold.
+//
+// The expected cost is the median whole-output cost of one delivered support
+// entry on the M207 sweep (100-123 tokens per delivered item across widths and
+// budgets; a related entry renders as a skeleton or signature plus its header),
+// stated in the same chars/4 currency as `maxTokens`. It is a product
+// measurement, not a tuning knob: lowering it retrieves candidates the budget
+// cannot deliver, raising it leaves budget the universe could have filled.
+//
+// The floor is the historical pool. The hard maximum bounds the per-candidate
+// downstream work (role refinement, signature loads, support rendering,
+// projection) at roughly three times the largest natural universe measured on
+// any corpus (143 candidates on C-MED with the lexical row budget at 100), so
+// it never binds on a real repository today and still bounds a caller asking
+// for a million tokens.
+//
+// What the allowance does NOT change: the lexical lane's row budget stays
+// derived from the floor (widening it changes BM25 idf and every normalised
+// score — a ranking change, not a breadth change), the backfill lanes keep
+// their own search windows, and delivery stays bounded by the token budget,
+// the evidence budget and the caller's ceiling. A candidate may be retrieved
+// and still not delivered; that is expected.
+
+/** The historical pool: the least allowance any budget receives. */
+export const CANDIDATE_POOL_FLOOR = 25;
+/** Measured median whole-output cost of one delivered support entry (M207 sweep). */
+export const EXPECTED_TOKENS_PER_DELIVERED_CANDIDATE = 120;
+/** Independent resource bound on the ranked candidates handed downstream. */
+export const CANDIDATE_POOL_HARD_MAXIMUM = 400;
+
+/** The candidate allowance for a token budget: clamp(ceil(budget / expected cost), floor, hard maximum). */
+export function candidatePoolFor(maxTokens: number): number {
+  if (!Number.isFinite(maxTokens) || maxTokens <= 0) return CANDIDATE_POOL_FLOOR;
+  const wanted = Math.ceil(maxTokens / EXPECTED_TOKENS_PER_DELIVERED_CANDIDATE);
+  return Math.max(CANDIDATE_POOL_FLOOR, Math.min(CANDIDATE_POOL_HARD_MAXIMUM, wanted));
+}
+
+/** Map a token budget to its sizing tier, pivot cap, support window and candidate allowance. */
 export function allocateBudget(maxTokens: number): BudgetAllocation {
   const tier = maxTokens < MICRO_MAX_TOKENS
     ? CapsuleV2Mode.Micro
@@ -85,5 +148,5 @@ export function allocateBudget(maxTokens: number): BudgetAllocation {
       ? CapsuleV2Mode.Standard
       : CapsuleV2Mode.Full;
 
-  return { tier, ...TIER_POLICY[tier] };
+  return { tier, ...TIER_POLICY[tier], candidatePool: candidatePoolFor(maxTokens) };
 }

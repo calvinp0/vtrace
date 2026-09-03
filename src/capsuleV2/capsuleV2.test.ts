@@ -11,6 +11,13 @@
 import assert from "node:assert/strict";
 import { test } from "bun:test";
 
+import {
+  CANDIDATE_POOL_FLOOR,
+  CANDIDATE_POOL_HARD_MAXIMUM,
+  EXPECTED_TOKENS_PER_DELIVERED_CANDIDATE,
+  allocateBudget,
+  candidatePoolFor,
+} from "./budgetAllocator";
 import { buildCapsuleV2 } from "./buildCapsuleV2";
 import { renderCapsuleV2Human } from "./renderHuman";
 import { retrieveDocSections } from "./docRetrieval";
@@ -312,7 +319,45 @@ test("candidatePoolSize varies retrieval breadth alone", () => {
     assert.ok(narrow.diagnostics.candidate_count <= product.diagnostics.candidate_count);
     assert.ok(narrow.diagnostics.candidate_count <= 2 + 4, "a width of two admits two ranked candidates plus bounded lane extras");
     assert.ok(product.diagnostics.candidate_count < 25, "the fixture universe is smaller than the product pool");
-    assert.deepEqual(wide, product, "a width above the universe delivers the product's own result");
+    // The reported allowance is the one difference: the selection is the product's own.
+    const strip = (r: CapsuleV2Result) => ({ ...r, diagnostics: { ...r.diagnostics, candidate_pool_size: 0 } });
+    assert.deepEqual(strip(wide), strip(product), "a width above the universe delivers the product's own result");
+  } finally {
+    db.close();
+  }
+});
+
+// M207: the candidate allowance is derived from the budget by one rule —
+// clamp(ceil(budget / expected cost per delivered candidate), floor, hard
+// maximum) — with no tier, no rung and no benchmark constant; the capsule asks
+// retrieval for exactly that many ranked candidates and reports it.
+test("the candidate allowance follows the budget under one rule", () => {
+  const rule = (b: number) => Math.max(CANDIDATE_POOL_FLOOR, Math.min(CANDIDATE_POOL_HARD_MAXIMUM, Math.ceil(b / EXPECTED_TOKENS_PER_DELIVERED_CANDIDATE)));
+  const budgets = [1, 500, 1000, 1500, 2000, 3000, 4000, 5000, 6000, 8000, 12000, 16000, 20000, 48000, 100_000, 1_000_000];
+  for (const b of budgets) {
+    assert.equal(allocateBudget(b).candidatePool, rule(b), `allowance at ${b}`);
+    assert.equal(candidatePoolFor(b), rule(b));
+  }
+  const values = budgets.map((b) => allocateBudget(b).candidatePool);
+  for (let i = 1; i < values.length; i += 1) assert.ok(values[i]! >= values[i - 1]!, "monotone in the budget");
+  assert.equal(allocateBudget(1000).candidatePool, CANDIDATE_POOL_FLOOR, "a small budget keeps the historical pool");
+  assert.equal(allocateBudget(3000).candidatePool, CANDIDATE_POOL_FLOOR);
+  assert.ok(allocateBudget(8000).candidatePool > CANDIDATE_POOL_FLOOR && allocateBudget(16000).candidatePool > allocateBudget(8000).candidatePool);
+  assert.equal(allocateBudget(1_000_000).candidatePool, CANDIDATE_POOL_HARD_MAXIMUM, "a pathological budget is bounded");
+  assert.equal(candidatePoolFor(Number.NaN), CANDIDATE_POOL_FLOOR);
+  assert.equal(candidatePoolFor(-5), CANDIDATE_POOL_FLOOR);
+});
+
+test("the capsule asks retrieval for the budget's allowance and reports it", () => {
+  const { db, repoRoot } = seedCapsuleV2Fixture();
+  try {
+    for (const maxTokens of [1000, 8000, 16000]) {
+      const result = buildCapsuleV2({ db, repoRoot, task: INLINES_TASK, intent: CapsuleIntent.Debug, maxTokens });
+      assert.equal(result.diagnostics.candidate_pool_size, allocateBudget(maxTokens).candidatePool);
+      assert.ok(result.diagnostics.candidate_count <= result.diagnostics.candidate_pool_size + 8, "the pool never exceeds the allowance plus the bounded lanes");
+    }
+    const pinned = buildCapsuleV2({ db, repoRoot, task: INLINES_TASK, intent: CapsuleIntent.Debug, maxTokens: 16000, candidatePoolSize: 3 });
+    assert.equal(pinned.diagnostics.candidate_pool_size, 3, "the instrument overrides the allowance and is reported truthfully");
   } finally {
     db.close();
   }
