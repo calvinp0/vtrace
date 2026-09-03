@@ -40,6 +40,7 @@ import {
 import { CANDIDATE_POOL_FLOOR, allocateBudget } from "./budgetAllocator";
 import {
   buildNoContextExplanations,
+  capOrderedPivots,
   collectIssueTokens,
   passthroughRoles,
   refineDebugRoles,
@@ -270,6 +271,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
     symbolSeeds,
     maxResults: candidatePoolSize,
     lexicalPoolSize: LEXICAL_POOL_SIZE,
+    conceptOwnerPoolSize: CANDIDATE_POOL_FLOOR,
     ...(hybridProfile === undefined ? {} : { profile: hybridProfile }),
     requestCache: hybridRequestCache,
   });
@@ -290,6 +292,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       symbolSeeds,
       maxResults: candidatePoolSize,
       lexicalPoolSize: LEXICAL_POOL_SIZE,
+      conceptOwnerPoolSize: CANDIDATE_POOL_FLOOR,
       enableCompoundTaskRescue: true,
       ...(hybridProfile === undefined ? {} : { profile: hybridProfile }),
       requestCache: hybridRequestCache,
@@ -748,11 +751,14 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   let anchoredCapExemption: { path: string; symbol: string; symbolId: string } | undefined;
   const roleAssignmentStarted = capsuleProfile === undefined ? 0 : performance.now();
   if (debugRefinement) {
+    // Roles are assigned UNCAPPED (M208): the tier's pivot cap is applied below,
+    // as a prefix of the ordered pivot plan, so the cap and the order can never
+    // disagree about which target leads.
     const result = refineDebugRoles(
       input.db,
       assignCandidateRoles(candidates),
       shaped,
-      allocation.maxPivots,
+      Number.POSITIVE_INFINITY,
       {
         sourceTextOf: (symbolId) => loadFocusedSourceById(input.db, input.repoRoot, symbolId),
         ...(classMethodExpansion === undefined ? {} : { expansion: classMethodExpansion }),
@@ -768,9 +774,8 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
     subsystemRoot = result.subsystemRoot;
     sourceBodyCallFallbackUsed = result.sourceBodyCallFallbackUsed;
     anchoredDispatcherExemptions = result.anchoredDispatcherExemptions;
-    anchoredCapExemption = result.anchoredCapExemption;
   } else {
-    refined = passthroughRoles(assignCandidateRoles(candidates, { maxPivots: allocation.maxPivots }));
+    refined = passthroughRoles(assignCandidateRoles(candidates));
   }
   recordCapsuleTiming(capsuleProfile, "capsule.role_assignment", roleAssignmentStarted);
 
@@ -798,8 +803,13 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   if (scopedObjectives.length > 1) incrementDocumentCounter(documentProfile, "candidate_sorts", 1);
   const distinctScopedObjectives = scopedObjectives.filter((entry, index, all) =>
     all.findIndex((candidate) => candidate.candidate.filePath === entry.candidate.filePath) === index);
+  // The affinity rank of each scoped objective: the pivot plan below orders by it
+  // first, and the tier's cap takes a prefix of that plan (M208) — so the same
+  // objectives lead at every budget, in the same order.
+  const scopedObjectiveRank = new Map<string, number>();
   if (distinctScopedObjectives.length >= 2 && shaped.pathClues !== undefined) {
-    const selectedIds = new Set(distinctScopedObjectives.slice(0, allocation.maxPivots).map((entry) => entry.candidate.symbolId));
+    distinctScopedObjectives.forEach((entry, index) => scopedObjectiveRank.set(entry.candidate.symbolId, index));
+    const selectedIds = new Set(distinctScopedObjectives.map((entry) => entry.candidate.symbolId));
     for (const entry of refined) {
       if (selectedIds.has(entry.candidate.symbolId)) {
         entry.role = CandidateRole.Pivot;
@@ -850,36 +860,10 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
     }
   }
 
-  // Reclaim pivot slots vacated after the cap was applied.
-  //
-  // The pivot cap runs BEFORE the two demotions above, so a candidate that is
-  // subsequently disqualified from the pivot role keeps the slot it consumed.
-  // Measured on the M156 broad100 (M157-A): sphinx-9320 spends both standard
-  // slots on two `doc/conf.py` candidates, the non-source rule then disqualifies
-  // both, and the seventeen candidates that had met the pivot bar — including
-  // three gold symbols — stay demoted behind a budget that is no longer spent.
-  // The capsule returns EMPTY while holding seventeen eligible edit targets.
-  //
-  // This restores the cap's own intent rather than relaxing it: only candidates
-  // the role layer already judged pivot-worthy are eligible, only slots that are
-  // genuinely free are filled, and the ranked order is preserved, so it can
-  // neither invent an edit target nor change which target leads. A candidate any
-  // stage judged unfit (`pivotIneligible`) is never a occupant.
-  const freeSlots = allocation.maxPivots - refined.filter((e) => e.role === CandidateRole.Pivot).length;
-  const reclaimedPivotSlots: Array<{ path: string; symbol: string }> = [];
-  if (freeSlots > 0) {
-    for (const entry of refined) {
-      if (reclaimedPivotSlots.length >= freeSlots) break;
-      if (entry.role !== CandidateRole.Support) continue;
-      if (entry.budgetDemotedPivot !== true || entry.pivotIneligible === true) continue;
-      entry.role = CandidateRole.Pivot;
-      entry.roleReason = `${entry.roleReason} — pivot slot released by a later demotion`;
-      entry.budgetDemotedPivot = false;
-      reclaimedPivotSlots.push({ path: entry.candidate.filePath, symbol: entry.candidate.localName });
-    }
-  }
-  const reclaimedPivotDiagnostics: Partial<CapsuleV2Result["diagnostics"]> =
-    reclaimedPivotSlots.length > 0 ? { reclaimed_pivot_slots: reclaimedPivotSlots } : {};
+  // Slots vacated by the demotions above need no reclaiming (M208): the tier's
+  // pivot cap is applied AFTER them, to the ordered pivot plan, so a candidate a
+  // later rule disqualifies never consumed a slot in the first place.
+
   const nonSourceDiagnostics: Partial<CapsuleV2Result["diagnostics"]> =
     nonSourceDownranked.length > 0 ? { non_source_candidates_downranked: nonSourceDownranked } : {};
 
@@ -893,26 +877,6 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
           source_body_call_fallback_used: sourceBodyCallFallbackUsed,
           sql_rendering_backfill_used: sqlRenderingBackfillUsed,
           ...(subsystemRoot === undefined ? {} : { subsystem_root: subsystemRoot }),
-        }
-      : {};
-
-  // M101 anchored-target pivot guard diagnostics: which exemptions fired.
-  // Present only when the guard changed a role decision, so unaffected capsules
-  // stay byte-identical.
-  const pivotGuardDiagnostics: Partial<CapsuleV2Result["diagnostics"]> =
-    anchoredDispatcherExemptions.length > 0 || anchoredCapExemption !== undefined
-      ? {
-          pivot_selection_version: "m101_anchored_target_guard",
-          ...(anchoredDispatcherExemptions.length > 0
-            ? { anchored_dispatcher_demotions_prevented: anchoredDispatcherExemptions }
-            : {}),
-          ...(anchoredCapExemption === undefined
-            ? {}
-            : {
-                anchored_pivot_cap_exemptions: [
-                  { path: anchoredCapExemption.path, symbol: anchoredCapExemption.symbol },
-                ],
-              }),
         }
       : {};
 
@@ -932,18 +896,34 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
         }
       : {};
 
+  // THE PIVOT PLAN (M208). Every pivot-worthy candidate the role layer kept,
+  // ordered by the ONE pivot order; the tier's cap then takes a prefix of it.
+  // Until M208 the cap ran first (in final-score order, inside the role layer)
+  // and the order ran second on the capped set, so widening the cap (micro 1 ->
+  // standard 2 -> full 5) admitted a candidate the order ranked above the old
+  // lead and the delivered focus changed at every tier boundary — all five
+  // frozen A13 swaps and all three focus-size drops (M208 causal report). One
+  // order for both decisions makes the smaller tier's pivots a prefix of the
+  // larger tier's, at every budget, whatever the pool.
   const pivotCandidates = refined.filter((r) => r.role === CandidateRole.Pivot);
-  const supportCandidates = refined.filter((r) => r.role === CandidateRole.Support);
-  const roleDiscards = refined.filter((r) => r.role === CandidateRole.Discard);
 
-  // Order the surviving pivots for rendering. A file-line anchor target leads of
-  // all (the issue named it outright). Then, for a composed-query SQL-output bug,
-  // the renderer most on-topic to the composition (`get_combinator_sql` for a
-  // "combined" issue) ahead of a generic `as_sql`/`execute_sql`. Finally a
-  // direct-evidence precedence tier: a body-literal diagnostic match (the bug
-  // names the exact string this symbol emits) ranks ahead of a title-symbol match,
-  // which in turn ranks ahead of ordinary lexical/graph candidates — exactly the
-  // priority line-anchor/body-literal > title-symbol > normal.
+  // Order the pivot plan. A scoped task objective (explicit task subtree) leads
+  // by its affinity rank. Then a file-line anchor target (the issue named it
+  // outright). Then, for a composed-query SQL-output bug, the renderer most
+  // on-topic to the composition (`get_combinator_sql` for a "combined" issue)
+  // ahead of a generic `as_sql`/`execute_sql`. Then a direct-evidence precedence
+  // tier: a body-literal diagnostic match (the bug names the exact string this
+  // symbol emits) ranks ahead of a title-symbol match, which in turn ranks ahead
+  // of ordinary lexical/graph candidates — exactly the priority
+  // line-anchor/body-literal > title-symbol > normal. Then a class-method
+  // expansion target (a recovered method claims a slot ahead of a broad class),
+  // then final score.
+  const scopedRank = (entry: RefinedRoledCandidate): number =>
+    scopedObjectiveRank.get(entry.candidate.symbolId) ?? Number.MAX_SAFE_INTEGER;
+  const expansionRank = (entry: RefinedRoledCandidate): number =>
+    entry.signals.is_class_method_expansion_target
+      ? classMethodExpansion?.methodScores.get(entry.candidate.symbolId) ?? 0
+      : -1;
   if (
     anchorSymbolIds.size > 0
     || sqlRenderingTrigger.active
@@ -978,17 +958,26 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       ) return 2;
       return 1;
     };
-    // A cap-exempted anchored pivot (M101) orders LAST regardless of its tier:
-    // the exemption buys a required-target slot, never the lead.
-    const capExemptRank = (entry: RefinedRoledCandidate): number =>
-      anchoredCapExemption?.symbolId === entry.candidate.symbolId ? 1 : 0;
     pivotCandidates.sort(
       (left, right) =>
-        capExemptRank(left) - capExemptRank(right)
+        scopedRank(left) - scopedRank(right)
         || anchorRank(right) - anchorRank(left)
         || renderingRank(right) - renderingRank(left)
         || evidenceTier(right) - evidenceTier(left)
+        || expansionRank(right) - expansionRank(left)
         || orderingFinal(right) - orderingFinal(left)
+        || left.candidate.fqName.localeCompare(right.candidate.fqName)
+        || left.candidate.symbolId.localeCompare(right.candidate.symbolId),
+    );
+  } else {
+    // No strong anchor and no SQL rendering: the plan is ordered by scoped
+    // objective, then class-method expansion, then final score, before v2 (below)
+    // may re-rank the ambiguous multi-target case.
+    pivotCandidates.sort(
+      (left, right) =>
+        scopedRank(left) - scopedRank(right)
+        || expansionRank(right) - expansionRank(left)
+        || right.candidate.scores.final - left.candidate.scores.final
         || left.candidate.fqName.localeCompare(right.candidate.fqName)
         || left.candidate.symbolId.localeCompare(right.candidate.symbolId),
     );
@@ -1038,12 +1027,56 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
         : pivotRankMeta.get(entry.candidate.symbolId)?.score ?? entry.candidate.scores.final;
     pivotCandidates.sort((left, right) => {
       return (
-        v2Score(right) - v2Score(left)
+        scopedRank(left) - scopedRank(right)
+        || expansionRank(right) - expansionRank(left)
+        || v2Score(right) - v2Score(left)
         || left.candidate.fqName.localeCompare(right.candidate.fqName)
         || left.candidate.symbolId.localeCompare(right.candidate.symbolId)
       );
     });
   }
+
+  // THE CAP, as a prefix of the plan. Pivots beyond the tier's cap become
+  // support with the historical demotion reason and flag (the support ordering
+  // and the co-edit lane read both); the single M101 anchored exemption, when
+  // one applies, is appended LAST so it can never be the lead.
+  // The plan's rank of every pivot-worthy candidate, read by the support order
+  // below: a cap-demoted pivot is the NEXT pivot a wider tier would name, so it
+  // leads support in plan order and its promotion moves nothing else.
+  const planRank = new Map<string, number>(pivotCandidates.map((entry, index) => [entry.candidate.symbolId, index] as const));
+  const cap = capOrderedPivots(pivotCandidates, allocation.maxPivots,
+    namedAnchorIds.size > 0 ? { symbolIds: namedAnchorIds } : undefined);
+  for (const entry of pivotCandidates) {
+    if (cap.keep.has(entry.candidate.symbolId)) continue;
+    entry.role = CandidateRole.Support;
+    entry.roleReason = `strong target but beyond the pivot budget — pivot: ${entry.roleReason}`;
+    entry.budgetDemotedPivot = true;
+  }
+  anchoredCapExemption = cap.capExemption;
+  pivotCandidates.splice(0, pivotCandidates.length, ...cap.kept, ...(cap.exempt === undefined ? [] : [cap.exempt]));
+  const supportCandidates = refined.filter((r) => r.role === CandidateRole.Support);
+  const roleDiscards = refined.filter((r) => r.role === CandidateRole.Discard);
+
+  // M101 anchored-target pivot guard diagnostics: which exemptions fired.
+  // Present only when the guard changed a role decision, so unaffected capsules
+  // stay byte-identical.
+  const pivotGuardDiagnostics: Partial<CapsuleV2Result["diagnostics"]> =
+    anchoredDispatcherExemptions.length > 0 || anchoredCapExemption !== undefined
+      ? {
+          pivot_selection_version: "m101_anchored_target_guard",
+          ...(anchoredDispatcherExemptions.length > 0
+            ? { anchored_dispatcher_demotions_prevented: anchoredDispatcherExemptions }
+            : {}),
+          ...(anchoredCapExemption === undefined
+            ? {}
+            : {
+                anchored_pivot_cap_exemptions: [
+                  { path: anchoredCapExemption.path, symbol: anchoredCapExemption.symbol },
+                ],
+              }),
+        }
+      : {};
+
 
   // No high-confidence edit target: emit an intentionally empty capsule rather
   // than a vague support-only pile. The discards still report what was generated,
@@ -1073,7 +1106,6 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
         ...lineAnchorDiagnostics,
         ...bodyLiteralDiagnostics(bodyLiteralMatches),
         ...nonSourceDiagnostics,
-        ...reclaimedPivotDiagnostics,
         ...titleSymbolDiagnostics,
         ...literalAnchorDiagnostics,
         ...directEvidenceDiagnostics,
@@ -1143,15 +1175,21 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   recordCapsuleTiming(capsuleProfile, "capsule.pivot_packing", pivotPackingStarted);
 
   // Order support so the most edit-relevant context wins scarce support slots:
-  // cap-demoted implementation helpers first, then ordinary local support, and
-  // generic infrastructure last — a generic parser class must never outrank a
-  // local helper (Problem B). Within a tier, higher final score wins. For
-  // non-debug intents every signal is false, so this reduces to final order.
-  // Recovered graph neighbours are appended AFTER every real support candidate, so
-  // they only fill a leftover slot and never displace a file vtrace already found.
+  // cap-demoted pivots and implementation helpers first, then ordinary local
+  // support, and generic infrastructure last — a generic parser class must never
+  // outrank a local helper (Problem B). Cap-demoted pivots keep the PLAN's order
+  // (M208): they are the pivots a wider tier names next, so when the cap widens
+  // the promoted entry leaves the head of support for the tail of the pivot
+  // block and every other entry keeps its place. Within a tier, higher final
+  // score wins. Recovered graph neighbours are appended AFTER every real support
+  // candidate, so they only fill a leftover slot and never displace a file
+  // vtrace already found.
+  const supportPlanRank = (entry: RefinedRoledCandidate): number =>
+    entry.budgetDemotedPivot === true ? planRank.get(entry.candidate.symbolId) ?? Number.MAX_SAFE_INTEGER : Number.MAX_SAFE_INTEGER;
   const baseSupportOrder = [...supportCandidates].sort(
     (left, right) =>
       supportTier(left) - supportTier(right)
+      || supportPlanRank(left) - supportPlanRank(right)
       || right.candidate.scores.final - left.candidate.scores.final,
   );
 
@@ -1850,7 +1888,6 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       ...pivotGuardDiagnostics,
       ...lineAnchorDiagnostics,
       ...nonSourceDiagnostics,
-      ...reclaimedPivotDiagnostics,
       ...titleSymbolDiagnostics,
       ...literalAnchorDiagnostics,
       ...directEvidenceDiagnostics,
@@ -2051,7 +2088,7 @@ function pathCompletionDiagnostics(
 }
 
 function supportTier(entry: RefinedRoledCandidate): number {
-  if (entry.signals.is_implementation_helper) {
+  if (entry.signals.is_implementation_helper || entry.budgetDemotedPivot === true) {
     return 0;
   }
   if (entry.signals.is_generic_infrastructure) {

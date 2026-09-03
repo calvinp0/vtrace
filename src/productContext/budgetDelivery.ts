@@ -341,10 +341,17 @@ function mutableItem(item: JsonRecord, index: number): MutableItem {
   const roles = asStringArray(item.roles) ?? [];
   const reasons = asStringArray(item.selectionReasons) ?? [];
   const directEvidence = reasons.join(" ").toLowerCase();
+  // A NEGATED mention is not evidence. The role gate's blocker for weak
+  // support reads "(not a pivot: no direct evidence (graph/domain reach only))"
+  // and the decoy rule says "with weak direct evidence"; a plain substring test
+  // took both as answer-bearing, so every weak graph/domain-reach entry a wider
+  // budget packed was PROTECTED by the ladder while the stronger, unprotected
+  // support the smaller budget had delivered was dropped from the tail — the
+  // M207 F15 collapse to one item is the same false positive (M208).
   const answerBearing = roles.includes("required")
     || directEvidence.includes("symbol-name match")
     || directEvidence.includes("preferred contrast")
-    || directEvidence.includes("direct evidence")
+    || /(?<!\bno |\bweak )direct evidence/.test(directEvidence)
     || directEvidence.includes("exact");
   return {
     original: item,

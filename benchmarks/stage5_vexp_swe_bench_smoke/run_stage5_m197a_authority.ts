@@ -145,7 +145,11 @@ const CORPORA = [
   // added two more (src/runPipeline/orientationRepresentation.ts and its test),
   // so the count is re-frozen at 504 on 2026-09-03 by the same rule; the replay
   // at 502 that failed on this line alone is kept as stage5_m205_authority.json.
-  { id: "C-MED", source: path.join(REPO, "src"), exts: [".ts", ".tsx"], expected: 504,
+  // M208 added two test files (src/capsuleV2/budgetAllocator.test.ts and
+  // src/capsuleV2/pivotPlanCap.test.ts), so the count is re-frozen at 506 on
+  // 2026-09-03 by the same rule; the replay at 504 (the predecessor worktree)
+  // is kept as stage5_m208_authority.json.
+  { id: "C-MED", source: path.join(REPO, "src"), exts: [".ts", ".tsx"], expected: 506,
     revisionOf: REPO, expectedRevisionPrefix: null },
   { id: "C-LARGE", source: "/home/calvin/code/ARC", exts: [".py"], expected: 276,
     revisionOf: "/home/calvin/code/ARC", expectedRevisionPrefix: null, excludePrefix: ".claude" },

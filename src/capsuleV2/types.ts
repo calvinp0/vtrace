@@ -544,16 +544,6 @@ export interface CapsuleV2Diagnostics {
    */
   non_source_candidates_downranked?: NonSourceDownrankDiagnostic[];
   /**
-   * Candidates promoted back into a pivot slot that a later demotion vacated.
-   * The pivot cap is applied before the scoped-objective and non-source
-   * demotions, so a candidate those rules disqualify keeps the slot it consumed
-   * and a candidate that met the pivot bar stays demoted behind a budget that is
-   * no longer spent. Only candidates already judged pivot-worthy are eligible,
-   * and only genuinely free slots are filled. Present only when at least one
-   * slot was reclaimed.
-   */
-  reclaimed_pivot_slots?: Array<{ path: string; symbol: string }>;
-  /**
    * Title-symbol candidate anchoring. The problem TITLE often names the important
    * class/type/symbol while the body lexical decoys dominate ranking; this seeds
    * the index symbols bearing those title names into the candidate pool with

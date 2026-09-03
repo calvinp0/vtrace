@@ -92,19 +92,16 @@ test("a pivot slot vacated by the non-source demotion is refilled from real sour
   }
 });
 
-test("reclaiming a slot is reported, and only reports candidates it actually promoted", () => {
+test("the tier's slots are filled from the ordered plan after the demotion, with no reclaim step", () => {
   const result = build();
 
-  const reclaimed = result.diagnostics.reclaimed_pivot_slots ?? [];
-  assert.ok(reclaimed.length > 0, "expected the reclaim to be reported");
-  assert.ok(reclaimed.length <= result.pivots.length);
-  const pivotIdentities = new Set(result.pivots.map((item) => `${item.path}::${item.symbol}`));
-  for (const entry of reclaimed) {
-    assert.ok(
-      pivotIdentities.has(`${entry.path}::${entry.symbol}`),
-      `reclaimed ${entry.path}::${entry.symbol} is not among the delivered pivots`,
-    );
-  }
+  // Standard tier (8k budget) allows two pivots; the two doc-tree candidates
+  // outrank the source ones, so before M208 both slots were spent and then
+  // vacated. The cap is now a prefix of the ordered plan taken AFTER the
+  // demotion, so both slots hold real source.
+  assert.equal(result.pivots.length, 2, `expected both slots filled, got ${result.pivots.length}`);
+  for (const pivot of result.pivots) assert.ok(pivot.path.startsWith("pkg/"), `expected a source pivot, got ${pivot.path}`);
+  assert.equal((result.diagnostics as Record<string, unknown>).reclaimed_pivot_slots, undefined);
 });
 
 test("a reclaimed pivot never exceeds the tier's pivot budget", () => {
@@ -114,12 +111,12 @@ test("a reclaimed pivot never exceeds the tier's pivot budget", () => {
   assert.ok(result.pivots.length <= 2, `expected at most 2 pivots, got ${result.pivots.length}`);
 });
 
-test("nothing is reclaimed when the task legitimately points at the doc tree", () => {
-  // The non-source rule is suppressed when the task names docs explicitly, so no
-  // slot is vacated and there is nothing to reclaim. This pins that the reclaim
-  // reacts to a VACATED slot rather than to doc-tree paths.
+test("when the task legitimately points at the doc tree, the doc candidates keep their place in the plan", () => {
+  // The non-source rule is suppressed when the task names docs explicitly, so
+  // the higher-ranked doc-tree candidates are not demoted and lead the plan.
   const result = build(`${TASK} Update the documentation under doc/ as well.`);
-  assert.equal(result.diagnostics.reclaimed_pivot_slots, undefined);
+  assert.ok(result.pivots.length > 0);
+  assert.ok(result.pivots.some((pivot) => pivot.path.startsWith("doc/")), "expected a doc-tree pivot when the task names docs");
 });
 
 test("a capsule with no budget-demoted candidate reclaims nothing", () => {

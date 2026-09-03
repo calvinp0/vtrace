@@ -154,6 +154,15 @@ export interface HybridRetrievalInput {
   symbolSeeds?: readonly string[];
   maxResults?: number;
   lexicalPoolSize?: number;
+  /**
+   * The size of the ranked slice the concept-owner lane judges "already
+   * represented" against (M208). Defaults to `maxResults`. The capsule pins it
+   * to its historical pool so the lane's admission does not depend on the
+   * caller's budget-derived allowance: with the allowance as the slice, a
+   * wider budget lets a lower-ranked lexical sibling represent a file and the
+   * rescued owner — a rank-2 candidate on C-MED — leaves the pool.
+   */
+  conceptOwnerPoolSize?: number;
   expansion?: GraphExpansionOptions;
   weights?: HybridScoreWeights;
   /**
@@ -448,7 +457,7 @@ export function hybridRetrieve(
   // owner counts as represented — measured on ARC, 31 of them, including the file
   // the request was actually about.
   const conceptOwner = timed(input.profile, "lexical.concept_owner", () =>
-    conceptOwnerCandidates(db, input, derivedIntent, ranked.slice(0, maxResults), raw));
+    conceptOwnerCandidates(db, input, derivedIntent, ranked.slice(0, input.conceptOwnerPoolSize ?? maxResults), raw));
   count(input.profile, "conceptOwnerCandidates", conceptOwner.diagnostics.candidatesAdmitted);
   count(input.profile, "conceptOwnerFilesExamined", conceptOwner.diagnostics.filesExamined);
   count(input.profile, "sourceReads", conceptOwner.diagnostics.sourceReads);

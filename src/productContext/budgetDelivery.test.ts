@@ -139,3 +139,63 @@ test("a body compacted to its defining lines is labelled excerpt, never signatur
   }
   assert.ok(result.accounting.compactionStages.some((s) => s === CompactionStage.SupportSkeletonized || s === CompactionStage.MinimalRepresentation || s === CompactionStage.SecondaryPivotSkeletonized || s === CompactionStage.LeadExcerptShortened));
 });
+
+/**
+ * The answer-bearing test and negated evidence (M208).
+ *
+ * The ladder protects "answer-bearing" support and drops the rest from the tail.
+ * The role gate's blocker for weak support reads "(not a pivot: no direct
+ * evidence (graph/domain reach only))"; a substring test on "direct evidence"
+ * took that NEGATION as evidence, protected every weak graph/domain-reach entry a
+ * wider budget packed, and evicted the stronger support the smaller budget had
+ * delivered. A negated mention is not evidence; a positive one still is.
+ */
+function twoSupportDraft(strongReason: string, weakReason: string): Record<string, unknown> {
+  const body = "def f(self):\n    return 1";
+  const items = [
+    { id: "P1", fqName: "pkg/mod.py::target", path: "pkg/mod.py", symbol: "target", lineSpan: { start: 1, end: 2 }, roles: ["pivot", "required"], contentMode: "focused_source", selectionReasons: ["actionable function — strong lexical match"], content: body },
+    { id: "S1", fqName: "pkg/mod.py::strong", path: "pkg/mod.py", symbol: "strong", lineSpan: { start: 1, end: 2 }, roles: ["support"], contentMode: "signature", selectionReasons: [strongReason], content: body },
+    { id: "S2", fqName: "pkg/other.py::weak", path: "pkg/other.py", symbol: "weak", lineSpan: { start: 1, end: 2 }, roles: ["support"], contentMode: "signature", selectionReasons: [weakReason], content: body },
+  ];
+  // Oversized on purpose: the ladder re-renders from the items, and the budget
+  // below is derived from that rendering, not from this placeholder.
+  const modelVisibleContext = "x".repeat(200_000);
+  return { productContext: { resolved: true, items, modelVisibleContext, leadPivot: "pkg/mod.py::target" } };
+}
+
+/**
+ * The budget one chars/4 token below the ladder's OWN full three-item rendering
+ * (the ladder re-renders with its header lines, so the hand-built context above
+ * is not the measure): an oversized context forces one compaction pass whose
+ * first rung already fits, and its final size is the full rendering.
+ */
+function oneItemShort(draft: Record<string, unknown>): number {
+  const probe = structuredClone(draft);
+  (probe.productContext as Record<string, unknown>).modelVisibleContext = "x".repeat(200_000);
+  const full = applyProgressiveContextBudget(probe, 10_000);
+  return (full?.accounting.finalModelTokens ?? 0) - 1;
+}
+
+test("a negated 'no direct evidence' blocker does not make a weak tail entry answer-bearing (M208)", () => {
+  const draft = twoSupportDraft(
+    "lexical match; issue-domain relevance",
+    "lexical match (not a pivot: no direct evidence (graph/domain reach only))",
+  );
+  // One token short of the full rendering: exactly one item must go, and the
+  // ladder must drop the weak tail entry (S2), not the stronger earlier one (S1).
+  const result = applyProgressiveContextBudget(draft, oneItemShort(draft));
+  assert.equal(result?.accounting.deliveredItems, 2);
+  const ids = ((draft.productContext as any).items as Array<{ id: string }>).map((i) => i.id);
+  assert.deepEqual(ids, ["P1", "S1"]);
+});
+
+test("a positive direct-evidence claim still protects its item from the tail drop", () => {
+  const draft = twoSupportDraft(
+    "lexical match; issue-domain relevance",
+    "task names `weak` (direct evidence, title)",
+  );
+  const result = applyProgressiveContextBudget(draft, oneItemShort(draft));
+  assert.equal(result?.accounting.deliveredItems, 2);
+  const ids = ((draft.productContext as any).items as Array<{ id: string }>).map((i) => i.id);
+  assert.deepEqual(ids, ["P1", "S2"]);
+});

@@ -619,20 +619,58 @@ function capPivots(
         || left.candidate.fqName.localeCompare(right.candidate.fqName)
         || left.candidate.symbolId.localeCompare(right.candidate.symbolId),
     );
-  const kept = sortedPivots.slice(0, Math.max(0, maxPivots));
-  const keep = new Set(kept.map((entry) => entry.candidate.symbolId));
+  const cap = capOrderedPivots(sortedPivots, maxPivots, namedAnchors);
+  const keep = cap.keep;
+  const capExemption = cap.capExemption;
 
-  // Anchored cap exemption (M101): the issue author NAMED at most one of the
-  // cap-evicted pivots (title symbol / high-signal literal / strong direct
-  // evidence) — keep the best-ordered such target as a single bounded extra
-  // pivot slot instead of demoting it to support. Single-pivot (micro) tiers
-  // stay decisive; test candidates and non-anchor-actionable kinds (a module
-  // variable a literal happened to hit) never qualify; the caller orders the
-  // exempted pivot last, so it can never be the lead.
+  return {
+    refined: refined.map((entry) => {
+      if (entry.role === CandidateRole.Pivot && !keep.has(entry.candidate.symbolId)) {
+        return {
+          ...entry,
+          role: CandidateRole.Support,
+          roleReason: `strong target beyond the pivot budget — ${entry.roleReason}`,
+          budgetDemotedPivot: true,
+        };
+      }
+      return entry;
+    }),
+    ...(capExemption === undefined ? {} : { capExemption }),
+  };
+}
+
+/**
+ * Cap an ALREADY-ORDERED pivot plan to `maxPivots` (M208): the kept pivots are
+ * the plan's prefix, so a tier that may name more edit sites names the same
+ * ones first and adds later ones — the property the frozen A13 rule measures as
+ * a stable focus. The order is the caller's single pivot authority; this
+ * function never re-sorts.
+ *
+ * Anchored cap exemption (M101): the issue author NAMED at most one of the
+ * cap-evicted pivots (title symbol / high-signal literal / strong direct
+ * evidence) — keep the best-ordered such target as a single bounded extra
+ * pivot slot instead of demoting it to support. Single-pivot (micro) tiers
+ * stay decisive; test candidates and non-anchor-actionable kinds (a module
+ * variable a literal happened to hit) never qualify; the exempted pivot is
+ * returned separately so the caller orders it LAST — it can never be the lead.
+ */
+export function capOrderedPivots(
+  ordered: readonly RefinedRoledCandidate[],
+  maxPivots: number,
+  namedAnchors: RefineDebugRolesOptions["namedAnchors"],
+): {
+  kept: RefinedRoledCandidate[];
+  exempt?: RefinedRoledCandidate;
+  keep: Set<string>;
+  capExemption?: { path: string; symbol: string; symbolId: string };
+} {
+  const kept = ordered.slice(0, Math.max(0, maxPivots));
+  const keep = new Set(kept.map((entry) => entry.candidate.symbolId));
+  let exempt: RefinedRoledCandidate | undefined;
   let capExemption: { path: string; symbol: string; symbolId: string } | undefined;
   if (namedAnchors !== undefined && maxPivots >= 2) {
     const keptFiles = new Set(kept.map((entry) => entry.candidate.filePath));
-    const exempt = sortedPivots
+    exempt = ordered
       .slice(Math.max(0, maxPivots))
       .find(
         (entry) =>
@@ -650,21 +688,7 @@ function capPivots(
       };
     }
   }
-
-  return {
-    refined: refined.map((entry) => {
-      if (entry.role === CandidateRole.Pivot && !keep.has(entry.candidate.symbolId)) {
-        return {
-          ...entry,
-          role: CandidateRole.Support,
-          roleReason: `strong target beyond the pivot budget — ${entry.roleReason}`,
-          budgetDemotedPivot: true,
-        };
-      }
-      return entry;
-    }),
-    ...(capExemption === undefined ? {} : { capExemption }),
-  };
+  return { kept, ...(exempt === undefined ? {} : { exempt }), keep, ...(capExemption === undefined ? {} : { capExemption }) };
 }
 
 // The issue's local subsystem: the directory the issue most clearly points at.

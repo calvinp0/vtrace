@@ -31,13 +31,12 @@
 //   * the ranked stream itself (the retrieval pool and the lanes' own caps);
 //   * downstream, the evidence budget on the model-visible context.
 //
-// The tier's support number survives as the support WINDOW: the ordering window
+// The support number survived M206 as the support WINDOW: the ordering window
 // the lane placement rules read (co-edit, path-completion and mechanism entries
 // displace or follow "winners" inside it; the file-evidence lane counts the
 // files inside it as already present) and the documentation-section fill count.
-// Keeping the window at its historical size keeps every lane's placement and
-// gating arithmetic exactly as it was, so lifting the maximum changed only how
-// much of the SAME ordered stream is delivered.
+// M208 made the window one constant for every tier (see below), so the lanes
+// partition the same ranked stream the same way at every budget.
 //
 // The tier is chosen from the budget alone (no per-task heuristics), so the same
 // budget always yields the same allocation — easy to reason about and to tune.
@@ -49,9 +48,10 @@ export interface BudgetAllocation {
   /** Hard cap on pivots (edit targets rendered as focused source). Role semantics; see above. */
   maxPivots: number;
   /**
-   * The support ORDERING WINDOW and documentation fill count for the tier.
-   * Not a delivery maximum: support delivery is bounded by the token budget
-   * and the ranked stream (M206).
+   * The support ORDERING WINDOW and documentation fill count. One constant for
+   * every tier (M208, `SUPPORT_ORDERING_WINDOW`), never a delivery maximum:
+   * support delivery is bounded by the token budget and the ranked stream
+   * (M206).
    */
   supportWindow: number;
   /**
@@ -74,14 +74,35 @@ export interface BudgetAllocation {
 export const MICRO_MAX_TOKENS = 1_500;
 export const STANDARD_MAX_TOKENS = 12_000;
 
-// Per-tier pivot caps and support windows. Micro is single-pivot by policy
-// (one decisive edit site). The windows are the historical support counts,
-// kept for the lane placement arithmetic they parameterise.
+// Per-tier pivot caps. Micro is single-pivot by policy (one decisive edit site).
 const TIER_POLICY = {
-  [CapsuleV2Mode.Micro]: { maxPivots: 1, supportWindow: 1 },
-  [CapsuleV2Mode.Standard]: { maxPivots: 2, supportWindow: 4 },
-  [CapsuleV2Mode.Full]: { maxPivots: 5, supportWindow: 10 },
+  [CapsuleV2Mode.Micro]: { maxPivots: 1 },
+  [CapsuleV2Mode.Standard]: { maxPivots: 2 },
+  [CapsuleV2Mode.Full]: { maxPivots: 5 },
 } as const;
+
+// --- The support ordering window (M208) --------------------------------------
+//
+// THE WINDOW IS ONE NUMBER, NOT A TIER. Until M208 the ordering window was the
+// tier's historical support count (micro 1, standard 4, full 10), so the lane
+// placement rules re-partitioned the SAME ranked support at every tier boundary:
+// `orderSupportWithCoedit` splits the base order at the window into protected
+// winners, displacing co-edits, displaceable winners, spare co-edits and the
+// rest, and the co-edit anchors, the file-evidence lane's "files already
+// present" count and the path-completion / mechanism lanes all read the window.
+// Measured on the frozen C-MED A13 transitions (M208 causal report): 17 of 80
+// adjacent-budget transitions first diverge at the support order, 84 delivered
+// entries change places purely because the window changed with the tier, and
+// lane-injected entries are not reproduced at the next budget because their
+// anchors were read from a different window.
+//
+// A caller's budget must decide HOW FAR the same ordered plan is delivered, not
+// re-partition the plan. So the window is a constant: the standard tier's
+// historical value, which is the product's default budget (8000 tokens) and the
+// most-validated live path, so the default request's support order is
+// byte-identical to M207's. Delivery is bounded by the token budget (M206) and
+// the evidence budget, never by this number.
+export const SUPPORT_ORDERING_WINDOW = 4;
 
 // --- The candidate allowance (M207) ------------------------------------------
 //
@@ -148,5 +169,5 @@ export function allocateBudget(maxTokens: number): BudgetAllocation {
       ? CapsuleV2Mode.Standard
       : CapsuleV2Mode.Full;
 
-  return { tier, ...TIER_POLICY[tier], candidatePool: candidatePoolFor(maxTokens) };
+  return { tier, ...TIER_POLICY[tier], supportWindow: SUPPORT_ORDERING_WINDOW, candidatePool: candidatePoolFor(maxTokens) };
 }

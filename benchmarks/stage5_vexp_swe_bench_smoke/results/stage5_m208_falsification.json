@@ -1,0 +1,112 @@
+{
+  "milestone": "M208",
+  "predecessor": {
+    "root": "/home/calvin/bench/vtrace-m208/pre",
+    "head": "b74287688653389eb360f6c420db524af566061a"
+  },
+  "controls": [
+    {
+      "id": "F1",
+      "statement": "a larger budget keeps every lower-budget related entry that still fits: no lower-budget evidence is evicted across the frozen budgets",
+      "pass": true,
+      "detail": "preserved 4/4 transitions; relations subsequence,subsequence,prefix,prefix; related counts 12->24->33->36->36"
+    },
+    {
+      "id": "F2",
+      "statement": "the larger budget adds later evidence behind the preserved evidence instead of replacing it",
+      "pass": true,
+      "detail": "transitions with new entries 3; relations subsequence,subsequence,prefix,prefix"
+    },
+    {
+      "id": "F3",
+      "statement": "an entry both budgets deliver keeps its representation or gets a richer one; a larger budget never downgrades it",
+      "pass": true,
+      "detail": "same 84, richer 21, poorer 0"
+    },
+    {
+      "id": "F4",
+      "statement": "a delivered item whose upstream form carries no code is relationship-only under its own reason, never with fabricated code",
+      "pass": true,
+      "detail": "summary item delivered true, code undefined, reason no_rendered_body; M205 REPRESENTATION_INTEGRITY_PASS"
+    },
+    {
+      "id": "F5",
+      "statement": "low-ranked tail candidates exposed by a larger budget or a wider pool never change the focus: one lead at every budget and width",
+      "pass": true,
+      "detail": "leads by budget resolve_widget_handler; by pool width 25/134 resolve_widget_handler"
+    },
+    {
+      "id": "F6",
+      "statement": "when the task names a symbol the pivot order ranks first, it leads at EVERY budget (micro included); the predecessor let it lead only once the cap admitted it",
+      "pass": true,
+      "detail": "product leads WidgetHandlerIndex; predecessor leads resolve_widget_handler|WidgetHandlerIndex"
+    },
+    {
+      "id": "F7",
+      "statement": "adding candidates to the base support lane leaves the existing entries' relative order intact (a subsequence), at 4000 and 16000",
+      "pass": true,
+      "detail": "4000: subsequence; 16000: subsequence"
+    },
+    {
+      "id": "F8",
+      "statement": "a wider pool at the same budget holds the narrow pool as a prefix of its ranked stream, and the delivered support order follows the stable stream",
+      "pass": true,
+      "detail": "pool 25 -> 81: prefix; support relation prefix; same lead true"
+    },
+    {
+      "id": "F9",
+      "statement": "the evidence packet stays inside the caller's budget under the product's own accounting at every dense budget (the per-item tokens fields ride above it by the ledger's stated overhead)",
+      "pass": true,
+      "detail": "checked 17 budgets; over: none"
+    },
+    {
+      "id": "F10",
+      "statement": "one general policy over a dense non-frozen budget grid: the focus never changes, its size never shrinks, the support window is a constant, and no product line compares the budget against a frozen rung",
+      "pass": true,
+      "detail": "17 budgets; swaps 0, size drops 0; window 4; frozen-rung comparisons in product lines 0"
+    },
+    {
+      "id": "F11",
+      "statement": "one semantic item is delivered once with one accounting record at every budget, however many routes proposed it",
+      "pass": true,
+      "detail": "delivered 25, distinct 25, ledger records 25; M203 ACCOUNTING_INTEGRITY_PASS"
+    },
+    {
+      "id": "F12",
+      "statement": "a corrupted per-item cost after the M208 path fails the M203 accounting guard",
+      "pass": true,
+      "detail": "M203 on a +40-token corruption: ACCOUNTING_INTEGRITY_FAIL"
+    },
+    {
+      "id": "F13",
+      "statement": "a delivered body that its source does not anchor fails the M205 truth guard; the honest packet passes it",
+      "pass": true,
+      "detail": "honest REPRESENTATION_INTEGRITY_PASS; forged REPRESENTATION_INTEGRITY_FAIL"
+    },
+    {
+      "id": "F14",
+      "statement": "a small truthful universe leaves the large budgets mostly unused yet the delivery is monotone: A13's semantics are not utilisation",
+      "pass": true,
+      "detail": "focus resolve_widget_handler_0; utilisation 42/22/11/5/3%"
+    },
+    {
+      "id": "F15",
+      "statement": "the M208 product change adds no impact, call-site or caller rendering: A13 closes independently of A15",
+      "pass": true,
+      "detail": "added product lines mentioning impact/call-site/caller: 0"
+    },
+    {
+      "id": "F16",
+      "statement": "the M207 predecessor swaps the focus across tiers on the same fixture and varies the support window with the tier; the M208 product does neither",
+      "pass": true,
+      "detail": "predecessor b74287688653 leads resolve_widget_handler,WidgetHandlerIndex,WidgetHandlerIndex,WidgetHandlerIndex,WidgetHandlerIndex (swaps 1), windows 1/4/10; product leads WidgetHandlerIndex,WidgetHandlerIndex,WidgetHandlerIndex,WidgetHandlerIndex,WidgetHandlerIndex (swaps 0), window 4"
+    },
+    {
+      "id": "F17",
+      "statement": "repeated equivalent calls produce the same packets in one process and the same capsule selection in a fresh process",
+      "pass": true,
+      "detail": "in-process repeats identical true; fresh-process capsule selections identical true (5 budgets)"
+    }
+  ],
+  "verdict": "M208_FALSIFICATION_CONTROLS_PASS"
+}

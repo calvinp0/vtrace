@@ -132,7 +132,10 @@ function compareScored(left: ScoredCandidate, right: ScoredCandidate): number {
 // "strong target beyond the pivot budget — " preamble, trim, and bound length.
 function shortWhy(item: CapsuleV2ProductItem): string {
   let why = item.roleReason.trim();
-  const cutMarkers = ["strong target beyond the pivot budget — ", "strong target beyond the pivot budget - "];
+  const cutMarkers = [
+    "strong target but beyond the pivot budget — pivot: ", "strong target but beyond the pivot budget — ",
+    "strong target beyond the pivot budget — ", "strong target beyond the pivot budget - ",
+  ];
   for (const marker of cutMarkers) {
     if (why.startsWith(marker)) why = why.slice(marker.length);
   }

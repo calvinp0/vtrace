@@ -383,7 +383,7 @@ export function laneOf(entry: CapsuleEntry | undefined, snapshot?: Pick<StageSna
   if (reason.includes("co-edit")) return "coedit";
   if (reason.includes("file-evidence") || reason.includes("file evidence") || reason.includes("deep-pool")) return "file_evidence_rescue";
   if (reason.includes("routed rescue")) return "routed_rescue";
-  if (reason.startsWith("strong target but beyond the pivot budget")) return "budget_demoted_pivot";
+  if (/^strong target (but )?beyond the pivot budget/.test(reason)) return "budget_demoted_pivot";
   if (entry.kind === "markdown_section" || reason.includes("documentation")) return "documentation";
   return `base_support_tier_${entry.supportTier}`;
 }
