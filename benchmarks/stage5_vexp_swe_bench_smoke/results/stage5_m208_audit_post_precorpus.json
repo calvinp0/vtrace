@@ -1,11 +1,11 @@
 {
   "milestone": "M208",
   "instrument": "run_stage5_m208_transition_audit.ts",
-  "label": "pre_fixed25",
-  "poolMode": "fixed:25",
+  "label": "post_precorpus",
+  "poolMode": "product",
   "product": {
-    "root": "/home/calvin/bench/vtrace-m208/pre",
-    "head": "b74287688653389eb360f6c420db524af566061a"
+    "root": "/home/calvin/code/vtrace",
+    "head": "ead16a1c7898f8383d90b04b2a790fe82334abb0"
   },
   "protocol": {
     "calls": "get_code_context, default detail, max_tokens at each budget, `--repeats` times per request in one process; one direct read-only capsule build with the handler's own preset/intent/maxBudgetCharacters (and the pinned pool when --pool-mode fixed:n); one debug call per task at the top budget for intent/preset; one debug call per frozen budget for the projector-only counterfactual",
@@ -43,9 +43,9 @@
   "hardware": {
     "cpus": 20,
     "loadAverageAtEnd": [
-      9.73,
-      10.13,
-      11.14
+      11.55,
+      11.02,
+      11.09
     ]
   },
   "corpora": [
@@ -72,37 +72,27 @@
         16000,
         20000
       ],
-      "poolMode": "fixed:25",
+      "poolMode": "product",
       "seamIdentity": {
-        "compared": 160,
-        "identical": 160,
+        "compared": 0,
+        "identical": 0,
         "differing": []
       },
       "frozenA13": {
-        "tasksWithSizeViolation": 3,
-        "tasksWithFocusSwap": 5,
-        "violations": 8,
-        "verdict": "VTRACE_BELOW_VEXP_CLAIM",
-        "swappedTasks": [
-          "where are import edges extracted from typescript",
-          "where does logic flow decide a path is unreachable",
-          "where is the MCP tool registry assembled",
-          "what writes the index manifest after a run",
-          "what happens when the index schema version is incompatible"
-        ],
-        "sizeViolationTasks": [
-          "where are import edges extracted from typescript",
-          "where is the MCP tool registry assembled",
-          "what writes the index manifest after a run"
-        ],
+        "tasksWithSizeViolation": 0,
+        "tasksWithFocusSwap": 0,
+        "violations": 0,
+        "verdict": "VTRACE_EXCEEDS_VEXP_CLAIM",
+        "swappedTasks": [],
+        "sizeViolationTasks": [],
         "curves": [
           {
             "task": "where are import edges extracted from typescript",
             "points": [
               {
                 "budget": 1000,
-                "focusAt": "parsers/typescriptParser.ts::extractImportEdges",
-                "focusCodeTokens": 352
+                "focusAt": "parsers/typescriptParser.ts::ExtractImportEdgesInput",
+                "focusCodeTokens": 40
               },
               {
                 "budget": 2000,
@@ -125,8 +115,8 @@
                 "focusCodeTokens": 40
               }
             ],
-            "sizeViolations": 1,
-            "focusSwaps": 1
+            "sizeViolations": 0,
+            "focusSwaps": 0
           },
           {
             "task": "how does the indexer decide a file is eligible for parsing",
@@ -198,7 +188,7 @@
               {
                 "budget": 1000,
                 "focusAt": "impact/getImpactGraph.ts::hasInheritedMemberEvidence",
-                "focusCodeTokens": 67
+                "focusCodeTokens": 152
               },
               {
                 "budget": 2000,
@@ -229,8 +219,8 @@
             "points": [
               {
                 "budget": 1000,
-                "focusAt": "logicFlow/searchLogicFlow.ts::LogicFlowPath",
-                "focusCodeTokens": 89
+                "focusAt": "logicFlow/searchLogicFlow.ts::hasCrossLanguagePythonCythonStep",
+                "focusCodeTokens": 143
               },
               {
                 "budget": 2000,
@@ -254,7 +244,7 @@
               }
             ],
             "sizeViolations": 0,
-            "focusSwaps": 1
+            "focusSwaps": 0
           },
           {
             "task": "how are skeleton declarations built from indexed symbols",
@@ -262,7 +252,7 @@
               {
                 "budget": 1000,
                 "focusAt": "skeleton/getSkeleton.ts::buildDeclarations",
-                "focusCodeTokens": 93
+                "focusCodeTokens": 374
               },
               {
                 "budget": 2000,
@@ -357,8 +347,8 @@
             "points": [
               {
                 "budget": 1000,
-                "focusAt": "mcp/tools.ts::createRestrictedMcpToolRegistry",
-                "focusCodeTokens": 207
+                "focusAt": "mcp/registry.ts::McpToolRegistry",
+                "focusCodeTokens": 60
               },
               {
                 "budget": 2000,
@@ -381,8 +371,8 @@
                 "focusCodeTokens": 60
               }
             ],
-            "sizeViolations": 1,
-            "focusSwaps": 1
+            "sizeViolations": 0,
+            "focusSwaps": 0
           },
           {
             "task": "how does the python parser resolve module imports",
@@ -421,23 +411,23 @@
             "points": [
               {
                 "budget": 1000,
-                "focusAt": "cli/index.ts::runCli",
-                "focusCodeTokens": 446
+                "focusAt": "db/sqlite.ts::openIndexerDatabase",
+                "focusCodeTokens": 43
               },
               {
                 "budget": 2000,
-                "focusAt": "cli/index.ts::runCli",
-                "focusCodeTokens": 446
+                "focusAt": "db/sqlite.ts::openIndexerDatabase",
+                "focusCodeTokens": 43
               },
               {
                 "budget": 4000,
-                "focusAt": "cli/index.ts::runCli",
-                "focusCodeTokens": 446
+                "focusAt": "db/sqlite.ts::openIndexerDatabase",
+                "focusCodeTokens": 43
               },
               {
                 "budget": 8000,
-                "focusAt": "cli/index.ts::runCli",
-                "focusCodeTokens": 446
+                "focusAt": "db/sqlite.ts::openIndexerDatabase",
+                "focusCodeTokens": 43
               },
               {
                 "budget": 16000,
@@ -445,8 +435,8 @@
                 "focusCodeTokens": 43
               }
             ],
-            "sizeViolations": 1,
-            "focusSwaps": 1
+            "sizeViolations": 0,
+            "focusSwaps": 0
           },
           {
             "task": "how are worktrees excluded from the parent repository index",
@@ -582,7 +572,7 @@
               {
                 "budget": 1000,
                 "focusAt": "parsers/pythonParser.ts::getCythonBackedExportIndex",
-                "focusCodeTokens": 75
+                "focusCodeTokens": 213
               },
               {
                 "budget": 2000,
@@ -677,23 +667,23 @@
             "points": [
               {
                 "budget": 1000,
-                "focusAt": "handoff/metadata.ts::HandoffSchemaVersion",
-                "focusCodeTokens": 15
+                "focusAt": "indexer/indexReadiness.ts::maxStoredFormatVersion",
+                "focusCodeTokens": 94
               },
               {
                 "budget": 2000,
-                "focusAt": "handoff/metadata.ts::HandoffSchemaVersion",
-                "focusCodeTokens": 15
+                "focusAt": "indexer/indexReadiness.ts::maxStoredFormatVersion",
+                "focusCodeTokens": 94
               },
               {
                 "budget": 4000,
-                "focusAt": "handoff/metadata.ts::HandoffSchemaVersion",
-                "focusCodeTokens": 15
+                "focusAt": "indexer/indexReadiness.ts::maxStoredFormatVersion",
+                "focusCodeTokens": 94
               },
               {
                 "budget": 8000,
-                "focusAt": "handoff/metadata.ts::HandoffSchemaVersion",
-                "focusCodeTokens": 15
+                "focusAt": "indexer/indexReadiness.ts::maxStoredFormatVersion",
+                "focusCodeTokens": 94
               },
               {
                 "budget": 16000,
@@ -702,7 +692,7 @@
               }
             ],
             "sizeViolations": 0,
-            "focusSwaps": 1
+            "focusSwaps": 0
           },
           {
             "task": "how is a symbol's fully qualified name constructed",
@@ -741,72 +731,74 @@
       "frozenSummary": {
         "transitions": 80,
         "relations": {
-          "neither": 36,
-          "subsequence": 30,
-          "prefix": 14
+          "neither": 53,
+          "subsequence": 23,
+          "prefix": 4
         },
         "focusAdjustedRelations": {
-          "neither": 36,
-          "subsequence": 30,
-          "prefix": 14
+          "neither": 53,
+          "subsequence": 23,
+          "prefix": 4
         },
         "firstDivergenceByMechanism": {
-          "SUBSEQUENCE_NEW_ITEMS_INTERLEAVED": 27,
-          "PIVOT_CAP_ROLE_PROMOTION": 20,
-          "NONE": 14,
-          "SUPPORT_WINDOW_PARTITION:coedit_displacement:window_changed": 5,
-          "EVIDENCE_BUDGET_DROP:graph_neighbour_anchoring": 4,
-          "PIVOT_CAP_LEAD_RESELECTION": 3,
-          "SUPPORT_LANE_PLACEMENT:coedit_injected_high": 2,
-          "SUPPORT_LANE_PLACEMENT:coedit_rescued_medium": 2,
-          "CAPSULE_PACKING:packing_over_budget": 1,
-          "REPRESENTATION_ROUTING:ceiling": 1,
-          "SUPPORT_ORDER_OTHER:base_support_tier_1": 1
-        },
-        "firstDivergenceByStage": {
-          "none": 41,
-          "S2_role_assignment": 20,
-          "S4b_support_order": 10,
-          "S7_evidence_budget": 4,
-          "S4a_pivot_order": 3,
-          "S5_packing": 1,
-          "S9_projector": 1
-        },
-        "lostItems": 19,
-        "lostItemsByMechanism": {
+          "SUBSEQUENCE_NEW_ITEMS_INTERLEAVED": 22,
+          "SUPPORT_WINDOW_PARTITION:coedit_displacement:window_content_changed": 16,
+          "PIVOT_CAP_ROLE_PROMOTION": 14,
           "EVIDENCE_BUDGET_DROP:graph_neighbour_anchoring": 7,
-          "EVIDENCE_BUDGET_DROP:impact_evidence(inferred)": 6,
-          "PIVOT_CAP_LEAD_RESELECTION": 3,
-          "CAPSULE_PACKING:packing_over_budget": 1,
-          "EVIDENCE_BUDGET_DROP:budget_demoted_pivot": 1,
-          "EVIDENCE_BUDGET_DROP:coedit_injected_high": 1
-        },
-        "movedItems": 90,
-        "movedItemsByMechanism": {
-          "SUPPORT_WINDOW_PARTITION:coedit_displacement:window_changed": 39,
-          "PIVOT_CAP_ROLE_PROMOTION": 35,
-          "SUPPORT_LANE_PLACEMENT:coedit_rescued_medium": 6,
-          "SUPPORT_LANE_PLACEMENT:coedit_injected_medium": 4,
-          "SUPPORT_LANE_PLACEMENT:coedit_injected_high": 3,
+          "SUPPORT_LANE_NOT_REPRODUCED:coedit_injected_high": 5,
+          "NONE": 4,
+          "SUPPORT_LANE_PLACEMENT:coedit_injected_medium": 3,
+          "SUPPORT_LANE_NOT_REPRODUCED:graph_neighbour_anchoring": 2,
+          "SUPPORT_LANE_PLACEMENT:coedit_rescued_medium": 2,
+          "EVIDENCE_BUDGET_DROP:base_support_tier_1": 1,
           "REPRESENTATION_ROUTING:ceiling": 1,
+          "SUPPORT_LANE_NOT_REPRODUCED:coedit_injected_medium": 1,
           "SUPPORT_LANE_PLACEMENT:coedit_rescued_high": 1,
           "SUPPORT_ORDER_OTHER:base_support_tier_1": 1
         },
-        "focusSwaps": 5,
-        "focusSwapsByClass": {
-          "tier_cap_widened_then_v2_reordered": 4,
-          "tier_cap_widened_then_anchor_tier_reordered": 1
+        "firstDivergenceByStage": {
+          "S4b_support_order": 31,
+          "none": 26,
+          "S2_role_assignment": 14,
+          "S7_evidence_budget": 8,
+          "S9_projector": 1
         },
-        "sizeViolations": 3,
-        "sizeViolationsByCause": {
-          "focus_swap": 3
+        "lostItems": 31,
+        "lostItemsByMechanism": {
+          "EVIDENCE_BUDGET_DROP:graph_neighbour_anchoring": 14,
+          "SUPPORT_LANE_NOT_REPRODUCED:coedit_injected_high": 8,
+          "SUPPORT_LANE_NOT_REPRODUCED:graph_neighbour_anchoring": 5,
+          "EVIDENCE_BUDGET_DROP:base_support_tier_1": 2,
+          "SUPPORT_LANE_NOT_REPRODUCED:coedit_injected_medium": 2
         },
-        "representationRegressions": 1,
+        "movedItems": 89,
+        "movedItemsByMechanism": {
+          "SUPPORT_WINDOW_PARTITION:coedit_displacement:window_content_changed": 46,
+          "PIVOT_CAP_ROLE_PROMOTION": 15,
+          "SUPPORT_LANE_PLACEMENT:coedit_rescued_medium": 9,
+          "SUPPORT_LANE_PLACEMENT:coedit_injected_medium": 5,
+          "REPRESENTATION_ROUTING:ceiling": 4,
+          "REPRESENTATION_ROUTING:no_rendered_body": 3,
+          "SUPPORT_LANE_PLACEMENT:coedit_rescued_high": 2,
+          "SUPPORT_LANE_PLACEMENT:graph_neighbour_append": 2,
+          "REPRESENTATION_ROUTING:form_not_code_bearing": 1,
+          "SUPPORT_LANE_PLACEMENT:coedit_injected_high": 1,
+          "SUPPORT_ORDER_OTHER:base_support_tier_1": 1
+        },
+        "focusSwaps": 0,
+        "focusSwapsByClass": {},
+        "sizeViolations": 0,
+        "sizeViolationsByCause": {},
+        "representationRegressions": 8,
         "representationRegressionsByClass": {
-          "avoidable_admission_first_crowding": 1
+          "upstream_form_changed": 4,
+          "avoidable_admission_first_crowding": 3,
+          "necessary_ceiling": 1
         },
         "representationRegressionsByReason": {
-          "ceiling": 1
+          "ceiling": 4,
+          "no_rendered_body": 3,
+          "form_not_code_bearing": 1
         },
         "unattributedTransitions": [],
         "unaccountedItems": [],
@@ -816,79 +808,82 @@
       "denseSummary": {
         "transitions": 320,
         "relations": {
-          "prefix": 168,
-          "subsequence": 97,
-          "neither": 55
+          "subsequence": 164,
+          "neither": 100,
+          "prefix": 56
         },
         "focusAdjustedRelations": {
-          "prefix": 169,
-          "subsequence": 96,
-          "neither": 55
+          "subsequence": 164,
+          "neither": 100,
+          "prefix": 56
         },
         "firstDivergenceByMechanism": {
-          "NONE": 168,
-          "SUBSEQUENCE_NEW_ITEMS_INTERLEAVED": 94,
-          "PIVOT_CAP_ROLE_PROMOTION": 22,
-          "EVIDENCE_BUDGET_DROP:graph_neighbour_anchoring": 10,
-          "EVIDENCE_BUDGET_DROP:budget_demoted_pivot": 7,
-          "SUPPORT_WINDOW_PARTITION:coedit_displacement:window_changed": 5,
-          "CAPSULE_PACKING:packing_over_budget": 4,
-          "PIVOT_CAP_LEAD_RESELECTION": 3,
-          "EVIDENCE_BUDGET_DROP:coedit_injected_high": 2,
-          "REPRESENTATION_ROUTING:ceiling": 2,
-          "EVIDENCE_BUDGET_DROP:base_support_tier_1": 1,
+          "SUBSEQUENCE_NEW_ITEMS_INTERLEAVED": 152,
+          "NONE": 56,
+          "SUPPORT_WINDOW_PARTITION:coedit_displacement:window_content_changed": 37,
+          "EVIDENCE_BUDGET_DROP:graph_neighbour_anchoring": 14,
+          "PIVOT_CAP_ROLE_PROMOTION": 14,
+          "REPRESENTATION_ROUTING:ceiling": 10,
+          "SUPPORT_LANE_NOT_REPRODUCED:coedit_injected_high": 7,
+          "SUPPORT_LANE_PLACEMENT:coedit_rescued_medium": 6,
+          "EVIDENCE_BUDGET_DROP:budget_demoted_pivot": 5,
+          "SUPPORT_LANE_PLACEMENT:coedit_injected_medium": 4,
+          "EVIDENCE_BUDGET_DROP:base_support_tier_1": 3,
+          "SUPPORT_LANE_NOT_REPRODUCED:graph_neighbour_anchoring": 3,
+          "SUPPORT_LANE_PLACEMENT:coedit_rescued_high": 3,
+          "REPRESENTATION_ROUTING:no_rendered_body": 2,
+          "SUPPORT_LANE_NOT_REPRODUCED:coedit_injected_medium": 1,
           "SUPPORT_LANE_PLACEMENT:coedit_injected_high": 1,
+          "SUPPORT_LANE_PLACEMENT:graph_neighbour_append": 1,
           "SUPPORT_ORDER_OTHER:base_support_tier_1": 1
         },
         "firstDivergenceByStage": {
-          "none": 262,
-          "S2_role_assignment": 22,
-          "S7_evidence_budget": 20,
-          "S4b_support_order": 7,
-          "S5_packing": 4,
-          "S4a_pivot_order": 3,
-          "S9_projector": 2
+          "none": 208,
+          "S4b_support_order": 64,
+          "S7_evidence_budget": 22,
+          "S2_role_assignment": 14,
+          "S9_projector": 12
         },
-        "lostItems": 80,
+        "lostItems": 109,
         "lostItemsByMechanism": {
-          "CAPSULE_PACKING:packing_over_budget": 24,
-          "EVIDENCE_BUDGET_DROP:budget_demoted_pivot": 16,
-          "EVIDENCE_BUDGET_DROP:graph_neighbour_anchoring": 12,
-          "EVIDENCE_BUDGET_DROP:base_support_tier_1": 11,
-          "EVIDENCE_BUDGET_DROP:impact_evidence(inferred)": 6,
-          "EVIDENCE_BUDGET_DROP:coedit_injected_high": 4,
-          "PIVOT_CAP_LEAD_RESELECTION": 4,
-          "EVIDENCE_BUDGET_DROP:coedit_rescued_high": 2,
+          "EVIDENCE_BUDGET_DROP:base_support_tier_1": 39,
+          "EVIDENCE_BUDGET_DROP:budget_demoted_pivot": 34,
+          "EVIDENCE_BUDGET_DROP:graph_neighbour_anchoring": 19,
+          "SUPPORT_LANE_NOT_REPRODUCED:coedit_injected_high": 8,
+          "SUPPORT_LANE_NOT_REPRODUCED:graph_neighbour_anchoring": 5,
+          "SUPPORT_LANE_NOT_REPRODUCED:coedit_injected_medium": 2,
+          "EVIDENCE_BUDGET_DROP:coedit_injected_medium": 1,
           "EVIDENCE_BUDGET_DROP:coedit_rescued_medium": 1
         },
-        "movedItems": 103,
+        "movedItems": 161,
         "movedItemsByMechanism": {
-          "SUPPORT_WINDOW_PARTITION:coedit_displacement:window_changed": 42,
-          "PIVOT_CAP_ROLE_PROMOTION": 37,
-          "REPRESENTATION_ROUTING:ceiling": 9,
-          "SUPPORT_LANE_PLACEMENT:coedit_rescued_medium": 6,
-          "SUPPORT_LANE_PLACEMENT:coedit_injected_medium": 5,
-          "SUPPORT_LANE_PLACEMENT:coedit_injected_high": 2,
-          "SUPPORT_LANE_PLACEMENT:coedit_rescued_high": 1,
+          "SUPPORT_WINDOW_PARTITION:coedit_displacement:window_content_changed": 66,
+          "REPRESENTATION_ROUTING:ceiling": 42,
+          "SUPPORT_LANE_PLACEMENT:coedit_rescued_medium": 16,
+          "PIVOT_CAP_ROLE_PROMOTION": 15,
+          "SUPPORT_LANE_PLACEMENT:coedit_injected_medium": 6,
+          "REPRESENTATION_ROUTING:no_rendered_body": 5,
+          "SUPPORT_LANE_PLACEMENT:coedit_rescued_high": 4,
+          "ASSEMBLY_LANE_REORDER:impact_evidence": 2,
+          "SUPPORT_LANE_PLACEMENT:graph_neighbour_append": 2,
+          "REPRESENTATION_ROUTING:form_not_code_bearing": 1,
+          "SUPPORT_LANE_PLACEMENT:coedit_injected_high": 1,
           "SUPPORT_ORDER_OTHER:base_support_tier_1": 1
         },
-        "focusSwaps": 5,
-        "focusSwapsByClass": {
-          "tier_cap_widened_then_v2_reordered": 4,
-          "tier_cap_widened_then_anchor_tier_reordered": 1
-        },
-        "sizeViolations": 4,
-        "sizeViolationsByCause": {
-          "focus_swap": 3,
-          "same_focus_body_shrank": 1
-        },
-        "representationRegressions": 9,
+        "focusSwaps": 0,
+        "focusSwapsByClass": {},
+        "sizeViolations": 0,
+        "sizeViolationsByCause": {},
+        "representationRegressions": 49,
         "representationRegressionsByClass": {
-          "necessary_ceiling": 6,
-          "avoidable_admission_first_crowding": 3
+          "avoidable_admission_first_crowding": 32,
+          "necessary_ceiling": 10,
+          "upstream_form_changed": 7
         },
         "representationRegressionsByReason": {
-          "ceiling": 9
+          "ceiling": 42,
+          "no_rendered_body": 5,
+          "form_not_code_bearing": 2
         },
         "unattributedTransitions": [],
         "unaccountedItems": [],
@@ -896,11 +891,11 @@
         "gate": "A13_CAUSAL_ATTRIBUTION_COMPLETE"
       },
       "frozenA11": {
-        "1000": 85.05,
-        "2000": 94.78,
-        "4000": 101.73,
-        "8000": 55.45,
-        "16000": 27.88
+        "1000": 83.5,
+        "2000": 94.1,
+        "4000": 102.2,
+        "8000": 102.44,
+        "16000": 96.87
       },
       "byBudget": {
         "750": {
@@ -911,29 +906,29 @@
           "poolWidthUsed": 25,
           "medianPool": 31,
           "medianDelivered": 5,
-          "medianWholeTokens": 654.5,
-          "medianUtilisation": 87.27,
-          "overBudget": 2,
+          "medianWholeTokens": 544,
+          "medianUtilisation": 72.53,
+          "overBudget": 1,
           "evidenceOverBudget": 0,
-          "medianAccountingOverheadTokens": 16,
+          "medianAccountingOverheadTokens": 15.5,
           "deliveryStatus": {
             "compacted": 20
           },
           "latency": {
             "n": 20,
-            "median": 409.95,
-            "p90": 572.7,
-            "p95": 590.1,
-            "max": 1010.7,
-            "min": 361.7
+            "median": 478.35,
+            "p90": 635.3,
+            "p95": 734.9,
+            "max": 1039.4,
+            "min": 393.8
           },
           "capsuleBuildMs": {
             "n": 20,
-            "median": 136.1,
-            "p90": 178.5,
-            "p95": 183.2,
-            "max": 710,
-            "min": 108.9
+            "median": 137.65,
+            "p90": 153.7,
+            "p95": 181,
+            "max": 719.4,
+            "min": 120.4
           },
           "debugDeliveryMatchesDefault": 0,
           "debugDeliveryDiffers": 0
@@ -945,30 +940,30 @@
           "allowance": 25,
           "poolWidthUsed": 25,
           "medianPool": 31,
-          "medianDelivered": 8,
-          "medianWholeTokens": 850.5,
-          "medianUtilisation": 85.05,
-          "overBudget": 4,
+          "medianDelivered": 7,
+          "medianWholeTokens": 835,
+          "medianUtilisation": 83.5,
+          "overBudget": 2,
           "evidenceOverBudget": 0,
-          "medianAccountingOverheadTokens": 25,
+          "medianAccountingOverheadTokens": 23,
           "deliveryStatus": {
             "compacted": 20
           },
           "latency": {
             "n": 20,
-            "median": 395.65,
-            "p90": 505.9,
-            "p95": 586.6,
-            "max": 1015.7,
-            "min": 365.8
+            "median": 496.45,
+            "p90": 712.7,
+            "p95": 1129.8,
+            "max": 1399.7,
+            "min": 404.2
           },
           "capsuleBuildMs": {
             "n": 20,
-            "median": 129.85,
-            "p90": 146.9,
-            "p95": 183,
-            "max": 715.6,
-            "min": 109.9
+            "median": 132,
+            "p90": 187.1,
+            "p95": 247.7,
+            "max": 722.4,
+            "min": 120.6
           },
           "debugDeliveryMatchesDefault": 0,
           "debugDeliveryDiffers": 20
@@ -980,30 +975,30 @@
           "allowance": 25,
           "poolWidthUsed": 25,
           "medianPool": 31,
-          "medianDelivered": 10,
-          "medianWholeTokens": 1114,
-          "medianUtilisation": 89.12,
+          "medianDelivered": 9,
+          "medianWholeTokens": 1095.5,
+          "medianUtilisation": 87.64,
           "overBudget": 2,
           "evidenceOverBudget": 0,
-          "medianAccountingOverheadTokens": 32,
+          "medianAccountingOverheadTokens": 29.5,
           "deliveryStatus": {
             "compacted": 20
           },
           "latency": {
             "n": 20,
-            "median": 406.95,
-            "p90": 501.5,
-            "p95": 626.3,
-            "max": 982.2,
-            "min": 358.8
+            "median": 487.1,
+            "p90": 619.1,
+            "p95": 1077.8,
+            "max": 2470.2,
+            "min": 408.1
           },
           "capsuleBuildMs": {
             "n": 20,
-            "median": 132.95,
-            "p90": 156.8,
-            "p95": 170,
-            "max": 727,
-            "min": 112.6
+            "median": 142.05,
+            "p90": 164.5,
+            "p95": 536.3,
+            "max": 707.6,
+            "min": 120
           },
           "debugDeliveryMatchesDefault": 0,
           "debugDeliveryDiffers": 0
@@ -1016,9 +1011,9 @@
           "poolWidthUsed": 25,
           "medianPool": 31,
           "medianDelivered": 12,
-          "medianWholeTokens": 1402.5,
-          "medianUtilisation": 93.56,
-          "overBudget": 4,
+          "medianWholeTokens": 1418.5,
+          "medianUtilisation": 94.63,
+          "overBudget": 3,
           "evidenceOverBudget": 0,
           "medianAccountingOverheadTokens": 39,
           "deliveryStatus": {
@@ -1026,19 +1021,19 @@
           },
           "latency": {
             "n": 20,
-            "median": 423.75,
-            "p90": 523.4,
-            "p95": 577.8,
-            "max": 1045.3,
-            "min": 378.1
+            "median": 501.75,
+            "p90": 689.6,
+            "p95": 1148.5,
+            "max": 1768.1,
+            "min": 432.3
           },
           "capsuleBuildMs": {
             "n": 20,
-            "median": 141.25,
-            "p90": 182.4,
-            "p95": 210.6,
-            "max": 705.6,
-            "min": 109.4
+            "median": 143.55,
+            "p90": 190.1,
+            "p95": 478.8,
+            "max": 710.7,
+            "min": 116.4
           },
           "debugDeliveryMatchesDefault": 0,
           "debugDeliveryDiffers": 0
@@ -1051,29 +1046,29 @@
           "poolWidthUsed": 25,
           "medianPool": 31,
           "medianDelivered": 12,
-          "medianWholeTokens": 1342,
-          "medianUtilisation": 89.47,
-          "overBudget": 6,
+          "medianWholeTokens": 1311,
+          "medianUtilisation": 87.4,
+          "overBudget": 1,
           "evidenceOverBudget": 0,
-          "medianAccountingOverheadTokens": 38,
+          "medianAccountingOverheadTokens": 38.5,
           "deliveryStatus": {
             "compacted": 20
           },
           "latency": {
             "n": 20,
-            "median": 443.05,
-            "p90": 612.6,
-            "p95": 616.3,
-            "max": 982.7,
-            "min": 380.6
+            "median": 506.95,
+            "p90": 867,
+            "p95": 1144.8,
+            "max": 1552.4,
+            "min": 435.6
           },
           "capsuleBuildMs": {
             "n": 20,
-            "median": 132.75,
-            "p90": 168.6,
-            "p95": 186,
-            "max": 702.3,
-            "min": 125.5
+            "median": 139.15,
+            "p90": 168.8,
+            "p95": 331,
+            "max": 733,
+            "min": 121.7
           },
           "debugDeliveryMatchesDefault": 0,
           "debugDeliveryDiffers": 0
@@ -1085,30 +1080,30 @@
           "allowance": 25,
           "poolWidthUsed": 25,
           "medianPool": 31,
-          "medianDelivered": 16.5,
-          "medianWholeTokens": 1895.5,
-          "medianUtilisation": 94.78,
-          "overBudget": 5,
+          "medianDelivered": 15.5,
+          "medianWholeTokens": 1882,
+          "medianUtilisation": 94.1,
+          "overBudget": 2,
           "evidenceOverBudget": 0,
-          "medianAccountingOverheadTokens": 53.5,
+          "medianAccountingOverheadTokens": 49.5,
           "deliveryStatus": {
             "compacted": 20
           },
           "latency": {
             "n": 20,
-            "median": 417.95,
-            "p90": 544.1,
-            "p95": 615.6,
-            "max": 979,
-            "min": 378.8
+            "median": 503.4,
+            "p90": 756.3,
+            "p95": 1086.4,
+            "max": 2201.9,
+            "min": 434.4
           },
           "capsuleBuildMs": {
             "n": 20,
-            "median": 138.4,
-            "p90": 157.9,
-            "p95": 196.8,
-            "max": 701.2,
-            "min": 114
+            "median": 136.35,
+            "p90": 161.3,
+            "p95": 253.2,
+            "max": 742.9,
+            "min": 121.3
           },
           "debugDeliveryMatchesDefault": 0,
           "debugDeliveryDiffers": 20
@@ -1120,30 +1115,30 @@
           "allowance": 25,
           "poolWidthUsed": 25,
           "medianPool": 31,
-          "medianDelivered": 20,
-          "medianWholeTokens": 2474,
-          "medianUtilisation": 98.96,
+          "medianDelivered": 20.5,
+          "medianWholeTokens": 2477,
+          "medianUtilisation": 99.08,
           "overBudget": 8,
           "evidenceOverBudget": 0,
-          "medianAccountingOverheadTokens": 65,
+          "medianAccountingOverheadTokens": 66.5,
           "deliveryStatus": {
             "compacted": 20
           },
           "latency": {
             "n": 20,
-            "median": 421.95,
-            "p90": 611.2,
-            "p95": 625.8,
-            "max": 1139.2,
-            "min": 391.9
+            "median": 508.8,
+            "p90": 601.2,
+            "p95": 674.2,
+            "max": 1066.6,
+            "min": 436
           },
           "capsuleBuildMs": {
             "n": 20,
-            "median": 136.8,
-            "p90": 162.4,
-            "p95": 223.4,
-            "max": 777.1,
-            "min": 117.3
+            "median": 137.05,
+            "p90": 172.1,
+            "p95": 230.8,
+            "max": 711.8,
+            "min": 124.2
           },
           "debugDeliveryMatchesDefault": 0,
           "debugDeliveryDiffers": 0
@@ -1156,29 +1151,29 @@
           "poolWidthUsed": 25,
           "medianPool": 31,
           "medianDelivered": 25,
-          "medianWholeTokens": 3021.5,
-          "medianUtilisation": 100.72,
+          "medianWholeTokens": 3012.5,
+          "medianUtilisation": 100.41,
           "overBudget": 12,
-          "evidenceOverBudget": 0,
-          "medianAccountingOverheadTokens": 81,
+          "evidenceOverBudget": 1,
+          "medianAccountingOverheadTokens": 80.5,
           "deliveryStatus": {
             "compacted": 20
           },
           "latency": {
             "n": 20,
-            "median": 426.7,
-            "p90": 587.3,
-            "p95": 796.7,
-            "max": 1080.3,
-            "min": 390.2
+            "median": 516.65,
+            "p90": 626.1,
+            "p95": 659.8,
+            "max": 1103.5,
+            "min": 465.1
           },
           "capsuleBuildMs": {
             "n": 20,
-            "median": 134.1,
-            "p90": 163.1,
-            "p95": 197.9,
-            "max": 755.4,
-            "min": 112.1
+            "median": 140.7,
+            "p90": 172.2,
+            "p95": 178.1,
+            "max": 714.6,
+            "min": 120.1
           },
           "debugDeliveryMatchesDefault": 0,
           "debugDeliveryDiffers": 0
@@ -1188,33 +1183,32 @@
             "standard"
           ],
           "allowance": 34,
-          "poolWidthUsed": 25,
-          "medianPool": 31,
-          "medianDelivered": 33,
-          "medianWholeTokens": 4069.5,
-          "medianUtilisation": 101.73,
-          "overBudget": 13,
+          "poolWidthUsed": 34,
+          "medianPool": 39,
+          "medianDelivered": 34.5,
+          "medianWholeTokens": 4088,
+          "medianUtilisation": 102.2,
+          "overBudget": 17,
           "evidenceOverBudget": 0,
-          "medianAccountingOverheadTokens": 106,
+          "medianAccountingOverheadTokens": 111,
           "deliveryStatus": {
-            "compacted": 19,
-            "complete": 1
+            "compacted": 20
           },
           "latency": {
             "n": 20,
-            "median": 435.6,
-            "p90": 552.4,
-            "p95": 626.6,
-            "max": 1054.2,
-            "min": 390
+            "median": 541.95,
+            "p90": 656.4,
+            "p95": 729.5,
+            "max": 1140.9,
+            "min": 443.5
           },
           "capsuleBuildMs": {
             "n": 20,
-            "median": 139.05,
-            "p90": 181.1,
-            "p95": 225.6,
-            "max": 723.3,
-            "min": 117.6
+            "median": 139.5,
+            "p90": 163.6,
+            "p95": 231.4,
+            "max": 701.2,
+            "min": 119.5
           },
           "debugDeliveryMatchesDefault": 0,
           "debugDeliveryDiffers": 20
@@ -1224,33 +1218,32 @@
             "standard"
           ],
           "allowance": 42,
-          "poolWidthUsed": 25,
-          "medianPool": 31,
-          "medianDelivered": 36,
-          "medianWholeTokens": 4368,
-          "medianUtilisation": 87.36,
-          "overBudget": 0,
+          "poolWidthUsed": 42,
+          "medianPool": 46,
+          "medianDelivered": 44,
+          "medianWholeTokens": 5118,
+          "medianUtilisation": 102.36,
+          "overBudget": 15,
           "evidenceOverBudget": 0,
-          "medianAccountingOverheadTokens": 116.5,
+          "medianAccountingOverheadTokens": 141.5,
           "deliveryStatus": {
-            "complete": 8,
-            "compacted": 12
+            "compacted": 20
           },
           "latency": {
             "n": 20,
-            "median": 435.1,
-            "p90": 544.5,
-            "p95": 549.5,
-            "max": 1004.4,
-            "min": 405.3
+            "median": 531.6,
+            "p90": 701.4,
+            "p95": 737.8,
+            "max": 1132.4,
+            "min": 428.3
           },
           "capsuleBuildMs": {
             "n": 20,
-            "median": 140.85,
-            "p90": 178.1,
-            "p95": 183.9,
-            "max": 710.4,
-            "min": 120.5
+            "median": 142.05,
+            "p90": 162,
+            "p95": 207.5,
+            "max": 747.6,
+            "min": 120.8
           },
           "debugDeliveryMatchesDefault": 0,
           "debugDeliveryDiffers": 0
@@ -1260,33 +1253,32 @@
             "standard"
           ],
           "allowance": 50,
-          "poolWidthUsed": 25,
-          "medianPool": 31,
-          "medianDelivered": 36,
-          "medianWholeTokens": 4436.5,
-          "medianUtilisation": 73.94,
-          "overBudget": 0,
-          "evidenceOverBudget": 0,
-          "medianAccountingOverheadTokens": 116.5,
+          "poolWidthUsed": 50,
+          "medianPool": 54,
+          "medianDelivered": 52.5,
+          "medianWholeTokens": 6142,
+          "medianUtilisation": 102.37,
+          "overBudget": 14,
+          "evidenceOverBudget": 2,
+          "medianAccountingOverheadTokens": 169,
           "deliveryStatus": {
-            "complete": 17,
-            "compacted": 3
+            "compacted": 20
           },
           "latency": {
             "n": 20,
-            "median": 445.15,
-            "p90": 760.7,
-            "p95": 1031.8,
-            "max": 1301.7,
-            "min": 375.1
+            "median": 540.6,
+            "p90": 575.9,
+            "p95": 748.9,
+            "max": 1142.7,
+            "min": 449.8
           },
           "capsuleBuildMs": {
             "n": 20,
-            "median": 140.1,
-            "p90": 173.9,
-            "p95": 293.7,
-            "max": 719.1,
-            "min": 124.4
+            "median": 141.05,
+            "p90": 161.7,
+            "p95": 170.7,
+            "max": 737.2,
+            "min": 126
           },
           "debugDeliveryMatchesDefault": 0,
           "debugDeliveryDiffers": 0
@@ -1296,32 +1288,32 @@
             "standard"
           ],
           "allowance": 67,
-          "poolWidthUsed": 25,
-          "medianPool": 31,
-          "medianDelivered": 36,
-          "medianWholeTokens": 4436.5,
-          "medianUtilisation": 55.45,
-          "overBudget": 0,
+          "poolWidthUsed": 67,
+          "medianPool": 70,
+          "medianDelivered": 71,
+          "medianWholeTokens": 8195.5,
+          "medianUtilisation": 102.44,
+          "overBudget": 13,
           "evidenceOverBudget": 0,
-          "medianAccountingOverheadTokens": 116.5,
+          "medianAccountingOverheadTokens": 227,
           "deliveryStatus": {
-            "complete": 20
+            "compacted": 20
           },
           "latency": {
             "n": 20,
-            "median": 440.95,
-            "p90": 745.8,
-            "p95": 763.3,
-            "max": 1133.9,
-            "min": 373.5
+            "median": 554.1,
+            "p90": 661.8,
+            "p95": 719.4,
+            "max": 1147.6,
+            "min": 482.4
           },
           "capsuleBuildMs": {
             "n": 20,
-            "median": 138.6,
-            "p90": 167.6,
-            "p95": 289.6,
-            "max": 727.5,
-            "min": 113.9
+            "median": 146.7,
+            "p90": 170.7,
+            "p95": 175.4,
+            "max": 742.9,
+            "min": 120.4
           },
           "debugDeliveryMatchesDefault": 0,
           "debugDeliveryDiffers": 20
@@ -1331,32 +1323,33 @@
             "standard"
           ],
           "allowance": 84,
-          "poolWidthUsed": 25,
-          "medianPool": 31,
-          "medianDelivered": 36,
-          "medianWholeTokens": 4436.5,
-          "medianUtilisation": 44.37,
-          "overBudget": 0,
+          "poolWidthUsed": 84,
+          "medianPool": 86.5,
+          "medianDelivered": 85.5,
+          "medianWholeTokens": 10081.5,
+          "medianUtilisation": 100.81,
+          "overBudget": 10,
           "evidenceOverBudget": 0,
-          "medianAccountingOverheadTokens": 116.5,
+          "medianAccountingOverheadTokens": 275,
           "deliveryStatus": {
-            "complete": 20
+            "complete": 3,
+            "compacted": 17
           },
           "latency": {
             "n": 20,
-            "median": 441.35,
-            "p90": 625.8,
-            "p95": 1018.7,
-            "max": 2025.4,
-            "min": 380.3
+            "median": 544.45,
+            "p90": 763.6,
+            "p95": 1232.6,
+            "max": 1284.9,
+            "min": 468.6
           },
           "capsuleBuildMs": {
             "n": 20,
-            "median": 133.2,
-            "p90": 168.7,
-            "p95": 401.6,
-            "max": 708.3,
-            "min": 116.5
+            "median": 147.45,
+            "p90": 186.6,
+            "p95": 512.5,
+            "max": 742,
+            "min": 124.3
           },
           "debugDeliveryMatchesDefault": 0,
           "debugDeliveryDiffers": 0
@@ -1366,32 +1359,33 @@
             "standard"
           ],
           "allowance": 100,
-          "poolWidthUsed": 25,
-          "medianPool": 31,
-          "medianDelivered": 36,
-          "medianWholeTokens": 4436.5,
-          "medianUtilisation": 36.97,
-          "overBudget": 0,
+          "poolWidthUsed": 100,
+          "medianPool": 101.5,
+          "medianDelivered": 100.5,
+          "medianWholeTokens": 11805.5,
+          "medianUtilisation": 98.38,
+          "overBudget": 9,
           "evidenceOverBudget": 0,
-          "medianAccountingOverheadTokens": 116.5,
+          "medianAccountingOverheadTokens": 324,
           "deliveryStatus": {
-            "complete": 20
+            "complete": 3,
+            "compacted": 17
           },
           "latency": {
             "n": 20,
-            "median": 424.55,
-            "p90": 563.2,
-            "p95": 1026.9,
-            "max": 3667,
-            "min": 375.7
+            "median": 556.2,
+            "p90": 767.8,
+            "p95": 1074.5,
+            "max": 1131.8,
+            "min": 494.3
           },
           "capsuleBuildMs": {
             "n": 20,
-            "median": 136.6,
-            "p90": 171.6,
-            "p95": 387.7,
-            "max": 738.2,
-            "min": 112.4
+            "median": 146.1,
+            "p90": 198.4,
+            "p95": 298.7,
+            "max": 795.1,
+            "min": 131.1
           },
           "debugDeliveryMatchesDefault": 0,
           "debugDeliveryDiffers": 0
@@ -1401,32 +1395,32 @@
             "full"
           ],
           "allowance": 100,
-          "poolWidthUsed": 25,
-          "medianPool": 31,
-          "medianDelivered": 37,
-          "medianWholeTokens": 4459.5,
-          "medianUtilisation": 37.16,
-          "overBudget": 0,
+          "poolWidthUsed": 100,
+          "medianPool": 101.5,
+          "medianDelivered": 100.5,
+          "medianWholeTokens": 11872.5,
+          "medianUtilisation": 98.94,
+          "overBudget": 9,
           "evidenceOverBudget": 0,
-          "medianAccountingOverheadTokens": 119,
+          "medianAccountingOverheadTokens": 324,
           "deliveryStatus": {
-            "complete": 20
+            "compacted": 20
           },
           "latency": {
             "n": 20,
-            "median": 430.4,
-            "p90": 592.5,
-            "p95": 1046.5,
-            "max": 1568.7,
-            "min": 378.6
+            "median": 571.9,
+            "p90": 851.6,
+            "p95": 1204.5,
+            "max": 2378.4,
+            "min": 481.7
           },
           "capsuleBuildMs": {
             "n": 20,
-            "median": 136.9,
-            "p90": 187.9,
-            "p95": 192.6,
-            "max": 730.2,
-            "min": 110.1
+            "median": 152.4,
+            "p90": 204.9,
+            "p95": 306.4,
+            "max": 774.4,
+            "min": 130.3
           },
           "debugDeliveryMatchesDefault": 0,
           "debugDeliveryDiffers": 0
@@ -1436,67 +1430,69 @@
             "full"
           ],
           "allowance": 134,
-          "poolWidthUsed": 25,
-          "medianPool": 31,
-          "medianDelivered": 37,
-          "medianWholeTokens": 4459.5,
-          "medianUtilisation": 27.88,
-          "overBudget": 0,
+          "poolWidthUsed": 134,
+          "medianPool": 130,
+          "medianDelivered": 128,
+          "medianWholeTokens": 15499.5,
+          "medianUtilisation": 96.87,
+          "overBudget": 7,
           "evidenceOverBudget": 0,
-          "medianAccountingOverheadTokens": 119,
+          "medianAccountingOverheadTokens": 412.5,
           "deliveryStatus": {
-            "complete": 20
+            "compacted": 17,
+            "complete": 3
           },
           "latency": {
             "n": 20,
-            "median": 426.7,
-            "p90": 547.5,
-            "p95": 601,
-            "max": 991.6,
-            "min": 380.6
+            "median": 588.05,
+            "p90": 809.2,
+            "p95": 1233.1,
+            "max": 2052.4,
+            "min": 494
           },
           "capsuleBuildMs": {
             "n": 20,
-            "median": 133.25,
-            "p90": 176.5,
-            "p95": 178.7,
-            "max": 716.6,
-            "min": 114.9
+            "median": 150.85,
+            "p90": 182.4,
+            "p95": 409.9,
+            "max": 715.2,
+            "min": 133.5
           },
-          "debugDeliveryMatchesDefault": 1,
-          "debugDeliveryDiffers": 19
+          "debugDeliveryMatchesDefault": 0,
+          "debugDeliveryDiffers": 20
         },
         "20000": {
           "tier": [
             "full"
           ],
           "allowance": 167,
-          "poolWidthUsed": 25,
-          "medianPool": 31,
-          "medianDelivered": 37,
-          "medianWholeTokens": 4459.5,
-          "medianUtilisation": 22.3,
+          "poolWidthUsed": 167,
+          "medianPool": 130,
+          "medianDelivered": 128,
+          "medianWholeTokens": 15499.5,
+          "medianUtilisation": 77.5,
           "overBudget": 0,
           "evidenceOverBudget": 0,
-          "medianAccountingOverheadTokens": 119,
+          "medianAccountingOverheadTokens": 412.5,
           "deliveryStatus": {
-            "complete": 20
+            "complete": 15,
+            "compacted": 5
           },
           "latency": {
             "n": 20,
-            "median": 450.8,
-            "p90": 565.5,
-            "p95": 634.9,
-            "max": 998.3,
-            "min": 390.4
+            "median": 576.65,
+            "p90": 755.5,
+            "p95": 1325.3,
+            "max": 2386.8,
+            "min": 515.8
           },
           "capsuleBuildMs": {
             "n": 20,
-            "median": 141.35,
-            "p90": 189.2,
-            "p95": 194.4,
-            "max": 706.8,
-            "min": 116.1
+            "median": 153.25,
+            "p90": 212,
+            "p95": 396.3,
+            "max": 751.7,
+            "min": 129.2
           },
           "debugDeliveryMatchesDefault": 0,
           "debugDeliveryDiffers": 0
@@ -1528,12 +1524,8 @@
           "task": "where are import edges extracted from typescript",
           "from": 8000,
           "to": 16000,
-          "measured": true,
-          "sameFocus": true,
-          "relation": "prefix",
-          "lowerRelated": 37,
-          "higherRelated": 37,
-          "representationRegressions": 0
+          "measured": false,
+          "reason": "debug_delivery_differs_from_default"
         },
         {
           "task": "how does the indexer decide a file is eligible for parsing",

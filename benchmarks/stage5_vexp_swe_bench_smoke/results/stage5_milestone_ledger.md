@@ -9983,3 +9983,244 @@ evidence          results/stage5_m207_final_report.{md,json} and the
   projected-body consistency as the two delivery findings it should read
   first; A15 untouched.
   `CONTEXT_COMPILER_PRODUCT_UTILITY_NOT_ESTABLISHED` still governs.
+
+## M208 — budget-growth monotonicity: the pivot plan is the full tier's plan; frozen A13 closes at 14/15 (PASS, A13 closed)
+
+```
+milestone         M208
+verdict           PASS
+parity            A13_CAUSAL_ATTRIBUTION_COMPLETE; A13_PARITY_CLOSED; 13/15 -> 14/15
+spend             0 live-agent runs, $0, 0 VEXP processes
+scope             A13 only. Reproduce M207's A13, recover the frozen authority,
+                  attribute every one of the 80 adjacent-budget transitions to
+                  its first divergent stage with per-item fates, run read-only
+                  counterfactuals, and only then repair the earliest coherent
+                  authority at each stage the ledger named. No A15, no new
+                  representation class, no scoring / eligibility / graph
+                  change, no live spend.
+
+result            VTRACE_VEXP_ENGINE_PARITY_THRESHOLD_MET
+                  MATCH 7  EXCEED 7  BELOW 1   match-or-exceed 14/15 (threshold 10)
+                  A8 minimum coverage 100% (veto 99%); structural violations 0
+                  determinism stable; invented structural claims 0
+                  frozen controls: F1-F5, F7, F8 pass; F6 FAILS on its stale
+                  `a14PerItem === 0` conjunct only (M203 standing finding).
+
+frozen A13        VEXP V-C7 "pivots degrade to skeletons and support is dropped
+                  when the budget binds". Rule (engine + report, verbatim):
+                  per task, ascending frozen budgets 1000 / 2000 / 4000 / 8000 /
+                  16000, a SIZE VIOLATION is a step where ceil(chars/4) of
+                  focus.code decreases and a FOCUS SWAP a step where focus.at
+                  changes; tasksWithSizeViolation + tasksWithFocusSwap over the
+                  20 C-MED tasks, band([n], 0, 0, "atMost") — MATCH 0, EXCEED 0
+                  (a zero score reports EXCEEDS; the exceed wording "plus a
+                  declared drop order" is not scored: a stale wording control,
+                  reported, not edited). The related-order relations and the
+                  representation regressions are M207 OBSERVATIONS
+                  (m204Utilization.orderRelation; code-bearing -> relationship
+                  _only), reproduced under the same rules, not in the verdict.
+                  M207 committed 3 / 5 BELOW; M208 pre-change reproduction
+                  3 / 5, order relations 0 / 15 / 65, 24 regressions, A11
+                  85.05 / 94.78 / 102.05 / 102.5 / 94.72 — exact. M208 frozen
+                  rerun 0 / 0, EXCEEDS.
+
+causal audit      run_stage5_m208_transition_audit.ts + m208BudgetMonotonicity
+                  .ts: the frozen protocol at 17 budgets (750 ... 20000, both
+                  tier boundaries at 1499/1500 and 11999/12000), 3 repeats,
+                  through the DEFAULT handler, with the M203 ledger and ONE
+                  direct capsule build (handler's preset) bound beside every
+                  packet; delivery facts read from the default packet's ledger
+                  (the debug envelope FAILS delivery at tight budgets — its
+                  metadata eats the evidence budget — so it is not read for
+                  that). Seam identity: the direct build's lead equals the
+                  packet's focus on every snapshot; every ledger S# id names
+                  the capsule entry at that ordinal. First divergence per
+                  transition = the earliest stage any lost or moved item
+                  names; movers = the items outside a weighted longest common
+                  subsequence (role-changed items weigh less, so a swap with a
+                  bystander names the promoted item). Pre-change, 80 frozen
+                  transitions: S1 27 (concept-owner pool membership, 40 lost
+                  items), S4b 21 (co-edit window partition / lane placement /
+                  lane not reproduced), S2 10 + S4a 3 (cap-demoted pivots
+                  promoted; all 5 swaps and all 3 size drops), S7 5 (ladder),
+                  S9 3 (routing), S5 1 (first-fit packing), none 10. Dense
+                  grid 320 transitions attributed likewise. Counterfactuals:
+                  pool pinned to 25 keeps every swap and removes the S1
+                  losses (36 neither); pinned to 134 keeps every swap and
+                  exposes the ladder (63 lost items); the projector on a fixed
+                  supply only takes a longer prefix.
+
+root causes       S2/S4a assignCandidateRoles(maxPivots) / capPivots capped the
+                  pivot SET in final-score order, then pivotCandidates.sort
+                  (anchor tiers) or pivot-ranking v2 ORDERED the capped set;
+                  widening the cap (micro 1 -> standard 2 -> full 5) admitted
+                  a candidate the order ranked above the old lead. Pool growth
+                  played no part (same 5 swaps at width 25). S1 the concept-
+                  owner rescue judged "file already represented" against
+                  ranked.slice(0, maxResults), which M207 made the allowance:
+                  at 4000 a lexical sibling represents the file and the rank-2
+                  owner leaves the pool. S4b orderSupportWithCoedit partitions
+                  base support at the tier's window (1 / 4 / 10). S7 the
+                  ladder's answerBearing substring matched the NEGATED blocker
+                  "no direct evidence (graph/domain reach only)" and protected
+                  the weak tail while evicting stronger support (the M207 F15
+                  collapse is the same false positive). S9 admission-first
+                  routing (M205): a wider supply admitted relationship-only
+                  crowds out a later entry's richer form (7 of 24 avoidable).
+
+repair            One authority per stage, no later compensation, no frozen
+                  rung anywhere (F10). S1 conceptOwnerPoolSize =
+                  CANDIDATE_POOL_FLOOR (hybridRetrieval.ts, buildCapsuleV2.ts).
+                  S2/S4a roles uncapped; the pivot PLAN is the full tier's plan:
+                  the first PIVOT_PLAN_WINDOW (5) candidates by the admission
+                  order (scoped objective, line anchor, SQL renderer, class-
+                  method expansion, organic final) ordered once by the lead
+                  order (anchor tiers with the renderer flag folded in, or v2),
+                  the rest in admission order, and capOrderedPivots takes a
+                  PREFIX of it with the M101 exemption appended last; the
+                  pivot-slot reclaim step retired (debugRoles.ts,
+                  buildCapsuleV2.ts, budgetAllocator.ts). S4b
+                  SUPPORT_ORDERING_WINDOW = 4 for every tier (the standard
+                  tier's and the default budget's) and cap-demoted pivots lead
+                  support in plan order (budgetAllocator.ts, buildCapsuleV2.ts).
+                  S7 answerBearing no longer matches "no / weak direct
+                  evidence" (budgetDelivery.ts). Not repaired by decision: S9
+                  admission-first routing (M205 authority), S5 first-fit
+                  packing, and the M203 accounting overhead above the ceiling
+                  (every whole-output overshoot is that overhead; evidence
+                  characters never exceed 4 x max_tokens beyond the packet
+                  rule's nearest-token rounding, 2 characters on 3 responses).
+
+before / after    Frozen 80 transitions (M207 product / M208 product on the
+                  M207 corpus copy / M208 product on its own corpus): size /
+                  swaps 3 / 5 -> 0 / 0 -> 0 / 0; prefix / subsequence / neither
+                  0 / 15 / 65 -> 4 / 23 / 53 -> 3 / 25 / 52; lost lower-budget
+                  items 74 -> 31 -> 31; regressions 24 -> 8 -> 10; dense
+                  prefix / subsequence / neither 50 / 139 / 131 -> 56 / 164 /
+                  100 -> 53 / 168 / 99. Residual first divergences (post):
+                  interleaving of new items 23 (subsequence), co-edit window
+                  partition 16, promoted pivots displaced by that partition 14,
+                  graph-neighbour tail dropped by the ladder 7, lane injection
+                  not reproduced 8, routing 2, none 3.
+
+falsification     F1-F17 pass (stage5_m208_falsification.json, predecessor =
+                  the M207 final commit in a detached worktree): preserved
+                  evidence and appended tails across the frozen budgets;
+                  representations same or richer (0 poorer); a summary item
+                  stays relationship-only and a forged body fails M205; one
+                  lead at every budget and pool width; a named symbol leads at
+                  the micro tier too where the predecessor let it lead only
+                  once the cap admitted it; base support keeps its order as
+                  candidates are added; the 25-pool is a prefix of the 81-pool
+                  with the same lead; evidence inside the budget at 17 dense
+                  budgets; no swap, no size drop, one window, no frozen-rung
+                  comparison in the changed product lines; one delivery and
+                  one record per item, a +40-token corruption fails M203; a
+                  3-candidate universe leaves 97% of 16000 unused yet
+                  monotone; no impact / call-site / caller rendering added;
+                  the predecessor swaps the lead across tiers on the same
+                  fixture and varies the window 1/4/10 while the product does
+                  neither; in-process and fresh-process repeats identical.
+
+retrieval eval    The committed baselines were stale since M134 and the 50 eval
+                  workspaces held indexes at index_format_version 1 / no
+                  index.meta.json (derivation gate: 0/20 evaluated). They were
+                  reindexed with the current indexer and both fixtures run on
+                  the M207 worktree and this tree (stage5_m208_retrieval_eval
+                  _ab.json): expanded 20/20 rows identical in top-1 pivot and
+                  result (top-1 0.85 both); cross_repo_30 27/30 identical,
+                  top-1 0.70 -> 0.6667 — the three moved rows (xarray-3677
+                  hit_top1_pivot -> hit_support, sphinx-7910 hit_discarded ->
+                  hit_support, sympy-16766 hit_support -> hit_discarded) are
+                  rows where the predecessor's 8000 lead already differed
+                  from its own 16000 lead, and the 16000 pivots are byte-
+                  identical to the predecessor's. Baselines regenerated at
+                  ead16a1c, meta bumped (M208 changed delivery on purpose).
+
+A5 / A12 / A14    Frozen A5 p90 52.09 / 218.69 / 384.23 ms (M207 55.17 / 203.6
+                  / 344.88), MATCHES, engine started at load 1.97; A5 harness
+                  57.16 / 237.66 / 377 (M207 51.61 / 201.04 / 344.91),
+                  MATCHES, run at load 3.97 (the desktop held the load; the
+                  idle gate was released by hand and the number is reported
+                  as contended). The plan orders every pivot-worthy candidate
+                  in the window, loading focused source for the v2 rank:
+                  median 2.5 ms, max 9.1 ms per request at 16000 on C-MED.
+                  Frozen A12 3 classes MATCHES (FOCUS:excerpt is gone: the
+                  lead is never ladder-shortened any more; the bar is 3).
+                  M205 sweep 180/180 packets, 1 integrity failure
+                  (`what deduplicates supporting files`@4000, the pre-existing
+                  compacted-body vs projected-body consistency question).
+                  Frozen A14 5077/5077 MATCHES.
+
+determinism       3 repeats: packets and ledgers stable on every audit;
+                  fresh-process capsule selections identical (F17). One
+                  transient decline (10 ms, no packet) on a REUSED scratch
+                  copy during one same-corpus run did not reproduce on a
+                  pristine copy or in isolation; the pristine run is the
+                  evidence.
+
+corpus identity   C-MED 504 -> 506 (two tests added); the count is re-frozen at
+                  506 by the M202/M203/M205 rule; the predecessor replay at
+                  504 fails only the detached-HEAD branch check
+                  (stage5_m208_authority.json); post M197A_AUTHORITY_VERIFIED
+                  at 506 @ ead16a1c. Same-corpus control: the M208 product on
+                  the pristine M207 corpus copy reports 0 / 0 with 4 / 23 / 53,
+                  so the movement is the policy, not the corpus.
+
+commits           e5925662  audit instrumentation, transition ledger, counter-
+                            factuals, causal report (no product change)
+                  30dac45a  concept-owner slice, plan-before-cap, constant
+                            window, plan-ordered demoted pivots, negation-
+                            aware ladder, tests, falsification
+                  ead16a1c  the plan window is the full tier's cap; renderer
+                            flag in the lead order
+                  (evidence commit recorded in the row below)
+
+evidence          results/stage5_m208_final_report.{md,json},
+                  stage5_m208_causal_report.{md,json}, stage5_m208_audit_
+                  {pre,pre_fixed25,pre_fixed134,post_precorpus,post}.json and
+                  their transitions/items jsonl, stage5_m208_engine.json,
+                  stage5_m208_claim_ledger.json, stage5_m208_indexing.json,
+                  stage5_m208_authority{,_post}.json, stage5_m208_
+                  falsification.json, stage5_m208_retrieval_eval_ab.json,
+                  stage5_m201_a5_m208_post.json, stage5_m205_representation_
+                  m208_post.json, stage5_m205_routing_ledger_m208_post.jsonl.
+```
+
+## M208 standing findings
+
+- **The pivot plan is the full tier's plan.** Monotone nesting across tiers
+  forces one plan; the full tier's was chosen so 16000 behaviour is unchanged
+  and every smaller tier names its first pivots. The cost on the live default
+  budget is visible in the retrieval A/B: where the predecessor's 8000 lead
+  differed from its own 16000 lead, 8000 now follows 16000 (cross_repo_30
+  top-1 0.70 -> 0.6667). xarray-3677 now leads at 8000 with
+  `versioneer.py::scan_setup_py`, a tier-2 anchored vendored symbol the
+  predecessor already led with at 16000 — an anchor-tier ranking quality
+  question, not M208's to change.
+
+- **The remaining non-prefix transitions are the co-edit window partition, the
+  ladder's tail drop and admission-first routing.** `orderSupportWithCoedit`
+  re-partitions the window as its content changes (a promoted pivot leaves it,
+  a new candidate enters it), so a cap-demoted pivot displaced behind co-edits
+  still jumps on promotion (14 + 16 of 80); the ladder drops graph-neighbour
+  entries from the tail when a larger budget packs more ahead of them (7); the
+  projector's WHICH-before-WHAT routing downgrades a later entry when a wider
+  supply is admitted relationship-only first (2 transitions, 10 regressions,
+  4 avoidable). None is the frozen authority's; each is a delivery-order
+  design decision for a later milestone, not a compensation to stack now.
+
+- **A12 sits exactly on its bar.** The ladder no longer shortens the lead, so
+  `FOCUS:excerpt` never appears in the default response and the frozen A12
+  count is 3 (MATCH >= 3). Any change that collapses another class flips A12.
+
+- **The debug envelope is not a witness for delivery.** At tight budgets its
+  metadata consumes the evidence budget and `retryWithinCeiling` lowers the
+  aim until delivery fails; the default packet's M203 ledger is the record of
+  what was delivered. Audits that read delivery from `detail=debug` at 1000 or
+  2000 are reading a different response.
+
+- **Next-step recommendation.** A15 is the only remaining deterministic parity
+  gap; M209 may target impact / call-site rendering. Do not re-tier the
+  support window or reorder pivots after the cap.
+  `CONTEXT_COMPILER_PRODUCT_UTILITY_NOT_ESTABLISHED` still governs.

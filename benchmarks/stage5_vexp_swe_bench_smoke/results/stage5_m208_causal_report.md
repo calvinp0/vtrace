@@ -60,10 +60,10 @@ MATCH = 0 violations; EXCEED = 0 (`band([a13Violations], 0, 0, "atMost")`: both 
 
 | budget | tier | maxPivots | supportWindow | candidate allowance |
 | --- | --- | --- | --- | --- |
-| 750 | micro | 1 | 1 | 25 |
-| 1000 | micro | 1 | 1 | 25 |
-| 1250 | micro | 1 | 1 | 25 |
-| 1499 | micro | 1 | 1 | 25 |
+| 750 | micro | 1 | 4 | 25 |
+| 1000 | micro | 1 | 4 | 25 |
+| 1250 | micro | 1 | 4 | 25 |
+| 1499 | micro | 1 | 4 | 25 |
 | 1500 | standard | 2 | 4 | 25 |
 | 2000 | standard | 2 | 4 | 25 |
 | 2500 | standard | 2 | 4 | 25 |
@@ -74,9 +74,9 @@ MATCH = 0 violations; EXCEED = 0 (`band([a13Violations], 0, 0, "atMost")`: both 
 | 8000 | standard | 2 | 4 | 67 |
 | 10000 | standard | 2 | 4 | 84 |
 | 11999 | standard | 2 | 4 | 100 |
-| 12000 | full | 5 | 10 | 100 |
-| 16000 | full | 5 | 10 | 134 |
-| 20000 | full | 5 | 10 | 167 |
+| 12000 | full | 5 | 4 | 100 |
+| 16000 | full | 5 | 4 | 134 |
+| 20000 | full | 5 | 4 | 167 |
 
 | stage | how the budget reaches it | code |
 | --- | --- | --- |
@@ -97,27 +97,27 @@ MATCH = 0 violations; EXCEED = 0 (`band([a13Violations], 0, 0, "atMost")`: both 
 | where are import edges extracted from typescript | 1000->2000 | micro->standard | 1->2 | 1->4 | 29->29 | extractImportEdges -> ExtractImportEdgesInput (size drop) | subsequence | subsequence | S4a_pivot_order: PIVOT_CAP_LEAD_RESELECTION | 0 | 0 | 12 | 0 |
 | where are import edges extracted from typescript | 2000->4000 | standard->standard | 2->2 | 4->4 | 29->36 | ExtractImportEdgesInput | neither | neither | S1_ranked_pool: RETRIEVAL_POOL_MEMBERSHIP:concept_owner | 1 | 0 | 23 | 0 |
 | where are import edges extracted from typescript | 4000->8000 | standard->standard | 2->2 | 4->4 | 36->68 | ExtractImportEdgesInput | neither | neither | S1_ranked_pool: RETRIEVAL_POOL_MEMBERSHIP:concept_owner | 1 | 2 | 24 | 1 |
-| where are import edges extracted from typescript | 8000->16000 | standard->full | 2->5 | 4->10 | 68->128 | ExtractImportEdgesInput | neither | neither | S2_role_assignment: PIVOT_CAP_ROLE_PROMOTION | 2 | 5 | 55 | 0 |
+| where are import edges extracted from typescript | 8000->16000 | standard->full | 2->5 | 4->10 | 68->128 | ExtractImportEdgesInput | neither | neither | S2_role_assignment: PIVOT_CAP_ROLE_PROMOTION | 2 | 3 | 55 | 0 |
 | how does the indexer decide a file is eligible for parsing | 1000->2000 | micro->standard | 1->2 | 1->4 | 34->34 | bindingTermFor | neither | neither | S4b_support_order: SUPPORT_WINDOW_PARTITION:coedit_displacement:window_changed | 0 | 2 | 10 | 0 |
 | how does the indexer decide a file is eligible for parsing | 2000->4000 | standard->standard | 2->2 | 4->4 | 34->43 | bindingTermFor | subsequence | subsequence | none: SUBSEQUENCE_NEW_ITEMS_INTERLEAVED | 0 | 0 | 16 | 0 |
 | how does the indexer decide a file is eligible for parsing | 4000->8000 | standard->standard | 2->2 | 4->4 | 43->75 | bindingTermFor | neither | neither | S4b_support_order: SUPPORT_WINDOW_PARTITION:coedit_displacement:window_content_changed | 0 | 6 | 41 | 5 |
 | how does the indexer decide a file is eligible for parsing | 8000->16000 | standard->full | 2->5 | 4->10 | 75->133 | bindingTermFor | neither | neither | S2_role_assignment: PIVOT_CAP_ROLE_PROMOTION | 1 | 8 | 60 | 0 |
-| budget allocation for capsule items is dropping sections | 1000->2000 | micro->standard | 1->2 | 1->4 | 31->31 | listCapsuleItems | neither | neither | S2_role_assignment: PIVOT_CAP_ROLE_PROMOTION | 1 | 2 | 8 | 0 |
+| budget allocation for capsule items is dropping sections | 1000->2000 | micro->standard | 1->2 | 1->4 | 31->31 | listCapsuleItems | neither | neither | S4b_support_order: SUPPORT_LANE_PLACEMENT:coedit_injected_high | 1 | 1 | 8 | 0 |
 | budget allocation for capsule items is dropping sections | 2000->4000 | standard->standard | 2->2 | 4->4 | 31->40 | listCapsuleItems | neither | neither | S4b_support_order: SUPPORT_LANE_NOT_REPRODUCED:coedit_injected_high | 1 | 3 | 23 | 3 |
 | budget allocation for capsule items is dropping sections | 4000->8000 | standard->standard | 2->2 | 4->4 | 40->72 | listCapsuleItems | neither | neither | S4b_support_order: SUPPORT_WINDOW_PARTITION:coedit_displacement:window_content_changed | 0 | 3 | 24 | 0 |
-| budget allocation for capsule items is dropping sections | 8000->16000 | standard->full | 2->5 | 4->10 | 72->127 | listCapsuleItems | neither | neither | S1_ranked_pool: RETRIEVAL_POOL_MEMBERSHIP:concept_owner | 3 | 4 | 53 | 0 |
+| budget allocation for capsule items is dropping sections | 8000->16000 | standard->full | 2->5 | 4->10 | 72->127 | listCapsuleItems | neither | neither | S1_ranked_pool: RETRIEVAL_POOL_MEMBERSHIP:concept_owner | 3 | 3 | 53 | 0 |
 | how is the impact graph bounded when a symbol has many callers | 1000->2000 | micro->standard | 1->2 | 1->4 | 30->30 | hasInheritedMemberEvidence | neither | neither | S2_role_assignment: PIVOT_CAP_ROLE_PROMOTION | 0 | 2 | 6 | 0 |
 | how is the impact graph bounded when a symbol has many callers | 2000->4000 | standard->standard | 2->2 | 4->4 | 30->38 | hasInheritedMemberEvidence | neither | neither | S1_ranked_pool: RETRIEVAL_POOL_MEMBERSHIP:concept_owner | 1 | 0 | 15 | 0 |
 | how is the impact graph bounded when a symbol has many callers | 4000->8000 | standard->standard | 2->2 | 4->4 | 38->72 | hasInheritedMemberEvidence | neither | neither | S1_ranked_pool: RETRIEVAL_POOL_MEMBERSHIP:concept_owner | 1 | 1 | 41 | 1 |
-| how is the impact graph bounded when a symbol has many callers | 8000->16000 | standard->full | 2->5 | 4->10 | 72->134 | hasInheritedMemberEvidence | neither | neither | S1_ranked_pool: RETRIEVAL_POOL_MEMBERSHIP:concept_owner | 1 | 10 | 62 | 0 |
+| how is the impact graph bounded when a symbol has many callers | 8000->16000 | standard->full | 2->5 | 4->10 | 72->134 | hasInheritedMemberEvidence | neither | neither | S1_ranked_pool: RETRIEVAL_POOL_MEMBERSHIP:concept_owner | 1 | 8 | 62 | 0 |
 | where does logic flow decide a path is unreachable | 1000->2000 | micro->standard | 1->2 | 1->4 | 31->31 | LogicFlowPath -> hasCrossLanguagePythonCythonStep | neither | neither | S4a_pivot_order: PIVOT_CAP_LEAD_RESELECTION | 2 | 0 | 9 | 0 |
 | where does logic flow decide a path is unreachable | 2000->4000 | standard->standard | 2->2 | 4->4 | 31->39 | hasCrossLanguagePythonCythonStep | neither | neither | S7_evidence_budget: EVIDENCE_BUDGET_DROP:graph_neighbour_anchoring | 1 | 0 | 23 | 0 |
 | where does logic flow decide a path is unreachable | 4000->8000 | standard->standard | 2->2 | 4->4 | 39->74 | hasCrossLanguagePythonCythonStep | neither | neither | S4b_support_order: SUPPORT_ORDER_OTHER:base_support_tier_1 | 0 | 3 | 30 | 0 |
-| where does logic flow decide a path is unreachable | 8000->16000 | standard->full | 2->5 | 4->10 | 74->130 | hasCrossLanguagePythonCythonStep | neither | neither | S1_ranked_pool: RETRIEVAL_POOL_MEMBERSHIP:concept_owner | 1 | 7 | 48 | 0 |
+| where does logic flow decide a path is unreachable | 8000->16000 | standard->full | 2->5 | 4->10 | 74->130 | hasCrossLanguagePythonCythonStep | neither | neither | S1_ranked_pool: RETRIEVAL_POOL_MEMBERSHIP:concept_owner | 1 | 5 | 48 | 0 |
 | how are skeleton declarations built from indexed symbols | 1000->2000 | micro->standard | 1->2 | 1->4 | 27->27 | buildDeclarations | subsequence | subsequence | none: SUBSEQUENCE_NEW_ITEMS_INTERLEAVED | 0 | 0 | 9 | 0 |
 | how are skeleton declarations built from indexed symbols | 2000->4000 | standard->standard | 2->2 | 4->4 | 27->36 | buildDeclarations | subsequence | subsequence | none: SUBSEQUENCE_NEW_ITEMS_INTERLEAVED | 0 | 0 | 15 | 0 |
 | how are skeleton declarations built from indexed symbols | 4000->8000 | standard->standard | 2->2 | 4->4 | 36->69 | buildDeclarations | subsequence | subsequence | none: SUBSEQUENCE_NEW_ITEMS_INTERLEAVED | 0 | 0 | 38 | 0 |
-| how are skeleton declarations built from indexed symbols | 8000->16000 | standard->full | 2->5 | 4->10 | 69->130 | buildDeclarations | neither | neither | S2_role_assignment: PIVOT_CAP_ROLE_PROMOTION | 0 | 7 | 63 | 0 |
+| how are skeleton declarations built from indexed symbols | 8000->16000 | standard->full | 2->5 | 4->10 | 69->130 | buildDeclarations | neither | neither | S4b_support_order: SUPPORT_WINDOW_PARTITION:coedit_displacement:window_changed | 0 | 5 | 63 | 0 |
 | what determines whether the repository index is considered fresh | 1000->2000 | micro->standard | 1->2 | 1->4 | 31->31 | findFileIndexFailure | neither | neither | S2_role_assignment: PIVOT_CAP_ROLE_PROMOTION | 0 | 1 | 9 | 0 |
 | what determines whether the repository index is considered fresh | 2000->4000 | standard->standard | 2->2 | 4->4 | 31->40 | findFileIndexFailure | subsequence | subsequence | S9_projector: REPRESENTATION_ROUTING:ceiling | 0 | 1 | 19 | 1 |
 | what determines whether the repository index is considered fresh | 4000->8000 | standard->standard | 2->2 | 4->4 | 40->73 | findFileIndexFailure | neither | neither | S1_ranked_pool: RETRIEVAL_POOL_MEMBERSHIP:concept_owner | 1 | 3 | 40 | 2 |
@@ -129,15 +129,15 @@ MATCH = 0 violations; EXCEED = 0 (`band([a13Violations], 0, 0, "atMost")`: both 
 | where is the MCP tool registry assembled | 1000->2000 | micro->standard | 1->2 | 1->4 | 25->25 | createRestrictedMcpToolRegistry -> McpToolRegistry (size drop) | subsequence | subsequence | S4a_pivot_order: PIVOT_CAP_LEAD_RESELECTION | 0 | 0 | 7 | 0 |
 | where is the MCP tool registry assembled | 2000->4000 | standard->standard | 2->2 | 4->4 | 25->34 | McpToolRegistry | neither | neither | S4b_support_order: SUPPORT_WINDOW_PARTITION:coedit_displacement:window_content_changed | 0 | 1 | 20 | 0 |
 | where is the MCP tool registry assembled | 4000->8000 | standard->standard | 2->2 | 4->4 | 34->67 | McpToolRegistry | neither | neither | S4b_support_order: SUPPORT_WINDOW_PARTITION:coedit_displacement:window_content_changed | 0 | 1 | 32 | 0 |
-| where is the MCP tool registry assembled | 8000->16000 | standard->full | 2->5 | 4->10 | 67->131 | McpToolRegistry | neither | neither | S2_role_assignment: PIVOT_CAP_ROLE_PROMOTION | 0 | 4 | 64 | 0 |
-| how does the python parser resolve module imports | 1000->2000 | micro->standard | 1->2 | 1->4 | 31->31 | resolveImportedModulePath | neither | neither | S2_role_assignment: PIVOT_CAP_ROLE_PROMOTION | 0 | 2 | 7 | 0 |
+| where is the MCP tool registry assembled | 8000->16000 | standard->full | 2->5 | 4->10 | 67->131 | McpToolRegistry | neither | neither | S4b_support_order: SUPPORT_LANE_PLACEMENT:coedit_injected_medium | 0 | 2 | 64 | 0 |
+| how does the python parser resolve module imports | 1000->2000 | micro->standard | 1->2 | 1->4 | 31->31 | resolveImportedModulePath | neither | neither | S4b_support_order: SUPPORT_WINDOW_PARTITION:coedit_displacement:window_changed | 0 | 1 | 7 | 0 |
 | how does the python parser resolve module imports | 2000->4000 | standard->standard | 2->2 | 4->4 | 31->39 | resolveImportedModulePath | neither | neither | S1_ranked_pool: RETRIEVAL_POOL_MEMBERSHIP:concept_owner | 3 | 0 | 20 | 0 |
 | how does the python parser resolve module imports | 4000->8000 | standard->standard | 2->2 | 4->4 | 39->71 | resolveImportedModulePath | neither | neither | S4b_support_order: SUPPORT_WINDOW_PARTITION:coedit_displacement:window_content_changed | 0 | 1 | 43 | 0 |
-| how does the python parser resolve module imports | 8000->16000 | standard->full | 2->5 | 4->10 | 71->129 | resolveImportedModulePath | neither | neither | S2_role_assignment: PIVOT_CAP_ROLE_PROMOTION | 1 | 8 | 52 | 0 |
+| how does the python parser resolve module imports | 8000->16000 | standard->full | 2->5 | 4->10 | 71->129 | resolveImportedModulePath | neither | neither | S2_role_assignment: PIVOT_CAP_ROLE_PROMOTION | 1 | 7 | 52 | 0 |
 | what writes the index manifest after a run | 1000->2000 | micro->standard | 1->2 | 1->4 | 29->29 | runCli | subsequence | subsequence | none: SUBSEQUENCE_NEW_ITEMS_INTERLEAVED | 0 | 0 | 5 | 0 |
 | what writes the index manifest after a run | 2000->4000 | standard->standard | 2->2 | 4->4 | 29->38 | runCli | neither | neither | S1_ranked_pool: RETRIEVAL_POOL_MEMBERSHIP:concept_owner | 2 | 0 | 24 | 0 |
 | what writes the index manifest after a run | 4000->8000 | standard->standard | 2->2 | 4->4 | 38->71 | runCli | neither | neither | S1_ranked_pool: RETRIEVAL_POOL_MEMBERSHIP:concept_owner | 1 | 3 | 38 | 2 |
-| what writes the index manifest after a run | 8000->16000 | standard->full | 2->5 | 4->10 | 71->130 | runCli -> openIndexerDatabase (size drop) | neither | neither | S1_ranked_pool: RETRIEVAL_POOL_MEMBERSHIP:concept_owner | 3 | 11 | 60 | 0 |
+| what writes the index manifest after a run | 8000->16000 | standard->full | 2->5 | 4->10 | 71->130 | runCli -> openIndexerDatabase (size drop) | neither | neither | S1_ranked_pool: RETRIEVAL_POOL_MEMBERSHIP:concept_owner | 3 | 10 | 60 | 0 |
 | how are worktrees excluded from the parent repository index | 1000->2000 | micro->standard | 1->2 | 1->4 | 28->28 | RepositoryIdentity | neither | neither | S4b_support_order: SUPPORT_LANE_PLACEMENT:coedit_rescued_medium | 0 | 1 | 8 | 0 |
 | how are worktrees excluded from the parent repository index | 2000->4000 | standard->standard | 2->2 | 4->4 | 28->38 | RepositoryIdentity | neither | neither | S1_ranked_pool: RETRIEVAL_POOL_MEMBERSHIP:concept_owner | 1 | 2 | 22 | 0 |
 | how are worktrees excluded from the parent repository index | 4000->8000 | standard->standard | 2->2 | 4->4 | 38->69 | RepositoryIdentity | neither | neither | S1_ranked_pool: RETRIEVAL_POOL_MEMBERSHIP:concept_owner | 2 | 3 | 41 | 0 |
@@ -149,11 +149,11 @@ MATCH = 0 violations; EXCEED = 0 (`band([a13Violations], 0, 0, "atMost")`: both 
 | how does the response envelope shed content under budget pressure | 1000->2000 | micro->standard | 1->2 | 1->4 | 31->31 | impactResponseMeetsEvidenceBudget | neither | neither | S5_packing: CAPSULE_PACKING:packing_over_budget | 1 | 0 | 3 | 0 |
 | how does the response envelope shed content under budget pressure | 2000->4000 | standard->standard | 2->2 | 4->4 | 31->38 | impactResponseMeetsEvidenceBudget | neither | neither | S7_evidence_budget: EVIDENCE_BUDGET_DROP:graph_neighbour_anchoring | 1 | 0 | 18 | 0 |
 | how does the response envelope shed content under budget pressure | 4000->8000 | standard->standard | 2->2 | 4->4 | 38->69 | impactResponseMeetsEvidenceBudget | subsequence | subsequence | none: SUBSEQUENCE_NEW_ITEMS_INTERLEAVED | 0 | 0 | 39 | 0 |
-| how does the response envelope shed content under budget pressure | 8000->16000 | standard->full | 2->5 | 4->10 | 69->130 | impactResponseMeetsEvidenceBudget | neither | neither | S1_ranked_pool: RETRIEVAL_POOL_MEMBERSHIP:concept_owner | 3 | 8 | 60 | 0 |
+| how does the response envelope shed content under budget pressure | 8000->16000 | standard->full | 2->5 | 4->10 | 69->130 | impactResponseMeetsEvidenceBudget | neither | neither | S1_ranked_pool: RETRIEVAL_POOL_MEMBERSHIP:concept_owner | 3 | 7 | 60 | 0 |
 | what deduplicates supporting files in the capsule | 1000->2000 | micro->standard | 1->2 | 1->4 | 31->31 | CapsuleSupportingCandidate | neither | neither | S2_role_assignment: PIVOT_CAP_ROLE_PROMOTION | 1 | 1 | 11 | 0 |
 | what deduplicates supporting files in the capsule | 2000->4000 | standard->standard | 2->2 | 4->4 | 31->40 | CapsuleSupportingCandidate | subsequence | subsequence | none: SUBSEQUENCE_NEW_ITEMS_INTERLEAVED | 0 | 0 | 20 | 0 |
 | what deduplicates supporting files in the capsule | 4000->8000 | standard->standard | 2->2 | 4->4 | 40->72 | CapsuleSupportingCandidate | neither | neither | S4b_support_order: SUPPORT_WINDOW_PARTITION:coedit_displacement:window_content_changed | 2 | 4 | 30 | 0 |
-| what deduplicates supporting files in the capsule | 8000->16000 | standard->full | 2->5 | 4->10 | 72->130 | CapsuleSupportingCandidate | neither | neither | S1_ranked_pool: RETRIEVAL_POOL_MEMBERSHIP:concept_owner | 4 | 9 | 44 | 0 |
+| what deduplicates supporting files in the capsule | 8000->16000 | standard->full | 2->5 | 4->10 | 72->130 | CapsuleSupportingCandidate | neither | neither | S1_ranked_pool: RETRIEVAL_POOL_MEMBERSHIP:concept_owner | 4 | 8 | 44 | 0 |
 | how does cython parsing differ from python parsing | 1000->2000 | micro->standard | 1->2 | 1->4 | 31->31 | getCythonBackedExportIndex | subsequence | subsequence | none: SUBSEQUENCE_NEW_ITEMS_INTERLEAVED | 0 | 0 | 5 | 0 |
 | how does cython parsing differ from python parsing | 2000->4000 | standard->standard | 2->2 | 4->4 | 31->40 | getCythonBackedExportIndex | neither | neither | S4b_support_order: SUPPORT_LANE_NOT_REPRODUCED:coedit_injected_high | 1 | 0 | 14 | 0 |
 | how does cython parsing differ from python parsing | 4000->8000 | standard->standard | 2->2 | 4->4 | 40->73 | getCythonBackedExportIndex | neither | neither | S4b_support_order: SUPPORT_LANE_NOT_REPRODUCED:graph_neighbour_anchoring | 2 | 1 | 38 | 1 |
@@ -161,7 +161,7 @@ MATCH = 0 violations; EXCEED = 0 (`band([a13Violations], 0, 0, "atMost")`: both 
 | where are call sites persisted for an edge | 1000->2000 | micro->standard | 1->2 | 1->4 | 29->29 | withCallSite | neither | neither | S7_evidence_budget: EVIDENCE_BUDGET_DROP:graph_neighbour_anchoring | 3 | 0 | 10 | 0 |
 | where are call sites persisted for an edge | 2000->4000 | standard->standard | 2->2 | 4->4 | 29->37 | withCallSite | subsequence | subsequence | S9_projector: REPRESENTATION_ROUTING:ceiling | 0 | 2 | 18 | 2 |
 | where are call sites persisted for an edge | 4000->8000 | standard->standard | 2->2 | 4->4 | 37->71 | withCallSite | neither | neither | S1_ranked_pool: RETRIEVAL_POOL_MEMBERSHIP:concept_owner | 1 | 1 | 40 | 1 |
-| where are call sites persisted for an edge | 8000->16000 | standard->full | 2->5 | 4->10 | 71->130 | withCallSite | neither | neither | S1_ranked_pool: RETRIEVAL_POOL_MEMBERSHIP:concept_owner | 1 | 11 | 55 | 0 |
+| where are call sites persisted for an edge | 8000->16000 | standard->full | 2->5 | 4->10 | 71->130 | withCallSite | neither | neither | S1_ranked_pool: RETRIEVAL_POOL_MEMBERSHIP:concept_owner | 1 | 9 | 55 | 0 |
 | how does search rank candidate symbols for a task | 1000->2000 | micro->standard | 1->2 | 1->4 | 30->30 | rankSearchCandidates | neither | neither | S4b_support_order: SUPPORT_WINDOW_PARTITION:coedit_displacement:window_changed | 0 | 1 | 10 | 0 |
 | how does search rank candidate symbols for a task | 2000->4000 | standard->standard | 2->2 | 4->4 | 30->37 | rankSearchCandidates | neither | neither | S1_ranked_pool: RETRIEVAL_POOL_MEMBERSHIP:concept_owner | 2 | 1 | 24 | 1 |
 | how does search rank candidate symbols for a task | 4000->8000 | standard->standard | 2->2 | 4->4 | 37->68 | rankSearchCandidates | neither | neither | S1_ranked_pool: RETRIEVAL_POOL_MEMBERSHIP:concept_owner | 1 | 1 | 31 | 0 |
@@ -173,33 +173,34 @@ MATCH = 0 violations; EXCEED = 0 (`band([a13Violations], 0, 0, "atMost")`: both 
 | how is a symbol's fully qualified name constructed | 1000->2000 | micro->standard | 1->2 | 1->4 | 31->31 | FullyQualifiedName | neither | neither | S4b_support_order: SUPPORT_LANE_PLACEMENT:coedit_rescued_medium | 0 | 1 | 8 | 0 |
 | how is a symbol's fully qualified name constructed | 2000->4000 | standard->standard | 2->2 | 4->4 | 31->39 | FullyQualifiedName | neither | neither | S4b_support_order: SUPPORT_LANE_NOT_REPRODUCED:graph_neighbour_anchoring | 1 | 0 | 18 | 0 |
 | how is a symbol's fully qualified name constructed | 4000->8000 | standard->standard | 2->2 | 4->4 | 39->69 | FullyQualifiedName | subsequence | subsequence | S9_projector: REPRESENTATION_ROUTING:ceiling | 0 | 1 | 36 | 1 |
-| how is a symbol's fully qualified name constructed | 8000->16000 | standard->full | 2->5 | 4->10 | 69->130 | FullyQualifiedName | neither | neither | S2_role_assignment: PIVOT_CAP_ROLE_PROMOTION | 0 | 8 | 61 | 0 |
+| how is a symbol's fully qualified name constructed | 8000->16000 | standard->full | 2->5 | 4->10 | 69->130 | FullyQualifiedName | neither | neither | S2_role_assignment: PIVOT_CAP_ROLE_PROMOTION | 0 | 7 | 61 | 0 |
 
 ## 5. First divergence, by mechanism
 
 | mechanism | transitions |
 | --- | --- |
 | RETRIEVAL_POOL_MEMBERSHIP:concept_owner | 27 |
-| PIVOT_CAP_ROLE_PROMOTION | 14 |
+| PIVOT_CAP_ROLE_PROMOTION | 10 |
 | SUBSEQUENCE_NEW_ITEMS_INTERLEAVED | 10 |
 | SUPPORT_WINDOW_PARTITION:coedit_displacement:window_content_changed | 6 |
 | EVIDENCE_BUDGET_DROP:graph_neighbour_anchoring | 5 |
+| SUPPORT_WINDOW_PARTITION:coedit_displacement:window_changed | 4 |
 | PIVOT_CAP_LEAD_RESELECTION | 3 |
 | REPRESENTATION_ROUTING:ceiling | 3 |
 | SUPPORT_LANE_NOT_REPRODUCED:coedit_injected_high | 3 |
 | SUPPORT_LANE_NOT_REPRODUCED:graph_neighbour_anchoring | 2 |
+| SUPPORT_LANE_PLACEMENT:coedit_injected_high | 2 |
 | SUPPORT_LANE_PLACEMENT:coedit_rescued_medium | 2 |
-| SUPPORT_WINDOW_PARTITION:coedit_displacement:window_changed | 2 |
 | CAPSULE_PACKING:packing_over_budget | 1 |
-| SUPPORT_LANE_PLACEMENT:coedit_injected_high | 1 |
+| SUPPORT_LANE_PLACEMENT:coedit_injected_medium | 1 |
 | SUPPORT_ORDER_OTHER:base_support_tier_1 | 1 |
 
 | stage | transitions |
 | --- | --- |
 | S1_ranked_pool | 27 |
-| S4b_support_order | 17 |
-| S2_role_assignment | 14 |
+| S4b_support_order | 21 |
 | none | 10 |
+| S2_role_assignment | 10 |
 | S7_evidence_budget | 5 |
 | S4a_pivot_order | 3 |
 | S9_projector | 3 |
@@ -220,12 +221,12 @@ Lost lower-budget items: 74.
 | EVIDENCE_BUDGET_DROP:coedit_injected_high | 1 |
 | SUPPORT_LANE_NOT_REPRODUCED:coedit_injected_medium | 1 |
 
-Moved items (outside the longest common subsequence of the two common-item orders, or role-changed): 219.
+Moved items (outside the longest common subsequence of the two common-item orders, or role-changed): 199.
 
 | mechanism | moved items |
 | --- | --- |
-| SUPPORT_WINDOW_PARTITION:coedit_displacement:window_changed | 84 |
-| PIVOT_CAP_ROLE_PROMOTION | 63 |
+| SUPPORT_WINDOW_PARTITION:coedit_displacement:window_changed | 91 |
+| PIVOT_CAP_ROLE_PROMOTION | 36 |
 | SUPPORT_WINDOW_PARTITION:coedit_displacement:window_content_changed | 24 |
 | REPRESENTATION_ROUTING:ceiling | 21 |
 | SUPPORT_LANE_PLACEMENT:coedit_rescued_medium | 12 |
@@ -342,14 +343,14 @@ Pool order relation across adjacent frozen budgets (lower pool vs higher pool): 
 
 ## 10. Lane and order
 
-Support-order relation (capsule packed support, lower vs higher): neither 73; subsequence 6; prefix 1. Movers by rule: SUPPORT_WINDOW_PARTITION:coedit_displacement:window_changed 84; PIVOT_CAP_ROLE_PROMOTION 63; SUPPORT_WINDOW_PARTITION:coedit_displacement:window_content_changed 24; REPRESENTATION_ROUTING:ceiling 21; SUPPORT_LANE_PLACEMENT:coedit_rescued_medium 12; SUPPORT_LANE_PLACEMENT:graph_neighbour_append 4; SUPPORT_LANE_PLACEMENT:coedit_injected_high 2; SUPPORT_LANE_PLACEMENT:coedit_injected_medium 2; SUPPORT_LANE_PLACEMENT:coedit_rescued_high 2; SUPPORT_ORDER_OTHER:base_support_tier_1 2; REPRESENTATION_ROUTING:form_not_code_bearing 1; REPRESENTATION_ROUTING:no_rendered_body 1; SUPPORT_ORDER_OTHER:budget_demoted_pivot 1.
+Support-order relation (capsule packed support, lower vs higher): neither 73; subsequence 6; prefix 1. Movers by rule: SUPPORT_WINDOW_PARTITION:coedit_displacement:window_changed 91; PIVOT_CAP_ROLE_PROMOTION 36; SUPPORT_WINDOW_PARTITION:coedit_displacement:window_content_changed 24; REPRESENTATION_ROUTING:ceiling 21; SUPPORT_LANE_PLACEMENT:coedit_rescued_medium 12; SUPPORT_LANE_PLACEMENT:graph_neighbour_append 4; SUPPORT_LANE_PLACEMENT:coedit_injected_high 2; SUPPORT_LANE_PLACEMENT:coedit_injected_medium 2; SUPPORT_LANE_PLACEMENT:coedit_rescued_high 2; SUPPORT_ORDER_OTHER:base_support_tier_1 2; REPRESENTATION_ROUTING:form_not_code_bearing 1; REPRESENTATION_ROUTING:no_rendered_body 1; SUPPORT_ORDER_OTHER:budget_demoted_pivot 1.
 
 Dense grid (17 budgets, 16 adjacent pairs x 20 tasks), by transition class:
 
 | class | transitions | prefix | subsequence | neither | focus swaps | first-divergence mechanisms |
 | --- | --- | --- | --- | --- | --- | --- |
 | same_tier_same_pool | 139 | 49 | 71 | 19 | 0 | SUBSEQUENCE_NEW_ITEMS_INTERLEAVED 70; NONE 49; EVIDENCE_BUDGET_DROP 18; CAPSULE_PACKING 1; REPRESENTATION_ROUTING 1 |
-| tier_boundary | 40 | 1 | 3 | 36 | 5 | PIVOT_CAP_LEAD_RESELECTION 3; PIVOT_CAP_ROLE_PROMOTION 30; SUPPORT_WINDOW_PARTITION 1; CAPSULE_PACKING 2; EVIDENCE_BUDGET_DROP 1; SUBSEQUENCE_NEW_ITEMS_INTERLEAVED 2; NONE 1 |
+| tier_boundary | 40 | 1 | 3 | 36 | 5 | PIVOT_CAP_LEAD_RESELECTION 3; PIVOT_CAP_ROLE_PROMOTION 21; SUPPORT_WINDOW_PARTITION 6; SUPPORT_LANE_PLACEMENT 2; CAPSULE_PACKING 3; EVIDENCE_BUDGET_DROP 2; SUBSEQUENCE_NEW_ITEMS_INTERLEAVED 2; NONE 1 |
 | same_tier_pool_grew | 141 | 0 | 65 | 76 | 0 | RETRIEVAL_POOL_MEMBERSHIP 31; SUBSEQUENCE_NEW_ITEMS_INTERLEAVED 56; SUPPORT_WINDOW_PARTITION 29; SUPPORT_LANE_NOT_REPRODUCED 11; REPRESENTATION_ROUTING 9; EVIDENCE_BUDGET_DROP 3; SUPPORT_LANE_PLACEMENT 1; SUPPORT_ORDER_OTHER 1 |
 
 ## 11. Evidence budget
@@ -386,9 +387,9 @@ Projector ceiling rejections over every snapshot: 0. the evidence packet (focus 
 
 |  | size / swaps | relations (frozen) | first divergence by stage | lost | moved | regressions | A11 medians | dense relations |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| C1 product allowance | 3 / 5 | {"neither":65,"subsequence":15} | S1_ranked_pool 27; S4b_support_order 17; S2_role_assignment 14; none 10; S7_evidence_budget 5; S4a_pivot_order 3; S9_projector 3; S5_packing 1 | 74 | 219 | 24 | {"1000":85.05,"2000":94.78,"4000":102.05,"8000":102.5,"16000":94.72} | {"subsequence":139,"neither":131,"prefix":50} |
-| C2 pool pinned to 25 (pre-M207 universe) | 3 / 5 | {"neither":36,"subsequence":30,"prefix":14} | none 40; S2_role_assignment 26; S4b_support_order 5; S7_evidence_budget 4; S4a_pivot_order 3; S5_packing 1; S9_projector 1 | 19 | 111 | 1 | {"1000":85.05,"2000":94.78,"4000":101.73,"8000":55.45,"16000":27.88} | {"prefix":168,"subsequence":97,"neither":55} |
-| C2 pool pinned to 134 (the 16000 universe) | 4 / 5 | {"neither":46,"subsequence":27,"prefix":7} | none 29; S2_role_assignment 24; S7_evidence_budget 10; S4b_support_order 8; S4a_pivot_order 4; S9_projector 3; S5_packing 2 | 63 | 122 | 11 | {"1000":85.8,"2000":96.65,"4000":102.88,"8000":103.17,"16000":94.72} | {"subsequence":140,"neither":96,"prefix":84} |
+| C1 product allowance | 3 / 5 | {"neither":65,"subsequence":15} | S1_ranked_pool 27; S4b_support_order 21; none 10; S2_role_assignment 10; S7_evidence_budget 5; S4a_pivot_order 3; S9_projector 3; S5_packing 1 | 74 | 199 | 24 | {"1000":85.05,"2000":94.78,"4000":102.05,"8000":102.5,"16000":94.72} | {"subsequence":139,"neither":131,"prefix":50} |
+| C2 pool pinned to 25 (pre-M207 universe) | 3 / 5 | {"neither":36,"subsequence":30,"prefix":14} | none 41; S2_role_assignment 20; S4b_support_order 10; S7_evidence_budget 4; S4a_pivot_order 3; S5_packing 1; S9_projector 1 | 19 | 90 | 1 | {"1000":85.05,"2000":94.78,"4000":101.73,"8000":55.45,"16000":27.88} | {"prefix":168,"subsequence":97,"neither":55} |
+| C2 pool pinned to 134 (the 16000 universe) | 4 / 5 | {"neither":46,"subsequence":27,"prefix":7} | none 30; S2_role_assignment 16; S4b_support_order 12; S7_evidence_budget 11; S4a_pivot_order 4; S5_packing 3; S9_projector 3; S6_assembly 1 | 63 | 104 | 11 | {"1000":85.8,"2000":96.65,"4000":102.88,"8000":103.17,"16000":94.72} | {"subsequence":140,"neither":96,"prefix":84} |
 
 C5 projector-only (the higher budget's authoritative debug result projected at both ceilings): measured 0 of 80 frozen pairs (unmeasured: {"debug_delivery_differs_from_default":80}); relations {}; same focus 0; representation regressions 0. With a fixed supply the projector takes a longer prefix and never reorders; the regressions are the admission-first routing.
 
@@ -399,8 +400,8 @@ Reading: pinning the pool to 25 removes the concept-owner losses and leaves the 
 | stage | mechanism | transitions | lost items | code |
 | --- | --- | --- | --- | --- |
 | S1_ranked_pool | RETRIEVAL_POOL_MEMBERSHIP:concept_owner | 27 | 40 | hybridRetrieval.ts:451 conceptOwnerCandidates(db, input, derivedIntent, ranked.slice(0, maxResults), raw) |
-| S2_role_assignment / S4a_pivot_order | PIVOT_CAP_ROLE_PROMOTION + PIVOT_CAP_LEAD_RESELECTION | 17 | 3 | assignCandidateRoles(candidates, { maxPivots }) / debugRoles.capPivots cap the pivot SET in final-score order (buildCapsuleV2.ts:755,773); pivotCandidates.sort (anchor tiers) and pivot-ranking v2 then ORDER the capped set (buildCapsuleV2.ts:975-1050) |
-| S4b_support_order | SUPPORT_WINDOW_PARTITION / SUPPORT_LANE_PLACEMENT / SUPPORT_LANE_NOT_REPRODUCED | 17 | 13 | buildCapsuleV2.ts:1173 supportWindow = allocation.supportWindow; coeditExpansion.ts:804 winners = baseOrder.slice(0, maxSupport) |
+| S2_role_assignment / S4a_pivot_order | PIVOT_CAP_ROLE_PROMOTION + PIVOT_CAP_LEAD_RESELECTION | 13 | 3 | assignCandidateRoles(candidates, { maxPivots }) / debugRoles.capPivots cap the pivot SET in final-score order (buildCapsuleV2.ts:755,773); pivotCandidates.sort (anchor tiers) and pivot-ranking v2 then ORDER the capped set (buildCapsuleV2.ts:975-1050) |
+| S4b_support_order | SUPPORT_WINDOW_PARTITION / SUPPORT_LANE_PLACEMENT / SUPPORT_LANE_NOT_REPRODUCED | 21 | 13 | buildCapsuleV2.ts:1173 supportWindow = allocation.supportWindow; coeditExpansion.ts:804 winners = baseOrder.slice(0, maxSupport) |
 | S7_evidence_budget | EVIDENCE_BUDGET_DROP | 5 | 17 | budgetDelivery.ts mutableItem(): answerBearing = roles.includes('required') \|\| directEvidence.includes('symbol-name match') \|\| ... \|\| directEvidence.includes('direct evidence') \|\| directEvidence.includes('exact') |
 | S9_projector | REPRESENTATION_ROUTING:ceiling | 3 | 0 | orientationProjection.ts:533-597 admission (relationship-only prefix) then routing (upstream form per entry, in order) |
 | S5_packing | CAPSULE_PACKING:packing_over_budget | 1 | 1 | buildCapsuleV2.ts:1464 renderSupport(..., input.maxTokens - usedTokens) -> 'over budget: no room for this support item' -> continue |

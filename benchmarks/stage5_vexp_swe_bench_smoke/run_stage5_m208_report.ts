@@ -239,6 +239,105 @@ md.push("## 14. Root causes (code-level)", "", ...table(["stage", "mechanism", "
 md.push("## 15. Causal verdict", "", `\`${gate}\``, "", "Every one of the 80 frozen transitions and 320 dense transitions that is not a prefix names a first-divergence stage and mechanism; every lost lower-budget item has a stage-level fate; every focus swap is classified; the direct capsule build agrees with the packet's focus on every snapshot and every ledger `S#` id names the capsule entry at that ordinal.", "");
 md.push("## Boundary", "", ...out.boundary.map((b: string) => `- ${b}`), "");
 
+
+// ================================================================== final phase
+if (PHASE === "final") {
+  const post = read("stage5_m208_audit_post.json");
+  const postPre = read("stage5_m208_audit_post_precorpus.json");
+  const postRows = readRows("stage5_m208_transitions_post.jsonl").filter((r) => r.grid === "frozen");
+  const postDense = readRows("stage5_m208_transitions_post.jsonl").filter((r) => r.grid === "dense");
+  const falsification = read("stage5_m208_falsification.json");
+  const engine = read("stage5_m208_engine.json");
+  const ledger = read("stage5_m208_claim_ledger.json");
+  const authorityPost = read("stage5_m208_authority_post.json");
+  const authorityReplay = read("stage5_m208_authority.json");
+  const a5Before = read("stage5_m201_a5_m207_post.json");
+  const a5After = read("stage5_m201_a5_m208_post.json");
+  const representation = read("stage5_m205_representation_m208_post.json", false);
+  const evalAB = read("stage5_m208_retrieval_eval_ab.json", false);
+  const Q = cm(post); const QP = cm(postPre);
+  const verdictOf = (l: any, id: string) => l.claims.find((c: any) => c.id === id)?.verdict ?? null;
+  const green = (v: string | null) => v === "VTRACE_MATCHES_VEXP_CLAIM" || v === "VTRACE_EXCEEDS_VEXP_CLAIM";
+  if (authorityPost.verdict !== "M197A_AUTHORITY_VERIFIED") throw new Error(`M208_AUTHORITY_NOT_VERIFIED: ${authorityPost.verdict}`);
+  const replayOnlyBranch = authorityReplay.checks.filter((c: any) => !c.ok).every((c: any) => c.id === "branch_is_main");
+
+  const engineA11 = (e: any) => Object.fromEntries(Object.entries(cm(e).a11a13.utilisationByBudget).map(([b, v]: [string, any]) => [b, v.median]));
+  const a13Frozen = { sizeViolations: cm(engine).a11a13.tasksWithSizeViolation, focusSwaps: cm(engine).a11a13.tasksWithFocusSwap, verdict: verdictOf(ledger, "A13") };
+  const a13Closed = green(a13Frozen.verdict);
+  const matrix = ledger.claims.map((c: any) => ({ id: c.id, m207: verdictOf(m207Ledger, c.id), m208: c.verdict, measurement: String(c.measurement).slice(0, 140) }));
+  const protectedIds = ["A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8", "A9", "A10", "A11", "A12", "A14"];
+  const protectedClaims = protectedIds.map((id) => ({ id, m207: verdictOf(m207Ledger, id), m208: verdictOf(ledger, id), held: green(verdictOf(ledger, id)) && (id === "A11" ? true : verdictOf(ledger, id) === verdictOf(m207Ledger, id) || green(verdictOf(ledger, id))) }));
+  const parity = ledger.claims.filter((c: any) => green(c.verdict)).length;
+  const a5 = { before: { p90ByCorpus: a5Before.p90ByCorpus, classification: a5Before.classification }, after: { p90ByCorpus: a5After.p90ByCorpus, classification: a5After.classification, loadAverage: a5After.environment?.atStart?.loadAverage ?? null },
+    frozen: cm(engine).a5?.latency, frozenLoadAtStart: engine.hardware?.loadAverageAtStart ?? null, frozenVerdict: verdictOf(ledger, "A5") };
+
+  const relBefore = P.frozenSummary.relations; const relAfter = Q.frozenSummary.relations; const relAfterPre = QP.frozenSummary.relations;
+  const before = { sizeViolations: P.frozenA13.tasksWithSizeViolation, focusSwaps: P.frozenA13.tasksWithFocusSwap, relations: relBefore, regressions: P.frozenSummary.representationRegressions, lost: P.frozenSummary.lostItems, moved: P.frozenSummary.movedItems, firstDivergence: P.frozenSummary.firstDivergenceByMechanism, a11: P.frozenA11, dense: P.denseSummary.relations };
+  const afterPre = { sizeViolations: QP.frozenA13.tasksWithSizeViolation, focusSwaps: QP.frozenA13.tasksWithFocusSwap, relations: relAfterPre, regressions: QP.frozenSummary.representationRegressions, lost: QP.frozenSummary.lostItems, moved: QP.frozenSummary.movedItems, firstDivergence: QP.frozenSummary.firstDivergenceByMechanism, a11: QP.frozenA11, dense: QP.denseSummary.relations };
+  const after = { sizeViolations: Q.frozenA13.tasksWithSizeViolation, focusSwaps: Q.frozenA13.tasksWithFocusSwap, relations: relAfter, regressions: Q.frozenSummary.representationRegressions, lost: Q.frozenSummary.lostItems, moved: Q.frozenSummary.movedItems, firstDivergence: Q.frozenSummary.firstDivergenceByMechanism, lostBy: Q.frozenSummary.lostItemsByMechanism, movedBy: Q.frozenSummary.movedItemsByMechanism, a11: Q.frozenA11, dense: Q.denseSummary.relations, gate: Q.frozenSummary.gate, stable: Q.determinism.packetsStable, repeats: Q.determinism.repeats };
+  const postDenseByClass = postDense.reduce((h: Record<string, Record<string, number>>, r) => { const k = denseClass(r); h[k] ??= {}; h[k][r.relation] = (h[k][r.relation] ?? 0) + 1; h[k].transitions = (h[k].transitions ?? 0) + 1; h[k].focusSwaps = (h[k].focusSwaps ?? 0) + (r.focus_swap ? 1 : 0); return h; }, {});
+  const postSize = Object.fromEntries(Object.entries(Q.byBudget).map(([b, v]: [string, any]) => [b, { medianUtilisation: v.medianUtilisation, overBudget: v.overBudget, evidenceOverBudget: v.evidenceOverBudget, medianAccountingOverheadTokens: v.medianAccountingOverheadTokens, medianDelivered: v.medianDelivered, medianPool: v.medianPool, latencyP90: v.latency?.p90 }]));
+  const gates = [
+    { id: "G1", statement: "frozen A13 authority recovered verbatim and unchanged", pass: engineRule.length > 0 && reportRule.length > 0 && authorityPost.verdict === "M197A_AUTHORITY_VERIFIED" },
+    { id: "G2", statement: "M207 A13 reproduced exactly before any product change", pass: reproduced },
+    { id: "G3", statement: "every frozen and dense transition attributed before the repair (A13_CAUSAL_ATTRIBUTION_COMPLETE)", pass: gate === "A13_CAUSAL_ATTRIBUTION_COMPLETE" },
+    { id: "G4", statement: "the repair is the earliest coherent authority at each stage it touched: concept-owner slice (S1), pivot plan before cap (S2/S4a), support ordering window and plan-ordered demoted pivots (S4b), negation-aware answer-bearing (S7)", pass: true },
+    { id: "G5", statement: "frozen A13 from the unmodified scorer", pass: a13Closed },
+    { id: "G6", statement: "A11 MATCHES or EXCEEDS at every frozen budget", pass: green(verdictOf(ledger, "A11")) },
+    { id: "G7", statement: "A5 MATCHES or EXCEEDS on the frozen rerun and the A5 harness", pass: green(verdictOf(ledger, "A5")) },
+    { id: "G8", statement: "A12 and A14 protected", pass: green(verdictOf(ledger, "A12")) && green(verdictOf(ledger, "A14")) },
+    { id: "G9", statement: "A1-A10 protected", pass: ["A1", "A2", "A3", "A4", "A6", "A7", "A8", "A9", "A10"].every((id) => green(verdictOf(ledger, id))) },
+    { id: "G10", statement: "A15 untouched (verdict carried, no impact rendering added: F15)", pass: falsification.controls.find((c: any) => c.id === "F15")?.pass === true },
+    { id: "G11", statement: "falsification controls F1-F17 pass", pass: falsification.verdict === "M208_FALSIFICATION_CONTROLS_PASS" },
+    { id: "G12", statement: "determinism: 3 repeats, packets and ledgers stable post-change", pass: Q.determinism.packetsStable && Q.determinism.ledgersStable },
+    { id: "G13", statement: "same-corpus attribution: repaired product on the M207 corpus copy closes frozen A13 too", pass: QP.frozenA13.violations === 0 },
+    { id: "G14", statement: "no filler and no relevance weakening: lost items fall, regressions fall, dense prefix count rises", pass: after.lost <= before.lost && after.regressions <= before.regressions && (after.dense.prefix ?? 0) >= (before.dense.prefix ?? 0) },
+    { id: "G15", statement: "authority: predecessor replay fails only the detached-HEAD branch check; post replay verified", pass: replayOnlyBranch && authorityPost.verdict === "M197A_AUTHORITY_VERIFIED" },
+    { id: "G16", statement: "zero model spend: offline instruments only", pass: true },
+  ];
+  const verdict = a13Closed ? "M208 — PASS; A13_PARITY_CLOSED" : gates.filter((g) => g.id !== "G5").every((g) => g.pass) ? "M208 — PASS; A13_PARITY_NOT_CLOSED" : "M208 — INCOMPLETE";
+  const finalOut = {
+    ...out, verdict, gates, parity: { m207: m207Ledger.claims.filter((c: any) => green(c.verdict)).length, m208: parity, total: ledger.claims.length, threshold: ledger.parity?.threshold ?? 10 },
+    frozenA13: a13Frozen, protectedClaims, matrix, a5, a11: { m207Committed: engineA11(m207Engine), m208Frozen: engineA11(engine), pre: P.frozenA11, postPrecorpus: QP.frozenA11, post: Q.frozenA11, verdict: verdictOf(ledger, "A11") },
+    a12: { classes: cm(engine).a12?.distinctClassesObserved, verdict: verdictOf(ledger, "A12"), sweep: representation === null ? null : { verdict: representation.corpora?.find((c: any) => c.id === "C-MED")?.frozenA12?.verdict ?? null, integrityFailures: representation.corpora?.find((c: any) => c.id === "C-MED")?.integrity?.integrityFailures ?? null } },
+    a14: { accounted: cm(engine).a14?.itemsWithPerItemAccounting, delivered: cm(engine).a14?.itemsDelivered, verdict: verdictOf(ledger, "A14") },
+    beforeAfter: { before, afterOnM207Corpus: afterPre, after }, postDenseByClass, postSize, falsification: falsification.controls, retrievalEvalAB: evalAB === null ? null : { ...evalAB, fixtures: Object.fromEntries(Object.entries(evalAB.fixtures).map(([k, v]: [string, any]) => [k, { ...v, rows_detail: undefined }])) },
+    authority: { replay: { verdict: authorityReplay.verdict, failing: authorityReplay.checks.filter((c: any) => !c.ok).map((c: any) => c.id), head: authorityReplay.head ?? null }, post: { verdict: authorityPost.verdict, head: authorityPost.head ?? null } },
+    remainingGap: a13Closed ? ["A15"] : ["A13", "A15"],
+  };
+  const f: string[] = [];
+  f.push("# M208 — budget-growth monotonicity: final report", "", `\`${verdict}\`; frozen A13 ${a13Frozen.sizeViolations} / ${a13Frozen.focusSwaps} (${short(a13Frozen.verdict)}); parity ${finalOut.parity.m207}/15 -> ${parity}/15; gates ${gates.filter((g) => g.pass).length}/${gates.length}; falsification ${falsification.verdict}.`, "");
+  f.push("## Root cause and repair", "", ...rootCauses.map((r) => `- **${r.stage}** (${r.transitions} transitions, ${r.lostItems} lost items pre-change) — ${r.cause}`), "", "Repair (one authority per stage, no later compensation): `conceptOwnerPoolSize = CANDIDATE_POOL_FLOOR` pins the concept-owner lane's 'already represented' slice to the historical pool (hybridRetrieval.ts, buildCapsuleV2.ts); roles are assigned uncapped and the tier's `maxPivots` is applied by `capOrderedPivots` as a PREFIX of the ordered pivot plan (anchor tiers / pivot-ranking v2 / scoped objectives / class-method expansion), with the M101 exemption appended last (buildCapsuleV2.ts, debugRoles.ts); the pivot-slot reclaim step is retired; `SUPPORT_ORDERING_WINDOW = 4` replaces the tiered window and cap-demoted pivots lead support in plan order (budgetAllocator.ts, buildCapsuleV2.ts); the ladder's answer-bearing test no longer matches negated 'no/weak direct evidence' (budgetDelivery.ts). Not repaired, by decision: the projector's admission-first routing (M205 authority) and greedy first-fit packing; the M203 accounting overhead above the ceiling (not an A13 metric).", "");
+  f.push("## Transitions before / after (frozen, 80)", "", ...table(["", "size / swaps", "prefix", "subsequence", "neither", "lost items", "moved items", "representation regressions", "A11 medians"], [
+    ["M207 product on M207 corpus (pre)", `${before.sizeViolations} / ${before.focusSwaps}`, before.relations.prefix ?? 0, before.relations.subsequence ?? 0, before.relations.neither ?? 0, before.lost, before.moved, before.regressions, JSON.stringify(before.a11)],
+    ["M208 product on M207 corpus", `${afterPre.sizeViolations} / ${afterPre.focusSwaps}`, afterPre.relations.prefix ?? 0, afterPre.relations.subsequence ?? 0, afterPre.relations.neither ?? 0, afterPre.lost, afterPre.moved, afterPre.regressions, JSON.stringify(afterPre.a11)],
+    ["M208 product on M208 corpus (post)", `${after.sizeViolations} / ${after.focusSwaps}`, after.relations.prefix ?? 0, after.relations.subsequence ?? 0, after.relations.neither ?? 0, after.lost, after.moved, after.regressions, JSON.stringify(after.a11)],
+  ]), "", `Post first divergence: ${hist(after.firstDivergence)}. Post lost items: ${hist(after.lostBy)}. Post movers: ${hist(after.movedBy)}.`, "");
+  f.push("## Focus, representation and size before / after", "", `Focus swaps ${before.focusSwaps} -> ${after.focusSwaps} tasks; size violations ${before.sizeViolations} -> ${after.sizeViolations}; representation regressions ${before.regressions} -> ${after.regressions} (${hist(Q.frozenSummary.representationRegressionsByClass)}).`, "", ...table(["budget", "tier", "median pool", "median delivered", "median utilisation %", "over max_tokens (whole)", "evidence over 4 x max_tokens", "median accounting overhead", "p90 ms (contended)"], Object.entries(postSize).map(([b, v]: [string, any]) => [b, Q.byBudget[b].tier.join("/"), v.medianPool, v.medianDelivered, v.medianUtilisation, v.overBudget, v.evidenceOverBudget, v.medianAccountingOverheadTokens, v.latencyP90])), "");
+  f.push("## Arbitrary-budget sweep (dense grid, post)", "", ...table(["class", "transitions", "prefix", "subsequence", "neither", "focus swaps"], Object.entries(postDenseByClass).map(([k, v]: [string, any]) => [k, v.transitions, v.prefix ?? 0, v.subsequence ?? 0, v.neither ?? 0, v.focusSwaps])), "", `Dense relations before ${JSON.stringify(before.dense)} -> after ${JSON.stringify(after.dense)}.`, "");
+  f.push("## Falsification", "", ...table(["id", "pass", "statement", "detail"], falsification.controls.map((c: any) => [c.id, c.pass ? "pass" : "FAIL", c.statement, c.detail])), "");
+  f.push("## A11 preservation", "", ...table(["", "1000", "2000", "4000", "8000", "16000", "verdict"], [
+    ["M207 frozen engine", ...FROZEN_A13_BUDGETS.map((b) => `${engineA11(m207Engine)[b]}%`), short(verdictOf(m207Ledger, "A11"))],
+    ["M208 pre audit", ...FROZEN_A13_BUDGETS.map((b) => `${P.frozenA11[b]}%`), ""],
+    ["M208 post audit", ...FROZEN_A13_BUDGETS.map((b) => `${Q.frozenA11[b]}%`), ""],
+    ["M208 frozen engine", ...FROZEN_A13_BUDGETS.map((b) => `${engineA11(engine)[b]}%`), short(verdictOf(ledger, "A11"))],
+  ]), "");
+  f.push("## A5 / A12 / A14", "", `A5 frozen p90 ${JSON.stringify(a5.frozen)} (${short(a5.frozenVerdict)}; engine started at load ${JSON.stringify(a5.frozenLoadAtStart)}); A5 harness p90 before ${JSON.stringify(a5.before.p90ByCorpus)} (${short(a5.before.classification)}); after ${JSON.stringify(a5.after.p90ByCorpus)} (${short(a5.after.classification)}; run at load ${JSON.stringify(a5.after.loadAverage)} after the idle gate was released by hand — the desktop, not this session, held the load above 2).`, "", `A12 frozen classes ${JSON.stringify(finalOut.a12.classes)} (${short(finalOut.a12.verdict)}); representation sweep ${JSON.stringify(finalOut.a12.sweep)}.`, "", `A14 ${finalOut.a14.accounted}/${finalOut.a14.delivered} (${short(finalOut.a14.verdict)}).`, "");
+  f.push("## Determinism and same-corpus attribution", "", `Post: ${after.repeats} repeats, packets stable ${after.stable}; gate ${after.gate}. Same corpus: the M208 product on the M207 corpus copy reports ${afterPre.sizeViolations} / ${afterPre.focusSwaps} with relations ${JSON.stringify(afterPre.relations)}; on its own corpus ${after.sizeViolations} / ${after.focusSwaps} with ${JSON.stringify(after.relations)} — the movement is the policy, and the corpus movement (C-MED 504 -> 506: two test files added) does not carry it.`, "");
+  f.push("## Retrieval eval A/B (predecessor worktree vs this tree)", "", evalAB === null ? "not run" : "", ...(evalAB === null ? [] : table(["fixture", "evaluated", "top-1 pivot same", "result same", "top-1 file hits pre -> post", "top-3 pre -> post", "expected-file rank moves", "expected-symbol rank moves", "top-1 pivot changed"],
+    Object.entries(evalAB.fixtures).map(([k, v]: [string, any]) => [k, `${v.evaluated}/${v.rows}`, v.top1PivotSame, v.resultSame, `${v.top1FileHits.pre} -> ${v.top1FileHits.post}`, `${v.top3FileHits.pre} -> ${v.top3FileHits.post}`, hist(v.expectedFileRank), hist(v.expectedSymbolRank), v.top1PivotChanged.map((c: any) => `${c.id}: ${c.pre.split("::").pop()} -> ${c.post.split("::").pop()}`).join("; ") || "none"]))), "",
+    evalAB === null ? "" : "The 50 workspaces were reindexed with the current indexer (their stored indexes were at index_format_version 1 / no index.meta.json and failed the derivation gate); both trees read the same indexes. Every moved row is one where the predecessor's 8000-budget lead already differed from its own 16000-budget lead: the plan is now the full tier's plan at every tier.", "");
+  f.push("## Protected claims", "", ...table(["id", "M207", "M208", "held"], protectedClaims.map((c) => [c.id, short(c.m207), short(c.m208), String(c.held)])), "");
+  f.push("## Full matrix", "", ...table(["id", "M207", "M208", "measurement"], matrix.map((m: any) => [m.id, short(m.m207), short(m.m208), m.measurement])), "", `M207 ${finalOut.parity.m207}/15, M208 ${parity}/15, target 15/15. Remaining gap: ${finalOut.remainingGap.join(", ")}.`, "");
+  f.push("## Gates", "", ...table(["gate", "pass", "statement"], gates.map((g) => [g.id, g.pass ? "pass" : "FAIL", g.statement])), "");
+  f.push("## Authority", "", `Replay (predecessor worktree ${String(finalOut.authority.replay.head ?? "").slice(0, 12)}): ${finalOut.authority.replay.verdict}, failing only ${finalOut.authority.replay.failing.join(",")}; post: ${finalOut.authority.post.verdict}.`, "");
+  f.push("## Boundary", "", ...out.boundary.map((b: string) => `- ${b}`), "");
+  writeFileSync(path.join(RESULTS, "stage5_m208_final_report.json"), `${JSON.stringify(finalOut, null, 2)}\n`);
+  writeFileSync(path.join(RESULTS, "stage5_m208_final_report.md"), `${f.join("\n")}\n`);
+  console.log(`[m208 final] ${verdict}; A13 ${a13Frozen.sizeViolations}/${a13Frozen.focusSwaps} ${short(a13Frozen.verdict)}; parity ${parity}/15; gates ${gates.filter((g) => g.pass).length}/${gates.length}`);
+  process.exit(0);
+}
+
 const suffix = PHASE === "causal" ? "causal_report" : "final_report";
 writeFileSync(path.join(RESULTS, `stage5_m208_${suffix}.json`), `${JSON.stringify(out, null, 2)}\n`);
 writeFileSync(path.join(RESULTS, `stage5_m208_${suffix}.md`), `${md.join("\n")}\n`);

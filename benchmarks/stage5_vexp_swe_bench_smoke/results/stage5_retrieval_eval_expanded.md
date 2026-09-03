@@ -36,17 +36,17 @@ support / discarded are compared against the fixture's `expected_files` and
 | instances_evaluated | 20 |
 | workspace_error_count | 0 |
 | no_context_count | 0 |
-| top_1_file_accuracy | 90.0% |
+| top_1_file_accuracy | 85.0% |
 | top_3_file_recall | 100.0% |
 | expected_file_as_pivot_rate | 100.0% |
 | expected_file_as_support_rate | 0.0% |
 | expected_file_discarded_rate | 0.0% |
 | expected_file_missing_rate | 0.0% |
-| expected_symbol_hit_rate | 70.0% |
-| expected_symbol_as_pivot_rate | 60.0% |
-| mean_capsule_tokens | 1220.7 |
+| expected_symbol_hit_rate | 75.0% |
+| expected_symbol_as_pivot_rate | 65.0% |
+| mean_capsule_tokens | 3638.3 |
 | mean_pivot_count | 2.05 |
-| mean_support_count | 3.95 |
+| mean_support_count | 60.65 |
 
 ## Aggregate metrics — by label source
 
@@ -65,10 +65,10 @@ support / discarded are compared against the fixture's `expected_files` and
 | expected_file_discarded_rate | 0.0% |
 | expected_file_missing_rate | 0.0% |
 | expected_symbol_hit_rate | 73.3% |
-| expected_symbol_as_pivot_rate | 60.0% |
-| mean_capsule_tokens | 1204.1 |
+| expected_symbol_as_pivot_rate | 66.7% |
+| mean_capsule_tokens | 4008.7 |
 | mean_pivot_count | 2.07 |
-| mean_support_count | 3.93 |
+| mean_support_count | 67.27 |
 
 ### manual_verified (hand-curated and checked)
 
@@ -78,23 +78,23 @@ support / discarded are compared against the fixture's `expected_files` and
 | instances_evaluated | 5 |
 | workspace_error_count | 0 |
 | no_context_count | 0 |
-| top_1_file_accuracy | 100.0% |
+| top_1_file_accuracy | 80.0% |
 | top_3_file_recall | 100.0% |
 | expected_file_as_pivot_rate | 100.0% |
 | expected_file_as_support_rate | 0.0% |
 | expected_file_discarded_rate | 0.0% |
 | expected_file_missing_rate | 0.0% |
-| expected_symbol_hit_rate | 60.0% |
+| expected_symbol_hit_rate | 80.0% |
 | expected_symbol_as_pivot_rate | 60.0% |
-| mean_capsule_tokens | 1270.6 |
+| mean_capsule_tokens | 2527.2 |
 | mean_pivot_count | 2.00 |
-| mean_support_count | 4.00 |
+| mean_support_count | 40.80 |
 
 ## Metrics by repo
 
 | repo | instances | top-1 file | top-3 file | as pivot | missing | mean tokens | mean pivots | mean support |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| django/django | 20/20 | 90.0% | 100.0% | 100.0% | 0.0% | 1220.7 | 2.05 | 3.95 |
+| django/django | 20/20 | 85.0% | 100.0% | 100.0% | 0.0% | 3638.3 | 2.05 | 60.65 |
 
 ## Miss summary (compact)
 
@@ -120,7 +120,7 @@ support / discarded are compared against the fixture's `expected_files` and
 | django__django-11095 | manual_verified | django/contrib/admin/options.py | django/contrib/admin/options.py::get_inline_instances | pivot | yes | yes | hit_top1_pivot | none |
 | django__django-11490 | manual_verified | django/db/models/sql/compiler.py | django/db/models/sql/compiler.py::get_combinator_sql | pivot | yes | yes | hit_top1_pivot | none |
 | django__django-11728 | manual_verified | django/contrib/admindocs/utils.py | django/contrib/admindocs/utils.py::replace_named_groups | pivot | yes | yes | hit_top1_pivot | none |
-| django__django-11740 | manual_verified | django/db/migrations/autodetector.py | django/db/migrations/autodetector.py::_get_dependencies_for_foreign_key | pivot | yes | yes | hit_top1_pivot | none |
+| django__django-11740 | manual_verified | django/db/migrations/autodetector.py | django/db/models/fields/related.py::ForeignKey | pivot | no | yes | hit_top3 | none |
 | django__django-10973 | gold_patch | django/db/backends/postgresql/client.py | db/backends/postgresql/client.py::_escape_pgpass | pivot | yes | yes | hit_top1_pivot | none |
 | django__django-11133 | gold_patch | django/http/response.py | http/response.py::HttpResponse | pivot | yes | yes | hit_top1_pivot | none |
 | django__django-11206 | gold_patch | django/utils/numberformat.py | utils/numberformat.py::format | pivot | yes | yes | hit_top1_pivot | none |

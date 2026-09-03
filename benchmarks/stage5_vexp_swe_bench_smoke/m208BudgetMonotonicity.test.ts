@@ -52,6 +52,9 @@ describe("longestCommonSubsequence", () => {
   test("names the minimal movers", () => {
     const keep = longestCommonSubsequence(["A", "B", "C", "D"], ["A", "C", "D", "B"]);
     expect([...keep]).toEqual(["A", "C", "D"]);
+    // A swap between a light (role-changed) item and a bystander names the light one.
+    const weighted = longestCommonSubsequence(["A", "X", "B"], ["A", "B", "X"], (id) => (id === "X" ? 1 : 2));
+    expect([...weighted]).toEqual(["A", "B"]);
   });
 });
 

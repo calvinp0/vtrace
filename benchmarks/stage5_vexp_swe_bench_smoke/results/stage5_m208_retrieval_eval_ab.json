@@ -1,0 +1,2047 @@
+{
+  "milestone": "M208",
+  "pre": "/tmp/m208-eval/pre",
+  "post": "/tmp/m208-eval/post",
+  "fixtures": {
+    "stage5_retrieval_eval_expanded": {
+      "rows": 20,
+      "evaluated": 20,
+      "workspaceErrors": 0,
+      "top1PivotSame": 20,
+      "top1PivotChanged": [],
+      "resultSame": 20,
+      "resultChanged": [],
+      "top1FileHits": {
+        "pre": 17,
+        "post": 17
+      },
+      "top3FileHits": {
+        "pre": 20,
+        "post": 20
+      },
+      "expectedFileRank": {
+        "same": 20
+      },
+      "expectedSymbolRank": {
+        "worse": 1,
+        "same": 18,
+        "better": 1
+      },
+      "rows_detail": [
+        {
+          "instance_id": "django__django-10880",
+          "repo": "django/django",
+          "intent": "debug",
+          "evaluated": true,
+          "top1Pivot": {
+            "pre": "django/db/models/aggregates.py::Count",
+            "post": "django/db/models/aggregates.py::Count",
+            "same": true
+          },
+          "expectedFileRank": {
+            "pre": "1",
+            "post": "1"
+          },
+          "expectedSymbolRank": {
+            "pre": "15",
+            "post": "24"
+          },
+          "result": {
+            "pre": "hit_top1_pivot",
+            "post": "hit_top1_pivot"
+          },
+          "missCategory": {
+            "pre": "none",
+            "post": "none"
+          },
+          "top1": {
+            "pre": "true",
+            "post": "true"
+          },
+          "top3": {
+            "pre": "true",
+            "post": "true"
+          },
+          "pivotCount": {
+            "pre": "2",
+            "post": "2"
+          }
+        },
+        {
+          "instance_id": "django__django-11095",
+          "repo": "django/django",
+          "intent": "debug",
+          "evaluated": true,
+          "top1Pivot": {
+            "pre": "django/contrib/admin/options.py::get_inline_instances",
+            "post": "django/contrib/admin/options.py::get_inline_instances",
+            "same": true
+          },
+          "expectedFileRank": {
+            "pre": "1",
+            "post": "1"
+          },
+          "expectedSymbolRank": {
+            "pre": "1",
+            "post": "1"
+          },
+          "result": {
+            "pre": "hit_top1_pivot",
+            "post": "hit_top1_pivot"
+          },
+          "missCategory": {
+            "pre": "none",
+            "post": "none"
+          },
+          "top1": {
+            "pre": "true",
+            "post": "true"
+          },
+          "top3": {
+            "pre": "true",
+            "post": "true"
+          },
+          "pivotCount": {
+            "pre": "2",
+            "post": "2"
+          }
+        },
+        {
+          "instance_id": "django__django-11490",
+          "repo": "django/django",
+          "intent": "debug",
+          "evaluated": true,
+          "top1Pivot": {
+            "pre": "django/db/models/sql/compiler.py::get_combinator_sql",
+            "post": "django/db/models/sql/compiler.py::get_combinator_sql",
+            "same": true
+          },
+          "expectedFileRank": {
+            "pre": "1",
+            "post": "1"
+          },
+          "expectedSymbolRank": {
+            "pre": "1",
+            "post": "1"
+          },
+          "result": {
+            "pre": "hit_top1_pivot",
+            "post": "hit_top1_pivot"
+          },
+          "missCategory": {
+            "pre": "none",
+            "post": "none"
+          },
+          "top1": {
+            "pre": "true",
+            "post": "true"
+          },
+          "top3": {
+            "pre": "true",
+            "post": "true"
+          },
+          "pivotCount": {
+            "pre": "2",
+            "post": "2"
+          }
+        },
+        {
+          "instance_id": "django__django-11728",
+          "repo": "django/django",
+          "intent": "debug",
+          "evaluated": true,
+          "top1Pivot": {
+            "pre": "django/contrib/admindocs/utils.py::replace_named_groups",
+            "post": "django/contrib/admindocs/utils.py::replace_named_groups",
+            "same": true
+          },
+          "expectedFileRank": {
+            "pre": "1",
+            "post": "1"
+          },
+          "expectedSymbolRank": {
+            "pre": "1",
+            "post": "1"
+          },
+          "result": {
+            "pre": "hit_top1_pivot",
+            "post": "hit_top1_pivot"
+          },
+          "missCategory": {
+            "pre": "none",
+            "post": "none"
+          },
+          "top1": {
+            "pre": "true",
+            "post": "true"
+          },
+          "top3": {
+            "pre": "true",
+            "post": "true"
+          },
+          "pivotCount": {
+            "pre": "2",
+            "post": "2"
+          }
+        },
+        {
+          "instance_id": "django__django-11740",
+          "repo": "django/django",
+          "intent": "debug",
+          "evaluated": true,
+          "top1Pivot": {
+            "pre": "django/db/models/fields/related.py::ForeignKey",
+            "post": "django/db/models/fields/related.py::ForeignKey",
+            "same": true
+          },
+          "expectedFileRank": {
+            "pre": "2",
+            "post": "2"
+          },
+          "expectedSymbolRank": {
+            "pre": "",
+            "post": ""
+          },
+          "result": {
+            "pre": "hit_top3",
+            "post": "hit_top3"
+          },
+          "missCategory": {
+            "pre": "none",
+            "post": "none"
+          },
+          "top1": {
+            "pre": "false",
+            "post": "false"
+          },
+          "top3": {
+            "pre": "true",
+            "post": "true"
+          },
+          "pivotCount": {
+            "pre": "2",
+            "post": "2"
+          }
+        },
+        {
+          "instance_id": "django__django-10973",
+          "repo": "django/django",
+          "intent": "debug",
+          "evaluated": true,
+          "top1Pivot": {
+            "pre": "db/backends/postgresql/client.py::_escape_pgpass",
+            "post": "db/backends/postgresql/client.py::_escape_pgpass",
+            "same": true
+          },
+          "expectedFileRank": {
+            "pre": "1",
+            "post": "1"
+          },
+          "expectedSymbolRank": {
+            "pre": "1",
+            "post": "1"
+          },
+          "result": {
+            "pre": "hit_top1_pivot",
+            "post": "hit_top1_pivot"
+          },
+          "missCategory": {
+            "pre": "none",
+            "post": "none"
+          },
+          "top1": {
+            "pre": "true",
+            "post": "true"
+          },
+          "top3": {
+            "pre": "true",
+            "post": "true"
+          },
+          "pivotCount": {
+            "pre": "2",
+            "post": "2"
+          }
+        },
+        {
+          "instance_id": "django__django-11133",
+          "repo": "django/django",
+          "intent": "debug",
+          "evaluated": true,
+          "top1Pivot": {
+            "pre": "http/response.py::HttpResponse",
+            "post": "http/response.py::HttpResponse",
+            "same": true
+          },
+          "expectedFileRank": {
+            "pre": "1",
+            "post": "1"
+          },
+          "expectedSymbolRank": {
+            "pre": "16",
+            "post": "13"
+          },
+          "result": {
+            "pre": "hit_top1_pivot",
+            "post": "hit_top1_pivot"
+          },
+          "missCategory": {
+            "pre": "none",
+            "post": "none"
+          },
+          "top1": {
+            "pre": "true",
+            "post": "true"
+          },
+          "top3": {
+            "pre": "true",
+            "post": "true"
+          },
+          "pivotCount": {
+            "pre": "2",
+            "post": "2"
+          }
+        },
+        {
+          "instance_id": "django__django-11206",
+          "repo": "django/django",
+          "intent": "debug",
+          "evaluated": true,
+          "top1Pivot": {
+            "pre": "utils/numberformat.py::format",
+            "post": "utils/numberformat.py::format",
+            "same": true
+          },
+          "expectedFileRank": {
+            "pre": "1",
+            "post": "1"
+          },
+          "expectedSymbolRank": {
+            "pre": "1",
+            "post": "1"
+          },
+          "result": {
+            "pre": "hit_top1_pivot",
+            "post": "hit_top1_pivot"
+          },
+          "missCategory": {
+            "pre": "none",
+            "post": "none"
+          },
+          "top1": {
+            "pre": "true",
+            "post": "true"
+          },
+          "top3": {
+            "pre": "true",
+            "post": "true"
+          },
+          "pivotCount": {
+            "pre": "2",
+            "post": "2"
+          }
+        },
+        {
+          "instance_id": "django__django-11749",
+          "repo": "django/django",
+          "intent": "debug",
+          "evaluated": true,
+          "top1Pivot": {
+            "pre": "core/management/__init__.py::call_command",
+            "post": "core/management/__init__.py::call_command",
+            "same": true
+          },
+          "expectedFileRank": {
+            "pre": "1",
+            "post": "1"
+          },
+          "expectedSymbolRank": {
+            "pre": "",
+            "post": ""
+          },
+          "result": {
+            "pre": "hit_top1_pivot",
+            "post": "hit_top1_pivot"
+          },
+          "missCategory": {
+            "pre": "none",
+            "post": "none"
+          },
+          "top1": {
+            "pre": "true",
+            "post": "true"
+          },
+          "top3": {
+            "pre": "true",
+            "post": "true"
+          },
+          "pivotCount": {
+            "pre": "2",
+            "post": "2"
+          }
+        },
+        {
+          "instance_id": "django__django-11815",
+          "repo": "django/django",
+          "intent": "debug",
+          "evaluated": true,
+          "top1Pivot": {
+            "pre": "db/migrations/serializer.py::EnumSerializer",
+            "post": "db/migrations/serializer.py::EnumSerializer",
+            "same": true
+          },
+          "expectedFileRank": {
+            "pre": "1",
+            "post": "1"
+          },
+          "expectedSymbolRank": {
+            "pre": "1",
+            "post": "1"
+          },
+          "result": {
+            "pre": "hit_top1_pivot",
+            "post": "hit_top1_pivot"
+          },
+          "missCategory": {
+            "pre": "none",
+            "post": "none"
+          },
+          "top1": {
+            "pre": "true",
+            "post": "true"
+          },
+          "top3": {
+            "pre": "true",
+            "post": "true"
+          },
+          "pivotCount": {
+            "pre": "2",
+            "post": "2"
+          }
+        },
+        {
+          "instance_id": "django__django-11820",
+          "repo": "django/django",
+          "intent": "debug",
+          "evaluated": true,
+          "top1Pivot": {
+            "pre": "db/models/base.py::_check_ordering",
+            "post": "db/models/base.py::_check_ordering",
+            "same": true
+          },
+          "expectedFileRank": {
+            "pre": "1",
+            "post": "1"
+          },
+          "expectedSymbolRank": {
+            "pre": "1",
+            "post": "1"
+          },
+          "result": {
+            "pre": "hit_top1_pivot",
+            "post": "hit_top1_pivot"
+          },
+          "missCategory": {
+            "pre": "none",
+            "post": "none"
+          },
+          "top1": {
+            "pre": "true",
+            "post": "true"
+          },
+          "top3": {
+            "pre": "true",
+            "post": "true"
+          },
+          "pivotCount": {
+            "pre": "2",
+            "post": "2"
+          }
+        },
+        {
+          "instance_id": "django__django-12050",
+          "repo": "django/django",
+          "intent": "debug",
+          "evaluated": true,
+          "top1Pivot": {
+            "pre": "db/models/sql/query.py::resolve_lookup_value",
+            "post": "db/models/sql/query.py::resolve_lookup_value",
+            "same": true
+          },
+          "expectedFileRank": {
+            "pre": "1",
+            "post": "1"
+          },
+          "expectedSymbolRank": {
+            "pre": "1",
+            "post": "1"
+          },
+          "result": {
+            "pre": "hit_top1_pivot",
+            "post": "hit_top1_pivot"
+          },
+          "missCategory": {
+            "pre": "none",
+            "post": "none"
+          },
+          "top1": {
+            "pre": "true",
+            "post": "true"
+          },
+          "top3": {
+            "pre": "true",
+            "post": "true"
+          },
+          "pivotCount": {
+            "pre": "2",
+            "post": "2"
+          }
+        },
+        {
+          "instance_id": "django__django-12273",
+          "repo": "django/django",
+          "intent": "debug",
+          "evaluated": true,
+          "top1Pivot": {
+            "pre": "forms/models.py::save",
+            "post": "forms/models.py::save",
+            "same": true
+          },
+          "expectedFileRank": {
+            "pre": "2",
+            "post": "2"
+          },
+          "expectedSymbolRank": {
+            "pre": "",
+            "post": ""
+          },
+          "result": {
+            "pre": "hit_top3",
+            "post": "hit_top3"
+          },
+          "missCategory": {
+            "pre": "none",
+            "post": "none"
+          },
+          "top1": {
+            "pre": "false",
+            "post": "false"
+          },
+          "top3": {
+            "pre": "true",
+            "post": "true"
+          },
+          "pivotCount": {
+            "pre": "2",
+            "post": "2"
+          }
+        },
+        {
+          "instance_id": "django__django-12276",
+          "repo": "django/django",
+          "intent": "debug",
+          "evaluated": true,
+          "top1Pivot": {
+            "pre": "forms/widgets.py::FileInput",
+            "post": "forms/widgets.py::FileInput",
+            "same": true
+          },
+          "expectedFileRank": {
+            "pre": "1",
+            "post": "1"
+          },
+          "expectedSymbolRank": {
+            "pre": "2",
+            "post": "2"
+          },
+          "result": {
+            "pre": "hit_top1_pivot",
+            "post": "hit_top1_pivot"
+          },
+          "missCategory": {
+            "pre": "none",
+            "post": "none"
+          },
+          "top1": {
+            "pre": "true",
+            "post": "true"
+          },
+          "top3": {
+            "pre": "true",
+            "post": "true"
+          },
+          "pivotCount": {
+            "pre": "2",
+            "post": "2"
+          }
+        },
+        {
+          "instance_id": "django__django-12325",
+          "repo": "django/django",
+          "intent": "debug",
+          "evaluated": true,
+          "top1Pivot": {
+            "pre": "db/models/sql/query.py::setup_joins",
+            "post": "db/models/sql/query.py::setup_joins",
+            "same": true
+          },
+          "expectedFileRank": {
+            "pre": "2",
+            "post": "2"
+          },
+          "expectedSymbolRank": {
+            "pre": "",
+            "post": ""
+          },
+          "result": {
+            "pre": "hit_top3",
+            "post": "hit_top3"
+          },
+          "missCategory": {
+            "pre": "none",
+            "post": "none"
+          },
+          "top1": {
+            "pre": "false",
+            "post": "false"
+          },
+          "top3": {
+            "pre": "true",
+            "post": "true"
+          },
+          "pivotCount": {
+            "pre": "2",
+            "post": "2"
+          }
+        },
+        {
+          "instance_id": "django__django-12774",
+          "repo": "django/django",
+          "intent": "debug",
+          "evaluated": true,
+          "top1Pivot": {
+            "pre": "db/models/query.py::in_bulk",
+            "post": "db/models/query.py::in_bulk",
+            "same": true
+          },
+          "expectedFileRank": {
+            "pre": "1",
+            "post": "1"
+          },
+          "expectedSymbolRank": {
+            "pre": "1",
+            "post": "1"
+          },
+          "result": {
+            "pre": "hit_top1_pivot",
+            "post": "hit_top1_pivot"
+          },
+          "missCategory": {
+            "pre": "none",
+            "post": "none"
+          },
+          "top1": {
+            "pre": "true",
+            "post": "true"
+          },
+          "top3": {
+            "pre": "true",
+            "post": "true"
+          },
+          "pivotCount": {
+            "pre": "3",
+            "post": "3"
+          }
+        },
+        {
+          "instance_id": "django__django-12858",
+          "repo": "django/django",
+          "intent": "debug",
+          "evaluated": true,
+          "top1Pivot": {
+            "pre": "db/models/base.py::_check_ordering",
+            "post": "db/models/base.py::_check_ordering",
+            "same": true
+          },
+          "expectedFileRank": {
+            "pre": "1",
+            "post": "1"
+          },
+          "expectedSymbolRank": {
+            "pre": "1",
+            "post": "1"
+          },
+          "result": {
+            "pre": "hit_top1_pivot",
+            "post": "hit_top1_pivot"
+          },
+          "missCategory": {
+            "pre": "none",
+            "post": "none"
+          },
+          "top1": {
+            "pre": "true",
+            "post": "true"
+          },
+          "top3": {
+            "pre": "true",
+            "post": "true"
+          },
+          "pivotCount": {
+            "pre": "2",
+            "post": "2"
+          }
+        },
+        {
+          "instance_id": "django__django-13012",
+          "repo": "django/django",
+          "intent": "debug",
+          "evaluated": true,
+          "top1Pivot": {
+            "pre": "db/models/expressions.py::ExpressionWrapper",
+            "post": "db/models/expressions.py::ExpressionWrapper",
+            "same": true
+          },
+          "expectedFileRank": {
+            "pre": "1",
+            "post": "1"
+          },
+          "expectedSymbolRank": {
+            "pre": "2",
+            "post": "2"
+          },
+          "result": {
+            "pre": "hit_top1_pivot",
+            "post": "hit_top1_pivot"
+          },
+          "missCategory": {
+            "pre": "none",
+            "post": "none"
+          },
+          "top1": {
+            "pre": "true",
+            "post": "true"
+          },
+          "top3": {
+            "pre": "true",
+            "post": "true"
+          },
+          "pivotCount": {
+            "pre": "2",
+            "post": "2"
+          }
+        },
+        {
+          "instance_id": "django__django-13112",
+          "repo": "django/django",
+          "intent": "debug",
+          "evaluated": true,
+          "top1Pivot": {
+            "pre": "db/models/fields/related.py::ForeignKey",
+            "post": "db/models/fields/related.py::ForeignKey",
+            "same": true
+          },
+          "expectedFileRank": {
+            "pre": "1",
+            "post": "1"
+          },
+          "expectedSymbolRank": {
+            "pre": "",
+            "post": ""
+          },
+          "result": {
+            "pre": "hit_top1_pivot",
+            "post": "hit_top1_pivot"
+          },
+          "missCategory": {
+            "pre": "none",
+            "post": "none"
+          },
+          "top1": {
+            "pre": "true",
+            "post": "true"
+          },
+          "top3": {
+            "pre": "true",
+            "post": "true"
+          },
+          "pivotCount": {
+            "pre": "2",
+            "post": "2"
+          }
+        },
+        {
+          "instance_id": "django__django-13195",
+          "repo": "django/django",
+          "intent": "debug",
+          "evaluated": true,
+          "top1Pivot": {
+            "pre": "http/response.py::delete_cookie",
+            "post": "http/response.py::delete_cookie",
+            "same": true
+          },
+          "expectedFileRank": {
+            "pre": "1",
+            "post": "1"
+          },
+          "expectedSymbolRank": {
+            "pre": "1",
+            "post": "1"
+          },
+          "result": {
+            "pre": "hit_top1_pivot",
+            "post": "hit_top1_pivot"
+          },
+          "missCategory": {
+            "pre": "none",
+            "post": "none"
+          },
+          "top1": {
+            "pre": "true",
+            "post": "true"
+          },
+          "top3": {
+            "pre": "true",
+            "post": "true"
+          },
+          "pivotCount": {
+            "pre": "2",
+            "post": "2"
+          }
+        }
+      ]
+    },
+    "stage5_retrieval_eval_cross_repo_30": {
+      "rows": 30,
+      "evaluated": 30,
+      "workspaceErrors": 0,
+      "top1PivotSame": 27,
+      "top1PivotChanged": [
+        {
+          "id": "scikit-learn__scikit-learn-11578",
+          "pre": "sklearn/linear_model/logistic.py::LogisticRegression",
+          "post": "sklearn/linear_model/logistic.py::_check_solver_option"
+        },
+        {
+          "id": "pydata__xarray-3677",
+          "pre": "xarray/core/dataset.py::merge",
+          "post": "versioneer.py::scan_setup_py"
+        },
+        {
+          "id": "sphinx-doc__sphinx-7910",
+          "pre": "sphinx/ext/autodoc/__init__.py::DecoratorDocumenter",
+          "post": "sphinx/environment/collectors/__init__.py::get_updated_docs"
+        }
+      ],
+      "resultSame": 27,
+      "resultChanged": [
+        {
+          "id": "pydata__xarray-3677",
+          "pre": "hit_top1_pivot",
+          "post": "hit_support"
+        },
+        {
+          "id": "sphinx-doc__sphinx-7910",
+          "pre": "hit_discarded",
+          "post": "hit_support"
+        },
+        {
+          "id": "sympy__sympy-16766",
+          "pre": "hit_support",
+          "post": "hit_discarded"
+        }
+      ],
+      "top1FileHits": {
+        "pre": 21,
+        "post": 20
+      },
+      "top3FileHits": {
+        "pre": 23,
+        "post": 22
+      },
+      "expectedFileRank": {
+        "same": 25,
+        "worse": 3,
+        "gained": 1,
+        "lost": 1
+      },
+      "expectedSymbolRank": {
+        "same": 19,
+        "better": 6,
+        "worse": 4,
+        "gained": 1
+      },
+      "rows_detail": [
+        {
+          "instance_id": "sympy__sympy-12419",
+          "repo": "sympy/sympy",
+          "intent": "debug",
+          "evaluated": true,
+          "top1Pivot": {
+            "pre": "sympy/matrices/matrices.py::is_zero",
+            "post": "sympy/matrices/matrices.py::is_zero",
+            "same": true
+          },
+          "expectedFileRank": {
+            "pre": "4",
+            "post": "4"
+          },
+          "expectedSymbolRank": {
+            "pre": "",
+            "post": ""
+          },
+          "result": {
+            "pre": "hit_support",
+            "post": "hit_support"
+          },
+          "missCategory": {
+            "pre": "present_but_support",
+            "post": "present_but_support"
+          },
+          "top1": {
+            "pre": "false",
+            "post": "false"
+          },
+          "top3": {
+            "pre": "false",
+            "post": "false"
+          },
+          "pivotCount": {
+            "pre": "2",
+            "post": "2"
+          }
+        },
+        {
+          "instance_id": "sympy__sympy-12481",
+          "repo": "sympy/sympy",
+          "intent": "debug",
+          "evaluated": true,
+          "top1Pivot": {
+            "pre": "sympy/combinatorics/permutations.py::Permutation",
+            "post": "sympy/combinatorics/permutations.py::Permutation",
+            "same": true
+          },
+          "expectedFileRank": {
+            "pre": "1",
+            "post": "1"
+          },
+          "expectedSymbolRank": {
+            "pre": "10",
+            "post": "2"
+          },
+          "result": {
+            "pre": "hit_top1_pivot",
+            "post": "hit_top1_pivot"
+          },
+          "missCategory": {
+            "pre": "none",
+            "post": "none"
+          },
+          "top1": {
+            "pre": "true",
+            "post": "true"
+          },
+          "top3": {
+            "pre": "true",
+            "post": "true"
+          },
+          "pivotCount": {
+            "pre": "3",
+            "post": "3"
+          }
+        },
+        {
+          "instance_id": "sympy__sympy-13372",
+          "repo": "sympy/sympy",
+          "intent": "debug",
+          "evaluated": true,
+          "top1Pivot": {
+            "pre": "sympy/core/evalf.py::evalf",
+            "post": "sympy/core/evalf.py::evalf",
+            "same": true
+          },
+          "expectedFileRank": {
+            "pre": "1",
+            "post": "1"
+          },
+          "expectedSymbolRank": {
+            "pre": "1",
+            "post": "1"
+          },
+          "result": {
+            "pre": "hit_top1_pivot",
+            "post": "hit_top1_pivot"
+          },
+          "missCategory": {
+            "pre": "none",
+            "post": "none"
+          },
+          "top1": {
+            "pre": "true",
+            "post": "true"
+          },
+          "top3": {
+            "pre": "true",
+            "post": "true"
+          },
+          "pivotCount": {
+            "pre": "2",
+            "post": "2"
+          }
+        },
+        {
+          "instance_id": "scikit-learn__scikit-learn-10844",
+          "repo": "scikit-learn/scikit-learn",
+          "intent": "debug",
+          "evaluated": true,
+          "top1Pivot": {
+            "pre": "sklearn/metrics/cluster/supervised.py::fowlkes_mallows_score",
+            "post": "sklearn/metrics/cluster/supervised.py::fowlkes_mallows_score",
+            "same": true
+          },
+          "expectedFileRank": {
+            "pre": "1",
+            "post": "1"
+          },
+          "expectedSymbolRank": {
+            "pre": "1",
+            "post": "1"
+          },
+          "result": {
+            "pre": "hit_top1_pivot",
+            "post": "hit_top1_pivot"
+          },
+          "missCategory": {
+            "pre": "none",
+            "post": "none"
+          },
+          "top1": {
+            "pre": "true",
+            "post": "true"
+          },
+          "top3": {
+            "pre": "true",
+            "post": "true"
+          },
+          "pivotCount": {
+            "pre": "2",
+            "post": "2"
+          }
+        },
+        {
+          "instance_id": "scikit-learn__scikit-learn-11578",
+          "repo": "scikit-learn/scikit-learn",
+          "intent": "debug",
+          "evaluated": true,
+          "top1Pivot": {
+            "pre": "sklearn/linear_model/logistic.py::LogisticRegression",
+            "post": "sklearn/linear_model/logistic.py::_check_solver_option",
+            "same": false
+          },
+          "expectedFileRank": {
+            "pre": "1",
+            "post": "1"
+          },
+          "expectedSymbolRank": {
+            "pre": "37",
+            "post": "22"
+          },
+          "result": {
+            "pre": "hit_top1_pivot",
+            "post": "hit_top1_pivot"
+          },
+          "missCategory": {
+            "pre": "none",
+            "post": "none"
+          },
+          "top1": {
+            "pre": "true",
+            "post": "true"
+          },
+          "top3": {
+            "pre": "true",
+            "post": "true"
+          },
+          "pivotCount": {
+            "pre": "2",
+            "post": "2"
+          }
+        },
+        {
+          "instance_id": "matplotlib__matplotlib-22719",
+          "repo": "matplotlib/matplotlib",
+          "intent": "debug",
+          "evaluated": true,
+          "top1Pivot": {
+            "pre": "lib/matplotlib/_type1font.py::value",
+            "post": "lib/matplotlib/_type1font.py::value",
+            "same": true
+          },
+          "expectedFileRank": {
+            "pre": "2",
+            "post": "3"
+          },
+          "expectedSymbolRank": {
+            "pre": "3",
+            "post": "4"
+          },
+          "result": {
+            "pre": "hit_top3",
+            "post": "hit_top3"
+          },
+          "missCategory": {
+            "pre": "none",
+            "post": "none"
+          },
+          "top1": {
+            "pre": "false",
+            "post": "false"
+          },
+          "top3": {
+            "pre": "true",
+            "post": "true"
+          },
+          "pivotCount": {
+            "pre": "2",
+            "post": "2"
+          }
+        },
+        {
+          "instance_id": "matplotlib__matplotlib-24627",
+          "repo": "matplotlib/matplotlib",
+          "intent": "debug",
+          "evaluated": true,
+          "top1Pivot": {
+            "pre": "lib/matplotlib/axes/_base.py::cla",
+            "post": "lib/matplotlib/axes/_base.py::cla",
+            "same": true
+          },
+          "expectedFileRank": {
+            "pre": "1",
+            "post": "1"
+          },
+          "expectedSymbolRank": {
+            "pre": "",
+            "post": ""
+          },
+          "result": {
+            "pre": "hit_top1_pivot",
+            "post": "hit_top1_pivot"
+          },
+          "missCategory": {
+            "pre": "none",
+            "post": "none"
+          },
+          "top1": {
+            "pre": "true",
+            "post": "true"
+          },
+          "top3": {
+            "pre": "true",
+            "post": "true"
+          },
+          "pivotCount": {
+            "pre": "2",
+            "post": "2"
+          }
+        },
+        {
+          "instance_id": "astropy__astropy-14365",
+          "repo": "astropy/astropy",
+          "intent": "debug",
+          "evaluated": true,
+          "top1Pivot": {
+            "pre": "astropy/io/ascii/qdp.py::_write_table_qdp",
+            "post": "astropy/io/ascii/qdp.py::_write_table_qdp",
+            "same": true
+          },
+          "expectedFileRank": {
+            "pre": "1",
+            "post": "1"
+          },
+          "expectedSymbolRank": {
+            "pre": "14",
+            "post": "11"
+          },
+          "result": {
+            "pre": "hit_top1_pivot",
+            "post": "hit_top1_pivot"
+          },
+          "missCategory": {
+            "pre": "none",
+            "post": "none"
+          },
+          "top1": {
+            "pre": "true",
+            "post": "true"
+          },
+          "top3": {
+            "pre": "true",
+            "post": "true"
+          },
+          "pivotCount": {
+            "pre": "2",
+            "post": "2"
+          }
+        },
+        {
+          "instance_id": "astropy__astropy-14369",
+          "repo": "astropy/astropy",
+          "intent": "debug",
+          "evaluated": true,
+          "top1Pivot": {
+            "pre": "astropy/io/ascii/cds.py::Cds",
+            "post": "astropy/io/ascii/cds.py::Cds",
+            "same": true
+          },
+          "expectedFileRank": {
+            "pre": "2",
+            "post": "2"
+          },
+          "expectedSymbolRank": {
+            "pre": "",
+            "post": ""
+          },
+          "result": {
+            "pre": "hit_top3",
+            "post": "hit_top3"
+          },
+          "missCategory": {
+            "pre": "none",
+            "post": "none"
+          },
+          "top1": {
+            "pre": "false",
+            "post": "false"
+          },
+          "top3": {
+            "pre": "true",
+            "post": "true"
+          },
+          "pivotCount": {
+            "pre": "3",
+            "post": "3"
+          }
+        },
+        {
+          "instance_id": "pytest-dev__pytest-10051",
+          "repo": "pytest-dev/pytest",
+          "intent": "debug",
+          "evaluated": true,
+          "top1Pivot": {
+            "pre": "src/_pytest/logging.py::get_records",
+            "post": "src/_pytest/logging.py::get_records",
+            "same": true
+          },
+          "expectedFileRank": {
+            "pre": "1",
+            "post": "1"
+          },
+          "expectedSymbolRank": {
+            "pre": "3",
+            "post": "24"
+          },
+          "result": {
+            "pre": "hit_top1_pivot",
+            "post": "hit_top1_pivot"
+          },
+          "missCategory": {
+            "pre": "none",
+            "post": "none"
+          },
+          "top1": {
+            "pre": "true",
+            "post": "true"
+          },
+          "top3": {
+            "pre": "true",
+            "post": "true"
+          },
+          "pivotCount": {
+            "pre": "2",
+            "post": "2"
+          }
+        },
+        {
+          "instance_id": "pytest-dev__pytest-5262",
+          "repo": "pytest-dev/pytest",
+          "intent": "debug",
+          "evaluated": true,
+          "top1Pivot": {
+            "pre": "src/_pytest/capture.py::EncodedFile",
+            "post": "src/_pytest/capture.py::EncodedFile",
+            "same": true
+          },
+          "expectedFileRank": {
+            "pre": "1",
+            "post": "1"
+          },
+          "expectedSymbolRank": {
+            "pre": "11",
+            "post": "6"
+          },
+          "result": {
+            "pre": "hit_top1_pivot",
+            "post": "hit_top1_pivot"
+          },
+          "missCategory": {
+            "pre": "none",
+            "post": "none"
+          },
+          "top1": {
+            "pre": "true",
+            "post": "true"
+          },
+          "top3": {
+            "pre": "true",
+            "post": "true"
+          },
+          "pivotCount": {
+            "pre": "2",
+            "post": "2"
+          }
+        },
+        {
+          "instance_id": "sphinx-doc__sphinx-7462",
+          "repo": "sphinx-doc/sphinx",
+          "intent": "debug",
+          "evaluated": true,
+          "top1Pivot": {
+            "pre": "sphinx/domains/python.py::_parse_annotation",
+            "post": "sphinx/domains/python.py::_parse_annotation",
+            "same": true
+          },
+          "expectedFileRank": {
+            "pre": "1",
+            "post": "1"
+          },
+          "expectedSymbolRank": {
+            "pre": "3",
+            "post": "3"
+          },
+          "result": {
+            "pre": "hit_top1_pivot",
+            "post": "hit_top1_pivot"
+          },
+          "missCategory": {
+            "pre": "none",
+            "post": "none"
+          },
+          "top1": {
+            "pre": "true",
+            "post": "true"
+          },
+          "top3": {
+            "pre": "true",
+            "post": "true"
+          },
+          "pivotCount": {
+            "pre": "2",
+            "post": "2"
+          }
+        },
+        {
+          "instance_id": "sphinx-doc__sphinx-7748",
+          "repo": "sphinx-doc/sphinx",
+          "intent": "debug",
+          "evaluated": true,
+          "top1Pivot": {
+            "pre": "sphinx/ext/autodoc/__init__.py::DocstringSignatureMixin",
+            "post": "sphinx/ext/autodoc/__init__.py::DocstringSignatureMixin",
+            "same": true
+          },
+          "expectedFileRank": {
+            "pre": "1",
+            "post": "1"
+          },
+          "expectedSymbolRank": {
+            "pre": "1",
+            "post": "1"
+          },
+          "result": {
+            "pre": "hit_top1_pivot",
+            "post": "hit_top1_pivot"
+          },
+          "missCategory": {
+            "pre": "none",
+            "post": "none"
+          },
+          "top1": {
+            "pre": "true",
+            "post": "true"
+          },
+          "top3": {
+            "pre": "true",
+            "post": "true"
+          },
+          "pivotCount": {
+            "pre": "2",
+            "post": "2"
+          }
+        },
+        {
+          "instance_id": "psf__requests-1142",
+          "repo": "psf/requests",
+          "intent": "debug",
+          "evaluated": true,
+          "top1Pivot": {
+            "pre": "requests/models.py::prepare_content_length",
+            "post": "requests/models.py::prepare_content_length",
+            "same": true
+          },
+          "expectedFileRank": {
+            "pre": "1",
+            "post": "1"
+          },
+          "expectedSymbolRank": {
+            "pre": "1",
+            "post": "1"
+          },
+          "result": {
+            "pre": "hit_top1_pivot",
+            "post": "hit_top1_pivot"
+          },
+          "missCategory": {
+            "pre": "none",
+            "post": "none"
+          },
+          "top1": {
+            "pre": "true",
+            "post": "true"
+          },
+          "top3": {
+            "pre": "true",
+            "post": "true"
+          },
+          "pivotCount": {
+            "pre": "2",
+            "post": "2"
+          }
+        },
+        {
+          "instance_id": "psf__requests-1724",
+          "repo": "psf/requests",
+          "intent": "debug",
+          "evaluated": true,
+          "top1Pivot": {
+            "pre": "requests/sessions.py::resolve_redirects",
+            "post": "requests/sessions.py::resolve_redirects",
+            "same": true
+          },
+          "expectedFileRank": {
+            "pre": "1",
+            "post": "1"
+          },
+          "expectedSymbolRank": {
+            "pre": "2",
+            "post": "2"
+          },
+          "result": {
+            "pre": "hit_top1_pivot",
+            "post": "hit_top1_pivot"
+          },
+          "missCategory": {
+            "pre": "none",
+            "post": "none"
+          },
+          "top1": {
+            "pre": "true",
+            "post": "true"
+          },
+          "top3": {
+            "pre": "true",
+            "post": "true"
+          },
+          "pivotCount": {
+            "pre": "2",
+            "post": "2"
+          }
+        },
+        {
+          "instance_id": "pallets__flask-5014",
+          "repo": "pallets/flask",
+          "intent": "debug",
+          "evaluated": true,
+          "top1Pivot": {
+            "pre": "src/flask/blueprints.py::Blueprint",
+            "post": "src/flask/blueprints.py::Blueprint",
+            "same": true
+          },
+          "expectedFileRank": {
+            "pre": "1",
+            "post": "1"
+          },
+          "expectedSymbolRank": {
+            "pre": "12",
+            "post": "11"
+          },
+          "result": {
+            "pre": "hit_top1_pivot",
+            "post": "hit_top1_pivot"
+          },
+          "missCategory": {
+            "pre": "none",
+            "post": "none"
+          },
+          "top1": {
+            "pre": "true",
+            "post": "true"
+          },
+          "top3": {
+            "pre": "true",
+            "post": "true"
+          },
+          "pivotCount": {
+            "pre": "2",
+            "post": "2"
+          }
+        },
+        {
+          "instance_id": "astropy__astropy-14539",
+          "repo": "astropy/astropy",
+          "intent": "debug",
+          "evaluated": true,
+          "top1Pivot": {
+            "pre": "astropy/io/fits/diff.py::identical",
+            "post": "astropy/io/fits/diff.py::identical",
+            "same": true
+          },
+          "expectedFileRank": {
+            "pre": "1",
+            "post": "1"
+          },
+          "expectedSymbolRank": {
+            "pre": "",
+            "post": ""
+          },
+          "result": {
+            "pre": "hit_top1_pivot",
+            "post": "hit_top1_pivot"
+          },
+          "missCategory": {
+            "pre": "none",
+            "post": "none"
+          },
+          "top1": {
+            "pre": "true",
+            "post": "true"
+          },
+          "top3": {
+            "pre": "true",
+            "post": "true"
+          },
+          "pivotCount": {
+            "pre": "2",
+            "post": "2"
+          }
+        },
+        {
+          "instance_id": "astropy__astropy-14598",
+          "repo": "astropy/astropy",
+          "intent": "debug",
+          "evaluated": true,
+          "top1Pivot": {
+            "pre": "astropy/io/fits/diff.py::FITSDiff",
+            "post": "astropy/io/fits/diff.py::FITSDiff",
+            "same": true
+          },
+          "expectedFileRank": {
+            "pre": "4",
+            "post": "6"
+          },
+          "expectedSymbolRank": {
+            "pre": "7",
+            "post": "12"
+          },
+          "result": {
+            "pre": "hit_support",
+            "post": "hit_support"
+          },
+          "missCategory": {
+            "pre": "present_but_support",
+            "post": "present_but_support"
+          },
+          "top1": {
+            "pre": "false",
+            "post": "false"
+          },
+          "top3": {
+            "pre": "false",
+            "post": "false"
+          },
+          "pivotCount": {
+            "pre": "3",
+            "post": "3"
+          }
+        },
+        {
+          "instance_id": "matplotlib__matplotlib-24970",
+          "repo": "matplotlib/matplotlib",
+          "intent": "debug",
+          "evaluated": true,
+          "top1Pivot": {
+            "pre": "src/numpy_cpp.h::numpy",
+            "post": "src/numpy_cpp.h::numpy",
+            "same": true
+          },
+          "expectedFileRank": {
+            "pre": "",
+            "post": ""
+          },
+          "expectedSymbolRank": {
+            "pre": "",
+            "post": ""
+          },
+          "result": {
+            "pre": "missing",
+            "post": "missing"
+          },
+          "missCategory": {
+            "pre": "wrong_subsystem",
+            "post": "wrong_subsystem"
+          },
+          "top1": {
+            "pre": "false",
+            "post": "false"
+          },
+          "top3": {
+            "pre": "false",
+            "post": "false"
+          },
+          "pivotCount": {
+            "pre": "2",
+            "post": "2"
+          }
+        },
+        {
+          "instance_id": "matplotlib__matplotlib-25960",
+          "repo": "matplotlib/matplotlib",
+          "intent": "debug",
+          "evaluated": true,
+          "top1Pivot": {
+            "pre": "lib/matplotlib/figure.py::subfigures",
+            "post": "lib/matplotlib/figure.py::subfigures",
+            "same": true
+          },
+          "expectedFileRank": {
+            "pre": "1",
+            "post": "1"
+          },
+          "expectedSymbolRank": {
+            "pre": "1",
+            "post": "1"
+          },
+          "result": {
+            "pre": "hit_top1_pivot",
+            "post": "hit_top1_pivot"
+          },
+          "missCategory": {
+            "pre": "none",
+            "post": "none"
+          },
+          "top1": {
+            "pre": "true",
+            "post": "true"
+          },
+          "top3": {
+            "pre": "true",
+            "post": "true"
+          },
+          "pivotCount": {
+            "pre": "2",
+            "post": "2"
+          }
+        },
+        {
+          "instance_id": "mwaskom__seaborn-3187",
+          "repo": "mwaskom/seaborn",
+          "intent": "debug",
+          "evaluated": true,
+          "top1Pivot": {
+            "pre": "seaborn/utils.py::move_legend",
+            "post": "seaborn/utils.py::move_legend",
+            "same": true
+          },
+          "expectedFileRank": {
+            "pre": "1",
+            "post": "1"
+          },
+          "expectedSymbolRank": {
+            "pre": "",
+            "post": ""
+          },
+          "result": {
+            "pre": "hit_top1_pivot",
+            "post": "hit_top1_pivot"
+          },
+          "missCategory": {
+            "pre": "none",
+            "post": "none"
+          },
+          "top1": {
+            "pre": "true",
+            "post": "true"
+          },
+          "top3": {
+            "pre": "true",
+            "post": "true"
+          },
+          "pivotCount": {
+            "pre": "2",
+            "post": "2"
+          }
+        },
+        {
+          "instance_id": "psf__requests-5414",
+          "repo": "psf/requests",
+          "intent": "debug",
+          "evaluated": true,
+          "top1Pivot": {
+            "pre": "requests/models.py::prepare_url",
+            "post": "requests/models.py::prepare_url",
+            "same": true
+          },
+          "expectedFileRank": {
+            "pre": "1",
+            "post": "1"
+          },
+          "expectedSymbolRank": {
+            "pre": "1",
+            "post": "1"
+          },
+          "result": {
+            "pre": "hit_top1_pivot",
+            "post": "hit_top1_pivot"
+          },
+          "missCategory": {
+            "pre": "none",
+            "post": "none"
+          },
+          "top1": {
+            "pre": "true",
+            "post": "true"
+          },
+          "top3": {
+            "pre": "true",
+            "post": "true"
+          },
+          "pivotCount": {
+            "pre": "2",
+            "post": "2"
+          }
+        },
+        {
+          "instance_id": "pydata__xarray-2905",
+          "repo": "pydata/xarray",
+          "intent": "debug",
+          "evaluated": true,
+          "top1Pivot": {
+            "pre": "xarray/core/variable.py::__setitem__",
+            "post": "xarray/core/variable.py::__setitem__",
+            "same": true
+          },
+          "expectedFileRank": {
+            "pre": "1",
+            "post": "1"
+          },
+          "expectedSymbolRank": {
+            "pre": "24",
+            "post": "21"
+          },
+          "result": {
+            "pre": "hit_top1_pivot",
+            "post": "hit_top1_pivot"
+          },
+          "missCategory": {
+            "pre": "none",
+            "post": "none"
+          },
+          "top1": {
+            "pre": "true",
+            "post": "true"
+          },
+          "top3": {
+            "pre": "true",
+            "post": "true"
+          },
+          "pivotCount": {
+            "pre": "3",
+            "post": "3"
+          }
+        },
+        {
+          "instance_id": "pydata__xarray-3677",
+          "repo": "pydata/xarray",
+          "intent": "debug",
+          "evaluated": true,
+          "top1Pivot": {
+            "pre": "xarray/core/dataset.py::merge",
+            "post": "versioneer.py::scan_setup_py",
+            "same": false
+          },
+          "expectedFileRank": {
+            "pre": "1",
+            "post": "4"
+          },
+          "expectedSymbolRank": {
+            "pre": "1",
+            "post": "4"
+          },
+          "result": {
+            "pre": "hit_top1_pivot",
+            "post": "hit_support"
+          },
+          "missCategory": {
+            "pre": "none",
+            "post": "present_but_support"
+          },
+          "top1": {
+            "pre": "true",
+            "post": "false"
+          },
+          "top3": {
+            "pre": "true",
+            "post": "false"
+          },
+          "pivotCount": {
+            "pre": "3",
+            "post": "3"
+          }
+        },
+        {
+          "instance_id": "pylint-dev__pylint-8898",
+          "repo": "pylint-dev/pylint",
+          "intent": "debug",
+          "evaluated": true,
+          "top1Pivot": {
+            "pre": "pylint/config/config_initialization.py::_order_all_first",
+            "post": "pylint/config/config_initialization.py::_order_all_first",
+            "same": true
+          },
+          "expectedFileRank": {
+            "pre": "8",
+            "post": "8"
+          },
+          "expectedSymbolRank": {
+            "pre": "",
+            "post": ""
+          },
+          "result": {
+            "pre": "hit_support",
+            "post": "hit_support"
+          },
+          "missCategory": {
+            "pre": "present_but_support",
+            "post": "present_but_support"
+          },
+          "top1": {
+            "pre": "false",
+            "post": "false"
+          },
+          "top3": {
+            "pre": "false",
+            "post": "false"
+          },
+          "pivotCount": {
+            "pre": "2",
+            "post": "2"
+          }
+        },
+        {
+          "instance_id": "pytest-dev__pytest-7432",
+          "repo": "pytest-dev/pytest",
+          "intent": "debug",
+          "evaluated": true,
+          "top1Pivot": {
+            "pre": "src/_pytest/skipping.py::evaluate_skip_marks",
+            "post": "src/_pytest/skipping.py::evaluate_skip_marks",
+            "same": true
+          },
+          "expectedFileRank": {
+            "pre": "1",
+            "post": "1"
+          },
+          "expectedSymbolRank": {
+            "pre": "7",
+            "post": "7"
+          },
+          "result": {
+            "pre": "hit_top1_pivot",
+            "post": "hit_top1_pivot"
+          },
+          "missCategory": {
+            "pre": "none",
+            "post": "none"
+          },
+          "top1": {
+            "pre": "true",
+            "post": "true"
+          },
+          "top3": {
+            "pre": "true",
+            "post": "true"
+          },
+          "pivotCount": {
+            "pre": "2",
+            "post": "2"
+          }
+        },
+        {
+          "instance_id": "sphinx-doc__sphinx-7910",
+          "repo": "sphinx-doc/sphinx",
+          "intent": "debug",
+          "evaluated": true,
+          "top1Pivot": {
+            "pre": "sphinx/ext/autodoc/__init__.py::DecoratorDocumenter",
+            "post": "sphinx/environment/collectors/__init__.py::get_updated_docs",
+            "same": false
+          },
+          "expectedFileRank": {
+            "pre": "",
+            "post": "10"
+          },
+          "expectedSymbolRank": {
+            "pre": "",
+            "post": "20"
+          },
+          "result": {
+            "pre": "hit_discarded",
+            "post": "hit_support"
+          },
+          "missCategory": {
+            "pre": "present_but_discarded",
+            "post": "present_but_support"
+          },
+          "top1": {
+            "pre": "false",
+            "post": "false"
+          },
+          "top3": {
+            "pre": "false",
+            "post": "false"
+          },
+          "pivotCount": {
+            "pre": "2",
+            "post": "2"
+          }
+        },
+        {
+          "instance_id": "sphinx-doc__sphinx-9230",
+          "repo": "sphinx-doc/sphinx",
+          "intent": "debug",
+          "evaluated": true,
+          "top1Pivot": {
+            "pre": "sphinx/builders/__init__.py::write_doc_serialized",
+            "post": "sphinx/builders/__init__.py::write_doc_serialized",
+            "same": true
+          },
+          "expectedFileRank": {
+            "pre": "",
+            "post": ""
+          },
+          "expectedSymbolRank": {
+            "pre": "",
+            "post": ""
+          },
+          "result": {
+            "pre": "missing",
+            "post": "missing"
+          },
+          "missCategory": {
+            "pre": "wrong_subsystem",
+            "post": "wrong_subsystem"
+          },
+          "top1": {
+            "pre": "false",
+            "post": "false"
+          },
+          "top3": {
+            "pre": "false",
+            "post": "false"
+          },
+          "pivotCount": {
+            "pre": "2",
+            "post": "2"
+          }
+        },
+        {
+          "instance_id": "sympy__sympy-15599",
+          "repo": "sympy/sympy",
+          "intent": "debug",
+          "evaluated": true,
+          "top1Pivot": {
+            "pre": "sympy/core/mod.py::Mod",
+            "post": "sympy/core/mod.py::Mod",
+            "same": true
+          },
+          "expectedFileRank": {
+            "pre": "1",
+            "post": "1"
+          },
+          "expectedSymbolRank": {
+            "pre": "",
+            "post": ""
+          },
+          "result": {
+            "pre": "hit_top1_pivot",
+            "post": "hit_top1_pivot"
+          },
+          "missCategory": {
+            "pre": "none",
+            "post": "none"
+          },
+          "top1": {
+            "pre": "true",
+            "post": "true"
+          },
+          "top3": {
+            "pre": "true",
+            "post": "true"
+          },
+          "pivotCount": {
+            "pre": "2",
+            "post": "2"
+          }
+        },
+        {
+          "instance_id": "sympy__sympy-16766",
+          "repo": "sympy/sympy",
+          "intent": "debug",
+          "evaluated": true,
+          "top1Pivot": {
+            "pre": "sympy/utilities/lambdify.py::lambdify",
+            "post": "sympy/utilities/lambdify.py::lambdify",
+            "same": true
+          },
+          "expectedFileRank": {
+            "pre": "15",
+            "post": ""
+          },
+          "expectedSymbolRank": {
+            "pre": "",
+            "post": ""
+          },
+          "result": {
+            "pre": "hit_support",
+            "post": "hit_discarded"
+          },
+          "missCategory": {
+            "pre": "present_but_support",
+            "post": "present_but_discarded"
+          },
+          "top1": {
+            "pre": "false",
+            "post": "false"
+          },
+          "top3": {
+            "pre": "false",
+            "post": "false"
+          },
+          "pivotCount": {
+            "pre": "2",
+            "post": "2"
+          }
+        }
+      ]
+    }
+  }
+}

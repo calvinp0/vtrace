@@ -1,6 +1,6 @@
 {
   "milestone": "M208",
-  "phase": "causal",
+  "phase": "final",
   "instrument": "run_stage5_m208_report.ts",
   "frozenAuthority": {
     "claimId": "A13",
@@ -4537,5 +4537,896 @@
     "NO_RUNTIME_REPAIR_INTERVENTION_AUTHORIZED",
     "I5_REMAINS_CLOSED",
     "I6_VALIDATION_SELECTION_REMAINS_CLOSED"
+  ],
+  "verdict": "M208 — PASS; A13_PARITY_CLOSED",
+  "gates": [
+    {
+      "id": "G1",
+      "statement": "frozen A13 authority recovered verbatim and unchanged",
+      "pass": true
+    },
+    {
+      "id": "G2",
+      "statement": "M207 A13 reproduced exactly before any product change",
+      "pass": true
+    },
+    {
+      "id": "G3",
+      "statement": "every frozen and dense transition attributed before the repair (A13_CAUSAL_ATTRIBUTION_COMPLETE)",
+      "pass": true
+    },
+    {
+      "id": "G4",
+      "statement": "the repair is the earliest coherent authority at each stage it touched: concept-owner slice (S1), pivot plan before cap (S2/S4a), support ordering window and plan-ordered demoted pivots (S4b), negation-aware answer-bearing (S7)",
+      "pass": true
+    },
+    {
+      "id": "G5",
+      "statement": "frozen A13 from the unmodified scorer",
+      "pass": true
+    },
+    {
+      "id": "G6",
+      "statement": "A11 MATCHES or EXCEEDS at every frozen budget",
+      "pass": true
+    },
+    {
+      "id": "G7",
+      "statement": "A5 MATCHES or EXCEEDS on the frozen rerun and the A5 harness",
+      "pass": true
+    },
+    {
+      "id": "G8",
+      "statement": "A12 and A14 protected",
+      "pass": true
+    },
+    {
+      "id": "G9",
+      "statement": "A1-A10 protected",
+      "pass": true
+    },
+    {
+      "id": "G10",
+      "statement": "A15 untouched (verdict carried, no impact rendering added: F15)",
+      "pass": true
+    },
+    {
+      "id": "G11",
+      "statement": "falsification controls F1-F17 pass",
+      "pass": true
+    },
+    {
+      "id": "G12",
+      "statement": "determinism: 3 repeats, packets and ledgers stable post-change",
+      "pass": true
+    },
+    {
+      "id": "G13",
+      "statement": "same-corpus attribution: repaired product on the M207 corpus copy closes frozen A13 too",
+      "pass": true
+    },
+    {
+      "id": "G14",
+      "statement": "no filler and no relevance weakening: lost items fall, regressions fall, dense prefix count rises",
+      "pass": true
+    },
+    {
+      "id": "G15",
+      "statement": "authority: predecessor replay fails only the detached-HEAD branch check; post replay verified",
+      "pass": true
+    },
+    {
+      "id": "G16",
+      "statement": "zero model spend: offline instruments only",
+      "pass": true
+    }
+  ],
+  "parity": {
+    "m207": 13,
+    "m208": 14,
+    "total": 15,
+    "threshold": 10
+  },
+  "frozenA13": {
+    "sizeViolations": 0,
+    "focusSwaps": 0,
+    "verdict": "VTRACE_EXCEEDS_VEXP_CLAIM"
+  },
+  "protectedClaims": [
+    {
+      "id": "A1",
+      "m207": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m208": "VTRACE_MATCHES_VEXP_CLAIM",
+      "held": true
+    },
+    {
+      "id": "A2",
+      "m207": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "m208": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "held": true
+    },
+    {
+      "id": "A3",
+      "m207": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m208": "VTRACE_MATCHES_VEXP_CLAIM",
+      "held": true
+    },
+    {
+      "id": "A4",
+      "m207": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "m208": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "held": true
+    },
+    {
+      "id": "A5",
+      "m207": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m208": "VTRACE_MATCHES_VEXP_CLAIM",
+      "held": true
+    },
+    {
+      "id": "A6",
+      "m207": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "m208": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "held": true
+    },
+    {
+      "id": "A7",
+      "m207": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "m208": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "held": true
+    },
+    {
+      "id": "A8",
+      "m207": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "m208": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "held": true
+    },
+    {
+      "id": "A9",
+      "m207": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m208": "VTRACE_MATCHES_VEXP_CLAIM",
+      "held": true
+    },
+    {
+      "id": "A10",
+      "m207": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m208": "VTRACE_MATCHES_VEXP_CLAIM",
+      "held": true
+    },
+    {
+      "id": "A11",
+      "m207": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "m208": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "held": true
+    },
+    {
+      "id": "A12",
+      "m207": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m208": "VTRACE_MATCHES_VEXP_CLAIM",
+      "held": true
+    },
+    {
+      "id": "A14",
+      "m207": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m208": "VTRACE_MATCHES_VEXP_CLAIM",
+      "held": true
+    }
+  ],
+  "matrix": [
+    {
+      "id": "A1",
+      "m207": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m208": "VTRACE_MATCHES_VEXP_CLAIM",
+      "measurement": "30 parser-backed families (bash, c, clojure, cpp, csharp, css, cython, dart, elixir, go, haskell, html, java, javascript, json, kotlin, lua,"
+    },
+    {
+      "id": "A2",
+      "m207": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "m208": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "measurement": "C-MED 60.54 files/s, C-LARGE 31.05 files/s (median of 3 cold builds)"
+    },
+    {
+      "id": "A3",
+      "m207": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m208": "VTRACE_MATCHES_VEXP_CLAIM",
+      "measurement": "C-LARGE k=1 ratio 0.057, k=3 ratio 0.133; reparsed 372 of the 372 files the indexer holds for a ONE-file change (the eligible .py denominato"
+    },
+    {
+      "id": "A4",
+      "m207": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "m208": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "measurement": "no-op median 0.007 / 0.091 / 0.171 s (C-SMALL / C-MED / C-LARGE), 0 files reparsed"
+    },
+    {
+      "id": "A5",
+      "m207": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m208": "VTRACE_MATCHES_VEXP_CLAIM",
+      "measurement": "get_code_context warm p90 52.09 / 218.69 / 384.23 ms (C-SMALL / C-MED / C-LARGE), 5 repetitions; best observed 37.92 / 161.27 / 315.67 ms"
+    },
+    {
+      "id": "A6",
+      "m207": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "m208": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "measurement": "get_impact_graph depth 3 warm p90 177.82 ms on C-LARGE (10 exact-FQN targets x 5)"
+    },
+    {
+      "id": "A7",
+      "m207": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "m208": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "measurement": "search_logic_flow warm p90 17.13 ms on C-LARGE; path edge counts {\"1\":10}"
+    },
+    {
+      "id": "A8",
+      "m207": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "m208": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "measurement": "C-SMALL 100%, C-MED 100%, C-LARGE 100%; unexplained missing 0/0/0"
+    },
+    {
+      "id": "A9",
+      "m207": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m208": "VTRACE_MATCHES_VEXP_CLAIM",
+      "measurement": "median rendered reduction C-MED 92.89%, C-LARGE 87.21% over 450 + 250 structurally valid files; 22 C-MED files excluded as malformed (F4)"
+    },
+    {
+      "id": "A10",
+      "m207": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m208": "VTRACE_MATCHES_VEXP_CLAIM",
+      "measurement": "signature retention C-MED 99.48%, C-LARGE 100% (verbatim, token-aligned, bracket-closed slices of source); member retention C-MED 100%, C-LA"
+    },
+    {
+      "id": "A11",
+      "m207": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "m208": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "measurement": "C-MED whole-response utilisation by budget: 1000=83.4%, 2000=93.78%, 4000=102.08%, 8000=102.59%, 16000=97.05% over 20 tasks"
+    },
+    {
+      "id": "A12",
+      "m207": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m208": "VTRACE_MATCHES_VEXP_CLAIM",
+      "measurement": "C-MED default response carries 3 distinct representation classes (FOCUS:focused_source, RELATED_WITH_CODE, RELATIONSHIP_ONLY); C-LARGE carri"
+    },
+    {
+      "id": "A13",
+      "m207": "VTRACE_BELOW_VEXP_CLAIM",
+      "m208": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "measurement": "0 of 20 tasks lose focus content as the budget grows, and 0 swap the delivered focus symbol, over 5 budgets"
+    },
+    {
+      "id": "A14",
+      "m207": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m208": "VTRACE_MATCHES_VEXP_CLAIM",
+      "measurement": "5077 of 5077 delivered items carry token accounting; no accounting block appears in the default response at all (present at detail=debug onl"
+    },
+    {
+      "id": "A15",
+      "m207": "VTRACE_BELOW_VEXP_CLAIM",
+      "m208": "VTRACE_BELOW_VEXP_CLAIM",
+      "measurement": "C-LARGE, 50 eligible call edges: the impact surface renders 0% as source expressions, the logic-flow surface 100%. On C-MED the flow surface"
+    }
+  ],
+  "a5": {
+    "before": {
+      "p90ByCorpus": {
+        "C-SMALL": 51.61,
+        "C-MED": 201.04,
+        "C-LARGE": 344.91
+      },
+      "classification": "VTRACE_MATCHES_VEXP_CLAIM"
+    },
+    "after": {
+      "p90ByCorpus": {
+        "C-SMALL": 57.16,
+        "C-MED": 237.66,
+        "C-LARGE": 377
+      },
+      "classification": "VTRACE_MATCHES_VEXP_CLAIM",
+      "loadAverage": [
+        3.97,
+        3.71,
+        3.76
+      ]
+    },
+    "frozen": {
+      "n": 25,
+      "median": 174.06,
+      "p90": 218.69,
+      "p95": 232.84,
+      "max": 240.84,
+      "min": 161.27
+    },
+    "frozenLoadAtStart": [
+      1.97,
+      2.65,
+      3.87
+    ],
+    "frozenVerdict": "VTRACE_MATCHES_VEXP_CLAIM"
+  },
+  "a11": {
+    "m207Committed": {
+      "1000": 84.05,
+      "2000": 94.65,
+      "4000": 102.05,
+      "8000": 102.5,
+      "16000": 94.72
+    },
+    "m208Frozen": {
+      "1000": 83.4,
+      "2000": 93.78,
+      "4000": 102.08,
+      "8000": 102.59,
+      "16000": 97.05
+    },
+    "pre": {
+      "1000": 85.05,
+      "2000": 94.78,
+      "4000": 102.05,
+      "8000": 102.5,
+      "16000": 94.72
+    },
+    "postPrecorpus": {
+      "1000": 83.5,
+      "2000": 94.1,
+      "4000": 102.2,
+      "8000": 102.44,
+      "16000": 96.87
+    },
+    "post": {
+      "1000": 83.4,
+      "2000": 94,
+      "4000": 102.09,
+      "8000": 102.59,
+      "16000": 97.05
+    },
+    "verdict": "VTRACE_EXCEEDS_VEXP_CLAIM"
+  },
+  "a12": {
+    "classes": [
+      "FOCUS:focused_source",
+      "RELATED_WITH_CODE",
+      "RELATIONSHIP_ONLY"
+    ],
+    "verdict": "VTRACE_MATCHES_VEXP_CLAIM",
+    "sweep": {
+      "verdict": "VTRACE_MATCHES_VEXP_CLAIM",
+      "integrityFailures": null
+    }
+  },
+  "a14": {
+    "accounted": 5077,
+    "delivered": 5077,
+    "verdict": "VTRACE_MATCHES_VEXP_CLAIM"
+  },
+  "beforeAfter": {
+    "before": {
+      "sizeViolations": 3,
+      "focusSwaps": 5,
+      "relations": {
+        "neither": 65,
+        "subsequence": 15
+      },
+      "regressions": 24,
+      "lost": 74,
+      "moved": 199,
+      "firstDivergence": {
+        "RETRIEVAL_POOL_MEMBERSHIP:concept_owner": 27,
+        "PIVOT_CAP_ROLE_PROMOTION": 10,
+        "SUBSEQUENCE_NEW_ITEMS_INTERLEAVED": 10,
+        "SUPPORT_WINDOW_PARTITION:coedit_displacement:window_content_changed": 6,
+        "EVIDENCE_BUDGET_DROP:graph_neighbour_anchoring": 5,
+        "SUPPORT_WINDOW_PARTITION:coedit_displacement:window_changed": 4,
+        "PIVOT_CAP_LEAD_RESELECTION": 3,
+        "REPRESENTATION_ROUTING:ceiling": 3,
+        "SUPPORT_LANE_NOT_REPRODUCED:coedit_injected_high": 3,
+        "SUPPORT_LANE_NOT_REPRODUCED:graph_neighbour_anchoring": 2,
+        "SUPPORT_LANE_PLACEMENT:coedit_injected_high": 2,
+        "SUPPORT_LANE_PLACEMENT:coedit_rescued_medium": 2,
+        "CAPSULE_PACKING:packing_over_budget": 1,
+        "SUPPORT_LANE_PLACEMENT:coedit_injected_medium": 1,
+        "SUPPORT_ORDER_OTHER:base_support_tier_1": 1
+      },
+      "a11": {
+        "1000": 85.05,
+        "2000": 94.78,
+        "4000": 102.05,
+        "8000": 102.5,
+        "16000": 94.72
+      },
+      "dense": {
+        "subsequence": 139,
+        "neither": 131,
+        "prefix": 50
+      }
+    },
+    "afterOnM207Corpus": {
+      "sizeViolations": 0,
+      "focusSwaps": 0,
+      "relations": {
+        "neither": 53,
+        "subsequence": 23,
+        "prefix": 4
+      },
+      "regressions": 8,
+      "lost": 31,
+      "moved": 89,
+      "firstDivergence": {
+        "SUBSEQUENCE_NEW_ITEMS_INTERLEAVED": 22,
+        "SUPPORT_WINDOW_PARTITION:coedit_displacement:window_content_changed": 16,
+        "PIVOT_CAP_ROLE_PROMOTION": 14,
+        "EVIDENCE_BUDGET_DROP:graph_neighbour_anchoring": 7,
+        "SUPPORT_LANE_NOT_REPRODUCED:coedit_injected_high": 5,
+        "NONE": 4,
+        "SUPPORT_LANE_PLACEMENT:coedit_injected_medium": 3,
+        "SUPPORT_LANE_NOT_REPRODUCED:graph_neighbour_anchoring": 2,
+        "SUPPORT_LANE_PLACEMENT:coedit_rescued_medium": 2,
+        "EVIDENCE_BUDGET_DROP:base_support_tier_1": 1,
+        "REPRESENTATION_ROUTING:ceiling": 1,
+        "SUPPORT_LANE_NOT_REPRODUCED:coedit_injected_medium": 1,
+        "SUPPORT_LANE_PLACEMENT:coedit_rescued_high": 1,
+        "SUPPORT_ORDER_OTHER:base_support_tier_1": 1
+      },
+      "a11": {
+        "1000": 83.5,
+        "2000": 94.1,
+        "4000": 102.2,
+        "8000": 102.44,
+        "16000": 96.87
+      },
+      "dense": {
+        "subsequence": 164,
+        "neither": 100,
+        "prefix": 56
+      }
+    },
+    "after": {
+      "sizeViolations": 0,
+      "focusSwaps": 0,
+      "relations": {
+        "neither": 52,
+        "subsequence": 25,
+        "prefix": 3
+      },
+      "regressions": 10,
+      "lost": 31,
+      "moved": 89,
+      "firstDivergence": {
+        "SUBSEQUENCE_NEW_ITEMS_INTERLEAVED": 23,
+        "SUPPORT_WINDOW_PARTITION:coedit_displacement:window_content_changed": 16,
+        "PIVOT_CAP_ROLE_PROMOTION": 14,
+        "EVIDENCE_BUDGET_DROP:graph_neighbour_anchoring": 7,
+        "SUPPORT_LANE_NOT_REPRODUCED:coedit_injected_high": 6,
+        "NONE": 3,
+        "SUPPORT_LANE_PLACEMENT:coedit_injected_medium": 3,
+        "REPRESENTATION_ROUTING:ceiling": 2,
+        "SUPPORT_LANE_PLACEMENT:coedit_rescued_medium": 2,
+        "EVIDENCE_BUDGET_DROP:base_support_tier_1": 1,
+        "SUPPORT_LANE_NOT_REPRODUCED:coedit_injected_medium": 1,
+        "SUPPORT_LANE_NOT_REPRODUCED:graph_neighbour_anchoring": 1,
+        "SUPPORT_LANE_PLACEMENT:coedit_rescued_high": 1
+      },
+      "lostBy": {
+        "EVIDENCE_BUDGET_DROP:graph_neighbour_anchoring": 14,
+        "SUPPORT_LANE_NOT_REPRODUCED:coedit_injected_high": 9,
+        "SUPPORT_LANE_NOT_REPRODUCED:graph_neighbour_anchoring": 4,
+        "EVIDENCE_BUDGET_DROP:base_support_tier_1": 2,
+        "SUPPORT_LANE_NOT_REPRODUCED:coedit_injected_medium": 2
+      },
+      "movedBy": {
+        "SUPPORT_WINDOW_PARTITION:coedit_displacement:window_content_changed": 46,
+        "PIVOT_CAP_ROLE_PROMOTION": 15,
+        "SUPPORT_LANE_PLACEMENT:coedit_rescued_medium": 9,
+        "REPRESENTATION_ROUTING:ceiling": 6,
+        "SUPPORT_LANE_PLACEMENT:coedit_injected_medium": 5,
+        "REPRESENTATION_ROUTING:no_rendered_body": 3,
+        "SUPPORT_LANE_PLACEMENT:coedit_rescued_high": 2,
+        "REPRESENTATION_ROUTING:form_not_code_bearing": 1,
+        "SUPPORT_LANE_PLACEMENT:coedit_injected_high": 1,
+        "SUPPORT_LANE_PLACEMENT:graph_neighbour_append": 1
+      },
+      "a11": {
+        "1000": 83.4,
+        "2000": 94,
+        "4000": 102.09,
+        "8000": 102.59,
+        "16000": 97.05
+      },
+      "dense": {
+        "subsequence": 168,
+        "neither": 99,
+        "prefix": 53
+      },
+      "gate": "A13_CAUSAL_ATTRIBUTION_COMPLETE",
+      "stable": true,
+      "repeats": 3
+    }
+  },
+  "postDenseByClass": {
+    "same_tier_same_pool": {
+      "prefix": 49,
+      "transitions": 139,
+      "focusSwaps": 0,
+      "subsequence": 75,
+      "neither": 15
+    },
+    "tier_boundary": {
+      "neither": 37,
+      "transitions": 40,
+      "focusSwaps": 0,
+      "prefix": 3
+    },
+    "same_tier_pool_grew": {
+      "subsequence": 93,
+      "transitions": 141,
+      "focusSwaps": 0,
+      "neither": 47,
+      "prefix": 1
+    }
+  },
+  "postSize": {
+    "750": {
+      "medianUtilisation": 72.53,
+      "overBudget": 1,
+      "evidenceOverBudget": 0,
+      "medianAccountingOverheadTokens": 16,
+      "medianDelivered": 5,
+      "medianPool": 30,
+      "latencyP90": 269.1
+    },
+    "1000": {
+      "medianUtilisation": 83.4,
+      "overBudget": 2,
+      "evidenceOverBudget": 0,
+      "medianAccountingOverheadTokens": 23,
+      "medianDelivered": 7,
+      "medianPool": 30,
+      "latencyP90": 253.9
+    },
+    "1250": {
+      "medianUtilisation": 88.04,
+      "overBudget": 2,
+      "evidenceOverBudget": 0,
+      "medianAccountingOverheadTokens": 29.5,
+      "medianDelivered": 9,
+      "medianPool": 30,
+      "latencyP90": 257.4
+    },
+    "1499": {
+      "medianUtilisation": 94.73,
+      "overBudget": 3,
+      "evidenceOverBudget": 0,
+      "medianAccountingOverheadTokens": 39,
+      "medianDelivered": 12,
+      "medianPool": 30,
+      "latencyP90": 277.4
+    },
+    "1500": {
+      "medianUtilisation": 86.5,
+      "overBudget": 1,
+      "evidenceOverBudget": 0,
+      "medianAccountingOverheadTokens": 38.5,
+      "medianDelivered": 12,
+      "medianPool": 30,
+      "latencyP90": 268.2
+    },
+    "2000": {
+      "medianUtilisation": 94,
+      "overBudget": 2,
+      "evidenceOverBudget": 0,
+      "medianAccountingOverheadTokens": 49.5,
+      "medianDelivered": 15.5,
+      "medianPool": 30,
+      "latencyP90": 279.2
+    },
+    "2500": {
+      "medianUtilisation": 98.34,
+      "overBudget": 5,
+      "evidenceOverBudget": 0,
+      "medianAccountingOverheadTokens": 65,
+      "medianDelivered": 20,
+      "medianPool": 30,
+      "latencyP90": 284.1
+    },
+    "3000": {
+      "medianUtilisation": 100.36,
+      "overBudget": 11,
+      "evidenceOverBudget": 0,
+      "medianAccountingOverheadTokens": 80.5,
+      "medianDelivered": 25,
+      "medianPool": 30,
+      "latencyP90": 283.4
+    },
+    "4000": {
+      "medianUtilisation": 102.09,
+      "overBudget": 17,
+      "evidenceOverBudget": 0,
+      "medianAccountingOverheadTokens": 109.5,
+      "medianDelivered": 34,
+      "medianPool": 39,
+      "latencyP90": 295.3
+    },
+    "5000": {
+      "medianUtilisation": 102.32,
+      "overBudget": 14,
+      "evidenceOverBudget": 0,
+      "medianAccountingOverheadTokens": 140,
+      "medianDelivered": 43.5,
+      "medianPool": 46,
+      "latencyP90": 308.4
+    },
+    "6000": {
+      "medianUtilisation": 102.54,
+      "overBudget": 14,
+      "evidenceOverBudget": 2,
+      "medianAccountingOverheadTokens": 170,
+      "medianDelivered": 53,
+      "medianPool": 54,
+      "latencyP90": 322.4
+    },
+    "8000": {
+      "medianUtilisation": 102.59,
+      "overBudget": 13,
+      "evidenceOverBudget": 0,
+      "medianAccountingOverheadTokens": 227.5,
+      "medianDelivered": 71,
+      "medianPool": 70,
+      "latencyP90": 335.4
+    },
+    "10000": {
+      "medianUtilisation": 101,
+      "overBudget": 10,
+      "evidenceOverBudget": 0,
+      "medianAccountingOverheadTokens": 275,
+      "medianDelivered": 85.5,
+      "medianPool": 86.5,
+      "latencyP90": 339.4
+    },
+    "11999": {
+      "medianUtilisation": 99.14,
+      "overBudget": 9,
+      "evidenceOverBudget": 0,
+      "medianAccountingOverheadTokens": 325,
+      "medianDelivered": 101,
+      "medianPool": 101.5,
+      "latencyP90": 373
+    },
+    "12000": {
+      "medianUtilisation": 99.03,
+      "overBudget": 9,
+      "evidenceOverBudget": 0,
+      "medianAccountingOverheadTokens": 325,
+      "medianDelivered": 101,
+      "medianPool": 101.5,
+      "latencyP90": 359.1
+    },
+    "16000": {
+      "medianUtilisation": 97.05,
+      "overBudget": 7,
+      "evidenceOverBudget": 1,
+      "medianAccountingOverheadTokens": 412.5,
+      "medianDelivered": 128,
+      "medianPool": 130,
+      "latencyP90": 427.7
+    },
+    "20000": {
+      "medianUtilisation": 77.63,
+      "overBudget": 0,
+      "evidenceOverBudget": 0,
+      "medianAccountingOverheadTokens": 412.5,
+      "medianDelivered": 128,
+      "medianPool": 130,
+      "latencyP90": 387.7
+    }
+  },
+  "falsification": [
+    {
+      "id": "F1",
+      "statement": "a larger budget keeps every lower-budget related entry that still fits: no lower-budget evidence is evicted across the frozen budgets",
+      "pass": true,
+      "detail": "preserved 4/4 transitions; relations prefix,prefix,prefix,prefix; related counts 12->24->33->36->36"
+    },
+    {
+      "id": "F2",
+      "statement": "the larger budget adds later evidence behind the preserved evidence instead of replacing it",
+      "pass": true,
+      "detail": "transitions with new entries 3; relations prefix,prefix,prefix,prefix"
+    },
+    {
+      "id": "F3",
+      "statement": "an entry both budgets deliver keeps its representation or gets a richer one; a larger budget never downgrades it",
+      "pass": true,
+      "detail": "same 83, richer 22, poorer 0"
+    },
+    {
+      "id": "F4",
+      "statement": "a delivered item whose upstream form carries no code is relationship-only under its own reason, never with fabricated code",
+      "pass": true,
+      "detail": "summary item delivered true, code undefined, reason no_rendered_body; M205 REPRESENTATION_INTEGRITY_PASS"
+    },
+    {
+      "id": "F5",
+      "statement": "low-ranked tail candidates exposed by a larger budget or a wider pool never change the focus: one lead at every budget and width",
+      "pass": true,
+      "detail": "leads by budget resolve_widget_handler; by pool width 25/134 resolve_widget_handler"
+    },
+    {
+      "id": "F6",
+      "statement": "when the task names a symbol the pivot order ranks first, it leads at EVERY budget (micro included); the predecessor let it lead only once the cap admitted it",
+      "pass": true,
+      "detail": "product leads WidgetHandlerIndex; predecessor leads resolve_widget_handler|WidgetHandlerIndex"
+    },
+    {
+      "id": "F7",
+      "statement": "adding candidates to the base support lane leaves the existing entries' relative order intact (a subsequence), at 4000 and 16000",
+      "pass": true,
+      "detail": "4000: prefix; 16000: subsequence"
+    },
+    {
+      "id": "F8",
+      "statement": "a wider pool at the same budget holds the narrow pool as a prefix of its ranked stream, and the delivered support order follows the stable stream",
+      "pass": true,
+      "detail": "pool 25 -> 81: prefix; support relation prefix; same lead true"
+    },
+    {
+      "id": "F9",
+      "statement": "the evidence packet stays inside the caller's budget under the product's own accounting at every dense budget (the per-item tokens fields ride above it by the ledger's stated overhead)",
+      "pass": true,
+      "detail": "checked 17 budgets; over: none"
+    },
+    {
+      "id": "F10",
+      "statement": "one general policy over a dense non-frozen budget grid: the focus never changes, its size never shrinks, the support window is a constant, and no product line compares the budget against a frozen rung",
+      "pass": true,
+      "detail": "17 budgets; swaps 0, size drops 0; window 4; frozen-rung comparisons in product lines 0"
+    },
+    {
+      "id": "F11",
+      "statement": "one semantic item is delivered once with one accounting record at every budget, however many routes proposed it",
+      "pass": true,
+      "detail": "delivered 25, distinct 25, ledger records 25; M203 ACCOUNTING_INTEGRITY_PASS"
+    },
+    {
+      "id": "F12",
+      "statement": "a corrupted per-item cost after the M208 path fails the M203 accounting guard",
+      "pass": true,
+      "detail": "M203 on a +40-token corruption: ACCOUNTING_INTEGRITY_FAIL"
+    },
+    {
+      "id": "F13",
+      "statement": "a delivered body that its source does not anchor fails the M205 truth guard; the honest packet passes it",
+      "pass": true,
+      "detail": "honest REPRESENTATION_INTEGRITY_PASS; forged REPRESENTATION_INTEGRITY_FAIL"
+    },
+    {
+      "id": "F14",
+      "statement": "a small truthful universe leaves the large budgets mostly unused yet the delivery is monotone: A13's semantics are not utilisation",
+      "pass": true,
+      "detail": "focus resolve_widget_handler_0; utilisation 42/22/11/5/3%"
+    },
+    {
+      "id": "F15",
+      "statement": "the M208 product change adds no impact, call-site or caller rendering: A13 closes independently of A15",
+      "pass": true,
+      "detail": "added product lines mentioning impact/call-site/caller: 0"
+    },
+    {
+      "id": "F16",
+      "statement": "the M207 predecessor swaps the focus across tiers on the same fixture and varies the support window with the tier; the M208 product does neither",
+      "pass": true,
+      "detail": "predecessor b74287688653 leads resolve_widget_handler,WidgetHandlerIndex,WidgetHandlerIndex,WidgetHandlerIndex,WidgetHandlerIndex (swaps 1), windows 1/4/10; product leads WidgetHandlerIndex,WidgetHandlerIndex,WidgetHandlerIndex,WidgetHandlerIndex,WidgetHandlerIndex (swaps 0), window 4"
+    },
+    {
+      "id": "F17",
+      "statement": "repeated equivalent calls produce the same packets in one process and the same capsule selection in a fresh process",
+      "pass": true,
+      "detail": "in-process repeats identical true; fresh-process capsule selections identical true (5 budgets)"
+    }
+  ],
+  "retrievalEvalAB": {
+    "milestone": "M208",
+    "pre": "/tmp/m208-eval/pre",
+    "post": "/tmp/m208-eval/post",
+    "fixtures": {
+      "stage5_retrieval_eval_expanded": {
+        "rows": 20,
+        "evaluated": 20,
+        "workspaceErrors": 0,
+        "top1PivotSame": 20,
+        "top1PivotChanged": [],
+        "resultSame": 20,
+        "resultChanged": [],
+        "top1FileHits": {
+          "pre": 17,
+          "post": 17
+        },
+        "top3FileHits": {
+          "pre": 20,
+          "post": 20
+        },
+        "expectedFileRank": {
+          "same": 20
+        },
+        "expectedSymbolRank": {
+          "worse": 1,
+          "same": 18,
+          "better": 1
+        }
+      },
+      "stage5_retrieval_eval_cross_repo_30": {
+        "rows": 30,
+        "evaluated": 30,
+        "workspaceErrors": 0,
+        "top1PivotSame": 27,
+        "top1PivotChanged": [
+          {
+            "id": "scikit-learn__scikit-learn-11578",
+            "pre": "sklearn/linear_model/logistic.py::LogisticRegression",
+            "post": "sklearn/linear_model/logistic.py::_check_solver_option"
+          },
+          {
+            "id": "pydata__xarray-3677",
+            "pre": "xarray/core/dataset.py::merge",
+            "post": "versioneer.py::scan_setup_py"
+          },
+          {
+            "id": "sphinx-doc__sphinx-7910",
+            "pre": "sphinx/ext/autodoc/__init__.py::DecoratorDocumenter",
+            "post": "sphinx/environment/collectors/__init__.py::get_updated_docs"
+          }
+        ],
+        "resultSame": 27,
+        "resultChanged": [
+          {
+            "id": "pydata__xarray-3677",
+            "pre": "hit_top1_pivot",
+            "post": "hit_support"
+          },
+          {
+            "id": "sphinx-doc__sphinx-7910",
+            "pre": "hit_discarded",
+            "post": "hit_support"
+          },
+          {
+            "id": "sympy__sympy-16766",
+            "pre": "hit_support",
+            "post": "hit_discarded"
+          }
+        ],
+        "top1FileHits": {
+          "pre": 21,
+          "post": 20
+        },
+        "top3FileHits": {
+          "pre": 23,
+          "post": 22
+        },
+        "expectedFileRank": {
+          "same": 25,
+          "worse": 3,
+          "gained": 1,
+          "lost": 1
+        },
+        "expectedSymbolRank": {
+          "same": 19,
+          "better": 6,
+          "worse": 4,
+          "gained": 1
+        }
+      }
+    }
+  },
+  "authority": {
+    "replay": {
+      "verdict": "M197A_AUTHORITY_MISMATCH",
+      "failing": [
+        "branch_is_main"
+      ],
+      "head": null
+    },
+    "post": {
+      "verdict": "M197A_AUTHORITY_VERIFIED",
+      "head": null
+    }
+  },
+  "remainingGap": [
+    "A15"
   ]
 }

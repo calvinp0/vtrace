@@ -400,19 +400,24 @@ export function discardClassOf(reason: string): string {
   return "role_gate_other";
 }
 
-/** Longest common subsequence of two sequences of distinct ids; returns the ids in it. */
-export function longestCommonSubsequence(a: readonly string[], b: readonly string[]): Set<string> {
+/**
+ * Longest common subsequence of two sequences of distinct ids, by weight;
+ * returns the ids kept. With `weightOf` an item can be made cheaper to leave
+ * out, so a swap between an item whose role changed and a bystander names the
+ * role-changed item as the mover.
+ */
+export function longestCommonSubsequence(a: readonly string[], b: readonly string[], weightOf: (id: string) => number = () => 1): Set<string> {
   const n = a.length; const m = b.length;
   const dp: number[][] = Array.from({ length: n + 1 }, () => new Array<number>(m + 1).fill(0));
   for (let i = n - 1; i >= 0; i -= 1) {
     for (let j = m - 1; j >= 0; j -= 1) {
-      dp[i]![j] = a[i] === b[j] ? dp[i + 1]![j + 1]! + 1 : Math.max(dp[i + 1]![j]!, dp[i]![j + 1]!);
+      dp[i]![j] = a[i] === b[j] ? dp[i + 1]![j + 1]! + weightOf(a[i]!) : Math.max(dp[i + 1]![j]!, dp[i]![j + 1]!);
     }
   }
   const keep = new Set<string>();
   let i = 0; let j = 0;
   while (i < n && j < m) {
-    if (a[i] === b[j]) { keep.add(a[i]!); i += 1; j += 1; }
+    if (a[i] === b[j] && dp[i]![j] === dp[i + 1]![j + 1]! + weightOf(a[i]!)) { keep.add(a[i]!); i += 1; j += 1; }
     else if (dp[i + 1]![j]! >= dp[i]![j + 1]!) i += 1;
     else j += 1;
   }
@@ -442,7 +447,7 @@ export function trackItem(lo: StageSnapshot, hi: StageSnapshot, fqName: string, 
     const shift = (base.commonOrdinalHigher ?? 0) - (base.commonOrdinalLower ?? 0);
     const roleChanged = lower.role !== higher.role && lower.role !== "absent" && higher.role !== "absent";
     let stage = "none"; let mechanism = "NONE";
-    if (base.mover || roleChanged) {
+    if (base.mover) {
       if (roleChanged && higher.role === "pivot") { stage = "S2_role_assignment"; mechanism = "PIVOT_CAP_ROLE_PROMOTION"; }
       else if (roleChanged) { stage = "S2_role_assignment"; mechanism = `ROLE_RECLASSIFICATION:${lower.role}->${higher.role}`; }
       else if (higher.assemblyLane === "capsule_pivot") { stage = "S4a_pivot_order"; mechanism = "PIVOT_CAP_LEAD_RESELECTION"; }
@@ -453,7 +458,7 @@ export function trackItem(lo: StageSnapshot, hi: StageSnapshot, fqName: string, 
       stage = "S9_projector"; mechanism = `REPRESENTATION_ROUTING:${higher.representationReason ?? "unknown"}`;
     }
     const fate: ItemFate = !base.mover ? "identical" : shift < 0 ? "moved_earlier" : "moved_later";
-    return { ...base, fate, firstDivergenceStage: stage, mechanism };
+    return { ...base, fate, firstDivergenceStage: stage, mechanism: !base.mover && roleChanged ? `${mechanism}:role_changed_in_place:${lower.role}->${higher.role}` : mechanism };
   }
   // Not delivered at the higher budget. The higher budget's own capsule facts decide first.
   if (higher.role === "pivot" || higher.role === "support") {
@@ -752,11 +757,17 @@ export function transitionRow(lo: StageSnapshot, hi: StageSnapshot): TransitionR
     const a = capsuleRole(lo, id); const b = capsuleRole(hi, id);
     return a !== "other" && b !== "other" && a !== b;
   }));
-  const stable = longestCommonSubsequence(common.filter((id) => !roleChanged.has(id)), hiCommon.filter((id) => !roleChanged.has(id)));
-  const movers = new Set(common.filter((id) => roleChanged.has(id) || !stable.has(id)));
+  // Role-changed items weigh less, so the longest common subsequence keeps
+  // bystanders and names the promoted item as the mover when the two swapped;
+  // a promoted item that kept its place (a cap-demoted pivot at the head of
+  // support entering the pivot block, M208) is in the subsequence and moved
+  // nothing.
+  const stable = longestCommonSubsequence(common, hiCommon, (id) => (roleChanged.has(id) ? 1 : 2));
+  const movers = new Set(common.filter((id) => !stable.has(id)));
   const tracked = lo.relatedIds.map((id) => trackItem(lo, hi, id, common, hiCommon, movers));
   const lostItems = tracked.filter((t) => !hiDelivered.has(t.fqName) || t.fate === "became_focus");
   const movedItems = tracked.filter((t) => hiRelated.has(t.fqName) && t.fate !== "became_focus" && (t.mover || t.firstDivergenceStage !== "none"));
+  void roleChanged;
   const swap = classifyFocusSwap(lo, hi);
   const { regressions, upgrades } = representationRegressionsOf(lo, hi);
   const stageRelations = {
