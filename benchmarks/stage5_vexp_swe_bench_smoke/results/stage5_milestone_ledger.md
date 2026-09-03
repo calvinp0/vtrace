@@ -9605,6 +9605,13 @@ corpus identity   C-MED 504 -> 504: M206 edited existing source files and
                   added none; revision moved; replay and post both
                   M197A_AUTHORITY_VERIFIED.
 
+commits           ae494219  allocation audit, counterfactual evaluator, driver,
+                            pre-change evidence
+                  f1cbdd77  support admission by token budget, support window,
+                            envelope schema repairs, tests, falsification and
+                            report scripts
+                  93442d1f  evidence, frozen rerun, this row
+
 evidence          results/stage5_m206_final_report.{md,json} and the
                   stage5_m206_*.{json,jsonl} artefacts beside it;
                   stage5_m205_representation_m206_post.json,
