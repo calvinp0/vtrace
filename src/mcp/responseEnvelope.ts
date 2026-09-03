@@ -666,14 +666,17 @@ function compactNonessentialEnvelopeMetadata(
   compactedFields: string[],
   omitted: Record<string, number>,
 ): void {
+  // The manifest ids are NOT optional: `check_capsule_staleness` and
+  // `vtrace check-capsule` are documented to take them, and each is one short
+  // string. Until M206 this rung deleted them with the capsule block, so a
+  // tight-budget `get_context_capsule` call returned a capsule whose freshness
+  // could never be checked.
   const optional = [
     "capsule",
     "runtime",
     "inspectFirst",
     "accounting",
     "capsuleResult",
-    "authoritativeCapsuleManifestId",
-    "capsuleManifestId",
     "pivotNeighborhood",
     "workspace",
     "retrieval",
@@ -1624,11 +1627,22 @@ function enforceTotalEnvelope(
       apply: () => {
         const context = asRecord(draft.context);
         if (context === undefined) return 0;
+        // The rung drops the item arrays, which are what a large capsule makes
+        // expensive. Every scalar the declared schema REQUIRES stays, verbatim
+        // from the original: a compacted block that violates its own schema is
+        // not a compaction but a corruption (M206 found this rung shipping a
+        // `context` without `compressed`, `truncated`, `budget` or the profile
+        // ids once capsules grew past a handful of support items).
         draft.context = {
           included: context.included ?? false,
           skipReason: context.skipReason ?? null,
           itemCount: context.itemCount ?? 0,
-          capsuleRef: context.capsuleRef ?? null,
+          compressed: context.compressed ?? false,
+          truncated: context.truncated ?? false,
+          ...(context.budget === undefined ? {} : { budget: context.budget }),
+          ...(context.capsuleProfileId === undefined ? {} : { capsuleProfileId: context.capsuleProfileId }),
+          ...(context.routingProfileId === undefined ? {} : { routingProfileId: context.routingProfileId }),
+          ...(context.capsuleRef === undefined ? {} : { capsuleRef: context.capsuleRef }),
           capsuleManifestId: context.capsuleManifestId ?? null,
           supersededBy: "productContext",
           note: "Dropped by response compaction; productContext carries the authoritative selection.",
@@ -1644,14 +1658,22 @@ function enforceTotalEnvelope(
         const diagnostics = asRecord(draft.diagnostics);
         const retrieval = diagnostics === undefined ? undefined : asRecord(diagnostics.retrieval);
         if (diagnostics === undefined || retrieval === undefined) return 0;
-        diagnostics.retrieval = {
-          initialReason: retrieval.initialReason ?? null,
-          finalReason: retrieval.finalReason ?? null,
-          fallbackApplied: retrieval.fallbackApplied ?? false,
-          finalContextItemCount: retrieval.finalContextItemCount ?? 0,
-          detail: "omitted_by_response_compaction",
-        };
-        return 1;
+        // Keep every property the declared retrieval-diagnostics schema
+        // REQUIRES, verbatim, and drop the rest. A rung that shipped a stub
+        // without `fallbackMode`, `fallbackRecovered`, the signal arrays or
+        // `search` produced a response that failed its own schema (M206); a
+        // rung that can free nothing without doing so is a no-op, not a lie.
+        const required = [
+          "initialReason", "fallbackApplied", "fallbackMode", "fallbackRecovered", "finalReason",
+          "initialContextItemCount", "finalContextItemCount", "pathSignalsConsidered", "pathSignalsMatched",
+          "candidateFilesConsidered", "weakPathCoverage", "search",
+        ];
+        const dropped = Object.keys(retrieval).filter((key) => !required.includes(key));
+        if (dropped.length === 0) return 0;
+        diagnostics.retrieval = Object.fromEntries(
+          required.filter((key) => key in retrieval).map((key) => [key, retrieval[key]]),
+        );
+        return dropped.length;
       },
     },
     {
@@ -1746,10 +1768,14 @@ function enforceTotalEnvelope(
           }
         }
         // The sibling `freshness` block repeats the same state; keep its scalar
-        // status fields (callers branch on them) and drop only nested detail.
+        // status fields (callers branch on them) and the members its declared
+        // schema REQUIRES (`reasons`, `readiness` — M206 found this rung deleting
+        // both as "nested detail" and shipping a block that failed its schema),
+        // and drop only the remaining nested detail.
         const sibling = asRecord(diagnostics.freshness);
         if (sibling !== undefined) {
           for (const key of Object.keys(sibling)) {
+            if (AGENT_FACING_FRESHNESS_KEYS.includes(key)) continue;
             if (typeof sibling[key] === "object" && sibling[key] !== null) {
               delete sibling[key];
               dropped += 1;
@@ -1757,7 +1783,8 @@ function enforceTotalEnvelope(
           }
         }
         if (dropped === 0) return 0;
-        essential.boundedDetailOmittedKeys = dropped;
+        // The omission is accounted in the envelope's omitted-detail counts; an
+        // undeclared marker key inside the block would fail its own schema (M206).
         diagnostics.indexFreshness = essential;
         return dropped;
       },

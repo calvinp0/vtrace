@@ -104,9 +104,39 @@ test("token budget is respected across micro / standard / full tiers", () => {
     assert.equal(result.budget.estimated_tokens, summed);
   }
 
-  // Micro is decisive: one pivot, at most one support item.
+  // Micro is decisive on the EDIT TARGET: one pivot. Support is bounded by the
+  // token budget, not by a count (M206), so what is asserted is that every
+  // packed item fits and nothing ranked was discarded merely for being past a
+  // count.
   assert.equal(micro.pivots.length, 1);
-  assert.ok(micro.support.length <= 1, "micro carries at most one support item");
+  for (const result of [micro, standard, full]) {
+    assert.ok(
+      result.discarded.every((d) => !/^beyond \w+ support budget/.test(d.discard_reason)),
+      "no ranked support candidate is discarded for a tier item count",
+    );
+  }
+});
+
+test("support admission is governed by the token budget, not by a tier count", () => {
+  // The standard tier's historical count was 4 support items. With the count
+  // gone, every support-authorised candidate that fits the budget is packed,
+  // in rank order, and a candidate that does not fit is discarded for the
+  // budget with that reason.
+  const standard = buildInlines(8_000);
+  assert.ok(standard.support.length >= 1, "support is delivered");
+  const summed = [...standard.pivots, ...standard.support].reduce((sum, item) => sum + item.estimated_tokens, 0);
+  assert.ok(summed <= standard.budget.max_tokens, "packed items fit the budget");
+  const countBound = standard.discarded.filter((d) => /support budget \(max/.test(d.discard_reason));
+  assert.equal(countBound.length, 0, "no count-bound discard exists any more");
+  // A budget too small for anything but the lead pivot's skeleton discards for the budget, never for a count.
+  const tiny = buildInlines(60);
+  assert.equal(tiny.pivots.length, 1, "the lead pivot is always emitted");
+  assert.ok(tiny.discarded.every((d) => !/support budget \(max/.test(d.discard_reason)));
+  assert.ok(
+    tiny.discarded.some((d) => d.discard_reason === "over budget: no room for this support item")
+      || tiny.support.length === 0,
+    "what a tiny budget cannot hold is discarded for the budget",
+  );
 });
 
 test("a centrality-only hub is never a pivot, at any budget", () => {

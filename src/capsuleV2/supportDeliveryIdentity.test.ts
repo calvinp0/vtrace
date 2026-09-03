@@ -110,23 +110,30 @@ test("byte-identical support evidence occupies at most one slot", () => {
   );
 });
 
-test("a slot freed by the rule refills from the support-authorized order", () => {
-  // The capsule must not SHRINK: the restatement is dropped BEFORE the bound is
-  // consumed, so the freed slot goes to the next authorized candidate.
+test("the rule never shrinks support: every authorized candidate that fits the budget is still delivered", () => {
+  // The restatement is dropped BEFORE any budget is consumed, so the room it
+  // would have taken goes to the next authorized candidate. Since M206 the
+  // bound on support is the token budget, not a tier count, so what is checked
+  // is that the redundant discards are the ONLY exclusions of otherwise-fitting
+  // candidates: nothing authorized is left behind while budget remains.
   const result = build();
   assert.ok(redundantDiscards(result).length > 0, "expected the fixture to produce a restatement");
-  assert.equal(
-    result.support.length,
-    4,
-    `expected the freed slots to refill to the tier bound, got ${result.support.length}`,
+  const otherDiscards = result.discarded.filter(
+    (d) => !/^redundant support: /.test(d.discard_reason)
+      && !/^over budget: /.test(d.discard_reason)
+      && /^support/.test(d.role_reason ?? d.discard_reason),
   );
+  assert.equal(otherDiscards.length, 0, `authorized support was excluded for a reason other than redundancy or budget:\n${otherDiscards.map((d) => d.discard_reason).join("\n")}`);
+  assert.ok(result.support.length >= 4, `expected the distinct candidates to be delivered, got ${result.support.length}`);
 });
 
-test("the rule never grows support past the tier bound", () => {
-  // Standard tier (8k) allows four support items. Refilling must never create
-  // an extra one, and no second budget may appear behind it.
+test("the rule never grows support past the token budget", () => {
+  // Refilling must never create an item the budget cannot hold, and the total
+  // the capsule reports is exactly the sum of what it delivered.
   const result = build();
-  assert.ok(result.support.length <= 4, `expected at most 4 support items, got ${result.support.length}`);
+  const summed = [...result.pivots, ...result.support].reduce((sum, item) => sum + item.estimated_tokens, 0);
+  assert.equal(result.budget.estimated_tokens, summed);
+  assert.ok(summed <= result.budget.max_tokens, `delivered ${summed} tokens against a budget of ${result.budget.max_tokens}`);
 });
 
 test("the exclusion reason says redundant, not irrelevant", () => {

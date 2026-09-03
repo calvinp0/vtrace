@@ -220,7 +220,8 @@ export function traceCase(kase: TraceCase): SupportPackingTrace {
     budget: kase.budget,
     mode: result.actual_mode,
     tier: result.diagnostics.tier,
-    allocatedMaxSupport: allocateBudget(kase.budget).maxSupport,
+    // M206: the tier support number is an ordering window, no longer a delivery maximum; reported under its historical name for this trace.
+    allocatedMaxSupport: allocateBudget(kase.budget).supportWindow,
     effectiveBound,
     pivots: result.pivots.map((item, index) => toPackedItem(item, index + 1, kase)),
     support: result.support.map((item, index) => toPackedItem(item, index + 1, kase)),

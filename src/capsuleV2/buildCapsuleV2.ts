@@ -1132,13 +1132,24 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       || right.candidate.scores.final - left.candidate.scores.final,
   );
 
-  // An anchored pivot-cap exemption (M101) CONVERTS one support slot into the
-  // extra pivot slot rather than growing the capsule: the promoted target was
-  // (or would have been) support anyway, so the total item budget — and with it
-  // file count, overpacking, and token profile — stays at the tier's cap.
-  const maxSupportSlots = Math.max(
+  // The tier's support WINDOW: the ordering window the lane placement rules
+  // below read (which winners a co-edit, a path completion or a mechanism
+  // helper may displace; how many distinct files the file-evidence lane counts
+  // as already present) and the documentation-section fill count. It is not a
+  // delivery maximum: until M206 the packing loop discarded every ranked
+  // support candidate past this count ("beyond <tier> support budget"), and on
+  // the frozen C-MED sweep that discarded 2,573 candidates over 100 responses
+  // that fit the caller's budget with room to spare (95 of 100 responses
+  // stopped on the count, none on the budget). Delivery is bounded by the
+  // token budget below, by the ranked stream's own size, and downstream by the
+  // evidence budget. See budgetAllocator.ts.
+  //
+  // An anchored pivot-cap exemption (M101) still CONVERTS one window slot into
+  // the extra pivot slot: the promoted target was (or would have been) support
+  // anyway, so the lanes' placement arithmetic is unchanged by the exemption.
+  const supportWindow = Math.max(
     0,
-    allocation.maxSupport - (anchoredCapExemption !== undefined ? 1 : 0),
+    allocation.supportWindow - (anchoredCapExemption !== undefined ? 1 : 0),
   );
 
   // Hidden co-edit support expansion (M97). With a credible source lead pivot,
@@ -1157,7 +1168,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
     pivotEntries: pivotCandidates,
     supportEntries: baseSupportOrder,
     winnerSymbolIds: new Set(
-      baseSupportOrder.slice(0, maxSupportSlots).map((e) => e.candidate.symbolId),
+      baseSupportOrder.slice(0, supportWindow).map((e) => e.candidate.symbolId),
     ),
     poolFilePaths: new Set(candidates.map((c) => c.filePath)),
     ids: { anchorSymbolIds, titleSymbolIds, literalAnchorIds, directEvidenceStrongIds, suppressedDecoyIds },
@@ -1177,7 +1188,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       rescuedSymbolIds: coedit.rescuedSymbolIds,
       spareOnlySymbolIds: coedit.spareOnlySymbolIds,
       pivotFilePaths: new Set(pivotCandidates.map((e) => e.candidate.filePath)),
-      maxSupport: maxSupportSlots,
+      maxSupport: supportWindow,
       // Generic-infrastructure-tier support is junk a co-edit may replace.
       isProtectedTier: (entry) => supportTier(entry) !== 2,
     });
@@ -1200,7 +1211,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   // duplicate-file/generic/docs slot but never evict a distinct new-file
   // winner, and never touches pivots.
   const baseWinnerFiles = new Set(pivotCandidates.map((e) => e.candidate.filePath));
-  for (const entry of orderedSupport.slice(0, maxSupportSlots)) {
+  for (const entry of orderedSupport.slice(0, supportWindow)) {
     baseWinnerFiles.add(entry.candidate.filePath);
   }
   const fileEvidenceStarted = capsuleProfile === undefined ? 0 : performance.now();
@@ -1229,7 +1240,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       rescuedSymbolIds: new Set(),
       spareOnlySymbolIds: new Set(),
       pivotFilePaths: new Set(pivotCandidates.map((e) => e.candidate.filePath)),
-      maxSupport: maxSupportSlots,
+      maxSupport: supportWindow,
       isProtectedTier: (entry) => supportTier(entry) !== 2,
     });
     orderedSupport = rescueOrder.ordered;
@@ -1244,7 +1255,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   // short call path whose every other node is ALREADY selected below. Its ordinary
   // rank and score are reported unchanged; only the SELECTION changes.
   const pathCompletionStarted = capsuleProfile === undefined ? 0 : performance.now();
-  const supportWinners = orderedSupport.slice(0, maxSupportSlots);
+  const supportWinners = orderedSupport.slice(0, supportWindow);
   const orchestrationIntentReason =
     retrieval.upstreamRescue.activationReason ?? retrieval.upstreamRescue.suppressedBy;
   const pathCompletion = selectPathCompletion({
@@ -1257,7 +1268,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       ...pivots.map((item) => item.fq_name),
       ...supportWinners.map((entry) => entry.candidate.fqName),
     ]),
-    supportSlots: maxSupportSlots,
+    supportSlots: supportWindow,
     hasBranchClause: (shaped.derivedIntent?.branchClauses.length ?? 0) > 0,
   });
   let pathCompletionSymbolId: string | undefined;
@@ -1292,7 +1303,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       || titleSymbolIds.has(winner.candidate.symbolId)
       || literalAnchorIds.has(winner.candidate.symbolId)
       || directEvidenceStrongIds.has(winner.candidate.symbolId);
-    if (supportWinners.length < maxSupportSlots) {
+    if (supportWinners.length < supportWindow) {
       orderedSupport = [...orderedSupport.slice(0, supportWinners.length), entry, ...orderedSupport.slice(supportWinners.length)];
     } else {
       let displaceIndex = -1;
@@ -1312,9 +1323,9 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
         orderedSupport = [
           ...orderedSupport.slice(0, displaceIndex),
           entry,
-          ...orderedSupport.slice(displaceIndex + 1, maxSupportSlots),
+          ...orderedSupport.slice(displaceIndex + 1, supportWindow),
           displaced,
-          ...orderedSupport.slice(maxSupportSlots),
+          ...orderedSupport.slice(supportWindow),
         ];
       }
     }
@@ -1353,7 +1364,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       seeds: mechanismSeeds,
       deliveredSymbolIds: new Set([
         ...pivotCandidates.map((entry) => entry.candidate.symbolId),
-        ...orderedSupport.slice(0, maxSupportSlots).map((entry) => entry.candidate.symbolId),
+        ...orderedSupport.slice(0, supportWindow).map((entry) => entry.candidate.symbolId),
       ]),
     })
     : inactiveMechanismSupport("request declares no behavioural operation");
@@ -1392,15 +1403,15 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
     // when support is full the weakest winner is DISPLACED rather than the
     // explanation silently dropped. The displaced entry keeps its place behind
     // the cap and is reported as budget-dropped, exactly as M140-C does.
-    if (orderedSupport.length < maxSupportSlots) {
+    if (orderedSupport.length < supportWindow) {
       orderedSupport = [...orderedSupport, entry];
     } else {
-      const displaced = orderedSupport[maxSupportSlots - 1]!;
+      const displaced = orderedSupport[supportWindow - 1]!;
       orderedSupport = [
-        ...orderedSupport.slice(0, maxSupportSlots - 1),
+        ...orderedSupport.slice(0, supportWindow - 1),
         entry,
         displaced,
-        ...orderedSupport.slice(maxSupportSlots),
+        ...orderedSupport.slice(supportWindow),
       ];
     }
   }
@@ -1419,12 +1430,14 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   // second item that would restate it can be recognised before it spends a slot.
   const deliveredIdentities = new Map<string, CapsuleV2Item>();
 
+  // Support admission is governed by the token budget alone (M206): every
+  // ranked, support-authorised candidate is offered in order and packed when
+  // its rendering fits the remaining budget. There is no count to reach, so
+  // nothing here can be filled; what ends the loop is the ranked stream running
+  // out or the budget. The stream is bounded upstream by the retrieval pool
+  // and the lanes' own caps, so the loop is bounded independently of any budget.
   const supportPackingStarted = capsuleProfile === undefined ? 0 : performance.now();
   for (const entry of orderedSupport) {
-    if (support.length >= maxSupportSlots) {
-      discarded.push(toDiscarded(entry, `beyond ${allocation.tier} support budget (max ${maxSupportSlots})`));
-      continue;
-    }
     const item = renderSupport(input.db, input.repoRoot, entry, input.maxTokens - usedTokens);
     if (item === undefined) {
       discarded.push(toDiscarded(entry, "over budget: no room for this support item"));
@@ -1516,9 +1529,10 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   }
   recordCapsuleTiming(capsuleProfile, "capsule.support_packing", supportPackingStarted);
 
-  // Truthful file-document candidates share the authoritative selection. They
-  // replace only the weakest packed support entries and can never become pivots
-  // or graph evidence. This keeps the capsule/item cap fixed.
+  // Truthful file-document candidates share the authoritative selection. When
+  // the token budget has no room for one, it replaces only the weakest packed
+  // support entries; it can never become a pivot or graph evidence. Bounded to
+  // two candidates by construction.
   const documentAccountingStarted = documentProfile === undefined ? 0 : performance.now();
   for (const document of documentRetrieval.candidates.slice(0, 2)) {
     if ([...pivots, ...support].some((item) => item.path === document.path)) continue;
@@ -1528,7 +1542,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
     incrementDocumentCounter(documentProfile, "document_items_rendered", 1);
     while (
       support.length > 0
-      && (support.length >= maxSupportSlots || usedTokens + item.estimated_tokens > input.maxTokens)
+      && usedTokens + item.estimated_tokens > input.maxTokens
     ) {
       let removableIndex = -1;
       for (let index = support.length - 1; index >= 0; index -= 1) {
@@ -1554,7 +1568,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       if (removed === undefined) break;
       usedTokens -= removed.estimated_tokens;
     }
-    if (support.length >= maxSupportSlots || usedTokens + item.estimated_tokens > input.maxTokens) continue;
+    if (usedTokens + item.estimated_tokens > input.maxTokens) continue;
     support.push(item);
     usedTokens += item.estimated_tokens;
   }
@@ -1583,20 +1597,9 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
         || left.candidate.filePath.localeCompare(right.candidate.filePath))[0];
     if (notebookEntry !== undefined) {
       const item = renderSupport(input.db, input.repoRoot, notebookEntry, input.maxTokens - usedTokens);
-      if (item !== undefined) {
-        if (support.length >= maxSupportSlots) {
-          const removableIndex = support.findIndex((candidate) =>
-            candidate.document_kind === undefined
-            && matchPathCluesWithContext(candidate.path, pathContext).length === 0);
-          if (removableIndex >= 0) {
-            const [removed] = support.splice(removableIndex, 1);
-            if (removed !== undefined) usedTokens -= removed.estimated_tokens;
-          }
-        }
-        if (support.length < maxSupportSlots && usedTokens + item.estimated_tokens <= input.maxTokens) {
-          support.push(item);
-          usedTokens += item.estimated_tokens;
-        }
+      if (item !== undefined && usedTokens + item.estimated_tokens <= input.maxTokens) {
+        support.push(item);
+        usedTokens += item.estimated_tokens;
       }
     }
   }
@@ -1709,11 +1712,14 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
         }
       : {};
 
-  // Documentation candidate source: query-relevant markdown sections fill any
-  // remaining SUPPORT budget as summaries (never pivots — docs are not edit
-  // targets). Code support takes priority, so docs are added last.
-  if (support.length < maxSupportSlots) {
-    const docs = retrieveDocSections(input.repoRoot, shaped.query, maxSupportSlots - support.length);
+  // Documentation candidate source: query-relevant markdown sections fill the
+  // tier's support window, when code support left part of it unused, as
+  // summaries (never pivots — docs are not edit targets). Code support takes
+  // priority, so docs are added last, and the window keeps this weakly
+  // relevance-gated lane at its historical count rather than letting it
+  // expand into a budget the stronger lanes did not need (M206).
+  if (support.length < supportWindow) {
+    const docs = retrieveDocSections(input.repoRoot, shaped.query, supportWindow - support.length);
     for (const doc of docs) {
       const item = composeDocItem(doc);
       if (usedTokens + item.estimated_tokens > input.maxTokens) {

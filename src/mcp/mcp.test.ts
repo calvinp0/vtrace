@@ -2752,6 +2752,11 @@ test("run_pipeline memory section includes durable observations when they match 
       toolId: McpToolId.RunPipeline,
       input: {
         detail: "debug",
+        // M206: the capsule now fills the caller's budget with evidence, so the
+        // debug envelope's fixed metadata allowance is consumed by items at the
+        // default budget on this fixture and the ladder compacts the memory
+        // observation arrays first. The section under test needs headroom.
+        max_tokens: 16_000,
         query: "rename createSession",
         sessionId: "session-alpha",
         saveObservation: true,
@@ -2764,6 +2769,11 @@ test("run_pipeline memory section includes durable observations when they match 
       toolId: McpToolId.RunPipeline,
       input: {
         detail: "debug",
+        // M206: the capsule now fills the caller's budget with evidence, so the
+        // debug envelope's fixed metadata allowance is consumed by items at the
+        // default budget on this fixture and the ladder compacts the memory
+        // observation arrays first. The section under test needs headroom.
+        max_tokens: 16_000,
         detail: "debug",
         query: "rename createSession",
         sessionId: "session-alpha",
@@ -2793,6 +2803,16 @@ test("run_pipeline memory section includes durable observations when they match 
       toolId: McpToolId.RunPipeline,
       input: {
         detail: "debug",
+        // M206: the capsule now fills the caller's budget with evidence, so the
+        // debug envelope's fixed metadata allowance is consumed by items at the
+        // default budget on this fixture and the ladder compacts the memory
+        // observation arrays first. The section under test needs headroom.
+        max_tokens: 16_000,
+        // M206: the capsule now fills the caller's budget with evidence, so the
+        // debug envelope's fixed metadata allowance is consumed by items at the
+        // default budget on this fixture and the ladder compacts the memory
+        // observation arrays first. The section under test needs headroom.
+        max_tokens: 16_000,
         detail: "debug",
         query: "rename createSession",
       },
@@ -2821,6 +2841,16 @@ const stores = new ProductStoreLease(db, initialized.paths.dbPath).write;
         toolId: McpToolId.RunPipeline,
         input: {
           detail: "debug",
+        // M206: the capsule now fills the caller's budget with evidence, so the
+        // debug envelope's fixed metadata allowance is consumed by items at the
+        // default budget on this fixture and the ladder compacts the memory
+        // observation arrays first. The section under test needs headroom.
+        max_tokens: 16_000,
+        // M206: the capsule now fills the caller's budget with evidence, so the
+        // debug envelope's fixed metadata allowance is consumed by items at the
+        // default budget on this fixture and the ladder compacts the memory
+        // observation arrays first. The section under test needs headroom.
+        max_tokens: 16_000,
           query: "rename createSession memory lifecycle",
           sessionId: "session-compress",
         },
@@ -2843,6 +2873,11 @@ const stores = new ProductStoreLease(db, initialized.paths.dbPath).write;
         toolId: McpToolId.RunPipeline,
         input: {
           detail: "debug",
+        // M206: the capsule now fills the caller's budget with evidence, so the
+        // debug envelope's fixed metadata allowance is consumed by items at the
+        // default budget on this fixture and the ladder compacts the memory
+        // observation arrays first. The section under test needs headroom.
+        max_tokens: 16_000,
           query: "rename createSession memory lifecycle",
           includeMemory: true,
         },
@@ -2914,6 +2949,8 @@ const stores = new ProductStoreLease(db, initialized.paths.dbPath).write;
         toolId: McpToolId.RunPipeline,
         input: {
           detail: "debug",
+          // M206: see the budget note on the durable-observations test above.
+          max_tokens: 16_000,
           query: "rename createSession lifecycle memory",
           includeMemory: true,
         },

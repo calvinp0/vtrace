@@ -2408,6 +2408,8 @@ const RUN_PIPELINE_ORCHESTRATION_DIAGNOSTICS_SCHEMA = objectProperty(
       type: ["string", "null"],
       description: "Present when machine-facing diagnostics were held for detail=debug; says so where the removal happened.",
     },
+    sectionDecisionsOmitted: integerProperty("Present when response compaction dropped the per-section decision mirrors (impact, memory, ...); how many were dropped. Each section still publishes its own decision."),
+    sectionDecisionsNote: stringProperty("Why the per-section decision mirrors are absent when `sectionDecisionsOmitted` is present."),
     intent: objectProperty(
       "Intent-selection diagnostics.",
       {
