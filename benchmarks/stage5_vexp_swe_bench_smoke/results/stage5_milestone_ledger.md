@@ -9907,7 +9907,7 @@ commits           0c3e7360  pool-authority audit, instrumentation seam, pool-
                             width sweep driver and pre-change evidence
                   15fbad8f  budget-derived candidate allowance, tests,
                             falsification and report drivers
-                  (next commit)  evidence, frozen rerun, this row
+                  4f5ea9b2  evidence, frozen rerun, this row
 
 evidence          results/stage5_m207_final_report.{md,json} and the
                   stage5_m207_*.{json,jsonl} artefacts beside it;
