@@ -1,0 +1,69 @@
+{
+  "history": [
+    "f099c3b1 2026-06-06 Build capsule v2 product output"
+  ],
+  "introducedIn": "f099c3b1 2026-06-06 Build capsule v2 product output",
+  "predecessorCaps": {
+    "micro": {
+      "maxPivots": 1,
+      "support": 1
+    },
+    "standard": {
+      "maxPivots": 2,
+      "support": 4
+    },
+    "full": {
+      "maxPivots": 5,
+      "support": 10
+    }
+  },
+  "currentPolicy": {
+    "micro": {
+      "maxPivots": 1,
+      "support": 1
+    },
+    "standard": {
+      "maxPivots": 2,
+      "support": 4
+    },
+    "full": {
+      "maxPivots": 5,
+      "support": 10
+    }
+  },
+  "predecessorCommentClaims": {
+    "microDecisive": true,
+    "fullTokenBudgetIsRealBound": true,
+    "tunablePolicy": true
+  },
+  "predecessorHardMaximumInPacking": true,
+  "currentHardMaximumInPacking": false,
+  "measurementOverFrozenSweep": {
+    "responses": 100,
+    "supportCountDiscards": 2573,
+    "tokenBudgetDiscards": 0,
+    "responsesStoppedOnCount": 95,
+    "pivotCapDemotions": 1338,
+    "counterfactualCeilingRejections": 36
+  },
+  "classification": [
+    {
+      "cap": "maxPivots (micro 1 / standard 2 / full 5)",
+      "kind": "role safeguard",
+      "authority": "pivots are edit targets: productContext marks them required (EDIT_OR_RULE_OUT) and the M112 action contract turns them into obligations; M101's anchored exemption is the one bounded exception",
+      "disposition": "preserved unchanged"
+    },
+    {
+      "cap": "maxSupport micro 1",
+      "kind": "historical default with a stated decisiveness rationale",
+      "authority": "comment: one decisive edit site; measured: the token budget and the evidence budget bound micro delivery on their own (post 1000: evidence budget binds every response)",
+      "disposition": "no longer a maximum; retained as the support window"
+    },
+    {
+      "cap": "maxSupport standard 4 / full 10",
+      "kind": "historical default",
+      "authority": "introduced f099c3b1 2026-06-06 Build capsule v2 product output with no measured rationale; the comment claimed the token budget was the real bound at full, which the sweep contradicts (2573 count discards, 0 budget discards over 100 frozen responses)",
+      "disposition": "no longer a maximum; retained as the support window (lane ordering and documentation fill)"
+    }
+  ]
+}

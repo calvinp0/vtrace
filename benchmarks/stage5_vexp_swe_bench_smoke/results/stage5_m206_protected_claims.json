@@ -1,0 +1,172 @@
+{
+  "protectedClaims": [
+    {
+      "id": "A1",
+      "m205": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m206": "VTRACE_MATCHES_VEXP_CLAIM",
+      "held": true
+    },
+    {
+      "id": "A2",
+      "m205": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "m206": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "held": true
+    },
+    {
+      "id": "A3",
+      "m205": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m206": "VTRACE_MATCHES_VEXP_CLAIM",
+      "held": true
+    },
+    {
+      "id": "A4",
+      "m205": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "m206": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "held": true
+    },
+    {
+      "id": "A5",
+      "m205": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m206": "VTRACE_MATCHES_VEXP_CLAIM",
+      "held": true
+    },
+    {
+      "id": "A6",
+      "m205": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "m206": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "held": true
+    },
+    {
+      "id": "A7",
+      "m205": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "m206": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "held": true
+    },
+    {
+      "id": "A8",
+      "m205": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "m206": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "held": true
+    },
+    {
+      "id": "A9",
+      "m205": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m206": "VTRACE_MATCHES_VEXP_CLAIM",
+      "held": true
+    },
+    {
+      "id": "A10",
+      "m205": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m206": "VTRACE_MATCHES_VEXP_CLAIM",
+      "held": true
+    },
+    {
+      "id": "A12",
+      "m205": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m206": "VTRACE_MATCHES_VEXP_CLAIM",
+      "held": true
+    },
+    {
+      "id": "A14",
+      "m205": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m206": "VTRACE_MATCHES_VEXP_CLAIM",
+      "held": true
+    }
+  ],
+  "matrix": [
+    {
+      "id": "A1",
+      "m205": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m206": "VTRACE_MATCHES_VEXP_CLAIM",
+      "measurement": "30 parser-backed families (bash, c, clojure, cpp, csharp, css, cython, dart, elixir, go, haskell, html, java, javascript, json, kotlin, lua, objective_c, ocaml, php, python, r, ruby, rust, scala, sql, swift, typescript, yaml, zig); 28 extension-detected; 31 enum members"
+    },
+    {
+      "id": "A2",
+      "m205": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "m206": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "measurement": "C-MED 63.49 files/s, C-LARGE 33.7 files/s (median of 3 cold builds)"
+    },
+    {
+      "id": "A3",
+      "m205": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m206": "VTRACE_MATCHES_VEXP_CLAIM",
+      "measurement": "C-LARGE k=1 ratio 0.054, k=3 ratio 0.134; reparsed 372 of the 372 files the indexer holds for a ONE-file change (the eligible .py denominator is 276; the indexer also enumerates .pyx/.pxd/.yml/.toml)"
+    },
+    {
+      "id": "A4",
+      "m205": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "m206": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "measurement": "no-op median 0.005 / 0.077 / 0.157 s (C-SMALL / C-MED / C-LARGE), 0 files reparsed"
+    },
+    {
+      "id": "A5",
+      "m205": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m206": "VTRACE_MATCHES_VEXP_CLAIM",
+      "measurement": "get_code_context warm p90 56.03 / 223.09 / 355.85 ms (C-SMALL / C-MED / C-LARGE), 5 repetitions; best observed 35.24 / 150.07 / 296.22 ms"
+    },
+    {
+      "id": "A6",
+      "m205": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "m206": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "measurement": "get_impact_graph depth 3 warm p90 155.19 ms on C-LARGE (10 exact-FQN targets x 5)"
+    },
+    {
+      "id": "A7",
+      "m205": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "m206": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "measurement": "search_logic_flow warm p90 17.46 ms on C-LARGE; path edge counts {\"1\":10}"
+    },
+    {
+      "id": "A8",
+      "m205": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "m206": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "measurement": "C-SMALL 100%, C-MED 100%, C-LARGE 100%; unexplained missing 0/0/0"
+    },
+    {
+      "id": "A9",
+      "m205": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m206": "VTRACE_MATCHES_VEXP_CLAIM",
+      "measurement": "median rendered reduction C-MED 92.82%, C-LARGE 87.21% over 449 + 250 structurally valid files; 22 C-MED files excluded as malformed (F4)"
+    },
+    {
+      "id": "A10",
+      "m205": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m206": "VTRACE_MATCHES_VEXP_CLAIM",
+      "measurement": "signature retention C-MED 99.48%, C-LARGE 100% (verbatim, token-aligned, bracket-closed slices of source); member retention C-MED 100%, C-LARGE 94.82%. Signature-PRESENCE alone would read 100% / 100%"
+    },
+    {
+      "id": "A11",
+      "m205": "VTRACE_BELOW_VEXP_CLAIM",
+      "m206": "VTRACE_BELOW_VEXP_CLAIM",
+      "measurement": "C-MED whole-response utilisation by budget: 1000=83.55%, 2000=95.47%, 4000=101.23%, 8000=55.48%, 16000=27.84% over 20 tasks"
+    },
+    {
+      "id": "A12",
+      "m205": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m206": "VTRACE_MATCHES_VEXP_CLAIM",
+      "measurement": "C-MED default response carries 4 distinct representation classes (FOCUS:focused_source, RELATED_WITH_CODE, RELATIONSHIP_ONLY, FOCUS:excerpt); C-LARGE carries 4"
+    },
+    {
+      "id": "A13",
+      "m205": "VTRACE_BELOW_VEXP_CLAIM",
+      "m206": "VTRACE_BELOW_VEXP_CLAIM",
+      "measurement": "3 of 20 tasks lose focus content as the budget grows, and 5 swap the delivered focus symbol, over 5 budgets"
+    },
+    {
+      "id": "A14",
+      "m205": "VTRACE_MATCHES_VEXP_CLAIM",
+      "m206": "VTRACE_MATCHES_VEXP_CLAIM",
+      "measurement": "2548 of 2548 delivered items carry token accounting; no accounting block appears in the default response at all (present at detail=debug only). get_skeleton publishes a per-CALL block whose savings figure differs from an independent measurement of the same output by 38.73 / 6.06 / 17.42 points"
+    },
+    {
+      "id": "A15",
+      "m205": "VTRACE_BELOW_VEXP_CLAIM",
+      "m206": "VTRACE_BELOW_VEXP_CLAIM",
+      "measurement": "C-LARGE, 50 eligible call edges: the impact surface renders 0% as source expressions, the logic-flow surface 100%. On C-MED the flow surface renders 100%"
+    }
+  ],
+  "parity": {
+    "m205": 12,
+    "m206": 12
+  }
+}

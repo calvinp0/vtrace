@@ -9433,3 +9433,229 @@ evidence          results/stage5_m205_final_report.{md,json} and the
   paired retrieval no-change proof; A13's baseline is unchanged at 3/5 with
   order relations 42/17/21 and 0 representation regressions; A15 untouched.
   `CONTEXT_COMPILER_PRODUCT_UTILITY_NOT_ESTABLISHED` still governs.
+
+
+## M206 — candidate allocation, tier-cap authority and frozen A11 (PASS, A11 not closed)
+
+```
+milestone         M206
+verdict           PASS
+parity            A11_PARITY_NOT_CLOSED; A11_SUPPLY_INSUFFICIENT;
+                  A11_CAP_REPAIR_INSUFFICIENT
+spend             0 live-agent runs, $0, 0 VEXP processes
+scope             A11 only. Recover the frozen utilisation claim, trace every
+                  candidate-truncation stage from the retrieval pool to the
+                  packet, measure the counterfactual uncapped supply of the
+                  SAME ranked stream before touching a cap, decide sufficiency
+                  on the frozen rule, and repair the fixed support count only
+                  as the demonstrated A11-owned defect. No A13, no A15, no
+                  representation class, no retrieval or ranking change.
+
+result            VTRACE_VEXP_ENGINE_PARITY_THRESHOLD_MET
+                  MATCH 7  EXCEED 5  BELOW 3   match-or-exceed 12/15 (threshold 10)
+                  A8 minimum coverage 100% (veto 99%); structural violations 0
+                  determinism stable; invented structural claims 0
+                  frozen controls: F1-F5, F7, F8 pass; F6 FAILS on its stale
+                  `a14PerItem === 0` conjunct only (M203 standing finding).
+
+frozen A11        VEXP V-C5 "run_pipeline takes a whole-output token budget,
+                  default 10000". Rule (engine + report, verbatim): per
+                  budget, the median over the 20 C-MED tasks of 100 x
+                  ceil(chars/4 of the whole default get_code_context output)
+                  / max_tokens; MATCHES >= 60% at every frozen budget, EXCEEDS
+                  >= 80%. M205 committed and pre-change reproduction (worktree
+                  at fabd8530): 46.55 / 50.2 / 25.1 / 13.17 / 13.74, BELOW.
+                  Post-change reproduction 83.85 / 95.47 / 101.23 / 55.48 /
+                  27.84; M206 frozen rerun 83.55 / 95.47 / 101.23 / 55.48 /
+                  27.84, BELOW (8000 and 16000 short of the line).
+
+allocation path   retrieval pool (hybridRetrieve, CANDIDATE_POOL_SIZE 25,
+                  budget-independent) -> role gate -> pivot cap (tier
+                  maxPivots; demotion to support) -> pivot packing -> support
+                  lanes and ordering -> support packing (until M206: the tier
+                  count, then the token budget, the M158 dedupe, lane token
+                  ceilings) -> product assembly (impact / memory / rules
+                  items, draft dedupe) -> evidence budget -> whole-response
+                  envelope -> projector admission (dedupe, claim, prefix under
+                  the caller's ceiling) -> M205 routing. Over the 100 frozen
+                  responses the support count discarded 2,573 support-
+                  authorised candidates that had passed every other rule and
+                  bound 95 of 100 responses; the token budget discarded 0; the
+                  pivot cap demoted 1,338 pivot-gated candidates to support
+                  (delivered as skeleton/signature when packed); the projector
+                  ceiling rejected nothing.
+
+tier caps         Introduced f099c3b1 (2026-06-06, "Build capsule v2 product
+                  output"), micro 1/1, standard 2/4, full 5/10, comment "the
+                  tunable policy"; the full-tier comment claimed the token
+                  budget was the real bound there (false in measurement).
+                  maxPivots is role semantics (required / EDIT_OR_RULE_OUT,
+                  M112 contract, M101 exemption): preserved unchanged. The
+                  support number is no longer a delivery maximum: it survives
+                  as the tier's support WINDOW (the ordering window the
+                  co-edit, path-completion and mechanism placement rules read,
+                  the file-evidence lane's present-file count, the
+                  documentation fill count), so every lane's placement
+                  arithmetic is unchanged and only how much of the SAME
+                  ordered stream is delivered moved. One authority, no
+                  versioned allocator (budgetAllocator.ts supportWindow;
+                  buildCapsuleV2.ts packing loop).
+
+counterfactual    Read-only evaluator (m206Allocation.ts, driver
+                  run_stage5_m206_allocation.ts): delivered prefix + every
+                  count-cap discard in the capsule's order, identity and body
+                  bound from the index by the product's own drafting rule,
+                  relationship-only admission under the caller's ceiling
+                  (prefix, first miss ends it), projector dedupe, then the M205
+                  router; the evidence budget and capsule token budget as a
+                  second bound. Replica matched the projector's ledger on
+                  180/180 responses; 0 gate failures. Uncapped medians
+                  (all bounds): 1000 102.85%, 2000 103.47%, 4000 94.78%,
+                  8000 52.69%, 16000 27.97% -> SUFFICIENT at 1000-4000,
+                  INSUFFICIENT at 8000 (4216 of 4800 tokens) and 16000 (4475 of
+                  9600). Every count-cap discard fit the ceiling at 8000 and
+                  16000 (0 rejections); the stream ends at the retrieval pool
+                  (median 30 candidates, 37-38 ranked pre-cap).
+
+decision          A11_SUPPLY_INSUFFICIENT under the frozen rule, so the cap
+                  repair cannot close A11: A11_CAP_REPAIR_INSUFFICIENT. The
+                  remaining deficit is caused by the next candidate-allocation
+                  mechanism on the audited path, the fixed 25-symbol retrieval
+                  pool (M100's lane arithmetic, lexical pool sizing and
+                  `withinPool` semantics hang off it), which is a retrieval
+                  change under the paired no-change protocol and outside M206.
+                  The support-count defect is A11-owned, demonstrated, and its
+                  repair is what a pool milestone would need first; it was
+                  repaired with the deficit stated, not closed.
+
+repair            buildCapsuleV2.ts: support admission is governed by the
+                  token budget alone (renderSupport against the remaining
+                  budget; M158 dedupe; lane ceilings), document candidates
+                  displace only for the budget, the notebook clause appends
+                  when it fits, documentation sections still fill the window
+                  only. budgetAllocator.ts: BudgetAllocation.supportWindow
+                  replaces maxSupport with the measured rationale. Three
+                  envelope rungs that shipped schema-invalid stubs once
+                  capsules grew were fixed at their source: `context` keeps
+                  its required scalars (compressed, truncated, budget, profile
+                  ids, capsuleRef), `diagnostics.retrieval` keeps every
+                  required member or is a no-op, `diagnostics.freshness` keeps
+                  reasons/readiness, `diagnostics.indexFreshness` no longer
+                  adds an undeclared marker; the two emitted diagnostics
+                  markers (sectionDecisionsOmitted/Note) are declared; the
+                  manifest ids are no longer "optional envelope metadata"
+                  (a tight-budget get_context_capsule could not be staleness-
+                  checked). Three memory tests on the tiny MCP fixture now
+                  pass max_tokens 16000 because the capsule fills the default
+                  budget and the ladder compacts memory observations first.
+
+before / after    C-MED medians, capsule selected / delivered items / whole
+                  tokens / utilisation: 1000 2->17 / 3->8 / 465.5->838.5 /
+                  46.55->83.85%; 2000 6->32 / 9->16.5 / 1004->1909.5 /
+                  50.2->95.47%; 4000 6->35 / 9->33 / 1004->4049.5 /
+                  25.1->101.23%; 8000 6->35 / 11->36 / 1053.5->4439 /
+                  13.17->55.48%; 16000 15->35 / 18->37 / 2198.5->4453 /
+                  13.74->27.84%. Stops after: evidence budget 59, retrieval
+                  pool cap 39, no truthful supply 2, count 0. Same-corpus
+                  control (repaired product on the pre-change copy): 180/180
+                  same focus, frozen A11 86.55 / 95.85 / 101.22 / 54.72 /
+                  27.96, i.e. the movement is the policy, not the corpus.
+                  Attribution: at 4000-16000 a median 97% of delivered
+                  identities were predicted; at 1000-2000 the product delivers
+                  fewer than the counterfactual because the whole-response
+                  envelope escalates the evidence budget (not modelled).
+
+falsification     F1-F12 pass: 3-candidate stream at 16000 leaves budget
+                  unused with no filler; 60-candidate stream at 2000
+                  predecessor 4 support / repaired 23, count discards 19 -> 0;
+                  twins packed once and a second proposal delivered once;
+                  16 test symbols stay out with budget to spare and a forced
+                  claimless entry fails the analyzer; pivot set identical under
+                  both allocators; 4 builds one hash; 400 candidates bounded
+                  by the pool (25) and 1185/16000 tokens in 21 ms; nine budgets
+                  same rule, monotone items, prefix support; wrong cost fails
+                  M203; fabricated code NOT_LOCATED; focus swap counted while
+                  utilisation passes; historical allocator fails the abundant
+                  control at 2000 that the repair passes, and at 16000 the
+                  stream binds both.
+
+determinism       3 repeats, 180 C-MED responses: packets and ledgers stable.
+
+A12 / A14         Representation sweep on the repaired product: 4 classes
+                  (+ FOCUS:excerpt), 0/180 integrity failures, 4,521 related
+                  entries all accounted and source-anchored (441 focused
+                  source, 109 signatures, 3,835 skeletons, 17 excerpts). Frozen
+                  A12 MATCHES (4 classes); frozen A14 2548/2548 MATCHES.
+
+A13, observed     3 size violations / 5 focus swaps pre, post and frozen
+                  rerun; order relations prefix 42 -> 15, subsequence 17 -> 31,
+                  neither 21 -> 34; representation regressions across
+                  adjacent budgets 0 -> 6 (the caller's ceiling now refuses a
+                  richer form on 47 entries). Measured, not optimised.
+
+cost              Frozen A5 p90 56.03 / 223.09 / 355.85 ms (M205 46.14 /
+                  201.55 / 324.21), MATCHES; A5 harness 52.25 / 207.46 /
+                  346.68 (M205 43.45 / 197.52 / 334.87), MATCHES. Largest
+                  packet 11,594 -> 20,479 bytes; largest item count 21 -> 42;
+                  largest ranked stream 42 (unchanged). Sweep process peak RSS
+                  497 MB (pre, 1 repeat) / 1,844 MB (post, 3 repeats, candidate
+                  rows retained). No DB table, no schema change.
+
+corpus identity   C-MED 504 -> 504: M206 edited existing source files and
+                  added none; revision moved; replay and post both
+                  M197A_AUTHORITY_VERIFIED.
+
+evidence          results/stage5_m206_final_report.{md,json} and the
+                  stage5_m206_*.{json,jsonl} artefacts beside it;
+                  stage5_m205_representation_m206_post.json,
+                  stage5_m205_routing_ledger_m206_post.jsonl,
+                  stage5_m201_a5_m206_post.json.
+```
+
+## M206 standing findings
+
+- **The tier support count was the binding stage, and it is gone.** 95 of
+  100 frozen responses stopped on it, every candidate it discarded fit the
+  caller's ceiling, and the token budget it was "standing in for" discarded
+  nothing. After the repair no stop reason names a count: the evidence budget
+  binds at 1000-4000 and the retrieval pool binds at 8000-16000.
+
+- **A11 is now bound by the retrieval pool, which is retrieval.** The ranked
+  stream ends at CANDIDATE_POOL_SIZE = 25 (median 30 with the bounded lanes,
+  37-38 ranked pre-cap) whatever the budget; at 8000 the whole stream is
+  worth ~4,400 frozen tokens against a 4,800 line and at 16000 against 9,600.
+  Sizing the pool by budget changes candidate generation (lexical pool size,
+  lane `withinPool` semantics, M100's file-evidence arithmetic) and needs the
+  paired retrieval protocol with regenerated baselines; it is the next A11
+  mechanism, and it is not licensed by this milestone.
+
+- **Filling the budget with evidence starves the debug envelope.** The
+  whole-response ceiling is requested + max(1000, 15%); a support item costs
+  ~60 chars of signature in the capsule and ~1,150 chars of metadata in the
+  debug response (capsuleResult + productContext.items + context). With 25-35
+  supports the debug response at the default budget passes the ceiling and
+  the ladder compacts `context`, `pivotNeighborhood`, retrieval telemetry and
+  memory observations on real repositories. The default projected packet is
+  unaffected; `detail=debug` callers who need those sections need headroom.
+  Three ladder rungs were found emitting schema-invalid stubs on the way
+  (M206 fixed them); the allowance itself is M166 territory, not M206's.
+
+- **The counterfactual over-predicts where the envelope escalates the
+  evidence budget.** At 1000-2000 the model said ~100% and the product
+  delivers 84-95%: the envelope lowers the evidence budget to fit the
+  authoritative response, which drops trailing supports before projection.
+  An uncapped-supply model that wants to predict tight budgets exactly must
+  include the envelope ladder.
+
+- **A13 moved because delivery order moved, not focus.** Focus swaps and size
+  violations are unchanged (5 / 3); the related order across adjacent budgets
+  is now mostly subsequence/neither because supports pack before impact and
+  memory items and the ceiling refuses some richer forms at the larger
+  budget (6 representation regressions). This is the M207 baseline.
+
+- **Next-step recommendation.** A11 needs a budget-derived retrieval pool
+  under the paired no-change protocol (M100/M140 lane semantics re-proven) —
+  with the support count gone that change would now reach the packet. A13's
+  baseline is 3/5 with order relations 15/31/34 and 6 representation
+  regressions; A15 untouched.
+  `CONTEXT_COMPILER_PRODUCT_UTILITY_NOT_ESTABLISHED` still governs.

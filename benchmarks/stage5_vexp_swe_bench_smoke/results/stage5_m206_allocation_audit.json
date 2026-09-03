@@ -1,0 +1,145 @@
+{
+  "path": [
+    "retrieval_pool",
+    "role_gate",
+    "pivot_cap",
+    "support_lanes",
+    "support_packing",
+    "product_assembly",
+    "evidence_budget",
+    "projector_admission"
+  ],
+  "functions": {
+    "retrieval_pool": "hybridRetrieve (src/retrieval/hybridRetrieval.ts) with maxResults = CANDIDATE_POOL_SIZE (buildCapsuleV2.ts)",
+    "role_gate": "assignCandidateRoles (src/capsule/assignCandidateRoles.ts) / refineDebugRoles (src/capsuleV2/debugRoles.ts)",
+    "pivot_cap": "allocateBudget().maxPivots -> capPivots (debugRoles.ts) / assignCandidateRoles maxPivots; demotion to support",
+    "pivot_packing": "renderPivot -> firstFitting (buildCapsuleV2.ts), lead pivot forced",
+    "support_ordering": "supportTier order, expandCoeditSupport + orderSupportWithCoedit (coeditExpansion.ts), rescueFileEvidenceSupport (fileEvidenceRescue.ts), selectPathCompletion (pathCompletion.ts), discoverMechanismSupport",
+    "support_packing": "the support packing loop in buildCapsuleV2.ts: renderSupport(remaining tokens) + M158 delivered-identity dedupe + lane token ceilings (+ the tier count until M206)",
+    "product_assembly": "assembleProductContext (sourceDraft, addActionabilityTargets, addImpactEvidence, addMemoryAndRules, deduplicateDrafts)",
+    "evidence_budget": "applyProgressiveContextBudget (budgetDelivery.ts) publishing the semantic item supply",
+    "envelope": "compactProductResponse / responseTokenCeiling (responseEnvelope.ts) on the authoritative response",
+    "projector_admission": "projectRunPipelineOrientation (orientationProjection.ts): dedupe, claim, prefix under orientationCeilingTokens; M205 routing"
+  },
+  "stageTotalsOverFrozen": {
+    "pre": {
+      "retrieval_pool": {
+        "lost": 0,
+        "otherwiseEligibleLost": 0,
+        "lostByReason": {}
+      },
+      "role_gate": {
+        "lost": 315,
+        "otherwiseEligibleLost": 0,
+        "lostByReason": {
+          "ROLE_GATE": 315
+        }
+      },
+      "pivot_cap": {
+        "lost": 1338,
+        "otherwiseEligibleLost": 0,
+        "lostByReason": {
+          "PIVOT_CAP_DEMOTED_TO_SUPPORT": 1338
+        }
+      },
+      "support_lanes": {
+        "lost": 0,
+        "otherwiseEligibleLost": 0,
+        "lostByReason": {}
+      },
+      "support_packing": {
+        "lost": 2573,
+        "otherwiseEligibleLost": 2573,
+        "lostByReason": {
+          "TIER_SUPPORT_CAP": 2573
+        }
+      },
+      "product_assembly": {
+        "lost": 52,
+        "otherwiseEligibleLost": 0,
+        "lostByReason": {
+          "DUPLICATE_DRAFT": 52
+        }
+      },
+      "evidence_budget": {
+        "lost": 0,
+        "otherwiseEligibleLost": 0,
+        "lostByReason": {}
+      },
+      "projector_admission": {
+        "lost": 257,
+        "otherwiseEligibleLost": 0,
+        "lostByReason": {
+          "DEDUPLICATED": 257
+        }
+      }
+    },
+    "post": {
+      "retrieval_pool": {
+        "lost": 0,
+        "otherwiseEligibleLost": 0,
+        "lostByReason": {}
+      },
+      "role_gate": {
+        "lost": 320,
+        "otherwiseEligibleLost": 0,
+        "lostByReason": {
+          "ROLE_GATE": 320
+        }
+      },
+      "pivot_cap": {
+        "lost": 1318,
+        "otherwiseEligibleLost": 0,
+        "lostByReason": {
+          "PIVOT_CAP_DEMOTED_TO_SUPPORT": 1318
+        }
+      },
+      "support_lanes": {
+        "lost": 0,
+        "otherwiseEligibleLost": 0,
+        "lostByReason": {}
+      },
+      "support_packing": {
+        "lost": 380,
+        "otherwiseEligibleLost": 0,
+        "lostByReason": {
+          "TOKEN_BUDGET": 379,
+          "LANE_TOKEN_CEILING": 1
+        }
+      },
+      "evidence_budget": {
+        "lost": 705,
+        "otherwiseEligibleLost": 0,
+        "lostByReason": {
+          "DROPPED_FOR_EVIDENCE_BUDGET": 705
+        }
+      },
+      "projector_admission": {
+        "lost": 8,
+        "otherwiseEligibleLost": 0,
+        "lostByReason": {
+          "DEDUPLICATED": 8
+        }
+      },
+      "product_assembly": {
+        "lost": 83,
+        "otherwiseEligibleLost": 0,
+        "lostByReason": {
+          "DUPLICATE_DRAFT": 83
+        }
+      }
+    }
+  },
+  "stopReasonsOverFrozen": {
+    "pre": {
+      "OTHER_EXPLICIT_POLICY:FIXED_TIER_SUPPORT_CAP": 95,
+      "NO_TRUTHFUL_SUPPLY": 5
+    },
+    "post": {
+      "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 59,
+      "OTHER_EXPLICIT_POLICY:CANDIDATE_POOL_CAP": 39,
+      "NO_TRUTHFUL_SUPPLY": 2
+    }
+  },
+  "poolCap": 25
+}

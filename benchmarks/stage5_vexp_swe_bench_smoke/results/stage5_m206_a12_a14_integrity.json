@@ -1,0 +1,92 @@
+{
+  "a12": {
+    "frozenClasses": [
+      "FOCUS:focused_source",
+      "RELATED_WITH_CODE",
+      "RELATIONSHIP_ONLY",
+      "FOCUS:excerpt"
+    ],
+    "count": 4,
+    "verdict": "VTRACE_MATCHES_VEXP_CLAIM",
+    "integrity": {
+      "packets": 180,
+      "failures": 0,
+      "failedGates": [],
+      "failedItems": []
+    },
+    "classTotals": {
+      "focused_source": 441,
+      "signature": 109,
+      "skeleton": 3835,
+      "relationship_only": 299,
+      "excerpt": 17
+    },
+    "reasonTotals": {
+      "upstream_form_delivered": 4222,
+      "form_not_code_bearing": 225,
+      "no_rendered_body": 27,
+      "ceiling": 47
+    },
+    "sourceTruth": {
+      "focused_source": {
+        "ANCHORED_IN_SPAN": 441
+      },
+      "signature": {
+        "PARSER_SIGNATURE": 109
+      },
+      "skeleton": {
+        "SKELETON_MATCHES_INDEX": 3681,
+        "SKELETON_HEAD_OF_INDEX": 154
+      },
+      "excerpt": {
+        "ANCHORED_IN_SPAN": 17
+      }
+    },
+    "frozenRerun": {
+      "classes": [
+        "FOCUS:focused_source",
+        "RELATED_WITH_CODE",
+        "RELATIONSHIP_ONLY",
+        "FOCUS:excerpt"
+      ],
+      "verdict": "VTRACE_MATCHES_VEXP_CLAIM"
+    },
+    "m205": {
+      "classes": [
+        "FOCUS:focused_source",
+        "RELATED_WITH_CODE",
+        "RELATIONSHIP_ONLY"
+      ],
+      "verdict": "VTRACE_MATCHES_VEXP_CLAIM"
+    }
+  },
+  "a14": {
+    "frozenRerun": {
+      "accounted": 2548,
+      "delivered": 2548,
+      "verdict": "VTRACE_MATCHES_VEXP_CLAIM"
+    },
+    "m205": {
+      "accounted": 1004,
+      "delivered": 1004,
+      "verdict": "VTRACE_MATCHES_VEXP_CLAIM"
+    },
+    "sweepIntegrity": {
+      "pre": {
+        "packets": 180,
+        "gateFailures": 0
+      },
+      "post": {
+        "packets": 180,
+        "gateFailures": 0,
+        "failedGates": []
+      }
+    },
+    "relatedEntriesOnCMed": {
+      "m205": 1703,
+      "m206": 4521,
+      "accounted": 4521,
+      "validRepresentation": 4521
+    }
+  }
+}

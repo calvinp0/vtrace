@@ -1,0 +1,1896 @@
+{
+  "milestone": "M201",
+  "instrument": "run_stage5_m201_a5.ts",
+  "label": "m206_post",
+  "protocol": {
+    "metric": "get_code_context warm wall-clock per call, measured around server.handleRequest",
+    "corpora": [
+      "C-SMALL",
+      "C-MED",
+      "C-LARGE"
+    ],
+    "queriesPerCorpus": 5,
+    "warmUpCallsPerQuery": 1,
+    "repeats": 5,
+    "aggregation": "percentile over all corpus samples, ceil(p*n)-1 index, per m197aFixtures.latencyStats",
+    "matchThreshold": "p90 <= 500 ms on EVERY corpus",
+    "exceedThreshold": "p90 <= 200 ms on EVERY corpus",
+    "indexLoadInsideTiming": "yes — the server opens the index per request; only the corpus copy and index build are outside",
+    "serializationBoundary": "the MCP tool output object returned by handleRequest, before transport encoding",
+    "snapshot": "/tmp/m201-snapshot",
+    "workRoot": "/tmp/m206-a5-work"
+  },
+  "environment": {
+    "atStart": {
+      "loadAverage": [
+        2.61,
+        3.38,
+        3.54
+      ],
+      "cpus": 20,
+      "memTotalKb": 65639748,
+      "memAvailableKb": 23557876,
+      "memPressurePercent": 64.11
+    },
+    "atEnd": {
+      "loadAverage": [
+        2.34,
+        3.24,
+        3.49
+      ],
+      "cpus": 20,
+      "memTotalKb": 65639748,
+      "memAvailableKb": 20603580,
+      "memPressurePercent": 68.61
+    }
+  },
+  "corpora": [
+    {
+      "id": "C-SMALL",
+      "language": "TypeScript",
+      "corpusPath": "/tmp/m206-a5-work/C-SMALL",
+      "snapshotFingerprint": {
+        "files": 21,
+        "bytes": 87021,
+        "sha256": "831c44ea8213b44f5eccda45b5de13f884037294451b42b980bab6441972bd4c"
+      },
+      "queries": 5,
+      "repeats": 5,
+      "latency": {
+        "n": 25,
+        "median": 45.52,
+        "p90": 52.25,
+        "p95": 52.32,
+        "max": 53.93,
+        "min": 37.12
+      },
+      "deterministic": true,
+      "nonDeterministicQueries": [],
+      "perQuery": [
+        {
+          "task": "how is the agent turn loop driven",
+          "samples": [
+            52.32,
+            52.25,
+            48.47,
+            49.5,
+            44.51
+          ],
+          "stats": {
+            "n": 5,
+            "median": 49.5,
+            "p90": 52.32,
+            "p95": 52.32,
+            "max": 52.32,
+            "min": 44.51
+          },
+          "semanticSha": [
+            "74fa27e87ef9d9c01f0bd02058ec8382eeb76c337f82e3eaac8acca3b3bc39ad"
+          ],
+          "byteSha": [
+            "74fa27e87ef9d9c01f0bd02058ec8382eeb76c337f82e3eaac8acca3b3bc39ad"
+          ],
+          "selection": {
+            "schemaVersion": "run_pipeline.orientation/1",
+            "focus": {
+              "at": "agents/claude-code.ts::spawnAgent",
+              "form": "skeleton",
+              "why": "actionable function — strong lexical match; issue-domain relevance",
+              "codeChars": 327,
+              "codeSha": "143743fdf066b73c"
+            },
+            "related": [
+              {
+                "at": "agents/adapter.ts::AgentRunOptions",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 25,
+                "codeSha": "36e1c83c3e08f753"
+              },
+              {
+                "at": "agents/adapter.ts::AgentRunResult",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 24,
+                "codeSha": "28ed64234f4d0fcd"
+              },
+              {
+                "at": "agents/claude-code.ts::ClaudeCodeAdapter.run",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 57,
+                "codeSha": "35b97fb961a39619"
+              },
+              {
+                "at": "agents/claude-code.ts::ClaudeCodeAdapter",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 290,
+                "codeSha": "7645e1b52997efdb"
+              },
+              {
+                "at": "agents/registry.ts::getAdapter",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 215,
+                "codeSha": "bcb4388416caef22"
+              },
+              {
+                "at": "agents/adapter.ts::AgentAdapter",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 22,
+                "codeSha": "a68081c1c5c6e84f"
+              },
+              {
+                "at": "compare/compare.ts::loadExternalAgent",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 103,
+                "codeSha": "9884378f5d5ffc07"
+              },
+              {
+                "at": "harness/orchestrator.ts::cleanPreviousRun",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 44,
+                "codeSha": "8ef8f89607762459"
+              },
+              {
+                "at": "harness/orchestrator.ts::dateStamp",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 28,
+                "codeSha": "b8441bf312028c9c"
+              },
+              {
+                "at": "compare/compare.ts::listExternalAgents",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 80,
+                "codeSha": "fb5e5cf4c446d1b2"
+              },
+              {
+                "at": "harness/loader.ts::buildPrompt",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 128,
+                "codeSha": "57ae0818d27b7263"
+              },
+              {
+                "at": "harness/repo.ts::capturePatch",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 190,
+                "codeSha": "756ad13e275132d3"
+              },
+              {
+                "at": "harness/loader.ts::loadBundledSubset",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 110,
+                "codeSha": "dafe82b559e5e3d2"
+              },
+              {
+                "at": "harness/orchestrator.ts::runBenchmark",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 246,
+                "codeSha": "0dc367ee0c5075f9"
+              },
+              {
+                "at": "harness/repo.ts::cleanupRepo",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 214,
+                "codeSha": "92be03711a64fa1e"
+              }
+            ],
+            "boundary": "Focused orientation: task-relevant evidence selected from the indexed worktree, not an exhaustive repository listing. Items not shown are not thereby absent.",
+            "notes": null,
+            "topLevelKeys": [
+              "boundary",
+              "focus",
+              "related",
+              "schemaVersion"
+            ]
+          },
+          "selectionSha": "4833c472236378ed80860919206a124c2c0fac54d79cdc6583c2b84960ae0fa0",
+          "serializedCharacters": 6531,
+          "responseTokens": 1633,
+          "boundedness": {
+            "responseBudget": null,
+            "withinDeclaredBudget": null,
+            "boundaryStatementPresent": true,
+            "deliveredItems": 16
+          },
+          "relatedCount": 15
+        },
+        {
+          "task": "where is the final patch extracted from the run",
+          "samples": [
+            53.93,
+            49.83,
+            45.35,
+            48.64,
+            45.52
+          ],
+          "stats": {
+            "n": 5,
+            "median": 48.64,
+            "p90": 53.93,
+            "p95": 53.93,
+            "max": 53.93,
+            "min": 45.35
+          },
+          "semanticSha": [
+            "e8265716c674a479cbe00ef97075d3dc1f41eea1195b6f21de70b52b2b33f234"
+          ],
+          "byteSha": [
+            "e8265716c674a479cbe00ef97075d3dc1f41eea1195b6f21de70b52b2b33f234"
+          ],
+          "selection": {
+            "schemaVersion": "run_pipeline.orientation/1",
+            "focus": {
+              "at": "cli.ts::findPython",
+              "form": "focused_source",
+              "why": "actionable function — strong lexical match",
+              "codeChars": 159,
+              "codeSha": "7281a843ac07a82b"
+            },
+            "related": [
+              {
+                "at": "harness/repo.ts::capturePatch",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 190,
+                "codeSha": "756ad13e275132d3"
+              },
+              {
+                "at": "harness/orchestrator.ts::cleanPreviousRun",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 44,
+                "codeSha": "8ef8f89607762459"
+              },
+              {
+                "at": "types.ts::RunConfig",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 19,
+                "codeSha": "79d6d88491188e48"
+              },
+              {
+                "at": "types.ts::RunResult",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 19,
+                "codeSha": "7c48586644325c5b"
+              },
+              {
+                "at": "evaluate/evaluator.ts::evaluateLightweight",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 56,
+                "codeSha": "7d6336ed02fb7250"
+              },
+              {
+                "at": "evaluate/evaluator.ts::evaluateDocker",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 85,
+                "codeSha": "4ae53d6eecca8f61"
+              },
+              {
+                "at": "evaluate/evaluator.ts::EvalOptions",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 21,
+                "codeSha": "e1e4021e2f76bcf2"
+              },
+              {
+                "at": "harness/orchestrator.ts::dateStamp",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 28,
+                "codeSha": "b8441bf312028c9c"
+              },
+              {
+                "at": "harness/orchestrator.ts::runBenchmark",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 246,
+                "codeSha": "0dc367ee0c5075f9"
+              },
+              {
+                "at": "harness/loader.ts::loadInstances",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 179,
+                "codeSha": "666f4fc5147ef58c"
+              },
+              {
+                "at": "harness/loader.ts::buildPrompt",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 128,
+                "codeSha": "57ae0818d27b7263"
+              },
+              {
+                "at": "harness/loader.ts::loadBundledSubset",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 110,
+                "codeSha": "dafe82b559e5e3d2"
+              },
+              {
+                "at": "harness/repo.ts::setupRepo",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 160,
+                "codeSha": "353d95367e82bff2"
+              },
+              {
+                "at": "harness/repo.ts::resetRepo",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 207,
+                "codeSha": "a882760e443eba22"
+              }
+            ],
+            "boundary": "Focused orientation: task-relevant evidence selected from the indexed worktree, not an exhaustive repository listing. Items not shown are not thereby absent.",
+            "notes": null,
+            "topLevelKeys": [
+              "boundary",
+              "focus",
+              "related",
+              "schemaVersion"
+            ]
+          },
+          "selectionSha": "c89ae0343b908a042a409750e6f1128113de67fb7aafc2a9a442eeb67a8d4a28",
+          "serializedCharacters": 5721,
+          "responseTokens": 1431,
+          "boundedness": {
+            "responseBudget": null,
+            "withinDeclaredBudget": null,
+            "boundaryStatementPresent": true,
+            "deliveredItems": 15
+          },
+          "relatedCount": 14
+        },
+        {
+          "task": "how are swe-bench instances loaded",
+          "samples": [
+            46.12,
+            48.33,
+            49.64,
+            49.51,
+            43.51
+          ],
+          "stats": {
+            "n": 5,
+            "median": 48.33,
+            "p90": 49.64,
+            "p95": 49.64,
+            "max": 49.64,
+            "min": 43.51
+          },
+          "semanticSha": [
+            "6c0866dd7e074860f707d77dd48000998741ec2ab074a7ae78c20c48a8b5f7e0"
+          ],
+          "byteSha": [
+            "6c0866dd7e074860f707d77dd48000998741ec2ab074a7ae78c20c48a8b5f7e0"
+          ],
+          "selection": {
+            "schemaVersion": "run_pipeline.orientation/1",
+            "focus": {
+              "at": "harness/loader.ts::loadInstances",
+              "form": "focused_source",
+              "why": "actionable function — strong lexical match; issue-domain relevance",
+              "codeChars": 536,
+              "codeSha": "a70eb951769bd220"
+            },
+            "related": [
+              {
+                "at": "harness/orchestrator.ts::cleanPreviousRun",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 44,
+                "codeSha": "8ef8f89607762459"
+              },
+              {
+                "at": "harness/orchestrator.ts::dateStamp",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 28,
+                "codeSha": "b8441bf312028c9c"
+              },
+              {
+                "at": "harness/orchestrator.ts::runBenchmark",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 246,
+                "codeSha": "0dc367ee0c5075f9"
+              },
+              {
+                "at": "harness/loader.ts::buildPrompt",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 128,
+                "codeSha": "57ae0818d27b7263"
+              },
+              {
+                "at": "harness/loader.ts::loadBundledSubset",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 110,
+                "codeSha": "dafe82b559e5e3d2"
+              },
+              {
+                "at": "types.ts::SwebenchInstance",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 26,
+                "codeSha": "e4c88a488fd521f4"
+              },
+              {
+                "at": "harness/repo.ts::capturePatch",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 190,
+                "codeSha": "756ad13e275132d3"
+              },
+              {
+                "at": "harness/repo.ts::cleanupRepo",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 214,
+                "codeSha": "92be03711a64fa1e"
+              },
+              {
+                "at": "harness/repo.ts::resetRepo",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 207,
+                "codeSha": "a882760e443eba22"
+              },
+              {
+                "at": "harness/repo.ts::setupRepo",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 160,
+                "codeSha": "353d95367e82bff2"
+              }
+            ],
+            "boundary": "Focused orientation: task-relevant evidence selected from the indexed worktree, not an exhaustive repository listing. Items not shown are not thereby absent.",
+            "notes": null,
+            "topLevelKeys": [
+              "boundary",
+              "focus",
+              "related",
+              "schemaVersion"
+            ]
+          },
+          "selectionSha": "666bfc711d4432ca2e6f8f4932b6a806ee365674c8bf6e99a2563c9ca017f469",
+          "serializedCharacters": 4918,
+          "responseTokens": 1230,
+          "boundedness": {
+            "responseBudget": null,
+            "withinDeclaredBudget": null,
+            "boundaryStatementPresent": true,
+            "deliveredItems": 11
+          },
+          "relatedCount": 10
+        },
+        {
+          "task": "what builds the prompt sent to the model",
+          "samples": [
+            37.12,
+            43.8,
+            42.28,
+            39.74,
+            40.2
+          ],
+          "stats": {
+            "n": 5,
+            "median": 40.2,
+            "p90": 43.8,
+            "p95": 43.8,
+            "max": 43.8,
+            "min": 37.12
+          },
+          "semanticSha": [
+            "c01e64b11ae528ef87171e694efe79cc267045f7e6788678e4b117f71f9791b5"
+          ],
+          "byteSha": [
+            "c01e64b11ae528ef87171e694efe79cc267045f7e6788678e4b117f71f9791b5"
+          ],
+          "selection": {
+            "schemaVersion": "run_pipeline.orientation/1",
+            "focus": {
+              "at": "harness/loader.ts::buildPrompt",
+              "form": "focused_source",
+              "why": "actionable function — strong lexical match; issue-domain relevance",
+              "codeChars": 322,
+              "codeSha": "c88e34258595e6c7"
+            },
+            "related": [
+              {
+                "at": "harness/orchestrator.ts::runBenchmark",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 246,
+                "codeSha": "0dc367ee0c5075f9"
+              },
+              {
+                "at": "harness/repo.ts::resetRepo",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 207,
+                "codeSha": "a882760e443eba22"
+              },
+              {
+                "at": "harness/repo.ts::capturePatch",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 190,
+                "codeSha": "756ad13e275132d3"
+              },
+              {
+                "at": "harness/repo.ts::setupRepo",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 160,
+                "codeSha": "353d95367e82bff2"
+              },
+              {
+                "at": "harness/orchestrator.ts::cleanPreviousRun",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 44,
+                "codeSha": "8ef8f89607762459"
+              },
+              {
+                "at": "harness/orchestrator.ts::dateStamp",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 28,
+                "codeSha": "b8441bf312028c9c"
+              },
+              {
+                "at": "vexp/ensure.ts::promptForInput",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 119,
+                "codeSha": "8673d6398df092aa"
+              },
+              {
+                "at": "metrics/pricing.ts::calculateCost",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 132,
+                "codeSha": "e2c1d8f08dcaa0e1"
+              }
+            ],
+            "boundary": "Focused orientation: task-relevant evidence selected from the indexed worktree, not an exhaustive repository listing. Items not shown are not thereby absent.",
+            "notes": null,
+            "topLevelKeys": [
+              "boundary",
+              "focus",
+              "related",
+              "schemaVersion"
+            ]
+          },
+          "selectionSha": "6d719cbc9dca42eaf777e19f9393482ff887ed702d8009d7bdf6766f56d05b0f",
+          "serializedCharacters": 3930,
+          "responseTokens": 983,
+          "boundedness": {
+            "responseBudget": null,
+            "withinDeclaredBudget": null,
+            "boundaryStatementPresent": true,
+            "deliveredItems": 9
+          },
+          "relatedCount": 8
+        },
+        {
+          "task": "how is a run result written to disk",
+          "samples": [
+            45.02,
+            42.94,
+            49.76,
+            43.37,
+            42.4
+          ],
+          "stats": {
+            "n": 5,
+            "median": 43.37,
+            "p90": 49.76,
+            "p95": 49.76,
+            "max": 49.76,
+            "min": 42.4
+          },
+          "semanticSha": [
+            "7f830162d514e6f87348d2e776cdf01ef691816cd05b1a0cc95c9ab9fdd19d09"
+          ],
+          "byteSha": [
+            "7f830162d514e6f87348d2e776cdf01ef691816cd05b1a0cc95c9ab9fdd19d09"
+          ],
+          "selection": {
+            "schemaVersion": "run_pipeline.orientation/1",
+            "focus": {
+              "at": "agents/adapter.ts::AgentRunResult",
+              "form": "focused_source",
+              "why": "actionable interface — strong lexical match; issue-domain relevance",
+              "codeChars": 353,
+              "codeSha": "46b8592a22242278"
+            },
+            "related": [
+              {
+                "at": "types.ts::RunResult",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 19,
+                "codeSha": "7c48586644325c5b"
+              },
+              {
+                "at": "evaluate/evaluator.ts::parseDockerResults",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 104,
+                "codeSha": "981f818a6ab11f1d"
+              },
+              {
+                "at": "harness/orchestrator.ts::cleanPreviousRun",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 44,
+                "codeSha": "8ef8f89607762459"
+              },
+              {
+                "at": "agents/adapter.ts::AgentAdapter",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 22,
+                "codeSha": "a68081c1c5c6e84f"
+              },
+              {
+                "at": "agents/claude-code.ts::ClaudeCodeAdapter",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 290,
+                "codeSha": "7645e1b52997efdb"
+              },
+              {
+                "at": "agents/claude-code.ts::spawnAgent",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 327,
+                "codeSha": "143743fdf066b73c"
+              },
+              {
+                "at": "types.ts::VexpMetrics",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 21,
+                "codeSha": "27a72b1b8dfbb5a7"
+              },
+              {
+                "at": "types.ts::RunConfig",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 19,
+                "codeSha": "79d6d88491188e48"
+              },
+              {
+                "at": "agents/adapter.ts::AgentRunOptions",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 25,
+                "codeSha": "36e1c83c3e08f753"
+              },
+              {
+                "at": "evaluate/evaluator.ts::loadResults",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 52,
+                "codeSha": "fa3fe6ff83f93579"
+              },
+              {
+                "at": "evaluate/evaluator.ts::saveResults",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 83,
+                "codeSha": "48d52502daf7b109"
+              },
+              {
+                "at": "compare/compare.ts::loadExternalAgent",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 103,
+                "codeSha": "9884378f5d5ffc07"
+              }
+            ],
+            "boundary": "Focused orientation: task-relevant evidence selected from the indexed worktree, not an exhaustive repository listing. Items not shown are not thereby absent.",
+            "notes": null,
+            "topLevelKeys": [
+              "boundary",
+              "focus",
+              "related",
+              "schemaVersion"
+            ]
+          },
+          "selectionSha": "a493405ce32f3a25f0058b28b0064b2b8ae873526ffdc4fcb170f60d6ba0d366",
+          "serializedCharacters": 5084,
+          "responseTokens": 1271,
+          "boundedness": {
+            "responseBudget": null,
+            "withinDeclaredBudget": null,
+            "boundaryStatementPresent": true,
+            "deliveredItems": 13
+          },
+          "relatedCount": 12
+        }
+      ]
+    },
+    {
+      "id": "C-MED",
+      "language": "TypeScript",
+      "corpusPath": "/tmp/m206-a5-work/C-MED",
+      "snapshotFingerprint": {
+        "files": 492,
+        "bytes": 7198020,
+        "sha256": "ef39fe0d82f6387be521cfb6ebfc8ab85010675776187d5d8bb4d843749e2b92"
+      },
+      "queries": 5,
+      "repeats": 5,
+      "latency": {
+        "n": 25,
+        "median": 165.05,
+        "p90": 207.46,
+        "p95": 210.4,
+        "max": 215.22,
+        "min": 157.23
+      },
+      "deterministic": true,
+      "nonDeterministicQueries": [],
+      "perQuery": [
+        {
+          "task": "where are import edges extracted from typescript",
+          "samples": [
+            157.98,
+            175.55,
+            162.78,
+            187.87,
+            163.03
+          ],
+          "stats": {
+            "n": 5,
+            "median": 163.03,
+            "p90": 187.87,
+            "p95": 187.87,
+            "max": 187.87,
+            "min": 157.98
+          },
+          "semanticSha": [
+            "7e2f1dcc4afc098a825bf42c130faaf86c29a4a68a3b439e95050ff87d013bab"
+          ],
+          "byteSha": [
+            "7e2f1dcc4afc098a825bf42c130faaf86c29a4a68a3b439e95050ff87d013bab"
+          ],
+          "selection": {
+            "schemaVersion": "run_pipeline.orientation/1",
+            "focus": {
+              "at": "parsers/typescriptParser.ts::extractImportEdges",
+              "form": "focused_source",
+              "why": "actionable function — strong lexical match; issue-domain relevance",
+              "codeChars": 1406,
+              "codeSha": "5c2f1f23387516fa"
+            },
+            "related": [
+              {
+                "at": "withCallSite",
+                "form": "signature",
+                "why": null,
+                "codeChars": 71,
+                "codeSha": "efecfb44cf8db891"
+              },
+              {
+                "at": "parsers/typescriptParser.ts::ExtractImportEdgesInput",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 33,
+                "codeSha": "814fbeb5b9032ba4"
+              },
+              {
+                "at": "parsers/typescriptParser.ts::parseTypeScriptWithContext",
+                "form": null,
+                "why": null,
+                "codeChars": null,
+                "codeSha": null
+              },
+              {
+                "at": "parsers/typescriptParser.ts::getExportIndex",
+                "form": null,
+                "why": null,
+                "codeChars": null,
+                "codeSha": null
+              },
+              {
+                "at": "parsers/typescriptParser.ts::getImportModuleSpecifier",
+                "form": null,
+                "why": null,
+                "codeChars": null,
+                "codeSha": null
+              }
+            ],
+            "boundary": "Focused orientation: task-relevant evidence selected from the indexed worktree, not an exhaustive repository listing. Items not shown are not thereby absent.",
+            "notes": null,
+            "topLevelKeys": [
+              "boundary",
+              "focus",
+              "related",
+              "schemaVersion"
+            ]
+          },
+          "selectionSha": "36f7d709cf1f5e5f937b922f257662a308e37898d541e7b1f52098b4571ffea4",
+          "serializedCharacters": 3123,
+          "responseTokens": 781,
+          "boundedness": {
+            "responseBudget": null,
+            "withinDeclaredBudget": null,
+            "boundaryStatementPresent": true,
+            "deliveredItems": 6
+          },
+          "relatedCount": 5
+        },
+        {
+          "task": "how does the indexer decide a file is eligible for parsing",
+          "samples": [
+            157.43,
+            175.55,
+            159.88,
+            178.22,
+            159.69
+          ],
+          "stats": {
+            "n": 5,
+            "median": 159.88,
+            "p90": 178.22,
+            "p95": 178.22,
+            "max": 178.22,
+            "min": 157.43
+          },
+          "semanticSha": [
+            "d5b2cec181bec7903c4d60b4051becac990f995e588ae9d6718eb9c1b477d128"
+          ],
+          "byteSha": [
+            "d5b2cec181bec7903c4d60b4051becac990f995e588ae9d6718eb9c1b477d128"
+          ],
+          "selection": {
+            "schemaVersion": "run_pipeline.orientation/1",
+            "focus": {
+              "at": "indexer/incrementalIndex.ts::bindingTermFor",
+              "form": "focused_source",
+              "why": "actionable function — strong lexical match; issue-domain relevance",
+              "codeChars": 514,
+              "codeSha": "9baeda5f7751a9de"
+            },
+            "related": [
+              {
+                "at": "indexer/indexProject.ts::createDefaultParserRegistry",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 310,
+                "codeSha": "38d77c04ae0f4480"
+              },
+              {
+                "at": "indexer/incrementalIndex.ts::deriveBindingClosure",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 256,
+                "codeSha": "29cd1b39d6b28449"
+              },
+              {
+                "at": "indexer/extractMechanismFacts.ts::extractMechanismFacts",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 339,
+                "codeSha": "2e891fc61e176d41"
+              },
+              {
+                "at": "indexer/incrementalIndex.ts::IncrementalRefreshPlan",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 32,
+                "codeSha": "82ba98a889938813"
+              },
+              {
+                "at": "indexer/indexOutcomeSummary.ts::BoundedIndexOutcomes",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 30,
+                "codeSha": "5043168d5f9d6317"
+              },
+              {
+                "at": "indexer/types.ts::IndexCoverageSummary",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 213,
+                "codeSha": "6a36b1b19162d794"
+              },
+              {
+                "at": "indexer/extractBodyLiterals.ts::BodyLiteral",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 21,
+                "codeSha": "a69a5f23afb2bb0a"
+              },
+              {
+                "at": "indexer/incrementalIndex.ts::computeBindingContextHash",
+                "form": null,
+                "why": null,
+                "codeChars": null,
+                "codeSha": null
+              },
+              {
+                "at": "indexer/incrementalIndex.ts::computeSemanticContextHash",
+                "form": null,
+                "why": null,
+                "codeChars": null,
+                "codeSha": null
+              }
+            ],
+            "boundary": "Focused orientation: task-relevant evidence selected from the indexed worktree, not an exhaustive repository listing. Items not shown are not thereby absent.",
+            "notes": null,
+            "topLevelKeys": [
+              "boundary",
+              "focus",
+              "related",
+              "schemaVersion"
+            ]
+          },
+          "selectionSha": "38b4e5ed98ef9c18c8bf8ee5c1c3224f22ee771df8b9f6f6737ebd7fe0b2cf71",
+          "serializedCharacters": 4769,
+          "responseTokens": 1193,
+          "boundedness": {
+            "responseBudget": null,
+            "withinDeclaredBudget": null,
+            "boundaryStatementPresent": true,
+            "deliveredItems": 10
+          },
+          "relatedCount": 9
+        },
+        {
+          "task": "budget allocation for capsule items is dropping sections",
+          "samples": [
+            165.05,
+            159.2,
+            158.71,
+            169.33,
+            157.23
+          ],
+          "stats": {
+            "n": 5,
+            "median": 159.2,
+            "p90": 169.33,
+            "p95": 169.33,
+            "max": 169.33,
+            "min": 157.23
+          },
+          "semanticSha": [
+            "e1452d5affd712c6dd54e024fee05c74a0cfddb113e407af272fb4cfba7a9f41"
+          ],
+          "byteSha": [
+            "e1452d5affd712c6dd54e024fee05c74a0cfddb113e407af272fb4cfba7a9f41"
+          ],
+          "selection": {
+            "schemaVersion": "run_pipeline.orientation/1",
+            "focus": {
+              "at": "capsule/budget.ts::listCapsuleItems",
+              "form": "focused_source",
+              "why": "actionable function — strong lexical match; issue-domain relevance",
+              "codeChars": 161,
+              "codeSha": "554d7204a89ef5d2"
+            },
+            "related": [
+              {
+                "at": "capsuleV2/budgetAllocator.ts::BudgetAllocation",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 26,
+                "codeSha": "2033774f6f345084"
+              },
+              {
+                "at": "buildDeterministicCapsule",
+                "form": "signature",
+                "why": null,
+                "codeChars": 266,
+                "codeSha": "72fcc393cf11457c"
+              },
+              {
+                "at": "capsuleV2/sectionBudgetAccounting.ts::inventorySections",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 242,
+                "codeSha": "afadba6bd87df5c0"
+              },
+              {
+                "at": "capsuleV2/budgetAllocator.ts::allocateBudget",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 122,
+                "codeSha": "3c7e75ec6554100a"
+              },
+              {
+                "at": "capsuleV2/sectionBudgetAccounting.ts::truncateContextByPriority",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 322,
+                "codeSha": "24f0d2500de7ace7"
+              },
+              {
+                "at": "capsuleV2/sectionBudgetAccounting.ts::SectionPriority",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 158,
+                "codeSha": "39bf22cf97479187"
+              },
+              {
+                "at": "capsuleV2/sectionBudgetAccounting.ts::analyzeSectionTruncation",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 275,
+                "codeSha": "d19ae1b185602811"
+              },
+              {
+                "at": "mcp/tools.ts::mergeCapsuleItems",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 135,
+                "codeSha": "f6c431a9deec0f6c"
+              },
+              {
+                "at": "capsule/budget.ts::computeCapsuleItemCost",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 58,
+                "codeSha": "b70fec3c33d99f31"
+              },
+              {
+                "at": "capsule/budget.ts::computeTotalCapsuleCost",
+                "form": null,
+                "why": null,
+                "codeChars": null,
+                "codeSha": null
+              },
+              {
+                "at": "capsule/types.ts::Capsule",
+                "form": null,
+                "why": null,
+                "codeChars": null,
+                "codeSha": null
+              },
+              {
+                "at": "capsule/types.ts::CapsuleItem",
+                "form": null,
+                "why": null,
+                "codeChars": null,
+                "codeSha": null
+              }
+            ],
+            "boundary": "Focused orientation: task-relevant evidence selected from the indexed worktree, not an exhaustive repository listing. Items not shown are not thereby absent.",
+            "notes": null,
+            "topLevelKeys": [
+              "boundary",
+              "focus",
+              "related",
+              "schemaVersion"
+            ]
+          },
+          "selectionSha": "def6558b88c6409e6af78ad7b389ae9fc8c5ed39189f4cc2933a6ab13f6a7a15",
+          "serializedCharacters": 5409,
+          "responseTokens": 1353,
+          "boundedness": {
+            "responseBudget": null,
+            "withinDeclaredBudget": null,
+            "boundaryStatementPresent": true,
+            "deliveredItems": 13
+          },
+          "relatedCount": 12
+        },
+        {
+          "task": "how is the impact graph bounded when a symbol has many callers",
+          "samples": [
+            207.46,
+            215.22,
+            210.4,
+            207.22,
+            204.54
+          ],
+          "stats": {
+            "n": 5,
+            "median": 207.46,
+            "p90": 215.22,
+            "p95": 215.22,
+            "max": 215.22,
+            "min": 204.54
+          },
+          "semanticSha": [
+            "ffb98e1bd416f243bb7e47dd23b0415dfa6c4953583bf3de96265ea598c05ed8"
+          ],
+          "byteSha": [
+            "ffb98e1bd416f243bb7e47dd23b0415dfa6c4953583bf3de96265ea598c05ed8"
+          ],
+          "selection": {
+            "schemaVersion": "run_pipeline.orientation/1",
+            "focus": {
+              "at": "impact/getImpactGraph.ts::hasInheritedMemberEvidence",
+              "form": "focused_source",
+              "why": "actionable function — symbol-name match; strong lexical match; issue-domain relevance",
+              "codeChars": 607,
+              "codeSha": "0e61bfda32e2e410"
+            },
+            "related": [
+              {
+                "at": "impact/staticEvidence.ts::findGroundedOccurrence",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 190,
+                "codeSha": "58d10d7bef0b88af"
+              },
+              {
+                "at": "impact/getImpactGraph.ts::hasMemberResolutionEvidence",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 130,
+                "codeSha": "1862b8073b392734"
+              },
+              {
+                "at": "impact/getImpactGraph.ts::hasCrossLanguagePythonCythonEvidence",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 121,
+                "codeSha": "62c54959f1269a26"
+              },
+              {
+                "at": "impact/getImpactGraph.ts::hashPath",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 53,
+                "codeSha": "2dadc466d26a22b0"
+              },
+              {
+                "at": "impact/getImpactGraph.ts::resolveCallerCoverage",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 487,
+                "codeSha": "d8901376ef7c4bce"
+              },
+              {
+                "at": "capsuleV2/projectNameSignals.ts::hasExplicitSymbolEvidence",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 254,
+                "codeSha": "ea3182393ce51ff1"
+              },
+              {
+                "at": "impact/getImpactGraph.ts::ImpactNode",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 48,
+                "codeSha": "28c56794e8dc93e8"
+              },
+              {
+                "at": "impact/getImpactGraph.ts::getImpactGraph",
+                "form": null,
+                "why": null,
+                "codeChars": null,
+                "codeSha": null
+              }
+            ],
+            "boundary": "Focused orientation: task-relevant evidence selected from the indexed worktree, not an exhaustive repository listing. Items not shown are not thereby absent.",
+            "notes": null,
+            "topLevelKeys": [
+              "boundary",
+              "focus",
+              "related",
+              "schemaVersion"
+            ]
+          },
+          "selectionSha": "f9c2da11ec7c2a5ec019934f3cd05257e8263ea33f311bf73b17e11b928e977a",
+          "serializedCharacters": 4817,
+          "responseTokens": 1205,
+          "boundedness": {
+            "responseBudget": null,
+            "withinDeclaredBudget": null,
+            "boundaryStatementPresent": true,
+            "deliveredItems": 9
+          },
+          "relatedCount": 8
+        },
+        {
+          "task": "where does logic flow decide a path is unreachable",
+          "samples": [
+            163.85,
+            164.49,
+            159.57,
+            184.19,
+            183.49
+          ],
+          "stats": {
+            "n": 5,
+            "median": 164.49,
+            "p90": 184.19,
+            "p95": 184.19,
+            "max": 184.19,
+            "min": 159.57
+          },
+          "semanticSha": [
+            "32cc3c07f48a1d4ce8d0a74ca7ec375c6a1ec101c27c642957ab341ed374a182"
+          ],
+          "byteSha": [
+            "32cc3c07f48a1d4ce8d0a74ca7ec375c6a1ec101c27c642957ab341ed374a182"
+          ],
+          "selection": {
+            "schemaVersion": "run_pipeline.orientation/1",
+            "focus": {
+              "at": "logicFlow/searchLogicFlow.ts::LogicFlowPath",
+              "form": "focused_source",
+              "why": "actionable interface — strong lexical match; issue-domain relevance; 8 dependents",
+              "codeChars": 353,
+              "codeSha": "bf7e55c0c75a0a3a"
+            },
+            "related": [
+              {
+                "at": "logicFlow/searchLogicFlow.ts::hasCrossLanguagePythonCythonStep",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 88,
+                "codeSha": "fdf1a56cb19722e8"
+              },
+              {
+                "at": "metrics/contextAccounting.ts::logicFlowOutputFilePathGroups",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 539,
+                "codeSha": "42b97772b29e2e4a"
+              },
+              {
+                "at": "logicFlow/searchLogicFlow.ts::isShortestPathEdge",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 188,
+                "codeSha": "9607e36fdafc5d7a"
+              },
+              {
+                "at": "logicFlow/searchLogicFlow.ts::toLogicFlowPath",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 214,
+                "codeSha": "35d18836b7c6d778"
+              },
+              {
+                "at": "logicFlow/searchLogicFlow.ts::attachFlowSourceExcerpts",
+                "form": null,
+                "why": null,
+                "codeChars": null,
+                "codeSha": null
+              },
+              {
+                "at": "logicFlow/searchLogicFlow.ts::buildCoverageNotes",
+                "form": null,
+                "why": null,
+                "codeChars": null,
+                "codeSha": null
+              },
+              {
+                "at": "logicFlow/searchLogicFlow.ts::collectObservedEdgeTypes",
+                "form": null,
+                "why": null,
+                "codeChars": null,
+                "codeSha": null
+              },
+              {
+                "at": "logicFlow/searchLogicFlow.ts::compareLogicFlowPaths",
+                "form": null,
+                "why": null,
+                "codeChars": null,
+                "codeSha": null
+              },
+              {
+                "at": "impact/staticEvidence.ts::StaticEvidenceStrength",
+                "form": null,
+                "why": null,
+                "codeChars": null,
+                "codeSha": null
+              }
+            ],
+            "boundary": "Focused orientation: task-relevant evidence selected from the indexed worktree, not an exhaustive repository listing. Items not shown are not thereby absent.",
+            "notes": null,
+            "topLevelKeys": [
+              "boundary",
+              "focus",
+              "related",
+              "schemaVersion"
+            ]
+          },
+          "selectionSha": "4c41ce75fcbdd7aa54633d833b6c11bf7166d648ec1e934a9af226b288c90ad2",
+          "serializedCharacters": 4142,
+          "responseTokens": 1036,
+          "boundedness": {
+            "responseBudget": null,
+            "withinDeclaredBudget": null,
+            "boundaryStatementPresent": true,
+            "deliveredItems": 10
+          },
+          "relatedCount": 9
+        }
+      ]
+    },
+    {
+      "id": "C-LARGE",
+      "language": "Python",
+      "corpusPath": "/tmp/m206-a5-work/C-LARGE",
+      "snapshotFingerprint": {
+        "files": 3286,
+        "bytes": 861325748,
+        "sha256": "17e9b94b8f37e054a06c9df8267c3e1002adcd91ef0ec6e761472263f0eadffe"
+      },
+      "queries": 5,
+      "repeats": 5,
+      "latency": {
+        "n": 25,
+        "median": 324.76,
+        "p90": 346.68,
+        "p95": 354.83,
+        "max": 366.06,
+        "min": 303.8
+      },
+      "deterministic": true,
+      "nonDeterministicQueries": [],
+      "perQuery": [
+        {
+          "task": "how is a reaction scheduled onto the job queue",
+          "samples": [
+            317.89,
+            303.8,
+            315.82,
+            309.39,
+            320.44
+          ],
+          "stats": {
+            "n": 5,
+            "median": 315.82,
+            "p90": 320.44,
+            "p95": 320.44,
+            "max": 320.44,
+            "min": 303.8
+          },
+          "semanticSha": [
+            "7b02c8e54dfed8ab768686770fb9702dca3bef953a2d39cbdbd1d6b1ac6f8990"
+          ],
+          "byteSha": [
+            "7b02c8e54dfed8ab768686770fb9702dca3bef953a2d39cbdbd1d6b1ac6f8990"
+          ],
+          "selection": {
+            "schemaVersion": "run_pipeline.orientation/1",
+            "focus": {
+              "at": "arc/scheduler.py::Scheduler.run_job",
+              "form": "skeleton",
+              "why": "actionable method — strong lexical match; issue-domain relevance; 21 dependents",
+              "codeChars": 1440,
+              "codeSha": "bab0094c5da0f778"
+            },
+            "related": [
+              {
+                "at": "arc/job/trsh.py::trsh_job_queue",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 384,
+                "codeSha": "af7be0c4667abab6"
+              },
+              {
+                "at": "arc/scheduler.py::Scheduler.get_server_job_ids",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 248,
+                "codeSha": "2db36d5dc1f34f0e"
+              },
+              {
+                "at": "arc/job/adapters/qchem.py::QChemAdapter.set_additional_file_paths",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 143,
+                "codeSha": "e709ab0a4a67cf04"
+              },
+              {
+                "at": "arc/scheduler.py::Scheduler.run_composite_job",
+                "form": null,
+                "why": null,
+                "codeChars": null,
+                "codeSha": null
+              },
+              {
+                "at": "arc/scheduler.py::Scheduler._run_a_job",
+                "form": null,
+                "why": null,
+                "codeChars": null,
+                "codeSha": null
+              },
+              {
+                "at": "arc/scheduler.py::Scheduler.parse_opt_geo",
+                "form": null,
+                "why": null,
+                "codeChars": null,
+                "codeSha": null
+              },
+              {
+                "at": "arc/scheduler.py::Scheduler.process_conformers",
+                "form": null,
+                "why": null,
+                "codeChars": null,
+                "codeSha": null
+              }
+            ],
+            "boundary": "Focused orientation: task-relevant evidence selected from the indexed worktree, not an exhaustive repository listing. Items not shown are not thereby absent.",
+            "notes": null,
+            "topLevelKeys": [
+              "boundary",
+              "focus",
+              "related",
+              "schemaVersion"
+            ]
+          },
+          "selectionSha": "623ebb281cb184988eed57fb5feeb9c06a3865a5a36fa730bfdbb0c2c4797457",
+          "serializedCharacters": 4265,
+          "responseTokens": 1067,
+          "boundedness": {
+            "responseBudget": null,
+            "withinDeclaredBudget": null,
+            "boundaryStatementPresent": true,
+            "deliveredItems": 8
+          },
+          "relatedCount": 7
+        },
+        {
+          "task": "where is the level of theory validated",
+          "samples": [
+            366.06,
+            354.83,
+            342.51,
+            336.81,
+            328.4
+          ],
+          "stats": {
+            "n": 5,
+            "median": 342.51,
+            "p90": 366.06,
+            "p95": 366.06,
+            "max": 366.06,
+            "min": 328.4
+          },
+          "semanticSha": [
+            "a694b944cc81f4c6298b1fc733e22e4438a6dd59343a77c1959b2811c1fd63ab"
+          ],
+          "byteSha": [
+            "a694b944cc81f4c6298b1fc733e22e4438a6dd59343a77c1959b2811c1fd63ab"
+          ],
+          "selection": {
+            "schemaVersion": "run_pipeline.orientation/1",
+            "focus": {
+              "at": "arc/level.py::Level",
+              "form": "skeleton",
+              "why": "actionable class — symbol-name match; strong lexical match; issue-domain relevance; 200 dependents",
+              "codeChars": 1397,
+              "codeSha": "9d7806c420f5d98e"
+            },
+            "related": [
+              {
+                "at": "arc/settings/settings.py::default_levels_of_theory",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 568,
+                "codeSha": "28e878c981f5900b"
+              },
+              {
+                "at": "arc/main.py::ARC.process_level_of_theory",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 143,
+                "codeSha": "a1fd8f51b080b598"
+              },
+              {
+                "at": "arc/output.py::_safe_dihedral_for_scan_atoms",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 305,
+                "codeSha": "f65ee022131afb87"
+              },
+              {
+                "at": "arc/checks/nmd_test.py::TestNMD.setUpClass",
+                "form": null,
+                "why": null,
+                "codeChars": null,
+                "codeSha": null
+              },
+              {
+                "at": "arc/checks/nmd_test.py::TestNMD.test_the_scheduler_does_not_switch_a_ts_for_an_unsupported_ess",
+                "form": null,
+                "why": null,
+                "codeChars": null,
+                "codeSha": null
+              }
+            ],
+            "boundary": "Focused orientation: task-relevant evidence selected from the indexed worktree, not an exhaustive repository listing. Items not shown are not thereby absent.",
+            "notes": null,
+            "topLevelKeys": [
+              "boundary",
+              "focus",
+              "related",
+              "schemaVersion"
+            ]
+          },
+          "selectionSha": "e0babd14353136706eace2bd9d97cebc01c99c00773a8e76be6b8491d649e457",
+          "serializedCharacters": 4122,
+          "responseTokens": 1031,
+          "boundedness": {
+            "responseBudget": null,
+            "withinDeclaredBudget": null,
+            "boundaryStatementPresent": true,
+            "deliveredItems": 6
+          },
+          "relatedCount": 5
+        },
+        {
+          "task": "how are species parsed from the input file",
+          "samples": [
+            319.86,
+            329.92,
+            321.34,
+            323.24,
+            334.11
+          ],
+          "stats": {
+            "n": 5,
+            "median": 323.24,
+            "p90": 334.11,
+            "p95": 334.11,
+            "max": 334.11,
+            "min": 319.86
+          },
+          "semanticSha": [
+            "8bf5e83264811b188e5a772193892c1f7eee4102025144b106cabd891a453f80"
+          ],
+          "byteSha": [
+            "8bf5e83264811b188e5a772193892c1f7eee4102025144b106cabd891a453f80"
+          ],
+          "selection": {
+            "schemaVersion": "run_pipeline.orientation/1",
+            "focus": {
+              "at": "arc/parser/parser.py::parse_1d_scan_energies_from_specific_angle",
+              "form": "focused_source",
+              "why": "actionable function — strong lexical match; issue-domain relevance",
+              "codeChars": 845,
+              "codeSha": "e0e4aaacec5701d3"
+            },
+            "related": [
+              {
+                "at": "arc/species/converter.py::xyz_from_data",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 260,
+                "codeSha": "635dab0ebfb04a19"
+              },
+              {
+                "at": "from_payload",
+                "form": "signature",
+                "why": null,
+                "codeChars": 213,
+                "codeSha": "0abd7896f8c9bacc"
+              },
+              {
+                "at": "arc/parser/parser.py::_get_lines_from_file",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 232,
+                "codeSha": "dce7ffb5151b5666"
+              },
+              {
+                "at": "arc/parser/adapters/cfour.py::CfourParser",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 542,
+                "codeSha": "c6ee68ff1c73ae79"
+              },
+              {
+                "at": "arc/parser/adapters/gaussian.py::parse_gaussian_constraints",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 244,
+                "codeSha": "573c0aa7d8d19efc"
+              },
+              {
+                "at": "arc/scheduler.py::Scheduler.check_scan_job",
+                "form": null,
+                "why": null,
+                "codeChars": null,
+                "codeSha": null
+              },
+              {
+                "at": "arc/parser/parser.py::parse_1d_scan_energies",
+                "form": null,
+                "why": null,
+                "codeChars": null,
+                "codeSha": null
+              },
+              {
+                "at": "arc/parser/parser.py::determine_ess",
+                "form": null,
+                "why": null,
+                "codeChars": null,
+                "codeSha": null
+              }
+            ],
+            "boundary": "Focused orientation: task-relevant evidence selected from the indexed worktree, not an exhaustive repository listing. Items not shown are not thereby absent.",
+            "notes": null,
+            "topLevelKeys": [
+              "boundary",
+              "focus",
+              "related",
+              "schemaVersion"
+            ]
+          },
+          "selectionSha": "fe086a3e61ae70e16ec2f5765367c70548f382785735991b2bcf883dea2495ff",
+          "serializedCharacters": 4870,
+          "responseTokens": 1218,
+          "boundedness": {
+            "responseBudget": null,
+            "withinDeclaredBudget": null,
+            "boundaryStatementPresent": true,
+            "deliveredItems": 9
+          },
+          "relatedCount": 8
+        },
+        {
+          "task": "what determines that a job has converged",
+          "samples": [
+            304.96,
+            324.76,
+            304.78,
+            317.32,
+            323.02
+          ],
+          "stats": {
+            "n": 5,
+            "median": 317.32,
+            "p90": 324.76,
+            "p95": 324.76,
+            "max": 324.76,
+            "min": 304.78
+          },
+          "semanticSha": [
+            "12317dea8041ade73151fcaef7e21bbd6a46e372c87392ade1e1a5c8e15d3ffb"
+          ],
+          "byteSha": [
+            "12317dea8041ade73151fcaef7e21bbd6a46e372c87392ade1e1a5c8e15d3ffb"
+          ],
+          "selection": {
+            "schemaVersion": "run_pipeline.orientation/1",
+            "focus": {
+              "at": "arc/job/adapters/scripts/ase_script.py::scan_convergence_warning",
+              "form": "focused_source",
+              "why": "actionable function — strong lexical match; issue-domain relevance",
+              "codeChars": 1596,
+              "codeSha": "f468178860a47ae8"
+            },
+            "related": [
+              {
+                "at": "arc/main.py::ARC.execute",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 209,
+                "codeSha": "2ec0d7f215399c89"
+              },
+              {
+                "at": "arc/job/adapters/scripts/ase_script.py::main",
+                "form": null,
+                "why": null,
+                "codeChars": null,
+                "codeSha": null
+              },
+              {
+                "at": "arc/job/adapters/scripts/ase_script.py::_scan_walk",
+                "form": null,
+                "why": null,
+                "codeChars": null,
+                "codeSha": null
+              },
+              {
+                "at": "arc/job/adapters/scripts/ase_script.py::amu",
+                "form": null,
+                "why": null,
+                "codeChars": null,
+                "codeSha": null
+              },
+              {
+                "at": "arc/job/adapters/scripts/ase_script.py::apply_constraints",
+                "form": null,
+                "why": null,
+                "codeChars": null,
+                "codeSha": null
+              }
+            ],
+            "boundary": "Focused orientation: task-relevant evidence selected from the indexed worktree, not an exhaustive repository listing. Items not shown are not thereby absent.",
+            "notes": null,
+            "topLevelKeys": [
+              "boundary",
+              "focus",
+              "related",
+              "schemaVersion"
+            ]
+          },
+          "selectionSha": "f4e08226aa9d7b192414e9ea90ad697cff4be8f1f0279c23bc6dea54d1d9c9b4",
+          "serializedCharacters": 3451,
+          "responseTokens": 863,
+          "boundedness": {
+            "responseBudget": null,
+            "withinDeclaredBudget": null,
+            "boundaryStatementPresent": true,
+            "deliveredItems": 6
+          },
+          "relatedCount": 5
+        },
+        {
+          "task": "how is the output of a quantum chemistry job parsed",
+          "samples": [
+            334.85,
+            330.91,
+            346.68,
+            335.35,
+            334.15
+          ],
+          "stats": {
+            "n": 5,
+            "median": 334.85,
+            "p90": 346.68,
+            "p95": 346.68,
+            "max": 346.68,
+            "min": 330.91
+          },
+          "semanticSha": [
+            "90e235411449e4216ab1fe77e7613963b2bc544db49b34a2d7185b4d366912bd"
+          ],
+          "byteSha": [
+            "90e235411449e4216ab1fe77e7613963b2bc544db49b34a2d7185b4d366912bd"
+          ],
+          "selection": {
+            "schemaVersion": "run_pipeline.orientation/1",
+            "focus": {
+              "at": "arc/job/adapter.py::JobAdapter.save_output_file",
+              "form": "focused_source",
+              "why": "actionable method — strong lexical match; issue-domain relevance",
+              "codeChars": 897,
+              "codeSha": "20f88606882955fc"
+            },
+            "related": [
+              {
+                "at": "arc/parser/adapters/cfour.py::CfourParser",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 542,
+                "codeSha": "c6ee68ff1c73ae79"
+              },
+              {
+                "at": "arc/job/adapters/psi_4.py::Psi4Adapter.set_files",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 211,
+                "codeSha": "9fd972dac3a9bf75"
+              },
+              {
+                "at": "arc/job/adapters/pyscf_adapter.py::PySCFAdapter.parse_results",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 215,
+                "codeSha": "de2c6da8b4aa69d0"
+              },
+              {
+                "at": "arc/statmech/arkane.py::get_arkane_model_chemistry",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 413,
+                "codeSha": "f2416750db95dc18"
+              },
+              {
+                "at": "arc/job/adapter.py::JobAdapter.rename_output_file",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 212,
+                "codeSha": "d29dd762aef258aa"
+              },
+              {
+                "at": "arc/job/adapters/ase_adapter.py::ASEAdapter.parse_results",
+                "form": "skeleton",
+                "why": null,
+                "codeChars": 83,
+                "codeSha": "b7b043ccb49d7418"
+              },
+              {
+                "at": "arc/job/adapter.py::JobAdapter",
+                "form": null,
+                "why": null,
+                "codeChars": null,
+                "codeSha": null
+              },
+              {
+                "at": "arc/common.py::read_yaml_file",
+                "form": null,
+                "why": null,
+                "codeChars": null,
+                "codeSha": null
+              },
+              {
+                "at": "arc/common.py::save_yaml_file",
+                "form": null,
+                "why": null,
+                "codeChars": null,
+                "codeSha": null
+              },
+              {
+                "at": "arc/job/adapter.py::JobAdapter.__repr__",
+                "form": null,
+                "why": null,
+                "codeChars": null,
+                "codeSha": null
+              }
+            ],
+            "boundary": "Focused orientation: task-relevant evidence selected from the indexed worktree, not an exhaustive repository listing. Items not shown are not thereby absent.",
+            "notes": null,
+            "topLevelKeys": [
+              "boundary",
+              "focus",
+              "related",
+              "schemaVersion"
+            ]
+          },
+          "selectionSha": "455b44f2452866f4c5cc935ff382ec71cd76162521b5f27d8261982ac6add7a4",
+          "serializedCharacters": 5554,
+          "responseTokens": 1389,
+          "boundedness": {
+            "responseBudget": null,
+            "withinDeclaredBudget": null,
+            "boundaryStatementPresent": true,
+            "deliveredItems": 11
+          },
+          "relatedCount": 10
+        }
+      ]
+    }
+  ],
+  "p90ByCorpus": {
+    "C-SMALL": 52.25,
+    "C-MED": 207.46,
+    "C-LARGE": 346.68
+  },
+  "classification": "VTRACE_MATCHES_VEXP_CLAIM"
+}

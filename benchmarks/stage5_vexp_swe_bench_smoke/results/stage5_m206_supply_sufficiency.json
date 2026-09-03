@@ -1,0 +1,341 @@
+{
+  "rule": "required_match_tokens(B) = ceil(0.6 x B) whole-packet chars/4 tokens; SUFFICIENT when the all-bounds median reaches it, INSUFFICIENT when the ceiling-only median does not, INDETERMINATE between; the verdict needs every frozen budget",
+  "rows": [
+    {
+      "budget": 1000,
+      "frozen": true,
+      "responses": 20,
+      "requiredMatchTokens": 600,
+      "requiredExceedTokens": 800,
+      "medianRankedPreCap": 37,
+      "medianPostCap": 2,
+      "medianCurrentFrozenTokens": 465.5,
+      "medianUncappedFrozenTokens": 1028.5,
+      "medianUncappedFrozenTokensAllBounds": 1028.5,
+      "currentUtilisationMedian": 46.55,
+      "theoreticalUtilisationMedian": 102.85,
+      "theoreticalUtilisationAllBoundsMedian": 102.85,
+      "distribution": {
+        "min": 39.8,
+        "p10": 100.5,
+        "median": 102.85,
+        "p90": 103.7,
+        "max": 104.4
+      },
+      "sufficiency": "SUFFICIENT"
+    },
+    {
+      "budget": 1500,
+      "frozen": false,
+      "responses": 20,
+      "requiredMatchTokens": 900,
+      "requiredExceedTokens": 1200,
+      "medianRankedPreCap": 37,
+      "medianPostCap": 6,
+      "medianCurrentFrozenTokens": 989,
+      "medianUncappedFrozenTokens": 1544,
+      "medianUncappedFrozenTokensAllBounds": 1542.5,
+      "currentUtilisationMedian": 65.94,
+      "theoreticalUtilisationMedian": 102.94,
+      "theoreticalUtilisationAllBoundsMedian": 102.84,
+      "distribution": {
+        "min": 66.6,
+        "p10": 68,
+        "median": 102.83500000000001,
+        "p90": 103.67,
+        "max": 104.2
+      },
+      "sufficiency": "SUFFICIENT"
+    },
+    {
+      "budget": 2000,
+      "frozen": true,
+      "responses": 20,
+      "requiredMatchTokens": 1200,
+      "requiredExceedTokens": 1600,
+      "medianRankedPreCap": 37,
+      "medianPostCap": 6,
+      "medianCurrentFrozenTokens": 1004,
+      "medianUncappedFrozenTokens": 2069.5,
+      "medianUncappedFrozenTokensAllBounds": 2069.5,
+      "currentUtilisationMedian": 50.2,
+      "theoreticalUtilisationMedian": 103.47,
+      "theoreticalUtilisationAllBoundsMedian": 103.47,
+      "distribution": {
+        "min": 51,
+        "p10": 82.1,
+        "median": 103.475,
+        "p90": 104.05,
+        "max": 104.25
+      },
+      "sufficiency": "SUFFICIENT"
+    },
+    {
+      "budget": 3000,
+      "frozen": false,
+      "responses": 20,
+      "requiredMatchTokens": 1800,
+      "requiredExceedTokens": 2400,
+      "medianRankedPreCap": 37,
+      "medianPostCap": 6,
+      "medianCurrentFrozenTokens": 1004,
+      "medianUncappedFrozenTokens": 3104.5,
+      "medianUncappedFrozenTokensAllBounds": 2541.5,
+      "currentUtilisationMedian": 33.47,
+      "theoreticalUtilisationMedian": 103.48,
+      "theoreticalUtilisationAllBoundsMedian": 84.72,
+      "distribution": {
+        "min": 34,
+        "p10": 64.8,
+        "median": 84.72,
+        "p90": 103.47,
+        "max": 103.8
+      },
+      "sufficiency": "SUFFICIENT"
+    },
+    {
+      "budget": 4000,
+      "frozen": true,
+      "responses": 20,
+      "requiredMatchTokens": 2400,
+      "requiredExceedTokens": 3200,
+      "medianRankedPreCap": 37,
+      "medianPostCap": 6,
+      "medianCurrentFrozenTokens": 1004,
+      "medianUncappedFrozenTokens": 4071,
+      "medianUncappedFrozenTokensAllBounds": 3791.5,
+      "currentUtilisationMedian": 25.1,
+      "theoreticalUtilisationMedian": 101.78,
+      "theoreticalUtilisationAllBoundsMedian": 94.78,
+      "distribution": {
+        "min": 25.5,
+        "p10": 59.25,
+        "median": 94.785,
+        "p90": 99.92,
+        "max": 102.13
+      },
+      "sufficiency": "SUFFICIENT"
+    },
+    {
+      "budget": 6000,
+      "frozen": false,
+      "responses": 20,
+      "requiredMatchTokens": 3600,
+      "requiredExceedTokens": 4800,
+      "medianRankedPreCap": 37,
+      "medianPostCap": 6,
+      "medianCurrentFrozenTokens": 1004,
+      "medianUncappedFrozenTokens": 4262,
+      "medianUncappedFrozenTokensAllBounds": 4262,
+      "currentUtilisationMedian": 16.73,
+      "theoreticalUtilisationMedian": 71.03,
+      "theoreticalUtilisationAllBoundsMedian": 71.03,
+      "distribution": {
+        "min": 17,
+        "p10": 39.5,
+        "median": 71.035,
+        "p90": 80.23,
+        "max": 83.15
+      },
+      "sufficiency": "SUFFICIENT"
+    },
+    {
+      "budget": 8000,
+      "frozen": true,
+      "responses": 20,
+      "requiredMatchTokens": 4800,
+      "requiredExceedTokens": 6400,
+      "medianRankedPreCap": 37,
+      "medianPostCap": 6,
+      "medianCurrentFrozenTokens": 1053.5,
+      "medianUncappedFrozenTokens": 4215.5,
+      "medianUncappedFrozenTokensAllBounds": 4215.5,
+      "currentUtilisationMedian": 13.17,
+      "theoreticalUtilisationMedian": 52.69,
+      "theoreticalUtilisationAllBoundsMedian": 52.69,
+      "distribution": {
+        "min": 15.06,
+        "p10": 30.16,
+        "median": 52.69,
+        "p90": 60.25,
+        "max": 62.36
+      },
+      "sufficiency": "INSUFFICIENT"
+    },
+    {
+      "budget": 12000,
+      "frozen": false,
+      "responses": 20,
+      "requiredMatchTokens": 7200,
+      "requiredExceedTokens": 9600,
+      "medianRankedPreCap": 38,
+      "medianPostCap": 15,
+      "medianCurrentFrozenTokens": 2186.5,
+      "medianUncappedFrozenTokens": 4435,
+      "medianUncappedFrozenTokensAllBounds": 4435,
+      "currentUtilisationMedian": 18.23,
+      "theoreticalUtilisationMedian": 36.96,
+      "theoreticalUtilisationAllBoundsMedian": 36.96,
+      "distribution": {
+        "min": 17.57,
+        "p10": 20.23,
+        "median": 36.959999999999994,
+        "p90": 40.96,
+        "max": 42.79
+      },
+      "sufficiency": "INSUFFICIENT"
+    },
+    {
+      "budget": 16000,
+      "frozen": true,
+      "responses": 20,
+      "requiredMatchTokens": 9600,
+      "requiredExceedTokens": 12800,
+      "medianRankedPreCap": 38,
+      "medianPostCap": 15,
+      "medianCurrentFrozenTokens": 2198.5,
+      "medianUncappedFrozenTokens": 4475,
+      "medianUncappedFrozenTokensAllBounds": 4475,
+      "currentUtilisationMedian": 13.74,
+      "theoreticalUtilisationMedian": 27.97,
+      "theoreticalUtilisationAllBoundsMedian": 27.97,
+      "distribution": {
+        "min": 13.18,
+        "p10": 15.17,
+        "median": 27.97,
+        "p90": 30.72,
+        "max": 32.09
+      },
+      "sufficiency": "INSUFFICIENT"
+    }
+  ],
+  "verdict": "A11_SUPPLY_INSUFFICIENT",
+  "counterfactualFrozenBand": {
+    "utilisationByBudget": {
+      "1000": {
+        "median": 102.85,
+        "medianAllBounds": 102.85
+      },
+      "2000": {
+        "median": 103.47,
+        "medianAllBounds": 103.47
+      },
+      "4000": {
+        "median": 101.78,
+        "medianAllBounds": 94.78
+      },
+      "8000": {
+        "median": 52.69,
+        "medianAllBounds": 52.69
+      },
+      "16000": {
+        "median": 27.97,
+        "medianAllBounds": 27.97
+      }
+    },
+    "verdictIfUncapped": "VTRACE_BELOW_VEXP_CLAIM",
+    "verdictIfUncappedAllBounds": "VTRACE_BELOW_VEXP_CLAIM"
+  },
+  "worstDeficits": [
+    {
+      "task": "what deduplicates supporting files in the capsule",
+      "budget": 16000,
+      "required": 9600,
+      "uncapped": 2108,
+      "deficit": 7492,
+      "candidateCount": null,
+      "rankedPreCap": null,
+      "stop": "NO_TRUTHFUL_SUPPLY"
+    },
+    {
+      "task": "how does cython parsing differ from python parsing",
+      "budget": 16000,
+      "required": 9600,
+      "uncapped": 2427,
+      "deficit": 7173,
+      "candidateCount": 31,
+      "rankedPreCap": 38,
+      "stop": "OTHER_EXPLICIT_POLICY"
+    },
+    {
+      "task": "where is the MCP tool registry assembled",
+      "budget": 16000,
+      "required": 9600,
+      "uncapped": 3234,
+      "deficit": 6366,
+      "candidateCount": 25,
+      "rankedPreCap": 32,
+      "stop": "OTHER_EXPLICIT_POLICY"
+    },
+    {
+      "task": "how does hybrid scoring combine lexical and graph signals",
+      "budget": 16000,
+      "required": 9600,
+      "uncapped": 3837,
+      "deficit": 5763,
+      "candidateCount": 29,
+      "rankedPreCap": 37,
+      "stop": "OTHER_EXPLICIT_POLICY"
+    },
+    {
+      "task": "where are import edges extracted from typescript",
+      "budget": 16000,
+      "required": 9600,
+      "uncapped": 4123,
+      "deficit": 5477,
+      "candidateCount": 29,
+      "rankedPreCap": 39,
+      "stop": "OTHER_EXPLICIT_POLICY"
+    },
+    {
+      "task": "where does logic flow decide a path is unreachable",
+      "budget": 16000,
+      "required": 9600,
+      "uncapped": 4168,
+      "deficit": 5432,
+      "candidateCount": 31,
+      "rankedPreCap": 39,
+      "stop": "OTHER_EXPLICIT_POLICY"
+    },
+    {
+      "task": "budget allocation for capsule items is dropping sections",
+      "budget": 16000,
+      "required": 9600,
+      "uncapped": 4172,
+      "deficit": 5428,
+      "candidateCount": 31,
+      "rankedPreCap": 35,
+      "stop": "OTHER_EXPLICIT_POLICY"
+    },
+    {
+      "task": "how does search rank candidate symbols for a task",
+      "budget": 16000,
+      "required": 9600,
+      "uncapped": 4350,
+      "deficit": 5250,
+      "candidateCount": 30,
+      "rankedPreCap": 37,
+      "stop": "OTHER_EXPLICIT_POLICY"
+    },
+    {
+      "task": "how are skeleton declarations built from indexed symbols",
+      "budget": 16000,
+      "required": 9600,
+      "uncapped": 4376,
+      "deficit": 5224,
+      "candidateCount": 27,
+      "rankedPreCap": 36,
+      "stop": "OTHER_EXPLICIT_POLICY"
+    },
+    {
+      "task": "where are call sites persisted for an edge",
+      "budget": 16000,
+      "required": 9600,
+      "uncapped": 4446,
+      "deficit": 5154,
+      "candidateCount": 29,
+      "rankedPreCap": 36,
+      "stop": "OTHER_EXPLICIT_POLICY"
+    }
+  ]
+}

@@ -1,0 +1,427 @@
+{
+  "corpus": "C-MED",
+  "worstTenPostChange": [
+    {
+      "task": "how does cython parsing differ from python parsing",
+      "budget": 16000,
+      "utilisationPercent": 16.3,
+      "frozenWholeTokens": 2608,
+      "items": 22,
+      "candidateCount": 31,
+      "rankedPreCap": 38,
+      "postCap": 22,
+      "remainingTruthfulSupply": 0,
+      "nextItemFits": false,
+      "counterfactualUtilisation": 16.3,
+      "counterfactualUtilisationAllBounds": 16.3,
+      "stop": {
+        "reason": "OTHER_EXPLICIT_POLICY",
+        "policy": "CANDIDATE_POOL_CAP",
+        "detail": "the ranked stream ends at the retrieval pool cap (31 of 25)"
+      },
+      "counterfactualStop": "OTHER_EXPLICIT_POLICY",
+      "bindingReason": "NO_ELIGIBLE_EVIDENCE"
+    },
+    {
+      "task": "where is the MCP tool registry assembled",
+      "budget": 16000,
+      "utilisationPercent": 22.99,
+      "frozenWholeTokens": 3678,
+      "items": 32,
+      "candidateCount": 25,
+      "rankedPreCap": 34,
+      "postCap": 32,
+      "remainingTruthfulSupply": 0,
+      "nextItemFits": false,
+      "counterfactualUtilisation": 22.99,
+      "counterfactualUtilisationAllBounds": 22.99,
+      "stop": {
+        "reason": "OTHER_EXPLICIT_POLICY",
+        "policy": "CANDIDATE_POOL_CAP",
+        "detail": "the ranked stream ends at the retrieval pool cap (25 of 25)"
+      },
+      "counterfactualStop": "OTHER_EXPLICIT_POLICY",
+      "bindingReason": "NO_ELIGIBLE_EVIDENCE"
+    },
+    {
+      "task": "what deduplicates supporting files in the capsule",
+      "budget": 16000,
+      "utilisationPercent": 23.96,
+      "frozenWholeTokens": 3834,
+      "items": 33,
+      "candidateCount": null,
+      "rankedPreCap": null,
+      "postCap": null,
+      "remainingTruthfulSupply": 0,
+      "nextItemFits": false,
+      "counterfactualUtilisation": 23.96,
+      "counterfactualUtilisationAllBounds": 23.96,
+      "stop": {
+        "reason": "NO_TRUTHFUL_SUPPLY",
+        "policy": null,
+        "detail": "every eligible ranked candidate delivered (pool ? of 25)"
+      },
+      "counterfactualStop": "NO_TRUTHFUL_SUPPLY",
+      "bindingReason": "NO_ELIGIBLE_EVIDENCE"
+    },
+    {
+      "task": "how does hybrid scoring combine lexical and graph signals",
+      "budget": 16000,
+      "utilisationPercent": 24.14,
+      "frozenWholeTokens": 3862,
+      "items": 35,
+      "candidateCount": 29,
+      "rankedPreCap": 37,
+      "postCap": 35,
+      "remainingTruthfulSupply": 0,
+      "nextItemFits": false,
+      "counterfactualUtilisation": 24.14,
+      "counterfactualUtilisationAllBounds": 24.14,
+      "stop": {
+        "reason": "OTHER_EXPLICIT_POLICY",
+        "policy": "CANDIDATE_POOL_CAP",
+        "detail": "the ranked stream ends at the retrieval pool cap (29 of 25)"
+      },
+      "counterfactualStop": "OTHER_EXPLICIT_POLICY",
+      "bindingReason": "NO_ELIGIBLE_EVIDENCE"
+    },
+    {
+      "task": "budget allocation for capsule items is dropping sections",
+      "budget": 16000,
+      "utilisationPercent": 25.14,
+      "frozenWholeTokens": 4022,
+      "items": 31,
+      "candidateCount": 31,
+      "rankedPreCap": 35,
+      "postCap": 31,
+      "remainingTruthfulSupply": 0,
+      "nextItemFits": false,
+      "counterfactualUtilisation": 25.14,
+      "counterfactualUtilisationAllBounds": 25.14,
+      "stop": {
+        "reason": "OTHER_EXPLICIT_POLICY",
+        "policy": "CANDIDATE_POOL_CAP",
+        "detail": "the ranked stream ends at the retrieval pool cap (31 of 25)"
+      },
+      "counterfactualStop": "OTHER_EXPLICIT_POLICY",
+      "bindingReason": "NO_ELIGIBLE_EVIDENCE"
+    },
+    {
+      "task": "where are import edges extracted from typescript",
+      "budget": 16000,
+      "utilisationPercent": 25.38,
+      "frozenWholeTokens": 4060,
+      "items": 38,
+      "candidateCount": 29,
+      "rankedPreCap": 39,
+      "postCap": 37,
+      "remainingTruthfulSupply": 0,
+      "nextItemFits": false,
+      "counterfactualUtilisation": 25.38,
+      "counterfactualUtilisationAllBounds": 25.38,
+      "stop": {
+        "reason": "OTHER_EXPLICIT_POLICY",
+        "policy": "CANDIDATE_POOL_CAP",
+        "detail": "the ranked stream ends at the retrieval pool cap (29 of 25)"
+      },
+      "counterfactualStop": "OTHER_EXPLICIT_POLICY",
+      "bindingReason": "NO_ELIGIBLE_EVIDENCE"
+    },
+    {
+      "task": "where does logic flow decide a path is unreachable",
+      "budget": 16000,
+      "utilisationPercent": 26.98,
+      "frozenWholeTokens": 4317,
+      "items": 33,
+      "candidateCount": 31,
+      "rankedPreCap": 39,
+      "postCap": 33,
+      "remainingTruthfulSupply": 0,
+      "nextItemFits": false,
+      "counterfactualUtilisation": 26.98,
+      "counterfactualUtilisationAllBounds": 26.98,
+      "stop": {
+        "reason": "OTHER_EXPLICIT_POLICY",
+        "policy": "CANDIDATE_POOL_CAP",
+        "detail": "the ranked stream ends at the retrieval pool cap (31 of 25)"
+      },
+      "counterfactualStop": "OTHER_EXPLICIT_POLICY",
+      "bindingReason": "NO_ELIGIBLE_EVIDENCE"
+    },
+    {
+      "task": "how does search rank candidate symbols for a task",
+      "budget": 16000,
+      "utilisationPercent": 27.19,
+      "frozenWholeTokens": 4350,
+      "items": 40,
+      "candidateCount": 30,
+      "rankedPreCap": 37,
+      "postCap": 35,
+      "remainingTruthfulSupply": 0,
+      "nextItemFits": false,
+      "counterfactualUtilisation": 27.19,
+      "counterfactualUtilisationAllBounds": 27.19,
+      "stop": {
+        "reason": "OTHER_EXPLICIT_POLICY",
+        "policy": "CANDIDATE_POOL_CAP",
+        "detail": "the ranked stream ends at the retrieval pool cap (30 of 25)"
+      },
+      "counterfactualStop": "OTHER_EXPLICIT_POLICY",
+      "bindingReason": "NO_ELIGIBLE_EVIDENCE"
+    },
+    {
+      "task": "what writes the index manifest after a run",
+      "budget": 16000,
+      "utilisationPercent": 27.2,
+      "frozenWholeTokens": 4352,
+      "items": 38,
+      "candidateCount": 28,
+      "rankedPreCap": 37,
+      "postCap": 36,
+      "remainingTruthfulSupply": 0,
+      "nextItemFits": false,
+      "counterfactualUtilisation": 27.2,
+      "counterfactualUtilisationAllBounds": 27.2,
+      "stop": {
+        "reason": "OTHER_EXPLICIT_POLICY",
+        "policy": "CANDIDATE_POOL_CAP",
+        "detail": "the ranked stream ends at the retrieval pool cap (28 of 25)"
+      },
+      "counterfactualStop": "OTHER_EXPLICIT_POLICY",
+      "bindingReason": "NO_ELIGIBLE_EVIDENCE"
+    },
+    {
+      "task": "how are skeleton declarations built from indexed symbols",
+      "budget": 16000,
+      "utilisationPercent": 27.44,
+      "frozenWholeTokens": 4390,
+      "items": 31,
+      "candidateCount": 27,
+      "rankedPreCap": 36,
+      "postCap": 31,
+      "remainingTruthfulSupply": 0,
+      "nextItemFits": false,
+      "counterfactualUtilisation": 27.44,
+      "counterfactualUtilisationAllBounds": 27.44,
+      "stop": {
+        "reason": "OTHER_EXPLICIT_POLICY",
+        "policy": "CANDIDATE_POOL_CAP",
+        "detail": "the ranked stream ends at the retrieval pool cap (27 of 25)"
+      },
+      "counterfactualStop": "OTHER_EXPLICIT_POLICY",
+      "bindingReason": "NO_ELIGIBLE_EVIDENCE"
+    }
+  ],
+  "worstTenPreChange": [
+    {
+      "task": "where are import edges extracted from typescript",
+      "budget": 8000,
+      "utilisationPercent": 9.88,
+      "frozenWholeTokens": 790,
+      "items": 9,
+      "candidateCount": 29,
+      "rankedPreCap": 39,
+      "postCap": 6,
+      "remainingTruthfulSupply": 31,
+      "nextItemFits": true,
+      "counterfactualUtilisation": 48.51,
+      "counterfactualUtilisationAllBounds": 48.51,
+      "stop": {
+        "reason": "OTHER_EXPLICIT_POLICY",
+        "policy": "FIXED_TIER_SUPPORT_CAP",
+        "detail": "31 ranked support candidates discarded for the tier's item count"
+      },
+      "counterfactualStop": "OTHER_EXPLICIT_POLICY",
+      "bindingReason": "OTHER"
+    },
+    {
+      "task": "where is the MCP tool registry assembled",
+      "budget": 8000,
+      "utilisationPercent": 10.84,
+      "frozenWholeTokens": 867,
+      "items": 8,
+      "candidateCount": 25,
+      "rankedPreCap": 32,
+      "postCap": 6,
+      "remainingTruthfulSupply": 23,
+      "nextItemFits": true,
+      "counterfactualUtilisation": 38.59,
+      "counterfactualUtilisationAllBounds": 38.59,
+      "stop": {
+        "reason": "OTHER_EXPLICIT_POLICY",
+        "policy": "FIXED_TIER_SUPPORT_CAP",
+        "detail": "23 ranked support candidates discarded for the tier's item count"
+      },
+      "counterfactualStop": "OTHER_EXPLICIT_POLICY",
+      "bindingReason": "OTHER"
+    },
+    {
+      "task": "how does cython parsing differ from python parsing",
+      "budget": 16000,
+      "utilisationPercent": 11.26,
+      "frozenWholeTokens": 1802,
+      "items": 17,
+      "candidateCount": 31,
+      "rankedPreCap": 38,
+      "postCap": 14,
+      "remainingTruthfulSupply": 8,
+      "nextItemFits": true,
+      "counterfactualUtilisation": 15.17,
+      "counterfactualUtilisationAllBounds": 15.17,
+      "stop": {
+        "reason": "OTHER_EXPLICIT_POLICY",
+        "policy": "FIXED_TIER_SUPPORT_CAP",
+        "detail": "8 ranked support candidates discarded for the tier's item count"
+      },
+      "counterfactualStop": "OTHER_EXPLICIT_POLICY",
+      "bindingReason": "OTHER"
+    },
+    {
+      "task": "where are call sites persisted for an edge",
+      "budget": 8000,
+      "utilisationPercent": 11.41,
+      "frozenWholeTokens": 913,
+      "items": 9,
+      "candidateCount": 29,
+      "rankedPreCap": 36,
+      "postCap": 6,
+      "remainingTruthfulSupply": 29,
+      "nextItemFits": true,
+      "counterfactualUtilisation": 54.67,
+      "counterfactualUtilisationAllBounds": 54.67,
+      "stop": {
+        "reason": "OTHER_EXPLICIT_POLICY",
+        "policy": "FIXED_TIER_SUPPORT_CAP",
+        "detail": "29 ranked support candidates discarded for the tier's item count"
+      },
+      "counterfactualStop": "OTHER_EXPLICIT_POLICY",
+      "bindingReason": "OTHER"
+    },
+    {
+      "task": "how does hybrid scoring combine lexical and graph signals",
+      "budget": 8000,
+      "utilisationPercent": 12.26,
+      "frozenWholeTokens": 981,
+      "items": 9,
+      "candidateCount": 29,
+      "rankedPreCap": 37,
+      "postCap": 6,
+      "remainingTruthfulSupply": 30,
+      "nextItemFits": true,
+      "counterfactualUtilisation": 43.49,
+      "counterfactualUtilisationAllBounds": 43.49,
+      "stop": {
+        "reason": "OTHER_EXPLICIT_POLICY",
+        "policy": "FIXED_TIER_SUPPORT_CAP",
+        "detail": "30 ranked support candidates discarded for the tier's item count"
+      },
+      "counterfactualStop": "OTHER_EXPLICIT_POLICY",
+      "bindingReason": "OTHER"
+    },
+    {
+      "task": "how is a symbol's fully qualified name constructed",
+      "budget": 8000,
+      "utilisationPercent": 12.34,
+      "frozenWholeTokens": 987,
+      "items": 13,
+      "candidateCount": 31,
+      "rankedPreCap": 39,
+      "postCap": 6,
+      "remainingTruthfulSupply": 30,
+      "nextItemFits": true,
+      "counterfactualUtilisation": 57.61,
+      "counterfactualUtilisationAllBounds": 57.61,
+      "stop": {
+        "reason": "OTHER_EXPLICIT_POLICY",
+        "policy": "FIXED_TIER_SUPPORT_CAP",
+        "detail": "30 ranked support candidates discarded for the tier's item count"
+      },
+      "counterfactualStop": "OTHER_EXPLICIT_POLICY",
+      "bindingReason": "OTHER"
+    },
+    {
+      "task": "budget allocation for capsule items is dropping sections",
+      "budget": 8000,
+      "utilisationPercent": 12.38,
+      "frozenWholeTokens": 990,
+      "items": 10,
+      "candidateCount": 31,
+      "rankedPreCap": 35,
+      "postCap": 6,
+      "remainingTruthfulSupply": 26,
+      "nextItemFits": true,
+      "counterfactualUtilisation": 50.09,
+      "counterfactualUtilisationAllBounds": 50.09,
+      "stop": {
+        "reason": "OTHER_EXPLICIT_POLICY",
+        "policy": "FIXED_TIER_SUPPORT_CAP",
+        "detail": "26 ranked support candidates discarded for the tier's item count"
+      },
+      "counterfactualStop": "OTHER_EXPLICIT_POLICY",
+      "bindingReason": "OTHER"
+    },
+    {
+      "task": "where are import edges extracted from typescript",
+      "budget": 16000,
+      "utilisationPercent": 12.39,
+      "frozenWholeTokens": 1983,
+      "items": 16,
+      "candidateCount": 29,
+      "rankedPreCap": 39,
+      "postCap": 15,
+      "remainingTruthfulSupply": 22,
+      "nextItemFits": true,
+      "counterfactualUtilisation": 25.77,
+      "counterfactualUtilisationAllBounds": 25.77,
+      "stop": {
+        "reason": "OTHER_EXPLICIT_POLICY",
+        "policy": "FIXED_TIER_SUPPORT_CAP",
+        "detail": "22 ranked support candidates discarded for the tier's item count"
+      },
+      "counterfactualStop": "OTHER_EXPLICIT_POLICY",
+      "bindingReason": "OTHER"
+    },
+    {
+      "task": "how does hybrid scoring combine lexical and graph signals",
+      "budget": 16000,
+      "utilisationPercent": 12.43,
+      "frozenWholeTokens": 1989,
+      "items": 16,
+      "candidateCount": 29,
+      "rankedPreCap": 37,
+      "postCap": 15,
+      "remainingTruthfulSupply": 21,
+      "nextItemFits": true,
+      "counterfactualUtilisation": 23.98,
+      "counterfactualUtilisationAllBounds": 23.98,
+      "stop": {
+        "reason": "OTHER_EXPLICIT_POLICY",
+        "policy": "FIXED_TIER_SUPPORT_CAP",
+        "detail": "21 ranked support candidates discarded for the tier's item count"
+      },
+      "counterfactualStop": "OTHER_EXPLICIT_POLICY",
+      "bindingReason": "OTHER"
+    },
+    {
+      "task": "where does the product context decide which files are pivots",
+      "budget": 8000,
+      "utilisationPercent": 12.53,
+      "frozenWholeTokens": 1002,
+      "items": 11,
+      "candidateCount": 34,
+      "rankedPreCap": 42,
+      "postCap": 6,
+      "remainingTruthfulSupply": 32,
+      "nextItemFits": true,
+      "counterfactualUtilisation": 55.04,
+      "counterfactualUtilisationAllBounds": 55.04,
+      "stop": {
+        "reason": "OTHER_EXPLICIT_POLICY",
+        "policy": "FIXED_TIER_SUPPORT_CAP",
+        "detail": "32 ranked support candidates discarded for the tier's item count"
+      },
+      "counterfactualStop": "OTHER_EXPLICIT_POLICY",
+      "bindingReason": "OTHER"
+    }
+  ]
+}
