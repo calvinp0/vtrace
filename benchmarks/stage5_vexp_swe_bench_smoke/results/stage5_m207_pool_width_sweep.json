@@ -1,0 +1,3756 @@
+{
+  "protocol": {
+    "calls": "get_code_context, default detail, max_tokens at each budget, one index per corpus copy; per width one server whose construction-time retrievalInstrumentation.candidatePoolSize is the width; one paired detail=debug call (include_item_content) and one direct read-only capsule build at the same width per request",
+    "tasks": "A13_TASKS (all 20 on C-MED, first 3 elsewhere)",
+    "budgets": [
+      1000,
+      1500,
+      2000,
+      3000,
+      4000,
+      6000,
+      8000,
+      12000,
+      16000
+    ],
+    "frozenBudgets": [
+      1000,
+      2000,
+      4000,
+      8000,
+      16000
+    ],
+    "widths": [
+      "25",
+      "50",
+      "100",
+      "200",
+      "uncapped"
+    ],
+    "heldFixed": "lexical row budget (lexicalPoolSizeFor(product pool)), backfill lane windows, anchors, decoy suppression, role gate, pivot cap, support window, M206 token-budget packing, M158 dedupe, lane ceilings, assembly, evidence budget, envelope, M205 router, M203 accounting, projector ceiling",
+    "frozenNumerator": "ceil(JSON.stringify(output).length / 4) (engine rule, verbatim)",
+    "frozenDenominator": "the caller's max_tokens",
+    "frozenAggregate": "per-budget median over the C-MED tasks",
+    "frozenBand": "MATCHES >= 60% at every frozen budget; EXCEEDS >= 80% (report rule, verbatim)",
+    "sufficiencyRule": "required_match_tokens(B) = ceil(0.6 x B) whole-packet chars/4 tokens; a width is SUFFICIENT at a budget when the median of its REAL packets reaches it; the verdict is taken on the widest width at every frozen budget"
+  },
+  "product": {
+    "root": "/home/calvin/code/vtrace",
+    "head": "b150fcb95f2e3a376170daff62a5e038c305a58f",
+    "fixedPool": 25,
+    "productPoolByBudget": {
+      "1000": 25,
+      "1500": 25,
+      "2000": 25,
+      "3000": 25,
+      "4000": 25,
+      "6000": 25,
+      "8000": 25,
+      "12000": 25,
+      "16000": 25
+    },
+    "relatedCodeCharacters": 600
+  },
+  "seamIdentity": {
+    "compared": 180,
+    "identical": 180,
+    "differing": []
+  },
+  "table": [
+    {
+      "width": "25",
+      "a11": {
+        "1000": 85.05,
+        "2000": 95.4,
+        "4000": 101.65,
+        "8000": 55.45,
+        "16000": 27.88
+      },
+      "verdict": "VTRACE_BELOW_VEXP_CLAIM",
+      "byBudget": {
+        "1000": {
+          "supply": {
+            "width": 25,
+            "budget": 1000,
+            "frozen": true,
+            "responses": 20,
+            "requiredMatchTokens": 600,
+            "requiredExceedTokens": 800,
+            "medianFrozenTokens": 850.5,
+            "medianUtilisation": 85.05,
+            "medianCandidateCount": 31,
+            "medianRankedStream": 38,
+            "medianDeliveredItems": 8,
+            "medianUnusedBudget": 149.5,
+            "sufficiency": "SUFFICIENT"
+          },
+          "medians": {
+            "candidateCount": 31,
+            "rankedStream": 38,
+            "eligible": 27,
+            "pivots": 1,
+            "support": 17,
+            "discarded": 20,
+            "roleDiscards": 2,
+            "assemblyItems": 1,
+            "selectedBeforeBudget": 22,
+            "deliveredUpstream": 9.5,
+            "droppedForBudget": 14,
+            "projectorProposed": 8,
+            "projectorAdmitted": 8,
+            "projectorDeduplicated": 0,
+            "projectorRejectedForCeiling": 0,
+            "items": 8,
+            "frozenWholeTokens": 850.5,
+            "evidenceTokens": 1055.5,
+            "unusedFrozenBudget": 149.5,
+            "renderedCharacters": null
+          },
+          "stopReasons": {
+            "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 20
+          },
+          "upstreamStatus": {
+            "compacted": 20
+          },
+          "latency": {
+            "n": 20,
+            "median": 184.85,
+            "p90": 203.68,
+            "p95": 222.29,
+            "max": 810.93,
+            "min": 171.04
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 117.19,
+            "p90": 142.86,
+            "p95": 143.38,
+            "max": 719.68,
+            "min": 0.42
+          },
+          "largestPacketBytes": 4092,
+          "utilisation": {
+            "min": 75.7,
+            "p10": 77.4,
+            "median": 85.05,
+            "p90": 101.9,
+            "max": 102.3
+          },
+          "discardTotals": {
+            "TOKEN_BUDGET": 311,
+            "ROLE_GATE": 66,
+            "LANE_TOKEN_CEILING": 1
+          },
+          "integrityFailures": 0
+        },
+        "1500": {
+          "supply": {
+            "width": 25,
+            "budget": 1500,
+            "frozen": false,
+            "responses": 20,
+            "requiredMatchTokens": 900,
+            "requiredExceedTokens": 1200,
+            "medianFrozenTokens": 1351,
+            "medianUtilisation": 90.06,
+            "medianCandidateCount": 31,
+            "medianRankedStream": 38,
+            "medianDeliveredItems": 12,
+            "medianUnusedBudget": 149,
+            "sufficiency": "SUFFICIENT"
+          },
+          "medians": {
+            "candidateCount": 31,
+            "rankedStream": 38,
+            "eligible": 27,
+            "pivots": 2,
+            "support": 21,
+            "discarded": 13,
+            "roleDiscards": 2,
+            "assemblyItems": 1,
+            "selectedBeforeBudget": 30,
+            "deliveredUpstream": 13,
+            "droppedForBudget": 15,
+            "projectorProposed": 12,
+            "projectorAdmitted": 12,
+            "projectorDeduplicated": 0,
+            "projectorRejectedForCeiling": 0,
+            "items": 12,
+            "frozenWholeTokens": 1351,
+            "evidenceTokens": 1669.5,
+            "unusedFrozenBudget": 149,
+            "renderedCharacters": 384
+          },
+          "stopReasons": {
+            "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 20
+          },
+          "upstreamStatus": {
+            "compacted": 20
+          },
+          "latency": {
+            "n": 20,
+            "median": 191.74,
+            "p90": 236.21,
+            "p95": 250.87,
+            "max": 838.2,
+            "min": 175.9
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 118.62,
+            "p90": 128.63,
+            "p95": 147.27,
+            "max": 733.96,
+            "min": 0.5
+          },
+          "largestPacketBytes": 6174,
+          "utilisation": {
+            "min": 7.2,
+            "p10": 44.87,
+            "median": 90.065,
+            "p90": 102.8,
+            "max": 102.93
+          },
+          "discardTotals": {
+            "TOKEN_BUDGET": 202,
+            "ROLE_GATE": 66
+          },
+          "integrityFailures": 0
+        },
+        "2000": {
+          "supply": {
+            "width": 25,
+            "budget": 2000,
+            "frozen": true,
+            "responses": 20,
+            "requiredMatchTokens": 1200,
+            "requiredExceedTokens": 1600,
+            "medianFrozenTokens": 1908,
+            "medianUtilisation": 95.4,
+            "medianCandidateCount": 31,
+            "medianRankedStream": 38,
+            "medianDeliveredItems": 16.5,
+            "medianUnusedBudget": 92,
+            "sufficiency": "SUFFICIENT"
+          },
+          "medians": {
+            "candidateCount": 31,
+            "rankedStream": 38,
+            "eligible": 27,
+            "pivots": 2,
+            "support": 30,
+            "discarded": 5,
+            "roleDiscards": 2,
+            "assemblyItems": 1,
+            "selectedBeforeBudget": 36.5,
+            "deliveredUpstream": 19,
+            "droppedForBudget": 17.5,
+            "projectorProposed": 16.5,
+            "projectorAdmitted": 16.5,
+            "projectorDeduplicated": 0,
+            "projectorRejectedForCeiling": 0,
+            "items": 16.5,
+            "frozenWholeTokens": 1908,
+            "evidenceTokens": 2355.5,
+            "unusedFrozenBudget": 92,
+            "renderedCharacters": null
+          },
+          "stopReasons": {
+            "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 20
+          },
+          "upstreamStatus": {
+            "compacted": 20
+          },
+          "latency": {
+            "n": 20,
+            "median": 197.24,
+            "p90": 231.95,
+            "p95": 244.09,
+            "max": 992,
+            "min": 183.21
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 119.3,
+            "p90": 129.25,
+            "p95": 167.33,
+            "max": 836.81,
+            "min": 0.33
+          },
+          "largestPacketBytes": 8249,
+          "utilisation": {
+            "min": 55.15,
+            "p10": 69.75,
+            "median": 95.4,
+            "p90": 102.8,
+            "max": 103.15
+          },
+          "discardTotals": {
+            "ROLE_GATE": 66,
+            "TOKEN_BUDGET": 64
+          },
+          "integrityFailures": 0
+        },
+        "3000": {
+          "supply": {
+            "width": 25,
+            "budget": 3000,
+            "frozen": false,
+            "responses": 20,
+            "requiredMatchTokens": 1800,
+            "requiredExceedTokens": 2400,
+            "medianFrozenTokens": 3021.5,
+            "medianUtilisation": 100.72,
+            "medianCandidateCount": 31,
+            "medianRankedStream": 38,
+            "medianDeliveredItems": 25,
+            "medianUnusedBudget": -21.5,
+            "sufficiency": "SUFFICIENT"
+          },
+          "medians": {
+            "candidateCount": 31,
+            "rankedStream": 38,
+            "eligible": 27,
+            "pivots": 2,
+            "support": 33,
+            "discarded": 2,
+            "roleDiscards": 2,
+            "assemblyItems": 1,
+            "selectedBeforeBudget": 39.5,
+            "deliveredUpstream": 28,
+            "droppedForBudget": 11,
+            "projectorProposed": 25,
+            "projectorAdmitted": 25,
+            "projectorDeduplicated": 0,
+            "projectorRejectedForCeiling": 0,
+            "items": 25,
+            "frozenWholeTokens": 3021.5,
+            "evidenceTokens": 3736.5,
+            "unusedFrozenBudget": -21.5,
+            "renderedCharacters": null
+          },
+          "stopReasons": {
+            "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 20
+          },
+          "upstreamStatus": {
+            "compacted": 20
+          },
+          "latency": {
+            "n": 20,
+            "median": 202.84,
+            "p90": 233.33,
+            "p95": 263.33,
+            "max": 1109.07,
+            "min": 181.35
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 119.53,
+            "p90": 134.64,
+            "p95": 147.13,
+            "max": 766.11,
+            "min": 0.62
+          },
+          "largestPacketBytes": 12377,
+          "utilisation": {
+            "min": 74.1,
+            "p10": 85.83,
+            "median": 100.715,
+            "p90": 102.6,
+            "max": 103.17
+          },
+          "discardTotals": {
+            "ROLE_GATE": 66
+          },
+          "integrityFailures": 0
+        },
+        "4000": {
+          "supply": {
+            "width": 25,
+            "budget": 4000,
+            "frozen": true,
+            "responses": 20,
+            "requiredMatchTokens": 2400,
+            "requiredExceedTokens": 3200,
+            "medianFrozenTokens": 4066,
+            "medianUtilisation": 101.65,
+            "medianCandidateCount": 31,
+            "medianRankedStream": 38,
+            "medianDeliveredItems": 33,
+            "medianUnusedBudget": -66,
+            "sufficiency": "SUFFICIENT"
+          },
+          "medians": {
+            "candidateCount": 31,
+            "rankedStream": 38,
+            "eligible": 27,
+            "pivots": 2,
+            "support": 33,
+            "discarded": 2,
+            "roleDiscards": 2,
+            "assemblyItems": 1,
+            "selectedBeforeBudget": 39.5,
+            "deliveredUpstream": 36,
+            "droppedForBudget": 1,
+            "projectorProposed": 33,
+            "projectorAdmitted": 33,
+            "projectorDeduplicated": 0,
+            "projectorRejectedForCeiling": 0,
+            "items": 33,
+            "frozenWholeTokens": 4066,
+            "evidenceTokens": 5020,
+            "unusedFrozenBudget": -66,
+            "renderedCharacters": null
+          },
+          "stopReasons": {
+            "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 19,
+            "OTHER_EXPLICIT_POLICY:CANDIDATE_POOL_CAP": 1
+          },
+          "upstreamStatus": {
+            "compacted": 19,
+            "complete": 1
+          },
+          "latency": {
+            "n": 20,
+            "median": 203.77,
+            "p90": 242.82,
+            "p95": 286.95,
+            "max": 925.75,
+            "min": 172.54
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 116.91,
+            "p90": 134.37,
+            "p95": 152.82,
+            "max": 716.86,
+            "min": 0.32
+          },
+          "largestPacketBytes": 16467,
+          "utilisation": {
+            "min": 64.95,
+            "p10": 84.08,
+            "median": 101.65,
+            "p90": 102.42,
+            "max": 102.92
+          },
+          "discardTotals": {
+            "ROLE_GATE": 66
+          },
+          "integrityFailures": 0
+        },
+        "6000": {
+          "supply": {
+            "width": 25,
+            "budget": 6000,
+            "frozen": false,
+            "responses": 20,
+            "requiredMatchTokens": 3600,
+            "requiredExceedTokens": 4800,
+            "medianFrozenTokens": 4436.5,
+            "medianUtilisation": 73.94,
+            "medianCandidateCount": 31,
+            "medianRankedStream": 38,
+            "medianDeliveredItems": 36,
+            "medianUnusedBudget": 1563.5,
+            "sufficiency": "SUFFICIENT"
+          },
+          "medians": {
+            "candidateCount": 31,
+            "rankedStream": 38,
+            "eligible": 27,
+            "pivots": 2,
+            "support": 33,
+            "discarded": 2,
+            "roleDiscards": 2,
+            "assemblyItems": 1,
+            "selectedBeforeBudget": 39.5,
+            "deliveredUpstream": 39.5,
+            "droppedForBudget": 0,
+            "projectorProposed": 36,
+            "projectorAdmitted": 36,
+            "projectorDeduplicated": 0,
+            "projectorRejectedForCeiling": 0,
+            "items": 36,
+            "frozenWholeTokens": 4436.5,
+            "evidenceTokens": 5483.5,
+            "unusedFrozenBudget": 1563.5,
+            "renderedCharacters": 16798
+          },
+          "stopReasons": {
+            "OTHER_EXPLICIT_POLICY:CANDIDATE_POOL_CAP": 16,
+            "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 3,
+            "NO_TRUTHFUL_SUPPLY": 1
+          },
+          "upstreamStatus": {
+            "complete": 17,
+            "compacted": 3
+          },
+          "latency": {
+            "n": 20,
+            "median": 195.6,
+            "p90": 216.34,
+            "p95": 233.11,
+            "max": 855.71,
+            "min": 171.59
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 120.32,
+            "p90": 132.14,
+            "p95": 142.83,
+            "max": 742.84,
+            "min": 0.34
+          },
+          "largestPacketBytes": 19939,
+          "utilisation": {
+            "min": 43.3,
+            "p10": 58.85,
+            "median": 73.94,
+            "p90": 81.38,
+            "max": 83.08
+          },
+          "discardTotals": {
+            "ROLE_GATE": 66
+          },
+          "integrityFailures": 0
+        },
+        "8000": {
+          "supply": {
+            "width": 25,
+            "budget": 8000,
+            "frozen": true,
+            "responses": 20,
+            "requiredMatchTokens": 4800,
+            "requiredExceedTokens": 6400,
+            "medianFrozenTokens": 4436.5,
+            "medianUtilisation": 55.45,
+            "medianCandidateCount": 31,
+            "medianRankedStream": 38,
+            "medianDeliveredItems": 36,
+            "medianUnusedBudget": 3563.5,
+            "sufficiency": "INSUFFICIENT"
+          },
+          "medians": {
+            "candidateCount": 31,
+            "rankedStream": 38,
+            "eligible": 27,
+            "pivots": 2,
+            "support": 33,
+            "discarded": 2,
+            "roleDiscards": 2,
+            "assemblyItems": 5,
+            "selectedBeforeBudget": 39.5,
+            "deliveredUpstream": 39.5,
+            "droppedForBudget": 0,
+            "projectorProposed": 36,
+            "projectorAdmitted": 36,
+            "projectorDeduplicated": 0,
+            "projectorRejectedForCeiling": 0,
+            "items": 36,
+            "frozenWholeTokens": 4436.5,
+            "evidenceTokens": 5483.5,
+            "unusedFrozenBudget": 3563.5,
+            "renderedCharacters": 21040
+          },
+          "stopReasons": {
+            "OTHER_EXPLICIT_POLICY:CANDIDATE_POOL_CAP": 19,
+            "NO_TRUTHFUL_SUPPLY": 1
+          },
+          "upstreamStatus": {
+            "complete": 20
+          },
+          "latency": {
+            "n": 20,
+            "median": 197.67,
+            "p90": 235.71,
+            "p95": 242.27,
+            "max": 786.08,
+            "min": 177.57
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 116.18,
+            "p90": 156.46,
+            "p95": 160.17,
+            "max": 703.15,
+            "min": 0.34
+          },
+          "largestPacketBytes": 19939,
+          "utilisation": {
+            "min": 32.48,
+            "p10": 44.14,
+            "median": 55.455,
+            "p90": 61.04,
+            "max": 62.31
+          },
+          "discardTotals": {
+            "ROLE_GATE": 66
+          },
+          "integrityFailures": 0
+        },
+        "12000": {
+          "supply": {
+            "width": 25,
+            "budget": 12000,
+            "frozen": false,
+            "responses": 20,
+            "requiredMatchTokens": 7200,
+            "requiredExceedTokens": 9600,
+            "medianFrozenTokens": 4459.5,
+            "medianUtilisation": 37.16,
+            "medianCandidateCount": 31,
+            "medianRankedStream": 38,
+            "medianDeliveredItems": 37,
+            "medianUnusedBudget": 7540.5,
+            "sufficiency": "INSUFFICIENT"
+          },
+          "medians": {
+            "candidateCount": 31,
+            "rankedStream": 38,
+            "eligible": 27,
+            "pivots": 5,
+            "support": 30,
+            "discarded": 2,
+            "roleDiscards": 2,
+            "assemblyItems": 21,
+            "selectedBeforeBudget": 40.5,
+            "deliveredUpstream": 40.5,
+            "droppedForBudget": 0,
+            "projectorProposed": 37,
+            "projectorAdmitted": 37,
+            "projectorDeduplicated": 0,
+            "projectorRejectedForCeiling": 0,
+            "items": 37,
+            "frozenWholeTokens": 4459.5,
+            "evidenceTokens": 5515,
+            "unusedFrozenBudget": 7540.5,
+            "renderedCharacters": 22650.5
+          },
+          "stopReasons": {
+            "OTHER_EXPLICIT_POLICY:CANDIDATE_POOL_CAP": 19,
+            "NO_TRUTHFUL_SUPPLY": 1
+          },
+          "upstreamStatus": {
+            "complete": 20
+          },
+          "latency": {
+            "n": 20,
+            "median": 195.41,
+            "p90": 218.42,
+            "p95": 244.25,
+            "max": 782.13,
+            "min": 171
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 117.05,
+            "p90": 139.32,
+            "p95": 145.04,
+            "max": 713.8,
+            "min": 0.35
+          },
+          "largestPacketBytes": 20525,
+          "utilisation": {
+            "min": 21.73,
+            "p10": 30.65,
+            "median": 37.16,
+            "p90": 41.7,
+            "max": 42.77
+          },
+          "discardTotals": {
+            "ROLE_GATE": 66
+          },
+          "integrityFailures": 0
+        },
+        "16000": {
+          "supply": {
+            "width": 25,
+            "budget": 16000,
+            "frozen": true,
+            "responses": 20,
+            "requiredMatchTokens": 9600,
+            "requiredExceedTokens": 12800,
+            "medianFrozenTokens": 4459.5,
+            "medianUtilisation": 27.88,
+            "medianCandidateCount": 31,
+            "medianRankedStream": 38,
+            "medianDeliveredItems": 37,
+            "medianUnusedBudget": 11540.5,
+            "sufficiency": "INSUFFICIENT"
+          },
+          "medians": {
+            "candidateCount": 31,
+            "rankedStream": 38,
+            "eligible": 27,
+            "pivots": 5,
+            "support": 30,
+            "discarded": 2,
+            "roleDiscards": 2,
+            "assemblyItems": 40.5,
+            "selectedBeforeBudget": 40.5,
+            "deliveredUpstream": 40.5,
+            "droppedForBudget": 0,
+            "projectorProposed": 37,
+            "projectorAdmitted": 37,
+            "projectorDeduplicated": 0,
+            "projectorRejectedForCeiling": 0,
+            "items": 37,
+            "frozenWholeTokens": 4459.5,
+            "evidenceTokens": 5515,
+            "unusedFrozenBudget": 11540.5,
+            "renderedCharacters": 22650.5
+          },
+          "stopReasons": {
+            "OTHER_EXPLICIT_POLICY:CANDIDATE_POOL_CAP": 19,
+            "NO_TRUTHFUL_SUPPLY": 1
+          },
+          "upstreamStatus": {
+            "complete": 20
+          },
+          "latency": {
+            "n": 20,
+            "median": 193.28,
+            "p90": 231.87,
+            "p95": 252.81,
+            "max": 800.29,
+            "min": 170.73
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 117.15,
+            "p90": 148.09,
+            "p95": 151.98,
+            "max": 727.67,
+            "min": 0.4
+          },
+          "largestPacketBytes": 20525,
+          "utilisation": {
+            "min": 16.3,
+            "p10": 22.99,
+            "median": 27.875,
+            "p90": 31.27,
+            "max": 32.08
+          },
+          "discardTotals": {
+            "ROLE_GATE": 66
+          },
+          "integrityFailures": 0
+        }
+      },
+      "a5LikeP90At8000": {
+        "cmed": 235.71,
+        "clarge": 336.37,
+        "csmall": 47.31
+      },
+      "p90At16000": {
+        "cmed": 231.87,
+        "clarge": 330.32
+      }
+    },
+    {
+      "width": "50",
+      "a11": {
+        "1000": 82.05,
+        "2000": 95.7,
+        "4000": 102.38,
+        "8000": 85.06,
+        "16000": 44.22
+      },
+      "verdict": "VTRACE_BELOW_VEXP_CLAIM",
+      "byBudget": {
+        "1000": {
+          "supply": {
+            "width": 50,
+            "budget": 1000,
+            "frozen": true,
+            "responses": 20,
+            "requiredMatchTokens": 600,
+            "requiredExceedTokens": 800,
+            "medianFrozenTokens": 820.5,
+            "medianUtilisation": 82.05,
+            "medianCandidateCount": 54,
+            "medianRankedStream": 60,
+            "medianDeliveredItems": 7,
+            "medianUnusedBudget": 179.5,
+            "sufficiency": "SUFFICIENT"
+          },
+          "medians": {
+            "candidateCount": 54,
+            "rankedStream": 60,
+            "eligible": 49,
+            "pivots": 1,
+            "support": 16,
+            "discarded": 42,
+            "roleDiscards": 4,
+            "assemblyItems": 1,
+            "selectedBeforeBudget": 22,
+            "deliveredUpstream": 9.5,
+            "droppedForBudget": 14,
+            "projectorProposed": 7,
+            "projectorAdmitted": 7,
+            "projectorDeduplicated": 0,
+            "projectorRejectedForCeiling": 0,
+            "items": 7,
+            "frozenWholeTokens": 820.5,
+            "evidenceTokens": 1011.5,
+            "unusedFrozenBudget": 179.5,
+            "renderedCharacters": null
+          },
+          "stopReasons": {
+            "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 20
+          },
+          "upstreamStatus": {
+            "compacted": 20
+          },
+          "latency": {
+            "n": 20,
+            "median": 193.14,
+            "p90": 225.51,
+            "p95": 270.71,
+            "max": 801.17,
+            "min": 176.18
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 121.45,
+            "p90": 147.62,
+            "p95": 159.92,
+            "max": 704.16,
+            "min": 0.38
+          },
+          "largestPacketBytes": 4114,
+          "utilisation": {
+            "min": 18.3,
+            "p10": 75.7,
+            "median": 82.05000000000001,
+            "p90": 101.6,
+            "max": 102.9
+          },
+          "discardTotals": {
+            "TOKEN_BUDGET": 707,
+            "ROLE_GATE": 96,
+            "LANE_TOKEN_CEILING": 1
+          },
+          "integrityFailures": 0
+        },
+        "1500": {
+          "supply": {
+            "width": 50,
+            "budget": 1500,
+            "frozen": false,
+            "responses": 20,
+            "requiredMatchTokens": 900,
+            "requiredExceedTokens": 1200,
+            "medianFrozenTokens": 1342.5,
+            "medianUtilisation": 89.5,
+            "medianCandidateCount": 54,
+            "medianRankedStream": 60,
+            "medianDeliveredItems": 12,
+            "medianUnusedBudget": 157.5,
+            "sufficiency": "SUFFICIENT"
+          },
+          "medians": {
+            "candidateCount": 54,
+            "rankedStream": 60,
+            "eligible": 49,
+            "pivots": 2,
+            "support": 22,
+            "discarded": 35,
+            "roleDiscards": 4,
+            "assemblyItems": 1,
+            "selectedBeforeBudget": 30.5,
+            "deliveredUpstream": 14,
+            "droppedForBudget": 16.5,
+            "projectorProposed": 12,
+            "projectorAdmitted": 12,
+            "projectorDeduplicated": 0,
+            "projectorRejectedForCeiling": 0,
+            "items": 12,
+            "frozenWholeTokens": 1342.5,
+            "evidenceTokens": 1660.5,
+            "unusedFrozenBudget": 157.5,
+            "renderedCharacters": null
+          },
+          "stopReasons": {
+            "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 20
+          },
+          "upstreamStatus": {
+            "compacted": 20
+          },
+          "latency": {
+            "n": 20,
+            "median": 210.03,
+            "p90": 280.24,
+            "p95": 294.57,
+            "max": 844.59,
+            "min": 184.27
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 123.47,
+            "p90": 163.43,
+            "p95": 165.43,
+            "max": 709.54,
+            "min": 0.32
+          },
+          "largestPacketBytes": 6188,
+          "utilisation": {
+            "min": 44.87,
+            "p10": 66.13,
+            "median": 89.5,
+            "p90": 101.47,
+            "max": 103.13
+          },
+          "discardTotals": {
+            "TOKEN_BUDGET": 580,
+            "ROLE_GATE": 96
+          },
+          "integrityFailures": 0
+        },
+        "2000": {
+          "supply": {
+            "width": 50,
+            "budget": 2000,
+            "frozen": true,
+            "responses": 20,
+            "requiredMatchTokens": 1200,
+            "requiredExceedTokens": 1600,
+            "medianFrozenTokens": 1914,
+            "medianUtilisation": 95.7,
+            "medianCandidateCount": 54,
+            "medianRankedStream": 60,
+            "medianDeliveredItems": 16.5,
+            "medianUnusedBudget": 86,
+            "sufficiency": "SUFFICIENT"
+          },
+          "medians": {
+            "candidateCount": 54,
+            "rankedStream": 60,
+            "eligible": 49,
+            "pivots": 2,
+            "support": 33,
+            "discarded": 23,
+            "roleDiscards": 4,
+            "assemblyItems": 1,
+            "selectedBeforeBudget": 39.5,
+            "deliveredUpstream": 19,
+            "droppedForBudget": 20,
+            "projectorProposed": 16.5,
+            "projectorAdmitted": 16.5,
+            "projectorDeduplicated": 0,
+            "projectorRejectedForCeiling": 0,
+            "items": 16.5,
+            "frozenWholeTokens": 1914,
+            "evidenceTokens": 2364,
+            "unusedFrozenBudget": 86,
+            "renderedCharacters": null
+          },
+          "stopReasons": {
+            "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 20
+          },
+          "upstreamStatus": {
+            "compacted": 20
+          },
+          "latency": {
+            "n": 20,
+            "median": 213.05,
+            "p90": 246.24,
+            "p95": 311.59,
+            "max": 861.75,
+            "min": 187.21
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 122,
+            "p90": 145.57,
+            "p95": 172.5,
+            "max": 738.75,
+            "min": 0.5
+          },
+          "largestPacketBytes": 8295,
+          "utilisation": {
+            "min": 55.15,
+            "p10": 74.4,
+            "median": 95.69999999999999,
+            "p90": 102.65,
+            "max": 103.7
+          },
+          "discardTotals": {
+            "TOKEN_BUDGET": 393,
+            "ROLE_GATE": 96
+          },
+          "integrityFailures": 0
+        },
+        "3000": {
+          "supply": {
+            "width": 50,
+            "budget": 3000,
+            "frozen": false,
+            "responses": 20,
+            "requiredMatchTokens": 1800,
+            "requiredExceedTokens": 2400,
+            "medianFrozenTokens": 3032,
+            "medianUtilisation": 101.06,
+            "medianCandidateCount": 54,
+            "medianRankedStream": 60,
+            "medianDeliveredItems": 27,
+            "medianUnusedBudget": -32,
+            "sufficiency": "SUFFICIENT"
+          },
+          "medians": {
+            "candidateCount": 54,
+            "rankedStream": 60,
+            "eligible": 49,
+            "pivots": 2,
+            "support": 51,
+            "discarded": 8,
+            "roleDiscards": 4,
+            "assemblyItems": 1,
+            "selectedBeforeBudget": 56.5,
+            "deliveredUpstream": 30,
+            "droppedForBudget": 27,
+            "projectorProposed": 27,
+            "projectorAdmitted": 27,
+            "projectorDeduplicated": 0,
+            "projectorRejectedForCeiling": 0,
+            "items": 27,
+            "frozenWholeTokens": 3032,
+            "evidenceTokens": 3737,
+            "unusedFrozenBudget": -32,
+            "renderedCharacters": 736
+          },
+          "stopReasons": {
+            "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 20
+          },
+          "upstreamStatus": {
+            "compacted": 20
+          },
+          "latency": {
+            "n": 20,
+            "median": 222.98,
+            "p90": 257.66,
+            "p95": 310.65,
+            "max": 865.65,
+            "min": 195.05
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 119.61,
+            "p90": 146.32,
+            "p95": 185.41,
+            "max": 706.48,
+            "min": 0.36
+          },
+          "largestPacketBytes": 12322,
+          "utilisation": {
+            "min": 6.6,
+            "p10": 71.4,
+            "median": 101.065,
+            "p90": 102.3,
+            "max": 102.7
+          },
+          "discardTotals": {
+            "ROLE_GATE": 96,
+            "TOKEN_BUDGET": 91
+          },
+          "integrityFailures": 0
+        },
+        "4000": {
+          "supply": {
+            "width": 50,
+            "budget": 4000,
+            "frozen": true,
+            "responses": 20,
+            "requiredMatchTokens": 2400,
+            "requiredExceedTokens": 3200,
+            "medianFrozenTokens": 4095,
+            "medianUtilisation": 102.38,
+            "medianCandidateCount": 54,
+            "medianRankedStream": 60,
+            "medianDeliveredItems": 36,
+            "medianUnusedBudget": -95,
+            "sufficiency": "SUFFICIENT"
+          },
+          "medians": {
+            "candidateCount": 54,
+            "rankedStream": 60,
+            "eligible": 49,
+            "pivots": 2,
+            "support": 54,
+            "discarded": 4,
+            "roleDiscards": 4,
+            "assemblyItems": 1,
+            "selectedBeforeBudget": 61,
+            "deliveredUpstream": 39.5,
+            "droppedForBudget": 21,
+            "projectorProposed": 36,
+            "projectorAdmitted": 36,
+            "projectorDeduplicated": 0,
+            "projectorRejectedForCeiling": 0,
+            "items": 36,
+            "frozenWholeTokens": 4095,
+            "evidenceTokens": 5049.5,
+            "unusedFrozenBudget": -95,
+            "renderedCharacters": null
+          },
+          "stopReasons": {
+            "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 20
+          },
+          "upstreamStatus": {
+            "compacted": 20
+          },
+          "latency": {
+            "n": 20,
+            "median": 222.69,
+            "p90": 286.96,
+            "p95": 339.02,
+            "max": 828.08,
+            "min": 203.71
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 123.04,
+            "p90": 152.42,
+            "p95": 169.27,
+            "max": 700.61,
+            "min": 0.36
+          },
+          "largestPacketBytes": 16551,
+          "utilisation": {
+            "min": 84.17,
+            "p10": 90.92,
+            "median": 102.38,
+            "p90": 102.8,
+            "max": 103.45
+          },
+          "discardTotals": {
+            "ROLE_GATE": 96
+          },
+          "integrityFailures": 0
+        },
+        "6000": {
+          "supply": {
+            "width": 50,
+            "budget": 6000,
+            "frozen": false,
+            "responses": 20,
+            "requiredMatchTokens": 3600,
+            "requiredExceedTokens": 4800,
+            "medianFrozenTokens": 6137,
+            "medianUtilisation": 102.28,
+            "medianCandidateCount": 54,
+            "medianRankedStream": 60,
+            "medianDeliveredItems": 52,
+            "medianUnusedBudget": -137,
+            "sufficiency": "SUFFICIENT"
+          },
+          "medians": {
+            "candidateCount": 54,
+            "rankedStream": 60,
+            "eligible": 49,
+            "pivots": 2,
+            "support": 54,
+            "discarded": 4,
+            "roleDiscards": 4,
+            "assemblyItems": 1,
+            "selectedBeforeBudget": 61,
+            "deliveredUpstream": 55,
+            "droppedForBudget": 5,
+            "projectorProposed": 52,
+            "projectorAdmitted": 52,
+            "projectorDeduplicated": 0,
+            "projectorRejectedForCeiling": 0,
+            "items": 52,
+            "frozenWholeTokens": 6137,
+            "evidenceTokens": 7575.5,
+            "unusedFrozenBudget": -137,
+            "renderedCharacters": null
+          },
+          "stopReasons": {
+            "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 20
+          },
+          "upstreamStatus": {
+            "compacted": 20
+          },
+          "latency": {
+            "n": 20,
+            "median": 221.86,
+            "p90": 275.06,
+            "p95": 362.28,
+            "max": 833.41,
+            "min": 195.74
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 120.98,
+            "p90": 165.18,
+            "p95": 178.93,
+            "max": 708.53,
+            "min": 0.48
+          },
+          "largestPacketBytes": 24728,
+          "utilisation": {
+            "min": 85,
+            "p10": 86.67,
+            "median": 102.28,
+            "p90": 102.77,
+            "max": 103.03
+          },
+          "discardTotals": {
+            "ROLE_GATE": 96
+          },
+          "integrityFailures": 0
+        },
+        "8000": {
+          "supply": {
+            "width": 50,
+            "budget": 8000,
+            "frozen": true,
+            "responses": 20,
+            "requiredMatchTokens": 4800,
+            "requiredExceedTokens": 6400,
+            "medianFrozenTokens": 6804.5,
+            "medianUtilisation": 85.06,
+            "medianCandidateCount": 54,
+            "medianRankedStream": 60,
+            "medianDeliveredItems": 57.5,
+            "medianUnusedBudget": 1195.5,
+            "sufficiency": "SUFFICIENT"
+          },
+          "medians": {
+            "candidateCount": 54,
+            "rankedStream": 60,
+            "eligible": 49,
+            "pivots": 2,
+            "support": 54,
+            "discarded": 4,
+            "roleDiscards": 4,
+            "assemblyItems": 1,
+            "selectedBeforeBudget": 61,
+            "deliveredUpstream": 61,
+            "droppedForBudget": 0,
+            "projectorProposed": 57.5,
+            "projectorAdmitted": 57.5,
+            "projectorDeduplicated": 0,
+            "projectorRejectedForCeiling": 0,
+            "items": 57.5,
+            "frozenWholeTokens": 6804.5,
+            "evidenceTokens": 8407,
+            "unusedFrozenBudget": 1195.5,
+            "renderedCharacters": 25424
+          },
+          "stopReasons": {
+            "OTHER_EXPLICIT_POLICY:CANDIDATE_POOL_CAP": 8,
+            "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 11,
+            "NO_TRUTHFUL_SUPPLY": 1
+          },
+          "upstreamStatus": {
+            "complete": 9,
+            "compacted": 11
+          },
+          "latency": {
+            "n": 20,
+            "median": 212.99,
+            "p90": 299.2,
+            "p95": 321.45,
+            "max": 816.86,
+            "min": 192.51
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 119.12,
+            "p90": 154.77,
+            "p95": 167.24,
+            "max": 708.24,
+            "min": 0.34
+          },
+          "largestPacketBytes": 32783,
+          "utilisation": {
+            "min": 63.75,
+            "p10": 65,
+            "median": 85.055,
+            "p90": 94.64,
+            "max": 102.45
+          },
+          "discardTotals": {
+            "ROLE_GATE": 96
+          },
+          "integrityFailures": 0
+        },
+        "12000": {
+          "supply": {
+            "width": 50,
+            "budget": 12000,
+            "frozen": false,
+            "responses": 20,
+            "requiredMatchTokens": 7200,
+            "requiredExceedTokens": 9600,
+            "medianFrozenTokens": 7075.5,
+            "medianUtilisation": 58.96,
+            "medianCandidateCount": 54,
+            "medianRankedStream": 61,
+            "medianDeliveredItems": 58,
+            "medianUnusedBudget": 4924.5,
+            "sufficiency": "INSUFFICIENT"
+          },
+          "medians": {
+            "candidateCount": 54,
+            "rankedStream": 61,
+            "eligible": 49,
+            "pivots": 5,
+            "support": 51,
+            "discarded": 4,
+            "roleDiscards": 4,
+            "assemblyItems": 8,
+            "selectedBeforeBudget": 61.5,
+            "deliveredUpstream": 61.5,
+            "droppedForBudget": 0,
+            "projectorProposed": 58,
+            "projectorAdmitted": 58,
+            "projectorDeduplicated": 0,
+            "projectorRejectedForCeiling": 0,
+            "items": 58,
+            "frozenWholeTokens": 7075.5,
+            "evidenceTokens": 8753,
+            "unusedFrozenBudget": 4924.5,
+            "renderedCharacters": 34852
+          },
+          "stopReasons": {
+            "OTHER_EXPLICIT_POLICY:CANDIDATE_POOL_CAP": 19,
+            "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 1
+          },
+          "upstreamStatus": {
+            "complete": 19,
+            "compacted": 1
+          },
+          "latency": {
+            "n": 20,
+            "median": 218.79,
+            "p90": 262.64,
+            "p95": 320.19,
+            "max": 803.22,
+            "min": 199.28
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 121.82,
+            "p90": 150.73,
+            "p95": 166.52,
+            "max": 699.04,
+            "min": 0.38
+          },
+          "largestPacketBytes": 33755,
+          "utilisation": {
+            "min": 43.58,
+            "p10": 44.27,
+            "median": 58.96,
+            "p90": 63.46,
+            "max": 70.33
+          },
+          "discardTotals": {
+            "ROLE_GATE": 96
+          },
+          "integrityFailures": 0
+        },
+        "16000": {
+          "supply": {
+            "width": 50,
+            "budget": 16000,
+            "frozen": true,
+            "responses": 20,
+            "requiredMatchTokens": 9600,
+            "requiredExceedTokens": 12800,
+            "medianFrozenTokens": 7075.5,
+            "medianUtilisation": 44.22,
+            "medianCandidateCount": 54,
+            "medianRankedStream": 61,
+            "medianDeliveredItems": 58,
+            "medianUnusedBudget": 8924.5,
+            "sufficiency": "INSUFFICIENT"
+          },
+          "medians": {
+            "candidateCount": 54,
+            "rankedStream": 61,
+            "eligible": 49,
+            "pivots": 5,
+            "support": 51,
+            "discarded": 4,
+            "roleDiscards": 4,
+            "assemblyItems": 31,
+            "selectedBeforeBudget": 61.5,
+            "deliveredUpstream": 61.5,
+            "droppedForBudget": 0,
+            "projectorProposed": 58,
+            "projectorAdmitted": 58,
+            "projectorDeduplicated": 0,
+            "projectorRejectedForCeiling": 0,
+            "items": 58,
+            "frozenWholeTokens": 7075.5,
+            "evidenceTokens": 8753,
+            "unusedFrozenBudget": 8924.5,
+            "renderedCharacters": 35024
+          },
+          "stopReasons": {
+            "OTHER_EXPLICIT_POLICY:CANDIDATE_POOL_CAP": 19,
+            "NO_TRUTHFUL_SUPPLY": 1
+          },
+          "upstreamStatus": {
+            "complete": 20
+          },
+          "latency": {
+            "n": 20,
+            "median": 220.93,
+            "p90": 270.48,
+            "p95": 292.45,
+            "max": 821.15,
+            "min": 194.2
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 121.22,
+            "p90": 148.61,
+            "p95": 152.75,
+            "max": 706.46,
+            "min": 0.45
+          },
+          "largestPacketBytes": 33755,
+          "utilisation": {
+            "min": 32.68,
+            "p10": 33.21,
+            "median": 44.22,
+            "p90": 47.59,
+            "max": 52.74
+          },
+          "discardTotals": {
+            "ROLE_GATE": 96
+          },
+          "integrityFailures": 0
+        }
+      },
+      "a5LikeP90At8000": {
+        "cmed": 299.2,
+        "clarge": 361.36,
+        "csmall": 39.73
+      },
+      "p90At16000": {
+        "cmed": 270.48,
+        "clarge": 349.56
+      }
+    },
+    {
+      "width": "100",
+      "a11": {
+        "1000": 85.8,
+        "2000": 97.17,
+        "4000": 102.93,
+        "8000": 103.06,
+        "16000": 73.85
+      },
+      "verdict": "VTRACE_MATCHES_VEXP_CLAIM",
+      "byBudget": {
+        "1000": {
+          "supply": {
+            "width": 100,
+            "budget": 1000,
+            "frozen": true,
+            "responses": 20,
+            "requiredMatchTokens": 600,
+            "requiredExceedTokens": 800,
+            "medianFrozenTokens": 858,
+            "medianUtilisation": 85.8,
+            "medianCandidateCount": 102,
+            "medianRankedStream": 107,
+            "medianDeliveredItems": 7,
+            "medianUnusedBudget": 142,
+            "sufficiency": "SUFFICIENT"
+          },
+          "medians": {
+            "candidateCount": 102,
+            "rankedStream": 107,
+            "eligible": 95,
+            "pivots": 1,
+            "support": 16,
+            "discarded": 89,
+            "roleDiscards": 6,
+            "assemblyItems": 1,
+            "selectedBeforeBudget": 21.5,
+            "deliveredUpstream": 9.5,
+            "droppedForBudget": 14,
+            "projectorProposed": 7,
+            "projectorAdmitted": 7,
+            "projectorDeduplicated": 0,
+            "projectorRejectedForCeiling": 0,
+            "items": 7,
+            "frozenWholeTokens": 858,
+            "evidenceTokens": 1056.5,
+            "unusedFrozenBudget": 142,
+            "renderedCharacters": null
+          },
+          "stopReasons": {
+            "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 20
+          },
+          "upstreamStatus": {
+            "compacted": 20
+          },
+          "latency": {
+            "n": 20,
+            "median": 197.35,
+            "p90": 219.46,
+            "p95": 262.33,
+            "max": 812.83,
+            "min": 173.18
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 122.4,
+            "p90": 141.71,
+            "p95": 161.49,
+            "max": 699.58,
+            "min": 0.36
+          },
+          "largestPacketBytes": 4135,
+          "utilisation": {
+            "min": 18.3,
+            "p10": 69.4,
+            "median": 85.80000000000001,
+            "p90": 102.3,
+            "max": 103.4
+          },
+          "discardTotals": {
+            "TOKEN_BUDGET": 1546,
+            "ROLE_GATE": 163,
+            "LANE_TOKEN_CEILING": 1
+          },
+          "integrityFailures": 0
+        },
+        "1500": {
+          "supply": {
+            "width": 100,
+            "budget": 1500,
+            "frozen": false,
+            "responses": 20,
+            "requiredMatchTokens": 900,
+            "requiredExceedTokens": 1200,
+            "medianFrozenTokens": 1351,
+            "medianUtilisation": 90.06,
+            "medianCandidateCount": 102,
+            "medianRankedStream": 107,
+            "medianDeliveredItems": 12.5,
+            "medianUnusedBudget": 149,
+            "sufficiency": "SUFFICIENT"
+          },
+          "medians": {
+            "candidateCount": 102,
+            "rankedStream": 107,
+            "eligible": 95,
+            "pivots": 2,
+            "support": 22,
+            "discarded": 85,
+            "roleDiscards": 6,
+            "assemblyItems": 1,
+            "selectedBeforeBudget": 30.5,
+            "deliveredUpstream": 13.5,
+            "droppedForBudget": 16.5,
+            "projectorProposed": 12.5,
+            "projectorAdmitted": 12.5,
+            "projectorDeduplicated": 0,
+            "projectorRejectedForCeiling": 0,
+            "items": 12.5,
+            "frozenWholeTokens": 1351,
+            "evidenceTokens": 1668,
+            "unusedFrozenBudget": 149,
+            "renderedCharacters": null
+          },
+          "stopReasons": {
+            "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 20
+          },
+          "upstreamStatus": {
+            "compacted": 20
+          },
+          "latency": {
+            "n": 20,
+            "median": 207.56,
+            "p90": 251.55,
+            "p95": 309.02,
+            "max": 794.35,
+            "min": 174.46
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 118.58,
+            "p90": 134.5,
+            "p95": 164.17,
+            "max": 711.62,
+            "min": 0.34
+          },
+          "largestPacketBytes": 6200,
+          "utilisation": {
+            "min": 46.47,
+            "p10": 60.4,
+            "median": 90.065,
+            "p90": 101.47,
+            "max": 103.33
+          },
+          "discardTotals": {
+            "TOKEN_BUDGET": 1417,
+            "ROLE_GATE": 163
+          },
+          "integrityFailures": 0
+        },
+        "2000": {
+          "supply": {
+            "width": 100,
+            "budget": 2000,
+            "frozen": true,
+            "responses": 20,
+            "requiredMatchTokens": 1200,
+            "requiredExceedTokens": 1600,
+            "medianFrozenTokens": 1943.5,
+            "medianUtilisation": 97.17,
+            "medianCandidateCount": 102,
+            "medianRankedStream": 107,
+            "medianDeliveredItems": 17,
+            "medianUnusedBudget": 56.5,
+            "sufficiency": "SUFFICIENT"
+          },
+          "medians": {
+            "candidateCount": 102,
+            "rankedStream": 107,
+            "eligible": 95,
+            "pivots": 2,
+            "support": 34,
+            "discarded": 71,
+            "roleDiscards": 6,
+            "assemblyItems": 1,
+            "selectedBeforeBudget": 39.5,
+            "deliveredUpstream": 19,
+            "droppedForBudget": 20,
+            "projectorProposed": 17,
+            "projectorAdmitted": 17,
+            "projectorDeduplicated": 0,
+            "projectorRejectedForCeiling": 0,
+            "items": 17,
+            "frozenWholeTokens": 1943.5,
+            "evidenceTokens": 2395.5,
+            "unusedFrozenBudget": 56.5,
+            "renderedCharacters": null
+          },
+          "stopReasons": {
+            "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 20
+          },
+          "upstreamStatus": {
+            "compacted": 20
+          },
+          "latency": {
+            "n": 20,
+            "median": 203.7,
+            "p90": 246.48,
+            "p95": 292.33,
+            "max": 825.28,
+            "min": 180.41
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 123.22,
+            "p90": 132.61,
+            "p95": 176.37,
+            "max": 706.78,
+            "min": 0.38
+          },
+          "largestPacketBytes": 8302,
+          "utilisation": {
+            "min": 49.25,
+            "p10": 70.05,
+            "median": 97.175,
+            "p90": 102.85,
+            "max": 103.8
+          },
+          "discardTotals": {
+            "TOKEN_BUDGET": 1223,
+            "ROLE_GATE": 163
+          },
+          "integrityFailures": 0
+        },
+        "3000": {
+          "supply": {
+            "width": 100,
+            "budget": 3000,
+            "frozen": false,
+            "responses": 20,
+            "requiredMatchTokens": 1800,
+            "requiredExceedTokens": 2400,
+            "medianFrozenTokens": 3046,
+            "medianUtilisation": 101.53,
+            "medianCandidateCount": 102,
+            "medianRankedStream": 107,
+            "medianDeliveredItems": 27.5,
+            "medianUnusedBudget": -46,
+            "sufficiency": "SUFFICIENT"
+          },
+          "medians": {
+            "candidateCount": 102,
+            "rankedStream": 107,
+            "eligible": 95,
+            "pivots": 2,
+            "support": 55,
+            "discarded": 52,
+            "roleDiscards": 6,
+            "assemblyItems": 1,
+            "selectedBeforeBudget": 60,
+            "deliveredUpstream": 30,
+            "droppedForBudget": 30.5,
+            "projectorProposed": 27.5,
+            "projectorAdmitted": 27.5,
+            "projectorDeduplicated": 0,
+            "projectorRejectedForCeiling": 0,
+            "items": 27.5,
+            "frozenWholeTokens": 3046,
+            "evidenceTokens": 3764.5,
+            "unusedFrozenBudget": -46,
+            "renderedCharacters": 736
+          },
+          "stopReasons": {
+            "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 20
+          },
+          "upstreamStatus": {
+            "compacted": 20
+          },
+          "latency": {
+            "n": 20,
+            "median": 223.02,
+            "p90": 267.73,
+            "p95": 323.92,
+            "max": 845.6,
+            "min": 192.72
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 123.14,
+            "p90": 130.24,
+            "p95": 178.77,
+            "max": 709.76,
+            "min": 0.34
+          },
+          "largestPacketBytes": 12405,
+          "utilisation": {
+            "min": 6.6,
+            "p10": 71.03,
+            "median": 101.535,
+            "p90": 102.97,
+            "max": 103.4
+          },
+          "discardTotals": {
+            "TOKEN_BUDGET": 844,
+            "ROLE_GATE": 163
+          },
+          "integrityFailures": 0
+        },
+        "4000": {
+          "supply": {
+            "width": 100,
+            "budget": 4000,
+            "frozen": true,
+            "responses": 20,
+            "requiredMatchTokens": 2400,
+            "requiredExceedTokens": 3200,
+            "medianFrozenTokens": 4117,
+            "medianUtilisation": 102.93,
+            "medianCandidateCount": 102,
+            "medianRankedStream": 107,
+            "medianDeliveredItems": 39,
+            "medianUnusedBudget": -117,
+            "sufficiency": "SUFFICIENT"
+          },
+          "medians": {
+            "candidateCount": 102,
+            "rankedStream": 107,
+            "eligible": 95,
+            "pivots": 2,
+            "support": 76,
+            "discarded": 34,
+            "roleDiscards": 6,
+            "assemblyItems": 1,
+            "selectedBeforeBudget": 79.5,
+            "deliveredUpstream": 40,
+            "droppedForBudget": 38.5,
+            "projectorProposed": 39,
+            "projectorAdmitted": 39,
+            "projectorDeduplicated": 0,
+            "projectorRejectedForCeiling": 0,
+            "items": 39,
+            "frozenWholeTokens": 4117,
+            "evidenceTokens": 5064,
+            "unusedFrozenBudget": -117,
+            "renderedCharacters": 736
+          },
+          "stopReasons": {
+            "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 20
+          },
+          "upstreamStatus": {
+            "compacted": 20
+          },
+          "latency": {
+            "n": 20,
+            "median": 239.38,
+            "p90": 281.15,
+            "p95": 282.28,
+            "max": 835.07,
+            "min": 199.21
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 123.77,
+            "p90": 145,
+            "p95": 154.69,
+            "max": 708.73,
+            "min": 0.35
+          },
+          "largestPacketBytes": 16600,
+          "utilisation": {
+            "min": 4.95,
+            "p10": 90.53,
+            "median": 102.92500000000001,
+            "p90": 103.38,
+            "max": 103.75
+          },
+          "discardTotals": {
+            "TOKEN_BUDGET": 456,
+            "ROLE_GATE": 163
+          },
+          "integrityFailures": 0
+        },
+        "6000": {
+          "supply": {
+            "width": 100,
+            "budget": 6000,
+            "frozen": false,
+            "responses": 20,
+            "requiredMatchTokens": 3600,
+            "requiredExceedTokens": 4800,
+            "medianFrozenTokens": 6175,
+            "medianUtilisation": 102.91,
+            "medianCandidateCount": 102,
+            "medianRankedStream": 107,
+            "medianDeliveredItems": 58,
+            "medianUnusedBudget": -175,
+            "sufficiency": "SUFFICIENT"
+          },
+          "medians": {
+            "candidateCount": 102,
+            "rankedStream": 107,
+            "eligible": 95,
+            "pivots": 2,
+            "support": 97,
+            "discarded": 10,
+            "roleDiscards": 6,
+            "assemblyItems": 1,
+            "selectedBeforeBudget": 102,
+            "deliveredUpstream": 61,
+            "droppedForBudget": 40,
+            "projectorProposed": 58,
+            "projectorAdmitted": 58,
+            "projectorDeduplicated": 0,
+            "projectorRejectedForCeiling": 0,
+            "items": 58,
+            "frozenWholeTokens": 6175,
+            "evidenceTokens": 7601,
+            "unusedFrozenBudget": -175,
+            "renderedCharacters": 736
+          },
+          "stopReasons": {
+            "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 20
+          },
+          "upstreamStatus": {
+            "compacted": 20
+          },
+          "latency": {
+            "n": 20,
+            "median": 252.22,
+            "p90": 335.42,
+            "p95": 343.8,
+            "max": 858.55,
+            "min": 231.95
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 124.12,
+            "p90": 148.06,
+            "p95": 165.79,
+            "max": 712.81,
+            "min": 0.36
+          },
+          "largestPacketBytes": 24878,
+          "utilisation": {
+            "min": 3.3,
+            "p10": 97.87,
+            "median": 102.91499999999999,
+            "p90": 103.52,
+            "max": 103.67
+          },
+          "discardTotals": {
+            "ROLE_GATE": 163,
+            "TOKEN_BUDGET": 28
+          },
+          "integrityFailures": 0
+        },
+        "8000": {
+          "supply": {
+            "width": 100,
+            "budget": 8000,
+            "frozen": true,
+            "responses": 20,
+            "requiredMatchTokens": 4800,
+            "requiredExceedTokens": 6400,
+            "medianFrozenTokens": 8245,
+            "medianUtilisation": 103.06,
+            "medianCandidateCount": 102,
+            "medianRankedStream": 107,
+            "medianDeliveredItems": 79,
+            "medianUnusedBudget": -245,
+            "sufficiency": "SUFFICIENT"
+          },
+          "medians": {
+            "candidateCount": 102,
+            "rankedStream": 107,
+            "eligible": 95,
+            "pivots": 2,
+            "support": 99,
+            "discarded": 6,
+            "roleDiscards": 6,
+            "assemblyItems": 1,
+            "selectedBeforeBudget": 104,
+            "deliveredUpstream": 82,
+            "droppedForBudget": 21.5,
+            "projectorProposed": 79,
+            "projectorAdmitted": 79,
+            "projectorDeduplicated": 0,
+            "projectorRejectedForCeiling": 0,
+            "items": 79,
+            "frozenWholeTokens": 8245,
+            "evidenceTokens": 10151,
+            "unusedFrozenBudget": -245,
+            "renderedCharacters": null
+          },
+          "stopReasons": {
+            "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 20
+          },
+          "upstreamStatus": {
+            "compacted": 20
+          },
+          "latency": {
+            "n": 20,
+            "median": 251.3,
+            "p90": 325.28,
+            "p95": 379.81,
+            "max": 864.63,
+            "min": 227.82
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 123.1,
+            "p90": 137.31,
+            "p95": 164.1,
+            "max": 709.1,
+            "min": 0.42
+          },
+          "largestPacketBytes": 33187,
+          "utilisation": {
+            "min": 100.79,
+            "p10": 102.53,
+            "median": 103.065,
+            "p90": 103.51,
+            "max": 103.71
+          },
+          "discardTotals": {
+            "ROLE_GATE": 163
+          },
+          "integrityFailures": 0
+        },
+        "12000": {
+          "supply": {
+            "width": 100,
+            "budget": 12000,
+            "frozen": false,
+            "responses": 20,
+            "requiredMatchTokens": 7200,
+            "requiredExceedTokens": 9600,
+            "medianFrozenTokens": 11638.5,
+            "medianUtilisation": 96.98,
+            "medianCandidateCount": 102,
+            "medianRankedStream": 108,
+            "medianDeliveredItems": 101,
+            "medianUnusedBudget": 361.5,
+            "sufficiency": "SUFFICIENT"
+          },
+          "medians": {
+            "candidateCount": 102,
+            "rankedStream": 108,
+            "eligible": 95,
+            "pivots": 5,
+            "support": 96,
+            "discarded": 6,
+            "roleDiscards": 6,
+            "assemblyItems": 1,
+            "selectedBeforeBudget": 104,
+            "deliveredUpstream": 104,
+            "droppedForBudget": 0,
+            "projectorProposed": 101,
+            "projectorAdmitted": 101,
+            "projectorDeduplicated": 0,
+            "projectorRejectedForCeiling": 0,
+            "items": 101,
+            "frozenWholeTokens": 11638.5,
+            "evidenceTokens": 14390,
+            "unusedFrozenBudget": 361.5,
+            "renderedCharacters": 38826.5
+          },
+          "stopReasons": {
+            "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 20
+          },
+          "upstreamStatus": {
+            "compacted": 20
+          },
+          "latency": {
+            "n": 20,
+            "median": 251.38,
+            "p90": 305.75,
+            "p95": 344.96,
+            "max": 850.96,
+            "min": 223.69
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 124.72,
+            "p90": 135.5,
+            "p95": 177.13,
+            "max": 710.94,
+            "min": 0.35
+          },
+          "largestPacketBytes": 49401,
+          "utilisation": {
+            "min": 66.45,
+            "p10": 81.75,
+            "median": 96.985,
+            "p90": 102.81,
+            "max": 102.92
+          },
+          "discardTotals": {
+            "ROLE_GATE": 163
+          },
+          "integrityFailures": 0
+        },
+        "16000": {
+          "supply": {
+            "width": 100,
+            "budget": 16000,
+            "frozen": true,
+            "responses": 20,
+            "requiredMatchTokens": 9600,
+            "requiredExceedTokens": 12800,
+            "medianFrozenTokens": 11815.5,
+            "medianUtilisation": 73.85,
+            "medianCandidateCount": 102,
+            "medianRankedStream": 108,
+            "medianDeliveredItems": 101,
+            "medianUnusedBudget": 4184.5,
+            "sufficiency": "SUFFICIENT"
+          },
+          "medians": {
+            "candidateCount": 102,
+            "rankedStream": 108,
+            "eligible": 95,
+            "pivots": 5,
+            "support": 96,
+            "discarded": 6,
+            "roleDiscards": 6,
+            "assemblyItems": 4,
+            "selectedBeforeBudget": 104,
+            "deliveredUpstream": 104,
+            "droppedForBudget": 0,
+            "projectorProposed": 101,
+            "projectorAdmitted": 101,
+            "projectorDeduplicated": 0,
+            "projectorRejectedForCeiling": 0,
+            "items": 101,
+            "frozenWholeTokens": 11815.5,
+            "evidenceTokens": 14610.5,
+            "unusedFrozenBudget": 4184.5,
+            "renderedCharacters": 52504
+          },
+          "stopReasons": {
+            "OTHER_EXPLICIT_POLICY:CANDIDATE_POOL_CAP": 15,
+            "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 5
+          },
+          "upstreamStatus": {
+            "complete": 15,
+            "compacted": 5
+          },
+          "latency": {
+            "n": 20,
+            "median": 251.44,
+            "p90": 310.95,
+            "p95": 372.04,
+            "max": 836.58,
+            "min": 222.34
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 126.31,
+            "p90": 141.61,
+            "p95": 178.39,
+            "max": 706.74,
+            "min": 0.36
+          },
+          "largestPacketBytes": 57127,
+          "utilisation": {
+            "min": 61.31,
+            "p10": 62.43,
+            "median": 73.85,
+            "p90": 86.56,
+            "max": 89.26
+          },
+          "discardTotals": {
+            "ROLE_GATE": 163
+          },
+          "integrityFailures": 0
+        }
+      },
+      "a5LikeP90At8000": {
+        "cmed": 325.28,
+        "clarge": 386.37,
+        "csmall": 47.05
+      },
+      "p90At16000": {
+        "cmed": 310.95,
+        "clarge": 374.2
+      }
+    },
+    {
+      "width": "200",
+      "a11": {
+        "1000": 85.8,
+        "2000": 97.82,
+        "4000": 102.89,
+        "8000": 103.16,
+        "16000": 94.72
+      },
+      "verdict": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "byBudget": {
+        "1000": {
+          "supply": {
+            "width": 200,
+            "budget": 1000,
+            "frozen": true,
+            "responses": 20,
+            "requiredMatchTokens": 600,
+            "requiredExceedTokens": 800,
+            "medianFrozenTokens": 858,
+            "medianUtilisation": 85.8,
+            "medianCandidateCount": 130,
+            "medianRankedStream": 135,
+            "medianDeliveredItems": 7,
+            "medianUnusedBudget": 142,
+            "sufficiency": "SUFFICIENT"
+          },
+          "medians": {
+            "candidateCount": 130,
+            "rankedStream": 135,
+            "eligible": 121.5,
+            "pivots": 1,
+            "support": 16,
+            "discarded": 118,
+            "roleDiscards": 8,
+            "assemblyItems": 1,
+            "selectedBeforeBudget": 21.5,
+            "deliveredUpstream": 10,
+            "droppedForBudget": 14,
+            "projectorProposed": 7,
+            "projectorAdmitted": 7,
+            "projectorDeduplicated": 0,
+            "projectorRejectedForCeiling": 0,
+            "items": 7,
+            "frozenWholeTokens": 858,
+            "evidenceTokens": 1058.5,
+            "unusedFrozenBudget": 142,
+            "renderedCharacters": null
+          },
+          "stopReasons": {
+            "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 20
+          },
+          "upstreamStatus": {
+            "compacted": 20
+          },
+          "latency": {
+            "n": 20,
+            "median": 199.97,
+            "p90": 256.84,
+            "p95": 269.05,
+            "max": 818.45,
+            "min": 184.91
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 125.83,
+            "p90": 145.38,
+            "p95": 148.18,
+            "max": 712.05,
+            "min": 0.41
+          },
+          "largestPacketBytes": 4135,
+          "utilisation": {
+            "min": 18.3,
+            "p10": 69.4,
+            "median": 85.80000000000001,
+            "p90": 102.3,
+            "max": 103.4
+          },
+          "discardTotals": {
+            "TOKEN_BUDGET": 2046,
+            "ROLE_GATE": 189,
+            "LANE_TOKEN_CEILING": 1
+          },
+          "integrityFailures": 0
+        },
+        "1500": {
+          "supply": {
+            "width": 200,
+            "budget": 1500,
+            "frozen": false,
+            "responses": 20,
+            "requiredMatchTokens": 900,
+            "requiredExceedTokens": 1200,
+            "medianFrozenTokens": 1374,
+            "medianUtilisation": 91.6,
+            "medianCandidateCount": 130,
+            "medianRankedStream": 135,
+            "medianDeliveredItems": 12.5,
+            "medianUnusedBudget": 126,
+            "sufficiency": "SUFFICIENT"
+          },
+          "medians": {
+            "candidateCount": 130,
+            "rankedStream": 135,
+            "eligible": 121.5,
+            "pivots": 2,
+            "support": 22,
+            "discarded": 111,
+            "roleDiscards": 8,
+            "assemblyItems": 1,
+            "selectedBeforeBudget": 30.5,
+            "deliveredUpstream": 13.5,
+            "droppedForBudget": 16.5,
+            "projectorProposed": 12.5,
+            "projectorAdmitted": 12.5,
+            "projectorDeduplicated": 0,
+            "projectorRejectedForCeiling": 0,
+            "items": 12.5,
+            "frozenWholeTokens": 1374,
+            "evidenceTokens": 1693.5,
+            "unusedFrozenBudget": 126,
+            "renderedCharacters": null
+          },
+          "stopReasons": {
+            "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 20
+          },
+          "upstreamStatus": {
+            "compacted": 20
+          },
+          "latency": {
+            "n": 20,
+            "median": 207.5,
+            "p90": 241.93,
+            "p95": 245.01,
+            "max": 838.85,
+            "min": 185.77
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 127.06,
+            "p90": 147.38,
+            "p95": 151.48,
+            "max": 717.68,
+            "min": 0.39
+          },
+          "largestPacketBytes": 6200,
+          "utilisation": {
+            "min": 46.47,
+            "p10": 60.4,
+            "median": 91.6,
+            "p90": 102.8,
+            "max": 103.33
+          },
+          "discardTotals": {
+            "TOKEN_BUDGET": 1916,
+            "ROLE_GATE": 189
+          },
+          "integrityFailures": 0
+        },
+        "2000": {
+          "supply": {
+            "width": 200,
+            "budget": 2000,
+            "frozen": true,
+            "responses": 20,
+            "requiredMatchTokens": 1200,
+            "requiredExceedTokens": 1600,
+            "medianFrozenTokens": 1956.5,
+            "medianUtilisation": 97.82,
+            "medianCandidateCount": 130,
+            "medianRankedStream": 135,
+            "medianDeliveredItems": 17,
+            "medianUnusedBudget": 43.5,
+            "sufficiency": "SUFFICIENT"
+          },
+          "medians": {
+            "candidateCount": 130,
+            "rankedStream": 135,
+            "eligible": 121.5,
+            "pivots": 2,
+            "support": 34,
+            "discarded": 101,
+            "roleDiscards": 8,
+            "assemblyItems": 1,
+            "selectedBeforeBudget": 39,
+            "deliveredUpstream": 19,
+            "droppedForBudget": 19.5,
+            "projectorProposed": 17,
+            "projectorAdmitted": 17,
+            "projectorDeduplicated": 0,
+            "projectorRejectedForCeiling": 0,
+            "items": 17,
+            "frozenWholeTokens": 1956.5,
+            "evidenceTokens": 2409.5,
+            "unusedFrozenBudget": 43.5,
+            "renderedCharacters": null
+          },
+          "stopReasons": {
+            "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 20
+          },
+          "upstreamStatus": {
+            "compacted": 20
+          },
+          "latency": {
+            "n": 20,
+            "median": 222.35,
+            "p90": 258.38,
+            "p95": 264.45,
+            "max": 811.46,
+            "min": 192.68
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 127.72,
+            "p90": 150.11,
+            "p95": 162.37,
+            "max": 735.45,
+            "min": 0.32
+          },
+          "largestPacketBytes": 8302,
+          "utilisation": {
+            "min": 49.25,
+            "p10": 70.05,
+            "median": 97.82499999999999,
+            "p90": 102.85,
+            "max": 103.8
+          },
+          "discardTotals": {
+            "TOKEN_BUDGET": 1725,
+            "ROLE_GATE": 189
+          },
+          "integrityFailures": 0
+        },
+        "3000": {
+          "supply": {
+            "width": 200,
+            "budget": 3000,
+            "frozen": false,
+            "responses": 20,
+            "requiredMatchTokens": 1800,
+            "requiredExceedTokens": 2400,
+            "medianFrozenTokens": 3059,
+            "medianUtilisation": 101.97,
+            "medianCandidateCount": 130,
+            "medianRankedStream": 135,
+            "medianDeliveredItems": 27.5,
+            "medianUnusedBudget": -59,
+            "sufficiency": "SUFFICIENT"
+          },
+          "medians": {
+            "candidateCount": 130,
+            "rankedStream": 135,
+            "eligible": 121.5,
+            "pivots": 2,
+            "support": 55,
+            "discarded": 80,
+            "roleDiscards": 8,
+            "assemblyItems": 1,
+            "selectedBeforeBudget": 60.5,
+            "deliveredUpstream": 30,
+            "droppedForBudget": 31,
+            "projectorProposed": 27.5,
+            "projectorAdmitted": 27.5,
+            "projectorDeduplicated": 0,
+            "projectorRejectedForCeiling": 0,
+            "items": 27.5,
+            "frozenWholeTokens": 3059,
+            "evidenceTokens": 3771.5,
+            "unusedFrozenBudget": -59,
+            "renderedCharacters": 736
+          },
+          "stopReasons": {
+            "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 20
+          },
+          "upstreamStatus": {
+            "compacted": 20
+          },
+          "latency": {
+            "n": 20,
+            "median": 227.83,
+            "p90": 268.52,
+            "p95": 298.72,
+            "max": 829.95,
+            "min": 196.67
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 123.61,
+            "p90": 150.09,
+            "p95": 152.98,
+            "max": 717.51,
+            "min": 0.34
+          },
+          "largestPacketBytes": 12420,
+          "utilisation": {
+            "min": 6.6,
+            "p10": 71.03,
+            "median": 101.965,
+            "p90": 103.03,
+            "max": 103.5
+          },
+          "discardTotals": {
+            "TOKEN_BUDGET": 1340,
+            "ROLE_GATE": 189
+          },
+          "integrityFailures": 0
+        },
+        "4000": {
+          "supply": {
+            "width": 200,
+            "budget": 4000,
+            "frozen": true,
+            "responses": 20,
+            "requiredMatchTokens": 2400,
+            "requiredExceedTokens": 3200,
+            "medianFrozenTokens": 4115.5,
+            "medianUtilisation": 102.89,
+            "medianCandidateCount": 130,
+            "medianRankedStream": 135,
+            "medianDeliveredItems": 38.5,
+            "medianUnusedBudget": -115.5,
+            "sufficiency": "SUFFICIENT"
+          },
+          "medians": {
+            "candidateCount": 130,
+            "rankedStream": 135,
+            "eligible": 121.5,
+            "pivots": 2,
+            "support": 76,
+            "discarded": 60,
+            "roleDiscards": 8,
+            "assemblyItems": 1,
+            "selectedBeforeBudget": 80,
+            "deliveredUpstream": 41.5,
+            "droppedForBudget": 38.5,
+            "projectorProposed": 38.5,
+            "projectorAdmitted": 38.5,
+            "projectorDeduplicated": 0,
+            "projectorRejectedForCeiling": 0,
+            "items": 38.5,
+            "frozenWholeTokens": 4115.5,
+            "evidenceTokens": 5064,
+            "unusedFrozenBudget": -115.5,
+            "renderedCharacters": 736
+          },
+          "stopReasons": {
+            "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 20
+          },
+          "upstreamStatus": {
+            "compacted": 20
+          },
+          "latency": {
+            "n": 20,
+            "median": 241.24,
+            "p90": 294.43,
+            "p95": 315.18,
+            "max": 842.37,
+            "min": 217.72
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 127.81,
+            "p90": 147.25,
+            "p95": 154.26,
+            "max": 714.93,
+            "min": 0.34
+          },
+          "largestPacketBytes": 16600,
+          "utilisation": {
+            "min": 4.95,
+            "p10": 90.53,
+            "median": 102.89,
+            "p90": 103.5,
+            "max": 103.75
+          },
+          "discardTotals": {
+            "TOKEN_BUDGET": 949,
+            "ROLE_GATE": 189
+          },
+          "integrityFailures": 0
+        },
+        "6000": {
+          "supply": {
+            "width": 200,
+            "budget": 6000,
+            "frozen": false,
+            "responses": 20,
+            "requiredMatchTokens": 3600,
+            "requiredExceedTokens": 4800,
+            "medianFrozenTokens": 6180,
+            "medianUtilisation": 103,
+            "medianCandidateCount": 130,
+            "medianRankedStream": 135,
+            "medianDeliveredItems": 60.5,
+            "medianUnusedBudget": -180,
+            "sufficiency": "SUFFICIENT"
+          },
+          "medians": {
+            "candidateCount": 130,
+            "rankedStream": 135,
+            "eligible": 121.5,
+            "pivots": 2,
+            "support": 110,
+            "discarded": 24,
+            "roleDiscards": 8,
+            "assemblyItems": 1,
+            "selectedBeforeBudget": 115.5,
+            "deliveredUpstream": 63.5,
+            "droppedForBudget": 50,
+            "projectorProposed": 60.5,
+            "projectorAdmitted": 60.5,
+            "projectorDeduplicated": 0,
+            "projectorRejectedForCeiling": 0,
+            "items": 60.5,
+            "frozenWholeTokens": 6180,
+            "evidenceTokens": 7602.5,
+            "unusedFrozenBudget": -180,
+            "renderedCharacters": 736
+          },
+          "stopReasons": {
+            "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 20
+          },
+          "upstreamStatus": {
+            "compacted": 20
+          },
+          "latency": {
+            "n": 20,
+            "median": 268.6,
+            "p90": 341.2,
+            "p95": 410.32,
+            "max": 900.21,
+            "min": 234.28
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 126.01,
+            "p90": 151.15,
+            "p95": 157.99,
+            "max": 721.01,
+            "min": 0.36
+          },
+          "largestPacketBytes": 25083,
+          "utilisation": {
+            "min": 3.3,
+            "p10": 99.18,
+            "median": 103,
+            "p90": 103.85,
+            "max": 104.52
+          },
+          "discardTotals": {
+            "ROLE_GATE": 189,
+            "TOKEN_BUDGET": 307
+          },
+          "integrityFailures": 0
+        },
+        "8000": {
+          "supply": {
+            "width": 200,
+            "budget": 8000,
+            "frozen": true,
+            "responses": 20,
+            "requiredMatchTokens": 4800,
+            "requiredExceedTokens": 6400,
+            "medianFrozenTokens": 8253,
+            "medianUtilisation": 103.16,
+            "medianCandidateCount": 130,
+            "medianRankedStream": 135,
+            "medianDeliveredItems": 82,
+            "medianUnusedBudget": -253,
+            "sufficiency": "SUFFICIENT"
+          },
+          "medians": {
+            "candidateCount": 130,
+            "rankedStream": 135,
+            "eligible": 121.5,
+            "pivots": 2,
+            "support": 123,
+            "discarded": 11,
+            "roleDiscards": 8,
+            "assemblyItems": 1,
+            "selectedBeforeBudget": 129,
+            "deliveredUpstream": 83,
+            "droppedForBudget": 45.5,
+            "projectorProposed": 82,
+            "projectorAdmitted": 82,
+            "projectorDeduplicated": 0,
+            "projectorRejectedForCeiling": 0,
+            "items": 82,
+            "frozenWholeTokens": 8253,
+            "evidenceTokens": 10147,
+            "unusedFrozenBudget": -253,
+            "renderedCharacters": 736
+          },
+          "stopReasons": {
+            "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 20
+          },
+          "upstreamStatus": {
+            "compacted": 20
+          },
+          "latency": {
+            "n": 20,
+            "median": 291.43,
+            "p90": 334.3,
+            "p95": 345.93,
+            "max": 895.15,
+            "min": 256.84
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 131.8,
+            "p90": 148.12,
+            "p95": 157.85,
+            "max": 728.84,
+            "min": 0.38
+          },
+          "largestPacketBytes": 33199,
+          "utilisation": {
+            "min": 2.48,
+            "p10": 102.4,
+            "median": 103.16499999999999,
+            "p90": 103.47,
+            "max": 103.75
+          },
+          "discardTotals": {
+            "ROLE_GATE": 189,
+            "TOKEN_BUDGET": 28
+          },
+          "integrityFailures": 0
+        },
+        "12000": {
+          "supply": {
+            "width": 200,
+            "budget": 12000,
+            "frozen": false,
+            "responses": 20,
+            "requiredMatchTokens": 7200,
+            "requiredExceedTokens": 9600,
+            "medianFrozenTokens": 12347,
+            "medianUtilisation": 102.89,
+            "medianCandidateCount": 130,
+            "medianRankedStream": 135,
+            "medianDeliveredItems": 112.5,
+            "medianUnusedBudget": -347,
+            "sufficiency": "SUFFICIENT"
+          },
+          "medians": {
+            "candidateCount": 130,
+            "rankedStream": 135,
+            "eligible": 121.5,
+            "pivots": 5,
+            "support": 121,
+            "discarded": 8,
+            "roleDiscards": 8,
+            "assemblyItems": 1,
+            "selectedBeforeBudget": 130.5,
+            "deliveredUpstream": 116,
+            "droppedForBudget": 17.5,
+            "projectorProposed": 112.5,
+            "projectorAdmitted": 112.5,
+            "projectorDeduplicated": 0,
+            "projectorRejectedForCeiling": 0,
+            "items": 112.5,
+            "frozenWholeTokens": 12347,
+            "evidenceTokens": 15215,
+            "unusedFrozenBudget": -347,
+            "renderedCharacters": 42232
+          },
+          "stopReasons": {
+            "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 20
+          },
+          "upstreamStatus": {
+            "compacted": 20
+          },
+          "latency": {
+            "n": 20,
+            "median": 277.71,
+            "p90": 318.01,
+            "p95": 363.12,
+            "max": 932.3,
+            "min": 247.31
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 126.95,
+            "p90": 154.91,
+            "p95": 158.03,
+            "max": 721.88,
+            "min": 0.37
+          },
+          "largestPacketBytes": 49661,
+          "utilisation": {
+            "min": 66.87,
+            "p10": 98.47,
+            "median": 102.895,
+            "p90": 103.23,
+            "max": 103.47
+          },
+          "discardTotals": {
+            "ROLE_GATE": 189
+          },
+          "integrityFailures": 0
+        },
+        "16000": {
+          "supply": {
+            "width": 200,
+            "budget": 16000,
+            "frozen": true,
+            "responses": 20,
+            "requiredMatchTokens": 9600,
+            "requiredExceedTokens": 12800,
+            "medianFrozenTokens": 15154,
+            "medianUtilisation": 94.72,
+            "medianCandidateCount": 130,
+            "medianRankedStream": 135,
+            "medianDeliveredItems": 126.5,
+            "medianUnusedBudget": 846,
+            "sufficiency": "SUFFICIENT"
+          },
+          "medians": {
+            "candidateCount": 130,
+            "rankedStream": 135,
+            "eligible": 121.5,
+            "pivots": 5,
+            "support": 121,
+            "discarded": 8,
+            "roleDiscards": 8,
+            "assemblyItems": 3,
+            "selectedBeforeBudget": 130.5,
+            "deliveredUpstream": 130.5,
+            "droppedForBudget": 0,
+            "projectorProposed": 126.5,
+            "projectorAdmitted": 126.5,
+            "projectorDeduplicated": 0,
+            "projectorRejectedForCeiling": 0,
+            "items": 126.5,
+            "frozenWholeTokens": 15154,
+            "evidenceTokens": 18727,
+            "unusedFrozenBudget": 846,
+            "renderedCharacters": 57581
+          },
+          "stopReasons": {
+            "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 17,
+            "NO_TRUTHFUL_SUPPLY": 3
+          },
+          "upstreamStatus": {
+            "compacted": 17,
+            "complete": 3
+          },
+          "latency": {
+            "n": 20,
+            "median": 277.34,
+            "p90": 338.23,
+            "p95": 365.98,
+            "max": 917.33,
+            "min": 238.94
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 130.29,
+            "p90": 153.97,
+            "p95": 156.35,
+            "max": 733.24,
+            "min": 0.37
+          },
+          "largestPacketBytes": 65703,
+          "utilisation": {
+            "min": 73.86,
+            "p10": 77.94,
+            "median": 94.715,
+            "p90": 102.61,
+            "max": 102.66
+          },
+          "discardTotals": {
+            "ROLE_GATE": 189
+          },
+          "integrityFailures": 0
+        }
+      },
+      "a5LikeP90At8000": {
+        "cmed": 334.3,
+        "clarge": 374.32,
+        "csmall": 44.01
+      },
+      "p90At16000": {
+        "cmed": 338.23,
+        "clarge": 410.68
+      }
+    },
+    {
+      "width": "uncapped",
+      "a11": {
+        "1000": 85.8,
+        "2000": 97.82,
+        "4000": 102.89,
+        "8000": 103.16,
+        "16000": 94.72
+      },
+      "verdict": "VTRACE_EXCEEDS_VEXP_CLAIM",
+      "byBudget": {
+        "1000": {
+          "supply": {
+            "width": 9007199254740991,
+            "budget": 1000,
+            "frozen": true,
+            "responses": 20,
+            "requiredMatchTokens": 600,
+            "requiredExceedTokens": 800,
+            "medianFrozenTokens": 858,
+            "medianUtilisation": 85.8,
+            "medianCandidateCount": 130,
+            "medianRankedStream": 135,
+            "medianDeliveredItems": 7,
+            "medianUnusedBudget": 142,
+            "sufficiency": "SUFFICIENT"
+          },
+          "medians": {
+            "candidateCount": 130,
+            "rankedStream": 135,
+            "eligible": 121.5,
+            "pivots": 1,
+            "support": 16,
+            "discarded": 118,
+            "roleDiscards": 8,
+            "assemblyItems": 1,
+            "selectedBeforeBudget": 21.5,
+            "deliveredUpstream": 9.5,
+            "droppedForBudget": 14,
+            "projectorProposed": 7,
+            "projectorAdmitted": 7,
+            "projectorDeduplicated": 0,
+            "projectorRejectedForCeiling": 0,
+            "items": 7,
+            "frozenWholeTokens": 858,
+            "evidenceTokens": 1058.5,
+            "unusedFrozenBudget": 142,
+            "renderedCharacters": null
+          },
+          "stopReasons": {
+            "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 20
+          },
+          "upstreamStatus": {
+            "compacted": 20
+          },
+          "latency": {
+            "n": 20,
+            "median": 208.68,
+            "p90": 254.69,
+            "p95": 273.92,
+            "max": 811.39,
+            "min": 180.37
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 127.94,
+            "p90": 149.16,
+            "p95": 157.7,
+            "max": 707.61,
+            "min": 0.36
+          },
+          "largestPacketBytes": 4135,
+          "utilisation": {
+            "min": 18.3,
+            "p10": 69.4,
+            "median": 85.80000000000001,
+            "p90": 102.3,
+            "max": 103.4
+          },
+          "discardTotals": {
+            "TOKEN_BUDGET": 2046,
+            "ROLE_GATE": 189,
+            "LANE_TOKEN_CEILING": 1
+          },
+          "integrityFailures": 0
+        },
+        "1500": {
+          "supply": {
+            "width": 9007199254740991,
+            "budget": 1500,
+            "frozen": false,
+            "responses": 20,
+            "requiredMatchTokens": 900,
+            "requiredExceedTokens": 1200,
+            "medianFrozenTokens": 1374,
+            "medianUtilisation": 91.6,
+            "medianCandidateCount": 130,
+            "medianRankedStream": 135,
+            "medianDeliveredItems": 12.5,
+            "medianUnusedBudget": 126,
+            "sufficiency": "SUFFICIENT"
+          },
+          "medians": {
+            "candidateCount": 130,
+            "rankedStream": 135,
+            "eligible": 121.5,
+            "pivots": 2,
+            "support": 22,
+            "discarded": 111,
+            "roleDiscards": 8,
+            "assemblyItems": 1,
+            "selectedBeforeBudget": 30.5,
+            "deliveredUpstream": 13.5,
+            "droppedForBudget": 16.5,
+            "projectorProposed": 12.5,
+            "projectorAdmitted": 12.5,
+            "projectorDeduplicated": 0,
+            "projectorRejectedForCeiling": 0,
+            "items": 12.5,
+            "frozenWholeTokens": 1374,
+            "evidenceTokens": 1693.5,
+            "unusedFrozenBudget": 126,
+            "renderedCharacters": null
+          },
+          "stopReasons": {
+            "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 20
+          },
+          "upstreamStatus": {
+            "compacted": 20
+          },
+          "latency": {
+            "n": 20,
+            "median": 218.38,
+            "p90": 254.07,
+            "p95": 260.37,
+            "max": 831.45,
+            "min": 190.15
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 129.89,
+            "p90": 151.01,
+            "p95": 159.72,
+            "max": 719.86,
+            "min": 0.35
+          },
+          "largestPacketBytes": 6200,
+          "utilisation": {
+            "min": 46.47,
+            "p10": 60.4,
+            "median": 91.6,
+            "p90": 102.8,
+            "max": 103.33
+          },
+          "discardTotals": {
+            "TOKEN_BUDGET": 1916,
+            "ROLE_GATE": 189
+          },
+          "integrityFailures": 0
+        },
+        "2000": {
+          "supply": {
+            "width": 9007199254740991,
+            "budget": 2000,
+            "frozen": true,
+            "responses": 20,
+            "requiredMatchTokens": 1200,
+            "requiredExceedTokens": 1600,
+            "medianFrozenTokens": 1956.5,
+            "medianUtilisation": 97.82,
+            "medianCandidateCount": 130,
+            "medianRankedStream": 135,
+            "medianDeliveredItems": 17,
+            "medianUnusedBudget": 43.5,
+            "sufficiency": "SUFFICIENT"
+          },
+          "medians": {
+            "candidateCount": 130,
+            "rankedStream": 135,
+            "eligible": 121.5,
+            "pivots": 2,
+            "support": 34,
+            "discarded": 101,
+            "roleDiscards": 8,
+            "assemblyItems": 1,
+            "selectedBeforeBudget": 39,
+            "deliveredUpstream": 19,
+            "droppedForBudget": 19.5,
+            "projectorProposed": 17,
+            "projectorAdmitted": 17,
+            "projectorDeduplicated": 0,
+            "projectorRejectedForCeiling": 0,
+            "items": 17,
+            "frozenWholeTokens": 1956.5,
+            "evidenceTokens": 2409.5,
+            "unusedFrozenBudget": 43.5,
+            "renderedCharacters": null
+          },
+          "stopReasons": {
+            "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 20
+          },
+          "upstreamStatus": {
+            "compacted": 20
+          },
+          "latency": {
+            "n": 20,
+            "median": 215.66,
+            "p90": 267.72,
+            "p95": 299.98,
+            "max": 813.04,
+            "min": 195.45
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 126.24,
+            "p90": 152.65,
+            "p95": 154.04,
+            "max": 713.67,
+            "min": 0.39
+          },
+          "largestPacketBytes": 8302,
+          "utilisation": {
+            "min": 49.25,
+            "p10": 70.05,
+            "median": 97.82499999999999,
+            "p90": 102.85,
+            "max": 103.8
+          },
+          "discardTotals": {
+            "TOKEN_BUDGET": 1725,
+            "ROLE_GATE": 189
+          },
+          "integrityFailures": 0
+        },
+        "3000": {
+          "supply": {
+            "width": 9007199254740991,
+            "budget": 3000,
+            "frozen": false,
+            "responses": 20,
+            "requiredMatchTokens": 1800,
+            "requiredExceedTokens": 2400,
+            "medianFrozenTokens": 3059,
+            "medianUtilisation": 101.97,
+            "medianCandidateCount": 130,
+            "medianRankedStream": 135,
+            "medianDeliveredItems": 27.5,
+            "medianUnusedBudget": -59,
+            "sufficiency": "SUFFICIENT"
+          },
+          "medians": {
+            "candidateCount": 130,
+            "rankedStream": 135,
+            "eligible": 121.5,
+            "pivots": 2,
+            "support": 55,
+            "discarded": 80,
+            "roleDiscards": 8,
+            "assemblyItems": 1,
+            "selectedBeforeBudget": 60.5,
+            "deliveredUpstream": 30,
+            "droppedForBudget": 31,
+            "projectorProposed": 27.5,
+            "projectorAdmitted": 27.5,
+            "projectorDeduplicated": 0,
+            "projectorRejectedForCeiling": 0,
+            "items": 27.5,
+            "frozenWholeTokens": 3059,
+            "evidenceTokens": 3771.5,
+            "unusedFrozenBudget": -59,
+            "renderedCharacters": 736
+          },
+          "stopReasons": {
+            "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 20
+          },
+          "upstreamStatus": {
+            "compacted": 20
+          },
+          "latency": {
+            "n": 20,
+            "median": 228.17,
+            "p90": 274.2,
+            "p95": 274.9,
+            "max": 834.8,
+            "min": 199.19
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 125.97,
+            "p90": 149.33,
+            "p95": 165.02,
+            "max": 715.2,
+            "min": 0.39
+          },
+          "largestPacketBytes": 12420,
+          "utilisation": {
+            "min": 6.6,
+            "p10": 71.03,
+            "median": 101.965,
+            "p90": 102.97,
+            "max": 103.5
+          },
+          "discardTotals": {
+            "TOKEN_BUDGET": 1340,
+            "ROLE_GATE": 189
+          },
+          "integrityFailures": 0
+        },
+        "4000": {
+          "supply": {
+            "width": 9007199254740991,
+            "budget": 4000,
+            "frozen": true,
+            "responses": 20,
+            "requiredMatchTokens": 2400,
+            "requiredExceedTokens": 3200,
+            "medianFrozenTokens": 4115.5,
+            "medianUtilisation": 102.89,
+            "medianCandidateCount": 130,
+            "medianRankedStream": 135,
+            "medianDeliveredItems": 38.5,
+            "medianUnusedBudget": -115.5,
+            "sufficiency": "SUFFICIENT"
+          },
+          "medians": {
+            "candidateCount": 130,
+            "rankedStream": 135,
+            "eligible": 121.5,
+            "pivots": 2,
+            "support": 76,
+            "discarded": 60,
+            "roleDiscards": 8,
+            "assemblyItems": 1,
+            "selectedBeforeBudget": 80,
+            "deliveredUpstream": 41,
+            "droppedForBudget": 38.5,
+            "projectorProposed": 38.5,
+            "projectorAdmitted": 38.5,
+            "projectorDeduplicated": 0,
+            "projectorRejectedForCeiling": 0,
+            "items": 38.5,
+            "frozenWholeTokens": 4115.5,
+            "evidenceTokens": 5064,
+            "unusedFrozenBudget": -115.5,
+            "renderedCharacters": 736
+          },
+          "stopReasons": {
+            "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 20
+          },
+          "upstreamStatus": {
+            "compacted": 20
+          },
+          "latency": {
+            "n": 20,
+            "median": 241.55,
+            "p90": 310.32,
+            "p95": 317.1,
+            "max": 850.92,
+            "min": 212.76
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 129.21,
+            "p90": 157.66,
+            "p95": 158.88,
+            "max": 714.19,
+            "min": 0.5
+          },
+          "largestPacketBytes": 16600,
+          "utilisation": {
+            "min": 4.95,
+            "p10": 90.53,
+            "median": 102.89,
+            "p90": 103.5,
+            "max": 103.75
+          },
+          "discardTotals": {
+            "TOKEN_BUDGET": 949,
+            "ROLE_GATE": 189
+          },
+          "integrityFailures": 0
+        },
+        "6000": {
+          "supply": {
+            "width": 9007199254740991,
+            "budget": 6000,
+            "frozen": false,
+            "responses": 20,
+            "requiredMatchTokens": 3600,
+            "requiredExceedTokens": 4800,
+            "medianFrozenTokens": 6180,
+            "medianUtilisation": 103,
+            "medianCandidateCount": 130,
+            "medianRankedStream": 135,
+            "medianDeliveredItems": 60.5,
+            "medianUnusedBudget": -180,
+            "sufficiency": "SUFFICIENT"
+          },
+          "medians": {
+            "candidateCount": 130,
+            "rankedStream": 135,
+            "eligible": 121.5,
+            "pivots": 2,
+            "support": 110,
+            "discarded": 24,
+            "roleDiscards": 8,
+            "assemblyItems": 1,
+            "selectedBeforeBudget": 115,
+            "deliveredUpstream": 63,
+            "droppedForBudget": 50,
+            "projectorProposed": 60.5,
+            "projectorAdmitted": 60.5,
+            "projectorDeduplicated": 0,
+            "projectorRejectedForCeiling": 0,
+            "items": 60.5,
+            "frozenWholeTokens": 6180,
+            "evidenceTokens": 7602.5,
+            "unusedFrozenBudget": -180,
+            "renderedCharacters": 736
+          },
+          "stopReasons": {
+            "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 20
+          },
+          "upstreamStatus": {
+            "compacted": 20
+          },
+          "latency": {
+            "n": 20,
+            "median": 277.87,
+            "p90": 323.51,
+            "p95": 369.46,
+            "max": 879.57,
+            "min": 229.08
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 133.47,
+            "p90": 157.74,
+            "p95": 158.02,
+            "max": 719.71,
+            "min": 0.36
+          },
+          "largestPacketBytes": 25083,
+          "utilisation": {
+            "min": 3.3,
+            "p10": 99.18,
+            "median": 103,
+            "p90": 103.85,
+            "max": 104.52
+          },
+          "discardTotals": {
+            "ROLE_GATE": 189,
+            "TOKEN_BUDGET": 307
+          },
+          "integrityFailures": 0
+        },
+        "8000": {
+          "supply": {
+            "width": 9007199254740991,
+            "budget": 8000,
+            "frozen": true,
+            "responses": 20,
+            "requiredMatchTokens": 4800,
+            "requiredExceedTokens": 6400,
+            "medianFrozenTokens": 8253,
+            "medianUtilisation": 103.16,
+            "medianCandidateCount": 130,
+            "medianRankedStream": 135,
+            "medianDeliveredItems": 82,
+            "medianUnusedBudget": -253,
+            "sufficiency": "SUFFICIENT"
+          },
+          "medians": {
+            "candidateCount": 130,
+            "rankedStream": 135,
+            "eligible": 121.5,
+            "pivots": 2,
+            "support": 123,
+            "discarded": 11,
+            "roleDiscards": 8,
+            "assemblyItems": 1,
+            "selectedBeforeBudget": 129,
+            "deliveredUpstream": 83,
+            "droppedForBudget": 45.5,
+            "projectorProposed": 82,
+            "projectorAdmitted": 82,
+            "projectorDeduplicated": 0,
+            "projectorRejectedForCeiling": 0,
+            "items": 82,
+            "frozenWholeTokens": 8253,
+            "evidenceTokens": 10147,
+            "unusedFrozenBudget": -253,
+            "renderedCharacters": 736
+          },
+          "stopReasons": {
+            "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 20
+          },
+          "upstreamStatus": {
+            "compacted": 20
+          },
+          "latency": {
+            "n": 20,
+            "median": 279.4,
+            "p90": 387.09,
+            "p95": 399.78,
+            "max": 899.1,
+            "min": 250.92
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 128.91,
+            "p90": 153.53,
+            "p95": 160.27,
+            "max": 713.34,
+            "min": 0.35
+          },
+          "largestPacketBytes": 33199,
+          "utilisation": {
+            "min": 2.48,
+            "p10": 102.4,
+            "median": 103.16499999999999,
+            "p90": 103.47,
+            "max": 103.75
+          },
+          "discardTotals": {
+            "ROLE_GATE": 189,
+            "TOKEN_BUDGET": 28
+          },
+          "integrityFailures": 0
+        },
+        "12000": {
+          "supply": {
+            "width": 9007199254740991,
+            "budget": 12000,
+            "frozen": false,
+            "responses": 20,
+            "requiredMatchTokens": 7200,
+            "requiredExceedTokens": 9600,
+            "medianFrozenTokens": 12347,
+            "medianUtilisation": 102.89,
+            "medianCandidateCount": 130,
+            "medianRankedStream": 135,
+            "medianDeliveredItems": 112.5,
+            "medianUnusedBudget": -347,
+            "sufficiency": "SUFFICIENT"
+          },
+          "medians": {
+            "candidateCount": 130,
+            "rankedStream": 135,
+            "eligible": 121.5,
+            "pivots": 5,
+            "support": 121,
+            "discarded": 8,
+            "roleDiscards": 8,
+            "assemblyItems": 1,
+            "selectedBeforeBudget": 130.5,
+            "deliveredUpstream": 116,
+            "droppedForBudget": 17.5,
+            "projectorProposed": 112.5,
+            "projectorAdmitted": 112.5,
+            "projectorDeduplicated": 0,
+            "projectorRejectedForCeiling": 0,
+            "items": 112.5,
+            "frozenWholeTokens": 12347,
+            "evidenceTokens": 15215,
+            "unusedFrozenBudget": -347,
+            "renderedCharacters": 42232
+          },
+          "stopReasons": {
+            "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 20
+          },
+          "upstreamStatus": {
+            "compacted": 20
+          },
+          "latency": {
+            "n": 20,
+            "median": 277.77,
+            "p90": 330.4,
+            "p95": 415.08,
+            "max": 886.17,
+            "min": 239.59
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 128.32,
+            "p90": 153.35,
+            "p95": 153.92,
+            "max": 741.1,
+            "min": 0.36
+          },
+          "largestPacketBytes": 49661,
+          "utilisation": {
+            "min": 66.87,
+            "p10": 98.47,
+            "median": 102.895,
+            "p90": 103.23,
+            "max": 103.47
+          },
+          "discardTotals": {
+            "ROLE_GATE": 189
+          },
+          "integrityFailures": 0
+        },
+        "16000": {
+          "supply": {
+            "width": 9007199254740991,
+            "budget": 16000,
+            "frozen": true,
+            "responses": 20,
+            "requiredMatchTokens": 9600,
+            "requiredExceedTokens": 12800,
+            "medianFrozenTokens": 15154,
+            "medianUtilisation": 94.72,
+            "medianCandidateCount": 130,
+            "medianRankedStream": 135,
+            "medianDeliveredItems": 126.5,
+            "medianUnusedBudget": 846,
+            "sufficiency": "SUFFICIENT"
+          },
+          "medians": {
+            "candidateCount": 130,
+            "rankedStream": 135,
+            "eligible": 121.5,
+            "pivots": 5,
+            "support": 121,
+            "discarded": 8,
+            "roleDiscards": 8,
+            "assemblyItems": 3,
+            "selectedBeforeBudget": 130.5,
+            "deliveredUpstream": 130.5,
+            "droppedForBudget": 0,
+            "projectorProposed": 126.5,
+            "projectorAdmitted": 126.5,
+            "projectorDeduplicated": 0,
+            "projectorRejectedForCeiling": 0,
+            "items": 126.5,
+            "frozenWholeTokens": 15154,
+            "evidenceTokens": 18727,
+            "unusedFrozenBudget": 846,
+            "renderedCharacters": 57581
+          },
+          "stopReasons": {
+            "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 17,
+            "NO_TRUTHFUL_SUPPLY": 3
+          },
+          "upstreamStatus": {
+            "compacted": 17,
+            "complete": 3
+          },
+          "latency": {
+            "n": 20,
+            "median": 278.86,
+            "p90": 333.21,
+            "p95": 432.47,
+            "max": 930.61,
+            "min": 249.58
+          },
+          "capsuleBuildMs": {
+            "n": 20,
+            "median": 133.79,
+            "p90": 165.45,
+            "p95": 172.51,
+            "max": 748.16,
+            "min": 0.33
+          },
+          "largestPacketBytes": 65703,
+          "utilisation": {
+            "min": 73.86,
+            "p10": 77.94,
+            "median": 94.715,
+            "p90": 102.61,
+            "max": 102.66
+          },
+          "discardTotals": {
+            "ROLE_GATE": 189
+          },
+          "integrityFailures": 0
+        }
+      },
+      "a5LikeP90At8000": {
+        "cmed": 387.09,
+        "clarge": 378.15,
+        "csmall": 39.01
+      },
+      "p90At16000": {
+        "cmed": 333.21,
+        "clarge": 411.86
+      }
+    }
+  ],
+  "universe": {
+    "cmedMedianUncapped": 130,
+    "largestCandidateCount": 136,
+    "clargeMedianUncapped": 64,
+    "csmallMedianUncapped": 5
+  },
+  "deliveryCollapsesByWidth": {
+    "25": {
+      "1000": [],
+      "2000": [],
+      "4000": [],
+      "8000": [],
+      "16000": []
+    },
+    "50": {
+      "1000": [
+        "how does cython parsing differ from python parsing"
+      ],
+      "2000": [],
+      "4000": [],
+      "8000": [],
+      "16000": []
+    },
+    "100": {
+      "1000": [
+        "what writes the index manifest after a run",
+        "how does cython parsing differ from python parsing"
+      ],
+      "2000": [],
+      "4000": [
+        "how are skeleton declarations built from indexed symbols"
+      ],
+      "8000": [],
+      "16000": []
+    },
+    "200": {
+      "1000": [
+        "what writes the index manifest after a run",
+        "how does cython parsing differ from python parsing"
+      ],
+      "2000": [],
+      "4000": [
+        "how are skeleton declarations built from indexed symbols"
+      ],
+      "8000": [
+        "how are skeleton declarations built from indexed symbols"
+      ],
+      "16000": []
+    },
+    "uncapped": {
+      "1000": [
+        "what writes the index manifest after a run",
+        "how does cython parsing differ from python parsing"
+      ],
+      "2000": [],
+      "4000": [
+        "how are skeleton declarations built from indexed symbols"
+      ],
+      "8000": [
+        "how are skeleton declarations built from indexed symbols"
+      ],
+      "16000": []
+    }
+  },
+  "otherCorpora": [
+    {
+      "id": "C-SMALL",
+      "supply": "A11_RETRIEVAL_SUPPLY_INSUFFICIENT",
+      "frozenA11ByWidth": {
+        "25": {
+          "1000": {
+            "median": 51.1
+          },
+          "2000": {
+            "median": 29.55
+          },
+          "4000": {
+            "median": 14.78
+          },
+          "8000": {
+            "median": 7.39
+          },
+          "16000": {
+            "median": 4.58
+          }
+        },
+        "50": {
+          "1000": {
+            "median": 51.1
+          },
+          "2000": {
+            "median": 29.55
+          },
+          "4000": {
+            "median": 14.78
+          },
+          "8000": {
+            "median": 7.39
+          },
+          "16000": {
+            "median": 4.58
+          }
+        },
+        "100": {
+          "1000": {
+            "median": 51.1
+          },
+          "2000": {
+            "median": 29.55
+          },
+          "4000": {
+            "median": 14.78
+          },
+          "8000": {
+            "median": 7.39
+          },
+          "16000": {
+            "median": 4.58
+          }
+        },
+        "200": {
+          "1000": {
+            "median": 51.1
+          },
+          "2000": {
+            "median": 29.55
+          },
+          "4000": {
+            "median": 14.78
+          },
+          "8000": {
+            "median": 7.39
+          },
+          "16000": {
+            "median": 4.58
+          }
+        },
+        "uncapped": {
+          "1000": {
+            "median": 51.1
+          },
+          "2000": {
+            "median": 29.55
+          },
+          "4000": {
+            "median": 14.78
+          },
+          "8000": {
+            "median": 7.39
+          },
+          "16000": {
+            "median": 4.58
+          }
+        }
+      }
+    },
+    {
+      "id": "C-LARGE",
+      "supply": "A11_RETRIEVAL_SUPPLY_INSUFFICIENT",
+      "frozenA11ByWidth": {
+        "25": {
+          "1000": {
+            "median": 67.7
+          },
+          "2000": {
+            "median": 61.25
+          },
+          "4000": {
+            "median": 62.52
+          },
+          "8000": {
+            "median": 38.29
+          },
+          "16000": {
+            "median": 20.39
+          }
+        },
+        "50": {
+          "1000": {
+            "median": 76.4
+          },
+          "2000": {
+            "median": 61.25
+          },
+          "4000": {
+            "median": 70.33
+          },
+          "8000": {
+            "median": 47.71
+          },
+          "16000": {
+            "median": 24.29
+          }
+        },
+        "100": {
+          "1000": {
+            "median": 76.4
+          },
+          "2000": {
+            "median": 61.25
+          },
+          "4000": {
+            "median": 71.47
+          },
+          "8000": {
+            "median": 47.71
+          },
+          "16000": {
+            "median": 24.62
+          }
+        },
+        "200": {
+          "1000": {
+            "median": 72.5
+          },
+          "2000": {
+            "median": 61.25
+          },
+          "4000": {
+            "median": 71.97
+          },
+          "8000": {
+            "median": 47.71
+          },
+          "16000": {
+            "median": 24.62
+          }
+        },
+        "uncapped": {
+          "1000": {
+            "median": 72.5
+          },
+          "2000": {
+            "median": 61.25
+          },
+          "4000": {
+            "median": 71.97
+          },
+          "8000": {
+            "median": 47.71
+          },
+          "16000": {
+            "median": 24.62
+          }
+        }
+      }
+    }
+  ]
+}

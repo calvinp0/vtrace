@@ -1,0 +1,91 @@
+{
+  "statement": "A13 was measured, not optimized.",
+  "m206Committed": {
+    "sizeViolations": 3,
+    "focusSwaps": 5,
+    "verdict": "VTRACE_BELOW_VEXP_CLAIM"
+  },
+  "reproductionPre": {
+    "sizeViolations": 3,
+    "focusSwaps": 5,
+    "orderRelations": {
+      "subsequence": 30,
+      "prefix": 15,
+      "neither": 35
+    },
+    "representationRegressions": 1
+  },
+  "byWidthPre": {
+    "25": {
+      "sizeViolations": 3,
+      "focusSwaps": 5,
+      "orderRelations": {
+        "subsequence": 30,
+        "prefix": 15,
+        "neither": 35
+      },
+      "representationRegressions": 1
+    },
+    "50": {
+      "sizeViolations": 3,
+      "focusSwaps": 5,
+      "orderRelations": {
+        "neither": 41,
+        "subsequence": 36,
+        "prefix": 3
+      },
+      "representationRegressions": 4
+    },
+    "100": {
+      "sizeViolations": 4,
+      "focusSwaps": 5,
+      "orderRelations": {
+        "neither": 47,
+        "subsequence": 30,
+        "prefix": 3
+      },
+      "representationRegressions": 43
+    },
+    "200": {
+      "sizeViolations": 4,
+      "focusSwaps": 5,
+      "orderRelations": {
+        "neither": 47,
+        "subsequence": 27,
+        "prefix": 6
+      },
+      "representationRegressions": 7
+    },
+    "uncapped": {
+      "sizeViolations": 4,
+      "focusSwaps": 5,
+      "orderRelations": {
+        "neither": 47,
+        "subsequence": 27,
+        "prefix": 6
+      },
+      "representationRegressions": 7
+    }
+  },
+  "reproductionPost": {
+    "sizeViolations": 3,
+    "focusSwaps": 5,
+    "orderRelations": {
+      "subsequence": 15,
+      "neither": 65
+    },
+    "representationRegressions": 24
+  },
+  "frozenRerun": {
+    "sizeViolations": 3,
+    "focusSwaps": 5,
+    "verdict": "VTRACE_BELOW_VEXP_CLAIM"
+  },
+  "swappedTasks": [
+    "where are import edges extracted from typescript",
+    "where does logic flow decide a path is unreachable",
+    "where is the MCP tool registry assembled",
+    "what writes the index manifest after a run",
+    "what happens when the index schema version is incompatible"
+  ]
+}

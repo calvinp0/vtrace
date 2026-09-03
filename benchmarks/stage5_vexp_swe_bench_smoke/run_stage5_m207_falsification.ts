@@ -396,7 +396,8 @@ let expanded: { result: any; packet: any; ledger: any; fx: { db: any; repoRoot: 
 
 // ------------------------------------------------ F13 anti-hardcode control
 {
-  const diff = execFileSync("git", ["-C", REPO, "diff", `${predecessorHead}..HEAD`, "--", "src/"], { encoding: "utf8" });
+  // Product lines only: a test may name a budget to check the rule; the rule may not.
+  const diff = execFileSync("git", ["-C", REPO, "diff", `${predecessorHead}..HEAD`, "--", "src/", ":(exclude)src/**/*.test.ts"], { encoding: "utf8" });
   const added = diff.split("\n").filter((l) => l.startsWith("+") && !l.startsWith("+++")).map((l) => l.slice(1));
   const competitor = added.filter((l) => /\b423\b/.test(l) || /top 12\b/i.test(l) || /vexp/i.test(l));
   const benchmarkRungs = added.filter((l) => /\b(16000|8000|4000|2000|1000)\b/.test(l) && /candidatePool|pool/i.test(l) && !/^\s*(\/\/|\*)/.test(l.trim()));
@@ -405,7 +406,7 @@ let expanded: { result: any; packet: any; ledger: any; fx: { db: any; repoRoot: 
   const whole = readFileSync(path.join(REPO, "src/capsuleV2/buildCapsuleV2.ts"), "utf8") + allocator;
   control("F13", "no competitor-derived or benchmark-derived constant governs the pool: no 423, no 'top 12 because VEXP', no frozen-rung case, no A11 threshold in the product change",
     competitor.length === 0 && benchmarkRungs.length === 0 && thresholdRule.length === 0 && !/\b423\b/.test(whole),
-    `added product lines ${added.length}; competitor hits ${competitor.length}; rung-keyed pool lines ${benchmarkRungs.length}; threshold-keyed lines ${thresholdRule.length}; 423 in pool sources ${/\b423\b/.test(whole)}`);
+    `added product lines ${added.length}; competitor hits ${competitor.length}; rung-keyed pool lines ${benchmarkRungs.length}${benchmarkRungs.length ? ` [${benchmarkRungs.slice(0, 2).map((l) => l.trim().slice(0, 80)).join(" | ")}]` : ""}; threshold-keyed lines ${thresholdRule.length}; 423 in pool sources ${/\b423\b/.test(whole)}`);
 }
 
 // ------------------------------------------- F14 pool-only causal control

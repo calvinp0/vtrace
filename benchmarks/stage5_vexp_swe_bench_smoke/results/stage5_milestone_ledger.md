@@ -9666,3 +9666,320 @@ evidence          results/stage5_m206_final_report.{md,json} and the
   baseline is 3/5 with order relations 15/31/34 and 6 representation
   regressions; A15 untouched.
   `CONTEXT_COMPILER_PRODUCT_UTILITY_NOT_ESTABLISHED` still governs.
+
+
+## M207 — retrieval-pool authority, truthful supply expansion and frozen A11 closure (PASS, A11 closed)
+
+```
+milestone         M207
+verdict           PASS
+parity            A11_RETRIEVAL_SUPPLY_SUFFICIENT; A11_PARITY_CLOSED;
+                  A11_RETRIEVAL_POOL_REPAIR_SUFFICIENT; 12/15 -> 13/15
+spend             0 live-agent runs, $0, 0 VEXP processes
+scope             A11 only. Audit every count bound on the candidate path,
+                  prove whether the fixed retrieval pool is the binding
+                  mechanism by varying the pool alone through the real product
+                  path, decide sufficiency on the frozen rule before any
+                  product change, and only then derive one budget-derived
+                  candidate allowance. No A13, no A15, no representation
+                  class, no eligibility, scoring or ranking change.
+
+result            VTRACE_VEXP_ENGINE_PARITY_THRESHOLD_MET
+                  MATCH 8  EXCEED 5  BELOW 2   match-or-exceed 13/15 (threshold 10)
+                  A8 minimum coverage 100% (veto 99%); structural violations 0
+                  determinism stable; invented structural claims 0
+                  frozen controls: F1-F5, F7, F8 pass; F6 FAILS on its stale
+                  `a14PerItem === 0` conjunct only (M203 standing finding).
+
+frozen A11        VEXP V-C5 "run_pipeline takes a whole-output token budget,
+                  default 10000". Rule (engine + report, verbatim): per
+                  budget, the median over the 20 C-MED tasks of 100 x
+                  ceil(chars/4 of the whole default get_code_context output)
+                  / max_tokens; MATCHES >= 60% at every frozen budget, EXCEEDS
+                  >= 80%. M206 committed 83.55 / 95.47 / 101.23 / 55.48 /
+                  27.84, BELOW. Pre-change reproduction at the product width
+                  on this tree 85.05 / 95.40 / 101.65 / 55.45 / 27.88, BELOW
+                  (the instrumentation seam edited src/, so the corpus moved
+                  by a few files; within 3 points at every budget). Post-
+                  change reproduction 85.05 / 94.78 / 102.05 / 102.50 / 94.72;
+                  M207 frozen engine rerun 84.05 / 94.65 / 102.05 / 102.50 /
+                  94.72, EXCEEDS (>= 80% at every frozen budget).
+
+pool authority    CANDIDATE_POOL_SIZE = 25 (buildCapsuleV2.ts:186), from the
+                  first capsule commit f099c3b1 (2026-06-06), comment:
+                  "Generous so the failing-test/graph routes can pull in a
+                  target lexical search alone missed; the budget allocator
+                  and role gate trim it back down" — a retrieval-quality
+                  default that named the allocator and the role gate as the
+                  real bounds; after M206 made support delivery budget-bound
+                  it was itself the binding stage at 8000-16000. Fourteen use
+                  sites: hybridRetrieve(maxResults) twice (normal and
+                  compound-task rescue), six anchor/backfill merge limits that
+                  evict the pool's tail, two backfill-lane search windows, the
+                  lexical row budget derivation. Hidden bounds recovered
+                  mechanically (stage5_m207_pool_authority_pre.json): the
+                  lexical lane fetches max(20, 4 x pool) = 100 rows; graph
+                  expansion 24 candidates at depth 1 with 6 same-module
+                  siblings per seed; body literals 10 per literal; per-seed
+                  symbol search 6; the broad SQL has NO LIMIT (only the
+                  path-signal query, 96) and ranking is never truncated —
+                  `assemble` scores the whole raw map and evaluatedById holds
+                  it. Dependents: isTestDominatedPool, conceptOwner's
+                  "already represented" slice, orchestration withinPool, the
+                  file-evidence lane's "25 symbols ≈ 9 files" arithmetic,
+                  co-edit poolFilePaths. The M206 "37-38 ranked pre-cap" was
+                  the capsule's ordered stream (pool + support lanes), not the
+                  universe: the universe is a median 130 candidates on C-MED
+                  (largest 136), 64 on C-LARGE, 5 on C-SMALL.
+
+counterfactual    Not a replay. A construction-time instrumentation field
+                  (McpServerContext.retrievalInstrumentation.candidatePoolSize
+                  -> orchestrator -> buildAuthoritativeProductRetrieval ->
+                  BuildCapsuleV2Input.candidatePoolSize) lets an in-process
+                  harness run the DEFAULT get_code_context handler at another
+                  pool width; no request field maps to it. Everything else is
+                  held at its product value: the lexical row budget is pinned
+                  to lexicalPoolSizeFor(the product pool) so BM25 idf and
+                  every max-normalised score are unchanged, the backfill
+                  lanes keep their windows, anchors, decoys, the role gate,
+                  the pivot cap, the M206 packing, the M158 dedupe, the lane
+                  ceilings, assembly, the evidence budget, the envelope, the
+                  M205 router, the M203 accounting and the projector ceiling
+                  all run as shipped. Seam identity: at the product width the
+                  instrumented packets are byte-identical to the
+                  uninstrumented handler, called immediately before in the
+                  same process state, on 180/180 C-MED, 27/27 C-SMALL and
+                  27/27 C-LARGE requests. Sweep (run_stage5_m207_pool_sweep.ts,
+                  widths 25 / 50 / 100 / 200 / uncapped, 9 budgets, 20 C-MED
+                  tasks + 3 on each other corpus, 1170 responses, 0 integrity
+                  failures, packets stable). C-MED frozen medians by width:
+                  25 -> 85.05 / 95.40 / 101.65 / 55.45 / 27.88 (BELOW);
+                  50 -> 82.05 / 95.70 / 102.38 / 85.06 / 44.22 (BELOW);
+                  100 -> 85.80 / 97.17 / 102.93 / 103.06 / 73.85 (MATCHES);
+                  200 and uncapped -> 85.80 / 97.82 / 102.89 / 103.16 /
+                  94.72 (EXCEEDS). Whole-output tokens at 16000: 4460 -> 7076
+                  -> 11816 -> 15154 against a MATCH line of 9600; delivered
+                  items 37 -> 58 -> 101 -> 126.5; the stream ends at the pool
+                  (CANDIDATE_POOL_CAP) on 19/20 responses at width 25 and on
+                  the evidence budget (17/20) or the exhausted universe (3/20)
+                  when uncapped. Sufficiency (required_match_tokens = ceil(0.6
+                  x B), real packets, the widest width, every frozen budget):
+                  A11_RETRIEVAL_SUPPLY_SUFFICIENT; narrowest sufficient swept
+                  width 100. Decided on b150fcb9 + seam (0c3e7360), before
+                  the product changed.
+
+tail quality      Newly exposed beyond the 25-pool at 16000 on C-MED
+                  (uncapped, 1954 candidates over 20 tasks): 93.2% delivered,
+                  6.8% rejected downstream (role gate or budget), 97.2% of the
+                  delivered as source-backed skeletons/signatures, 2.8%
+                  relationship-only, duplicate rate 0; provenance lexical
+                  1548, graph neighbour 277, same module 71, concept owner 48,
+                  symbol name 5, upstream rescue 5; exposed final scores
+                  min/p10/median/p90/max 0 / 0.41 / 0.84 / 1.21 / 1.59 against
+                  the 25-pool's 0.31 / 0.87 / 1.34 / 1.72 / 2.52 — a lower tail
+                  of the SAME ranking, admitted by the unchanged role gate
+                  (anything with lexical, graph or domain evidence is support
+                  at least; only tests and evidence-free symbols are
+                  discarded). Role identity vs width 25 at every frozen budget
+                  and width: same pivot set 20/20 (19/20 at 16000, where one
+                  task gains a fifth pivot under the unchanged gate), same
+                  lead 20/20, same focus 20/20, starved pivots 0.
+
+decision          The universe can satisfy the frozen rule and the fixed pool
+                  is the binding stage, so the pool repair is licensed: the
+                  allocator that already turns the budget into a tier, a pivot
+                  cap and a support window now derives the CANDIDATE
+                  ALLOWANCE (budgetAllocator.ts): candidatePool =
+                  clamp(ceil(maxTokens / 120), 25, 400). 120 is the measured
+                  median whole-output cost of one delivered support entry on
+                  the sweep (100-123 tokens per item across widths and
+                  budgets); 25 is the historical pool (no budget receives
+                  less); 400 bounds the per-candidate downstream work at ~3x
+                  the largest natural universe measured (143). Monotone in
+                  the budget; no tier, no rung, no benchmark constant.
+                  Allowance 25 up to 3000, 34 at 4000, 50 at 6000, 67 at
+                  8000, 100 at 12000, 134 at 16000, 400 from 48000. The
+                  lexical row budget stays derived from the floor (100 rows:
+                  widening it changes idf and every normalised score, a
+                  ranking change outside M207), the backfill lanes keep their
+                  windows, and the capsule reports candidate_pool_size beside
+                  candidate_count. One authority, no fixed constant, no
+                  parallel retriever; the instrument stays as the override
+                  the benchmark harness uses.
+
+before / after    C-MED medians, pool / delivered items / whole tokens /
+                  utilisation: 1000 31->31 / 8->8 / 850.5->850.5 /
+                  85.05->85.05; 2000 31->31 / 16.5->16.5 / 1908->1895.5 /
+                  95.40->94.78; 4000 31->38 / 33->34 / 4066->4082 /
+                  101.65->102.05; 8000 31->71 / 36->69.5 / 4436.5->8200 /
+                  55.45->102.50; 16000 31->130 / 37->126.5 / 4459.5->15154 /
+                  27.88->94.72. Role discards 2 -> 8 at 16000 (tests and
+                  evidence-free tail), eligible 27 -> 121.5. Stops after:
+                  the evidence budget on every response but 3 at 16000, which
+                  exhaust the universe (NO_TRUTHFUL_SUPPLY); no response stops
+                  on the pool. Attribution: 99/100 frozen responses land
+                  inside the swept bracket around their allowance; the
+                  repaired product with its pool pinned to 25 through the
+                  instrument reproduces the width-25 packets (same focus
+                  100/100, same related set 86/100, frozen A11 86.35 / 94.95 /
+                  101.73 / 55.45 / 27.88 — the residual is the corpus and the
+                  tight-budget envelope, not the policy). Same-corpus control
+                  (repaired product on the pre-change copy): 180/180 same
+                  focus, frozen A11 85.05 / 95.40 / 102.05 / 102.50 / 94.72
+                  vs 85.05 / 94.78 / 102.05 / 102.50 / 94.72 on the moved
+                  corpus, i.e. the movement is the policy.
+
+falsification     F1-F15 pass (stage5_m207_falsification.json, predecessor =
+                  the M206 final commit in a detached worktree): the fixed
+                  pool truncates a 60-resolver universe at 25 and the
+                  allowance exposes 37 more, all resolvers; a 3-candidate
+                  universe at 16000 leaves 96.6% of the budget unused with
+                  every delivered identity in the stream; 8 tests stay out at
+                  the role gate and 40 evidence-free billing symbols never
+                  enter the pool; twins deliver once with one record; four
+                  builds one hash and the 25-pool is a PREFIX of the 62-pool;
+                  pivot sets identical to the predecessor at 8000 and 16000
+                  while support grows 23 -> 60 and 20 -> 57; the allowance on
+                  a 22-budget grid equals the stated rule, is monotone, floored
+                  and capped, and the capsule's pool is min(universe,
+                  allowance) at 1500/3000/6000/12000; 500 candidates stay at
+                  pool 106 (the lexical row budget binds before the hard
+                  maximum) in 25 ms with +6 MB; the 61-related packet is
+                  62/62 accounted and a forged or missing tail cost fails
+                  M203; every tail body is source-anchored and a fabricated one
+                  fails M205; a focus swap is counted while utilisation passes;
+                  no impact-like entry at either width; no 423, no rung-keyed
+                  or threshold-keyed product line; the product pinned to 25 is
+                  shape-identical to the predecessor at 2000/8000/16000; and
+                  the evidence-budget ladder drops 40 ordinary supports from
+                  the tail but collapses 40 answer-bearing supports to one item
+                  (the hazard below).
+
+determinism       3 repeats, 360 C-MED responses at the product width and
+                  the pinned control: packets and ledgers stable.
+
+A12 / A14         Representation sweep on the repaired product: 4 classes
+                  MATCHES; 8605 related entries on C-MED (M206 4521), all
+                  accounted, 8603 valid; the 2 gate failures
+                  (`IndexCoverageSummary` at 1500 and 2000 on one task) are
+                  IDENTICAL under the predecessor product on this corpus and
+                  under the repaired product on the pre-change copy, so they
+                  belong to the corpus movement, not the pool (standing
+                  finding below). Frozen A12 MATCHES; frozen A14 5055/5055
+                  MATCHES.
+
+A13, observed     3 size violations / 5 focus swaps pre, post and frozen
+                  rerun (BELOW); order relations across adjacent frozen
+                  budgets prefix 15 -> 0, subsequence 30 -> 15, neither 35 ->
+                  65 (a wider pool at the larger budget reorders the related
+                  list); representation regressions 1 -> 24. Measured, not
+                  optimised.
+
+cost              Frozen A5 p90 55.17 / 203.6 / 344.88 ms (M206 56.03 /
+                  223.09 / 355.85), MATCHES; A5 harness 51.61 / 201.04 /
+                  344.91 (M206 52.25 / 207.46 / 346.68), MATCHES — the default
+                  budget's allowance of 67 costs nothing measurable at the
+                  frozen A5 protocol. Pool-width latency curve (pre sweep,
+                  load ~4): C-MED p90 at 8000 236 -> 299 -> 325 -> 334 -> 387
+                  ms and C-LARGE 336 -> 361 -> 386 -> 374 -> 378 at widths
+                  25 / 50 / 100 / 200 / uncapped; post sweep at the product
+                  width, C-MED p90 272.34 ms at 8000 and
+                  321.95 ms at 16000, C-LARGE 352.24
+                  and 419.85. Largest packet 20,479 -> 65,703
+                  bytes; largest item count 42 -> 135; largest ranked stream
+                  42 -> 141; capsule build median 115 -> 128 ms at 16000.
+                  Sweep process peak RSS 2.2 GB (audit instrumentation
+                  retaining 1170 responses and the candidate ledger); product
+                  memory per request +6 MB on a 500-candidate fixture (F8). No
+                  DB table, no schema change; capsule diagnostics gain
+                  candidate_pool_size.
+
+corpus identity   C-MED 504 -> 504: M207 edited existing source files and
+                  added none; the revision and file contents moved (the seam
+                  and the policy are in src/), so the corpus is not byte-
+                  identical to M206's and the same-corpus control above
+                  separates that movement from the policy. Replay (predecessor
+                  worktree, detached at b150fcb9): every check passes except
+                  the branch-name check a detached HEAD cannot pass; post
+                  M197A_AUTHORITY_VERIFIED at 504 @ 15fbad8f.
+
+commits           0c3e7360  pool-authority audit, instrumentation seam, pool-
+                            width sweep driver and pre-change evidence
+                  15fbad8f  budget-derived candidate allowance, tests,
+                            falsification and report drivers
+                  (next commit)  evidence, frozen rerun, this row
+
+evidence          results/stage5_m207_final_report.{md,json} and the
+                  stage5_m207_*.{json,jsonl} artefacts beside it;
+                  stage5_m205_representation_m207_{post,predecessor_check,
+                  precorpus_check}.json, stage5_m205_routing_ledger_m207_post
+                  .jsonl, stage5_m201_a5_m207_post.json.
+```
+
+## M207 standing findings
+
+- **The fixed pool was the binding stage, and it is gone.** With support
+  delivery budget-bound (M206), the 25-candidate pool ended the ranked stream
+  on 19 of 20 frozen responses at 8000 and 16000. The pool is now the budget's
+  candidate allowance, and no frozen response stops on it: the evidence
+  budget binds everywhere except three 16000 responses that exhaust the
+  universe. Frozen A11 83.55 / 95.47 / 101.23 / 55.48 / 27.84 -> 84.05 /
+  94.65 / 102.05 / 102.50 / 94.72, EXCEEDS; parity 13/15.
+
+- **The universe is bounded by the lexical row budget, not by the allowance.**
+  The lexical lane returns at most 100 rows (max(20, 4 x the floor)), graph
+  expansion adds 24, and the natural universe is a median 130 candidates on
+  C-MED, 64 on C-LARGE. An allowance above ~134 is headroom on today's
+  corpora (F8: 500 matching candidates yield a pool of 106). Widening the
+  lexical row budget would change BM25 idf and every normalised score — a
+  ranking change under the paired protocol — and is the next candidate-supply
+  mechanism if a larger budget ever needs more than the universe holds; the
+  remaining A11 gap at 16000 (94.7% against an 80% EXCEED line) does not.
+
+- **The evidence-budget ladder collapses when protected supply alone exceeds
+  the budget.** `applyProgressiveContextBudget` never drops an answer-bearing
+  support item (role `required`, or a reason containing "symbol-name match",
+  "preferred contrast", "direct evidence" or "exact"); once the minimal
+  representations of the protected items exceed the budget, its final rung
+  keeps ONE item. Pre-existing at width 25 (one C-MED response at 1500) and
+  exposed more often by a wide pool (at width 100 the task "how are skeleton
+  declarations built from indexed symbols" collapses to 1 delivered item of
+  66 selected at 4000; uncapped, at 8000 too, 1 of 128). The allowance sits
+  below the cliff on the frozen corpus (0 collapses at the product width at
+  every budget) but the cliff is the ladder's, documented by F15 and not
+  repaired: a tail drop of protected support before the collapse rung is a
+  delivery-semantics change for a later milestone.
+
+- **Tight-budget packets depend on process state and load.** Under a load of
+  10-15 from an unrelated workload, one representation sweep produced 3
+  non-packet responses and 5 unstable packets that did not reproduce in
+  isolation or on the idle rerun (180/180 packets, stable); a first draft of
+  the seam-identity control compared packets across process states and found
+  4/180 differing at 1000-3000 that were byte-identical when the two handlers
+  were called back to back. The debug envelope sits within a few tokens of
+  its whole-response ceiling at every budget (2997/3000, 9176/9200), so any
+  serialization-size difference can move a compaction rung. Latency evidence
+  in this row is from idle runs; the first post-change sweep and A5 harness
+  ran under that load and were rerun.
+
+- **The related packet can carry more than the compacted authoritative
+  rendering.** On one C-MED task at 1500 and 2000 the evidence budget
+  skeletonizes the second pivot upstream while the projected packet delivers
+  its full 463-character source-anchored body; the M205 analyzer flags the
+  two as `truncation_truthful_against_body` failures. The body is truthful
+  (ANCHORED_IN_SPAN) and the discrepancy is identical under the predecessor
+  product on this corpus, so it is a pre-existing consistency question between
+  the compacted authoritative context and the projection, not an M207 effect.
+
+- **A13 moved because the related list reorders with the pool, not the
+  focus.** Focus swaps and size violations are unchanged (5 / 3); across
+  adjacent frozen budgets the related order is now never a prefix (15 -> 0)
+  because the larger budget's wider pool interleaves newly exposed supports;
+  representation regressions 1 -> 24. This is the A13 baseline.
+
+- **Next-step recommendation.** A11 is closed; A13 (3 / 5, order relations
+  0 / 15 / 65, 24 representation regressions) is the next authorized target,
+  with the evidence-budget ladder's collapse rung and the compacted-body vs
+  projected-body consistency as the two delivery findings it should read
+  first; A15 untouched.
+  `CONTEXT_COMPILER_PRODUCT_UTILITY_NOT_ESTABLISHED` still governs.

@@ -447,7 +447,8 @@ for (const spec of corpusSpecs(REPO).filter((s) => CORPORA.includes(s.id))) {
   }
 
   // Tail: the worst-utilised frozen responses at the widest width, each with what stopped it.
-  const widest = widthLabel(WIDTHS.at(-1)!);
+  // The product's own width when it was swept, else the widest counterfactual.
+  const widest = widthLabel(WIDTHS.includes(PRODUCT_WIDTH) ? PRODUCT_WIDTH : WIDTHS.at(-1)!);
   const worst = [...packets.filter((r) => r.width === widest && r.frozenBudget)].sort((x, y) => x.utilisation.utilisationPercent - y.utilisation.utilisationPercent).slice(0, 10)
     .map((r) => ({ task: r.task, budget: r.budget, utilisationPercent: r.utilisation.utilisationPercent, frozenWholeTokens: r.utilisation.frozenWholeTokens,
       items: r.utilisation.items, candidateCount: r.candidateCount, rankedStream: r.rankedStream, pivots: r.pivots, support: r.support, roleDiscards: r.roleDiscards,

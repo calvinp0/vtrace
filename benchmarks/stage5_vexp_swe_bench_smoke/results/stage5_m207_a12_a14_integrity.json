@@ -1,0 +1,116 @@
+{
+  "a12": {
+    "frozenClasses": [
+      "FOCUS:focused_source",
+      "RELATED_WITH_CODE",
+      "RELATIONSHIP_ONLY",
+      "FOCUS:excerpt"
+    ],
+    "count": 4,
+    "verdict": "VTRACE_MATCHES_VEXP_CLAIM",
+    "integrity": {
+      "packets": 180,
+      "failures": 2,
+      "failedGates": [
+        "how does the indexer decide a file is eligible for parsing@1500:every_item_passes",
+        "how does the indexer decide a file is eligible for parsing@2000:every_item_passes"
+      ],
+      "failedItems": [
+        "how does the indexer decide a file is eligible for parsing@1500:indexer/types.ts::IndexCoverageSummary:truncation_truthful_against_body+code_is_the_head_bound_of_the_body",
+        "how does the indexer decide a file is eligible for parsing@2000:indexer/types.ts::IndexCoverageSummary:truncation_truthful_against_body+code_is_the_head_bound_of_the_body"
+      ]
+    },
+    "integrityAttribution": {
+      "post": [
+        "how does the indexer decide a file is eligible for parsing@1500:indexer/types.ts::IndexCoverageSummary:truncation_truthful_against_body+code_is_the_head_bound_of_the_body",
+        "how does the indexer decide a file is eligible for parsing@2000:indexer/types.ts::IndexCoverageSummary:truncation_truthful_against_body+code_is_the_head_bound_of_the_body"
+      ],
+      "predecessorOnSameCorpus": [
+        "how does the indexer decide a file is eligible for parsing@1500:indexer/types.ts::IndexCoverageSummary:truncation_truthful_against_body+code_is_the_head_bound_of_the_body",
+        "how does the indexer decide a file is eligible for parsing@2000:indexer/types.ts::IndexCoverageSummary:truncation_truthful_against_body+code_is_the_head_bound_of_the_body"
+      ],
+      "currentOnPreCorpus": [
+        "how does the indexer decide a file is eligible for parsing@1500:indexer/types.ts::IndexCoverageSummary:truncation_truthful_against_body+code_is_the_head_bound_of_the_body",
+        "how does the indexer decide a file is eligible for parsing@2000:indexer/types.ts::IndexCoverageSummary:truncation_truthful_against_body+code_is_the_head_bound_of_the_body"
+      ],
+      "m206": [],
+      "noNewFailure": true,
+      "note": "the failing items, when present, are identical under the predecessor product on this corpus and under the current product on the pre-change copy: the corpus (this tree's src) moved with the seam and the item's authoritative body is skeletonized by the evidence budget at 1500/2000 while the packet carries the source-anchored full body; a consistency question between the compacted authoritative rendering and the projected packet that predates M207 and is independent of the pool"
+    },
+    "classTotals": {
+      "focused_source": 441,
+      "signature": 66,
+      "skeleton": 7625,
+      "relationship_only": 635,
+      "excerpt": 18
+    },
+    "reasonTotals": {
+      "upstream_form_delivered": 7970,
+      "form_not_code_bearing": 212,
+      "no_rendered_body": 47,
+      "ceiling": 376
+    },
+    "sourceTruth": {
+      "focused_source": {
+        "ANCHORED_IN_SPAN": 441
+      },
+      "signature": {
+        "PARSER_SIGNATURE": 66
+      },
+      "skeleton": {
+        "SKELETON_MATCHES_INDEX": 7273,
+        "SKELETON_HEAD_OF_INDEX": 352
+      },
+      "excerpt": {
+        "ANCHORED_IN_SPAN": 18
+      }
+    },
+    "frozenRerun": {
+      "classes": [
+        "FOCUS:focused_source",
+        "RELATED_WITH_CODE",
+        "RELATIONSHIP_ONLY",
+        "FOCUS:excerpt"
+      ],
+      "verdict": "VTRACE_MATCHES_VEXP_CLAIM"
+    },
+    "m206": {
+      "classes": [
+        "FOCUS:focused_source",
+        "RELATED_WITH_CODE",
+        "RELATIONSHIP_ONLY",
+        "FOCUS:excerpt"
+      ],
+      "verdict": "VTRACE_MATCHES_VEXP_CLAIM"
+    }
+  },
+  "a14": {
+    "frozenRerun": {
+      "accounted": 5055,
+      "delivered": 5055,
+      "verdict": "VTRACE_MATCHES_VEXP_CLAIM"
+    },
+    "m206": {
+      "accounted": 2548,
+      "delivered": 2548,
+      "verdict": "VTRACE_MATCHES_VEXP_CLAIM"
+    },
+    "sweepIntegrity": {
+      "pre": {
+        "packets": 900,
+        "failures": 0
+      },
+      "post": {
+        "packets": 360,
+        "failures": 0,
+        "failedGates": []
+      }
+    },
+    "relatedEntriesOnCMed": {
+      "m206": 4521,
+      "m207": 8605,
+      "accounted": 8605,
+      "validRepresentation": 8603
+    }
+  }
+}

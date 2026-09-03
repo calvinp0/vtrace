@@ -1,0 +1,315 @@
+{
+  "symbol": "CANDIDATE_POOL_SIZE",
+  "value": 25,
+  "file": "src/capsuleV2/buildCapsuleV2.ts",
+  "line": 186,
+  "introducedIn": "f099c3b12daf2a3ff248777c969f6f78a31e87e5 2026-06-06 Build capsule v2 product output",
+  "originalComment": [
+    "The candidate pool retrieval ranks before role assignment. Generous so the",
+    "failing-test/graph routes can pull in a target lexical search alone missed;",
+    "the budget allocator and role gate trim it back down."
+  ],
+  "classification": {
+    "isSafetyBound": false,
+    "isPerformanceBound": false,
+    "isRetrievalQualityHeuristic": true,
+    "isBenchmarkHeuristic": false,
+    "isHistoricalDefault": true,
+    "isBudgetAware": false,
+    "commentDelegatesTrimmingTo": "the budget allocator and the role gate",
+    "note": "The comment describes the pool as generous input to the allocator and role gate, i.e. as a supply the downstream bounds would trim. M206 measured the opposite: after the tier count was removed the pool itself is the binding stage at 8000 and 16000 (39 of 100 frozen responses stop on it), because the downstream token budget is caller-derived and the pool is not."
+  },
+  "useSites": [
+    {
+      "line": 180,
+      "use": "definition / instrument",
+      "text": "candidatePoolSize?: number;"
+    },
+    {
+      "line": 186,
+      "use": "definition / instrument",
+      "text": "const CANDIDATE_POOL_SIZE = 25;"
+    },
+    {
+      "line": 191,
+      "use": "lexical row budget derivation",
+      "text": "const LEXICAL_POOL_SIZE = lexicalPoolSizeFor(CANDIDATE_POOL_SIZE);"
+    },
+    {
+      "line": 252,
+      "use": "definition / instrument",
+      "text": "const candidatePoolSize = input.candidatePoolSize ?? CANDIDATE_POOL_SIZE;"
+    },
+    {
+      "line": 269,
+      "use": "hybridRetrieve output cap (the pool)",
+      "text": "maxResults: candidatePoolSize,"
+    },
+    {
+      "line": 289,
+      "use": "hybridRetrieve output cap (the pool)",
+      "text": "maxResults: candidatePoolSize,"
+    },
+    {
+      "line": 368,
+      "use": "backfill lane search window",
+      "text": "poolSize: CANDIDATE_POOL_SIZE,"
+    },
+    {
+      "line": 374,
+      "use": "anchor/backfill merge limit (evicts the tail)",
+      "text": "candidates = mergeCandidatesPreferring(backfill.candidates, candidates, candidatePoolSize);"
+    },
+    {
+      "line": 401,
+      "use": "backfill lane search window",
+      "text": "poolSize: CANDIDATE_POOL_SIZE,"
+    },
+    {
+      "line": 405,
+      "use": "anchor/backfill merge limit (evicts the tail)",
+      "text": "candidates = mergeCandidatesPreferring(sqlCandidates, candidates, candidatePoolSize);"
+    },
+    {
+      "line": 427,
+      "use": "anchor/backfill merge limit (evicts the tail)",
+      "text": "candidates = mergeCandidatesPreferring(fresh, candidates, candidatePoolSize);"
+    },
+    {
+      "line": 458,
+      "use": "anchor/backfill merge limit (evicts the tail)",
+      "text": "candidates = mergeCandidatesPreferring(fresh, candidates, candidatePoolSize);"
+    },
+    {
+      "line": 544,
+      "use": "anchor/backfill merge limit (evicts the tail)",
+      "text": "candidates = mergeCandidatesPreferring(fresh, candidates, candidatePoolSize);"
+    },
+    {
+      "line": 579,
+      "use": "other",
+      "text": "candidatePoolSize,"
+    }
+  ],
+  "dependents": [
+    {
+      "name": "backfill lane windows",
+      "detail": "backfillProductionCandidates / backfillSqlRenderingCandidates search max(poolSize, BACKFILL_RETRIEVAL_WINDOW) and slice to poolSize",
+      "file": "src/capsuleV2/productionBackfill.ts"
+    },
+    {
+      "name": "concept-owner deliverable pool",
+      "detail": "conceptOwnerCandidates judges 'already represented' against ranked.slice(0, maxResults)",
+      "file": "src/retrieval/hybridRetrieval.ts"
+    },
+    {
+      "name": "orchestration withinPool",
+      "detail": "OrchestrationPathCandidate.withinPool = ordinaryRank <= maxResults; read by selectPathCompletion",
+      "file": "src/retrieval/hybridRetrieval.ts"
+    },
+    {
+      "name": "file-evidence lane arithmetic",
+      "detail": "comment: the pool cap counts SYMBOLS (25 symbols ≈ 9 distinct files); MAX_ORGANIC_RANK bounds the deep organic pass",
+      "file": "src/capsuleV2/fileEvidenceRescue.ts"
+    },
+    {
+      "name": "test-dominated pool test",
+      "detail": "isTestDominatedPool reads the ratio of test symbols in the (capped) pool to trigger production backfill",
+      "file": "src/capsuleV2/productionBackfill.ts"
+    },
+    {
+      "name": "co-edit poolFilePaths",
+      "detail": "expandCoeditSupport / rescueFileEvidenceSupport read the pool's file set to decide what is already present",
+      "file": "src/capsuleV2/coeditExpansion.ts"
+    }
+  ],
+  "bounds": [
+    {
+      "stage": "final retrieval pool",
+      "file": "src/capsuleV2/buildCapsuleV2.ts",
+      "symbol": "CANDIDATE_POOL_SIZE",
+      "value": 25,
+      "appliedAt": "hybridRetrieve(maxResults) → ranked.slice(0, maxResults) after scoring (admitBoundedLanesBesideCap); then every anchor/backfill merge limit; then the compound-task re-retrieval",
+      "budgetAware": false,
+      "kind": "retrieval-quality heuristic (fixed default)",
+      "rationale": "The candidate pool retrieval ranks before role assignment. Generous so the failing-test/graph routes can pull in a target lexical search alone missed; the budget allocator and role gate trim it back down.",
+      "line": 186
+    },
+    {
+      "stage": "lexical symbol search (prose query)",
+      "file": "src/retrieval/hybridRetrieval.ts",
+      "symbol": "lexicalPoolSize = max(lexicalPoolMinimum, maxResults × lexicalPoolMultiplier)",
+      "value": 100,
+      "appliedAt": "searchSymbols(maxResults = lexicalPoolSize): rankSearchCandidates slices the merged SQL candidate rows after ranking",
+      "budgetAware": false,
+      "kind": "derived from the pool (hidden second bound)",
+      "rationale": "lexicalPoolMinimum 20, lexicalPoolMultiplier 4: the lexical lane fetches 4× the pool so graph/test routes can compete",
+      "line": null
+    },
+    {
+      "stage": "per-seed symbol search",
+      "file": "src/retrieval/hybridRetrieval.ts",
+      "symbol": "DEFAULTS.symbolPoolSize",
+      "value": 6,
+      "appliedAt": "searchSymbols(maxResults) per likely symbol / seed",
+      "budgetAware": false,
+      "kind": "lane window",
+      "rationale": "each resolved symbol name admits at most this many index rows",
+      "line": null
+    },
+    {
+      "stage": "body-literal search",
+      "file": "src/retrieval/hybridRetrieval.ts",
+      "symbol": "BODY_LITERAL_POOL_SIZE",
+      "value": 10,
+      "appliedAt": "searchBodyLiterals(db, expr, limit) per literal",
+      "budgetAware": false,
+      "kind": "lane window",
+      "rationale": "a distinctive literal should resolve to very few symbols; cap defensively",
+      "line": 692
+    },
+    {
+      "stage": "likely-file path candidates",
+      "file": "src/retrieval/hybridRetrieval.ts",
+      "symbol": "listSymbolsForFile (no count)",
+      "value": "unbounded per file",
+      "appliedAt": "every symbol of every likely edit file enters the raw map",
+      "budgetAware": false,
+      "kind": "no bound",
+      "rationale": "",
+      "line": null
+    },
+    {
+      "stage": "failing-test → implementation",
+      "file": "src/retrieval/hybridRetrieval.ts",
+      "symbol": "expandTestsToImplementation (no count)",
+      "value": "unbounded per test",
+      "appliedAt": "every routed implementation enters the raw map",
+      "budgetAware": false,
+      "kind": "no bound",
+      "rationale": "",
+      "line": null
+    },
+    {
+      "stage": "scoring / ranking (assemble)",
+      "file": "src/retrieval/hybridRetrieval.ts",
+      "symbol": "assemble → FULL ranked pool",
+      "value": "no truncation",
+      "appliedAt": "every raw candidate is scored and sorted; evaluatedById holds the whole ranking",
+      "budgetAware": false,
+      "kind": "no bound",
+      "rationale": "comment: Returns the FULL ranked pool; the caller applies maxResults",
+      "line": null
+    },
+    {
+      "stage": "bounded lanes beside the cap",
+      "file": "src/retrieval/hybridRetrieval.ts",
+      "symbol": "admitBoundedLanesBesideCap",
+      "value": "concept-owner cap + operation-fact cap",
+      "appliedAt": "lane-admitted ids missing from the capped slice are appended and re-sorted",
+      "budgetAware": false,
+      "kind": "lane cap (beside the pool)",
+      "rationale": "a lane exists because ordinary ranking cannot see its findings",
+      "line": null
+    },
+    {
+      "stage": "graph + same-module expansion",
+      "file": "src/retrieval/graphExpansion.ts",
+      "symbol": "DEFAULTS.maxExpandedCandidates / maxDepth / sameModuleLimit",
+      "value": "24 candidates, depth 1, 6 siblings per seed",
+      "appliedAt": "expandGraphCandidates over every query-side seed",
+      "budgetAware": false,
+      "kind": "lane window",
+      "rationale": "bounded neighbour expansion",
+      "line": null
+    },
+    {
+      "stage": "path-signal SQL candidates",
+      "file": "src/retrieval/searchSymbolsShared.ts",
+      "symbol": "PATH_SIGNAL_CANDIDATE_LIMIT",
+      "value": 96,
+      "appliedAt": "SQL LIMIT on the path-signal candidate query",
+      "budgetAware": false,
+      "kind": "query-size safety",
+      "rationale": "",
+      "line": 149
+    },
+    {
+      "stage": "broad admission disjuncts",
+      "file": "src/retrieval/searchSymbolsShared.ts",
+      "symbol": "BROAD_ADMISSION_DISJUNCT_LIMIT",
+      "value": 96,
+      "appliedAt": "number of OR-disjuncts in the broad candidate SQL",
+      "budgetAware": false,
+      "kind": "query-size safety",
+      "rationale": "bounds the SQL text, not the rows",
+      "line": 1384
+    },
+    {
+      "stage": "broad candidate SQL",
+      "file": "src/retrieval/searchSymbolsShared.ts",
+      "symbol": "LIMIT clauses",
+      "value": 1,
+      "appliedAt": "743: LIMIT ?",
+      "budgetAware": false,
+      "kind": "observation",
+      "rationale": "the only SQL LIMIT on the lexical path is the path-signal query; the broad candidate query returns every matching row and ranking slices it",
+      "line": null
+    }
+  ],
+  "hiddenLimits": [
+    "lexical row budget = max(20, 4 × pool) — derived from the pool, so the pool constant also sizes the lexical universe",
+    "graph expansion 24 candidates at depth 1 (6 same-module siblings per seed)",
+    "anchor/backfill merges evict the pool's tail to stay at the pool size",
+    "the compound-task rescue re-retrieves at the same pool size",
+    "MAX_ORGANIC_RANK (file-evidence deep pass) and MAX_ROUTED_RESCUE_RESULTS are independent 100-row windows"
+  ],
+  "rankedUniverse": {
+    "statement": "The ranking is never truncated: assemble scores the whole raw map and evaluatedById carries every scored candidate. The universe before the pool is bounded by the generators' own windows: the lexical row budget, per-seed symbol windows, the body-literal window, the graph-expansion window, and the rescue lanes' caps. The M206 '37-38 ranked pre-cap' figure is the CAPSULE's ordered stream (pool + support lanes), not this universe; the sweep measures the universe as the uncapped width's candidate_count.",
+    "lexicalRowBudget": 100,
+    "graphExpansionWindow": 24,
+    "fileEvidenceOrganicRankWindow": 100,
+    "routedRescue": {
+      "maxResults": 100,
+      "maxAdditions": 2
+    }
+  },
+  "competitorConstantScan": [
+    {
+      "file": "src/capsuleV2/buildCapsuleV2.ts",
+      "hits": []
+    },
+    {
+      "file": "src/capsuleV2/budgetAllocator.ts",
+      "hits": []
+    },
+    {
+      "file": "src/retrieval/hybridRetrieval.ts",
+      "hits": []
+    }
+  ],
+  "current": {
+    "allocatorCarriesCandidatePool": true,
+    "fixedConstantRemains": false,
+    "floor": 25,
+    "hardMaximum": 400,
+    "tokensPerDeliveredCandidate": 120,
+    "rule": "candidatePool = clamp(ceil(maxTokens / EXPECTED_TOKENS_PER_DELIVERED_CANDIDATE), CANDIDATE_POOL_FLOOR, CANDIDATE_POOL_HARD_MAXIMUM)",
+    "allowanceByBudget": {
+      "500": 25,
+      "1000": 25,
+      "1500": 25,
+      "2000": 25,
+      "3000": 25,
+      "4000": 34,
+      "6000": 50,
+      "8000": 67,
+      "12000": 100,
+      "16000": 134,
+      "20000": 167,
+      "48000": 400,
+      "100000": 400
+    },
+    "statedRuleAgrees": true
+  }
+}

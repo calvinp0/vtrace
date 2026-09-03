@@ -1,0 +1,776 @@
+[
+  {
+    "budget": 1000,
+    "frozen": true,
+    "allowance": 25,
+    "candidateCount": {
+      "before": 31,
+      "after": 31
+    },
+    "rankedStream": {
+      "before": 38,
+      "after": 38
+    },
+    "eligible": {
+      "before": 27,
+      "after": 27
+    },
+    "roleDiscards": {
+      "before": 2,
+      "after": 2
+    },
+    "selectedCapsule": {
+      "before": 18,
+      "after": 18
+    },
+    "discardedCapsule": {
+      "before": 20,
+      "after": 20
+    },
+    "discardTotals": {
+      "before": {
+        "TOKEN_BUDGET": 311,
+        "ROLE_GATE": 66,
+        "LANE_TOKEN_CEILING": 1
+      },
+      "after": {
+        "TOKEN_BUDGET": 311,
+        "ROLE_GATE": 66,
+        "LANE_TOKEN_CEILING": 1
+      }
+    },
+    "deliveredItems": {
+      "before": 8,
+      "after": 8
+    },
+    "wholeTokens": {
+      "before": 850.5,
+      "after": 850.5
+    },
+    "unusedBudget": {
+      "before": 149.5,
+      "after": 149.5
+    },
+    "utilisation": {
+      "before": 85.05,
+      "after": 85.05,
+      "distributionAfter": {
+        "min": 75.7,
+        "p10": 77.4,
+        "median": 85.05,
+        "p90": 101.9,
+        "max": 102.3
+      }
+    },
+    "stopReasons": {
+      "before": {
+        "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 20
+      },
+      "after": {
+        "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 20
+      }
+    },
+    "upstreamStatus": {
+      "before": {
+        "compacted": 20
+      },
+      "after": {
+        "compacted": 20
+      }
+    },
+    "latencyP90": {
+      "before": 203.68,
+      "after": 209.44
+    },
+    "capsuleBuildMsMedian": {
+      "before": 117.19,
+      "after": 113.4
+    }
+  },
+  {
+    "budget": 1500,
+    "frozen": false,
+    "allowance": 25,
+    "candidateCount": {
+      "before": 31,
+      "after": 31
+    },
+    "rankedStream": {
+      "before": 38,
+      "after": 38
+    },
+    "eligible": {
+      "before": 27,
+      "after": 27
+    },
+    "roleDiscards": {
+      "before": 2,
+      "after": 2
+    },
+    "selectedCapsule": {
+      "before": 23,
+      "after": 23
+    },
+    "discardedCapsule": {
+      "before": 13,
+      "after": 13
+    },
+    "discardTotals": {
+      "before": {
+        "TOKEN_BUDGET": 202,
+        "ROLE_GATE": 66
+      },
+      "after": {
+        "TOKEN_BUDGET": 208,
+        "ROLE_GATE": 66
+      }
+    },
+    "deliveredItems": {
+      "before": 12,
+      "after": 12
+    },
+    "wholeTokens": {
+      "before": 1351,
+      "after": 1342
+    },
+    "unusedBudget": {
+      "before": 149,
+      "after": 158
+    },
+    "utilisation": {
+      "before": 90.06,
+      "after": 89.47,
+      "distributionAfter": {
+        "min": 7.2,
+        "p10": 44.87,
+        "median": 89.465,
+        "p90": 102.8,
+        "max": 102.93
+      }
+    },
+    "stopReasons": {
+      "before": {
+        "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 20
+      },
+      "after": {
+        "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 20
+      }
+    },
+    "upstreamStatus": {
+      "before": {
+        "compacted": 20
+      },
+      "after": {
+        "compacted": 20
+      }
+    },
+    "latencyP90": {
+      "before": 236.21,
+      "after": 223.48
+    },
+    "capsuleBuildMsMedian": {
+      "before": 118.62,
+      "after": 111.84
+    }
+  },
+  {
+    "budget": 2000,
+    "frozen": true,
+    "allowance": 25,
+    "candidateCount": {
+      "before": 31,
+      "after": 31
+    },
+    "rankedStream": {
+      "before": 38,
+      "after": 38
+    },
+    "eligible": {
+      "before": 27,
+      "after": 27
+    },
+    "roleDiscards": {
+      "before": 2,
+      "after": 2
+    },
+    "selectedCapsule": {
+      "before": 32,
+      "after": 32
+    },
+    "discardedCapsule": {
+      "before": 5,
+      "after": 5
+    },
+    "discardTotals": {
+      "before": {
+        "ROLE_GATE": 66,
+        "TOKEN_BUDGET": 64
+      },
+      "after": {
+        "ROLE_GATE": 66,
+        "TOKEN_BUDGET": 64
+      }
+    },
+    "deliveredItems": {
+      "before": 16.5,
+      "after": 16.5
+    },
+    "wholeTokens": {
+      "before": 1908,
+      "after": 1895.5
+    },
+    "unusedBudget": {
+      "before": 92,
+      "after": 104.5
+    },
+    "utilisation": {
+      "before": 95.4,
+      "after": 94.78,
+      "distributionAfter": {
+        "min": 55.15,
+        "p10": 69.75,
+        "median": 94.775,
+        "p90": 102.8,
+        "max": 103.15
+      }
+    },
+    "stopReasons": {
+      "before": {
+        "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 20
+      },
+      "after": {
+        "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 20
+      }
+    },
+    "upstreamStatus": {
+      "before": {
+        "compacted": 20
+      },
+      "after": {
+        "compacted": 20
+      }
+    },
+    "latencyP90": {
+      "before": 231.95,
+      "after": 209.56
+    },
+    "capsuleBuildMsMedian": {
+      "before": 119.3,
+      "after": 111.67
+    }
+  },
+  {
+    "budget": 3000,
+    "frozen": false,
+    "allowance": 25,
+    "candidateCount": {
+      "before": 31,
+      "after": 31
+    },
+    "rankedStream": {
+      "before": 38,
+      "after": 38
+    },
+    "eligible": {
+      "before": 27,
+      "after": 27
+    },
+    "roleDiscards": {
+      "before": 2,
+      "after": 2
+    },
+    "selectedCapsule": {
+      "before": 35,
+      "after": 35
+    },
+    "discardedCapsule": {
+      "before": 2,
+      "after": 2
+    },
+    "discardTotals": {
+      "before": {
+        "ROLE_GATE": 66
+      },
+      "after": {
+        "ROLE_GATE": 66
+      }
+    },
+    "deliveredItems": {
+      "before": 25,
+      "after": 25
+    },
+    "wholeTokens": {
+      "before": 3021.5,
+      "after": 3021.5
+    },
+    "unusedBudget": {
+      "before": -21.5,
+      "after": -21.5
+    },
+    "utilisation": {
+      "before": 100.72,
+      "after": 100.72,
+      "distributionAfter": {
+        "min": 74.1,
+        "p10": 85.83,
+        "median": 100.715,
+        "p90": 102.6,
+        "max": 103.17
+      }
+    },
+    "stopReasons": {
+      "before": {
+        "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 20
+      },
+      "after": {
+        "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 20
+      }
+    },
+    "upstreamStatus": {
+      "before": {
+        "compacted": 20
+      },
+      "after": {
+        "compacted": 20
+      }
+    },
+    "latencyP90": {
+      "before": 233.33,
+      "after": 210.8
+    },
+    "capsuleBuildMsMedian": {
+      "before": 119.53,
+      "after": 116.26
+    }
+  },
+  {
+    "budget": 4000,
+    "frozen": true,
+    "allowance": 34,
+    "candidateCount": {
+      "before": 31,
+      "after": 38
+    },
+    "rankedStream": {
+      "before": 38,
+      "after": 46
+    },
+    "eligible": {
+      "before": 27,
+      "after": 34.5
+    },
+    "roleDiscards": {
+      "before": 2,
+      "after": 3
+    },
+    "selectedCapsule": {
+      "before": 35,
+      "after": 42
+    },
+    "discardedCapsule": {
+      "before": 2,
+      "after": 3
+    },
+    "discardTotals": {
+      "before": {
+        "ROLE_GATE": 66
+      },
+      "after": {
+        "ROLE_GATE": 75
+      }
+    },
+    "deliveredItems": {
+      "before": 33,
+      "after": 34
+    },
+    "wholeTokens": {
+      "before": 4066,
+      "after": 4082
+    },
+    "unusedBudget": {
+      "before": -66,
+      "after": -82
+    },
+    "utilisation": {
+      "before": 101.65,
+      "after": 102.05,
+      "distributionAfter": {
+        "min": 82.03,
+        "p10": 87.38,
+        "median": 102.05,
+        "p90": 103,
+        "max": 103.25
+      }
+    },
+    "stopReasons": {
+      "before": {
+        "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 19,
+        "OTHER_EXPLICIT_POLICY:CANDIDATE_POOL_CAP": 1
+      },
+      "after": {
+        "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 20
+      }
+    },
+    "upstreamStatus": {
+      "before": {
+        "compacted": 19,
+        "complete": 1
+      },
+      "after": {
+        "compacted": 20
+      }
+    },
+    "latencyP90": {
+      "before": 242.82,
+      "after": 244.87
+    },
+    "capsuleBuildMsMedian": {
+      "before": 116.91,
+      "after": 113.91
+    }
+  },
+  {
+    "budget": 6000,
+    "frozen": false,
+    "allowance": 50,
+    "candidateCount": {
+      "before": 31,
+      "after": 54
+    },
+    "rankedStream": {
+      "before": 38,
+      "after": 60
+    },
+    "eligible": {
+      "before": 27,
+      "after": 49
+    },
+    "roleDiscards": {
+      "before": 2,
+      "after": 4
+    },
+    "selectedCapsule": {
+      "before": 35,
+      "after": 56
+    },
+    "discardedCapsule": {
+      "before": 2,
+      "after": 4
+    },
+    "discardTotals": {
+      "before": {
+        "ROLE_GATE": 66
+      },
+      "after": {
+        "ROLE_GATE": 96
+      }
+    },
+    "deliveredItems": {
+      "before": 36,
+      "after": 52
+    },
+    "wholeTokens": {
+      "before": 4436.5,
+      "after": 6150
+    },
+    "unusedBudget": {
+      "before": 1563.5,
+      "after": -150
+    },
+    "utilisation": {
+      "before": 73.94,
+      "after": 102.5,
+      "distributionAfter": {
+        "min": 85,
+        "p10": 85.83,
+        "median": 102.5,
+        "p90": 102.77,
+        "max": 103.03
+      }
+    },
+    "stopReasons": {
+      "before": {
+        "OTHER_EXPLICIT_POLICY:CANDIDATE_POOL_CAP": 16,
+        "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 3,
+        "NO_TRUTHFUL_SUPPLY": 1
+      },
+      "after": {
+        "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 20
+      }
+    },
+    "upstreamStatus": {
+      "before": {
+        "complete": 17,
+        "compacted": 3
+      },
+      "after": {
+        "compacted": 20
+      }
+    },
+    "latencyP90": {
+      "before": 216.34,
+      "after": 261.99
+    },
+    "capsuleBuildMsMedian": {
+      "before": 120.32,
+      "after": 117.18
+    }
+  },
+  {
+    "budget": 8000,
+    "frozen": true,
+    "allowance": 67,
+    "candidateCount": {
+      "before": 31,
+      "after": 71
+    },
+    "rankedStream": {
+      "before": 38,
+      "after": 78
+    },
+    "eligible": {
+      "before": 27,
+      "after": 65
+    },
+    "roleDiscards": {
+      "before": 2,
+      "after": 5.5
+    },
+    "selectedCapsule": {
+      "before": 35,
+      "after": 71
+    },
+    "discardedCapsule": {
+      "before": 2,
+      "after": 6
+    },
+    "discardTotals": {
+      "before": {
+        "ROLE_GATE": 66
+      },
+      "after": {
+        "ROLE_GATE": 127
+      }
+    },
+    "deliveredItems": {
+      "before": 36,
+      "after": 69.5
+    },
+    "wholeTokens": {
+      "before": 4436.5,
+      "after": 8200
+    },
+    "unusedBudget": {
+      "before": 3563.5,
+      "after": -200
+    },
+    "utilisation": {
+      "before": 55.45,
+      "after": 102.5,
+      "distributionAfter": {
+        "min": 81.54,
+        "p10": 81.99,
+        "median": 102.5,
+        "p90": 102.85,
+        "max": 102.92
+      }
+    },
+    "stopReasons": {
+      "before": {
+        "OTHER_EXPLICIT_POLICY:CANDIDATE_POOL_CAP": 19,
+        "NO_TRUTHFUL_SUPPLY": 1
+      },
+      "after": {
+        "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 20
+      }
+    },
+    "upstreamStatus": {
+      "before": {
+        "complete": 20
+      },
+      "after": {
+        "compacted": 20
+      }
+    },
+    "latencyP90": {
+      "before": 235.71,
+      "after": 272.34
+    },
+    "capsuleBuildMsMedian": {
+      "before": 116.18,
+      "after": 118.3
+    }
+  },
+  {
+    "budget": 12000,
+    "frozen": false,
+    "allowance": 100,
+    "candidateCount": {
+      "before": 31,
+      "after": 102
+    },
+    "rankedStream": {
+      "before": 38,
+      "after": 108
+    },
+    "eligible": {
+      "before": 27,
+      "after": 95
+    },
+    "roleDiscards": {
+      "before": 2,
+      "after": 6
+    },
+    "selectedCapsule": {
+      "before": 35,
+      "after": 101
+    },
+    "discardedCapsule": {
+      "before": 2,
+      "after": 6
+    },
+    "discardTotals": {
+      "before": {
+        "ROLE_GATE": 66
+      },
+      "after": {
+        "ROLE_GATE": 163
+      }
+    },
+    "deliveredItems": {
+      "before": 37,
+      "after": 101
+    },
+    "wholeTokens": {
+      "before": 4459.5,
+      "after": 11638.5
+    },
+    "unusedBudget": {
+      "before": 7540.5,
+      "after": 361.5
+    },
+    "utilisation": {
+      "before": 37.16,
+      "after": 96.98,
+      "distributionAfter": {
+        "min": 66.45,
+        "p10": 81.75,
+        "median": 96.985,
+        "p90": 102.81,
+        "max": 102.92
+      }
+    },
+    "stopReasons": {
+      "before": {
+        "OTHER_EXPLICIT_POLICY:CANDIDATE_POOL_CAP": 19,
+        "NO_TRUTHFUL_SUPPLY": 1
+      },
+      "after": {
+        "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 20
+      }
+    },
+    "upstreamStatus": {
+      "before": {
+        "complete": 20
+      },
+      "after": {
+        "compacted": 20
+      }
+    },
+    "latencyP90": {
+      "before": 218.42,
+      "after": 294.42
+    },
+    "capsuleBuildMsMedian": {
+      "before": 117.05,
+      "after": 122.19
+    }
+  },
+  {
+    "budget": 16000,
+    "frozen": true,
+    "allowance": 134,
+    "candidateCount": {
+      "before": 31,
+      "after": 130
+    },
+    "rankedStream": {
+      "before": 38,
+      "after": 135
+    },
+    "eligible": {
+      "before": 27,
+      "after": 121.5
+    },
+    "roleDiscards": {
+      "before": 2,
+      "after": 8
+    },
+    "selectedCapsule": {
+      "before": 35,
+      "after": 126
+    },
+    "discardedCapsule": {
+      "before": 2,
+      "after": 8
+    },
+    "discardTotals": {
+      "before": {
+        "ROLE_GATE": 66
+      },
+      "after": {
+        "ROLE_GATE": 189
+      }
+    },
+    "deliveredItems": {
+      "before": 37,
+      "after": 126.5
+    },
+    "wholeTokens": {
+      "before": 4459.5,
+      "after": 15154
+    },
+    "unusedBudget": {
+      "before": 11540.5,
+      "after": 846
+    },
+    "utilisation": {
+      "before": 27.88,
+      "after": 94.72,
+      "distributionAfter": {
+        "min": 73.86,
+        "p10": 76.02,
+        "median": 94.715,
+        "p90": 102.61,
+        "max": 102.66
+      }
+    },
+    "stopReasons": {
+      "before": {
+        "OTHER_EXPLICIT_POLICY:CANDIDATE_POOL_CAP": 19,
+        "NO_TRUTHFUL_SUPPLY": 1
+      },
+      "after": {
+        "OTHER_EXPLICIT_POLICY:UPSTREAM_EVIDENCE_BUDGET": 17,
+        "NO_TRUTHFUL_SUPPLY": 3
+      }
+    },
+    "upstreamStatus": {
+      "before": {
+        "complete": 20
+      },
+      "after": {
+        "compacted": 17,
+        "complete": 3
+      }
+    },
+    "latencyP90": {
+      "before": 231.87,
+      "after": 321.95
+    },
+    "capsuleBuildMsMedian": {
+      "before": 117.15,
+      "after": 124.87
+    }
+  }
+]

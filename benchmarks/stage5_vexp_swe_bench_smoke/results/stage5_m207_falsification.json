@@ -66,7 +66,7 @@
       "id": "F8",
       "statement": "a very large candidate-producing repository stays deterministically bounded: the pool never exceeds the hard maximum, the 16000 pool never exceeds its allowance, and time and memory stay controlled",
       "pass": true,
-      "detail": "500 candidates -> pool 106 at 1e6 tokens (hard max 400) in 22 ms; pool 106 at 16000 (allowance 134) in 22 ms; rss delta 7 MB"
+      "detail": "500 candidates -> pool 106 at 1e6 tokens (hard max 400) in 24 ms; pool 106 at 16000 (allowance 134) in 21 ms; rss delta 8 MB"
     },
     {
       "id": "F9",
@@ -96,7 +96,7 @@
       "id": "F13",
       "statement": "no competitor-derived or benchmark-derived constant governs the pool: no 423, no 'top 12 because VEXP', no frozen-rung case, no A11 threshold in the product change",
       "pass": true,
-      "detail": "added product lines 119; competitor hits 0; rung-keyed pool lines 0; threshold-keyed lines 0; 423 in pool sources false"
+      "detail": "added product lines 148; competitor hits 0; rung-keyed pool lines 0; threshold-keyed lines 0; 423 in pool sources false"
     },
     {
       "id": "F14",

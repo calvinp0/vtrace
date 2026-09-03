@@ -1,0 +1,732 @@
+{
+  "statement": "what the wider widths newly exposed beyond the 25-candidate pool, with each candidate's downstream fate under the unchanged role gate, allocator, router and projector",
+  "rows": [
+    {
+      "width": 50,
+      "budget": 8000,
+      "exposed": 473,
+      "scoreDistribution": {
+        "min": 0.5185,
+        "p10": 0.8419,
+        "median": 1.1312,
+        "p90": 1.3499,
+        "max": 1.5898
+      },
+      "baselineScoreDistribution": {
+        "min": 0.312,
+        "p10": 0.8738,
+        "median": 1.3376,
+        "p90": 1.7219,
+        "max": 2.5179
+      },
+      "fates": {
+        "support_delivered": 440,
+        "support_discarded": 32,
+        "unaccounted": 1
+      },
+      "provenance": {
+        "lexical": 363,
+        "graph_neighbour": 82,
+        "concept_owner": 18,
+        "same_module": 7,
+        "upstream_rescue": 3
+      },
+      "representations": {
+        "skeleton": 439,
+        "not_delivered": 32,
+        "relationship_only": 2
+      },
+      "deliveredFraction": 0.9323,
+      "rejectedDownstreamFraction": 0.0677,
+      "sourceBackedFraction": 0.9955,
+      "relationshipOnlyFraction": 0.0045,
+      "duplicateRate": 0
+    },
+    {
+      "width": 50,
+      "budget": 16000,
+      "exposed": 473,
+      "scoreDistribution": {
+        "min": 0.5185,
+        "p10": 0.8419,
+        "median": 1.1312,
+        "p90": 1.3499,
+        "max": 1.5898
+      },
+      "baselineScoreDistribution": {
+        "min": 0.312,
+        "p10": 0.8738,
+        "median": 1.3376,
+        "p90": 1.7219,
+        "max": 2.5179
+      },
+      "fates": {
+        "support_delivered": 439,
+        "support_discarded": 31,
+        "unaccounted": 2,
+        "pivot": 1
+      },
+      "provenance": {
+        "lexical": 363,
+        "graph_neighbour": 82,
+        "concept_owner": 18,
+        "same_module": 7,
+        "upstream_rescue": 3
+      },
+      "representations": {
+        "skeleton": 438,
+        "not_delivered": 31,
+        "relationship_only": 3,
+        "focused_source": 1
+      },
+      "deliveredFraction": 0.9345,
+      "rejectedDownstreamFraction": 0.0655,
+      "sourceBackedFraction": 0.9932,
+      "relationshipOnlyFraction": 0.0068,
+      "duplicateRate": 0
+    },
+    {
+      "width": 100,
+      "budget": 8000,
+      "exposed": 1412,
+      "scoreDistribution": {
+        "min": 0.3467,
+        "p10": 0.6048,
+        "median": 0.9591,
+        "p90": 1.2525,
+        "max": 1.5898
+      },
+      "baselineScoreDistribution": {
+        "min": 0.312,
+        "p10": 0.8738,
+        "median": 1.3376,
+        "p90": 1.7219,
+        "max": 2.5179
+      },
+      "fates": {
+        "support_delivered": 1049,
+        "support_discarded": 106,
+        "support_packed_not_projected": 256,
+        "unaccounted": 1
+      },
+      "provenance": {
+        "lexical": 1152,
+        "graph_neighbour": 176,
+        "same_module": 34,
+        "concept_owner": 40,
+        "symbol_name": 5,
+        "upstream_rescue": 5
+      },
+      "representations": {
+        "skeleton": 791,
+        "not_delivered": 362,
+        "relationship_only": 259
+      },
+      "deliveredFraction": 0.7436,
+      "rejectedDownstreamFraction": 0.2564,
+      "sourceBackedFraction": 0.7533,
+      "relationshipOnlyFraction": 0.2467,
+      "duplicateRate": 0
+    },
+    {
+      "width": 100,
+      "budget": 16000,
+      "exposed": 1412,
+      "scoreDistribution": {
+        "min": 0.3467,
+        "p10": 0.6048,
+        "median": 0.9591,
+        "p90": 1.2525,
+        "max": 1.5898
+      },
+      "baselineScoreDistribution": {
+        "min": 0.312,
+        "p10": 0.8738,
+        "median": 1.3376,
+        "p90": 1.7219,
+        "max": 2.5179
+      },
+      "fates": {
+        "support_delivered": 1304,
+        "support_discarded": 105,
+        "unaccounted": 2,
+        "pivot": 1
+      },
+      "provenance": {
+        "lexical": 1152,
+        "graph_neighbour": 176,
+        "same_module": 34,
+        "concept_owner": 40,
+        "symbol_name": 5,
+        "upstream_rescue": 5
+      },
+      "representations": {
+        "skeleton": 1296,
+        "not_delivered": 105,
+        "relationship_only": 10,
+        "focused_source": 1
+      },
+      "deliveredFraction": 0.9256,
+      "rejectedDownstreamFraction": 0.0744,
+      "sourceBackedFraction": 0.9923,
+      "relationshipOnlyFraction": 0.0077,
+      "duplicateRate": 0
+    },
+    {
+      "width": 200,
+      "budget": 8000,
+      "exposed": 1954,
+      "scoreDistribution": {
+        "min": 0,
+        "p10": 0.405,
+        "median": 0.8404,
+        "p90": 1.2108,
+        "max": 1.5898
+      },
+      "baselineScoreDistribution": {
+        "min": 0.312,
+        "p10": 0.8738,
+        "median": 1.3376,
+        "p90": 1.7219,
+        "max": 2.5179
+      },
+      "fates": {
+        "support_delivered": 1113,
+        "support_packed_not_projected": 691,
+        "support_discarded": 149,
+        "unaccounted": 1
+      },
+      "provenance": {
+        "lexical": 1548,
+        "graph_neighbour": 277,
+        "same_module": 71,
+        "concept_owner": 48,
+        "symbol_name": 5,
+        "upstream_rescue": 5
+      },
+      "representations": {
+        "skeleton": 858,
+        "not_delivered": 840,
+        "relationship_only": 256
+      },
+      "deliveredFraction": 0.5701,
+      "rejectedDownstreamFraction": 0.4299,
+      "sourceBackedFraction": 0.7702,
+      "relationshipOnlyFraction": 0.2298,
+      "duplicateRate": 0
+    },
+    {
+      "width": 200,
+      "budget": 16000,
+      "exposed": 1954,
+      "scoreDistribution": {
+        "min": 0,
+        "p10": 0.405,
+        "median": 0.8404,
+        "p90": 1.2108,
+        "max": 1.5898
+      },
+      "baselineScoreDistribution": {
+        "min": 0.312,
+        "p10": 0.8738,
+        "median": 1.3376,
+        "p90": 1.7219,
+        "max": 2.5179
+      },
+      "fates": {
+        "support_delivered": 1818,
+        "support_discarded": 132,
+        "unaccounted": 3,
+        "pivot": 1
+      },
+      "provenance": {
+        "lexical": 1548,
+        "graph_neighbour": 277,
+        "same_module": 71,
+        "concept_owner": 48,
+        "symbol_name": 5,
+        "upstream_rescue": 5
+      },
+      "representations": {
+        "skeleton": 1770,
+        "not_delivered": 132,
+        "relationship_only": 51,
+        "focused_source": 1
+      },
+      "deliveredFraction": 0.9324,
+      "rejectedDownstreamFraction": 0.0676,
+      "sourceBackedFraction": 0.972,
+      "relationshipOnlyFraction": 0.028,
+      "duplicateRate": 0
+    },
+    {
+      "width": 9007199254740991,
+      "budget": 8000,
+      "exposed": 1954,
+      "scoreDistribution": {
+        "min": 0,
+        "p10": 0.405,
+        "median": 0.8404,
+        "p90": 1.2108,
+        "max": 1.5898
+      },
+      "baselineScoreDistribution": {
+        "min": 0.312,
+        "p10": 0.8738,
+        "median": 1.3376,
+        "p90": 1.7219,
+        "max": 2.5179
+      },
+      "fates": {
+        "support_delivered": 1113,
+        "support_packed_not_projected": 691,
+        "support_discarded": 149,
+        "unaccounted": 1
+      },
+      "provenance": {
+        "lexical": 1548,
+        "graph_neighbour": 277,
+        "same_module": 71,
+        "concept_owner": 48,
+        "symbol_name": 5,
+        "upstream_rescue": 5
+      },
+      "representations": {
+        "skeleton": 858,
+        "not_delivered": 840,
+        "relationship_only": 256
+      },
+      "deliveredFraction": 0.5701,
+      "rejectedDownstreamFraction": 0.4299,
+      "sourceBackedFraction": 0.7702,
+      "relationshipOnlyFraction": 0.2298,
+      "duplicateRate": 0
+    },
+    {
+      "width": 9007199254740991,
+      "budget": 16000,
+      "exposed": 1954,
+      "scoreDistribution": {
+        "min": 0,
+        "p10": 0.405,
+        "median": 0.8404,
+        "p90": 1.2108,
+        "max": 1.5898
+      },
+      "baselineScoreDistribution": {
+        "min": 0.312,
+        "p10": 0.8738,
+        "median": 1.3376,
+        "p90": 1.7219,
+        "max": 2.5179
+      },
+      "fates": {
+        "support_delivered": 1818,
+        "support_discarded": 132,
+        "unaccounted": 3,
+        "pivot": 1
+      },
+      "provenance": {
+        "lexical": 1548,
+        "graph_neighbour": 277,
+        "same_module": 71,
+        "concept_owner": 48,
+        "symbol_name": 5,
+        "upstream_rescue": 5
+      },
+      "representations": {
+        "skeleton": 1770,
+        "not_delivered": 132,
+        "relationship_only": 51,
+        "focused_source": 1
+      },
+      "deliveredFraction": 0.9324,
+      "rejectedDownstreamFraction": 0.0676,
+      "sourceBackedFraction": 0.972,
+      "relationshipOnlyFraction": 0.028,
+      "duplicateRate": 0
+    }
+  ],
+  "roleIdentity": [
+    {
+      "width": 50,
+      "budget": 1000,
+      "responses": 20,
+      "samePivotSet": 20,
+      "sameLeadPivot": 20,
+      "sameFocus": 20,
+      "pivotCountDelta": {
+        "min": 0,
+        "max": 0,
+        "median": 0
+      },
+      "supportCountDelta": {
+        "min": -1,
+        "max": 2,
+        "median": 0
+      },
+      "starvedPivots": 0
+    },
+    {
+      "width": 50,
+      "budget": 2000,
+      "responses": 20,
+      "samePivotSet": 20,
+      "sameLeadPivot": 20,
+      "sameFocus": 20,
+      "pivotCountDelta": {
+        "min": 0,
+        "max": 0,
+        "median": 0
+      },
+      "supportCountDelta": {
+        "min": -4,
+        "max": 22,
+        "median": 2
+      },
+      "starvedPivots": 0
+    },
+    {
+      "width": 50,
+      "budget": 4000,
+      "responses": 20,
+      "samePivotSet": 20,
+      "sameLeadPivot": 20,
+      "sameFocus": 20,
+      "pivotCountDelta": {
+        "min": 0,
+        "max": 0,
+        "median": 0
+      },
+      "supportCountDelta": {
+        "min": 0,
+        "max": 26,
+        "median": 21
+      },
+      "starvedPivots": 0
+    },
+    {
+      "width": 50,
+      "budget": 8000,
+      "responses": 20,
+      "samePivotSet": 20,
+      "sameLeadPivot": 20,
+      "sameFocus": 20,
+      "pivotCountDelta": {
+        "min": 0,
+        "max": 0,
+        "median": 0
+      },
+      "supportCountDelta": {
+        "min": 0,
+        "max": 26,
+        "median": 21
+      },
+      "starvedPivots": 0
+    },
+    {
+      "width": 50,
+      "budget": 16000,
+      "responses": 20,
+      "samePivotSet": 19,
+      "sameLeadPivot": 20,
+      "sameFocus": 20,
+      "pivotCountDelta": {
+        "min": 0,
+        "max": 1,
+        "median": 0
+      },
+      "supportCountDelta": {
+        "min": 0,
+        "max": 25,
+        "median": 21
+      },
+      "starvedPivots": 0
+    },
+    {
+      "width": 100,
+      "budget": 1000,
+      "responses": 20,
+      "samePivotSet": 20,
+      "sameLeadPivot": 20,
+      "sameFocus": 20,
+      "pivotCountDelta": {
+        "min": 0,
+        "max": 0,
+        "median": 0
+      },
+      "supportCountDelta": {
+        "min": -2,
+        "max": 2,
+        "median": 0
+      },
+      "starvedPivots": 0
+    },
+    {
+      "width": 100,
+      "budget": 2000,
+      "responses": 20,
+      "samePivotSet": 20,
+      "sameLeadPivot": 20,
+      "sameFocus": 20,
+      "pivotCountDelta": {
+        "min": 0,
+        "max": 0,
+        "median": 0
+      },
+      "supportCountDelta": {
+        "min": -4,
+        "max": 22,
+        "median": 2
+      },
+      "starvedPivots": 0
+    },
+    {
+      "width": 100,
+      "budget": 4000,
+      "responses": 20,
+      "samePivotSet": 20,
+      "sameLeadPivot": 20,
+      "sameFocus": 20,
+      "pivotCountDelta": {
+        "min": 0,
+        "max": 0,
+        "median": 0
+      },
+      "supportCountDelta": {
+        "min": 0,
+        "max": 76,
+        "median": 41
+      },
+      "starvedPivots": 0
+    },
+    {
+      "width": 100,
+      "budget": 8000,
+      "responses": 20,
+      "samePivotSet": 20,
+      "sameLeadPivot": 20,
+      "sameFocus": 20,
+      "pivotCountDelta": {
+        "min": 0,
+        "max": 0,
+        "median": 0
+      },
+      "supportCountDelta": {
+        "min": 0,
+        "max": 76,
+        "median": 66
+      },
+      "starvedPivots": 0
+    },
+    {
+      "width": 100,
+      "budget": 16000,
+      "responses": 20,
+      "samePivotSet": 19,
+      "sameLeadPivot": 20,
+      "sameFocus": 20,
+      "pivotCountDelta": {
+        "min": 0,
+        "max": 1,
+        "median": 0
+      },
+      "supportCountDelta": {
+        "min": 0,
+        "max": 75,
+        "median": 66
+      },
+      "starvedPivots": 0
+    },
+    {
+      "width": 200,
+      "budget": 1000,
+      "responses": 20,
+      "samePivotSet": 20,
+      "sameLeadPivot": 20,
+      "sameFocus": 20,
+      "pivotCountDelta": {
+        "min": 0,
+        "max": 0,
+        "median": 0
+      },
+      "supportCountDelta": {
+        "min": -2,
+        "max": 2,
+        "median": 0
+      },
+      "starvedPivots": 0
+    },
+    {
+      "width": 200,
+      "budget": 2000,
+      "responses": 20,
+      "samePivotSet": 20,
+      "sameLeadPivot": 20,
+      "sameFocus": 20,
+      "pivotCountDelta": {
+        "min": 0,
+        "max": 0,
+        "median": 0
+      },
+      "supportCountDelta": {
+        "min": -4,
+        "max": 22,
+        "median": 2
+      },
+      "starvedPivots": 0
+    },
+    {
+      "width": 200,
+      "budget": 4000,
+      "responses": 20,
+      "samePivotSet": 20,
+      "sameLeadPivot": 20,
+      "sameFocus": 20,
+      "pivotCountDelta": {
+        "min": 0,
+        "max": 0,
+        "median": 0
+      },
+      "supportCountDelta": {
+        "min": 0,
+        "max": 79,
+        "median": 42
+      },
+      "starvedPivots": 0
+    },
+    {
+      "width": 200,
+      "budget": 8000,
+      "responses": 20,
+      "samePivotSet": 20,
+      "sameLeadPivot": 20,
+      "sameFocus": 20,
+      "pivotCountDelta": {
+        "min": 0,
+        "max": 0,
+        "median": 0
+      },
+      "supportCountDelta": {
+        "min": 0,
+        "max": 101,
+        "median": 90.5
+      },
+      "starvedPivots": 0
+    },
+    {
+      "width": 200,
+      "budget": 16000,
+      "responses": 20,
+      "samePivotSet": 19,
+      "sameLeadPivot": 20,
+      "sameFocus": 20,
+      "pivotCountDelta": {
+        "min": 0,
+        "max": 1,
+        "median": 0
+      },
+      "supportCountDelta": {
+        "min": 0,
+        "max": 101,
+        "median": 91.5
+      },
+      "starvedPivots": 0
+    },
+    {
+      "width": 9007199254740991,
+      "budget": 1000,
+      "responses": 20,
+      "samePivotSet": 20,
+      "sameLeadPivot": 20,
+      "sameFocus": 20,
+      "pivotCountDelta": {
+        "min": 0,
+        "max": 0,
+        "median": 0
+      },
+      "supportCountDelta": {
+        "min": -2,
+        "max": 2,
+        "median": 0
+      },
+      "starvedPivots": 0
+    },
+    {
+      "width": 9007199254740991,
+      "budget": 2000,
+      "responses": 20,
+      "samePivotSet": 20,
+      "sameLeadPivot": 20,
+      "sameFocus": 20,
+      "pivotCountDelta": {
+        "min": 0,
+        "max": 0,
+        "median": 0
+      },
+      "supportCountDelta": {
+        "min": -4,
+        "max": 22,
+        "median": 2
+      },
+      "starvedPivots": 0
+    },
+    {
+      "width": 9007199254740991,
+      "budget": 4000,
+      "responses": 20,
+      "samePivotSet": 20,
+      "sameLeadPivot": 20,
+      "sameFocus": 20,
+      "pivotCountDelta": {
+        "min": 0,
+        "max": 0,
+        "median": 0
+      },
+      "supportCountDelta": {
+        "min": 0,
+        "max": 79,
+        "median": 42
+      },
+      "starvedPivots": 0
+    },
+    {
+      "width": 9007199254740991,
+      "budget": 8000,
+      "responses": 20,
+      "samePivotSet": 20,
+      "sameLeadPivot": 20,
+      "sameFocus": 20,
+      "pivotCountDelta": {
+        "min": 0,
+        "max": 0,
+        "median": 0
+      },
+      "supportCountDelta": {
+        "min": 0,
+        "max": 101,
+        "median": 90.5
+      },
+      "starvedPivots": 0
+    },
+    {
+      "width": 9007199254740991,
+      "budget": 16000,
+      "responses": 20,
+      "samePivotSet": 19,
+      "sameLeadPivot": 20,
+      "sameFocus": 20,
+      "pivotCountDelta": {
+        "min": 0,
+        "max": 1,
+        "median": 0
+      },
+      "supportCountDelta": {
+        "min": 0,
+        "max": 101,
+        "median": 91.5
+      },
+      "starvedPivots": 0
+    }
+  ]
+}
