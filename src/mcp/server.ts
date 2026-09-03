@@ -35,6 +35,9 @@ export function createMcpServerContext(
     initialized: input.initialized ?? config?.initialized ?? state?.initialized ?? false,
     config,
     state,
+    ...(input.retrievalInstrumentation === undefined
+      ? {}
+      : { retrievalInstrumentation: input.retrievalInstrumentation }),
   };
 }
 

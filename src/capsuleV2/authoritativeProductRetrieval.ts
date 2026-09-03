@@ -61,6 +61,8 @@ export function buildAuthoritativeProductRetrieval(
     capsuleIntent?: CapsuleIntent;
     /** Offline profiler seam; result diagnostics remain deterministic by default. */
     includeTimingDiagnostics?: boolean;
+    /** Retrieval-pool width instrument (M207); see BuildCapsuleV2Input. */
+    candidatePoolSize?: number;
   },
 ): AuthoritativeProductRetrieval {
   const started = performance.now();
@@ -72,6 +74,7 @@ export function buildAuthoritativeProductRetrieval(
     intent: input.capsuleIntent ?? capsuleIntentForPreset(input.preset),
     maxTokens,
     includeTimingDiagnostics: input.includeTimingDiagnostics,
+    ...(input.candidatePoolSize === undefined ? {} : { candidatePoolSize: input.candidatePoolSize }),
   });
   const rescued = applyLazyRoutedRescue(
     db,

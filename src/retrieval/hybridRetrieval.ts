@@ -289,6 +289,16 @@ const DEFAULTS = Object.freeze({
   symbolPoolSize: 6,
 });
 
+/**
+ * The lexical lane's row budget when the caller does not name one: four rows
+ * for every candidate the pool may return, never fewer than twenty. Exported so
+ * a caller that varies the pool width can hold the lexical universe — and with
+ * it every BM25/normalisation-dependent score — at the value the product uses.
+ */
+export function lexicalPoolSizeFor(maxResults: number): number {
+  return Math.max(DEFAULTS.lexicalPoolMinimum, maxResults * DEFAULTS.lexicalPoolMultiplier);
+}
+
 // Raw (un-normalised) per-signal accumulation for one candidate.
 interface RawCandidate {
   symbol: SymbolRecord;
@@ -330,8 +340,7 @@ export function hybridRetrieve(
     operationRoles: inactiveOperationRoles("retrieval produced no candidates").diagnostics,
     };
   }
-  const lexicalPoolSize = input.lexicalPoolSize
-    ?? Math.max(DEFAULTS.lexicalPoolMinimum, maxResults * DEFAULTS.lexicalPoolMultiplier);
+  const lexicalPoolSize = input.lexicalPoolSize ?? lexicalPoolSizeFor(maxResults);
 
   const raw = new Map<SymbolId, RawCandidate>();
 

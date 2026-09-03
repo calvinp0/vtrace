@@ -132,6 +132,11 @@ export interface RunPipelineOrchestratorInput {
   readonly capsuleIntent?: CapsuleIntent;
   /** Request-local provenance context. Product callers resolve it once. */
   readonly currentObservationContext?: CurrentObservationContext;
+  /**
+   * Retrieval-pool width instrument (M207 counterfactual sweeps). Reaches the
+   * capsule builder unchanged; never derived from a request.
+   */
+  readonly candidatePoolSize?: number;
 }
 
 export const RUN_PIPELINE_DEFAULTS = Object.freeze({
@@ -384,6 +389,7 @@ export function runPipelineOrchestrator(
     maxBudgetCharacters,
     preset: intentDecision.selected,
     ...(rawInput.capsuleIntent === undefined ? {} : { capsuleIntent: rawInput.capsuleIntent }),
+    ...(rawInput.candidatePoolSize === undefined ? {} : { candidatePoolSize: rawInput.candidatePoolSize }),
     requireRoutedContext: shouldRunRoutedStructuralContext(query, normalizedIntent),
   });
   // Persist a deterministic capsule manifest so the emitted manifest id
@@ -644,6 +650,8 @@ export function runReliableContextRetrieval(
     requireRoutedContext?: boolean;
     /** Offline diagnostics only; product behavior and ordering are unchanged. */
     includeTimingDiagnostics?: boolean;
+    /** Retrieval-pool width instrument (M207); see BuildCapsuleV2Input. */
+    candidatePoolSize?: number;
   },
 ): OrchestrationContextSection {
   const primaryRetrieval = buildAuthoritativeProductRetrieval(db, repoRoot, {
@@ -651,6 +659,7 @@ export function runReliableContextRetrieval(
     preset: input.preset,
     maxBudgetCharacters: input.maxBudgetCharacters,
     capsuleIntent: input.capsuleIntent,
+    ...(input.candidatePoolSize === undefined ? {} : { candidatePoolSize: input.candidatePoolSize }),
   });
   const routedQuery = primaryRetrieval.routedQuery
     ?? (input.requireRoutedContext === true

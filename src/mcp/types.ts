@@ -129,6 +129,16 @@ export interface McpServerContext {
   readonly initialized: boolean;
   readonly config: RepoLocalConfig | null;
   readonly state: RepoLocalState | null;
+  /**
+   * Construction-time instrumentation for read-only benchmark sweeps (M207).
+   * The stdio server never sets it and no request field maps to it, so a
+   * product caller cannot reach it; an in-process harness that constructs the
+   * server may widen the capsule's retrieval pool to measure what the SAME
+   * product path delivers at another breadth.
+   */
+  readonly retrievalInstrumentation?: {
+    readonly candidatePoolSize?: number;
+  };
 }
 
 export interface McpToolError {

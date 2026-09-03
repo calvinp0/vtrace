@@ -5999,3 +5999,13 @@ async function writeConceptDebugFixtureRepo(repoRoot: string): Promise<void> {
     ].join("\n"),
   );
 }
+
+// M207: the pool-width instrument lives on the server context only. It is
+// carried when the constructing harness sets it and absent otherwise, so the
+// stdio server — which never sets it — cannot expose it to any request.
+test("server context carries retrieval instrumentation only when constructed with it", () => {
+  const plain = createMcpServerContext({ repoRoot: "/tmp/nowhere" });
+  assert.equal("retrievalInstrumentation" in plain, false);
+  const instrumented = createMcpServerContext({ repoRoot: "/tmp/nowhere", retrievalInstrumentation: { candidatePoolSize: 50 } });
+  assert.deepEqual(instrumented.retrievalInstrumentation, { candidatePoolSize: 50 });
+});

@@ -186,3 +186,19 @@ function retrieve(
     maxBudgetCharacters: 32_000,
   });
 }
+
+test("authoritative adapter passes the M207 pool-width instrument through unchanged", () => {
+  const { db, repoRoot } = seedCapsuleV2Fixture();
+  try {
+    const product = buildAuthoritativeProductRetrieval(db, repoRoot, {
+      query: INLINES_TASK, preset: RunPipelinePresetIntent.Debug, maxBudgetCharacters: 32_000,
+    });
+    const narrow = buildAuthoritativeProductRetrieval(db, repoRoot, {
+      query: INLINES_TASK, preset: RunPipelinePresetIntent.Debug, maxBudgetCharacters: 32_000, candidatePoolSize: 1,
+    });
+    assert.ok(narrow.result.diagnostics.candidate_count < product.result.diagnostics.candidate_count);
+    assert.equal(narrow.result.pivots[0]?.fq_name, product.result.pivots[0]?.fq_name, "the lead is the top-ranked candidate at either width");
+  } finally {
+    db.close();
+  }
+});

@@ -9083,6 +9083,10 @@ const RUN_PIPELINE_TOOL_DEFINITION = createEngineDelegateToolDefinition<RunPipel
               : { capsuleEngine: engineSnake ?? engineCamel }),
             ...(capsuleV2Intent === undefined ? {} : { capsuleIntent: capsuleV2Intent }),
             ...(capsuleBudgetTokens === undefined ? {} : { capsuleBudgetTokens }),
+            // M207 instrumentation: construction-time only, never from the request.
+            ...(context.retrievalInstrumentation?.candidatePoolSize === undefined
+              ? {}
+              : { candidatePoolSize: context.retrievalInstrumentation.candidatePoolSize }),
           });
 
           // Auto-capture is a best-effort post-success side effect shared with

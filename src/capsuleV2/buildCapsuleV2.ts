@@ -24,6 +24,7 @@ import {
 import { loadSymbolSource } from "../capsule/loadSymbolSource";
 import { shapeSweQuery, type ShapedSweQuery } from "../capsule/sweQueryShaping";
 import {
+  lexicalPoolSizeFor,
   createHybridRetrievalRequestCache,
   createHybridRetrievalProfile,
   hybridRetrieve,
@@ -167,12 +168,27 @@ export interface BuildCapsuleV2Input {
    * ordering. See `pivotRankingV2.ts`. Never uses outcome as an input.
    */
   pivotRankingVersion?: PivotRankingVersion;
+  /**
+   * Retrieval-pool width instrument (M207 counterfactual). Overrides the number
+   * of ranked candidates retrieval returns to role assignment; every other
+   * bound — the lexical row budget, the backfill lanes' own search windows, the
+   * role gate, the pivot cap, the token budget — stays at its product value, so
+   * a sweep over this input varies retrieval breadth alone. Defaults to the
+   * product pool. Never set on a request path; the MCP server carries it only
+   * as a construction-time instrumentation field.
+   */
+  candidatePoolSize?: number;
 }
 
 // The candidate pool retrieval ranks before role assignment. Generous so the
 // failing-test/graph routes can pull in a target lexical search alone missed;
 // the budget allocator and role gate trim it back down.
 const CANDIDATE_POOL_SIZE = 25;
+// The lexical lane's row budget is derived from the PRODUCT pool, not from a
+// counterfactual width: the lane's BM25 idf and every max-normalised component
+// are functions of the rows it returns, so holding it fixed is what keeps a
+// pool-width sweep a sweep over breadth alone.
+const LEXICAL_POOL_SIZE = lexicalPoolSizeFor(CANDIDATE_POOL_SIZE);
 // Cap on how many evidence lines a pivot carries — enough to justify the edit
 // target without flooding the capsule.
 const MAX_PIVOT_EVIDENCE = 6;
@@ -233,6 +249,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
   // fixed keys, so it is not directly a Record<string, number>).
   const weightsRecord: Record<string, number> = Object.fromEntries(Object.entries(weights));
   const allocation = allocateBudget(input.maxTokens);
+  const candidatePoolSize = input.candidatePoolSize ?? CANDIDATE_POOL_SIZE;
   const taskDerivationMs = performance.now() - taskDerivationStarted;
 
   const symbolSeeds = deriveSymbolSeeds(shaped);
@@ -249,7 +266,8 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
     taskText: input.task,
     weights,
     symbolSeeds,
-    maxResults: CANDIDATE_POOL_SIZE,
+    maxResults: candidatePoolSize,
+    lexicalPoolSize: LEXICAL_POOL_SIZE,
     ...(hybridProfile === undefined ? {} : { profile: hybridProfile }),
     requestCache: hybridRequestCache,
   });
@@ -268,7 +286,8 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       taskText: input.task,
       weights,
       symbolSeeds,
-      maxResults: CANDIDATE_POOL_SIZE,
+      maxResults: candidatePoolSize,
+      lexicalPoolSize: LEXICAL_POOL_SIZE,
       enableCompoundTaskRescue: true,
       ...(hybridProfile === undefined ? {} : { profile: hybridProfile }),
       requestCache: hybridRequestCache,
@@ -345,13 +364,14 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
         weights,
         task: input.task,
         issueTokens: collectIssueTokens(shaped),
+        // The lane's own search window: the product pool, not the counterfactual width.
         poolSize: CANDIDATE_POOL_SIZE,
       });
       classMethodExpansionUsed = backfill.classMethodExpansionUsed;
       classMethodExpansion = backfill.expansion;
       if (backfill.candidates.length > 0) {
         productionBackfillUsed = true;
-        candidates = mergeCandidatesPreferring(backfill.candidates, candidates, CANDIDATE_POOL_SIZE);
+        candidates = mergeCandidatesPreferring(backfill.candidates, candidates, candidatePoolSize);
       }
     } else {
       // No backfill needed, but the class + methods may already be in the pool;
@@ -382,7 +402,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
     });
     if (sqlCandidates.length > 0) {
       sqlRenderingBackfillUsed = true;
-      candidates = mergeCandidatesPreferring(sqlCandidates, candidates, CANDIDATE_POOL_SIZE);
+      candidates = mergeCandidatesPreferring(sqlCandidates, candidates, candidatePoolSize);
     }
   }
 
@@ -404,7 +424,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
     const poolIds = new Set(candidates.map((c) => c.symbolId));
     const fresh = titleSymbols.candidates.filter((c) => !poolIds.has(c.symbolId));
     if (fresh.length > 0) {
-      candidates = mergeCandidatesPreferring(fresh, candidates, CANDIDATE_POOL_SIZE);
+      candidates = mergeCandidatesPreferring(fresh, candidates, candidatePoolSize);
     }
   }
   const titleSymbolIds = new Set(titleSymbols.matches.map((m) => m.symbolId));
@@ -435,7 +455,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
     const poolIds = new Set(candidates.map((c) => c.symbolId));
     const fresh = literalAnchors.candidates.filter((c) => !poolIds.has(c.symbolId));
     if (fresh.length > 0) {
-      candidates = mergeCandidatesPreferring(fresh, candidates, CANDIDATE_POOL_SIZE);
+      candidates = mergeCandidatesPreferring(fresh, candidates, candidatePoolSize);
     }
   }
   const literalAnchorIds = new Set(literalAnchors.matches.map((m) => m.symbolId));
@@ -521,7 +541,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
       fresh.push(candidate);
     }
     if (fresh.length > 0) {
-      candidates = mergeCandidatesPreferring(fresh, candidates, CANDIDATE_POOL_SIZE);
+      candidates = mergeCandidatesPreferring(fresh, candidates, candidatePoolSize);
     }
   }
   const weakDirectOrdering: WeakDirectEvidenceOrdering = {
@@ -556,7 +576,7 @@ export function buildCapsuleV2(input: BuildCapsuleV2Input): CapsuleV2Result {
     candidates = mergeCandidatesPreferring(
       lineAnchorResolutions.map((resolution) => buildLineAnchorCandidate(resolution)),
       candidates,
-      CANDIDATE_POOL_SIZE,
+      candidatePoolSize,
     );
   }
 

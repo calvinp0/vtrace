@@ -292,3 +292,28 @@ test("formatThousands groups digits deterministically", () => {
   assert.equal(formatThousands(2_140), "2,140");
   assert.equal(formatThousands(1_234_567), "1,234,567");
 });
+
+// M207: the retrieval-pool width is an instrument, not a second authority.
+// Absent, the capsule uses the product pool; a narrower width truncates the
+// ranked stream the role layer sees; a width wider than the fixture's whole
+// candidate universe changes nothing, because the universe — the lexical row
+// budget, the lane windows, the scores — is held at its product value.
+test("candidatePoolSize varies retrieval breadth alone", () => {
+  const { db, repoRoot } = seedCapsuleV2Fixture();
+  try {
+    const build = (candidatePoolSize?: number) => buildCapsuleV2({
+      db, repoRoot, task: INLINES_TASK, intent: CapsuleIntent.Debug, maxTokens: 8_000,
+      ...(candidatePoolSize === undefined ? {} : { candidatePoolSize }),
+    });
+    const product = build();
+    const narrow = build(2);
+    const wide = build(1_000);
+    assert.ok(product.diagnostics.candidate_count > 2, "fixture must hold more than two candidates");
+    assert.ok(narrow.diagnostics.candidate_count <= product.diagnostics.candidate_count);
+    assert.ok(narrow.diagnostics.candidate_count <= 2 + 4, "a width of two admits two ranked candidates plus bounded lane extras");
+    assert.ok(product.diagnostics.candidate_count < 25, "the fixture universe is smaller than the product pool");
+    assert.deepEqual(wide, product, "a width above the universe delivers the product's own result");
+  } finally {
+    db.close();
+  }
+});
