@@ -267,15 +267,31 @@ export interface ImpactCensus {
   readonly relationsWithCallSite: number;
   readonly countsByKind: Readonly<Record<string, number>>;
   readonly countsByStrength: Readonly<Record<string, number>>;
-  /** Reverse-reachable relations beyond distance 1. Bounded by the traversal budget. */
-  readonly transitiveDependents: number;
-  readonly transitiveDependencies: number;
-  /** False when the traversal budget bit, so the two fields above are floors. */
-  readonly transitiveComplete: boolean;
   /** False when direct enumeration hit `DIRECT_ENUMERATION_CEILING`. */
   readonly complete: boolean;
   readonly enumerationCeiling: number;
 }
+
+/**
+ * WHY NO TRANSITIVE COUNTS LIVE HERE, since §12 permits them and an earlier
+ * revision of this file carried them.
+ *
+ * `domain: "direct_universe"` is a promise, and transitive reach cannot keep it.
+ * The reverse traversal that produces those figures is bounded by `max_edges` —
+ * the SAME knob that bounds the projection — so a `transitiveDependents` beside
+ * these fields would move with the render even while every field above it stayed
+ * still. The M211 falsification suite caught exactly that: the census was
+ * byte-identical across every budget except for its transitive tail, which is
+ * the coupling this milestone exists to remove, reintroduced inside the very
+ * record that claims to be free of it.
+ *
+ * The distinction §12 asks for is preserved rather than dropped:
+ * `richSummary.transitiveIncoming` / `transitiveOutgoing` still carry those
+ * numbers, and M139's `richSummary.fieldDomains` already labels them
+ * `full_graph` and marks them budget-bounded. Keeping one authority per
+ * population is also what §32 asks for — two places counting reachability with
+ * two different bounds is the duplicate-authority defect, not a convenience.
+ */
 
 export interface ImpactGraphOutput {
   readonly requested: {
@@ -861,9 +877,7 @@ const CENSUS_STRUCTURAL_KINDS: ReadonlySet<StaticRelationKind> = new Set(["conta
  */
 function buildImpactCensus(
   universe: readonly StaticRelationEvidence[],
-  traversals: readonly TraversedRelation[],
   directComplete: boolean,
-  transitiveComplete: boolean,
 ): ImpactCensus {
   const incoming = universe.filter((relation) => relation.direction === "incoming");
   const callers = incoming.filter((relation) => CENSUS_CALL_KINDS.has(relation.kind));
@@ -890,9 +904,6 @@ function buildImpactCensus(
     relationsWithCallSite: universe.filter((relation) => (relation.evidence.callSites?.length ?? 0) > 0).length,
     countsByKind: countBy(universe.map((relation) => relation.kind)),
     countsByStrength: countBy(universe.map((relation) => relation.strength)),
-    transitiveDependents: traversals.filter((item) => item.direction === "incoming" && item.distance > 1).length,
-    transitiveDependencies: traversals.filter((item) => item.direction === "outgoing" && item.distance > 1).length,
-    transitiveComplete,
     complete: directComplete,
     enumerationCeiling: DIRECT_ENUMERATION_CEILING,
   };
@@ -1036,9 +1047,7 @@ function buildRichImpact(
   // projection; nothing below may write back into it.
   const census = buildImpactCensus(
     allDirectRelations,
-    traversals,
     allDirectCandidates.length <= DIRECT_ENUMERATION_CEILING,
-    remainingTraversalEdges > 0,
   );
 
   // The canonical stream is `allDirectRelations` in `compareStaticRelations`
@@ -1363,8 +1372,22 @@ function hashPath(edgeIds: readonly string[]): string {
   return `path_${edgeIds.join("_").slice(0, 96)}`;
 }
 
+/**
+ * Wall-clock milliseconds, rounded to two decimals.
+ *
+ * The rounding is not cosmetic. `performance.now()` differences serialize as up
+ * to eighteen characters (`84.32158399999998`), and the response envelope
+ * measures the COMPLETE serialized object against its ceiling — so an unrounded
+ * timing block makes the response's size, and therefore how much evidence the
+ * ladder can keep, a function of how many digits this run's float happened to
+ * need. M211 caught the consequence directly: the same request on the same index
+ * returned two relations or one across repeats, decided by digit width alone.
+ * Two decimals is finer than any latency this field is used to reason about and
+ * bounds each value's width; the residual is covered by
+ * `LADDER_MEASUREMENT_JITTER_TOKENS` in the envelope.
+ */
 function measuredElapsed(start: number, enabled: boolean): number {
-  return enabled ? Math.max(0, performance.now() - start) : 0;
+  return enabled ? Math.round(Math.max(0, performance.now() - start) * 100) / 100 : 0;
 }
 
 function discoverImpactSymbols(

@@ -127,6 +127,41 @@ export function impactResponseMeetsEvidenceBudget(budget: ImpactResponseBudget):
 }
 
 /**
+ * Headroom the LADDER leaves under the delivery ceiling, in tokens. The terminal
+ * gate is unaffected: this only makes the ladder stop a little sooner.
+ *
+ * WHY IT EXISTS. The ladder's decisions are step functions of the serialized
+ * size, and a few characters of that size are not a property of the graph at
+ * all — `timing` carries measured wall-clock, so two runs over an identical
+ * index serialize to slightly different lengths. M211 measured the consequence:
+ * with the repaired ladder the ARC default response landed sixteen characters
+ * under its ceiling, and repeats of the identical request returned two relations
+ * or one depending on how many digits that run's elapsed floats needed.
+ * `measuredElapsed` now rounds, which bounds each value's width; this covers
+ * what rounding cannot, namely a value crossing a power of ten.
+ *
+ * Sized at eight tokens — an order of magnitude above the residual jitter and
+ * three orders below the smallest budget the tool accepts, so it can change
+ * whether a response is deterministic but not what it can afford to say.
+ */
+export const LADDER_MEASUREMENT_JITTER_TOKENS = 8;
+
+/**
+ * Width-maximal stand-ins the ladder prices wall-clock at. Every value is wider
+ * than any elapsed figure this tool can produce — `measuredElapsed` rounds to two
+ * decimals, and 99 999.99 ms is over a minute inside a single impact call — so
+ * substituting them can only over-state the response, never under-state it.
+ */
+const LADDER_TIMING_UPPER_BOUND: ImpactGraphOutput["timing"] = Object.freeze({
+  targetResolutionMs: 99_999.99,
+  directNeighborQueryMs: 99_999.99,
+  pathTraversalMs: 99_999.99,
+  renderMs: 99_999.99,
+  totalImpactMs: 99_999.99,
+});
+const LADDER_LATENCY_UPPER_BOUND = 99_999.99;
+
+/**
  * Final model-facing gate for get_impact_graph. The traversal may inspect more
  * evidence, but every compatibility projection is rebuilt from one retained set
  * of persisted edge ids before the complete serialized object is measured.
@@ -147,6 +182,36 @@ export function compactImpactProductResponse(
     Math.floor(IMPACT_HARD_SERIALIZED_CHARACTER_CEILING / 4),
   );
   const originalUniqueEdges = uniqueDeliveredEdgeCount(draft);
+
+  /**
+   * MEASURED WALL-CLOCK IS THE ONE PART OF THIS RESPONSE WHOSE SIZE IS NOT A
+   * PROPERTY OF THE REPOSITORY, so the ladder is not allowed to see it.
+   *
+   * `timing` and `accounting.latencyMs` serialize to however many digits a
+   * particular run happened to need, and the ladder's rungs are step functions
+   * of the serialized size. M211 measured both halves of the consequence: the
+   * same request on the same index returned two relations or one across repeats,
+   * and the frozen A6 determinism control went UNSTABLE on `ARCReaction` under
+   * load — where the elapsed figures are wider — while the identical request in
+   * isolation was perfectly stable. Rounding in `measuredElapsed` bounds each
+   * value's width but cannot remove the dependence.
+   *
+   * So the ladder measures against width-MAXIMAL stand-ins and the real values
+   * are restored before the response is finally measured and gated. The
+   * stand-ins are an upper bound, never an under-estimate, so a shape the ladder
+   * admitted cannot then fail the terminal: the real response is only ever
+   * smaller than the one the ladder priced.
+   */
+  const realTiming = draft.timing;
+  const realAccountingLatency = draft.accounting?.latencyMs;
+  draft.timing = LADDER_TIMING_UPPER_BOUND;
+  if (draft.accounting !== undefined) draft.accounting = { ...draft.accounting, latencyMs: LADDER_LATENCY_UPPER_BOUND } as typeof draft.accounting;
+  const restoreMeasuredWallClock = (): void => {
+    draft.timing = realTiming;
+    if (draft.accounting !== undefined && realAccountingLatency !== undefined) {
+      draft.accounting = { ...draft.accounting, latencyMs: realAccountingLatency } as typeof draft.accounting;
+    }
+  };
 
   // Canonical selection: direct evidence first (already evidence-ranked), then
   // legacy reverse edges as compatibility projections. No DB/iteration order is
@@ -248,7 +313,12 @@ export function compactImpactProductResponse(
       originalUniqueEdges,
       compacted,
     });
-    return impactResponseFitsEnvelope(accounting) && impactResponseMeetsEvidenceBudget(accounting);
+    // The ladder aims at the ceiling less its jitter allowance, so a decision it
+    // makes here cannot be reversed by the width of a wall-clock float. The
+    // terminal below still tests the real ceiling.
+    return accounting.estimatedTotalTokens <= accounting.totalCeiling - LADDER_MEASUREMENT_JITTER_TOKENS
+      && accounting.serializedCharacters <= IMPACT_HARD_SERIALIZED_CHARACTER_CEILING
+      && impactResponseMeetsEvidenceBudget(accounting);
   };
 
   if (!ladderSatisfied() && draft.paths.length > 0) {
@@ -516,6 +586,10 @@ export function compactImpactProductResponse(
     };
     if (finalized !== null && finalized.remaining > handle.remaining) compacted.add("continuation");
   }
+
+  // The ladder has made every decision it is going to. Real elapsed figures go
+  // back before anything is measured for reporting or gated for delivery.
+  restoreMeasuredWallClock();
 
   const responseBudget = buildBudget(draft, {
     requestedMaxTokens,
