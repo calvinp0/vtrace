@@ -6,6 +6,7 @@ import type {
   ImpactNode,
 } from "./getImpactGraph";
 import type { CallerCoverage } from "./callerCoverage";
+import { finalizeImpactContinuation } from "./impactContinuation";
 import type { StaticRelationEvidence } from "./staticEvidence";
 
 export const IMPACT_RESPONSE_ENVELOPE_VERSION = "vtrace.impact_response_envelope/1" as const;
@@ -290,6 +291,53 @@ export function compactImpactProductResponse(
       compacted.add("transitiveCompatibilityEdges");
     }
   }
+
+  /**
+   * THE GRAPH RESTATEMENT NOW HAS A RUNG (M211 §20), and it is above the
+   * evidence rather than below them.
+   *
+   * M210 measured this as the ladder's remaining structural fault: `nodes`,
+   * `edges` and `view` were only ever trimmed at the very END, after the
+   * evidence had already been demoted and cut to one relation. The result on
+   * the ARC corpus was a default response spending 3 167 characters restating a
+   * 3-edge projection while its one delivered relation had lost its source line
+   * — and, worse, the reduced evidence never bought anything, because the
+   * restatement it was reduced to make room for was still there.
+   *
+   * The reason it may yield first is new. `edges` is a compatibility projection
+   * of relations this response already carries in full, and until M211 it was
+   * also the only place the response admitted the graph was larger than the
+   * render. `impactCensus` now states that truthfully in ~600 characters, so
+   * dropping edge rows costs the reader a duplicate rather than a fact. Each
+   * dropped row stays counted in `responseBudget.omittedEdges`.
+   *
+   * Bounded below by one: an impact response that retains a relation but no edge
+   * at all would contradict its own compatibility contract.
+   */
+  if (!ladderSatisfied() && draft.edges.length > 1) {
+    const projected = draft.edges;
+    const baseNodes = draft.nodes;
+    const baseView = draft.view;
+    const baseDependentFiles = draft.dependentFiles;
+    let low = 1;
+    let high = projected.length;
+    let best = 1;
+    while (low <= high) {
+      const middle = Math.floor((low + high) / 2);
+      draft.nodes = baseNodes;
+      draft.view = baseView;
+      draft.dependentFiles = baseDependentFiles;
+      draft.edges = projected.slice(0, middle);
+      rebuildCanonicalNodeAndViewProjections(draft, compacted);
+      if (ladderSatisfied()) { best = middle; low = middle + 1; } else { high = middle - 1; }
+    }
+    draft.nodes = baseNodes;
+    draft.view = baseView;
+    draft.dependentFiles = baseDependentFiles;
+    draft.edges = projected.slice(0, best);
+    rebuildCanonicalNodeAndViewProjections(draft, compacted);
+    if (best < projected.length) compacted.add("canonicalEdges");
+  }
   // Potential callers are unproven evidence, so they yield before proven
   // relations — but only after the low-value transitive support above, and
   // strictly worst-confidence first. Whatever is dropped stays visible as a
@@ -311,20 +359,82 @@ export function compactImpactProductResponse(
     compacted.add("potentialCallers[].compactProjection");
   }
 
+  /**
+   * GRADUATED RELATION DEGRADATION (M211 §21), replacing a cliff.
+   *
+   * Until M211 this was two rungs: demote EVERY relation to `minimalRelation`,
+   * then pop the tail one at a time. The first step is what M210 measured as the
+   * cliff — one rung earlier the response carries a rendered source line on
+   * every relation, and one rung later on none of them, because the demotion was
+   * global. On the ARC corpus that left the default response delivering a single
+   * relation with no source line while a truthful 869 callers existed.
+   *
+   * The replacement reaches a strictly better response for the same budget and
+   * cannot reach a worse one. It solves for the shape
+   *
+   *     relations[0, a)  full compact form, source line intact
+   *     relations[a, b)  minimal form, relationship + provenance only
+   *     relations[b, n)  not rendered — counted by `impactCensus`
+   *
+   * maximising `b` FIRST and only then `a`. Maximising `b` first is what makes
+   * this a Pareto improvement: `b` is exactly the count the old cliff-then-trim
+   * pair converged to, so no relation that used to be delivered is lost, and the
+   * head relations recover the source line they used to have taken from them.
+   *
+   * Both searches are binary rather than linear because `fits(k)` is monotone in
+   * `k` — a longer prefix, or a richer prefix, only ever serializes larger. The
+   * old tail loop paid one full re-serialization per dropped relation; at the
+   * default `max_edges: 64` that is 63 of them against 6 here, which is why this
+   * does not cost the latency the graduation would otherwise imply.
+   */
   if (!ladderSatisfied() && draft.directRelations.length > 0) {
-    draft.directRelations = draft.directRelations.map(minimalRelation);
-    rebuildCanonicalNodeAndViewProjections(draft, compacted);
-    compacted.add("directRelations[].compactProjection");
-  }
+    const ranked = draft.directRelations;
+    // The search probes prefix lengths out of order, and
+    // `rebuildCanonicalNodeAndViewProjections` SYNTHESISES a node from a relation
+    // endpoint when the node is no longer present — at `distance: 1` and with the
+    // endpoint's own kind. Rebuilding from an already-shrunk projection would
+    // therefore let a probe that shrinks and a later probe that grows disagree
+    // about a node's distance. Every probe restarts from the same base instead,
+    // so the shape that is finally applied is the one that was measured.
+    const baseNodes = draft.nodes;
+    const baseView = draft.view;
+    const baseDependentFiles = draft.dependentFiles;
+    const applyShape = (full: number, total: number): void => {
+      draft.nodes = baseNodes;
+      draft.view = baseView;
+      draft.dependentFiles = baseDependentFiles;
+      draft.directRelations = [
+        ...ranked.slice(0, full),
+        ...ranked.slice(full, total).map(minimalRelation),
+      ];
+      rebuildCanonicalNodeAndViewProjections(draft, compacted);
+    };
+    /** Largest `k` in [0, high] for which `admits(k)` holds, given monotonicity. */
+    const largestAdmissible = (high: number, admits: (k: number) => boolean): number => {
+      let low = 0;
+      let best = 0;
+      let ceiling = high;
+      while (low <= ceiling) {
+        const middle = Math.floor((low + ceiling) / 2);
+        if (admits(middle)) { best = middle; low = middle + 1; } else { ceiling = middle - 1; }
+      }
+      return best;
+    };
 
-  // A very small token request can require fewer retained relations. Remove the
-  // lowest-ranked detailed evidence tail. The compact legacy edge projection is
-  // retained independently so graph semantics do not disappear merely because
-  // one verbose compatibility representation was compacted.
-  while (!ladderSatisfied() && draft.directRelations.length > 1) {
-    draft.directRelations = draft.directRelations.slice(0, -1);
-    rebuildCanonicalNodeAndViewProjections(draft, compacted);
-    compacted.add("directRelations");
+    // The ladder's floor is one relation, as it has always been: below that the
+    // only remaining move is to deliver nothing, and `bounded_degradation` owns
+    // that decision. The search may report 0, so the floor is applied here.
+    const retained = Math.max(1, largestAdmissible(ranked.length, (count) => {
+      applyShape(0, count);
+      return ladderSatisfied();
+    }));
+    const detailed = largestAdmissible(retained, (count) => {
+      applyShape(count, retained);
+      return ladderSatisfied();
+    });
+    applyShape(detailed, retained);
+    if (detailed < retained) compacted.add("directRelations[].compactProjection");
+    if (retained < ranked.length) compacted.add("directRelations");
   }
   if (!ladderSatisfied() && draft.paths.length > 0) {
     draft.paths = [];
@@ -383,6 +493,28 @@ export function compactImpactProductResponse(
     draft.edges = draft.edges.slice(0, -1);
     rebuildCanonicalNodeAndViewProjections(draft, compacted);
     compacted.add("canonicalEdges");
+  }
+
+  // THE LADDER IS DONE; the delivered set is final. Reconcile the continuation
+  // against it (§22) before the response is measured, so `delivered + remaining
+  // == total` describes what the caller receives rather than what the core
+  // sliced. The census is deliberately NOT touched: it answers "how much impact
+  // exists", which no amount of compaction changes.
+  if (draft.continuation !== null && draft.continuation !== undefined) {
+    const handle = draft.continuation;
+    const finalized = finalizeImpactContinuation(
+      handle.ref,
+      handle.offset,
+      handle.total,
+      draft.directRelations.map((relation) => relation.id),
+    );
+    draft.continuation = finalized === null ? null : {
+      ...handle,
+      delivered: draft.directRelations.length,
+      remaining: finalized.remaining,
+      ref: finalized.ref,
+    };
+    if (finalized !== null && finalized.remaining > handle.remaining) compacted.add("continuation");
   }
 
   const responseBudget = buildBudget(draft, {
@@ -522,6 +654,24 @@ function buildBoundedImpactDecline(
     fieldDomains: {},
     truncated: true,
   };
+
+  // THE CENSUS SURVIVES THE DECLINE WHOLE, and is the reason the decline is
+  // worth returning at all: a reader who receives no evidence still learns that
+  // 869 callers exist rather than being unable to tell that from a symbol with
+  // none.
+  //
+  // Not even its two maps are emptied, which is the one place this record
+  // deliberately parts company with the `richSummary` treatment directly above.
+  // `richSummary.countsByRelation` describes the DELIVERED graph, so it must go
+  // to zero when nothing is delivered or it would be making a claim about a
+  // response that no longer carries anything. The census describes the
+  // UNIVERSE, and declining to deliver evidence does not change how much impact
+  // exists — zeroing it here would be the census contradicting itself between
+  // two budgets, which is precisely the coupling M211 removed. The record stays
+  // a constant width regardless, because `countsByKind` and `countsByStrength`
+  // are keyed by `StaticRelationKind` and `StaticEvidenceStrength`: closed
+  // frozen vocabularies of fourteen and five members, not repository-supplied
+  // values.
 
   // The discovered/delivered split, restated for a delivery of nothing. This is
   // the field that carries the truth: `exactCallerCount` keeps what was found and

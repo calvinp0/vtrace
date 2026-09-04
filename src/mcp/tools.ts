@@ -10087,6 +10087,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
           include_lexical: booleanProperty("Include explicitly lexical evidence. Lexical evidence is never counted as an exact call."),
           include_unresolved: booleanProperty("Include recognized unresolved evidence when available; targets are never fabricated."),
           include_evidence: booleanProperty("Include bounded source grounding and resolution methods. Defaults to true."),
+          continuation_ref: stringProperty("Resume the canonical relation stream from a previous response's continuation.ref, returning the next page of truthful direct relations. The ref binds the index revision, the resolved symbol, the request shape and the ordering authority, so it fails with invalid_continuation rather than paginating a different graph after a re-index. Re-issue without it to start over. Every other bound (depth, direction, relations, max_edges, max_tokens) must match the request the ref was minted from."),
           repo_root: REPO_ROOT_PROPERTY,
         },
         ["symbol_fqn"],
@@ -10111,6 +10112,8 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
           entrypoints: arrayProperty("Entrypoint-like exported symbols reached by upstream paths, with evidence and limitations.", { type: "object", description: "Classified entrypoint-like symbol.", additionalProperties: true }),
           tests: arrayProperty("Test symbols reached by upstream paths, with evidence and limitations.", { type: "object", description: "Classified test symbol.", additionalProperties: true }),
           richSummary: { type: "object", description: "Separate direct/transitive, incoming/outgoing, relation/strength, and truncation counts.", additionalProperties: true },
+          continuation: { type: ["object", "null"], description: "Deterministic handle onto the truthful relations this response did not render, or null when it rendered all of them. total is the census figure, delivered is what this page carries, remaining is what a caller can still ask for, and ref is the opaque token to pass back as continuation_ref. Pages are contiguous windows of one canonically ordered stream, so concatenating them yields the prefix of that stream with no duplicate and no gap.", additionalProperties: true },
+          impactCensus: { type: "object", description: "Truthful blast-radius census over the COMPLETE direct relation universe, independent of how much evidence this response could afford to render. directRelations/exactCallers/resolvedCallers/importers/referrers/subtypes/affectedFiles and the countsBy* maps are measured before any budget; nodes, edges, view and directRelations are the bounded projection of it. Read this to learn how much impact exists; read directRelations to see the evidence. exactCallers and resolvedCallers are never summed behind one label, transitive counts carry their own transitiveComplete flag, and complete reports whether direct enumeration hit its operational ceiling.", additionalProperties: true },
           limits: { type: "object", description: "Applied depth/path/edge/token bounds.", additionalProperties: true },
           timing: { type: "object", description: "Target-resolution, neighbor-query, path-traversal, render, and total impact timings in milliseconds.", additionalProperties: true },
           diagnostics: { type: "object", description: "Static-only boundary, traversal counters, and limitations.", additionalProperties: true },
@@ -10122,7 +10125,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
           accounting: CONTEXT_ACCOUNTING_SCHEMA,
           responseBudget: { type: "object", description: "Final complete-response and canonical-edge accounting; withinEnvelope is always true on success.", additionalProperties: true },
         },
-        ["requested", "resolvedSymbol", "coverage", "summary", "dependentFiles", "nodes", "edges", "view", "responseBudget", "callerCoverage", "potentialCallers"],
+        ["requested", "resolvedSymbol", "coverage", "summary", "dependentFiles", "nodes", "edges", "view", "responseBudget", "callerCoverage", "potentialCallers", "impactCensus"],
       ),
     },
     async handler({ context, request }) {
@@ -10144,6 +10147,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
       const includeLexical = parseOptionalBoolean(McpToolId.GetImpactGraph, input, "include_lexical");
       const includeUnresolved = parseOptionalBoolean(McpToolId.GetImpactGraph, input, "include_unresolved");
       const includeEvidence = parseOptionalBoolean(McpToolId.GetImpactGraph, input, "include_evidence");
+      const continuationRef = parseOptionalStringField(McpToolId.GetImpactGraph, input, "continuation_ref");
       const requestedRoot = parseOptionalStringField(McpToolId.GetImpactGraph, input, "repo_root");
 
       if (requestedRoot !== undefined && typeof requestedRoot !== "string") {
@@ -10212,6 +10216,7 @@ const RESERVED_MCP_TOOL_DEFINITIONS_UNFROZEN = [
             ...(typeof includeLexical !== "boolean" ? {} : { includeLexical }),
             ...(typeof includeUnresolved !== "boolean" ? {} : { includeUnresolved }),
             ...(typeof includeEvidence !== "boolean" ? {} : { includeEvidence }),
+            ...(continuationRef === undefined ? {} : { continuationRef }),
           }, {
             repoRoot: binding.repoRoot,
             measureTiming: true,

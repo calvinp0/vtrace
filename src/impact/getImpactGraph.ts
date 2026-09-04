@@ -10,7 +10,18 @@ import {
   type SymbolKind,
   type SymbolRecord,
 } from "../domain/types";
+import { getLatestIndexRun } from "../db/repositories/indexRunsRepository";
 import { detectLanguage } from "../fs/languageDetection";
+import {
+  IMPACT_CONTINUATION_VERSION,
+  IMPACT_ORDERING_AUTHORITY,
+  decodeImpactContinuation,
+  encodeImpactContinuation,
+  locateContinuationCursor,
+  validateImpactContinuation,
+  type ImpactContinuationCursor,
+  type ImpactContinuationErrorCode,
+} from "./impactContinuation";
 import {
   analyzeCallerCoverage,
   type CallerCoverage,
@@ -59,6 +70,13 @@ export interface GetImpactGraphInput {
    */
   readonly includePotentialCallers?: boolean;
   readonly maxPotentialCallers?: number;
+  /**
+   * M211 continuation: resume the canonical relation stream where a previous
+   * response left off. The ref carries its own authority (index revision,
+   * resolved target, request shape, ordering identity, cursor) and fails closed
+   * rather than paginating a different graph — see `impactContinuation.ts`.
+   */
+  readonly continuationRef?: string;
 }
 
 /**
@@ -77,7 +95,27 @@ export interface GetImpactGraphOptions {
 export const IMPACT_GRAPH_ERROR_CODE = Object.freeze({
   UnknownSymbol: "unknown_symbol",
   AmbiguousSymbol: "ambiguous_symbol",
+  InvalidContinuation: "invalid_continuation",
 });
+
+/**
+ * How to obtain the truthful relations this response did not render (M211).
+ *
+ * Present only when the canonical stream genuinely holds more; never synthesised
+ * to make a response look expandable. `delivered + remaining == total` is
+ * maintained against `impactCensus`, and `total` is the census figure rather
+ * than anything the response managed to serialize.
+ */
+export interface ImpactContinuationHandle {
+  readonly total: number;
+  readonly delivered: number;
+  readonly remaining: number;
+  readonly offset: number;
+  readonly ref: string;
+  readonly orderingAuthority: string;
+  readonly expansionTool: "get_impact_graph";
+  readonly expansionParameter: "continuation_ref";
+}
 
 export type ImpactGraphErrorCode =
   (typeof IMPACT_GRAPH_ERROR_CODE)[keyof typeof IMPACT_GRAPH_ERROR_CODE];
@@ -183,6 +221,62 @@ export interface ImpactView {
   readonly lines: readonly string[];
 }
 
+export const IMPACT_CENSUS_VERSION = "vtrace.impact_census/1" as const;
+
+/**
+ * THE IMPACT CENSUS (M211): what the graph truthfully knows about the blast
+ * radius, measured over the COMPLETE direct relation universe and deliberately
+ * independent of how much evidence the response can afford to render.
+ *
+ * WHY IT EXISTS. Before M211 the only counts a caller could read were derived
+ * from the delivered slice: `countConsumers` filtered `directRelations` AFTER
+ * `slice(0, maxEdges)`, so a symbol with 869 callers reported 64 — and reported
+ * a truthful 58 one symbol earlier, because that universe happened to fit. A
+ * count that is right until it silently is not is worse than one that is always
+ * wrong, since nothing in the response marks the transition. Every field here is
+ * measured over `allDirectRelations`, never over what survived a budget.
+ *
+ * WHAT IT DOES NOT DO. It does not merge epistemic classes. `exactCallers` and
+ * `resolvedCallers` stay apart because a call proven inside one file and a call
+ * resolved across a module boundary are different claims, and no field sums them
+ * behind one label. Unproven candidate call sites are not here at all: they are
+ * not relations, and `callerCoverage.potentialCallerCount` already owns them.
+ * Direct and transitive stay apart for the same reason, and the transitive
+ * figures carry their own completeness flag because the traversal that produces
+ * them IS budget-bounded while the direct enumeration is not.
+ */
+export interface ImpactCensus {
+  readonly censusVersion: typeof IMPACT_CENSUS_VERSION;
+  /** The population every `direct*` field below was measured over. */
+  readonly domain: "direct_universe";
+  readonly directRelations: number;
+  readonly directIncoming: number;
+  readonly directOutgoing: number;
+  /** Proven incoming calls resolved inside one file or class. */
+  readonly exactCallers: number;
+  /** Incoming calls resolved across a module or class boundary. Never merged with the above. */
+  readonly resolvedCallers: number;
+  readonly referrers: number;
+  readonly importers: number;
+  readonly subtypes: number;
+  readonly structuralContainers: number;
+  readonly outgoingDependencies: number;
+  readonly crossFileRelations: number;
+  readonly affectedFiles: number;
+  /** Direct relations carrying at least one parser-persisted call site. */
+  readonly relationsWithCallSite: number;
+  readonly countsByKind: Readonly<Record<string, number>>;
+  readonly countsByStrength: Readonly<Record<string, number>>;
+  /** Reverse-reachable relations beyond distance 1. Bounded by the traversal budget. */
+  readonly transitiveDependents: number;
+  readonly transitiveDependencies: number;
+  /** False when the traversal budget bit, so the two fields above are floors. */
+  readonly transitiveComplete: boolean;
+  /** False when direct enumeration hit `DIRECT_ENUMERATION_CEILING`. */
+  readonly complete: boolean;
+  readonly enumerationCeiling: number;
+}
+
 export interface ImpactGraphOutput {
   readonly requested: {
     readonly symbolFqn: string;
@@ -204,6 +298,17 @@ export interface ImpactGraphOutput {
   readonly entrypoints: readonly ImpactClassifiedSymbol[];
   readonly tests: readonly ImpactClassifiedSymbol[];
   readonly richSummary: RichImpactSummary;
+  /**
+   * M211 truthful blast-radius census over the complete direct relation
+   * universe. Additive: every legacy field above keeps its meaning, and this is
+   * the only count authority that is not a function of the delivered subset.
+   */
+  readonly impactCensus: ImpactCensus;
+  /**
+   * Deterministic handle onto the rest of the canonical relation stream, or null
+   * when this response carries all of it.
+   */
+  readonly continuation: ImpactContinuationHandle | null;
   readonly limits: ImpactLimits;
   readonly timing: ImpactTiming;
   readonly diagnostics: ImpactDiagnostics;
@@ -401,6 +506,32 @@ export function getImpactGraph(
 
   const resolvedSymbol = matches[0]!;
   const targetResolutionMs = measuredElapsed(targetStarted, timingEnabled);
+
+  // Continuation authority is checked BEFORE any graph work: a ref that no
+  // longer holds must fail closed, and spending a traversal to discover that
+  // would be spending it to produce an answer we are about to refuse.
+  const indexRunId = getLatestIndexRun(db)?.id ?? null;
+  let continuationCursor: ImpactContinuationCursor | null = null;
+  if (input.continuationRef !== undefined) {
+    const decoded = decodeImpactContinuation(input.continuationRef);
+    if (decoded.ok === false) {
+      return continuationError(decoded.code, decoded.message, input.symbolFqn);
+    }
+    const validated = validateImpactContinuation(decoded.cursor, {
+      indexRunId,
+      symbolId: resolvedSymbol.id,
+      symbolFqn: resolvedSymbol.fqName,
+      depth: input.depth,
+      direction: input.direction ?? "both",
+      relations: input.relations === undefined ? null : [...input.relations],
+      includeLexical: input.includeLexical === true,
+      includeUnresolved: input.includeUnresolved === true,
+    });
+    if (validated.ok === false) {
+      return continuationError(validated.code, validated.message, input.symbolFqn);
+    }
+    continuationCursor = decoded.cursor;
+  }
   const maxEdges = Math.min(MAX_INSPECTED_EDGES, Math.max(1, input.maxEdges ?? DEFAULT_MAX_EDGES));
   const discovery = discoverImpactSymbols(db, resolvedSymbol, input.depth, maxEdges);
   const { distanceById, symbolsById } = discovery;
@@ -440,11 +571,20 @@ export function getImpactGraph(
     inheritedEvidencePresent,
     crossLanguageEvidencePresent,
   );
-  const rich = buildRichImpact(db, resolvedSymbol, input, options, targetResolutionMs, totalStarted);
+  const { universeConsumers, continuationFault, ...rich } = buildRichImpact(
+    db, resolvedSymbol, input, options, targetResolutionMs, totalStarted,
+    { indexRunId, cursor: continuationCursor },
+  );
+  if (continuationFault !== null) {
+    return continuationError(continuationFault.code, continuationFault.message, input.symbolFqn);
+  }
   const canonicalDependentsOmitted = discovery.omittedDependents;
   const canonicalEdgeSlotsOmitted = Math.max(0, discoveredEdges.length - edges.length);
   const canonicalEdgesOmitted = canonicalDependentsOmitted + canonicalEdgeSlotsOmitted;
-  const consumers = countConsumers(rich.directRelations, nodes.length);
+  const consumers = {
+    ...universeConsumers,
+    reverseReachableSymbolCount: Math.max(nodes.length - 1, 0),
+  };
   const coverage = resolveCallerCoverage({
     db,
     resolvedSymbol,
@@ -517,6 +657,77 @@ export function getImpactGraph(
   };
 }
 
+/**
+ * Mint the handle onto the rest of the stream, or `null` when there is no rest.
+ *
+ * §17: an exhausted stream gets no ref. A continuation that expands to nothing
+ * is filler with a cursor attached, and it would invite exactly the wasted
+ * round-trip the census exists to prevent.
+ */
+export function buildContinuationHandle(input: {
+  readonly indexRunId: number | null;
+  readonly root: SymbolRecord;
+  readonly input: GetImpactGraphInput;
+  readonly offset: number;
+  readonly delivered: readonly StaticRelationEvidence[];
+  readonly total: number;
+}): ImpactContinuationHandle | null {
+  const delivered = input.delivered.length;
+  const after = input.offset + delivered;
+  const remaining = Math.max(0, input.total - after);
+  // Minted whenever the stream is non-empty, INCLUDING when this page exhausts
+  // it. The response envelope trims further and then finalises this handle
+  // against what it actually delivered — `finalizeImpactContinuation` is what
+  // drops the handle to null, so the §17 "no continuation that expands to
+  // nothing" rule is enforced once, at the product boundary, over the real
+  // delivered set rather than over this intermediate one.
+  if (input.total === 0) return null;
+  return {
+    total: input.total,
+    delivered,
+    remaining,
+    offset: input.offset,
+    ref: encodeImpactContinuation({
+      version: IMPACT_CONTINUATION_VERSION,
+      indexRunId: input.indexRunId,
+      symbolId: input.root.id,
+      symbolFqn: input.root.fqName,
+      depth: input.input.depth,
+      direction: input.input.direction ?? "both",
+      relations: input.input.relations === undefined ? null : [...input.input.relations],
+      includeLexical: input.input.includeLexical === true,
+      includeUnresolved: input.input.includeUnresolved === true,
+      ordering: IMPACT_ORDERING_AUTHORITY,
+      after,
+      afterRelationId: input.delivered.at(-1)?.id ?? null,
+    }),
+    orderingAuthority: IMPACT_ORDERING_AUTHORITY,
+    expansionTool: "get_impact_graph",
+    expansionParameter: "continuation_ref",
+  };
+}
+
+/**
+ * A continuation ref that no longer holds is a REQUEST error, not a degraded
+ * answer. Returning a page of a graph the caller did not ask about would be the
+ * one failure §25 forbids, so the machine-readable `reason` names which
+ * authority lapsed and the caller re-issues the request without the ref.
+ */
+function continuationError(
+  reason: ImpactContinuationErrorCode,
+  message: string,
+  symbolFqn: string,
+): ImpactGraphResult {
+  return {
+    ok: false,
+    error: {
+      code: IMPACT_GRAPH_ERROR_CODE.InvalidContinuation,
+      message,
+      details: { symbolFqn, reason, recovery: "reissue get_impact_graph without continuation_ref" },
+    },
+  };
+}
+
 function omissionCause(
   dependentsOmitted: number,
   edgeSlotsOmitted: number,
@@ -531,11 +742,16 @@ function omissionCause(
  * Split the direct neighbourhood by what each relation actually means. A
  * `contains` edge from the owning class is not a consumer, and an outgoing
  * `calls` edge is a dependency of the target rather than a dependent on it.
+ *
+ * M211: this is now called over the COMPLETE direct relation universe, never
+ * over the delivered slice. Passing it the slice — which is what happened until
+ * M211 — made every count below a restatement of how much the response could
+ * afford to render, so a symbol with 869 callers reported the value of
+ * `max_edges`.
  */
 function countConsumers(
   directRelations: readonly StaticRelationEvidence[],
-  nodeCount: number,
-): Omit<ImpactConsumerCounts, "potentialCallerCount"> {
+): Omit<ImpactConsumerCounts, "potentialCallerCount" | "reverseReachableSymbolCount"> {
   const incoming = directRelations.filter((relation) => relation.direction === "incoming");
   return {
     exactCallerCount: incoming.filter((relation) => relation.kind === "calls").length,
@@ -544,7 +760,6 @@ function countConsumers(
       .filter((relation) => relation.kind === "contains" || relation.kind === "defines")
       .length,
     outgoingDependencyCount: directRelations.filter((relation) => relation.direction === "outgoing").length,
-    reverseReachableSymbolCount: Math.max(nodeCount - 1, 0),
   };
 }
 
@@ -621,6 +836,67 @@ const DEFAULT_MAX_PATHS = 3;
 const DEFAULT_MAX_EDGES = 64;
 const DEFAULT_MAX_TOKENS = 1_200;
 const MAX_INSPECTED_EDGES = 2_000;
+/**
+ * Operational safety bound on DIRECT relation enumeration (§10). Independent of
+ * `max_edges`, which bounds what is delivered: this bounds what is examined, and
+ * exists because the direct neighbourhood previously had no ceiling of any kind.
+ * Sized far above the largest fan-in observed on the benchmark corpora (1042 on
+ * `ARCSpecies`) so it is a backstop rather than a routine truncation.
+ */
+const DIRECT_ENUMERATION_CEILING = 20_000;
+
+const CENSUS_CALL_KINDS: ReadonlySet<StaticRelationKind> = new Set(["calls"]);
+const CENSUS_REFERENCE_KINDS: ReadonlySet<StaticRelationKind> = new Set([
+  "references", "decorates", "registers", "routes_to", "tests", "documents",
+]);
+const CENSUS_IMPORT_KINDS: ReadonlySet<StaticRelationKind> = new Set(["imports", "re_exports"]);
+const CENSUS_SUBTYPE_KINDS: ReadonlySet<StaticRelationKind> = new Set(["inherits", "implements"]);
+const CENSUS_STRUCTURAL_KINDS: ReadonlySet<StaticRelationKind> = new Set(["contains", "defines"]);
+
+/**
+ * The single count authority (§32). Every field is measured over `universe` —
+ * the complete direct relation set — so a projection can never be its source,
+ * and the reconciliation `rendered + remaining == census total` holds by
+ * construction rather than by agreement between two queries.
+ */
+function buildImpactCensus(
+  universe: readonly StaticRelationEvidence[],
+  traversals: readonly TraversedRelation[],
+  directComplete: boolean,
+  transitiveComplete: boolean,
+): ImpactCensus {
+  const incoming = universe.filter((relation) => relation.direction === "incoming");
+  const callers = incoming.filter((relation) => CENSUS_CALL_KINDS.has(relation.kind));
+  const files = new Set<string>();
+  for (const relation of universe) {
+    const path = relation.direction === "incoming" ? relation.source.path : relation.target.path;
+    if (path !== undefined) files.add(path);
+  }
+  return {
+    censusVersion: IMPACT_CENSUS_VERSION,
+    domain: "direct_universe",
+    directRelations: universe.length,
+    directIncoming: incoming.length,
+    directOutgoing: universe.length - incoming.length,
+    exactCallers: callers.filter((relation) => relation.strength === "exact").length,
+    resolvedCallers: callers.filter((relation) => relation.strength !== "exact").length,
+    referrers: incoming.filter((relation) => CENSUS_REFERENCE_KINDS.has(relation.kind)).length,
+    importers: incoming.filter((relation) => CENSUS_IMPORT_KINDS.has(relation.kind)).length,
+    subtypes: incoming.filter((relation) => CENSUS_SUBTYPE_KINDS.has(relation.kind)).length,
+    structuralContainers: incoming.filter((relation) => CENSUS_STRUCTURAL_KINDS.has(relation.kind)).length,
+    outgoingDependencies: universe.length - incoming.length,
+    crossFileRelations: universe.filter((relation) => relation.source.path !== relation.target.path).length,
+    affectedFiles: files.size,
+    relationsWithCallSite: universe.filter((relation) => (relation.evidence.callSites?.length ?? 0) > 0).length,
+    countsByKind: countBy(universe.map((relation) => relation.kind)),
+    countsByStrength: countBy(universe.map((relation) => relation.strength)),
+    transitiveDependents: traversals.filter((item) => item.direction === "incoming" && item.distance > 1).length,
+    transitiveDependencies: traversals.filter((item) => item.direction === "outgoing" && item.distance > 1).length,
+    transitiveComplete,
+    complete: directComplete,
+    enumerationCeiling: DIRECT_ENUMERATION_CEILING,
+  };
+}
 const HARD_MAX_DEPTH = 8;
 const HARD_MAX_PATHS = 16;
 const HARD_MAX_TOKENS = 20_000;
@@ -632,7 +908,12 @@ function buildRichImpact(
   options: GetImpactGraphOptions | undefined,
   targetResolutionMs: number,
   totalStarted: number,
-): Pick<ImpactGraphOutput, "directRelations" | "paths" | "affectedFiles" | "entrypoints" | "tests" | "richSummary" | "limits" | "timing" | "diagnostics"> {
+  continuation: { readonly indexRunId: number | null; readonly cursor: ImpactContinuationCursor | null },
+): Pick<ImpactGraphOutput, "directRelations" | "paths" | "affectedFiles" | "entrypoints" | "tests" | "richSummary" | "impactCensus" | "continuation" | "limits" | "timing" | "diagnostics">
+  & {
+    readonly universeConsumers: Omit<ImpactConsumerCounts, "potentialCallerCount" | "reverseReachableSymbolCount">;
+    readonly continuationFault: { readonly code: ImpactContinuationErrorCode; readonly message: string } | null;
+  } {
   const direction = input.direction ?? "both";
   const maxDepth = Math.min(HARD_MAX_DEPTH, Math.max(0, input.depth));
   const maxPaths = Math.min(HARD_MAX_PATHS, Math.max(1, input.maxPaths ?? DEFAULT_MAX_PATHS));
@@ -642,8 +923,15 @@ function buildRichImpact(
   const timingEnabled = options?.measureTiming === true;
   const directStarted = timingEnabled ? performance.now() : 0;
   let edgesInspected = 0;
-  const directCandidates = listEdgesForSymbol(db, root.id);
-  edgesInspected += directCandidates.length;
+  // §10: the census is freed from the MODEL-VISIBLE budget, not from every
+  // bound. Direct enumeration previously had no ceiling at all — it hydrated the
+  // whole neighbourhood however large. It now has an explicit operational one,
+  // applied over `listEdgesForSymbol`'s stable `edges.id` order so the truncated
+  // prefix is deterministic, and the census reports itself incomplete when it
+  // bites rather than publishing a floor as a total.
+  const allDirectCandidates = listEdgesForSymbol(db, root.id);
+  const directCandidates = allDirectCandidates.slice(0, DIRECT_ENUMERATION_CEILING);
+  edgesInspected += allDirectCandidates.length;
   const symbolCache = new Map<string, SymbolRecord>([[root.id, root]]);
   // M140: hydrate the whole direct neighbourhood in ONE query. This path used
   // to issue a lookup per distinct endpoint, so a high-fan-in symbol cost one
@@ -666,22 +954,47 @@ function buildRichImpact(
   // the headline relations carry exact provenance instead of a body scan. The
   // transitive traversal below still scans; see the M131 impact audit.
   const directCallSites = listCallSitesForEdges(db, directCandidates.map((edge) => edge.id));
-  const persistedDirectRelations = directCandidates.flatMap((edge): StaticRelationEvidence[] => {
+  /**
+   * M211 §48: counting must not require rendering. `buildStaticRelationEvidence`
+   * builds a bounded source excerpt per candidate, and that hydration measured
+   * ~90% of impact latency on the highest-fanout ARC symbol (190ms hydrated
+   * against 21ms structural over 1042 direct edges) — of which 999 were then
+   * discarded by the `maxEdges` slice.
+   *
+   * The excerpt is skipped in this pass ONLY for kinds whose classification is
+   * provably independent of it. `classifyRelation` reads the excerpt text to
+   * tell `imports` from `re_exports`, to detect an alias, and to tell
+   * `inherits`/`implements`/`decorates` apart from a bare `references`; those
+   * kinds must stay hydrated here or their `kind` and `strength` would move, and
+   * `compareStaticRelations` orders on both. `calls` and `contains` read nothing
+   * but the edge and its two endpoints, so deferring their excerpt cannot change
+   * the universe, its ordering, or the census taken over it.
+   *
+   * The relations that are actually delivered are rebuilt WITH their evidence
+   * below, so no delivered record loses a source line to this.
+   */
+  const deferrableEdgeTypes = new Set<EdgeType>([EdgeType.Calls, EdgeType.Contains]);
+  const buildRelation = (edge: EdgeRecord, hydrate: boolean): StaticRelationEvidence | null => {
     const source = symbolFor(edge.srcSymbolId);
     const target = symbolFor(edge.dstSymbolId);
-    if (source === undefined || target === undefined) return [];
+    if (source === undefined || target === undefined) return null;
     // M140: module scope is a structural owner, not a consumer. Its import
     // edges are real, but delivering a bodyless `<module>` relation beside the
     // importing file's actual definitions is noise. See the known limitation on
     // import-only dependency coverage in the M140 report.
-    if (isStructuralSymbolKind(source.kind) || isStructuralSymbolKind(target.kind)) return [];
+    if (isStructuralSymbolKind(source.kind) || isStructuralSymbolKind(target.kind)) return null;
     const relation = buildStaticRelationEvidence(db, edge, source, target, {
       direction: edge.dstSymbolId === root.id ? "incoming" : "outgoing",
       repoRoot: options?.repoRoot,
-      includeSourceEvidence: input.includeEvidence ?? true,
+      includeSourceEvidence: hydrate && (input.includeEvidence ?? true),
       callSites: directCallSites.get(edge.id) ?? [],
     });
-    return relationAllowed(relation, relationFilter, input) ? [relation] : [];
+    return relationAllowed(relation, relationFilter, input) ? relation : null;
+  };
+  const candidateEdgeById = new Map(directCandidates.map((edge) => [edge.id, edge]));
+  const persistedDirectRelations = directCandidates.flatMap((edge): StaticRelationEvidence[] => {
+    const relation = buildRelation(edge, !deferrableEdgeTypes.has(edge.edgeType));
+    return relation === null ? [] : [relation];
   });
   const documentationRelations = input.includeLexical === true && options?.repoRoot !== undefined
     ? findDocumentationEvidence(options.repoRoot, root)
@@ -718,8 +1031,33 @@ function buildRichImpact(
   const paths = tokenBounded.paths;
   const pathTraversalMs = measuredElapsed(traversalStarted, timingEnabled);
 
-  const directRelations = allDirectRelations.slice(0, maxEdges);
-  const omittedDirectEdges = Math.max(0, allDirectRelations.length - directRelations.length);
+  // THE CENSUS IS TAKEN HERE — over the complete universe, before any budget
+  // touches it, and never again afterwards. Everything below this line is a
+  // projection; nothing below may write back into it.
+  const census = buildImpactCensus(
+    allDirectRelations,
+    traversals,
+    allDirectCandidates.length <= DIRECT_ENUMERATION_CEILING,
+    remainingTraversalEdges > 0,
+  );
+
+  // The canonical stream is `allDirectRelations` in `compareStaticRelations`
+  // order, and a page is a contiguous window of it. Nothing re-sorts, re-filters
+  // or re-queries between pages, which is what makes page 1 + page 2 the prefix
+  // of one stream rather than two answers that happen to agree.
+  const located = continuation.cursor === null
+    ? { ok: true as const, offset: 0 }
+    : locateContinuationCursor(continuation.cursor, allDirectRelations.map((relation) => relation.id));
+  const continuationFault = located.ok === true ? null : { code: located.code, message: located.message };
+  const streamOffset = located.ok === true ? located.offset : 0;
+
+  // The projection, and the only relations whose source evidence is hydrated.
+  const directRelations = allDirectRelations.slice(streamOffset, streamOffset + maxEdges).map((relation) => {
+    const edge = relation.edgeId === null ? undefined : candidateEdgeById.get(relation.edgeId);
+    if (edge === undefined || !deferrableEdgeTypes.has(edge.edgeType)) return relation;
+    return buildRelation(edge, true) ?? relation;
+  });
+  const omittedDirectEdges = Math.max(0, allDirectRelations.length - streamOffset - directRelations.length);
   const affected = summarizeAffectedFiles(traversals, root.filePath);
   const reachedSymbols = uniqueSymbols(traversals.flatMap((item) => item.symbols.slice(1)));
   const classified = reachedSymbols.flatMap((symbol): ImpactClassifiedSymbol[] => {
@@ -764,6 +1102,21 @@ function buildRichImpact(
       omittedEdges: omittedDirectEdges + traversals.reduce((sum, item) => sum + item.omittedEdges, 0),
       fieldDomains: RICH_SUMMARY_FIELD_DOMAINS,
     },
+    impactCensus: census,
+    continuation: buildContinuationHandle({
+      indexRunId: continuation.indexRunId,
+      root,
+      input,
+      offset: streamOffset,
+      delivered: directRelations,
+      total: allDirectRelations.length,
+    }),
+    continuationFault,
+    // Deliberately NOT an output key: `getImpactGraph` destructures it away
+    // before spreading the rest into the response. It exists only so the legacy
+    // `summary.consumers` block can be counted over the same universe the census
+    // was taken over, instead of over the delivered slice.
+    universeConsumers: countConsumers(allDirectRelations),
     limits: { maxDepth, maxPaths, maxEdges, maxTokens },
     timing: {
       targetResolutionMs,
