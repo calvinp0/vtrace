@@ -81,6 +81,11 @@ PYTHON = f"{VEXP}/.venv/bin/python"
 
 EVALUATOR_TIMEOUT_S = 1800
 
+# swebench's own words when the model patch cannot be applied by any of its three
+# strategies. Matched literally rather than by exit status, because the harness
+# exits non-zero for that AND for infrastructure failures.
+PATCH_APPLY_FAILED_MARKER = ">>>>> Patch Apply Failed:"
+
 
 # ── the pre-agent untracked snapshot, at the granularity M215 measured ──
 #
@@ -617,6 +622,9 @@ class Bridge:
             "--max_workers", "1", "--timeout", str(EVALUATOR_TIMEOUT_S),
             "--cache_level", "instance", "--clean", "False",
         ]
+        pre_existing_log_dir = os.path.isdir(
+            os.path.join(VEXP, "logs", "run_evaluation", run_id, run_id, instance_id)
+        )
         t0 = time.time()
         try:
             proc = subprocess.run(
@@ -630,6 +638,15 @@ class Bridge:
             }
         log_dir = os.path.join(VEXP, "logs", "run_evaluation", run_id, run_id, instance_id)
         report_path = os.path.join(log_dir, "report.json")
+        if pre_existing_log_dir:
+            # A directory that was already there means this run id has been
+            # evaluated before, and anything read out of it might be that
+            # evaluation's answer rather than this one's. Fail closed.
+            return {
+                **base, "evaluatorRan": False, "exitStatus": proc.returncode, "resolved": False,
+                "outcome": "EVALUATOR_INFRA_FAILURE", "rawResult": "", "command": " ".join(cmd),
+                "reason": f"the evaluator log directory already existed: {log_dir}",
+            }
         out = {
             **base,
             "command": " ".join(cmd),
@@ -647,17 +664,65 @@ class Bridge:
         if os.path.exists(report_path):
             try:
                 report = json.load(open(report_path))
-                row = report.get(instance_id, {})
                 out["rawResult"] = json.dumps(report, sort_keys=True)
-                out["report"] = row
-                out["resolved"] = bool(row.get("resolved"))
-                out["evaluatorRan"] = True
-                out["outcome"] = "TASK_RESOLVED" if out["resolved"] else "TASK_UNRESOLVED"
+                # The instance must be IN the report. A report that exists but
+                # does not mention this instance is an evaluation that did not
+                # happen, and `report.get(id, {})` would quietly turn it into
+                # `resolved: false` -- an infrastructure failure wearing an
+                # ordinary unresolved outcome's clothes, which is exactly the
+                # collapse the evaluator interface exists to prevent. The M216
+                # control that asked swebench for an instance outside its
+                # dataset found this.
+                if instance_id not in report:
+                    out["reason"] = (
+                        f"the evaluator's report does not contain {instance_id}; it graded "
+                        f"{sorted(report)[:5]}"
+                    )
+                    out["outcome"] = "EVALUATOR_INFRA_FAILURE"
+                else:
+                    row = report[instance_id]
+                    out["report"] = row
+                    out["resolved"] = bool(row.get("resolved"))
+                    out["evaluatorRan"] = True
+                    out["outcome"] = "TASK_RESOLVED" if out["resolved"] else "TASK_UNRESOLVED"
             except Exception as exc:  # noqa: BLE001
                 out["reason"] = f"evaluator report unreadable: {exc}"
                 out["outcome"] = "EVALUATOR_INFRA_FAILURE"
         else:
-            out["reason"] = "evaluator produced no report.json"
+            # swebench 4.1.0 writes NO report.json when the model patch does not
+            # apply: it raises EvaluationError and leaves only patch.diff and
+            # run_instance.log. Treating that absence as an infrastructure
+            # failure would exclude a run for the reason M214 puts at the top of
+            # its neverExclusions list -- "the agent made a bad patch" -- and it
+            # would do so on whichever arm produced worse diffs. So the log's own
+            # marker is read, and a patch that failed to apply is an ORDINARY
+            # unresolved outcome.
+            #
+            # The M216 control that fed the real evaluator a malformed patch
+            # found this. It had appeared to pass earlier only because a stale
+            # log directory still held a previous evaluation's report.
+            instance_log = os.path.join(log_dir, "run_instance.log")
+            marker = ""
+            if os.path.exists(instance_log):
+                try:
+                    marker = open(instance_log, errors="replace").read()
+                except Exception:  # noqa: BLE001
+                    marker = ""
+            if PATCH_APPLY_FAILED_MARKER in marker:
+                out["evaluatorRan"] = True
+                out["resolved"] = False
+                out["outcome"] = "TASK_UNRESOLVED"
+                out["patchApplied"] = False
+                out["reason"] = (
+                    "the model patch did not apply; swebench writes no report for that case and it "
+                    "is an ordinary unresolved outcome, never an exclusion"
+                )
+                out["rawResult"] = json.dumps({
+                    "patchApplied": False,
+                    "evaluator": "swebench run_instance reported >>>>> Patch Apply Failed",
+                }, sort_keys=True)
+            else:
+                out["reason"] = "evaluator produced no report.json and no patch-apply failure"
         patch_path = os.path.join(log_dir, "patch.diff")
         if os.path.exists(patch_path):
             applied = open(patch_path).read()

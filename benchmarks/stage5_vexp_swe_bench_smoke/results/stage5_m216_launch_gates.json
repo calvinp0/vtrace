@@ -1,8 +1,8 @@
 {
-  "schemaVersion": "stage5.m215.launch-gates.v1",
-  "milestone": "M215",
-  "generatedAt": "2026-09-04T22:39:34.706Z",
-  "executorVersion": "stage5.m215.launch-executor.v1",
+  "schemaVersion": "stage5.m216.launch-gates.v1",
+  "milestone": "M216",
+  "generatedAt": "2026-09-04T22:39:34.708Z",
+  "adapterVersion": "stage5.m216.production-adapters.v1",
   "authorities": {
     "preregistration": {
       "artifact": "stage5_m214_preregistration.json",
@@ -36,8 +36,25 @@
     "documentedExclusionsAreIncomplete": true,
     "documentedExclusionNote": "M214's published hashRule names three excluded fields; its generator excludes nine, the six extra being outputs derived from the document and written into it after hashing. The executor reproduces the generator's rule exactly. The frozen artifact is NOT edited to correct its own prose, because that would change the digest it froze."
   },
-  "m214PreregistrationComplete": true,
   "m214TableUnchangedApartFromG32": true,
+  "adapterBindings": [
+    {
+      "id": "SYNTHETIC",
+      "status": "IMPLEMENTED",
+      "authoritative": false
+    },
+    {
+      "id": "DOCKER_SWEBENCH",
+      "status": "IMPLEMENTED",
+      "authoritative": true
+    }
+  ],
+  "dockerSwebenchBindingEvidence": {
+    "exercised": true,
+    "adaptersPresent": true,
+    "evidencePresent": true,
+    "reasons": []
+  },
   "runtimeGuards": {
     "sourceStateEquivalence": "m215LaunchExecutor preflightGates R6_SOURCE_STATE_EQUIVALENCE, which calls M214's own auditSourceStateEquivalence on digests taken either side of treatment initialisation",
     "indexingObservational": "the same R6 gate: the pre- and post-treatment tracked-source digests must be equal",
@@ -74,6 +91,29 @@
     "R14_LIFECYCLE_ORDER",
     "R15_EVALUATOR_AUTHORITY"
   ],
+  "technicalGateIds": [
+    "G32",
+    "G33",
+    "G34",
+    "G35",
+    "G37",
+    "G38",
+    "G39",
+    "G43",
+    "G44",
+    "G45",
+    "G46",
+    "G47",
+    "G48",
+    "G49",
+    "G50",
+    "G51",
+    "G52",
+    "G53",
+    "G54",
+    "G55"
+  ],
+  "missingTechnicalGates": [],
   "gates": [
     {
       "id": "G1",
@@ -368,6 +408,97 @@
       "gateClass": "INFRASTRUCTURE",
       "status": "PASS",
       "evidence": "every layer ran against synthetic adapters or real git; no provider was contacted"
+    },
+    {
+      "id": "G43",
+      "requirement": "M216_SUBSTRATE_REDUCTION_COMPLETE: every obligation M215's interfaces impose is matched to an existing authority or named as a missing primitive",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "M216_SUBSTRATE_REDUCTION_COMPLETE; 5 DIRECT_REUSE, 5 THIN_ADAPTER, 2 MISSING_PRIMITIVE"
+    },
+    {
+      "id": "G44",
+      "requirement": "REAL_CONTAINER_ADAPTER_BOUND: the production container adapter exists and started real containers",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "stage5.m216.production-adapters.v1; 10 containers started, 10 torn down"
+    },
+    {
+      "id": "G45",
+      "requirement": "REAL_AGENT_ADAPTER_BOUND: the production argv, environment and process reach a real child, and the two arms differ only in MCP configuration",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "controls F51A, F51, F21, F21B, F79, F59_BASELINE_FIRST, F59_VTRACE_FIRST, F26_BASELINE_FIRST, F26_VTRACE_FIRST all satisfied"
+    },
+    {
+      "id": "G46",
+      "requirement": "REAL_EVALUATOR_ADAPTER_BOUND: the official swebench evaluator is invoked and infrastructure failure stays distinct from an unresolved task",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "controls E1, F56, F56B, F57 all satisfied"
+    },
+    {
+      "id": "G47",
+      "requirement": "REAL_SOURCE_STATE_AUTHORITY_VERIFIED: source identity is measured, moves when source moves, and is equal across both arms of a pair",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "controls F45, F45B, F46, F46A, F70, F71, F74, F50_BASELINE_FIRST, F50_VTRACE_FIRST all satisfied"
+    },
+    {
+      "id": "G48",
+      "requirement": "REAL_PATCH_CAPTURE_VERIFIED: the derived rule is unambiguous on both treatment routes, captures real edits exactly, and excludes treatment state written during the run",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "controls F41P1, F41P2, F41P4, F41P5, F41P6, F47, F48, F47R, F47RB, F72, F75 all satisfied"
+    },
+    {
+      "id": "G49",
+      "requirement": "REAL_PAIR_ISOLATION_VERIFIED: both arm orders run on the real substrate with no treatment state surviving between them",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "controls F49_BASELINE_FIRST, F49_VTRACE_FIRST, F62, F76, F77, F73 all satisfied"
+    },
+    {
+      "id": "G50",
+      "requirement": "MODEL_IDENTITY_RUNTIME_GATE_BOUND: the production agent path aborts on a wrong or absent provider identity, and accepts a recorded correct one",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "controls F53, F54, F55, F53R, F54R, F69, F80, F81 all satisfied"
+    },
+    {
+      "id": "G51",
+      "requirement": "REAL_RESUME_PATH_VERIFIED: a ledger restores in another process, a decided row is refused rather than rerun, and no duplicate outcome is possible",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "controls F61A, F61, F58 all satisfied"
+    },
+    {
+      "id": "G52",
+      "requirement": "M216_FALSIFICATION_SUITE_PASSED: every real-substrate control is satisfied and the suite carries both expectations",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "73/73 controls satisfied (24 GUARD_FIRES, 49 GUARD_SILENT); failures [none]"
+    },
+    {
+      "id": "G53",
+      "requirement": "no frozen task was touched by the real substrate and live model spend is $0",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "frozen tasks touched 0; non-frozen [pylint-dev__pylint-6903, pylint-dev__pylint-7080]; provider calls 0; spend $0"
+    },
+    {
+      "id": "G54",
+      "requirement": "SPEND_PROJECTION_RECONCILED: the mathematically possible cohort is reconciled with the frozen ceiling, retry exposure included",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "200 x $3.5 = $700 against a $700 ceiling; retry headroom $0; a fully retried cohort would be $1400, which the guard refuses rather than funds"
+    },
+    {
+      "id": "G55",
+      "requirement": "M216-owned harness, adapters and tests are typechecked",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "tsconfig.m216.json: 0 errors; M216_SCOPED_TYPECHECK_VERIFIED"
     }
   ],
   "deferredRuntimeGates": [
@@ -376,10 +507,29 @@
   "blockers": [
     "G36"
   ],
+  "spendProjection": {
+    "plannedRuns": 200,
+    "perRunCapUsd": 3.5,
+    "firstAttemptMaximumUsd": 700,
+    "maxAttemptsPerRun": 2,
+    "retryableCategories": [
+      "MODEL_SERVICE_FAILURE",
+      "CONTAINER_CANNOT_START",
+      "EVALUATOR_INFRA_FAILURE",
+      "TELEMETRY_CORRUPT"
+    ],
+    "mathematicalMaximumUsd": 1400,
+    "ceilingUsd": 700,
+    "firstAttemptFitsCeiling": true,
+    "retryHeadroomUsd": 0,
+    "guardBoundsActualSpend": true,
+    "reconciliation": "200 x $3.5 = $700 = the $700 ceiling exactly, so first attempts fit with $0 of retry headroom. A fully retried cohort would be $1400, which the ceiling refuses rather than funds: the executor will not begin a run whose worst case breaches it, and M214's budgetInterlock declares a cohort that hits the cap INCOMPLETE. Actual spend is bounded; completion is not guaranteed once retry budget is consumed. Of the four rerunnable categories, only MODEL_SERVICE_FAILURE can have already cost money, and an attempt whose cost the provider never reported is charged at its cap by the production agent adapter rather than at $0."
+  },
   "technicalExecutorReady": true,
   "spendAuthorized": false,
   "readinessVerdict": "TECHNICAL_EXECUTOR_READY",
   "spendAuthorizationStatus": "SPEND_AUTHORIZATION_PENDING",
   "paidRunsStarted": 0,
-  "liveModelSpendUsd": 0
+  "liveModelSpendUsd": 0,
+  "frozenBenchmarkTaskLiveAgentRuns": 0
 }

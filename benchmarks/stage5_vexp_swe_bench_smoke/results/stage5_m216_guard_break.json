@@ -1,0 +1,74 @@
+{
+  "schemaVersion": "stage5.m216.guard-break.v1",
+  "milestone": "M216",
+  "generatedAt": "2026-09-04T22:37:07.028Z",
+  "breakages": [
+    {
+      "id": "B1_SOURCE_STATE_SNAPSHOT_GRANULARITY",
+      "guardClass": "source state",
+      "file": "m216ProductionAdapters.ts",
+      "expectedFailures": [
+        "F75",
+        "F47R"
+      ]
+    },
+    {
+      "id": "B2_ADAPTER_IDENTITY_VERSION_PIN",
+      "guardClass": "adapter identity",
+      "file": "m216ProductionAdapters.ts",
+      "expectedFailures": [
+        "F21B"
+      ]
+    },
+    {
+      "id": "B3_PATCH_CAPTURE_DERIVED_EXCLUSIONS",
+      "guardClass": "patch capture",
+      "file": "m216RealSubstrate.ts",
+      "expectedFailures": [
+        "F41P2",
+        "F41P4",
+        "F47"
+      ]
+    }
+  ],
+  "clean": {
+    "satisfied": 73,
+    "controlCount": 73
+  },
+  "broken": {
+    "satisfied": 67,
+    "controlCount": 73,
+    "failures": [
+      "F21B",
+      "F41P2",
+      "F41P4",
+      "F47",
+      "F47R",
+      "F75"
+    ]
+  },
+  "brokenRunError": null,
+  "restored": {
+    "satisfied": 73,
+    "controlCount": 73,
+    "failures": []
+  },
+  "expectedFailures": [
+    "F21B",
+    "F41P2",
+    "F41P4",
+    "F47",
+    "F47R",
+    "F75"
+  ],
+  "deliberatelyUnaffected": [
+    {
+      "id": "F41P1",
+      "why": "the vtrace-init route is protected by git's own .git/info/exclude entry, not by the derived exclusions, so emptying them cannot reach it"
+    }
+  ],
+  "unexpectedFailures": [],
+  "missedFailures": [],
+  "sourceFilesRestoredIntact": true,
+  "verdict": "M216_SUITE_IS_FALSIFYING"
+}

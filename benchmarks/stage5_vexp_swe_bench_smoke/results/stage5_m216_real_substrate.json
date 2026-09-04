@@ -1,0 +1,974 @@
+{
+  "schemaVersion": "stage5.m216.real-substrate.v1",
+  "milestone": "M216",
+  "generatedAt": "2026-09-04T22:37:06.835Z",
+  "substrateReduction": {
+    "verdict": "M216_SUBSTRATE_REDUCTION_COMPLETE",
+    "rows": 12,
+    "directReuse": 5,
+    "thinAdapter": 5,
+    "missingPrimitive": 2,
+    "unclassified": []
+  },
+  "controlCount": 73,
+  "satisfied": 73,
+  "failures": [],
+  "guardFiresControls": 24,
+  "guardSilentControls": 49,
+  "suitePasses": true,
+  "containersStarted": 10,
+  "containersTornDown": 10,
+  "frozenInstancesTouched": [],
+  "nonFrozenInstancesTouched": [
+    "pylint-dev__pylint-6903",
+    "pylint-dev__pylint-7080"
+  ],
+  "liveModelSpendUsd": 0,
+  "providerCalls": 0,
+  "frozenBenchmarkTaskLiveAgentRuns": 0,
+  "executedRows": [
+    {
+      "order": "BASELINE_FIRST",
+      "arm": "baseline",
+      "instanceId": "pylint-dev__pylint-7080",
+      "status": "VALID_UNRESOLVED",
+      "infrastructureCategory": null,
+      "reason": "evaluator swebench==4.1.0 run_evaluation; dataset=research_instances.jsonl reported resolved=false",
+      "phases": [
+        "CONTAINER_START",
+        "SOURCE_CHECKOUT_AT_BASE_COMMIT",
+        "SOURCE_STATE_DIGEST_BEFORE_TREATMENT",
+        "TREATMENT_INITIALISATION",
+        "SOURCE_STATE_DIGEST_AFTER_TREATMENT",
+        "PRE_AGENT_UNTRACKED_SNAPSHOT",
+        "AGENT_RUN",
+        "PATCH_CAPTURE",
+        "EVALUATION"
+      ],
+      "spawnedArgvLength": 17,
+      "spawnedModelFlag": "claude-opus-4-5-20251101",
+      "capturedPatchPaths": [
+        "pylint/__init__.py"
+      ],
+      "evaluatorRan": true,
+      "resolved": false,
+      "treatmentToolsExposed": false
+    },
+    {
+      "order": "BASELINE_FIRST",
+      "arm": "vtrace",
+      "instanceId": "pylint-dev__pylint-7080",
+      "status": "VALID_UNRESOLVED",
+      "infrastructureCategory": null,
+      "reason": "evaluator swebench==4.1.0 run_evaluation; dataset=research_instances.jsonl reported resolved=false",
+      "phases": [
+        "CONTAINER_START",
+        "SOURCE_CHECKOUT_AT_BASE_COMMIT",
+        "SOURCE_STATE_DIGEST_BEFORE_TREATMENT",
+        "TREATMENT_INITIALISATION",
+        "SOURCE_STATE_DIGEST_AFTER_TREATMENT",
+        "PRE_AGENT_UNTRACKED_SNAPSHOT",
+        "AGENT_RUN",
+        "PATCH_CAPTURE",
+        "EVALUATION"
+      ],
+      "spawnedArgvLength": 17,
+      "spawnedModelFlag": "claude-opus-4-5-20251101",
+      "capturedPatchPaths": [
+        "pylint/__init__.py"
+      ],
+      "evaluatorRan": true,
+      "resolved": false,
+      "treatmentToolsExposed": true
+    },
+    {
+      "order": "VTRACE_FIRST",
+      "arm": "vtrace",
+      "instanceId": "pylint-dev__pylint-6903",
+      "status": "VALID_UNRESOLVED",
+      "infrastructureCategory": null,
+      "reason": "evaluator swebench==4.1.0 run_evaluation; dataset=research_instances.jsonl reported resolved=false",
+      "phases": [
+        "CONTAINER_START",
+        "SOURCE_CHECKOUT_AT_BASE_COMMIT",
+        "SOURCE_STATE_DIGEST_BEFORE_TREATMENT",
+        "TREATMENT_INITIALISATION",
+        "SOURCE_STATE_DIGEST_AFTER_TREATMENT",
+        "PRE_AGENT_UNTRACKED_SNAPSHOT",
+        "AGENT_RUN",
+        "PATCH_CAPTURE",
+        "EVALUATION"
+      ],
+      "spawnedArgvLength": 17,
+      "spawnedModelFlag": "claude-opus-4-5-20251101",
+      "capturedPatchPaths": [
+        "pylint/__init__.py"
+      ],
+      "evaluatorRan": true,
+      "resolved": false,
+      "treatmentToolsExposed": true
+    },
+    {
+      "order": "VTRACE_FIRST",
+      "arm": "baseline",
+      "instanceId": "pylint-dev__pylint-6903",
+      "status": "VALID_UNRESOLVED",
+      "infrastructureCategory": null,
+      "reason": "evaluator swebench==4.1.0 run_evaluation; dataset=research_instances.jsonl reported resolved=false",
+      "phases": [
+        "CONTAINER_START",
+        "SOURCE_CHECKOUT_AT_BASE_COMMIT",
+        "SOURCE_STATE_DIGEST_BEFORE_TREATMENT",
+        "TREATMENT_INITIALISATION",
+        "SOURCE_STATE_DIGEST_AFTER_TREATMENT",
+        "PRE_AGENT_UNTRACKED_SNAPSHOT",
+        "AGENT_RUN",
+        "PATCH_CAPTURE",
+        "EVALUATION"
+      ],
+      "spawnedArgvLength": 17,
+      "spawnedModelFlag": "claude-opus-4-5-20251101",
+      "capturedPatchPaths": [
+        "pylint/__init__.py"
+      ],
+      "evaluatorRan": true,
+      "resolved": false,
+      "treatmentToolsExposed": false
+    }
+  ],
+  "controls": [
+    {
+      "id": "F44A",
+      "description": "every research instance is outside M214's frozen 100",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F41",
+      "description": "a missing production container adapter makes the DOCKER_SWEBENCH binding unusable",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "production container adapter is absent; the binding cannot produce an outcome"
+    },
+    {
+      "id": "F42",
+      "description": "a missing production agent adapter makes the DOCKER_SWEBENCH binding unusable",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "production agent adapter is absent; the binding cannot produce an outcome"
+    },
+    {
+      "id": "F43",
+      "description": "a missing production evaluator adapter makes the DOCKER_SWEBENCH binding unusable",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "production evaluator adapter is absent; the binding cannot produce an outcome"
+    },
+    {
+      "id": "F64",
+      "description": "implementing M214's PROSE hash rule (3 excluded fields) fails to reproduce the frozen digest; the generator excludes 9",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "the 3-field prose rule does not reproduce the committed digest"
+    },
+    {
+      "id": "F65",
+      "description": "the actual generator field-exclusion authority reproduces the frozen digest from the unmodified committed artifact",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F55",
+      "description": "a recorded REAL provider init event carrying the frozen model identity passes the gate",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_AGENT_PATH",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F53",
+      "description": "an init event naming a different model aborts before a valid outcome can exist",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "substrate": "REAL_AGENT_PATH",
+      "satisfied": true,
+      "detail": "provider served claude-sonnet-4-5-20250929, the frozen target is claude-opus-4-5-20251101"
+    },
+    {
+      "id": "F54",
+      "description": "an absent provider model identity is a failure, not a pass",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "substrate": "REAL_AGENT_PATH",
+      "satisfied": true,
+      "detail": "no authoritative provider model-identity event was observed; the CLI alias and the local model registry are not evidence of what the provider served"
+    },
+    {
+      "id": "F69",
+      "description": "parsing the same recorded stream three times yields byte-identical telemetry, model identity, usage and termination",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_AGENT_PATH",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F63",
+      "description": "a credential value that reached a persisted artifact is detected",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "persisted artifact contains the value of ANTHROPIC_API_KEY in plaintext"
+    },
+    {
+      "id": "F63B",
+      "description": "an artifact carrying only the NAME of a credential is clean",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F67",
+      "description": "a COHORT launch without explicit spend authorisation is refused",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no spend authorisation supplied; a COHORT run makes paid model calls and requires explicit operator authorisation of the frozen $700 ceiling. Technical readiness is not authorisation."
+    },
+    {
+      "id": "F66A",
+      "description": "the first-attempt cohort projection fits inside the frozen ceiling",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F66",
+      "description": "with cumulative spend one dollar under the ceiling, one more run at its cap is refused",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "refusing to begin another model call: $699.0000 spent, and one more run at its $3.5 cap could reach $702.5000 against an authorised ceiling of $700"
+    },
+    {
+      "id": "F66B",
+      "description": "an empty cohort's projection is inside the ceiling and the guard stays silent",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F66C",
+      "description": "the projection charges every remaining run at its cap, so the ceiling binds on what the cohort could cost rather than on what it has cost",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F68",
+      "description": "the operational progress view exposes no per-arm outcome, pass rate or test statistic",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F41P1",
+      "description": "no source change on the vtrace-init route captures an empty patch",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_GIT",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F41P2",
+      "description": "no source change on the vtrace-index route captures an empty patch",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_GIT",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F47",
+      "description": "treatment metadata created during the run does not enter the source patch",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_GIT",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F48",
+      "description": "the historical FILE-granularity snapshot captures a treatment file written during the run; the corrected DIRECTORY invocation does not",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "substrate": "REAL_GIT",
+      "satisfied": true,
+      "detail": ".vtrace/session.sqlite"
+    },
+    {
+      "id": "F41P4",
+      "description": "one tracked source edit is captured exactly",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_GIT",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F41P5",
+      "description": "an untracked source file the agent created IS captured; the exclusion covers only pre-existing untracked state",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_GIT",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F41P6",
+      "description": "a treatment directory the harness has never heard of is captured when it appears after the snapshot, proving the rule is derivation and not a vendor allowlist",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "substrate": "REAL_GIT",
+      "satisfied": true,
+      "detail": ".someothertool/state"
+    },
+    {
+      "id": "F51A",
+      "description": "the production argv is exactly the frozen invocation",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_AGENT_PATH",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F51",
+      "description": "altering one frozen agent argument is detected",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "substrate": "REAL_AGENT_PATH",
+      "satisfied": true,
+      "detail": "one argument differs from the frozen invocation"
+    },
+    {
+      "id": "F52A",
+      "description": "the real vtrace MCP server serves exactly the frozen 14-tool treatment catalogue",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_AGENT_PATH",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F52",
+      "description": "a treatment catalogue missing one tool is detected",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "substrate": "REAL_AGENT_PATH",
+      "satisfied": true,
+      "detail": "vtrace arm is missing frozen treatment tools: mcp__vtrace__get_code_context"
+    },
+    {
+      "id": "F52B",
+      "description": "an extra debug tool in the treatment catalogue is detected",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "substrate": "REAL_AGENT_PATH",
+      "satisfied": true,
+      "detail": "vtrace arm exposes treatment tools outside the frozen catalogue: mcp__vtrace__search_symbols"
+    },
+    {
+      "id": "F26",
+      "description": "the baseline arm exposes zero treatment tools",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_AGENT_PATH",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F26B",
+      "description": "a baseline arm that could see one treatment tool is detected",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "substrate": "REAL_AGENT_PATH",
+      "satisfied": true,
+      "detail": "baseline arm exposes treatment tools: mcp__vtrace__get_code_context"
+    },
+    {
+      "id": "F21",
+      "description": "the pinned binary and M214's declared symlink both report the frozen version 2.1.260",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_AGENT_PATH",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F21B",
+      "description": "a version pin the installed binary does not satisfy is refused before launch",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "substrate": "REAL_AGENT_PATH",
+      "satisfied": true,
+      "detail": "the pinned binary /home/calvin/.local/share/claude/versions/0.0.0-not-installed reports (nothing), frozen authority is 0.0.0-not-installed | M214's declared binary /home/calvin/.local/bin/claude reports 2.1.260, frozen authority is 0.0.0-not-installed; the symlink no longer points at the pinned version"
+    },
+    {
+      "id": "F79",
+      "description": "the launched executable is the VERSIONED binary, not the symlink that follows whatever was installed last",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_AGENT_PATH",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F44",
+      "description": "the real substrate refuses a frozen task in research mode, including 'just for infrastructure'",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "substrate": "REAL_CONTAINER",
+      "satisfied": true,
+      "detail": "container.start refused: astropy__astropy-14365 is in M214's frozen 100 and the caller declared mode=RESEARCH. A frozen task may not be touched by the real substrate outside a COHORT run, including 'just for infrastructure'."
+    },
+    {
+      "id": "F45",
+      "description": "a container whose checkout does not land on the declared base commit is refused",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "substrate": "REAL_CONTAINER",
+      "satisfied": true,
+      "detail": "container did not start for pylint-dev__pylint-7080: checkout did not land on base_commit (head=64e918f89c57906880665890f779c2d82a694ef4, rc=128)"
+    },
+    {
+      "id": "F46A",
+      "description": "the started container's /testbed exists and is writable",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_CONTAINER",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F46",
+      "description": "a checkout root that is not there is refused by the same probe",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "substrate": "REAL_CONTAINER",
+      "satisfied": true,
+      "detail": "/testbed_does_not_exist is absent or not writable in the started container"
+    },
+    {
+      "id": "F45B",
+      "description": "after reset the real container HEAD is the declared base commit",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_CONTAINER",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F70",
+      "description": "the tracked-source digest is stable across repeated reads of an unchanged tree",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_CONTAINER",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F71",
+      "description": "the tracked-source digest changes when a tracked file changes, so source identity is a measurement and not a constant",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "substrate": "REAL_CONTAINER",
+      "satisfied": true,
+      "detail": "digest moved 3d1562556cb8615af0497ea4dd0217abd545fef559ae4fa2d3b29a26bcbe723b -> 33fb600254413ed7731836240b56da12cc08fcfd27eba576644085a6fcf53652"
+    },
+    {
+      "id": "F72",
+      "description": "the real patch snapshot captures exactly the edited tracked file",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_CONTAINER",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F73",
+      "description": "a real VTRACE index is built in the real checkout before the agent starts, and it serves the frozen catalogue",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_CONTAINER",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F74",
+      "description": "building the treatment index leaves tracked source byte-identical, so indexing is observational",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_CONTAINER",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F75",
+      "description": "the pre-agent snapshot names the treatment DIRECTORY, not the files inside it",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_CONTAINER",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F47R",
+      "description": "on the REAL substrate, treatment state written during the run does not enter the captured source patch",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_CONTAINER",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F47RB",
+      "description": "the same real state IS captured when the derived exclusions are dropped, so the exclusion is doing the work rather than git",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "substrate": "REAL_CONTAINER",
+      "satisfied": true,
+      "detail": ".vtrace/index.meta.json | .vtrace/index.sqlite | .vtrace/session-written-during-run.bin | .vtrace/session.sqlite"
+    },
+    {
+      "id": "F76",
+      "description": "the baseline arm's real environment carries no VTRACE or VEXP variable and no MCP server",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_AGENT_PATH",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F77",
+      "description": "no evaluation artifact is reachable from the real agent workspace",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_CONTAINER",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F59_BASELINE_FIRST",
+      "description": "both arms of the BASELINE_FIRST order reach a real child process with the frozen model, native tools and budgets",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_AGENT_PATH",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F26_BASELINE_FIRST",
+      "description": "the two arms' invocations differ only in the MCP configuration document",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_AGENT_PATH",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F50_BASELINE_FIRST",
+      "description": "both arms of the pair started from an identical tracked-source digest",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_CONTAINER",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F49_BASELINE_FIRST",
+      "description": "the arm that ran second inherited no treatment state from the first, as measured by the COLD_UNIFORM gate that would have stopped it",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_CONTAINER",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F31_BASELINE_FIRST",
+      "description": "every required runtime gate is present in both records",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_AGENT_PATH",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F59_VTRACE_FIRST",
+      "description": "both arms of the VTRACE_FIRST order reach a real child process with the frozen model, native tools and budgets",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_AGENT_PATH",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F26_VTRACE_FIRST",
+      "description": "the two arms' invocations differ only in the MCP configuration document",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_AGENT_PATH",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F50_VTRACE_FIRST",
+      "description": "both arms of the pair started from an identical tracked-source digest",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_CONTAINER",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F49_VTRACE_FIRST",
+      "description": "the arm that ran second inherited no treatment state from the first, as measured by the COLD_UNIFORM gate that would have stopped it",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_CONTAINER",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F31_VTRACE_FIRST",
+      "description": "every required runtime gate is present in both records",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_AGENT_PATH",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F53R",
+      "description": "a wrong provider model identity aborts the real agent path before an outcome exists",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_AGENT_PATH",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F54R",
+      "description": "an absent provider model identity aborts the real agent path",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_AGENT_PATH",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "E1",
+      "description": "an empty patch is an ordinary unresolved outcome, and the evaluator says so rather than failing",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_EVALUATOR",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F56",
+      "description": "an unappliable patch is graded by the real evaluator as an ordinary unresolved outcome, not as an infrastructure failure",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_EVALUATOR",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F56B",
+      "description": "an evaluation whose report does not contain the instance is an infrastructure failure, never an unresolved task",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_EVALUATOR",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F57",
+      "description": "the real evaluator's identity is recorded so drift after the cohort begins is detectable",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_EVALUATOR",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F61A",
+      "description": "a ledger written by one process restores in another with its chain and digests recomputed",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_CONTAINER",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F61",
+      "description": "after resume, a row that already has a valid outcome is refused rather than rerun",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "substrate": "REAL_CONTAINER",
+      "satisfied": true,
+      "detail": "launch refused for M216_RESEARCH_NON_EVALUATION:pylint-dev__pylint-7080:baseline: P6_EXECUTION_ORDER (pylint-dev__pylint-7080, baseline) already has a valid outcome (VTRACE_EXTERNAL_VEXP_100:pylint-dev__pylint-7080:baseline#a1#0937d9c71d56, VALID_UNRESOLVED); rerunning a decided cell is refused; VTRACE_EXTERNAL_VEXP_100:pylint-dev__pylint-7080:baseline#a1#0937d9c71d56 produced a valid outcome (VALID_UNRESOLVED); a valid run is never retried, whichever way it went"
+    },
+    {
+      "id": "F58",
+      "description": "a research result is refused by a COHORT ledger, on its mode and on its manifest digest",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "substrate": "REAL_CONTAINER",
+      "satisfied": true,
+      "detail": "refusing a SYNTHETIC result in a COHORT ledger: VTRACE_EXTERNAL_VEXP_100:pylint-dev__pylint-7080:baseline#a1#0937d9c71d56"
+    },
+    {
+      "id": "F62",
+      "description": "teardown removed the completed arm's scratch root, so the next row cannot inherit its treatment state",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_CONTAINER",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F80",
+      "description": "an agent process that cannot be spawned is an infrastructure failure before treatment exposure, not an unresolved task",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_AGENT_PATH",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F81",
+      "description": "an agent that ran and produced no result event is a model-service failure, not an unresolved task",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_AGENT_PATH",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F78",
+      "description": "a LIVE provider boundary is refused outside COHORT mode, whatever authorisation the caller claims",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "substrate": "REAL_AGENT_PATH",
+      "satisfied": true,
+      "detail": "agent.run refused: providerBoundary=LIVE requires mode=COHORT. A paid provider call is not an infrastructure operation."
+    }
+  ],
+  "notes": {
+    "researchPopulation": {
+      "instances": [
+        "pylint-dev__pylint-7080",
+        "pylint-dev__pylint-6903"
+      ],
+      "notInM214FrozenPopulation": true,
+      "source": "SWE-bench Verified complement (400 tasks M214 did not freeze)"
+    },
+    "patchControlOutcomes": [
+      {
+        "id": "P1",
+        "route": "INIT/DIRECTORY",
+        "exclusions": [],
+        "captured": []
+      },
+      {
+        "id": "P2",
+        "route": "INDEX/DIRECTORY",
+        "exclusions": [
+          ".vtrace"
+        ],
+        "captured": []
+      },
+      {
+        "id": "P3",
+        "route": "INDEX/DIRECTORY",
+        "exclusions": [
+          ".vtrace"
+        ],
+        "captured": []
+      },
+      {
+        "id": "P3_FILE_GRANULARITY",
+        "route": "INDEX/FILE",
+        "exclusions": [
+          ".vtrace/config.json",
+          ".vtrace/index.sqlite"
+        ],
+        "captured": [
+          ".vtrace/session.sqlite"
+        ]
+      },
+      {
+        "id": "P4",
+        "route": "INDEX/DIRECTORY",
+        "exclusions": [
+          ".vtrace"
+        ],
+        "captured": [
+          "source.py"
+        ]
+      },
+      {
+        "id": "P5",
+        "route": "INDEX/DIRECTORY",
+        "exclusions": [
+          ".vtrace"
+        ],
+        "captured": [
+          "new_module.py"
+        ]
+      },
+      {
+        "id": "P6_UNKNOWN_VENDOR",
+        "route": "INDEX/DIRECTORY",
+        "exclusions": [
+          ".vtrace"
+        ],
+        "captured": [
+          ".someothertool/state"
+        ]
+      }
+    ],
+    "spendProjection": {
+      "plannedRuns": 200,
+      "perRunCapUsd": 3.5,
+      "firstAttemptMaximumUsd": 700,
+      "maxAttemptsPerRun": 2,
+      "retryableCategories": [
+        "MODEL_SERVICE_FAILURE",
+        "CONTAINER_CANNOT_START",
+        "EVALUATOR_INFRA_FAILURE",
+        "TELEMETRY_CORRUPT"
+      ],
+      "mathematicalMaximumUsd": 1400,
+      "ceilingUsd": 700,
+      "firstAttemptFitsCeiling": true,
+      "retryHeadroomUsd": 0,
+      "guardBoundsActualSpend": true,
+      "reconciliation": "200 x $3.5 = $700 = the $700 ceiling exactly, so first attempts fit with $0 of retry headroom. A fully retried cohort would be $1400, which the ceiling refuses rather than funds: the executor will not begin a run whose worst case breaches it, and M214's budgetInterlock declares a cohort that hits the cap INCOMPLETE. Actual spend is bounded; completion is not guaranteed once retry budget is consumed. Of the four rerunnable categories, only MODEL_SERVICE_FAILURE can have already cost money, and an attempt whose cost the provider never reported is charged at its cap by the production agent adapter rather than at $0."
+    },
+    "substrateIdentity": {
+      "bridgeVersion": "stage5.m216.substrate-bridge.v1",
+      "python": "3.12.12",
+      "pythonExecutable": "/home/calvin/code/vexp-swe-bench/.venv/bin/python",
+      "dockerSdk": "7.1.0",
+      "dockerServer": "29.6.2",
+      "swebench": "4.1.0",
+      "containerAuthority": "m193_container_adapter.M193Container",
+      "patchSnapshotAuthority": "stage5.m193c.patch-snapshot-authority.v1",
+      "untrackedSnapshotAuthority": "stage5.m216.untracked-snapshot.v1",
+      "trackedSourceDigestAuthority": "stage5.m216.tracked-source-digest.v1",
+      "dataset": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m216_research/research_instances.jsonl",
+      "frozenPopulationSize": 100
+    },
+    "perturbedFile": "doc/conf.py",
+    "treatmentInitialisation": {
+      "initialised": true,
+      "indexBuildSeconds": 9.103,
+      "indexSizeBytes": 40646973,
+      "exposedToolCount": 14
+    },
+    "preAgentUntrackedSnapshot": [
+      ".vtrace"
+    ],
+    "baselineSurface": {
+      "mcpServers": [],
+      "modelVisibleToolNames": [
+        "Edit",
+        "Write",
+        "Bash",
+        "Read",
+        "Glob",
+        "Grep",
+        "TodoWrite"
+      ],
+      "environmentVariableNames": [
+        "CLAUDE_CONFIG_DIR",
+        "HOME",
+        "LANG",
+        "LOGNAME",
+        "PATH",
+        "SHELL",
+        "TERM",
+        "USER"
+      ],
+      "treatmentBinariesOnPath": [
+        "/home/calvin/.npm-global/bin/vexp"
+      ],
+      "daemonSocketsReachable": [],
+      "injectedContextDocuments": [],
+      "goldArtifactsInAgentContext": []
+    },
+    "evaluatorMalformed": {
+      "evaluatorRan": true,
+      "exitStatus": 0,
+      "resolved": false,
+      "rawResult": "{\"evaluator\": \"swebench run_instance reported >>>>> Patch Apply Failed\", \"patchApplied\": false}"
+    },
+    "evaluatorInfraFailure": {
+      "evaluatorRan": false,
+      "exitStatus": 1,
+      "resolved": false
+    },
+    "evaluatorIdentity": {
+      "implementation": "swebench.harness.run_evaluation",
+      "package": "swebench",
+      "version": "4.1.0",
+      "python": "/home/calvin/code/vexp-swe-bench/.venv/bin/python",
+      "dataset": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m216_research/research_instances.jsonl"
+    },
+    "substrateAccounting": {
+      "containersCreated": 11,
+      "containersStarted": 10,
+      "containersTornDown": 10,
+      "openContainers": [],
+      "frozenInstancesTouched": [],
+      "nonFrozenInstancesTouched": [
+        "pylint-dev__pylint-6903",
+        "pylint-dev__pylint-7080"
+      ],
+      "commandCount": 125
+    },
+    "containersStartedByRunner": 11
+  }
+}

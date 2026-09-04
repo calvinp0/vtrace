@@ -204,10 +204,20 @@ export class M216ContainerAdapter implements ContainerAdapter {
   private readonly canonicalDigests = new Map<string, string>();
   private readonly inherited = new Map<string, readonly string[]>();
   private readonly hostMounts = new Map<string, string>();
+  /**
+   * Exposed so the agent adapter can be handed THIS adapter's registry.
+   *
+   * The two-construction defect was fixed once by introducing the registry and
+   * then reappeared because a caller gave the container adapter one registry and
+   * the agent adapter another. Reading it off the container adapter removes the
+   * chance to disagree.
+   */
+  readonly armEnvironments: ArmEnvironmentRegistry;
   readonly treatmentSetup = new Map<string, { seconds: number; bytes: number }>();
 
   constructor(options: M216ContainerOptions) {
     this.options = options;
+    this.armEnvironments = options.armEnvironments;
   }
 
   private get bridge(): SubstrateBridge {
@@ -1060,8 +1070,25 @@ export class M216AgentAdapter implements AgentAdapter {
 
     const parsed = parseAgentStream(lines);
     // The hook can only fire on an init event that arrived. A run that produced
-    // none never had its identity asserted, and silence is a failure.
-    if (!identityAsserted) hooks.assertProviderModelIdentity(parsed.providerModelIdentity);
+    // none never had its identity asserted, and silence is a failure — but WHICH
+    // failure depends on whether the agent ever spoke.
+    //
+    // A process that started and emitted nothing never reached the treatment,
+    // and calling that MODEL_IDENTITY_DRIFT would blame the provider for a
+    // missing binary. A process that emitted events and still never named a
+    // model is the case the identity gate exists for: silence is not
+    // confirmation. The M216 controls for a missing binary and for a run with no
+    // result event both landed in the wrong category until this split existed.
+    if (!identityAsserted) {
+      if (lines.length === 0) {
+        throw new SubstrateError(
+          `the agent process produced no output at all (started=${result.started}, exit `
+          + `${String(result.exitCode)}); it never reached the treatment. stderr: `
+          + `${(result.stderrTail ?? "").slice(-600)}`,
+        );
+      }
+      hooks.assertProviderModelIdentity(parsed.providerModelIdentity);
+    }
 
     const termination = classifyTermination(
       parsed, result.timedOut, result.started, spec.perRunCostCapUsd,
@@ -1100,8 +1127,36 @@ export class M216EvaluatorAdapter implements EvaluatorAdapter {
     this.options = options;
   }
 
+  private invocation = 0;
+  /**
+   * A per-PROCESS nonce, not just a per-invocation counter.
+   *
+   * The counter alone made the suite non-idempotent: a second run of the same
+   * controls produced the same run ids, hit the log directories the first run
+   * had left, and the fail-closed guard below correctly refused every
+   * evaluation. Fresh directories per process is what the guard is protecting,
+   * so the id has to provide them.
+   */
+  private readonly nonce = createHash("sha256")
+    .update(`${process.pid}:${Date.now()}:${Math.random()}`).digest("hex").slice(0, 6);
+
+  /**
+   * §29 — one evaluation, one log directory.
+   *
+   * swebench keys its log directory by run id, and a run id derived only from
+   * the manifest row is the SAME id every time that row is evaluated. The M216
+   * control that asked the evaluator for an instance outside its dataset read
+   * back the report a previous successful evaluation had left in that directory
+   * and reported the task unresolved. A retried cohort run would have done the
+   * same thing with the first attempt's verdict.
+   *
+   * The id therefore also carries the patch and the invocation, and the bridge
+   * refuses a directory that already exists.
+   */
   async evaluate(row: RunManifestRow, patch: string): Promise<EvaluationOutcome> {
-    const runId = `m216-${row.instanceId}-${row.arm}-${sha256(row.runId).slice(0, 8)}`;
+    this.invocation += 1;
+    const runId = `m216-${row.instanceId}-${row.arm}-${sha256(row.runId).slice(0, 8)}`
+      + `-${sha256(patch).slice(0, 8)}-${this.nonce}${this.invocation}`;
     const result = await this.options.bridge.call<{
       command: string; evaluatorIdentity: string; exitStatus: number; rawResult: string;
       resolved: boolean; evaluatorRan: boolean; outcome: string;

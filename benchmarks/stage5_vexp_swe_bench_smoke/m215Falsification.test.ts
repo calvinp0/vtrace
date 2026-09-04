@@ -24,8 +24,10 @@ import {
   runM215FalsificationSuite,
   suitePasses,
 } from "./m215Falsification";
+import { dockerSwebenchBindingEvidence } from "./m216BindingEvidence";
 import {
   M215_ADAPTER_BINDINGS,
+  dockerSwebenchEvidence,
   assertBindingUsable,
   authoritativeBindingAvailable,
   bindingFor,
@@ -124,22 +126,53 @@ describe("M215 falsification suite", () => {
 });
 
 describe("adapter bindings", () => {
-  test("only the synthetic binding is implemented, and it is not authoritative", () => {
+  // M216 UPDATE. M215 asserted a literal here — DOCKER_SWEBENCH was
+  // DECLARED_UNIMPLEMENTED and that was the milestone's honest residual. M216
+  // implemented and exercised it, so the literal would now be a test of a stale
+  // fact. What replaces it is strictly stronger rather than weaker: the status
+  // is asserted to FOLLOW its evidence in both directions, so the guard M215
+  // built still fails closed and is now checked to do so on a real input.
+  test("the synthetic binding is implemented and is never authoritative", () => {
     expect(bindingFor("SYNTHETIC").status).toBe("IMPLEMENTED");
     expect(bindingFor("SYNTHETIC").authoritative).toBe(false);
-    expect(bindingFor("DOCKER_SWEBENCH").status).toBe("DECLARED_UNIMPLEMENTED");
-    expect(authoritativeBindingAvailable()).toBe(false);
+  });
+
+  test("the real binding's status follows its evidence rather than a literal", () => {
+    const evidence = dockerSwebenchEvidence();
+    expect(bindingFor("DOCKER_SWEBENCH").status)
+      .toBe(evidence.exercised ? "IMPLEMENTED" : "DECLARED_UNIMPLEMENTED");
+    expect(authoritativeBindingAvailable()).toBe(evidence.exercised);
+  });
+
+  test("a binding whose adapters are absent is unusable, whatever evidence exists", () => {
+    for (const name of ["container", "agent", "evaluator"] as const) {
+      const evidence = dockerSwebenchBindingEvidence({
+        adapters: { [name]: undefined } as Record<string, unknown>,
+      });
+      expect(evidence.exercised).toBe(false);
+      expect(evidence.reasons.join(" ")).toContain(name);
+    }
+  });
+
+  test("a binding nothing has exercised is unusable even with every adapter present", () => {
+    const evidence = dockerSwebenchBindingEvidence({ resultsDir: "/nonexistent/m215-binding" });
+    expect(evidence.exercised).toBe(false);
+    expect(evidence.evidencePresent).toBe(false);
   });
 
   test("an unimplemented binding fails closed rather than falling back to fakes", () => {
-    expect(() => assertBindingUsable("DOCKER_SWEBENCH")).toThrow(/DECLARED_UNIMPLEMENTED/);
     expect(() => assertBindingUsable("SYNTHETIC")).not.toThrow();
+    if (!dockerSwebenchEvidence().exercised) {
+      expect(() => assertBindingUsable("DOCKER_SWEBENCH")).toThrow(/DECLARED_UNIMPLEMENTED/);
+    } else {
+      expect(() => assertBindingUsable("DOCKER_SWEBENCH")).not.toThrow();
+    }
   });
 
-  test("the unimplemented binding names the work it is waiting on", () => {
+  test("the real binding names the authorities it stands on", () => {
     const binding = bindingFor("DOCKER_SWEBENCH");
-    expect(binding.outstandingWork.length).toBeGreaterThan(0);
     expect(binding.inheritedFrom).toContain("m193_container_adapter.py");
+    expect(binding.authoritative).toBe(true);
     expect(M215_ADAPTER_BINDINGS).toHaveLength(2);
   });
 });
