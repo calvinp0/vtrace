@@ -1,0 +1,22 @@
+{
+  "//": "M215 §55 — the scoped typecheck target, extended from M214's.",
+  "//why": [
+    "tsconfig.benchmarks.json still excludes benchmarks/**/*.test.ts, and enabling it repo-wide",
+    "surfaces ~59 pre-existing errors in unrelated historical benchmark tests that M215 is not",
+    "authorised to clean up. This config keeps the same strict settings and widens M214's scope to",
+    "M215-owned harness and test files, so new executor code cannot hide a type error behind that",
+    "exclusion. M214's files stay included: the executor imports them, and a scope that dropped",
+    "them would stop checking the boundary where the two milestones meet."
+  ],
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": [
+    "benchmarks/stage5_vexp_swe_bench_smoke/m214*.ts",
+    "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m214_*.ts",
+    "benchmarks/stage5_vexp_swe_bench_smoke/m215*.ts",
+    "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m215_*.ts"
+  ],
+  "exclude": ["node_modules", "dist", "build", "coverage"]
+}
