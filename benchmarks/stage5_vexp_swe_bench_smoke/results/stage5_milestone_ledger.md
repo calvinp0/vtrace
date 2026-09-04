@@ -10601,11 +10601,11 @@ corpus identity   No source file changed, so no corpus moved. Authority
                   M197A_AUTHORITY_VERIFIED. There is no policy-versus-corpus
                   movement to separate because there is no policy movement.
 
-commits           <AUDIT_SHA>  instrumentation: the pure allocation/attribution
+commits           badf59b5  instrumentation: the pure allocation/attribution
                             library, the three-view audit, the capacity/budget
                             decomposition, the falsification suite
                             (no product change)
-                  <EVIDENCE_SHA>  evidence, frozen rerun, guards, causal report,
+                  8a0b1b0c  evidence, frozen rerun, guards, causal report,
                             final report, this row
 
 evidence          results/stage5_m210_final_report.md,
