@@ -11635,3 +11635,199 @@ commits           executor + launcher, then falsification + dry-run evidence,
   change anything frozen; the preregistration hash is the check on that.
   `ENGINE QUALITY != CODING-AGENT UTILITY` and
   `CONTEXT_COMPILER_PRODUCT_UTILITY_NOT_ESTABLISHED` both still govern.
+
+## M216
+
+```text
+milestone         M216
+verdict           PASS (the real Stage-5 substrate is bound to M215's executor
+                  and exercised end to end; launch is now blocked only on human
+                  authorisation of the frozen spend)
+markers           M216_SUBSTRATE_REDUCTION_COMPLETE;
+                  REAL_CONTAINER_ADAPTER_BOUND;
+                  REAL_AGENT_ADAPTER_BOUND;
+                  REAL_EVALUATOR_ADAPTER_BOUND;
+                  REAL_SOURCE_STATE_AUTHORITY_VERIFIED;
+                  REAL_PATCH_CAPTURE_VERIFIED;
+                  REAL_PAIR_ISOLATION_VERIFIED;
+                  REAL_EVALUATOR_PATH_VERIFIED;
+                  MODEL_IDENTITY_RUNTIME_GATE_BOUND;
+                  REAL_RESUME_PATH_VERIFIED;
+                  FROZEN_HASH_RULE_PROSE_MISMATCH_PRESERVED_AND_EXECUTABLE;
+                  M216_FALSIFICATION_SUITE_PASSED;
+                  M216_SUITE_IS_FALSIFYING;
+                  M216_SCOPED_TYPECHECK_VERIFIED;
+                  PREREGISTRATION_UNCHANGED;
+                  MANIFEST_UNCHANGED;
+                  EXTERNAL_REFERENCE_UNCHANGED;
+                  VTRACE_PRODUCT_UNCHANGED;
+                  TECHNICAL_EXECUTOR_READY;
+                  PAID_RUNS_NOT_STARTED;
+                  SPEND_AUTHORIZATION_PENDING
+parity            UNCHANGED and NOT re-run. Frozen matrix stays MATCH 7 EXCEED 7
+                  BELOW 1, match-or-exceed 14/15, A15 BELOW and
+                  A15_PARITY_GAP_INVALIDATED (M212). M216 does NOT license
+                  writing 15/15 anywhere, ever.
+spend             0 frozen benchmark tasks run with a live agent, $0 live model
+                  spend, 0 provider calls. Unlike M215, real Docker WAS used and
+                  is expected: 10 containers created, started and torn down, all
+                  on SWE-bench Verified complement instances, plus the evaluation
+                  containers swebench manages itself. 0 frozen task ids touched
+                  by the real substrate.
+scope             Launch machinery only. 0 src/ diff. Nothing frozen was touched:
+                  preregistration, manifest, external reference, tasks, model,
+                  agent, budgets, analysis plan and stopping rule are all
+                  byte-identical and all three digests recompute.
+what was built    The three adapters M215 declared and did not implement, over
+                  ONE substrate boundary that carries operations only. Python
+                  keeps the machinery (M193's container authority, M193C's patch
+                  snapshot, M194's launch namespace and evaluator); TypeScript
+                  keeps everything that DEFINES the experiment (argv,
+                  environment, arm MCP configuration, model target, budgets,
+                  stream parser, termination classification), because a value the
+                  substrate could choose is a value that can differ between arms.
+                  m216_substrate_bridge.py, m216SubstrateBridge.ts,
+                  m216ProductionAdapters.ts, m216ResearchFixture.ts,
+                  m216BindingEvidence.ts, m216SubstrateAudit.ts,
+                  m216RealSubstrate.ts, m216_replay_agent.py, and the runners for
+                  the substrate audit, the real-substrate suite, the guard-break,
+                  the scoped typecheck, readiness and the report.
+substrate audit   M216_SUBSTRATE_REDUCTION_COMPLETE before any adapter was
+                  written: 5 DIRECT_REUSE, 5 THIN_ADAPTER, 2 MISSING_PRIMITIVE,
+                  0 unclassified. The two missing primitives are honest -- M193
+                  and M194 acquired ONE untreated arm, so nothing existed for
+                  building the treatment index before the agent starts, and M194
+                  read the init event after the process exited, which puts the
+                  model-identity check after the money.
+falsification     73/73 controls satisfied (24 GUARD_FIRES, 49 GUARD_SILENT).
+                  Guard-break: three guards broken at once (source state,
+                  adapter identity, patch capture) took the suite 73 -> 67,
+                  failing exactly the six predicted controls, and restoring them
+                  returned it to 73/73. M216_SUITE_IS_FALSIFYING. One control is
+                  deliberately NOT expected to fall and the reason is recorded.
+readiness         TECHNICAL_EXECUTOR_READY. Blockers: G36 only, which is spend
+                  authorisation. G32 and G35 flipped to PASS because the binding
+                  registry now DERIVES DOCKER_SWEBENCH's status from evidence
+                  rather than from a literal.
+tests             6548 pass, 49 skip, 0 fail (395 files); +34 net new tests.
+                  typecheck, typecheck:benchmarks, lint and git diff --check all
+                  clean. M216_NEW_TYPECHECK_ERRORS 0; the ~59 pre-existing
+                  benchmark test type errors are untouched and NOT claimed fixed.
+commits           substrate audit + protocol, then production bindings, then
+                  falsification + integration evidence, then report + ledger.
+```
+
+## M216 standing findings
+
+- **An unappliable patch was going to be EXCLUDED from the cohort, and that is
+  the finding this milestone existed to produce.** swebench 4.1.0 writes no
+  `report.json` when the model patch does not apply: it raises
+  `EvaluationError`, logs `>>>>> Patch Apply Failed:` and leaves only
+  `patch.diff` and `run_instance.log`. Reading that absence as "the evaluator
+  did not run" returns `EVALUATOR_INFRA_FAILURE`, an EXCLUSION category, for the
+  reason M214 puts at the top of its `neverExclusions` list -- "the agent made a
+  bad patch". Over 200 runs that removes runs asymmetrically, on whichever arm
+  produces worse diffs, which is the exact shape of bias a preregistered causal
+  experiment cannot survive. The evaluator must read swebench's own marker: a
+  patch that failed to apply is an ORDINARY unresolved outcome. Only an absence
+  with no such marker is an infrastructure failure.
+
+- **The mirror image is just as dangerous and lives one line away.**
+  `report.get(instance_id, {})` turns a report that exists but does not MENTION
+  the instance into `resolved: false` -- an evaluation that never happened
+  scored as an agent failure. Membership in the report has to be required.
+  Between them these two defects can move a run in either direction, and both
+  were invisible until a control asked the real evaluator a question whose
+  answer nobody had assumed.
+
+- **An evaluator log directory keyed by the manifest row is a channel from one
+  attempt to the next.** swebench keys `logs/run_evaluation/<run_id>/` by run
+  id, so a run id derived from the row alone means a re-evaluated row reads back
+  whatever the previous evaluation left there. In a cohort that is a retry
+  inheriting the first attempt's verdict. The id must carry the patch and a
+  per-process nonce, and the harness must refuse a directory that already
+  exists -- and the nonce is not optional: without it the suite stops being
+  idempotent and every second run fails closed.
+
+- **The pre-agent snapshot's granularity is real and it is now bound.** With
+  `git ls-files --others --exclude-standard --directory` the derived exclusion
+  is `.vtrace` and a treatment file written DURING the run is excluded; without
+  `--directory` the exclusions name the files that existed at snapshot time and
+  that later file is captured as agent output. `m193c_patch_snapshot.py`
+  enumerates without the flag and is RIGHT to -- that is the capture lane, which
+  must reach each untracked file to diff it. M216 adds a separate
+  benchmark-owned snapshot command at the coarser granularity rather than
+  changing what five milestones of controls were written against.
+
+- **The exclusion is doing the work, and that is now measured rather than
+  assumed.** On the real substrate the same treatment file written after the
+  snapshot stays out of the patch WITH the derived exclusions and is captured
+  WITHOUT them. A control that only showed the file absent could not tell the
+  exclusion from git's own behaviour.
+
+- **One arm environment per run, owned by the container adapter.** Building it
+  once for the surface audit and again for the launch means the directory R5
+  audits is not the directory the agent is handed. Fixing that with a shared
+  registry was not enough: callers then supplied the container adapter one
+  registry and the agent adapter another, and the same defect returned through a
+  second door. The registry belongs to the container adapter and the agent reads
+  it off that adapter, so there is nowhere for a caller to supply two.
+
+- **Launch the versioned binary, not the symlink M214 named.** M214 froze
+  `binary` (the `claude` symlink) and `version` (2.1.260), and M194 recorded why
+  those can disagree: the symlink follows whatever was installed last. Asserting
+  the version and then launching the symlink leaves a window between the two.
+  Spawning the versioned binary AND requiring the declared symlink to report the
+  same version satisfies both frozen fields and is strictly stronger than either.
+
+- **"No init event" is not one failure.** A process that started and emitted
+  nothing never reached the treatment; a process that spoke and never named a
+  model is the case the identity gate exists for. Collapsing them blames the
+  provider for a missing binary and puts an AGENT_INFRASTRUCTURE failure in the
+  MODEL_IDENTITY_DRIFT bucket.
+
+- **A binding's status must be derived, not written.** M215 wrote
+  `DECLARED_UNIMPLEMENTED` as a literal, which was honest then; flipping it to
+  `IMPLEMENTED` would be the hand-set readiness the milestone forbids, and an
+  edit that broke every adapter would leave the gate green. The status now
+  follows two facts that can each be false -- the adapter constructors exist,
+  and an evidence document shows the controls passing, containers started, no
+  frozen task touched and $0 spent.
+
+- **The retry headroom is exactly zero.** 200 x $3.50 is $700, which is exactly
+  the authorised ceiling. A fully retried cohort would be $1400. That is not an
+  inconsistency -- M214's `budgetInterlock` says the cap is an infrastructure
+  guard rather than a stopping rule, and the executor refuses to BEGIN a run
+  whose worst case would breach it -- but it means a cohort that consumes any
+  retry budget cannot also finish 200 runs. "Incomplete" is a reachable ending
+  and the authorisation decision should price it in. Of the four rerunnable
+  categories only MODEL_SERVICE_FAILURE can already have cost money, and it is
+  precisely the case with no provider-reported cost, so the adapter charges such
+  an attempt at its cap rather than at $0.
+
+- **Reported ambiguity, not resolved: teardown-failure semantics.** Neither M214
+  nor M215 says whether a teardown failure after an otherwise valid evaluated
+  result invalidates that result. The binding's behaviour is that teardown
+  reports rather than throws and the result stands. What is NOT implemented is
+  the other half: if a teardown failure threatens the isolation of future rows,
+  halting the cohort would be more appropriate than rewriting the completed
+  result. This needs a preregistration-compatible clarification before launch,
+  not an invention.
+
+- **Reported ambiguity, not resolved: whether the per-task ceiling resets on a
+  retry.** The executor's answer is that it does not -- `--max-budget-usd` is
+  per process, so a second attempt can spend up to the cap again and both
+  attempts' costs sum into the cumulative total. That is the only reading
+  consistent with `bothAttemptsRemainInLedger`, but it is an inference.
+
+- **Next-step recommendation.** Do NOT start the benchmark. The technical
+  executor is ready and the only remaining pre-launch decision is human:
+  explicit authorisation of the frozen $700 ceiling, which closes G36. Before
+  that authorisation is acted on, the two ambiguities above should get
+  preregistration-compatible answers, because both change what happens to a run
+  that has already cost money. Live provider model identity remains a mandatory
+  first-run runtime assertion and is correctly classified
+  PENDING_AT_FIRST_PAID_RUN rather than as a defect. `ENGINE QUALITY !=
+  CODING-AGENT UTILITY` and `CONTEXT_COMPILER_PRODUCT_UTILITY_NOT_ESTABLISHED`
+  both still govern: nothing in M216 measured the product, only whether the
+  experiment that would can actually be run.
