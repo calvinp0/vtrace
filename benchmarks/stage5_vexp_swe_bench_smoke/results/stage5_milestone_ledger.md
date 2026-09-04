@@ -10384,7 +10384,7 @@ commits           75c8f94d  audit instrumentation, truth library + tests,
                   328f9457  compactRelation preserves the grounding keys,
                             minimalRelation becomes the shedding rung, schema
                             corrected, 6 tests
-                  <evidence>  evidence, frozen rerun, falsification, retrieval
+                  9eae0cf5  evidence, frozen rerun, falsification, retrieval
                             A/B, A5/M205 guards, final report, this row
 
 evidence          results/stage5_m209_final_report.{md,json},
