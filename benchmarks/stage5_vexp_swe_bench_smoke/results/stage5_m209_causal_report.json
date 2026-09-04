@@ -1,0 +1,2602 @@
+{
+  "milestone": "M209",
+  "phase": "causal",
+  "instrument": "run_stage5_m209_report.ts",
+  "frozenAuthority": {
+    "claim": "A15",
+    "scorer": "run_stage5_m197a_report.ts (claim row + band) over run_stage5_m197a_engine.ts (A15 block) with m197aScoring.callSiteIsRendered and m197aFixtures.deriveCallSiteEdges",
+    "predicateRule": [
+      "export function callSiteIsRendered(evidence: CallSiteEvidence): boolean {",
+      "  const text = evidence?.sourceText;",
+      "  if (typeof text !== \"string\" || text.trim().length === 0) return false;",
+      "  const callee = evidence.referenceName;",
+      "  if (typeof callee !== \"string\" || callee.length === 0) return false;",
+      "  return text.includes(callee);",
+      "}"
+    ],
+    "populationRule": [
+      "export function deriveCallSiteEdges(db: Database, limit: number): FlowPair[] {",
+      "  return (db.query(`",
+      "    select ss.fq_name as start, ds.fq_name as end",
+      "    from edges e",
+      "    join edge_call_sites cs on cs.edge_id = e.id and cs.ordinal = 0",
+      "    join symbols ss on ss.id = e.src_symbol_id",
+      "    join symbols ds on ds.id = e.dst_symbol_id",
+      "    where e.edge_type = 'calls' and ss.fq_name <> ds.fq_name",
+      "    order by e.id",
+      "    limit ?1`).all(limit) as FlowPair[]);",
+      "}"
+    ],
+    "engineRule": [
+      "  // -------------------------------------------------- A15 + §30 truthfulness",
+      "  const callEdges = deriveCallSiteEdges(db, 50);",
+      "  let eligible = 0;",
+      "  let impactRendersExpression = 0;",
+      "  let flowRendersExpression = 0;",
+      "  let flowTextNamesCallee = 0;",
+      "  let flowTextMatchesDeclaredSpan = 0;",
+      "  let declaredSpanNamesCallee = 0;",
+      "  const renderExamples: any[] = [];",
+      "",
+      "  for (const pair of callEdges) {",
+      "    const flow = await call(server, McpToolId.SearchLogicFlow,",
+      "      { repo_root: work, start: pair.start, end: pair.end });",
+      "    const step = flow?.paths?.[0]?.steps?.[0];",
+      "    const ev = step?.relation?.evidence;",
+      "    const site = ev?.callSites?.[0];",
+      "    const srcPath = step?.relation?.source?.path;",
+      "    if (!ev || !site || !srcPath) continue;",
+      "    eligible += 1;",
+      "",
+      "    const lines = linesOf(srcPath);",
+      "    const spanText = lines.slice(site.startLine - 1, site.endLine).join(\"\\n\");",
+      "    const callee: string = ev.referenceName ?? \"\";",
+      "    if (callee && spanText.includes(callee)) declaredSpanNamesCallee += 1;",
+      "",
+      "    if (typeof ev.sourceText === \"string\" && ev.sourceText.trim().length > 0) {",
+      "      flowRendersExpression += 1;",
+      "      if (callSiteIsRendered(ev)) flowTextNamesCallee += 1;",
+      "      if (ev.sourceText.trim() === spanText.trim()) flowTextMatchesDeclaredSpan += 1;",
+      "      else if (renderExamples.length < 5) {",
+      "        renderExamples.push({ from: pair.start, to: pair.end, callee,",
+      "          declaredSpan: `${srcPath}:${site.startLine}-${site.endLine}`,",
+      "          rendered: ev.sourceText.slice(0, 140), actualAtDeclaredSpan: spanText.slice(0, 140) });",
+      "      }",
+      "    }",
+      "",
+      "    // The impact surface, which is where a caller list is actually consumed.",
+      "    const impact = await call(server, McpToolId.GetImpactGraph,",
+      "      { repo_root: work, symbol_fqn: pair.end, depth: 3 });",
+      "    const relation = (impact?.directRelations ?? []).find((r: any) => r.source?.symbol === pair.start);",
+      "    if (relation && callSiteIsRendered(relation.evidence ?? {})) impactRendersExpression += 1;"
+    ],
+    "claimRule": [
+      "    id: \"A15\", vexpClaim: \"call-site evidence renders the call expression, not just a location\",",
+      "    vexpSource: \"V-B1/V-B2 evidence half\", m196Prior: \"0% rendered (100% stored) — FAILS\",",
+      "    reproduction: ReproductionStatus.Reproduced,",
+      "    measurement: `C-LARGE, ${eng(\"C-LARGE\")?.a15?.eligibleCallSites} eligible call edges: the impact `",
+      "      + `surface renders ${a15Impact}% as source expressions, the logic-flow surface ${a15Flow}%. `",
+      "      + `On C-MED the flow surface renders ${eng(\"C-MED\")?.a15?.flowCorrectRenderPercent}%`,",
+      "    matchThreshold: \">= 90% of eligible call sites render the expression\", exceedThreshold: \"100%\",",
+      "    // Scored on the IMPACT surface: that is the caller-enumeration surface V-B1",
+      "    // describes and the surface M196's prior was set against. The flow-surface",
+      "    // result is a correction to that prior and is published beside it, with the",
+      "    // aggregate's sensitivity to the choice stated below.",
+      "    verdict: band([a15Impact], 90, 100, \"atLeast\"),",
+      "    comparabilityCaveat: \"scored on get_impact_graph; get_code_context's logic-flow surface DOES \""
+    ],
+    "bandRule": [
+      "function band(values: readonly (number | null)[], match: number, exceed: number,",
+      "              direction: \"atLeast\" | \"atMost\"): ClaimVerdict | null {",
+      "  if (values.length === 0 || values.some((v) => v === null || Number.isNaN(v))) return null;",
+      "  const nums = values as number[];",
+      "  const clears = (bar: number) => direction === \"atLeast\"",
+      "    ? nums.every((v) => v >= bar) : nums.every((v) => v <= bar);",
+      "  if (clears(exceed)) return ClaimVerdict.Exceeds;",
+      "  if (clears(match)) return ClaimVerdict.Matches;",
+      "  return ClaimVerdict.Below;",
+      "}"
+    ],
+    "surfaceRule": [
+      "const a15Impact = eng(\"C-LARGE\")?.a15?.impactRenderPercent ?? null;",
+      "const a15Flow = eng(\"C-LARGE\")?.a15?.flowCorrectRenderPercent ?? null;"
+    ],
+    "recovered": "A15_FROZEN_AUTHORITY_RECOVERED"
+  },
+  "reproduction": {
+    "m208Committed": {
+      "a15": {
+        "C-SMALL": {
+          "eligibleCallSites": 36,
+          "impactSurfaceRenderingExpression": 0,
+          "flowSurfaceRenderingExpression": 36,
+          "flowRenderedTextNamesCallee": 36,
+          "flowRenderedTextMatchesDeclaredSpan": 35,
+          "declaredSpanActuallyNamesCallee": 36,
+          "impactRenderPercent": 0,
+          "flowCorrectRenderPercent": 100,
+          "misrenderedExamples": [
+            {
+              "from": "agents/claude-code.ts::ClaudeCodeAdapter.run",
+              "to": "agents/claude-code.ts::spawnAgent",
+              "callee": "spawnAgent",
+              "declaredSpan": "agents/claude-code.ts:52-55",
+              "rendered": "const rawOutput = await spawnAgent(",
+              "actualAtDeclaredSpan": "    const rawOutput = await spawnAgent(\n      \"claude\", args, opts.cwd,\n      opts.timeoutMs, opts.costLimitUsd, opts.model, opts.env,\n    )"
+            }
+          ]
+        },
+        "C-MED": {
+          "eligibleCallSites": 50,
+          "impactSurfaceRenderingExpression": 0,
+          "flowSurfaceRenderingExpression": 50,
+          "flowRenderedTextNamesCallee": 50,
+          "flowRenderedTextMatchesDeclaredSpan": 42,
+          "declaredSpanActuallyNamesCallee": 50,
+          "impactRenderPercent": 0,
+          "flowCorrectRenderPercent": 100,
+          "misrenderedExamples": [
+            {
+              "from": "capsule/selectCapsuleMemories.ts::scoreObservation",
+              "to": "capsule/selectCapsuleMemories.ts::isEligibleForSurfacing",
+              "callee": "isEligibleForSurfacing",
+              "declaredSpan": "capsule/selectCapsuleMemories.ts:140-147",
+              "rendered": "if (!isEligibleForSurfacing({",
+              "actualAtDeclaredSpan": "  if (!isEligibleForSurfacing({\n    linkedSymbolMatches,\n    linkedFileMatches,\n    queryTermMatches,\n    intentMatch,\n    staleness,\n    sc"
+            },
+            {
+              "from": "runPipeline/runPipelineOrchestrator.ts::runReliableContextRetrieval",
+              "to": "intent/routeQuery.ts::routeQuery",
+              "callee": "routeQuery",
+              "declaredSpan": "runPipeline/runPipelineOrchestrator.ts:666-669",
+              "rendered": "? routeQuery(db, input.query, {",
+              "actualAtDeclaredSpan": "      ? routeQuery(db, input.query, {\n          maxResults: input.maxResults,\n          includeTimingDiagnostics: input.includeTimingDiagnos"
+            },
+            {
+              "from": "impact/staticEvidence.ts::buildStaticRelationEvidence",
+              "to": "source/sourceExcerpt.ts::buildSymbolSourceExcerpt",
+              "callee": "buildSymbolSourceExcerpt",
+              "declaredSpan": "impact/staticEvidence.ts:153-156",
+              "rendered": "? buildSymbolSourceExcerpt(db, options.repoRoot, source.id, {",
+              "actualAtDeclaredSpan": "    ? buildSymbolSourceExcerpt(db, options.repoRoot, source.id, {\n      mode: \"span\",\n      ...(anchorLine === undefined ? {} : { anchorLine"
+            },
+            {
+              "from": "cli/formatters.ts::formatRuntimeDaemonLogs",
+              "to": "cli/formatters.ts::formatSection",
+              "callee": "formatSection",
+              "declaredSpan": "cli/formatters.ts:619-623",
+              "rendered": "formatSection(\"Runtime state\", [",
+              "actualAtDeclaredSpan": "    formatSection(\"Runtime state\", [\n      `Repo root: ${input.repoRoot}`,\n      `Log file: ${formatRepoRelativePath(input.repoRoot, input.l"
+            },
+            {
+              "from": "observations/consolidation.ts::buildConsolidationGroup",
+              "to": "observations/consolidation.ts::formatConsolidatedBody",
+              "callee": "formatConsolidatedBody",
+              "declaredSpan": "observations/consolidation.ts:274-288",
+              "rendered": "body: formatConsolidatedBody({",
+              "actualAtDeclaredSpan": "    body: formatConsolidatedBody({\n      signature,\n      sessionId: sortedObservations[0]!.sessionId ?? \"\",\n      sourceObservationCount,\n "
+            }
+          ]
+        },
+        "C-LARGE": {
+          "eligibleCallSites": 50,
+          "impactSurfaceRenderingExpression": 0,
+          "flowSurfaceRenderingExpression": 50,
+          "flowRenderedTextNamesCallee": 50,
+          "flowRenderedTextMatchesDeclaredSpan": 41,
+          "declaredSpanActuallyNamesCallee": 50,
+          "impactRenderPercent": 0,
+          "flowCorrectRenderPercent": 100,
+          "misrenderedExamples": [
+            {
+              "from": "arc/checks/nmd_test.py::TestNMD.test_analyze_ts_nmd_urea_rad_furazan",
+              "to": "arc/species/converter.py::check_xyz_dict",
+              "callee": "check_xyz_dict",
+              "declaredSpan": "arc/checks/nmd_test.py:1451-1465",
+              "rendered": "rxn.ts_species = ARCSpecies(label='TS_1', is_ts=True, xyz=check_xyz_dict(",
+              "actualAtDeclaredSpan": "        rxn.ts_species = ARCSpecies(label='TS_1', is_ts=True, xyz=check_xyz_dict(\n            \"\"\"N       1.76136700    0.43616300   -1.05594"
+            },
+            {
+              "from": "arc/tckdb/adapter_test.py::TestArtifactUpload.test_idempotency_replay_recorded",
+              "to": "arc/tckdb/adapter_test.py::_StubResponse",
+              "callee": "_StubResponse",
+              "declaredSpan": "arc/tckdb/adapter_test.py:912-921",
+              "rendered": "client = _StubClient(response=_StubResponse(",
+              "actualAtDeclaredSpan": "        client = _StubClient(response=_StubResponse(\n            {\n                \"calculation_id\": 42,\n                \"calculation_ref\": "
+            },
+            {
+              "from": "arc/species/zmat.py::_add_nth_atom_to_zmat",
+              "to": "arc/species/zmat.py::determine_a_atoms",
+              "callee": "determine_a_atoms",
+              "declaredSpan": "arc/species/zmat.py:885-897",
+              "rendered": "a_atoms = determine_a_atoms(",
+              "actualAtDeclaredSpan": "        a_atoms = determine_a_atoms(\n            zmat,\n            coords,\n            connectivity,\n            r_atoms,\n            n,\n   "
+            },
+            {
+              "from": "arc/tckdb/adapter_test.py::TestComputedSpeciesBundle.test_alt_conformer_energy_data_never_reaches_payload",
+              "to": "arc/tckdb/adapter_test.py::TestComputedSpeciesBundle._record_with_alt_conformers",
+              "callee": "_record_with_alt_conformers",
+              "declaredSpan": "arc/tckdb/adapter_test.py:2540-2543",
+              "rendered": "record = self._record_with_alt_conformers(",
+              "actualAtDeclaredSpan": "                record = self._record_with_alt_conformers(\n                    alt_xyzs=(\"C 0.4 0.0 0.0\\nH 1.4 0.0 0.0\",),\n                 "
+            },
+            {
+              "from": "arc/species/zmat.py::determine_d_atoms",
+              "to": "arc/species/zmat.py::determine_d_atoms_from_connectivity",
+              "callee": "determine_d_atoms_from_connectivity",
+              "declaredSpan": "arc/species/zmat.py:569-570",
+              "rendered": "d_atoms = determine_d_atoms_from_connectivity(zmat, xyz, coords, connectivity, a_atoms, atom_index,",
+              "actualAtDeclaredSpan": "        d_atoms = determine_d_atoms_from_connectivity(zmat, xyz, coords, connectivity, a_atoms, atom_index,\n                                "
+            }
+          ]
+        }
+      },
+      "matrix": [
+        [
+          "A1",
+          "MATCHES"
+        ],
+        [
+          "A2",
+          "EXCEEDS"
+        ],
+        [
+          "A3",
+          "MATCHES"
+        ],
+        [
+          "A4",
+          "EXCEEDS"
+        ],
+        [
+          "A5",
+          "MATCHES"
+        ],
+        [
+          "A6",
+          "EXCEEDS"
+        ],
+        [
+          "A7",
+          "EXCEEDS"
+        ],
+        [
+          "A8",
+          "EXCEEDS"
+        ],
+        [
+          "A9",
+          "MATCHES"
+        ],
+        [
+          "A10",
+          "MATCHES"
+        ],
+        [
+          "A11",
+          "EXCEEDS"
+        ],
+        [
+          "A12",
+          "MATCHES"
+        ],
+        [
+          "A13",
+          "EXCEEDS"
+        ],
+        [
+          "A14",
+          "MATCHES"
+        ],
+        [
+          "A15",
+          "BELOW"
+        ]
+      ],
+      "matchOrExceed": 14
+    },
+    "m209Pre": null,
+    "auditFrozenAgreement": [
+      {
+        "corpus": "C-SMALL",
+        "engineImpactPercent": 0,
+        "auditImpactPercent": 0,
+        "engineEligible": 36,
+        "auditEligible": 36
+      },
+      {
+        "corpus": "C-MED",
+        "engineImpactPercent": 0,
+        "auditImpactPercent": 0,
+        "engineEligible": 50,
+        "auditEligible": 50
+      },
+      {
+        "corpus": "C-LARGE",
+        "engineImpactPercent": 0,
+        "auditImpactPercent": 0,
+        "engineEligible": 50,
+        "auditEligible": 50
+      }
+    ]
+  },
+  "substrate": {
+    "C-SMALL": {
+      "edgeCallSitesTable": true,
+      "columns": [
+        "edge_id TEXT",
+        "ordinal INTEGER",
+        "start_line INTEGER",
+        "start_column INTEGER",
+        "end_line INTEGER",
+        "end_column INTEGER",
+        "precision TEXT"
+      ],
+      "edgeTypes": {
+        "calls": 36,
+        "contains": 11,
+        "references": 14
+      },
+      "calls": {
+        "edges": 36,
+        "edgesWithPersistedSite": 36,
+        "edgesWithoutSite": 0,
+        "sitePercent": 100,
+        "sites": 51,
+        "precision": {
+          "span": 51
+        },
+        "edgesWithMultipleSites": 8,
+        "crossFileEdges": 0,
+        "sameFileEdges": 36,
+        "sitesOutsideCallerSpan": 0
+      },
+      "references": {
+        "edges": 14,
+        "edgesWithPersistedSite": 0
+      },
+      "imports": {
+        "edges": 0
+      },
+      "highestFanIn": [
+        {
+          "fqn": "compare/compare.ts::loadExternalAgent",
+          "c": 2
+        },
+        {
+          "fqn": "agents/claude-code.ts::spawnAgent",
+          "c": 1
+        },
+        {
+          "fqn": "compare/compare.ts::listExternalAgents",
+          "c": 1
+        }
+      ],
+      "absent": [
+        "potential (unresolved-receiver) callers: never persisted; discovered per response by callerCoverage",
+        "call-site source text: never persisted; rebuilt from the file on disk under the index's hash check",
+        "graph distance: not a column; computed per traversal"
+      ]
+    },
+    "C-MED": {
+      "edgeCallSitesTable": true,
+      "columns": [
+        "edge_id TEXT",
+        "ordinal INTEGER",
+        "start_line INTEGER",
+        "start_column INTEGER",
+        "end_line INTEGER",
+        "end_column INTEGER",
+        "precision TEXT"
+      ],
+      "edgeTypes": {
+        "calls": 4468,
+        "contains": 29,
+        "imports": 256,
+        "references": 5511
+      },
+      "calls": {
+        "edges": 4468,
+        "edgesWithPersistedSite": 4468,
+        "edgesWithoutSite": 0,
+        "sitePercent": 100,
+        "sites": 6003,
+        "precision": {
+          "span": 6003
+        },
+        "edgesWithMultipleSites": 760,
+        "crossFileEdges": 1806,
+        "sameFileEdges": 2662,
+        "sitesOutsideCallerSpan": 0
+      },
+      "references": {
+        "edges": 5511,
+        "edgesWithPersistedSite": 0
+      },
+      "imports": {
+        "edges": 256
+      },
+      "highestFanIn": [
+        {
+          "fqn": "db/sqlite.ts::openIndexerDatabase",
+          "c": 58
+        },
+        {
+          "fqn": "domain/types.ts::normalizeFilePath",
+          "c": 52
+        },
+        {
+          "fqn": "indexer/indexProject.ts::indexProject",
+          "c": 31
+        }
+      ],
+      "absent": [
+        "potential (unresolved-receiver) callers: never persisted; discovered per response by callerCoverage",
+        "call-site source text: never persisted; rebuilt from the file on disk under the index's hash check",
+        "graph distance: not a column; computed per traversal"
+      ]
+    },
+    "C-LARGE": {
+      "edgeCallSitesTable": true,
+      "columns": [
+        "edge_id TEXT",
+        "ordinal INTEGER",
+        "start_line INTEGER",
+        "start_column INTEGER",
+        "end_line INTEGER",
+        "end_column INTEGER",
+        "precision TEXT"
+      ],
+      "edgeTypes": {
+        "calls": 12421,
+        "contains": 6886,
+        "imports": 2512,
+        "references": 3068
+      },
+      "calls": {
+        "edges": 12421,
+        "edgesWithPersistedSite": 12421,
+        "edgesWithoutSite": 0,
+        "sitePercent": 100,
+        "sites": 19330,
+        "precision": {
+          "line": 60,
+          "span": 19270
+        },
+        "edgesWithMultipleSites": 2513,
+        "crossFileEdges": 7729,
+        "sameFileEdges": 4692,
+        "sitesOutsideCallerSpan": 0
+      },
+      "references": {
+        "edges": 3068,
+        "edgesWithPersistedSite": 0
+      },
+      "imports": {
+        "edges": 2512
+      },
+      "highestFanIn": [
+        {
+          "fqn": "arc/species/species.py::ARCSpecies",
+          "c": 869
+        },
+        {
+          "fqn": "arc/molecule/molecule.py::Molecule",
+          "c": 531
+        },
+        {
+          "fqn": "arc/reaction/reaction.py::ARCReaction",
+          "c": 361
+        }
+      ],
+      "absent": [
+        "potential (unresolved-receiver) callers: never persisted; discovered per response by callerCoverage",
+        "call-site source text: never persisted; rebuilt from the file on disk under the index's hash check",
+        "graph distance: not a column; computed per traversal"
+      ]
+    }
+  },
+  "truth": {
+    "C-SMALL": {
+      "core": {
+        "relationFound": 36,
+        "withSourceText": 36,
+        "withReferenceName": 36,
+        "edgeSite": 36,
+        "faultless": 36,
+        "faults": {},
+        "byStrength": {
+          "exact": 36
+        },
+        "byLocationKind": {
+          "edge_site": 36
+        },
+        "crossFile": 0,
+        "sameFile": 36
+      },
+      "product": {
+        "relationFound": 36,
+        "withSourceText": 0,
+        "withReferenceName": 0,
+        "evidenceKeySets": {
+          "callSiteCount,callSites,locationKind,resolutionMethod": 36
+        },
+        "compactedFieldSets": {
+          "accounting|affectedFiles/entrypoints/tests|coverage.notes|diagnostics.limitations|directRelations[].compactProjection|directRelations[].evidence|nodes[].sourceExcerpt|paths": 1,
+          "accounting|affectedFiles/entrypoints/tests|coverage.notes|diagnostics.limitations|directRelations[].evidence|nodes[].sourceExcerpt|paths|view": 2,
+          "accounting|affectedFiles/entrypoints/tests|coverage.notes|diagnostics.limitations|directRelations|directRelations[].compactProjection|directRelations[].evidence|nodes[].sourceExcerpt": 4,
+          "affectedFiles/entrypoints/tests|coverage.notes|diagnostics.limitations|directRelations[].evidence|nodes[].sourceExcerpt|paths|view": 1,
+          "affectedFiles/entrypoints/tests|coverage.notes|directRelations[].evidence|nodes[].sourceExcerpt|paths|view": 3,
+          "coverage.notes|directRelations[].evidence|nodes[].sourceExcerpt|paths|view": 9,
+          "coverage.notes|directRelations[].evidence|nodes[].sourceExcerpt|view": 16
+        },
+        "resultStates": {
+          "bounded_truncated": 2,
+          "response_compacted": 34
+        },
+        "faults": {},
+        "deterministic": true,
+        "latency": {
+          "n": 108,
+          "median": 9.39,
+          "p90": 16.4,
+          "p95": 17.13,
+          "max": 20.96,
+          "min": 5.66
+        }
+      },
+      "flow": {
+        "impactRendered": 0,
+        "impactRenderPercent": 0,
+        "flowRendered": 36,
+        "flowRenderPercent": 100
+      },
+      "renderability": {
+        "RENDERABLE_FROM_EXISTING_TRUTH": 36
+      }
+    },
+    "C-MED": {
+      "core": {
+        "relationFound": 50,
+        "withSourceText": 50,
+        "withReferenceName": 50,
+        "edgeSite": 50,
+        "faultless": 50,
+        "faults": {},
+        "byStrength": {
+          "exact": 36,
+          "resolved": 14
+        },
+        "byLocationKind": {
+          "edge_site": 50
+        },
+        "crossFile": 14,
+        "sameFile": 36
+      },
+      "product": {
+        "relationFound": 31,
+        "withSourceText": 0,
+        "withReferenceName": 0,
+        "evidenceKeySets": {
+          "": 19,
+          "callSiteCount,callSites,locationKind,resolutionMethod": 31
+        },
+        "compactedFieldSets": {
+          "accounting|affectedFiles/entrypoints/tests|bounded_degradation|canonicalEdges|coverage.notes|diagnostics.limitations|directRelations|directRelations[].compactProjection": 22,
+          "accounting|affectedFiles/entrypoints/tests|bounded_degradation|coverage.notes|diagnostics.limitations|directRelations|directRelations[].compactProjection|directRelations[].evidence": 2,
+          "accounting|affectedFiles/entrypoints/tests|coverage.notes|diagnostics.limitations|directRelations[].compactProjection|directRelations[].evidence|nodes[].sourceExcerpt|paths": 1,
+          "accounting|affectedFiles/entrypoints/tests|coverage.notes|diagnostics.limitations|directRelations[].evidence|nodes[].sourceExcerpt|paths|transitiveCompatibilityEdges": 6,
+          "accounting|affectedFiles/entrypoints/tests|coverage.notes|diagnostics.limitations|directRelations[].evidence|nodes[].sourceExcerpt|paths|view": 1,
+          "accounting|affectedFiles/entrypoints/tests|coverage.notes|diagnostics.limitations|directRelations|directRelations[].compactProjection|directRelations[].evidence|nodes[].sourceExcerpt": 12,
+          "affectedFiles/entrypoints/tests|coverage.notes|directRelations[].evidence|nodes[].sourceExcerpt|paths|view": 4,
+          "coverage.notes|directRelations[].evidence|nodes[].sourceExcerpt|paths|view": 2
+        },
+        "resultStates": {
+          "bounded_truncated": 43,
+          "response_compacted": 7
+        },
+        "faults": {},
+        "deterministic": false,
+        "latency": {
+          "n": 150,
+          "median": 14.72,
+          "p90": 33.25,
+          "p95": 42.64,
+          "max": 54.11,
+          "min": 6.75
+        }
+      },
+      "flow": {
+        "impactRendered": 0,
+        "impactRenderPercent": 0,
+        "flowRendered": 50,
+        "flowRenderPercent": 100
+      },
+      "renderability": {
+        "RENDERABLE_FROM_EXISTING_TRUTH": 50
+      }
+    },
+    "C-LARGE": {
+      "core": {
+        "relationFound": 42,
+        "withSourceText": 42,
+        "withReferenceName": 42,
+        "edgeSite": 42,
+        "faultless": 42,
+        "faults": {},
+        "byStrength": {
+          "absent": 8,
+          "exact": 21,
+          "resolved": 21
+        },
+        "byLocationKind": {
+          "absent": 8,
+          "edge_site": 42
+        },
+        "crossFile": 21,
+        "sameFile": 21
+      },
+      "product": {
+        "relationFound": 13,
+        "withSourceText": 0,
+        "withReferenceName": 0,
+        "evidenceKeySets": {
+          "": 37,
+          "callSiteCount,callSites,locationKind,resolutionMethod": 13
+        },
+        "compactedFieldSets": {
+          "accounting|affectedFiles/entrypoints/tests|bounded_degradation|canonicalEdges|coverage.notes|diagnostics.limitations|directRelations|directRelations[].compactProjection": 39,
+          "accounting|affectedFiles/entrypoints/tests|coverage.notes|diagnostics.limitations|directRelations[].evidence|nodes[].sourceExcerpt|paths|transitiveCompatibilityEdges": 3,
+          "accounting|affectedFiles/entrypoints/tests|coverage.notes|diagnostics.limitations|directRelations|directRelations[].compactProjection|directRelations[].evidence|nodes[].sourceExcerpt": 6,
+          "accounting|bounded_degradation|canonicalEdges|coverage.notes|diagnostics.limitations|directRelations|directRelations[].compactProjection|directRelations[].evidence": 1,
+          "accounting|coverage.notes|diagnostics.limitations|directRelations[].evidence|nodes[].sourceExcerpt|paths|transitiveCompatibilityEdges|view": 1
+        },
+        "resultStates": {
+          "bounded_truncated": 50
+        },
+        "faults": {},
+        "deterministic": true,
+        "latency": {
+          "n": 150,
+          "median": 26.7,
+          "p90": 206.04,
+          "p95": 212.35,
+          "max": 257.12,
+          "min": 8.87
+        }
+      },
+      "flow": {
+        "impactRendered": 0,
+        "impactRenderPercent": 0,
+        "flowRendered": 50,
+        "flowRenderPercent": 100
+      },
+      "renderability": {
+        "NO_TRUTH": 8,
+        "RENDERABLE_FROM_EXISTING_TRUTH": 42
+      }
+    }
+  },
+  "dropPoint": {
+    "productEvidenceKeySets": {
+      "": 37,
+      "callSiteCount,callSites,locationKind,resolutionMethod": 13
+    },
+    "compactedFieldSets": {
+      "accounting|affectedFiles/entrypoints/tests|bounded_degradation|canonicalEdges|coverage.notes|diagnostics.limitations|directRelations|directRelations[].compactProjection": 39,
+      "accounting|affectedFiles/entrypoints/tests|coverage.notes|diagnostics.limitations|directRelations[].evidence|nodes[].sourceExcerpt|paths|transitiveCompatibilityEdges": 3,
+      "accounting|affectedFiles/entrypoints/tests|coverage.notes|diagnostics.limitations|directRelations|directRelations[].compactProjection|directRelations[].evidence|nodes[].sourceExcerpt": 6,
+      "accounting|bounded_degradation|canonicalEdges|coverage.notes|diagnostics.limitations|directRelations|directRelations[].compactProjection|directRelations[].evidence": 1,
+      "accounting|coverage.notes|diagnostics.limitations|directRelations[].evidence|nodes[].sourceExcerpt|paths|transitiveCompatibilityEdges|view": 1
+    },
+    "coreWithSourceText": 42,
+    "productWithSourceText": 0,
+    "coreWithReferenceName": 42,
+    "productWithReferenceName": 0,
+    "resultStates": {
+      "bounded_truncated": 50
+    }
+  },
+  "counterfactual": {
+    "C-SMALL": {
+      "renderableFromExistingTruth": 36,
+      "achievableImpactRenderPercent": 100,
+      "scoredRelationFitsEvidenceTarget": 36,
+      "scoredRelationFitsCeiling": 32,
+      "wholeResponse": {
+        "responses": 36,
+        "meetEvidenceTargetWithAllStrippedKeys": 35,
+        "fitCeilingWithAllStrippedKeys": 28,
+        "maxStrippedTokens": 56,
+        "medianStrippedTokens": 23,
+        "rows": [
+          {
+            "to": "vexp/enhancer.ts::indexRepo",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 18,
+            "modelVisibleTokens": 874,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1943,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "leaderboard/render.ts::displayName",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 31,
+            "modelVisibleTokens": 485,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1566,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "compare/compare.ts::loadExternalAgent",
+            "retained": 2,
+            "retainedWithCoreSourceText": 2,
+            "strippedTokensAllRetained": 45,
+            "modelVisibleTokens": 1120,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1976,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": false
+          },
+          {
+            "to": "vexp/daemon.ts::sleep",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 15,
+            "modelVisibleTokens": 939,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1917,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "compare/compare.ts::listExternalAgents",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 41,
+            "modelVisibleTokens": 808,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1797,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "agents/claude-code.ts::spawnAgent",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 20,
+            "modelVisibleTokens": 649,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1732,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "ui/progress.ts::formatDuration",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 23,
+            "modelVisibleTokens": 601,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1671,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "evaluate/evaluator.ts::evaluateDocker",
+            "retained": 2,
+            "retainedWithCoreSourceText": 2,
+            "strippedTokensAllRetained": 48,
+            "modelVisibleTokens": 1137,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1993,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": false
+          },
+          {
+            "to": "vexp/ensure.ts::compareVersions",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 25,
+            "modelVisibleTokens": 891,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1959,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "evaluate/evaluator.ts::findPython",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 19,
+            "modelVisibleTokens": 642,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1722,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "evaluate/evaluator.ts::parseIndividualLogs",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 27,
+            "modelVisibleTokens": 836,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1923,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "harness/loader.ts::loadInstances",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 22,
+            "modelVisibleTokens": 900,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1975,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "vexp/ensure.ts::getVexpPlan",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 20,
+            "modelVisibleTokens": 891,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1961,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "vexp/daemon.ts::VexpDaemon.waitForReady",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 24,
+            "modelVisibleTokens": 1052,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1903,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "vexp/enhancer.ts::writeHooks",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 18,
+            "modelVisibleTokens": 877,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1946,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "evaluate/evaluator.ts::parseDockerResults",
+            "retained": 2,
+            "retainedWithCoreSourceText": 2,
+            "strippedTokensAllRetained": 53,
+            "modelVisibleTokens": 1045,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1965,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": false
+          },
+          {
+            "to": "harness/repo.ts::cleanupRepo",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 18,
+            "modelVisibleTokens": 879,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1948,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "vexp/enhancer.ts::writeClaudeMd",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 20,
+            "modelVisibleTokens": 884,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1956,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "harness/orchestrator.ts::dateStamp",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 29,
+            "modelVisibleTokens": 884,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1963,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "evaluate/evaluator.ts::evaluateLightweight",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 21,
+            "modelVisibleTokens": 907,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1992,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": false
+          },
+          {
+            "to": "vexp/daemon.ts::VexpDaemon.getSocketPath",
+            "retained": 3,
+            "retainedWithCoreSourceText": 2,
+            "strippedTokensAllRetained": 50,
+            "modelVisibleTokens": 1113,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1962,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": false
+          },
+          {
+            "to": "vexp/ensure.ts::getLatestNpmVersion",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 25,
+            "modelVisibleTokens": 887,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1958,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "leaderboard/compare.ts::loadLeaderboard",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 22,
+            "modelVisibleTokens": 479,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1565,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "vexp/enhancer.ts::writeMcpConfig",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 26,
+            "modelVisibleTokens": 894,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1966,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "leaderboard/render.ts::padRight",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 21,
+            "modelVisibleTokens": 518,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1597,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "vexp/ensure.ts::promptForInput",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 26,
+            "modelVisibleTokens": 860,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1931,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "vexp/enhancer.ts::cleanVexpState",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 20,
+            "modelVisibleTokens": 887,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1960,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "vexp/daemon.ts::VexpDaemon.ping",
+            "retained": 2,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 26,
+            "modelVisibleTokens": 1126,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1961,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "harness/orchestrator.ts::cleanPreviousRun",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 22,
+            "modelVisibleTokens": 914,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1998,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": false
+          },
+          {
+            "to": "vexp/ensure.ts::getVexpVersion",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 22,
+            "modelVisibleTokens": 886,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1954,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "vexp/ensure.ts::installVexp",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 17,
+            "modelVisibleTokens": 886,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1952,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "vexp/daemon.ts::VexpDaemon.stop",
+            "retained": 2,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 20,
+            "modelVisibleTokens": 790,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1864,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "vexp/daemon.ts::VexpDaemon.start",
+            "retained": 3,
+            "retainedWithCoreSourceText": 3,
+            "strippedTokensAllRetained": 56,
+            "modelVisibleTokens": 1152,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1988,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": false,
+            "wouldFitCeiling": false
+          },
+          {
+            "to": "ui/progress.ts::Progress.renderBar",
+            "retained": 2,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 26,
+            "modelVisibleTokens": 785,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1859,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "compare/compare.ts::loadExternalAgent",
+            "retained": 2,
+            "retainedWithCoreSourceText": 2,
+            "strippedTokensAllRetained": 45,
+            "modelVisibleTokens": 1120,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1976,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": false
+          },
+          {
+            "to": "vexp/daemon.ts::fnvHash",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 20,
+            "modelVisibleTokens": 950,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1929,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          }
+        ]
+      }
+    },
+    "C-MED": {
+      "renderableFromExistingTruth": 50,
+      "achievableImpactRenderPercent": 100,
+      "scoredRelationFitsEvidenceTarget": 31,
+      "scoredRelationFitsCeiling": 26,
+      "wholeResponse": {
+        "responses": 50,
+        "meetEvidenceTargetWithAllStrippedKeys": 49,
+        "fitCeilingWithAllStrippedKeys": 38,
+        "maxStrippedTokens": 67,
+        "medianStrippedTokens": 31,
+        "rows": [
+          {
+            "to": "capsule/selectCapsuleMemories.ts::isEligibleForSurfacing",
+            "retained": 2,
+            "retainedWithCoreSourceText": 2,
+            "strippedTokensAllRetained": 46,
+            "modelVisibleTokens": 1096,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1966,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": false
+          },
+          {
+            "to": "retrieval/upstreamRescue.ts::inactiveUpstreamRescue",
+            "retained": 2,
+            "retainedWithCoreSourceText": 2,
+            "strippedTokensAllRetained": 67,
+            "modelVisibleTokens": 1098,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1979,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": false
+          },
+          {
+            "to": "intent/routeQuery.ts::routeQuery",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 27,
+            "modelVisibleTokens": 1062,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1891,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "source/sourceExcerpt.ts::buildSymbolSourceExcerpt",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 39,
+            "modelVisibleTokens": 1080,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1914,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "domain/types.ts::normalizeFilePath",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 26,
+            "modelVisibleTokens": 1101,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1925,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "capsule/budget.ts::createCharacterBudget",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 24,
+            "modelVisibleTokens": 1038,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1866,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "observations/consolidation.ts::buildConsolidationGroup",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 39,
+            "modelVisibleTokens": 1055,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1862,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "indexer/parseCache.ts::resolveParseCacheEntryPath",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 46,
+            "modelVisibleTokens": 994,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1863,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "indexer/extractBodyLiterals.ts::bodyLiteralsSearchText",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 35,
+            "modelVisibleTokens": 1072,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1977,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": false
+          },
+          {
+            "to": "capsuleV2/pivotInspectionCompliance.ts::hasNonGroundedRuleOut",
+            "retained": 2,
+            "retainedWithCoreSourceText": 2,
+            "strippedTokensAllRetained": 53,
+            "modelVisibleTokens": 1122,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 2000,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": false
+          },
+          {
+            "to": "parsers/typescriptParser.ts::getImportSpecifiers",
+            "retained": 2,
+            "retainedWithCoreSourceText": 2,
+            "strippedTokensAllRetained": 55,
+            "modelVisibleTokens": 1005,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1872,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "retrieval/searchSymbolsShared.ts::classifyLikelyTestCandidate",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 27,
+            "modelVisibleTokens": 1096,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1910,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "capsule/budget.ts::createCharacterBudget",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 24,
+            "modelVisibleTokens": 1038,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1865,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "fs/worktreeExclusions.ts::normalizeRelative",
+            "retained": 2,
+            "retainedWithCoreSourceText": 2,
+            "strippedTokensAllRetained": 58,
+            "modelVisibleTokens": 1066,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1920,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "indexer/materializationAuthority.test.ts::git",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 24,
+            "modelVisibleTokens": 574,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1680,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "observations/buildSessionSummary.ts::createEmptyKindCounts",
+            "retained": 2,
+            "retainedWithCoreSourceText": 2,
+            "strippedTokensAllRetained": 57,
+            "modelVisibleTokens": 921,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1798,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "capsule/toolCallLog.ts::isRecord",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 27,
+            "modelVisibleTokens": 1028,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1875,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "cli/formatters.ts::formatSection",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 19,
+            "modelVisibleTokens": 1167,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1947,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "fs/worktreeExclusions.ts::relativeDescendantPath",
+            "retained": 2,
+            "retainedWithCoreSourceText": 2,
+            "strippedTokensAllRetained": 58,
+            "modelVisibleTokens": 894,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1751,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "capsule/buildCapsule.ts::buildCapsule",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 17,
+            "modelVisibleTokens": 1067,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1890,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "retrieval/hybridRetrieval.ts::hybridRetrieve",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 35,
+            "modelVisibleTokens": 1149,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1988,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": false
+          },
+          {
+            "to": "parsers/cythonParser.ts::buildCythonResolution",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 26,
+            "modelVisibleTokens": 1174,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1980,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": false
+          },
+          {
+            "to": "db/sqlite.ts::openIndexerDatabase",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 22,
+            "modelVisibleTokens": 1031,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1848,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "capsuleV2/directEvidenceAnchoring.ts::symbolsForResolvedFile",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 22,
+            "modelVisibleTokens": 1114,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1927,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "capsuleV2/authoritativeProductRetrieval.ts::projectItem",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 28,
+            "modelVisibleTokens": 1096,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1920,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "observations/consolidation.ts::formatConsolidatedBody",
+            "retained": 2,
+            "retainedWithCoreSourceText": 2,
+            "strippedTokensAllRetained": 46,
+            "modelVisibleTokens": 916,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1775,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "runPipeline/deferredVexpStore.ts::computeDeferredVexpHashFromParts",
+            "retained": 2,
+            "retainedWithCoreSourceText": 2,
+            "strippedTokensAllRetained": 52,
+            "modelVisibleTokens": 950,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1964,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": false
+          },
+          {
+            "to": "runtime/daemon.ts::delay",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 14,
+            "modelVisibleTokens": 453,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1287,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "retrieval/hybridScoring.ts::findExceptionNames",
+            "retained": 2,
+            "retainedWithCoreSourceText": 2,
+            "strippedTokensAllRetained": 52,
+            "modelVisibleTokens": 892,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1743,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "db/sqlite.ts::openIndexerDatabase",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 22,
+            "modelVisibleTokens": 1031,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1847,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "fs/git.ts::readGitHead",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 27,
+            "modelVisibleTokens": 1153,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1953,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "retrieval/upstreamRescue.ts::inactiveUpstreamRescue",
+            "retained": 2,
+            "retainedWithCoreSourceText": 2,
+            "strippedTokensAllRetained": 67,
+            "modelVisibleTokens": 1098,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1979,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": false
+          },
+          {
+            "to": "productContext/budgetDelivery.ts::render",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 30,
+            "modelVisibleTokens": 1186,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1982,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": false,
+            "wouldFitCeiling": false
+          },
+          {
+            "to": "capsuleV2/buildCapsuleV2.ts::bodyLiteralDiagnostics",
+            "retained": 2,
+            "retainedWithCoreSourceText": 2,
+            "strippedTokensAllRetained": 48,
+            "modelVisibleTokens": 1021,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1906,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "mcp/startServer.ts::parseToolsFlag",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 24,
+            "modelVisibleTokens": 921,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1919,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "capsule/buildCapsuleImpl.ts::firstDefined",
+            "retained": 2,
+            "retainedWithCoreSourceText": 2,
+            "strippedTokensAllRetained": 38,
+            "modelVisibleTokens": 919,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1767,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "parsers/cythonParser.ts::buildModuleIndexes",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 44,
+            "modelVisibleTokens": 1148,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1944,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "cli/progress.ts::renderCompletedLine",
+            "retained": 3,
+            "retainedWithCoreSourceText": 3,
+            "strippedTokensAllRetained": 67,
+            "modelVisibleTokens": 1109,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1961,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": false
+          },
+          {
+            "to": "mcp/responseEnvelope.ts::buildAccounting",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 29,
+            "modelVisibleTokens": 1169,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1966,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "mcp/responseEnvelope.ts::serialize",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 24,
+            "modelVisibleTokens": 1033,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1828,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "workspace/queryRouteHints.ts::isSymbolHint",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 19,
+            "modelVisibleTokens": 876,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1884,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "domain/types.ts::normalizeFilePath",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 26,
+            "modelVisibleTokens": 1101,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1925,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "indexer/parseCache.ts::computeParseCacheKey",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 24,
+            "modelVisibleTokens": 1175,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1984,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": false
+          },
+          {
+            "to": "cli/commands/workspaceCommand.ts::formatCommandError",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 30,
+            "modelVisibleTokens": 685,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1926,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "parsers/typescriptParser.ts::collectClassHeritageReferences",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 41,
+            "modelVisibleTokens": 1041,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1851,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "cli/cli.test.ts::repoLocalDbPath",
+            "retained": 2,
+            "retainedWithCoreSourceText": 2,
+            "strippedTokensAllRetained": 53,
+            "modelVisibleTokens": 868,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1862,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "observations/sessionLifecycle.ts::collectKeyTerms",
+            "retained": 2,
+            "retainedWithCoreSourceText": 2,
+            "strippedTokensAllRetained": 54,
+            "modelVisibleTokens": 1067,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1943,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "indexer/extractMechanismFacts.ts::orderedOperand",
+            "retained": 2,
+            "retainedWithCoreSourceText": 2,
+            "strippedTokensAllRetained": 67,
+            "modelVisibleTokens": 1102,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1961,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": false
+          },
+          {
+            "to": "workspace/config.ts::writeWorkspaceConfig",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 31,
+            "modelVisibleTokens": 1042,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1866,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "retrieval/searchSymbolsShared.ts::queryBoundaryCandidates",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 30,
+            "modelVisibleTokens": 1062,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1955,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          }
+        ]
+      }
+    },
+    "C-LARGE": {
+      "renderableFromExistingTruth": 42,
+      "achievableImpactRenderPercent": 84,
+      "scoredRelationFitsEvidenceTarget": 12,
+      "scoredRelationFitsCeiling": 12,
+      "wholeResponse": {
+        "responses": 50,
+        "meetEvidenceTargetWithAllStrippedKeys": 48,
+        "fitCeilingWithAllStrippedKeys": 48,
+        "maxStrippedTokens": 77,
+        "medianStrippedTokens": 30,
+        "rows": [
+          {
+            "to": "arc/job/env_run.py::_pythonpath_lines",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 28,
+            "modelVisibleTokens": 496,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1346,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "arc/molecule/symmetry.py::calculate_atom_symmetry_number",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 33,
+            "modelVisibleTokens": 1104,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1919,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "arc/species/converter.py::check_xyz_dict",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 19,
+            "modelVisibleTokens": 979,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1791,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "arc/common.py::key_by_val",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 23,
+            "modelVisibleTokens": 1050,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1845,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "arc/species/species.py::ARCSpecies",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 38,
+            "modelVisibleTokens": 1029,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1843,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "arc/molecule/symmetry.py::calculate_bond_symmetry_number",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 35,
+            "modelVisibleTokens": 1082,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1895,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "arc/job/adapters/scripts/pyscf_script.py::mol_to_xyz_dict",
+            "retained": 2,
+            "retainedWithCoreSourceText": 2,
+            "strippedTokensAllRetained": 47,
+            "modelVisibleTokens": 963,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1819,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "arc/job/pipe/pipe_state.py::get_task_attempt_dir",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 30,
+            "modelVisibleTokens": 975,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1795,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "arc/tckdb/adapter_test.py::_fake_output_doc",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 19,
+            "modelVisibleTokens": 1128,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1931,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "arc/species/species.py::ARCSpecies",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 38,
+            "modelVisibleTokens": 1029,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1843,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "arc/molecule/group.py::Group.specify_unpaired_extensions",
+            "retained": 2,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 44,
+            "modelVisibleTokens": 925,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1800,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "arc/job/adapters/ts/heuristics_test.py::TestHeuristicsAdapter._check_h_abs_wells_reversed",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 38,
+            "modelVisibleTokens": 1093,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1922,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "arc/species/species.py::process_run_time",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 24,
+            "modelVisibleTokens": 997,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1878,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "arc/species/species.py::ARCSpecies",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 38,
+            "modelVisibleTokens": 1029,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1842,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "arc/molecule/molecule.py::Molecule",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 18,
+            "modelVisibleTokens": 1012,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1825,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "arc/statmech/arkane.py::_warn_no_match",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 35,
+            "modelVisibleTokens": 1179,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1986,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": false,
+            "wouldFitCeiling": false
+          },
+          {
+            "to": "arc/level.py::assign_frequency_scale_factor",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 40,
+            "modelVisibleTokens": 1092,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1903,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "arc/tckdb/adapter_test.py::_StubResponse",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 27,
+            "modelVisibleTokens": 1113,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1915,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "arc/species/species.py::ARCSpecies",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 38,
+            "modelVisibleTokens": 1029,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1842,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "arc/output.py::_build_scan_result_for_rotor",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 27,
+            "modelVisibleTokens": 1015,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1830,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "arc/molecule/molecule.py::Molecule.get_net_charge",
+            "retained": 2,
+            "retainedWithCoreSourceText": 2,
+            "strippedTokensAllRetained": 43,
+            "modelVisibleTokens": 1063,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1939,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "arc/species/species.py::ARCSpecies.get_xyz",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 22,
+            "modelVisibleTokens": 1055,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1864,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "arc/job/adapters/ts/linear_utils/geom_utils.py::bfs_path",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 18,
+            "modelVisibleTokens": 1034,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1863,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "arc/job/local.py::change_mode",
+            "retained": 2,
+            "retainedWithCoreSourceText": 2,
+            "strippedTokensAllRetained": 53,
+            "modelVisibleTokens": 1035,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1903,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "arc/molecule/resonance.py::generate_kekule_structure",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 28,
+            "modelVisibleTokens": 1046,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1876,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "arc/job/local.py::execute_command",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 21,
+            "modelVisibleTokens": 1114,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1949,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "arc/species/zmat.py::determine_a_atoms",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 20,
+            "modelVisibleTokens": 1072,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1934,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "arc/species/species.py::ARCSpecies",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 38,
+            "modelVisibleTokens": 1029,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1842,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "arc/molecule/pathfinder.py::find_butadiene_end_with_charge",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 30,
+            "modelVisibleTokens": 1134,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1957,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "arc/species/zmat.py::get_atom_indices_from_zmat_parameter",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 44,
+            "modelVisibleTokens": 993,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1820,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "arc/settings/external_paths.py::find_goflow_feat_dict",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 26,
+            "modelVisibleTokens": 1011,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1833,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "arc/job/adapters/ts/linear_utils/path_spec_test.py::TestHasCommittedSpectatorGroup._xyz_two_carbons",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 27,
+            "modelVisibleTokens": 891,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1725,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "arc/tckdb/adapter_test.py::TestComputedSpeciesBundle._record_with_alt_conformers",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 27,
+            "modelVisibleTokens": 1045,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1864,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "arc/job/adapters/ts/linear_utils/math_zmat.py::average_zmat_params",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 24,
+            "modelVisibleTokens": 1104,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1939,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "arc/job/adapters/ts/linear_utils/path_spec.py::has_recipe_channel_mismatch",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 34,
+            "modelVisibleTokens": 1011,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1861,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "arc/species/zmat.py::determine_d_atoms_from_connectivity",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 43,
+            "modelVisibleTokens": 1123,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1940,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "arc/molecule/molecule.py::Molecule",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 18,
+            "modelVisibleTokens": 1012,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1825,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "arc/molecule/vf2.pyx::VF2.match",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 16,
+            "modelVisibleTokens": 1071,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1858,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "arc/job/adapters/ts/linear.py::_enrich_post_migration_path_spec",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 31,
+            "modelVisibleTokens": 1079,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1922,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "arc/job/pipe/pipe_run.py::PipeRun",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 28,
+            "modelVisibleTokens": 1153,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1973,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": false
+          },
+          {
+            "to": "arc/statmech/arkane.py::clean_output_directory",
+            "retained": 2,
+            "retainedWithCoreSourceText": 2,
+            "strippedTokensAllRetained": 77,
+            "modelVisibleTokens": 943,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1797,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "arc/job/adapter_test.py::_SSHClientStub",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 20,
+            "modelVisibleTokens": 1157,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1961,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "arc/common.py::calculate_arrhenius_rate_coefficient",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 35,
+            "modelVisibleTokens": 1055,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1933,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "arc/tckdb/adapter_test.py::TestComputedReactionBundle._fake_rich_irc_points",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 31,
+            "modelVisibleTokens": 1061,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1873,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "arc/species/zmat.py::xyz_to_zmat",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 35,
+            "modelVisibleTokens": 1102,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1931,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "arc/tckdb/adapter_test.py::_full_record",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 18,
+            "modelVisibleTokens": 994,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1793,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "arc/scheduler.py::Scheduler",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 26,
+            "modelVisibleTokens": 1083,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1911,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "arc/tckdb/adapter_test.py::_pbac_record",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 20,
+            "modelVisibleTokens": 1182,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1973,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": false,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "arc/species/species.py::ARCSpecies",
+            "retained": 1,
+            "retainedWithCoreSourceText": 1,
+            "strippedTokensAllRetained": 38,
+            "modelVisibleTokens": 1029,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1843,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          },
+          {
+            "to": "arc/species/zmat.py::get_all_neighbors",
+            "retained": 2,
+            "retainedWithCoreSourceText": 2,
+            "strippedTokensAllRetained": 52,
+            "modelVisibleTokens": 1012,
+            "requestedMaxTokens": 1200,
+            "totalTokens": 1888,
+            "totalCeiling": 2000,
+            "wouldMeetEvidenceTarget": true,
+            "wouldFitCeiling": true
+          }
+        ]
+      }
+    }
+  },
+  "fanIn": {
+    "C-SMALL": {
+      "symbol": "compare/compare.ts::loadExternalAgent",
+      "incomingCalls": 2,
+      "default": {
+        "characters": 7901,
+        "directRelations": 2,
+        "withSourceText": 0,
+        "edgesInspected": 18,
+        "retainedEdges": 4,
+        "omittedEdges": 0,
+        "totalTokens": 1976,
+        "totalCeiling": 2000,
+        "resultState": "response_compacted"
+      },
+      "hardBounds": {
+        "characters": 16910,
+        "directRelations": 4,
+        "withSourceText": 0,
+        "edgesInspected": 18,
+        "retainedEdges": 4,
+        "omittedEdges": 0,
+        "totalTokens": 4228,
+        "totalCeiling": 20000,
+        "resultState": "response_compacted"
+      }
+    },
+    "C-MED": {
+      "symbol": "db/sqlite.ts::openIndexerDatabase",
+      "incomingCalls": 58,
+      "default": {
+        "characters": 7394,
+        "directRelations": 1,
+        "withSourceText": 0,
+        "edgesInspected": 133,
+        "retainedEdges": 5,
+        "omittedEdges": 170,
+        "totalTokens": 1849,
+        "totalCeiling": 2000,
+        "resultState": "bounded_truncated"
+      },
+      "hardBounds": {
+        "characters": 79522,
+        "directRelations": 30,
+        "withSourceText": 0,
+        "edgesInspected": 986,
+        "retainedEdges": 69,
+        "omittedEdges": 137,
+        "totalTokens": 19881,
+        "totalCeiling": 20000,
+        "resultState": "bounded_truncated"
+      }
+    },
+    "C-LARGE": {
+      "symbol": "arc/species/species.py::ARCSpecies",
+      "incomingCalls": 869,
+      "default": {
+        "characters": 7367,
+        "directRelations": 1,
+        "withSourceText": 0,
+        "edgesInspected": 1106,
+        "retainedEdges": 4,
+        "omittedEdges": 2818,
+        "totalTokens": 1842,
+        "totalCeiling": 2000,
+        "resultState": "bounded_truncated"
+      },
+      "hardBounds": {
+        "characters": 79385,
+        "directRelations": 1,
+        "withSourceText": 0,
+        "edgesInspected": 3042,
+        "retainedEdges": 87,
+        "omittedEdges": 2213,
+        "totalTokens": 19847,
+        "totalCeiling": 20000,
+        "resultState": "bounded_truncated"
+      }
+    }
+  },
+  "supply": [
+    {
+      "corpus": "C-SMALL",
+      "eligible": 36,
+      "renderable": 36,
+      "truthPercent": 100,
+      "achievablePercent": 100,
+      "achievableAtAnyCost": 100,
+      "callerLostToCoreSlice": 0,
+      "rank": {
+        "rank0": 35,
+        "atMost2": 36,
+        "atMost6": 36,
+        "atMost9": 36,
+        "max": 1,
+        "medianCoreRelations": 1
+      },
+      "fitsEvidenceTargetAllRetained": 35,
+      "fitsCeilingAllRetained": 28,
+      "responses": 36
+    },
+    {
+      "corpus": "C-MED",
+      "eligible": 50,
+      "renderable": 50,
+      "truthPercent": 100,
+      "achievablePercent": 94,
+      "achievableAtAnyCost": 98,
+      "callerLostToCoreSlice": 0,
+      "rank": {
+        "rank0": 29,
+        "atMost2": 42,
+        "atMost6": 45,
+        "atMost9": 48,
+        "max": 36,
+        "medianCoreRelations": 5
+      },
+      "fitsEvidenceTargetAllRetained": 49,
+      "fitsCeilingAllRetained": 38,
+      "responses": 50
+    },
+    {
+      "corpus": "C-LARGE",
+      "eligible": 50,
+      "renderable": 42,
+      "truthPercent": 84,
+      "achievablePercent": 60,
+      "achievableAtAnyCost": 74,
+      "callerLostToCoreSlice": 8,
+      "rank": {
+        "rank0": 10,
+        "atMost2": 19,
+        "atMost6": 29,
+        "atMost9": 32,
+        "max": 46,
+        "medianCoreRelations": 13
+      },
+      "fitsEvidenceTargetAllRetained": 48,
+      "fitsCeilingAllRetained": 48,
+      "responses": 50
+    }
+  ],
+  "gate": "A15_RENDERABLE_SUPPLY_INSUFFICIENT",
+  "examples": {
+    "C-SMALL": [
+      {
+        "from": "vexp/enhancer.ts::setupVexpRepo",
+        "to": "vexp/enhancer.ts::indexRepo",
+        "role": "exact caller (persisted call site)",
+        "declaredSpan": "vexp/enhancer.ts:23-23",
+        "coreSourceText": "await indexRepo(repoPath);",
+        "productSourceText": null
+      },
+      {
+        "from": "leaderboard/render.ts::renderLeaderboard",
+        "to": "leaderboard/render.ts::displayName",
+        "role": "exact caller (persisted call site)",
+        "declaredSpan": "leaderboard/render.ts:14-14",
+        "coreSourceText": "const maxNameLen = Math.max(...entries.map((e) => displayName(e).length), 10);",
+        "productSourceText": null
+      },
+      {
+        "from": "compare/compare.ts::buildCompare",
+        "to": "compare/compare.ts::loadExternalAgent",
+        "role": "exact caller (persisted call site)",
+        "declaredSpan": "compare/compare.ts:95-95",
+        "coreSourceText": "const agent = loadExternalAgent(name);",
+        "productSourceText": null
+      }
+    ],
+    "C-MED": [
+      {
+        "from": "capsule/selectCapsuleMemories.ts::scoreObservation",
+        "to": "capsule/selectCapsuleMemories.ts::isEligibleForSurfacing",
+        "role": "exact caller (persisted call site)",
+        "declaredSpan": "capsule/selectCapsuleMemories.ts:140-147",
+        "coreSourceText": "if (!isEligibleForSurfacing({",
+        "productSourceText": null
+      },
+      {
+        "from": "retrieval/hybridRetrieval.ts::hybridRetrieve",
+        "to": "retrieval/upstreamRescue.ts::inactiveUpstreamRescue",
+        "role": "resolved caller (persisted call site)",
+        "declaredSpan": "retrieval/hybridRetrieval.ts:342-342",
+        "coreSourceText": "upstreamRescue: inactiveUpstreamRescue(\"no results requested\"),",
+        "productSourceText": null
+      },
+      {
+        "from": "runPipeline/runPipelineOrchestrator.ts::runReliableContextRetrieval",
+        "to": "intent/routeQuery.ts::routeQuery",
+        "role": "resolved caller (persisted call site)",
+        "declaredSpan": "runPipeline/runPipelineOrchestrator.ts:666-669",
+        "coreSourceText": "? routeQuery(db, input.query, {",
+        "productSourceText": null
+      }
+    ],
+    "C-LARGE": [
+      {
+        "from": "arc/job/env_run.py::rmg_env_command",
+        "to": "arc/job/env_run.py::_pythonpath_lines",
+        "role": "exact caller (persisted call site)",
+        "declaredSpan": "arc/job/env_run.py:288-288",
+        "coreSourceText": "return '\\n'.join(preamble + _pythonpath_lines(rmg_path) + [",
+        "productSourceText": null
+      },
+      {
+        "from": "arc/molecule/symmetry_test.py::TestMoleculeSymmetry.test_atom_symmetry_number_methane",
+        "to": "arc/molecule/symmetry.py::calculate_atom_symmetry_number",
+        "role": "resolved caller (persisted call site)",
+        "declaredSpan": "arc/molecule/symmetry_test.py:42-42",
+        "coreSourceText": "symmetry_number *= calculate_atom_symmetry_number(molecule, atom)",
+        "productSourceText": null
+      },
+      {
+        "from": "arc/checks/nmd_test.py::TestNMD.test_analyze_ts_nmd_urea_rad_furazan",
+        "to": "arc/species/converter.py::check_xyz_dict",
+        "role": "resolved caller (persisted call site)",
+        "declaredSpan": "arc/checks/nmd_test.py:1451-1465",
+        "coreSourceText": "rxn.ts_species = ARCSpecies(label='TS_1', is_ts=True, xyz=check_xyz_dict(",
+        "productSourceText": null
+      }
+    ]
+  }
+}
