@@ -36,9 +36,11 @@ export function corpusSpecs(repoRoot: string): readonly CorpusSpec[] {
       exts: [".ts", ".tsx"], frozenEligible: 21 },
     // 492 at M197A; 500 since M202 added eight source files to the corpus that
     // is the product; 502 since M203 added two; 504 since M205 added two; 506
-    // since M208 added two tests (see run_stage5_m197a_authority.ts, corpus_C-MED).
+    // since M208 added two tests; 508 since M211 added the impact continuation
+    // module and its census/projection test (see run_stage5_m197a_authority.ts,
+    // corpus_C-MED).
     { id: "C-MED", source: path.join(repoRoot, "src"), language: "TypeScript",
-      exts: [".ts", ".tsx"], frozenEligible: 506 },
+      exts: [".ts", ".tsx"], frozenEligible: 508 },
     { id: "C-LARGE", source: "/home/calvin/code/ARC", language: "Python",
       exts: [".py"], frozenEligible: 276 },
   ];

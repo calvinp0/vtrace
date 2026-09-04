@@ -148,8 +148,11 @@ const CORPORA = [
   // M208 added two test files (src/capsuleV2/budgetAllocator.test.ts and
   // src/capsuleV2/pivotPlanCap.test.ts), so the count is re-frozen at 506 on
   // 2026-09-03 by the same rule; the replay at 504 (the predecessor worktree)
-  // is kept as stage5_m208_authority.json.
-  { id: "C-MED", source: path.join(REPO, "src"), exts: [".ts", ".tsx"], expected: 506,
+  // is kept as stage5_m208_authority.json. M211 added two source files
+  // (src/impact/impactContinuation.ts and
+  // src/impact/impactCensusProjection.test.ts), so the count is re-frozen at 508
+  // on 2026-09-04 by the same rule.
+  { id: "C-MED", source: path.join(REPO, "src"), exts: [".ts", ".tsx"], expected: 508,
     revisionOf: REPO, expectedRevisionPrefix: null },
   { id: "C-LARGE", source: "/home/calvin/code/ARC", exts: [".py"], expected: 276,
     revisionOf: "/home/calvin/code/ARC", expectedRevisionPrefix: null, excludePrefix: ".claude" },

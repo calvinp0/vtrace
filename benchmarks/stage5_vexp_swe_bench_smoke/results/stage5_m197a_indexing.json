@@ -10,16 +10,16 @@
   "repeats": 3,
   "hardware": {
     "cpus": 20,
-    "scratch": "/tmp/claude-1000/-home-calvin-code-vtrace/d5ccbc1c-ab7e-420e-8144-f53597294a5f/scratchpad/m197a",
+    "scratch": "/tmp/m211-frozen",
     "loadAverageAtStart": [
-      16.39,
-      17.39,
-      17.55
+      3.09,
+      3.46,
+      3.21
     ],
     "loadAverageAtEnd": [
-      36.51,
-      25.41,
-      20.49
+      4.58,
+      3.9,
+      3.41
     ],
     "note": "scratch is tmpfs; index build is RAM-backed and not comparable to unstated VEXP hardware"
   },
@@ -68,18 +68,18 @@
       "id": "C-MED",
       "language": "TypeScript",
       "source": "/home/calvin/code/vtrace/src",
-      "sourceFilesOnDisk": 492,
+      "sourceFilesOnDisk": 508,
       "legitimatelyExcluded": 0,
-      "eligible": 492,
-      "frozenEligible": 492,
-      "eligibleMatchesFrozen": true,
-      "represented": 492,
+      "eligible": 508,
+      "frozenEligible": 506,
+      "eligibleMatchesFrozen": false,
+      "represented": 508,
       "unexplainedMissing": 0,
       "coveragePercent": 100,
       "coverageAgainstRawDisk": 100,
       "productCoverage": {
-        "filesEligible": 492,
-        "filesIndexed": 492,
+        "filesEligible": 508,
+        "filesIndexed": 508,
         "filesFailed": 0,
         "filesSkipped": 0,
         "complete": true,
@@ -87,20 +87,20 @@
       },
       "exclusionJustification": {},
       "unexplainedMissingFiles": [],
-      "totalSymbols": 4595,
-      "totalEdges": 10010,
+      "totalSymbols": 4739,
+      "totalEdges": 10319,
       "determinism": {
         "repeats": 3,
         "nonIdenticalRuns": 0,
         "symbolCounts": [
-          4595,
-          4595,
-          4595
+          4739,
+          4739,
+          4739
         ],
         "edgeCounts": [
-          10010,
-          10010,
-          10010
+          10319,
+          10319,
+          10319
         ]
       }
     },
@@ -118,8 +118,8 @@
       "coveragePercent": 100,
       "coverageAgainstRawDisk": 28.31,
       "productCoverage": {
-        "filesEligible": 346,
-        "filesIndexed": 346,
+        "filesEligible": 372,
+        "filesIndexed": 372,
         "filesFailed": 0,
         "filesSkipped": 0,
         "complete": true,
@@ -136,15 +136,15 @@
         }
       },
       "unexplainedMissingFiles": [],
-      "totalSymbols": 10309,
+      "totalSymbols": 10345,
       "totalEdges": 24887,
       "determinism": {
         "repeats": 3,
         "nonIdenticalRuns": 0,
         "symbolCounts": [
-          10309,
-          10309,
-          10309
+          10345,
+          10345,
+          10345
         ],
         "edgeCounts": [
           24887,
@@ -162,37 +162,37 @@
       "filesIndexed": 21,
       "cold": {
         "n": 3,
-        "median": 197.7,
-        "p90": 216.3,
-        "p95": 216.3,
-        "max": 216.3,
-        "min": 195.1,
-        "filesPerSecondMedian": 106.21
+        "median": 91.2,
+        "p90": 100.8,
+        "p95": 100.8,
+        "max": 100.8,
+        "min": 89.2,
+        "filesPerSecondMedian": 230.14
       },
       "noop": {
         "n": 3,
-        "median": 10.4,
-        "p90": 18.4,
-        "p95": 18.4,
-        "max": 18.4,
-        "min": 9
+        "median": 6.5,
+        "p90": 6.9,
+        "p95": 6.9,
+        "max": 6.9,
+        "min": 5.3
       },
       "noopFilesAttemptedForParse": 0,
       "incremental": {
         "k1": {
           "changedFiles": 1,
-          "elapsedMs": 84.6,
+          "elapsedMs": 13,
           "filesAttemptedForParse": 21,
           "filesIndexed": 21,
-          "ratioToColdMedian": 0.428,
+          "ratioToColdMedian": 0.143,
           "failureMode": null
         },
         "k3": {
           "changedFiles": 3,
-          "elapsedMs": 89.2,
+          "elapsedMs": 18.1,
           "filesAttemptedForParse": 21,
           "filesIndexed": 21,
-          "ratioToColdMedian": 0.451,
+          "ratioToColdMedian": 0.198,
           "failureMode": null
         }
       },
@@ -204,46 +204,46 @@
       },
       "symbols": 98,
       "edges": 61,
-      "indexBytes": 430080
+      "indexBytes": 471040
     },
     {
       "id": "C-MED",
       "language": "TypeScript",
-      "eligibleFiles": 492,
-      "filesIndexed": 492,
+      "eligibleFiles": 508,
+      "filesIndexed": 508,
       "cold": {
         "n": 3,
-        "median": 17992.2,
-        "p90": 18522.1,
-        "p95": 18522.1,
-        "max": 18522.1,
-        "min": 17398.9,
-        "filesPerSecondMedian": 27.35
+        "median": 8415.8,
+        "p90": 8445,
+        "p95": 8445,
+        "max": 8445,
+        "min": 8388,
+        "filesPerSecondMedian": 60.36
       },
       "noop": {
         "n": 3,
-        "median": 181.9,
-        "p90": 205.2,
-        "p95": 205.2,
-        "max": 205.2,
-        "min": 129.3
+        "median": 100.6,
+        "p90": 113.1,
+        "p95": 113.1,
+        "max": 113.1,
+        "min": 74.3
       },
       "noopFilesAttemptedForParse": 0,
       "incremental": {
         "k1": {
           "changedFiles": 1,
-          "elapsedMs": 5930.2,
-          "filesAttemptedForParse": 492,
-          "filesIndexed": 492,
-          "ratioToColdMedian": 0.33,
+          "elapsedMs": 256.7,
+          "filesAttemptedForParse": 508,
+          "filesIndexed": 508,
+          "ratioToColdMedian": 0.03,
           "failureMode": null
         },
         "k3": {
           "changedFiles": 3,
-          "elapsedMs": 5456.8,
-          "filesAttemptedForParse": 492,
-          "filesIndexed": 492,
-          "ratioToColdMedian": 0.303,
+          "elapsedMs": 247,
+          "filesAttemptedForParse": 508,
+          "filesIndexed": 508,
+          "ratioToColdMedian": 0.029,
           "failureMode": null
         }
       },
@@ -251,63 +251,62 @@
         "status": "OK",
         "changedFiles": 1,
         "target": "access/indexAccessLifecycle.test.ts",
-        "filesAttemptedForParse": 492
+        "filesAttemptedForParse": 508
       },
-      "symbols": 4595,
-      "edges": 10010,
-      "indexBytes": 18345984
+      "symbols": 4739,
+      "edges": 10319,
+      "indexBytes": 19124224
     },
     {
       "id": "C-LARGE",
       "language": "Python",
       "eligibleFiles": 276,
-      "filesIndexed": 346,
+      "filesIndexed": 372,
       "cold": {
         "n": 3,
-        "median": 39267.8,
-        "p90": 41026.2,
-        "p95": 41026.2,
-        "max": 41026.2,
-        "min": 38378.4,
-        "filesPerSecondMedian": 8.81
+        "median": 11780.7,
+        "p90": 12068.3,
+        "p95": 12068.3,
+        "max": 12068.3,
+        "min": 11728.1,
+        "filesPerSecondMedian": 31.58
       },
       "noop": {
         "n": 3,
-        "median": 297.6,
-        "p90": 347.6,
-        "p95": 347.6,
-        "max": 347.6,
-        "min": 281
+        "median": 169.8,
+        "p90": 222.4,
+        "p95": 222.4,
+        "max": 222.4,
+        "min": 158.6
       },
       "noopFilesAttemptedForParse": 0,
       "incremental": {
         "k1": {
           "changedFiles": 1,
-          "elapsedMs": null,
-          "filesAttemptedForParse": null,
-          "filesIndexed": null,
-          "ratioToColdMedian": null,
-          "failureMode": "UNIQUE constraint failed: edges.id"
+          "elapsedMs": 644.1,
+          "filesAttemptedForParse": 372,
+          "filesIndexed": 372,
+          "ratioToColdMedian": 0.055,
+          "failureMode": null
         },
         "k3": {
           "changedFiles": 3,
-          "elapsedMs": 71753.5,
-          "filesAttemptedForParse": 346,
-          "filesIndexed": 346,
-          "ratioToColdMedian": 1.827,
+          "elapsedMs": 1587.8,
+          "filesAttemptedForParse": 372,
+          "filesIndexed": 372,
+          "ratioToColdMedian": 0.135,
           "failureMode": null
         }
       },
       "singleRefreshSequence": {
-        "status": "CRASH",
+        "status": "OK",
         "changedFiles": 1,
         "target": "ARC.py",
-        "error": "UNIQUE constraint failed: edges.id",
-        "note": "pre-existing; reproduced through the product's own openIndexerDatabase path"
+        "filesAttemptedForParse": 372
       },
-      "symbols": 10309,
+      "symbols": 10345,
       "edges": 24887,
-      "indexBytes": 46596096
+      "indexBytes": 49459200
     }
   ]
 }

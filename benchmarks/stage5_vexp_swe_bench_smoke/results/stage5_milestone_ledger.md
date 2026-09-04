@@ -10677,3 +10677,193 @@ evidence          results/stage5_m210_final_report.md,
   M210 did not begin and which no engine result licenses.
   `ENGINE QUALITY != CODING-AGENT UTILITY` and
   `CONTEXT_COMPILER_PRODUCT_UTILITY_NOT_ESTABLISHED` both still govern.
+
+---
+
+```text
+milestone         M211
+verdict           PASS (post-parity product architecture)
+markers           M211_IMPACT_ARCHITECTURE_AUDITED;
+                  M211_ARCHITECTURE_REDUCTION_PROVEN;
+                  IMPACT_CENSUS_DECOUPLED_FROM_EVIDENCE_BUDGET;
+                  IMPACT_PROJECTION_BOUNDED_AND_TRUTHFUL;
+                  IMPACT_CONTINUATION_DETERMINISTIC;
+                  M211_FALSIFICATION_SUITE_PASSED
+parity            UNCHANGED. Frozen matrix re-run as a REGRESSION CHECK only:
+                  MATCH 7 EXCEED 7 BELOW 1, match-or-exceed 14/15, A15 BELOW.
+                  M210's A15_DELIVERY_ARITHMETICALLY_UNREACHABLE stands. The
+                  frozen A15 scorer was not touched and its population was not
+                  re-derived.
+spend             0 live-agent runs, $0, 0 Docker, 0 VEXP processes.
+scope             Post-parity. Separate "how much impact exists" from "how much
+                  impact evidence should be read now". No frozen-A15 repair, no
+                  retrieval tuning, no new representation class, no V2 API.
+
+defect            countConsumers was called on directRelations AFTER
+                  slice(0, maxEdges), so the published caller count WAS the
+                  rendered length once the universe exceeded the slice — and was
+                  accidentally truthful just below it, which is worse, because
+                  nothing marked the transition. ARCSpecies: 999 truthful direct
+                  relations reported as 64, one delivered relation carrying no
+                  source line, 3167 chars restating a 3-edge projection against
+                  921 chars of evidence. Over 16 probes on three real corpora at
+                  the 0..1000+ fanout ladder: census false in 4 (exactly those
+                  above 64), restatement > evidence in 15, collapse to <=1
+                  relation in 10, zero source-backed relations in 11 that had
+                  persisted call sites.
+
+repair            (1) impactCensus over the complete direct universe, taken
+                  before any budget and never rewritten; summary.consumers now
+                  counted over the same universe. (2) nodes/edges/view get a
+                  ladder rung ABOVE the evidence — licensed only because the
+                  census states graph size in ~600 chars, so a dropped edge row
+                  costs a duplicate not a fact. (3) graduated degradation: a
+                  prefix at full form, a middle at minimal, a counted tail,
+                  maximising COUNT first so it is a Pareto improvement over the
+                  old cliff; binary search, 6 re-serializations replace 63.
+                  (4) lazy hydration: calls/contains classify without an excerpt
+                  (provable — classifyRelation reads text only for imports
+                  re-export/alias and inherits/implements/decorates), so
+                  ARCSpecies builds 64 excerpts instead of 999.
+
+continuation      A self-validating cursor that STORES NOTHING. expand_vexp_ref
+                  exists and declares an impact_graph category, but its contract
+                  is stored-truth snapshotting and a 999-relation hydrated
+                  universe is exactly what must not be materialised to serve
+                  page two. The stream is re-derived instead, totally ordered by
+                  compareStaticRelations (adopted, not invented: it reads no
+                  evidence field). The ref binds index revision + ordering
+                  verbatim and symbol + request shape by digest, 156 chars — an
+                  earlier revision at 573 chars cost exactly the delivered
+                  relation it points away from.
+
+result            ARCSpecies default response: census 64 -> 869 truthful,
+                  rendered 1 -> 2, source-backed 0 -> 1, restatement 3167 ->
+                  1620 against evidence 921 -> 1915, core latency 221 -> 77 ms.
+                  Molecule 64 -> 531 / 0 -> 2 text / 148 -> 66 ms. Evidence now
+                  exceeds restatement on every high-fanout probe; before,
+                  restatement exceeded evidence on 15 of 16.
+
+metrics           Twelve P1-P12 product metrics frozen in
+                  m211ImpactArchitecture.ts BEFORE any functional change and
+                  recorded in stage5_m211_audit_pre.json. Eleven met. P6
+                  (EVIDENCE_YIELD) is PARTIAL and reported as such: source-backed
+                  count fell on 0/16 targets but rose on only 4 of 6 high-fanout
+                  ones — _submit and colliding_atoms gained a second relation
+                  while neither could afford a full form for even one. The bar
+                  was frozen before the result was known and is not restated.
+
+falsification     M211_FALSIFICATION_SUITE_PASSED — 37 pass, 4 vacuous, 0 fail,
+                  F1-F24 on real repositories through the product path. The four
+                  vacuous are declared: F7 on all corpora (no delivered relation
+                  lacked a persisted call site) and F20 on C-SMALL (its widest
+                  symbol holds 4 relations, so there is no collapse to repair).
+
+self-caught       TWO defects were found by M211's own controls, not by
+                  inspection. (a) The census carried transitive counts whose
+                  traversal is bounded by max_edges, so a record promising
+                  domain:"direct_universe" moved with the render — the coupling
+                  this milestone removes, reintroduced inside it. Transitive
+                  figures stay in richSummary where fieldDomains already labels
+                  them budget-bounded. (b) The repaired ladder left the ARC
+                  default 16 chars under its ceiling and `timing` carries
+                  wall-clock, whose serialized WIDTH is not a property of the
+                  repository: identical requests returned two relations or one,
+                  and frozen A6 determinism went UNSTABLE on ARCReaction under
+                  load. measuredElapsed now rounds to 2dp and the ladder prices
+                  wall-clock at width-maximal stand-ins restored before the
+                  response is measured and gated. The suite was blind to (b) at
+                  first — it checked ordering, which never moved, not the
+                  delivered set. F9 now checks both.
+
+A5/A6/A7/A11      A5 MATCHES p90 65.58 / 267.61 / 422.65 ms, best observed 41.76
+A12/A13/A14       / 201.26 / 370.57 (load 2.97-3.57 on 20 CPUs from the user's
+                  own desktop processes; §36's idle condition was not
+                  achievable, and M210 recorded 361.92 idle / 375.32 at load
+                  2.5). A6 EXCEEDS 93.07 ms. A7 EXCEEDS 18.57. A11 EXCEEDS
+                  82.1 / 94.08 / 101.95 / 102.53 / 95.97 (M210 82.7 / 94 /
+                  102.06 / 102.58 / 96.19). A12 MATCHES 3 classes C-MED, 4
+                  C-LARGE — no new class. A13 EXCEEDS 0 size drops / 0 swaps.
+                  A14 MATCHES 5065/5065. Frozen F6 still FAILS on its stale
+                  a14PerItem === 0 conjunct alone, as at M203/M208/M209/M210.
+
+isolation         CHECKED, NOT ASSUMED, AND IT DOES NOT HOLD.
+                  productContext/assembleProductContext.ts and
+                  runPipeline/runPipelineOrchestrator.ts both call
+                  getImpactGraph as a value, so the A11/A13 path runs M211's
+                  core changes. Neither embeds the census (each reads selected
+                  fields), and A11/A12/A13 were re-measured directly rather than
+                  argued away.
+
+retrieval eval    Both fixtures re-run on this tree: expanded 20/20 top-1 85.0%,
+                  cross_repo_30 30/30 top-1 66.7% (0.6667), top-3 73.3%, pivot
+                  70.0%, missing 6.7%. Both CSVs BYTE-IDENTICAL to the committed
+                  baselines; no baseline regenerated. M208 floor held exactly.
+
+corpus identity   M197A_AUTHORITY_VERIFIED. C-MED re-frozen 506 -> 508 on
+                  2026-09-04 by the standing rule (M211 added
+                  src/impact/impactContinuation.ts and
+                  src/impact/impactCensusProjection.test.ts), as M202/M203/M205/
+                  M208 did before it. C-SMALL 21 @ d658e3457b, C-LARGE 276 @
+                  826144342e, 699 nested-worktree .py excluded.
+
+tests             6250 pass, 49 skip, 0 fail (384 files). typecheck, typecheck:
+                  benchmarks, lint, git diff --check all clean.
+
+commits           dc2e5f0b audit + counterfactual (no production change);
+                  ea7cf446 census / projection / continuation; evidence commit
+                  records this row.
+```
+
+## M211 standing findings
+
+- **A count that is right until it silently is not is worse than one that is
+  always wrong.** The pre-M211 caller count was truthful on C-MED's 131- and
+  127-relation probes and false on C-LARGE's 999-relation one, for the same
+  reason in both cases — it counted the delivered slice. Nothing in the response
+  marked the transition. Any future count field should name the population it
+  was measured over, as M139's `fieldDomains` already does and as the census's
+  `domain` now does.
+
+- **The restatement was only allowed to yield first because the census exists.**
+  `nodes`/`edges`/`view` had no rung for a defensible reason: before M211 they
+  were the only place the response admitted the graph was larger than the render.
+  A successor tempted to shed them further should keep that order of reasoning —
+  the cheap truthful statement of size has to come first, or the reduction is
+  just a loss.
+
+- **A per-relation restatement overhead of ~795 characters against a
+  ~880-character relation record is what still caps evidence yield.** `edges`
+  carries two 64-hex symbol ids and two fully-qualified names that
+  `directRelations` already carries, and `nodes` repeats them again. That is a
+  duplicate-authority defect (§32) and roughly doubles the price of every
+  delivered relation, but removing it means changing required schema fields and
+  was out of M211's risk budget. It is the next real lever on impact evidence
+  density, and it is a compatibility milestone, not a budget one.
+
+- **Wall-clock in a budgeted response is a determinism hazard.** `timing`'s
+  serialized WIDTH is not a property of the repository, and any ladder whose
+  rungs are step functions of serialized size will eventually be decided by it.
+  M211 hit this only because the repaired ladder landed 16 characters from the
+  ceiling. Any future response-shaping work should price measured latency at a
+  fixed upper bound during its decisions and restore the real value afterwards,
+  and any determinism control should compare the DELIVERED SET, not just the
+  ordering — the ordering never moved while the count did.
+
+- **P6 is partially met and must not be reported otherwise.** Two high-fanout
+  targets (`_submit`, `colliding_atoms`) gained a second delivered relation but
+  neither could afford a full representation for even one, so their source-backed
+  count stayed at zero. Their relations carry long source lines and multiple call
+  sites; the fix is the per-relation restatement overhead above, not the ladder.
+
+- **The impact path is NOT isolated from `get_code_context`/`run_pipeline`.**
+  Both `assembleProductContext` and `runPipelineOrchestrator` call
+  `getImpactGraph` as a value. Any future impact change inherits A11/A12/A13
+  obligations and must re-measure them rather than argue isolation.
+
+- **Next-step recommendation.** Freeze the VTRACE impact/product architecture.
+  The separately-authorised next programme is unchanged and was not begun here:
+  pre-register and reproduce the exact Baseline vs Baseline+VTRACE vs
+  Baseline+VEXP causal benchmark conditions before any paid live run.
+  `ENGINE QUALITY != CODING-AGENT UTILITY` and
+  `CONTEXT_COMPILER_PRODUCT_UTILITY_NOT_ESTABLISHED` both still govern.

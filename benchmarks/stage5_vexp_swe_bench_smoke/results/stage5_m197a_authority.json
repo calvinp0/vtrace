@@ -4,12 +4,16 @@
   "gate": "frozen VEXP claim authority and corpus identity verified before any Track-A scoring",
   "git": {
     "branch": "main",
-    "head": "4ab01a72ef6e38fad3dac3b2a04e89d446b190b7",
-    "trackedDirtCount": 3,
+    "head": "ea7cf446fedd2c3840ed538c912b01f8ae3289b0",
+    "trackedDirtCount": 7,
     "trackedDirt": [
-      " M benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_milestone_ledger.md",
+      " M benchmarks/stage5_vexp_swe_bench_smoke/m197aFixtures.ts",
+      " M benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_m197a_indexing.json",
       " M benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_outcome_ledger.json",
-      " M benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_outcome_ledger.md"
+      " M benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_outcome_ledger.md",
+      " M benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m197a_authority.ts",
+      " M src/impact/getImpactGraph.ts",
+      " M src/impact/impactResponseEnvelope.ts"
     ]
   },
   "preregistration": {
@@ -44,9 +48,9 @@
     {
       "id": "C-MED",
       "source": "/home/calvin/code/vtrace/src",
-      "revision": "4ab01a72ef6e38fad3dac3b2a04e89d446b190b7",
-      "eligibleFiles": 492,
-      "expected": 492
+      "revision": "ea7cf446fedd2c3840ed538c912b01f8ae3289b0",
+      "eligibleFiles": 508,
+      "expected": 508
     },
     {
       "id": "C-LARGE",
@@ -65,7 +69,7 @@
     {
       "id": "m196a_head_is_ancestor",
       "ok": true,
-      "detail": "HEAD=4ab01a72ef6e expected M196A 4ab01a72ef6e at or below"
+      "detail": "HEAD=ea7cf446fedd expected M196A 4ab01a72ef6e at or below"
     },
     {
       "id": "preregistration_sha256",
@@ -120,7 +124,7 @@
     {
       "id": "corpus_C-MED",
       "ok": true,
-      "detail": "492 files (expected 492) @ 4ab01a72ef"
+      "detail": "508 files (expected 508) @ ea7cf446fe"
     },
     {
       "id": "corpus_C-LARGE",

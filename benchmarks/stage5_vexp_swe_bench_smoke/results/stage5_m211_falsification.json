@@ -1,0 +1,592 @@
+{
+  "milestone": "M211",
+  "phase": "falsification",
+  "productHead": "ea7cf446fedd2c3840ed538c912b01f8ae3289b0",
+  "generatedAtMs": 1788532564366,
+  "marker": "M211_FALSIFICATION_SUITE_PASSED",
+  "totals": {
+    "controls": 41,
+    "pass": 37,
+    "vacuous": 4,
+    "fail": 0
+  },
+  "controls": [
+    {
+      "id": "F1/F16",
+      "claim": "census is identical at every projection and evidence budget",
+      "status": "PASS",
+      "detail": {
+        "targets": 2,
+        "faults": []
+      }
+    },
+    {
+      "id": "F2",
+      "claim": "a symbol with no relations yields a zero census, no continuation, no filler",
+      "status": "PASS",
+      "detail": {
+        "fqn": "agents/registry.ts::getAdapter"
+      }
+    },
+    {
+      "id": "F3/F4",
+      "claim": "exact/resolved and direct/transitive classes are counted apart, never promoted",
+      "status": "PASS",
+      "detail": {
+        "faults": []
+      }
+    },
+    {
+      "id": "F5/F14/F15/F17",
+      "claim": "responses stay bounded and the restatement never explodes with fanout",
+      "status": "PASS",
+      "detail": {
+        "probes": 10,
+        "faults": [],
+        "widest": [
+          {
+            "fqn": "compare/compare.ts::loadExternalAgent",
+            "maxTokens": 1,
+            "total": 3370,
+            "restatement": 34,
+            "rendered": 0,
+            "latencyMs": 2.4
+          },
+          {
+            "fqn": "compare/compare.ts::loadExternalAgent",
+            "maxTokens": 400,
+            "total": 3376,
+            "restatement": 34,
+            "rendered": 0,
+            "latencyMs": 2
+          },
+          {
+            "fqn": "compare/compare.ts::loadExternalAgent",
+            "maxTokens": 1200,
+            "total": 7353,
+            "restatement": 1285,
+            "rendered": 2,
+            "latencyMs": 2
+          },
+          {
+            "fqn": "compare/compare.ts::loadExternalAgent",
+            "maxTokens": 4000,
+            "total": 17744,
+            "restatement": 8034,
+            "rendered": 4,
+            "latencyMs": 2.2
+          },
+          {
+            "fqn": "compare/compare.ts::loadExternalAgent",
+            "maxTokens": 20000,
+            "total": 17746,
+            "restatement": 8034,
+            "rendered": 4,
+            "latencyMs": 2.2
+          }
+        ]
+      }
+    },
+    {
+      "id": "F6",
+      "claim": "a corrupted rendered line is detected, and no delivered line is fabricated",
+      "status": "PASS",
+      "detail": {
+        "fabricated": [],
+        "corruptionDetected": true
+      }
+    },
+    {
+      "id": "F7",
+      "claim": "a relation with no persisted call site is counted but given no source line",
+      "status": "VACUOUS",
+      "detail": {
+        "graphOnlyDelivered": 0
+      }
+    },
+    {
+      "id": "F8",
+      "claim": "one semantic relation is one census row and one projected row",
+      "status": "PASS",
+      "detail": {
+        "faults": [],
+        "multiSiteCollisions": 0
+      }
+    },
+    {
+      "id": "F9/F10/F11/F23",
+      "claim": "one canonical order, a reproducible delivered set, and pages that concatenate to its prefix at every page size",
+      "status": "PASS",
+      "detail": {
+        "faults": [],
+        "walked": {
+          "maxEdges=1": 4,
+          "maxEdges=2": 4,
+          "maxEdges=5": 4,
+          "maxEdges=16": 4
+        }
+      }
+    },
+    {
+      "id": "F12/F24",
+      "claim": "a stale, tampered, malformed or out-of-scope ref fails closed",
+      "status": "PASS",
+      "detail": {
+        "tampered_checksum": "continuation_tampered",
+        "tampered_body": "continuation_tampered",
+        "garbage": "continuation_malformed",
+        "truncated": "continuation_malformed",
+        "empty": "continuation_malformed",
+        "scope_depth": "continuation_scope_mismatch",
+        "scope_direction": "continuation_scope_mismatch",
+        "other_symbol": "ACCEPTED"
+      }
+    },
+    {
+      "id": "F13",
+      "claim": "the same ref expands identically from an independent database handle",
+      "status": "PASS",
+      "detail": {
+        "aOk": true,
+        "bOk": true
+      }
+    },
+    {
+      "id": "F18",
+      "claim": "representation degrades from the tail: source lines are always held by a prefix",
+      "status": "PASS",
+      "detail": {
+        "faults": []
+      }
+    },
+    {
+      "id": "F19",
+      "claim": "response accounting equals the measured response, and a corruption is detectable",
+      "status": "PASS",
+      "detail": {
+        "declared": 17747,
+        "measured": 17747,
+        "detects": true
+      }
+    },
+    {
+      "id": "F20",
+      "claim": "the M210 high-fanout case is measurably improved, not merely relabelled",
+      "status": "VACUOUS",
+      "detail": {
+        "target": "compare/compare.ts::loadExternalAgent",
+        "truthfulTotal": 4,
+        "publishedCallers": 2,
+        "rendered": 2,
+        "withText": 2,
+        "restatement": 1285,
+        "evidence": 1843,
+        "continuation": {
+          "remaining": 2
+        }
+      }
+    },
+    {
+      "id": "F1/F16",
+      "claim": "census is identical at every projection and evidence budget",
+      "status": "PASS",
+      "detail": {
+        "targets": 4,
+        "faults": []
+      }
+    },
+    {
+      "id": "F2",
+      "claim": "a symbol with no relations yields a zero census, no continuation, no filler",
+      "status": "PASS",
+      "detail": {
+        "fqn": "access/indexAccessLifecycle.test.ts::catalogueIndexes"
+      }
+    },
+    {
+      "id": "F3/F4",
+      "claim": "exact/resolved and direct/transitive classes are counted apart, never promoted",
+      "status": "PASS",
+      "detail": {
+        "faults": []
+      }
+    },
+    {
+      "id": "F5/F14/F15/F17",
+      "claim": "responses stay bounded and the restatement never explodes with fanout",
+      "status": "PASS",
+      "detail": {
+        "probes": 20,
+        "faults": [],
+        "widest": [
+          {
+            "fqn": "db/sqlite.ts::openIndexerDatabase",
+            "maxTokens": 1,
+            "total": 3401,
+            "restatement": 34,
+            "rendered": 0,
+            "latencyMs": 26.6
+          },
+          {
+            "fqn": "db/sqlite.ts::openIndexerDatabase",
+            "maxTokens": 400,
+            "total": 3406,
+            "restatement": 34,
+            "rendered": 0,
+            "latencyMs": 20.5
+          },
+          {
+            "fqn": "db/sqlite.ts::openIndexerDatabase",
+            "maxTokens": 1200,
+            "total": 7618,
+            "restatement": 1410,
+            "rendered": 2,
+            "latencyMs": 20.4
+          },
+          {
+            "fqn": "db/sqlite.ts::openIndexerDatabase",
+            "maxTokens": 4000,
+            "total": 19113,
+            "restatement": 4814,
+            "rendered": 11,
+            "latencyMs": 21.5
+          },
+          {
+            "fqn": "db/sqlite.ts::openIndexerDatabase",
+            "maxTokens": 20000,
+            "total": 79868,
+            "restatement": 22085,
+            "rendered": 63,
+            "latencyMs": 26.3
+          }
+        ]
+      }
+    },
+    {
+      "id": "F6",
+      "claim": "a corrupted rendered line is detected, and no delivered line is fabricated",
+      "status": "PASS",
+      "detail": {
+        "fabricated": [],
+        "corruptionDetected": true
+      }
+    },
+    {
+      "id": "F7",
+      "claim": "a relation with no persisted call site is counted but given no source line",
+      "status": "VACUOUS",
+      "detail": {
+        "graphOnlyDelivered": 0
+      }
+    },
+    {
+      "id": "F8",
+      "claim": "one semantic relation is one census row and one projected row",
+      "status": "PASS",
+      "detail": {
+        "faults": [],
+        "multiSiteCollisions": 91
+      }
+    },
+    {
+      "id": "F9/F10/F11/F23",
+      "claim": "one canonical order, a reproducible delivered set, and pages that concatenate to its prefix at every page size",
+      "status": "PASS",
+      "detail": {
+        "faults": [],
+        "walked": {
+          "maxEdges=1": 6,
+          "maxEdges=2": 12,
+          "maxEdges=5": 12,
+          "maxEdges=16": 12
+        }
+      }
+    },
+    {
+      "id": "F12/F24",
+      "claim": "a stale, tampered, malformed or out-of-scope ref fails closed",
+      "status": "PASS",
+      "detail": {
+        "tampered_checksum": "continuation_tampered",
+        "tampered_body": "continuation_tampered",
+        "garbage": "continuation_malformed",
+        "truncated": "continuation_malformed",
+        "empty": "continuation_malformed",
+        "scope_depth": "continuation_scope_mismatch",
+        "scope_direction": "continuation_scope_mismatch",
+        "other_symbol": "ACCEPTED"
+      }
+    },
+    {
+      "id": "F13",
+      "claim": "the same ref expands identically from an independent database handle",
+      "status": "PASS",
+      "detail": {
+        "aOk": true,
+        "bOk": true
+      }
+    },
+    {
+      "id": "F18",
+      "claim": "representation degrades from the tail: source lines are always held by a prefix",
+      "status": "PASS",
+      "detail": {
+        "faults": []
+      }
+    },
+    {
+      "id": "F19",
+      "claim": "response accounting equals the measured response, and a corruption is detectable",
+      "status": "PASS",
+      "detail": {
+        "declared": 79869,
+        "measured": 79869,
+        "detects": true
+      }
+    },
+    {
+      "id": "F20",
+      "claim": "the M210 high-fanout case is measurably improved, not merely relabelled",
+      "status": "PASS",
+      "detail": {
+        "target": "db/sqlite.ts::openIndexerDatabase",
+        "truthfulTotal": 127,
+        "publishedCallers": 58,
+        "rendered": 2,
+        "withText": 2,
+        "restatement": 1410,
+        "evidence": 1903,
+        "continuation": {
+          "remaining": 125
+        }
+      }
+    },
+    {
+      "id": "F1/F16",
+      "claim": "census is identical at every projection and evidence budget",
+      "status": "PASS",
+      "detail": {
+        "targets": 7,
+        "faults": []
+      }
+    },
+    {
+      "id": "F2",
+      "claim": "a symbol with no relations yields a zero census, no continuation, no filler",
+      "status": "PASS",
+      "detail": {
+        "fqn": "arc/constants.py::F"
+      }
+    },
+    {
+      "id": "F3/F4",
+      "claim": "exact/resolved and direct/transitive classes are counted apart, never promoted",
+      "status": "PASS",
+      "detail": {
+        "faults": []
+      }
+    },
+    {
+      "id": "F5/F14/F15/F17",
+      "claim": "responses stay bounded and the restatement never explodes with fanout",
+      "status": "PASS",
+      "detail": {
+        "probes": 35,
+        "faults": [],
+        "widest": [
+          {
+            "fqn": "arc/species/species.py::ARCSpecies",
+            "maxTokens": 1,
+            "total": 3496,
+            "restatement": 34,
+            "rendered": 0,
+            "latencyMs": 72.5
+          },
+          {
+            "fqn": "arc/species/species.py::ARCSpecies",
+            "maxTokens": 400,
+            "total": 3503,
+            "restatement": 34,
+            "rendered": 0,
+            "latencyMs": 78.2
+          },
+          {
+            "fqn": "arc/species/species.py::ARCSpecies",
+            "maxTokens": 1200,
+            "total": 7922,
+            "restatement": 1620,
+            "rendered": 2,
+            "latencyMs": 74.5
+          },
+          {
+            "fqn": "arc/species/species.py::ARCSpecies",
+            "maxTokens": 4000,
+            "total": 19087,
+            "restatement": 4594,
+            "rendered": 10,
+            "latencyMs": 78
+          },
+          {
+            "fqn": "arc/species/species.py::ARCSpecies",
+            "maxTokens": 20000,
+            "total": 79950,
+            "restatement": 22925,
+            "rendered": 53,
+            "latencyMs": 82.1
+          }
+        ]
+      }
+    },
+    {
+      "id": "F6",
+      "claim": "a corrupted rendered line is detected, and no delivered line is fabricated",
+      "status": "PASS",
+      "detail": {
+        "fabricated": [],
+        "corruptionDetected": true
+      }
+    },
+    {
+      "id": "F7",
+      "claim": "a relation with no persisted call site is counted but given no source line",
+      "status": "VACUOUS",
+      "detail": {
+        "graphOnlyDelivered": 0
+      }
+    },
+    {
+      "id": "F8",
+      "claim": "one semantic relation is one census row and one projected row",
+      "status": "PASS",
+      "detail": {
+        "faults": [],
+        "multiSiteCollisions": 93
+      }
+    },
+    {
+      "id": "F9/F10/F11/F23",
+      "claim": "one canonical order, a reproducible delivered set, and pages that concatenate to its prefix at every page size",
+      "status": "PASS",
+      "detail": {
+        "faults": [],
+        "walked": {
+          "maxEdges=1": 6,
+          "maxEdges=2": 10,
+          "maxEdges=5": 10,
+          "maxEdges=16": 9
+        }
+      }
+    },
+    {
+      "id": "F12/F24",
+      "claim": "a stale, tampered, malformed or out-of-scope ref fails closed",
+      "status": "PASS",
+      "detail": {
+        "tampered_checksum": "continuation_tampered",
+        "tampered_body": "continuation_tampered",
+        "garbage": "continuation_malformed",
+        "truncated": "continuation_malformed",
+        "empty": "continuation_malformed",
+        "scope_depth": "continuation_scope_mismatch",
+        "scope_direction": "continuation_scope_mismatch",
+        "other_symbol": "ACCEPTED"
+      }
+    },
+    {
+      "id": "F13",
+      "claim": "the same ref expands identically from an independent database handle",
+      "status": "PASS",
+      "detail": {
+        "aOk": true,
+        "bOk": true
+      }
+    },
+    {
+      "id": "F18",
+      "claim": "representation degrades from the tail: source lines are always held by a prefix",
+      "status": "PASS",
+      "detail": {
+        "faults": []
+      }
+    },
+    {
+      "id": "F19",
+      "claim": "response accounting equals the measured response, and a corruption is detectable",
+      "status": "PASS",
+      "detail": {
+        "declared": 79951,
+        "measured": 79951,
+        "detects": true
+      }
+    },
+    {
+      "id": "F20",
+      "claim": "the M210 high-fanout case is measurably improved, not merely relabelled",
+      "status": "PASS",
+      "detail": {
+        "target": "arc/species/species.py::ARCSpecies",
+        "truthfulTotal": 999,
+        "publishedCallers": 869,
+        "rendered": 2,
+        "withText": 1,
+        "restatement": 1620,
+        "evidence": 1915,
+        "continuation": {
+          "remaining": 997
+        }
+      }
+    },
+    {
+      "id": "F21",
+      "claim": "frozen A15 independence is asserted by the evidence run, not by this driver",
+      "status": "PASS",
+      "detail": {
+        "note": "M211 changes no frozen scorer and re-derives no frozen population; the frozen A1-A15 rerun is reported in the evidence report as an OBSERVATION. A15 remains BELOW and the historical parity line remains 14/15."
+      }
+    },
+    {
+      "id": "F22",
+      "claim": "retrieval independence is asserted by the retrieval eval, not by this driver",
+      "status": "PASS",
+      "detail": {
+        "note": "expanded + cross_repo_30 are re-run against this tree in the evidence run; no baseline is regenerated."
+      }
+    }
+  ],
+  "corpora": [
+    {
+      "id": "C-SMALL",
+      "status": "OK",
+      "widest": "compare/compare.ts::loadExternalAgent",
+      "targets": [
+        "compare/compare.ts::loadExternalAgent",
+        "agents/claude-code.ts::spawnAgent"
+      ]
+    },
+    {
+      "id": "C-MED",
+      "status": "OK",
+      "widest": "db/sqlite.ts::openIndexerDatabase",
+      "targets": [
+        "db/sqlite.ts::openIndexerDatabase",
+        "access/symbolNameAccessPath.ts::applySymbolNameAccessPath",
+        "capsule/budget.ts::computeCapsuleItemCost",
+        "indexer/indexProject.ts::indexProject"
+      ]
+    },
+    {
+      "id": "C-LARGE",
+      "status": "OK",
+      "widest": "arc/species/species.py::ARCSpecies",
+      "targets": [
+        "arc/species/species.py::ARCSpecies",
+        "ARC.py::parse_command_line_arguments",
+        "ARC_test.py::_StubAdapter",
+        "arc/job/pipe/pipe_state.py::update_task_state",
+        "arc/species/species.py::colliding_atoms",
+        "arc/tckdb/adapter_test.py::TestComputedReactionBundle._submit",
+        "arc/molecule/molecule.py::Molecule"
+      ]
+    }
+  ]
+}
