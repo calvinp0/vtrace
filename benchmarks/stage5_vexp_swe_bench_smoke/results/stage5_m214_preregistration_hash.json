@@ -1,0 +1,18 @@
+{
+  "schemaVersion": "stage5.m214.preregistration-hash.v1",
+  "benchmarkName": "VTRACE_EXTERNAL_VEXP_100",
+  "file": "stage5_m214_preregistration.json",
+  "hashRule": "sha256 over \"VTRACE_EXTERNAL_VEXP_100\\n\" followed by the canonical (recursively key-sorted) JSON of every field except preregistrationHash, preregistrationHashRule and generatedAt",
+  "recordedHash": "3cd3b3d2d665c559fdb66e7274e809245e82ea7373344cf32614833b8dcbfea4",
+  "recomputedFromWrittenFile": "3cd3b3d2d665c559fdb66e7274e809245e82ea7373344cf32614833b8dcbfea4",
+  "matches": true,
+  "mutationDetected": true,
+  "distinctFromParent": true,
+  "manifestFile": "stage5_m214_run_manifest.json",
+  "manifestHash": "549df54b0f48b59a2bc13da2acf27cbf2469f416d90018c3d48dd87219f77ff1",
+  "externalReferenceFile": "stage5_m214_external_reference.json",
+  "externalReferenceHash": "822c4c5fb69dc21b8ada04189e73fcadb3e5ab1bf7c06a855dd4582a6ec7834b",
+  "parentPreregistrationHash": "5d90eddb9cc4759acf6a6fbc033d54ee0d5aea589a92c169daa7dca8d9c568c8",
+  "parentImmutable": true,
+  "launchHarnessRequirement": "The future launch harness MUST recompute this hash from the committed preregistration and abort if it differs. A changed preregistration is a NEW cohort with a new hash, never a silent edit to this one. It must also verify the M213 hash is unchanged, and that this hash is not M213's."
+}

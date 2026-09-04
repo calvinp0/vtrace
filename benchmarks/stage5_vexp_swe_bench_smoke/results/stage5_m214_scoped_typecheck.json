@@ -1,0 +1,53 @@
+{
+  "schemaVersion": "stage5.m214.scoped-typecheck.v1",
+  "milestone": "M214",
+  "generatedAt": "2026-09-04T17:42:16.468Z",
+  "scopedConfig": "tsconfig.m214.json",
+  "scopedConfigCovers": [
+    "benchmarks/stage5_vexp_swe_bench_smoke/m214*.ts (including *.test.ts)",
+    "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m214_*.ts",
+    "every file those transitively import"
+  ],
+  "clean": {
+    "config": "tsconfig.m214.json",
+    "exitCode": 0,
+    "errorCount": 0,
+    "errors": []
+  },
+  "injected": {
+    "config": "tsconfig.m214.json",
+    "exitCode": 2,
+    "errorCount": 1,
+    "errors": [
+      "benchmarks/stage5_vexp_swe_bench_smoke/m214InjectedTypeErrorProbe.ts(3,14): error TS2322: Type 'string' is not assignable to type 'number'."
+    ],
+    "injectedFile": "benchmarks/stage5_vexp_swe_bench_smoke/m214InjectedTypeErrorProbe.ts"
+  },
+  "afterRemoval": {
+    "config": "tsconfig.m214.json",
+    "exitCode": 0,
+    "errorCount": 0,
+    "errors": []
+  },
+  "preexistingBenchmarkTestTypeErrors": {
+    "config": "tsconfig.m214-preexisting-probe.json",
+    "exitCode": 2,
+    "errorCount": 59,
+    "errors": [
+      "benchmarks/arc_python_cython_parity/run_arc_python_cython_parity.test.ts(47,11): error TS2322: Type '\"contains\"' is not assignable to type 'EdgeType'.",
+      "benchmarks/arc_python_cython_parity/run_arc_python_cython_parity.test.ts(48,11): error TS2322: Type '\"calls\"' is not assignable to type 'EdgeType'.",
+      "benchmarks/arc_python_cython_parity/run_arc_python_cython_parity.test.ts(51,11): error TS2820: Type '\"python\"' is not assignable to type 'Language'. Did you mean 'Language.Cython'?",
+      "benchmarks/arc_python_cython_parity/run_arc_python_cython_parity.test.ts(51,31): error TS2322: Type '\"calls\"' is not assignable to type 'EdgeType'.",
+      "benchmarks/arc_python_cython_parity/run_arc_python_cython_parity.test.ts(52,11): error TS2820: Type '\"cython\"' is not assignable to type 'Language'. Did you mean 'Language.Python'?"
+    ],
+    "note": "pre-existing, in historical benchmark test files, outside M214's scope; only the first five error lines are retained"
+  },
+  "scopeStatement": "M214_NEW_TYPECHECK_ERRORS is the scoped target's error count and is 0. PREEXISTING_BENCHMARK_TEST_TYPE_ERRORS is what enabling benchmark test files repo-wide would surface in historical files; it is outside M214's authorised scope and is NOT claimed to be fixed. Repository-wide benchmark tests remain untypechecked.",
+  "findings": {
+    "scopedTargetCleanAsCommitted": true,
+    "scopedTargetDetectsInjectedError": true,
+    "scopedTargetCleanAfterRemoval": true,
+    "probeFileRemoved": true
+  },
+  "verdict": "M214_SCOPED_TYPECHECK_VERIFIED"
+}

@@ -1,0 +1,1360 @@
+{
+  "schemaVersion": "stage5.m214.preregistration.v1",
+  "milestone": "M214",
+  "benchmarkName": "VTRACE_EXTERNAL_VEXP_100",
+  "generatedAt": "2026-09-04T18:01:13.718Z",
+  "frozenBeforeAnyPaidRun": true,
+  "liveModelSpendDuringM214Usd": 0,
+  "benchmarkTaskLiveAgentRuns": 0,
+  "authorityNote": "A frozen design is a precondition for a paid run, not permission to start one. No paid run is authorised by this document.",
+  "parent": {
+    "milestone": "M213",
+    "experimentName": "VTRACE_VEXP_CAUSAL_100",
+    "preregistrationFile": "stage5_m213_preregistration.json",
+    "preregistrationHash": "5d90eddb9cc4759acf6a6fbc033d54ee0d5aea589a92c169daa7dca8d9c568c8",
+    "manifestFile": "stage5_m213_run_manifest.json",
+    "manifestHash": "0001072171e0e3aa4242a6865a7bf144cb3ffba145c89aeee27de99b18cbe9d9",
+    "armCount": 3,
+    "intendedRuns": 300,
+    "verdict": "M213 — INCOMPLETE",
+    "status": [
+      "CAUSAL_BENCHMARK_PREREGISTERED",
+      "TASK_POPULATION_FROZEN",
+      "RUN_MANIFEST_FROZEN",
+      "ANALYSIS_PLAN_FROZEN",
+      "STOPPING_RULE_FROZEN",
+      "VTRACE_TREATMENT_EXECUTABLE",
+      "VEXP_TREATMENT_NOT_EXECUTABLE",
+      "M213_FALSIFICATION_SUITE_PASSED",
+      "PAID_RUNS_NOT_STARTED",
+      "PAID_CAUSAL_BENCHMARK_NOT_READY"
+    ],
+    "immutabilityRule": "M213's artifacts are read-only for every later milestone. M214 does not rewrite M213 as PASS, does not remove the three-arm preregistration, and does not reuse its hash. A change to any M213 artifact is a defect, not an update.",
+    "whyM214Exists": "The VEXP arm is blocked by product availability and licensing, not by a VTRACE engineering defect. The three-arm design stays frozen and unexecuted; M214 preregisters the two-arm causal experiment that CAN run, plus a clearly separated external reference to the vendor's published result on the identical task population.",
+    "recomputedPreregistrationHash": "5d90eddb9cc4759acf6a6fbc033d54ee0d5aea589a92c169daa7dca8d9c568c8",
+    "recordedPreregistrationHash": "5d90eddb9cc4759acf6a6fbc033d54ee0d5aea589a92c169daa7dca8d9c568c8",
+    "immutable": true,
+    "vexpBlockers": [
+      "the installed CLI (2.0.24) refuses every invocation with an update-required notice, so no VEXP command can run on this host as it stands",
+      "no licence is present in ~/.vexp, so the effective plan is FREE",
+      "the free plan admits 1 repository, and the frozen population spans 12",
+      "the free plan caps the graph at 2,000 nodes, and the largest repository in the population (django/django) carries 41,032 indexed symbols",
+      "the platform core binary (@vexp/core-<platform>) is not installed, and it is the component that both indexes and enforces the plan"
+    ],
+    "vexpVerdict": "VEXP_TREATMENT_NOT_EXECUTABLE"
+  },
+  "repositoryState": {
+    "branch": "main",
+    "vtraceCommit": "f37dc003bb0b323f34d351b5cea77c8a66f32450",
+    "vtraceProductTreeSha": "b3b3e439f10c6c526cafc6001d25dd0e7552ce6d",
+    "productTreeUnchangedSinceM213": true,
+    "trackedWorkingTreeClean": false,
+    "trackedDirtyPaths": [
+      "M benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_milestone_ledger.md",
+      " M benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_outcome_ledger.json",
+      " M benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_outcome_ledger.md"
+    ],
+    "note": "Untracked benchmark output is ignored by design. Two pre-existing tracked result files (stage5_outcome_ledger.json/.md) predate this milestone and are not touched.",
+    "productChanges": 0
+  },
+  "researchQuestions": {
+    "RQ1": "Does VTRACE causally change task resolution relative to an identical baseline in this harness? H1: P(resolve|VTRACE) != P(resolve|baseline), two-sided, paired.",
+    "RQ2": "Does VTRACE change input, output or total tokens, model cost, or turns, holding resolution as measured?",
+    "RQ3": "Does VTRACE alter native search usage, file reads, files inspected or files edited?",
+    "RQ4": "How often is the treatment actually consumed — exposed, invoked, invoked before the first edit? Descriptive and mediator only.",
+    "RQ5_EXTERNAL": "Descriptively, how does our absolute pass rate compare with the vendor's published result on the identical task population? NOT a causal question and never analysed as one.",
+    "directionality": "Every causal hypothesis is two-sided. M183 observed exact resolution parity, so a one-sided favourable claim is not supported by anything this programme has measured."
+  },
+  "taskPopulation": {
+    "selection": "Option 1 — the exact VEXP subset, taken as the vendor's own committed artifact",
+    "path": "/home/calvin/code/vexp-swe-bench/data/swe-bench-100.jsonl",
+    "sha256": "7bd07d5e50e26f3c51e8813f93be6be840a62f9fac333586f139ac7853971d7d",
+    "provenance": {
+      "source": "https://github.com/Vexp-ai/vexp-swe-bench",
+      "file": "data/swe-bench-100.jsonl",
+      "vendorCommit": "880e486",
+      "vendorCommitSubject": "Initial release: vexp-swe-bench benchmark harness",
+      "checkoutHead": "d658e3457b82b5cb041f586093cc5002008a8cea",
+      "fileCleanInVendorCheckout": true,
+      "parentDataset": "princeton-nlp/SWE-bench_Verified (500 instances)",
+      "inheritedFrom": "M213",
+      "regeneratedFromVendorScript": false,
+      "regenerationRefusedBecause": "the vendor's scripts/select-subset.py selects a different 100 tasks than the artifact shipped beside it; the artifact is what the published 73/100 was computed on"
+    },
+    "instanceCount": 100,
+    "repositories": [
+      "astropy/astropy",
+      "django/django",
+      "matplotlib/matplotlib",
+      "mwaskom/seaborn",
+      "pallets/flask",
+      "psf/requests",
+      "pydata/xarray",
+      "pylint-dev/pylint",
+      "pytest-dev/pytest",
+      "scikit-learn/scikit-learn",
+      "sphinx-doc/sphinx",
+      "sympy/sympy"
+    ],
+    "countsByRepository": {
+      "astropy/astropy": 5,
+      "django/django": 44,
+      "matplotlib/matplotlib": 7,
+      "mwaskom/seaborn": 1,
+      "pallets/flask": 1,
+      "psf/requests": 4,
+      "pydata/xarray": 6,
+      "pylint-dev/pylint": 2,
+      "pytest-dev/pytest": 4,
+      "scikit-learn/scikit-learn": 2,
+      "sphinx-doc/sphinx": 7,
+      "sympy/sympy": 17
+    },
+    "complexityMedian": 22,
+    "complexityCeiling": 247,
+    "verification": {
+      "instanceCount": 100,
+      "instanceCountIs100": true,
+      "repositoryCount": 12,
+      "allTwelveRepositoriesPresent": true,
+      "distributionMatchesPublishedTable": true,
+      "publishedTable": {
+        "django/django": 44,
+        "sympy/sympy": 17,
+        "sphinx-doc/sphinx": 7,
+        "matplotlib/matplotlib": 7,
+        "scikit-learn/scikit-learn": 2,
+        "astropy/astropy": 5,
+        "pydata/xarray": 6,
+        "pytest-dev/pytest": 4,
+        "pylint-dev/pylint": 2,
+        "psf/requests": 4,
+        "mwaskom/seaborn": 1,
+        "pallets/flask": 1
+      },
+      "complexityCeilingRespected": true,
+      "complexityMedianMatchesPublished": true,
+      "sha256Matches": true,
+      "verified": true
+    },
+    "externalArtifactGuardIssues": [],
+    "instanceIds": [
+      "astropy__astropy-14365",
+      "astropy__astropy-14369",
+      "astropy__astropy-14539",
+      "astropy__astropy-14598",
+      "astropy__astropy-7166",
+      "django__django-10880",
+      "django__django-10973",
+      "django__django-11095",
+      "django__django-11133",
+      "django__django-11206",
+      "django__django-11490",
+      "django__django-11728",
+      "django__django-11740",
+      "django__django-11749",
+      "django__django-11815",
+      "django__django-11820",
+      "django__django-12050",
+      "django__django-12273",
+      "django__django-12276",
+      "django__django-12325",
+      "django__django-12774",
+      "django__django-12858",
+      "django__django-13012",
+      "django__django-13112",
+      "django__django-13195",
+      "django__django-13363",
+      "django__django-13512",
+      "django__django-13513",
+      "django__django-13551",
+      "django__django-13590",
+      "django__django-13658",
+      "django__django-13810",
+      "django__django-13820",
+      "django__django-14608",
+      "django__django-14792",
+      "django__django-15037",
+      "django__django-15503",
+      "django__django-15572",
+      "django__django-15695",
+      "django__django-15731",
+      "django__django-16256",
+      "django__django-16263",
+      "django__django-16333",
+      "django__django-16569",
+      "django__django-16667",
+      "django__django-16819",
+      "django__django-16877",
+      "django__django-16938",
+      "django__django-17084",
+      "matplotlib__matplotlib-22719",
+      "matplotlib__matplotlib-24627",
+      "matplotlib__matplotlib-24870",
+      "matplotlib__matplotlib-24970",
+      "matplotlib__matplotlib-25332",
+      "matplotlib__matplotlib-25960",
+      "matplotlib__matplotlib-26466",
+      "mwaskom__seaborn-3187",
+      "pallets__flask-5014",
+      "psf__requests-1142",
+      "psf__requests-1724",
+      "psf__requests-1921",
+      "psf__requests-5414",
+      "pydata__xarray-2905",
+      "pydata__xarray-3677",
+      "pydata__xarray-4695",
+      "pydata__xarray-6599",
+      "pydata__xarray-6938",
+      "pydata__xarray-6992",
+      "pylint-dev__pylint-4551",
+      "pylint-dev__pylint-8898",
+      "pytest-dev__pytest-10051",
+      "pytest-dev__pytest-5262",
+      "pytest-dev__pytest-6197",
+      "pytest-dev__pytest-7432",
+      "scikit-learn__scikit-learn-10844",
+      "scikit-learn__scikit-learn-11578",
+      "sphinx-doc__sphinx-7462",
+      "sphinx-doc__sphinx-7748",
+      "sphinx-doc__sphinx-7910",
+      "sphinx-doc__sphinx-9230",
+      "sphinx-doc__sphinx-9320",
+      "sphinx-doc__sphinx-9698",
+      "sphinx-doc__sphinx-9711",
+      "sympy__sympy-12419",
+      "sympy__sympy-12481",
+      "sympy__sympy-13372",
+      "sympy__sympy-13480",
+      "sympy__sympy-13974",
+      "sympy__sympy-15599",
+      "sympy__sympy-15875",
+      "sympy__sympy-16597",
+      "sympy__sympy-16766",
+      "sympy__sympy-16792",
+      "sympy__sympy-18189",
+      "sympy__sympy-19637",
+      "sympy__sympy-20428",
+      "sympy__sympy-20801",
+      "sympy__sympy-23413",
+      "sympy__sympy-24213",
+      "sympy__sympy-24562"
+    ],
+    "vendorScriptMismatch": {
+      "script": "scripts/select-subset.py",
+      "scriptSeed": 42,
+      "overlapWithShippedArtifact": 22,
+      "overlapWithShippedArtifactUnderDocumentedComplexityFilter": 26,
+      "documentedFilterOmittedByScript": "complexity ≤ 250, listed as step 1 in the vendor's own docs",
+      "allocationDifferences": [
+        "django/django 42 (script) vs 44 (artifact)",
+        "sympy/sympy 14 vs 17",
+        "scikit-learn/scikit-learn 6 vs 2",
+        "sphinx-doc/sphinx 8 vs 7",
+        "matplotlib/matplotlib 5 vs 7",
+        "pydata/xarray 4 vs 6",
+        "pylint-dev/pylint 3 vs 2",
+        "psf/requests 5 vs 4",
+        "mwaskom/seaborn 2 vs 1"
+      ],
+      "status": [
+        "EXACT_VEXP_SUBSET_AVAILABLE_AS_ARTIFACT",
+        "EXACT_VEXP_SUBSET_NOT_SCRIPT_REPRODUCIBLE"
+      ],
+      "rederivedByM214": true,
+      "rederivedOverlap": 22,
+      "artifact": "stage5_m214_vendor_script_subset.json"
+    }
+  },
+  "arms": [
+    {
+      "arm": "baseline",
+      "label": "Arm A — BASELINE",
+      "nativeTools": [
+        "Edit",
+        "Write",
+        "Bash",
+        "Read",
+        "Glob",
+        "Grep",
+        "TodoWrite"
+      ],
+      "mcpServers": [],
+      "treatmentToolCatalog": [],
+      "modelVisibleToolNames": [
+        "Edit",
+        "Write",
+        "Bash",
+        "Read",
+        "Glob",
+        "Grep",
+        "TodoWrite"
+      ],
+      "treatmentInstruction": null,
+      "forbiddenWorkspaceEntries": [
+        ".vtrace",
+        ".vexp"
+      ],
+      "forbiddenEnvironmentPrefixes": [
+        "VTRACE_",
+        "VEXP_"
+      ],
+      "treatmentStatePaths": []
+    },
+    {
+      "arm": "vtrace",
+      "label": "Arm B — BASELINE + VTRACE",
+      "nativeTools": [
+        "Edit",
+        "Write",
+        "Bash",
+        "Read",
+        "Glob",
+        "Grep",
+        "TodoWrite"
+      ],
+      "mcpServers": [
+        "vtrace"
+      ],
+      "treatmentToolCatalog": [
+        "get_code_context",
+        "run_pipeline",
+        "index_repo",
+        "check_capsule_staleness",
+        "get_context_capsule",
+        "get_impact_graph",
+        "search_logic_flow",
+        "get_skeleton",
+        "index_status",
+        "workspace_setup",
+        "get_session_context",
+        "search_memory",
+        "save_observation",
+        "expand_vexp_ref"
+      ],
+      "modelVisibleToolNames": [
+        "Edit",
+        "Write",
+        "Bash",
+        "Read",
+        "Glob",
+        "Grep",
+        "TodoWrite",
+        "mcp__vtrace__get_code_context",
+        "mcp__vtrace__run_pipeline",
+        "mcp__vtrace__index_repo",
+        "mcp__vtrace__check_capsule_staleness",
+        "mcp__vtrace__get_context_capsule",
+        "mcp__vtrace__get_impact_graph",
+        "mcp__vtrace__search_logic_flow",
+        "mcp__vtrace__get_skeleton",
+        "mcp__vtrace__index_status",
+        "mcp__vtrace__workspace_setup",
+        "mcp__vtrace__get_session_context",
+        "mcp__vtrace__search_memory",
+        "mcp__vtrace__save_observation",
+        "mcp__vtrace__expand_vexp_ref"
+      ],
+      "treatmentInstruction": null,
+      "forbiddenWorkspaceEntries": [
+        ".vexp"
+      ],
+      "forbiddenEnvironmentPrefixes": [
+        "VEXP_"
+      ],
+      "treatmentStatePaths": [
+        ".vtrace"
+      ]
+    }
+  ],
+  "armCount": 2,
+  "vexpIsNotAnArm": "There is no VEXP arm and no VEXP run row. The vendor's published result lives in stage5_m214_external_reference.json and is labelled EXTERNAL_VENDOR_REFERENCE.",
+  "treatmentSurface": {
+    "vtrace": {
+      "catalog": [
+        "get_code_context",
+        "run_pipeline",
+        "index_repo",
+        "check_capsule_staleness",
+        "get_context_capsule",
+        "get_impact_graph",
+        "search_logic_flow",
+        "get_skeleton",
+        "index_status",
+        "workspace_setup",
+        "get_session_context",
+        "search_memory",
+        "save_observation",
+        "expand_vexp_ref"
+      ],
+      "catalogSize": 14,
+      "audit": {
+        "source": "src/mcp/tools.ts defaultMcpToolRegistry.listMetadata(), read at runtime by the generator",
+        "howStarted": "vtrace mcp-serve --repo <workspace>, with NO --tools flag",
+        "catalogSize": 14,
+        "isProductDefault": true,
+        "benchmarkOnlyToolsIncluded": 0,
+        "debugOnlyToolsIncluded": 0,
+        "auditedFields": [
+          "toolId",
+          "description",
+          "input schema",
+          "required inputs"
+        ],
+        "conclusion": "All fourteen are agent-facing product tools whose descriptions address a coding task rather than a benchmark. The registry's hidden surface is not exposed, and no tool is added, removed or reworded for this experiment.",
+        "frozenAtFirstPaidRun": true
+      },
+      "readFromProduct": {
+        "source": "src/mcp/tools.ts defaultMcpToolRegistry.listMetadata(), read at runtime",
+        "readable": true,
+        "catalog": [
+          "get_code_context",
+          "run_pipeline",
+          "index_repo",
+          "check_capsule_staleness",
+          "get_context_capsule",
+          "get_impact_graph",
+          "search_logic_flow",
+          "get_skeleton",
+          "index_status",
+          "workspace_setup",
+          "get_session_context",
+          "search_memory",
+          "save_observation",
+          "expand_vexp_ref"
+        ],
+        "matchesFrozen": true,
+        "tools": [
+          {
+            "toolId": "get_code_context",
+            "descriptionChars": 1360,
+            "descriptionSha256": "f5c0b328fee9f0ac",
+            "inputSchemaSha256": "c120d05d7cd1e5c7",
+            "requiredInputs": []
+          },
+          {
+            "toolId": "run_pipeline",
+            "descriptionChars": 223,
+            "descriptionSha256": "42e169bf4db0f880",
+            "inputSchemaSha256": "5e0f330a549e9c7b",
+            "requiredInputs": []
+          },
+          {
+            "toolId": "index_repo",
+            "descriptionChars": 139,
+            "descriptionSha256": "c7e18ffb10717449",
+            "inputSchemaSha256": "916ff94ea9232c11",
+            "requiredInputs": []
+          },
+          {
+            "toolId": "check_capsule_staleness",
+            "descriptionChars": 74,
+            "descriptionSha256": "9af0817ba1cc243b",
+            "inputSchemaSha256": "2d98744f3fad6b71",
+            "requiredInputs": [
+              "manifestId",
+              "comparisonRunId"
+            ]
+          },
+          {
+            "toolId": "get_context_capsule",
+            "descriptionChars": 72,
+            "descriptionSha256": "5178b68a8a5b6a5c",
+            "inputSchemaSha256": "62cd698708f91b1f",
+            "requiredInputs": []
+          },
+          {
+            "toolId": "get_impact_graph",
+            "descriptionChars": 796,
+            "descriptionSha256": "8b5b301da6b43c64",
+            "inputSchemaSha256": "d937689d3a116224",
+            "requiredInputs": [
+              "symbol_fqn"
+            ]
+          },
+          {
+            "toolId": "search_logic_flow",
+            "descriptionChars": 349,
+            "descriptionSha256": "ef34483576c564bd",
+            "inputSchemaSha256": "f045df9748b10e8c",
+            "requiredInputs": [
+              "start",
+              "end"
+            ]
+          },
+          {
+            "toolId": "get_skeleton",
+            "descriptionChars": 74,
+            "descriptionSha256": "3fe3713e8f9fec62",
+            "inputSchemaSha256": "06a4b5ef2d7bc286",
+            "requiredInputs": [
+              "files"
+            ]
+          },
+          {
+            "toolId": "index_status",
+            "descriptionChars": 67,
+            "descriptionSha256": "5f8b0498448d63fd",
+            "inputSchemaSha256": "7e9c64fc142a0b82",
+            "requiredInputs": []
+          },
+          {
+            "toolId": "workspace_setup",
+            "descriptionChars": 75,
+            "descriptionSha256": "2c4c5dabca82554f",
+            "inputSchemaSha256": "25167b10875a05f3",
+            "requiredInputs": []
+          },
+          {
+            "toolId": "get_session_context",
+            "descriptionChars": 133,
+            "descriptionSha256": "c59dbb1f4d0f22df",
+            "inputSchemaSha256": "4f03f31f37678471",
+            "requiredInputs": []
+          },
+          {
+            "toolId": "search_memory",
+            "descriptionChars": 109,
+            "descriptionSha256": "2c2b6c05a591c619",
+            "inputSchemaSha256": "9e75c685e3c3abf7",
+            "requiredInputs": [
+              "query"
+            ]
+          },
+          {
+            "toolId": "save_observation",
+            "descriptionChars": 74,
+            "descriptionSha256": "af255f49db980b74",
+            "inputSchemaSha256": "6056f398a37781e4",
+            "requiredInputs": [
+              "kind",
+              "summary"
+            ]
+          },
+          {
+            "toolId": "expand_vexp_ref",
+            "descriptionChars": 154,
+            "descriptionSha256": "1dc2b91211fb6200",
+            "inputSchemaSha256": "0c0437ce6516d8e1",
+            "requiredInputs": [
+              "hash"
+            ]
+          }
+        ]
+      },
+      "howStarted": "vtrace mcp-serve --repo <workspace>, with NO --tools flag"
+    },
+    "baseline": {
+      "catalog": [],
+      "catalogSize": 0
+    }
+  },
+  "agent": {
+    "implementation": "Anthropic Claude Code CLI, headless",
+    "binary": "/home/calvin/.local/bin/claude",
+    "version": "2.1.260",
+    "versionPinNote": "The launch harness must assert this exact string before every run and abort the cohort on any difference. One agent implementation serves both arms; there is no baseline agent and no VTRACE-specialised agent.",
+    "systemPrompt": "CLI default; no --append-system-prompt and no --system-prompt in either arm",
+    "userPromptSource": "vexp-swe-bench src/harness/loader.ts buildPrompt, verbatim, identical in both arms",
+    "userPromptText": "You are working on the {repo} repository (Python).\nFix the following issue by making the necessary code changes.\nDo NOT write or modify tests — only fix the source code.\n\n{problem_statement}",
+    "userPromptContainsTreatmentInstruction": false,
+    "treatmentInstructionPolicy": "Neither arm receives a treatment-specific instruction. 'Always use VTRACE first' is not the intended production integration and would measure a mandate rather than the product.",
+    "outputFormat": "stream-json --verbose",
+    "turnLoop": "the Claude Code CLI's own; unchanged and identical across arms",
+    "terminationLogic": "CLI default termination, bounded by --max-turns and the per-run cost cap",
+    "errorRetryBehaviour": "CLI default; harness-level retry restricted to the infrastructure categories in M214_EXCLUSIONS",
+    "editMechanism": "the CLI's own Edit/Write tools, identical in both arms",
+    "turnAccounting": "the CLI's own turn counter, read from the stream-json transcript"
+  },
+  "model": {
+    "provider": "Anthropic",
+    "model": "claude-opus-4-5-20251101",
+    "alias": "claude-opus-4-5",
+    "rationale": "The model VEXP's published benchmark used ('All agents use Claude Opus 4.5 for a fair, apples-to-apples comparison'), which is what keeps the external comparison as close to like-for-like as a cross-study comparison can be.",
+    "temperature": "not exposed by the Claude Code CLI; provider default",
+    "thinkingBudget": 0,
+    "effortFlag": "omitted",
+    "maxOutputTokens": "provider default (registry: 32000 default, 64000 upper)",
+    "identicalAcrossArms": true,
+    "availabilityEvidence": "PRESENT_IN_AGENT_MODEL_REGISTRY_NOT_PROVIDER_CONFIRMED",
+    "availabilityEvidenceDetail": "Claude Code 2.1.260's bundled model registry lists id 'claude-opus-4-5' with first_party provider id 'claude-opus-4-5-20251101', a 200000-token window, pricing tier_5_25 and no deprecation or retirement marker, alongside newer families. No paid call was made to confirm the provider still serves it.",
+    "identityVerification": "The launch harness reads the provider-returned model identity from each run's stream-json init event and aborts the cohort on any difference from the pin (§34).",
+    "driftPolicy": "If the provider-returned identity changes materially mid-cohort, STOP the cohort. Runs from before and after the change are never mixed; the cohort is declared invalid and restarted from zero under a new preregistration hash.",
+    "ifUnavailableAtLaunch": "The causal experiment is NOT cancelled. Baseline vs VTRACE remains valid under any single model used identically by both arms. What weakens is the EXTERNAL comparison: pinning a different model must be recorded as a DIFFERS row in the published-condition matrix, and the vendor's 73/100 may then be cited only with the model-identity caveat attached. A newer model is never used silently and the result is never described as an exact VEXP replication.",
+    "availabilityAudit": {
+      "method": "static read of the installed agent binary's bundled model registry; no model was called",
+      "binary": "/home/calvin/.local/share/claude/versions/2.1.260",
+      "registryEntryFound": true,
+      "registryEntry": "id:\"claude-opus-4-5\",family:\"opus\",display_name:\"Opus 4.5\",knowledge_cutoff:\"May 2025\",provider_ids:{first_party:\"claude-opus-4-5-20251101\",bedrock:\"us.anthropic.claude-opus-4-5-20251101-v1:0\",vertex:\"claude-opus-4-5@20251101\",foundry:\"claude-opus-4-5\",anthropic_aws:\"claude-opus-4-5-20251101\",anthropic_google_cloud:\"claude-opus-4-5-20251101\",mantle:null,gateway:\"claude-opus-4-5-20251101\"",
+      "deprecationMarkerFound": false,
+      "providerConfirmed": false,
+      "evidence": "Claude Code 2.1.260's model registry lists claude-opus-4-5 with first_party id claude-opus-4-5-20251101, alongside newer families, with no deprecation or retirement marker. A provider-confirmed response would require a paid call and was not made.",
+      "status": "PASS"
+    }
+  },
+  "nativeTools": {
+    "set": [
+      "Edit",
+      "Write",
+      "Bash",
+      "Read",
+      "Glob",
+      "Grep",
+      "TodoWrite"
+    ],
+    "identicalAcrossArms": true,
+    "rationale": "vexp-swe-bench's DEFAULT_ALLOWED_TOOLS, unchanged in both arms. M168-E measured that denying Grep/Glob is itself a treatment that lost two tasks and won none."
+  },
+  "budgets": {
+    "maxTurns": 250,
+    "perRunCostCapUsd": 3.5,
+    "wallClockTimeoutSecondsPerRun": 3600,
+    "toolCallTimeoutSeconds": 600,
+    "repositoryCommandTimeoutSeconds": 600,
+    "maxOutputTokensPerTurn": "provider default; not exposed by the Claude Code CLI",
+    "totalIntendedRuns": 200,
+    "totalSpendCapUsd": 700,
+    "totalSpendCapRationale": "200 runs at the $3.50 per-run ceiling. At the untreated historical mean of $0.6604 the projection is $132.08 and at the untreated p90 of $1.2392 it is $247.84; the cap is an infrastructure guard, not an expectation.",
+    "projectedTotalUsdAtUntreatedMean": 132.08,
+    "projectedTotalUsdAtUntreatedP90": 247.84,
+    "identicalAcrossArms": true,
+    "noTreatmentSpecificGrace": "There is no per-arm budget field. An arm-specific cap cannot be expressed without editing this object, which changes the preregistration hash."
+  },
+  "budgetIdentity": "bf705ec05d41d8f9",
+  "costSemantics": {
+    "capAppliesTo": "provider-reported model cost for the agent run, and nothing else",
+    "setupCounted": false,
+    "setupRationale": "VTRACE index construction happens before the agent starts and consumes no model tokens. Charging it to the model budget would let a cheap local computation shrink the turn budget of one arm.",
+    "cachedInputCounted": true,
+    "cachedInputRationale": "the provider bills it, so the experiment counts it",
+    "toolCpuCounted": false,
+    "modelRetryCounted": true,
+    "modelRetryRationale": "a provider-side retry that produced billed tokens is part of what the run cost; a harness-level relaunch after an infrastructure failure starts a new run row",
+    "localComputeReportedSeparately": true,
+    "localComputeFields": [
+      "index build wall-clock seconds",
+      "index size on disk",
+      "treatment tool latency, summed"
+    ],
+    "mixingProhibited": "Model cost and local compute are reported as two numbers and never summed into one 'cost per task'. Preprocessing cost is not hidden inside model cost in either direction."
+  },
+  "publishedConditionMatrix": [
+    {
+      "condition": "task artifact",
+      "vexpPublished": "data/swe-bench-100.jsonl at vendor commit 880e486",
+      "m214": "the identical file, sha256-pinned",
+      "match": "MATCH",
+      "note": "byte-for-byte the same artifact; verified by digest, not by re-running the vendor's sampler"
+    },
+    {
+      "condition": "model",
+      "vexpPublished": "Claude Opus 4.5",
+      "m214": "claude-opus-4-5-20251101",
+      "match": "MATCH",
+      "note": "same model family and version; the vendor published no dated identifier, so an exact snapshot match is assumed rather than proven"
+    },
+    {
+      "condition": "agent",
+      "vexpPublished": "Claude Code",
+      "m214": "Claude Code CLI 2.1.260, headless",
+      "match": "APPROXIMATE",
+      "note": "the vendor published no CLI version or date; agent versions differ in tool loop and defaults, and this one postdates their run"
+    },
+    {
+      "condition": "turn cap",
+      "vexpPublished": "250",
+      "m214": "250",
+      "match": "MATCH",
+      "note": "verified in the vendor README's own defaults section"
+    },
+    {
+      "condition": "cost cap",
+      "vexpPublished": "$3/task",
+      "m214": "$3.50/task",
+      "match": "DIFFERS",
+      "note": "raised deliberately: the most expensive historical arm on this model cost $3.0384, so $3.00 truncates real runs. Both M214 arms share the raised cap, so the causal comparison is unaffected; the external comparison inherits a small upward bias in our favour and is reported with that stated"
+    },
+    {
+      "condition": "container / evaluator",
+      "vexpPublished": "not published",
+      "m214": "swebench==4.1.0 official per-instance evaluation images, one container per run",
+      "match": "UNKNOWN",
+      "note": "the vendor's harness reuses one working tree per repository slug across tasks; whether their published run did the same is not stated"
+    },
+    {
+      "condition": "network policy",
+      "vexpPublished": "not published",
+      "m214": "the container's own posture, identical in both arms",
+      "match": "UNKNOWN",
+      "note": "unknowable from published material"
+    },
+    {
+      "condition": "native tool catalogue",
+      "vexpPublished": "not published; the harness ships DEFAULT_ALLOWED_TOOLS",
+      "m214": "Edit, Write, Bash, Read, Glob, Grep, TodoWrite",
+      "match": "APPROXIMATE",
+      "note": "the vendor's shipped default is adopted unchanged, but the published run's actual catalogue is not stated"
+    },
+    {
+      "condition": "repetitions per task",
+      "vexpPublished": "pass@1, repetitions not stated",
+      "m214": "one run per arm per task",
+      "match": "UNKNOWN",
+      "note": "a best-of-n reported as pass@1 would not be comparable; nothing published rules it in or out"
+    }
+  ],
+  "externalComparisonLabel": "same-task published-condition external replication",
+  "externalComparisonLabelRefused": [
+    "exact VEXP replication",
+    "head-to-head benchmark against VEXP",
+    "apples-to-apples comparison with VEXP",
+    "we reran VEXP's benchmark"
+  ],
+  "substrate": {
+    "inheritedFrom": "M192 / M193",
+    "harness": "swebench==4.1.0 official per-instance evaluation images",
+    "perInstanceContainers": true,
+    "freshCheckoutPerRun": true,
+    "authoritativeCheckout": "SINGLE_BIND_MOUNTED_TREE",
+    "patchCaptureMechanism": "m193c_patch_snapshot: `git diff --no-renames HEAD` for tracked bytes plus a `git ls-files --others --exclude-standard` untracked lane, both restricted by a pathspec derived from the untracked paths present before the agent started. Non-mutating: it never stages and never resets.",
+    "patchCaptureIsTreatmentAgnostic": true,
+    "patchCaptureNamesNoVendorDirectory": true,
+    "vendorHarnessNotAdopted": "vexp-swe-bench keeps ONE working tree per repository slug under .bench-repos and reuses it across every task of that repository; its capturePatch hardcodes `:(exclude).vexp` and does not exclude `.vtrace`; its resetRepo runs `git clean -fdx -e .vexp`. All three are removed structurally rather than patched.",
+    "indexWarmthRegime": "COLD_UNIFORM",
+    "indexWarmthRationale": "Every run gets a fresh container and checkout, so no treatment state survives into the next task. Cold and warm regimes are not mixed: this cohort is cold throughout and is reported as cold. Index build time and size are measured and reported separately from model cost, so preprocessing is neither hidden nor charged to the agent's turn budget.",
+    "indexingIsObservational": "Treatment initialisation may create untracked metadata; it may not mutate tracked source. The tracked-source digest is taken before and after initialisation for every run, and a difference fails the launch gate rather than being tolerated.",
+    "baselineReceivesNoTreatmentState": "The baseline arm's workspace is never indexed and never carries .vtrace, VTRACE environment variables, a daemon socket, or any VTRACE-generated file."
+  },
+  "lifecycleOrder": [
+    "CONTAINER_START",
+    "SOURCE_CHECKOUT_AT_BASE_COMMIT",
+    "SOURCE_STATE_DIGEST_BEFORE_TREATMENT",
+    "TREATMENT_INITIALISATION",
+    "SOURCE_STATE_DIGEST_AFTER_TREATMENT",
+    "PRE_AGENT_UNTRACKED_SNAPSHOT",
+    "AGENT_RUN",
+    "PATCH_CAPTURE",
+    "EVALUATION"
+  ],
+  "indexWarmthPolicy": {
+    "regime": "COLD_UNIFORM",
+    "rationale": "Every run gets a fresh container and a fresh checkout, so no treatment state can survive into the next task by construction rather than by a clean rule that has to be maintained. The product-use scenario this matches is an agent arriving at a repository it has not indexed — which is what a SWE-bench instance is.",
+    "indexBuiltBeforeAgentStart": true,
+    "indexBuildChargedToModelBudget": false,
+    "reportedSeparately": [
+      "index build wall-clock seconds",
+      "index size on disk",
+      "treatment tool latency"
+    ],
+    "survivesBetweenRuns": [],
+    "baselineIsNeverIndexed": true,
+    "statement": "Source checkout is reset identically for both arms. Treatment index construction happens outside the source reset, after checkout and before the agent starts, and is measured rather than charged. `.vtrace` persistence is never a side effect of a generic `git clean`: nothing persists, for either arm, and the policy says so rather than the clean flags implying it."
+  },
+  "patchCaptureRepair": {
+    "artifact": "stage5_m214_patch_capture_repair.json",
+    "verdict": "PATCH_CAPTURE_REPAIR_VERIFIED",
+    "findings": {
+      "sourceUnchangedByTreatment": true,
+      "treatmentCreatedState": true,
+      "vendorLeaksTreatmentStateOnAtLeastOneRoute": true,
+      "vendorLeakIsRouteDependent": true,
+      "derivedProducesEmptyPatchOnNoSourceChange": true,
+      "derivedCapturesExactlyTheAgentEdit": true,
+      "derivedNeverCapturesTreatmentState": true,
+      "initWritesRepositoryLocalGitExclude": true,
+      "indexAloneWritesNoGitExclude": true,
+      "lifecycleOrderExecutedCorrectly": true,
+      "snapshotTakenAfterTreatmentInitialisation": true
+    },
+    "hardcodedExclusionAudit": [
+      "patch capture does not exclude .vtrace; that treatment's generated state would enter its patch",
+      "patch capture uses a hardcoded exclusion list [.vexp, .claude, .bench-mcp-config.json] rather than deriving exclusions from observed pre-agent state; the next treatment added will be captured as agent output"
+    ]
+  },
+  "benchmarkHarnessAudit": {
+    "file": "/home/calvin/code/vexp-swe-bench/dist/harness/repo.js",
+    "readable": true,
+    "patchCaptureExclusions": [
+      ".bench-mcp-config.json",
+      ".claude",
+      ".vexp"
+    ],
+    "cleanPreservedPaths": [
+      ".bench-mcp-config.json",
+      ".claude",
+      ".vexp"
+    ],
+    "findings": [
+      "patch capture does not exclude .vtrace; that treatment's generated state would enter its patch",
+      "patch capture uses a hardcoded exclusion list [.bench-mcp-config.json, .claude, .vexp] rather than deriving exclusions from observed pre-agent state; the next treatment added will be captured as agent output",
+      "reset preserves treatment state .vexp under a COLD_UNIFORM policy; that treatment would be warm on the next task while any treatment not on the preserve list rebuilds",
+      "the harness reuses ONE working tree per repository slug under .bench-repos across every task of that repository, so two arms of one task would not be independent"
+    ]
+  },
+  "evaluator": {
+    "interpreter": "/home/calvin/code/vexp-swe-bench/.venv/bin/python",
+    "available": true,
+    "version": "4.1.0",
+    "expectedVersion": "4.1.0",
+    "matchesExpected": true
+  },
+  "randomization": {
+    "seed": "M214-VTRACE-EXTERNAL-VEXP-100-v1",
+    "method": "Instances are ranked by sha256(seed + ' ' + instance_id) and the rank's parity selects one of the two orders, so the assignment is arbitrary with respect to repository, difficulty and every historical outcome.",
+    "orders": [
+      [
+        "baseline",
+        "vtrace"
+      ],
+      [
+        "vtrace",
+        "baseline"
+      ]
+    ],
+    "balance": {
+      "baseline>vtrace": 50,
+      "vtrace>baseline": 50
+    },
+    "balanceNote": "exactly 50/50; baseline is never systematically first"
+  },
+  "runManifest": {
+    "schemaVersion": "stage5.m214.run-manifest.v1",
+    "file": "stage5_m214_run_manifest.json",
+    "intendedRuns": 200,
+    "manifestHash": "549df54b0f48b59a2bc13da2acf27cbf2469f416d90018c3d48dd87219f77ff1",
+    "generatedBeforeAnyExecution": true,
+    "allStatusesPlanned": true,
+    "containsNoVendorRow": true
+  },
+  "primaryOutcome": {
+    "measure": "SWE-bench resolved",
+    "encoding": "binary; 1 = resolved, 0 = unresolved",
+    "evaluator": "the official SWE-bench evaluator (swebench==4.1.0) against the frozen FAIL_TO_PASS and PASS_TO_PASS sets",
+    "refusedSubstitutes": [
+      "a patch was produced",
+      "tests appeared to pass in the agent's own transcript",
+      "the agent declared success",
+      "the patch touched a gold file",
+      "a locally-run test passed"
+    ]
+  },
+  "primaryEstimand": {
+    "statement": "ΔVTRACE = outcome(VTRACE) − outcome(BASELINE), on paired tasks",
+    "design": "paired — every task is run under both arms",
+    "directionality": "two-sided. M183 observed exact resolution parity on 30 paired tasks, so a one-sided favourable hypothesis is not supported by anything this programme has measured.",
+    "comparator": "our own baseline, run in this harness",
+    "notTheComparator": "the vendor's published 73/100. VTRACE − 73 is not a causal quantity: without a matched baseline, an absolute pass rate above or below 73 could equally reflect our harness, our agent version or our container substrate.",
+    "baselineIsMandatory": true
+  },
+  "statisticalPlan": {
+    "design": "paired — both arms on the same 100 tasks",
+    "binaryMethod": "exact McNemar (binomial) on discordant pairs, with a paired bootstrap CI on the pass-rate difference",
+    "bootstrapResamples": 10000,
+    "bootstrapUnit": "task (both of a task's arms resample together, preserving pairing)",
+    "intervalLevel": 0.95,
+    "reportedAlways": [
+      "both resolved",
+      "VTRACE only",
+      "baseline only",
+      "neither",
+      "baseline pass rate",
+      "VTRACE pass rate",
+      "absolute paired delta",
+      "discordant count difference",
+      "exact McNemar p-value",
+      "95% paired bootstrap CI on the absolute delta"
+    ],
+    "continuousMethod": "paired differences on tokens, cost, turns and tool counts; median AND mean both reported with a 95% paired bootstrap CI, because M174 showed a two-run tail can carry 95.7% of a cost premium and a mean alone would have hidden it",
+    "effectSizeDiscipline": "p < 0.05 is not the definition of success. Absolute delta, discordant counts and interval width are reported first; a +1/100 result and a +10/100 result are described differently even when neither is conventionally significant.",
+    "frozenBeforeOutcomes": true,
+    "refused": [
+      "changing the analysis after seeing outcomes",
+      "reporting aggregate percentages without the paired table",
+      "choosing the highlighted efficiency metric after seeing which one favours an arm",
+      "pooling these results statistically with M183",
+      "computing any paired statistic against the vendor's published number"
+    ]
+  },
+  "secondaryOutcomes": {
+    "efficiency": [
+      "input tokens",
+      "output tokens",
+      "cached tokens",
+      "total model tokens",
+      "provider-reported cost",
+      "turns",
+      "wall-clock duration"
+    ],
+    "behaviour": [
+      "native search calls (grep/ripgrep)",
+      "glob/find invocations",
+      "file reads",
+      "git commands",
+      "test executions",
+      "files inspected",
+      "files edited"
+    ],
+    "timing": [
+      "turn of first edit",
+      "turn of first read of a file the gold patch touches"
+    ],
+    "timingCaveat": "Gold-relative timing is computed after the fact from the frozen dataset. The eventual outcome NEVER classifies pre-decision relevance: M185 and M189 both showed that letting it do so manufactures an effect. Gold patches, gold file lists and FAIL_TO_PASS never enter any agent's context.",
+    "costSource": "provider-reported cost from the run's own telemetry, deduplicated on message.id — M169 found the raw row token fields inflated by re-counting streamed messages.",
+    "identicalInstrumentationAcrossArms": true
+  },
+  "treatmentUsage": {
+    "recorded": [
+      "VTRACE exposed",
+      "VTRACE invoked at least once",
+      "turn of first invocation",
+      "number of invocations",
+      "which tools were invoked",
+      "tokens and characters returned by the treatment",
+      "treatment latency, summed",
+      "invoked before the first edit"
+    ],
+    "analysisRole": "descriptive and mediator only",
+    "neverConditionsPrimary": true,
+    "statement": "Uptake is post-treatment behaviour. A run where VTRACE was exposed and never invoked stays in the VTRACE arm: non-use is a consequence of the treatment, and dropping those runs would convert an intention-to-treat estimate into a self-selected one that can only flatter the treatment."
+  },
+  "ittPolicy": {
+    "primaryAnalysis": "INTENTION_TO_TREAT — every launched valid run is analysed under its assigned arm",
+    "secondaryAnalysis": "TREATMENT_VALID / per-protocol, restricted to runs where the surface came up, the index was ready and the tool schema was visible. Reported beside the ITT result, never instead of it.",
+    "neverExcludedForBehaviour": [
+      "the treatment was exposed but never invoked",
+      "the treatment's output was poor",
+      "the agent ignored the treatment"
+    ],
+    "initialisationFailurePolicy": "A VTRACE initialisation failure is NEVER silently converted to a baseline run. If the surface did not come up, the run is excluded as TREATMENT_INITIALISATION_FAILURE before the model is called and stays visible in the accounting with its arm and repository. A failure discovered AFTER the model started is retained under ITT and flagged treatment-invalid."
+  },
+  "exclusions": {
+    "legitimate": [
+      "CONTAINER_CANNOT_START",
+      "SOURCE_REVISION_UNAVAILABLE",
+      "BENCHMARK_INSTANCE_MALFORMED",
+      "ENVIRONMENT_IRREPRODUCIBLE",
+      "TREATMENT_INITIALISATION_FAILURE",
+      "AGENT_INFRASTRUCTURE_FAILURE_BEFORE_TREATMENT_EXPOSURE",
+      "MODEL_SERVICE_FAILURE",
+      "MODEL_IDENTITY_DRIFT",
+      "PATCH_EXTRACTION_FAILURE",
+      "EVALUATOR_INFRA_FAILURE",
+      "TELEMETRY_CORRUPT",
+      "TREATMENT_CONTAMINATION",
+      "ARM_CONFIGURATION_WRONG"
+    ],
+    "neverExclusions": [
+      "the agent failed the task",
+      "the agent never used VTRACE",
+      "the agent made a bad patch",
+      "the agent ran out of turns",
+      "the agent hit the cost cap",
+      "a test failed",
+      "the model produced no patch",
+      "the run was expensive",
+      "the task is hard",
+      "the task is a known VTRACE loss",
+      "the run is inconvenient"
+    ],
+    "exclusionsRemainVisible": true,
+    "frozenBeforeAnyPaidRun": true,
+    "statement": "An exclusion category not on this list cannot be created after outcomes exist. Every excluded run keeps its arm, repository and category in the corpus accounting, so a drift toward excluding one arm would be readable rather than hidden.",
+    "pairingRule": "An exclusion removes one RUN, not the task. A task with one valid arm contributes to neither the paired table nor either pass rate, and is reported as an incomplete pair with its reason.",
+    "retryPolicy": {
+      "rerunnable": [
+        "MODEL_SERVICE_FAILURE",
+        "CONTAINER_CANNOT_START",
+        "EVALUATOR_INFRA_FAILURE",
+        "TELEMETRY_CORRUPT"
+      ],
+      "notRerunnable": [
+        "a bad patch",
+        "turn exhaustion",
+        "hitting the cost cap",
+        "agent timeout",
+        "the evaluator judging the task unresolved",
+        "the agent choosing not to test",
+        "the agent choosing not to invoke VTRACE"
+      ],
+      "maxAttemptsPerRun": 2,
+      "bothAttemptsRemainInLedger": true
+    }
+  },
+  "stoppingRule": {
+    "design": "FIXED_N",
+    "tasks": 100,
+    "arms": 2,
+    "intendedRuns": 200,
+    "statement": "All 100 tasks × 2 arms = 200 outcome-bearing runs. The cohort is complete when every planned run has reached a terminal state. There is no interim analysis, no adaptive continuation and no early stop.",
+    "refusedInputs": [
+      "VTRACE looks neutral",
+      "VTRACE is winning",
+      "VTRACE is losing",
+      "token savings look obvious",
+      "an early p-value crossed a threshold",
+      "the discordant table looks favourable",
+      "the absolute pass rate already exceeds 73"
+    ],
+    "onlyLegitimateEarlyTermination": "The cohort may be ABANDONED — not analysed — if a defect invalidating comparability is found. Abandonment discards the cohort and restarts from zero under a new preregistration hash; favourable partial results are never retained.",
+    "budgetInterlock": "The $700 total cap is an infrastructure guard, not a stopping rule. If it binds, the cohort is incomplete and is reported as incomplete."
+  },
+  "noTuningPolicy": {
+    "frozenAtFirstPaidRun": [
+      "VTRACE product commit and src tree",
+      "agent version",
+      "model",
+      "prompts",
+      "tool catalogues",
+      "budgets",
+      "task set",
+      "randomisation",
+      "harness",
+      "evaluator",
+      "warm/cold policy",
+      "patch-capture policy",
+      "stopping rule",
+      "analysis plan",
+      "external reference"
+    ],
+    "onCriticalDefect": "STOP, declare the cohort invalid, fix, restart from zero",
+    "refused": "patching halfway through and retaining earlier outcomes",
+    "productChangesDuringPreregistration": 0,
+    "productChangeStatement": "M214 makes no src/ change. The treatment is frozen at the tree M213 measured. If the harness exposes a genuine treatment-breaking product bug, it is REPORTED; it is not silently repaired while the preregistration continues, because a repaired treatment is a different treatment and needs a new frozen identity."
+  },
+  "causalWording": {
+    "ifBetter": "VTRACE improved resolution relative to its matched baseline by Δ on this frozen population.",
+    "ifEqual": "No resolution benefit was observed relative to the matched baseline.",
+    "ifWorse": "VTRACE reduced resolution relative to the matched baseline under these conditions.",
+    "softeningProhibited": "An unfavourable result is stated in the same voice as a favourable one. A null result is stated as a null result, with its interval, and is not reworded into a directional claim the interval does not support.",
+    "frozenBeforeOutcomes": true
+  },
+  "reportingDiscipline": {
+    "successCriterion": "a valid experiment completed",
+    "refusedSuccessCriterion": "VTRACE wins",
+    "separateTablesRequired": "Baseline and VTRACE appear in the paired causal table. The vendor's published result appears only in a separate external-reference table. They are never rows of one table.",
+    "interpretations": [
+      {
+        "outcome": "VTRACE improves resolution (CI excludes 0, positive)",
+        "means": "the treatment causally helped this agent on this population; the size of the help is the interval, not the point estimate"
+      },
+      {
+        "outcome": "resolution unchanged, tokens or cost reduced",
+        "means": "no capability effect, a measurable efficiency effect; a legitimate and reportable product claim that is NOT a resolution claim"
+      },
+      {
+        "outcome": "resolution unchanged, cost unchanged",
+        "means": "the treatment did not change what this agent does on this population; consistent with M173, M183 and M185"
+      },
+      {
+        "outcome": "VTRACE reduces resolution",
+        "means": "the treatment causally hurt; reported plainly, with the per-task losses examined and not explained away as variance without evidence"
+      },
+      {
+        "outcome": "absolute pass rate exceeds the published 73 but the causal delta is zero",
+        "means": "our harness, agent or substrate is stronger than the vendor's published cohort; it says nothing about VTRACE, and must not be reported as a VTRACE result"
+      },
+      {
+        "outcome": "causal delta is positive but absolute pass rate is below the published 73",
+        "means": "VTRACE helped our agent, and our agent or substrate is weaker than the vendor's published cohort; both are true and neither cancels the other"
+      }
+    ]
+  },
+  "outcomeInterpretations": [
+    {
+      "outcome": "VTRACE improves resolution (CI excludes 0, positive)",
+      "means": "the treatment causally helped this agent on this population; the size of the help is the interval, not the point estimate"
+    },
+    {
+      "outcome": "resolution unchanged, tokens or cost reduced",
+      "means": "no capability effect, a measurable efficiency effect; a legitimate and reportable product claim that is NOT a resolution claim"
+    },
+    {
+      "outcome": "resolution unchanged, cost unchanged",
+      "means": "the treatment did not change what this agent does on this population; consistent with M173, M183 and M185"
+    },
+    {
+      "outcome": "VTRACE reduces resolution",
+      "means": "the treatment causally hurt; reported plainly, with the per-task losses examined and not explained away as variance without evidence"
+    },
+    {
+      "outcome": "absolute pass rate exceeds the published 73 but the causal delta is zero",
+      "means": "our harness, agent or substrate is stronger than the vendor's published cohort; it says nothing about VTRACE, and must not be reported as a VTRACE result"
+    },
+    {
+      "outcome": "causal delta is positive but absolute pass rate is below the published 73",
+      "means": "VTRACE helped our agent, and our agent or substrate is weaker than the vendor's published cohort; both are true and neither cancels the other"
+    }
+  ],
+  "historicalComparisonPolicy": {
+    "comparableHistory": [
+      {
+        "source": "M183",
+        "result": "30 paired tasks, 60 runs; baseline 19/30, VTRACE 19/30; both 17, VTRACE-only 2, baseline-only 2, neither 9; McNemar p = 1.0",
+        "label": "historical/non-identical"
+      }
+    ],
+    "poolingProhibited": true,
+    "statement": "Historical results may be cited beside the new experiment and must be labelled historical/non-identical. They are never pooled statistically with it."
+  },
+  "externalReference": {
+    "file": "stage5_m214_external_reference.json",
+    "evidenceClass": "EXTERNAL_VENDOR_REFERENCE",
+    "hash": "822c4c5fb69dc21b8ada04189e73fcadb3e5ab1bf7c06a855dd4582a6ec7834b",
+    "hashRule": "sha256 over \"M214_EXTERNAL_VENDOR_REFERENCE\\n\" followed by the canonical (recursively key-sorted) JSON of the frozen reference object",
+    "publishedPassAt1": "73 / 100",
+    "publishedCostPerTaskUsd": 0.67,
+    "mayEnterCausalAnalysis": false,
+    "guard": "auditPairedComparison rejects any operand that is not one of the two executed arms; auditCausalTableMembership rejects an external row in a causal table; auditExternalComparisonWording rejects head-to-head phrasing and requires a cross-study qualifier on any numeric side-by-side."
+  },
+  "scopedTypecheck": {
+    "artifact": "stage5_m214_scoped_typecheck.json",
+    "config": "tsconfig.m214.json",
+    "m214NewTypecheckErrors": 0,
+    "preexistingBenchmarkTestTypeErrors": 59,
+    "verdict": "M214_SCOPED_TYPECHECK_VERIFIED"
+  },
+  "vtraceExecutability": {
+    "inheritedFrom": "M213",
+    "artifact": "stage5_m213_vtrace_executability.json",
+    "repositoriesProven": 12,
+    "observationalIndexing": true
+  },
+  "preregistrationHashRule": "sha256 over \"VTRACE_EXTERNAL_VEXP_100\\n\" followed by the canonical (recursively key-sorted) JSON of every field except preregistrationHash, preregistrationHashRule and generatedAt",
+  "preregistrationHash": "3cd3b3d2d665c559fdb66e7274e809245e82ea7373344cf32614833b8dcbfea4",
+  "launchGates": [
+    {
+      "id": "G1",
+      "requirement": "M214 preregistration committed",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "stage5_m214_preregistration.json generated from the committed authority module"
+    },
+    {
+      "id": "G2",
+      "requirement": "M214 preregistration hash recorded",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "domain-separated sha256 over the canonical document, recomputed from the written file"
+    },
+    {
+      "id": "G3",
+      "requirement": "M213 remains immutable",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "M213's committed preregistration rehashes to its recorded digest under M213's own rule"
+    },
+    {
+      "id": "G4",
+      "requirement": "exact VEXP 100-task artifact verified",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "sha256 of the vendor's own committed jsonl, plus their published distribution table"
+    },
+    {
+      "id": "G5",
+      "requirement": "100 task ids frozen",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "the instance ids are committed in the preregistration before any run"
+    },
+    {
+      "id": "G6",
+      "requirement": "200-run manifest frozen",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "200 planned rows generated before any execution, hashed"
+    },
+    {
+      "id": "G7",
+      "requirement": "baseline is treatment-free",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "F3 control: no VTRACE server, tool, env var, workspace entry or generated file"
+    },
+    {
+      "id": "G8",
+      "requirement": "VTRACE treatment executable",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "M213's per-repository index + tools/list + deterministic query dry run, 12/12 repositories"
+    },
+    {
+      "id": "G9",
+      "requirement": "VTRACE identity frozen",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "commit SHA and src tree SHA both recorded; the tree is unchanged since M213 measured it"
+    },
+    {
+      "id": "G10",
+      "requirement": "agent identity frozen",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "one frozen agent record shared by both arm definitions"
+    },
+    {
+      "id": "G11",
+      "requirement": "model identity frozen",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "one frozen model record shared by both arm definitions"
+    },
+    {
+      "id": "G12",
+      "requirement": "native tools identical across arms",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "F7 control over the arm definitions"
+    },
+    {
+      "id": "G13",
+      "requirement": "budgets identical across arms",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "F6 control plus one budget-identity digest carried on every manifest row"
+    },
+    {
+      "id": "G14",
+      "requirement": "source states equivalent before each arm starts",
+      "gateClass": "RUNTIME",
+      "status": "DEFERRED_TO_LAUNCH",
+      "evidence": "the guard exists and its mechanism is measured (indexing is observational on tracked source across 12 repositories); per-run equality can only be asserted when runs exist; asserted per run by auditSourceStateEquivalence (m214TreatmentLifecycle.ts)"
+    },
+    {
+      "id": "G15",
+      "requirement": "indexing is observational on tracked source",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "F5 control: tracked-source digest measured before and after treatment initialisation"
+    },
+    {
+      "id": "G16",
+      "requirement": ".vtrace excluded from patch capture",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "F4 control, reproduced against a real index: the old capture leaks, the new one is empty"
+    },
+    {
+      "id": "G17",
+      "requirement": "metadata reset / warm policy symmetric and verified",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "F19 and F20 controls over the frozen COLD_UNIFORM policy"
+    },
+    {
+      "id": "G18",
+      "requirement": "execution-order randomisation frozen",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "seeded 50/50 arm-order assignment, seed committed, orders in the manifest"
+    },
+    {
+      "id": "G19",
+      "requirement": "evaluator validated",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "swebench==4.1.0 official evaluator, the harness M192 established and M213 re-verified"
+    },
+    {
+      "id": "G20",
+      "requirement": "primary paired analysis frozen",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "M214_STATISTICAL_PLAN"
+    },
+    {
+      "id": "G21",
+      "requirement": "efficiency analysis frozen",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "M214_SECONDARY_OUTCOMES"
+    },
+    {
+      "id": "G22",
+      "requirement": "invalid-run rules frozen",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "M214_EXCLUSIONS"
+    },
+    {
+      "id": "G23",
+      "requirement": "fixed-N stopping frozen",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "M214_STOPPING_RULE"
+    },
+    {
+      "id": "G24",
+      "requirement": "external VEXP reference frozen",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "published figures, sources, retrieval date and source digest committed before any run"
+    },
+    {
+      "id": "G25",
+      "requirement": "external reference cannot enter causal analysis",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "F16 and F17 controls: the paired-statistics entry point rejects a non-arm operand"
+    },
+    {
+      "id": "G26",
+      "requirement": "M214 falsification suite passes",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "F0–F24"
+    },
+    {
+      "id": "G27",
+      "requirement": "no frozen-population outcome-bearing agent run has occurred",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "M214 spend accounting"
+    },
+    {
+      "id": "G28",
+      "requirement": "live model spend is $0 during preregistration",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "no model was called by any M214 script"
+    },
+    {
+      "id": "G29",
+      "requirement": "M214-owned harness and tests are typechecked",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "tsconfig.m214.json includes this milestone's test files, which the repo-wide benchmark config excludes"
+    },
+    {
+      "id": "G30",
+      "requirement": "model availability established",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "the agent binary's own model registry carries a complete unflagged entry; a provider-confirmed response would require a paid call"
+    },
+    {
+      "id": "G31",
+      "requirement": "treatment lifecycle ordering executed and verified",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "the pre-agent untracked snapshot is taken AFTER treatment initialisation — executed on real repositories by the patch-capture probe and audited from the resulting trace, which is what makes G16 hold"
+    },
+    {
+      "id": "G32",
+      "requirement": "a launch executor exists that can run the frozen manifest",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "FAIL",
+      "evidence": "the component that would create the containers, run the lifecycle per run and bind this preregistration's hash before the first paid call; M213 listed building it as the outstanding infrastructure work and M214 is not scoped to build it"
+    }
+  ],
+  "launchAuthorized": false,
+  "preregistrationComplete": true,
+  "deferredRuntimeGates": [
+    "G14"
+  ],
+  "readinessVerdict": "PAID_TWO_ARM_CAUSAL_BENCHMARK_NOT_READY",
+  "readinessBlocker": [
+    "G14",
+    "G32"
+  ]
+}

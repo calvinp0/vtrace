@@ -1,0 +1,148 @@
+{
+  "schemaVersion": "stage5.m214.external-reference.v1",
+  "milestone": "M214",
+  "generatedAt": "2026-09-04T18:01:13.718Z",
+  "hashRule": "sha256 over \"M214_EXTERNAL_VENDOR_REFERENCE\\n\" followed by the canonical (recursively key-sorted) JSON of the frozen reference object",
+  "externalReferenceHash": "822c4c5fb69dc21b8ada04189e73fcadb3e5ab1bf7c06a855dd4582a6ec7834b",
+  "reference": {
+    "evidenceClass": "EXTERNAL_VENDOR_REFERENCE",
+    "system": "vexp + Claude Code",
+    "taskArtifactSha256": "7bd07d5e50e26f3c51e8813f93be6be840a62f9fac333586f139ac7853971d7d",
+    "taskCount": 100,
+    "publishedPassAt1Count": 73,
+    "publishedPassAt1Percent": 73,
+    "publishedCostPerTaskUsd": 0.67,
+    "publishedModel": "Claude Opus 4.5",
+    "publishedCostLimitUsdPerTask": 3,
+    "publishedTurnBudget": 250,
+    "repositoriesRepresented": 12,
+    "perTaskOutcomesPublished": false,
+    "sources": [
+      {
+        "url": "https://github.com/Vexp-ai/vexp-swe-bench",
+        "file": "README.md",
+        "vendorCommit": "d658e3457b82b5cb041f586093cc5002008a8cea",
+        "vendorCommitDate": "2026-03-22T19:04:18+01:00",
+        "fileSha256": "e743e1483aa24a9214a415537742a081d31a888cf117d9c0749fea7d10f9f19a",
+        "retrievedAt": "2026-09-04",
+        "quotedLine": "| **vexp + Claude Code** | **73.0%** | **$0.67** | 7–10 |"
+      },
+      {
+        "url": "https://github.com/Vexp-ai/vexp-swe-bench",
+        "file": "README.md",
+        "vendorCommit": "d658e3457b82b5cb041f586093cc5002008a8cea",
+        "vendorCommitDate": "2026-03-22T19:04:18+01:00",
+        "fileSha256": "e743e1483aa24a9214a415537742a081d31a888cf117d9c0749fea7d10f9f19a",
+        "retrievedAt": "2026-09-04",
+        "quotedLine": "Evaluated on a 100-task subset of SWE-bench Verified. All agents use Claude Opus 4.5 for a fair, apples-to-apples comparison."
+      },
+      {
+        "url": "https://github.com/Vexp-ai/vexp-swe-bench",
+        "file": "README.md",
+        "vendorCommit": "d658e3457b82b5cb041f586093cc5002008a8cea",
+        "vendorCommitDate": "2026-03-22T19:04:18+01:00",
+        "fileSha256": "e743e1483aa24a9214a415537742a081d31a888cf117d9c0749fea7d10f9f19a",
+        "retrievedAt": "2026-09-04",
+        "quotedLine": "The defaults are aligned with mini-SWE-agent v2: 250 turns, $3/task cost limit, no global timeout."
+      },
+      {
+        "url": "https://github.com/Vexp-ai/vexp-swe-bench",
+        "file": "docs/TASK_SELECTION.md",
+        "vendorCommit": "d658e3457b82b5cb041f586093cc5002008a8cea",
+        "vendorCommitDate": "2026-03-22T19:04:18+01:00",
+        "fileSha256": "6718013fcf3873d9e493a89e2eb269e1a7593a6c85919e6b2a68935c26a808e5",
+        "retrievedAt": "2026-09-04",
+        "quotedLine": "the per-repository distribution of the published 100-task subset (12 repositories)"
+      }
+    ],
+    "caveats": [
+      "VEXP was NOT executed in the M214 harness. This number is a vendor-published external reference, produced by a different cohort at a different time.",
+      "No per-task VEXP outcomes are published, so no paired table against it can exist even in principle.",
+      "The vendor's own benchmark contains no orientation intervention that M188 could identify: their buildPrompt injects nothing and their tool fired on 5 of 100 tasks. The published 73/100 is therefore not itself clean causal evidence for the VEXP repository-intelligence treatment.",
+      "The published cost of $0.67/task was measured on the vendor's cohort with the vendor's agent version, container substrate and network posture, none of which are published.",
+      "The agent version, container substrate, network policy and repetitions-per-task behind the published figure are all UNKNOWN; see the published-condition matrix."
+    ]
+  },
+  "publishedConditionMatrix": [
+    {
+      "condition": "task artifact",
+      "vexpPublished": "data/swe-bench-100.jsonl at vendor commit 880e486",
+      "m214": "the identical file, sha256-pinned",
+      "match": "MATCH",
+      "note": "byte-for-byte the same artifact; verified by digest, not by re-running the vendor's sampler"
+    },
+    {
+      "condition": "model",
+      "vexpPublished": "Claude Opus 4.5",
+      "m214": "claude-opus-4-5-20251101",
+      "match": "MATCH",
+      "note": "same model family and version; the vendor published no dated identifier, so an exact snapshot match is assumed rather than proven"
+    },
+    {
+      "condition": "agent",
+      "vexpPublished": "Claude Code",
+      "m214": "Claude Code CLI 2.1.260, headless",
+      "match": "APPROXIMATE",
+      "note": "the vendor published no CLI version or date; agent versions differ in tool loop and defaults, and this one postdates their run"
+    },
+    {
+      "condition": "turn cap",
+      "vexpPublished": "250",
+      "m214": "250",
+      "match": "MATCH",
+      "note": "verified in the vendor README's own defaults section"
+    },
+    {
+      "condition": "cost cap",
+      "vexpPublished": "$3/task",
+      "m214": "$3.50/task",
+      "match": "DIFFERS",
+      "note": "raised deliberately: the most expensive historical arm on this model cost $3.0384, so $3.00 truncates real runs. Both M214 arms share the raised cap, so the causal comparison is unaffected; the external comparison inherits a small upward bias in our favour and is reported with that stated"
+    },
+    {
+      "condition": "container / evaluator",
+      "vexpPublished": "not published",
+      "m214": "swebench==4.1.0 official per-instance evaluation images, one container per run",
+      "match": "UNKNOWN",
+      "note": "the vendor's harness reuses one working tree per repository slug across tasks; whether their published run did the same is not stated"
+    },
+    {
+      "condition": "network policy",
+      "vexpPublished": "not published",
+      "m214": "the container's own posture, identical in both arms",
+      "match": "UNKNOWN",
+      "note": "unknowable from published material"
+    },
+    {
+      "condition": "native tool catalogue",
+      "vexpPublished": "not published; the harness ships DEFAULT_ALLOWED_TOOLS",
+      "m214": "Edit, Write, Bash, Read, Glob, Grep, TodoWrite",
+      "match": "APPROXIMATE",
+      "note": "the vendor's shipped default is adopted unchanged, but the published run's actual catalogue is not stated"
+    },
+    {
+      "condition": "repetitions per task",
+      "vexpPublished": "pass@1, repetitions not stated",
+      "m214": "one run per arm per task",
+      "match": "UNKNOWN",
+      "note": "a best-of-n reported as pass@1 would not be comparable; nothing published rules it in or out"
+    }
+  ],
+  "comparisonLabel": "same-task published-condition external replication",
+  "comparisonLabelRefused": [
+    "exact VEXP replication",
+    "head-to-head benchmark against VEXP",
+    "apples-to-apples comparison with VEXP",
+    "we reran VEXP's benchmark"
+  ],
+  "mayEnterCausalAnalysis": false,
+  "separateTableRequired": true,
+  "exampleWording": {
+    "favourable": "Observed in M214: baseline 74 / 100, VTRACE 76 / 100. Published external reference: vexp + Claude Code 73 / 100. VTRACE's observed absolute pass rate is 3 points above the published result. vexp + Claude Code was not executed in the M214 harness; this is a cross-study descriptive comparison, not a causal head-to-head estimate, and the causal quantity is VTRACE minus our own baseline.",
+    "unfavourable": "Observed in M214: baseline 68 / 100, VTRACE 70 / 100. Published external reference: vexp + Claude Code 73 / 100. VTRACE's observed absolute pass rate is 3 points below the published result. vexp + Claude Code was not executed in the M214 harness; this is a cross-study descriptive comparison, not a causal head-to-head estimate, and the causal quantity is VTRACE minus our own baseline.",
+    "causalFavourable": "VTRACE improved resolution relative to its matched baseline by 2 / 100 on this frozen population.",
+    "causalNull": "No resolution benefit was observed relative to the matched baseline.",
+    "causalUnfavourable": "VTRACE reduced resolution relative to the matched baseline by 2 / 100 under these conditions."
+  },
+  "exampleWordingPassesAudit": true
+}

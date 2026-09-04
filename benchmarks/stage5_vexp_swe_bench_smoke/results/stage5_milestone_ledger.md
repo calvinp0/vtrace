@@ -11223,3 +11223,232 @@ commits           harness + preregistration authority, then evidence.
   describe it as the three-arm benchmark. That choice belongs to the project
   owner. `ENGINE QUALITY != CODING-AGENT UTILITY` and
   `CONTEXT_COMPILER_PRODUCT_UTILITY_NOT_ESTABLISHED` both still govern.
+
+
+## M214
+
+```text
+milestone         M214
+verdict           INCOMPLETE (preregistration complete; launch blocked on an
+                  executor that does not exist)
+markers           TWO_ARM_CAUSAL_BENCHMARK_PREREGISTERED;
+                  EXTERNAL_VEXP_REFERENCE_FROZEN;
+                  TASK_POPULATION_FROZEN;
+                  RUN_MANIFEST_FROZEN;
+                  ANALYSIS_PLAN_FROZEN;
+                  STOPPING_RULE_FROZEN;
+                  PATCH_CAPTURE_REPAIR_VERIFIED;
+                  M214_SCOPED_TYPECHECK_VERIFIED;
+                  M214_FALSIFICATION_SUITE_PASSED;
+                  M213_PREREGISTRATION_UNMODIFIED;
+                  VEXP_TREATMENT_NOT_EXECUTABLE;
+                  EXACT_VEXP_SUBSET_NOT_SCRIPT_REPRODUCIBLE;
+                  PAID_RUNS_NOT_STARTED;
+                  PAID_TWO_ARM_CAUSAL_BENCHMARK_NOT_READY
+parity            UNCHANGED and NOT re-run. Frozen matrix stays MATCH 7 EXCEED 7
+                  BELOW 1, match-or-exceed 14/15, A15 BELOW and
+                  A15_PARITY_GAP_INVALIDATED (M212). M214 does NOT license
+                  writing 15/15 anywhere, ever.
+spend             0 benchmark-task live-agent runs, $0 live model spend, 0 model
+                  calls of any kind, 0 VEXP processes started, 0 containers.
+                  Deterministic probes only: 2 throwaway git repos, 2 real
+                  vtrace index builds, 1 run of the vendor's own selection
+                  script, 3 tsc invocations.
+scope             Preregistration and launch-readiness only. 0 src/ diff. No
+                  scorer change, no retrieval change, no product change. The
+                  standing residuals (impact fanout, A13 non-prefix, cross_repo
+                  Top-1) were deliberately NOT repaired: a repaired treatment is
+                  a different treatment and would need a new frozen identity.
+
+why M214 exists   M213 preregistered the ideal three-arm experiment and then
+                  found arm C unrunnable -- CLI 2.0.24 refuses to run, no
+                  licence.jwt, free plan = 1 repository against a 12-repository
+                  population and a 2,000-node graph ceiling against django's
+                  41,032 symbols, platform core absent. That is procurement, not
+                  engineering. M213 stays FROZEN, unedited and unexecuted as
+                  evidence the direct comparison was designed BEFORE it was
+                  found to be blocked. M214 preregisters the strongest
+                  experiment available without a licence: Baseline vs
+                  Baseline+VTRACE, paired and causal, with the vendor's
+                  published 73/100 as a clearly separated external reference.
+
+experiment        VTRACE_EXTERNAL_VEXP_100. Two arms, 100 tasks, 200 planned
+                  runs, all PLANNED, no VEXP row anywhere in the manifest.
+                  Frozen vtraceCommit f37dc003 (harness commit), src tree
+                  b3b3e439 -- unchanged since M213 measured executability, which
+                  is why that evidence transfers as a fact rather than a
+                  hand-wave. prereg hash 3cd3b3d2..8dcbfea4, manifest hash
+                  549df54b..19f77ff1, external reference hash
+                  822c4c5f..2a6ec7834b. The prereg hash is DOMAIN-SEPARATED by
+                  the experiment name, so even a document identical to M213's
+                  could not collide with M213's digest -- "do not reuse M213's
+                  hash" is structural, not a promise. M213's committed bytes
+                  rehash to their recorded 5d90eddb..c568c8; armCount still 3,
+                  launchAuthorized still false.
+
+population        The SAME vendor artifact M213 froze, sha256 7bd07d5e..71d7d,
+                  inherited by IMPORTING M213's loader and digest constant
+                  rather than re-declaring them -- so "the exact same 100 tasks"
+                  is one code path, not two that can drift. The 22/100 script
+                  mismatch was RE-DERIVED, not transcribed: the vendor's own
+                  select-subset.py run unmodified under their venv against
+                  Verified (500) overlaps their shipped artifact in 22/100,
+                  django 42 vs 44, sympy 14 vs 17, scikit-learn 6 vs 2, and 494
+                  of 500 rows pass the <=250 ceiling the script omits. The
+                  script-derived id list is committed as the wrong artifact F2
+                  swaps in.
+
+patch capture     THE M213 LEAK IS REAL, AND ROUTE-DEPENDENT. Reproduced on two
+                  real repos with two real vtrace indexes: `vtrace init` appends
+                  /.vtrace/ to .git/info/exclude and `vtrace index` alone does
+                  NOT, so the vendor's hardcoded `git add -A -- .
+                  :(exclude).vexp ...` captured 0 bytes on the init route and
+                  6,378 bytes over .vtrace/{index.meta.json,index.sqlite,
+                  session.sqlite} on the index-only route -- the same three
+                  paths M213 measured at 105,321 bytes on flask. Whether the
+                  competitor's harness polluted every VTRACE patch turned on
+                  which entry point ran. The repair is DERIVED, not renamed:
+                  the agent's patch = what changed minus what was already there
+                  pre-agent. Empty patch on a no-source-change run and exactly
+                  pkg/core.py on a one-edit run, on BOTH routes. The finding
+                  forced a real guard change: exclusion has two correct routes
+                  (DERIVED_SNAPSHOT_EXCLUSION, NOT_ENUMERABLE_BY_GIT) and both
+                  are recorded rather than trusted. Tracked-source digests
+                  identical across indexing on both routes.
+
+external ref      73/100 and $0.67/task, EXTERNAL_VENDOR_REFERENCE, pinned to
+                  vendor commit d658e345 with README sha256 e743e148.. and
+                  TASK_SELECTION.md sha256 6718013f.., retrieved 2026-09-04. The
+                  separation is EXECUTABLE, not editorial: auditPairedComparison
+                  rejects any operand that is not one of the two executed arms
+                  (including a bare "vexp"), auditCausalTableMembership rejects
+                  an external row in a causal table, auditEvidenceClassLabel
+                  rejects "Arm C"/"experimental arm"/"head-to-head",
+                  auditExternalComparisonWording rejects "VTRACE beats VEXP" and
+                  REQUIRES a cross-study qualifier on any numeric side-by-side,
+                  and renderExternalComparison generates the sentence so the
+                  qualifier cannot be forgotten -- then passes the same auditor.
+                  No per-task VEXP outcomes are published, so no paired table
+                  against it can exist even in principle.
+
+conditions        Published-condition matrix: task artifact MATCH, model MATCH,
+                  turn cap 250 MATCH, agent APPROXIMATE, native tools
+                  APPROXIMATE, cost cap DIFFERS ($3.50 vs $3.00, raised because
+                  $3.00 truncates real runs -- both arms share it, so the causal
+                  comparison is unaffected and the external one inherits a small
+                  stated bias), container/evaluator UNKNOWN, network UNKNOWN,
+                  repetitions UNKNOWN. Four UNKNOWN + one DIFFERS => the label
+                  is "same-task published-condition external replication" and
+                  never "exact VEXP replication".
+
+model            claude-opus-4-5-20251101, PRESENT_IN_AGENT_MODEL_REGISTRY_
+                  NOT_PROVIDER_CONFIRMED -- Claude Code 2.1.260's own bundled
+                  registry carries a complete entry (200k window, tier_5_25,
+                  all five provider routes) beside newer families with NO
+                  deprecation/retirement/sunset marker. Stronger than M213's
+                  "not verified" and still not a provider response; the residual
+                  closes at launch by reading each run's own init event, the
+                  first moment it can close without spending.
+
+gates             30/32 PASS, and ALL 30 PREREGISTRATION gates pass.
+                  G14 DEFERRED_TO_LAUNCH (RUNTIME), G32 FAIL (INFRASTRUCTURE:
+                  no launch executor). M214 gives the gate table THREE CLASSES
+                  because M213's conflated two kinds of condition and produced
+                  BLOCKED cells that read as defects: PREREGISTRATION must pass
+                  now, RUNTIME is asserted per run by the executor and names the
+                  guard that will assert it, INFRASTRUCTURE asks whether the
+                  asserting thing exists. A RUNTIME gate's status is
+                  caller-supplied, so launchAuthorized is REACHABLE -- a gate
+                  table that can never approve anything is not a gate table.
+                  preregistrationComplete=true, launchAuthorized=false: two
+                  different facts, now separately reportable. G31 (lifecycle
+                  ordering) is PASS rather than BLOCKED because the probe
+                  EXECUTES the order on real repositories and audits the trace
+                  it emitted -- this closes what M213 had to leave open.
+
+falsification     58 controls, 58 satisfied. F1-F24 as specified plus F25
+                  (arm cross-contamination), F26 (lifecycle reorder) and F27
+                  (external hash stability), each added because M214's own audit
+                  found the risk. Genuine negative controls throughout
+                  (F0_CLEAN per arm, F1_CLEAN, F2_CLEAN, F3_CLEAN, F4_CLEAN,
+                  F4_ORDERING_CLEAN, F4_NOT_ENUMERABLE_CLEAN, F5_CLEAN,
+                  F6_CLEAN, F13_CLEAN, F14_CLEAN, F16_CLEAN, F17_CLEAN,
+                  F19_CLEAN, F20_CLEAN, F24_CLEAN, F25_CLEAN, F27). F15 is the
+                  load-bearing one: treatment exposed and never invoked is a
+                  VALID ITT run and the guard stays SILENT. The suite is itself
+                  falsifiable -- tests inject a tampered hash, a vendor list
+                  that already excluded .vtrace, a symmetric clean policy, a
+                  typecheck that misses its injected error and a script subset
+                  that happened to match, and assert the matching control
+                  becomes unsatisfied.
+
+typecheck         tsconfig.m214.json narrows the strict settings to M214-owned
+                  files INCLUDING their tests, which tsconfig.benchmarks.json
+                  excludes. M214_NEW_TYPECHECK_ERRORS 0;
+                  PREEXISTING_BENCHMARK_TEST_TYPE_ERRORS 59, in historical
+                  benchmark tests, outside M214's authorised scope and NOT
+                  fixed. Repository-wide benchmark tests remain untypechecked
+                  and M214 does not claim otherwise. The target is proven able
+                  to FAIL: a deliberate type error is written into a file its
+                  globs cover, reported, removed, and the target is clean again.
+                  It caught a real error on its first run (a misapplied
+                  `as const` in m214ExternalReference.ts).
+
+tests             6457 pass, 49 skip, 0 fail (391 files). typecheck,
+                  typecheck:benchmarks, lint, the M214 scoped typecheck and
+                  git diff --check all clean. 136 new tests across
+                  m214Preregistration.test.ts, m214ExternalReference.test.ts,
+                  m214TreatmentLifecycle.test.ts and m214Falsification.test.ts.
+
+commits           harness + preregistration authority, then frozen evidence.
+```
+
+## M214 standing findings
+
+- **A benchmark harness's fairness must not depend on which entry point ran.**
+  `vtrace init` writes `/.vtrace/` into `.git/info/exclude`; `vtrace index`
+  alone does not. From the same index, the competitor's hardcoded `capturePatch`
+  list captured 0 bytes on one route and 6,378 on the other. Neither outcome was
+  designed, and the difference decides whether every VTRACE-arm patch is
+  polluted. A hardcoded exclusion list is a defect even when it happens to be
+  complete today, and the auditor reports it as one alongside whatever it
+  misses. Derive the exclusion from observed pre-agent state or inherit the bug.
+
+- **A gate that can never pass before launch is not a gate.** M213 marked
+  per-run conditions BLOCKED and got a table where scheduling facts read as
+  defects. Splitting gates into PREREGISTRATION / RUNTIME / INFRASTRUCTURE lets
+  an honest NOT_READY say which kind of unready it is -- here, a finished design
+  waiting on an executor -- and forces each deferred gate to name the guard that
+  will close it. It also keeps `launchAuthorized` reachable.
+
+- **Separating an external reference from a causal arm has to be executable.**
+  The realistic failure is not a dishonest claim; it is a correct paired
+  analysis rendered into a table with a third row for context. Three independent
+  places catch it -- the paired-statistics entry point rejects non-arm operands,
+  the table auditor rejects the evidence class, and the comparison sentence is
+  generated rather than written and then checked by the same auditor that
+  rejects the forbidden phrasings. Freeze the language before the favourable
+  number exists, because that is when the rule is still negotiable.
+
+- **Freeze the treatment by its source tree, not its commit.** `HEAD:src` is
+  stable across benchmark-only commits, so M213's twelve-repository
+  executability evidence transfers to M214 as a mechanical fact rather than an
+  assumption. A commit SHA would have moved and forced either a re-run or a
+  hand-wave.
+
+- **Next-step recommendation.** Do NOT start the benchmark. Two things close
+  M214's residual, in order: (1) build the LAUNCH EXECUTOR -- per-instance
+  containers, the frozen lifecycle in the frozen order, the pre-agent untracked
+  snapshot taken AFTER treatment initialisation, per-run assertion of
+  `auditSourceStateEquivalence` and of the provider-returned model identity, and
+  a hard abort if the committed preregistration hash does not recompute; this
+  closes G32 and lets G14 be asserted rather than deferred. (2) Obtain explicit
+  authorisation for the frozen $700 ceiling. Neither requires touching the
+  product, and neither should change anything in the preregistration -- its hash
+  is the check on that. If a VEXP licence with an unlimited repository ceiling
+  is ever obtained, run M213's three-arm preregistration AS WRITTEN; do not bolt
+  a third arm onto M214, whose external-reference machinery exists precisely
+  because that arm could not be run. `ENGINE QUALITY != CODING-AGENT UTILITY`
+  and `CONTEXT_COMPILER_PRODUCT_UTILITY_NOT_ESTABLISHED` both still govern.
+  Nothing in M214 measured utility; it only made a measurement of it possible to
+  trust.
