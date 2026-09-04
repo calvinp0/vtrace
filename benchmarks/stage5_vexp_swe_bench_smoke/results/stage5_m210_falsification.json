@@ -1,0 +1,328 @@
+{
+  "milestone": "M210",
+  "instrument": "run_stage5_m210_falsification.ts",
+  "scratch": "/tmp/m210-falsification",
+  "fanout": [
+    {
+      "fanout": 0,
+      "coreRelations": 10,
+      "deliveredRelations": 2,
+      "characters": 7652,
+      "ceilingCharacters": 8000,
+      "withinEnvelope": true,
+      "resultState": "bounded_truncated",
+      "omittedEdges": 7,
+      "deterministic": true,
+      "deliveredIsCorePrefix": true,
+      "latencyMs": [
+        11.82,
+        9.4,
+        12.12
+      ],
+      "medianLatencyMs": 11.82
+    },
+    {
+      "fanout": 1,
+      "coreRelations": 11,
+      "deliveredRelations": 1,
+      "characters": 7505,
+      "ceilingCharacters": 8000,
+      "withinEnvelope": true,
+      "resultState": "bounded_truncated",
+      "omittedEdges": 7,
+      "deterministic": true,
+      "deliveredIsCorePrefix": true,
+      "latencyMs": [
+        13.28,
+        13.07,
+        10.55
+      ],
+      "medianLatencyMs": 13.07
+    },
+    {
+      "fanout": 8,
+      "coreRelations": 18,
+      "deliveredRelations": 1,
+      "characters": 7769,
+      "ceilingCharacters": 8000,
+      "withinEnvelope": true,
+      "resultState": "bounded_truncated",
+      "omittedEdges": 13,
+      "deterministic": true,
+      "deliveredIsCorePrefix": true,
+      "latencyMs": [
+        12.41,
+        12.11,
+        15.57
+      ],
+      "medianLatencyMs": 12.41
+    },
+    {
+      "fanout": 32,
+      "coreRelations": 42,
+      "deliveredRelations": 1,
+      "characters": 7772,
+      "ceilingCharacters": 8000,
+      "withinEnvelope": true,
+      "resultState": "bounded_truncated",
+      "omittedEdges": 37,
+      "deterministic": true,
+      "deliveredIsCorePrefix": true,
+      "latencyMs": [
+        26.48,
+        20.1,
+        21.83
+      ],
+      "medianLatencyMs": 21.83
+    },
+    {
+      "fanout": 63,
+      "coreRelations": 64,
+      "deliveredRelations": 1,
+      "characters": 7755,
+      "ceilingCharacters": 8000,
+      "withinEnvelope": true,
+      "resultState": "bounded_truncated",
+      "omittedEdges": 85,
+      "deterministic": true,
+      "deliveredIsCorePrefix": true,
+      "latencyMs": [
+        43.84,
+        36.48,
+        39.12
+      ],
+      "medianLatencyMs": 39.12
+    },
+    {
+      "fanout": 64,
+      "coreRelations": 64,
+      "deliveredRelations": 1,
+      "characters": 7758,
+      "ceilingCharacters": 8000,
+      "withinEnvelope": true,
+      "resultState": "bounded_truncated",
+      "omittedEdges": 88,
+      "deterministic": true,
+      "deliveredIsCorePrefix": true,
+      "latencyMs": [
+        44.05,
+        36.35,
+        35.08
+      ],
+      "medianLatencyMs": 36.35
+    },
+    {
+      "fanout": 65,
+      "coreRelations": 64,
+      "deliveredRelations": 1,
+      "characters": 7759,
+      "ceilingCharacters": 8000,
+      "withinEnvelope": true,
+      "resultState": "bounded_truncated",
+      "omittedEdges": 91,
+      "deterministic": true,
+      "deliveredIsCorePrefix": true,
+      "latencyMs": [
+        46.21,
+        38.53,
+        38.48
+      ],
+      "medianLatencyMs": 38.53
+    },
+    {
+      "fanout": 96,
+      "coreRelations": 64,
+      "deliveredRelations": 1,
+      "characters": 7760,
+      "ceilingCharacters": 8000,
+      "withinEnvelope": true,
+      "resultState": "bounded_truncated",
+      "omittedEdges": 184,
+      "deterministic": true,
+      "deliveredIsCorePrefix": true,
+      "latencyMs": [
+        41.03,
+        37.56,
+        35
+      ],
+      "medianLatencyMs": 37.56
+    },
+    {
+      "fanout": 128,
+      "coreRelations": 64,
+      "deliveredRelations": 1,
+      "characters": 7760,
+      "ceilingCharacters": 8000,
+      "withinEnvelope": true,
+      "resultState": "bounded_truncated",
+      "omittedEdges": 280,
+      "deterministic": true,
+      "deliveredIsCorePrefix": true,
+      "latencyMs": [
+        51.94,
+        39.46,
+        36.32
+      ],
+      "medianLatencyMs": 39.46
+    },
+    {
+      "fanout": 256,
+      "coreRelations": 64,
+      "deliveredRelations": 1,
+      "characters": 7752,
+      "ceilingCharacters": 8000,
+      "withinEnvelope": true,
+      "resultState": "bounded_truncated",
+      "omittedEdges": 664,
+      "deterministic": true,
+      "deliveredIsCorePrefix": true,
+      "latencyMs": [
+        51.29,
+        45.91,
+        45.72
+      ],
+      "medianLatencyMs": 45.91
+    },
+    {
+      "fanout": 512,
+      "coreRelations": 64,
+      "deliveredRelations": 1,
+      "characters": 7413,
+      "ceilingCharacters": 8000,
+      "withinEnvelope": true,
+      "resultState": "bounded_truncated",
+      "omittedEdges": 1432,
+      "deterministic": true,
+      "deliveredIsCorePrefix": true,
+      "latencyMs": [
+        68.28,
+        57.83,
+        53.55
+      ],
+      "medianLatencyMs": 57.83
+    }
+  ],
+  "controls": [
+    {
+      "id": "F1",
+      "question": "can a weaker relation ever be ordered ahead of an exact caller?",
+      "pass": true,
+      "detail": "9 relations, lanes {\"exact_caller\":1,\"resolved_caller\":2,\"importer\":5,\"referrer\":1}; first exact caller at ordinal 0; weaker relations ahead of it 0; weaker relations present in the stream 6 (a zero here would make the control vacuous)"
+    },
+    {
+      "id": "F2",
+      "question": "does a target with no callers get a fabricated caller slot?",
+      "pass": true,
+      "detail": "orphan: 0 relations, 0 incoming calls, exactCallerCount 0, potentialCallers 0, fabricated 0"
+    },
+    {
+      "id": "F3",
+      "question": "do many exact callers yield a deterministic BOUNDED prefix rather than an unbounded list?",
+      "pass": true,
+      "detail": "0:2/10 1:1/11 8:1/18 32:1/42 63:1/64 64:1/64 65:1/64 96:1/64 128:1/64 256:1/64 512:1/64"
+    },
+    {
+      "id": "F10",
+      "question": "does genuine capacity exhaustion stay bounded and report itself?",
+      "pass": true,
+      "detail": "64:bounded_truncated/omitted 88 65:bounded_truncated/omitted 91 96:bounded_truncated/omitted 184 128:bounded_truncated/omitted 280 256:bounded_truncated/omitted 664 512:bounded_truncated/omitted 1432"
+    },
+    {
+      "id": "F20",
+      "question": "is ONE policy applied across arbitrary fanout, with the response always inside its envelope?",
+      "pass": true,
+      "detail": "0:7652<=8000@11.82ms 1:7505<=8000@13.07ms 8:7769<=8000@12.41ms 32:7772<=8000@21.83ms 63:7755<=8000@39.12ms 64:7758<=8000@36.35ms 65:7759<=8000@38.53ms 96:7760<=8000@37.56ms 128:7760<=8000@39.46ms 256:7752<=8000@45.91ms 512:7413<=8000@57.83ms"
+    },
+    {
+      "id": "F4",
+      "question": "can an unresolved receiver arrive as an EXACT caller?",
+      "pass": true,
+      "detail": "Reg.target: 1 relations, 0 exact callers claimed from the dynamic dispatch site (0 required); 1 potential callers, confidences [\"unresolved\"]; kept out of directRelations true"
+    },
+    {
+      "id": "F5",
+      "question": "does the relation stream still carry non-call impact evidence?",
+      "pass": true,
+      "detail": "9 relations: {\"exact_caller\":1,\"resolved_caller\":2,\"importer\":5,\"referrer\":1}"
+    },
+    {
+      "id": "F6",
+      "question": "are same-file and cross-file status truthful?",
+      "pass": true,
+      "detail": "same-file 1 (sibling in pkg/core.py), cross-file 8"
+    },
+    {
+      "id": "F7",
+      "question": "does one caller/target pair reached by several routes arrive once?",
+      "pass": true,
+      "detail": "9 relations, 9 distinct ids, 9 distinct caller/target/kind pairs"
+    },
+    {
+      "id": "F8",
+      "question": "do two calls from one caller stay two distinct sites on one relation?",
+      "pass": true,
+      "detail": "callSiteCount 2, sites 4-4,5-5"
+    },
+    {
+      "id": "F9",
+      "question": "can any truthful allocation policy recover the frozen caller inside the shipped bound?",
+      "pass": true,
+      "detail": "C-LARGE frozen 8%; every allocation arm {\"CONTROL\":8,\"P1_LANE_AUTHORITY\":8,\"P2_GROUNDED_FIRST\":8,\"P3_LANE_THEN_GROUNDED\":8,\"P4_LANE_ROUND_ROBIN\":8,\"E1_NO_COMPAT_EDGES\":8,\"E2_NO_COMPAT_EDGES_LANE\":8,\"E3_NO_COMPAT_EDGES_GROUNDED\":8}; evidence-only packing ceiling (graph restatement charged at ZERO) 46% < 90 required"
+    },
+    {
+      "id": "F11",
+      "question": "is the capacity/budget decomposition stable and single-authority?",
+      "pass": true,
+      "detail": "edge-only sweep {\"edges64\":8,\"edges96\":8,\"edges128\":8,\"edges256\":8,\"edges2000\":8} (flat = enumeration capacity does not bind); token-only sweep {\"tokens1200\":8,\"tokens1600\":14,\"tokens2000\":18,\"tokens2400\":20,\"tokens3200\":30,\"tokens4800\":42,\"tokens20000\":74}"
+    },
+    {
+      "id": "F12",
+      "question": "is the delivered call line the file's own line, and is a plausible forgery still caught?",
+      "pass": true,
+      "detail": "rendered \"return target(x)\" faults []; forgery passes the frozen rule true and fails the truth guard true"
+    },
+    {
+      "id": "F13",
+      "question": "is a file edited after indexing ever rendered as current source?",
+      "pass": true,
+      "detail": "sourceText (withheld)"
+    },
+    {
+      "id": "F14",
+      "question": "does a 400-caller fanout ever leave the response envelope, at any budget?",
+      "pass": true,
+      "detail": "1:643<=801 50:643<=850 200:644<=1000 400:644<=1200 1200:1853<=2000 4000:4733<=4800 20000:19866<=20000"
+    },
+    {
+      "id": "F15",
+      "question": "is the impact envelope on the run_pipeline / get_code_context path at all?",
+      "pass": true,
+      "detail": "files referencing impactResponseEnvelope: [\"src/mcp/responseEnvelope.ts\",\"src/mcp/tools.ts\",\"src/productContext/budgetDelivery.ts\",\"src/cli/commands/impactGraphCommand.ts\"]; run_pipeline and get_code_context import getImpactGraph (the CORE) and never the envelope, so an envelope-only change cannot reach A11/A13"
+    },
+    {
+      "id": "F17",
+      "question": "does the response's own size accounting equal its measured size, and is a corruption detectable?",
+      "pass": true,
+      "detail": "claimed 7651, measured 7651; a +40 corruption (7691) is detectable"
+    },
+    {
+      "id": "F18",
+      "question": "did M210 change product behaviour, so that a predecessor comparison is even meaningful?",
+      "pass": true,
+      "detail": "src/ files modified: 0. With zero product change the predecessor IS this product, so every measurement in this suite describes both and there is no historical condition to reproduce apart from it."
+    },
+    {
+      "id": "F19",
+      "question": "did any frozen-A15 constant enter the product?",
+      "pass": true,
+      "detail": "src/impact carries 1 pre-existing occurrences of 50/90/0.9, none introduced here (src/impact diff empty: true): [\"src/impact/impactResponseEnvelope.ts:447: * `pytest-dev__pytest-10081` at `max_tokens` 1/50/100/200/400 — and, more\"]. The frozen population size and threshold appear only in the instruments, which is where a measurement's own constants belong: [\"benchmarks/stage5_vexp_swe_bench_smoke/m210RelationAllocation.ts\",\"benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m210_audit.ts\",\"benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m210_allocation.ts\",\"benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m210_falsification.ts\"]"
+    },
+    {
+      "id": "F16",
+      "question": "did the focus contract move?",
+      "pass": true,
+      "detail": "C-MED focus size violations 0, focus swaps 0 over 20 tasks"
+    }
+  ],
+  "verdict": "M210_FALSIFICATION_SUITE_PASSED"
+}

@@ -10442,3 +10442,238 @@ evidence          results/stage5_m209_final_report.{md,json},
   live-agent conditions, which M209 did not begin and which no engine result
   licenses. `ENGINE QUALITY != CODING-AGENT UTILITY` and
   `CONTEXT_COMPILER_PRODUCT_UTILITY_NOT_ESTABLISHED` both still govern.
+
+---
+
+```text
+milestone         M210
+verdict           PASS (causal); no product change
+parity            A15_CALLER_CAPACITY_ATTRIBUTION_COMPLETE;
+                  A15_EXISTING_CAPACITY_INSUFFICIENT;
+                  A15_BROADER_CAPACITY_INSUFFICIENT;
+                  A15_PARITY_NOT_CLOSED; 14/15 -> 14/15 (A15 stays BELOW)
+spend             0 live-agent runs, $0, 0 VEXP processes, 0 Docker
+scope             A15 only. Decide whether the residual M209 named is poor
+                  relation ALLOCATION inside the existing capacity, genuinely
+                  insufficient caller-enumeration CAPACITY, or a further
+                  primitive — and change product behaviour only if the causal
+                  gate licenses it. No A13 reopening, no retrieval tuning, no
+                  new representation class, no index change. Stop after M210.
+
+result            VTRACE_VEXP_ENGINE_PARITY_THRESHOLD_MET
+                  MATCH 7  EXCEED 7  BELOW 1   match-or-exceed 14/15 (threshold 10)
+                  A8 100% (veto 99%); structural violations 0; determinism
+                  stable; strengthened 0; invented 0. Frozen F6 still FAILS on
+                  its stale `a14PerItem === 0` conjunct only, as at M203/M208/M209.
+
+reproduction      M209 reproduced exactly before anything was built: the a15
+                  block of this run's stage5_m197a_engine.json is BYTE-IDENTICAL
+                  to the committed stage5_m209_engine.json — 83.33 / 24 / 8%
+                  impact, 100% flow, eligible 36 / 50 / 50, all five misrendered
+                  examples identical. Full matrix 14/15 with A15 BELOW.
+                  A2/A3 required rerunning run_stage5_m197a_indexing.ts: the
+                  report reads the SHARED stage5_m197a_indexing.json, which still
+                  holds M197A's own contended measurement, and reading it stale
+                  yields a spurious A2 BELOW / A3 BELOW and 12/15.
+
+instrument        Every counterfactual arm is a pure pre-transform of the core
+                  output handed to the product's OWN unmodified
+                  compactImpactProductResponse, assembled exactly as
+                  src/mcp/tools.ts assembles it; no budget arithmetic, ladder
+                  order or renderer is re-implemented. The identity arm is
+                  checked against the real MCP response and agrees 136/136, and
+                  the core's default slice is the head of the hard-bound universe
+                  in 136/136.
+
+occupancy         THE decisive measurement. Of the slots ahead of a scored
+                  caller in the core's own ordered relations — 1 on C-SMALL, 112
+                  on C-MED, 831 on C-LARGE — every single one is ANOTHER CALLER
+                  of the same symbol (C-LARGE 192 exact + 639 resolved), all 831
+                  carrying a persisted site and a renderable line. Zero
+                  referrers, importers, subtypes, structural or outgoing
+                  relations; zero duplicates; zero relations without evidence.
+                  It is a property of the product, not of ARC:
+                  compareStaticRelations orders incoming -> strength -> kind, and
+                  `calls` is alphabetically first of all fourteen kinds, so an
+                  exact caller can only ever be preceded by other exact callers.
+                  F1 proves it on a fixture carrying six weaker relations.
+
+attribution       C-LARGE 50: SCORED 4; CALLER_INSIDE_SLICE_BUT_EVIDENCE_NOT_
+                  AFFORDABLE 38 (29 relation_trimmed + 9 evidence_shed);
+                  CALLER_OUTSIDE_GLOBAL_SLICE 8; ORDERED_BELOW_WEAKER 0;
+                  RENDERING_FAILURE 0; DEDUPED 0; TRUTH_UNAVAILABLE 0; STALE 0.
+                  The default response delivers ONE relation in 44 of 50 cases.
+
+counterfactual A  Eight arms at the shipped bounds — product order, lane
+                  authority, grounded-evidence-first, lane-then-grounded, lane
+                  round-robin, and three with the compatibility edge list
+                  removed. ALL EIGHT score identically to the shipped order on
+                  all three corpora (83.33 / 24 / 8%). They cannot differ:
+                  reordering a stream that is 100% callers only changes WHICH
+                  caller occupies the single delivered slot. (E1 also shows the
+                  envelope re-synthesises `edges` from the retained relations, so
+                  removing the list upstream is undone downstream.)
+
+sufficiency       A15_EXISTING_CAPACITY_INSUFFICIENT, two independent proofs.
+                  (1) Only 42/50 C-LARGE callers lie inside the core's own
+                  64-relation slice: an 84% CEILING, below the 90% bar, before
+                  any budget is measured. (2) Packing the default budget by hand
+                  at the product's own measured per-item sizes: status quo 2%,
+                  coherent projections 36%, and EVIDENCE-ONLY — the graph
+                  restatement charged at ZERO — 46%. 46 < 90.
+
+decomposition     The two authorities moved one at a time (§19). ENUMERATION
+                  (max_edges 64->2000, tokens default): 8% at EVERY width on
+                  C-LARGE, 24% at every width on C-MED, 83.33% on C-SMALL,
+                  median relations delivered stays 1, and C-LARGE p90 latency
+                  rises 222 -> 4425 ms. Widening enumeration recovers ZERO items
+                  and buys only cost. REPRESENTATION (max_tokens 1200->20000,
+                  edges default): C-LARGE 8/14/18/20/30/42/74%, C-MED 24->90%,
+                  C-SMALL 83.33->100%. At the hard maximum the C-LARGE response
+                  is 66346 characters, 8.8x the default, and still short of 90.
+                  A15_BROADER_CAPACITY_INSUFFICIENT.
+
+root cause        A15_DELIVERY_ARITHMETICALLY_UNREACHABLE. Reaching 90% on
+                  C-LARGE means delivering universe rank 530 — 531 direct
+                  relations, each with its own rendered source line — inside 1200
+                  model-visible tokens (4800 chars). Sorted C-LARGE ranks run
+                  0..816. A delivered relation costs a median 1014 chars today
+                  (538000 for 531: 112x the default budget, 6.7x the tool's hard
+                  80000-char ceiling); even a hypothetical minimal truthful
+                  record (~150 chars) needs 79650, still 16.6x the default budget
+                  and the entire hard ceiling with nothing else in the response.
+                  A15_CALLER_SUPPLY_INSUFFICIENT is NOT the finding and must not
+                  be reported: C-LARGE holds 12421 calls edges, 12421 of them
+                  with a persisted site (100%), 19330 sites, and the scored
+                  caller's relation exists in the truthful universe 50/50.
+
+repair            NONE. §28's hierarchy terminates: repair A impossible (nothing
+                  weaker to displace), repair B insufficient (74% at the hard
+                  maximum), repair C's primitive neither narrowly repairable nor
+                  sufficient. `git diff HEAD -- src` is empty.
+
+falsification     20/20, M210_FALSIFICATION_SUITE_PASSED, on real repositories
+                  indexed by the production indexProject. F1 no weaker relation
+                  ever precedes an exact caller (6 weaker present, exact still at
+                  ordinal 0); F9 all eight allocation arms identical and the
+                  evidence-only ceiling 46 < 90; F11 edge sweep flat while the
+                  token sweep is monotone; F2 no fabricated caller slot; F3/F10/
+                  F20 fanout 0..512 bounded, deterministic, one policy, 7412-7772
+                  chars and 11.8-57.8 ms; F4 an unresolved receiver stays a
+                  potential caller and is never promoted; F5-F8 non-call evidence
+                  retained, same/cross-file truthful, one relation per pair, two
+                  sites stay two; F12 the delivered line is the file's own and a
+                  forgery that SATISFIES the frozen rule still fails the truth
+                  guard; F13 an edited file yields a withheld excerpt; F14 a
+                  400-caller fanout stays in the envelope at budgets 1..20000;
+                  F15 the impact envelope is imported only by mcp/tools.ts and
+                  the CLI, never by run_pipeline or get_code_context; F17 the
+                  response's size accounting equals its measured length and a +40
+                  corruption is detectable; F18 zero src/ files modified; F19 no
+                  frozen-A15 constant entered the product.
+
+retrieval eval    Both fixtures re-run on this tree: expanded 20/20 top-1 85.0%,
+                  cross_repo_30 30/30 top-1 66.7% (0.6667). Both CSVs
+                  BYTE-IDENTICAL to the committed baselines. The M208 floor is
+                  held exactly and no baseline was regenerated — with src/
+                  byte-identical, retrieval could not have moved.
+
+A5 / A6 / A11     Frozen A5 p90 57.22 / 242.08 / 361.92 MATCHES (M209 67.93 /
+A12 / A13 / A14   251.83 / 366.48). A5 harness at load 2.5: 65.4 / 225.22 /
+                  375.32 MATCHES (M209 61.58 / 223.93 / 361.95 at load 1.32). A6
+                  p90 9.71 / 47.61 / 172.65 EXCEEDS. A7 8.3 / 9.57 / 18.19
+                  EXCEEDS. A11 82.7 / 94 / 102.06 / 102.58 / 96.19 EXCEEDS. A12
+                  3 classes MATCHES. A13 0 size / 0 swaps EXCEEDS. A14 5072/5072
+                  MATCHES. The M205 sweep was not rerun: with src/ byte-identical
+                  there is no mechanism by which A12 or A14 could move, and the
+                  frozen rerun measures both directly.
+
+determinism       136/136 scored responses stable across 3 semantic-projection
+                  repeats on all three corpora; the falsification fanout family
+                  stable across 3 repeats at all 11 widths. The committed §29
+                  projection is used, not a hand-rolled one — a hand-rolled
+                  variant reported spurious non-determinism and was replaced
+                  rather than accommodated.
+
+corpus identity   No source file changed, so no corpus moved. Authority
+                  re-verified C-SMALL 21 @ d658e3457b, C-MED 506 @ 5c1c2108a4,
+                  C-LARGE 276 @ 826144342e, 699 nested-worktree .py excluded —
+                  M197A_AUTHORITY_VERIFIED. There is no policy-versus-corpus
+                  movement to separate because there is no policy movement.
+
+commits           <AUDIT_SHA>  instrumentation: the pure allocation/attribution
+                            library, the three-view audit, the capacity/budget
+                            decomposition, the falsification suite
+                            (no product change)
+                  <EVIDENCE_SHA>  evidence, frozen rerun, guards, causal report,
+                            final report, this row
+
+evidence          results/stage5_m210_final_report.md,
+                  stage5_m210_causal_report.md,
+                  stage5_m210_audit_pre.json + stage5_m210_items_pre.jsonl,
+                  stage5_m210_allocation_pre.json +
+                  stage5_m210_allocation_items_pre.jsonl,
+                  stage5_m210_falsification.json,
+                  stage5_m210_engine_pre.json, stage5_m210_indexing_pre.json,
+                  stage5_m210_authority.json, stage5_m210_claim_ledger.json
+                  (the frozen A1-A15 matrix this milestone was measured against),
+                  stage5_m201_a5_m210_post.json.
+```
+
+## M210 standing findings
+
+- **A15 is unreachable, not merely unrepaired — and the reason is arithmetic.**
+  The frozen metric asks whether the default `get_impact_graph` response contains
+  one *arbitrary* caller of the callee, chosen by edge id. On C-LARGE that means
+  delivering 531 direct relations with a rendered source line each, inside a
+  1200-token model-visible budget. Every truthful representation exceeds that by
+  one to two orders of magnitude, and the tool's own hard 80000-character ceiling
+  cannot carry them either. Do not reopen A15: it is not a product defect, and
+  the only way to turn it green is to change the metric's own conditions.
+
+- **Relation allocation is exonerated by measurement.** Every slot ahead of a
+  scored caller is another caller of the same symbol (831/831 on C-LARGE), so
+  there is nothing weaker to displace; all eight allocation policies score
+  identically. This is guaranteed by `compareStaticRelations` — incoming first,
+  then strength, then kind, and `calls` sorts alphabetically first of all
+  fourteen kinds. A successor proposing a caller-priority lane for
+  `get_impact_graph` should know that one already exists in effect.
+
+- **Enumeration capacity is not the binding authority; representation budget is.**
+  `max_edges` 64 → 2000 recovers zero items on every corpus while raising
+  C-LARGE p90 from 222 ms to 4425 ms. `max_tokens` 1200 → 20000 moves C-LARGE
+  8 % → 74 %. Any future impact work should move the representation budget, and
+  should not spend latency widening a slice whose contents never reach the
+  response.
+
+- **`nodes` and `view` have no rung on the impact degradation ladder.** At
+  `max_edges: 64` before shedding, the graph restatement is 173 % (C-MED) and
+  768 % (C-LARGE) of the whole model-visible budget, while the evidence
+  projection is trimmed to one relation and — one rung earlier — has its source
+  line shed from *every* relation at once rather than from the tail that cannot
+  afford it. Two measured repairs follow: coherent projections would take C-MED
+  24 → 74 % and C-LARGE 8 → 36 % inside the identical bound, and graduated
+  evidence shedding would recover 9 C-LARGE / 20 C-MED / 6 C-SMALL misses. Both
+  are bounded above by the 46 % evidence-only ceiling, so **neither closes A15**,
+  and both change delivered structure at every budget. They are a
+  budget/representation milestone with its own A11/A13/A12 obligations, to be
+  justified by the tool's contract and never by A15's threshold. M209 declined
+  the first for the same reason.
+
+- **`stage5_m197a_indexing.json` is a shared slot holding M197A's own contended
+  measurement.** Any successor running `run_stage5_m197a_report.ts` without first
+  rerunning `run_stage5_m197a_indexing.ts` will read a spurious A2 BELOW / A3
+  BELOW and report 12/15. Rerun indexing, then snapshot it per milestone.
+
+- **The envelope's canonical selection re-applies `max_edges` over edges and
+  synthetic relation ids together**, so it can deliver fewer relations than the
+  core's 64-relation slice holds — 11 absent scored targets measured through the
+  MCP tool against 8 through the core. Observed, not repaired.
+
+- **Next-step recommendation.** The deterministic engine-parity programme ends
+  here at **14/15** and is NOT complete; it must never be reported as 15/15. The
+  separately-authorised next programme remains the causal benchmark — Baseline vs
+  Baseline+VTRACE vs Baseline+VEXP under identical live-agent conditions — which
+  M210 did not begin and which no engine result licenses.
+  `ENGINE QUALITY != CODING-AGENT UTILITY` and
+  `CONTEXT_COMPILER_PRODUCT_UTILITY_NOT_ESTABLISHED` both still govern.
