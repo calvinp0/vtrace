@@ -1,0 +1,20 @@
+{
+  "//": "M214 §33 — a SCOPED typecheck target that includes this milestone's test files.",
+  "//why": [
+    "tsconfig.benchmarks.json excludes benchmarks/**/*.test.ts, so no benchmark test file has ever",
+    "been typechecked. Enabling it repo-wide surfaces ~60 pre-existing errors in unrelated",
+    "historical benchmark tests, which M214 is not authorised to clean up. This config narrows the",
+    "same strict settings to M214-owned files so that new harness and test code cannot hide a type",
+    "error behind that exclusion. Files M214 imports (m213Preregistration.ts and its transitive",
+    "dependencies) are pulled in by the compiler and are therefore checked too."
+  ],
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": [
+    "benchmarks/stage5_vexp_swe_bench_smoke/m214*.ts",
+    "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m214_*.ts"
+  ],
+  "exclude": ["node_modules", "dist", "build", "coverage"]
+}
