@@ -1,0 +1,1073 @@
+{
+  "milestone": "M211",
+  "phase": "audit",
+  "label": "pre",
+  "productHead": "575287d1651a8bea525d4dfcd1c198e26b3ba06d",
+  "generatedAtMs": 1788529380075,
+  "loadAverage": [
+    3.09,
+    2.78,
+    2.04
+  ],
+  "endLoadAverage": [
+    3.16,
+    2.8,
+    2.05
+  ],
+  "orderingAuthority": "compareStaticRelations/direction,strength,kind,sourcePath,sourceSymbol,id",
+  "frozenMetrics": [
+    {
+      "id": "P1",
+      "name": "CENSUS_TRUTH",
+      "bar": "For every probe target the delivered census equals the census computed over the complete relation universe the core returns at its hard bound. Zero disagreements."
+    },
+    {
+      "id": "P2",
+      "name": "CENSUS_INDEPENDENT_OF_EVIDENCE_BUDGET",
+      "bar": "Census counts are byte-identical across max_tokens in {400, 1200, 4000, 20000} and max_edges in {1, 8, 64, 2000}. Zero movements."
+    },
+    {
+      "id": "P3",
+      "name": "PROJECTION_IS_A_SUBSET",
+      "bar": "Every rendered relation id occurs in the census universe; no id occurs twice. Zero violations."
+    },
+    {
+      "id": "P4",
+      "name": "SOURCE_ANCHORED",
+      "bar": "Every rendered sourceText is the file's own line at the recorded span, under M209's truth guard. Zero fabrications."
+    },
+    {
+      "id": "P5",
+      "name": "CLASS_PRESERVED",
+      "bar": "Rendered exact/resolved and direct/transitive labels equal the universe's for the same relation id. Zero promotions."
+    },
+    {
+      "id": "P6",
+      "name": "EVIDENCE_YIELD",
+      "bar": "Source-backed rendered relations in the DEFAULT response: must not fall on any probe target, and must rise on the high-fanout targets (>=64 direct relations)."
+    },
+    {
+      "id": "P7",
+      "name": "RESTATEMENT_SHARE",
+      "bar": "graph-restatement chars / total chars in the default response: must fall on every probe target with >=8 direct relations."
+    },
+    {
+      "id": "P8",
+      "name": "BOUNDEDNESS",
+      "bar": "Default response stays inside the shipped envelope on every target and every fanout in {0,1,8,32,64,128,500,1000+}; no response exceeds the 80000-char hard ceiling; response size does not grow without bound in fanout."
+    },
+    {
+      "id": "P9",
+      "name": "RECONCILIATION",
+      "bar": "rendered + remaining == census total for the projected role, and remaining >= 0, on every target. Zero violations."
+    },
+    {
+      "id": "P10",
+      "name": "CONTINUATION_COVERAGE",
+      "bar": "Concatenated pages equal the prefix of the canonical ordered stream: no duplicate relation across pages, no relation skipped by cursor arithmetic, identical under a fresh process."
+    },
+    {
+      "id": "P11",
+      "name": "CENSUS_LATENCY_NO_REGRESSION",
+      "bar": "p90 default get_impact_graph latency on each corpus does not regress against the pre-change measurement taken in the same run conditions."
+    },
+    {
+      "id": "P12",
+      "name": "COUNTING_DOES_NOT_RENDER",
+      "bar": "Source excerpts built per default request is O(delivered evidence + classification-bound kinds), not O(universe). Measured by counting excerpt builds."
+    }
+  ],
+  "marker": "M211_IMPACT_ARCHITECTURE_AUDITED",
+  "reductionVerdict": "M211_ARCHITECTURE_REDUCTION_PROVEN",
+  "reductionInputs": {
+    "evidenceImproves": true,
+    "restatementFalls": true,
+    "censusIsFalseToday": true,
+    "boundedStill": true,
+    "highFanoutProbes": 6
+  },
+  "corpora": [
+    {
+      "id": "C-SMALL",
+      "status": "OK",
+      "probes": 3,
+      "censusFalseCount": 0,
+      "restatementExceedsEvidence": 2,
+      "collapsedToOneRelation": 0,
+      "zeroSourceBacked": 1,
+      "highFanout": {
+        "probes": 0,
+        "shippedEvidenceMedian": null,
+        "counterfactualEvidenceMedian": null,
+        "shippedRestatementShareMedian": null,
+        "counterfactualRestatementShareMedian": null
+      },
+      "rows": [
+        {
+          "bucket": 0,
+          "fqn": "agents/adapter.ts::AgentAdapter",
+          "faninCalls": 0,
+          "truth": {
+            "directRelations": 2,
+            "directIncoming": 0,
+            "directOutgoing": 2,
+            "exactCallers": 0,
+            "resolvedCallers": 0,
+            "referrers": 0,
+            "importers": 0,
+            "subtypes": 0,
+            "structuralContainers": 0,
+            "outgoingDependencies": 2,
+            "crossFileRelations": 0,
+            "affectedFiles": 1,
+            "relationsWithCallSite": 0
+          },
+          "claimed": {
+            "exactCallerCount": 0,
+            "exactReferenceCount": 0,
+            "outgoingDependencyCount": 2,
+            "directIncoming": 0,
+            "directOutgoing": 2
+          },
+          "censusTruthful": true,
+          "shipped": {
+            "totalCharacters": 7245,
+            "restatementCharacters": 1525,
+            "evidenceCharacters": 1708,
+            "fixedCharacters": 4012,
+            "restatementShare": 0.2105,
+            "deliveredRelations": 2,
+            "deliveredWithSourceText": 2,
+            "deliveredNodes": 3,
+            "deliveredEdges": 2,
+            "resultState": "response_compacted",
+            "latencyMs": 3.8
+          },
+          "counterfactual": {
+            "censusCharacters": 503,
+            "fixedCharacters": 4012,
+            "restatementCharacters": 1522,
+            "evidenceBudget": 3217,
+            "evidenceCharacters": 1839,
+            "totalCharacters": 7876,
+            "restatementShare": 0.2571,
+            "rendered": 2,
+            "renderedWithSourceText": 2,
+            "forms": {
+              "full": 1,
+              "signature": 1,
+              "metadata": 0
+            },
+            "remaining": 0
+          }
+        },
+        {
+          "bucket": 1,
+          "fqn": "agents/claude-code.ts::spawnAgent",
+          "faninCalls": 1,
+          "truth": {
+            "directRelations": 1,
+            "directIncoming": 1,
+            "directOutgoing": 0,
+            "exactCallers": 1,
+            "resolvedCallers": 0,
+            "referrers": 0,
+            "importers": 0,
+            "subtypes": 0,
+            "structuralContainers": 0,
+            "outgoingDependencies": 0,
+            "crossFileRelations": 0,
+            "affectedFiles": 1,
+            "relationsWithCallSite": 1
+          },
+          "claimed": {
+            "exactCallerCount": 1,
+            "exactReferenceCount": 0,
+            "outgoingDependencyCount": 0,
+            "directIncoming": 1,
+            "directOutgoing": 0
+          },
+          "censusTruthful": true,
+          "shipped": {
+            "totalCharacters": 6990,
+            "restatementCharacters": 1697,
+            "evidenceCharacters": 923,
+            "fixedCharacters": 4370,
+            "restatementShare": 0.2428,
+            "deliveredRelations": 1,
+            "deliveredWithSourceText": 1,
+            "deliveredNodes": 3,
+            "deliveredEdges": 2,
+            "resultState": "response_compacted",
+            "latencyMs": 1.5
+          },
+          "counterfactual": {
+            "censusCharacters": 503,
+            "fixedCharacters": 4370,
+            "restatementCharacters": 1006,
+            "evidenceBudget": 2810,
+            "evidenceCharacters": 1133,
+            "totalCharacters": 7012,
+            "restatementShare": 0.2152,
+            "rendered": 1,
+            "renderedWithSourceText": 1,
+            "forms": {
+              "full": 1,
+              "signature": 0,
+              "metadata": 0
+            },
+            "remaining": 0
+          }
+        },
+        {
+          "bucket": 8,
+          "fqn": "compare/compare.ts::loadExternalAgent",
+          "faninCalls": 2,
+          "truth": {
+            "directRelations": 4,
+            "directIncoming": 2,
+            "directOutgoing": 2,
+            "exactCallers": 2,
+            "resolvedCallers": 0,
+            "referrers": 0,
+            "importers": 0,
+            "subtypes": 0,
+            "structuralContainers": 0,
+            "outgoingDependencies": 2,
+            "crossFileRelations": 0,
+            "affectedFiles": 1,
+            "relationsWithCallSite": 3
+          },
+          "claimed": {
+            "exactCallerCount": 2,
+            "exactReferenceCount": 0,
+            "outgoingDependencyCount": 2,
+            "directIncoming": 2,
+            "directOutgoing": 2
+          },
+          "censusTruthful": true,
+          "shipped": {
+            "totalCharacters": 7957,
+            "restatementCharacters": 2897,
+            "evidenceCharacters": 1597,
+            "fixedCharacters": 3463,
+            "restatementShare": 0.3641,
+            "deliveredRelations": 2,
+            "deliveredWithSourceText": 0,
+            "deliveredNodes": 5,
+            "deliveredEdges": 4,
+            "resultState": "response_compacted",
+            "latencyMs": 2.4
+          },
+          "counterfactual": {
+            "censusCharacters": 503,
+            "fixedCharacters": 3463,
+            "restatementCharacters": 1592,
+            "evidenceBudget": 3744,
+            "evidenceCharacters": 2264,
+            "totalCharacters": 7822,
+            "restatementShare": 0.2678,
+            "rendered": 2,
+            "renderedWithSourceText": 2,
+            "forms": {
+              "full": 2,
+              "signature": 0,
+              "metadata": 0
+            },
+            "remaining": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": "C-MED",
+      "status": "OK",
+      "probes": 5,
+      "censusFalseCount": 0,
+      "restatementExceedsEvidence": 5,
+      "collapsedToOneRelation": 4,
+      "zeroSourceBacked": 4,
+      "highFanout": {
+        "probes": 2,
+        "shippedEvidenceMedian": 0,
+        "counterfactualEvidenceMedian": 2,
+        "shippedRestatementShareMedian": 0.463,
+        "counterfactualRestatementShareMedian": 0.3052
+      },
+      "rows": [
+        {
+          "bucket": 0,
+          "fqn": "access/indexAccessLifecycle.test.ts::catalogueIndexes",
+          "faninCalls": 0,
+          "truth": {
+            "directRelations": 0,
+            "directIncoming": 0,
+            "directOutgoing": 0,
+            "exactCallers": 0,
+            "resolvedCallers": 0,
+            "referrers": 0,
+            "importers": 0,
+            "subtypes": 0,
+            "structuralContainers": 0,
+            "outgoingDependencies": 0,
+            "crossFileRelations": 0,
+            "affectedFiles": 0,
+            "relationsWithCallSite": 0
+          },
+          "claimed": {
+            "exactCallerCount": 0,
+            "exactReferenceCount": 0,
+            "outgoingDependencyCount": 0,
+            "directIncoming": 0,
+            "directOutgoing": 0
+          },
+          "censusTruthful": true,
+          "shipped": {
+            "totalCharacters": 4332,
+            "restatementCharacters": 358,
+            "evidenceCharacters": 2,
+            "fixedCharacters": 3972,
+            "restatementShare": 0.0826,
+            "deliveredRelations": 0,
+            "deliveredWithSourceText": 0,
+            "deliveredNodes": 1,
+            "deliveredEdges": 0,
+            "resultState": "response_compacted",
+            "latencyMs": 0.7
+          },
+          "counterfactual": {
+            "censusCharacters": 503,
+            "fixedCharacters": 3972,
+            "restatementCharacters": 354,
+            "evidenceBudget": 3171,
+            "evidenceCharacters": 0,
+            "totalCharacters": 4829,
+            "restatementShare": 0.1775,
+            "rendered": 0,
+            "renderedWithSourceText": 0,
+            "forms": {
+              "full": 0,
+              "signature": 0,
+              "metadata": 0
+            },
+            "remaining": 0
+          }
+        },
+        {
+          "bucket": 1,
+          "fqn": "access/symbolNameAccessPath.ts::applySymbolNameAccessPath",
+          "faninCalls": 1,
+          "truth": {
+            "directRelations": 3,
+            "directIncoming": 1,
+            "directOutgoing": 2,
+            "exactCallers": 0,
+            "resolvedCallers": 1,
+            "referrers": 0,
+            "importers": 0,
+            "subtypes": 0,
+            "structuralContainers": 0,
+            "outgoingDependencies": 2,
+            "crossFileRelations": 1,
+            "affectedFiles": 2,
+            "relationsWithCallSite": 2
+          },
+          "claimed": {
+            "exactCallerCount": 1,
+            "exactReferenceCount": 0,
+            "outgoingDependencyCount": 2,
+            "directIncoming": 1,
+            "directOutgoing": 2
+          },
+          "censusTruthful": true,
+          "shipped": {
+            "totalCharacters": 7137,
+            "restatementCharacters": 2674,
+            "evidenceCharacters": 886,
+            "fixedCharacters": 3577,
+            "restatementShare": 0.3747,
+            "deliveredRelations": 1,
+            "deliveredWithSourceText": 0,
+            "deliveredNodes": 4,
+            "deliveredEdges": 3,
+            "resultState": "bounded_truncated",
+            "latencyMs": 2.9
+          },
+          "counterfactual": {
+            "censusCharacters": 503,
+            "fixedCharacters": 3577,
+            "restatementCharacters": 1902,
+            "evidenceBudget": 3558,
+            "evidenceCharacters": 1995,
+            "totalCharacters": 7977,
+            "restatementShare": 0.3015,
+            "rendered": 2,
+            "renderedWithSourceText": 2,
+            "forms": {
+              "full": 1,
+              "signature": 1,
+              "metadata": 0
+            },
+            "remaining": 1
+          }
+        },
+        {
+          "bucket": 8,
+          "fqn": "capsule/budget.ts::computeCapsuleItemCost",
+          "faninCalls": 8,
+          "truth": {
+            "directRelations": 16,
+            "directIncoming": 12,
+            "directOutgoing": 4,
+            "exactCallers": 0,
+            "resolvedCallers": 8,
+            "referrers": 0,
+            "importers": 4,
+            "subtypes": 0,
+            "structuralContainers": 0,
+            "outgoingDependencies": 4,
+            "crossFileRelations": 13,
+            "affectedFiles": 7,
+            "relationsWithCallSite": 11
+          },
+          "claimed": {
+            "exactCallerCount": 8,
+            "exactReferenceCount": 0,
+            "outgoingDependencyCount": 4,
+            "directIncoming": 12,
+            "directOutgoing": 4
+          },
+          "censusTruthful": true,
+          "shipped": {
+            "totalCharacters": 7640,
+            "restatementCharacters": 3443,
+            "evidenceCharacters": 857,
+            "fixedCharacters": 3340,
+            "restatementShare": 0.4507,
+            "deliveredRelations": 1,
+            "deliveredWithSourceText": 0,
+            "deliveredNodes": 5,
+            "deliveredEdges": 4,
+            "resultState": "bounded_truncated",
+            "latencyMs": 8.5
+          },
+          "counterfactual": {
+            "censusCharacters": 508,
+            "fixedCharacters": 3340,
+            "restatementCharacters": 1909,
+            "evidenceBudget": 3775,
+            "evidenceCharacters": 1936,
+            "totalCharacters": 7693,
+            "restatementShare": 0.3142,
+            "rendered": 2,
+            "renderedWithSourceText": 2,
+            "forms": {
+              "full": 1,
+              "signature": 1,
+              "metadata": 0
+            },
+            "remaining": 14
+          }
+        },
+        {
+          "bucket": 32,
+          "fqn": "indexer/indexProject.ts::indexProject",
+          "faninCalls": 31,
+          "truth": {
+            "directRelations": 131,
+            "directIncoming": 69,
+            "directOutgoing": 62,
+            "exactCallers": 0,
+            "resolvedCallers": 31,
+            "referrers": 0,
+            "importers": 38,
+            "subtypes": 0,
+            "structuralContainers": 0,
+            "outgoingDependencies": 62,
+            "crossFileRelations": 109,
+            "affectedFiles": 51,
+            "relationsWithCallSite": 82
+          },
+          "claimed": {
+            "exactCallerCount": 31,
+            "exactReferenceCount": 0,
+            "outgoingDependencyCount": 0,
+            "directIncoming": 64,
+            "directOutgoing": 0
+          },
+          "censusTruthful": true,
+          "shipped": {
+            "totalCharacters": 7900,
+            "restatementCharacters": 3658,
+            "evidenceCharacters": 846,
+            "fixedCharacters": 3396,
+            "restatementShare": 0.463,
+            "deliveredRelations": 1,
+            "deliveredWithSourceText": 0,
+            "deliveredNodes": 5,
+            "deliveredEdges": 5,
+            "resultState": "bounded_truncated",
+            "latencyMs": 40.3
+          },
+          "counterfactual": {
+            "censusCharacters": 516,
+            "fixedCharacters": 3396,
+            "restatementCharacters": 1815,
+            "evidenceBudget": 3735,
+            "evidenceCharacters": 1910,
+            "totalCharacters": 7637,
+            "restatementShare": 0.3052,
+            "rendered": 2,
+            "renderedWithSourceText": 2,
+            "forms": {
+              "full": 1,
+              "signature": 1,
+              "metadata": 0
+            },
+            "remaining": 129
+          }
+        },
+        {
+          "bucket": 64,
+          "fqn": "db/sqlite.ts::openIndexerDatabase",
+          "faninCalls": 58,
+          "truth": {
+            "directRelations": 127,
+            "directIncoming": 126,
+            "directOutgoing": 1,
+            "exactCallers": 0,
+            "resolvedCallers": 58,
+            "referrers": 0,
+            "importers": 68,
+            "subtypes": 0,
+            "structuralContainers": 0,
+            "outgoingDependencies": 1,
+            "crossFileRelations": 127,
+            "affectedFiles": 59,
+            "relationsWithCallSite": 59
+          },
+          "claimed": {
+            "exactCallerCount": 58,
+            "exactReferenceCount": 0,
+            "outgoingDependencyCount": 0,
+            "directIncoming": 64,
+            "directOutgoing": 0
+          },
+          "censusTruthful": true,
+          "shipped": {
+            "totalCharacters": 7431,
+            "restatementCharacters": 3268,
+            "evidenceCharacters": 836,
+            "fixedCharacters": 3327,
+            "restatementShare": 0.4398,
+            "deliveredRelations": 1,
+            "deliveredWithSourceText": 0,
+            "deliveredNodes": 4,
+            "deliveredEdges": 5,
+            "resultState": "bounded_truncated",
+            "latencyMs": 41.9
+          },
+          "counterfactual": {
+            "censusCharacters": 515,
+            "fixedCharacters": 3327,
+            "restatementCharacters": 1793,
+            "evidenceBudget": 3811,
+            "evidenceCharacters": 2324,
+            "totalCharacters": 7959,
+            "restatementShare": 0.29,
+            "rendered": 2,
+            "renderedWithSourceText": 2,
+            "forms": {
+              "full": 2,
+              "signature": 0,
+              "metadata": 0
+            },
+            "remaining": 125
+          }
+        }
+      ]
+    },
+    {
+      "id": "C-LARGE",
+      "status": "OK",
+      "probes": 8,
+      "censusFalseCount": 4,
+      "restatementExceedsEvidence": 8,
+      "collapsedToOneRelation": 6,
+      "zeroSourceBacked": 6,
+      "highFanout": {
+        "probes": 4,
+        "shippedEvidenceMedian": 0,
+        "counterfactualEvidenceMedian": 2,
+        "shippedRestatementShareMedian": 0.4384,
+        "counterfactualRestatementShareMedian": 0.3301
+      },
+      "rows": [
+        {
+          "bucket": 0,
+          "fqn": "ARC.py::<module>",
+          "faninCalls": 0,
+          "truth": {
+            "directRelations": 0,
+            "directIncoming": 0,
+            "directOutgoing": 0,
+            "exactCallers": 0,
+            "resolvedCallers": 0,
+            "referrers": 0,
+            "importers": 0,
+            "subtypes": 0,
+            "structuralContainers": 0,
+            "outgoingDependencies": 0,
+            "crossFileRelations": 0,
+            "affectedFiles": 0,
+            "relationsWithCallSite": 0
+          },
+          "claimed": {
+            "exactCallerCount": 0,
+            "exactReferenceCount": 0,
+            "outgoingDependencyCount": 0,
+            "directIncoming": 0,
+            "directOutgoing": 0
+          },
+          "censusTruthful": true,
+          "shipped": {
+            "totalCharacters": 4102,
+            "restatementCharacters": 243,
+            "evidenceCharacters": 2,
+            "fixedCharacters": 3857,
+            "restatementShare": 0.0592,
+            "deliveredRelations": 0,
+            "deliveredWithSourceText": 0,
+            "deliveredNodes": 1,
+            "deliveredEdges": 0,
+            "resultState": "bounded_truncated",
+            "latencyMs": 3.6
+          },
+          "counterfactual": {
+            "censusCharacters": 503,
+            "fixedCharacters": 3857,
+            "restatementCharacters": 239,
+            "evidenceBudget": 3401,
+            "evidenceCharacters": 0,
+            "totalCharacters": 4599,
+            "restatementShare": 0.1613,
+            "rendered": 0,
+            "renderedWithSourceText": 0,
+            "forms": {
+              "full": 0,
+              "signature": 0,
+              "metadata": 0
+            },
+            "remaining": 0
+          }
+        },
+        {
+          "bucket": 1,
+          "fqn": "ARC.py::parse_command_line_arguments",
+          "faninCalls": 1,
+          "truth": {
+            "directRelations": 1,
+            "directIncoming": 1,
+            "directOutgoing": 0,
+            "exactCallers": 1,
+            "resolvedCallers": 0,
+            "referrers": 0,
+            "importers": 0,
+            "subtypes": 0,
+            "structuralContainers": 0,
+            "outgoingDependencies": 0,
+            "crossFileRelations": 0,
+            "affectedFiles": 1,
+            "relationsWithCallSite": 1
+          },
+          "claimed": {
+            "exactCallerCount": 1,
+            "exactReferenceCount": 0,
+            "outgoingDependencyCount": 0,
+            "directIncoming": 1,
+            "directOutgoing": 0
+          },
+          "censusTruthful": true,
+          "shipped": {
+            "totalCharacters": 7387,
+            "restatementCharacters": 2567,
+            "evidenceCharacters": 885,
+            "fixedCharacters": 3935,
+            "restatementShare": 0.3475,
+            "deliveredRelations": 1,
+            "deliveredWithSourceText": 1,
+            "deliveredNodes": 2,
+            "deliveredEdges": 1,
+            "resultState": "response_compacted",
+            "latencyMs": 1.1
+          },
+          "counterfactual": {
+            "censusCharacters": 503,
+            "fixedCharacters": 3935,
+            "restatementCharacters": 890,
+            "evidenceBudget": 3286,
+            "evidenceCharacters": 1095,
+            "totalCharacters": 6423,
+            "restatementShare": 0.2169,
+            "rendered": 1,
+            "renderedWithSourceText": 1,
+            "forms": {
+              "full": 1,
+              "signature": 0,
+              "metadata": 0
+            },
+            "remaining": 0
+          }
+        },
+        {
+          "bucket": 8,
+          "fqn": "ARC_test.py::_StubAdapter",
+          "faninCalls": 8,
+          "truth": {
+            "directRelations": 12,
+            "directIncoming": 8,
+            "directOutgoing": 4,
+            "exactCallers": 8,
+            "resolvedCallers": 0,
+            "referrers": 0,
+            "importers": 0,
+            "subtypes": 0,
+            "structuralContainers": 0,
+            "outgoingDependencies": 4,
+            "crossFileRelations": 0,
+            "affectedFiles": 1,
+            "relationsWithCallSite": 8
+          },
+          "claimed": {
+            "exactCallerCount": 8,
+            "exactReferenceCount": 0,
+            "outgoingDependencyCount": 4,
+            "directIncoming": 8,
+            "directOutgoing": 4
+          },
+          "censusTruthful": true,
+          "shipped": {
+            "totalCharacters": 7772,
+            "restatementCharacters": 3765,
+            "evidenceCharacters": 837,
+            "fixedCharacters": 3170,
+            "restatementShare": 0.4844,
+            "deliveredRelations": 1,
+            "deliveredWithSourceText": 0,
+            "deliveredNodes": 5,
+            "deliveredEdges": 4,
+            "resultState": "bounded_truncated",
+            "latencyMs": 6.3
+          },
+          "counterfactual": {
+            "censusCharacters": 505,
+            "fixedCharacters": 3170,
+            "restatementCharacters": 2093,
+            "evidenceBudget": 3872,
+            "evidenceCharacters": 1911,
+            "totalCharacters": 7679,
+            "restatementShare": 0.3383,
+            "rendered": 2,
+            "renderedWithSourceText": 2,
+            "forms": {
+              "full": 1,
+              "signature": 1,
+              "metadata": 0
+            },
+            "remaining": 10
+          }
+        },
+        {
+          "bucket": 32,
+          "fqn": "arc/job/pipe/pipe_state.py::update_task_state",
+          "faninCalls": 32,
+          "truth": {
+            "directRelations": 39,
+            "directIncoming": 32,
+            "directOutgoing": 7,
+            "exactCallers": 0,
+            "resolvedCallers": 32,
+            "referrers": 0,
+            "importers": 0,
+            "subtypes": 0,
+            "structuralContainers": 0,
+            "outgoingDependencies": 7,
+            "crossFileRelations": 32,
+            "affectedFiles": 8,
+            "relationsWithCallSite": 39
+          },
+          "claimed": {
+            "exactCallerCount": 32,
+            "exactReferenceCount": 0,
+            "outgoingDependencyCount": 7,
+            "directIncoming": 32,
+            "directOutgoing": 7
+          },
+          "censusTruthful": true,
+          "shipped": {
+            "totalCharacters": 7378,
+            "restatementCharacters": 3131,
+            "evidenceCharacters": 957,
+            "fixedCharacters": 3290,
+            "restatementShare": 0.4244,
+            "deliveredRelations": 1,
+            "deliveredWithSourceText": 0,
+            "deliveredNodes": 4,
+            "deliveredEdges": 3,
+            "resultState": "bounded_truncated",
+            "latencyMs": 27.1
+          },
+          "counterfactual": {
+            "censusCharacters": 509,
+            "fixedCharacters": 3290,
+            "restatementCharacters": 1345,
+            "evidenceBudget": 3748,
+            "evidenceCharacters": 1438,
+            "totalCharacters": 6582,
+            "restatementShare": 0.2817,
+            "rendered": 1,
+            "renderedWithSourceText": 1,
+            "forms": {
+              "full": 1,
+              "signature": 0,
+              "metadata": 0
+            },
+            "remaining": 38
+          }
+        },
+        {
+          "bucket": 64,
+          "fqn": "arc/species/species.py::colliding_atoms",
+          "faninCalls": 65,
+          "truth": {
+            "directRelations": 81,
+            "directIncoming": 79,
+            "directOutgoing": 2,
+            "exactCallers": 2,
+            "resolvedCallers": 63,
+            "referrers": 0,
+            "importers": 14,
+            "subtypes": 0,
+            "structuralContainers": 0,
+            "outgoingDependencies": 2,
+            "crossFileRelations": 79,
+            "affectedFiles": 18,
+            "relationsWithCallSite": 67
+          },
+          "claimed": {
+            "exactCallerCount": 64,
+            "exactReferenceCount": 0,
+            "outgoingDependencyCount": 0,
+            "directIncoming": 64,
+            "directOutgoing": 0
+          },
+          "censusTruthful": false,
+          "shipped": {
+            "totalCharacters": 7215,
+            "restatementCharacters": 2958,
+            "evidenceCharacters": 901,
+            "fixedCharacters": 3356,
+            "restatementShare": 0.41,
+            "deliveredRelations": 1,
+            "deliveredWithSourceText": 0,
+            "deliveredNodes": 5,
+            "deliveredEdges": 3,
+            "resultState": "bounded_truncated",
+            "latencyMs": 62.4
+          },
+          "counterfactual": {
+            "censusCharacters": 511,
+            "fixedCharacters": 3356,
+            "restatementCharacters": 1851,
+            "evidenceBudget": 3770,
+            "evidenceCharacters": 2085,
+            "totalCharacters": 7803,
+            "restatementShare": 0.3027,
+            "rendered": 2,
+            "renderedWithSourceText": 2,
+            "forms": {
+              "full": 1,
+              "signature": 1,
+              "metadata": 0
+            },
+            "remaining": 79
+          }
+        },
+        {
+          "bucket": 128,
+          "fqn": "arc/tckdb/adapter_test.py::TestComputedReactionBundle._submit",
+          "faninCalls": 108,
+          "truth": {
+            "directRelations": 114,
+            "directIncoming": 109,
+            "directOutgoing": 5,
+            "exactCallers": 108,
+            "resolvedCallers": 0,
+            "referrers": 0,
+            "importers": 0,
+            "subtypes": 0,
+            "structuralContainers": 1,
+            "outgoingDependencies": 5,
+            "crossFileRelations": 0,
+            "affectedFiles": 1,
+            "relationsWithCallSite": 113
+          },
+          "claimed": {
+            "exactCallerCount": 64,
+            "exactReferenceCount": 0,
+            "outgoingDependencyCount": 0,
+            "directIncoming": 64,
+            "directOutgoing": 0
+          },
+          "censusTruthful": false,
+          "shipped": {
+            "totalCharacters": 7401,
+            "restatementCharacters": 3206,
+            "evidenceCharacters": 904,
+            "fixedCharacters": 3291,
+            "restatementShare": 0.4332,
+            "deliveredRelations": 1,
+            "deliveredWithSourceText": 0,
+            "deliveredNodes": 4,
+            "deliveredEdges": 3,
+            "resultState": "bounded_truncated",
+            "latencyMs": 90.2
+          },
+          "counterfactual": {
+            "censusCharacters": 513,
+            "fixedCharacters": 3291,
+            "restatementCharacters": 1377,
+            "evidenceBudget": 3732,
+            "evidenceCharacters": 1276,
+            "totalCharacters": 6457,
+            "restatementShare": 0.2927,
+            "rendered": 1,
+            "renderedWithSourceText": 1,
+            "forms": {
+              "full": 1,
+              "signature": 0,
+              "metadata": 0
+            },
+            "remaining": 113
+          }
+        },
+        {
+          "bucket": 500,
+          "fqn": "arc/molecule/molecule.py::Molecule",
+          "faninCalls": 531,
+          "truth": {
+            "directRelations": 780,
+            "directIncoming": 664,
+            "directOutgoing": 116,
+            "exactCallers": 4,
+            "resolvedCallers": 527,
+            "referrers": 94,
+            "importers": 39,
+            "subtypes": 0,
+            "structuralContainers": 0,
+            "outgoingDependencies": 116,
+            "crossFileRelations": 653,
+            "affectedFiles": 53,
+            "relationsWithCallSite": 531
+          },
+          "claimed": {
+            "exactCallerCount": 64,
+            "exactReferenceCount": 0,
+            "outgoingDependencyCount": 0,
+            "directIncoming": 64,
+            "directOutgoing": 0
+          },
+          "censusTruthful": false,
+          "shipped": {
+            "totalCharacters": 7315,
+            "restatementCharacters": 3207,
+            "evidenceCharacters": 812,
+            "fixedCharacters": 3296,
+            "restatementShare": 0.4384,
+            "deliveredRelations": 1,
+            "deliveredWithSourceText": 0,
+            "deliveredNodes": 5,
+            "deliveredEdges": 3,
+            "resultState": "bounded_truncated",
+            "latencyMs": 148.1
+          },
+          "counterfactual": {
+            "censusCharacters": 522,
+            "fixedCharacters": 3296,
+            "restatementCharacters": 2005,
+            "evidenceBudget": 3789,
+            "evidenceCharacters": 1833,
+            "totalCharacters": 7656,
+            "restatementShare": 0.3301,
+            "rendered": 2,
+            "renderedWithSourceText": 2,
+            "forms": {
+              "full": 1,
+              "signature": 1,
+              "metadata": 0
+            },
+            "remaining": 778
+          }
+        },
+        {
+          "bucket": 1000,
+          "fqn": "arc/species/species.py::ARCSpecies",
+          "faninCalls": 869,
+          "truth": {
+            "directRelations": 999,
+            "directIncoming": 945,
+            "directOutgoing": 54,
+            "exactCallers": 2,
+            "resolvedCallers": 867,
+            "referrers": 36,
+            "importers": 40,
+            "subtypes": 0,
+            "structuralContainers": 0,
+            "outgoingDependencies": 54,
+            "crossFileRelations": 940,
+            "affectedFiles": 83,
+            "relationsWithCallSite": 869
+          },
+          "claimed": {
+            "exactCallerCount": 64,
+            "exactReferenceCount": 0,
+            "outgoingDependencyCount": 0,
+            "directIncoming": 64,
+            "directOutgoing": 0
+          },
+          "censusTruthful": false,
+          "shipped": {
+            "totalCharacters": 7396,
+            "restatementCharacters": 3167,
+            "evidenceCharacters": 921,
+            "fixedCharacters": 3308,
+            "restatementShare": 0.4282,
+            "deliveredRelations": 1,
+            "deliveredWithSourceText": 0,
+            "deliveredNodes": 5,
+            "deliveredEdges": 3,
+            "resultState": "bounded_truncated",
+            "latencyMs": 221
+          },
+          "counterfactual": {
+            "censusCharacters": 520,
+            "fixedCharacters": 3308,
+            "restatementCharacters": 1981,
+            "evidenceBudget": 3783,
+            "evidenceCharacters": 2136,
+            "totalCharacters": 7945,
+            "restatementShare": 0.3148,
+            "rendered": 2,
+            "renderedWithSourceText": 2,
+            "forms": {
+              "full": 1,
+              "signature": 1,
+              "metadata": 0
+            },
+            "remaining": 997
+          }
+        }
+      ]
+    }
+  ]
+}
