@@ -1,0 +1,393 @@
+{
+  "milestone": "M212",
+  "generatedAt": "2026-09-04T15:54:15.401Z",
+  "method": "synthetic controlled-fanout corpora, VTRACE default get_impact_graph through the MCP request handler; no agent, no model call",
+  "preregistered": {
+    "fanouts": [
+      1,
+      8,
+      32,
+      64,
+      65,
+      100,
+      200,
+      500
+    ],
+    "sampleSize": 10,
+    "sampleRule": "first N caller FQNs lexicographically, fixed before any response was read"
+  },
+  "repeats": 2,
+  "perFanout": [
+    {
+      "fanout": 1,
+      "status": "MEASURED",
+      "truthfulCallers": 1,
+      "indexedCallers": 1,
+      "indexingRecallPercent": 100,
+      "censusDirectRelations": 3,
+      "censusExactCallers": 0,
+      "censusResolvedCallers": 1,
+      "censusImporters": 2,
+      "censusComplete": true,
+      "deliveredRelations": 3,
+      "deliveredWithSource": 3,
+      "continuationRemaining": null,
+      "continuationPagesFollowed": 0,
+      "continuationExhausted": true,
+      "continuationFaults": [],
+      "responseBytes": 7567,
+      "sample": [
+        "src/callers_0001.ts::caller_0001"
+      ],
+      "sampleBreakdown": {
+        "INLINE_WITH_SOURCE": 1
+      },
+      "reachableBreakdown": {
+        "INLINE_WITH_SOURCE": 1
+      },
+      "recall": {
+        "inlineRecall": 100,
+        "reachableRecall": 100
+      },
+      "projectionClass": "FULL_INLINE_ENUMERATION",
+      "semanticsStableAcrossRepeats": true
+    },
+    {
+      "fanout": 8,
+      "status": "MEASURED",
+      "truthfulCallers": 8,
+      "indexedCallers": 8,
+      "indexingRecallPercent": 100,
+      "censusDirectRelations": 9,
+      "censusExactCallers": 0,
+      "censusResolvedCallers": 8,
+      "censusImporters": 1,
+      "censusComplete": true,
+      "deliveredRelations": 1,
+      "deliveredWithSource": 0,
+      "continuationRemaining": 8,
+      "continuationPagesFollowed": 4,
+      "continuationExhausted": true,
+      "continuationFaults": [],
+      "responseBytes": 5570,
+      "sample": [
+        "src/callers_0001.ts::caller_0001",
+        "src/callers_0001.ts::caller_0002",
+        "src/callers_0001.ts::caller_0003",
+        "src/callers_0001.ts::caller_0004",
+        "src/callers_0001.ts::caller_0005",
+        "src/callers_0001.ts::caller_0006",
+        "src/callers_0001.ts::caller_0007",
+        "src/callers_0001.ts::caller_0008"
+      ],
+      "sampleBreakdown": {
+        "INLINE_WITHOUT_SOURCE": 1,
+        "CENSUS_ONLY": 7
+      },
+      "reachableBreakdown": {
+        "INLINE_WITHOUT_SOURCE": 2,
+        "INLINE_WITH_SOURCE": 6
+      },
+      "recall": {
+        "inlineRecall": 0,
+        "reachableRecall": 75
+      },
+      "projectionClass": "BOUNDED_INLINE_WITH_OTHER_EXPANSION",
+      "semanticsStableAcrossRepeats": true
+    },
+    {
+      "fanout": 32,
+      "status": "MEASURED",
+      "truthfulCallers": 32,
+      "indexedCallers": 32,
+      "indexingRecallPercent": 100,
+      "censusDirectRelations": 34,
+      "censusExactCallers": 0,
+      "censusResolvedCallers": 32,
+      "censusImporters": 2,
+      "censusComplete": true,
+      "deliveredRelations": 2,
+      "deliveredWithSource": 2,
+      "continuationRemaining": 32,
+      "continuationPagesFollowed": 15,
+      "continuationExhausted": true,
+      "continuationFaults": [],
+      "responseBytes": 7106,
+      "sample": [
+        "src/callers_0001.ts::caller_0001",
+        "src/callers_0001.ts::caller_0002",
+        "src/callers_0001.ts::caller_0003",
+        "src/callers_0001.ts::caller_0004",
+        "src/callers_0001.ts::caller_0005",
+        "src/callers_0001.ts::caller_0006",
+        "src/callers_0001.ts::caller_0007",
+        "src/callers_0001.ts::caller_0008",
+        "src/callers_0001.ts::caller_0009",
+        "src/callers_0001.ts::caller_0010"
+      ],
+      "sampleBreakdown": {
+        "INLINE_WITH_SOURCE": 2,
+        "CENSUS_ONLY": 8
+      },
+      "reachableBreakdown": {
+        "INLINE_WITH_SOURCE": 10
+      },
+      "recall": {
+        "inlineRecall": 20,
+        "reachableRecall": 100
+      },
+      "projectionClass": "BOUNDED_INLINE_WITH_OTHER_EXPANSION",
+      "semanticsStableAcrossRepeats": true
+    },
+    {
+      "fanout": 64,
+      "status": "MEASURED",
+      "truthfulCallers": 64,
+      "indexedCallers": 64,
+      "indexingRecallPercent": 100,
+      "censusDirectRelations": 68,
+      "censusExactCallers": 0,
+      "censusResolvedCallers": 64,
+      "censusImporters": 4,
+      "censusComplete": true,
+      "deliveredRelations": 2,
+      "deliveredWithSource": 2,
+      "continuationRemaining": 66,
+      "continuationPagesFollowed": 32,
+      "continuationExhausted": true,
+      "continuationFaults": [],
+      "responseBytes": 7118,
+      "sample": [
+        "src/callers_0001.ts::caller_0001",
+        "src/callers_0001.ts::caller_0002",
+        "src/callers_0001.ts::caller_0003",
+        "src/callers_0001.ts::caller_0004",
+        "src/callers_0001.ts::caller_0005",
+        "src/callers_0001.ts::caller_0006",
+        "src/callers_0001.ts::caller_0007",
+        "src/callers_0001.ts::caller_0008",
+        "src/callers_0001.ts::caller_0009",
+        "src/callers_0001.ts::caller_0010"
+      ],
+      "sampleBreakdown": {
+        "INLINE_WITH_SOURCE": 2,
+        "CENSUS_ONLY": 8
+      },
+      "reachableBreakdown": {
+        "INLINE_WITH_SOURCE": 10
+      },
+      "recall": {
+        "inlineRecall": 20,
+        "reachableRecall": 100
+      },
+      "projectionClass": "BOUNDED_INLINE_WITH_OTHER_EXPANSION",
+      "semanticsStableAcrossRepeats": true
+    },
+    {
+      "fanout": 65,
+      "status": "MEASURED",
+      "truthfulCallers": 65,
+      "indexedCallers": 65,
+      "indexingRecallPercent": 100,
+      "censusDirectRelations": 69,
+      "censusExactCallers": 0,
+      "censusResolvedCallers": 65,
+      "censusImporters": 4,
+      "censusComplete": true,
+      "deliveredRelations": 2,
+      "deliveredWithSource": 2,
+      "continuationRemaining": 67,
+      "continuationPagesFollowed": 33,
+      "continuationExhausted": true,
+      "continuationFaults": [],
+      "responseBytes": 7126,
+      "sample": [
+        "src/callers_0001.ts::caller_0001",
+        "src/callers_0001.ts::caller_0002",
+        "src/callers_0001.ts::caller_0003",
+        "src/callers_0001.ts::caller_0004",
+        "src/callers_0001.ts::caller_0005",
+        "src/callers_0001.ts::caller_0006",
+        "src/callers_0001.ts::caller_0007",
+        "src/callers_0001.ts::caller_0008",
+        "src/callers_0001.ts::caller_0009",
+        "src/callers_0001.ts::caller_0010"
+      ],
+      "sampleBreakdown": {
+        "INLINE_WITH_SOURCE": 2,
+        "CENSUS_ONLY": 8
+      },
+      "reachableBreakdown": {
+        "INLINE_WITH_SOURCE": 10
+      },
+      "recall": {
+        "inlineRecall": 20,
+        "reachableRecall": 100
+      },
+      "projectionClass": "BOUNDED_INLINE_WITH_OTHER_EXPANSION",
+      "semanticsStableAcrossRepeats": true
+    },
+    {
+      "fanout": 100,
+      "status": "MEASURED",
+      "truthfulCallers": 100,
+      "indexedCallers": 100,
+      "indexingRecallPercent": 100,
+      "censusDirectRelations": 105,
+      "censusExactCallers": 0,
+      "censusResolvedCallers": 100,
+      "censusImporters": 5,
+      "censusComplete": true,
+      "deliveredRelations": 2,
+      "deliveredWithSource": 2,
+      "continuationRemaining": 103,
+      "continuationPagesFollowed": 51,
+      "continuationExhausted": true,
+      "continuationFaults": [],
+      "responseBytes": 7142,
+      "sample": [
+        "src/callers_0001.ts::caller_0001",
+        "src/callers_0001.ts::caller_0002",
+        "src/callers_0001.ts::caller_0003",
+        "src/callers_0001.ts::caller_0004",
+        "src/callers_0001.ts::caller_0005",
+        "src/callers_0001.ts::caller_0006",
+        "src/callers_0001.ts::caller_0007",
+        "src/callers_0001.ts::caller_0008",
+        "src/callers_0001.ts::caller_0009",
+        "src/callers_0001.ts::caller_0010"
+      ],
+      "sampleBreakdown": {
+        "INLINE_WITH_SOURCE": 2,
+        "CENSUS_ONLY": 8
+      },
+      "reachableBreakdown": {
+        "INLINE_WITH_SOURCE": 10
+      },
+      "recall": {
+        "inlineRecall": 20,
+        "reachableRecall": 100
+      },
+      "projectionClass": "BOUNDED_INLINE_WITH_OTHER_EXPANSION",
+      "semanticsStableAcrossRepeats": true
+    },
+    {
+      "fanout": 200,
+      "status": "MEASURED",
+      "truthfulCallers": 200,
+      "indexedCallers": 200,
+      "indexingRecallPercent": 100,
+      "censusDirectRelations": 210,
+      "censusExactCallers": 0,
+      "censusResolvedCallers": 200,
+      "censusImporters": 10,
+      "censusComplete": true,
+      "deliveredRelations": 2,
+      "deliveredWithSource": 2,
+      "continuationRemaining": 208,
+      "continuationPagesFollowed": 101,
+      "continuationExhausted": true,
+      "continuationFaults": [],
+      "responseBytes": 7147,
+      "sample": [
+        "src/callers_0001.ts::caller_0001",
+        "src/callers_0001.ts::caller_0002",
+        "src/callers_0001.ts::caller_0003",
+        "src/callers_0001.ts::caller_0004",
+        "src/callers_0001.ts::caller_0005",
+        "src/callers_0001.ts::caller_0006",
+        "src/callers_0001.ts::caller_0007",
+        "src/callers_0001.ts::caller_0008",
+        "src/callers_0001.ts::caller_0009",
+        "src/callers_0001.ts::caller_0010"
+      ],
+      "sampleBreakdown": {
+        "INLINE_WITH_SOURCE": 2,
+        "CENSUS_ONLY": 8
+      },
+      "reachableBreakdown": {
+        "INLINE_WITH_SOURCE": 10
+      },
+      "recall": {
+        "inlineRecall": 20,
+        "reachableRecall": 100
+      },
+      "projectionClass": "BOUNDED_INLINE_WITH_OTHER_EXPANSION",
+      "semanticsStableAcrossRepeats": true
+    },
+    {
+      "fanout": 500,
+      "status": "MEASURED",
+      "truthfulCallers": 500,
+      "indexedCallers": 500,
+      "indexingRecallPercent": 100,
+      "censusDirectRelations": 525,
+      "censusExactCallers": 0,
+      "censusResolvedCallers": 500,
+      "censusImporters": 25,
+      "censusComplete": true,
+      "deliveredRelations": 2,
+      "deliveredWithSource": 2,
+      "continuationRemaining": 523,
+      "continuationPagesFollowed": 253,
+      "continuationExhausted": true,
+      "continuationFaults": [],
+      "responseBytes": 7417,
+      "sample": [
+        "src/callers_0001.ts::caller_0001",
+        "src/callers_0001.ts::caller_0002",
+        "src/callers_0001.ts::caller_0003",
+        "src/callers_0001.ts::caller_0004",
+        "src/callers_0001.ts::caller_0005",
+        "src/callers_0001.ts::caller_0006",
+        "src/callers_0001.ts::caller_0007",
+        "src/callers_0001.ts::caller_0008",
+        "src/callers_0001.ts::caller_0009",
+        "src/callers_0001.ts::caller_0010"
+      ],
+      "sampleBreakdown": {
+        "INLINE_WITH_SOURCE": 2,
+        "CENSUS_ONLY": 8
+      },
+      "reachableBreakdown": {
+        "INLINE_WITH_SOURCE": 10
+      },
+      "recall": {
+        "inlineRecall": 20,
+        "reachableRecall": 100
+      },
+      "projectionClass": "BOUNDED_INLINE_WITH_OTHER_EXPANSION",
+      "semanticsStableAcrossRepeats": true
+    }
+  ],
+  "aggregate": {
+    "corpora": 8,
+    "allSemanticsStable": true,
+    "indexingRecallMin": 100,
+    "censusTruthfulEverywhere": true,
+    "projectionClasses": [
+      "FULL_INLINE_ENUMERATION",
+      "BOUNDED_INLINE_WITH_OTHER_EXPANSION"
+    ],
+    "inlineRecallByFanout": {
+      "1": 100,
+      "8": 0,
+      "32": 20,
+      "64": 20,
+      "65": 20,
+      "100": 20,
+      "200": 20,
+      "500": 20
+    },
+    "reachableRecallByFanout": {
+      "1": 100,
+      "8": 75,
+      "32": 100,
+      "64": 100,
+      "65": 100,
+      "100": 100,
+      "200": 100,
+      "500": 100
+    }
+  }
+}

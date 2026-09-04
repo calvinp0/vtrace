@@ -10867,3 +10867,150 @@ commits           dc2e5f0b audit + counterfactual (no production change);
   Baseline+VEXP causal benchmark conditions before any paid live run.
   `ENGINE QUALITY != CODING-AGENT UTILITY` and
   `CONTEXT_COMPILER_PRODUCT_UTILITY_NOT_ESTABLISHED` both still govern.
+
+---
+
+```text
+milestone         M212
+verdict           PASS (research / measurement only)
+markers           CURRENT_VEXP_DOCS_SUPPORT_PROGRESSIVE_IMPACT_DISCLOSURE;
+                  CURRENT_VEXP_DOES_NOT_SUPPORT_FROZEN_A15_INLINE_ASSUMPTION;
+                  FROZEN_A15_SUPERSEDED_BY_CURRENT_VEXP_ARCHITECTURE;
+                  VEXP_IMPACT_RENDERER_HAS_NO_SOURCE_BEARING_FIELD;
+                  VEXP_IMPACT_TOOL_NOT_IN_DEFAULT_CATALOG;
+                  M212_BEHAVIOURAL_PROBE_LICENCE_BLOCKED
+parity            UNCHANGED and NOT re-run. Frozen matrix stays MATCH 7 EXCEED 7
+                  BELOW 1, match-or-exceed 14/15, A15 BELOW. The frozen scorer,
+                  its thresholds and its population were not touched. M212 does
+                  NOT license writing 15/15 anywhere, ever.
+spend             0 live-agent runs, $0, 0 Docker, 0 VEXP processes started,
+                  0 VEXP deterministic tool invocations (licence-blocked).
+scope             Validity audit of a frozen claim, not an engine milestone. Ask
+                  whether A15 still describes the competitor before spending
+                  engine work reaching it. No product change, prefer zero src/.
+
+vexp identity     Installed 2.0.24 (stale; refuses to run at all -- prints
+                  "update required" and exits). Newest public release 3.1.1,
+                  changelog-dated 2026-09-03, obtained via `npm pack
+                  vexp-cli@3.1.1` into isolated scratch, sha256 5f17c301..ec831.
+                  The user's global install was NOT upgraded. Control F2 fired.
+
+central finding   VEXP's get_impact_graph renderer emits fqn, edge_type, depth,
+                  file_path, cross_repo, repo, children -- and NO source-bearing
+                  field, not even a line number. The field set is IDENTICAL in
+                  2.0.24 (the version frozen A15 was authored against) and 3.1.1.
+                  Its shadow A15 score is 0% STRUCTURALLY, against a 90% MATCH
+                  bar. Frozen A15 was therefore never a measurement of VEXP
+                  behaviour: it is a VTRACE operationalisation of claim V-B1,
+                  which M196 recorded as INSUFFICIENT_METHOD, "none published".
+                  A15 is superseded by ABSENCE, not by VEXP moving.
+
+catalog finding   get_impact_graph is NOT in VEXP's default MCP catalog in
+                  either version. 2.0.24 defaults to run_pipeline, get_skeleton,
+                  index_status, expand_vexp_ref (4); 3.1.1 to run_pipeline,
+                  get_skeleton, verify_done (3), with expand_vexp_ref now gated
+                  out too. Current default dependents evidence is verify_done's
+                  "(file:line)" -- which m197aScoring F5 explicitly rejects as
+                  insufficient for A15.
+
+criterion 3       NOT DISCHARGED and not argued around. No cursor/limit param on
+                  get_impact_graph, no V-REF in impact output, expander gated
+                  out of default. A reader requiring all four SUPERSEDED
+                  criteria should read the verdict as UNRESOLVED on criterion 3;
+                  nothing in the recommendation changes, because criterion 4
+                  alone removes the case for A15 engine work.
+
+C1 unverified     The brief's claim that the changelog documents an impact-count
+                  defect caused by token-budget capping was NOT FOUND on current
+                  public material (two targeted fetches + site-scoped search).
+                  Recorded as unverified; supports no conclusion here.
+
+shadow A15        8 synthetic fanouts (1/8/32/64/65/100/200/500), one repo each,
+                  indexing recall 100% everywhere, census exactly truthful
+                  everywhere (resolvedCallers == fanout at every point).
+                  VTRACE INLINE_RECALL 20% at every fanout >= 32 -- reproducing
+                  the frozen C-LARGE 20% on a corpus sharing nothing with ARC,
+                  so the frozen number is a property of the evidence budget, not
+                  of ARC. REACHABLE_RECALL 100% via continuation, exhausted at
+                  every fanout (253 pages at 500), 0 faults. Default response is
+                  SIZE-INVARIANT to blast radius: 5570-7566 bytes from fanout 1
+                  to 500. Semantics stable across 2 repeats, timing excluded.
+
+residual          Fanout 8 is the sweep's worst point and was not predicted:
+                  INLINE_RECALL 0% (its one delivered relation carries no source
+                  at all) and REACHABLE_RECALL 75%, two sampled callers arriving
+                  as INLINE_WITHOUT_SOURCE even after the stream is exhausted.
+                  Small universes can deliver identity without affording the
+                  call expression. Observed, not repaired; M212 changed no code.
+
+self-caught       M212's own unit test caught its V-REF attribution reading a
+                  fixed 2000-char window that spills into neighbouring tool
+                  definitions -- a false positive on exactly the claim control
+                  F1 exists to protect. Fixed to read each tool's own
+                  description literal. Two extractor regexes also assumed \w
+                  identifiers and returned nothing on $-bearing minified names,
+                  and a third brace-matched bodies built from nested template
+                  holes and silently returned an empty field set; that path now
+                  returns null and is read as UNKNOWN, never as "no fields".
+
+falsification     F1-F12 all enforced; F1 and F2 both fired and changed the
+                  work. F11 (frozen scorer untouched) and F12 (zero src/ change)
+                  verified by empty `git status --porcelain` over the frozen
+                  scorer files and over src/.
+
+corpus identity   C-MED UNCHANGED at 508. M212 added benchmark files only and
+                  C-MED is src/; no re-freeze was due or performed.
+
+tests             6265 pass, 49 skip, 0 fail (385 files). typecheck, typecheck:
+                  benchmarks, lint, git diff --check all clean.
+
+commits           e7567d68 harness + preregistration (criteria fixed before
+                  measurement); evidence commit records this row.
+```
+
+## M212 standing findings
+
+- **A frozen claim can be stale at the moment it is frozen.** M196 read
+  vexp-cli 2.0.24 on 2026-09-01, five days after 3.0.0 shipped, and derived A15
+  from V-B1 -- a claim it had itself just classified `INSUFFICIENT_METHOD`,
+  measurement definition "none published". Every claim in the frozen matrix whose
+  `vexpSource` carries that classification is a VTRACE-authored bar wearing a
+  competitor's name. A15 was the one that bound. It is worth knowing which others
+  share the property before any of them is treated as a parity gap.
+
+- **Ask what a competitor's renderer CAN emit before measuring what it DID.**
+  The behavioural probe M212 planned was licence-blocked, and it would have been
+  the weaker instrument anyway. A renderer with no source-bearing field cannot
+  produce a call expression on any corpus, for any symbol, at any budget, on any
+  plan -- a capability statement, where a probe yields only a sample. Static
+  reads of shipped vendor bundles should be the first move in a parity audit,
+  not the fallback.
+
+- **VEXP's default agent-facing surface is three tools, and impact is not one of
+  them.** A parity programme that measures VTRACE's `get_impact_graph` against
+  VEXP's `get_impact_graph` is comparing a default surface to a surface the
+  competitor's agents are never shown. Future comparisons should name which
+  surface they mean; VEXP's default blast-radius disclosure is a `run_pipeline`
+  header plus `verify_done`'s `file:line` dependents.
+
+- **The 20% was never about ARC.** Frozen A15's C-LARGE value reproduces exactly
+  on a synthetic corpus with nothing in common with it, at every fanout from 32
+  to 500. A future milestone tempted to explain an A15 number by something in the
+  corpus should check the synthetic sweep first -- the number is a property of
+  the evidence budget.
+
+- **Size-invariance is the property worth defending, not the inline count.** The
+  default impact response moved 5570 -> 7566 bytes while its universe moved 1 ->
+  500. That is the M211 architecture's actual achievement, it is measurable in
+  one run, and it is the thing a future change to impact could break silently.
+  It deserves a standing regression check more than A15 deserves a repair.
+
+- **Next-step recommendation.** UNCHANGED from M211 and now positively
+  supported rather than merely un-refuted: freeze the VTRACE impact architecture
+  at M211, retain 14/15 as historical fact, record A15 as no longer
+  representative, and proceed to the separately-authorised causal-benchmark
+  preregistration -- Baseline vs Baseline+VTRACE vs Baseline+VEXP -- before any
+  paid live run. Do NOT open a narrow A15 capacity milestone: M210 showed the
+  predicate arithmetically unreachable and M212 shows the competitor scores 0%
+  against it. `ENGINE QUALITY != CODING-AGENT UTILITY` and
+  `CONTEXT_COMPILER_PRODUCT_UTILITY_NOT_ESTABLISHED` both still govern.
