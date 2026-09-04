@@ -1,0 +1,565 @@
+{
+  "schemaVersion": "stage5.m215.falsification.v1",
+  "milestone": "M215",
+  "generatedAt": "2026-09-04T19:27:29.718Z",
+  "executorVersion": "stage5.m215.launch-executor.v1",
+  "liveModelSpendUsd": 0,
+  "frozenBenchmarkTaskLiveAgentRuns": 0,
+  "authorities": {
+    "preregistration": {
+      "artifact": "stage5_m214_preregistration.json",
+      "expected": "3cd3b3d2d665c559fdb66e7274e809245e82ea7373344cf32614833b8dcbfea4",
+      "actual": "3cd3b3d2d665c559fdb66e7274e809245e82ea7373344cf32614833b8dcbfea4",
+      "verified": true
+    },
+    "manifest": {
+      "artifact": "stage5_m214_run_manifest.json",
+      "expected": "549df54b0f48b59a2bc13da2acf27cbf2469f416d90018c3d48dd87219f77ff1",
+      "actual": "549df54b0f48b59a2bc13da2acf27cbf2469f416d90018c3d48dd87219f77ff1",
+      "verified": true
+    },
+    "externalReference": {
+      "artifact": "stage5_m214_external_reference.json",
+      "expected": "822c4c5fb69dc21b8ada04189e73fcadb3e5ab1bf7c06a855dd4582a6ec7834b",
+      "actual": "822c4c5fb69dc21b8ada04189e73fcadb3e5ab1bf7c06a855dd4582a6ec7834b",
+      "verified": true
+    }
+  },
+  "observedVtraceProductTreeSha": "b3b3e439f10c6c526cafc6001d25dd0e7552ce6d",
+  "controlCount": 66,
+  "satisfied": 66,
+  "guardFiresControls": 44,
+  "guardSilentControls": 22,
+  "suitePasses": true,
+  "failures": [],
+  "controls": [
+    {
+      "id": "F0_CLEAN_BASELINE",
+      "description": "a fully compliant baseline run reaches a valid outcome with every required gate asserted",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F0_CLEAN_VTRACE",
+      "description": "a fully compliant vtrace run reaches a valid outcome with every required gate asserted",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F0_CLEAN_AUDIT_RUN",
+      "description": "M214's own per-run auditor is silent on the executor's observed configuration",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F1_PREREGISTRATION_MUTATION",
+      "description": "one altered preregistration field refuses the launch before any container starts",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "satisfied": true,
+      "detail": "stage5_m214_preregistration.json does not recompute to its frozen digest: expected 3cd3b3d2d665c559fdb66e7274e809245e82ea7373344cf32614833b8dcbfea4, actual 18fed8c811a7983ad7a5eeb86f09389a0737df20a9b948a5fb1ce7424bb79616 | launch refused for VTRACE_EXTERNAL_VEXP_100:astropy__astropy-14365:baseline: P1_PREREGISTRATION_HASH expected 3cd3b3d2d665c559fdb66e7274e809245e82ea7373344cf32614833b8dcbfea4, actual 18fed8c811a7983ad7a5eeb86f09389a0737df20a9b948a5fb1ce7424bb79616"
+    },
+    {
+      "id": "F2_MANIFEST_MUTATION",
+      "description": "one altered manifest row refuses the launch of every row, not only that one",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "satisfied": true,
+      "detail": "stage5_m214_run_manifest.json does not recompute to its frozen digest: expected 549df54b0f48b59a2bc13da2acf27cbf2469f416d90018c3d48dd87219f77ff1, actual a7d35246d5a6a323db1c463994739cd21f9b112eda867d785ddaa5bb51d80ad5 | launch refused for VTRACE_EXTERNAL_VEXP_100:astropy__astropy-14365:baseline: P2_MANIFEST_HASH expected 549df54b0f48b59a2bc13da2acf27cbf2469f416d90018c3d48dd87219f77ff1, actual a7d35246d5a6a323db1c463994739cd21f9b112eda867d785ddaa5bb51d80ad5"
+    },
+    {
+      "id": "F3_EXTERNAL_REFERENCE_MUTATION",
+      "description": "the external reference is part of experiment identity: altering it fails the launch, while never influencing execution",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "satisfied": true,
+      "detail": "stage5_m214_external_reference.json does not recompute to its frozen digest: expected 822c4c5fb69dc21b8ada04189e73fcadb3e5ab1bf7c06a855dd4582a6ec7834b, actual 0000000000000000000000000000000000000000000000000000000000000000 | launch refused for VTRACE_EXTERNAL_VEXP_100:astropy__astropy-14365:baseline: P3_EXTERNAL_REFERENCE_HASH expected 822c4c5fb69dc21b8ada04189e73fcadb3e5ab1bf7c06a855dd4582a6ec7834b, actual 0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    {
+      "id": "F4_INVALID_ARM_VEXP",
+      "description": "arm=VEXP is refused: the vendor's published figure is an external reference, never an arm",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "satisfied": true,
+      "detail": "'vexp' is not an executable arm of this experiment. The executable arms are baseline and vtrace; the vendor's published figure is an EXTERNAL_VENDOR_REFERENCE with no container, no budget and no execution order, and never enters the arm set."
+    },
+    {
+      "id": "F5_TASK_OUTSIDE_MANIFEST",
+      "description": "a task outside the frozen 100 cannot be addressed by the executor",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "satisfied": true,
+      "detail": "no frozen manifest row matches {\"instanceId\":\"not__a-real-task-1\",\"arm\":\"baseline\"}; a task or arm outside the frozen 100x2 cohort cannot be executed by this executor"
+    },
+    {
+      "id": "F6_MODEL_MISMATCH",
+      "description": "a provider init event reporting another model rejects the run before it can be authoritative",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "satisfied": true,
+      "detail": "MODEL_IDENTITY_DRIFT: provider-returned model identity claude-sonnet-4-5-20250929 is not the frozen target claude-opus-4-5-20251101; the run is aborted before it can become an authoritative outcome"
+    },
+    {
+      "id": "F6B_MODEL_MISMATCH_NOT_VALID",
+      "description": "the model-mismatched run is INFRASTRUCTURE_INVALID under MODEL_IDENTITY_DRIFT, not unresolved",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F32_PROVIDER_IDENTITY_ABSENT",
+      "description": "no authoritative model init event means the run cannot become a valid outcome; silence is not confirmation",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "satisfied": true,
+      "detail": "MODEL_IDENTITY_DRIFT: provider-returned model identity (absent) is not the frozen target claude-opus-4-5-20251101; the run is aborted before it can become an authoritative outcome"
+    },
+    {
+      "id": "F7_AGENT_VERSION_MISMATCH",
+      "description": "a different agent version fails; 'close enough' is not a version match",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "satisfied": true,
+      "detail": "ARM_CONFIGURATION_WRONG: R2_AGENT_IDENTITY: agent version 2.1.261 is not the frozen pin 2.1.260"
+    },
+    {
+      "id": "F8_NATIVE_TOOL_DRIFT",
+      "description": "removing one native tool fails: both arms derive their catalogue from one authority",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "satisfied": true,
+      "detail": "TREATMENT_CONTAMINATION: R2_AGENT_IDENTITY: native tool catalogue differs from the frozen authority | R3_NATIVE_TOOL_AUTHORITY: native-tool catalogue does not hash to the single frozen authority | R5_ARM_ISOLATION: baseline arm is missing native tools: Grep"
+    },
+    {
+      "id": "F9_PROMPT_DRIFT",
+      "description": "a changed user prompt fails; neither arm carries a treatment instruction",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "satisfied": true,
+      "detail": "ARM_CONFIGURATION_WRONG: R2_AGENT_IDENTITY: user prompt template differs from the frozen text"
+    },
+    {
+      "id": "F10_TREATMENT_IDENTITY_DRIFT",
+      "description": "a VTRACE product tree other than the frozen HEAD:src identity fails the cohort",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "satisfied": true,
+      "detail": "VTRACE treatment drift: the manifest freezes product tree b3b3e439f10c6c526cafc6001d25dd0e7552ce6d, the working tree is 0000000000000000000000000000000000000000. A changed treatment is a different treatment and needs a new preregistration hash."
+    },
+    {
+      "id": "F10B_TREATMENT_IDENTITY_FROZEN",
+      "description": "the observed product tree IS the frozen one, checked by tree identity rather than by repository HEAD so harness commits do not mutate the treatment",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F11_MISSING_TREATMENT_TOOL",
+      "description": "a VTRACE arm missing one frozen treatment tool fails: a null result on a narrowed treatment would be unreadable",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "satisfied": true,
+      "detail": "TREATMENT_CONTAMINATION: R4_TREATMENT_CATALOGUE: vtrace arm is missing frozen treatment tools: mcp__vtrace__get_impact_graph | R5_ARM_ISOLATION: vtrace arm model-visible tool surface differs from the arm definition | R10_TREATMENT_IDENTITY: exposed treatment catalogue does not hash to the frozen catalogue"
+    },
+    {
+      "id": "F12_BASELINE_CONTAMINATION",
+      "description": "one VTRACE tool reachable from the baseline fails before the agent starts",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "satisfied": true,
+      "detail": "TREATMENT_CONTAMINATION: R2_AGENT_IDENTITY: native tool catalogue differs from the frozen authority | R3_NATIVE_TOOL_AUTHORITY: native-tool catalogue does not hash to the single frozen authority | R5_ARM_ISOLATION: baseline arm exposes non-native tools: mcp__vtrace__get_code_context"
+    },
+    {
+      "id": "F12B_BASELINE_ENV_CONTAMINATION",
+      "description": "a VTRACE environment variable in the baseline fails; contamination is observable, not asserted away",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "satisfied": true,
+      "detail": "TREATMENT_CONTAMINATION: R5_ARM_ISOLATION: baseline arm carries treatment environment variables: VTRACE_REPO_ROOT"
+    },
+    {
+      "id": "F12C_BASELINE_DAEMON_REACHABLE",
+      "description": "a reachable treatment daemon socket contaminates the baseline even with no tool configured",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "satisfied": true,
+      "detail": "TREATMENT_CONTAMINATION: R5_ARM_ISOLATION: baseline arm can reach treatment daemon sockets: /run/vtrace.sock"
+    },
+    {
+      "id": "F13_SOURCE_MUTATED_BY_TREATMENT",
+      "description": "treatment initialisation that changes tracked source fails; indexing is observational",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "satisfied": true,
+      "detail": "ENVIRONMENT_IRREPRODUCIBLE: R6_SOURCE_STATE_EQUIVALENCE: treatment initialisation mutated tracked source in the vtrace arm: e365f8f4d02545adafb5193448e0742b084b92e78bcda5fec17b2a25b4ad25b4 → ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff; vtrace arm tracked source differs from the canonical state for astropy__astropy-14369"
+    },
+    {
+      "id": "F13B_HEAD_NOT_BASE_COMMIT",
+      "description": "a HEAD that is not the frozen base commit fails before the agent starts",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "satisfied": true,
+      "detail": "ENVIRONMENT_IRREPRODUCIBLE: R6_SOURCE_STATE_EQUIVALENCE: baseline arm HEAD at agent start is 0000000000000000000000000000000000000000, not the frozen base commit 7269fa3e33e8d02485a647da91a5a2a60a06af61"
+    },
+    {
+      "id": "F14_PATCH_INIT_ROUTE",
+      "description": "treatment state on the INIT_WRITES_GIT_EXCLUDE route, no source edit: the captured source patch is empty",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F15_PATCH_INDEX_ONLY_ROUTE",
+      "description": "treatment state on the INDEX_ONLY_NO_GIT_EXCLUDE route, no source edit: the captured source patch is empty",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F16_REAL_SOURCE_EDIT",
+      "description": "one edited source file is captured exactly, with treatment metadata excluded",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F17_CONVERSATION_REUSE",
+      "description": "a run seeded from the paired arm's conversation fails",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "satisfied": true,
+      "detail": "conversation state reused from …:astropy__astropy-14365:vtrace"
+    },
+    {
+      "id": "F18_PATCH_REUSE",
+      "description": "a run seeded from the paired arm's patch fails",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "satisfied": true,
+      "detail": "patch state reused from …:astropy__astropy-14365:vtrace"
+    },
+    {
+      "id": "F18B_TREATMENT_RESULT_REUSE",
+      "description": "a run reusing the paired arm's treatment output fails",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "satisfied": true,
+      "detail": "treatment result reused from …:vtrace"
+    },
+    {
+      "id": "F19_EXECUTION_ORDER_VIOLATION",
+      "description": "running a pair's second arm before its first is refused; the frozen order is not a choice",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "satisfied": true,
+      "detail": "launch refused for VTRACE_EXTERNAL_VEXP_100:astropy__astropy-14365:vtrace: P6_EXECUTION_ORDER execution-order violation: row 1 (astropy__astropy-14365, vtrace) was requested while row 0 (astropy__astropy-14365, baseline) has not reached a terminal state; the frozen order is not an operator choice"
+    },
+    {
+      "id": "F36_OPERATOR_ROW_SELECTION",
+      "description": "an operator selecting a later manifest row while an earlier one is unfinished is refused",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "satisfied": true,
+      "detail": "launch refused for VTRACE_EXTERNAL_VEXP_100:django__django-12774:vtrace: P6_EXECUTION_ORDER execution-order violation: row 40 (django__django-12774, vtrace) was requested while row 4 (astropy__astropy-14539, baseline) has not reached a terminal state; the frozen order is not an operator choice"
+    },
+    {
+      "id": "F36B_SCHEDULER_PICKS_FROZEN_ORDER",
+      "description": "the scheduler, not the operator, picks the next row, and it picks the frozen next one",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F20_DUPLICATE_VALID_OUTCOME",
+      "description": "a second valid completion of the same (instance, arm) is a cohort-integrity failure, not a newer result",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "satisfied": true,
+      "detail": "launch refused for VTRACE_EXTERNAL_VEXP_100:astropy__astropy-14365:baseline: P6_EXECUTION_ORDER (astropy__astropy-14365, baseline) already has a valid outcome (VTRACE_EXTERNAL_VEXP_100:astropy__astropy-14365:baseline#a1#6998d4a12f9c, VALID_RESOLVED); rerunning a decided cell is refused; VTRACE_EXTERNAL_VEXP_100:astropy__astropy-14365:baseline#a1#6998d4a12f9c produced a valid outcome (VALID_RESOLVED); a valid run is never retried, whichever way it went"
+    },
+    {
+      "id": "F20B_ORIGINAL_OUTCOME_RETAINED",
+      "description": "the original outcome is still the only one in the ledger after the refusal",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F21_INFRASTRUCTURE_RETRY_PERMITTED",
+      "description": "a preregistered infrastructure failure may be retried, and the original attempt is retained",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F22_VALID_OUTCOME_RETRY_REFUSED",
+      "description": "a valid unresolved run is not retryable; a bad patch is not infrastructure",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "satisfied": true,
+      "detail": "VTRACE_EXTERNAL_VEXP_100:astropy__astropy-14365:baseline#a1#6998d4a12f9c produced a valid outcome (VALID_UNRESOLVED); a valid run is never retried, whichever way it went | launch refused for VTRACE_EXTERNAL_VEXP_100:astropy__astropy-14365:baseline: P6_EXECUTION_ORDER (astropy__astropy-14365, baseline) already has a valid outcome (VTRACE_EXTERNAL_VEXP_100:astropy__astropy-14365:baseline#a1#6998d4a12f9c, VALID_UNRESOLVED); rerunning a decided cell is refused; VTRACE_EXTERNAL_VEXP_100:astropy__astropy-14365:baseline#a1#6998d4a12f9c produced a valid outcome (VALID_UNRESOLVED); a valid run is never retried, whichever way it went"
+    },
+    {
+      "id": "F22B_INVENTED_EXCLUSION_CATEGORY",
+      "description": "an exclusion category outside M214's frozen list cannot be used to invalidate a run",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "satisfied": true,
+      "detail": "OUTCOME_WAS_INCONVENIENT is not one of the 13 frozen categories"
+    },
+    {
+      "id": "F23_EARLY_FINAL_ANALYSIS",
+      "description": "a cohort at 50% refuses to produce a final causal report",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "satisfied": true,
+      "detail": "100 of 200 planned runs have not reached a terminal state; FIXED_N admits no interim analysis"
+    },
+    {
+      "id": "F23B_SYNTHETIC_NEVER_FINAL",
+      "description": "a SYNTHETIC ledger can never produce a final causal report, complete or not",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "satisfied": true,
+      "detail": "a SYNTHETIC ledger can never produce a final causal report | 100 of 200 planned runs have not reached a terminal state; FIXED_N admits no interim analysis"
+    },
+    {
+      "id": "F24_TREATMENT_EXPOSED_NEVER_USED",
+      "description": "a treatment-exposed run the agent never invoked is a VALID intention-to-treat outcome",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F25_TREATMENT_INITIALISATION_FAILURE",
+      "description": "a treatment that fails to initialise is classified under the frozen category, not silently run",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F26_GOLD_LEAKAGE",
+      "description": "a gold patch reachable from the agent's context fails preflight before the model is called",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "satisfied": true,
+      "detail": "ARM_CONFIGURATION_WRONG: R8_GOLD_LEAKAGE: evaluation artifacts reachable from agent context: /testbed/.gold/patch.diff"
+    },
+    {
+      "id": "F27_SPEND_CEILING",
+      "description": "with cumulative spend near the frozen ceiling, the next model call is refused",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "satisfied": true,
+      "detail": "refusing to begin another model call: $699.0000 spent, and one more run at its $3.5 cap could reach $702.5000 against an authorised ceiling of $700"
+    },
+    {
+      "id": "F27B_PROJECTION_BINDS_NOT_TOTAL",
+      "description": "the ceiling binds on the projected maximum, not on what has already been spent",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F28_NO_SPEND_AUTHORIZATION",
+      "description": "a COHORT launch without explicit operator spend authorisation is refused",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "satisfied": true,
+      "detail": "no spend authorisation supplied; a COHORT run makes paid model calls and requires explicit operator authorisation of the frozen $700 ceiling. Technical readiness is not authorisation."
+    },
+    {
+      "id": "F28B_AUTHORIZATION_CEILING_MUST_MATCH",
+      "description": "an authorisation for a different ceiling than the frozen one is refused",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "satisfied": true,
+      "detail": "authorised ceiling $2000 differs from the frozen $700"
+    },
+    {
+      "id": "F28C_UNAUTHORIZED_COHORT_LAUNCH_REFUSED",
+      "description": "the executor refuses an unauthorised COHORT row before starting a container",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "satisfied": true,
+      "detail": "launch refused for VTRACE_EXTERNAL_VEXP_100:astropy__astropy-14365:baseline: P7_SPEND_AUTHORIZATION no spend authorisation supplied; a COHORT run makes paid model calls and requires explicit operator authorisation of the frozen $700 ceiling. Technical readiness is not authorisation."
+    },
+    {
+      "id": "F29_SYNTHETIC_MODE_ISOLATION",
+      "description": "a SYNTHETIC result cannot be written into an authoritative cohort ledger",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "satisfied": true,
+      "detail": "refusing a SYNTHETIC result in a COHORT ledger: VTRACE_EXTERNAL_VEXP_100:astropy__astropy-14365:baseline#a1#6998d4a12f9c"
+    },
+    {
+      "id": "F30_RESULT_MUTATION",
+      "description": "editing a completed result's bytes fails digest verification on replay",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "satisfied": true,
+      "detail": "persisted digest for VTRACE_EXTERNAL_VEXP_100:astropy__astropy-14365:baseline#a1#6998d4a12f9c does not match the restored record | persisted chain digest for VTRACE_EXTERNAL_VEXP_100:astropy__astropy-14365:baseline#a1#6998d4a12f9c does not match the replay"
+    },
+    {
+      "id": "F30B_CORRECTION_IS_APPEND_ONLY",
+      "description": "metadata repair appends a correction and leaves the original outcome and its digest intact",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F31_RUNTIME_GATE_OMISSION",
+      "description": "a required gate missing from the run's evidence fails coverage, even when every gate present passes",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "satisfied": true,
+      "detail": "required gate R6_SOURCE_STATE_EQUIVALENCE is absent from the run's evidence"
+    },
+    {
+      "id": "F31B_GATE_COVERAGE_COMPLETE",
+      "description": "a compliant run carries every required prelaunch and runtime gate",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F33_EVALUATION_FAILURE_IS_NOT_UNRESOLVED",
+      "description": "an evaluator that did not run yields EVALUATOR_INFRA_FAILURE, never an implied unresolved task",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F34_ARM_BUDGET_ASYMMETRY",
+      "description": "giving one arm extra turns fails; there is no per-arm budget field to express it in",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "satisfied": true,
+      "detail": "stage5_m214_run_manifest.json does not recompute to its frozen digest: expected 549df54b0f48b59a2bc13da2acf27cbf2469f416d90018c3d48dd87219f77ff1, actual 9e2ac9fbe91f50bca5df3f05bfbce00ae6a74eb88efea11e09cf75c387aeb799 | launch refused for VTRACE_EXTERNAL_VEXP_100:astropy__astropy-14365:baseline: P2_MANIFEST_HASH expected 549df54b0f48b59a2bc13da2acf27cbf2469f416d90018c3d48dd87219f77ff1, actual 9e2ac9fbe91f50bca5df3f05bfbce00ae6a74eb88efea11e09cf75c387aeb799"
+    },
+    {
+      "id": "F35_RESUME",
+      "description": "an interrupted cohort resumes at exactly the next frozen row, with no duplicates and no reordering",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F37_SECRET_LEAKAGE",
+      "description": "a credential in the run environment never reaches the persisted result; its name is recorded and flagged, its value is not",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F37B_SECRET_SCANNER_DETECTS_A_LEAK",
+      "description": "the leak scanner is not vacuous: a value deliberately embedded in an artifact is detected",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "satisfied": true,
+      "detail": "persisted artifact contains the value of ANTHROPIC_API_KEY in plaintext"
+    },
+    {
+      "id": "F38_RESULT_ARM_MISMATCH",
+      "description": "a result claiming an arm the manifest row does not assign fails",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "satisfied": true,
+      "detail": "arm mismatch: assigned baseline, observed vtrace | model-visible tool surface differs from the vtrace arm definition | MCP servers differ from the vtrace arm definition: observed [] | VTRACE identity drift: expected , observed null | VTRACE product tree drift: expected , observed null | VTRACE arm did not have the treatment surface exposed"
+    },
+    {
+      "id": "F39_EXTERNAL_VEXP_IN_PAIRED_ANALYSIS",
+      "description": "feeding the external vendor reference into the paired analyser is refused",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "satisfied": true,
+      "detail": "paired analysis operand (right) \"vexp\" carries evidence class EXTERNAL_VENDOR_REFERENCE; external references have no per-task paired outcomes and cannot enter a causal statistic"
+    },
+    {
+      "id": "F39B_TWO_ARM_PAIRED_ANALYSIS_ADMITTED",
+      "description": "the two executed arms remain a legitimate paired comparison",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F40_RESET_PRESERVES_TREATMENT_STATE",
+      "description": "a reset that preserves treatment state under the frozen COLD_UNIFORM policy fails",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "satisfied": true,
+      "detail": "ENVIRONMENT_IRREPRODUCIBLE: R7_RESET_WARMTH_POLICY: reset preserves treatment state .vtrace under a COLD_UNIFORM policy; that treatment would be warm on the next task while any treatment not on the preserve list rebuilds"
+    },
+    {
+      "id": "F40B_WARM_STATE_INHERITED",
+      "description": "treatment state inherited from a previous run fails the frozen cold policy",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "satisfied": true,
+      "detail": "ENVIRONMENT_IRREPRODUCIBLE: R7_RESET_WARMTH_POLICY: vtrace arm inherited treatment state under a COLD_UNIFORM policy: .vtrace/index.sqlite"
+    },
+    {
+      "id": "H1_LEGACY_PATCH_CAPTURE_LEAKS_TREATMENT_STATE",
+      "description": "the pre-repair vendor rule (hardcoded vendor pathspec) captures treatment metadata as agent output on the index-only route, and the executor rejects that run",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "satisfied": true,
+      "detail": "PATCH_EXTRACTION_FAILURE: patch capture omitted derived exclusions: .vtrace; captured patch contains treatment state under .vtrace: .vtrace/config.json; captured patch contains treatment state under .vtrace: .vtrace/index.sqlite; captured patch contains treatment state under .vtrace: .vtrace/session.sqlite"
+    },
+    {
+      "id": "H2_TREATMENT_METADATA_WARM_ASYMMETRY",
+      "description": "the pre-repair reset rule, which preserved the vendor's own state directory across runs, fails the frozen cold policy",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "satisfied": true,
+      "detail": "reset preserves treatment state .vexp under a COLD_UNIFORM policy; that treatment would be warm on the next task while any treatment not on the preserve list rebuilds"
+    },
+    {
+      "id": "H3_SNAPSHOT_BEFORE_TREATMENT_INITIALISATION",
+      "description": "taking the pre-agent untracked snapshot before treatment initialisation reintroduces the leak by ordering rather than by pathspec, and the lifecycle audit names it",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "satisfied": true,
+      "detail": "lifecycle phase out of order: TREATMENT_INITIALISATION occurs after a later phase | the pre-agent untracked snapshot is taken BEFORE treatment initialisation; treatment state created afterwards would be attributed to the agent"
+    },
+    {
+      "id": "H3B_EXECUTOR_USES_THE_REPAIRED_ORDER",
+      "description": "the executor's own observed lifecycle takes the snapshot AFTER treatment initialisation",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F38C_OUTCOME_BLIND_DASHBOARD",
+      "description": "the operational dashboard exposes completion, spend and infrastructure health, and cannot answer which arm is ahead",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "satisfied": true,
+      "detail": "no issue reported"
+    }
+  ]
+}
