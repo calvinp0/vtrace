@@ -1,0 +1,387 @@
+{
+  "schemaVersion": "stage5.m215.launch-gates.v1",
+  "milestone": "M215",
+  "generatedAt": "2026-09-04T19:44:28.809Z",
+  "executorVersion": "stage5.m215.launch-executor.v1",
+  "authorities": {
+    "preregistration": {
+      "artifact": "stage5_m214_preregistration.json",
+      "expected": "3cd3b3d2d665c559fdb66e7274e809245e82ea7373344cf32614833b8dcbfea4",
+      "actual": "3cd3b3d2d665c559fdb66e7274e809245e82ea7373344cf32614833b8dcbfea4",
+      "verified": true
+    },
+    "manifest": {
+      "artifact": "stage5_m214_run_manifest.json",
+      "expected": "549df54b0f48b59a2bc13da2acf27cbf2469f416d90018c3d48dd87219f77ff1",
+      "actual": "549df54b0f48b59a2bc13da2acf27cbf2469f416d90018c3d48dd87219f77ff1",
+      "verified": true
+    },
+    "externalReference": {
+      "artifact": "stage5_m214_external_reference.json",
+      "expected": "822c4c5fb69dc21b8ada04189e73fcadb3e5ab1bf7c06a855dd4582a6ec7834b",
+      "actual": "822c4c5fb69dc21b8ada04189e73fcadb3e5ab1bf7c06a855dd4582a6ec7834b",
+      "verified": true
+    },
+    "preregistrationHashExcludedFields": [
+      "preregistrationHash",
+      "preregistrationHashRule",
+      "generatedAt",
+      "launchGates",
+      "launchAuthorized",
+      "preregistrationComplete",
+      "deferredRuntimeGates",
+      "readinessVerdict",
+      "readinessBlocker"
+    ],
+    "documentedExclusionsAreIncomplete": true,
+    "documentedExclusionNote": "M214's published hashRule names three excluded fields; its generator excludes nine, the six extra being outputs derived from the document and written into it after hashing. The executor reproduces the generator's rule exactly. The frozen artifact is NOT edited to correct its own prose, because that would change the digest it froze."
+  },
+  "m214PreregistrationComplete": true,
+  "m214TableUnchangedApartFromG32": true,
+  "runtimeGuards": {
+    "sourceStateEquivalence": "m215LaunchExecutor preflightGates R6_SOURCE_STATE_EQUIVALENCE, which calls M214's own auditSourceStateEquivalence on digests taken either side of treatment initialisation",
+    "indexingObservational": "the same R6 gate: the pre- and post-treatment tracked-source digests must be equal",
+    "treatmentStateExcludedFromPatch": "m215LaunchExecutor R13_PATCH_CAPTURE, over exclusions derived from the pre-agent untracked snapshot, with no vendor directory named anywhere in the rule",
+    "resetWarmPolicySymmetric": "m215LaunchExecutor R7_RESET_WARMTH_POLICY, calling auditWarmthPolicy and auditResetPreservedPaths against the frozen COLD_UNIFORM regime",
+    "modelAvailability": "m215LaunchExecutor R12_PROVIDER_MODEL_IDENTITY, reading the provider-returned identity from the run's own init event via AgentRunHooks.assertProviderModelIdentity, which aborts the run",
+    "treatmentLifecycleOrder": "m215LaunchExecutor R14_LIFECYCLE_ORDER, over the phases the executor actually reached"
+  },
+  "requiredPrelaunchGateIds": [
+    "P1_PREREGISTRATION_HASH",
+    "P2_MANIFEST_HASH",
+    "P3_EXTERNAL_REFERENCE_HASH",
+    "P4_ROW_IS_FROZEN",
+    "P5_NO_RUNTIME_OVERRIDES",
+    "P6_EXECUTION_ORDER",
+    "P7_SPEND_AUTHORIZATION",
+    "P8_SPEND_CEILING",
+    "P9_LEDGER_INTEGRITY"
+  ],
+  "requiredRuntimeGateIds": [
+    "R1_ARM_ADMISSIBLE",
+    "R2_AGENT_IDENTITY",
+    "R3_NATIVE_TOOL_AUTHORITY",
+    "R4_TREATMENT_CATALOGUE",
+    "R5_ARM_ISOLATION",
+    "R6_SOURCE_STATE_EQUIVALENCE",
+    "R7_RESET_WARMTH_POLICY",
+    "R8_GOLD_LEAKAGE",
+    "R9_BUDGET_SYMMETRY",
+    "R10_TREATMENT_IDENTITY",
+    "R11_SECRET_HYGIENE",
+    "R12_PROVIDER_MODEL_IDENTITY",
+    "R13_PATCH_CAPTURE",
+    "R14_LIFECYCLE_ORDER",
+    "R15_EVALUATOR_AUTHORITY"
+  ],
+  "gates": [
+    {
+      "id": "G1",
+      "requirement": "M214 preregistration committed",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "stage5_m214_preregistration.json generated from the committed authority module"
+    },
+    {
+      "id": "G2",
+      "requirement": "M214 preregistration hash recorded",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "domain-separated sha256 over the canonical document, recomputed from the written file"
+    },
+    {
+      "id": "G3",
+      "requirement": "M213 remains immutable",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "M213's committed preregistration rehashes to its recorded digest under M213's own rule"
+    },
+    {
+      "id": "G4",
+      "requirement": "exact VEXP 100-task artifact verified",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "sha256 of the vendor's own committed jsonl, plus their published distribution table"
+    },
+    {
+      "id": "G5",
+      "requirement": "100 task ids frozen",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "the instance ids are committed in the preregistration before any run"
+    },
+    {
+      "id": "G6",
+      "requirement": "200-run manifest frozen",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "200 planned rows generated before any execution, hashed"
+    },
+    {
+      "id": "G7",
+      "requirement": "baseline is treatment-free",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "F3 control: no VTRACE server, tool, env var, workspace entry or generated file"
+    },
+    {
+      "id": "G8",
+      "requirement": "VTRACE treatment executable",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "M213's per-repository index + tools/list + deterministic query dry run, 12/12 repositories"
+    },
+    {
+      "id": "G9",
+      "requirement": "VTRACE identity frozen",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "commit SHA and src tree SHA both recorded; the tree is unchanged since M213 measured it"
+    },
+    {
+      "id": "G10",
+      "requirement": "agent identity frozen",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "one frozen agent record shared by both arm definitions"
+    },
+    {
+      "id": "G11",
+      "requirement": "model identity frozen",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "one frozen model record shared by both arm definitions"
+    },
+    {
+      "id": "G12",
+      "requirement": "native tools identical across arms",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "F7 control over the arm definitions"
+    },
+    {
+      "id": "G13",
+      "requirement": "budgets identical across arms",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "F6 control plus one budget-identity digest carried on every manifest row"
+    },
+    {
+      "id": "G14",
+      "requirement": "source states equivalent before each arm starts",
+      "gateClass": "RUNTIME",
+      "status": "DEFERRED_TO_LAUNCH",
+      "evidence": "the guard exists and its mechanism is measured (indexing is observational on tracked source across 12 repositories); per-run equality can only be asserted when runs exist; asserted per run by m215LaunchExecutor preflightGates R6_SOURCE_STATE_EQUIVALENCE, which calls M214's own auditSourceStateEquivalence on digests taken either side of treatment initialisation"
+    },
+    {
+      "id": "G15",
+      "requirement": "indexing is observational on tracked source",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "F5 control: tracked-source digest measured before and after treatment initialisation"
+    },
+    {
+      "id": "G16",
+      "requirement": ".vtrace excluded from patch capture",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "F4 control, reproduced against a real index: the old capture leaks, the new one is empty"
+    },
+    {
+      "id": "G17",
+      "requirement": "metadata reset / warm policy symmetric and verified",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "F19 and F20 controls over the frozen COLD_UNIFORM policy"
+    },
+    {
+      "id": "G18",
+      "requirement": "execution-order randomisation frozen",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "seeded 50/50 arm-order assignment, seed committed, orders in the manifest"
+    },
+    {
+      "id": "G19",
+      "requirement": "evaluator validated",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "swebench==4.1.0 official evaluator, the harness M192 established and M213 re-verified"
+    },
+    {
+      "id": "G20",
+      "requirement": "primary paired analysis frozen",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "M214_STATISTICAL_PLAN"
+    },
+    {
+      "id": "G21",
+      "requirement": "efficiency analysis frozen",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "M214_SECONDARY_OUTCOMES"
+    },
+    {
+      "id": "G22",
+      "requirement": "invalid-run rules frozen",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "M214_EXCLUSIONS"
+    },
+    {
+      "id": "G23",
+      "requirement": "fixed-N stopping frozen",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "M214_STOPPING_RULE"
+    },
+    {
+      "id": "G24",
+      "requirement": "external VEXP reference frozen",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "published figures, sources, retrieval date and source digest committed before any run"
+    },
+    {
+      "id": "G25",
+      "requirement": "external reference cannot enter causal analysis",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "F16 and F17 controls: the paired-statistics entry point rejects a non-arm operand"
+    },
+    {
+      "id": "G26",
+      "requirement": "M214 falsification suite passes",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "F0–F24"
+    },
+    {
+      "id": "G27",
+      "requirement": "no frozen-population outcome-bearing agent run has occurred",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "M214 spend accounting"
+    },
+    {
+      "id": "G28",
+      "requirement": "live model spend is $0 during preregistration",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "no model was called by any M214 script"
+    },
+    {
+      "id": "G29",
+      "requirement": "M214-owned harness and tests are typechecked",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "tsconfig.m214.json includes this milestone's test files, which the repo-wide benchmark config excludes"
+    },
+    {
+      "id": "G30",
+      "requirement": "model availability established",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "the agent binary's own model registry carries a complete unflagged entry; a provider-confirmed response would require a paid call"
+    },
+    {
+      "id": "G31",
+      "requirement": "treatment lifecycle ordering executed and verified",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "the pre-agent untracked snapshot is taken AFTER treatment initialisation — executed on real repositories by the patch-capture probe and audited from the resulting trace, which is what makes G16 hold"
+    },
+    {
+      "id": "G32",
+      "requirement": "a launch executor exists that can run the frozen manifest",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "FAIL",
+      "evidence": "the component that would create the containers, run the lifecycle per run and bind this preregistration's hash before the first paid call; M213 listed building it as the outstanding infrastructure work and M214 is not scoped to build it"
+    },
+    {
+      "id": "G33",
+      "requirement": "LAUNCH_EXECUTOR_IMPLEMENTED: one executor runs any frozen manifest row through the frozen lifecycle under runtime enforcement",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "stage5.m215.launch-executor.v1: 9 prelaunch and 15 runtime gates, one arm-neutral orchestration, cohort launcher, append-only ledger, resume, spend guard"
+    },
+    {
+      "id": "G34",
+      "requirement": "LAUNCH_EXECUTOR_FALSIFIED: the enforcement is exercised by controls that fail when the guards are removed",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "66/66 controls satisfied (44 GUARD_FIRES, 22 GUARD_SILENT); failures: [none]"
+    },
+    {
+      "id": "G35",
+      "requirement": "an adapter binding exists that can produce authoritative outcomes on the real substrate",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "FAIL",
+      "evidence": "bindings: SYNTHETIC=IMPLEMENTED, DOCKER_SWEBENCH=DECLARED_UNIMPLEMENTED. The executor's containers, agent process and evaluator are interfaces; only the synthetic binding is implemented, and it cannot write authoritative cohort results"
+    },
+    {
+      "id": "G36",
+      "requirement": "explicit operator authorisation of the frozen $700 ceiling exists",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "FAIL",
+      "evidence": "M215 requested no authorisation and spent $0. Building the executor is not authorisation; the launcher refuses a COHORT run without --authorize-spend"
+    },
+    {
+      "id": "G37",
+      "requirement": "patch capture is unambiguous on both treatment-state routes, against real git",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "D4 on a scratch repository outside the frozen 100: empty on both routes with no source edit, exactly the edited file with one, and the pre-repair vendor rule leaks where the derived rule does not"
+    },
+    {
+      "id": "G38",
+      "requirement": "the cohort survives interruption with no duplicate and no reordered outcome",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "D-resume: ledger persisted, restored and continued; digests and chain recomputed on replay"
+    },
+    {
+      "id": "G39",
+      "requirement": "M215-owned harness and tests are typechecked",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "tsconfig.m215.json extends M214's scope to this milestone's files"
+    },
+    {
+      "id": "G40",
+      "requirement": "the frozen VTRACE treatment tree is unchanged",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "HEAD:src is b3b3e439f10c6c526cafc6001d25dd0e7552ce6d, which is the tree every vtrace manifest row declares; M215 changed no src/ file"
+    },
+    {
+      "id": "G41",
+      "requirement": "M214's frozen authorities are unmodified",
+      "gateClass": "PREREGISTRATION",
+      "status": "PASS",
+      "evidence": "preregistration 3cd3b3d2d665c559, manifest 549df54b0f48b59a, external reference 822c4c5fb69dc21b, all recomputed from the committed bytes"
+    },
+    {
+      "id": "G42",
+      "requirement": "no frozen-population outcome-bearing run occurred and live model spend is $0 during M215",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "every layer ran against synthetic adapters or real git; no provider was contacted"
+    }
+  ],
+  "deferredRuntimeGates": [
+    "G14"
+  ],
+  "blockers": [
+    "G32",
+    "G35",
+    "G36"
+  ],
+  "technicalExecutorReady": false,
+  "spendAuthorized": false,
+  "readinessVerdict": "TECHNICAL_EXECUTOR_NOT_READY",
+  "spendAuthorizationStatus": "SPEND_AUTHORIZATION_PENDING",
+  "paidRunsStarted": 0,
+  "liveModelSpendUsd": 0
+}

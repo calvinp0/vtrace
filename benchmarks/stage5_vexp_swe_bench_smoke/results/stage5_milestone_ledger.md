@@ -11452,3 +11452,186 @@ commits           harness + preregistration authority, then frozen evidence.
   and `CONTEXT_COMPILER_PRODUCT_UTILITY_NOT_ESTABLISHED` both still govern.
   Nothing in M214 measured utility; it only made a measurement of it possible to
   trust.
+
+## M215
+
+```text
+milestone         M215
+verdict           INCOMPLETE (launch executor implemented and falsified; launch
+                  still blocked, now on a substrate adapter binding rather than
+                  on the executor)
+markers           LAUNCH_EXECUTOR_IMPLEMENTED;
+                  LAUNCH_EXECUTOR_FALSIFIED;
+                  RUNTIME_GATE_ENFORCEMENT_VERIFIED;
+                  PATCH_CAPTURE_REPAIR_PRESERVED;
+                  SOURCE_STATE_EQUIVALENCE_GUARD_IMPLEMENTED;
+                  PAIR_INDEPENDENCE_VERIFIED;
+                  RESULT_IMMUTABILITY_VERIFIED;
+                  RESUME_SEMANTICS_VERIFIED;
+                  MODEL_IDENTITY_RUNTIME_GATE_IMPLEMENTED;
+                  SPEND_GUARD_IMPLEMENTED;
+                  M215_FALSIFICATION_SUITE_PASSED;
+                  M215_SCOPED_TYPECHECK_VERIFIED;
+                  PREREGISTRATION_UNCHANGED;
+                  MANIFEST_UNCHANGED;
+                  EXTERNAL_REFERENCE_UNCHANGED;
+                  VTRACE_PRODUCT_UNCHANGED;
+                  SUBSTRATE_ADAPTER_BINDING_NOT_IMPLEMENTED;
+                  PAID_RUNS_NOT_STARTED;
+                  TECHNICAL_EXECUTOR_NOT_READY;
+                  SPEND_AUTHORIZATION_PENDING
+parity            UNCHANGED and NOT re-run. Frozen matrix stays MATCH 7 EXCEED 7
+                  BELOW 1, match-or-exceed 14/15, A15 BELOW and
+                  A15_PARITY_GAP_INVALIDATED (M212). M215 does NOT license
+                  writing 15/15 anywhere, ever.
+spend             0 benchmark-task live-agent runs, $0 live model spend, 0
+                  provider calls of any kind, 0 Docker containers, 0 VEXP
+                  processes. Deterministic work only: 6 throwaway git
+                  repositories under mktemp -d (created and removed by the D4
+                  layer) and 8 tsc invocations.
+scope             Launch machinery only. 0 src/ diff. No scorer, retrieval,
+                  capsule or product change. Nothing frozen was touched: the
+                  preregistration, the manifest, the external reference, the 100
+                  tasks, the model, the agent, the budgets, the analysis plan
+                  and the stopping rule are all byte-identical, and all three
+                  frozen digests recompute.
+what was built    ONE executor authority (m215LaunchExecutor.ts), no versioned
+                  siblings: an arm is a manifest-row field that selects an
+                  armDefinition and both arms traverse the same orchestration.
+                  Containers, the agent and the evaluator are INTERFACES, which
+                  is what made a $0 milestone able to falsify a $700 machine --
+                  the dry run replaces exactly those three and nothing else, so
+                  every gate, ordering rule, ledger write and patch derivation
+                  the paid path uses is the code the controls exercise.
+                  Also: m215CohortLedger.ts (append-only, exactly-once,
+                  hash-chained, mode-isolated), m215Fixtures.ts (synthetic
+                  adapters), m215Falsification.ts (66 controls),
+                  m215AdapterBindings.ts (the binding registry that carries the
+                  residual), run_stage5_m215_{launch,falsification,dry_run,
+                  readiness,scoped_typecheck}.ts, tsconfig.m215.json.
+gates             9 prelaunch (P1-P9) + 15 runtime (R1-R15), all REQUIRED, all
+                  carrying gateId/class/required/status/evidence/failureReason/
+                  assertedAt. Coverage is checked by NAME against a frozen list,
+                  because the realistic failure is subtraction: requiredGatesPass
+                  over a table missing a row is trivially true.
+                  G32 is now DERIVED as G33 (orchestration exists) AND G35
+                  (substrate binding exists) rather than judged, so M215 does not
+                  award itself the gate it was scoped to close. G33/G34/G37-G42
+                  PASS; G32/G35/G36 FAIL; G14 stays DEFERRED_TO_LAUNCH with a
+                  named guard (R6) instead of an intention. M214's own table was
+                  re-derived from its committed document and is UNCHANGED apart
+                  from G32.
+falsification     66 controls, 66 satisfied: 44 GUARD_FIRES, 22 GUARD_SILENT.
+                  F1-F40 plus F0 negative controls and H1-H3B, the historical
+                  defect controls that require M213's and M214's OLD behaviour to
+                  FAIL a control the M215 path passes.
+                  The suite was mutation-tested: breaking
+                  auditProviderModelIdentity and auditRowPermitted's
+                  earlier-unfinished check drops it to 61/66, failing exactly
+                  F6/F6B/F32/F19/F36. A suite that only ever passes is
+                  indistinguishable from one that cannot fail.
+dry run           D1 full executor path both arms (24 gates each, all PASS,
+                  coverage clean, observed lifecycle equal to the frozen order);
+                  D2 three infrastructure failures each classified into the
+                  frozen category with the retry decision it earns; D3 treatment
+                  invoked before/after/never, all three VALID under ITT;
+                  D4 REAL git on a scratch repository outside the frozen 100,
+                  six scenarios, all six invariants hold; resume 6 rows persist
+                  restore 4 more, 0 duplicates, ordinals 0..9.
+self-caught       Two defects in M215's own code, both found by its own suite.
+                  (1) R14_LIFECYCLE_ORDER was asserted BEFORE the EVALUATION
+                  phase was pushed, so auditLifecycleOrder reported a phase it
+                  had not reached as missing and every compliant run became
+                  TELEMETRY_CORRUPT -- which is on M214's rerunnable list, so the
+                  scheduler then re-offered row 0 forever. Nine controls failed
+                  together and named it. (2) Five controls (F6, F20, F22, F28C,
+                  F32) reported "the executor ACCEPTED this" as an issue, which
+                  made a GUARD_FIRES control satisfied whether the guard fired or
+                  not. Both fixed; the helper now documents why it returns empty
+                  on an accepted run.
+tests             6514 pass, 49 skip, 0 fail (394 files). typecheck,
+                  typecheck:benchmarks, lint and git diff --check all clean.
+                  57 new tests across m215CohortLedger.test.ts,
+                  m215LaunchExecutor.test.ts and m215Falsification.test.ts.
+                  M215_NEW_TYPECHECK_ERRORS 0; the ~59 pre-existing benchmark
+                  test type errors are untouched and NOT claimed to be fixed.
+commits           executor + launcher, then falsification + dry-run evidence,
+                  then report + ledger.
+```
+
+## M215 standing findings
+
+- **M214's published hash rule is incomplete, and the executor must implement
+  the rule rather than the prose.** The `hashRule` string names three excluded
+  fields; the generator excludes nine. The six extra (`launchGates`,
+  `launchAuthorized`, `preregistrationComplete`, `deferredRuntimeGates`,
+  `readinessVerdict`, `readinessBlocker`) are outputs DERIVED from the document
+  and written into the same file after hashing. Recomputing with only the
+  documented three yields
+  `eca0c012a96f7a64fc4d5e384c79b97af1f1b04fe2b7089821b00b8acde4631c`, so an
+  executor that trusted the prose would fail closed on the unmodified committed
+  artifact and no run would ever start. The frozen artifact is NOT edited to fix
+  its own prose — that would change the digest it froze. The exclusion set is
+  declared as `M215_PREREGISTRATION_HASH_EXCLUDED_FIELDS` with the reason
+  attached and the discrepancy is recorded in the gate artifact.
+
+- **The pre-agent untracked snapshot's GRANULARITY is load-bearing, and the
+  production command does not have it.** D4 measured the difference on real git:
+  with `git ls-files --others --exclude-standard --directory` the derived
+  exclusion is `.vtrace` and a treatment file written DURING the agent run is
+  excluded; without `--directory` the exclusions name the three files that
+  existed at snapshot time and that later file is captured as agent output.
+  `m193c_patch_snapshot.py` enumerates without `--directory`. This is M213's leak
+  arriving through the snapshot instead of through the pathspec, and it is why
+  `ContainerAdapter.untrackedPaths` specifies directory granularity in its
+  contract and why that requirement is written into the unimplemented binding's
+  outstanding work.
+
+- **Make the model-identity assertion a HOOK, not a post-hoc read.** The
+  provider-returned identity is checked during initialisation, via a callback the
+  agent adapter must call before producing telemetry, and throwing from it aborts
+  the run. Reading the identity after the run returns would put the check after
+  the money. Absence is a failure, not a pass: M214 could only establish
+  PRESENT_IN_AGENT_MODEL_REGISTRY_NOT_PROVIDER_CONFIRMED, and a gate that treated
+  silence as confirmation would leave the cohort with exactly the evidence M214
+  already had. The CLI alias is not the identity either.
+
+- **Gate coverage must be checked by NAME.** `requiredGatesPass` over a table
+  that is missing a row is trivially true, so the realistic way enforcement
+  weakens is a gate that quietly stops being emitted. A run cannot become a valid
+  outcome unless every required gate is PRESENT, checked against a frozen id
+  list.
+
+- **A `GUARD_FIRES` control must be satisfied only by an actual refusal.** Five
+  M215 controls initially reported "the executor accepted this" as an issue,
+  which made them pass whether the guard fired or not. Any control whose issue
+  list includes its own negative result is vacuous, and a suite of them looks
+  identical to a suite that works.
+
+- **The ceiling binds on the PROJECTION, not the running total.** Checking only
+  cumulative spend would let the cohort start a run that cannot finish inside the
+  authorised budget, which turns a hard ceiling into an apology. Every remaining
+  run is charged at its per-run cap because that is the only number the executor
+  can guarantee.
+
+- **Refuse to ship an unexercised binding rather than report readiness on code
+  that has never run.** The Docker + CLI + swebench binding is buildable — M193's
+  container authority and M194's acquisition script already do the work in Python
+  — but nothing in a $0 milestone could execute it, and shipping it would let a
+  future operator believe it had been verified. It is `DECLARED_UNIMPLEMENTED` in
+  a binding registry that fails closed, with its outstanding work enumerated,
+  which is the same move M214 made with G32 rather than spreading the gap across
+  the table.
+
+- **Next-step recommendation.** Do NOT start the benchmark. Two things close
+  M215's residual, in order: (1) implement the `DOCKER_SWEBENCH` adapter binding
+  over M193's container authority, the pinned Claude Code CLI (the versioned
+  binary, not the symlink) and swebench 4.1.0, taking the pre-agent snapshot at
+  DIRECTORY granularity, and prove it with a zero-cost Docker smoke on a task
+  OUTSIDE the frozen 100 — that closes G35 and, with G33, closes G32 and lets G14
+  be asserted rather than deferred. (2) Obtain explicit authorisation for the
+  frozen $700 ceiling — that closes G36, and it is a separate fact from technical
+  readiness in both directions. Neither touches the product and neither may
+  change anything frozen; the preregistration hash is the check on that.
+  `ENGINE QUALITY != CODING-AGENT UTILITY` and
+  `CONTEXT_COMPILER_PRODUCT_UTILITY_NOT_ESTABLISHED` both still govern.
