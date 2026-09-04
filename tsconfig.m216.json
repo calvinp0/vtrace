@@ -1,0 +1,25 @@
+{
+  "//": "M216 §53 — the scoped typecheck target, extended from M215's.",
+  "//why": [
+    "Same reasoning as M215: tsconfig.benchmarks.json excludes benchmarks/**/*.test.ts, and the",
+    "~59 pre-existing errors in unrelated historical benchmark tests are outside this milestone.",
+    "This config keeps M214's and M215's files in scope — M216's adapters implement M215's",
+    "interfaces and import M214's frozen constants, so a scope that dropped either would stop",
+    "checking exactly the boundary the production bindings live on — and adds M216's own.",
+    "m193aArmEnvironment is included because the production agent environment is built by it."
+  ],
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": [
+    "benchmarks/stage5_vexp_swe_bench_smoke/m193aArmEnvironment.ts",
+    "benchmarks/stage5_vexp_swe_bench_smoke/m214*.ts",
+    "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m214_*.ts",
+    "benchmarks/stage5_vexp_swe_bench_smoke/m215*.ts",
+    "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m215_*.ts",
+    "benchmarks/stage5_vexp_swe_bench_smoke/m216*.ts",
+    "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m216_*.ts"
+  ],
+  "exclude": ["node_modules", "dist", "build", "coverage"]
+}
