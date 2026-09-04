@@ -1,0 +1,3348 @@
+{
+  "milestone": "M197A",
+  "instrument": "run_stage5_m197a_engine.ts",
+  "claims": [
+    "A1",
+    "A5",
+    "A6",
+    "A7",
+    "A9",
+    "A10",
+    "A11",
+    "A12",
+    "A13",
+    "A14",
+    "A15"
+  ],
+  "repeats": 5,
+  "tokenAuthority": "ceil(characters / 4), applied identically to both sides of every ratio (§2)",
+  "hardware": {
+    "cpus": 20,
+    "loadAverageAtStart": [
+      2.64,
+      2,
+      1.66
+    ],
+    "loadAverageAtEnd": [
+      2.17,
+      2.09,
+      1.74
+    ],
+    "scratch": "/home/calvin/bench/vtrace-m209/scratch/frozen-post"
+  },
+  "toolSchemaTokens": {
+    "registeredTools": 21,
+    "modelVisibleTools": 14,
+    "estimatedTokens": 5521
+  },
+  "a1": {
+    "declaredEnumMembers": 31,
+    "declaredEnum": [
+      "typescript",
+      "javascript",
+      "python",
+      "cython",
+      "yaml",
+      "toml",
+      "go",
+      "rust",
+      "java",
+      "csharp",
+      "c",
+      "cpp",
+      "ruby",
+      "kotlin",
+      "scala",
+      "swift",
+      "dart",
+      "elixir",
+      "haskell",
+      "ocaml",
+      "lua",
+      "r",
+      "php",
+      "zig",
+      "objective_c",
+      "bash",
+      "html",
+      "css",
+      "json",
+      "sql",
+      "clojure"
+    ],
+    "extensionDetectedFamilies": 28,
+    "extensionDetection": {
+      "typescript": [
+        ".ts",
+        ".tsx"
+      ],
+      "javascript": [
+        ".js",
+        ".jsx",
+        ".mjs",
+        ".cjs"
+      ],
+      "python": [
+        ".py"
+      ],
+      "cython": [
+        ".pyx",
+        ".pxd",
+        ".pxi"
+      ],
+      "yaml": [
+        ".yml",
+        ".yaml"
+      ],
+      "toml": [
+        ".toml"
+      ],
+      "go": [
+        ".go"
+      ],
+      "rust": [
+        ".rs"
+      ],
+      "java": [
+        ".java"
+      ],
+      "kotlin": [
+        ".kt"
+      ],
+      "ruby": [
+        ".rb"
+      ],
+      "php": [
+        ".php"
+      ],
+      "c": [
+        ".c",
+        ".h"
+      ],
+      "cpp": [
+        ".cpp",
+        ".hpp"
+      ],
+      "csharp": [
+        ".cs"
+      ],
+      "swift": [
+        ".swift"
+      ],
+      "scala": [
+        ".scala"
+      ],
+      "bash": [
+        ".sh"
+      ],
+      "sql": [
+        ".sql"
+      ],
+      "json": [
+        ".json"
+      ],
+      "html": [
+        ".html"
+      ],
+      "css": [
+        ".css"
+      ],
+      "elixir": [
+        ".ex"
+      ],
+      "haskell": [
+        ".hs"
+      ],
+      "lua": [
+        ".lua"
+      ],
+      "r": [
+        ".r"
+      ],
+      "objective_c": [
+        ".m"
+      ],
+      "dart": [
+        ".dart"
+      ]
+    },
+    "advertisedIndexableFamilies": 30,
+    "advertisedIndexable": [
+      "typescript",
+      "javascript",
+      "python",
+      "cython",
+      "yaml",
+      "go",
+      "rust",
+      "java",
+      "csharp",
+      "c",
+      "cpp",
+      "ruby",
+      "kotlin",
+      "scala",
+      "swift",
+      "dart",
+      "elixir",
+      "haskell",
+      "ocaml",
+      "lua",
+      "r",
+      "php",
+      "zig",
+      "objective_c",
+      "bash",
+      "html",
+      "css",
+      "json",
+      "sql",
+      "clojure"
+    ],
+    "parserBackedFamilies": 30,
+    "parserBacked": [
+      "bash",
+      "c",
+      "clojure",
+      "cpp",
+      "csharp",
+      "css",
+      "cython",
+      "dart",
+      "elixir",
+      "go",
+      "haskell",
+      "html",
+      "java",
+      "javascript",
+      "json",
+      "kotlin",
+      "lua",
+      "objective_c",
+      "ocaml",
+      "php",
+      "python",
+      "r",
+      "ruby",
+      "rust",
+      "scala",
+      "sql",
+      "swift",
+      "typescript",
+      "yaml",
+      "zig"
+    ],
+    "detectedWithoutParser": [
+      "toml"
+    ]
+  },
+  "corpora": [
+    {
+      "id": "C-SMALL",
+      "language": "TypeScript",
+      "filesIndexed": 21,
+      "a5": {
+        "queries": 5,
+        "repeats": 5,
+        "latency": {
+          "n": 25,
+          "median": 60.01,
+          "p90": 67.93,
+          "p95": 71.8,
+          "max": 79.13,
+          "min": 47.85
+        },
+        "deterministic": true,
+        "nonDeterministicQueries": []
+      },
+      "a6": {
+        "targets": 10,
+        "repeats": 5,
+        "latency": {
+          "n": 50,
+          "median": 8.93,
+          "p90": 10.4,
+          "p95": 11.84,
+          "max": 12.35,
+          "min": 6.46
+        },
+        "deterministic": true,
+        "nonDeterministicQueries": [],
+        "targetsSample": [
+          "compare/compare.ts::loadExternalAgent",
+          "agents/claude-code.ts::spawnAgent",
+          "compare/compare.ts::listExternalAgents",
+          "evaluate/evaluator.ts::evaluateDocker",
+          "evaluate/evaluator.ts::evaluateLightweight"
+        ]
+      },
+      "a7": {
+        "pairs": 10,
+        "repeats": 5,
+        "latency": {
+          "n": 50,
+          "median": 7.85,
+          "p90": 9.29,
+          "p95": 10.02,
+          "max": 15.09,
+          "min": 5.79
+        },
+        "deterministic": true,
+        "nonDeterministicQueries": [],
+        "pathEdgeCounts": {
+          "n": 10,
+          "median": 1,
+          "distribution": {
+            "1": 10
+          }
+        }
+      },
+      "a9": {
+        "filesMeasured": 15,
+        "filesMalformed": 0,
+        "filesConsidered": 15,
+        "malformedPercent": 0,
+        "renderedReduction": {
+          "median": 90.06,
+          "min": 75.44,
+          "max": 99.33
+        },
+        "wholeResponseReduction": {
+          "median": 65.69,
+          "min": 9.93
+        },
+        "stratifiedMedian": {
+          "small": {
+            "n": 13,
+            "median": 90.06
+          },
+          "medium": {
+            "n": 2,
+            "median": 93.47
+          },
+          "large": {
+            "n": 0,
+            "median": null
+          }
+        },
+        "structuralFaults": {}
+      },
+      "a10": {
+        "declarations": 76,
+        "validSignatures": 76,
+        "withNonEmptySignature": 76,
+        "signaturePresencePercent": 100,
+        "signatureRetentionPercent": 100,
+        "signatureRetentionBasis": "declarations whose emitted signature is a verbatim, token-aligned, bracket-closed slice of the source",
+        "members": 8,
+        "membersWithSignature": 8,
+        "indexedMethods": 11,
+        "memberRetentionPercent": 72.73,
+        "declarationNamesFoundInSource": 76,
+        "declarationNamesChecked": 76,
+        "nameSourceTruthPercent": 100
+      },
+      "a11a13": {
+        "budgets": [
+          1000,
+          2000,
+          4000,
+          8000,
+          16000
+        ],
+        "tasks": 3,
+        "curves": [
+          {
+            "task": "where are import edges extracted from typescript",
+            "points": [
+              {
+                "budget": 1000,
+                "latencyMs": 43.4,
+                "wholeResponseTokens": 83,
+                "utilisationPercent": 8.3,
+                "focusAt": null,
+                "focusForm": null,
+                "focusCodeTokens": 0,
+                "relatedCount": 0,
+                "relatedCarryingCode": 0,
+                "representationClasses": [],
+                "itemsWithTokenAccounting": 0
+              },
+              {
+                "budget": 2000,
+                "latencyMs": 40,
+                "wholeResponseTokens": 83,
+                "utilisationPercent": 4.15,
+                "focusAt": null,
+                "focusForm": null,
+                "focusCodeTokens": 0,
+                "relatedCount": 0,
+                "relatedCarryingCode": 0,
+                "representationClasses": [],
+                "itemsWithTokenAccounting": 0
+              },
+              {
+                "budget": 4000,
+                "latencyMs": 40.9,
+                "wholeResponseTokens": 83,
+                "utilisationPercent": 2.08,
+                "focusAt": null,
+                "focusForm": null,
+                "focusCodeTokens": 0,
+                "relatedCount": 0,
+                "relatedCarryingCode": 0,
+                "representationClasses": [],
+                "itemsWithTokenAccounting": 0
+              },
+              {
+                "budget": 8000,
+                "latencyMs": 42.4,
+                "wholeResponseTokens": 83,
+                "utilisationPercent": 1.04,
+                "focusAt": null,
+                "focusForm": null,
+                "focusCodeTokens": 0,
+                "relatedCount": 0,
+                "relatedCarryingCode": 0,
+                "representationClasses": [],
+                "itemsWithTokenAccounting": 0
+              },
+              {
+                "budget": 16000,
+                "latencyMs": 42,
+                "wholeResponseTokens": 83,
+                "utilisationPercent": 0.52,
+                "focusAt": null,
+                "focusForm": null,
+                "focusCodeTokens": 0,
+                "relatedCount": 0,
+                "relatedCarryingCode": 0,
+                "representationClasses": [],
+                "itemsWithTokenAccounting": 0
+              }
+            ],
+            "sizeViolations": 0,
+            "focusSwaps": 0
+          },
+          {
+            "task": "how does the indexer decide a file is eligible for parsing",
+            "points": [
+              {
+                "budget": 1000,
+                "latencyMs": 76.3,
+                "wholeResponseTokens": 511,
+                "utilisationPercent": 51.1,
+                "focusAt": "metrics/stream-parser.ts::ParsedStream",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 75,
+                "relatedCount": 4,
+                "relatedCarryingCode": 4,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE"
+                ],
+                "itemsWithTokenAccounting": 5
+              },
+              {
+                "budget": 2000,
+                "latencyMs": 70.1,
+                "wholeResponseTokens": 591,
+                "utilisationPercent": 29.55,
+                "focusAt": "metrics/stream-parser.ts::ParsedStream",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 75,
+                "relatedCount": 4,
+                "relatedCarryingCode": 4,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE"
+                ],
+                "itemsWithTokenAccounting": 5
+              },
+              {
+                "budget": 4000,
+                "latencyMs": 57.8,
+                "wholeResponseTokens": 591,
+                "utilisationPercent": 14.78,
+                "focusAt": "metrics/stream-parser.ts::ParsedStream",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 75,
+                "relatedCount": 4,
+                "relatedCarryingCode": 4,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE"
+                ],
+                "itemsWithTokenAccounting": 5
+              },
+              {
+                "budget": 8000,
+                "latencyMs": 61.5,
+                "wholeResponseTokens": 591,
+                "utilisationPercent": 7.39,
+                "focusAt": "metrics/stream-parser.ts::ParsedStream",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 75,
+                "relatedCount": 4,
+                "relatedCarryingCode": 4,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE"
+                ],
+                "itemsWithTokenAccounting": 5
+              },
+              {
+                "budget": 16000,
+                "latencyMs": 67.1,
+                "wholeResponseTokens": 732,
+                "utilisationPercent": 4.58,
+                "focusAt": "metrics/stream-parser.ts::ParsedStream",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 75,
+                "relatedCount": 4,
+                "relatedCarryingCode": 4,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE"
+                ],
+                "itemsWithTokenAccounting": 5
+              }
+            ],
+            "sizeViolations": 0,
+            "focusSwaps": 0
+          },
+          {
+            "task": "budget allocation for capsule items is dropping sections",
+            "points": [
+              {
+                "budget": 1000,
+                "latencyMs": 39.3,
+                "wholeResponseTokens": 83,
+                "utilisationPercent": 8.3,
+                "focusAt": null,
+                "focusForm": null,
+                "focusCodeTokens": 0,
+                "relatedCount": 0,
+                "relatedCarryingCode": 0,
+                "representationClasses": [],
+                "itemsWithTokenAccounting": 0
+              },
+              {
+                "budget": 2000,
+                "latencyMs": 44,
+                "wholeResponseTokens": 83,
+                "utilisationPercent": 4.15,
+                "focusAt": null,
+                "focusForm": null,
+                "focusCodeTokens": 0,
+                "relatedCount": 0,
+                "relatedCarryingCode": 0,
+                "representationClasses": [],
+                "itemsWithTokenAccounting": 0
+              },
+              {
+                "budget": 4000,
+                "latencyMs": 36.7,
+                "wholeResponseTokens": 83,
+                "utilisationPercent": 2.08,
+                "focusAt": null,
+                "focusForm": null,
+                "focusCodeTokens": 0,
+                "relatedCount": 0,
+                "relatedCarryingCode": 0,
+                "representationClasses": [],
+                "itemsWithTokenAccounting": 0
+              },
+              {
+                "budget": 8000,
+                "latencyMs": 35.6,
+                "wholeResponseTokens": 83,
+                "utilisationPercent": 1.04,
+                "focusAt": null,
+                "focusForm": null,
+                "focusCodeTokens": 0,
+                "relatedCount": 0,
+                "relatedCarryingCode": 0,
+                "representationClasses": [],
+                "itemsWithTokenAccounting": 0
+              },
+              {
+                "budget": 16000,
+                "latencyMs": 36.9,
+                "wholeResponseTokens": 83,
+                "utilisationPercent": 0.52,
+                "focusAt": null,
+                "focusForm": null,
+                "focusCodeTokens": 0,
+                "relatedCount": 0,
+                "relatedCarryingCode": 0,
+                "representationClasses": [],
+                "itemsWithTokenAccounting": 0
+              }
+            ],
+            "sizeViolations": 0,
+            "focusSwaps": 0
+          }
+        ],
+        "utilisationByBudget": {
+          "1000": {
+            "median": 8.3
+          },
+          "2000": {
+            "median": 4.15
+          },
+          "4000": {
+            "median": 2.08
+          },
+          "8000": {
+            "median": 1.04
+          },
+          "16000": {
+            "median": 0.52
+          }
+        },
+        "tasksWithSizeViolation": 0,
+        "tasksWithFocusSwap": 0
+      },
+      "a12": {
+        "distinctClassesObserved": [
+          "FOCUS:focused_source",
+          "RELATED_WITH_CODE"
+        ]
+      },
+      "a14": {
+        "defaultVsDebug": {
+          "accountingInDefaultResponse": false,
+          "accountingInDebugResponse": true,
+          "reductionFieldInDefaultResponse": false,
+          "reductionFieldInDebugResponse": true,
+          "defaultResponseTopLevelKeys": [
+            "schemaVersion",
+            "state",
+            "summary",
+            "boundary"
+          ],
+          "debugResponseTopLevelKeys": [
+            "schemaVersion",
+            "request",
+            "capsuleResult",
+            "authoritativeCapsuleManifestId",
+            "pivotNeighborhood",
+            "inspectFirst",
+            "capsule",
+            "runtime",
+            "intent",
+            "taskSummary",
+            "context",
+            "impact",
+            "flow",
+            "memory",
+            "rules",
+            "diagnostics",
+            "deferred",
+            "productContext",
+            "workspaceRouting",
+            "savedObservation",
+            "accounting",
+            "responseBudget"
+          ],
+          "defaultResponseTokens": 83,
+          "debugResponseTokens": 3465
+        },
+        "skeletonAccounting": {
+          "file": "agents/adapter.ts",
+          "perCallAccounting": {
+            "latencyMs": 10.704913999999917,
+            "estimatedOutputTokens": 207,
+            "estimatedNaiveFullFileTokens": 426,
+            "estimatedTokensSavedVsNaiveFullFile": 219,
+            "estimatedSavingsPercentVsNaiveFullFile": 51.41,
+            "uniqueFilesCounted": 1,
+            "method": "chars_div_4",
+            "baseline": "full contents of unique files represented in emitted context items"
+          },
+          "perItemAccounting": 0,
+          "declarations": 3,
+          "productReportedSavingsPercent": 51.41,
+          "independentRenderedReductionPercent": 90.14,
+          "authoritiesDisagreeByPoints": 38.73
+        },
+        "itemsWithPerItemAccounting": 25,
+        "itemsDelivered": 35
+      },
+      "a15": {
+        "eligibleCallSites": 36,
+        "impactSurfaceRenderingExpression": 30,
+        "flowSurfaceRenderingExpression": 36,
+        "flowRenderedTextNamesCallee": 36,
+        "flowRenderedTextMatchesDeclaredSpan": 35,
+        "declaredSpanActuallyNamesCallee": 36,
+        "impactRenderPercent": 83.33,
+        "flowCorrectRenderPercent": 100,
+        "misrenderedExamples": [
+          {
+            "from": "agents/claude-code.ts::ClaudeCodeAdapter.run",
+            "to": "agents/claude-code.ts::spawnAgent",
+            "callee": "spawnAgent",
+            "declaredSpan": "agents/claude-code.ts:52-55",
+            "rendered": "const rawOutput = await spawnAgent(",
+            "actualAtDeclaredSpan": "    const rawOutput = await spawnAgent(\n      \"claude\", args, opts.cwd,\n      opts.timeoutMs, opts.costLimitUsd, opts.model, opts.env,\n    )"
+          }
+        ]
+      },
+      "truthfulness": {
+        "excerptChecked": 30,
+        "excerptAnchored": 17,
+        "excerptMisanchored": 0,
+        "excerptNotLocated": 13,
+        "excerptAnchorPercentOfConclusive": 100,
+        "excerptStartLineDeltas": {
+          "0": 17,
+          "not_located": 13
+        },
+        "strengthenedCallSiteRenderings": 0,
+        "renderedCallSites": 36,
+        "inventedStructuralClaims": 0
+      }
+    },
+    {
+      "id": "C-MED",
+      "language": "TypeScript",
+      "filesIndexed": 506,
+      "a5": {
+        "queries": 5,
+        "repeats": 5,
+        "latency": {
+          "n": 25,
+          "median": 190.62,
+          "p90": 251.83,
+          "p95": 252.42,
+          "max": 282.53,
+          "min": 180.79
+        },
+        "deterministic": true,
+        "nonDeterministicQueries": []
+      },
+      "a6": {
+        "targets": 10,
+        "repeats": 5,
+        "latency": {
+          "n": 50,
+          "median": 29.48,
+          "p90": 46.04,
+          "p95": 48.31,
+          "max": 53.63,
+          "min": 19.23
+        },
+        "deterministic": true,
+        "nonDeterministicQueries": [],
+        "targetsSample": [
+          "db/sqlite.ts::openIndexerDatabase",
+          "domain/types.ts::normalizeFilePath",
+          "indexer/indexProject.ts::indexProject",
+          "setup/repoState.ts::resolveRepoLocalPaths",
+          "retrieval/searchSymbolsShared.ts::isLikelyTestCandidate"
+        ]
+      },
+      "a7": {
+        "pairs": 10,
+        "repeats": 5,
+        "latency": {
+          "n": 50,
+          "median": 8.74,
+          "p90": 9.89,
+          "p95": 10.41,
+          "max": 24.71,
+          "min": 6.93
+        },
+        "deterministic": true,
+        "nonDeterministicQueries": [],
+        "pathEdgeCounts": {
+          "n": 10,
+          "median": 1,
+          "distribution": {
+            "1": 10
+          }
+        }
+      },
+      "a9": {
+        "filesMeasured": 450,
+        "filesMalformed": 22,
+        "filesConsidered": 472,
+        "malformedPercent": 4.66,
+        "renderedReduction": {
+          "median": 92.89,
+          "min": 59.51,
+          "max": 100
+        },
+        "wholeResponseReduction": {
+          "median": 78.46,
+          "min": -33.87
+        },
+        "stratifiedMedian": {
+          "small": {
+            "n": 181,
+            "median": 90.07
+          },
+          "medium": {
+            "n": 226,
+            "median": 94.11
+          },
+          "large": {
+            "n": 43,
+            "median": 92.97
+          }
+        },
+        "structuralFaults": {
+          "SLICED_MID_IDENTIFIER_END": 24
+        }
+      },
+      "a10": {
+        "declarations": 4602,
+        "validSignatures": 4578,
+        "withNonEmptySignature": 4602,
+        "signaturePresencePercent": 100,
+        "signatureRetentionPercent": 99.48,
+        "signatureRetentionBasis": "declarations whose emitted signature is a verbatim, token-aligned, bracket-closed slice of the source",
+        "members": 29,
+        "membersWithSignature": 29,
+        "indexedMethods": 29,
+        "memberRetentionPercent": 100,
+        "declarationNamesFoundInSource": 4602,
+        "declarationNamesChecked": 4602,
+        "nameSourceTruthPercent": 100
+      },
+      "a11a13": {
+        "budgets": [
+          1000,
+          2000,
+          4000,
+          8000,
+          16000
+        ],
+        "tasks": 20,
+        "curves": [
+          {
+            "task": "where are import edges extracted from typescript",
+            "points": [
+              {
+                "budget": 1000,
+                "latencyMs": 218.6,
+                "wholeResponseTokens": 880,
+                "utilisationPercent": 88,
+                "focusAt": "parsers/typescriptParser.ts::ExtractImportEdgesInput",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 40,
+                "relatedCount": 9,
+                "relatedCarryingCode": 6,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 10
+              },
+              {
+                "budget": 2000,
+                "latencyMs": 232.1,
+                "wholeResponseTokens": 1743,
+                "utilisationPercent": 87.15,
+                "focusAt": "parsers/typescriptParser.ts::ExtractImportEdgesInput",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 40,
+                "relatedCount": 16,
+                "relatedCarryingCode": 13,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 17
+              },
+              {
+                "budget": 4000,
+                "latencyMs": 256,
+                "wholeResponseTokens": 4007,
+                "utilisationPercent": 100.17,
+                "focusAt": "parsers/typescriptParser.ts::ExtractImportEdgesInput",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 40,
+                "relatedCount": 38,
+                "relatedCarryingCode": 34,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 39
+              },
+              {
+                "budget": 8000,
+                "latencyMs": 245.5,
+                "wholeResponseTokens": 6671,
+                "utilisationPercent": 83.39,
+                "focusAt": "parsers/typescriptParser.ts::ExtractImportEdgesInput",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 40,
+                "relatedCount": 64,
+                "relatedCarryingCode": 58,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 65
+              },
+              {
+                "budget": 16000,
+                "latencyMs": 289.4,
+                "wholeResponseTokens": 13448,
+                "utilisationPercent": 84.05,
+                "focusAt": "parsers/typescriptParser.ts::ExtractImportEdgesInput",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 40,
+                "relatedCount": 118,
+                "relatedCarryingCode": 113,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 119
+              }
+            ],
+            "sizeViolations": 0,
+            "focusSwaps": 0
+          },
+          {
+            "task": "how does the indexer decide a file is eligible for parsing",
+            "points": [
+              {
+                "budget": 1000,
+                "latencyMs": 214.1,
+                "wholeResponseTokens": 792,
+                "utilisationPercent": 79.2,
+                "focusAt": "indexer/incrementalIndex.ts::bindingTermFor",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 129,
+                "relatedCount": 5,
+                "relatedCarryingCode": 3,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 6
+              },
+              {
+                "budget": 2000,
+                "latencyMs": 251.9,
+                "wholeResponseTokens": 1605,
+                "utilisationPercent": 80.25,
+                "focusAt": "indexer/incrementalIndex.ts::bindingTermFor",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 129,
+                "relatedCount": 13,
+                "relatedCarryingCode": 8,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 14
+              },
+              {
+                "budget": 4000,
+                "latencyMs": 286.5,
+                "wholeResponseTokens": 3718,
+                "utilisationPercent": 92.95,
+                "focusAt": "indexer/incrementalIndex.ts::bindingTermFor",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 129,
+                "relatedCount": 28,
+                "relatedCarryingCode": 24,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 29
+              },
+              {
+                "budget": 8000,
+                "latencyMs": 280.6,
+                "wholeResponseTokens": 8219,
+                "utilisationPercent": 102.74,
+                "focusAt": "indexer/incrementalIndex.ts::bindingTermFor",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 129,
+                "relatedCount": 71,
+                "relatedCarryingCode": 57,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 72
+              },
+              {
+                "budget": 16000,
+                "latencyMs": 289.4,
+                "wholeResponseTokens": 15469,
+                "utilisationPercent": 96.68,
+                "focusAt": "indexer/incrementalIndex.ts::bindingTermFor",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 129,
+                "relatedCount": 131,
+                "relatedCarryingCode": 128,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 132
+              }
+            ],
+            "sizeViolations": 0,
+            "focusSwaps": 0
+          },
+          {
+            "task": "budget allocation for capsule items is dropping sections",
+            "points": [
+              {
+                "budget": 1000,
+                "latencyMs": 216,
+                "wholeResponseTokens": 822,
+                "utilisationPercent": 82.2,
+                "focusAt": "capsule/budget.ts::listCapsuleItems",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 41,
+                "relatedCount": 6,
+                "relatedCarryingCode": 5,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 7
+              },
+              {
+                "budget": 2000,
+                "latencyMs": 243.5,
+                "wholeResponseTokens": 1943,
+                "utilisationPercent": 97.15,
+                "focusAt": "capsule/budget.ts::listCapsuleItems",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 41,
+                "relatedCount": 14,
+                "relatedCarryingCode": 14,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE"
+                ],
+                "itemsWithTokenAccounting": 15
+              },
+              {
+                "budget": 4000,
+                "latencyMs": 225.3,
+                "wholeResponseTokens": 4083,
+                "utilisationPercent": 102.08,
+                "focusAt": "capsule/budget.ts::listCapsuleItems",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 41,
+                "relatedCount": 34,
+                "relatedCarryingCode": 33,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 35
+              },
+              {
+                "budget": 8000,
+                "latencyMs": 227.1,
+                "wholeResponseTokens": 6717,
+                "utilisationPercent": 83.96,
+                "focusAt": "capsule/budget.ts::listCapsuleItems",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 41,
+                "relatedCount": 60,
+                "relatedCarryingCode": 60,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE"
+                ],
+                "itemsWithTokenAccounting": 61
+              },
+              {
+                "budget": 16000,
+                "latencyMs": 275.7,
+                "wholeResponseTokens": 12668,
+                "utilisationPercent": 79.17,
+                "focusAt": "capsule/budget.ts::listCapsuleItems",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 41,
+                "relatedCount": 112,
+                "relatedCarryingCode": 112,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE"
+                ],
+                "itemsWithTokenAccounting": 113
+              }
+            ],
+            "sizeViolations": 0,
+            "focusSwaps": 0
+          },
+          {
+            "task": "how is the impact graph bounded when a symbol has many callers",
+            "points": [
+              {
+                "budget": 1000,
+                "latencyMs": 260.6,
+                "wholeResponseTokens": 1023,
+                "utilisationPercent": 102.3,
+                "focusAt": "impact/getImpactGraph.ts::hasInheritedMemberEvidence",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 152,
+                "relatedCount": 10,
+                "relatedCarryingCode": 7,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 11
+              },
+              {
+                "budget": 2000,
+                "latencyMs": 288.8,
+                "wholeResponseTokens": 1948,
+                "utilisationPercent": 97.4,
+                "focusAt": "impact/getImpactGraph.ts::hasInheritedMemberEvidence",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 152,
+                "relatedCount": 14,
+                "relatedCarryingCode": 14,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE"
+                ],
+                "itemsWithTokenAccounting": 15
+              },
+              {
+                "budget": 4000,
+                "latencyMs": 280.7,
+                "wholeResponseTokens": 4096,
+                "utilisationPercent": 102.4,
+                "focusAt": "impact/getImpactGraph.ts::hasInheritedMemberEvidence",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 152,
+                "relatedCount": 32,
+                "relatedCarryingCode": 30,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 33
+              },
+              {
+                "budget": 8000,
+                "latencyMs": 317.7,
+                "wholeResponseTokens": 8233,
+                "utilisationPercent": 102.91,
+                "focusAt": "impact/getImpactGraph.ts::hasInheritedMemberEvidence",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 152,
+                "relatedCount": 72,
+                "relatedCarryingCode": 59,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 73
+              },
+              {
+                "budget": 16000,
+                "latencyMs": 358.9,
+                "wholeResponseTokens": 16427,
+                "utilisationPercent": 102.67,
+                "focusAt": "impact/getImpactGraph.ts::hasInheritedMemberEvidence",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 152,
+                "relatedCount": 134,
+                "relatedCarryingCode": 131,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 135
+              }
+            ],
+            "sizeViolations": 0,
+            "focusSwaps": 0
+          },
+          {
+            "task": "where does logic flow decide a path is unreachable",
+            "points": [
+              {
+                "budget": 1000,
+                "latencyMs": 223.2,
+                "wholeResponseTokens": 820,
+                "utilisationPercent": 82,
+                "focusAt": "logicFlow/searchLogicFlow.ts::hasCrossLanguagePythonCythonStep",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 143,
+                "relatedCount": 5,
+                "relatedCarryingCode": 4,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 6
+              },
+              {
+                "budget": 2000,
+                "latencyMs": 213.4,
+                "wholeResponseTokens": 1773,
+                "utilisationPercent": 88.65,
+                "focusAt": "logicFlow/searchLogicFlow.ts::hasCrossLanguagePythonCythonStep",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 143,
+                "relatedCount": 12,
+                "relatedCarryingCode": 11,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 13
+              },
+              {
+                "budget": 4000,
+                "latencyMs": 234.9,
+                "wholeResponseTokens": 4023,
+                "utilisationPercent": 100.58,
+                "focusAt": "logicFlow/searchLogicFlow.ts::hasCrossLanguagePythonCythonStep",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 143,
+                "relatedCount": 32,
+                "relatedCarryingCode": 31,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 33
+              },
+              {
+                "budget": 8000,
+                "latencyMs": 237.3,
+                "wholeResponseTokens": 7620,
+                "utilisationPercent": 95.25,
+                "focusAt": "logicFlow/searchLogicFlow.ts::hasCrossLanguagePythonCythonStep",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 143,
+                "relatedCount": 64,
+                "relatedCarryingCode": 62,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 65
+              },
+              {
+                "budget": 16000,
+                "latencyMs": 291.1,
+                "wholeResponseTokens": 13941,
+                "utilisationPercent": 87.13,
+                "focusAt": "logicFlow/searchLogicFlow.ts::hasCrossLanguagePythonCythonStep",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 143,
+                "relatedCount": 113,
+                "relatedCarryingCode": 111,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 114
+              }
+            ],
+            "sizeViolations": 0,
+            "focusSwaps": 0
+          },
+          {
+            "task": "how are skeleton declarations built from indexed symbols",
+            "points": [
+              {
+                "budget": 1000,
+                "latencyMs": 246.7,
+                "wholeResponseTokens": 800,
+                "utilisationPercent": 80,
+                "focusAt": "skeleton/getSkeleton.ts::buildDeclarations",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 374,
+                "relatedCount": 3,
+                "relatedCarryingCode": 3,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE"
+                ],
+                "itemsWithTokenAccounting": 4
+              },
+              {
+                "budget": 2000,
+                "latencyMs": 273.8,
+                "wholeResponseTokens": 1880,
+                "utilisationPercent": 94,
+                "focusAt": "skeleton/getSkeleton.ts::buildDeclarations",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 374,
+                "relatedCount": 11,
+                "relatedCarryingCode": 10,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 12
+              },
+              {
+                "budget": 4000,
+                "latencyMs": 243.8,
+                "wholeResponseTokens": 4097,
+                "utilisationPercent": 102.42,
+                "focusAt": "skeleton/getSkeleton.ts::buildDeclarations",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 374,
+                "relatedCount": 30,
+                "relatedCarryingCode": 28,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 31
+              },
+              {
+                "budget": 8000,
+                "latencyMs": 286.1,
+                "wholeResponseTokens": 8208,
+                "utilisationPercent": 102.6,
+                "focusAt": "skeleton/getSkeleton.ts::buildDeclarations",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 374,
+                "relatedCount": 67,
+                "relatedCarryingCode": 61,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 68
+              },
+              {
+                "budget": 16000,
+                "latencyMs": 317.5,
+                "wholeResponseTokens": 16416,
+                "utilisationPercent": 102.6,
+                "focusAt": "skeleton/getSkeleton.ts::buildDeclarations",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 374,
+                "relatedCount": 128,
+                "relatedCarryingCode": 115,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 129
+              }
+            ],
+            "sizeViolations": 0,
+            "focusSwaps": 0
+          },
+          {
+            "task": "what determines whether the repository index is considered fresh",
+            "points": [
+              {
+                "budget": 1000,
+                "latencyMs": 209.7,
+                "wholeResponseTokens": 781,
+                "utilisationPercent": 78.1,
+                "focusAt": "db/repositories/fileIndexFailuresRepository.ts::findFileIndexFailure",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 109,
+                "relatedCount": 5,
+                "relatedCarryingCode": 4,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 6
+              },
+              {
+                "budget": 2000,
+                "latencyMs": 232.2,
+                "wholeResponseTokens": 1891,
+                "utilisationPercent": 94.55,
+                "focusAt": "db/repositories/fileIndexFailuresRepository.ts::findFileIndexFailure",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 109,
+                "relatedCount": 14,
+                "relatedCarryingCode": 12,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 15
+              },
+              {
+                "budget": 4000,
+                "latencyMs": 242.5,
+                "wholeResponseTokens": 4048,
+                "utilisationPercent": 101.2,
+                "focusAt": "db/repositories/fileIndexFailuresRepository.ts::findFileIndexFailure",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 109,
+                "relatedCount": 35,
+                "relatedCarryingCode": 31,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 36
+              },
+              {
+                "budget": 8000,
+                "latencyMs": 278,
+                "wholeResponseTokens": 8215,
+                "utilisationPercent": 102.69,
+                "focusAt": "db/repositories/fileIndexFailuresRepository.ts::findFileIndexFailure",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 109,
+                "relatedCount": 71,
+                "relatedCarryingCode": 55,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 72
+              },
+              {
+                "budget": 16000,
+                "latencyMs": 368.2,
+                "wholeResponseTokens": 16413,
+                "utilisationPercent": 102.58,
+                "focusAt": "db/repositories/fileIndexFailuresRepository.ts::findFileIndexFailure",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 109,
+                "relatedCount": 131,
+                "relatedCarryingCode": 114,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 132
+              }
+            ],
+            "sizeViolations": 0,
+            "focusSwaps": 0
+          },
+          {
+            "task": "how does hybrid scoring combine lexical and graph signals",
+            "points": [
+              {
+                "budget": 1000,
+                "latencyMs": 213.1,
+                "wholeResponseTokens": 862,
+                "utilisationPercent": 86.2,
+                "focusAt": "retrieval/hybridScoring.ts::combineFinalScore",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 126,
+                "relatedCount": 7,
+                "relatedCarryingCode": 6,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 8
+              },
+              {
+                "budget": 2000,
+                "latencyMs": 236.2,
+                "wholeResponseTokens": 2002,
+                "utilisationPercent": 100.1,
+                "focusAt": "retrieval/hybridScoring.ts::combineFinalScore",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 126,
+                "relatedCount": 18,
+                "relatedCarryingCode": 18,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE"
+                ],
+                "itemsWithTokenAccounting": 19
+              },
+              {
+                "budget": 4000,
+                "latencyMs": 228,
+                "wholeResponseTokens": 4130,
+                "utilisationPercent": 103.25,
+                "focusAt": "retrieval/hybridScoring.ts::combineFinalScore",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 126,
+                "relatedCount": 42,
+                "relatedCarryingCode": 41,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 43
+              },
+              {
+                "budget": 8000,
+                "latencyMs": 268.3,
+                "wholeResponseTokens": 7413,
+                "utilisationPercent": 92.66,
+                "focusAt": "retrieval/hybridScoring.ts::combineFinalScore",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 126,
+                "relatedCount": 70,
+                "relatedCarryingCode": 70,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE"
+                ],
+                "itemsWithTokenAccounting": 71
+              },
+              {
+                "budget": 16000,
+                "latencyMs": 304.2,
+                "wholeResponseTokens": 13643,
+                "utilisationPercent": 85.27,
+                "focusAt": "retrieval/hybridScoring.ts::combineFinalScore",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 126,
+                "relatedCount": 122,
+                "relatedCarryingCode": 122,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE"
+                ],
+                "itemsWithTokenAccounting": 123
+              }
+            ],
+            "sizeViolations": 0,
+            "focusSwaps": 0
+          },
+          {
+            "task": "where is the MCP tool registry assembled",
+            "points": [
+              {
+                "budget": 1000,
+                "latencyMs": 219,
+                "wholeResponseTokens": 899,
+                "utilisationPercent": 89.9,
+                "focusAt": "mcp/registry.ts::McpToolRegistry",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 60,
+                "relatedCount": 8,
+                "relatedCarryingCode": 7,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 9
+              },
+              {
+                "budget": 2000,
+                "latencyMs": 251.6,
+                "wholeResponseTokens": 1921,
+                "utilisationPercent": 96.05,
+                "focusAt": "mcp/registry.ts::McpToolRegistry",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 60,
+                "relatedCount": 16,
+                "relatedCarryingCode": 16,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE"
+                ],
+                "itemsWithTokenAccounting": 17
+              },
+              {
+                "budget": 4000,
+                "latencyMs": 264,
+                "wholeResponseTokens": 4114,
+                "utilisationPercent": 102.85,
+                "focusAt": "mcp/registry.ts::McpToolRegistry",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 60,
+                "relatedCount": 36,
+                "relatedCarryingCode": 36,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE"
+                ],
+                "itemsWithTokenAccounting": 37
+              },
+              {
+                "budget": 8000,
+                "latencyMs": 331.5,
+                "wholeResponseTokens": 7673,
+                "utilisationPercent": 95.91,
+                "focusAt": "mcp/registry.ts::McpToolRegistry",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 60,
+                "relatedCount": 68,
+                "relatedCarryingCode": 68,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE"
+                ],
+                "itemsWithTokenAccounting": 69
+              },
+              {
+                "budget": 16000,
+                "latencyMs": 444,
+                "wholeResponseTokens": 13893,
+                "utilisationPercent": 86.83,
+                "focusAt": "mcp/registry.ts::McpToolRegistry",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 60,
+                "relatedCount": 132,
+                "relatedCarryingCode": 132,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE"
+                ],
+                "itemsWithTokenAccounting": 133
+              }
+            ],
+            "sizeViolations": 0,
+            "focusSwaps": 0
+          },
+          {
+            "task": "how does the python parser resolve module imports",
+            "points": [
+              {
+                "budget": 1000,
+                "latencyMs": 213.1,
+                "wholeResponseTokens": 818,
+                "utilisationPercent": 81.8,
+                "focusAt": "parsers/pythonParser.ts::resolveImportedModulePath",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 117,
+                "relatedCount": 6,
+                "relatedCarryingCode": 4,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 7
+              },
+              {
+                "budget": 2000,
+                "latencyMs": 223.5,
+                "wholeResponseTokens": 1823,
+                "utilisationPercent": 91.15,
+                "focusAt": "parsers/pythonParser.ts::resolveImportedModulePath",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 117,
+                "relatedCount": 14,
+                "relatedCarryingCode": 12,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 15
+              },
+              {
+                "budget": 4000,
+                "latencyMs": 237.8,
+                "wholeResponseTokens": 4035,
+                "utilisationPercent": 100.88,
+                "focusAt": "parsers/pythonParser.ts::resolveImportedModulePath",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 117,
+                "relatedCount": 32,
+                "relatedCarryingCode": 31,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 33
+              },
+              {
+                "budget": 8000,
+                "latencyMs": 274.2,
+                "wholeResponseTokens": 8243,
+                "utilisationPercent": 103.04,
+                "focusAt": "parsers/pythonParser.ts::resolveImportedModulePath",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 117,
+                "relatedCount": 76,
+                "relatedCarryingCode": 66,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 77
+              },
+              {
+                "budget": 16000,
+                "latencyMs": 312,
+                "wholeResponseTokens": 13759,
+                "utilisationPercent": 85.99,
+                "focusAt": "parsers/pythonParser.ts::resolveImportedModulePath",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 117,
+                "relatedCount": 127,
+                "relatedCarryingCode": 124,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 128
+              }
+            ],
+            "sizeViolations": 0,
+            "focusSwaps": 0
+          },
+          {
+            "task": "what writes the index manifest after a run",
+            "points": [
+              {
+                "budget": 1000,
+                "latencyMs": 231.9,
+                "wholeResponseTokens": 886,
+                "utilisationPercent": 88.6,
+                "focusAt": "db/sqlite.ts::openIndexerDatabase",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 43,
+                "relatedCount": 8,
+                "relatedCarryingCode": 7,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 9
+              },
+              {
+                "budget": 2000,
+                "latencyMs": 241.8,
+                "wholeResponseTokens": 1965,
+                "utilisationPercent": 98.25,
+                "focusAt": "db/sqlite.ts::openIndexerDatabase",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 43,
+                "relatedCount": 18,
+                "relatedCarryingCode": 16,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 19
+              },
+              {
+                "budget": 4000,
+                "latencyMs": 268.1,
+                "wholeResponseTokens": 4109,
+                "utilisationPercent": 102.72,
+                "focusAt": "db/sqlite.ts::openIndexerDatabase",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 43,
+                "relatedCount": 35,
+                "relatedCarryingCode": 31,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 36
+              },
+              {
+                "budget": 8000,
+                "latencyMs": 274.6,
+                "wholeResponseTokens": 8212,
+                "utilisationPercent": 102.65,
+                "focusAt": "db/sqlite.ts::openIndexerDatabase",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 43,
+                "relatedCount": 73,
+                "relatedCarryingCode": 60,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 74
+              },
+              {
+                "budget": 16000,
+                "latencyMs": 316.3,
+                "wholeResponseTokens": 15311,
+                "utilisationPercent": 95.69,
+                "focusAt": "db/sqlite.ts::openIndexerDatabase",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 43,
+                "relatedCount": 125,
+                "relatedCarryingCode": 122,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 126
+              }
+            ],
+            "sizeViolations": 0,
+            "focusSwaps": 0
+          },
+          {
+            "task": "how are worktrees excluded from the parent repository index",
+            "points": [
+              {
+                "budget": 1000,
+                "latencyMs": 210.4,
+                "wholeResponseTokens": 858,
+                "utilisationPercent": 85.8,
+                "focusAt": "indexer/worktreeIdentity.ts::RepositoryIdentity",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 236,
+                "relatedCount": 5,
+                "relatedCarryingCode": 4,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 6
+              },
+              {
+                "budget": 2000,
+                "latencyMs": 217.2,
+                "wholeResponseTokens": 1878,
+                "utilisationPercent": 93.9,
+                "focusAt": "indexer/worktreeIdentity.ts::RepositoryIdentity",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 236,
+                "relatedCount": 14,
+                "relatedCarryingCode": 12,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 15
+              },
+              {
+                "budget": 4000,
+                "latencyMs": 235.3,
+                "wholeResponseTokens": 4063,
+                "utilisationPercent": 101.58,
+                "focusAt": "indexer/worktreeIdentity.ts::RepositoryIdentity",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 236,
+                "relatedCount": 33,
+                "relatedCarryingCode": 30,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 34
+              },
+              {
+                "budget": 8000,
+                "latencyMs": 248.2,
+                "wholeResponseTokens": 8217,
+                "utilisationPercent": 102.71,
+                "focusAt": "indexer/worktreeIdentity.ts::RepositoryIdentity",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 236,
+                "relatedCount": 73,
+                "relatedCarryingCode": 59,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 74
+              },
+              {
+                "budget": 16000,
+                "latencyMs": 293.4,
+                "wholeResponseTokens": 16408,
+                "utilisationPercent": 102.55,
+                "focusAt": "indexer/worktreeIdentity.ts::RepositoryIdentity",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 236,
+                "relatedCount": 130,
+                "relatedCarryingCode": 129,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 131
+              }
+            ],
+            "sizeViolations": 0,
+            "focusSwaps": 0
+          },
+          {
+            "task": "where does the product context decide which files are pivots",
+            "points": [
+              {
+                "budget": 1000,
+                "latencyMs": 228.2,
+                "wholeResponseTokens": 832,
+                "utilisationPercent": 83.2,
+                "focusAt": "productContext/assembleProductContext.ts::isRequiredPivot",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 42,
+                "relatedCount": 5,
+                "relatedCarryingCode": 5,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE"
+                ],
+                "itemsWithTokenAccounting": 6
+              },
+              {
+                "budget": 2000,
+                "latencyMs": 247.2,
+                "wholeResponseTokens": 2003,
+                "utilisationPercent": 100.15,
+                "focusAt": "productContext/assembleProductContext.ts::isRequiredPivot",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 42,
+                "relatedCount": 15,
+                "relatedCarryingCode": 15,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE"
+                ],
+                "itemsWithTokenAccounting": 16
+              },
+              {
+                "budget": 4000,
+                "latencyMs": 260.6,
+                "wholeResponseTokens": 4105,
+                "utilisationPercent": 102.63,
+                "focusAt": "productContext/assembleProductContext.ts::isRequiredPivot",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 42,
+                "relatedCount": 32,
+                "relatedCarryingCode": 31,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 33
+              },
+              {
+                "budget": 8000,
+                "latencyMs": 287.1,
+                "wholeResponseTokens": 8215,
+                "utilisationPercent": 102.69,
+                "focusAt": "productContext/assembleProductContext.ts::isRequiredPivot",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 42,
+                "relatedCount": 69,
+                "relatedCarryingCode": 58,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 70
+              },
+              {
+                "budget": 16000,
+                "latencyMs": 322,
+                "wholeResponseTokens": 16411,
+                "utilisationPercent": 102.57,
+                "focusAt": "productContext/assembleProductContext.ts::isRequiredPivot",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 42,
+                "relatedCount": 132,
+                "relatedCarryingCode": 102,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 133
+              }
+            ],
+            "sizeViolations": 0,
+            "focusSwaps": 0
+          },
+          {
+            "task": "how does the response envelope shed content under budget pressure",
+            "points": [
+              {
+                "budget": 1000,
+                "latencyMs": 224.8,
+                "wholeResponseTokens": 770,
+                "utilisationPercent": 77,
+                "focusAt": "impact/impactResponseEnvelope.ts::impactResponseMeetsEvidenceBudget",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 40,
+                "relatedCount": 6,
+                "relatedCarryingCode": 5,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 7
+              },
+              {
+                "budget": 2000,
+                "latencyMs": 228.6,
+                "wholeResponseTokens": 1731,
+                "utilisationPercent": 86.55,
+                "focusAt": "impact/impactResponseEnvelope.ts::impactResponseMeetsEvidenceBudget",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 40,
+                "relatedCount": 13,
+                "relatedCarryingCode": 10,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 14
+              },
+              {
+                "budget": 4000,
+                "latencyMs": 241.3,
+                "wholeResponseTokens": 4062,
+                "utilisationPercent": 101.55,
+                "focusAt": "impact/impactResponseEnvelope.ts::impactResponseMeetsEvidenceBudget",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 40,
+                "relatedCount": 31,
+                "relatedCarryingCode": 30,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 32
+              },
+              {
+                "budget": 8000,
+                "latencyMs": 253.6,
+                "wholeResponseTokens": 8189,
+                "utilisationPercent": 102.36,
+                "focusAt": "impact/impactResponseEnvelope.ts::impactResponseMeetsEvidenceBudget",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 40,
+                "relatedCount": 64,
+                "relatedCarryingCode": 59,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 65
+              },
+              {
+                "budget": 16000,
+                "latencyMs": 323,
+                "wholeResponseTokens": 16002,
+                "utilisationPercent": 100.01,
+                "focusAt": "impact/impactResponseEnvelope.ts::impactResponseMeetsEvidenceBudget",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 40,
+                "relatedCount": 123,
+                "relatedCarryingCode": 121,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 124
+              }
+            ],
+            "sizeViolations": 0,
+            "focusSwaps": 0
+          },
+          {
+            "task": "what deduplicates supporting files in the capsule",
+            "points": [
+              {
+                "budget": 1000,
+                "latencyMs": 231.5,
+                "wholeResponseTokens": 865,
+                "utilisationPercent": 86.5,
+                "focusAt": "capsule/types.ts::CapsuleSupportingCandidate",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 60,
+                "relatedCount": 6,
+                "relatedCarryingCode": 6,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE"
+                ],
+                "itemsWithTokenAccounting": 7
+              },
+              {
+                "budget": 2000,
+                "latencyMs": 264.4,
+                "wholeResponseTokens": 1835,
+                "utilisationPercent": 91.75,
+                "focusAt": "capsule/types.ts::CapsuleSupportingCandidate",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 60,
+                "relatedCount": 16,
+                "relatedCarryingCode": 13,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 17
+              },
+              {
+                "budget": 4000,
+                "latencyMs": 244.7,
+                "wholeResponseTokens": 4115,
+                "utilisationPercent": 102.88,
+                "focusAt": "capsule/types.ts::CapsuleSupportingCandidate",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 60,
+                "relatedCount": 37,
+                "relatedCarryingCode": 32,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 38
+              },
+              {
+                "budget": 8000,
+                "latencyMs": 279.8,
+                "wholeResponseTokens": 8183,
+                "utilisationPercent": 102.29,
+                "focusAt": "capsule/types.ts::CapsuleSupportingCandidate",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 60,
+                "relatedCount": 65,
+                "relatedCarryingCode": 63,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 66
+              },
+              {
+                "budget": 16000,
+                "latencyMs": 313.3,
+                "wholeResponseTokens": 12656,
+                "utilisationPercent": 79.1,
+                "focusAt": "capsule/types.ts::CapsuleSupportingCandidate",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 60,
+                "relatedCount": 104,
+                "relatedCarryingCode": 102,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 105
+              }
+            ],
+            "sizeViolations": 0,
+            "focusSwaps": 0
+          },
+          {
+            "task": "how does cython parsing differ from python parsing",
+            "points": [
+              {
+                "budget": 1000,
+                "latencyMs": 194,
+                "wholeResponseTokens": 894,
+                "utilisationPercent": 89.4,
+                "focusAt": "parsers/pythonParser.ts::getCythonBackedExportIndex",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 213,
+                "relatedCount": 7,
+                "relatedCarryingCode": 6,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 8
+              },
+              {
+                "budget": 2000,
+                "latencyMs": 210.6,
+                "wholeResponseTokens": 1989,
+                "utilisationPercent": 99.45,
+                "focusAt": "parsers/pythonParser.ts::getCythonBackedExportIndex",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 213,
+                "relatedCount": 16,
+                "relatedCarryingCode": 16,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE"
+                ],
+                "itemsWithTokenAccounting": 17
+              },
+              {
+                "budget": 4000,
+                "latencyMs": 207.5,
+                "wholeResponseTokens": 3495,
+                "utilisationPercent": 87.38,
+                "focusAt": "parsers/pythonParser.ts::getCythonBackedExportIndex",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 213,
+                "relatedCount": 29,
+                "relatedCarryingCode": 29,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE"
+                ],
+                "itemsWithTokenAccounting": 30
+              },
+              {
+                "budget": 8000,
+                "latencyMs": 264.8,
+                "wholeResponseTokens": 6523,
+                "utilisationPercent": 81.54,
+                "focusAt": "parsers/pythonParser.ts::getCythonBackedExportIndex",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 213,
+                "relatedCount": 65,
+                "relatedCarryingCode": 64,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 66
+              },
+              {
+                "budget": 16000,
+                "latencyMs": 299.1,
+                "wholeResponseTokens": 11817,
+                "utilisationPercent": 73.86,
+                "focusAt": "parsers/pythonParser.ts::getCythonBackedExportIndex",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 213,
+                "relatedCount": 121,
+                "relatedCarryingCode": 118,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 122
+              }
+            ],
+            "sizeViolations": 0,
+            "focusSwaps": 0
+          },
+          {
+            "task": "where are call sites persisted for an edge",
+            "points": [
+              {
+                "budget": 1000,
+                "latencyMs": 218.6,
+                "wholeResponseTokens": 728,
+                "utilisationPercent": 72.8,
+                "focusAt": "parsers/edgeCallSites.ts::withCallSite",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 73,
+                "relatedCount": 7,
+                "relatedCarryingCode": 4,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 8
+              },
+              {
+                "budget": 2000,
+                "latencyMs": 233.2,
+                "wholeResponseTokens": 1920,
+                "utilisationPercent": 96,
+                "focusAt": "parsers/edgeCallSites.ts::withCallSite",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 73,
+                "relatedCount": 14,
+                "relatedCarryingCode": 14,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE"
+                ],
+                "itemsWithTokenAccounting": 15
+              },
+              {
+                "budget": 4000,
+                "latencyMs": 257,
+                "wholeResponseTokens": 4096,
+                "utilisationPercent": 102.4,
+                "focusAt": "parsers/edgeCallSites.ts::withCallSite",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 73,
+                "relatedCount": 31,
+                "relatedCarryingCode": 29,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 32
+              },
+              {
+                "budget": 8000,
+                "latencyMs": 286.9,
+                "wholeResponseTokens": 8205,
+                "utilisationPercent": 102.56,
+                "focusAt": "parsers/edgeCallSites.ts::withCallSite",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 73,
+                "relatedCount": 69,
+                "relatedCarryingCode": 63,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 70
+              },
+              {
+                "budget": 16000,
+                "latencyMs": 303,
+                "wholeResponseTokens": 15549,
+                "utilisationPercent": 97.18,
+                "focusAt": "parsers/edgeCallSites.ts::withCallSite",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 73,
+                "relatedCount": 127,
+                "relatedCarryingCode": 125,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 128
+              }
+            ],
+            "sizeViolations": 0,
+            "focusSwaps": 0
+          },
+          {
+            "task": "how does search rank candidate symbols for a task",
+            "points": [
+              {
+                "budget": 1000,
+                "latencyMs": 225.2,
+                "wholeResponseTokens": 813,
+                "utilisationPercent": 81.3,
+                "focusAt": "retrieval/searchSymbolsShared.ts::rankSearchCandidates",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 102,
+                "relatedCount": 7,
+                "relatedCarryingCode": 4,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 8
+              },
+              {
+                "budget": 2000,
+                "latencyMs": 276.9,
+                "wholeResponseTokens": 1866,
+                "utilisationPercent": 93.3,
+                "focusAt": "retrieval/searchSymbolsShared.ts::rankSearchCandidates",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 102,
+                "relatedCount": 18,
+                "relatedCarryingCode": 12,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 19
+              },
+              {
+                "budget": 4000,
+                "latencyMs": 253.7,
+                "wholeResponseTokens": 4083,
+                "utilisationPercent": 102.08,
+                "focusAt": "retrieval/searchSymbolsShared.ts::rankSearchCandidates",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 102,
+                "relatedCount": 39,
+                "relatedCarryingCode": 33,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 40
+              },
+              {
+                "budget": 8000,
+                "latencyMs": 271.1,
+                "wholeResponseTokens": 7611,
+                "utilisationPercent": 95.14,
+                "focusAt": "retrieval/searchSymbolsShared.ts::rankSearchCandidates",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 102,
+                "relatedCount": 70,
+                "relatedCarryingCode": 66,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 71
+              },
+              {
+                "budget": 16000,
+                "latencyMs": 314.6,
+                "wholeResponseTokens": 14164,
+                "utilisationPercent": 88.53,
+                "focusAt": "retrieval/searchSymbolsShared.ts::rankSearchCandidates",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 102,
+                "relatedCount": 126,
+                "relatedCarryingCode": 124,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 127
+              }
+            ],
+            "sizeViolations": 0,
+            "focusSwaps": 0
+          },
+          {
+            "task": "what happens when the index schema version is incompatible",
+            "points": [
+              {
+                "budget": 1000,
+                "latencyMs": 232.9,
+                "wholeResponseTokens": 846,
+                "utilisationPercent": 84.6,
+                "focusAt": "indexer/indexReadiness.ts::maxStoredFormatVersion",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 94,
+                "relatedCount": 6,
+                "relatedCarryingCode": 5,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 7
+              },
+              {
+                "budget": 2000,
+                "latencyMs": 232.6,
+                "wholeResponseTokens": 1661,
+                "utilisationPercent": 83.05,
+                "focusAt": "indexer/indexReadiness.ts::maxStoredFormatVersion",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 94,
+                "relatedCount": 15,
+                "relatedCarryingCode": 10,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 16
+              },
+              {
+                "budget": 4000,
+                "latencyMs": 237.2,
+                "wholeResponseTokens": 3991,
+                "utilisationPercent": 99.78,
+                "focusAt": "indexer/indexReadiness.ts::maxStoredFormatVersion",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 94,
+                "relatedCount": 32,
+                "relatedCarryingCode": 28,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 33
+              },
+              {
+                "budget": 8000,
+                "latencyMs": 300,
+                "wholeResponseTokens": 8216,
+                "utilisationPercent": 102.7,
+                "focusAt": "indexer/indexReadiness.ts::maxStoredFormatVersion",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 94,
+                "relatedCount": 67,
+                "relatedCarryingCode": 55,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 68
+              },
+              {
+                "budget": 16000,
+                "latencyMs": 318.3,
+                "wholeResponseTokens": 16404,
+                "utilisationPercent": 102.53,
+                "focusAt": "indexer/indexReadiness.ts::maxStoredFormatVersion",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 94,
+                "relatedCount": 130,
+                "relatedCarryingCode": 109,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 131
+              }
+            ],
+            "sizeViolations": 0,
+            "focusSwaps": 0
+          },
+          {
+            "task": "how is a symbol's fully qualified name constructed",
+            "points": [
+              {
+                "budget": 1000,
+                "latencyMs": 834.1,
+                "wholeResponseTokens": 797,
+                "utilisationPercent": 79.7,
+                "focusAt": "domain/types.ts::FullyQualifiedName",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 9,
+                "relatedCount": 8,
+                "relatedCarryingCode": 5,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 9
+              },
+              {
+                "budget": 2000,
+                "latencyMs": 854.1,
+                "wholeResponseTokens": 1880,
+                "utilisationPercent": 94,
+                "focusAt": "domain/types.ts::FullyQualifiedName",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 9,
+                "relatedCount": 16,
+                "relatedCarryingCode": 13,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 17
+              },
+              {
+                "budget": 4000,
+                "latencyMs": 845.5,
+                "wholeResponseTokens": 4082,
+                "utilisationPercent": 102.05,
+                "focusAt": "domain/types.ts::FullyQualifiedName",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 9,
+                "relatedCount": 37,
+                "relatedCarryingCode": 32,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 38
+              },
+              {
+                "budget": 8000,
+                "latencyMs": 855.2,
+                "wholeResponseTokens": 8230,
+                "utilisationPercent": 102.88,
+                "focusAt": "domain/types.ts::FullyQualifiedName",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 9,
+                "relatedCount": 73,
+                "relatedCarryingCode": 62,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 74
+              },
+              {
+                "budget": 16000,
+                "latencyMs": 930.2,
+                "wholeResponseTokens": 16362,
+                "utilisationPercent": 102.26,
+                "focusAt": "domain/types.ts::FullyQualifiedName",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 9,
+                "relatedCount": 134,
+                "relatedCarryingCode": 131,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 135
+              }
+            ],
+            "sizeViolations": 0,
+            "focusSwaps": 0
+          }
+        ],
+        "utilisationByBudget": {
+          "1000": {
+            "median": 82.7
+          },
+          "2000": {
+            "median": 94
+          },
+          "4000": {
+            "median": 102.06
+          },
+          "8000": {
+            "median": 102.58
+          },
+          "16000": {
+            "median": 96.19
+          }
+        },
+        "tasksWithSizeViolation": 0,
+        "tasksWithFocusSwap": 0
+      },
+      "a12": {
+        "distinctClassesObserved": [
+          "FOCUS:focused_source",
+          "RELATED_WITH_CODE",
+          "RELATIONSHIP_ONLY"
+        ]
+      },
+      "a14": {
+        "defaultVsDebug": {
+          "accountingInDefaultResponse": false,
+          "accountingInDebugResponse": true,
+          "reductionFieldInDefaultResponse": false,
+          "reductionFieldInDebugResponse": true,
+          "defaultResponseTopLevelKeys": [
+            "schemaVersion",
+            "focus",
+            "related",
+            "boundary"
+          ],
+          "debugResponseTopLevelKeys": [
+            "schemaVersion",
+            "request",
+            "capsuleResult",
+            "authoritativeCapsuleManifestId",
+            "pivotNeighborhood",
+            "inspectFirst",
+            "capsule",
+            "runtime",
+            "intent",
+            "taskSummary",
+            "context",
+            "impact",
+            "flow",
+            "memory",
+            "rules",
+            "diagnostics",
+            "deferred",
+            "productContext",
+            "workspaceRouting",
+            "savedObservation",
+            "accounting",
+            "responseBudget"
+          ],
+          "defaultResponseTokens": 1123,
+          "debugResponseTokens": 9073
+        },
+        "skeletonAccounting": {
+          "file": "access/indexAccessLifecycle.test.ts",
+          "perCallAccounting": {
+            "latencyMs": 4.923018000001321,
+            "estimatedOutputTokens": 421,
+            "estimatedNaiveFullFileTokens": 4469,
+            "estimatedTokensSavedVsNaiveFullFile": 4048,
+            "estimatedSavingsPercentVsNaiveFullFile": 90.58,
+            "uniqueFilesCounted": 1,
+            "method": "chars_div_4",
+            "baseline": "full contents of unique files represented in emitted context items"
+          },
+          "perItemAccounting": 0,
+          "declarations": 7,
+          "productReportedSavingsPercent": 90.58,
+          "independentRenderedReductionPercent": 96.64,
+          "authoritiesDisagreeByPoints": 6.06
+        },
+        "itemsWithPerItemAccounting": 5072,
+        "itemsDelivered": 5072
+      },
+      "a15": {
+        "eligibleCallSites": 50,
+        "impactSurfaceRenderingExpression": 12,
+        "flowSurfaceRenderingExpression": 50,
+        "flowRenderedTextNamesCallee": 50,
+        "flowRenderedTextMatchesDeclaredSpan": 42,
+        "declaredSpanActuallyNamesCallee": 50,
+        "impactRenderPercent": 24,
+        "flowCorrectRenderPercent": 100,
+        "misrenderedExamples": [
+          {
+            "from": "capsule/selectCapsuleMemories.ts::scoreObservation",
+            "to": "capsule/selectCapsuleMemories.ts::isEligibleForSurfacing",
+            "callee": "isEligibleForSurfacing",
+            "declaredSpan": "capsule/selectCapsuleMemories.ts:140-147",
+            "rendered": "if (!isEligibleForSurfacing({",
+            "actualAtDeclaredSpan": "  if (!isEligibleForSurfacing({\n    linkedSymbolMatches,\n    linkedFileMatches,\n    queryTermMatches,\n    intentMatch,\n    staleness,\n    sc"
+          },
+          {
+            "from": "runPipeline/runPipelineOrchestrator.ts::runReliableContextRetrieval",
+            "to": "intent/routeQuery.ts::routeQuery",
+            "callee": "routeQuery",
+            "declaredSpan": "runPipeline/runPipelineOrchestrator.ts:666-669",
+            "rendered": "? routeQuery(db, input.query, {",
+            "actualAtDeclaredSpan": "      ? routeQuery(db, input.query, {\n          maxResults: input.maxResults,\n          includeTimingDiagnostics: input.includeTimingDiagnos"
+          },
+          {
+            "from": "impact/staticEvidence.ts::buildStaticRelationEvidence",
+            "to": "source/sourceExcerpt.ts::buildSymbolSourceExcerpt",
+            "callee": "buildSymbolSourceExcerpt",
+            "declaredSpan": "impact/staticEvidence.ts:153-156",
+            "rendered": "? buildSymbolSourceExcerpt(db, options.repoRoot, source.id, {",
+            "actualAtDeclaredSpan": "    ? buildSymbolSourceExcerpt(db, options.repoRoot, source.id, {\n      mode: \"span\",\n      ...(anchorLine === undefined ? {} : { anchorLine"
+          },
+          {
+            "from": "cli/formatters.ts::formatRuntimeDaemonLogs",
+            "to": "cli/formatters.ts::formatSection",
+            "callee": "formatSection",
+            "declaredSpan": "cli/formatters.ts:619-623",
+            "rendered": "formatSection(\"Runtime state\", [",
+            "actualAtDeclaredSpan": "    formatSection(\"Runtime state\", [\n      `Repo root: ${input.repoRoot}`,\n      `Log file: ${formatRepoRelativePath(input.repoRoot, input.l"
+          },
+          {
+            "from": "observations/consolidation.ts::buildConsolidationGroup",
+            "to": "observations/consolidation.ts::formatConsolidatedBody",
+            "callee": "formatConsolidatedBody",
+            "declaredSpan": "observations/consolidation.ts:274-288",
+            "rendered": "body: formatConsolidatedBody({",
+            "actualAtDeclaredSpan": "    body: formatConsolidatedBody({\n      signature,\n      sessionId: sortedObservations[0]!.sessionId ?? \"\",\n      sourceObservationCount,\n "
+          }
+        ]
+      },
+      "truthfulness": {
+        "excerptChecked": 30,
+        "excerptAnchored": 25,
+        "excerptMisanchored": 0,
+        "excerptNotLocated": 5,
+        "excerptAnchorPercentOfConclusive": 100,
+        "excerptStartLineDeltas": {
+          "0": 25,
+          "not_located": 5
+        },
+        "strengthenedCallSiteRenderings": 0,
+        "renderedCallSites": 50,
+        "inventedStructuralClaims": 0
+      }
+    },
+    {
+      "id": "C-LARGE",
+      "language": "Python",
+      "filesIndexed": 276,
+      "a5": {
+        "queries": 5,
+        "repeats": 5,
+        "latency": {
+          "n": 25,
+          "median": 337.82,
+          "p90": 366.48,
+          "p95": 369.97,
+          "max": 371.19,
+          "min": 313.81
+        },
+        "deterministic": true,
+        "nonDeterministicQueries": []
+      },
+      "a6": {
+        "targets": 10,
+        "repeats": 5,
+        "latency": {
+          "n": 50,
+          "median": 106.8,
+          "p90": 161.06,
+          "p95": 237.27,
+          "max": 261.49,
+          "min": 56.66
+        },
+        "deterministic": true,
+        "nonDeterministicQueries": [],
+        "targetsSample": [
+          "arc/species/species.py::ARCSpecies",
+          "arc/molecule/molecule.py::Molecule",
+          "arc/reaction/reaction.py::ARCReaction",
+          "arc/level.py::Level",
+          "arc/species/converter.py::str_to_xyz"
+        ]
+      },
+      "a7": {
+        "pairs": 10,
+        "repeats": 5,
+        "latency": {
+          "n": 50,
+          "median": 9.26,
+          "p90": 17.11,
+          "p95": 17.56,
+          "max": 31.32,
+          "min": 7.81
+        },
+        "deterministic": true,
+        "nonDeterministicQueries": [],
+        "pathEdgeCounts": {
+          "n": 10,
+          "median": 1,
+          "distribution": {
+            "1": 10
+          }
+        }
+      },
+      "a9": {
+        "filesMeasured": 250,
+        "filesMalformed": 0,
+        "filesConsidered": 250,
+        "malformedPercent": 0,
+        "renderedReduction": {
+          "median": 87.21,
+          "min": 1.86,
+          "max": 99.44
+        },
+        "wholeResponseReduction": {
+          "median": 69.71,
+          "min": -54.65
+        },
+        "stratifiedMedian": {
+          "small": {
+            "n": 45,
+            "median": 84.62
+          },
+          "medium": {
+            "n": 122,
+            "median": 84.67
+          },
+          "large": {
+            "n": 83,
+            "median": 90.32
+          }
+        },
+        "structuralFaults": {}
+      },
+      "a10": {
+        "declarations": 2981,
+        "validSignatures": 2981,
+        "withNonEmptySignature": 2981,
+        "signaturePresencePercent": 100,
+        "signatureRetentionPercent": 100,
+        "signatureRetentionBasis": "declarations whose emitted signature is a verbatim, token-aligned, bracket-closed slice of the source",
+        "members": 6262,
+        "membersWithSignature": 6262,
+        "indexedMethods": 6604,
+        "memberRetentionPercent": 94.82,
+        "declarationNamesFoundInSource": 2981,
+        "declarationNamesChecked": 2981,
+        "nameSourceTruthPercent": 100
+      },
+      "a11a13": {
+        "budgets": [
+          1000,
+          2000,
+          4000,
+          8000,
+          16000
+        ],
+        "tasks": 3,
+        "curves": [
+          {
+            "task": "where are import edges extracted from typescript",
+            "points": [
+              {
+                "budget": 1000,
+                "latencyMs": 325,
+                "wholeResponseTokens": 869,
+                "utilisationPercent": 86.9,
+                "focusAt": "arc/imports.py::_local_overlays_disabled",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 175,
+                "relatedCount": 5,
+                "relatedCarryingCode": 5,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE"
+                ],
+                "itemsWithTokenAccounting": 6
+              },
+              {
+                "budget": 2000,
+                "latencyMs": 311.7,
+                "wholeResponseTokens": 1462,
+                "utilisationPercent": 73.1,
+                "focusAt": "arc/imports.py::_local_overlays_disabled",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 175,
+                "relatedCount": 12,
+                "relatedCarryingCode": 10,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 13
+              },
+              {
+                "budget": 4000,
+                "latencyMs": 306.2,
+                "wholeResponseTokens": 2355,
+                "utilisationPercent": 58.88,
+                "focusAt": "arc/imports.py::_local_overlays_disabled",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 175,
+                "relatedCount": 19,
+                "relatedCarryingCode": 17,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 20
+              },
+              {
+                "budget": 8000,
+                "latencyMs": 305.8,
+                "wholeResponseTokens": 3796,
+                "utilisationPercent": 47.45,
+                "focusAt": "arc/imports.py::_local_overlays_disabled",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 175,
+                "relatedCount": 32,
+                "relatedCarryingCode": 30,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 33
+              },
+              {
+                "budget": 16000,
+                "latencyMs": 309.7,
+                "wholeResponseTokens": 3939,
+                "utilisationPercent": 24.62,
+                "focusAt": "arc/imports.py::_local_overlays_disabled",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 175,
+                "relatedCount": 32,
+                "relatedCarryingCode": 30,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 33
+              }
+            ],
+            "sizeViolations": 0,
+            "focusSwaps": 0
+          },
+          {
+            "task": "how does the indexer decide a file is eligible for parsing",
+            "points": [
+              {
+                "budget": 1000,
+                "latencyMs": 342.8,
+                "wholeResponseTokens": 769,
+                "utilisationPercent": 76.9,
+                "focusAt": "arc/species/species.py::determine_rotor_symmetry",
+                "focusForm": "skeleton",
+                "focusCodeTokens": 144,
+                "relatedCount": 7,
+                "relatedCarryingCode": 2,
+                "representationClasses": [
+                  "FOCUS:skeleton",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 8
+              },
+              {
+                "budget": 2000,
+                "latencyMs": 346.9,
+                "wholeResponseTokens": 742,
+                "utilisationPercent": 37.1,
+                "focusAt": "arc/species/species.py::determine_rotor_symmetry",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 441,
+                "relatedCount": 2,
+                "relatedCarryingCode": 1,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 3
+              },
+              {
+                "budget": 4000,
+                "latencyMs": 355.5,
+                "wholeResponseTokens": 2130,
+                "utilisationPercent": 53.25,
+                "focusAt": "arc/species/species.py::determine_rotor_symmetry",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 441,
+                "relatedCount": 16,
+                "relatedCarryingCode": 9,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 17
+              },
+              {
+                "budget": 8000,
+                "latencyMs": 370.4,
+                "wholeResponseTokens": 6759,
+                "utilisationPercent": 84.49,
+                "focusAt": "arc/species/species.py::determine_rotor_symmetry",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 441,
+                "relatedCount": 61,
+                "relatedCarryingCode": 35,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 62
+              },
+              {
+                "budget": 16000,
+                "latencyMs": 415.8,
+                "wholeResponseTokens": 13500,
+                "utilisationPercent": 84.38,
+                "focusAt": "arc/species/species.py::determine_rotor_symmetry",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 441,
+                "relatedCount": 135,
+                "relatedCarryingCode": 65,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 136
+              }
+            ],
+            "sizeViolations": 0,
+            "focusSwaps": 0
+          },
+          {
+            "task": "budget allocation for capsule items is dropping sections",
+            "points": [
+              {
+                "budget": 1000,
+                "latencyMs": 347.4,
+                "wholeResponseTokens": 692,
+                "utilisationPercent": 69.2,
+                "focusAt": "arc/job/pipe/pipe_run.py::worker_cpu_cores",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 389,
+                "relatedCount": 3,
+                "relatedCarryingCode": 0,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 4
+              },
+              {
+                "budget": 2000,
+                "latencyMs": 323.3,
+                "wholeResponseTokens": 960,
+                "utilisationPercent": 48,
+                "focusAt": "arc/job/pipe/pipe_run.py::worker_cpu_cores",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 389,
+                "relatedCount": 6,
+                "relatedCarryingCode": 1,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 7
+              },
+              {
+                "budget": 4000,
+                "latencyMs": 396.3,
+                "wholeResponseTokens": 2598,
+                "utilisationPercent": 64.95,
+                "focusAt": "arc/job/pipe/pipe_run.py::worker_cpu_cores",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 389,
+                "relatedCount": 19,
+                "relatedCarryingCode": 14,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 20
+              },
+              {
+                "budget": 8000,
+                "latencyMs": 362,
+                "wholeResponseTokens": 3750,
+                "utilisationPercent": 46.88,
+                "focusAt": "arc/job/pipe/pipe_run.py::worker_cpu_cores",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 389,
+                "relatedCount": 26,
+                "relatedCarryingCode": 21,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 27
+              },
+              {
+                "budget": 16000,
+                "latencyMs": 342,
+                "wholeResponseTokens": 3886,
+                "utilisationPercent": 24.29,
+                "focusAt": "arc/job/pipe/pipe_run.py::worker_cpu_cores",
+                "focusForm": "focused_source",
+                "focusCodeTokens": 389,
+                "relatedCount": 27,
+                "relatedCarryingCode": 22,
+                "representationClasses": [
+                  "FOCUS:focused_source",
+                  "RELATED_WITH_CODE",
+                  "RELATIONSHIP_ONLY"
+                ],
+                "itemsWithTokenAccounting": 28
+              }
+            ],
+            "sizeViolations": 0,
+            "focusSwaps": 0
+          }
+        ],
+        "utilisationByBudget": {
+          "1000": {
+            "median": 76.9
+          },
+          "2000": {
+            "median": 48
+          },
+          "4000": {
+            "median": 58.88
+          },
+          "8000": {
+            "median": 47.45
+          },
+          "16000": {
+            "median": 24.62
+          }
+        },
+        "tasksWithSizeViolation": 0,
+        "tasksWithFocusSwap": 0
+      },
+      "a12": {
+        "distinctClassesObserved": [
+          "FOCUS:focused_source",
+          "RELATED_WITH_CODE",
+          "RELATIONSHIP_ONLY",
+          "FOCUS:skeleton"
+        ]
+      },
+      "a14": {
+        "defaultVsDebug": {
+          "accountingInDefaultResponse": false,
+          "accountingInDebugResponse": true,
+          "reductionFieldInDefaultResponse": false,
+          "reductionFieldInDebugResponse": true,
+          "defaultResponseTopLevelKeys": [
+            "schemaVersion",
+            "focus",
+            "related",
+            "boundary"
+          ],
+          "debugResponseTopLevelKeys": [
+            "schemaVersion",
+            "request",
+            "capsuleResult",
+            "authoritativeCapsuleManifestId",
+            "pivotNeighborhood",
+            "inspectFirst",
+            "capsule",
+            "runtime",
+            "intent",
+            "taskSummary",
+            "context",
+            "impact",
+            "flow",
+            "memory",
+            "rules",
+            "diagnostics",
+            "deferred",
+            "productContext",
+            "workspaceRouting",
+            "savedObservation",
+            "accounting",
+            "responseBudget"
+          ],
+          "defaultResponseTokens": 1065,
+          "debugResponseTokens": 8434
+        },
+        "skeletonAccounting": {
+          "file": "ARC.py",
+          "perCallAccounting": {
+            "latencyMs": 4.112637999991421,
+            "estimatedOutputTokens": 202,
+            "estimatedNaiveFullFileTokens": 861,
+            "estimatedTokensSavedVsNaiveFullFile": 659,
+            "estimatedSavingsPercentVsNaiveFullFile": 76.54,
+            "uniqueFilesCounted": 1,
+            "method": "chars_div_4",
+            "baseline": "full contents of unique files represented in emitted context items"
+          },
+          "perItemAccounting": 0,
+          "declarations": 3,
+          "productReportedSavingsPercent": 76.54,
+          "independentRenderedReductionPercent": 93.96,
+          "authoritiesDisagreeByPoints": 17.42
+        },
+        "itemsWithPerItemAccounting": 417,
+        "itemsDelivered": 417
+      },
+      "a15": {
+        "eligibleCallSites": 50,
+        "impactSurfaceRenderingExpression": 4,
+        "flowSurfaceRenderingExpression": 50,
+        "flowRenderedTextNamesCallee": 50,
+        "flowRenderedTextMatchesDeclaredSpan": 41,
+        "declaredSpanActuallyNamesCallee": 50,
+        "impactRenderPercent": 8,
+        "flowCorrectRenderPercent": 100,
+        "misrenderedExamples": [
+          {
+            "from": "arc/checks/nmd_test.py::TestNMD.test_analyze_ts_nmd_urea_rad_furazan",
+            "to": "arc/species/converter.py::check_xyz_dict",
+            "callee": "check_xyz_dict",
+            "declaredSpan": "arc/checks/nmd_test.py:1451-1465",
+            "rendered": "rxn.ts_species = ARCSpecies(label='TS_1', is_ts=True, xyz=check_xyz_dict(",
+            "actualAtDeclaredSpan": "        rxn.ts_species = ARCSpecies(label='TS_1', is_ts=True, xyz=check_xyz_dict(\n            \"\"\"N       1.76136700    0.43616300   -1.05594"
+          },
+          {
+            "from": "arc/tckdb/adapter_test.py::TestArtifactUpload.test_idempotency_replay_recorded",
+            "to": "arc/tckdb/adapter_test.py::_StubResponse",
+            "callee": "_StubResponse",
+            "declaredSpan": "arc/tckdb/adapter_test.py:912-921",
+            "rendered": "client = _StubClient(response=_StubResponse(",
+            "actualAtDeclaredSpan": "        client = _StubClient(response=_StubResponse(\n            {\n                \"calculation_id\": 42,\n                \"calculation_ref\": "
+          },
+          {
+            "from": "arc/species/zmat.py::_add_nth_atom_to_zmat",
+            "to": "arc/species/zmat.py::determine_a_atoms",
+            "callee": "determine_a_atoms",
+            "declaredSpan": "arc/species/zmat.py:885-897",
+            "rendered": "a_atoms = determine_a_atoms(",
+            "actualAtDeclaredSpan": "        a_atoms = determine_a_atoms(\n            zmat,\n            coords,\n            connectivity,\n            r_atoms,\n            n,\n   "
+          },
+          {
+            "from": "arc/tckdb/adapter_test.py::TestComputedSpeciesBundle.test_alt_conformer_energy_data_never_reaches_payload",
+            "to": "arc/tckdb/adapter_test.py::TestComputedSpeciesBundle._record_with_alt_conformers",
+            "callee": "_record_with_alt_conformers",
+            "declaredSpan": "arc/tckdb/adapter_test.py:2540-2543",
+            "rendered": "record = self._record_with_alt_conformers(",
+            "actualAtDeclaredSpan": "                record = self._record_with_alt_conformers(\n                    alt_xyzs=(\"C 0.4 0.0 0.0\\nH 1.4 0.0 0.0\",),\n                 "
+          },
+          {
+            "from": "arc/species/zmat.py::determine_d_atoms",
+            "to": "arc/species/zmat.py::determine_d_atoms_from_connectivity",
+            "callee": "determine_d_atoms_from_connectivity",
+            "declaredSpan": "arc/species/zmat.py:569-570",
+            "rendered": "d_atoms = determine_d_atoms_from_connectivity(zmat, xyz, coords, connectivity, a_atoms, atom_index,",
+            "actualAtDeclaredSpan": "        d_atoms = determine_d_atoms_from_connectivity(zmat, xyz, coords, connectivity, a_atoms, atom_index,\n                                "
+          }
+        ]
+      },
+      "truthfulness": {
+        "excerptChecked": 30,
+        "excerptAnchored": 23,
+        "excerptMisanchored": 0,
+        "excerptNotLocated": 7,
+        "excerptAnchorPercentOfConclusive": 100,
+        "excerptStartLineDeltas": {
+          "0": 23,
+          "not_located": 7
+        },
+        "strengthenedCallSiteRenderings": 0,
+        "renderedCallSites": 50,
+        "inventedStructuralClaims": 0
+      }
+    }
+  ]
+}

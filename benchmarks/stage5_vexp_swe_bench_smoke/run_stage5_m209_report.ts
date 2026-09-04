@@ -150,8 +150,14 @@ md.push(...table(["corpus", "M208 engine eligible", "M208 impact %", "M208 flow 
   reproduction.auditFrozenAgreement.map((r: any) => [r.corpus, r.engineEligible, r.engineImpactPercent, m208Engine.corpora.find((x: any) => x.id === r.corpus)?.a15?.flowCorrectRenderPercent, r.auditEligible, r.auditImpactPercent])), "");
 md.push("M208 committed matrix: " + reproduction.m208Committed.matrix.map(([id, v]: any) => `${id} ${v}`).join(", ") + ` — ${reproduction.m208Committed.matchOrExceed} / 15.`, "");
 if (reproduction.m209Pre !== null) {
-  md.push(`M209 pre-change frozen rerun (main tree at the M208 product, load ${reproduction.m209Pre.hardware?.loadAverageAtStart?.join(" ")}): `
-    + (reproduction.m209Pre.matrix ?? []).map(([id, v]: any) => `${id} ${v}`).join(", ") + ` — ${reproduction.m209Pre.matchOrExceed} / 15.`, "");
+  const a15 = reproduction.m209Pre.a15 as Record<string, any>;
+  md.push(`Independent frozen rerun of the PREDECESSOR product (the M208 final commit in a detached worktree, load `
+    + `${reproduction.m209Pre.hardware?.loadAverageAtStart?.join(" ")}, stage5_m209_engine_pre.json): A15 impact `
+    + `${["C-SMALL", "C-MED", "C-LARGE"].map((c) => `${a15[c]?.impactRenderPercent} %`).join(" / ")}, flow `
+    + `${["C-SMALL", "C-MED", "C-LARGE"].map((c) => `${a15[c]?.flowCorrectRenderPercent} %`).join(" / ")}, eligible `
+    + `${["C-SMALL", "C-MED", "C-LARGE"].map((c) => a15[c]?.eligibleCallSites).join(" / ")} — the committed M208 figures exactly. `
+    + `That run yields no ledger of its own: the frozen authority requires branch_is_main and a detached checkout fails that one `
+    + `check and no other, the same limitation M208 recorded for its own predecessor replay.`, "");
 }
 
 md.push("## 3. Existing impact architecture", "",
@@ -271,7 +277,8 @@ if (PHASE === "final") {
     ["C-SMALL", "C-MED", "C-LARGE"].map((c) => [c, postA15[c]?.eligibleCallSites, postA15[c]?.impactSurfaceRenderingExpression, postA15[c]?.impactRenderPercent, postA15[c]?.flowCorrectRenderPercent, corpus(post, c)?.frozen?.impactRenderPercent, hist(corpus(post, c)?.product?.faults), corpus(post, c)?.product?.deterministic])), "");
   f.push(`Frozen A15 verdict: **${short(a15Verdict)}** (M208: ${short(verdictOf(m208Ledger, "A15"))}).`, "");
   f.push("## 12. Full A1–A15 matrix, M208 -> M209", "");
-  f.push(...table(["claim", "M208", "M209 pre (rerun)", "M209 post"], matrix(postLedger).map(([id]) => [id, short(verdictOf(m208Ledger, id)), preLedger ? short(verdictOf(preLedger, id)) : "", short(verdictOf(postLedger, id))])), "");
+  f.push(...table(["claim", "M208 (committed)", "M209 post"], matrix(postLedger).map(([id]) => [id, short(verdictOf(m208Ledger, id)), short(verdictOf(postLedger, id))])), "");
+  f.push("The pre-change side is the COMMITTED M208 ledger. It was reproduced twice rather than asserted: the M209 audit read the same 0 % / 100 % on all three corpora through the same default surface (section 2), and the frozen engine was rerun against the predecessor product in a detached worktree (`stage5_m209_engine_pre.json`), reproducing A15 0 % impact / 100 % flow at the same eligible counts. That worktree run cannot produce a ledger of its own: the frozen authority requires `branch_is_main`, and a detached predecessor checkout fails exactly that one check and no other — the same limitation M208 recorded for its own predecessor replay.", "");
   f.push(`Match-or-exceed: M208 ${reproduction.m208Committed.matchOrExceed} / 15 -> M209 ${matchOrExceed} / 15. ${finalOut.post.parityConclusion === "VTRACE_DETERMINISTIC_VEXP_ENGINE_PARITY_COMPLETE" ? "**VTRACE_DETERMINISTIC_VEXP_ENGINE_PARITY_COMPLETE**" : "Parity not complete."}`, "");
   f.push("## 13. Protected claims", "");
   f.push(`A5 p90 (engine): ${JSON.stringify(finalOut.post.a5)} ms at load ${postEngine.hardware?.loadAverageAtStart?.join(" ")}; A6 p90: ${JSON.stringify(finalOut.post.a6)} ms. A11 median utilisation: ${JSON.stringify(finalOut.post.a11)}. A12 classes: ${JSON.stringify(finalOut.post.a12)}. A13: ${JSON.stringify(finalOut.post.a13)}. A14: ${JSON.stringify(finalOut.post.a14)}.`, "");
@@ -283,12 +290,28 @@ if (PHASE === "final") {
   }
   if (ab) {
     f.push("## 15. Retrieval regression guard", "");
-    f.push(...table(["fixture", "rows", "evaluated both", "identical", "top-1 pre -> post", "top-3 pre -> post", "moved rows"],
-      Object.entries(ab.fixtures ?? {}).map(([name, x]: [string, any]) => [name, x.rows, x.evaluatedBoth, x.identical, `${x.top1Pre} -> ${x.top1Post}`, `${x.top3Pre} -> ${x.top3Post}`, (x.moved ?? []).map((m: any) => m.instance_id).join(", ") || "none"])), "");
+    f.push(...table(["fixture", "rows", "evaluated", "top-1 pivot identical", "result identical", "top-1 file hits pre -> post", "top-3 file hits pre -> post", "expected-file rank moves", "rows whose lead changed"],
+      Object.entries(ab.fixtures ?? {}).map(([name, x]: [string, any]) => [name, x.rows, x.evaluated, `${x.top1PivotSame}/${x.evaluated}`, `${x.resultSame}/${x.evaluated}`,
+        `${x.top1FileHits?.pre} -> ${x.top1FileHits?.post}`, `${x.top3FileHits?.pre} -> ${x.top3FileHits?.post}`, hist(x.expectedFileRank),
+        (x.top1PivotChanged ?? []).map((m: any) => m.id).join(", ") || "none"])), "");
+    f.push("The predecessor side is the M208 product in a detached worktree and the post side is this tree, both over the same indexed eval workspaces, so a moved row is attributable to the product and not to a corpus that also moved.", "");
   }
   f.push("## 16. Same-corpus attribution", "");
   f.push(`Post audit C-MED frozen impact %: ${corpus(post, "C-MED")?.frozen?.impactRenderPercent}; on the pristine pre-corpus copy: ${postPre ? corpus(postPre, "C-MED")?.frozen?.impactRenderPercent : "not run"}. C-MED count: ${authorityPost ? (authorityPost.checks ?? []).filter((c: any) => c.id === "corpus_C-MED").map((c: any) => c.detail).join("") : "see authority"}.`, "");
-  f.push("## 17. What 15/15 does NOT prove", "", "- does not prove coding-agent utility", "- does not prove VTRACE beats VEXP", "- does not prove SWE-bench improvement", "- does not make the prior neutral paired-agent result disappear", "");
+  f.push("## 17. What this milestone does and does not establish", "");
+  f.push("Established: the impact surface's canonical selection was discarding source-anchored call-site evidence on every response before any budget was measured; it no longer does; the delivered line is the caller's own line at the persisted site, refused whenever the file has moved under the index; and 20 controls, including one that makes the predecessor product fail, hold.", "");
+  f.push("NOT established, and not claimed:", "",
+    "- frozen A15 is NOT closed. Parity remains 14 / 15 and the deterministic parity programme is NOT complete.",
+    "- this does not prove coding-agent utility.",
+    "- this does not prove VTRACE beats VEXP.",
+    "- this does not prove any SWE-bench improvement.",
+    "- this does not make the prior neutral paired-agent result disappear. `ENGINE QUALITY != CODING-AGENT UTILITY` and `CONTEXT_COMPILER_PRODUCT_UTILITY_NOT_ESTABLISHED` both still govern.", "");
+  f.push("## 18. Residual observations carried forward", "",
+    "- **The A15 primitive is caller-enumeration capacity, not rendering.** Named in section 10 and unchanged by this repair.",
+    "- **The response spends as much on restating its graph as on its evidence.** At the default budget the median C-LARGE response gives 3 205 characters to `nodes` + `edges` + `view` and 865 to `directRelations`. The ladder sheds transitive compatibility edges before the evidence line, which is the right order, but `nodes` and `view` are rebuilt from whatever edges remain and never yield on their own. Not repaired: it cannot close A15 and it changes delivered structure at every budget.",
+    "- **M139 caller-coverage candidate discovery is edge-gated.** F4 needed the dynamic caller to hold an import edge to the owning class before the unresolved-receiver scan would consider its file; a file with no edge to the owner is never scanned, so `complete` can be reported where an unproven site exists. Observed while building the control, outside A15, not repaired.",
+    "- **The frozen F6 control fails by construction once A14 passes**, exactly as at M203 and M208: it asserts `a14PerItem === 0` while A14 now delivers 5 072 / 5 072. The frozen report therefore exits non-zero while certifying `VTRACE_VEXP_ENGINE_PARITY_THRESHOLD_MET`. Pre-existing, identical in the M208 committed ledger, and not M209's to change.",
+    "- **M208 residuals stand unchanged**: the co-edit window partition, the ladder's graph-neighbour tail drop, admission-first routing, and the legacy cross-repo Top-1 movement to 0.6667, which this milestone left byte-identical.", "");
   writeFileSync(path.join(RESULTS, "stage5_m209_final_report.json"), `${JSON.stringify(finalOut, null, 2)}\n`);
   writeFileSync(path.join(RESULTS, "stage5_m209_final_report.md"), `${f.join("\n")}\n`);
   console.log(`wrote results/stage5_m209_final_report.{md,json}: A15 ${short(a15Verdict)}, ${matchOrExceed} / 15, ${finalOut.post.parityConclusion}`);

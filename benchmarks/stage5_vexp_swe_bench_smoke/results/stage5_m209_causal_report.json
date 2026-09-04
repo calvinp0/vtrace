@@ -295,7 +295,150 @@
       ],
       "matchOrExceed": 14
     },
-    "m209Pre": null,
+    "m209Pre": {
+      "a15": {
+        "C-SMALL": {
+          "eligibleCallSites": 36,
+          "impactSurfaceRenderingExpression": 0,
+          "flowSurfaceRenderingExpression": 36,
+          "flowRenderedTextNamesCallee": 36,
+          "flowRenderedTextMatchesDeclaredSpan": 35,
+          "declaredSpanActuallyNamesCallee": 36,
+          "impactRenderPercent": 0,
+          "flowCorrectRenderPercent": 100,
+          "misrenderedExamples": [
+            {
+              "from": "agents/claude-code.ts::ClaudeCodeAdapter.run",
+              "to": "agents/claude-code.ts::spawnAgent",
+              "callee": "spawnAgent",
+              "declaredSpan": "agents/claude-code.ts:52-55",
+              "rendered": "const rawOutput = await spawnAgent(",
+              "actualAtDeclaredSpan": "    const rawOutput = await spawnAgent(\n      \"claude\", args, opts.cwd,\n      opts.timeoutMs, opts.costLimitUsd, opts.model, opts.env,\n    )"
+            }
+          ]
+        },
+        "C-MED": {
+          "eligibleCallSites": 50,
+          "impactSurfaceRenderingExpression": 0,
+          "flowSurfaceRenderingExpression": 50,
+          "flowRenderedTextNamesCallee": 50,
+          "flowRenderedTextMatchesDeclaredSpan": 42,
+          "declaredSpanActuallyNamesCallee": 50,
+          "impactRenderPercent": 0,
+          "flowCorrectRenderPercent": 100,
+          "misrenderedExamples": [
+            {
+              "from": "capsule/selectCapsuleMemories.ts::scoreObservation",
+              "to": "capsule/selectCapsuleMemories.ts::isEligibleForSurfacing",
+              "callee": "isEligibleForSurfacing",
+              "declaredSpan": "capsule/selectCapsuleMemories.ts:140-147",
+              "rendered": "if (!isEligibleForSurfacing({",
+              "actualAtDeclaredSpan": "  if (!isEligibleForSurfacing({\n    linkedSymbolMatches,\n    linkedFileMatches,\n    queryTermMatches,\n    intentMatch,\n    staleness,\n    sc"
+            },
+            {
+              "from": "runPipeline/runPipelineOrchestrator.ts::runReliableContextRetrieval",
+              "to": "intent/routeQuery.ts::routeQuery",
+              "callee": "routeQuery",
+              "declaredSpan": "runPipeline/runPipelineOrchestrator.ts:666-669",
+              "rendered": "? routeQuery(db, input.query, {",
+              "actualAtDeclaredSpan": "      ? routeQuery(db, input.query, {\n          maxResults: input.maxResults,\n          includeTimingDiagnostics: input.includeTimingDiagnos"
+            },
+            {
+              "from": "impact/staticEvidence.ts::buildStaticRelationEvidence",
+              "to": "source/sourceExcerpt.ts::buildSymbolSourceExcerpt",
+              "callee": "buildSymbolSourceExcerpt",
+              "declaredSpan": "impact/staticEvidence.ts:153-156",
+              "rendered": "? buildSymbolSourceExcerpt(db, options.repoRoot, source.id, {",
+              "actualAtDeclaredSpan": "    ? buildSymbolSourceExcerpt(db, options.repoRoot, source.id, {\n      mode: \"span\",\n      ...(anchorLine === undefined ? {} : { anchorLine"
+            },
+            {
+              "from": "cli/formatters.ts::formatRuntimeDaemonLogs",
+              "to": "cli/formatters.ts::formatSection",
+              "callee": "formatSection",
+              "declaredSpan": "cli/formatters.ts:619-623",
+              "rendered": "formatSection(\"Runtime state\", [",
+              "actualAtDeclaredSpan": "    formatSection(\"Runtime state\", [\n      `Repo root: ${input.repoRoot}`,\n      `Log file: ${formatRepoRelativePath(input.repoRoot, input.l"
+            },
+            {
+              "from": "observations/consolidation.ts::buildConsolidationGroup",
+              "to": "observations/consolidation.ts::formatConsolidatedBody",
+              "callee": "formatConsolidatedBody",
+              "declaredSpan": "observations/consolidation.ts:274-288",
+              "rendered": "body: formatConsolidatedBody({",
+              "actualAtDeclaredSpan": "    body: formatConsolidatedBody({\n      signature,\n      sessionId: sortedObservations[0]!.sessionId ?? \"\",\n      sourceObservationCount,\n "
+            }
+          ]
+        },
+        "C-LARGE": {
+          "eligibleCallSites": 50,
+          "impactSurfaceRenderingExpression": 0,
+          "flowSurfaceRenderingExpression": 50,
+          "flowRenderedTextNamesCallee": 50,
+          "flowRenderedTextMatchesDeclaredSpan": 41,
+          "declaredSpanActuallyNamesCallee": 50,
+          "impactRenderPercent": 0,
+          "flowCorrectRenderPercent": 100,
+          "misrenderedExamples": [
+            {
+              "from": "arc/checks/nmd_test.py::TestNMD.test_analyze_ts_nmd_urea_rad_furazan",
+              "to": "arc/species/converter.py::check_xyz_dict",
+              "callee": "check_xyz_dict",
+              "declaredSpan": "arc/checks/nmd_test.py:1451-1465",
+              "rendered": "rxn.ts_species = ARCSpecies(label='TS_1', is_ts=True, xyz=check_xyz_dict(",
+              "actualAtDeclaredSpan": "        rxn.ts_species = ARCSpecies(label='TS_1', is_ts=True, xyz=check_xyz_dict(\n            \"\"\"N       1.76136700    0.43616300   -1.05594"
+            },
+            {
+              "from": "arc/tckdb/adapter_test.py::TestArtifactUpload.test_idempotency_replay_recorded",
+              "to": "arc/tckdb/adapter_test.py::_StubResponse",
+              "callee": "_StubResponse",
+              "declaredSpan": "arc/tckdb/adapter_test.py:912-921",
+              "rendered": "client = _StubClient(response=_StubResponse(",
+              "actualAtDeclaredSpan": "        client = _StubClient(response=_StubResponse(\n            {\n                \"calculation_id\": 42,\n                \"calculation_ref\": "
+            },
+            {
+              "from": "arc/species/zmat.py::_add_nth_atom_to_zmat",
+              "to": "arc/species/zmat.py::determine_a_atoms",
+              "callee": "determine_a_atoms",
+              "declaredSpan": "arc/species/zmat.py:885-897",
+              "rendered": "a_atoms = determine_a_atoms(",
+              "actualAtDeclaredSpan": "        a_atoms = determine_a_atoms(\n            zmat,\n            coords,\n            connectivity,\n            r_atoms,\n            n,\n   "
+            },
+            {
+              "from": "arc/tckdb/adapter_test.py::TestComputedSpeciesBundle.test_alt_conformer_energy_data_never_reaches_payload",
+              "to": "arc/tckdb/adapter_test.py::TestComputedSpeciesBundle._record_with_alt_conformers",
+              "callee": "_record_with_alt_conformers",
+              "declaredSpan": "arc/tckdb/adapter_test.py:2540-2543",
+              "rendered": "record = self._record_with_alt_conformers(",
+              "actualAtDeclaredSpan": "                record = self._record_with_alt_conformers(\n                    alt_xyzs=(\"C 0.4 0.0 0.0\\nH 1.4 0.0 0.0\",),\n                 "
+            },
+            {
+              "from": "arc/species/zmat.py::determine_d_atoms",
+              "to": "arc/species/zmat.py::determine_d_atoms_from_connectivity",
+              "callee": "determine_d_atoms_from_connectivity",
+              "declaredSpan": "arc/species/zmat.py:569-570",
+              "rendered": "d_atoms = determine_d_atoms_from_connectivity(zmat, xyz, coords, connectivity, a_atoms, atom_index,",
+              "actualAtDeclaredSpan": "        d_atoms = determine_d_atoms_from_connectivity(zmat, xyz, coords, connectivity, a_atoms, atom_index,\n                                "
+            }
+          ]
+        }
+      },
+      "matrix": null,
+      "matchOrExceed": null,
+      "hardware": {
+        "cpus": 20,
+        "loadAverageAtStart": [
+          4.74,
+          4.2,
+          3.4
+        ],
+        "loadAverageAtEnd": [
+          4.4,
+          4.25,
+          3.5
+        ],
+        "scratch": "/tmp/m209-frozen-pre"
+      }
+    },
     "auditFrozenAgreement": [
       {
         "corpus": "C-SMALL",

@@ -1,4 +1,4 @@
-# M209 causal report — pre-change
+# M209 final report
 
 ## 1. Frozen A15 authority
 
@@ -239,4 +239,104 @@ The C-LARGE population is 42 / 50 renderable from existing truth (84 %), but onl
 ## Boundary
 
 Frozen A15 measures the impact surface's rendering of a persisted call site as source text naming the callee. It does not measure caller completeness, potential-caller quality, transitive rendering, or agent utility. `ENGINE QUALITY != CODING-AGENT UTILITY` governs; nothing in this report is a claim about SWE-bench.
+
+## 11. Post-change A15 (frozen)
+
+| corpus | eligible | impact rendered | impact % | flow % | audit impact % | audit faults (product) | deterministic |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| C-SMALL | 36 | 30 | 83.33 | 100 | 83.33 | none | true |
+| C-MED | 50 | 12 | 24 | 100 | 24 | none | true |
+| C-LARGE | 50 | 4 | 8 | 100 | 8 | none | true |
+
+Frozen A15 verdict: **BELOW** (M208: BELOW).
+
+## 12. Full A1–A15 matrix, M208 -> M209
+
+| claim | M208 (committed) | M209 post |
+| --- | --- | --- |
+| A1 | MATCHES | MATCHES |
+| A2 | EXCEEDS | EXCEEDS |
+| A3 | MATCHES | MATCHES |
+| A4 | EXCEEDS | EXCEEDS |
+| A5 | MATCHES | MATCHES |
+| A6 | EXCEEDS | EXCEEDS |
+| A7 | EXCEEDS | EXCEEDS |
+| A8 | EXCEEDS | EXCEEDS |
+| A9 | MATCHES | MATCHES |
+| A10 | MATCHES | MATCHES |
+| A11 | EXCEEDS | EXCEEDS |
+| A12 | MATCHES | MATCHES |
+| A13 | EXCEEDS | EXCEEDS |
+| A14 | MATCHES | MATCHES |
+| A15 | BELOW | BELOW |
+
+The pre-change side is the COMMITTED M208 ledger. It was reproduced twice rather than asserted: the M209 audit read the same 0 % / 100 % on all three corpora through the same default surface (section 2), and the frozen engine was rerun against the predecessor product in a detached worktree (`stage5_m209_engine_pre.json`), reproducing A15 0 % impact / 100 % flow at the same eligible counts. That worktree run cannot produce a ledger of its own: the frozen authority requires `branch_is_main`, and a detached predecessor checkout fails exactly that one check and no other — the same limitation M208 recorded for its own predecessor replay.
+
+Match-or-exceed: M208 14 / 15 -> M209 14 / 15. Parity not complete.
+
+## 13. Protected claims
+
+A5 p90 (engine): {"C-SMALL":67.93,"C-MED":251.83,"C-LARGE":366.48} ms at load 2.64 2 1.66; A6 p90: {"C-SMALL":10.4,"C-MED":46.04,"C-LARGE":161.06} ms. A11 median utilisation: {"1000":82.7,"2000":94,"4000":102.06,"8000":102.58,"16000":96.19}. A12 classes: ["FOCUS:focused_source","RELATED_WITH_CODE","RELATIONSHIP_ONLY"]. A13: {"sizeViolations":0,"focusSwaps":0}. A14: {"perItem":5072,"delivered":5072}.
+
+A5 harness (run_stage5_m201_a5.ts): [{"id":"C-SMALL","p90":61.58},{"id":"C-MED","p90":223.93},{"id":"C-LARGE","p90":361.95}]
+
+## 14. Falsification
+
+| control | pass | detail |
+| --- | --- | --- |
+| F1 | true | routes/user.py::handle rendered "owner = get_user_by_id(request.owner_id)" at L4, faults [], role "resolved caller (persisted call site)" |
+| F2 | true | moved to L3 (`def handle(request):`): faults ["SPAN_TEXT_LACKS_CALLEE","SOURCE_TEXT_NOT_AT_SPAN"] |
+| F3 | true | the forged line satisfies the FROZEN rule (true) and fails the source guard: ["SPAN_TEXT_LACKS_CALLEE","SOURCE_TEXT_NOT_AT_SPAN"] |
+| F4 | true | svc/dynamic.py as a proven relation: false; coverage status "incomplete" (exact callers 0, potential 1); the dynamic site arrives as a potential caller with confidence "unresolved" / evidenceKind "name_match_only", receiver "handler" — never as a caller |
+| F5 | true | 3 caller/target pairs, each represented once; strengths ["exact","resolved"] |
+| F6 | true | handle_twice: 2 sites at L8, L9, callSiteCount 2 |
+| F7 | true | 4 delivered relation(s), 4 distinct call-site identities |
+| F8 | true | load_profile in svc/user.py, strength exact, faults [] |
+| F9 | true | routes/user.py -> svc/user.py, referenceName "get_user_by_id" |
+| F10 | true | routes/admin.py::panel distance 2; present in directRelations: false |
+| F11 | true | edge survived: true; sourceText undefined; locationKind edge_site; the freshness check refused the excerpt, so the span travels alone |
+| F12 | true | relation survived: true; callSites undefined; locationKind "caller_span_scan" (a located occurrence is labelled as one, never as a persisted site) |
+| F13 | true | build/ files indexed: 0; build/ callers delivered: false |
+| F14 | true | nested/ files indexed: 0; the nested marker appears in the delivered evidence: false |
+| F15 | true | serializedCharacters 11964 = measured 11964; retainedEdges 5; a +40 corruption is detectable by re-measuring: true |
+| F16 | true | 1: 0 rel / 0 with text / 614<=801 decline; 50: 0 rel / 0 with text / 615<=850 decline; 200: 0 rel / 0 with text / 615<=1000 decline; 400: 0 rel / 0 with text / 615<=1200 decline; 1200: 3 rel / 0 with text / 1939<=2000; 3000: 4 rel / 4 with text / 2991<=3800; 20000: 4 rel / 4 with text / 2992<=20000 |
+| F17 | true | 400 tokens: 0 relation(s) / 0 with text; 20000 tokens: 4 relation(s) / 4 with text |
+| F18 | true | focus swaps 0, size drops 0 over 1000:89c 2000:89c 4000:89c 8000:89c 16000:89c |
+| F19 | true | predecessor 0b091b9ca4 on the same core output renders 0 expressions at every budget (1200: 0/3, 3000: 0/4, 20000: 0/4), keys ["callSiteCount","callSites","locationKind","resolutionMethod"]; this product renders the same relation, keys ["callSiteCount","callSites","locationKind","referenceName","resolutionMethod","sourceText"] |
+| F20 | true | 2 changed product file(s) clean of all 9 probes |
+
+Overall: ALL PASS; predecessor 0b091b9ca49c9805996644b10d697040843f8e3b.
+
+## 15. Retrieval regression guard
+
+| fixture | rows | evaluated | top-1 pivot identical | result identical | top-1 file hits pre -> post | top-3 file hits pre -> post | expected-file rank moves | rows whose lead changed |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| stage5_retrieval_eval_expanded | 20 | 20 | 20/20 | 20/20 | 17 -> 17 | 20 -> 20 | same 20 | none |
+| stage5_retrieval_eval_cross_repo_30 | 30 | 30 | 30/30 | 30/30 | 20 -> 20 | 22 -> 22 | same 30 | none |
+
+The predecessor side is the M208 product in a detached worktree and the post side is this tree, both over the same indexed eval workspaces, so a moved row is attributable to the product and not to a corpus that also moved.
+
+## 16. Same-corpus attribution
+
+Post audit C-MED frozen impact %: 24; on the pristine pre-corpus copy: 26. C-MED count: 506 files (expected 506) @ 75c8f94dd0.
+
+## 17. What this milestone does and does not establish
+
+Established: the impact surface's canonical selection was discarding source-anchored call-site evidence on every response before any budget was measured; it no longer does; the delivered line is the caller's own line at the persisted site, refused whenever the file has moved under the index; and 20 controls, including one that makes the predecessor product fail, hold.
+
+NOT established, and not claimed:
+
+- frozen A15 is NOT closed. Parity remains 14 / 15 and the deterministic parity programme is NOT complete.
+- this does not prove coding-agent utility.
+- this does not prove VTRACE beats VEXP.
+- this does not prove any SWE-bench improvement.
+- this does not make the prior neutral paired-agent result disappear. `ENGINE QUALITY != CODING-AGENT UTILITY` and `CONTEXT_COMPILER_PRODUCT_UTILITY_NOT_ESTABLISHED` both still govern.
+
+## 18. Residual observations carried forward
+
+- **The A15 primitive is caller-enumeration capacity, not rendering.** Named in section 10 and unchanged by this repair.
+- **The response spends as much on restating its graph as on its evidence.** At the default budget the median C-LARGE response gives 3 205 characters to `nodes` + `edges` + `view` and 865 to `directRelations`. The ladder sheds transitive compatibility edges before the evidence line, which is the right order, but `nodes` and `view` are rebuilt from whatever edges remain and never yield on their own. Not repaired: it cannot close A15 and it changes delivered structure at every budget.
+- **M139 caller-coverage candidate discovery is edge-gated.** F4 needed the dynamic caller to hold an import edge to the owning class before the unresolved-receiver scan would consider its file; a file with no edge to the owner is never scanned, so `complete` can be reported where an unproven site exists. Observed while building the control, outside A15, not repaired.
+- **The frozen F6 control fails by construction once A14 passes**, exactly as at M203 and M208: it asserts `a14PerItem === 0` while A14 now delivers 5 072 / 5 072. The frozen report therefore exits non-zero while certifying `VTRACE_VEXP_ENGINE_PARITY_THRESHOLD_MET`. Pre-existing, identical in the M208 committed ledger, and not M209's to change.
+- **M208 residuals stand unchanged**: the co-edit window partition, the ladder's graph-neighbour tail drop, admission-first routing, and the legacy cross-repo Top-1 movement to 0.6667, which this milestone left byte-identical.
 

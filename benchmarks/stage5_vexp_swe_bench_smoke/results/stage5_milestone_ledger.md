@@ -10224,3 +10224,221 @@ evidence          results/stage5_m208_final_report.{md,json},
   gap; M209 may target impact / call-site rendering. Do not re-tier the
   support window or reorder pivots after the cap.
   `CONTEXT_COMPILER_PRODUCT_UTILITY_NOT_ESTABLISHED` still governs.
+
+---
+
+```text
+milestone         M209
+verdict           PASS
+parity            A15_FROZEN_AUTHORITY_RECOVERED; A15_RENDERABLE_SUPPLY_INSUFFICIENT;
+                  A15_PARITY_NOT_CLOSED; 14/15 -> 14/15 (A15 stays BELOW)
+spend             0 live-agent runs, $0, 0 VEXP processes, 0 Docker
+scope             A15 only. Recover the frozen authority, audit the impact /
+                  call-site truth through every surface, measure what a
+                  renderer-only repair could reach, and only then repair. No
+                  A13 reopening, no retrieval tuning, no new representation
+                  class, no index change, no live spend. Stop after M209.
+
+result            VTRACE_VEXP_ENGINE_PARITY_THRESHOLD_MET
+                  MATCH 7  EXCEED 7  BELOW 1   match-or-exceed 14/15 (threshold 10)
+                  A8 minimum coverage 100% (veto 99%); structural violations 0
+                  determinism stable; strengthened 0; invented structural claims 0
+                  frozen controls: F1-F5, F7, F8 pass; F6 FAILS on its stale
+                  `a14PerItem === 0` conjunct only (M203 standing finding,
+                  identical in the M208 committed ledger).
+
+frozen A15        VEXP V-B1/V-B2 evidence half, "call-site evidence renders the
+                  call expression, not just a location". Rule (verbatim):
+                  population deriveCallSiteEdges(db, 50) = calls edges with an
+                  ordinal-0 persisted site and distinct endpoints, by edge id;
+                  eligibility decided on the FLOW surface (a step carrying
+                  evidence + callSites[0] + a source path); the numerator is the
+                  DEFAULT get_impact_graph response for the CALLEE at depth 3,
+                  its directRelations entry whose source.symbol is the caller,
+                  passed to callSiteIsRendered = sourceText non-empty AND
+                  containing referenceName; scored on C-LARGE;
+                  band([impactRenderPercent], 90, 100, "atLeast").
+
+reproduction      M208 reproduced twice before any change: the M209 audit read
+                  0% impact / 100% flow at eligible 36 / 50 / 50 through the
+                  same default surface, and the frozen engine rerun against the
+                  predecessor product in a detached worktree reproduced the same
+                  (stage5_m209_engine_pre.json). That worktree yields no ledger:
+                  the authority requires branch_is_main and a detached checkout
+                  fails that one check and no other, as at M208.
+
+truth substrate   Call sites are fully persisted: edge_call_sites carries
+                  start/end line+column and precision for 100% of calls edges on
+                  all three corpora (36 / 4468 / 12421 edges; 51 / 6003 / 19330
+                  sites; 8 / 760 / 2513 edges with more than one site; 0 sites
+                  outside the caller's own indexed span). Source TEXT is never
+                  persisted: it is rebuilt per response by buildSymbolSourceExcerpt
+                  under loadSymbolSource's size+sha256 check, so a moved file
+                  yields no line rather than a stale one. references edges carry
+                  no sites (0 of 14 / 5511 / 3068); potential callers are never
+                  persisted and are discovered per response.
+
+root cause        compactImpactProductResponse rebuilt every relation's evidence
+                  through compactRelation, keeping resolutionMethod /
+                  locationKind / callSites and dropping sourceText and
+                  referenceName. It runs on the canonical selection of EVERY
+                  response BEFORE any budget is measured and is not a ladder
+                  rung, so the caller-enumeration surface delivered a coordinate
+                  and no expression at every budget, while the identical output
+                  of the same builder reached search_logic_flow intact (0% vs
+                  100%). The product proved the call site and discarded the proof.
+
+repair            compactRelation preserves sourceText / referenceName /
+                  importAlias; minimalRelation (a real ladder rung, fired only
+                  under pressure) sheds the line and records
+                  directRelations[].compactProjection, keeping the span, the
+                  endpoints and the name. Evidence schema corrected: callSites /
+                  callSiteCount were emitted but undeclared under
+                  additionalProperties:false, and locationKind never mentioned
+                  caller_span_scan. Nothing new is computed; no index change.
+
+why not closed    The frozen metric needs the DEFAULT response to contain one
+                  ARBITRARY caller of the callee. Two independent bounds hold on
+                  C-LARGE: the core's own default 64-relation slice never sees 8
+                  of the 50 callers (hard ceiling 84% < the 90% bar), and of the
+                  42 that remain the caller sits at rank 0 in 10 and within the
+                  first three in 19, while the median response spends 3332 of
+                  8000 characters on fixed metadata and 3205 on nodes+edges+view
+                  — about three relations fit even if every graph restatement
+                  were free (74% at an unreachable 200 chars/relation, 60% at
+                  500). Restoring the evidence costs a median 30 tokens and fits
+                  the ceiling on 48/50; retaining the caller does not. The
+                  residual is a caller-enumeration capacity primitive, not a
+                  rendering one, and it would change delivery at every budget —
+                  a budget/representation milestone with its own A11/A13
+                  obligations, not M209's to build.
+
+before / after    Frozen A15 impact rendering 0 / 0 / 0% -> 83.33 / 24 / 8%
+                  (C-SMALL / C-MED / C-LARGE), flow unchanged 100 / 100 / 100%,
+                  eligible unchanged 36 / 50 / 50. A15 BELOW -> BELOW. No
+                  delivered relation lost (36 / 31 / 13 before and after); one
+                  response each on C-SMALL and C-MED traded a second relation
+                  for the first one's expression. Product-surface truth faults 0
+                  on every corpus; strengthened 0; invented 0.
+
+falsification     F1-F20 all pass (stage5_m209_falsification.json, predecessor =
+                  the M208 final commit 0b091b9c in a detached worktree; real
+                  repos indexed by the production indexProject): an exact
+                  cross-file caller renders its own line at its own span; a span
+                  moved to another valid-looking line fails; a forged line that
+                  SATISFIES the frozen rule fails the source guard; an
+                  unresolved receiver arrives as a potential caller with a
+                  confidence and never as a relation; one caller/target pair is
+                  represented once; two calls from one caller stay two sites; one
+                  call site arrives once; same-file and cross-file status are
+                  truthful; a depth-2 dependent keeps distance 2 and is not a
+                  direct relation; a file edited after indexing yields the span
+                  alone, never a stale line; with the site rows deleted the
+                  relation survives labelled caller_span_scan; an excluded
+                  directory and a nested linked worktree cannot reach the model
+                  through an edge; the response's accounting equals its own
+                  measured length and a +40 corruption is detectable; budgets
+                  1..20000 never leave the envelope and 1/50/200/400 decline
+                  bounded; a larger budget delivers more, never less; focus
+                  identity and size are unmoved across the frozen budgets; the
+                  PREDECESSOR renders 0 expressions at every budget where this
+                  product renders them; no benchmark, competitor or fixture
+                  constant entered the product.
+
+retrieval eval    Both fixtures re-run on the M208 worktree and this tree over
+                  the same indexed eval workspaces: expanded 20/20 and
+                  cross_repo_30 30/30 identical in top-1 pivot, result, hit
+                  classes and every expected-file/symbol rank; the CSVs are
+                  byte-identical to each other AND to the committed baselines,
+                  so no baseline regeneration was needed. cross_repo_30 top-1
+                  stays 0.6667 and expanded stays 0.85 — the M208 floor is held
+                  exactly, not merely not worsened.
+
+A5 / A11 / A12    Frozen A5 p90 67.93 / 251.83 / 366.48 ms MATCHES (engine at
+A13 / A14         load 2.64; M208 52.09 / 218.69 / 384.23 at load 1.97). A5
+                  harness on an idle machine (load 1.32): 61.58 / 223.93 /
+                  361.95 MATCHES, at or better than M208's 57.16 / 237.66 / 377
+                  at load 3.97. A6 p90 10.4 / 46.04 / 161.06 EXCEEDS (M208 9.75
+                  / 45.03 / 177.82). A11 82.7 / 94 / 102.06 / 102.58 / 96.19
+                  EXCEEDS. A12 3 classes MATCHES. A13 0 size / 0 swaps EXCEEDS.
+                  A14 5072/5072 MATCHES. M205 sweep: C-MED 3 classes, 1
+                  integrity failure in 180 (the pre-existing compacted-body vs
+                  projected-body question, unchanged since M208).
+
+determinism       3 repeats per response in every audit: semantic hashes stable
+                  on all 136 scored responses across all three corpora, pre and
+                  post; the own-corpus audit reproduces the frozen engine's A15
+                  exactly (83.33 / 24 / 8%).
+
+corpus identity   C-MED 506 -> 506 (two src files modified, none added or
+                  removed); A8 100% on all three corpora. Same-corpus control:
+                  the post product on the PRISTINE pre-change corpus copy reads
+                  C-MED 26% against 24% on its own corpus, so that 2-point
+                  movement is the corpus (the modified files shift the
+                  first-50-by-edge-id population), not the policy. C-LARGE, the
+                  SCORED corpus, is 8% on both and is untouched by it.
+
+commits           75c8f94d  audit instrumentation, truth library + tests,
+                            renderability/delivery analyzer, causal report
+                            (no product change)
+                  328f9457  compactRelation preserves the grounding keys,
+                            minimalRelation becomes the shedding rung, schema
+                            corrected, 6 tests
+                  <evidence>  evidence, frozen rerun, falsification, retrieval
+                            A/B, A5/M205 guards, final report, this row
+
+evidence          results/stage5_m209_final_report.{md,json},
+                  stage5_m209_causal_report.{md,json}, stage5_m209_audit_
+                  {pre,post,post_precorpus}.json and their items jsonl,
+                  stage5_m209_engine{,_pre}.json, stage5_m209_indexing.json,
+                  stage5_m209_claim_ledger.json, stage5_m209_authority_
+                  {pre,post}.json, stage5_m209_falsification.json,
+                  stage5_m209_retrieval_eval_ab.json,
+                  stage5_m201_a5_m209_post.json,
+                  stage5_m205_representation_m209_post.json,
+                  stage5_m205_routing_ledger_m209_post.jsonl.
+```
+
+## M209 standing findings
+
+- **A15 is bound by caller-enumeration capacity, not by rendering.** The scored
+  metric asks whether the default response for a callee contains one arbitrary
+  caller of it. Clearing 90% on C-LARGE requires enumerating essentially the
+  complete caller list (median 13 relations, up to rank 46) inside a 2000-token
+  ceiling that already spends ~3300 characters on unshrinkable metadata, and the
+  core's own default 64-relation slice caps the reachable population at 84%
+  regardless. Any future attempt must be a budget/representation milestone with
+  its own A11/A13 obligations, not a rendering one. Do not close A15 by raising
+  the tool's default bounds: that tunes the benchmark's own conditions.
+
+- **The impact response spends as much on restating its graph as on its
+  evidence.** At the default budget the median C-LARGE response gives 3205
+  characters to `nodes` + `edges` + `view` and 865 to `directRelations`. The
+  ladder does shed transitive compatibility edges before the evidence line, which
+  is the right order, but `nodes` and `view` are rebuilt from whatever edges
+  remain and never yield on their own. Not repaired: it cannot close A15 and it
+  would change delivered structure at every budget.
+
+- **Shedding evidence must stay a ladder decision.** The defect M209 repaired was
+  not that the line was ever dropped — it is expensive and the ladder should drop
+  it — but that it was dropped by canonical SELECTION, unconditionally, before
+  any budget was measured, and therefore silently. A projection that runs on
+  every response is not the place for a cost decision.
+
+- **M139 caller-coverage candidate discovery is edge-gated.** Building F4 showed
+  that a file with no edge to the owning class is never scanned for unresolved
+  receivers, so `complete` can be reported where an unproven call site exists.
+  Outside A15, observed and not repaired.
+
+- **The frozen F6 control fails by construction once A14 passes**, exactly as at
+  M203 and M208: it asserts `a14PerItem === 0` while A14 delivers 5072/5072, so
+  the frozen report exits non-zero while certifying
+  VTRACE_VEXP_ENGINE_PARITY_THRESHOLD_MET. Not M209's to change.
+
+- **Next-step recommendation.** The deterministic parity programme ends here at
+  14/15 with A15's residual precisely named; it is NOT complete and must not be
+  reported as such. The separately-authorized next programme is the causal
+  benchmark Baseline vs Baseline+VTRACE vs Baseline+VEXP under identical
+  live-agent conditions, which M209 did not begin and which no engine result
+  licenses. `ENGINE QUALITY != CODING-AGENT UTILITY` and
+  `CONTEXT_COMPILER_PRODUCT_UTILITY_NOT_ESTABLISHED` both still govern.
