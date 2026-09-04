@@ -1,0 +1,13 @@
+{
+  "schemaVersion": "stage5.m213.preregistration-hash.v1",
+  "benchmarkName": "VTRACE_VEXP_CAUSAL_100",
+  "file": "stage5_m213_preregistration.json",
+  "hashRule": "sha256 over the canonical (recursively key-sorted) JSON of every field except preregistrationHash, preregistrationHashRule and generatedAt",
+  "recordedHash": "5d90eddb9cc4759acf6a6fbc033d54ee0d5aea589a92c169daa7dca8d9c568c8",
+  "recomputedFromWrittenFile": "5d90eddb9cc4759acf6a6fbc033d54ee0d5aea589a92c169daa7dca8d9c568c8",
+  "matches": true,
+  "mutationDetected": true,
+  "manifestFile": "stage5_m213_run_manifest.json",
+  "manifestHash": "0001072171e0e3aa4242a6865a7bf144cb3ffba145c89aeee27de99b18cbe9d9",
+  "launchHarnessRequirement": "The future launch harness MUST recompute this hash from the committed preregistration and abort if it differs. A changed preregistration is a NEW cohort with a new hash, never a silent edit to this one."
+}

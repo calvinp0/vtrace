@@ -1,0 +1,1221 @@
+{
+  "schemaVersion": "stage5.m213.preregistration.v1",
+  "milestone": "M213",
+  "benchmarkName": "VTRACE_VEXP_CAUSAL_100",
+  "generatedAt": "2026-09-04T16:59:59.794Z",
+  "frozenBeforeAnyPaidRun": true,
+  "liveModelSpendDuringM213Usd": 0,
+  "benchmarkTaskLiveAgentRuns": 0,
+  "authorityNote": "A frozen design is a precondition for a paid run, not permission to start one. No paid run is authorised by the existence of this document; the launch gates below decide that, and one of them does not pass.",
+  "repositoryState": {
+    "vtraceCommit": "a4cd91225c2a4196cdffb265ddbc2390a9bf38b5",
+    "trackedWorkingTreeClean": false,
+    "note": "Untracked benchmark output is ignored by design; only tracked state is asserted clean."
+  },
+  "researchQuestions": {
+    "RQ1": "Does VTRACE causally improve task resolution relative to baseline? H1: P(resolve|VTRACE) != P(resolve|baseline), two-sided.",
+    "RQ2": "Does VEXP causally improve task resolution relative to the same baseline? H2: P(resolve|VEXP) != P(resolve|baseline), two-sided.",
+    "RQ3": "Under identical conditions, which treatment produces the larger causal delta from baseline?",
+    "RQ4": "Does either treatment reduce input, output or total tokens, or model cost, holding resolution approximately constant?",
+    "RQ5": "How do treatments alter native search usage, file reads, symbol lookup, turn count, files inspected and files edited?",
+    "RQ6": "How often is the treatment actually consumed — exposed, invoked, invoked before the first edit?",
+    "directionality": "Every hypothesis is two-sided. M183 observed exact resolution parity, so a one-sided favourable claim is not historically justified and is not preregistered."
+  },
+  "taskPopulation": {
+    "selectionOption": "Option 1 — the exact VEXP subset, taken as the vendor's own committed artifact",
+    "path": "/home/calvin/code/vexp-swe-bench/data/swe-bench-100.jsonl",
+    "sha256": "7bd07d5e50e26f3c51e8813f93be6be840a62f9fac333586f139ac7853971d7d",
+    "provenance": {
+      "source": "https://github.com/Vexp-ai/vexp-swe-bench",
+      "file": "data/swe-bench-100.jsonl",
+      "vendorCommit": "880e486",
+      "vendorCommitSubject": "Initial release: vexp-swe-bench benchmark harness",
+      "checkoutHead": "d658e3457b82b5cb041f586093cc5002008a8cea",
+      "fileCleanInVendorCheckout": true,
+      "parentDataset": "princeton-nlp/SWE-bench_Verified (500 instances)"
+    },
+    "instanceCount": 100,
+    "repositories": [
+      "astropy/astropy",
+      "django/django",
+      "matplotlib/matplotlib",
+      "mwaskom/seaborn",
+      "pallets/flask",
+      "psf/requests",
+      "pydata/xarray",
+      "pylint-dev/pylint",
+      "pytest-dev/pytest",
+      "scikit-learn/scikit-learn",
+      "sphinx-doc/sphinx",
+      "sympy/sympy"
+    ],
+    "countsByRepository": {
+      "astropy/astropy": 5,
+      "django/django": 44,
+      "matplotlib/matplotlib": 7,
+      "mwaskom/seaborn": 1,
+      "pallets/flask": 1,
+      "psf/requests": 4,
+      "pydata/xarray": 6,
+      "pylint-dev/pylint": 2,
+      "pytest-dev/pytest": 4,
+      "scikit-learn/scikit-learn": 2,
+      "sphinx-doc/sphinx": 7,
+      "sympy/sympy": 17
+    },
+    "complexityMedian": 22,
+    "complexityCeiling": 247,
+    "verification": {
+      "instanceCount": 100,
+      "instanceCountIs100": true,
+      "repositoryCount": 12,
+      "allTwelveRepositoriesPresent": true,
+      "distributionMatchesPublishedTable": true,
+      "publishedTable": {
+        "django/django": 44,
+        "sympy/sympy": 17,
+        "sphinx-doc/sphinx": 7,
+        "matplotlib/matplotlib": 7,
+        "scikit-learn/scikit-learn": 2,
+        "astropy/astropy": 5,
+        "pydata/xarray": 6,
+        "pytest-dev/pytest": 4,
+        "pylint-dev/pylint": 2,
+        "psf/requests": 4,
+        "mwaskom/seaborn": 1,
+        "pallets/flask": 1
+      },
+      "complexityCeilingRespected": true,
+      "complexityMedianMatchesPublished": true,
+      "sha256Matches": true,
+      "verified": true
+    },
+    "instanceIds": [
+      "astropy__astropy-14365",
+      "astropy__astropy-14369",
+      "astropy__astropy-14539",
+      "astropy__astropy-14598",
+      "astropy__astropy-7166",
+      "django__django-10880",
+      "django__django-10973",
+      "django__django-11095",
+      "django__django-11133",
+      "django__django-11206",
+      "django__django-11490",
+      "django__django-11728",
+      "django__django-11740",
+      "django__django-11749",
+      "django__django-11815",
+      "django__django-11820",
+      "django__django-12050",
+      "django__django-12273",
+      "django__django-12276",
+      "django__django-12325",
+      "django__django-12774",
+      "django__django-12858",
+      "django__django-13012",
+      "django__django-13112",
+      "django__django-13195",
+      "django__django-13363",
+      "django__django-13512",
+      "django__django-13513",
+      "django__django-13551",
+      "django__django-13590",
+      "django__django-13658",
+      "django__django-13810",
+      "django__django-13820",
+      "django__django-14608",
+      "django__django-14792",
+      "django__django-15037",
+      "django__django-15503",
+      "django__django-15572",
+      "django__django-15695",
+      "django__django-15731",
+      "django__django-16256",
+      "django__django-16263",
+      "django__django-16333",
+      "django__django-16569",
+      "django__django-16667",
+      "django__django-16819",
+      "django__django-16877",
+      "django__django-16938",
+      "django__django-17084",
+      "matplotlib__matplotlib-22719",
+      "matplotlib__matplotlib-24627",
+      "matplotlib__matplotlib-24870",
+      "matplotlib__matplotlib-24970",
+      "matplotlib__matplotlib-25332",
+      "matplotlib__matplotlib-25960",
+      "matplotlib__matplotlib-26466",
+      "mwaskom__seaborn-3187",
+      "pallets__flask-5014",
+      "psf__requests-1142",
+      "psf__requests-1724",
+      "psf__requests-1921",
+      "psf__requests-5414",
+      "pydata__xarray-2905",
+      "pydata__xarray-3677",
+      "pydata__xarray-4695",
+      "pydata__xarray-6599",
+      "pydata__xarray-6938",
+      "pydata__xarray-6992",
+      "pylint-dev__pylint-4551",
+      "pylint-dev__pylint-8898",
+      "pytest-dev__pytest-10051",
+      "pytest-dev__pytest-5262",
+      "pytest-dev__pytest-6197",
+      "pytest-dev__pytest-7432",
+      "scikit-learn__scikit-learn-10844",
+      "scikit-learn__scikit-learn-11578",
+      "sphinx-doc__sphinx-7462",
+      "sphinx-doc__sphinx-7748",
+      "sphinx-doc__sphinx-7910",
+      "sphinx-doc__sphinx-9230",
+      "sphinx-doc__sphinx-9320",
+      "sphinx-doc__sphinx-9698",
+      "sphinx-doc__sphinx-9711",
+      "sympy__sympy-12419",
+      "sympy__sympy-12481",
+      "sympy__sympy-13372",
+      "sympy__sympy-13480",
+      "sympy__sympy-13974",
+      "sympy__sympy-15599",
+      "sympy__sympy-15875",
+      "sympy__sympy-16597",
+      "sympy__sympy-16766",
+      "sympy__sympy-16792",
+      "sympy__sympy-18189",
+      "sympy__sympy-19637",
+      "sympy__sympy-20428",
+      "sympy__sympy-20801",
+      "sympy__sympy-23413",
+      "sympy__sympy-24213",
+      "sympy__sympy-24562"
+    ],
+    "reproducibilityFinding": {
+      "exactSubsetAvailable": true,
+      "reproducibleFromVendorScript": false,
+      "statement": "The vendor's shipped scripts/select-subset.py does NOT reproduce their shipped data/swe-bench-100.jsonl. Run against SWE-bench Verified (500) in natural parquet order it selects a set overlapping the shipped subset in 22 of 100 instances; in instance-id order, also 22; with the documented complexity<=250 filter applied first, 26. Its repository allocation differs materially too (django 42 vs 44, sympy 14 vs 17, scikit-learn 6 vs 2). The script also omits the <=250 filter its own documentation describes as step 1.",
+      "consequence": "The ARTIFACT is authoritative and is what M213 freezes; the script is not. Anyone 'reproducing' VEXP's subset from the published script would benchmark a different 100 tasks and could not legitimately compare against VEXP's published number.",
+      "artifactMatchesPublishedProperties": "All twelve repositories present, the per-repository table matches docs/TASK_SELECTION.md exactly, median complexity is 22 as published, and the maximum is 247, inside the documented <=250 ceiling. 6 of the full 500 exceed 250 (1.2%), matching the published '~1%'."
+    }
+  },
+  "arms": [
+    {
+      "arm": "baseline",
+      "label": "Arm A — BASELINE",
+      "nativeTools": [
+        "Edit",
+        "Write",
+        "Bash",
+        "Read",
+        "Glob",
+        "Grep",
+        "TodoWrite"
+      ],
+      "mcpServers": [],
+      "treatmentToolCatalog": [],
+      "modelVisibleToolNames": [
+        "Edit",
+        "Write",
+        "Bash",
+        "Read",
+        "Glob",
+        "Grep",
+        "TodoWrite"
+      ],
+      "treatmentInstruction": null,
+      "forbiddenArtifacts": [
+        ".vtrace",
+        ".vexp",
+        "VTRACE_*",
+        "VEXP_*",
+        "vtrace daemon socket"
+      ]
+    },
+    {
+      "arm": "vtrace",
+      "label": "Arm B — VTRACE",
+      "nativeTools": [
+        "Edit",
+        "Write",
+        "Bash",
+        "Read",
+        "Glob",
+        "Grep",
+        "TodoWrite"
+      ],
+      "mcpServers": [
+        "vtrace"
+      ],
+      "treatmentToolCatalog": [
+        "get_code_context",
+        "run_pipeline",
+        "index_repo",
+        "check_capsule_staleness",
+        "get_context_capsule",
+        "get_impact_graph",
+        "search_logic_flow",
+        "get_skeleton",
+        "index_status",
+        "workspace_setup",
+        "get_session_context",
+        "search_memory",
+        "save_observation",
+        "expand_vexp_ref"
+      ],
+      "modelVisibleToolNames": [
+        "Edit",
+        "Write",
+        "Bash",
+        "Read",
+        "Glob",
+        "Grep",
+        "TodoWrite",
+        "mcp__vtrace__get_code_context",
+        "mcp__vtrace__run_pipeline",
+        "mcp__vtrace__index_repo",
+        "mcp__vtrace__check_capsule_staleness",
+        "mcp__vtrace__get_context_capsule",
+        "mcp__vtrace__get_impact_graph",
+        "mcp__vtrace__search_logic_flow",
+        "mcp__vtrace__get_skeleton",
+        "mcp__vtrace__index_status",
+        "mcp__vtrace__workspace_setup",
+        "mcp__vtrace__get_session_context",
+        "mcp__vtrace__search_memory",
+        "mcp__vtrace__save_observation",
+        "mcp__vtrace__expand_vexp_ref"
+      ],
+      "treatmentInstruction": null,
+      "forbiddenArtifacts": [
+        ".vexp",
+        "VEXP_*",
+        "vexp daemon socket"
+      ]
+    },
+    {
+      "arm": "vexp",
+      "label": "Arm C — VEXP",
+      "nativeTools": [
+        "Edit",
+        "Write",
+        "Bash",
+        "Read",
+        "Glob",
+        "Grep",
+        "TodoWrite"
+      ],
+      "mcpServers": [
+        "vexp"
+      ],
+      "treatmentToolCatalog": [
+        "run_pipeline",
+        "get_skeleton",
+        "verify_done"
+      ],
+      "modelVisibleToolNames": [
+        "Edit",
+        "Write",
+        "Bash",
+        "Read",
+        "Glob",
+        "Grep",
+        "TodoWrite",
+        "mcp__vexp__run_pipeline",
+        "mcp__vexp__get_skeleton",
+        "mcp__vexp__verify_done"
+      ],
+      "treatmentInstruction": null,
+      "forbiddenArtifacts": [
+        ".vtrace",
+        "VTRACE_*",
+        "vtrace daemon socket"
+      ]
+    }
+  ],
+  "armCount": 3,
+  "treatmentSurfaces": {
+    "vtrace": {
+      "catalog": [
+        "get_code_context",
+        "run_pipeline",
+        "index_repo",
+        "check_capsule_staleness",
+        "get_context_capsule",
+        "get_impact_graph",
+        "search_logic_flow",
+        "get_skeleton",
+        "index_status",
+        "workspace_setup",
+        "get_session_context",
+        "search_memory",
+        "save_observation",
+        "expand_vexp_ref"
+      ],
+      "catalogSize": 14,
+      "source": "src/mcp/tools.ts defaultMcpToolRegistry.listMetadata(), read at runtime",
+      "howStarted": "vtrace mcp-serve --repo <workspace>, with NO --tools flag",
+      "rationale": "The product default. Seven further tools (search_symbols, build_capsule, build_handoff, route_query, list_runs, list_sessions, read_session) are registered but hidden from tools/list and are NOT exposed: the arm is the product we would genuinely offer an agent, not every research tool that exists."
+    },
+    "vexp": {
+      "catalog": [
+        "run_pipeline",
+        "get_skeleton",
+        "verify_done"
+      ],
+      "catalogSize": 3,
+      "source": "vexp-cli 3.1.1 mcp/mcp-server.cjs, read statically via M212's extractor",
+      "rationale": "VEXP's ACTUAL default agent-facing surface. get_impact_graph is NOT in it and is not added: M212 established that measuring VTRACE against a VEXP surface VEXP's own agents are never shown produces a VTRACE-authored proxy, not a measurement of the competitor."
+    },
+    "asymmetryIsDeliberate": "Fourteen tools versus three is a real difference between the two products and is preserved. Normalising the catalogues would replace both treatments with a construct neither vendor ships. The cost of a larger catalogue — M166 measured tool schemas as model-visible and billed every turn — is part of what the experiment measures, not a confound to remove."
+  },
+  "agent": {
+    "implementation": "Anthropic Claude Code CLI, headless",
+    "binary": "/home/calvin/.local/bin/claude",
+    "version": "2.1.260",
+    "versionPinNote": "M193 pinned 2.1.251; that version is no longer installed on this host, so M213 re-pins to the currently installed 2.1.260 rather than claiming continuity it does not have. The launch harness must assert this exact string and abort the cohort on any difference.",
+    "systemPrompt": "CLI default; no --append-system-prompt and no --system-prompt in any arm",
+    "userPromptSource": "vexp-swe-bench src/harness/loader.ts buildPrompt, verbatim, identical in all three arms",
+    "userPromptText": "You are working on the {repo} repository (Python).\nFix the following issue by making the necessary code changes.\nDo NOT write or modify tests — only fix the source code.\n\n{problem_statement}",
+    "userPromptContainsTreatmentInstruction": false,
+    "outputFormat": "stream-json --verbose",
+    "turnLoop": "the Claude Code CLI's own; unchanged and identical across arms",
+    "terminationLogic": "CLI default termination, bounded by --max-turns and the per-run cost cap",
+    "errorRetryBehaviour": "CLI default; harness-level retry restricted to the infrastructure categories in §8 of the preregistration"
+  },
+  "model": {
+    "provider": "Anthropic",
+    "model": "claude-opus-4-5-20251101",
+    "rationale": "The model VEXP's published benchmark used (README: 'All agents use Claude Opus 4.5 for a fair, apples-to-apples comparison'), and the model every untreated historical VTRACE baseline arm used, so the frozen cost ceilings are derived from this model's own economics.",
+    "temperature": "not exposed by the Claude Code CLI; provider default",
+    "thinkingBudget": 0,
+    "effortFlag": "omitted",
+    "maxOutputTokens": "provider default",
+    "identityVerification": "The launch harness must read the provider-returned model identity from each run's stream-json init event and abort the cohort if it differs from the pin. Availability of this exact model id was NOT verified during M213, because verifying it requires a paid call.",
+    "availabilityVerified": false
+  },
+  "nativeTools": {
+    "set": [
+      "Edit",
+      "Write",
+      "Bash",
+      "Read",
+      "Glob",
+      "Grep",
+      "TodoWrite"
+    ],
+    "identicalAcrossArms": true,
+    "rationale": "vexp-swe-bench's DEFAULT_ALLOWED_TOOLS, unchanged in every arm. M168-E measured that denying Grep/Glob is itself a treatment that lost two tasks and won none. The question is whether the treatment helps a competent native-search agent, not whether it can replace grep."
+  },
+  "budgets": {
+    "maxTurns": 250,
+    "perRunCostCapUsd": 3.5,
+    "wallClockTimeoutSecondsPerRun": 3600,
+    "toolCallTimeoutSeconds": 600,
+    "repositoryCommandTimeoutSeconds": 600,
+    "maxOutputTokensPerTurn": "provider default; not exposed by the Claude Code CLI",
+    "totalIntendedRuns": 300,
+    "totalSpendCapUsd": 1050,
+    "totalSpendCapRationale": "300 runs at the $3.50 per-run ceiling. A cohort that hits this is one where every single run cost more than any run ever observed; at the untreated historical mean of $0.6604 the projection is $198.12, and at the untreated p90 of $1.2392 it is $371.76.",
+    "projectedTotalUsdAtUntreatedMean": 198.12,
+    "projectedTotalUsdAtUntreatedP90": 371.76
+  },
+  "substrate": {
+    "inheritedFrom": "M192 / M193",
+    "harness": "swebench==4.1.0 official per-instance evaluation images",
+    "perInstanceContainers": true,
+    "freshCheckoutPerRun": true,
+    "authoritativeCheckout": "SINGLE_BIND_MOUNTED_TREE",
+    "patchCaptureMechanism": "m193c_patch_snapshot: `git diff --no-renames HEAD` for tracked bytes plus a `git ls-files --others --exclude-standard` untracked lane, both restricted by a pathspec that excludes every path already untracked before the agent started. Non-mutating: it never stages and never resets.",
+    "patchCaptureIsTreatmentAgnostic": true,
+    "patchCaptureNamesNoVendorDirectory": true,
+    "indexWarmthRegime": "COLD_UNIFORM",
+    "indexWarmthRationale": "Every run gets a fresh checkout, so neither treatment carries an index into the next task. §13's cold and warm regimes are not mixed: this cohort is cold throughout, and is reported as cold.",
+    "residualNotVerifiable": [
+      "Treatment state that lives OUTSIDE the workspace is not covered by a fresh checkout. VTRACE writes only `<repo>/.vtrace` (measured: the executability dry run created exactly that one path and nothing else). VEXP keeps state under ~/.vexp and runs a daemon, so whether a VEXP arm is genuinely cold cannot be established until the VEXP arm is executable at all.",
+      "The ordering requirement — that the pre-agent untracked snapshot is taken AFTER treatment initialisation, so treatment state is excluded rather than attributed to the agent — is a property of a launch harness that does not exist yet."
+    ],
+    "imageNamespace": "swebench",
+    "instanceImageTag": "latest",
+    "checkoutRoot": "/testbed",
+    "whyNotTheVendorHarnessWorkingTrees": "vexp-swe-bench keeps ONE working tree per repository slug under .bench-repos and reuses it across every task of that repository. Per-instance containers give §14 repository-state equality and §17 independence by construction instead of by discipline.",
+    "networkPolicy": "The agent has the container's own network posture, identical in all three arms. No arm receives treatment-specific external knowledge."
+  },
+  "randomization": {
+    "seed": "M213-VTRACE-VEXP-CAUSAL-100-v1",
+    "method": "Instances are ranked by sha256(seed + instance_id) and the rank's residue modulo six selects one of the six arm orders. Arbitrary with respect to repository, difficulty and every historical outcome.",
+    "orders": [
+      [
+        "baseline",
+        "vtrace",
+        "vexp"
+      ],
+      [
+        "baseline",
+        "vexp",
+        "vtrace"
+      ],
+      [
+        "vtrace",
+        "baseline",
+        "vexp"
+      ],
+      [
+        "vtrace",
+        "vexp",
+        "baseline"
+      ],
+      [
+        "vexp",
+        "baseline",
+        "vtrace"
+      ],
+      [
+        "vexp",
+        "vtrace",
+        "baseline"
+      ]
+    ],
+    "balance": {
+      "baseline>vtrace>vexp": 17,
+      "baseline>vexp>vtrace": 17,
+      "vtrace>baseline>vexp": 17,
+      "vtrace>vexp>baseline": 17,
+      "vexp>baseline>vtrace": 16,
+      "vexp>vtrace>baseline": 16
+    },
+    "balanceNote": "17/17/17/17/16/16 across the six orders; baseline is never systematically first."
+  },
+  "runManifest": {
+    "schemaVersion": "stage5.m213.run-manifest.v1",
+    "file": "stage5_m213_run_manifest.json",
+    "intendedRuns": 300,
+    "manifestHash": "0001072171e0e3aa4242a6865a7bf144cb3ffba145c89aeee27de99b18cbe9d9",
+    "generatedBeforeAnyExecution": true
+  },
+  "primaryOutcome": {
+    "measure": "SWE-bench resolved",
+    "encoding": "binary; 1 = resolved, 0 = unresolved",
+    "evaluator": "the official SWE-bench evaluator (swebench==4.1.0) against the frozen FAIL_TO_PASS and PASS_TO_PASS sets",
+    "refusedSubstitutes": [
+      "a patch was produced",
+      "tests appeared to pass in the agent's own transcript",
+      "the agent declared success",
+      "the patch touched a gold file"
+    ]
+  },
+  "comparisonStructure": {
+    "primary": "VTRACE vs baseline (B − A)",
+    "keySecondary": [
+      "VEXP vs baseline (C − A)",
+      "VTRACE vs VEXP (B − C)"
+    ],
+    "multiplicity": "ONE primary comparison plus two key secondary comparisons. The primary is not multiplicity-adjusted. The two key secondary comparisons are reported with Holm correction across the pair, and every comparison is reported with its absolute delta, discordant-pair counts and interval whether or not any p-value crosses a threshold.",
+    "rationale": "Co-primary status for all three would make the headline claim depend on a correction chosen after the fact. The programme's own question is whether VTRACE helps, so that is the primary; VEXP's causal effect and the head-to-head are exactly as preregistered but explicitly secondary."
+  },
+  "statisticalPlan": {
+    "design": "paired — every task is run under all three arms",
+    "binaryMethod": "exact McNemar (binomial) on discordant pairs, with a paired bootstrap CI on the pass-rate difference",
+    "bootstrapResamples": 10000,
+    "bootstrapUnit": "task (all three of a task's arms resample together, preserving pairing)",
+    "intervalLevel": 0.95,
+    "reportedPerComparison": [
+      "both resolve",
+      "treatment only",
+      "comparator only",
+      "neither",
+      "absolute pass-rate delta",
+      "relative pass-rate delta",
+      "95% bootstrap CI on the absolute delta",
+      "exact McNemar p-value"
+    ],
+    "continuousMethod": "paired differences on tokens, cost, turns and tool counts; median and mean both reported with a 95% paired bootstrap CI, because M174 showed a two-run tail can carry 95.7% of a cost premium and a mean alone would have hidden it",
+    "effectSizeDiscipline": "p < 0.05 is not the definition of success. Absolute delta, discordant counts and interval width are reported first; a +1/100 result and a +10/100 result are described differently even when neither is conventionally significant.",
+    "refused": [
+      "reporting aggregate percentages without the paired table",
+      "choosing the highlighted efficiency metric after seeing which one favours a treatment",
+      "pooling these results statistically with M183 or with VEXP's published number"
+    ]
+  },
+  "secondaryOutcomes": {
+    "efficiency": [
+      "input tokens",
+      "output tokens",
+      "cached tokens",
+      "total model tokens",
+      "provider-reported cost",
+      "wall-clock duration",
+      "turns"
+    ],
+    "costSource": "provider-reported cost, taken from the run's own telemetry. A price table is used only if the provider reports none, in which case the table and its retrieval date are frozen in the artifact before any run.",
+    "behaviour": [
+      "grep/ripgrep invocations",
+      "glob/find invocations",
+      "file reads",
+      "git commands",
+      "test commands",
+      "turn count",
+      "files inspected",
+      "files edited",
+      "turn of first edit",
+      "turn of first read of a file the gold patch touches"
+    ],
+    "behaviourInstrumentation": "ordered tool telemetry from the stream-json transcript, classified by tool name only. No outcome label may enter the classification of pre-decision evidence (M185/M189).",
+    "goldRelativeMetricsAreEvaluationOnly": "Gold-relative timing metrics are computed after the fact from the frozen dataset. Gold patches, gold file lists and FAIL_TO_PASS never enter any agent's context (§18 falsification control).",
+    "uptake": [
+      "treatment surface exposed",
+      "treatment tool invoked at least once",
+      "number of treatment invocations",
+      "tokens returned by the treatment",
+      "turn of first treatment invocation",
+      "treatment invoked before the first edit",
+      "treatment invoked before the first read of a file the patch later touches"
+    ],
+    "uptakeIsAMediator": "Uptake is post-treatment behaviour. It is described and may be analysed as a mediator, and it NEVER conditions the primary comparison (§25)."
+  },
+  "treatmentValidity": {
+    "recordedPerRun": [
+      "assigned arm",
+      "treatment surface available",
+      "treatment initialisation succeeded",
+      "treatment index ready",
+      "treatment tool schema visible in tools/list",
+      "treatment invocation possible (a deterministic probe call succeeded)"
+    ],
+    "primaryAnalysis": "INTENTION_TO_TREAT — every launched run is analysed under its assigned arm",
+    "secondaryAnalysis": "TREATMENT_VALID / per-protocol, restricted to runs where all six fields above hold",
+    "initialisationFailurePolicy": "A VTRACE or VEXP initialisation failure is NEVER silently converted to baseline. The run is launched only if the treatment surface came up; if it did not, the run is excluded as TREATMENT_INITIALISATION_FAILURE before the model is called, is replaced by nothing, and stays visible in the accounting with its arm and repository. A failure discovered AFTER the model started is retained under intention-to-treat and flagged treatment-invalid."
+  },
+  "exclusions": {
+    "legitimate": [
+      "CONTAINER_CANNOT_START",
+      "SOURCE_REVISION_UNAVAILABLE",
+      "BENCHMARK_INSTANCE_MALFORMED",
+      "ENVIRONMENT_IRREPRODUCIBLE",
+      "TREATMENT_INITIALISATION_FAILURE",
+      "AGENT_INFRASTRUCTURE_FAILURE_BEFORE_TREATMENT_EXPOSURE",
+      "MODEL_SERVICE_FAILURE",
+      "PATCH_EXTRACTION_FAILURE",
+      "EVALUATOR_INFRA_FAILURE",
+      "TELEMETRY_CORRUPT",
+      "TREATMENT_CONTAMINATION"
+    ],
+    "neverExclusions": [
+      "the task failed",
+      "the agent got confused",
+      "the treatment was not used",
+      "the treatment's output was poor",
+      "a test failed",
+      "the model produced no patch",
+      "the run was expensive",
+      "the run is inconvenient"
+    ],
+    "exclusionsRemainVisible": true,
+    "frozenBeforeAnyPaidRun": true,
+    "statement": "An exclusion category not on this list cannot be created after outcomes exist. Every excluded run keeps its arm, repository and category in the corpus accounting, so a drift toward excluding one arm would be readable rather than hidden.",
+    "retryPolicy": {
+      "rerunnable": [
+        "MODEL_SERVICE_FAILURE",
+        "CONTAINER_INFRA_FAILURE",
+        "EVALUATOR_INFRA_FAILURE",
+        "TELEMETRY_CORRUPT"
+      ],
+      "notRerunnable": [
+        "a bad patch",
+        "turn exhaustion",
+        "hitting the cost cap",
+        "agent timeout",
+        "the evaluator judging the task unresolved",
+        "the agent choosing not to test"
+      ],
+      "maxAttemptsPerRun": 2,
+      "bothAttemptsRemainInLedger": true
+    }
+  },
+  "stoppingRule": {
+    "design": "FIXED_N",
+    "intendedRuns": 300,
+    "statement": "All 100 tasks × 3 arms = 300 runs. The cohort is complete when every planned run has reached a terminal state. There is no interim analysis, no adaptive continuation and no early stop.",
+    "refusedInputs": [
+      "VTRACE looks better",
+      "VTRACE looks worse",
+      "VEXP looks better",
+      "cost is disappointing",
+      "an early p-value crossed a threshold",
+      "the discordant table looks favourable"
+    ],
+    "onlyLegitimateEarlyTermination": "The cohort may be ABANDONED — not analysed — if a defect invalidating comparability is found (§30). Abandonment discards the cohort; it never yields a reported result.",
+    "budgetInterlock": "The $1,050 total cap is an infrastructure guard, not a stopping rule. If it binds, the cohort is incomplete and is reported as incomplete; a partial cohort is never analysed as if it were the preregistered experiment."
+  },
+  "noTuningPolicy": {
+    "frozenAtFirstPaidRun": [
+      "VTRACE product commit",
+      "VEXP version",
+      "agent version",
+      "model",
+      "prompts",
+      "tool catalogues",
+      "budgets",
+      "task set",
+      "randomisation",
+      "harness",
+      "evaluator",
+      "stopping rule",
+      "analysis plan"
+    ],
+    "onCriticalDefect": "STOP, declare the cohort invalid, fix, restart from zero",
+    "refused": "patching halfway through and retaining earlier outcomes"
+  },
+  "historicalComparisonPolicy": {
+    "comparableHistory": [
+      {
+        "source": "M183",
+        "result": "30 paired tasks, 60 runs; baseline 19/30, VTRACE 19/30; both 17, VTRACE-only 2, baseline-only 2, neither 9; McNemar p = 1.0",
+        "label": "historical/non-identical"
+      },
+      {
+        "source": "VEXP published benchmark",
+        "result": "a reported pass rate on this exact 100-task subset",
+        "label": "historical/non-identical; NOT a causal treatment effect — it has no same-run control"
+      }
+    ],
+    "poolingProhibited": true,
+    "statement": "Historical results may be cited beside the new experiment and must be labelled historical/non-identical. They are never pooled statistically with it. The three-arm benchmark is the authoritative causal comparison."
+  },
+  "reportingDiscipline": {
+    "acceptableOutcomes": [
+      "No detectable resolution improvement, with lower token use.",
+      "No detectable difference in either resolution or efficiency.",
+      "VEXP improved resolution; VTRACE did not.",
+      "VTRACE and VEXP both improved resolution similarly.",
+      "VTRACE improved resolution; VEXP did not."
+    ],
+    "successCriterion": "a valid experiment completed",
+    "refusedSuccessCriterion": "VTRACE wins",
+    "nullResultWording": "A null result is stated as a null result, with its interval, and is not reworded into a directional claim the interval does not support."
+  },
+  "failureTaxonomy": {
+    "purpose": "post-hoc description only; it never alters a primary outcome",
+    "categories": [
+      "NEVER_FOUND_RELEVANT_CODE",
+      "FOUND_CODE_WRONG_DIAGNOSIS",
+      "CROSS_FILE_CONTRACT_FAILURE",
+      "INCORRECT_PATCH",
+      "TEST_OR_VALIDATION_FAILURE",
+      "ENVIRONMENT_FAILURE",
+      "BUDGET_EXHAUSTION",
+      "NO_PATCH"
+    ],
+    "rubricDiscipline": "Evidence-based classification with arm labels blinded where practical. M185 and M189 both showed anecdotal stage labels supporting conclusions the data did not; a taxonomy count is never evidence of treatment effectiveness on its own."
+  },
+  "patchQuality": {
+    "recorded": [
+      "files changed",
+      "lines added",
+      "lines removed",
+      "edit attempts",
+      "test runs",
+      "final patch size"
+    ],
+    "interpretation": "descriptive only; a smaller patch is not assumed to be a better one"
+  },
+  "initializationAccounting": {
+    "recordedSeparatelyFromModelCost": true,
+    "fields": [
+      "index build wall time",
+      "index storage bytes",
+      "indexing failures",
+      "workspace setup time",
+      "daemon startup time"
+    ],
+    "regimes": [
+      "cold single-task",
+      "warm reused repository"
+    ],
+    "mixingProhibited": "The two regimes are reported separately and never combined into one metric.",
+    "measuredColdIndexCost": {
+      "note": "from the M213 VTRACE executability dry run, one instance per repository",
+      "source": "stage5_m213_vtrace_executability.json"
+    }
+  },
+  "benchmarkHarnessAudit": {
+    "file": "/home/calvin/code/vexp-swe-bench/dist/harness/repo.js",
+    "readable": true,
+    "patchCaptureExclusions": [
+      ".bench-mcp-config.json",
+      ".claude",
+      ".vexp"
+    ],
+    "cleanPreservedPaths": [
+      ".bench-mcp-config.json",
+      ".claude",
+      ".vexp"
+    ],
+    "repositoryReuse": "ONE working tree per repository slug under .bench-repos, reused across every task of that repository — 44 django tasks share one directory",
+    "findings": [
+      {
+        "id": "H1",
+        "severity": "LAUNCH_BLOCKING",
+        "statement": "capturePatch stages `git add -A -- . :(exclude).vexp :(exclude).claude :(exclude).bench-mcp-config.json`. It excludes the competitor's generated state and does NOT exclude .vtrace. Reproduced directly: on a flask checkout where the agent changed nothing, the captured patch contained .vtrace/index.meta.json, .vtrace/index.sqlite and .vtrace/session.sqlite — 105,321 bytes of diff, 1,848 lines of VTRACE index metadata including absolute host paths and indexer fingerprints.",
+        "consequence": "Every VTRACE-arm patch would be polluted, could fail to apply, and could exhaust the capture's 10 MB buffer — producing PATCH_EXTRACTION_FAILURE exclusions concentrated in one arm for a reason unrelated to utility.",
+        "requiredRemedy": "The exclusion must be symmetric: every treatment's generated state directory is excluded, or none is. Enforced by control F21 and gate G21."
+      },
+      {
+        "id": "H2",
+        "severity": "LAUNCH_BLOCKING",
+        "statement": "resetRepo and setupRepo run `git clean -fdx -e .vexp -e .claude -e .bench-mcp-config.json` between tasks. .vexp survives; .vtrace would be deleted.",
+        "consequence": "The competitor's index is warm across all 44 django tasks while VTRACE pays a cold rebuild on every one — a systematic latency and setup-cost advantage to one arm that §13's cold/warm accounting would then report as a property of the products.",
+        "requiredRemedy": "Either regime is defensible; a mixed one is not. Enforced by control F22 and gate G22."
+      },
+      {
+        "id": "H3",
+        "severity": "DESIGN_RELEVANT",
+        "statement": "ONE working tree per repository slug under .bench-repos, reused across every task of that repository — 44 django tasks share one directory",
+        "consequence": "Shared working trees make three arms of the same task non-independent and prevent concurrent execution within a repository.",
+        "requiredRemedy": "M213 adopts the M192 per-instance container substrate instead, which removes the hazard structurally rather than by scheduling discipline."
+      }
+    ],
+    "note": "These are findings about the BENCHMARK HARNESS, not about VEXP's product. They are recorded because a preregistration that inherited them silently would have produced a competitor-favouring result the analysis could not have detected."
+  },
+  "evaluator": {
+    "interpreter": "/home/calvin/code/vexp-swe-bench/.venv/bin/python",
+    "available": true,
+    "version": "4.1.0",
+    "expectedVersion": "4.1.0",
+    "matchesExpected": true,
+    "integrityAudit": "M192 hashed seven load-bearing swebench harness files against the wheel and found 0 modified; that audit is inherited, not repeated here."
+  },
+  "executability": {
+    "vtrace": {
+      "verdict": "VTRACE_TREATMENT_EXECUTABLE",
+      "repositoriesProven": 12,
+      "repositoriesIntended": 12,
+      "observationalIndexing": true,
+      "pathsIndexingCreates": [
+        ".vtrace"
+      ],
+      "artifact": "stage5_m213_vtrace_executability.json"
+    },
+    "vexp": {
+      "verdict": "VEXP_TREATMENT_NOT_EXECUTABLE",
+      "blockers": [
+        "the installed CLI (2.0.24) refuses every invocation with an update-required notice, so no VEXP command can run on this host as it stands",
+        "no licence is present in ~/.vexp, so the effective plan is FREE",
+        "the free plan admits 1 repository, and the frozen population spans 12",
+        "the free plan caps the graph at 2,000 nodes, and the largest repository in the population (django/django) carries 41,032 indexed symbols",
+        "the platform core binary (@vexp/core-<platform>) is not installed, and it is the component that both indexes and enforces the plan"
+      ],
+      "artifact": "stage5_m213_vexp_executability.json"
+    }
+  },
+  "contaminationGuards": {
+    "baseline": [
+      ".vtrace",
+      ".vexp",
+      "VTRACE_*",
+      "VEXP_*",
+      "vtrace daemon socket"
+    ],
+    "vtrace": [
+      ".vexp",
+      "VEXP_*",
+      "vexp daemon socket"
+    ],
+    "vexp": [
+      ".vtrace",
+      "VTRACE_*",
+      "vtrace daemon socket"
+    ],
+    "audited": [
+      "system prompt",
+      "initial user prompt",
+      "tool schemas",
+      "environment variables",
+      "workspace root entries at agent start",
+      "CLAUDE.md / AGENTS.md reachable from the workspace or its ancestors",
+      "MCP configuration",
+      "PATH",
+      "daemon sockets",
+      "generated context files"
+    ],
+    "benchmarkNativeInstructionFiles": "Instruction files belonging to the benchmark repository at its base commit are the benchmark's normal condition, are preserved identically in all three arms, and are recorded separately from experimental injection so the two are never confused."
+  },
+  "falsification": {
+    "controls": [
+      {
+        "id": "F0_CLEAN_BASELINE",
+        "description": "a fully compliant baseline run raises no issue",
+        "expectation": "GUARD_SILENT",
+        "fired": false,
+        "satisfied": true,
+        "detail": "no issue reported"
+      },
+      {
+        "id": "F0_CLEAN_VTRACE",
+        "description": "a fully compliant vtrace run raises no issue",
+        "expectation": "GUARD_SILENT",
+        "fired": false,
+        "satisfied": true,
+        "detail": "no issue reported"
+      },
+      {
+        "id": "F0_CLEAN_VEXP",
+        "description": "a fully compliant vexp run raises no issue",
+        "expectation": "GUARD_SILENT",
+        "fired": false,
+        "satisfied": true,
+        "detail": "no issue reported"
+      },
+      {
+        "id": "F1",
+        "description": "a VTRACE tool is injected into the baseline arm",
+        "expectation": "GUARD_FIRES",
+        "fired": true,
+        "satisfied": true,
+        "detail": "model-visible tool surface differs from the baseline arm definition; MCP servers differ from the baseline arm definition: observed [vtrace]"
+      },
+      {
+        "id": "F2",
+        "description": "VEXP is exposed inside the VTRACE arm",
+        "expectation": "GUARD_FIRES",
+        "fired": true,
+        "satisfied": true,
+        "detail": "model-visible tool surface differs from the vtrace arm definition; MCP servers differ from the vtrace arm definition: observed [vexp,vtrace]; vtrace arm workspace contains forbidden entry .vexp at agent start"
+      },
+      {
+        "id": "F3",
+        "description": "VTRACE is exposed inside the VEXP arm",
+        "expectation": "GUARD_FIRES",
+        "fired": true,
+        "satisfied": true,
+        "detail": "model-visible tool surface differs from the vexp arm definition; MCP servers differ from the vexp arm definition: observed [vexp,vtrace]; vexp arm carries forbidden environment variables: VTRACE_HOME"
+      },
+      {
+        "id": "F4",
+        "description": "the VTRACE commit changes after the manifest is generated",
+        "expectation": "GUARD_FIRES",
+        "fired": true,
+        "satisfied": true,
+        "detail": "VTRACE identity drift: expected a4cd91225c2a4196cdffb265ddbc2390a9bf38b5, observed 0000000000000000000000000000000000000000"
+      },
+      {
+        "id": "F5",
+        "description": "one arm runs a different model id",
+        "expectation": "GUARD_FIRES",
+        "fired": true,
+        "satisfied": true,
+        "detail": "model drift: expected claude-opus-4-5-20251101, observed claude-sonnet-5"
+      },
+      {
+        "id": "F6",
+        "description": "a treatment-specific instruction is appended to one arm's prompt",
+        "expectation": "GUARD_FIRES",
+        "fired": true,
+        "satisfied": true,
+        "detail": "system prompt carries an appendix; every arm must use the CLI default"
+      },
+      {
+        "id": "F7",
+        "description": "one arm is given a larger turn and cost budget",
+        "expectation": "GUARD_FIRES",
+        "fired": true,
+        "satisfied": true,
+        "detail": "turn budget drift: expected 250, observed 400; cost cap drift: expected 3.5, observed 6"
+      },
+      {
+        "id": "F8",
+        "description": "source is modified before one arm starts",
+        "expectation": "GUARD_FIRES",
+        "fired": true,
+        "satisfied": true,
+        "detail": "tracked source state differs from the canonical state for this instance"
+      },
+      {
+        "id": "F9",
+        "description": "a task is removed from the manifest after preregistration",
+        "expectation": "GUARD_FIRES",
+        "fired": true,
+        "satisfied": true,
+        "detail": "frozen instance missing from manifest: astropy__astropy-14365; manifest has 297 rows, expected 300; manifest hash mismatch: recorded 0001072171e0e3aa4242a6865a7bf144cb3ffba145c89aeee27de99b18cbe9d9, computed 46611e67638467e2f565154b42854f1ca8c2e4d933d8c71a8e5ef77155dde44e"
+      },
+      {
+        "id": "F10",
+        "description": "the arm-order seed is changed after preregistration",
+        "expectation": "GUARD_FIRES",
+        "fired": true,
+        "satisfied": true,
+        "detail": "run VTRACE_VEXP_CAUSAL_100:astropy__astropy-14365:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:astropy__astropy-14365:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:astropy__astropy-14365:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:astropy__astropy-14369:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:astropy__astropy-14369:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:astropy__astropy-14369:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:astropy__astropy-14539:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:astropy__astropy-14539:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:astropy__astropy-14539:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:astropy__astropy-14598:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:astropy__astropy-14598:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:astropy__astropy-14598:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:astropy__astropy-7166:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:astropy__astropy-7166:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:astropy__astropy-7166:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-10880:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-10880:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-10880:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-10973:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-10973:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-10973:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-11095:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-11095:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-11095:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-11133:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-11133:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-11133:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-11206:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-11206:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-11206:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-11490:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-11490:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-11490:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-11728:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-11728:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-11728:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-11740:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-11740:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-11740:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-11749:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-11749:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-11749:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-11815:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-11815:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-11815:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-11820:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-11820:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-11820:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-12050:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-12050:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-12050:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-12273:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-12273:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-12273:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-12276:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-12276:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-12276:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-12325:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-12325:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-12325:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-12774:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-12774:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-12774:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-12858:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-12858:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-12858:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-13012:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-13012:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-13012:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-13112:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-13112:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-13112:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-13195:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-13195:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-13195:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-13363:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-13363:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-13363:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-13512:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-13512:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-13512:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-13513:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-13513:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-13513:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-13551:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-13551:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-13551:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-13590:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-13590:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-13590:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-13658:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-13658:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-13658:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-13810:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-13810:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-13810:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-13820:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-13820:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-13820:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-14608:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-14608:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-14608:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-14792:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-14792:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-14792:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-15037:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-15037:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-15037:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-15503:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-15503:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-15503:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-15572:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-15572:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-15572:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-15695:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-15695:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-15695:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-15731:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-15731:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-15731:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-16256:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-16256:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-16256:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-16263:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-16263:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-16263:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-16333:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-16333:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-16333:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-16569:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-16569:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-16569:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-16667:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-16667:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-16667:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-16819:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-16819:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-16819:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-16877:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-16877:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-16877:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-16938:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-16938:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-16938:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-17084:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-17084:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:django__django-17084:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:matplotlib__matplotlib-22719:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:matplotlib__matplotlib-22719:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:matplotlib__matplotlib-22719:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:matplotlib__matplotlib-24627:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:matplotlib__matplotlib-24627:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:matplotlib__matplotlib-24627:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:matplotlib__matplotlib-24870:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:matplotlib__matplotlib-24870:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:matplotlib__matplotlib-24870:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:matplotlib__matplotlib-24970:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:matplotlib__matplotlib-24970:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:matplotlib__matplotlib-24970:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:matplotlib__matplotlib-25332:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:matplotlib__matplotlib-25332:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:matplotlib__matplotlib-25332:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:matplotlib__matplotlib-25960:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:matplotlib__matplotlib-25960:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:matplotlib__matplotlib-25960:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:matplotlib__matplotlib-26466:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:matplotlib__matplotlib-26466:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:matplotlib__matplotlib-26466:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:mwaskom__seaborn-3187:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:mwaskom__seaborn-3187:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:mwaskom__seaborn-3187:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:pallets__flask-5014:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:pallets__flask-5014:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:pallets__flask-5014:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:psf__requests-1142:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:psf__requests-1142:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:psf__requests-1142:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:psf__requests-1724:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:psf__requests-1724:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:psf__requests-1724:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:psf__requests-1921:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:psf__requests-1921:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:psf__requests-1921:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:psf__requests-5414:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:psf__requests-5414:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:psf__requests-5414:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:pydata__xarray-2905:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:pydata__xarray-2905:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:pydata__xarray-2905:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:pydata__xarray-3677:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:pydata__xarray-3677:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:pydata__xarray-3677:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:pydata__xarray-4695:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:pydata__xarray-4695:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:pydata__xarray-4695:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:pydata__xarray-6599:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:pydata__xarray-6599:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:pydata__xarray-6599:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:pydata__xarray-6938:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:pydata__xarray-6938:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:pydata__xarray-6938:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:pydata__xarray-6992:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:pydata__xarray-6992:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:pydata__xarray-6992:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:pylint-dev__pylint-4551:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:pylint-dev__pylint-4551:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:pylint-dev__pylint-4551:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:pylint-dev__pylint-8898:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:pylint-dev__pylint-8898:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:pylint-dev__pylint-8898:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:pytest-dev__pytest-10051:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:pytest-dev__pytest-10051:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:pytest-dev__pytest-10051:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:pytest-dev__pytest-5262:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:pytest-dev__pytest-5262:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:pytest-dev__pytest-5262:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:pytest-dev__pytest-6197:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:pytest-dev__pytest-6197:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:pytest-dev__pytest-6197:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:pytest-dev__pytest-7432:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:pytest-dev__pytest-7432:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:pytest-dev__pytest-7432:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:scikit-learn__scikit-learn-10844:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:scikit-learn__scikit-learn-10844:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:scikit-learn__scikit-learn-10844:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:scikit-learn__scikit-learn-11578:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:scikit-learn__scikit-learn-11578:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:scikit-learn__scikit-learn-11578:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sphinx-doc__sphinx-7462:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sphinx-doc__sphinx-7462:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sphinx-doc__sphinx-7462:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sphinx-doc__sphinx-7748:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sphinx-doc__sphinx-7748:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sphinx-doc__sphinx-7748:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sphinx-doc__sphinx-7910:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sphinx-doc__sphinx-7910:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sphinx-doc__sphinx-7910:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sphinx-doc__sphinx-9230:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sphinx-doc__sphinx-9230:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sphinx-doc__sphinx-9230:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sphinx-doc__sphinx-9320:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sphinx-doc__sphinx-9320:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sphinx-doc__sphinx-9320:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sphinx-doc__sphinx-9698:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sphinx-doc__sphinx-9698:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sphinx-doc__sphinx-9698:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sphinx-doc__sphinx-9711:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sphinx-doc__sphinx-9711:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sphinx-doc__sphinx-9711:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sympy__sympy-12419:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sympy__sympy-12419:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sympy__sympy-12419:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sympy__sympy-12481:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sympy__sympy-12481:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sympy__sympy-12481:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sympy__sympy-13372:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sympy__sympy-13372:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sympy__sympy-13372:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sympy__sympy-13480:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sympy__sympy-13480:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sympy__sympy-13480:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sympy__sympy-13974:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sympy__sympy-13974:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sympy__sympy-13974:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sympy__sympy-15599:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sympy__sympy-15599:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sympy__sympy-15599:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sympy__sympy-15875:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sympy__sympy-15875:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sympy__sympy-15875:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sympy__sympy-16597:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sympy__sympy-16597:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sympy__sympy-16597:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sympy__sympy-16766:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sympy__sympy-16766:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sympy__sympy-16766:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sympy__sympy-16792:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sympy__sympy-16792:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sympy__sympy-16792:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sympy__sympy-18189:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sympy__sympy-18189:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sympy__sympy-18189:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sympy__sympy-19637:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sympy__sympy-19637:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sympy__sympy-19637:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sympy__sympy-20428:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sympy__sympy-20428:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sympy__sympy-20428:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sympy__sympy-20801:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sympy__sympy-20801:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sympy__sympy-20801:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sympy__sympy-23413:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sympy__sympy-23413:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sympy__sympy-23413:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sympy__sympy-24213:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sympy__sympy-24213:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sympy__sympy-24213:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sympy__sympy-24562:vtrace carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sympy__sympy-24562:baseline carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; run VTRACE_VEXP_CAUSAL_100:sympy__sympy-24562:vexp carries seed some-other-seed, expected M213-VTRACE-VEXP-CAUSAL-100-v1; manifest hash mismatch: recorded 0001072171e0e3aa4242a6865a7bf144cb3ffba145c89aeee27de99b18cbe9d9, computed 61e079179163b3a50b2c314c2c314802d3b4479a539308a9ae37a568b0eb7995"
+      },
+      {
+        "id": "F11",
+        "description": "an ordinary unresolved run is marked invalid with no infrastructure reason",
+        "expectation": "GUARD_FIRES",
+        "fired": true,
+        "satisfied": true,
+        "detail": "exclusion category AGENT_DID_NOT_SOLVE_IT is not preregistered; outcomes are not exclusions"
+      },
+      {
+        "id": "F12",
+        "description": "a treatment arm exposes its tool and the agent never invokes it: the run stays valid under ITT",
+        "expectation": "GUARD_SILENT",
+        "fired": false,
+        "satisfied": true,
+        "detail": "no issue reported"
+      },
+      {
+        "id": "F13_CLASSIFIED",
+        "description": "treatment initialisation failure is a preregistered exclusion category",
+        "expectation": "GUARD_SILENT",
+        "fired": false,
+        "satisfied": true,
+        "detail": "no issue reported"
+      },
+      {
+        "id": "F13_NO_SILENT_BASELINE",
+        "description": "a VTRACE arm whose treatment failed to initialise is silently run as baseline",
+        "expectation": "GUARD_FIRES",
+        "fired": true,
+        "satisfied": true,
+        "detail": "model-visible tool surface differs from the vtrace arm definition; MCP servers differ from the vtrace arm definition: observed []; VTRACE identity drift: expected a4cd91225c2a4196cdffb265ddbc2390a9bf38b5, observed null"
+      },
+      {
+        "id": "F14",
+        "description": "the preregistration document is edited after its hash is recorded",
+        "expectation": "GUARD_FIRES",
+        "fired": true,
+        "satisfied": true,
+        "detail": "preregistration hash mismatch: recorded 1ac2e23520c8620ac8b792de7b68deb922b28b4927c0f86e584727ae96daf8f4, computed aa5a21555de64eacea2d702cd961ad094d479e235bbb58be77d6631d2b2373ca"
+      },
+      {
+        "id": "F15",
+        "description": "the cohort is finalised after 180 of 300 planned runs",
+        "expectation": "GUARD_FIRES",
+        "fired": true,
+        "satisfied": true,
+        "detail": "cohort is not finalisable: 180 of 300 planned runs are terminal"
+      },
+      {
+        "id": "F16",
+        "description": "tasks are dropped from the analysis because a treatment lost them",
+        "expectation": "GUARD_FIRES",
+        "fired": true,
+        "satisfied": true,
+        "detail": "frozen instance missing from manifest: astropy__astropy-14365; frozen instance missing from manifest: astropy__astropy-14369; frozen instance missing from manifest: astropy__astropy-14539; frozen instance missing from manifest: astropy__astropy-14598; frozen instance missing from manifest: astropy__astropy-7166; frozen instance missing from manifest: django__django-10880; frozen instance missing from manifest: django__django-10973; frozen instance missing from manifest: django__django-11095; frozen instance missing from manifest: django__django-11133; frozen instance missing from manifest: django__django-11206; manifest has 270 rows, expected 300"
+      },
+      {
+        "id": "F17",
+        "description": "Grep is removed from one arm",
+        "expectation": "GUARD_FIRES",
+        "fired": true,
+        "satisfied": true,
+        "detail": "native tool set differs from the frozen set: observed [Bash,Edit,Glob,Read,TodoWrite,Write]; model-visible tool surface differs from the vexp arm definition"
+      },
+      {
+        "id": "F18",
+        "description": "the gold patch is reachable from the agent's context",
+        "expectation": "GUARD_FIRES",
+        "fired": true,
+        "satisfied": true,
+        "detail": "evaluation artifacts reachable from agent context: gold_patch.diff, FAIL_TO_PASS.json"
+      },
+      {
+        "id": "F19",
+        "description": "a later arm reuses the previous arm's conversation and patch",
+        "expectation": "GUARD_FIRES",
+        "fired": true,
+        "satisfied": true,
+        "detail": "conversation state reused from VTRACE_VEXP_CAUSAL_100:astropy__astropy-14365:vtrace; patch state reused from VTRACE_VEXP_CAUSAL_100:astropy__astropy-14365:vtrace"
+      },
+      {
+        "id": "F20",
+        "description": "the VEXP arm cannot pin a version",
+        "expectation": "GUARD_FIRES",
+        "fired": true,
+        "satisfied": true,
+        "detail": "VEXP version is not pinned; a versionless competitor arm cannot launch (F20)"
+      },
+      {
+        "id": "F21_HARNESS",
+        "description": "the harness's own patch-capture exclusion list is asymmetric across treatments",
+        "expectation": "GUARD_FIRES",
+        "fired": true,
+        "satisfied": true,
+        "detail": "patch capture does not exclude .vtrace; that arm's generated state would enter its patch"
+      },
+      {
+        "id": "F21_PATCH",
+        "description": "a captured patch contains the treatment's generated index state",
+        "expectation": "GUARD_FIRES",
+        "fired": true,
+        "satisfied": true,
+        "detail": "captured patch contains treatment-generated path .vtrace/index.meta.json; captured patch contains treatment-generated path .vtrace/index.sqlite"
+      },
+      {
+        "id": "F21_CLEAN",
+        "description": "a captured patch containing only source changes raises no issue",
+        "expectation": "GUARD_SILENT",
+        "fired": false,
+        "satisfied": true,
+        "detail": "no issue reported"
+      },
+      {
+        "id": "F22",
+        "description": "the harness preserves one treatment's index between tasks and wipes the other's",
+        "expectation": "GUARD_FIRES",
+        "fired": true,
+        "satisfied": true,
+        "detail": "index warmth is asymmetric: .vtrace wiped but .vexp preserved between tasks"
+      },
+      {
+        "id": "F22_CLEAN",
+        "description": "a symmetric clean policy raises no issue",
+        "expectation": "GUARD_SILENT",
+        "fired": false,
+        "satisfied": true,
+        "detail": "no issue reported"
+      }
+    ],
+    "controlCount": 29,
+    "allSatisfied": true,
+    "negativeControlIncluded": true,
+    "negativeControlNote": "F0_CLEAN_* and the GUARD_SILENT controls exist because a guard that rejects everything would pass F1–F22 and be worthless."
+  },
+  "launchGates": [
+    {
+      "id": "G1",
+      "requirement": "preregistration committed",
+      "status": "PASS",
+      "evidence": "stage5_m213_preregistration.json generated from the committed authority module"
+    },
+    {
+      "id": "G2",
+      "requirement": "preregistration hash recorded",
+      "status": "PASS",
+      "evidence": "sha256 over the canonical document, printed in the artifact and in the report"
+    },
+    {
+      "id": "G3",
+      "requirement": "task population frozen",
+      "status": "PASS",
+      "evidence": "VEXP's own 100 instance ids, sha256-pinned, verified against their published table"
+    },
+    {
+      "id": "G4",
+      "requirement": "run manifest frozen",
+      "status": "PASS",
+      "evidence": "300 planned rows generated before any execution"
+    },
+    {
+      "id": "G5",
+      "requirement": "VTRACE treatment executable",
+      "status": "PASS",
+      "evidence": "offline per-repository index + tools/list + deterministic query dry run"
+    },
+    {
+      "id": "G6",
+      "requirement": "VEXP treatment executable",
+      "status": "FAIL",
+      "evidence": "installed CLI runnability, licence state and plan capacity against the population's repositories"
+    },
+    {
+      "id": "G7",
+      "requirement": "baseline contamination guard passes",
+      "status": "PASS",
+      "evidence": "F1 control"
+    },
+    {
+      "id": "G8",
+      "requirement": "treatment contamination guards pass",
+      "status": "PASS",
+      "evidence": "F2 and F3 controls"
+    },
+    {
+      "id": "G9",
+      "requirement": "identical agent verified",
+      "status": "PASS",
+      "evidence": "one frozen agent record shared by all three arm definitions"
+    },
+    {
+      "id": "G10",
+      "requirement": "identical model verified",
+      "status": "PASS",
+      "evidence": "one frozen model record shared by all three arm definitions"
+    },
+    {
+      "id": "G11",
+      "requirement": "identical budgets verified",
+      "status": "PASS",
+      "evidence": "F7 control over the manifest's per-row budget fields"
+    },
+    {
+      "id": "G12",
+      "requirement": "identical native tools verified",
+      "status": "PASS",
+      "evidence": "F17 control over the arm definitions"
+    },
+    {
+      "id": "G13",
+      "requirement": "repository-state equivalence verified",
+      "status": "PASS",
+      "evidence": "F8 control plus the measured tracked-source digest before/after indexing"
+    },
+    {
+      "id": "G14",
+      "requirement": "evaluator validated",
+      "status": "PASS",
+      "evidence": "swebench==4.1.0 official evaluator, the same harness M192 established"
+    },
+    {
+      "id": "G15",
+      "requirement": "exclusion rules frozen",
+      "status": "PASS",
+      "evidence": "M213_EXCLUSIONS"
+    },
+    {
+      "id": "G16",
+      "requirement": "statistical plan frozen",
+      "status": "PASS",
+      "evidence": "M213_STATISTICAL_PLAN"
+    },
+    {
+      "id": "G17",
+      "requirement": "stopping rule frozen",
+      "status": "PASS",
+      "evidence": "M213_STOPPING_RULE"
+    },
+    {
+      "id": "G18",
+      "requirement": "randomisation frozen",
+      "status": "PASS",
+      "evidence": "seeded balanced arm-order assignment, seed committed"
+    },
+    {
+      "id": "G19",
+      "requirement": "all falsification controls pass",
+      "status": "PASS",
+      "evidence": "F1–F22"
+    },
+    {
+      "id": "G20",
+      "requirement": "no benchmark-task outcome-bearing live run has occurred",
+      "status": "PASS",
+      "evidence": "M213 spend accounting"
+    },
+    {
+      "id": "G21",
+      "requirement": "treatment-generated state cannot enter a captured patch",
+      "status": "BLOCKED",
+      "evidence": "vendor harness capture symmetric: false; M213's adopted substrate excludes pre-agent untracked paths and names no vendor directory, but the ordering that makes that hold belongs to a launch harness that does not exist yet"
+    },
+    {
+      "id": "G22",
+      "requirement": "index warmth is symmetric across treatment arms",
+      "status": "BLOCKED",
+      "evidence": "vendor harness warmth symmetric: false; M213's substrate is COLD_UNIFORM by fresh checkout, but VEXP keeps state outside the workspace and cannot be shown cold while the VEXP arm is not executable"
+    }
+  ],
+  "launchAuthorized": false,
+  "preregistrationHashRule": "sha256 over the canonical (recursively key-sorted) JSON of every field except preregistrationHash, preregistrationHashRule and generatedAt",
+  "preregistrationHash": "5d90eddb9cc4759acf6a6fbc033d54ee0d5aea589a92c169daa7dca8d9c568c8"
+}

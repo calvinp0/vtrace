@@ -11014,3 +11014,212 @@ commits           e7567d68 harness + preregistration (criteria fixed before
   predicate arithmetically unreachable and M212 shows the competitor scores 0%
   against it. `ENGINE QUALITY != CODING-AGENT UTILITY` and
   `CONTEXT_COMPILER_PRODUCT_UTILITY_NOT_ESTABLISHED` both still govern.
+
+---
+
+```text
+milestone         M213
+verdict           INCOMPLETE (preregistration / harness audit; one arm not executable)
+markers           CAUSAL_BENCHMARK_PREREGISTERED;
+                  TASK_POPULATION_FROZEN;
+                  RUN_MANIFEST_FROZEN;
+                  ANALYSIS_PLAN_FROZEN;
+                  STOPPING_RULE_FROZEN;
+                  M213_FALSIFICATION_SUITE_PASSED;
+                  VTRACE_TREATMENT_EXECUTABLE;
+                  VEXP_TREATMENT_NOT_EXECUTABLE;
+                  EXACT_VEXP_SUBSET_AVAILABLE_AS_ARTIFACT;
+                  EXACT_VEXP_SUBSET_NOT_SCRIPT_REPRODUCIBLE;
+                  PAID_RUNS_NOT_STARTED;
+                  PAID_CAUSAL_BENCHMARK_NOT_READY
+parity            UNCHANGED and NOT re-run. Frozen matrix stays MATCH 7 EXCEED 7
+                  BELOW 1, match-or-exceed 14/15, A15 BELOW and
+                  A15_PARITY_GAP_INVALIDATED (M212). The frozen scorer, its
+                  thresholds and its population were not touched. M213 does NOT
+                  license writing 15/15 anywhere, ever.
+spend             0 benchmark-task live-agent runs, $0 live model spend,
+                  0 VEXP processes started, 0 model calls of any kind.
+                  12 Docker containers created for offline checkout extraction
+                  (create + cp + rm; none ran a test, none pulled an image).
+scope             Preregistration, harness audit, treatment-definition audit and
+                  dry-run validation only. No product change, no VEXP change, no
+                  scorer change, 0 src/ diff.
+
+experiment        VTRACE_VEXP_CAUSAL_100. Three arms -- baseline / +VTRACE /
+                  +VEXP -- over 100 tasks, 300 intended runs, every task under
+                  every arm. Primary B-A; key secondary C-A and B-C with Holm
+                  across the pair. Paired exact McNemar plus a 95% task-level
+                  bootstrap (10,000 resamples). FIXED_N, no interim analysis.
+                  preregistration hash 5d90eddb..c568c8; manifest hash
+                  00010721..cbe9d9 over 300 PLANNED rows. The hash covers the
+                  design and excludes generatedAt, so regeneration is idempotent
+                  and any committing edit still moves it; the guard is exercised
+                  on the written artifact, and the generator throws rather than
+                  emit a document whose hash does not verify.
+
+population        Option 1 in its strongest form: VEXP's own committed 100-task
+                  artifact, sha256 7bd07d5e..71d7d, at their initial-release
+                  commit 880e486 and clean in their checkout. Every published
+                  property survived contact with the bytes -- 12 repositories,
+                  the per-repository table reproduced cell for cell, median
+                  complexity 22, max 247 inside the documented <=250 ceiling,
+                  and 6/500 = 1.2% of the full set excluded by that ceiling
+                  against a published "~1%".
+
+subset finding    THE VENDOR'S OWN SELECTION SCRIPT DOES NOT REPRODUCE THE
+                  VENDOR'S OWN SUBSET. scripts/select-subset.py run against
+                  SWE-bench Verified (500) from the local HuggingFace cache
+                  overlaps the shipped subset in 22/100 instances in natural
+                  parquet order, 22/100 in instance-id order, and 26/100 with
+                  the documented complexity<=250 filter applied first -- which
+                  the script itself omits. Allocation differs materially too
+                  (django 42 vs 44, sympy 14 vs 17, scikit-learn 6 vs 2). The
+                  ARTIFACT is authoritative and is what M213 freezes. Anyone
+                  "reproducing VEXP's subset" from the published script
+                  benchmarks a different 78 tasks and cannot legitimately
+                  compare against VEXP's published number.
+
+vtrace gate       PASS, 12/12 repositories. Per repository: checkout from the
+                  cached eval image, base_commit checked out, tracked-source
+                  digest, index, digest again, MCP initialize + tools/list + one
+                  real get_code_context. 12/12 indexed, 12/12 listed the
+                  14-tool product default, 12/12 returned a packet (8-18 items),
+                  0 errors, 137 s total index time. INDEXING IS OBSERVATIONAL,
+                  measured not assumed: the tracked-source digest was identical
+                  before and after in every repository, and the only path
+                  indexing created anywhere was `.vtrace`.
+
+vexp gate         FAIL, and it is procurement, not engineering. Five independent
+                  blockers: installed 2.0.24 refuses every invocation including
+                  --version; no licence in ~/.vexp so the plan is FREE; free
+                  admits 1 repository against a 12-repository population; free
+                  caps the graph at 2,000 nodes while the largest repository
+                  carries 41,032 indexed symbols (a VTRACE symbol count, NOT a
+                  VEXP node count -- reported for scale only, and the repository
+                  -count blocker is decisive without it); and @vexp/core-<plat>
+                  is not installed. Of the vendor's published tiers only tier3,
+                  team and tier4 have an unlimited repository ceiling -- PRO'S 3
+                  IS NOT ENOUGH. No imitation was substituted (M212's lesson).
+
+harness audit     TWO LAUNCH-BLOCKING ASYMMETRIES in vexp-swe-bench, both
+                  measured from its own shipped JS and both favouring the
+                  competitor's arm. (H1) capturePatch runs `git add -A -- .
+                  :(exclude).vexp :(exclude).claude :(exclude).bench-mcp-config
+                  .json` -- it excludes the competitor's state and NOT .vtrace.
+                  Reproduced on a flask checkout where the agent changed
+                  nothing: the captured patch carried .vtrace/index.meta.json,
+                  index.sqlite and session.sqlite, 105,321 bytes and 1,848 lines
+                  of index metadata including absolute host paths, which would
+                  pollute every VTRACE patch and could concentrate
+                  PATCH_EXTRACTION_FAILURE exclusions in one arm. (H2) resetRepo
+                  runs `git clean -fdx -e .vexp -e .claude ...` -- .vexp
+                  survives between tasks, .vtrace would be deleted, so the
+                  competitor's index is warm across all 44 django tasks while
+                  VTRACE rebuilds cold on each. (H3) one working tree per
+                  repository slug under .bench-repos, reused across every task,
+                  which breaks arm independence. M213 adopts the M192/M193
+                  per-instance container substrate instead, whose patch capture
+                  excludes whatever was untracked PRE-AGENT and therefore names
+                  no vendor directory at all.
+
+gates             19 PASS, 1 FAIL (G6 VEXP executable), 2 BLOCKED (G21 patch
+                  neutrality, G22 index warmth) -> launchAuthorized false. G21
+                  and G22 are BLOCKED rather than FAIL because the adopted
+                  substrate's mechanism is right by construction but the
+                  ORDERING that makes it hold -- pre-agent untracked snapshot
+                  taken after treatment init -- belongs to a launch harness that
+                  does not exist yet; G22 additionally cannot close while VEXP
+                  is unexecutable, since VEXP keeps state under ~/.vexp and runs
+                  a daemon, so a fresh checkout does not by itself make it cold.
+                  G9-G18 are DERIVED from evidence, not asserted true: agent and
+                  model identity from manifest uniqueness plus the absence of
+                  any treatment-specific instruction, budgets from uniqueness
+                  across all 300 rows, the evaluator from swebench actually
+                  reporting 4.1.0, randomisation from every row's seed and
+                  arm-order index agreeing with the frozen assignment.
+
+falsification     29 controls, 29 satisfied. F1-F20 as specified; F21 (treatment
+                  state in a captured patch) and F22 (asymmetric index warmth)
+                  were ADDED because the harness audit found real defects, and
+                  both fire against measured pathspecs rather than hypotheticals.
+                  The suite carries genuine negative controls -- F0_CLEAN per
+                  arm, F12 (unused treatment stays in the experiment), F13
+                  _CLASSIFIED, F21_CLEAN, F22_CLEAN -- because a guard that
+                  rejected everything would pass F1-F22 and be worthless.
+
+self-caught       Three defects in M213's OWN instruments, all found and fixed
+                  before they reached a claim. (1) The executability probe piped
+                  `index --json` and the two largest repositories truncated it
+                  mid-string, which read back as "null symbols" rather than as
+                  an error -- now written to a file, and a parse failure is
+                  reported as a parse failure. (2) Its query-result reader
+                  looked for keys the orientation packet does not have and
+                  recorded null items for all twelve; the packet is
+                  {boundary, focus, related, schemaVersion}. (3) A first VEXP
+                  catalogue extractor used a text window and returned all twelve
+                  tools as "default"; replaced by delegation to M212's tested
+                  extractor, which returns the correct three. A fourth was
+                  caught by a test rather than by inspection: a substring
+                  contamination check flags mcp__vtrace__expand_vexp_ref -- a
+                  VTRACE product tool whose name contains "vexp" -- as VEXP
+                  contamination on every VTRACE run, so the guards compare
+                  server names and whole catalogues, never substrings. A fifth
+                  reached a full-suite run: when G21/G22 became tri-state, a
+                  test's GateInputs literal kept the old boolean fields and
+                  `bun run lint` did not notice, because
+                  tsconfig.benchmarks.json EXCLUDES benchmarks/**/*.test.ts.
+                  Benchmark tests are never typechecked; enabling it repo-wide
+                  surfaces 60 pre-existing errors elsewhere, so that is a
+                  separate cleanup. The M213 files were verified against a
+                  strict config that does include their tests: 0 errors.
+
+tests             6321 pass, 49 skip, 0 fail (387 files). typecheck,
+                  typecheck:benchmarks, lint and git diff --check all clean.
+                  56 new tests across m213Preregistration.test.ts and
+                  m213Falsification.test.ts.
+
+commits           harness + preregistration authority, then evidence.
+```
+
+## M213 standing findings
+
+- **A competitor's published reproducibility script is not a reproduction.**
+  VEXP documents a seed-42 stratified selection and ships the script, and the
+  script produces a different 100 tasks than the file beside it — 22% overlap.
+  The subset is only recoverable as an artifact. Any future comparison against a
+  published competitor number should verify that the population it runs is the
+  population that number was computed on, by hash, not by re-running the
+  vendor's sampler.
+
+- **Audit the benchmark harness before inheriting it, not after.** Two of the
+  three arm asymmetries M213 found are single lines of pathspec in a file nobody
+  had read, and both favour the competitor. Neither would have shown up in the
+  analysis as a bias: H1 would have surfaced as VTRACE patches failing to apply,
+  H2 as VTRACE being slower to set up. A harness that hardcodes one vendor's
+  state directory should be assumed to hardcode only that one.
+
+- **`.vtrace/` in the workspace is a treatment artifact with consequences.**
+  Indexing is observational on tracked source — measured across twelve
+  repositories, byte-identical digests — but it creates an untracked directory
+  the agent can see and `git add -A` can stage. Any harness that captures a
+  patch must exclude it by a rule that is derived rather than named, or every
+  future VTRACE benchmark inherits H1.
+
+- **`pro` does not cover a 12-repository benchmark.** The competitor's own
+  repository ceilings are 1 (free, tier1), 3 (pro, tier2) and unlimited (tier3,
+  team, tier4). A causal benchmark spanning SWE-bench Verified's twelve
+  repositories therefore requires a top-tier licence, which is a purchase, not a
+  configuration. Worth knowing before any future milestone budgets for one.
+
+- **Next-step recommendation.** Do NOT start the benchmark. Three things close
+  it, in order: (1) obtain a VEXP licence with an unlimited repository ceiling
+  and upgrade vexp-cli to 3.1.1 with its platform core, then re-run the G6 probe;
+  (2) build the launch harness that takes the pre-agent untracked snapshot AFTER
+  treatment initialisation and resets treatment-external state between runs,
+  closing G21 and G22 by measurement rather than argument; (3) obtain explicit
+  authorisation for the frozen $1,050 ceiling. If a VEXP licence is not
+  obtainable, the honest options are to stop at `VEXP_TREATMENT_NOT_EXECUTABLE`
+  or to preregister a SEPARATE, clearly two-arm experiment — never to run A/B and
+  describe it as the three-arm benchmark. That choice belongs to the project
+  owner. `ENGINE QUALITY != CODING-AGENT UTILITY` and
+  `CONTEXT_COMPILER_PRODUCT_UTILITY_NOT_ESTABLISHED` both still govern.
