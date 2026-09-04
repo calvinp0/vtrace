@@ -648,12 +648,38 @@ function compactViewLine(
     : `d${node.distance} ${node.fqName} ${edge.edgeType} ${target?.fqName ?? edge.toFqName}`;
 }
 
+/**
+ * Canonical selection's per-relation projection: what every delivered relation
+ * looks like BEFORE the ladder has shed anything.
+ *
+ * WHY THE GROUNDING KEYS ARE KEPT (M209). `sourceText` is the caller's own line
+ * at the persisted call site, and `referenceName` is the callee name that line
+ * has to contain for the line to be evidence at all. `buildStaticRelationEvidence`
+ * derives both under the index's freshness check — the excerpt is refused unless
+ * the file's size and sha256 still match what was indexed — so they are the proof
+ * that the structural claim is true, not a restatement of it.
+ *
+ * This function runs on EVERY response, before any budget is measured. Dropping
+ * the two keys here made a call site indistinguishable from a coordinate on the
+ * one surface that enumerates callers, on every call, at every budget, while the
+ * same builder's output reached `search_logic_flow` intact — the asymmetry M209
+ * measured at 0 % against 100 %. Shedding them is a budget decision, and budget
+ * decisions belong to the ladder: `minimalRelation` below is the rung that makes
+ * it, and it records itself in `compactedFields` so a reader can tell an
+ * unaffordable line from an absent one.
+ *
+ * `limitations` is still dropped here: it is per-relation prose restating what
+ * the tool schema and `diagnostics.limitations` already declare once.
+ */
 function compactRelation(relation: StaticRelationEvidence): StaticRelationEvidence {
   return {
     ...relation,
     evidence: {
       resolutionMethod: relation.evidence.resolutionMethod,
       locationKind: relation.evidence.locationKind,
+      ...(relation.evidence.sourceText === undefined ? {} : { sourceText: relation.evidence.sourceText }),
+      ...(relation.evidence.referenceName === undefined ? {} : { referenceName: relation.evidence.referenceName }),
+      ...(relation.evidence.importAlias === undefined ? {} : { importAlias: relation.evidence.importAlias }),
       ...(relation.evidence.callSites === undefined ? {} : { callSites: relation.evidence.callSites }),
       ...(relation.evidence.callSiteCount === undefined ? {} : { callSiteCount: relation.evidence.callSiteCount }),
     },
@@ -661,6 +687,16 @@ function compactRelation(relation: StaticRelationEvidence): StaticRelationEviden
   };
 }
 
+/**
+ * The ladder's per-relation rung: the smallest truthful record of the relation.
+ *
+ * The rendered line goes here and only here, because it is the largest part of a
+ * relation and the response is over its budget. `referenceName` stays: it is a
+ * local name, it names what the resolver matched, and losing it would leave the
+ * span with nothing to say what it is a span OF. The span itself, the endpoints
+ * and the resolution method all survive, so what remains is a truthful pointer —
+ * which is exactly what a caller who could not afford the expression should get.
+ */
 function minimalRelation(relation: StaticRelationEvidence): StaticRelationEvidence {
   return {
     ...relation,
@@ -669,6 +705,7 @@ function minimalRelation(relation: StaticRelationEvidence): StaticRelationEviden
     evidence: {
       resolutionMethod: relation.evidence.resolutionMethod,
       locationKind: relation.evidence.locationKind,
+      ...(relation.evidence.referenceName === undefined ? {} : { referenceName: relation.evidence.referenceName }),
       ...(relation.evidence.callSites === undefined ? {} : { callSites: relation.evidence.callSites }),
       ...(relation.evidence.callSiteCount === undefined ? {} : { callSiteCount: relation.evidence.callSiteCount }),
     },

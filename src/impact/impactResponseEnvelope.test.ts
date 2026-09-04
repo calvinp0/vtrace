@@ -508,3 +508,78 @@ test("M178: totality survives the split — a tiny budget still declines rather 
     assert.equal(impactResponseFitsEnvelope(response.responseBudget), true, `max_tokens=${maxTokens}`);
   }
 });
+
+// ── M209: the call site travels as evidence, not as a coordinate ─────────────
+//
+// `compactRelation` runs on the canonical selection of EVERY response, before
+// any budget is measured. Until M209 it rebuilt `evidence` without `sourceText`
+// or `referenceName`, so the surface that enumerates callers delivered a span
+// and no expression on every call at every budget, while the same builder's
+// output reached `search_logic_flow` intact. These tests pin the repair and,
+// just as importantly, pin that shedding the line remains a LADDER decision
+// that says so.
+
+function relationWithText(edge: ImpactEdge, line: number, text: string): StaticRelationEvidence {
+  const base = relationFor(edge, line);
+  return { ...base, evidence: { ...base.evidence, sourceText: text, referenceName: "target" } };
+}
+
+test("M209: a response that fits keeps the rendered call expression and the name it grounds", () => {
+  const input = graph(2);
+  const text = "    result = target(payload)";
+  const response = compactImpactProductResponse({ ...input, directRelations: [relationWithText(input.edges[0]!, 253, text)] });
+  const evidence = response.directRelations[0]!.evidence;
+  assert.equal(evidence.sourceText, text);
+  assert.equal(evidence.referenceName, "target");
+  assert.ok(evidence.sourceText!.includes(evidence.referenceName!));
+  // The span it came from is still there beside it: the line does not replace
+  // the coordinates, it is offered with them.
+  assert.deepEqual(evidence.callSites, [{ startLine: 253, endLine: 253, precision: "span" }]);
+  assert.equal(response.responseBudget.withinEnvelope, true);
+  assert.ok(response.responseBudget.estimatedTotalTokens <= response.responseBudget.totalCeiling);
+});
+
+test("M209: the expression is never invented — a relation the builder could not ground carries none", () => {
+  const input = graph(2);
+  const response = compactImpactProductResponse({ ...input, directRelations: [relationFor(input.edges[0]!, 253)] });
+  const evidence = response.directRelations[0]!.evidence;
+  assert.equal(evidence.sourceText, undefined);
+  assert.equal(evidence.locationKind, "edge_site");
+  assert.deepEqual(evidence.callSites, [{ startLine: 253, endLine: 253, precision: "span" }]);
+});
+
+test("M209: under budget pressure the line is shed by the ladder, and the ladder says so", () => {
+  const input = graph(2);
+  const long = `    result = target(${"argument, ".repeat(30)})`;
+  const relations = input.edges.slice(0, 2).map((edge, index) => relationWithText(edge, 100 + index, long));
+  const response = compactImpactProductResponse({ ...input, directRelations: relations, limits: { ...input.limits, maxTokens: 400 } });
+  assert.equal(response.directRelations.every((relation) => relation.evidence.sourceText === undefined), true);
+  assert.ok(response.responseBudget.compactedFields.includes("directRelations[].compactProjection"));
+  // What survives is a truthful pointer, not a mystery: the span and the name.
+  const evidence = response.directRelations[0]!.evidence;
+  assert.equal(evidence.referenceName, "target");
+  assert.ok(evidence.callSites !== undefined);
+  assert.equal(response.responseBudget.withinEnvelope, true);
+});
+
+test("M209: restoring the evidence does not let a response leave its envelope", () => {
+  for (const maxTokens of [1, 50, 200, 400, 1_200, 3_000]) {
+    const input = graph(500);
+    const long = `    value = target(${"x".repeat(200)})`;
+    const relations = input.edges.slice(0, 12).map((edge, index) => relationWithText(edge, 100 + index, long));
+    const response = compactImpactProductResponse({ ...input, directRelations: relations, limits: { ...input.limits, maxTokens } });
+    assert.equal(response.responseBudget.withinEnvelope, true);
+    assert.ok(response.responseBudget.estimatedTotalTokens <= response.responseBudget.totalCeiling);
+    assert.ok(response.responseBudget.serializedCharacters <= IMPACT_HARD_SERIALIZED_CHARACTER_CEILING);
+  }
+});
+
+test("M209: a rendered line is bounded by its own builder, so it cannot become a file dump", () => {
+  // The builder caps a rendered line at 240 characters; the envelope carries
+  // what it is given, so this asserts the envelope adds no second opinion.
+  const input = graph(2);
+  const text = `    result = target(${"y".repeat(210)})`.slice(0, 240);
+  const response = compactImpactProductResponse({ ...input, directRelations: [relationWithText(input.edges[0]!, 7, text)] });
+  const delivered = response.directRelations[0]!.evidence.sourceText;
+  assert.ok(delivered === undefined || delivered.length <= 240);
+});

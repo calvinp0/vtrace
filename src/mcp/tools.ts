@@ -620,11 +620,20 @@ const STATIC_RELATION_EVIDENCE_SCHEMA = objectProperty(
       type: "object",
       description: "Why and where this relationship was resolved.",
       properties: {
-        sourceText: stringProperty("Bounded source line when an edge occurrence was grounded."),
+        sourceText: stringProperty("The caller's own source line at the reported call site, trimmed and bounded. Present when the line could be read from source that still matches the index; shed under budget pressure, which is recorded in responseBudget.compactedFields."),
         importAlias: stringProperty("Source alias when recoverable."),
-        referenceName: stringProperty("Name used to ground the target."),
+        referenceName: stringProperty("Name used to ground the target. A rendered sourceText contains it."),
         resolutionMethod: stringProperty("Deterministic resolver/category name."),
-        locationKind: stringProperty("edge_site, source_symbol_span, or indexed_metadata."),
+        locationKind: stringProperty("edge_site (a call-site span the parser persisted with the edge), caller_span_scan (a located occurrence inside the caller's span, not proof of which occurrence produced the edge), source_symbol_span (no occurrence located; the span is the symbol's), or indexed_metadata."),
+        callSites: arrayProperty(
+          "Parser-persisted occurrences of this edge, bounded and ordered by position. Present only for edge_site provenance.",
+          objectProperty("One persisted occurrence.", {
+            startLine: integerProperty("1-based first line."),
+            endLine: integerProperty("1-based last line."),
+            precision: stringProperty("span or line."),
+          }, ["startLine", "endLine", "precision"]),
+        ),
+        callSiteCount: integerProperty("Total occurrences recorded, including any beyond the bounded list."),
       },
       required: ["resolutionMethod", "locationKind"],
       additionalProperties: false,
