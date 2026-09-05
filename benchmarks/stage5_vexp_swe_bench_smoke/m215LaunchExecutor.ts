@@ -87,6 +87,12 @@ import {
   isTerminalValid,
   requiredGatesPass,
 } from "./m215CohortLedger";
+import {
+  type CohortOperations,
+  type IsolationScope,
+  type TeardownReport,
+  unreportedTeardown,
+} from "./m217ContinuationSafety";
 
 // ── Executor identity (§40) ─────────────────────────────────────────
 
@@ -660,7 +666,13 @@ export interface ContainerAdapter {
   inspectArmSurface(handle: ContainerHandle, row: RunManifestRow): Promise<ArmSurfaceObservation>;
   /** PATCH_CAPTURE — derived exclusions in, source patch out. */
   capturePatch(handle: ContainerHandle, exclusions: readonly string[]): Promise<CapturedPatch>;
-  stop(handle: ContainerHandle): Promise<void>;
+  /**
+   * Teardown. M217: reports rather than throws, and what it reports is only
+   * the adapter's own story — the executor hands it to the continuation
+   * authority, which enumerates what is actually left before deciding whether
+   * another row may begin. A `void` return is treated as an unreported teardown.
+   */
+  stop(handle: ContainerHandle): Promise<TeardownReport | void>;
 }
 
 export interface ArmSurfaceObservation extends BaselineIsolationObservation {
@@ -1060,7 +1072,7 @@ export function preflightGates(input: PreflightInputs): readonly RuntimeGateReco
 export const M215_REQUIRED_PRELAUNCH_GATE_IDS: readonly string[] = Object.freeze([
   "P1_PREREGISTRATION_HASH", "P2_MANIFEST_HASH", "P3_EXTERNAL_REFERENCE_HASH", "P4_ROW_IS_FROZEN",
   "P5_NO_RUNTIME_OVERRIDES", "P6_EXECUTION_ORDER", "P7_SPEND_AUTHORIZATION", "P8_SPEND_CEILING",
-  "P9_LEDGER_INTEGRITY",
+  "P9_LEDGER_INTEGRITY", "P10_CONTINUATION_SAFETY",
 ]);
 
 export const M215_REQUIRED_RUNTIME_GATE_IDS: readonly string[] = Object.freeze([
@@ -1184,6 +1196,13 @@ export interface ExecutorDependencies {
   readonly spendAuthorization: SpendAuthorization | null;
   /** Extra runtime arguments, audited for frozen-property overrides (§6). */
   readonly runtimeOverrides?: Readonly<Record<string, unknown>>;
+  /**
+   * M217 — the continuation-safety authority. Required in COHORT mode (a
+   * cohort without one cannot prove isolation between rows and P10 fails
+   * closed); optional in SYNTHETIC mode so M215's controls, which have no
+   * substrate to isolate, are unchanged.
+   */
+  readonly operations?: CohortOperations;
 }
 
 export class LaunchRefusedError extends Error {
@@ -1285,6 +1304,26 @@ export function launchPreconditionGates(
     "P9_LEDGER_INTEGRITY", "INFRASTRUCTURE", true,
     deps.ledger.verifyIntegrity(),
     `ledger chain head ${deps.ledger.headChainDigest().slice(0, 16)}`,
+    at,
+  ));
+
+  // M217 §7 — the next row may begin IFF every gate above passes AND
+  // continuation safety is proven. A valid previous result is not proof.
+  gates.push(gateRecord(
+    "P10_CONTINUATION_SAFETY", "INFRASTRUCTURE", true,
+    deps.operations === undefined
+      ? (deps.mode === "SYNTHETIC"
+        ? []
+        : [
+          "no continuation-safety authority is bound; isolation between rows cannot be proven, so a "
+          + "COHORT row may not begin",
+        ])
+      : [...deps.operations.auditContinuation(), ...deps.operations.ledger.verifyIntegrity()],
+    deps.operations === undefined
+      ? "SYNTHETIC mode with no substrate to isolate"
+      : `continuation ${deps.operations.state()} after ${deps.operations.ledger.events.length} `
+        + `operational events; operations chain head `
+        + deps.operations.ledger.headChainDigest().slice(0, 16),
     at,
   ));
 
@@ -1544,7 +1583,49 @@ export async function executeManifestRow(
       valid(evaluation.resolved,
         `evaluator ${evaluation.evaluatorIdentity} reported resolved=${evaluation.resolved}`));
   } finally {
-    await deps.container.stop(handle);
+    // M217 §5, §11 — teardown is reported, never thrown, and never touches the
+    // result. Whatever the row produced is already in the result ledger with
+    // its digest; the continuation authority reads that digest and decides a
+    // DIFFERENT question: whether the next row may begin.
+    const teardown = await teardownContainer(deps, handle);
+    if (deps.operations !== undefined) {
+      const entry = deps.ledger.entries.find((candidate) => candidate.attemptId === attemptId);
+      const own = handle as ContainerHandle & { armRoot?: string; hostMount?: string };
+      const scope: IsolationScope = {
+        workRoot: deps.operations.workRoot,
+        armRoot: own.armRoot ?? null,
+        hostMount: own.hostMount ?? null,
+        instanceId: row.instanceId,
+        runId: row.runId,
+      };
+      await deps.operations.recordTeardown({
+        row,
+        attemptId,
+        resultDigest: entry?.resultDigest ?? null,
+        resultStatus: entry?.status ?? null,
+        scope,
+      }, teardown);
+    }
+  }
+}
+
+/**
+ * Tear down and REPORT.
+ *
+ * Without an operations authority (M215's synthetic controls) a thrown teardown
+ * still propagates, so M215's behaviour is unchanged. With one, every failure
+ * becomes part of the report the authority classifies, because a teardown that
+ * threw past the authority would be a teardown nobody enumerated.
+ */
+async function teardownContainer(
+  deps: ExecutorDependencies, handle: ContainerHandle,
+): Promise<TeardownReport> {
+  try {
+    const report = (await deps.container.stop(handle)) as TeardownReport | undefined;
+    return report ?? unreportedTeardown("the container adapter returned no teardown report");
+  } catch (error) {
+    if (deps.operations === undefined) throw error;
+    return unreportedTeardown(`teardown threw: ${(error as Error).message}`);
   }
 }
 
@@ -1751,10 +1832,12 @@ export function renderProgress(
   ledger: CohortLedger,
   currentRunId: string | null,
   runtimeErrors: readonly string[] = [],
+  operations: CohortOperations | null = null,
 ): CohortProgress {
   const projection = projectSpend(ledger, manifest);
   const terminal = manifest.filter((row) => isTerminal(ledger.statusFor(row.instanceId, row.arm)));
   const validRuns = manifest.filter((row) => isTerminalValid(ledger.statusFor(row.instanceId, row.arm)));
+  void operations;
   return {
     plannedRuns: manifest.length,
     terminalRuns: terminal.length,
@@ -1793,6 +1876,15 @@ export async function runCohort(
   let stoppedBecause = "cohort complete: every planned run has reached a terminal state";
 
   while (executed.length < limit) {
+    // M217 §10 — a blocked continuation stops the loop BEFORE a row is
+    // selected. There is no branch that continues, retries the next row, or
+    // consults the previous result: the previous result is not the question.
+    if (deps.operations !== undefined && deps.operations.state() === "CONTINUATION_BLOCKED") {
+      const reasons = deps.operations.auditContinuation();
+      stoppedBecause = reasons.join("; ");
+      errors.push(...reasons);
+      break;
+    }
     const row = selectNextRow(deps.authorities.manifest, deps.ledger);
     if (row === undefined) break;
     if (deps.mode === "COHORT") {
@@ -1817,7 +1909,9 @@ export async function runCohort(
 
   return {
     executed: Object.freeze(executed),
-    progress: renderProgress(deps.authorities.manifest, deps.ledger, null, Object.freeze(errors)),
+    progress: renderProgress(
+      deps.authorities.manifest, deps.ledger, null, Object.freeze(errors), deps.operations ?? null,
+    ),
     stoppedBecause,
   };
 }

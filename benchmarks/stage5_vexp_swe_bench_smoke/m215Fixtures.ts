@@ -42,6 +42,7 @@ import {
   LEGACY_VENDOR_PATCH_EXCLUSIONS,
   treatmentCatalogSha256,
 } from "./m215LaunchExecutor";
+import type { TeardownReport } from "./m217ContinuationSafety";
 import type { TelemetryEvent } from "./m215CohortLedger";
 
 // ── Treatment-state routes (§31, §54) ───────────────────────────────
@@ -292,8 +293,13 @@ export class SyntheticContainerAdapter implements ContainerAdapter {
     return { patch, paths, exclusions: applied };
   }
 
-  async stop(handle: ContainerHandle): Promise<void> {
+  /** M217 — a synthetic teardown reports clean; the synthetic probe decides residue. */
+  async stop(handle: ContainerHandle): Promise<TeardownReport> {
     this.stopped.push(handle.workingDirectory);
+    return {
+      attempted: true, reported: true, containerRemoved: true, mountRemoved: true,
+      armRootRemoved: true, errors: [],
+    };
   }
 }
 

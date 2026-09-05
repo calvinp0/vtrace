@@ -21,6 +21,15 @@
  *
  * M215 itself spends nothing: the only implemented binding is SYNTHETIC, and a
  * COHORT launch on it is refused.
+ *
+ * M217 UPDATE. The launcher now (a) resolves the DOCKER_SWEBENCH adapters
+ * through `m217LaunchBinding.startCohortBinding` instead of a property no
+ * binding declared, (b) keeps a second, append-only OPERATIONS ledger beside
+ * the result ledger and binds it to the executor as the continuation-safety
+ * authority, (c) refuses to start over residual substrate state, and (d) offers
+ * exactly one way out of COHORT_HALTED_ISOLATION_RISK: `--recover-isolation`,
+ * which runs the predeclared recovery path, records what it verified, and runs
+ * no row. There is still no `--force`.
  */
 
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
@@ -62,6 +71,16 @@ import {
   CohortLedger,
   M215_LEDGER_SCHEMA,
 } from "./m215CohortLedger";
+import { SubstrateBridge } from "./m216SubstrateBridge";
+import {
+  type OperationalEvent,
+  CohortOperations,
+  CohortOperationsLedger,
+  M217_OPERATIONS_LEDGER_SCHEMA,
+  residualStateIssues,
+} from "./m217ContinuationSafety";
+import { M217IsolationProbe } from "./m217IsolationProbe";
+import { startCohortBinding } from "./m217LaunchBinding";
 
 const RESULTS_DIR = join(import.meta.dir, "results");
 
@@ -76,11 +95,13 @@ interface LaunchArgs {
   readonly plan: boolean;
   readonly row: string | null;
   readonly maxRows: number | null;
+  /** M217 §12 — run the predeclared isolation recovery path; runs no row. */
+  readonly recoverIsolation: boolean;
 }
 
 const OPERATIONAL_FLAGS: readonly string[] = Object.freeze([
   "--binding", "--results", "--cohort-dir", "--authorize-spend", "--resume", "--plan", "--row",
-  "--max-rows",
+  "--max-rows", "--recover-isolation",
 ]);
 
 /**
@@ -118,7 +139,7 @@ export function parseLaunchArgs(argv: readonly string[]): LaunchArgs {
       continue;
     }
     const next = argv[index + 1];
-    if (name === "--resume" || name === "--plan") {
+    if (name === "--resume" || name === "--plan" || name === "--recover-isolation") {
       args[name] = true;
       continue;
     }
@@ -139,6 +160,7 @@ export function parseLaunchArgs(argv: readonly string[]): LaunchArgs {
     plan: args["--plan"] === true,
     row: args["--row"] === undefined ? null : String(args["--row"]),
     maxRows: args["--max-rows"] === undefined ? null : Number(args["--max-rows"]),
+    recoverIsolation: args["--recover-isolation"] === true,
   };
 }
 
@@ -212,6 +234,67 @@ function restoreLedger(
     persisted.records, persisted.entries, persisted.corrections,
   );
   return { ledger: restored.ledger, restored: true, issues: restored.issues };
+}
+
+// ── M217 — the operations ledger, beside the result ledger ──────────
+
+interface PersistedOperations {
+  readonly schemaVersion: typeof M217_OPERATIONS_LEDGER_SCHEMA;
+  readonly events: readonly OperationalEvent[];
+}
+
+function operationsPath(dir: string): string {
+  return join(dir, "cohort_operations.json");
+}
+
+export function workRootFor(cohortDir: string): string {
+  return join(cohortDir, "_work");
+}
+
+/**
+ * Restore the operations ledger, or start one.
+ *
+ * A result ledger that exists without an operations ledger is a cohort whose
+ * isolation history is unknown, and is refused: the state it would resume in
+ * cannot be proven SAFE, and CohortOperations has no way to say "unknown".
+ */
+function restoreOperations(
+  args: LaunchArgs, resultLedgerRestored: boolean,
+): { readonly ledger: CohortOperationsLedger; readonly issues: readonly string[] } {
+  const path = operationsPath(args.cohortDir);
+  let persisted: PersistedOperations | null = null;
+  try {
+    persisted = JSON.parse(readFileSync(path, "utf8")) as PersistedOperations;
+  } catch {
+    persisted = null;
+  }
+  if (persisted === null) {
+    if (resultLedgerRestored) {
+      throw new Error(
+        `the cohort at ${args.cohortDir} has a result ledger but no operations ledger at ${path}; `
+        + "its isolation history is unknown and continuation safety cannot be proven, so it is "
+        + "not resumed",
+      );
+    }
+    return { ledger: new CohortOperationsLedger(), issues: [] };
+  }
+  if (persisted.schemaVersion !== M217_OPERATIONS_LEDGER_SCHEMA) {
+    throw new Error(
+      `operations ledger schema ${persisted.schemaVersion} is not ${M217_OPERATIONS_LEDGER_SCHEMA}`,
+    );
+  }
+  return CohortOperationsLedger.restore(persisted.events);
+}
+
+function persistOperations(dir: string, ledger: CohortOperationsLedger): string {
+  mkdirSync(dir, { recursive: true });
+  const document: PersistedOperations = {
+    schemaVersion: M217_OPERATIONS_LEDGER_SCHEMA,
+    events: ledger.events,
+  };
+  const path = operationsPath(dir);
+  writeFileSync(path, `${JSON.stringify(document, null, 2)}\n`);
+  return path;
 }
 
 function persistLedger(dir: string, ledger: CohortLedger): string {
@@ -338,39 +421,104 @@ async function main(): Promise<void> {
   if (issues.length > 0) {
     throw new Error(`refusing to resume a cohort whose ledger does not verify: ${issues.join("; ")}`);
   }
+  const operationsRestored = restoreOperations(args, restored);
+  if (operationsRestored.issues.length > 0) {
+    throw new Error(
+      `refusing to resume a cohort whose operations ledger does not verify: `
+      + operationsRestored.issues.join("; "),
+    );
+  }
+  const workRoot = workRootFor(args.cohortDir);
+  const now = (): string => new Date().toISOString();
 
-  // Unreachable today: no authoritative binding is implemented, so
-  // `assertBindingUsable` above has already thrown. The wiring is kept whole so
-  // that implementing the binding is the ONLY remaining step.
-  const adapters = (binding as unknown as { adapters?: never }).adapters;
-  if (adapters === undefined) {
-    throw new Error(`binding ${binding.id} declares no adapters`);
+  // M217 §12 — recovery is its own action. It needs the probe and nothing
+  // else, runs no row, and leaves an event saying what it verified.
+  if (args.recoverIsolation) {
+    if (!args.resume) throw new Error("--recover-isolation requires --resume: recovery is for an existing cohort");
+    const bridge = await SubstrateBridge.start({
+      benchmarkDir: import.meta.dir, manifestPath: join(args.resultsDir, M215_MANIFEST_FILE),
+    });
+    try {
+      const operations = new CohortOperations(
+        operationsRestored.ledger, new M217IsolationProbe(bridge), workRoot, now,
+      );
+      const event = await operations.recover();
+      const path = persistOperations(args.cohortDir, operationsRestored.ledger);
+      process.stdout.write(`${JSON.stringify({
+        recovery: event.kind,
+        continuation: operations.state(),
+        operations: path,
+        progress: renderProgress(authorities.manifest, ledger, null, [], operations),
+      }, null, 2)}\n`);
+    } finally {
+      await bridge.shutdown();
+    }
+    return;
   }
 
-  const deps: ExecutorDependencies = {
-    mode: "COHORT",
-    authorities,
-    container: (adapters as ExecutorDependencies).container,
-    agent: (adapters as ExecutorDependencies).agent,
-    evaluator: (adapters as ExecutorDependencies).evaluator,
-    ledger,
-    now: () => new Date().toISOString(),
-    spendAuthorization: authorizationFor(args.authorizeSpend),
-  };
-
-  if (args.row !== null) {
-    const row = resolveManifestRow(authorities.manifest, { runId: args.row });
-    await executeManifestRow(deps, { runId: row.runId });
-  } else {
-    await runCohort(deps, args.maxRows === null ? {} : { maxRows: args.maxRows });
+  // M217 — the DOCKER_SWEBENCH adapters are constructed by the one factory
+  // the real-substrate controls also exercise; there is no second way to
+  // obtain them and no property a binding could fail to declare.
+  if (binding.id !== "DOCKER_SWEBENCH") {
+    throw new Error(`binding ${binding.id} has no production adapter factory`);
   }
+  const live = await startCohortBinding({
+    benchmarkDir: import.meta.dir,
+    manifestPath: join(args.resultsDir, M215_MANIFEST_FILE),
+    manifest: authorities.manifest,
+    workRoot,
+  });
+  try {
+    const operations = new CohortOperations(operationsRestored.ledger, live.probe, workRoot, now);
+    const deps: ExecutorDependencies = {
+      mode: "COHORT",
+      authorities,
+      container: live.container,
+      agent: live.agent,
+      evaluator: live.evaluator,
+      ledger,
+      now,
+      spendAuthorization: authorizationFor(args.authorizeSpend),
+      operations,
+    };
 
-  const path = persistLedger(args.cohortDir, ledger);
-  process.stdout.write(`${JSON.stringify({
-    resumed: restored,
-    ledger: path,
-    progress: renderProgress(authorities.manifest, ledger, null),
-  }, null, 2)}\n`);
+    // M217 §7 — a cohort does not START over residue either. The preflight is
+    // an operational event, so a refused launch leaves evidence of why.
+    const preflight = await operations.recordLaunchPreflight();
+    if (operations.state() === "CONTINUATION_BLOCKED") {
+      persistOperations(args.cohortDir, operationsRestored.ledger);
+      persistLedger(args.cohortDir, ledger);
+      throw new Error(
+        "refusing to launch: residual substrate state under the work root — "
+        + residualStateIssues((preflight.detail as { residual: Parameters<typeof residualStateIssues>[0] }).residual)
+          .join("; ")
+        + ". Run --recover-isolation --resume to remediate and re-verify.",
+      );
+    }
+
+    try {
+      if (args.row !== null) {
+        const row = resolveManifestRow(authorities.manifest, { runId: args.row });
+        await executeManifestRow(deps, { runId: row.runId });
+      } else {
+        await runCohort(deps, args.maxRows === null ? {} : { maxRows: args.maxRows });
+      }
+    } finally {
+      // Both ledgers are persisted whatever happened, so a crash mid-row
+      // cannot leave a result without its teardown event or vice versa.
+      persistLedger(args.cohortDir, ledger);
+      persistOperations(args.cohortDir, operationsRestored.ledger);
+    }
+
+    process.stdout.write(`${JSON.stringify({
+      resumed: restored,
+      ledger: cohortPath(args.cohortDir),
+      operations: operationsPath(args.cohortDir),
+      progress: renderProgress(authorities.manifest, ledger, null, [], operations),
+    }, null, 2)}\n`);
+  } finally {
+    await live.bridge.shutdown();
+  }
 }
 
 // Guarded so the argument parser can be imported and tested without the import

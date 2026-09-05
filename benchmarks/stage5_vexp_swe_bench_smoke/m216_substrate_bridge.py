@@ -55,6 +55,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from m193_container_adapter import (  # noqa: E402
     CHECKOUT_ROOT,
+    M193_RESOURCE_PREFIX,
     InstanceSpec,
     M193Container,
     conda_env_for,
@@ -85,6 +86,11 @@ EVALUATOR_TIMEOUT_S = 1800
 # strategies. Matched literally rather than by exit status, because the harness
 # exits non-zero for that AND for infrastructure failures.
 PATCH_APPLY_FAILED_MARKER = ">>>>> Patch Apply Failed:"
+
+# M217 — the residual-state probe. swebench names every evaluation container
+# `sweb.eval.<instance>.<run_id>`; M193 names the harness's own `m193-<instance>`.
+RESIDUAL_STATE_PROBE_VERSION = "stage5.m217.residual-state-probe.v1"
+EVALUATOR_CONTAINER_PREFIX = "sweb.eval."
 
 
 # ── the pre-agent untracked snapshot, at the granularity M215 measured ──
@@ -729,6 +735,153 @@ class Bridge:
             out["evaluatorPatchNormalizedSha256"] = sha256_text(normalize_patch(applied))
         return out
 
+    # ── M217 — residual substrate state, enumerated and remediated ──
+    #
+    # Continuation safety is proven by ABSENCE. These two operations look for
+    # everything a finished row could have left behind that the next row could
+    # inherit or be timed against, and remove exactly what they listed. Neither
+    # decides whether a row may run: that is the executor's P10 gate, which
+    # reads the enumeration the first operation returns.
+
+    def _residual_containers(self, errors: list[str]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+        harness: list[dict[str, Any]] = []
+        evaluator: list[dict[str, Any]] = []
+        try:
+            import docker as docker_sdk
+
+            client = docker_sdk.from_env()
+            for box in client.containers.list(all=True):
+                name = box.name or ""
+                image = ""
+                try:
+                    image = ",".join(box.image.tags) if box.image is not None else ""
+                except Exception:  # noqa: BLE001
+                    image = "(unknown)"
+                record = {"name": name, "id": box.id[:12], "status": box.status, "image": image}
+                if name.startswith(M193_RESOURCE_PREFIX):
+                    harness.append(record)
+                elif name.startswith(EVALUATOR_CONTAINER_PREFIX):
+                    evaluator.append(record)
+        except Exception as exc:  # noqa: BLE001
+            errors.append(f"container enumeration failed: {exc}")
+        harness.sort(key=lambda entry: entry["name"])
+        evaluator.sort(key=lambda entry: entry["name"])
+        return harness, evaluator
+
+    def _residual_processes(self, work_root: str, errors: list[str]) -> list[dict[str, Any]]:
+        """Host processes whose command line names the cohort work root.
+
+        The agent, its bwrap namespace, the treatment's MCP server and the
+        evaluator's python all carry a path under the work root in argv. The
+        bridge itself and its parent do not (they carry the manifest path), and
+        are excluded by pid regardless.
+        """
+        found: list[dict[str, Any]] = []
+        own = {os.getpid(), os.getppid()}
+        try:
+            pids = [int(entry) for entry in os.listdir("/proc") if entry.isdigit()]
+        except Exception as exc:  # noqa: BLE001
+            errors.append(f"process enumeration failed: {exc}")
+            return found
+        needle = work_root.encode()
+        for pid in sorted(pids):
+            if pid in own:
+                continue
+            try:
+                with open(f"/proc/{pid}/cmdline", "rb") as fh:
+                    raw = fh.read()
+            except Exception:  # noqa: BLE001
+                continue
+            if needle in raw:
+                found.append({"pid": pid, "cmdline": raw.replace(b"\0", b" ").decode("utf-8", "replace").strip()[:400]})
+        return found
+
+    def op_substrate_residual_state(self, params: dict[str, Any]) -> dict[str, Any]:
+        work_root = os.path.abspath(params["workRoot"])
+        arm_root = params.get("armRoot")
+        host_mount = params.get("hostMount")
+        errors: list[str] = []
+        harness, evaluator = self._residual_containers(errors)
+        processes = self._residual_processes(work_root, errors)
+        return {
+            "probeVersion": RESIDUAL_STATE_PROBE_VERSION,
+            "probedAt": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            "scope": {
+                "workRoot": work_root, "armRoot": arm_root, "hostMount": host_mount,
+                "instanceId": params.get("instanceId"), "runId": params.get("runId"),
+            },
+            "harnessContainers": harness,
+            "evaluatorContainers": evaluator,
+            "liveProcesses": processes,
+            "armRootPresent": bool(arm_root) and os.path.isdir(arm_root),
+            "hostMountPresent": bool(host_mount) and os.path.isdir(host_mount),
+            "openBridgeHandles": sorted(self.containers),
+            "probeErrors": errors,
+        }
+
+    def op_substrate_remediate_residual_state(self, params: dict[str, Any]) -> dict[str, Any]:
+        """Remove exactly what `op_substrate_residual_state` would list.
+
+        Bounded on purpose: containers by the two prefixes, processes by the
+        work-root needle, and directories only when they lie under the work
+        root. Nothing else on the machine is reachable from here.
+        """
+        work_root = os.path.abspath(params["workRoot"])
+        arm_root = params.get("armRoot")
+        host_mount = params.get("hostMount")
+        actions: list[str] = []
+        errors: list[str] = []
+        harness, evaluator = self._residual_containers(errors)
+        try:
+            import docker as docker_sdk
+
+            client = docker_sdk.from_env()
+            for record in harness + evaluator:
+                try:
+                    client.containers.get(record["name"]).remove(force=True)
+                    actions.append(f"removed container {record['name']} ({record['id']})")
+                except Exception as exc:  # noqa: BLE001
+                    errors.append(f"could not remove container {record['name']}: {exc}")
+        except Exception as exc:  # noqa: BLE001
+            errors.append(f"docker unavailable for remediation: {exc}")
+        import signal
+
+        for proc in self._residual_processes(work_root, errors):
+            try:
+                os.kill(int(proc["pid"]), signal.SIGKILL)
+                actions.append(f"killed pid {proc['pid']}")
+            except ProcessLookupError:
+                actions.append(f"pid {proc['pid']} already gone")
+            except Exception as exc:  # noqa: BLE001
+                errors.append(f"could not kill pid {proc['pid']}: {exc}")
+        import shutil
+
+        for label, path in (("arm root", arm_root), ("host mount", host_mount)):
+            if not path:
+                continue
+            resolved = os.path.abspath(path)
+            if not resolved.startswith(work_root + os.sep):
+                errors.append(f"refusing to remove {label} outside the work root: {resolved}")
+                continue
+            if os.path.isdir(resolved):
+                try:
+                    shutil.rmtree(resolved)
+                    actions.append(f"removed {label} {resolved}")
+                except Exception as exc:  # noqa: BLE001
+                    errors.append(f"could not remove {label} {resolved}: {exc}")
+        # Handles for containers that no longer exist are stale by construction.
+        for handle in list(self.containers):
+            box = self.containers[handle]
+            try:
+                box.client.containers.get(box.name)
+            except Exception:  # noqa: BLE001
+                self.containers.pop(handle, None)
+                actions.append(f"dropped stale bridge handle {handle}")
+        # Give a killed process a moment to leave /proc before the caller re-enumerates.
+        if actions:
+            time.sleep(0.5)
+        return {"actions": actions, "errors": errors}
+
     # ── accounting ──────────────────────────────────────────────────
 
     def op_accounting(self, params: dict[str, Any]) -> dict[str, Any]:
@@ -756,6 +909,8 @@ OPS = {
     "evaluator.identity": "op_evaluator_identity",
     "evaluator.evaluate": "op_evaluator_evaluate",
     "accounting": "op_accounting",
+    "substrate.residualState": "op_substrate_residual_state",
+    "substrate.remediateResidualState": "op_substrate_remediate_residual_state",
 }
 
 

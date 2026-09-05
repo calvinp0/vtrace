@@ -53,6 +53,7 @@ import {
   type SubstrateMode,
   SubstrateError,
 } from "./m216SubstrateBridge";
+import type { TeardownReport } from "./m217ContinuationSafety";
 
 export const M216_ADAPTER_VERSION = "stage5.m216.production-adapters.v1" as const;
 
@@ -518,18 +519,58 @@ export class M216ContainerAdapter implements ContainerAdapter {
     };
   }
 
-  async stop(handle: ContainerHandle): Promise<void> {
+  /**
+   * Teardown, REPORTED.
+   *
+   * M216's version discarded the bridge's answer: `container.stop` returned
+   * `{stopped: false, containerRemoveError: ...}` and nothing read it, so a
+   * container that survived removal was indistinguishable from one that did
+   * not. The report now carries every fact the bridge and the filesystem can
+   * state, and none of them decides anything here — M217's continuation
+   * authority enumerates the substrate and decides.
+   */
+  async stop(handle: ContainerHandle): Promise<TeardownReport> {
     const own = handle as M216ContainerHandle;
-    await this.bridge.call("container.stop", { handle: own.bridgeHandle, removeMount: true });
+    const errors: string[] = [];
+    let containerRemoved = false;
+    let mountRemoved = false;
+    try {
+      const result = await this.bridge.call<{
+        stopped?: boolean; containerRemoved?: boolean; mountRemoved?: boolean;
+        containerRemoveError?: string; mountRemoveError?: string; reason?: string;
+      }>("container.stop", { handle: own.bridgeHandle, removeMount: true });
+      containerRemoved = result.containerRemoved === true;
+      mountRemoved = result.mountRemoved === true;
+      if (typeof result.containerRemoveError === "string") {
+        errors.push(`container removal: ${result.containerRemoveError}`);
+      }
+      if (typeof result.mountRemoveError === "string") {
+        errors.push(`mount removal: ${result.mountRemoveError}`);
+      }
+      if (result.stopped !== true && errors.length === 0) {
+        errors.push(`container.stop reported stopped=false: ${result.reason ?? "no reason"}`);
+      }
+    } catch (error) {
+      errors.push(`container.stop threw: ${(error as Error).message}`);
+    }
     this.options.armEnvironments.release(own.runId);
     // §43 — the arm's own scratch root, including the treatment's generated
     // state and the agent's private configuration directory, does not survive
     // into the next arm of the same task.
     try {
       rmSync(own.armRoot, { recursive: true, force: true });
-    } catch {
-      /* teardown reports rather than throws; the caller's isolation check decides */
+    } catch (error) {
+      errors.push(`arm root removal: ${(error as Error).message}`);
     }
+    const armRootRemoved = !existsSync(own.armRoot);
+    if (!armRootRemoved && !errors.some((entry) => entry.startsWith("arm root removal"))) {
+      errors.push(`arm root still present after removal: ${own.armRoot}`);
+    }
+    if (!mountRemoved && own.hostMount && !existsSync(own.hostMount)) mountRemoved = true;
+    return {
+      attempted: true, reported: true, containerRemoved, mountRemoved, armRootRemoved,
+      errors: Object.freeze(errors),
+    };
   }
 }
 
