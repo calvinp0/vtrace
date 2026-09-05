@@ -1,0 +1,103 @@
+{
+  "schemaVersion": "stage5.m214-a1.pre-outcome-amendment.v1",
+  "amendmentId": "M214_A1_RETRY_RESERVE",
+  "amendmentKind": "PRE_OUTCOME_AMENDMENT",
+  "scope": "FINANCIAL_RETRY_RESERVE_ONLY",
+  "parent": {
+    "experimentName": "VTRACE_EXTERNAL_VEXP_100",
+    "preregistrationFile": "stage5_m214_preregistration.json",
+    "preregistrationHash": "3cd3b3d2d665c559fdb66e7274e809245e82ea7373344cf32614833b8dcbfea4",
+    "manifestFile": "stage5_m214_run_manifest.json",
+    "manifestHash": "549df54b0f48b59a2bc13da2acf27cbf2469f416d90018c3d48dd87219f77ff1",
+    "externalReferenceFile": "stage5_m214_external_reference.json",
+    "externalReferenceHash": "822c4c5fb69dc21b8ada04189e73fcadb3e5ab1bf7c06a855dd4582a6ec7834b"
+  },
+  "lineage": [
+    "M214 (frozen preregistration, manifest, external reference)",
+    "A1 — financial retry reserve only",
+    "launchable experiment authority = M214 + A1"
+  ],
+  "outcomeBearingRunsBeforeAmendment": 0,
+  "decidedBefore": [
+    "any outcome-bearing run",
+    "any treatment result",
+    "any causal result"
+  ],
+  "notOutcomeInformed": true,
+  "ordinaryExposure": {
+    "intendedValidOutcomes": 200,
+    "perRowCapUsd": 3.5,
+    "usd": 700,
+    "source": "M214_BUDGET.totalIntendedRuns x M214_BUDGET.perRunCostCapUsd; unchanged"
+  },
+  "retryReserve": {
+    "attempts": 10,
+    "perAttemptCapUsd": 3.5,
+    "usd": 35,
+    "fractionOfIntendedRuns": 0.05,
+    "rationale": "10 / 200 = 5% is an OPERATIONAL RESERVE POLICY, not an estimated expected failure rate. The purpose is bounded resilience: a small, fixed number of infrastructure retries can be funded without making fixed-N completion impossible. The choice was made before any outcome-bearing run, before any treatment result and before any causal result, and therefore cannot be treatment-outcome-driven.",
+    "usableOnlyFor": "retry classes already authorised by the frozen preregistration (M214_EXCLUSIONS.retryPolicy.rerunnable); a retry outside those classes is refused even while the reserve remains",
+    "newRetryClassesCreated": 0,
+    "slotAccounting": "a slot is consumed by every retry attempt STARTED (attempt > 1), whatever it later costs; dollars are consumed by the retry attempt's provider-reported cost, charged at the per-attempt cap when the provider reports none"
+  },
+  "hardCeilingUsd": 735,
+  "manifestRows": 200,
+  "intendedValidOutcomes": 200,
+  "observationsStatement": "The experiment still contains 200 intended valid observations, not 210. Retries are attempts associated with an existing manifest row, never new planned experimental rows; the same 200-row manifest remains authoritative and is not regenerated.",
+  "retryEligibilityUnchanged": {
+    "rerunnable": [
+      "MODEL_SERVICE_FAILURE",
+      "CONTAINER_CANNOT_START",
+      "EVALUATOR_INFRA_FAILURE",
+      "TELEMETRY_CORRUPT"
+    ],
+    "notRerunnable": [
+      "a bad patch",
+      "turn exhaustion",
+      "hitting the cost cap",
+      "agent timeout",
+      "the evaluator judging the task unresolved",
+      "the agent choosing not to test",
+      "the agent choosing not to invoke VTRACE"
+    ],
+    "maxAttemptsPerRun": 2,
+    "bothAttemptsRemainInLedger": true,
+    "preregisteredInfrastructureInvalidRetriesRemainPermissible": true
+  },
+  "exhaustion": {
+    "marker": "RETRY_RESERVE_EXHAUSTED",
+    "rule": "After the tenth retry attempt, or once the remaining reserve dollars cannot fund another allowed retry at its cap, or once cumulative spend plus one attempt at cap would exceed the hard ceiling, no further paid retry is permitted. The operator is never asked dynamically to raise the budget; a further increase requires another explicit preregistration amendment."
+  },
+  "completionSemantics": {
+    "statement": "The reserve exists to improve the chance of reaching the 200 valid outcomes the frozen fixed-N rules require. It does not redefine completion.",
+    "endStates": [
+      "FIXED_N_COMPLETE",
+      "HALTED_RETRY_RESERVE_EXHAUSTED",
+      "HALTED_GLOBAL_SPEND_CEILING",
+      "HALTED_ISOLATION_RISK",
+      "other preregistered infrastructure halt"
+    ]
+  },
+  "unchanged": [
+    "task population",
+    "task order",
+    "arm allocation",
+    "agent",
+    "model target",
+    "VTRACE treatment identity",
+    "native tools",
+    "per-run budget",
+    "primary outcome",
+    "statistical analysis",
+    "stopping target",
+    "ITT semantics",
+    "retry eligibility",
+    "external VEXP reference"
+  ],
+  "supersedesInformationally": "M217's ZERO_RETRY_HEADROOM_RECORDED statement; M217's arithmetic remains correct for M214 alone and is not edited",
+  "spendAuthorizationStatus": "SPEND_AUTHORIZATION_PENDING",
+  "authorizesSpend": false,
+  "amendmentHashRule": "sha256 over \"M214_A1_RETRY_RESERVE\\n\" followed by the canonical (recursively key-sorted) JSON of every field except amendmentHash, amendmentHashRule and generatedAt",
+  "amendmentHash": "0ed156bc924a4817122c46b5c9fc0334e5f046c2dce0547eef2573b2483b76c1",
+  "generatedAt": "2026-09-05T11:40:26.453Z"
+}
