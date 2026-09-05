@@ -240,7 +240,7 @@ describe("the production invocation", () => {
           ...process.env,
           VTRACE_DEBUG: "1",
           VEXP_LICENCE: "secret",
-          ANTHROPIC_API_KEY: "sk-should-not-survive",
+          ANTHROPIC_API_KEY: "FAKE-VALUE-should-not-survive",
         }, `env${arm}`,
       );
       expect(Object.keys(environment.env).filter((name) => /^(VTRACE|VEXP|ANTHROPIC)/.test(name)))

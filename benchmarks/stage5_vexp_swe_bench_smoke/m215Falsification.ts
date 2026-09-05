@@ -1114,7 +1114,7 @@ export async function runM215FalsificationSuite(
   // ── F37 — secret handling ─────────────────────────────────────────
 
   {
-    const secret = "sk-ant-api03-M215-FAKE-CREDENTIAL-0123456789";
+    const secret = "M215-FAKE-CREDENTIAL-VALUE-0123456789";
     const world = syntheticWorld({ extraEnvironment: { ANTHROPIC_API_KEY: secret } });
     const ledger = freshLedger(authorities);
     const attempt = await runRow(authorities, ledger, world, { executionOrder: 0 });

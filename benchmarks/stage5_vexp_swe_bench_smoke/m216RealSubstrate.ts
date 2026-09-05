@@ -540,7 +540,7 @@ export function pureControls(
   ));
 
   // F63 — secrets never reach a persisted artifact.
-  const fakeSecret = "sk-ant-m216-fake-credential-value";
+  const fakeSecret = "M216-FAKE-CREDENTIAL-VALUE-not-a-key";
   controls.push(control(
     "F63", "a credential value that reached a persisted artifact is detected",
     "GUARD_FIRES", "PURE",

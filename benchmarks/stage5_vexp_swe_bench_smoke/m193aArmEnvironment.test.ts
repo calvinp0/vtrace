@@ -62,7 +62,7 @@ function contaminatedParentEnv(hostConfig: string): Record<string, string | unde
     VTRACE_STAGE5_EXPECTED_TESTBED_PREFIX: "/testbed",
     VTRACE_ENABLE_TRACEBACK_LOCALIZED_SKIP: "1",
     VEXP_AGENT: "claude-code",
-    ANTHROPIC_API_KEY: "sk-should-never-cross",
+    ANTHROPIC_API_KEY: "FAKE-VALUE-should-never-cross",
     ANTHROPIC_BASE_URL: "https://not-the-pinned-provider.example",
   };
 }
@@ -253,7 +253,7 @@ describe("§23/§27 the record proves the launch without carrying a secret", () 
     expect(rec.envKeys).toContain("CLAUDE_CONFIG_DIR");
     const serialized = JSON.stringify(rec);
     expect(serialized).not.toContain("REDACTED-TEST-TOKEN");
-    expect(serialized).not.toContain("sk-should-never-cross");
+    expect(serialized).not.toContain("FAKE-VALUE-should-never-cross");
   });
 
   test("the contents hash covers names and sizes, and moves when the directory does", () => {

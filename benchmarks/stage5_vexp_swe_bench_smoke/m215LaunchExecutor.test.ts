@@ -295,20 +295,20 @@ describe("patch capture", () => {
 describe("secrets", () => {
   test("the snapshot records names and never values", () => {
     const snapshot = redactEnvironmentSnapshot(
-      { PATH: "/usr/bin:/bin", ANTHROPIC_API_KEY: "sk-ant-fake-0123456789", HOME: "/root" },
+      { PATH: "/usr/bin:/bin", ANTHROPIC_API_KEY: "FAKE-CREDENTIAL-VALUE-0123456789", HOME: "/root" },
       { cpuLimit: "4", memoryLimit: "8g", networkPolicy: "none" },
     );
     expect(snapshot.environmentVariableNames).toContain("ANTHROPIC_API_KEY");
     expect(snapshot.redactedVariableNames).toEqual(["ANTHROPIC_API_KEY"]);
-    expect(JSON.stringify(snapshot)).not.toContain("sk-ant-fake-0123456789");
+    expect(JSON.stringify(snapshot)).not.toContain("FAKE-CREDENTIAL-VALUE-0123456789");
     expect(snapshot.pathEntries).toEqual(["/usr/bin", "/bin"]);
   });
 
   test("the leak scanner detects a value that reached an artifact", () => {
-    const environment = { ANTHROPIC_API_KEY: "sk-ant-fake-0123456789" };
+    const environment = { ANTHROPIC_API_KEY: "FAKE-CREDENTIAL-VALUE-0123456789" };
     expect(auditSerializedArtifactForSecrets('{"a":1}', environment)).toEqual([]);
     expect(auditSerializedArtifactForSecrets(
-      '{"a":"sk-ant-fake-0123456789"}', environment,
+      '{"a":"FAKE-CREDENTIAL-VALUE-0123456789"}', environment,
     )).toHaveLength(1);
   });
 });
