@@ -1,0 +1,83 @@
+{
+  "schemaVersion": "stage5.m218.launch-risk.v1",
+  "amendmentId": "M214_A1_RETRY_RESERVE",
+  "amendmentHash": "0ed156bc924a4817122c46b5c9fc0334e5f046c2dce0547eef2573b2483b76c1",
+  "executableAuthorityIdentity": "782f8a94e5d6bb8e09000b16c37a1037d72cb40537523ab61db0c53fa80ef086",
+  "ceilingAwaitingAuthorizationUsd": 735,
+  "ordinaryExposureUsd": 700,
+  "retryReserveUsd": 35,
+  "retryReserveAttempts": 10,
+  "perAttemptCapUsd": 3.5,
+  "intendedValidOutcomes": 200,
+  "manifestRows": 200,
+  "rerunnableCategories": [
+    "MODEL_SERVICE_FAILURE",
+    "CONTAINER_CANNOT_START",
+    "EVALUATOR_INFRA_FAILURE",
+    "TELEMETRY_CORRUPT"
+  ],
+  "maxAttemptsPerRun": 2,
+  "exhaustionMarker": "RETRY_RESERVE_EXHAUSTED",
+  "haltStatuses": [
+    "COHORT_HALTED_ISOLATION_RISK",
+    "COHORT_HALTED_SPEND_CEILING",
+    "COHORT_HALTED_RETRY_RESERVE_EXHAUSTED"
+  ],
+  "consequence": "Up to 10 preregistered infrastructure retries can be funded at the $3.5 cap without making completion of all 200 intended runs impossible under the $735 hard ceiling. An eleventh needed retry, or a reserve that cannot fund one more retry at cap, halts the cohort with COHORT_HALTED_RETRY_RESERVE_EXHAUSTED; the rows that never ran stay PLANNED and the cohort is reported as incomplete. No outcome is fabricated and no budget is raised at runtime.",
+  "spendAuthorizationStatus": "SPEND_AUTHORIZATION_PENDING",
+  "outcomeBlind": true,
+  "informationalOnly": true,
+  "milestone": "M218",
+  "generatedAt": "2026-09-05T12:03:20.657Z",
+  "executableAuthority": {
+    "preregistrationHash": "3cd3b3d2d665c559fdb66e7274e809245e82ea7373344cf32614833b8dcbfea4",
+    "manifestHash": "549df54b0f48b59a2bc13da2acf27cbf2469f416d90018c3d48dd87219f77ff1",
+    "externalReferenceHash": "822c4c5fb69dc21b8ada04189e73fcadb3e5ab1bf7c06a855dd4582a6ec7834b",
+    "amendmentHash": "0ed156bc924a4817122c46b5c9fc0334e5f046c2dce0547eef2573b2483b76c1",
+    "identity": "782f8a94e5d6bb8e09000b16c37a1037d72cb40537523ab61db0c53fa80ef086"
+  },
+  "loadedFrom": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_m214_a1_retry_reserve_amendment.json",
+  "recoveryPath": [
+    "the cohort loop stops; no next row is selected",
+    "an operator invokes the launcher's --recover-isolation action (no other flag reaches BLOCKED state)",
+    "the probe enumerates residual substrate state under the cohort work root",
+    "the probe remediates exactly what it enumerated: harness containers, evaluator containers, processes referencing the work root, the stale arm root",
+    "the probe enumerates again and the second enumeration must be empty",
+    "ISOLATION_RECOVERY_VERIFIED is appended and continuation returns to CONTINUATION_SAFE",
+    "the operator relaunches with --resume; selectNextRow resumes at the next unstarted row in frozen order, and a row with a valid outcome is refused rather than rerun"
+  ],
+  "scratchPolicy": {
+    "version": "stage5.m218.scratch-policy.v1",
+    "observedInputs": {
+      "label": "PRE-LAUNCH OBSERVED INFRASTRUCTURE HIGH-WATER (not a future guarantee)",
+      "largestFrozenRepositoryCheckoutBytes": 285146397,
+      "largestFrozenRepositoryCheckoutRepo": "django__django (working tree + .git incl. directory entries, vexp-swe-bench/.bench-repos, measured by run_stage5_m218_tmp_census.ts 2026-09-05)",
+      "largestFrozenRepositoryCheckoutInodes": 14239,
+      "treatmentIndexBytesObserved": 40646988,
+      "treatmentIndexSource": "M216 real-substrate research row (pylint), indexSizeBytes",
+      "agentStreamBytesP90": 563927,
+      "agentStreamBytesMax": 2603053,
+      "agentStreamSource": "1368 historical Stage 5 raw run directories (M60–M183)",
+      "largestFrozenImageBytes": 10800000000,
+      "largestFrozenImageSource": "docker images: swebench/sweb.eval.x86_64.matplotlib_1776_matplotlib-24627 (10.8GB)",
+      "evaluatorLogBytesPerEvaluation": 67302,
+      "evaluatorLogSource": "vexp-swe-bench/logs/run_evaluation, per-run-directory median over the first 400 directories (the vexp-swebench-* directories are ~2.5 MB each)",
+      "agentPrivateTmpBytes": "UNKNOWN_BEFORE_PAID_COHORT"
+    },
+    "safetyFactor": 4,
+    "projectedAttemptScratchBytes": 2147483648,
+    "projectedAttemptInodes": 250000,
+    "hostSafetyReserveBytes": 32337418240,
+    "hostSafetyReserveInodes": 1250000,
+    "sharedTmpMinFreeBytes": 1073741824,
+    "sharedTmpMinFreeInodes": 100000,
+    "warningAttemptScratchBytes": 2147483648,
+    "hardAttemptScratchBytes": 8589934592,
+    "monitorIntervalMs": 30000,
+    "emergencyAbortCategory": "ENVIRONMENT_IRREPRODUCIBLE",
+    "emergencyAbortRationale": "A forced abort to protect the host is mapped to the closest frozen infrastructure class: the run's environment could not be sustained under the frozen resource policy. It is NOT rerunnable under M214's retry policy; no new retry class is created.",
+    "arms": "IDENTICAL for baseline and vtrace; the policy has no arm field",
+    "frozenBefore": "any outcome-bearing run; a later change is an explicit operational amendment"
+  },
+  "doesNotRequest": "authorisation; this artifact is informational and the decision is human"
+}

@@ -92,6 +92,12 @@ import {
   establishNamespace,
   imageAvailability,
 } from "./m218ScratchLifecycle";
+import {
+  type ActiveSpendAuthority,
+  amendedLaunchRisk,
+  auditExecutableAuthorityBinding,
+  loadActiveSpendAuthority,
+} from "./m218SpendAuthority";
 
 const RESULTS_DIR = join(import.meta.dir, "results");
 
@@ -392,12 +398,15 @@ function persistLedger(dir: string, ledger: CohortLedger): string {
  * thing an operator should read before authorising: the frozen hashes, the
  * fixed N, the ceiling, and the named reason the launch is not yet possible.
  */
-function renderPlan(authorities: FrozenAuthorities, args: LaunchArgs): Record<string, unknown> {
+function renderPlan(
+  authorities: FrozenAuthorities, args: LaunchArgs, authority: ActiveSpendAuthority | null,
+): Record<string, unknown> {
   const binding = bindingFor(args.binding);
   const ledger = new CohortLedger(
     "COHORT", authorities.preregistrationHash.actual, authorities.manifestHash.actual,
   );
   const next = selectNextRow(authorities.manifest, ledger);
+  const ceiling = authority?.hardCeilingUsd ?? M215_AUTHORIZED_CEILING_USD;
   return {
     executorVersion: M215_EXECUTOR_VERSION,
     frozenAuthorities: {
@@ -407,6 +416,22 @@ function renderPlan(authorities: FrozenAuthorities, args: LaunchArgs): Record<st
       verified: authorities.verified,
       issues: authorities.issues,
     },
+    // M218 §60 — the executable authority is M214 + A1; the plan says which
+    // ceiling the launcher will actually enforce and why.
+    executableAuthority: authority === null
+      ? { bound: false, reason: "the M214_A1 amendment could not be loaded; a COHORT launch is refused" }
+      : {
+        bound: true,
+        amendmentId: authority.amendmentId,
+        amendmentHash: authority.amendmentHash,
+        identity: authority.executableAuthority.identity,
+        lineageIssues: auditExecutableAuthorityBinding(authority, {
+          preregistrationHash: authorities.preregistrationHash.actual,
+          manifestHash: authorities.manifestHash.actual,
+          externalReferenceHash: authorities.externalReferenceHash.actual,
+        }),
+        launchRisk: amendedLaunchRisk(authority),
+      },
     cohort: {
       design: M214_STOPPING_RULE.design,
       tasks: M214_STOPPING_RULE.tasks,
@@ -422,8 +447,11 @@ function renderPlan(authorities: FrozenAuthorities, args: LaunchArgs): Record<st
     budgets: {
       maxTurns: M214_BUDGET.maxTurns,
       perRunCostCapUsd: M214_BUDGET.perRunCostCapUsd,
-      authorizedCeilingUsd: M215_AUTHORIZED_CEILING_USD,
-      projection: projectSpend(ledger, authorities.manifest),
+      m214CeilingUsd: M215_AUTHORIZED_CEILING_USD,
+      activeCeilingUsd: ceiling,
+      retryReserveUsd: authority?.retryReserveUsd ?? 0,
+      retryReserveAttempts: authority?.retryReserveAttempts ?? 0,
+      projection: projectSpend(ledger, authorities.manifest, ceiling),
     },
     concurrency: M215_CONCURRENCY_POLICY,
     scratchPolicy: M218_SCRATCH_POLICY,
@@ -437,22 +465,40 @@ function renderPlan(authorities: FrozenAuthorities, args: LaunchArgs): Record<st
       id: entry.id, status: entry.status, authoritative: entry.authoritative,
     })),
     spendAuthorizationIssues: auditSpendAuthorization(
-      args.authorizeSpend === null ? null : authorizationFor(args.authorizeSpend), "COHORT",
+      args.authorizeSpend === null ? null : authorizationFor(args.authorizeSpend, authority), "COHORT", ceiling,
     ),
-    launchable: authoritativeBindingAvailable() && args.authorizeSpend !== null,
+    launchable: authoritativeBindingAvailable() && args.authorizeSpend !== null && authority !== null,
   };
 }
 
-function authorizationFor(operator: string): SpendAuthorization {
+/**
+ * M218 §60 — the operator's authorisation names the ACTIVE ceiling and the
+ * amendment that produced it. An authorisation of M214's $700 alone fails P7
+ * once A1 is active; there is no "old or new budget" choice.
+ */
+function authorizationFor(operator: string, authority: ActiveSpendAuthority | null): SpendAuthorization {
+  const ceiling = authority?.hardCeilingUsd ?? M215_AUTHORIZED_CEILING_USD;
   return {
     authorized: true,
     authorizedByOperator: operator,
-    authorizedCeilingUsd: M215_AUTHORIZED_CEILING_USD,
+    authorizedCeilingUsd: ceiling,
     authorizedAt: new Date().toISOString(),
     statement:
-      `${operator} authorised the frozen $${M215_AUTHORIZED_CEILING_USD} ceiling for `
-      + "VTRACE_EXTERNAL_VEXP_100 at the preregistration and manifest hashes recorded on every run.",
+      `${operator} authorised the $${ceiling} hard ceiling for VTRACE_EXTERNAL_VEXP_100 under `
+      + (authority === null
+        ? "M214 alone"
+        : `M214 + ${authority.amendmentId} (${authority.amendmentHash}; $${authority.ordinaryExposureUsd} ordinary `
+          + `+ $${authority.retryReserveUsd} retry reserve for ${authority.retryReserveAttempts} attempts)`)
+      + " at the preregistration and manifest hashes recorded on every run.",
   };
+}
+
+function tryLoadAuthority(resultsDir: string): { readonly authority: ActiveSpendAuthority | null; readonly error: string | null } {
+  try {
+    return { authority: loadActiveSpendAuthority(resultsDir), error: null };
+  } catch (error) {
+    return { authority: null, error: (error as Error).message };
+  }
 }
 
 // ── Main ────────────────────────────────────────────────────────────
@@ -466,18 +512,36 @@ async function main(): Promise<void> {
     );
   }
 
+  const loaded = tryLoadAuthority(args.resultsDir);
   if (args.plan) {
-    process.stdout.write(`${JSON.stringify(renderPlan(authorities, args), null, 2)}\n`);
+    process.stdout.write(`${JSON.stringify({
+      ...renderPlan(authorities, args, loaded.authority),
+      ...(loaded.error === null ? {} : { executableAuthorityError: loaded.error }),
+    }, null, 2)}\n`);
     return;
   }
+
+  // M218 §60 — the executable authority (M214 + A1) is required before the
+  // spend refusal is even evaluated, so the ceiling the operator is asked to
+  // authorise is the active one and never M214's alone.
+  if (loaded.authority === null) {
+    throw new Error(`refusing to launch: ${loaded.error ?? "no executable authority"}`);
+  }
+  const authority = loaded.authority;
+  const lineage = auditExecutableAuthorityBinding(authority, {
+    preregistrationHash: authorities.preregistrationHash.actual,
+    manifestHash: authorities.manifestHash.actual,
+    externalReferenceHash: authorities.externalReferenceHash.actual,
+  });
+  if (lineage.length > 0) throw new Error(`refusing to launch: executable authority does not bind: ${lineage.join("; ")}`);
 
   // Both refusals below are ordered before anything expensive, and neither is
   // recoverable by another flag.
   if (args.authorizeSpend === null) {
     throw new Error(
-      "refusing to launch: no spend authorisation. A COHORT run makes paid model calls against a "
-      + `frozen $${M215_AUTHORIZED_CEILING_USD} ceiling and requires --authorize-spend "<operator>". `
-      + "Technical readiness is not financial authorisation.",
+      "refusing to launch: no spend authorisation. A COHORT run makes paid model calls against the "
+      + `active $${authority.hardCeilingUsd} hard ceiling (M214 + ${authority.amendmentId}) and requires `
+      + "--authorize-spend \"<operator>\". Technical readiness is not financial authorisation.",
     );
   }
   const binding = assertBindingUsable(args.binding);
@@ -556,9 +620,10 @@ async function main(): Promise<void> {
       evaluator: live.evaluator,
       ledger,
       now,
-      spendAuthorization: authorizationFor(args.authorizeSpend),
+      spendAuthorization: authorizationFor(args.authorizeSpend, authority),
       operations,
       scratch,
+      spendAuthority: authority,
     };
 
     // M218 §22, §25 — stale owned scratch, capacity and image availability
@@ -606,7 +671,7 @@ async function main(): Promise<void> {
       resumed: restored,
       ledger: cohortPath(args.cohortDir),
       operations: operationsPath(args.cohortDir),
-      progress: renderProgress(authorities.manifest, ledger, null, [], operations, scratch),
+      progress: renderProgress(authorities.manifest, ledger, null, [], operations, scratch, authority),
     }, null, 2)}\n`);
   } finally {
     await live.bridge.shutdown();

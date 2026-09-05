@@ -105,6 +105,14 @@ import type {
   ScratchClaim,
   ScratchCleanupReport,
 } from "./m218ScratchLifecycle";
+import {
+  type ActiveSpendAuthority,
+  type RetryReserveAccounting,
+  admitRetry,
+  auditExecutableAuthorityBinding,
+  auditRetryAdmission,
+  retryReserveAccounting,
+} from "./m218SpendAuthority";
 
 // ── Executor identity (§40) ─────────────────────────────────────────
 
@@ -508,24 +516,37 @@ export interface SpendAuthorization {
 
 export const M215_AUTHORIZED_CEILING_USD = M214_BUDGET.totalSpendCapUsd;
 
+/**
+ * M218 §60 — the ceiling in force.
+ *
+ * M214's $700 when no amendment is bound (the predecessor suites' world), the
+ * amended hard ceiling when the executable authority M214 + A1 is bound. In
+ * COHORT mode P12 requires the binding, so the paid path never runs under the
+ * unamended number.
+ */
+export function activeCeilingUsd(deps: { readonly spendAuthority?: ActiveSpendAuthority }): number {
+  return deps.spendAuthority?.hardCeilingUsd ?? M215_AUTHORIZED_CEILING_USD;
+}
+
 export function auditSpendAuthorization(
   authorization: SpendAuthorization | null,
   mode: ExecutionMode,
+  ceilingUsd: number = M215_AUTHORIZED_CEILING_USD,
 ): readonly string[] {
   if (mode === "SYNTHETIC") return [];
   if (authorization === null) {
     return [
       "no spend authorisation supplied; a COHORT run makes paid model calls and requires explicit "
       + "operator authorisation of the frozen $"
-      + `${M215_AUTHORIZED_CEILING_USD} ceiling. Technical readiness is not authorisation.`,
+      + `${ceilingUsd} ceiling. Technical readiness is not authorisation.`,
     ];
   }
   const issues: string[] = [];
   if (authorization.authorized !== true) issues.push("spend authorisation is not affirmative");
-  if (authorization.authorizedCeilingUsd !== M215_AUTHORIZED_CEILING_USD) {
+  if (authorization.authorizedCeilingUsd !== ceilingUsd) {
     issues.push(
-      `authorised ceiling $${authorization.authorizedCeilingUsd} differs from the frozen `
-      + `$${M215_AUTHORIZED_CEILING_USD}`,
+      `authorised ceiling $${authorization.authorizedCeilingUsd} differs from the active `
+      + `$${ceilingUsd}`,
     );
   }
   if (authorization.authorizedByOperator.trim().length === 0) {
@@ -1098,7 +1119,7 @@ export const M215_REQUIRED_PRELAUNCH_GATE_IDS: readonly string[] = Object.freeze
   "P1_PREREGISTRATION_HASH", "P2_MANIFEST_HASH", "P3_EXTERNAL_REFERENCE_HASH", "P4_ROW_IS_FROZEN",
   "P5_NO_RUNTIME_OVERRIDES", "P6_EXECUTION_ORDER", "P7_SPEND_AUTHORIZATION", "P8_SPEND_CEILING",
   "P9_LEDGER_INTEGRITY", "P10_CONTINUATION_SAFETY", "P11_RETRY_SPEND_RESERVE",
-  "P13_SCRATCH_CAPACITY",
+  "P12_EXECUTABLE_AUTHORITY", "P13_SCRATCH_CAPACITY",
 ]);
 
 export const M215_REQUIRED_RUNTIME_GATE_IDS: readonly string[] = Object.freeze([
@@ -1236,6 +1257,13 @@ export interface ExecutorDependencies {
    * unchanged.
    */
   readonly scratch?: ScratchAuthority;
+  /**
+   * M218 §60 — the executable authority M214 + A1. Required in COHORT mode
+   * (P12 fails closed without it, and the ceiling it carries is the one P7,
+   * P8 and P11 enforce); optional in SYNTHETIC mode so the predecessor suites
+   * keep M214's numbers.
+   */
+  readonly spendAuthority?: ActiveSpendAuthority;
 }
 
 export class LaunchRefusedError extends Error {
@@ -1317,19 +1345,21 @@ export function launchPreconditionGates(
     at,
   ));
 
+  const ceiling = activeCeilingUsd(deps);
   gates.push(gateRecord(
     "P7_SPEND_AUTHORIZATION", "INFRASTRUCTURE", true,
-    auditSpendAuthorization(deps.spendAuthorization, deps.mode),
+    auditSpendAuthorization(deps.spendAuthorization, deps.mode, ceiling),
     deps.mode === "SYNTHETIC"
       ? "SYNTHETIC mode makes no paid call and requires no authorisation"
-      : `explicit operator authorisation of the frozen $${M215_AUTHORIZED_CEILING_USD} ceiling`,
+      : `explicit operator authorisation of the active $${ceiling} ceiling`
+        + (deps.spendAuthority === undefined ? " (M214 alone)" : ` (M214 + ${deps.spendAuthority.amendmentId})`),
     at,
   ));
 
   gates.push(gateRecord(
     "P8_SPEND_CEILING", "INFRASTRUCTURE", true,
-    deps.mode === "SYNTHETIC" ? [] : auditSpendCeiling(deps.ledger),
-    "cumulative spend plus one more run at its cap must stay inside the authorised ceiling",
+    deps.mode === "SYNTHETIC" ? [] : auditSpendCeiling(deps.ledger, ceiling),
+    `cumulative spend plus one more run at its cap must stay inside the active $${ceiling} ceiling`,
     at,
   ));
 
@@ -1366,16 +1396,46 @@ export function launchPreconditionGates(
   // evidence carries the completion-reserve declaration either way.
   const reserve = deps.mode === "SYNTHETIC" && deps.operations === undefined
     ? null
-    : retryReserveDecisionFor(deps.ledger, deps.authorities.manifest, row);
+    : retryReserveDecisionFor(deps.ledger, deps.authorities.manifest, row, undefined, ceiling);
+  // M218 §8, §9 — under the amended authority a retry must also be admitted by
+  // the fixed reserve: a preregistered class, a slot, dollars at cap, and the
+  // hard ceiling. RETRY_RESERVE_EXHAUSTED refuses here as the backstop for a
+  // direct --row selection; the cohort loop halts before reaching this point.
+  const admission = deps.spendAuthority === undefined ? null : admitRetry(deps.spendAuthority, deps.ledger, row);
   gates.push(gateRecord(
     "P11_RETRY_SPEND_RESERVE", "INFRASTRUCTURE", true,
-    reserve === null ? [] : auditRetrySpendReserve(reserve),
+    [...(reserve === null ? [] : auditRetrySpendReserve(reserve)), ...auditRetryAdmission(admission)],
     reserve === null
       ? "SYNTHETIC mode without an operations authority makes no paid call"
       : `attempt ${reserve.attempt}: $${reserve.cumulativeUsd} spent + $${reserve.retryExposureUsd} this `
         + `attempt + $${reserve.remainingRequiredExposureUsd} for ${reserve.rowsRequiringAttemptExcludingThis} `
         + `remaining required attempts = $${reserve.projectedUsd} against $${reserve.ceilingUsd}; `
-        + `${reserve.declaration}; policy ${reserve.policy}`,
+        + `${reserve.declaration}; policy ${reserve.policy}`
+        + (admission === null ? "" : `; retry ${admission.retryOrdinal} of ${deps.spendAuthority?.retryReserveAttempts}: `
+          + `class ${admission.preregisteredRetryClass}, prior spend $${admission.priorAttemptSpendUsd}, `
+          + `reserve after ${admission.remainingRetryReserveAttemptsAfter} slots / $${admission.remainingRetryReserveUsdAfterAtCap}, `
+          + `global after $${admission.remainingGlobalReserveUsdAfterAtCap}; ${admission.permitted ? "ADMITTED" : admission.refusal}`),
+    at,
+  ));
+
+  // M218 §60 — the executable authority is M214 + A1, bound and verified, or
+  // no COHORT row begins. Launching against M214's $700 authority alone is
+  // refused by name.
+  gates.push(gateRecord(
+    "P12_EXECUTABLE_AUTHORITY", "PREREGISTRATION", true,
+    deps.mode === "SYNTHETIC" && deps.spendAuthority === undefined
+      ? []
+      : auditExecutableAuthorityBinding(deps.spendAuthority, {
+        preregistrationHash: deps.authorities.preregistrationHash.actual,
+        manifestHash: deps.authorities.manifestHash.actual,
+        externalReferenceHash: deps.authorities.externalReferenceHash.actual,
+      }),
+    deps.spendAuthority === undefined
+      ? "SYNTHETIC mode with no executable authority bound; M214's numbers apply"
+      : `M214 + ${deps.spendAuthority.amendmentId} (${deps.spendAuthority.amendmentHash.slice(0, 16)}), executable `
+        + `authority ${deps.spendAuthority.executableAuthority.identity.slice(0, 16)}; hard ceiling `
+        + `$${deps.spendAuthority.hardCeilingUsd} = $${deps.spendAuthority.ordinaryExposureUsd} + `
+        + `$${deps.spendAuthority.retryReserveUsd} (${deps.spendAuthority.retryReserveAttempts} retry attempts)`,
     at,
   ));
 
@@ -1479,8 +1539,9 @@ export async function executeManifestRow(
   // M217 §16 — a retry's spend decision is an operational event, recorded
   // before the attempt can cost anything and outside the result ledger.
   if (deps.operations !== undefined && attempt > 1) {
-    const decision = retryReserveDecisionFor(deps.ledger, deps.authorities.manifest, row);
-    deps.operations.recordRetryReserve({ runId, attemptId }, { decision });
+    const decision = retryReserveDecisionFor(deps.ledger, deps.authorities.manifest, row, undefined, activeCeilingUsd(deps));
+    const admission = deps.spendAuthority === undefined ? null : admitRetry(deps.spendAuthority, deps.ledger, row);
+    deps.operations.recordRetryReserve({ runId, attemptId }, { decision, admission });
   }
 
   // M218 §14 — ownership is registered OUTSIDE the ephemeral directory before
@@ -2035,6 +2096,9 @@ export interface CohortProgress {
   // M218 §41 — scratch health: free space, owned bytes, stale paths, cleanup
   // failures. Operational, outcome-blind.
   readonly scratchHealth: ScratchHealth | null;
+  // M218 §8 — the fixed retry reserve, when the amended authority is bound.
+  readonly retryReserve: RetryReserveAccounting | null;
+  readonly executableAuthority: string | null;
 }
 
 export interface ScratchHealth {
@@ -2098,13 +2162,17 @@ export function renderProgress(
   runtimeErrors: readonly string[] = [],
   operations: CohortOperations | null = null,
   scratch: ScratchAuthority | null = null,
+  spendAuthority: ActiveSpendAuthority | null = null,
 ): CohortProgress {
-  const projection = projectSpend(ledger, manifest);
+  const ceiling = spendAuthority?.hardCeilingUsd ?? M215_AUTHORIZED_CEILING_USD;
+  const projection = projectSpend(ledger, manifest, ceiling);
   const terminal = manifest.filter((row) => isTerminal(ledger.statusFor(row.instanceId, row.arm)));
   const validRuns = manifest.filter((row) => isTerminalValid(ledger.statusFor(row.instanceId, row.arm)));
-  const operational = cohortOperationalStatus(manifest, ledger, operations?.ledger ?? null);
+  const operational = cohortOperationalStatus(manifest, ledger, operations?.ledger ?? null, ceiling);
   return {
     scratchHealth: scratchHealth(operations, scratch),
+    retryReserve: spendAuthority === null ? null : retryReserveAccounting(spendAuthority, ledger),
+    executableAuthority: spendAuthority?.executableAuthority.identity ?? null,
     operationalStatus: operational.status,
     rowsRemaining: operational.rowsRemaining,
     maximumRemainingExposureUsd: operational.maximumRemainingExposureUsd,
@@ -2162,7 +2230,7 @@ export async function runCohort(
     const row = selectNextRow(deps.authorities.manifest, deps.ledger);
     if (row === undefined) break;
     if (deps.mode === "COHORT") {
-      const ceiling = auditSpendCeiling(deps.ledger);
+      const ceiling = auditSpendCeiling(deps.ledger, activeCeilingUsd(deps));
       if (ceiling.length > 0) {
         stoppedBecause = `COHORT_HALTED_SPEND_CEILING: ${ceiling.join("; ")}`;
         errors.push(...ceiling);
@@ -2170,9 +2238,27 @@ export async function runCohort(
         // stay PLANNED and nothing is written to the result ledger for them.
         deps.operations?.recordSpendHalt({
           reasons: ceiling,
-          reserve: completionReserve(deps.ledger, deps.authorities.manifest),
+          reserve: completionReserve(deps.ledger, deps.authorities.manifest, activeCeilingUsd(deps)),
           nextUnstartedRow: row.runId,
         });
+        break;
+      }
+    }
+    // M218 §9, §10 — a retry the frozen policy permits but the fixed reserve
+    // cannot fund halts the cohort as its own end state. Nothing is skipped,
+    // nothing is fabricated, and no budget is raised here: the operator
+    // decides, and a further increase is another explicit amendment.
+    if (deps.spendAuthority !== undefined) {
+      const admission = admitRetry(deps.spendAuthority, deps.ledger, row);
+      if (admission !== null && !admission.permitted && admission.refusal === "RETRY_RESERVE_EXHAUSTED") {
+        stoppedBecause = `COHORT_HALTED_RETRY_RESERVE_EXHAUSTED: ${admission.refusalDetail ?? ""}`;
+        errors.push(stoppedBecause);
+        deps.operations?.recordScratchEvent("COHORT_HALTED_RETRY_RESERVE_EXHAUSTED", false, {
+          reasons: [admission.refusalDetail ?? "RETRY_RESERVE_EXHAUSTED"],
+          admission,
+          accounting: retryReserveAccounting(deps.spendAuthority, deps.ledger),
+          nextUnstartedRow: row.runId,
+        }, { runId: row.runId });
         break;
       }
     }
@@ -2192,7 +2278,7 @@ export async function runCohort(
     executed: Object.freeze(executed),
     progress: renderProgress(
       deps.authorities.manifest, deps.ledger, null, Object.freeze(errors), deps.operations ?? null,
-      deps.scratch ?? null,
+      deps.scratch ?? null, deps.spendAuthority ?? null,
     ),
     stoppedBecause,
   };

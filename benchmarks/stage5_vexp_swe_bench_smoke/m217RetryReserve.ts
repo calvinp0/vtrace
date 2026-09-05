@@ -299,6 +299,8 @@ export type CohortOperationalStatus =
   | "COHORT_IN_PROGRESS"
   | "COHORT_HALTED_ISOLATION_RISK"
   | "COHORT_HALTED_SPEND_CEILING"
+  // M218 §10 — the fixed retry reserve could not fund a permitted retry.
+  | "COHORT_HALTED_RETRY_RESERVE_EXHAUSTED"
   | "EXPERIMENT_COMPLETED_FIXED_N";
 
 export interface OperationalStatusView {
@@ -350,6 +352,11 @@ export function cohortOperationalStatus(
         + String((blocking.detail as { classification?: unknown }).classification ?? "unclassified");
   } else if (remaining === 0) {
     status = "EXPERIMENT_COMPLETED_FIXED_N";
+  } else if (lastEvent?.kind === "COHORT_HALTED_RETRY_RESERVE_EXHAUSTED") {
+    status = "COHORT_HALTED_RETRY_RESERVE_EXHAUSTED";
+    haltReason = String((lastEvent.detail as { reasons?: unknown }).reasons ?? "RETRY_RESERVE_EXHAUSTED")
+      + `; ${remaining} planned rows remain unstarted or unrecovered and are reported as such; a further `
+      + "increase requires another explicit preregistration amendment";
   } else if (ceilingBinds || lastEvent?.kind === "COHORT_HALTED_SPEND_CEILING") {
     status = "COHORT_HALTED_SPEND_CEILING";
     haltReason = `the frozen $${ceilingUsd} ceiling binds: $${reserve.cumulativeUsd} spent and one more `
