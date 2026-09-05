@@ -1,9 +1,0 @@
-{
-  "schemaVersion": "stage5.m133.response-duplication.v1",
-  "fixture": "large exact Python-like source body injected into node excerpt and coverage",
-  "largeExactBodyPresentAfterCompaction": false,
-  "nodeSourceExcerptsPresentAfterCompaction": false,
-  "authoritativeProvenance": "compact directRelations edge-site evidence",
-  "arcNodeSourceBodyCopies": 0,
-  "pass": true
-}

@@ -1,4 +1,0 @@
-label,classification,checker_fired,second_call,candidate,ast_py_edit,first_pass_patch_sha,revised_patch_sha,prompt_sha,response_summary
-eval-m53-ruleout-corrective-sphinx-7462-r1,candidate_ast_edit,yes,yes,yes,yes,1f5e48d6,14e165a7,fc42beea,"stated ast.py returns '' vs '()'; judged incorrect (Tuple[()]->Tuple[]); edited both files"
-eval-m53-ruleout-corrective-sphinx-7462-r2,candidate_no_ast_edit,yes,yes,yes,no,1f5e48d6,1f5e48d6,fc42beea,"stated ast.py returns ''; judged 'correct output / no crash'; declined ast.py; revised==first pass"
-eval-m53-ruleout-corrective-sphinx-7462-r3,checker_did_not_fire,no,no,no,no,6aca9946,,,"surfaced+grepped ast.py; crash-shaped rule-out present but no RULEOUT_CUE token / no PIVOT_DECISION -> not detected"

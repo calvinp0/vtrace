@@ -1,9 +1,0 @@
-{
-  "schemaVersion": "stage5.m137.performance.v1",
-  "iterations": 2000,
-  "queryIntentDerivationMsPerRequest": 0.0523,
-  "symbolHypothesisCleanupIncludedInDerivation": true,
-  "definitionCapabilityScoringMsPerCandidate": 0.0093,
-  "totalArcRetrievalMs": 152.0489,
-  "sourceReadsPerCandidate": 0
-}

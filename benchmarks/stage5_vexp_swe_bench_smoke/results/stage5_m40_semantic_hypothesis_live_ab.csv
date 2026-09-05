@@ -1,7 +1,0 @@
-label,arm,replicate,valid,patch_produced,sem_rendered,sem_tokens,ast_surfaced,ast_inspected,ast_mentioned,ast_edited,py_edited,resolved,tool_calls,read,search,bash,edit,unique_files_touched,input_tokens,injected_context_tokens,cost,num_turns,mechanism
-eval-m40-control-sphinx-7462-r1,control,1,True,True,False,0,True,True,True,False,True,False,7,2,1,0,2,1,167,2890,0.47025649999999997,23,control_baseline_gap
-eval-m40-control-sphinx-7462-r2,control,2,True,True,False,0,True,False,True,False,True,False,6,2,0,0,2,1,132,2890,0.24721949999999998,18,control_baseline_gap
-eval-m40-control-sphinx-7462-r3,control,3,True,True,False,0,True,True,True,False,True,False,5,2,1,0,2,1,104,2890,0.1953935,14,control_baseline_gap
-eval-m40-treatment-sphinx-7462-r1,treatment,1,True,True,True,114,True,True,True,False,True,False,8,1,1,0,2,1,174,3007,0.4627805,24,hypothesis_seen_but_no_edit
-eval-m40-treatment-sphinx-7462-r2,treatment,2,True,True,True,114,True,True,True,False,True,False,6,2,1,0,2,1,132,3007,0.2588805,18,hypothesis_seen_but_no_edit
-eval-m40-treatment-sphinx-7462-r3,treatment,3,True,True,True,114,True,True,True,False,True,False,7,2,1,0,2,1,153,3007,0.2843765,21,hypothesis_seen_but_no_edit

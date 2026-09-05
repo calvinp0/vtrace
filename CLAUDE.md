@@ -103,9 +103,15 @@ Each labelled run lives under `$OUT/runs/<label>/raw/`:
 - **Live runs must be sequential**: the first pass writes a SHARED
   `results/_agent_stream.jsonl`; concurrent live runs clobber it. (Docker evaluates can
   overlap a live run — different resources.)
-- **Raw artifacts are untracked, never stage them**: everything under `$OUT/runs/`,
-  `$OUT/_agent_*.jsonl`, `$OUT/_*prompt*.md`, and `_m1*_*_prompts/` dirs. Stage only
-  source, tests, and the named `results/stage5_*.md` reports.
+- **Assessment data is not tracked (policy since 2026-09-05)**: everything under
+  `benchmarks/*/results/` is gitignored and stays on disk only. The sole tracked
+  exceptions are the frozen experiment authorities the launcher and readiness
+  checks depend on (`stage5_m213_*`/`stage5_m214_*` preregistration, manifest,
+  external reference, A1 amendment and their hash records) and
+  `stage5_milestone_ledger.md`. Reports, evidence JSON, baselines and raw runs
+  are our own assessment data, not what makes vtrace run; they are never staged.
+  Longer term the whole `benchmarks/` harness leaves this repository when vtrace
+  ships as a product.
 - **Don't touch pre-existing dirty result files** (e.g. `stage5_outcome_ledger.*`) —
   they predate your work. (The `stage5_retrieval_eval_*` baselines are an exception
   since 2026-07-03: they are canonical again, refreshed via the meta-file protocol
@@ -126,6 +132,8 @@ Each labelled run lives under `$OUT/runs/<label>/raw/`:
   `results/stage5_milestone_ledger.md`** (what's been done, standing findings, the
   issued next-step recommendation) and run the baseline freshness check if the work
   touches retrieval/capsule code. **At the end, append the milestone's row +
-  standing findings to the ledger in the same commit**, and update the untracked
-  working docs (`VTRACE_TOOLING_AUDIT.md` addendum) when a finding changes what
-  they claim.
+  standing findings to the ledger in the same commit** (the ledger is the one
+  tracked results file besides the frozen authorities; the milestone's
+  `stage5_m<NN>_*` reports and evidence stay untracked on disk), and update the
+  untracked working docs (`VTRACE_TOOLING_AUDIT.md` addendum) when a finding
+  changes what they claim.

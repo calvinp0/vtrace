@@ -1,9 +1,0 @@
-{
-  "milestone": "M182-A",
-  "assemblePromiseAll":"resolveWorktreeIdentity, readIndexMeta, freshness inspection, and observation context are awaited positionally; completion order cannot reorder results",
-  "retrieval":"synchronous SQLite/filesystem scoring and selection; no completion-order append in the candidate path",
-  "packing":"pure synchronous function of authoritative response and budget",
-  "mcp":"independent requests may overlap, but each constructs private arrays/maps; no shared mutable selection collection",
-  "session":"saveObservation=false, sessionId absent, observationText absent; intentional memory evolution disabled",
-  "classification":"NO_ASYNC_COMPLETION_ORDER_CONSUMED_SEMANTICALLY"
-}

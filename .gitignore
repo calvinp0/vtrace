@@ -29,3 +29,19 @@ benchmarks/stage5_vexp_swe_bench_smoke/results/m194/
 
 # Operator cleanup records: local audit trail of host deletions, never repository evidence
 benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_m218_*_operator_cleanup.json
+
+# Assessment data (policy 2026-09-05): benchmark results are our own evidence, not
+# what makes vtrace run. Everything under benchmarks/*/results stays on disk only,
+# except the frozen experiment authorities the launcher verifies and the ledger.
+benchmarks/arc_*/results/
+benchmarks/stage5_vexp_swe_bench_smoke/results/*
+!benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_m213_preregistration.json
+!benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_m213_run_manifest.json
+!benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_m213_preregistration_hash.json
+!benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_m214_preregistration.json
+!benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_m214_run_manifest.json
+!benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_m214_external_reference.json
+!benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_m214_preregistration_hash.json
+!benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_m214_a1_retry_reserve_amendment.json
+!benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_m214_a1_amendment_hash.json
+!benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_milestone_ledger.md

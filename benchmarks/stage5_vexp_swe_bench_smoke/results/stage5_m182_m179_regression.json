@@ -1,7 +1,0 @@
-{
-  "sourceAuthority":"stage5_m181_candidate_canonical_primary.json and stage5_m181_qualification.json; no product diff in M182",
-  "orientationToDecline":0,
-  "priorityInversions":0,
-  "fixedCeilingPairs":8,
-  "verdict":"PASS"
-}

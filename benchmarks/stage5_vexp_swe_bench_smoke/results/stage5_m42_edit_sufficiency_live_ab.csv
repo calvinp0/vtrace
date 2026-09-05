@@ -1,7 +1,0 @@
-label,arm,rep,valid,patch,sem_rendered,sem_tok,chk_rendered,chk_tok,ast_surfaced,ast_inspected,ast_mentioned,ast_edited,py_edited,resolved,tool_calls,reads,greps,bashes,files_touched,input_tokens,cache_read,inj_tok,cost,turns,mechanism
-eval-m42-control-sphinx-7462-r1,control,1,True,True,False,0,False,0,True,True,True,False,True,False,8,2,0,4,1,174,795249,2890,0.438866,24,control_baseline_gap
-eval-m42-control-sphinx-7462-r2,control,2,True,True,False,0,False,0,True,True,True,False,True,False,9,3,1,3,1,202,973507,2890,0.3741805,28,control_baseline_gap
-eval-m42-control-sphinx-7462-r3,control,3,True,True,False,0,False,0,True,True,True,False,True,False,6,1,1,2,1,132,599088,2890,0.230338,18,control_baseline_gap
-eval-m42-treatment-sphinx-7462-r1,treatment,1,True,True,True,114,True,183,True,True,True,False,True,False,5,2,1,0,1,111,459891,3188,0.3449455,15,checklist_seen_but_no_edit
-eval-m42-treatment-sphinx-7462-r2,treatment,2,True,True,True,114,True,183,True,True,True,False,True,False,6,2,1,1,1,132,600052,3188,0.24043749999999997,18,checklist_seen_but_no_edit
-eval-m42-treatment-sphinx-7462-r3,treatment,3,True,True,True,114,True,183,True,True,True,False,True,False,8,4,0,2,1,167,792697,3188,0.284991,23,checklist_seen_but_no_edit
