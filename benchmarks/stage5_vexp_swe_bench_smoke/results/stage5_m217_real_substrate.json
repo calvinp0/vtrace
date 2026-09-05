@@ -1,7 +1,7 @@
 {
   "schemaVersion": "stage5.m217.real-substrate.v1",
   "milestone": "M217",
-  "generatedAt": "2026-09-05T10:49:12.925Z",
+  "generatedAt": "2026-09-05T12:29:58.140Z",
   "controlCount": 15,
   "satisfied": 15,
   "failures": [],
@@ -40,7 +40,9 @@
       "gates": [
         "P1_PREREGISTRATION_HASH=PASS",
         "P10_CONTINUATION_SAFETY=PASS",
-        "P11_RETRY_SPEND_RESERVE=PASS"
+        "P11_RETRY_SPEND_RESERVE=PASS",
+        "P12_EXECUTABLE_AUTHORITY=PASS",
+        "P13_SCRATCH_CAPACITY=PASS"
       ]
     },
     {
@@ -64,7 +66,9 @@
       "gates": [
         "P1_PREREGISTRATION_HASH=PASS",
         "P10_CONTINUATION_SAFETY=PASS",
-        "P11_RETRY_SPEND_RESERVE=PASS"
+        "P11_RETRY_SPEND_RESERVE=PASS",
+        "P12_EXECUTABLE_AUTHORITY=PASS",
+        "P13_SCRATCH_CAPACITY=PASS"
       ]
     },
     {
@@ -88,7 +92,9 @@
       "gates": [
         "P1_PREREGISTRATION_HASH=PASS",
         "P10_CONTINUATION_SAFETY=PASS",
-        "P11_RETRY_SPEND_RESERVE=PASS"
+        "P11_RETRY_SPEND_RESERVE=PASS",
+        "P12_EXECUTABLE_AUTHORITY=PASS",
+        "P13_SCRATCH_CAPACITY=PASS"
       ]
     }
   ],
@@ -121,7 +127,7 @@
       "fired": true,
       "substrate": "REAL_CONTAINER",
       "satisfied": true,
-      "detail": "harness container still present: m193-pylint-dev__pylint-7080 (running, d165a44c730d) | arm root still present: /home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m217_work/pylint-dev__pylint-7080--vtrace | host mount still present: /home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m217_work/pylint-dev__pylint-7080--vtrace/testbed | substrate bridge still holds container handle m216-pylint-dev__pylint-7080-d165a44c730d"
+      "detail": "harness container still present: m193-pylint-dev__pylint-7080 (running, af6b02d94618) | arm root still present: /home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m217_work/pylint-dev__pylint-7080--vtrace | host mount still present: /home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m217_work/pylint-dev__pylint-7080--vtrace/testbed | substrate bridge still holds container handle m216-pylint-dev__pylint-7080-af6b02d94618 | owned scratch still holds 95518720 bytes / 7147 entries under /home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m217_work/pylint-dev__pylint-7080--vtrace | container m193-pylint-dev__pylint-7080 (running, af6b02d94618) still binds /home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m217_work/pylint-dev__pylint-7080--vtrace/testbed"
     },
     {
       "id": "F107",
@@ -268,7 +274,7 @@
     },
     "inducedResidue": {
       "probeVersion": "stage5.m217.residual-state-probe.v1",
-      "probedAt": "2026-09-05T10:48:58Z",
+      "probedAt": "2026-09-05T12:29:40Z",
       "scope": {
         "workRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m217_work",
         "armRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m217_work/pylint-dev__pylint-7080--vtrace",
@@ -279,7 +285,7 @@
       "harnessContainers": [
         {
           "name": "m193-pylint-dev__pylint-7080",
-          "id": "d165a44c730d",
+          "id": "af6b02d94618",
           "status": "running",
           "image": "swebench/sweb.eval.x86_64.pylint-dev_1776_pylint-7080:latest"
         }
@@ -289,16 +295,26 @@
       "armRootPresent": true,
       "hostMountPresent": true,
       "openBridgeHandles": [
-        "m216-pylint-dev__pylint-7080-d165a44c730d"
+        "m216-pylint-dev__pylint-7080-af6b02d94618"
+      ],
+      "ownedScratchBytesRemaining": 95518720,
+      "ownedScratchInodesRemaining": 7147,
+      "containerMountReferences": [
+        {
+          "name": "m193-pylint-dev__pylint-7080",
+          "id": "af6b02d94618",
+          "status": "running",
+          "source": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m217_work/pylint-dev__pylint-7080--vtrace/testbed"
+        }
       ],
       "probeErrors": []
     },
     "recovery": {
       "kind": "ISOLATION_RECOVERY_VERIFIED",
       "actions": [
-        "removed container m193-pylint-dev__pylint-7080 (d165a44c730d)",
+        "removed container m193-pylint-dev__pylint-7080 (af6b02d94618)",
         "removed arm root /home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m217_work/pylint-dev__pylint-7080--vtrace",
-        "dropped stale bridge handle m216-pylint-dev__pylint-7080-d165a44c730d"
+        "dropped stale bridge handle m216-pylint-dev__pylint-7080-af6b02d94618"
       ],
       "errors": []
     },
@@ -331,9 +347,9 @@
       "swebench/sweb.eval.x86_64.pylint-dev_1776_pylint-6903:latest"
     ],
     "processWitness": {
-      "pid": 1678786,
+      "pid": 2295545,
       "listed": [
-        1678786
+        2295545
       ]
     },
     "falseFailureReport": {

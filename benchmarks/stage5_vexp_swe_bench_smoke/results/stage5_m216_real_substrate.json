@@ -1,7 +1,7 @@
 {
   "schemaVersion": "stage5.m216.real-substrate.v1",
   "milestone": "M216",
-  "generatedAt": "2026-09-05T10:53:25.832Z",
+  "generatedAt": "2026-09-05T12:29:11.137Z",
   "substrateReduction": {
     "verdict": "M216_SUBSTRATE_REDUCTION_COMPLETE",
     "rows": 12,
@@ -904,8 +904,8 @@
     "perturbedFile": "doc/conf.py",
     "treatmentInitialisation": {
       "initialised": true,
-      "indexBuildSeconds": 9.636,
-      "indexSizeBytes": 40646988,
+      "indexBuildSeconds": 9.873,
+      "indexSizeBytes": 40646969,
       "exposedToolCount": 14
     },
     "preAgentUntrackedSnapshot": [

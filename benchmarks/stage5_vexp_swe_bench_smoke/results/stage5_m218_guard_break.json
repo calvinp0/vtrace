@@ -1,0 +1,138 @@
+{
+  "schemaVersion": "stage5.m218.guard-break.v1",
+  "milestone": "M218",
+  "generatedAt": "2026-09-05T12:18:58.516Z",
+  "breakages": [
+    {
+      "id": "B1_OWNERSHIP_VALIDATION_ACCEPTS_ANY_PATH",
+      "guardClass": "scratch ownership / path validation",
+      "file": "m218ScratchLifecycle.ts",
+      "expectedPureFailures": [
+        "F130",
+        "F140",
+        "F145",
+        "F145B"
+      ],
+      "observedPureFailures": [
+        "F130",
+        "F140",
+        "F145",
+        "F145B"
+      ],
+      "expectedHostFailures": [
+        "F169"
+      ],
+      "observedHostFailures": [
+        "F169"
+      ],
+      "hostSuiteRun": true,
+      "missed": [],
+      "unexpected": []
+    },
+    {
+      "id": "B2_CAPACITY_GATE_ALWAYS_PASSES",
+      "guardClass": "pre-run free-space gate",
+      "file": "m218ScratchLifecycle.ts",
+      "expectedPureFailures": [
+        "F137",
+        "F139"
+      ],
+      "observedPureFailures": [
+        "F137",
+        "F139"
+      ],
+      "expectedHostFailures": [
+        "F171"
+      ],
+      "observedHostFailures": [
+        "F171"
+      ],
+      "hostSuiteRun": true,
+      "missed": [],
+      "unexpected": []
+    },
+    {
+      "id": "B3_RETRY_RESERVE_NEVER_EXHAUSTED",
+      "guardClass": "retry-reserve ceiling",
+      "file": "m218SpendAuthority.ts",
+      "expectedPureFailures": [
+        "F123"
+      ],
+      "observedPureFailures": [
+        "F123"
+      ],
+      "expectedHostFailures": [],
+      "observedHostFailures": [],
+      "hostSuiteRun": false,
+      "missed": [],
+      "unexpected": []
+    }
+  ],
+  "pure": {
+    "clean": {
+      "satisfied": 38,
+      "controlCount": 38
+    },
+    "restored": {
+      "satisfied": 38,
+      "controlCount": 38,
+      "failures": []
+    }
+  },
+  "real": {
+    "clean": {
+      "satisfied": 7,
+      "controlCount": 7
+    },
+    "restored": {
+      "satisfied": 7,
+      "controlCount": 7,
+      "failures": []
+    },
+    "note": "the real-host suite; the real-container suite is preserved by its own clean run"
+  },
+  "brokenRunError": null,
+  "deliberatelyUnaffected": [
+    {
+      "id": "F147",
+      "why": "every target it tries (/, /tmp, an empty path, $HOME, a relative path, a kernel filesystem, the namespace root itself) is refused by forbiddenRootReason or by the root-identity check, both of which B1 leaves intact; the first guard-break run predicted it would fall and was wrong for exactly this reason"
+    },
+    {
+      "id": "F146",
+      "why": "symlink refusal happens on lstat of the target before the descendant check, and symlinks inside a tree are unlinked by the walker; B1 does not reach either"
+    },
+    {
+      "id": "F129",
+      "why": "the unregistered path lies INSIDE the namespace; B1 removes the outside check, which that control does not exercise"
+    },
+    {
+      "id": "F138",
+      "why": "B2 makes the gate pass, and F138 expects a pass"
+    },
+    {
+      "id": "F124",
+      "why": "a non-preregistered class is refused before the reserve is consulted; B3 cannot reach it"
+    },
+    {
+      "id": "F125B",
+      "why": "P12 reads the binding, not the accounting"
+    }
+  ],
+  "observedPureFailuresUnion": [
+    "F123",
+    "F130",
+    "F137",
+    "F139",
+    "F140",
+    "F145",
+    "F145B"
+  ],
+  "observedHostFailuresUnion": [
+    "F169",
+    "F171"
+  ],
+  "unexpectedFailures": [],
+  "missedFailures": [],
+  "sourceFilesRestoredIntact": true,
+  "verdict": "M218_SUITE_IS_FALSIFYING"
+}

@@ -512,7 +512,43 @@ export function filesystemCapacity(path: string): FilesystemCapacity {
  * labelled so; the thresholds are conservative multiples of what could be
  * measured, not predictions.
  */
-export const M218_SCRATCH_POLICY = Object.freeze({
+export interface ScratchPolicyObservedInputs {
+  readonly label: string;
+  readonly largestFrozenRepositoryCheckoutBytes: number;
+  readonly largestFrozenRepositoryCheckoutRepo: string;
+  readonly largestFrozenRepositoryCheckoutInodes: number;
+  readonly treatmentIndexBytesObserved: number;
+  readonly treatmentIndexSource: string;
+  readonly agentStreamBytesP90: number;
+  readonly agentStreamBytesMax: number;
+  readonly agentStreamSource: string;
+  readonly largestFrozenImageBytes: number;
+  readonly largestFrozenImageSource: string;
+  readonly evaluatorLogBytesPerEvaluation: number;
+  readonly evaluatorLogSource: string;
+  readonly agentPrivateTmpBytes: string;
+}
+
+export interface ScratchPolicy {
+  readonly version: string;
+  readonly observedInputs: ScratchPolicyObservedInputs;
+  readonly safetyFactor: number;
+  readonly projectedAttemptScratchBytes: number;
+  readonly projectedAttemptInodes: number;
+  readonly hostSafetyReserveBytes: number;
+  readonly hostSafetyReserveInodes: number;
+  readonly sharedTmpMinFreeBytes: number;
+  readonly sharedTmpMinFreeInodes: number;
+  readonly warningAttemptScratchBytes: number;
+  readonly hardAttemptScratchBytes: number;
+  readonly monitorIntervalMs: number;
+  readonly emergencyAbortCategory: string;
+  readonly emergencyAbortRationale: string;
+  readonly arms: string;
+  readonly frozenBefore: string;
+}
+
+export const M218_SCRATCH_POLICY: ScratchPolicy = Object.freeze({
   version: "stage5.m218.scratch-policy.v1",
   observedInputs: Object.freeze({
     label: "PRE-LAUNCH OBSERVED INFRASTRUCTURE HIGH-WATER (not a future guarantee)",
@@ -555,7 +591,6 @@ export const M218_SCRATCH_POLICY = Object.freeze({
   frozenBefore: "any outcome-bearing run; a later change is an explicit operational amendment",
 });
 
-export type ScratchPolicy = typeof M218_SCRATCH_POLICY;
 
 export interface CapacityGateReport {
   readonly at: string;

@@ -1,0 +1,50 @@
+{
+  "schemaVersion": "stage5.m218.scoped-typecheck.v1",
+  "milestone": "M218",
+  "generatedAt": "2026-09-05T12:15:54.659Z",
+  "scopedConfig": "tsconfig.m218.json",
+  "scopedConfigCovers": [
+    "benchmarks/stage5_vexp_swe_bench_smoke/m218*.ts (including *.test.ts)",
+    "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m218_*.ts",
+    "M217's, M216's, M215's and M214's files, kept inside the scope because M218's scratch and spend authorities are consumed by M215's executor, ride M216's bridge and extend M217's ledger",
+    "benchmarks/stage5_vexp_swe_bench_smoke/m193aArmEnvironment.ts",
+    "every file those transitively import"
+  ],
+  "clean": {
+    "config": "tsconfig.m218.json",
+    "exitCode": 0,
+    "errorCount": 0,
+    "errors": []
+  },
+  "injected": {
+    "config": "tsconfig.m218.json",
+    "exitCode": 2,
+    "errorCount": 1,
+    "errors": [
+      "benchmarks/stage5_vexp_swe_bench_smoke/m218InjectedTypeErrorProbe.ts(2,14): error TS2322: Type 'string' is not assignable to type 'number'."
+    ],
+    "injectedFile": "benchmarks/stage5_vexp_swe_bench_smoke/m218InjectedTypeErrorProbe.ts"
+  },
+  "afterRemoval": {
+    "config": "tsconfig.m218.json",
+    "exitCode": 0,
+    "errorCount": 0,
+    "errors": []
+  },
+  "predecessorScope": {
+    "config": "tsconfig.m217.json",
+    "exitCode": 0,
+    "errorCount": 0,
+    "errors": []
+  },
+  "m218NewTypecheckErrors": 0,
+  "scopeStatement": "M218_NEW_TYPECHECK_ERRORS is the scoped target's error count and is 0. The ~59 pre-existing errors in historical benchmark test files that enabling benchmark tests repo-wide would surface are outside M218's authorised scope, were measured by M214, and are NOT claimed to be fixed.",
+  "findings": {
+    "scopedTargetCleanAsCommitted": true,
+    "scopedTargetDetectsInjectedError": true,
+    "scopedTargetCleanAfterRemoval": true,
+    "probeFileRemoved": true,
+    "predecessorScopeStillClean": true
+  },
+  "verdict": "M218_SCOPED_TYPECHECK_VERIFIED"
+}

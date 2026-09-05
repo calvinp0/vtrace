@@ -1,8 +1,9 @@
 {
-  "schemaVersion": "stage5.m216.launch-gates.v1",
-  "milestone": "M216",
-  "generatedAt": "2026-09-05T12:30:15.201Z",
-  "adapterVersion": "stage5.m216.production-adapters.v1",
+  "schemaVersion": "stage5.m218.launch-gates.v1",
+  "milestone": "M218",
+  "generatedAt": "2026-09-05T12:30:15.211Z",
+  "scratchVersion": "stage5.m218.scratch-lifecycle.v1",
+  "spendAuthorityVersion": "stage5.m218.spend-authority.v1",
   "authorities": {
     "preregistration": {
       "artifact": "stage5_m214_preregistration.json",
@@ -34,9 +35,15 @@
       "readinessBlocker"
     ],
     "documentedExclusionsAreIncomplete": true,
-    "documentedExclusionNote": "M214's published hashRule names three excluded fields; its generator excludes nine, the six extra being outputs derived from the document and written into it after hashing. The executor reproduces the generator's rule exactly. The frozen artifact is NOT edited to correct its own prose, because that would change the digest it froze."
+    "documentedExclusionNote": "M214's published hashRule names three excluded fields; its generator excludes nine, the six extra being outputs derived from the document and written into it after hashing. The executor reproduces the generator's rule exactly. The frozen artifact is NOT edited to correct its own prose, because that would change the digest it froze.",
+    "amendment": {
+      "id": "M214_A1_RETRY_RESERVE",
+      "hash": "0ed156bc924a4817122c46b5c9fc0334e5f046c2dce0547eef2573b2483b76c1",
+      "executableAuthority": "782f8a94e5d6bb8e09000b16c37a1037d72cb40537523ab61db0c53fa80ef086"
+    }
   },
   "m214TableUnchangedApartFromG32": true,
+  "m217TechnicalExecutorReady": true,
   "adapterBindings": [
     {
       "id": "SYNTHETIC",
@@ -49,19 +56,17 @@
       "authoritative": true
     }
   ],
-  "dockerSwebenchBindingEvidence": {
-    "exercised": true,
-    "adaptersPresent": true,
-    "evidencePresent": true,
-    "reasons": []
-  },
   "runtimeGuards": {
     "sourceStateEquivalence": "m215LaunchExecutor preflightGates R6_SOURCE_STATE_EQUIVALENCE, which calls M214's own auditSourceStateEquivalence on digests taken either side of treatment initialisation",
     "indexingObservational": "the same R6 gate: the pre- and post-treatment tracked-source digests must be equal",
     "treatmentStateExcludedFromPatch": "m215LaunchExecutor R13_PATCH_CAPTURE, over exclusions derived from the pre-agent untracked snapshot, with no vendor directory named anywhere in the rule",
     "resetWarmPolicySymmetric": "m215LaunchExecutor R7_RESET_WARMTH_POLICY, calling auditWarmthPolicy and auditResetPreservedPaths against the frozen COLD_UNIFORM regime",
     "modelAvailability": "m215LaunchExecutor R12_PROVIDER_MODEL_IDENTITY, reading the provider-returned identity from the run's own init event via AgentRunHooks.assertProviderModelIdentity, which aborts the run",
-    "treatmentLifecycleOrder": "m215LaunchExecutor R14_LIFECYCLE_ORDER, over the phases the executor actually reached"
+    "treatmentLifecycleOrder": "m215LaunchExecutor R14_LIFECYCLE_ORDER, over the phases the executor actually reached",
+    "P10_CONTINUATION_SAFETY": "the next row may begin only when the operations ledger's state is CONTINUATION_SAFE and its chain recomputes",
+    "P11_RETRY_SPEND_RESERVE": "before any attempt: cumulative + this attempt's cap + remaining required attempts at cap, against the ceiling, under the frozen policy; M218: a retry must also be admitted by the fixed reserve (frozen class, slot, dollars at cap, ceiling) and RETRY_RESERVE_EXHAUSTED refuses",
+    "P12_EXECUTABLE_AUTHORITY": "a COHORT row requires the executable authority M214 + A1 bound with matching lineage; M214's $700 authority alone is refused",
+    "P13_SCRATCH_CAPACITY": "before every attempt the namespace filesystem and the shared /tmp must satisfy the frozen scratch policy (host reserve + projected attempt, inodes, tmp floor)"
   },
   "requiredPrelaunchGateIds": [
     "P1_PREREGISTRATION_HASH",
@@ -115,7 +120,37 @@
     "G52",
     "G53",
     "G54",
-    "G55"
+    "G55",
+    "G56",
+    "G57",
+    "G58",
+    "G59",
+    "G60",
+    "G61",
+    "G62",
+    "G63",
+    "G64",
+    "G65",
+    "G66",
+    "G67",
+    "G68",
+    "G69",
+    "G70",
+    "G71",
+    "G72",
+    "G73",
+    "G74",
+    "G75",
+    "G76",
+    "G77",
+    "G78",
+    "G79",
+    "G80",
+    "G81",
+    "G82",
+    "G83",
+    "G84",
+    "G85"
   ],
   "missingTechnicalGates": [],
   "gates": [
@@ -366,10 +401,10 @@
     },
     {
       "id": "G36",
-      "requirement": "explicit operator authorisation of the frozen $700 ceiling exists",
+      "requirement": "explicit operator authorisation of the frozen $700 ceiling exists (M218: the amount awaiting authorisation is the $735 hard ceiling under M214 + M214_A1_RETRY_RESERVE)",
       "gateClass": "INFRASTRUCTURE",
       "status": "FAIL",
-      "evidence": "M215 requested no authorisation and spent $0. Building the executor is not authorisation; the launcher refuses a COHORT run without --authorize-spend"
+      "evidence": "M215 requested no authorisation and spent $0. Building the executor is not authorisation; the launcher refuses a COHORT run without --authorize-spend; M218 proposes $735 = $700 + $35"
     },
     {
       "id": "G37",
@@ -503,6 +538,216 @@
       "gateClass": "INFRASTRUCTURE",
       "status": "PASS",
       "evidence": "tsconfig.m216.json: 0 errors; M216_SCOPED_TYPECHECK_VERIFIED"
+    },
+    {
+      "id": "G56",
+      "requirement": "TEARDOWN_RESULT_VALIDITY_SEPARATED_FROM_CONTINUATION_SAFETY: a completed result keeps its status, bytes and digest across a teardown failure, a halt and a recovery",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "controls pure [F87, F88, F95]; real [F108] all satisfied"
+    },
+    {
+      "id": "G57",
+      "requirement": "TEARDOWN_ISOLATION_INTERLOCK_IMPLEMENTED: every teardown is followed by an enumeration; residue of any class blocks, absence proves, a failed probe blocks",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "controls pure [F82, F83, F84, F97, F98, F99, F101, F102]; real [F106, F107, F107B, F112, F113, F114, F115, F117] all satisfied"
+    },
+    {
+      "id": "G58",
+      "requirement": "COHORT_HALT_ON_ISOLATION_RISK_VERIFIED: with isolation unproven no next row launches, no container starts, and no flag or direct selection can force one",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "controls pure [F84, F85, F103]; real [F104, F109, F109B] all satisfied"
+    },
+    {
+      "id": "G59",
+      "requirement": "ISOLATION_RECOVERY_PATH_VERIFIED: the predeclared path removes exactly the residue, re-proves by a second enumeration, resumes at the next unstarted row and reruns nothing",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "controls pure [F86, F96, F100]; real [F110, F111] all satisfied"
+    },
+    {
+      "id": "G60",
+      "requirement": "FROZEN_SPEND_ARITHMETIC_VERIFIED and ZERO_RETRY_HEADROOM_RECORDED: 200 x the frozen cap equals the frozen ceiling, and the launch-risk artifact records the $0 reserve",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "controls pure [F89] all satisfied"
+    },
+    {
+      "id": "G61",
+      "requirement": "RETRY_SPEND_INTERLOCK_VERIFIED: before a paid retry the three numbers are computed, the frozen policy is applied, the declaration is recorded, and a spend halt fabricates nothing",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "controls pure [F90, F91, F91B, F92, F93] all satisfied"
+    },
+    {
+      "id": "G62",
+      "requirement": "OUTCOME_BLIND_OPERATIONS: halt, spend and isolation status expose no arm's performance",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "controls pure [F94]; real [F116] all satisfied"
+    },
+    {
+      "id": "G63",
+      "requirement": "M217_FALSIFICATION_SUITE_PASSED and M217_SUITE_IS_FALSIFYING: both suites satisfied, both expectations present, and the two new guards demonstrably load-bearing",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "pure 23/23; real 15/15; guard-break M217_SUITE_IS_FALSIFYING (pure broken failing [F100, F84, F85, F86, F88, F91, F91B, F94, F96, F97], real broken failing [F107, F109, F109B, F110, F111, F112, F113], missed [], unexpected [])"
+    },
+    {
+      "id": "G64",
+      "requirement": "M217-owned harness and tests are typechecked",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "tsconfig.m217.json: 0 errors; M217_SCOPED_TYPECHECK_VERIFIED"
+    },
+    {
+      "id": "G65",
+      "requirement": "LAUNCHER_BINDING_RESOLUTION: the launcher resolves the DOCKER_SWEBENCH adapters through one factory that the real-substrate controls also ran a full row through",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "stage5.m217.launch-binding.v1; launcher calls startCohortBinding; real F106 satisfied"
+    },
+    {
+      "id": "G66",
+      "requirement": "no frozen task was touched and live model spend is $0 during M217",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "real: frozen touched 0, provider calls 0, spend $0, containers 4; pure: provider calls 0"
+    },
+    {
+      "id": "G67",
+      "requirement": "M215 and M216 controls preserved: the predecessor suites still pass in full",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "M215 66/66; M216 real 73/73"
+    },
+    {
+      "id": "G68",
+      "requirement": "PRE_OUTCOME_FINANCIAL_AMENDMENT_COMMITTED: M214's bytes and digests are untouched, the committed A1 recomputes to the pinned digest, its parent is M214, and it changes only the financial reserve",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "controls pure [F118, F119, F120, F121, F122, F125] all satisfied"
+    },
+    {
+      "id": "G69",
+      "requirement": "RETRY_RESERVE_10_ATTEMPTS and HARD_SPEND_CEILING_$735: the reserve is exactly 10 x $3.50 = $35 over $700, the eleventh retry is refused RETRY_RESERVE_EXHAUSTED, a non-preregistered class is refused with the reserve intact, and no retry class was created",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "controls pure [F122, F123, F124] all satisfied"
+    },
+    {
+      "id": "G70",
+      "requirement": "EXECUTABLE_AUTHORITY_BINDING: the launcher and executor require M214 + A1; M214's $700 authority alone and a $700 authorisation are refused by name",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "controls pure [F120, F125B, F125C] all satisfied"
+    },
+    {
+      "id": "G71",
+      "requirement": "TMP_LIFECYCLE_CENSUS_COMPLETE: every producer on the paid path is attributed and classified, the policy's observed inputs agree with the census, and no historical scratch was deleted",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "M218_TMP_LIFECYCLE_CENSUS_COMPLETE; lifetimes {\"RUN_OWNED\":8,\"TASK_OWNED\":0,\"COHORT_OWNED\":3,\"EXTERNAL_SHARED_CACHE\":3,\"UNKNOWN\":1}; policyInputsAgree true; historical cleaned 0"
+    },
+    {
+      "id": "G72",
+      "requirement": "RUN_OWNED_TMP_NAMESPACE_ENFORCED: every attempt claims an owned path under the marked namespace before use, no attempt inherits scratch, unregistered paths are never deleted, and run A cannot touch run B",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "controls pure [F126, F129, F130, F148]; real [F172, F173] all satisfied"
+    },
+    {
+      "id": "G73",
+      "requirement": "AGENT_TMP_ISOLATED_PER_ATTEMPT: the real bwrap namespace binds the attempt's owned directory at /tmp, the agent's marker is removed with the attempt, and a sentinel from arm 1 is invisible to arm 2 in both orders",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "controls pure [F127, F141]; real [F173, F174, F178] all satisfied"
+    },
+    {
+      "id": "G74",
+      "requirement": "BASELINE_VTRACE_TMP_EQUIVALENCE: both arms receive the same private-/tmp configuration and policy, differing only in the attempt path",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "controls pure [F142]; real [F175] all satisfied"
+    },
+    {
+      "id": "G75",
+      "requirement": "RUN_TMP_CLEANUP_VERIFIED: cleanup runs after the container is gone, is verified by measurement to 0 bytes, survives an exception, and removes large nested trees",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "controls pure [F126, F128, F143]; host [F166]; real [F173, F179] all satisfied"
+    },
+    {
+      "id": "G76",
+      "requirement": "STALE_TMP_RECOVERY_VERIFIED: stale owned scratch is classified by ownership facts, never by age, cleaned when safe, blocked when unsafe or unknown, and a crashed executor's scratch is recovered on resume",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "controls pure [F133, F134, F150]; host [F170]; real [F182] all satisfied"
+    },
+    {
+      "id": "G77",
+      "requirement": "TMP_CAPACITY_GATE_VERIFIED: P13 refuses below the derived threshold or on low inodes before any container or claim, accepts above it, refuses a tmpfs-hosted namespace, and passes on the cohort's real filesystem",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "controls pure [F137, F138, F139]; host [F171, F171B]; real [F172] all satisfied"
+    },
+    {
+      "id": "G78",
+      "requirement": "TMP_CLEANUP_PART_OF_CONTINUATION_SAFETY: a live process, mount or container makes cleanup refuse; the valid result stands; the next row is blocked; the predeclared recovery removes exactly the owned residue and the cohort resumes without a rerun",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "controls pure [F131, F132, F135, F136, F144, F149]; host [F168]; real [F176, F177, F178] all satisfied"
+    },
+    {
+      "id": "G79",
+      "requirement": "TMP_PATH_SAFETY_VERIFIED: deletion never follows a symlink, never leaves the canonical namespace, and /, /tmp, $HOME, an empty path and the namespace root are structurally refused",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "controls pure [F145, F146, F147]; host [F167, F169] all satisfied"
+    },
+    {
+      "id": "G80",
+      "requirement": "EVIDENCE_PERSISTED_BEFORE_CLEANUP: the raw stream, patch and evaluation are copied out and digest-verified before cleanup and cannot be reached by it",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "controls pure [F140]; real [F173] all satisfied"
+    },
+    {
+      "id": "G81",
+      "requirement": "SCRATCH_EMERGENCY_AND_STATUS: the per-attempt emergency threshold aborts through the real adapter and the bridge watchdog under the frozen infrastructure class, and operational views stay outcome-blind",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "controls pure [F151, F152]; real [F180, F181] all satisfied"
+    },
+    {
+      "id": "G82",
+      "requirement": "M218_FALSIFICATION_SUITE_PASSED and M218_SUITE_IS_FALSIFYING: all three suites satisfied with both expectations present, and the three new guards demonstrably load-bearing",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "pure 38/38; host 7/7; real 11/11; guard-break M218_SUITE_IS_FALSIFYING (B1_OWNERSHIP_VALIDATION_ACCEPTS_ANY_PATH: [F130, F140, F145, F145B, F169]; B2_CAPACITY_GATE_ALWAYS_PASSES: [F137, F139, F171]; B3_RETRY_RESERVE_NEVER_EXHAUSTED: [F123]; missed []; unexpected [])"
+    },
+    {
+      "id": "G83",
+      "requirement": "M218-owned harness and tests are typechecked",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "tsconfig.m218.json: 0 errors; M218_SCOPED_TYPECHECK_VERIFIED"
+    },
+    {
+      "id": "G84",
+      "requirement": "no frozen task was touched and live model spend is $0 during M218",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "real: frozen touched 0, provider calls 0, spend $0, containers 5; pure/host provider calls 0/0"
+    },
+    {
+      "id": "G85",
+      "requirement": "M215, M216 and M217 controls preserved: the predecessor suites still pass in full under the M218 adapters, bridge and executor",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "M215 66/66; M216 real 73/73; M217 pure 23/23; M217 real 15/15"
     }
   ],
   "deferredRuntimeGates": [
@@ -511,28 +756,52 @@
   "blockers": [
     "G36"
   ],
-  "spendProjection": {
-    "plannedRuns": 200,
-    "perRunCapUsd": 3.5,
-    "firstAttemptMaximumUsd": 700,
-    "maxAttemptsPerRun": 2,
-    "retryableCategories": [
-      "MODEL_SERVICE_FAILURE",
-      "CONTAINER_CANNOT_START",
-      "EVALUATOR_INFRA_FAILURE",
-      "TELEMETRY_CORRUPT"
-    ],
-    "mathematicalMaximumUsd": 1400,
-    "ceilingUsd": 700,
-    "firstAttemptFitsCeiling": true,
-    "retryHeadroomUsd": 0,
-    "guardBoundsActualSpend": true,
-    "reconciliation": "200 x $3.5 = $700 = the $700 ceiling exactly, so first attempts fit with $0 of retry headroom. A fully retried cohort would be $1400, which the ceiling refuses rather than funds: the executor will not begin a run whose worst case breaches it, and M214's budgetInterlock declares a cohort that hits the cap INCOMPLETE. Actual spend is bounded; completion is not guaranteed once retry budget is consumed. Of the four rerunnable categories, only MODEL_SERVICE_FAILURE can have already cost money, and an attempt whose cost the provider never reported is charged at its cap by the production agent adapter rather than at $0."
+  "scratchPolicy": {
+    "version": "stage5.m218.scratch-policy.v1",
+    "observedInputs": {
+      "label": "PRE-LAUNCH OBSERVED INFRASTRUCTURE HIGH-WATER (not a future guarantee)",
+      "largestFrozenRepositoryCheckoutBytes": 285146397,
+      "largestFrozenRepositoryCheckoutRepo": "django__django (working tree + .git incl. directory entries, vexp-swe-bench/.bench-repos, measured by run_stage5_m218_tmp_census.ts 2026-09-05)",
+      "largestFrozenRepositoryCheckoutInodes": 14239,
+      "treatmentIndexBytesObserved": 40646988,
+      "treatmentIndexSource": "M216 real-substrate research row (pylint), indexSizeBytes",
+      "agentStreamBytesP90": 563927,
+      "agentStreamBytesMax": 2603053,
+      "agentStreamSource": "1368 historical Stage 5 raw run directories (M60–M183)",
+      "largestFrozenImageBytes": 10800000000,
+      "largestFrozenImageSource": "docker images: swebench/sweb.eval.x86_64.matplotlib_1776_matplotlib-24627 (10.8GB)",
+      "evaluatorLogBytesPerEvaluation": 67302,
+      "evaluatorLogSource": "vexp-swe-bench/logs/run_evaluation, per-run-directory median over the first 400 directories (the vexp-swebench-* directories are ~2.5 MB each)",
+      "agentPrivateTmpBytes": "UNKNOWN_BEFORE_PAID_COHORT"
+    },
+    "safetyFactor": 4,
+    "projectedAttemptScratchBytes": 2147483648,
+    "projectedAttemptInodes": 250000,
+    "hostSafetyReserveBytes": 32337418240,
+    "hostSafetyReserveInodes": 1250000,
+    "sharedTmpMinFreeBytes": 1073741824,
+    "sharedTmpMinFreeInodes": 100000,
+    "warningAttemptScratchBytes": 2147483648,
+    "hardAttemptScratchBytes": 8589934592,
+    "monitorIntervalMs": 30000,
+    "emergencyAbortCategory": "ENVIRONMENT_IRREPRODUCIBLE",
+    "emergencyAbortRationale": "A forced abort to protect the host is mapped to the closest frozen infrastructure class: the run's environment could not be sustained under the frozen resource policy. It is NOT rerunnable under M214's retry policy; no new retry class is created.",
+    "arms": "IDENTICAL for baseline and vtrace; the policy has no arm field",
+    "frozenBefore": "any outcome-bearing run; a later change is an explicit operational amendment"
+  },
+  "financialEnvelope": {
+    "ordinaryExposureUsd": 700,
+    "retryReserveUsd": 35,
+    "retryReserveAttempts": 10,
+    "hardCeilingUsd": 735,
+    "manifestRows": 200,
+    "intendedValidOutcomes": 200
   },
   "technicalExecutorReady": true,
   "spendAuthorized": false,
   "readinessVerdict": "TECHNICAL_EXECUTOR_READY",
   "spendAuthorizationStatus": "SPEND_AUTHORIZATION_PENDING",
+  "proposedAuthorizationUsd": 735,
   "paidRunsStarted": 0,
   "liveModelSpendUsd": 0,
   "frozenBenchmarkTaskLiveAgentRuns": 0

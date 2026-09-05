@@ -1,7 +1,7 @@
 {
   "schemaVersion": "stage5.m215.falsification.v1",
   "milestone": "M215",
-  "generatedAt": "2026-09-05T10:29:13.755Z",
+  "generatedAt": "2026-09-05T12:29:58.754Z",
   "executorVersion": "stage5.m215.launch-executor.v1",
   "liveModelSpendUsd": 0,
   "frozenBenchmarkTaskLiveAgentRuns": 0,
@@ -391,7 +391,7 @@
       "expectation": "GUARD_FIRES",
       "fired": true,
       "satisfied": true,
-      "detail": "authorised ceiling $2000 differs from the frozen $700"
+      "detail": "authorised ceiling $2000 differs from the active $700"
     },
     {
       "id": "F28C_UNAUTHORIZED_COHORT_LAUNCH_REFUSED",
@@ -399,7 +399,7 @@
       "expectation": "GUARD_FIRES",
       "fired": true,
       "satisfied": true,
-      "detail": "launch refused for VTRACE_EXTERNAL_VEXP_100:astropy__astropy-14365:baseline: P7_SPEND_AUTHORIZATION no spend authorisation supplied; a COHORT run makes paid model calls and requires explicit operator authorisation of the frozen $700 ceiling. Technical readiness is not authorisation. | P10_CONTINUATION_SAFETY no continuation-safety authority is bound; isolation between rows cannot be proven, so a COHORT row may not begin"
+      "detail": "launch refused for VTRACE_EXTERNAL_VEXP_100:astropy__astropy-14365:baseline: P7_SPEND_AUTHORIZATION no spend authorisation supplied; a COHORT run makes paid model calls and requires explicit operator authorisation of the frozen $700 ceiling. Technical readiness is not authorisation. | P10_CONTINUATION_SAFETY no continuation-safety authority is bound; isolation between rows cannot be proven, so a COHORT row may not begin | P12_EXECUTABLE_AUTHORITY no executable authority is bound; a COHORT row requires M214 + M214_A1_RETRY_RESERVE (amendment 0ed156bc924a4817...), never M214's $700 authority alone | P13_SCRATCH_CAPACITY no scratch authority is bound; owned scratch cannot be claimed, gated or verified, so a COHORT row may not begin"
     },
     {
       "id": "F29_SYNTHETIC_MODE_ISOLATION",

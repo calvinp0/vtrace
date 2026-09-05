@@ -12000,3 +12000,162 @@ spend arithmetic  200 x $3.50 = $700 = frozen ceiling; retry reserve $0;
   PENDING_AT_FIRST_PAID_RUN. `ENGINE QUALITY != CODING-AGENT UTILITY` and
   `CONTEXT_COMPILER_PRODUCT_UTILITY_NOT_ESTABLISHED` still govern: nothing in
   M217 measured the product.
+
+## M218
+
+```text
+milestone         M218
+verdict           PASS (a pre-outcome financial amendment gives a fixed ten-attempt
+                  retry reserve under a $735 hard ceiling, the executable authority
+                  is M214 + A1, and temporary-space ownership, cleanup, capacity and
+                  stale-scratch recovery are enforced in the real executor; launch is
+                  still blocked only on human authorisation of the spend)
+markers           PRE_OUTCOME_FINANCIAL_AMENDMENT_COMMITTED; RETRY_RESERVE_10_ATTEMPTS;
+                  HARD_SPEND_CEILING_$735; TMP_LIFECYCLE_CENSUS_COMPLETE;
+                  RUN_OWNED_TMP_NAMESPACE_ENFORCED; AGENT_TMP_ISOLATED_PER_ATTEMPT;
+                  RUN_TMP_CLEANUP_VERIFIED; STALE_TMP_RECOVERY_VERIFIED;
+                  TMP_CAPACITY_GATE_VERIFIED; TMP_CLEANUP_PART_OF_CONTINUATION_SAFETY;
+                  TMP_PATH_SAFETY_VERIFIED; M218_FALSIFICATION_SUITE_PASSED;
+                  M218_SUITE_IS_FALSIFYING; M218_SCOPED_TYPECHECK_VERIFIED;
+                  PREREGISTRATION_UNCHANGED; MANIFEST_UNCHANGED;
+                  EXTERNAL_REFERENCE_UNCHANGED; VTRACE_PRODUCT_UNCHANGED;
+                  TECHNICAL_EXECUTOR_READY; PAID_RUNS_NOT_STARTED;
+                  SPEND_AUTHORIZATION_PENDING
+parity            UNCHANGED and NOT re-run. Frozen matrix stays MATCH 7 EXCEED 7
+                  BELOW 1, match-or-exceed 14/15, A15 BELOW and
+                  A15_PARITY_GAP_INVALIDATED (M212). Never write 15/15.
+spend             0 frozen benchmark tasks run with a live agent, $0 live model
+                  spend, 0 provider calls. Real Docker WAS used and is expected:
+                  5 research containers per M218 real-substrate run (pylint-7080,
+                  pylint-6903, SWE-bench Verified complement; 4 pair rows + 1
+                  emergency-abort row; run twice, the first interrupted by hand
+                  when it exposed the bridge defect below), plus the M216 (10) and
+                  M217 (5) suites re-run for preservation. 0 frozen task ids.
+scope             Launch machinery only. 0 src/ diff (HEAD:src still
+                  b3b3e439f10c6c526cafc6001d25dd0e7552ce6d). All seven frozen
+                  artifacts byte-identical to the M217 HEAD blobs (F118); the
+                  three digests recompute; nothing frozen was regenerated.
+what was built    Commit 1 (ec34e0ef) -- m218Amendment.ts + committed
+                  stage5_m214_a1_retry_reserve_amendment.json / _hash.json:
+                  M214_A1_RETRY_RESERVE, domain "M214_A1_RETRY_RESERVE\n", pinned
+                  0ed156bc924a4817122c46b5c9fc0334e5f046c2dce0547eef2573b2483b76c1,
+                  parent = M214's three digests, executable authority (M214 + A1)
+                  782f8a94e5d6bb8e09000b16c37a1037d72cb40537523ab61db0c53fa80ef086;
+                  audit refuses any frozen experimental key. Commit 2 (78cb2653) --
+                  m218ScratchLifecycle.ts (marked namespace, registry claims written
+                  before use, symlink-safe strict-descendant deletion, measured
+                  verification, capacity policy + gate, checkpoints, emergency
+                  monitor, evidence persistence, stale sweep by ownership facts),
+                  m218IsolationProbe.ts (ownership-aware recovery), sandbox_prefix
+                  agent_tmp -> `--bind <attempt>/tmp /tmp`, bridge residualState
+                  reports owned bytes/entries + any container bound into the work
+                  root, executor P13_SCRATCH_CAPACITY + claim/checkpoint/evidence/
+                  cleanup order in finally, adapters hand off arm-root removal to
+                  the authority, launcher scratch preflight (sweep + capacity +
+                  image availability), run_stage5_m218_tmp_census.ts. Commit 3
+                  (d7df3a02) -- m218SpendAuthority.ts, P12_EXECUTABLE_AUTHORITY,
+                  active-ceiling P7/P8/P11, retry admission (8 recorded facts),
+                  COHORT_HALTED_RETRY_RESERVE_EXHAUSTED, launcher binds M214 + A1,
+                  stage5_m218_launch_risk.{json,md}. Commit 4 (a5c1204c) --
+                  residue by entries as well as bytes, recovery deletes only what
+                  the registry owns, bridge kills the agent's process group and
+                  enforces the deadline from the watchdog. Commit 5 -- suites,
+                  guard-break, scoped typecheck, readiness (G68-G85), report, row.
+census            M218_TMP_LIFECYCLE_CENSUS_COMPLETE: 15 producers attributed to
+                  source (RUN_OWNED 8, COHORT_OWNED 3, EXTERNAL_SHARED_CACHE 3,
+                  UNKNOWN 1 = historical /tmp). Host /tmp: 68 827 top-level
+                  entries on a 32 GB tmpfs, ~12 GB / ~1.2M inodes used; dominant
+                  inode consumer = bun-test mkdtemp fixtures, dominant byte
+                  consumer = /tmp/m210-*..m213-* corpus copies (~4.2 GB). Cleaned
+                  by M218: 0 bytes (ownership not provable to the §12 standard).
+policy            projected attempt 2 GiB (floor; 4 x (285 MB checkout + 40 MB
+                  index + 2.6 MB stream) = 1.3 GB), host reserve 2 x 10.8 GB
+                  largest image + 10 GiB = 32.3e9, required free 34.5e9 bytes;
+                  inodes 250k + 1.25M; shared /tmp floor 1 GiB / 100k inodes;
+                  per-attempt warning 2 GiB, hard 8 GiB at 30 s cadence; abort
+                  category ENVIRONMENT_IRREPRODUCIBLE (not rerunnable, no new
+                  class). Observed research high-water: 34 MB baseline / 95 MB
+                  vtrace (pylint); paid agent /tmp usage UNKNOWN_BEFORE_PAID_COHORT.
+suites            pure 38/38 (9 GUARD_FIRES, 29 GUARD_SILENT; A1-A8 = F118-F125,
+                  T1-T25 = F126-F150); real-host 7/7 (2 fires); real-container
+                  11/11 (F172-F182). Guard-break B1 ownership [F130 F140 F145
+                  F145B]+[F169], B2 capacity [F137 F139]+[F171], B3 reserve
+                  [F123]: 0 missed, 0 unexpected, sources restored, verdict
+                  M218_SUITE_IS_FALSIFYING (first pass mispredicted F147/F145 and
+                  missed F140; corrected by mechanism, recorded). Preservation:
+                  M215 66/66, M216 real 73/73, M217 pure 23/23, M217 real 15/15
+                  re-run on the final bridge. M218_NEW_TYPECHECK_ERRORS 0; the
+                  ~59 pre-existing benchmark-test errors remain unclaimed.
+                  bun test 6605 pass / 49 skip / 0 fail across 400 files; typecheck, typecheck:benchmarks, lint, git diff --check clean; secret scan clean.
+spend arithmetic  ordinary $700 = 200 x $3.50 (unchanged); reserve $35 = 10 x
+                  $3.50; hard ceiling $735; manifest rows 200; intended outcomes
+                  200 not 210; slots consumed per retry attempt started, dollars
+                  by recorded cost; eleventh retry -> RETRY_RESERVE_EXHAUSTED ->
+                  COHORT_HALTED_RETRY_RESERVE_EXHAUSTED; a further increase is
+                  another explicit amendment. 10/200 = 5% is a reserve policy,
+                  not a failure-rate estimate, chosen with 0 outcome-bearing runs.
+```
+
+## M218 standing findings
+
+- **The coding agent's /tmp is now owned, bound and measured.** Before M218 it was
+  a bwrap `--tmpfs /tmp`: RAM-backed, unbounded, invisible, and gone without a
+  trace. Now `sandbox_prefix(..., agent_tmp)` binds `<attempt>/tmp` at /tmp for
+  both arms; the real substrate showed `--bind <attempt>/tmp /tmp` in the spawned
+  argv, the flood the agent wrote to /tmp measured by the executor's monitor
+  under the owned path, its marker gone with the attempt, and a sentinel from
+  arm 1 invisible to arm 2 in both orders
+  (F173, F174, F178). The M194 default (`--tmpfs`) is unchanged when no
+  `agent_tmp` is given.
+
+- **The transcript used to die at teardown.** The raw agent stream lived only in
+  `<armRoot>/raw`, which `stop()` deleted. Evidence (raw stream, captured patch,
+  evaluator raw result, result reference) is now copied to
+  `<cohortDir>/evidence/<claimId>` and digest-verified BEFORE cleanup may run; a
+  persistence failure skips cleanup and blocks (F140, F173).
+
+- **Absence is proven by entries, not just bytes.** An empty directory on tmpfs has
+  zero blocks, so a refused cleanup once enumerated as clean; the probe reports
+  owned bytes AND entries and any container of any name bound into the work root.
+
+- **The bridge could not stop a hung agent.** The emergency-abort control hung
+  328 s: killing bwrap (no `--unshare-pid`) reparented its child, which kept the
+  stdout pipe open, and the wall-clock deadline was only checked on line arrival.
+  Fixed by running the agent in its own session, killing the process group, and
+  enforcing the deadline from the watchdog; the same control then aborted in
+  0.5 s (F180). This would have affected every paid run's timeout path.
+
+- **Ownership is proven by facts, never by age or name.** Claims live outside the
+  namespace; a sweep classifies ACTIVE (creator pid + start ticks alive),
+  STALE_CLEANABLE (dead creator, no live reference), STALE_UNSAFE, UNKNOWN (no
+  claim; blocks; never deleted). ~68k historical /tmp entries are attributed by
+  source grep but NOT proven owned and were NOT deleted; the census is the
+  operator's input. Do not "clean up /tmp" on this machine by prefix.
+
+- **A namespace on tmpfs /tmp is refused by design.** The frozen host reserve
+  (2 x largest frozen image + 10 GiB ≈ 30 GiB) exceeds the 32 GB tmpfs; the
+  cohort namespace is the results directory on the root filesystem (312 GiB free
+  at census). The guard-break's first prediction on F171 was wrong for exactly
+  this reason and is recorded.
+
+- **64 of 100 frozen images are absent locally and M193 does not pull.** A
+  missing image is CONTAINER_CANNOT_START, which would burn a retry slot for
+  nothing; the launcher's scratch preflight now refuses to start until every
+  manifest image is present. Pre-pulling (~2 GB incremental per image, see
+  docker system df) is an operator step, and its growth is EXTERNAL_SHARED_CACHE,
+  never RUN_OWNED scratch.
+
+- **The active number to authorise is $735, under M214 + A1.** M217's "$0
+  reserve" is the M214-alone arithmetic and is not edited. P12 refuses M214
+  alone; P7 refuses a $700 authorisation; RETRY_RESERVE_EXHAUSTED halts as its
+  own end state and never asks for money at runtime.
+
+- **Next-step recommendation.** Do NOT start the benchmark. There is no further
+  engineering milestone before the launch decision. The decision needs: human
+  authorisation of the $735 hard ceiling (G36) under M214 + A1; an operator
+  pre-pull of the 64 absent frozen images; and an operator decision on the
+  historical /tmp scratch (optional for launch: the benchmark no longer writes
+  there and the /tmp floor currently passes). Live provider model identity
+  remains PENDING_AT_FIRST_PAID_RUN. `ENGINE QUALITY != CODING-AGENT UTILITY`
+  and `CONTEXT_COMPILER_PRODUCT_UTILITY_NOT_ESTABLISHED` still govern: nothing
+  in M218 measured the product.

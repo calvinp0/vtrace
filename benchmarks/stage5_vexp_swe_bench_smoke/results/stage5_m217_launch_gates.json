@@ -1,7 +1,7 @@
 {
   "schemaVersion": "stage5.m217.launch-gates.v1",
   "milestone": "M217",
-  "generatedAt": "2026-09-05T10:53:44.307Z",
+  "generatedAt": "2026-09-05T12:30:15.205Z",
   "continuationVersion": "stage5.m217.continuation-safety.v1",
   "authorities": {
     "preregistration": {
@@ -71,7 +71,9 @@
     "P8_SPEND_CEILING",
     "P9_LEDGER_INTEGRITY",
     "P10_CONTINUATION_SAFETY",
-    "P11_RETRY_SPEND_RESERVE"
+    "P11_RETRY_SPEND_RESERVE",
+    "P12_EXECUTABLE_AUTHORITY",
+    "P13_SCRATCH_CAPACITY"
   ],
   "requiredRuntimeGateIds": [
     "R1_ARM_ADMISSIBLE",
@@ -355,7 +357,7 @@
       "requirement": "LAUNCH_EXECUTOR_IMPLEMENTED: one executor runs any frozen manifest row through the frozen lifecycle under runtime enforcement",
       "gateClass": "INFRASTRUCTURE",
       "status": "PASS",
-      "evidence": "stage5.m215.launch-executor.v1: 11 prelaunch and 15 runtime gates, one arm-neutral orchestration, cohort launcher, append-only ledger, resume, spend guard"
+      "evidence": "stage5.m215.launch-executor.v1: 13 prelaunch and 15 runtime gates, one arm-neutral orchestration, cohort launcher, append-only ledger, resume, spend guard"
     },
     {
       "id": "G34",

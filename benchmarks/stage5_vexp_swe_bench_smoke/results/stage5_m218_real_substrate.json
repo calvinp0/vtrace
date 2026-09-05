@@ -1,0 +1,891 @@
+{
+  "schemaVersion": "stage5.m218.real-substrate.v1",
+  "milestone": "M218",
+  "generatedAt": "2026-09-05T12:24:33.727Z",
+  "controlCount": 11,
+  "satisfied": 11,
+  "failures": [],
+  "guardFiresControls": 0,
+  "guardSilentControls": 11,
+  "suitePasses": true,
+  "containersStarted": 5,
+  "containersTornDown": 5,
+  "frozenInstancesTouched": [],
+  "nonFrozenInstancesTouched": [
+    "pylint-dev__pylint-6903",
+    "pylint-dev__pylint-7080"
+  ],
+  "liveModelSpendUsd": 0,
+  "providerCalls": 0,
+  "frozenBenchmarkTaskLiveAgentRuns": 0,
+  "executedRows": [
+    {
+      "order": 0,
+      "arm": "baseline",
+      "instanceId": "pylint-dev__pylint-7080",
+      "status": "VALID_UNRESOLVED",
+      "category": null,
+      "phases": [
+        "CONTAINER_START",
+        "SOURCE_CHECKOUT_AT_BASE_COMMIT",
+        "SOURCE_STATE_DIGEST_BEFORE_TREATMENT",
+        "TREATMENT_INITIALISATION",
+        "SOURCE_STATE_DIGEST_AFTER_TREATMENT",
+        "PRE_AGENT_UNTRACKED_SNAPSHOT",
+        "AGENT_RUN",
+        "PATCH_CAPTURE",
+        "EVALUATION"
+      ],
+      "gates": [
+        "P1_PREREGISTRATION_HASH=PASS",
+        "P10_CONTINUATION_SAFETY=PASS",
+        "P11_RETRY_SPEND_RESERVE=PASS",
+        "P12_EXECUTABLE_AUTHORITY=PASS",
+        "P13_SCRATCH_CAPACITY=PASS"
+      ]
+    },
+    {
+      "order": 1,
+      "arm": "vtrace",
+      "instanceId": "pylint-dev__pylint-7080",
+      "status": "VALID_UNRESOLVED",
+      "category": null,
+      "phases": [
+        "CONTAINER_START",
+        "SOURCE_CHECKOUT_AT_BASE_COMMIT",
+        "SOURCE_STATE_DIGEST_BEFORE_TREATMENT",
+        "TREATMENT_INITIALISATION",
+        "SOURCE_STATE_DIGEST_AFTER_TREATMENT",
+        "PRE_AGENT_UNTRACKED_SNAPSHOT",
+        "AGENT_RUN",
+        "PATCH_CAPTURE",
+        "EVALUATION"
+      ],
+      "gates": [
+        "P1_PREREGISTRATION_HASH=PASS",
+        "P10_CONTINUATION_SAFETY=PASS",
+        "P11_RETRY_SPEND_RESERVE=PASS",
+        "P12_EXECUTABLE_AUTHORITY=PASS",
+        "P13_SCRATCH_CAPACITY=PASS"
+      ]
+    },
+    {
+      "order": 2,
+      "arm": "vtrace",
+      "instanceId": "pylint-dev__pylint-6903",
+      "status": "VALID_UNRESOLVED",
+      "category": null,
+      "phases": [
+        "CONTAINER_START",
+        "SOURCE_CHECKOUT_AT_BASE_COMMIT",
+        "SOURCE_STATE_DIGEST_BEFORE_TREATMENT",
+        "TREATMENT_INITIALISATION",
+        "SOURCE_STATE_DIGEST_AFTER_TREATMENT",
+        "PRE_AGENT_UNTRACKED_SNAPSHOT",
+        "AGENT_RUN",
+        "PATCH_CAPTURE",
+        "EVALUATION"
+      ],
+      "gates": [
+        "P1_PREREGISTRATION_HASH=PASS",
+        "P10_CONTINUATION_SAFETY=PASS",
+        "P11_RETRY_SPEND_RESERVE=PASS",
+        "P12_EXECUTABLE_AUTHORITY=PASS",
+        "P13_SCRATCH_CAPACITY=PASS"
+      ]
+    },
+    {
+      "order": 3,
+      "arm": "baseline",
+      "instanceId": "pylint-dev__pylint-6903",
+      "status": "VALID_UNRESOLVED",
+      "category": null,
+      "phases": [
+        "CONTAINER_START",
+        "SOURCE_CHECKOUT_AT_BASE_COMMIT",
+        "SOURCE_STATE_DIGEST_BEFORE_TREATMENT",
+        "TREATMENT_INITIALISATION",
+        "SOURCE_STATE_DIGEST_AFTER_TREATMENT",
+        "PRE_AGENT_UNTRACKED_SNAPSHOT",
+        "AGENT_RUN",
+        "PATCH_CAPTURE",
+        "EVALUATION"
+      ],
+      "gates": [
+        "P1_PREREGISTRATION_HASH=PASS",
+        "P10_CONTINUATION_SAFETY=PASS",
+        "P11_RETRY_SPEND_RESERVE=PASS",
+        "P12_EXECUTABLE_AUTHORITY=PASS",
+        "P13_SCRATCH_CAPACITY=PASS"
+      ]
+    },
+    {
+      "order": 0,
+      "arm": "baseline",
+      "instanceId": "pylint-dev__pylint-7080",
+      "status": "INFRASTRUCTURE_INVALID",
+      "category": "ENVIRONMENT_IRREPRODUCIBLE",
+      "phases": [
+        "CONTAINER_START",
+        "SOURCE_CHECKOUT_AT_BASE_COMMIT",
+        "SOURCE_STATE_DIGEST_BEFORE_TREATMENT",
+        "TREATMENT_INITIALISATION",
+        "SOURCE_STATE_DIGEST_AFTER_TREATMENT",
+        "PRE_AGENT_UNTRACKED_SNAPSHOT",
+        "AGENT_RUN"
+      ],
+      "gates": [
+        "P1_PREREGISTRATION_HASH=PASS",
+        "P10_CONTINUATION_SAFETY=PASS",
+        "P11_RETRY_SPEND_RESERVE=PASS",
+        "P12_EXECUTABLE_AUTHORITY=PASS",
+        "P13_SCRATCH_CAPACITY=PASS"
+      ]
+    }
+  ],
+  "controls": [
+    {
+      "id": "F172",
+      "briefId": null,
+      "description": "before the first row the real namespace is swept clean, the real host passes the frozen capacity gate, and the substrate enumeration is empty",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_CONTAINER",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F173",
+      "briefId": "T2",
+      "description": "on the real substrate the agent's /tmp is the attempt's owned directory bound by bwrap; the marker it writes there is removed with the attempt, the raw stream is persisted, the claim is released, and an unrelated host /tmp sentinel survives",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_CONTAINER",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F174",
+      "briefId": "T16",
+      "description": "baseline → vtrace: the sentinel baseline left in its private /tmp is not visible to the vtrace arm of the same task",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_CONTAINER",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F175",
+      "briefId": "T17",
+      "description": "baseline and vtrace received identical bwrap tmp configuration and TMP-related environment after normalising the attempt path; the treatment difference is elsewhere",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_CONTAINER",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F176",
+      "briefId": "T6",
+      "description": "a real detached process spawned inside the agent's namespace keeps the owned scratch alive: the container is gone, cleanup refuses, the real enumeration lists the process and the residue bytes, the valid result stands, and continuation is BLOCKED",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_CONTAINER",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F177",
+      "briefId": "T19",
+      "description": "while blocked the next row is refused by P10; the predeclared recovery kills the real holder, removes the owned scratch through the ownership-checked authority, releases the claim, and re-proves isolation",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_CONTAINER",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F178",
+      "briefId": "T11",
+      "description": "vtrace → baseline: after recovery the baseline arm runs without seeing vtrace's sentinel and without the held row being rerun; four rows, four results",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_CONTAINER",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F179",
+      "briefId": null,
+      "description": "every real row records scratch checkpoints at container setup, agent completion, evaluation and before cleanup, and a positive high-water",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_CONTAINER",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F180",
+      "briefId": null,
+      "description": "a real attempt whose private /tmp crosses a research hard threshold is aborted through the adapter's signal and the bridge's watchdog, classified ENVIRONMENT_IRREPRODUCIBLE (not rerunnable), charged at cap, recorded as SCRATCH_EMERGENCY_ABORT, and its scratch is still cleaned",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_CONTAINER",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F181",
+      "briefId": null,
+      "description": "the real cohort's operational view with scratch health names no arm's performance and its operations chain recomputes",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_CONTAINER",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F182",
+      "briefId": "T25",
+      "description": "after every row the namespace holds nothing owned: the final sweep finds only the marker and the COHORT_OWNED evaluation directory",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_CONTAINER",
+      "satisfied": true,
+      "detail": "no issue reported"
+    }
+  ],
+  "notes": {
+    "substrateIdentity": {
+      "bridgeVersion": "stage5.m216.substrate-bridge.v1",
+      "python": "3.12.12",
+      "pythonExecutable": "/home/calvin/code/vexp-swe-bench/.venv/bin/python",
+      "dockerSdk": "7.1.0",
+      "dockerServer": "29.6.2",
+      "swebench": "4.1.0",
+      "containerAuthority": "m193_container_adapter.M193Container",
+      "patchSnapshotAuthority": "stage5.m193c.patch-snapshot-authority.v1",
+      "untrackedSnapshotAuthority": "stage5.m216.untracked-snapshot.v1",
+      "trackedSourceDigestAuthority": "stage5.m216.tracked-source-digest.v1",
+      "dataset": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m216_research/research_instances.jsonl",
+      "frozenPopulationSize": 100
+    },
+    "preflight": {
+      "sweep": {
+        "pass": true,
+        "entries": 1
+      },
+      "gate": {
+        "pass": true,
+        "issues": [],
+        "free": 336487477248
+      },
+      "isolation": "SUBSTRATE_CLEAN"
+    },
+    "row0": {
+      "witness": {
+        "arm": "baseline",
+        "priorSentinel": "ABSENT",
+        "tmpMarkerWritten": true,
+        "tmpDir": "/tmp"
+      },
+      "spawnedArgv": [
+        "/usr/bin/bwrap",
+        "--tmpfs",
+        "/",
+        "--ro-bind",
+        "/usr",
+        "/usr",
+        "--ro-bind",
+        "/etc",
+        "/etc",
+        "--ro-bind",
+        "/opt",
+        "/opt",
+        "--symlink",
+        "usr/lib",
+        "/lib",
+        "--symlink",
+        "usr/lib64",
+        "/lib64",
+        "--symlink",
+        "usr/bin",
+        "/bin",
+        "--symlink",
+        "usr/sbin",
+        "/sbin",
+        "--bind",
+        "/home",
+        "/home",
+        "--bind",
+        "/var",
+        "/var",
+        "--bind",
+        "/run",
+        "/run",
+        "--proc",
+        "/proc",
+        "--dev",
+        "/dev",
+        "--bind",
+        "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m218_work/_work/pylint-dev__pylint-7080--baseline/tmp",
+        "/tmp",
+        "--bind",
+        "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m218_work/_work/pylint-dev__pylint-7080--baseline",
+        "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m218_work/_work/pylint-dev__pylint-7080--baseline",
+        "--dir",
+        "/testbed",
+        "--bind",
+        "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m218_work/_work/pylint-dev__pylint-7080--baseline/testbed",
+        "/testbed",
+        "--chdir",
+        "/testbed",
+        "--"
+      ],
+      "scratch": {
+        "claimId": "afffe2b58ebb1d3379eb7361",
+        "scratchPath": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m218_work/_work/pylint-dev__pylint-7080--baseline",
+        "agentTmp": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m218_work/_work/pylint-dev__pylint-7080--baseline/tmp",
+        "freeBytesBefore": 336487477248,
+        "scratchHighWaterBytes": 34271232,
+        "freeBytesBeforeCleanup": 336487313408,
+        "scratchBytesAfterCleanup": 0,
+        "freeBytesAfterCleanup": 336487358464,
+        "cleanupStatus": "CLEANED",
+        "cleanupVerified": true,
+        "liveReferences": [],
+        "checkpoints": [
+          {
+            "label": "AFTER_CONTAINER_SETUP",
+            "at": "2026-09-05T12:23:39.330Z",
+            "scratchBytes": 34271232,
+            "scratchApparentBytes": 20811837,
+            "scratchInodes": 4836,
+            "freeBytes": 336452960256
+          },
+          {
+            "label": "AFTER_TREATMENT_INITIALISATION",
+            "at": "2026-09-05T12:23:40.638Z",
+            "scratchBytes": 34230272,
+            "scratchApparentBytes": 20791486,
+            "scratchInodes": 4829,
+            "freeBytes": 336453083136
+          },
+          {
+            "label": "AFTER_AGENT_COMPLETION",
+            "at": "2026-09-05T12:23:41.911Z",
+            "scratchBytes": 34263040,
+            "scratchApparentBytes": 20804809,
+            "scratchInodes": 4835,
+            "freeBytes": 336453017600
+          },
+          {
+            "label": "AFTER_EVALUATION",
+            "at": "2026-09-05T12:23:42.227Z",
+            "scratchBytes": 34263040,
+            "scratchApparentBytes": 20804809,
+            "scratchInodes": 4835,
+            "freeBytes": 336453017600
+          },
+          {
+            "label": "BEFORE_CLEANUP",
+            "at": "2026-09-05T12:23:42.244Z",
+            "scratchBytes": 34263040,
+            "scratchApparentBytes": 20804809,
+            "scratchInodes": 4835,
+            "freeBytes": 336453017600
+          }
+        ],
+        "emergency": {
+          "highWaterBytes": 34263040,
+          "warned": false,
+          "aborted": false,
+          "samples": 1,
+          "reason": null
+        }
+      }
+    },
+    "armEquivalence": {
+      "baseline": [
+        "/usr/bin/bwrap",
+        "--tmpfs",
+        "/",
+        "--ro-bind",
+        "/usr",
+        "/usr",
+        "--ro-bind",
+        "/etc",
+        "/etc",
+        "--ro-bind",
+        "/opt",
+        "/opt",
+        "--symlink",
+        "usr/lib",
+        "/lib",
+        "--symlink",
+        "usr/lib64",
+        "/lib64",
+        "--symlink",
+        "usr/bin",
+        "/bin",
+        "--symlink",
+        "usr/sbin",
+        "/sbin",
+        "--bind",
+        "/home",
+        "/home",
+        "--bind",
+        "/var",
+        "/var",
+        "--bind",
+        "/run",
+        "/run",
+        "--proc",
+        "/proc",
+        "--dev",
+        "/dev",
+        "--bind",
+        "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m218_work/_work/pylint-dev__pylint-7080--baseline/tmp",
+        "/tmp",
+        "--bind",
+        "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m218_work/_work/pylint-dev__pylint-7080--baseline",
+        "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m218_work/_work/pylint-dev__pylint-7080--baseline",
+        "--dir",
+        "/testbed",
+        "--bind",
+        "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m218_work/_work/pylint-dev__pylint-7080--baseline/testbed",
+        "/testbed",
+        "--chdir",
+        "/testbed",
+        "--"
+      ],
+      "vtrace": [
+        "/usr/bin/bwrap",
+        "--tmpfs",
+        "/",
+        "--ro-bind",
+        "/usr",
+        "/usr",
+        "--ro-bind",
+        "/etc",
+        "/etc",
+        "--ro-bind",
+        "/opt",
+        "/opt",
+        "--symlink",
+        "usr/lib",
+        "/lib",
+        "--symlink",
+        "usr/lib64",
+        "/lib64",
+        "--symlink",
+        "usr/bin",
+        "/bin",
+        "--symlink",
+        "usr/sbin",
+        "/sbin",
+        "--bind",
+        "/home",
+        "/home",
+        "--bind",
+        "/var",
+        "/var",
+        "--bind",
+        "/run",
+        "/run",
+        "--proc",
+        "/proc",
+        "--dev",
+        "/dev",
+        "--bind",
+        "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m218_work/_work/pylint-dev__pylint-7080--vtrace/tmp",
+        "/tmp",
+        "--bind",
+        "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m218_work/_work/pylint-dev__pylint-7080--vtrace",
+        "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m218_work/_work/pylint-dev__pylint-7080--vtrace",
+        "--dir",
+        "/testbed",
+        "--bind",
+        "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m218_work/_work/pylint-dev__pylint-7080--vtrace/testbed",
+        "/testbed",
+        "--chdir",
+        "/testbed",
+        "--"
+      ]
+    },
+    "row2": {
+      "holderPid": 2206616,
+      "scratch": {
+        "claimId": "c1c368ccb8d9910ae8596794",
+        "scratchPath": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m218_work/_work/pylint-dev__pylint-6903--vtrace",
+        "agentTmp": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m218_work/_work/pylint-dev__pylint-6903--vtrace/tmp",
+        "freeBytesBefore": 336484421632,
+        "scratchHighWaterBytes": 90247168,
+        "freeBytesBeforeCleanup": 336484380672,
+        "scratchBytesAfterCleanup": 45056,
+        "freeBytesAfterCleanup": 336484380672,
+        "cleanupStatus": "REFUSED_LIVE_OWNER",
+        "cleanupVerified": false,
+        "liveReferences": [
+          {
+            "kind": "PROCESS",
+            "detail": "pid 2206616 python3 -c import sys,time; time.sleep(600) /home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m218_work/_work/pylint-dev__pylint-6903--vtrace (cwd /testbed (deleted))"
+          }
+        ],
+        "checkpoints": [
+          {
+            "label": "AFTER_CONTAINER_SETUP",
+            "at": "2026-09-05T12:24:01.903Z",
+            "scratchBytes": 30691328,
+            "scratchApparentBytes": 19470322,
+            "scratchInodes": 4020,
+            "freeBytes": 336453484544
+          },
+          {
+            "label": "AFTER_TREATMENT_INITIALISATION",
+            "at": "2026-09-05T12:24:14.123Z",
+            "scratchBytes": 90214400,
+            "scratchApparentBytes": 75011803,
+            "scratchInodes": 6249,
+            "freeBytes": 336394141696
+          },
+          {
+            "label": "AFTER_AGENT_COMPLETION",
+            "at": "2026-09-05T12:24:15.543Z",
+            "scratchBytes": 90247168,
+            "scratchApparentBytes": 75025124,
+            "scratchInodes": 6255,
+            "freeBytes": 336394100736
+          },
+          {
+            "label": "AFTER_EVALUATION",
+            "at": "2026-09-05T12:24:15.850Z",
+            "scratchBytes": 90247168,
+            "scratchApparentBytes": 75025124,
+            "scratchInodes": 6255,
+            "freeBytes": 336394100736
+          },
+          {
+            "label": "BEFORE_CLEANUP",
+            "at": "2026-09-05T12:24:15.868Z",
+            "scratchBytes": 90247168,
+            "scratchApparentBytes": 75025124,
+            "scratchInodes": 6255,
+            "freeBytes": 336394100736
+          }
+        ],
+        "emergency": {
+          "highWaterBytes": 90247168,
+          "warned": false,
+          "aborted": false,
+          "samples": 1,
+          "reason": null
+        }
+      },
+      "residual": {
+        "probeVersion": "stage5.m217.residual-state-probe.v1",
+        "probedAt": "2026-09-05T12:24:16Z",
+        "scope": {
+          "workRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m218_work/_work",
+          "armRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m218_work/_work/pylint-dev__pylint-6903--vtrace",
+          "hostMount": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m218_work/_work/pylint-dev__pylint-6903--vtrace/testbed",
+          "instanceId": "pylint-dev__pylint-6903",
+          "runId": "M216_RESEARCH_NON_EVALUATION:pylint-dev__pylint-6903:vtrace"
+        },
+        "harnessContainers": [],
+        "evaluatorContainers": [],
+        "liveProcesses": [
+          {
+            "pid": 2206616,
+            "cmdline": "python3 -c import sys,time; time.sleep(600) /home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m218_work/_work/pylint-dev__pylint-6903--vtrace"
+          }
+        ],
+        "armRootPresent": true,
+        "hostMountPresent": false,
+        "openBridgeHandles": [],
+        "ownedScratchBytesRemaining": 45056,
+        "ownedScratchInodesRemaining": 9,
+        "containerMountReferences": [],
+        "probeErrors": []
+      }
+    },
+    "recovery": {
+      "actions": [
+        "ownership of /home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m218_work/_work/pylint-dev__pylint-6903--vtrace proven by scratch claim c1c368ccb8d9910ae8596794",
+        "removed owned scratch /home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m218_work/_work/pylint-dev__pylint-6903--vtrace (28672 bytes, claim c1c368ccb8d9910ae8596794 released)",
+        "killed pid 2206616"
+      ],
+      "errors": []
+    },
+    "highWater": {
+      "label": "PRE-LAUNCH OBSERVED INFRASTRUCTURE HIGH-WATER (research instances, replay agent; the paid agent's /tmp usage is unknown)",
+      "rows": [
+        {
+          "attemptId": "VTRACE_EXTERNAL_VEXP_100:pylint-dev__pylint-7080:baseline#a1#0937d9c71d56",
+          "cleanupStatus": "CLEANED",
+          "highWaterBytes": 34271232,
+          "checkpoints": [
+            {
+              "label": "AFTER_CONTAINER_SETUP",
+              "bytes": 34271232,
+              "inodes": 4836
+            },
+            {
+              "label": "AFTER_TREATMENT_INITIALISATION",
+              "bytes": 34230272,
+              "inodes": 4829
+            },
+            {
+              "label": "AFTER_AGENT_COMPLETION",
+              "bytes": 34263040,
+              "inodes": 4835
+            },
+            {
+              "label": "AFTER_EVALUATION",
+              "bytes": 34263040,
+              "inodes": 4835
+            },
+            {
+              "label": "BEFORE_CLEANUP",
+              "bytes": 34263040,
+              "inodes": 4835
+            }
+          ]
+        },
+        {
+          "attemptId": "VTRACE_EXTERNAL_VEXP_100:pylint-dev__pylint-7080:vtrace#a1#4a6e25a20e30",
+          "cleanupStatus": "CLEANED",
+          "highWaterBytes": 95531008,
+          "checkpoints": [
+            {
+              "label": "AFTER_CONTAINER_SETUP",
+              "bytes": 34271232,
+              "inodes": 4836
+            },
+            {
+              "label": "AFTER_TREATMENT_INITIALISATION",
+              "bytes": 95498240,
+              "inodes": 7144
+            },
+            {
+              "label": "AFTER_AGENT_COMPLETION",
+              "bytes": 95531008,
+              "inodes": 7150
+            },
+            {
+              "label": "AFTER_EVALUATION",
+              "bytes": 95531008,
+              "inodes": 7150
+            },
+            {
+              "label": "BEFORE_CLEANUP",
+              "bytes": 95531008,
+              "inodes": 7150
+            }
+          ]
+        },
+        {
+          "attemptId": "VTRACE_EXTERNAL_VEXP_100:pylint-dev__pylint-6903:vtrace#a1#a425f7b7ecbf",
+          "cleanupStatus": "REFUSED_LIVE_OWNER",
+          "highWaterBytes": 90247168,
+          "checkpoints": [
+            {
+              "label": "AFTER_CONTAINER_SETUP",
+              "bytes": 30691328,
+              "inodes": 4020
+            },
+            {
+              "label": "AFTER_TREATMENT_INITIALISATION",
+              "bytes": 90214400,
+              "inodes": 6249
+            },
+            {
+              "label": "AFTER_AGENT_COMPLETION",
+              "bytes": 90247168,
+              "inodes": 6255
+            },
+            {
+              "label": "AFTER_EVALUATION",
+              "bytes": 90247168,
+              "inodes": 6255
+            },
+            {
+              "label": "BEFORE_CLEANUP",
+              "bytes": 90247168,
+              "inodes": 6255
+            }
+          ]
+        },
+        {
+          "attemptId": "VTRACE_EXTERNAL_VEXP_100:pylint-dev__pylint-6903:baseline#a1#4f5383ee028d",
+          "cleanupStatus": "CLEANED",
+          "highWaterBytes": 30691328,
+          "checkpoints": [
+            {
+              "label": "AFTER_CONTAINER_SETUP",
+              "bytes": 30691328,
+              "inodes": 4020
+            },
+            {
+              "label": "AFTER_TREATMENT_INITIALISATION",
+              "bytes": 30650368,
+              "inodes": 4013
+            },
+            {
+              "label": "AFTER_AGENT_COMPLETION",
+              "bytes": 30683136,
+              "inodes": 4019
+            },
+            {
+              "label": "AFTER_EVALUATION",
+              "bytes": 30683136,
+              "inodes": 4019
+            },
+            {
+              "label": "BEFORE_CLEANUP",
+              "bytes": 30683136,
+              "inodes": 4019
+            }
+          ]
+        }
+      ]
+    },
+    "emergency": {
+      "emergency": {
+        "highWaterBytes": 40550400,
+        "warned": true,
+        "aborted": true,
+        "samples": 2,
+        "reason": "Error: M218 scratch emergency: /home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m218_work/_work/pylint-dev__pylint-7080--baseline reached 40546304 bytes, above the frozen hard threshold 3145728; the attempt is aborted to protect the host"
+      },
+      "wallClockSeconds": 0.501,
+      "termination": "HARNESS_ABORT"
+    },
+    "finalProgress": {
+      "scratchHealth": {
+        "namespaceRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m218_work/_work",
+        "freeBytes": 336483921920,
+        "freeInodes": 104445632,
+        "capacityGatePass": true,
+        "ownedScratchBytes": 0,
+        "claimedPaths": 0,
+        "staleOwnedPathsAtLastSweep": 0,
+        "unknownPathsAtLastSweep": 0,
+        "cleanupFailures": 1,
+        "emergencyAborts": 0
+      },
+      "retryReserve": null,
+      "executableAuthority": null,
+      "operationalStatus": "EXPERIMENT_COMPLETED_FIXED_N",
+      "rowsRemaining": 0,
+      "maximumRemainingExposureUsd": 0,
+      "completionReserveUsd": 698.803832,
+      "fixedNCompletionGuaranteed": true,
+      "continuationState": "CONTINUATION_SAFE",
+      "haltReason": null,
+      "operationsChainHead": "e0e925f3b03182aa19b362357c041b142c5e4bf5f5de2ca8b6615630fe7ff9e8",
+      "plannedRuns": 4,
+      "terminalRuns": 4,
+      "validRuns": 4,
+      "infrastructureInvalidRuns": 0,
+      "currentRunId": null,
+      "cumulativeSpendUsd": 1.196168,
+      "projectedMaximumSpendUsd": 1.196168,
+      "ceilingUsd": 700,
+      "ledgerChainHead": "175e53fcf4827e0531202cd8a35f635740eba43adc01ab1a797c58d24392a0ba",
+      "runtimeErrors": []
+    },
+    "operationalEvents": [
+      {
+        "sequence": 0,
+        "kind": "SCRATCH_STALE_SWEEP",
+        "continuationAfter": "CONTINUATION_SAFE",
+        "attemptId": null
+      },
+      {
+        "sequence": 1,
+        "kind": "SCRATCH_CAPACITY_GATE",
+        "continuationAfter": "CONTINUATION_SAFE",
+        "attemptId": null
+      },
+      {
+        "sequence": 2,
+        "kind": "LAUNCH_ISOLATION_PREFLIGHT",
+        "continuationAfter": "CONTINUATION_SAFE",
+        "attemptId": null
+      },
+      {
+        "sequence": 3,
+        "kind": "ROW_TEARDOWN",
+        "continuationAfter": "CONTINUATION_SAFE",
+        "attemptId": "VTRACE_EXTERNAL_VEXP_100:pylint-dev__pylint-7080:baseline#a1#0937d9c71d56"
+      },
+      {
+        "sequence": 4,
+        "kind": "ROW_TEARDOWN",
+        "continuationAfter": "CONTINUATION_SAFE",
+        "attemptId": "VTRACE_EXTERNAL_VEXP_100:pylint-dev__pylint-7080:vtrace#a1#4a6e25a20e30"
+      },
+      {
+        "sequence": 5,
+        "kind": "ROW_TEARDOWN",
+        "continuationAfter": "CONTINUATION_BLOCKED",
+        "attemptId": "VTRACE_EXTERNAL_VEXP_100:pylint-dev__pylint-6903:vtrace#a1#a425f7b7ecbf"
+      },
+      {
+        "sequence": 6,
+        "kind": "COHORT_HALTED_ISOLATION_RISK",
+        "continuationAfter": "CONTINUATION_BLOCKED",
+        "attemptId": "VTRACE_EXTERNAL_VEXP_100:pylint-dev__pylint-6903:vtrace#a1#a425f7b7ecbf"
+      },
+      {
+        "sequence": 7,
+        "kind": "ISOLATION_RECOVERY_VERIFIED",
+        "continuationAfter": "CONTINUATION_SAFE",
+        "attemptId": "VTRACE_EXTERNAL_VEXP_100:pylint-dev__pylint-6903:vtrace#a1#a425f7b7ecbf"
+      },
+      {
+        "sequence": 8,
+        "kind": "ROW_TEARDOWN",
+        "continuationAfter": "CONTINUATION_SAFE",
+        "attemptId": "VTRACE_EXTERNAL_VEXP_100:pylint-dev__pylint-6903:baseline#a1#4f5383ee028d"
+      }
+    ],
+    "finalSweep": {
+      "at": "2026-09-05T12:24:33.693Z",
+      "namespaceRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m218_work/_work",
+      "entries": [
+        {
+          "path": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m218_work/_work/.m218-scratch-namespace.json",
+          "classification": "MARKER",
+          "bytes": 4096,
+          "inodes": 1,
+          "ageSeconds": 57.7158212890625,
+          "claimId": null,
+          "claimState": null,
+          "ownershipEvidence": [],
+          "liveChecks": [],
+          "reason": "the namespace marker",
+          "cleaned": false,
+          "bytesRemoved": 0,
+          "errors": []
+        }
+      ],
+      "cleaned": [],
+      "blocking": [],
+      "pass": true
+    },
+    "substrateAccounting": {
+      "containersCreated": 5,
+      "containersStarted": 5,
+      "containersTornDown": 5,
+      "openContainers": [],
+      "frozenInstancesTouched": [],
+      "nonFrozenInstancesTouched": [
+        "pylint-dev__pylint-6903",
+        "pylint-dev__pylint-7080"
+      ],
+      "commandCount": 59
+    }
+  }
+}

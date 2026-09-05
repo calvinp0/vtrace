@@ -1,0 +1,619 @@
+{
+  "schemaVersion": "stage5.m218.falsification.v1",
+  "milestone": "M218",
+  "generatedAt": "2026-09-05T12:18:57.531Z",
+  "authorities": {
+    "preregistration": {
+      "artifact": "stage5_m214_preregistration.json",
+      "expected": "3cd3b3d2d665c559fdb66e7274e809245e82ea7373344cf32614833b8dcbfea4",
+      "actual": "3cd3b3d2d665c559fdb66e7274e809245e82ea7373344cf32614833b8dcbfea4",
+      "verified": true
+    },
+    "manifest": {
+      "artifact": "stage5_m214_run_manifest.json",
+      "expected": "549df54b0f48b59a2bc13da2acf27cbf2469f416d90018c3d48dd87219f77ff1",
+      "actual": "549df54b0f48b59a2bc13da2acf27cbf2469f416d90018c3d48dd87219f77ff1",
+      "verified": true
+    },
+    "externalReference": {
+      "artifact": "stage5_m214_external_reference.json",
+      "expected": "822c4c5fb69dc21b8ada04189e73fcadb3e5ab1bf7c06a855dd4582a6ec7834b",
+      "actual": "822c4c5fb69dc21b8ada04189e73fcadb3e5ab1bf7c06a855dd4582a6ec7834b",
+      "verified": true
+    }
+  },
+  "predecessorHead": "9eb8689a71cac1c193ee081e15301c0cd1477a04",
+  "controlCount": 38,
+  "satisfied": 38,
+  "failures": [],
+  "guardFiresControls": 9,
+  "guardSilentControls": 29,
+  "suitePasses": true,
+  "briefControlMap": [
+    {
+      "id": "F118",
+      "briefId": "A1"
+    },
+    {
+      "id": "F119",
+      "briefId": "A2"
+    },
+    {
+      "id": "F120",
+      "briefId": "A3"
+    },
+    {
+      "id": "F121",
+      "briefId": "A4"
+    },
+    {
+      "id": "F122",
+      "briefId": "A5"
+    },
+    {
+      "id": "F123",
+      "briefId": "A6"
+    },
+    {
+      "id": "F124",
+      "briefId": "A7"
+    },
+    {
+      "id": "F125",
+      "briefId": "A8"
+    },
+    {
+      "id": "F126",
+      "briefId": "T1"
+    },
+    {
+      "id": "F127",
+      "briefId": "T2"
+    },
+    {
+      "id": "F128",
+      "briefId": "T3"
+    },
+    {
+      "id": "F129",
+      "briefId": "T4"
+    },
+    {
+      "id": "F130",
+      "briefId": "T5"
+    },
+    {
+      "id": "F145",
+      "briefId": "T20"
+    },
+    {
+      "id": "F145B",
+      "briefId": "T20"
+    },
+    {
+      "id": "F131",
+      "briefId": "T6"
+    },
+    {
+      "id": "F144",
+      "briefId": "T19"
+    },
+    {
+      "id": "F132",
+      "briefId": "T7"
+    },
+    {
+      "id": "F133",
+      "briefId": "T8"
+    },
+    {
+      "id": "F134",
+      "briefId": "T9"
+    },
+    {
+      "id": "F150",
+      "briefId": "T25"
+    },
+    {
+      "id": "F135",
+      "briefId": "T10"
+    },
+    {
+      "id": "F136",
+      "briefId": "T11"
+    },
+    {
+      "id": "F149",
+      "briefId": "T24"
+    },
+    {
+      "id": "F137",
+      "briefId": "T12"
+    },
+    {
+      "id": "F138",
+      "briefId": "T13"
+    },
+    {
+      "id": "F139",
+      "briefId": "T14"
+    },
+    {
+      "id": "F140",
+      "briefId": "T15"
+    },
+    {
+      "id": "F141",
+      "briefId": "T16"
+    },
+    {
+      "id": "F142",
+      "briefId": "T17"
+    },
+    {
+      "id": "F143",
+      "briefId": "T18"
+    },
+    {
+      "id": "F146",
+      "briefId": "T21"
+    },
+    {
+      "id": "F147",
+      "briefId": "T22"
+    },
+    {
+      "id": "F148",
+      "briefId": "T23"
+    }
+  ],
+  "launchRisk": {
+    "schemaVersion": "stage5.m218.launch-risk.v1",
+    "amendmentId": "M214_A1_RETRY_RESERVE",
+    "amendmentHash": "0ed156bc924a4817122c46b5c9fc0334e5f046c2dce0547eef2573b2483b76c1",
+    "executableAuthorityIdentity": "782f8a94e5d6bb8e09000b16c37a1037d72cb40537523ab61db0c53fa80ef086",
+    "ceilingAwaitingAuthorizationUsd": 735,
+    "ordinaryExposureUsd": 700,
+    "retryReserveUsd": 35,
+    "retryReserveAttempts": 10,
+    "perAttemptCapUsd": 3.5,
+    "intendedValidOutcomes": 200,
+    "manifestRows": 200,
+    "rerunnableCategories": [
+      "MODEL_SERVICE_FAILURE",
+      "CONTAINER_CANNOT_START",
+      "EVALUATOR_INFRA_FAILURE",
+      "TELEMETRY_CORRUPT"
+    ],
+    "maxAttemptsPerRun": 2,
+    "exhaustionMarker": "RETRY_RESERVE_EXHAUSTED",
+    "haltStatuses": [
+      "COHORT_HALTED_ISOLATION_RISK",
+      "COHORT_HALTED_SPEND_CEILING",
+      "COHORT_HALTED_RETRY_RESERVE_EXHAUSTED"
+    ],
+    "consequence": "Up to 10 preregistered infrastructure retries can be funded at the $3.5 cap without making completion of all 200 intended runs impossible under the $735 hard ceiling. An eleventh needed retry, or a reserve that cannot fund one more retry at cap, halts the cohort with COHORT_HALTED_RETRY_RESERVE_EXHAUSTED; the rows that never ran stay PLANNED and the cohort is reported as incomplete. No outcome is fabricated and no budget is raised at runtime.",
+    "spendAuthorizationStatus": "SPEND_AUTHORIZATION_PENDING",
+    "outcomeBlind": true,
+    "informationalOnly": true
+  },
+  "scratchPolicy": {
+    "version": "stage5.m218.scratch-policy.v1",
+    "observedInputs": {
+      "label": "PRE-LAUNCH OBSERVED INFRASTRUCTURE HIGH-WATER (not a future guarantee)",
+      "largestFrozenRepositoryCheckoutBytes": 285146397,
+      "largestFrozenRepositoryCheckoutRepo": "django__django (working tree + .git incl. directory entries, vexp-swe-bench/.bench-repos, measured by run_stage5_m218_tmp_census.ts 2026-09-05)",
+      "largestFrozenRepositoryCheckoutInodes": 14239,
+      "treatmentIndexBytesObserved": 40646988,
+      "treatmentIndexSource": "M216 real-substrate research row (pylint), indexSizeBytes",
+      "agentStreamBytesP90": 563927,
+      "agentStreamBytesMax": 2603053,
+      "agentStreamSource": "1368 historical Stage 5 raw run directories (M60–M183)",
+      "largestFrozenImageBytes": 10800000000,
+      "largestFrozenImageSource": "docker images: swebench/sweb.eval.x86_64.matplotlib_1776_matplotlib-24627 (10.8GB)",
+      "evaluatorLogBytesPerEvaluation": 67302,
+      "evaluatorLogSource": "vexp-swe-bench/logs/run_evaluation, per-run-directory median over the first 400 directories (the vexp-swebench-* directories are ~2.5 MB each)",
+      "agentPrivateTmpBytes": "UNKNOWN_BEFORE_PAID_COHORT"
+    },
+    "safetyFactor": 4,
+    "projectedAttemptScratchBytes": 2147483648,
+    "projectedAttemptInodes": 250000,
+    "hostSafetyReserveBytes": 32337418240,
+    "hostSafetyReserveInodes": 1250000,
+    "sharedTmpMinFreeBytes": 1073741824,
+    "sharedTmpMinFreeInodes": 100000,
+    "warningAttemptScratchBytes": 2147483648,
+    "hardAttemptScratchBytes": 8589934592,
+    "monitorIntervalMs": 30000,
+    "emergencyAbortCategory": "ENVIRONMENT_IRREPRODUCIBLE",
+    "emergencyAbortRationale": "A forced abort to protect the host is mapped to the closest frozen infrastructure class: the run's environment could not be sustained under the frozen resource policy. It is NOT rerunnable under M214's retry policy; no new retry class is created.",
+    "arms": "IDENTICAL for baseline and vtrace; the policy has no arm field",
+    "frozenBefore": "any outcome-bearing run; a later change is an explicit operational amendment"
+  },
+  "liveModelSpendUsd": 0,
+  "providerCalls": 0,
+  "frozenBenchmarkTaskLiveAgentRuns": 0,
+  "dockerContainersStarted": 0,
+  "controls": [
+    {
+      "id": "F118",
+      "briefId": "A1",
+      "description": "the original M214 preregistration, manifest, external reference and hash record (and M213) are byte-identical to the M217 HEAD blobs",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F119",
+      "briefId": "A2",
+      "description": "the M214 preregistration hash recomputes unchanged and is the amendment's parent",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F120",
+      "briefId": "A3",
+      "description": "an amendment that names a task, model, analysis, turn budget or arm set is refused by the audit, cannot bind as an authority, and a forged digest is refused by P12",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "model: refused by audit | model: refused: the amendment at memory is not the active authority: the ame | tasks: refused by audit | tasks: refused: the amendment at memory is not the active authority: the ame | statisticalPlan: refused by audit | statisticalPlan: refused: the amendment at memory is not the active authority: the ame | maxTurns: refused by audit | maxTurns: refused: the amendment at memory is not the active authority: the ame | arms: refused by audit | arms: refused: the amendment at memory is not the active authority: the ame | forged amendment digest refused by P12"
+    },
+    {
+      "id": "F121",
+      "briefId": "A4",
+      "description": "the frozen manifest remains 200 rows with its frozen digest, and the amendment declares 200 intended valid outcomes, not 210",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F122",
+      "briefId": "A5",
+      "description": "the committed amendment verifies to the pinned digest and states 10 attempts x $3.50 = $35 over $700 = $735, decided before any outcome",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F123",
+      "briefId": "A6",
+      "description": "after ten maximum-cost retries the eleventh is refused RETRY_RESERVE_EXHAUSTED by the accounting, by P11 on direct selection, and the cohort loop halts as its own end state without asking for more budget",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "reserve exhausted after ten $3.50 retries | eleventh retry refused RETRY_RESERVE_EXHAUSTED | direct row selection refused by P11 before a container | cohort loop halted COHORT_HALTED_RETRY_RESERVE_EXHAUSTED | operational status names the halt | halt recorded as an operational event | no result was written for the refused retry"
+    },
+    {
+      "id": "F124",
+      "briefId": "A7",
+      "description": "a retry whose prior failure is not on M214's rerunnable list is refused even though the whole reserve remains",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "refused RETRY_CLASS_NOT_PREREGISTERED with 10 slots and $35 intact | executor refused the non-preregistered retry"
+    },
+    {
+      "id": "F125",
+      "briefId": "A8",
+      "description": "the external VEXP reference digest is unchanged and is the amendment's parent; the amendment neither cites nor alters it",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F125B",
+      "briefId": null,
+      "description": "a COHORT row with no executable authority bound (M214's $700 alone) is refused by P12 before a container starts",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "launch refused for VTRACE_EXTERNAL_VEXP_100:astropy__astropy-14365:baseline: P12_EXECUTABLE_AUTHORITY no executable authority is bound; a COHORT row requires M214 + M214_A1_RETRY_RESERVE (amendment 0e"
+    },
+    {
+      "id": "F125C",
+      "briefId": null,
+      "description": "an operator authorisation of the original $700 ceiling is refused by P7 once A1 is the active authority ($735)",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "launch refused for VTRACE_EXTERNAL_VEXP_100:astropy__astropy-14365:baseline: P7_SPEND_AUTHORIZATION authorised ceiling $700 differs from the active $735"
+    },
+    {
+      "id": "F126",
+      "briefId": "T1",
+      "description": "a normal attempt claims owned scratch, records checkpoints, and cleanup leaves 0 run-owned bytes, a released claim, TEARDOWN_CLEAN and SAFE continuation",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F127",
+      "briefId": "T2",
+      "description": "a file the agent creates in its private /tmp lives inside the owned attempt path and is removed after the attempt",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F128",
+      "briefId": "T3",
+      "description": "a substantial nested tree (hundreds of entries, megabytes) is removed completely and its high-water is recorded",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F129",
+      "briefId": "T4",
+      "description": "a path under the namespace with no registered claim is classified UNKNOWN, blocks launch, and is never deleted, even by a forged claim",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F130",
+      "briefId": "T5",
+      "description": "an unrelated user temporary directory beside the namespace is untouched by attempts, sweeps and a direct cleanup request",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F145",
+      "briefId": "T20",
+      "description": "a path outside the namespace is structurally undeletable by the cleanup authority",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "/tmp/vtrace-stage5-m218-research-xnzoO1/unrelated-fresh-for-t20 (canonical /tmp/vtrace-stage5-m218-research-xnzoO1/unrel"
+    },
+    {
+      "id": "F145B",
+      "briefId": "T20",
+      "description": "the refused deletion did not touch the target",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F131",
+      "briefId": "T6",
+      "description": "a live process referencing the owned scratch makes cleanup refuse destructive deletion, the valid result stands, and continuation is BLOCKED until the owner is handled",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F144",
+      "briefId": "T19",
+      "description": "once the owning child is gone, the predeclared recovery removes the owned scratch through the ownership-checked path, releases the claim, and the next row runs without rerunning the valid one",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F132",
+      "briefId": "T7",
+      "description": "a teardown that could not remove the container leaves the bind-mounted tree in place, cleanup refuses, and continuation is BLOCKED",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F133",
+      "briefId": "T8",
+      "description": "stale owned scratch whose creator is dead and which nothing references is classified by ownership facts (registry, pid, references; age diagnostic only), removed, and released",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F134",
+      "briefId": "T9",
+      "description": "after a simulated executor crash the resumed sweep records path, size, ownership evidence, live checks and the reason cleanup was safe, then cleans",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F150",
+      "briefId": "T25",
+      "description": "the startup sweep removes safe stale paths and, for an unsafe or unknown path, blocks launch: the first row is refused by P10",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F135",
+      "briefId": "T10",
+      "description": "a valid result whose scratch cleanup failed is retained unchanged while the next row is blocked",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F136",
+      "briefId": "T11",
+      "description": "after the residue is cleaned and re-probed, the cohort continues at the next row without rerunning the prior valid result",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F149",
+      "briefId": "T24",
+      "description": "the cleanup record rides the append-only, hash-chained operations ledger with the §40 fields, and a mutation is detected",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F137",
+      "briefId": "T12",
+      "description": "with free space one byte below the derived threshold the attempt is refused by P13 before any container or claim",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "launch refused for VTRACE_EXTERNAL_VEXP_100:astropy__astropy-14365:baseline: P13_SCRATCH_CAPACITY namespace filesystem has 34484901887 bytes free; the policy re"
+    },
+    {
+      "id": "F138",
+      "briefId": "T13",
+      "description": "with free space at the threshold the valid run path is accepted",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F139",
+      "briefId": "T14",
+      "description": "a low free-inode condition fires the gate even with ample bytes",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "launch refused for VTRACE_EXTERNAL_VEXP_100:astropy__astropy-14365:vtrace: P6_EXECUTION_ORDER execution-order violation: row 1 (astropy__astropy-14365, vtrace) "
+    },
+    {
+      "id": "F140",
+      "briefId": "T15",
+      "description": "the raw stream, patch and evaluation are persisted outside scratch and digest-verified before cleanup; cleanup cannot reach them and they survive with their digests",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F141",
+      "briefId": "T16",
+      "description": "in both arm orders, a sentinel written by arm 1 into its private /tmp is not visible to arm 2, whose private /tmp is a different owned path",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F142",
+      "briefId": "T17",
+      "description": "baseline and vtrace receive the same private-/tmp shape (<attempt>/tmp) under the same frozen scratch policy; only the attempt path differs",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F143",
+      "briefId": "T18",
+      "description": "an exception thrown during the attempt still persists evidence, tears down and cleans the owned scratch, and continuation is SAFE",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F146",
+      "briefId": "T21",
+      "description": "symlinks inside owned scratch pointing outside (a directory, a file, the home directory) are unlinked never followed, and a claim path that is itself a symlink is refused",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F147",
+      "briefId": "T22",
+      "description": "cleanup of /, /tmp, an empty string, the home directory, the namespace root itself, a relative path and a kernel filesystem is structurally refused, as is establishing a namespace there",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "\"/\": refusing to delete the filesystem root | \"/tmp\": refusing to delete top-level system directory /tmp | \"/tmp\": refusing to delete top-level system directory /tmp | \"\": refusing to delete empty path | \"   \": refusing to delete empty path | \"/home/calvin\": refusing to delete the home directory | \"/tmp/vtrace-stage5-m218-research-vkre7v/cohort/_work\": refusing to delete the namespace root itself | \"relative\": refusing to delete relative path \"relative\" | \"/proc/self\": refusing to delete a kernel filesystem (/proc/self | namespace at /tmp refused | namespace at $HOME refused"
+    },
+    {
+      "id": "F148",
+      "briefId": "T23",
+      "description": "cleaning run A's owned scratch cannot touch run B's concurrently claimed scratch",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F151",
+      "briefId": null,
+      "description": "an attempt whose owned scratch crosses the frozen hard threshold trips the emergency monitor, which is recorded as SCRATCH_EMERGENCY_ABORT with the high-water, and the scratch is still cleaned",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F152",
+      "briefId": null,
+      "description": "the operational view carries scratch health (free space, owned bytes, stale paths, cleanup failures) and the retry reserve, and names no arm's performance",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no issue reported"
+    }
+  ]
+}

@@ -1,0 +1,260 @@
+{
+  "schemaVersion": "stage5.m218.real-host.v1",
+  "milestone": "M218",
+  "generatedAt": "2026-09-05T12:18:58.513Z",
+  "controlCount": 7,
+  "satisfied": 7,
+  "failures": [],
+  "guardFiresControls": 2,
+  "guardSilentControls": 5,
+  "suitePasses": true,
+  "liveModelSpendUsd": 0,
+  "providerCalls": 0,
+  "frozenBenchmarkTaskLiveAgentRuns": 0,
+  "frozenInstancesTouched": [],
+  "containersStarted": 0,
+  "researchNamespaceRemoved": true,
+  "controls": [
+    {
+      "id": "F166",
+      "briefId": "T1",
+      "description": "on the real shared /tmp filesystem, owned scratch is created, a real subprocess writes ~48 MiB into it, cleanup executes through the ownership-checked path, free space is recovered, and an unrelated temp sentinel remains",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_PROCESS",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F167",
+      "briefId": "T21",
+      "description": "on the real filesystem, symlinks from owned scratch to a sibling directory, a file, the home directory and an unrelated /tmp directory are unlinked and their targets untouched",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_PROCESS",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F168",
+      "briefId": "T6",
+      "description": "a real detached process whose cwd and argv hold the owned path makes the real liveness probe refuse cleanup; once the process is killed, cleanup completes",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_PROCESS",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F169",
+      "briefId": "T22",
+      "description": "cleanup of /, /tmp, an empty path, the home directory, the namespace root and an unrelated /tmp directory is refused on the real host and nothing is touched",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "substrate": "REAL_PROCESS",
+      "satisfied": true,
+      "detail": "\"/\" refused | \"/tmp\" refused | \"/tmp\" refused | \"\" refused | \"/home/calvin\" refused | \"/tmp/vtrace-stage5-m218-research-4MrtaZ/_work\" refused | \"/tmp/m218-unrelated-dir-nUesm2\" refused"
+    },
+    {
+      "id": "F170",
+      "briefId": "T9",
+      "description": "on the real host, scratch left by a dead creator with no live reference is recognised by the registry and the real pid check, recorded, and removed by the startup sweep",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_PROCESS",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F171",
+      "briefId": "T12",
+      "description": "the frozen capacity policy refuses a namespace hosted on the shared tmpfs /tmp: its whole size is below the host reserve plus one projected attempt",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "substrate": "REAL_PROCESS",
+      "satisfied": true,
+      "detail": "namespace filesystem has 20493303808 bytes free; the policy requires 34484901888 (32337418240 host reserve + 2147483648 projected attempt scratch)"
+    },
+    {
+      "id": "F171B",
+      "briefId": "T13",
+      "description": "the same policy passes for a namespace on the cohort's real filesystem (the results directory), with the shared /tmp floor also satisfied",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_PROCESS",
+      "satisfied": true,
+      "detail": "no issue reported"
+    }
+  ],
+  "notes": {
+    "namespace": "/tmp/vtrace-stage5-m218-research-4MrtaZ/_work",
+    "sharedTmp": {
+      "path": "/tmp",
+      "totalBytes": 33607553024,
+      "freeBytes": 20493324288,
+      "freeFraction": 0.6097832910764197,
+      "totalInodes": 4194304,
+      "freeInodes": 3024433,
+      "measuredAt": "2026-09-05T12:18:57.562Z"
+    },
+    "r1": {
+      "bytesWritten": 50331654,
+      "measuredBefore": {
+        "bytes": 50335744,
+        "apparentBytes": 50331974,
+        "inodes": 7,
+        "exists": true
+      },
+      "freeBefore": 20493320192,
+      "freeDuring": 20442984448,
+      "freeAfter": 20493320192,
+      "report": {
+        "schemaVersion": "stage5.m218.scratch-lifecycle.v1",
+        "claimId": "664e3f83ee66425eab4354ac",
+        "scratchPath": "/tmp/vtrace-stage5-m218-research-4MrtaZ/_work/astropy__astropy-14365--baseline",
+        "at": "2026-09-05T12:18:57.662Z",
+        "freeBytesBefore": 20493324288,
+        "scratchHighWaterBytes": 50335744,
+        "scratchHighWaterInodes": 7,
+        "freeBytesBeforeCleanup": 20442984448,
+        "containerRemoved": true,
+        "checkpoints": [
+          {
+            "label": "AFTER_SUBPROCESS_WRITE",
+            "at": "2026-09-05T12:18:57.661Z",
+            "scratchBytes": 50335744,
+            "scratchApparentBytes": 50331974,
+            "scratchInodes": 7,
+            "freeBytes": 20442984448
+          }
+        ],
+        "bytesRemoved": 50335744,
+        "entriesRemoved": 7,
+        "symlinksUnlinked": 0,
+        "status": "CLEANED",
+        "scratchBytesAfterCleanup": 0,
+        "scratchInodesAfterCleanup": 0,
+        "freeBytesAfterCleanup": 20493320192,
+        "liveReferences": [],
+        "errors": [],
+        "verified": true
+      }
+    },
+    "r3": {
+      "holderPid": 2178220,
+      "refused": [
+        {
+          "kind": "PROCESS",
+          "detail": "pid 2178220 python3 -c import sys,time; time.sleep(600) /tmp/vtrace-stage5-m218-research-4MrtaZ/_work/astropy__astropy-14365--baseline (cwd /tmp/vtrace-stage5-m218-research-4MrtaZ/_work/astropy__astropy-14365--baseline/tmp)"
+        }
+      ],
+      "cleaned": "CLEANED"
+    },
+    "r5": {
+      "at": "2026-09-05T12:18:58.504Z",
+      "namespaceRoot": "/tmp/vtrace-stage5-m218-research-4MrtaZ/_work",
+      "entries": [
+        {
+          "path": "/tmp/vtrace-stage5-m218-research-4MrtaZ/_work/.m218-scratch-namespace.json",
+          "classification": "MARKER",
+          "bytes": 4096,
+          "inodes": 1,
+          "ageSeconds": 0.941353759765625,
+          "claimId": null,
+          "claimState": null,
+          "ownershipEvidence": [],
+          "liveChecks": [],
+          "reason": "the namespace marker",
+          "cleaned": false,
+          "bytesRemoved": 0,
+          "errors": []
+        },
+        {
+          "path": "/tmp/vtrace-stage5-m218-research-4MrtaZ/_work/astropy__astropy-14365--baseline",
+          "classification": "STALE_CLEANABLE",
+          "bytes": 1048576,
+          "inodes": 0,
+          "ageSeconds": null,
+          "claimId": "ed837e57dd147a1a22e4c267",
+          "claimState": "RELEASED",
+          "ownershipEvidence": [
+            "claim ed837e57dd147a1a22e4c267 (VTRACE_EXTERNAL_VEXP_100:astropy__astropy-14365:baseline#a2#real-host-symlink) state RELEASED",
+            "creator pid 2178185@archlinux start 296700553"
+          ],
+          "liveChecks": [
+            "claim already RELEASED"
+          ],
+          "reason": "ownership proven, no live references; removed",
+          "cleaned": true,
+          "bytesRemoved": 1048576,
+          "errors": []
+        }
+      ],
+      "cleaned": [
+        "/tmp/vtrace-stage5-m218-research-4MrtaZ/_work/astropy__astropy-14365--baseline"
+      ],
+      "blocking": [],
+      "pass": true
+    },
+    "capacityGateOnSharedTmpNamespace": {
+      "at": "2026-09-05T12:18:58.512Z",
+      "namespaceRoot": "/tmp/vtrace-stage5-m218-research-4MrtaZ/_work",
+      "namespaceFilesystem": {
+        "path": "/tmp/vtrace-stage5-m218-research-4MrtaZ/_work",
+        "totalBytes": 33607553024,
+        "freeBytes": 20493303808,
+        "freeFraction": 0.6097826816895957,
+        "totalInodes": 4194304,
+        "freeInodes": 3024426,
+        "measuredAt": "2026-09-05T12:18:58.512Z"
+      },
+      "sharedTmp": {
+        "path": "/tmp",
+        "totalBytes": 33607553024,
+        "freeBytes": 20493303808,
+        "freeFraction": 0.6097826816895957,
+        "totalInodes": 4194304,
+        "freeInodes": 3024426,
+        "measuredAt": "2026-09-05T12:18:58.512Z"
+      },
+      "projectedAttemptScratchBytes": 2147483648,
+      "hostSafetyReserveBytes": 32337418240,
+      "requiredFreeBytes": 34484901888,
+      "freeAfterProjectedAttemptBytes": 18345820160,
+      "requiredFreeInodes": 1500000,
+      "issues": [
+        "namespace filesystem has 20493303808 bytes free; the policy requires 34484901888 (32337418240 host reserve + 2147483648 projected attempt scratch)"
+      ],
+      "pass": false
+    },
+    "capacityGateOnCohortNamespace": {
+      "at": "2026-09-05T12:18:58.512Z",
+      "namespaceRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m218_real_host_2rHKWt/_work",
+      "namespaceFilesystem": {
+        "path": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m218_real_host_2rHKWt/_work",
+        "totalBytes": 1966788050944,
+        "freeBytes": 336442322944,
+        "freeFraction": 0.17106180952366354,
+        "totalInodes": 122036224,
+        "freeInodes": 104441428,
+        "measuredAt": "2026-09-05T12:18:58.512Z"
+      },
+      "sharedTmp": {
+        "path": "/tmp",
+        "totalBytes": 33607553024,
+        "freeBytes": 20493303808,
+        "freeFraction": 0.6097826816895957,
+        "totalInodes": 4194304,
+        "freeInodes": 3024426,
+        "measuredAt": "2026-09-05T12:18:58.512Z"
+      },
+      "projectedAttemptScratchBytes": 2147483648,
+      "hostSafetyReserveBytes": 32337418240,
+      "requiredFreeBytes": 34484901888,
+      "freeAfterProjectedAttemptBytes": 334294839296,
+      "requiredFreeInodes": 1500000,
+      "issues": [],
+      "pass": true
+    }
+  }
+}
