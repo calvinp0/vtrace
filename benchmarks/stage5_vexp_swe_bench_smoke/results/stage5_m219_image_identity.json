@@ -1,0 +1,908 @@
+{
+  "schemaVersion": "stage5.m219.image-identity.v1",
+  "recordedAt": "2026-09-05T15:27:39.824Z",
+  "manifestHash": "549df54b0f48b59a2bc13da2acf27cbf2469f416d90018c3d48dd87219f77ff1",
+  "host": "archlinux",
+  "images": [
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.astropy_1776_astropy-14365:latest",
+      "instanceIds": [
+        "astropy__astropy-14365"
+      ],
+      "imageId": "sha256:70da5c0d4fcbbc2cbc46bbccf8d9ac2dfd4453cf7a19f9fa150b30bb7346f2f4",
+      "repoDigest": "sha256:70da5c0d4fcbbc2cbc46bbccf8d9ac2dfd4453cf7a19f9fa150b30bb7346f2f4",
+      "sizeBytes": 4170000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.astropy_1776_astropy-14369:latest",
+      "instanceIds": [
+        "astropy__astropy-14369"
+      ],
+      "imageId": "sha256:ba6a17ac704562c63d361457c25320d5dcf60b0d1592568e9264bbd148025140",
+      "repoDigest": "sha256:ba6a17ac704562c63d361457c25320d5dcf60b0d1592568e9264bbd148025140",
+      "sizeBytes": 4160000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.astropy_1776_astropy-14539:latest",
+      "instanceIds": [
+        "astropy__astropy-14539"
+      ],
+      "imageId": "sha256:ed6b8fa262a734159bb7171934ad5d03dff520de439555bf3b6f41470a09bc4c",
+      "repoDigest": "sha256:ed6b8fa262a734159bb7171934ad5d03dff520de439555bf3b6f41470a09bc4c",
+      "sizeBytes": 4170000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.astropy_1776_astropy-14598:latest",
+      "instanceIds": [
+        "astropy__astropy-14598"
+      ],
+      "imageId": "sha256:e6a7291cea12126cd739997769070d60e4ebac363af4065261073750cb617bf3",
+      "repoDigest": "sha256:e6a7291cea12126cd739997769070d60e4ebac363af4065261073750cb617bf3",
+      "sizeBytes": 4170000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.astropy_1776_astropy-7166:latest",
+      "instanceIds": [
+        "astropy__astropy-7166"
+      ],
+      "imageId": "sha256:4b46c92697326df9440868e8990289755954dd739a1ff27a4ad1371da6a63ce2",
+      "repoDigest": "sha256:4b46c92697326df9440868e8990289755954dd739a1ff27a4ad1371da6a63ce2",
+      "sizeBytes": 4110000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.django_1776_django-10880:latest",
+      "instanceIds": [
+        "django__django-10880"
+      ],
+      "imageId": "sha256:94e6ba5d96b1a1db8bc6fd117c03728d6a7453ddb723dc4484f48bd22efc968d",
+      "repoDigest": "sha256:94e6ba5d96b1a1db8bc6fd117c03728d6a7453ddb723dc4484f48bd22efc968d",
+      "sizeBytes": 4180000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.django_1776_django-10973:latest",
+      "instanceIds": [
+        "django__django-10973"
+      ],
+      "imageId": "sha256:ed086eeedcb33feb3d298d97764c0413e078d1e6144f0a145c5defa34bb077c8",
+      "repoDigest": "sha256:ed086eeedcb33feb3d298d97764c0413e078d1e6144f0a145c5defa34bb077c8",
+      "sizeBytes": 4180000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.django_1776_django-11095:latest",
+      "instanceIds": [
+        "django__django-11095"
+      ],
+      "imageId": "sha256:0d2973f2ef6308ebe0309814503143869edce1f057e7ca565d4305ffbfbceb76",
+      "repoDigest": "sha256:0d2973f2ef6308ebe0309814503143869edce1f057e7ca565d4305ffbfbceb76",
+      "sizeBytes": 4180000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.django_1776_django-11133:latest",
+      "instanceIds": [
+        "django__django-11133"
+      ],
+      "imageId": "sha256:914093363dbe12def92c5d36e9bdc5270cce5ed0aa6f3daad8bc4ef0389c29bf",
+      "repoDigest": "sha256:914093363dbe12def92c5d36e9bdc5270cce5ed0aa6f3daad8bc4ef0389c29bf",
+      "sizeBytes": 4190000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.django_1776_django-11206:latest",
+      "instanceIds": [
+        "django__django-11206"
+      ],
+      "imageId": "sha256:1478ff091b2e702e3eeda873e40054431d9f2b592f8e0f61d9dc6b7ec18455b7",
+      "repoDigest": "sha256:1478ff091b2e702e3eeda873e40054431d9f2b592f8e0f61d9dc6b7ec18455b7",
+      "sizeBytes": 4180000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.django_1776_django-11490:latest",
+      "instanceIds": [
+        "django__django-11490"
+      ],
+      "imageId": "sha256:efe0a8e57dfa92d296fb017ad7931d842b506ad05ef7582195b4bd9a890c3a9e",
+      "repoDigest": "sha256:efe0a8e57dfa92d296fb017ad7931d842b506ad05ef7582195b4bd9a890c3a9e",
+      "sizeBytes": 4180000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.django_1776_django-11728:latest",
+      "instanceIds": [
+        "django__django-11728"
+      ],
+      "imageId": "sha256:20c1140ad7480854ca794a512fd7db9345e16d8fed19edf8f7f8759f6658ee08",
+      "repoDigest": "sha256:20c1140ad7480854ca794a512fd7db9345e16d8fed19edf8f7f8759f6658ee08",
+      "sizeBytes": 4180000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.django_1776_django-11740:latest",
+      "instanceIds": [
+        "django__django-11740"
+      ],
+      "imageId": "sha256:6a057a8a78fefed32c70c306c4843a12a9a83147a75e20a523d2fa7bdca392f4",
+      "repoDigest": "sha256:6a057a8a78fefed32c70c306c4843a12a9a83147a75e20a523d2fa7bdca392f4",
+      "sizeBytes": 4180000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.django_1776_django-11749:latest",
+      "instanceIds": [
+        "django__django-11749"
+      ],
+      "imageId": "sha256:8fd290a544ff73ae75fc4331e4c5f0ff1d80a2458665e484f3d4a5862ba10e50",
+      "repoDigest": "sha256:8fd290a544ff73ae75fc4331e4c5f0ff1d80a2458665e484f3d4a5862ba10e50",
+      "sizeBytes": 4180000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.django_1776_django-11815:latest",
+      "instanceIds": [
+        "django__django-11815"
+      ],
+      "imageId": "sha256:19b66392c9872e6d07b331b0ed59466c3e6c3588bc4cdd89f56f8767dc774f8a",
+      "repoDigest": "sha256:19b66392c9872e6d07b331b0ed59466c3e6c3588bc4cdd89f56f8767dc774f8a",
+      "sizeBytes": 4200000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.django_1776_django-11820:latest",
+      "instanceIds": [
+        "django__django-11820"
+      ],
+      "imageId": "sha256:26d34e7bfd4225521b60124c4c71c7be9e00ee81255b93662edd2c31b4a68c06",
+      "repoDigest": "sha256:26d34e7bfd4225521b60124c4c71c7be9e00ee81255b93662edd2c31b4a68c06",
+      "sizeBytes": 4180000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.django_1776_django-12050:latest",
+      "instanceIds": [
+        "django__django-12050"
+      ],
+      "imageId": "sha256:34773901589784072af940b29697018dc17b32e37b4ff135a153c99ac2c38dec",
+      "repoDigest": "sha256:34773901589784072af940b29697018dc17b32e37b4ff135a153c99ac2c38dec",
+      "sizeBytes": 4180000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.django_1776_django-12273:latest",
+      "instanceIds": [
+        "django__django-12273"
+      ],
+      "imageId": "sha256:ceea46664eff0d02e627ee17f0f9230e5c20a1debf3eb1ca2b53c7ca476210aa",
+      "repoDigest": "sha256:ceea46664eff0d02e627ee17f0f9230e5c20a1debf3eb1ca2b53c7ca476210aa",
+      "sizeBytes": 4180000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.django_1776_django-12276:latest",
+      "instanceIds": [
+        "django__django-12276"
+      ],
+      "imageId": "sha256:903942f778dbcf0b61c62031697c4a5f3655569c11c84204bdfa307b844ec2ae",
+      "repoDigest": "sha256:903942f778dbcf0b61c62031697c4a5f3655569c11c84204bdfa307b844ec2ae",
+      "sizeBytes": 4180000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.django_1776_django-12325:latest",
+      "instanceIds": [
+        "django__django-12325"
+      ],
+      "imageId": "sha256:9c15847c3fd7d269adf15233bd7034bb9e0491e45fefe87454013d2bdf7a6efe",
+      "repoDigest": "sha256:9c15847c3fd7d269adf15233bd7034bb9e0491e45fefe87454013d2bdf7a6efe",
+      "sizeBytes": 4180000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.django_1776_django-12774:latest",
+      "instanceIds": [
+        "django__django-12774"
+      ],
+      "imageId": "sha256:c3d0148636ca1fc2170212ba6cc2c3c2df470ccca9e2e6b755447e3e51abd9f6",
+      "repoDigest": "sha256:c3d0148636ca1fc2170212ba6cc2c3c2df470ccca9e2e6b755447e3e51abd9f6",
+      "sizeBytes": 4190000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.django_1776_django-12858:latest",
+      "instanceIds": [
+        "django__django-12858"
+      ],
+      "imageId": "sha256:c9865ad6e7a0907fa9a449b6f7541a72904777036515d539b38186fe01e09f2b",
+      "repoDigest": "sha256:c9865ad6e7a0907fa9a449b6f7541a72904777036515d539b38186fe01e09f2b",
+      "sizeBytes": 4190000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.django_1776_django-13012:latest",
+      "instanceIds": [
+        "django__django-13012"
+      ],
+      "imageId": "sha256:29c0e742cb37711bd8439df0ab91e29900dcac93d81121b2f2c4fcfaf995eceb",
+      "repoDigest": "sha256:29c0e742cb37711bd8439df0ab91e29900dcac93d81121b2f2c4fcfaf995eceb",
+      "sizeBytes": 4190000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.django_1776_django-13112:latest",
+      "instanceIds": [
+        "django__django-13112"
+      ],
+      "imageId": "sha256:a5e22b373f35ce538ae14aa9b2eb2c6552379ff97a560128270e45e18984eaf1",
+      "repoDigest": "sha256:a5e22b373f35ce538ae14aa9b2eb2c6552379ff97a560128270e45e18984eaf1",
+      "sizeBytes": 4190000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.django_1776_django-13195:latest",
+      "instanceIds": [
+        "django__django-13195"
+      ],
+      "imageId": "sha256:b42fb9c9d19e0f503e0353b77195524e6dff1997ce7cf2e53e38950af3f1cc11",
+      "repoDigest": "sha256:b42fb9c9d19e0f503e0353b77195524e6dff1997ce7cf2e53e38950af3f1cc11",
+      "sizeBytes": 4190000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.django_1776_django-13363:latest",
+      "instanceIds": [
+        "django__django-13363"
+      ],
+      "imageId": "sha256:d2d3a8ca05dac86be07180d39c31caa12d268924dc56743262ac92a175aed3f6",
+      "repoDigest": "sha256:d2d3a8ca05dac86be07180d39c31caa12d268924dc56743262ac92a175aed3f6",
+      "sizeBytes": 4200000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.django_1776_django-13512:latest",
+      "instanceIds": [
+        "django__django-13512"
+      ],
+      "imageId": "sha256:730eab5b64c03ed8e8c94064da483db36fbd79d2465ffa98809acc6282bcfd82",
+      "repoDigest": "sha256:730eab5b64c03ed8e8c94064da483db36fbd79d2465ffa98809acc6282bcfd82",
+      "sizeBytes": 4200000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.django_1776_django-13513:latest",
+      "instanceIds": [
+        "django__django-13513"
+      ],
+      "imageId": "sha256:3e24b398102a82535f18951342d28cb996eb7e38177fef493387d068584e76a9",
+      "repoDigest": "sha256:3e24b398102a82535f18951342d28cb996eb7e38177fef493387d068584e76a9",
+      "sizeBytes": 4200000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.django_1776_django-13551:latest",
+      "instanceIds": [
+        "django__django-13551"
+      ],
+      "imageId": "sha256:6a26656fa15981ec1e6ab64a2a2f6cb7378d957b3e63385507c1728a01b619f8",
+      "repoDigest": "sha256:6a26656fa15981ec1e6ab64a2a2f6cb7378d957b3e63385507c1728a01b619f8",
+      "sizeBytes": 4220000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.django_1776_django-13590:latest",
+      "instanceIds": [
+        "django__django-13590"
+      ],
+      "imageId": "sha256:981974f9ed75972ce502a3c9b805513b509031ba3d5a41d93e5f95db9e3dadf8",
+      "repoDigest": "sha256:981974f9ed75972ce502a3c9b805513b509031ba3d5a41d93e5f95db9e3dadf8",
+      "sizeBytes": 4220000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.django_1776_django-13658:latest",
+      "instanceIds": [
+        "django__django-13658"
+      ],
+      "imageId": "sha256:eb867897d1362f64efd96d65ec1decc1d3783f433a59e74885bb5e92f6737cd9",
+      "repoDigest": "sha256:eb867897d1362f64efd96d65ec1decc1d3783f433a59e74885bb5e92f6737cd9",
+      "sizeBytes": 4220000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.django_1776_django-13810:latest",
+      "instanceIds": [
+        "django__django-13810"
+      ],
+      "imageId": "sha256:b3b2851bafad29b19506a85779bf248365381c6f04b228989f57d5c5c54c5ddb",
+      "repoDigest": "sha256:b3b2851bafad29b19506a85779bf248365381c6f04b228989f57d5c5c54c5ddb",
+      "sizeBytes": 4200000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.django_1776_django-13820:latest",
+      "instanceIds": [
+        "django__django-13820"
+      ],
+      "imageId": "sha256:6831a14a8d8d2bfac2a12ff3cc386e4d34e132f58fa4a5f2754bf69dda766e5b",
+      "repoDigest": "sha256:6831a14a8d8d2bfac2a12ff3cc386e4d34e132f58fa4a5f2754bf69dda766e5b",
+      "sizeBytes": 4200000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.django_1776_django-14608:latest",
+      "instanceIds": [
+        "django__django-14608"
+      ],
+      "imageId": "sha256:a8978401269f0ef58e8ddc42dae1ad21547a74d94551241c1754627dbc0d79b9",
+      "repoDigest": "sha256:a8978401269f0ef58e8ddc42dae1ad21547a74d94551241c1754627dbc0d79b9",
+      "sizeBytes": 4350000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.django_1776_django-14792:latest",
+      "instanceIds": [
+        "django__django-14792"
+      ],
+      "imageId": "sha256:95b4576c207216a24962c777447737314d8a69e9beac97065f58995fc54ce7f8",
+      "repoDigest": "sha256:95b4576c207216a24962c777447737314d8a69e9beac97065f58995fc54ce7f8",
+      "sizeBytes": 4340000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.django_1776_django-15037:latest",
+      "instanceIds": [
+        "django__django-15037"
+      ],
+      "imageId": "sha256:4a75865ed731741f5b3c52483f71fd538bd86933d8339298279e68d87804bc13",
+      "repoDigest": "sha256:4a75865ed731741f5b3c52483f71fd538bd86933d8339298279e68d87804bc13",
+      "sizeBytes": 4390000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.django_1776_django-15503:latest",
+      "instanceIds": [
+        "django__django-15503"
+      ],
+      "imageId": "sha256:4438a1d7e5551ebb084426bd286735e51a05d498684a5cb7eec337d259d02a13",
+      "repoDigest": "sha256:4438a1d7e5551ebb084426bd286735e51a05d498684a5cb7eec337d259d02a13",
+      "sizeBytes": 4390000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.django_1776_django-15572:latest",
+      "instanceIds": [
+        "django__django-15572"
+      ],
+      "imageId": "sha256:0409b51743d552658e20a8e54fc461186f67e6998f589e3321b4c4b6c29e23c7",
+      "repoDigest": "sha256:0409b51743d552658e20a8e54fc461186f67e6998f589e3321b4c4b6c29e23c7",
+      "sizeBytes": 4390000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.django_1776_django-15695:latest",
+      "instanceIds": [
+        "django__django-15695"
+      ],
+      "imageId": "sha256:c7697fff17b1d0580146de04672f7e71d2ab19b3a42a0cc08168c5920385bd69",
+      "repoDigest": "sha256:c7697fff17b1d0580146de04672f7e71d2ab19b3a42a0cc08168c5920385bd69",
+      "sizeBytes": 4410000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.django_1776_django-15731:latest",
+      "instanceIds": [
+        "django__django-15731"
+      ],
+      "imageId": "sha256:00aa4ebb72a1a53853bd2ff2998b69f04a18a3d49da2d322e98d29f1b2e07641",
+      "repoDigest": "sha256:00aa4ebb72a1a53853bd2ff2998b69f04a18a3d49da2d322e98d29f1b2e07641",
+      "sizeBytes": 4400000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.django_1776_django-16256:latest",
+      "instanceIds": [
+        "django__django-16256"
+      ],
+      "imageId": "sha256:4b95237ee6f8da439e16578107fb5f1c2afb433a2d793961770adabe46744743",
+      "repoDigest": "sha256:4b95237ee6f8da439e16578107fb5f1c2afb433a2d793961770adabe46744743",
+      "sizeBytes": 4400000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.django_1776_django-16263:latest",
+      "instanceIds": [
+        "django__django-16263"
+      ],
+      "imageId": "sha256:82700a720fd444baafe5b0a83a16784dad712f8da1dc2c2b7070a5c6650e0739",
+      "repoDigest": "sha256:82700a720fd444baafe5b0a83a16784dad712f8da1dc2c2b7070a5c6650e0739",
+      "sizeBytes": 4400000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.django_1776_django-16333:latest",
+      "instanceIds": [
+        "django__django-16333"
+      ],
+      "imageId": "sha256:420fc5a360b24e529b22e4b5f920e1dfd808dee5034c2c41d39aff24fd6cc1cc",
+      "repoDigest": "sha256:420fc5a360b24e529b22e4b5f920e1dfd808dee5034c2c41d39aff24fd6cc1cc",
+      "sizeBytes": 4400000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.django_1776_django-16569:latest",
+      "instanceIds": [
+        "django__django-16569"
+      ],
+      "imageId": "sha256:f500cd7cad21c076f6e479b047ec3ce7fb6e5c0dbd76bbe73915e42e7b52cd32",
+      "repoDigest": "sha256:f500cd7cad21c076f6e479b047ec3ce7fb6e5c0dbd76bbe73915e42e7b52cd32",
+      "sizeBytes": 4480000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.django_1776_django-16667:latest",
+      "instanceIds": [
+        "django__django-16667"
+      ],
+      "imageId": "sha256:28e82e91c61e771774a7a72d6819efb7f994671077f636507a1e2f91889c451a",
+      "repoDigest": "sha256:28e82e91c61e771774a7a72d6819efb7f994671077f636507a1e2f91889c451a",
+      "sizeBytes": 4480000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.django_1776_django-16819:latest",
+      "instanceIds": [
+        "django__django-16819"
+      ],
+      "imageId": "sha256:6c46d22aaf692840f16209fe29b1d0c940bed043fce8047eb12169215222f044",
+      "repoDigest": "sha256:6c46d22aaf692840f16209fe29b1d0c940bed043fce8047eb12169215222f044",
+      "sizeBytes": 4490000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.django_1776_django-16877:latest",
+      "instanceIds": [
+        "django__django-16877"
+      ],
+      "imageId": "sha256:19b59ae7add0a454202fc9301ca8ddef1e977e5c0a6ec9163224e4622b63e1e9",
+      "repoDigest": "sha256:19b59ae7add0a454202fc9301ca8ddef1e977e5c0a6ec9163224e4622b63e1e9",
+      "sizeBytes": 4490000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.django_1776_django-16938:latest",
+      "instanceIds": [
+        "django__django-16938"
+      ],
+      "imageId": "sha256:f4346d8fc89a1359ed5ee8429d408ed645f7f8db97ba347ab8d77bfd59e67a4f",
+      "repoDigest": "sha256:f4346d8fc89a1359ed5ee8429d408ed645f7f8db97ba347ab8d77bfd59e67a4f",
+      "sizeBytes": 4490000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.django_1776_django-17084:latest",
+      "instanceIds": [
+        "django__django-17084"
+      ],
+      "imageId": "sha256:5a200d1c5ac1dec314fa7c4e9933db8314f030d2579ffb0ac4f4891f7eb77169",
+      "repoDigest": "sha256:5a200d1c5ac1dec314fa7c4e9933db8314f030d2579ffb0ac4f4891f7eb77169",
+      "sizeBytes": 4490000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.matplotlib_1776_matplotlib-22719:latest",
+      "instanceIds": [
+        "matplotlib__matplotlib-22719"
+      ],
+      "imageId": "sha256:c717250d0f6b4a9c65cd719057124119671e995e35b1a5b48a613288c31b85e8",
+      "repoDigest": "sha256:c717250d0f6b4a9c65cd719057124119671e995e35b1a5b48a613288c31b85e8",
+      "sizeBytes": 10600000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.matplotlib_1776_matplotlib-24627:latest",
+      "instanceIds": [
+        "matplotlib__matplotlib-24627"
+      ],
+      "imageId": "sha256:476e2188798df71e5e904360d15fe2c6fe23c7f215eb3dafd3001688cbc40adc",
+      "repoDigest": "sha256:476e2188798df71e5e904360d15fe2c6fe23c7f215eb3dafd3001688cbc40adc",
+      "sizeBytes": 10800000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.matplotlib_1776_matplotlib-24870:latest",
+      "instanceIds": [
+        "matplotlib__matplotlib-24870"
+      ],
+      "imageId": "sha256:e7387d51d146c5aa492184a1ba8b4be444964ba3f653b3304e8d5d9a27ea3c33",
+      "repoDigest": "sha256:e7387d51d146c5aa492184a1ba8b4be444964ba3f653b3304e8d5d9a27ea3c33",
+      "sizeBytes": 10800000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.matplotlib_1776_matplotlib-24970:latest",
+      "instanceIds": [
+        "matplotlib__matplotlib-24970"
+      ],
+      "imageId": "sha256:c5d99048ceeb6b0c3157dde39bb122174e494b557fb7dd3c6d4bd8dba70a1bfa",
+      "repoDigest": "sha256:c5d99048ceeb6b0c3157dde39bb122174e494b557fb7dd3c6d4bd8dba70a1bfa",
+      "sizeBytes": 10800000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.matplotlib_1776_matplotlib-25332:latest",
+      "instanceIds": [
+        "matplotlib__matplotlib-25332"
+      ],
+      "imageId": "sha256:e730789910800c84441072e81399d623440a0b03838867d203e54a5f65058cb3",
+      "repoDigest": "sha256:e730789910800c84441072e81399d623440a0b03838867d203e54a5f65058cb3",
+      "sizeBytes": 10800000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.matplotlib_1776_matplotlib-25960:latest",
+      "instanceIds": [
+        "matplotlib__matplotlib-25960"
+      ],
+      "imageId": "sha256:396c621f3067dc1f1d4928494d8b6a0b68975d3e88d83ea6d2b43573c64a1b8e",
+      "repoDigest": "sha256:396c621f3067dc1f1d4928494d8b6a0b68975d3e88d83ea6d2b43573c64a1b8e",
+      "sizeBytes": 10800000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.matplotlib_1776_matplotlib-26466:latest",
+      "instanceIds": [
+        "matplotlib__matplotlib-26466"
+      ],
+      "imageId": "sha256:f800b21c102fae7869144983fc32dc6c344f40871be11524807c3df30046ef37",
+      "repoDigest": "sha256:f800b21c102fae7869144983fc32dc6c344f40871be11524807c3df30046ef37",
+      "sizeBytes": 10800000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.mwaskom_1776_seaborn-3187:latest",
+      "instanceIds": [
+        "mwaskom__seaborn-3187"
+      ],
+      "imageId": "sha256:aea7e43b20703256f5cb807b54cd78a12601f21086d3a62a41de18c254771f4e",
+      "repoDigest": "sha256:aea7e43b20703256f5cb807b54cd78a12601f21086d3a62a41de18c254771f4e",
+      "sizeBytes": 4690000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.pallets_1776_flask-5014:latest",
+      "instanceIds": [
+        "pallets__flask-5014"
+      ],
+      "imageId": "sha256:bde4fbdafa36141d4396944da88ec37aabdef612ed36920090675bccd0ca5d72",
+      "repoDigest": "sha256:bde4fbdafa36141d4396944da88ec37aabdef612ed36920090675bccd0ca5d72",
+      "sizeBytes": 4230000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.psf_1776_requests-1142:latest",
+      "instanceIds": [
+        "psf__requests-1142"
+      ],
+      "imageId": "sha256:b2733e57feb4cfaeac24ab5ec496d4cb89a37db53bd0ca72eaededdb2ce19d1c",
+      "repoDigest": "sha256:b2733e57feb4cfaeac24ab5ec496d4cb89a37db53bd0ca72eaededdb2ce19d1c",
+      "sizeBytes": 3810000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.psf_1776_requests-1724:latest",
+      "instanceIds": [
+        "psf__requests-1724"
+      ],
+      "imageId": "sha256:e369005d38858ea90f843d853cb8427a2681b7513b846d12a34cb8d52c00763e",
+      "repoDigest": "sha256:e369005d38858ea90f843d853cb8427a2681b7513b846d12a34cb8d52c00763e",
+      "sizeBytes": 3630000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.psf_1776_requests-1921:latest",
+      "instanceIds": [
+        "psf__requests-1921"
+      ],
+      "imageId": "sha256:394cd3621cbf2aa70794d91f5eb9009c169da649d9b9ee9e3944b661dfb72088",
+      "repoDigest": "sha256:394cd3621cbf2aa70794d91f5eb9009c169da649d9b9ee9e3944b661dfb72088",
+      "sizeBytes": 3580000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.psf_1776_requests-5414:latest",
+      "instanceIds": [
+        "psf__requests-5414"
+      ],
+      "imageId": "sha256:71c78211f16803c111ed1807ded20f8defd5f6917fb958ace4e076d5ea7d8b10",
+      "repoDigest": "sha256:71c78211f16803c111ed1807ded20f8defd5f6917fb958ace4e076d5ea7d8b10",
+      "sizeBytes": 3840000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.pydata_1776_xarray-2905:latest",
+      "instanceIds": [
+        "pydata__xarray-2905"
+      ],
+      "imageId": "sha256:23c72d6ce177631efc8094bf28418e3a960d96ca23e8ad727a18c644de257e9f",
+      "repoDigest": "sha256:23c72d6ce177631efc8094bf28418e3a960d96ca23e8ad727a18c644de257e9f",
+      "sizeBytes": 7570000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.pydata_1776_xarray-3677:latest",
+      "instanceIds": [
+        "pydata__xarray-3677"
+      ],
+      "imageId": "sha256:4a68ac272a07b3b4762756ae9d24b5de1cce82aae696b6dc3deb9676a4b0c14e",
+      "repoDigest": "sha256:4a68ac272a07b3b4762756ae9d24b5de1cce82aae696b6dc3deb9676a4b0c14e",
+      "sizeBytes": 7560000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.pydata_1776_xarray-4695:latest",
+      "instanceIds": [
+        "pydata__xarray-4695"
+      ],
+      "imageId": "sha256:fe6074de116357f2b6f1b3b964726cd02b866f68509f3e74d3a58c48a778ac6d",
+      "repoDigest": "sha256:fe6074de116357f2b6f1b3b964726cd02b866f68509f3e74d3a58c48a778ac6d",
+      "sizeBytes": 7570000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.pydata_1776_xarray-6599:latest",
+      "instanceIds": [
+        "pydata__xarray-6599"
+      ],
+      "imageId": "sha256:32ffcec37de801f41349c399cbab1a64ade337fdc88249ae2fe8dcf94c6a17d1",
+      "repoDigest": "sha256:32ffcec37de801f41349c399cbab1a64ade337fdc88249ae2fe8dcf94c6a17d1",
+      "sizeBytes": 7430000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.pydata_1776_xarray-6938:latest",
+      "instanceIds": [
+        "pydata__xarray-6938"
+      ],
+      "imageId": "sha256:478bec70c00955b969d68ce630cee233560c0d43ac4f01784f05b38105f654dd",
+      "repoDigest": "sha256:478bec70c00955b969d68ce630cee233560c0d43ac4f01784f05b38105f654dd",
+      "sizeBytes": 7080000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.pydata_1776_xarray-6992:latest",
+      "instanceIds": [
+        "pydata__xarray-6992"
+      ],
+      "imageId": "sha256:a70eb8c7e98b984c8c9a75c8e165d564d2f0bd16c1717320dbab40f771691112",
+      "repoDigest": "sha256:a70eb8c7e98b984c8c9a75c8e165d564d2f0bd16c1717320dbab40f771691112",
+      "sizeBytes": 7100000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.pylint-dev_1776_pylint-4551:latest",
+      "instanceIds": [
+        "pylint-dev__pylint-4551"
+      ],
+      "imageId": "sha256:910cb070fc5e1c02b715b561c2f5783bb5f5e5935d9a169b4c91bdcfdd015f52",
+      "repoDigest": "sha256:910cb070fc5e1c02b715b561c2f5783bb5f5e5935d9a169b4c91bdcfdd015f52",
+      "sizeBytes": 4050000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.pylint-dev_1776_pylint-8898:latest",
+      "instanceIds": [
+        "pylint-dev__pylint-8898"
+      ],
+      "imageId": "sha256:a78e6034f627c1ae69c67b5a25ae5420192afb7279a4fd032a74095752e707d7",
+      "repoDigest": "sha256:a78e6034f627c1ae69c67b5a25ae5420192afb7279a4fd032a74095752e707d7",
+      "sizeBytes": 3910000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.pytest-dev_1776_pytest-10051:latest",
+      "instanceIds": [
+        "pytest-dev__pytest-10051"
+      ],
+      "imageId": "sha256:e38365e835d4ba57f3e7331778894f51ac20bf6c5893827065da8657525e123f",
+      "repoDigest": "sha256:e38365e835d4ba57f3e7331778894f51ac20bf6c5893827065da8657525e123f",
+      "sizeBytes": 3840000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.pytest-dev_1776_pytest-5262:latest",
+      "instanceIds": [
+        "pytest-dev__pytest-5262"
+      ],
+      "imageId": "sha256:0d6480e4b7519e81cdc8359fedfeb5389e1949f31a8bc9da7869b0d66a7ce2a4",
+      "repoDigest": "sha256:0d6480e4b7519e81cdc8359fedfeb5389e1949f31a8bc9da7869b0d66a7ce2a4",
+      "sizeBytes": 3840000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.pytest-dev_1776_pytest-6197:latest",
+      "instanceIds": [
+        "pytest-dev__pytest-6197"
+      ],
+      "imageId": "sha256:5dbfbcf23210a5a0ccdc4dbf1a55c894255b28fe6c56c13c9a4724d6c13bab4e",
+      "repoDigest": "sha256:5dbfbcf23210a5a0ccdc4dbf1a55c894255b28fe6c56c13c9a4724d6c13bab4e",
+      "sizeBytes": 3830000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.pytest-dev_1776_pytest-7432:latest",
+      "instanceIds": [
+        "pytest-dev__pytest-7432"
+      ],
+      "imageId": "sha256:5ec7065f9477542610ea5137247539d8f1c9762112803b0690d5ccb2e64d2f07",
+      "repoDigest": "sha256:5ec7065f9477542610ea5137247539d8f1c9762112803b0690d5ccb2e64d2f07",
+      "sizeBytes": 3840000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.scikit-learn_1776_scikit-learn-10844:latest",
+      "instanceIds": [
+        "scikit-learn__scikit-learn-10844"
+      ],
+      "imageId": "sha256:2cb7669b05e488e4cf5ab5905ccd225c71fb2804cdb4072bb3fa0704e0816e76",
+      "repoDigest": "sha256:2cb7669b05e488e4cf5ab5905ccd225c71fb2804cdb4072bb3fa0704e0816e76",
+      "sizeBytes": 5330000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.scikit-learn_1776_scikit-learn-11578:latest",
+      "instanceIds": [
+        "scikit-learn__scikit-learn-11578"
+      ],
+      "imageId": "sha256:356d13cc7323cd19eef059944545940115a77eb79a92073a2fbd65475c7c129d",
+      "repoDigest": "sha256:356d13cc7323cd19eef059944545940115a77eb79a92073a2fbd65475c7c129d",
+      "sizeBytes": 5350000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.sphinx-doc_1776_sphinx-7462:latest",
+      "instanceIds": [
+        "sphinx-doc__sphinx-7462"
+      ],
+      "imageId": "sha256:e24b5788a09c7aea754561c38b4d59225b55c93b2bec2141954018305c2e04b3",
+      "repoDigest": "sha256:e24b5788a09c7aea754561c38b4d59225b55c93b2bec2141954018305c2e04b3",
+      "sizeBytes": 3810000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.sphinx-doc_1776_sphinx-7748:latest",
+      "instanceIds": [
+        "sphinx-doc__sphinx-7748"
+      ],
+      "imageId": "sha256:572d11650dea6831a1c81bb31ed468c49370f607b9af7dd762b16283c47bbd27",
+      "repoDigest": "sha256:572d11650dea6831a1c81bb31ed468c49370f607b9af7dd762b16283c47bbd27",
+      "sizeBytes": 4050000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.sphinx-doc_1776_sphinx-7910:latest",
+      "instanceIds": [
+        "sphinx-doc__sphinx-7910"
+      ],
+      "imageId": "sha256:6fdaa2813b52f3878a7c0c8b9bc3241ff8e948d04ae6885cf7983ed0a7543f2c",
+      "repoDigest": "sha256:6fdaa2813b52f3878a7c0c8b9bc3241ff8e948d04ae6885cf7983ed0a7543f2c",
+      "sizeBytes": 4060000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.sphinx-doc_1776_sphinx-9230:latest",
+      "instanceIds": [
+        "sphinx-doc__sphinx-9230"
+      ],
+      "imageId": "sha256:2a18fa57b69c646bf0e1916f1df157a62de80ca8b55325738f9c9eeff9c38c86",
+      "repoDigest": "sha256:2a18fa57b69c646bf0e1916f1df157a62de80ca8b55325738f9c9eeff9c38c86",
+      "sizeBytes": 4060000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.sphinx-doc_1776_sphinx-9320:latest",
+      "instanceIds": [
+        "sphinx-doc__sphinx-9320"
+      ],
+      "imageId": "sha256:0dd7b74de29c5734fbcd2fb9ab5295f610b5b281bd2fdd87e9c3c1d3f272f28a",
+      "repoDigest": "sha256:0dd7b74de29c5734fbcd2fb9ab5295f610b5b281bd2fdd87e9c3c1d3f272f28a",
+      "sizeBytes": 4060000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.sphinx-doc_1776_sphinx-9698:latest",
+      "instanceIds": [
+        "sphinx-doc__sphinx-9698"
+      ],
+      "imageId": "sha256:38120cc331db6bb9d962101a6795a515d56c8a4ace9983f17afede39fd926d5b",
+      "repoDigest": "sha256:38120cc331db6bb9d962101a6795a515d56c8a4ace9983f17afede39fd926d5b",
+      "sizeBytes": 4060000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.sphinx-doc_1776_sphinx-9711:latest",
+      "instanceIds": [
+        "sphinx-doc__sphinx-9711"
+      ],
+      "imageId": "sha256:6cfd4c13fa562c54559d5d7cd9335cba16b21a4291f7f46bbaae997d6153ed35",
+      "repoDigest": "sha256:6cfd4c13fa562c54559d5d7cd9335cba16b21a4291f7f46bbaae997d6153ed35",
+      "sizeBytes": 4060000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.sympy_1776_sympy-12419:latest",
+      "instanceIds": [
+        "sympy__sympy-12419"
+      ],
+      "imageId": "sha256:f78a02916b66645a5325eb515192081890cfc77a103202d5b611d3b2d4b77893",
+      "repoDigest": "sha256:f78a02916b66645a5325eb515192081890cfc77a103202d5b611d3b2d4b77893",
+      "sizeBytes": 3930000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.sympy_1776_sympy-12481:latest",
+      "instanceIds": [
+        "sympy__sympy-12481"
+      ],
+      "imageId": "sha256:bb526b7d1c4a160d96d3ab925a6b382194a19bf77a72df71e220ce19fe924e7f",
+      "repoDigest": "sha256:bb526b7d1c4a160d96d3ab925a6b382194a19bf77a72df71e220ce19fe924e7f",
+      "sizeBytes": 3930000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.sympy_1776_sympy-13372:latest",
+      "instanceIds": [
+        "sympy__sympy-13372"
+      ],
+      "imageId": "sha256:afc436645be2d3bc40184b51f04e9a0cecad3945746e9bcfeaf6733b1d7cf436",
+      "repoDigest": "sha256:afc436645be2d3bc40184b51f04e9a0cecad3945746e9bcfeaf6733b1d7cf436",
+      "sizeBytes": 3940000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.sympy_1776_sympy-13480:latest",
+      "instanceIds": [
+        "sympy__sympy-13480"
+      ],
+      "imageId": "sha256:98270682f9052def68c8c42f78fb6ce6573f2dc7b8cb7fe741139a0543b30e21",
+      "repoDigest": "sha256:98270682f9052def68c8c42f78fb6ce6573f2dc7b8cb7fe741139a0543b30e21",
+      "sizeBytes": 3940000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.sympy_1776_sympy-13974:latest",
+      "instanceIds": [
+        "sympy__sympy-13974"
+      ],
+      "imageId": "sha256:26a1656436e6c2ff0bd6b4ab1cfc54f083e4cfa255cb0a839bf3ee15eea5ab6c",
+      "repoDigest": "sha256:26a1656436e6c2ff0bd6b4ab1cfc54f083e4cfa255cb0a839bf3ee15eea5ab6c",
+      "sizeBytes": 3940000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.sympy_1776_sympy-15599:latest",
+      "instanceIds": [
+        "sympy__sympy-15599"
+      ],
+      "imageId": "sha256:b7e6e69c4defe6eb7fe5c57ff3c946d94f7a2048523de41516d209a9b9d00016",
+      "repoDigest": "sha256:b7e6e69c4defe6eb7fe5c57ff3c946d94f7a2048523de41516d209a9b9d00016",
+      "sizeBytes": 3960000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.sympy_1776_sympy-15875:latest",
+      "instanceIds": [
+        "sympy__sympy-15875"
+      ],
+      "imageId": "sha256:e2812656720310590f43b2773a81f896dafe9e36efa151494a6663bb26ec49f0",
+      "repoDigest": "sha256:e2812656720310590f43b2773a81f896dafe9e36efa151494a6663bb26ec49f0",
+      "sizeBytes": 3960000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.sympy_1776_sympy-16597:latest",
+      "instanceIds": [
+        "sympy__sympy-16597"
+      ],
+      "imageId": "sha256:80716265dd8eef4052cb15f07ded4cbf2ddcd5957d7d526597be6808c56bb55e",
+      "repoDigest": "sha256:80716265dd8eef4052cb15f07ded4cbf2ddcd5957d7d526597be6808c56bb55e",
+      "sizeBytes": 3960000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.sympy_1776_sympy-16766:latest",
+      "instanceIds": [
+        "sympy__sympy-16766"
+      ],
+      "imageId": "sha256:31178dfc1eabbcb5b6b8f569c4cbe60dd0eecf423bbf99223d125e08f3b5444a",
+      "repoDigest": "sha256:31178dfc1eabbcb5b6b8f569c4cbe60dd0eecf423bbf99223d125e08f3b5444a",
+      "sizeBytes": 3970000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.sympy_1776_sympy-16792:latest",
+      "instanceIds": [
+        "sympy__sympy-16792"
+      ],
+      "imageId": "sha256:2cb71c3fea9be968b204a39cb1af5d178f32af3cf916b0383f51c65f9c3181ab",
+      "repoDigest": "sha256:2cb71c3fea9be968b204a39cb1af5d178f32af3cf916b0383f51c65f9c3181ab",
+      "sizeBytes": 3970000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.sympy_1776_sympy-18189:latest",
+      "instanceIds": [
+        "sympy__sympy-18189"
+      ],
+      "imageId": "sha256:7f3118533e22d47a19b9784ab86c7b0251cd6fec0acc71f7fe8805809f052724",
+      "repoDigest": "sha256:7f3118533e22d47a19b9784ab86c7b0251cd6fec0acc71f7fe8805809f052724",
+      "sizeBytes": 3980000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.sympy_1776_sympy-19637:latest",
+      "instanceIds": [
+        "sympy__sympy-19637"
+      ],
+      "imageId": "sha256:956f0b8b048011ead5ff6d46007527a4cb4e1007e4f74fd1c935df6420730d8f",
+      "repoDigest": "sha256:956f0b8b048011ead5ff6d46007527a4cb4e1007e4f74fd1c935df6420730d8f",
+      "sizeBytes": 3980000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.sympy_1776_sympy-20428:latest",
+      "instanceIds": [
+        "sympy__sympy-20428"
+      ],
+      "imageId": "sha256:5e4cde96a50b814adfab5f2dc786b2a865ee3b146c18f1f231c467d6f8aeac96",
+      "repoDigest": "sha256:5e4cde96a50b814adfab5f2dc786b2a865ee3b146c18f1f231c467d6f8aeac96",
+      "sizeBytes": 3990000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.sympy_1776_sympy-20801:latest",
+      "instanceIds": [
+        "sympy__sympy-20801"
+      ],
+      "imageId": "sha256:66efe47a12232b336ded7ef943a03dd42f5d6cbeeb609c46ce5646686b218eda",
+      "repoDigest": "sha256:66efe47a12232b336ded7ef943a03dd42f5d6cbeeb609c46ce5646686b218eda",
+      "sizeBytes": 3990000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.sympy_1776_sympy-23413:latest",
+      "instanceIds": [
+        "sympy__sympy-23413"
+      ],
+      "imageId": "sha256:ff343113e7d03f91f325eb74e7a90247714fcac28af5c28cdb69ccb17c768eb0",
+      "repoDigest": "sha256:ff343113e7d03f91f325eb74e7a90247714fcac28af5c28cdb69ccb17c768eb0",
+      "sizeBytes": 4010000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.sympy_1776_sympy-24213:latest",
+      "instanceIds": [
+        "sympy__sympy-24213"
+      ],
+      "imageId": "sha256:a458bae7d95f469fa8e438da0a39a2d168e93f70239155dbd833934948f2b296",
+      "repoDigest": "sha256:a458bae7d95f469fa8e438da0a39a2d168e93f70239155dbd833934948f2b296",
+      "sizeBytes": 4030000000
+    },
+    {
+      "containerImage": "swebench/sweb.eval.x86_64.sympy_1776_sympy-24562:latest",
+      "instanceIds": [
+        "sympy__sympy-24562"
+      ],
+      "imageId": "sha256:776086d668f184408eb410669894ed1721bd813aa01af4ffd2884e3312a843da",
+      "repoDigest": "sha256:776086d668f184408eb410669894ed1721bd813aa01af4ffd2884e3312a843da",
+      "sizeBytes": 4020000000
+    }
+  ]
+}

@@ -12159,3 +12159,163 @@ spend arithmetic  ordinary $700 = 200 x $3.50 (unchanged); reserve $35 = 10 x
   remains PENDING_AT_FIRST_PAID_RUN. `ENGINE QUALITY != CODING-AGENT UTILITY`
   and `CONTEXT_COMPILER_PRODUCT_UTILITY_NOT_ESTABLISHED` still govern: nothing
   in M218 measured the product.
+
+## M219
+
+```text
+milestone         M219
+verdict           PASS (final zero-model-spend host / materialization preflight:
+                  every frozen SWE-bench image is local and identity-verified,
+                  every one of the 100 unique images starts with a writable
+                  /testbed and its base commit present, Docker and /tmp clear
+                  their gates, only provably owned scratch was eligible for
+                  cleaning and there was none, ambiguous historical /tmp is
+                  preserved, and the production launcher's own preflight
+                  reaches exactly one blocker: human spend authorisation)
+markers           ALL_FROZEN_SWEBENCH_IMAGES_LOCAL; FROZEN_IMAGE_MAPPING_VERIFIED;
+                  REAL_CONTAINER_PREFLIGHT_VERIFIED; PROVABLY_OWNED_STALE_TMP_CLEANED;
+                  AMBIGUOUS_HISTORICAL_TMP_PRESERVED; TMP_CAPACITY_GATE_PASSED;
+                  DOCKER_CAPACITY_PREFLIGHT_PASSED; NO_ACTIVE_BENCHMARK_RESIDUE;
+                  FINAL_ZERO_SPEND_LAUNCH_PREFLIGHT_PASSED; M219_FALSIFICATION_SUITE_PASSED;
+                  M219_SCOPED_TYPECHECK_VERIFIED; PREREGISTRATION_UNCHANGED;
+                  MANIFEST_UNCHANGED; EXTERNAL_REFERENCE_UNCHANGED; AMENDMENT_UNCHANGED;
+                  VTRACE_PRODUCT_UNCHANGED; TECHNICAL_EXECUTOR_READY;
+                  PAID_TWO_ARM_CAUSAL_BENCHMARK_READY_FOR_HUMAN_AUTHORIZATION;
+                  SPEND_AUTHORIZATION_PENDING; PAID_RUNS_NOT_STARTED; LIVE_MODEL_SPEND_$0
+parity            UNCHANGED and NOT re-run. Frozen matrix stays MATCH 7 EXCEED 7
+                  BELOW 1, match-or-exceed 14/15, A15 BELOW and
+                  A15_PARITY_GAP_INVALIDATED (M212). Never write 15/15.
+spend             0 frozen benchmark tasks run with a live agent, $0 live model
+                  spend, 0 provider calls. Network: 64 image pulls (78.0 GB of
+                  image size; Docker image store 141.6 -> 204.7 GB, +63.1 GB
+                  with shared layers; ~17 min summed pull time at concurrency 2).
+                  Containers: 100 M219 preflight probes (one per unique frozen
+                  image, no agent, no patch, no bind mount, all torn down) + 5
+                  M218 research containers (pylint-7080/6903 re-run). 0 frozen
+                  task ids run.
+scope             Operator preflight only. 0 src/ diff (HEAD:src still
+                  b3b3e439f10c6c526cafc6001d25dd0e7552ce6d). All nine frozen
+                  artifacts (M213 x3, M214 x4, A1 x2) byte-identical to the
+                  d38aaebc blobs. No change to task ids, manifest, order, agent,
+                  model, treatment, per-run cap, retry classes, analysis,
+                  stopping rule or external reference. Starting HEAD 0a602266
+                  (five hygiene commits after the M218 final HEAD d38aaebc:
+                  operator-authorised /tmp and workspace cleanups, untracked
+                  records, untracked assessment data, fixture relabel).
+images            Population derived from manifest row.containerImage (the field
+                  the launch binding hands the bridge and M193 looks up): 100
+                  tasks / 200 rows / 100 unique images, each task exactly one
+                  image. Before: 36 present / 64 absent (M218's numbers
+                  reproduced on the host, not inherited). Pulled exactly the 64
+                  absent required images, 0 failures, 0 prune operations, 4
+                  local non-manifest swebench images untouched. After: 100/100.
+                  Identity record stage5_m219_image_identity.json (TRACKED; the
+                  manifest pins names, not digests): image id + registry digest
+                  + task ids per image. Preflight: 200/200 rows resolve without
+                  a pull and verify identity via docker inspect AND the adapter's
+                  own docker SDK images.get (100/100). The launcher's scratch
+                  preflight now runs the same identity check when the record
+                  exists (imageIdentityPreflight); a re-tagged image or a row
+                  re-pointed at another task's image refuses by name.
+containers        100/100 unique images: start, /testbed exists and is writable
+                  (probe file created and removed in the writable layer), base
+                  commit present (git cat-file) and ancestor of HEAD (git
+                  merge-base; M193 checks it out at setup), trivial command,
+                  git status digest identical before/after, clean teardown;
+                  0 survivors; writable-layer high-water 909 312 bytes; ~5 min.
+capacity          Docker root = cohort filesystem (/var/lib/docker on /). Root
+                  free 716.4 -> 652.2 GB. Derived Docker requirement 22.3 GB
+                  (largest image 10.8 GB + 4 x 3 containers x max(909 KB, 64
+                  MiB) + 10 GiB) PASS. M218 P13 unchanged: required 34 484 901 888
+                  vs 652 202 885 120 free PASS; /tmp floor satisfied. /tmp
+                  (32 GB tmpfs): free 25.95 -> 25.92 GB; 11 080 -> 11 083
+                  entries (pulls do not touch the tmpfs).
+tmp ownership     Historical /tmp classified per entry: PROVABLY_OWNED 0,
+                  AMBIGUOUS 9 453 entries / 5.28 GB, UNRELATED 1 630 / 2.35 GB
+                  (system, browser, Claude Code, other-project prefixes),
+                  ACTIVE 0. Deleted 0. The M218 ~68k / ~12 GB finding was
+                  reduced by the operator commits before M219; what remains is
+                  mostly unattributed other-project scratch (node-compile-cache
+                  1.1 GB, v2i_archive_*, torchinductor, aud*, pytest-of-calvin),
+                  all REPORT_ONLY_DO_NOT_DELETE. Production sweep on the cohort
+                  namespace results/_m215_cohort/_work: MARKER only, 0 cleaned,
+                  0 blocking; M218 research namespace: 4 RELEASED claims, clean.
+residue           14 containers enumerated, 0 harness/evaluator/preflight, 14
+                  unrelated (operator's own services); 22 processes classified
+                  UNRELATED_TOOLING (GNOME glycin bwrap loaders, Claude Code
+                  sessions and their whole-/tmp bwrap sandboxes); 0 benchmark
+                  substrate/sandbox/evaluator processes; 0 mounts under a
+                  benchmark root. Host: 37.4 GB memory available, 915
+                  processes, load ~5 on 20 cpus; no exhaustion.
+launch preflight  run_stage5_m215_launch.ts --preflight (new operational flag;
+                  runs every launch check in launch order, evaluates the spend
+                  refusal LAST, never reaches runCohort): FROZEN_AUTHORITIES,
+                  EXECUTABLE_AUTHORITY (M214 + A1, lineage binds),
+                  SPEND_ENVELOPE ($700 + $35 = $735, 10 attempts, 200 rows),
+                  BINDING (DOCKER_SWEBENCH authoritative), LEDGERS (new cohort),
+                  SCRATCH_NAMESPACE (marked), SUBSTRATE_IDENTITY (bridge v1,
+                  python 3.12.12, docker 29.6.2, swebench 4.1.0, frozen
+                  population 100), SCRATCH_CAPACITY_IMAGES (sweep clean, P13
+                  pass, 200/200 identity-verified), ISOLATION_PREFLIGHT
+                  (CONTINUATION_SAFE) all PASS; final blocker
+                  SPEND_AUTHORIZATION_PENDING; rows executed 0. The bare
+                  launcher still refuses by name naming $735 (F196). G36 not set.
+suites            M219 F183-F198 (brief F1-F16) 16/16: 6 GUARD_FIRES, 10
+                  GUARD_SILENT; 8 REAL_PROCESS. F4 caught a real gap on its
+                  first run: re-pointing one row of a pair at another task's
+                  image left every recorded image still required, so the
+                  identity record now carries task ids per image and a row with
+                  any issue is never identity-verified. M218 re-run on the
+                  materialized host: real-host 7/7, real-container 11/11 (F174/
+                  F175/F178 both-arm sentinel isolation), pure 38/38 via the
+                  M218 readiness chain. M219 gates G86-G96 all PASS; G36 FAIL
+                  (human). bun test / typecheck / typecheck:benchmarks / lint /
+                  git diff --check / secret scan: see the commit message.
+spend arithmetic  200 rows x $3.50 = $700 ordinary; 10 retry slots x $3.50 =
+                  $35 reserve; $735 hard ceiling; manifest 200 PLANNED rows,
+                  not 210; executor and launcher agree (SPEND_ENVELOPE, F197,
+                  F198). No hidden paid attempt.
+```
+
+## M219 standing findings
+
+- **The frozen substrate is materialized and identity-bound.** Every one of
+  the 100 frozen images is local, its immutable id and registry digest are
+  recorded in `stage5_m219_image_identity.json` with the task ids it serves,
+  and the launcher refuses a launch if any row stops resolving to that identity
+  without a pull. The manifest still pins names; the record is M219's own
+  authority and adds evidence without rewriting anything frozen.
+
+- **Digest formats differ by surface.** `docker image ls` prints a bare
+  `sha256:…` while `RepoDigests` prints `repo@sha256:…`; the first identity
+  preflight failed 200/200 on that alone. Compare the digest after the `@`.
+
+- **Same-name substitution is now detectable, mapping swaps too.** F3 breaks
+  the id or digest under an unchanged name; F4 re-points one row of a pair at
+  another task's image, which passes a pure "is every recorded image required"
+  check. Both refuse only because the record carries per-image task ids and a
+  row with any issue is never counted identity-verified.
+
+- **Historical /tmp is attribution, not ownership — still.** After the
+  operator cleanups nothing under /tmp is benchmark-owned; 9 453 entries /
+  5.28 GB are AMBIGUOUS (mostly unattributed other-project scratch) and are
+  REPORT_ONLY. External producers (browser, system, Claude Code) are UNRELATED
+  even when live. Do not "clean up /tmp" on this machine by prefix; the paid
+  benchmark does not write there.
+
+- **Docker and the cohort namespace share one filesystem.** M218's host
+  reserve (2 x largest image + 10 GiB) already covers the Docker root; M219
+  adds a Docker-specific requirement derived from the measured 63.1 GB
+  materialization, the 10.8 GB largest image and the 909 KB observed probe
+  writable layer (22.3 GB required, 652 GB free). Container writable layers
+  are negligible next to the image store.
+
+- **Next-step recommendation.** Do NOT start the benchmark from this session.
+  No further engineering or operator milestone is required before the
+  financial decision. The single remaining gate is G36: human authorisation of
+  the $735 hard ceiling under M214 + A1, given to the launcher as
+  `--authorize-spend "<operator>"` with the DOCKER_SWEBENCH binding, after
+  which P1-P13 govern every row. Live provider model identity remains
+  PENDING_AT_FIRST_PAID_RUN. `ENGINE QUALITY != CODING-AGENT UTILITY` and
+  `CONTEXT_COMPILER_PRODUCT_UTILITY_NOT_ESTABLISHED` still govern: nothing in
+  M219 measured the product.
