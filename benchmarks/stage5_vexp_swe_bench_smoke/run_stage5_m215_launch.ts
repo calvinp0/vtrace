@@ -30,9 +30,19 @@
  * exactly one way out of COHORT_HALTED_ISOLATION_RISK: `--recover-isolation`,
  * which runs the predeclared recovery path, records what it verified, and runs
  * no row. There is still no `--force`.
+ *
+ * M220 UPDATE. The cohort is executed in outcome-blind QUOTA-WINDOW SESSIONS
+ * under the A2 amendment (M214 + A1 + A2). A COHORT launch requires
+ * `--max-pairs-this-session N`; the loop runs at most N complete frozen pairs,
+ * pauses (COHORT_PAUSED_QUOTA_WINDOW), proves the substrate clean, and the
+ * next `--resume` continues at exactly the next frozen row. `--pause-after-
+ * current-pair` / `--pause-after-current-arm` write an explicit pause request
+ * a running session honours; `--session-status` prints an outcome-blind status
+ * and runs nothing. There is no task selector.
  */
 
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 import type { RunManifestRow } from "./m214Preregistration";
@@ -45,6 +55,7 @@ import {
   bindingFor,
 } from "./m215AdapterBindings";
 import {
+  type CohortRunReport,
   type ExecutorDependencies,
   type FrozenAuthorities,
   type SpendAuthorization,
@@ -55,6 +66,8 @@ import {
   M215_FROZEN_PROPERTIES,
   M215_MANIFEST_FILE,
   M215_PREREGISTRATION_FILE,
+  M220_PAUSED_STATUS,
+  auditFrozenTreatmentTree,
   auditSpendAuthorization,
   executeManifestRow,
   projectSpend,
@@ -71,6 +84,7 @@ import {
   CohortLedger,
   M215_LEDGER_SCHEMA,
 } from "./m215CohortLedger";
+import { resolveAgentBinary } from "./m216ProductionAdapters";
 import { SubstrateBridge } from "./m216SubstrateBridge";
 import {
   type OperationalEvent,
@@ -81,6 +95,7 @@ import {
 } from "./m217ContinuationSafety";
 import { M217IsolationProbe } from "./m217IsolationProbe";
 import { startCohortBinding } from "./m217LaunchBinding";
+import { cohortOperationalStatus } from "./m217RetryReserve";
 import { ScratchAwareIsolationProbe } from "./m218IsolationProbe";
 import {
   HostLivenessProbe,
@@ -105,8 +120,35 @@ import {
   dockerImageInspector,
   imagePreflight,
 } from "./m219OperatorPreflight";
+import {
+  type ActiveSessionAuthority,
+  M214_A2_AMENDMENT_ID,
+  auditSessionAuthorityBinding,
+  loadActiveSessionAuthority,
+} from "./m220Amendment";
+import {
+  type PauseRequest,
+  type PauseRequestKind,
+  type SessionBounds,
+  M220_PAIR_TIMING_SCHEMA,
+  M220_PAUSE_REQUEST_FILE,
+  M220_SESSION_JOURNAL_SCHEMA,
+  deriveSessionJournal,
+  frozenPairs,
+  lastHardQuotaLimit,
+  nextSessionNumber,
+  pairTemporalGaps,
+  parsePauseRequest,
+  pauseRequestDocument,
+  quotaWindowGate,
+  sessionIdFor,
+  sessionStatusView,
+  statusViewLeaksOutcome,
+  validateMaxPairs,
+} from "./m220QuotaSession";
 
 const RESULTS_DIR = join(import.meta.dir, "results");
+const VTRACE_ROOT = join(import.meta.dir, "..", "..");
 
 // ── Argument parsing (§47) ──────────────────────────────────────────
 
@@ -123,11 +165,28 @@ interface LaunchArgs {
   readonly recoverIsolation: boolean;
   /** M219 §24 — run every launch check up to the spend refusal; runs no row, never launches. */
   readonly preflight: boolean;
+  /** M220 §8 — the operator's per-session pair cap; required for a COHORT loop launch. */
+  readonly maxPairsThisSession: number | null;
+  /** M220 §42 — no NEW pair after this many seconds; an active pair finishes. */
+  readonly maxSessionWallClockSeconds: number | null;
+  /** M220 §12 — explicit pause requests; alone they write the request and run nothing. */
+  readonly pauseAfterCurrentPair: boolean;
+  readonly pauseAfterCurrentArm: boolean;
+  readonly clearPauseRequest: boolean;
+  /** M220 §32 — the outcome-blind status; runs nothing. */
+  readonly sessionStatus: boolean;
 }
 
 const OPERATIONAL_FLAGS: readonly string[] = Object.freeze([
   "--binding", "--results", "--cohort-dir", "--authorize-spend", "--resume", "--plan", "--row",
   "--max-rows", "--recover-isolation", "--preflight",
+  "--max-pairs-this-session", "--max-session-wall-clock", "--pause-after-current-pair",
+  "--pause-after-current-arm", "--clear-pause-request", "--session-status",
+]);
+
+const BOOLEAN_FLAGS: readonly string[] = Object.freeze([
+  "--resume", "--plan", "--recover-isolation", "--preflight", "--pause-after-current-pair",
+  "--pause-after-current-arm", "--clear-pause-request", "--session-status",
 ]);
 
 /**
@@ -136,7 +195,8 @@ const OPERATIONAL_FLAGS: readonly string[] = Object.freeze([
  * Unknown flags are refused rather than ignored, and a flag whose name matches a
  * frozen property gets a message saying which property and why — an operator who
  * reaches for `--model` should learn that the model is frozen, not that the flag
- * was typed wrong.
+ * was typed wrong. There is deliberately no `--task`, `--skip-to` or
+ * `--start-at`: the next pair is the next frozen pair.
  */
 export function parseLaunchArgs(argv: readonly string[]): LaunchArgs {
   const args: Record<string, string | boolean> = {};
@@ -157,7 +217,8 @@ export function parseLaunchArgs(argv: readonly string[]): LaunchArgs {
     if (!OPERATIONAL_FLAGS.includes(name)) {
       throw new Error(
         `unknown argument ${name}. The launcher accepts only operational arguments: `
-        + OPERATIONAL_FLAGS.join(", "),
+        + OPERATIONAL_FLAGS.join(", ")
+        + ". There is no task selector: the next pair is always the next frozen pair.",
       );
     }
     if (token.includes("=")) {
@@ -165,7 +226,7 @@ export function parseLaunchArgs(argv: readonly string[]): LaunchArgs {
       continue;
     }
     const next = argv[index + 1];
-    if (name === "--resume" || name === "--plan" || name === "--recover-isolation" || name === "--preflight") {
+    if (BOOLEAN_FLAGS.includes(name)) {
       args[name] = true;
       continue;
     }
@@ -175,6 +236,16 @@ export function parseLaunchArgs(argv: readonly string[]): LaunchArgs {
   }
 
   const resultsDir = String(args["--results"] ?? RESULTS_DIR);
+  const maxPairs = args["--max-pairs-this-session"] === undefined
+    ? null
+    : validateMaxPairs(Number(args["--max-pairs-this-session"]));
+  const wallClock = args["--max-session-wall-clock"] === undefined ? null : Number(args["--max-session-wall-clock"]);
+  if (wallClock !== null && (!Number.isFinite(wallClock) || wallClock <= 0)) {
+    throw new Error(`--max-session-wall-clock must be a positive number of seconds (got ${String(args["--max-session-wall-clock"])})`);
+  }
+  if (args["--pause-after-current-pair"] === true && args["--pause-after-current-arm"] === true) {
+    throw new Error("--pause-after-current-pair and --pause-after-current-arm are exclusive; choose the boundary");
+  }
   return {
     binding: (args["--binding"] ?? "DOCKER_SWEBENCH") as BindingId,
     resultsDir,
@@ -188,6 +259,12 @@ export function parseLaunchArgs(argv: readonly string[]): LaunchArgs {
     maxRows: args["--max-rows"] === undefined ? null : Number(args["--max-rows"]),
     recoverIsolation: args["--recover-isolation"] === true,
     preflight: args["--preflight"] === true,
+    maxPairsThisSession: maxPairs,
+    maxSessionWallClockSeconds: wallClock,
+    pauseAfterCurrentPair: args["--pause-after-current-pair"] === true,
+    pauseAfterCurrentArm: args["--pause-after-current-arm"] === true,
+    clearPauseRequest: args["--clear-pause-request"] === true,
+    sessionStatus: args["--session-status"] === true,
   };
 }
 
@@ -222,10 +299,11 @@ function cohortPath(dir: string): string {
  *
  * `--resume` is required to reuse an existing ledger, so a second launch cannot
  * quietly append to a cohort the operator has forgotten about, and cannot
- * quietly start a second one either.
+ * quietly start a second one either. `readOnly` is the status path: it reads
+ * whatever exists without requiring the flag, and can write nothing.
  */
 function restoreLedger(
-  authorities: FrozenAuthorities, args: LaunchArgs,
+  authorities: FrozenAuthorities, args: LaunchArgs, readOnly = false,
 ): { readonly ledger: CohortLedger; readonly restored: boolean; readonly issues: readonly string[] } {
   const path = cohortPath(args.cohortDir);
   let persisted: PersistedCohort | null = null;
@@ -243,7 +321,7 @@ function restoreLedger(
       issues: [],
     };
   }
-  if (!args.resume) {
+  if (!args.resume && !readOnly) {
     throw new Error(
       `a cohort ledger already exists at ${path}. Pass --resume to continue it; the launcher will `
       + "not silently append to, or silently replace, an existing cohort.",
@@ -415,6 +493,99 @@ function persistLedger(dir: string, ledger: CohortLedger): string {
   return path;
 }
 
+// ── M220 — pause requests, the session journal and the status view ──
+
+export function pauseRequestPath(cohortDir: string): string {
+  return join(cohortDir, M220_PAUSE_REQUEST_FILE);
+}
+
+export function readPauseRequest(cohortDir: string): PauseRequest | null {
+  const path = pauseRequestPath(cohortDir);
+  if (!existsSync(path)) return null;
+  return parsePauseRequest(readFileSync(path, "utf8"));
+}
+
+export function writePauseRequest(cohortDir: string, kind: PauseRequestKind, requestedBy: string, now: () => string): string {
+  mkdirSync(cohortDir, { recursive: true });
+  const path = pauseRequestPath(cohortDir);
+  writeFileSync(path, `${JSON.stringify(pauseRequestDocument(kind, now(), requestedBy), null, 2)}\n`);
+  return path;
+}
+
+export function clearPauseRequest(cohortDir: string): boolean {
+  const path = pauseRequestPath(cohortDir);
+  if (!existsSync(path)) return false;
+  rmSync(path, { force: true });
+  return true;
+}
+
+/**
+ * The journal, the pair-timing metadata and the status view are all DERIVED
+ * from the two ledgers, written after every persist. The status view is
+ * checked against the outcome-shaped key pattern before it is written: a
+ * status that could leak an interim result is a defect, not a document.
+ */
+export function persistSessionDocuments(
+  dir: string, manifest: readonly RunManifestRow[], ledger: CohortLedger, operations: CohortOperationsLedger,
+  extra: { readonly subscriptionAuthState: string | null; readonly scratchFreeBytes: number | null; readonly now: () => string },
+): { readonly journal: string; readonly timing: string; readonly status: string } {
+  mkdirSync(dir, { recursive: true });
+  const journal = deriveSessionJournal(operations.events, ledger);
+  const pairs = frozenPairs(manifest);
+  const timing = pairTemporalGaps(pairs, ledger, journal);
+  const operational = cohortOperationalStatus(manifest, ledger, operations);
+  const status = sessionStatusView({
+    manifest, ledger, events: operations.events,
+    operationalStatus: operational.status, continuationState: operations.state(),
+    pauseRequest: readPauseRequest(dir), subscriptionAuthState: extra.subscriptionAuthState,
+    scratchFreeBytes: extra.scratchFreeBytes, now: extra.now(), nextRow: selectNextRow(manifest, ledger),
+  });
+  const leaks = statusViewLeaksOutcome(status);
+  if (leaks.length > 0) throw new Error(`refusing to write a session status that names an outcome: ${leaks.join(", ")}`);
+  const journalPath = join(dir, "cohort_session_journal.json");
+  writeFileSync(journalPath, `${JSON.stringify({
+    schemaVersion: M220_SESSION_JOURNAL_SCHEMA, derivedFromOperationsChainHead: operations.headChainDigest(),
+    sessions: journal, outcomeLabels: "none by construction", generatedAt: extra.now(),
+  }, null, 2)}\n`);
+  const timingPath = join(dir, "cohort_pair_timing.json");
+  writeFileSync(timingPath, `${JSON.stringify({ ...timing, schemaVersion: M220_PAIR_TIMING_SCHEMA, generatedAt: extra.now() }, null, 2)}\n`);
+  const statusPath = join(dir, "cohort_session_status.json");
+  writeFileSync(statusPath, `${JSON.stringify({ ...status, generatedAt: extra.now() }, null, 2)}\n`);
+  return { journal: journalPath, timing: timingPath, status: statusPath };
+}
+
+/** M220 §37–§39 — the identities a session must re-prove before its first row. */
+export interface SessionIdentityPreflight {
+  readonly agent: { readonly ok: boolean; readonly detail: string; readonly pinnedBinary: string; readonly version: string };
+  readonly treatment: { readonly ok: boolean; readonly detail: string; readonly headSrc: string; readonly srcWorktreeClean: boolean };
+  readonly issues: readonly string[];
+}
+
+export function sessionIdentityPreflight(manifest: readonly RunManifestRow[], vtraceRoot: string = VTRACE_ROOT): SessionIdentityPreflight {
+  const agent = resolveAgentBinary();
+  let headSrc = "";
+  let dirty = "";
+  let treatmentIssues: readonly string[] = [];
+  try {
+    headSrc = execFileSync("git", ["-C", vtraceRoot, "rev-parse", "HEAD:src"], { encoding: "utf8" }).trim();
+    dirty = execFileSync("git", ["-C", vtraceRoot, "status", "--porcelain", "--", "src"], { encoding: "utf8" }).trim();
+    treatmentIssues = auditFrozenTreatmentTree(manifest, headSrc);
+  } catch (error) {
+    treatmentIssues = [`could not read the VTRACE product tree: ${(error as Error).message}`];
+  }
+  const srcClean = dirty.length === 0;
+  const issues: string[] = [
+    ...agent.issues,
+    ...treatmentIssues,
+    ...(srcClean ? [] : [`the VTRACE src/ working tree has uncommitted changes; the treatment the agent would run is not HEAD:src: ${dirty.split("\n").slice(0, 5).join(" | ")}`]),
+  ];
+  return {
+    agent: { ok: agent.issues.length === 0, detail: agent.issues.join("; ") || `pinned ${agent.binary} reports ${agent.pinnedBinaryVersion}; declared symlink reports ${agent.declaredBinaryVersion}`, pinnedBinary: agent.binary, version: agent.pinnedBinaryVersion },
+    treatment: { ok: treatmentIssues.length === 0 && srcClean, detail: treatmentIssues.join("; ") || `HEAD:src ${headSrc}${srcClean ? "" : " (src worktree dirty)"}`, headSrc, srcWorktreeClean: srcClean },
+    issues: Object.freeze(issues),
+  };
+}
+
 // ── Plan (§47) ──────────────────────────────────────────────────────
 
 /**
@@ -426,6 +597,7 @@ function persistLedger(dir: string, ledger: CohortLedger): string {
  */
 function renderPlan(
   authorities: FrozenAuthorities, args: LaunchArgs, authority: ActiveSpendAuthority | null,
+  sessionAuthority: ActiveSessionAuthority | null,
 ): Record<string, unknown> {
   const binding = bindingFor(args.binding);
   const ledger = new CohortLedger(
@@ -457,6 +629,19 @@ function renderPlan(
           externalReferenceHash: authorities.externalReferenceHash.actual,
         }),
         launchRisk: amendedLaunchRisk(authority),
+      },
+    // M220 — and A2 on top of it: the session model the launch will run under.
+    sessionAuthority: sessionAuthority === null
+      ? { bound: false, reason: `the ${M214_A2_AMENDMENT_ID} amendment could not be loaded; a quota-window session is refused` }
+      : {
+        bound: true,
+        amendmentId: sessionAuthority.amendmentId,
+        amendmentHash: sessionAuthority.amendmentHash,
+        identity: sessionAuthority.executableAuthority.identity,
+        pauseState: sessionAuthority.pauseState,
+        quotaInterruptionClass: sessionAuthority.quotaInterruptionClass,
+        requiredLaunchArgument: "--max-pairs-this-session N (N >= 1, operator-chosen, outcome-blind)",
+        pairsInFrozenOrder: frozenPairs(authorities.manifest).length,
       },
     cohort: {
       design: M214_STOPPING_RULE.design,
@@ -493,7 +678,7 @@ function renderPlan(
     spendAuthorizationIssues: auditSpendAuthorization(
       args.authorizeSpend === null ? null : authorizationFor(args.authorizeSpend, authority), "COHORT", ceiling,
     ),
-    launchable: authoritativeBindingAvailable() && args.authorizeSpend !== null && authority !== null,
+    launchable: authoritativeBindingAvailable() && args.authorizeSpend !== null && authority !== null && sessionAuthority !== null,
   };
 }
 
@@ -527,6 +712,14 @@ function tryLoadAuthority(resultsDir: string): { readonly authority: ActiveSpend
   }
 }
 
+function tryLoadSessionAuthority(resultsDir: string): { readonly authority: ActiveSessionAuthority | null; readonly error: string | null } {
+  try {
+    return { authority: loadActiveSessionAuthority(resultsDir), error: null };
+  } catch (error) {
+    return { authority: null, error: (error as Error).message };
+  }
+}
+
 // ── M219 §24, §25 — the production launch preflight, without a launch ──
 
 /**
@@ -540,7 +733,10 @@ function tryLoadAuthority(resultsDir: string): { readonly authority: ActiveSpend
  * Exit 0 means: every technical gate passed and the only blocker is
  * SPEND_AUTHORIZATION_PENDING. Any technical failure exits 1.
  */
-async function launchPreflight(args: LaunchArgs, authorities: FrozenAuthorities, authority: ActiveSpendAuthority): Promise<void> {
+async function launchPreflight(
+  args: LaunchArgs, authorities: FrozenAuthorities, authority: ActiveSpendAuthority,
+  sessionAuthority: ActiveSessionAuthority | null, sessionAuthorityError: string | null,
+): Promise<void> {
   const now = (): string => new Date().toISOString();
   const gates: { id: string; pass: boolean; detail: string }[] = [];
   const gate = (id: string, pass: boolean, detail: string): void => { gates.push({ id, pass, detail }); };
@@ -551,6 +747,15 @@ async function launchPreflight(args: LaunchArgs, authorities: FrozenAuthorities,
     externalReferenceHash: authorities.externalReferenceHash.actual,
   });
   gate("EXECUTABLE_AUTHORITY", lineage.length === 0, `${authority.amendmentId} ${authority.amendmentHash}; executable ${authority.executableAuthority.identity}; ${lineage.join("; ") || "lineage binds"}`);
+  // M220 — A2 must bind on top of A1.
+  const sessionLineage = auditSessionAuthorityBinding(sessionAuthority ?? undefined, {
+    preregistrationHash: authorities.preregistrationHash.actual,
+    manifestHash: authorities.manifestHash.actual,
+    externalReferenceHash: authorities.externalReferenceHash.actual,
+    a1AmendmentHash: authority.amendmentHash,
+  });
+  gate("SESSION_AUTHORITY", sessionAuthority !== null && sessionLineage.length === 0,
+    sessionAuthority === null ? (sessionAuthorityError ?? "A2 not loaded") : `${sessionAuthority.amendmentId} ${sessionAuthority.amendmentHash}; executable (M214 + A1 + A2) ${sessionAuthority.executableAuthority.identity}; ${sessionLineage.join("; ") || "lineage binds"}`);
   gate("SPEND_ENVELOPE", authority.hardCeilingUsd === 735 && authority.retryReserveUsd === 35 && authority.retryReserveAttempts === 10 && authority.ordinaryExposureUsd === 700,
     `$${authority.ordinaryExposureUsd} ordinary + $${authority.retryReserveUsd} retry reserve (${authority.retryReserveAttempts} attempts) = $${authority.hardCeilingUsd} hard ceiling; manifest rows ${authorities.manifest.length}`);
   let binding: ReturnType<typeof assertBindingUsable> | null = null;
@@ -561,16 +766,27 @@ async function launchPreflight(args: LaunchArgs, authorities: FrozenAuthorities,
     gate("BINDING", false, (error as Error).message);
   }
   let ledgerState = "new cohort";
+  let operationsEvents: readonly OperationalEvent[] = [];
   try {
-    const restored = restoreLedger(authorities, args);
+    const restored = restoreLedger(authorities, args, true);
     ledgerState = restored.restored ? `resumed (${restored.issues.length} issues)` : "new cohort";
     const operationsRestored = restoreOperations(args, restored.restored);
+    operationsEvents = operationsRestored.ledger.events;
     gate("LEDGERS", restored.issues.length === 0 && operationsRestored.issues.length === 0, `${ledgerState}; operations ${operationsRestored.ledger.events.length} events`);
   } catch (error) {
     gate("LEDGERS", false, (error as Error).message);
   }
   const scratch = buildScratchAuthority(args.cohortDir, now);
   gate("SCRATCH_NAMESPACE", existsSync(scratch.namespace.markerPath), `${scratch.namespace.canonicalRoot} marked for ${scratch.namespace.experiment}`);
+
+  // M220 §37–§39 — agent binary, treatment tree and the quota window.
+  const identity = sessionIdentityPreflight(authorities.manifest);
+  gate("AGENT_IDENTITY", identity.agent.ok, identity.agent.detail);
+  gate("TREATMENT_TREE", identity.treatment.ok, identity.treatment.detail);
+  const windowIssues = quotaWindowGate(lastHardQuotaLimit(operationsEvents), now());
+  gate("QUOTA_WINDOW", windowIssues.length === 0, windowIssues.join("; ") || "no unexpired hard quota limit on record");
+  const pending = readPauseRequest(args.cohortDir);
+  gate("PAUSE_REQUEST", true, pending === null ? "no pause request pending" : `pause request pending: ${pending.kind} at ${pending.requestedAt} (a launch would pause before its first new pair)`);
 
   let substrate: Record<string, unknown> | null = null;
   let scratchIssues: readonly string[] = [];
@@ -617,6 +833,12 @@ async function launchPreflight(args: LaunchArgs, authorities: FrozenAuthorities,
       activeCeilingUsd: authority.hardCeilingUsd,
       retryReserveAttempts: authority.retryReserveAttempts,
     },
+    sessionModel: sessionAuthority === null ? null : {
+      amendmentId: sessionAuthority.amendmentId,
+      requiredLaunchArgument: "--max-pairs-this-session N",
+      pauseState: sessionAuthority.pauseState,
+      maxPairsThisSessionSupplied: args.maxPairsThisSession,
+    },
     finalBlocker: technicalBlockers.length > 0 ? `TECHNICAL: ${technicalBlockers.join(", ")}` : spendPending ? "SPEND_AUTHORIZATION_PENDING" : "NONE (preflight never launches)",
     verdict: technicalBlockers.length === 0 ? "FINAL_ZERO_SPEND_LAUNCH_PREFLIGHT_PASSED" : "FINAL_ZERO_SPEND_LAUNCH_PREFLIGHT_FAILED",
     rowsExecuted: 0,
@@ -627,6 +849,40 @@ async function launchPreflight(args: LaunchArgs, authorities: FrozenAuthorities,
   };
   process.stdout.write(`${JSON.stringify(document, null, 2)}\n`);
   if (technicalBlockers.length > 0) process.exitCode = 1;
+}
+
+// ── M220 §32 — the outcome-blind status, without a bridge ───────────
+
+function printSessionStatus(args: LaunchArgs, authorities: FrozenAuthorities): void {
+  const now = (): string => new Date().toISOString();
+  const restored = restoreLedger(authorities, args, true);
+  const operationsRestored = restoreOperations(args, restored.restored);
+  const scratch = buildScratchAuthority(args.cohortDir, now);
+  let free: number | null = null;
+  try {
+    free = scratch.capacityGate().namespaceFilesystem.freeBytes;
+  } catch {
+    free = null;
+  }
+  const operational = cohortOperationalStatus(authorities.manifest, restored.ledger, operationsRestored.ledger);
+  const view = sessionStatusView({
+    manifest: authorities.manifest, ledger: restored.ledger, events: operationsRestored.ledger.events,
+    operationalStatus: operational.status, continuationState: operationsRestored.ledger.state(),
+    pauseRequest: readPauseRequest(args.cohortDir), subscriptionAuthState: null,
+    scratchFreeBytes: free, now: now(), nextRow: selectNextRow(authorities.manifest, restored.ledger),
+  });
+  const leaks = statusViewLeaksOutcome(view);
+  if (leaks.length > 0) throw new Error(`refusing to print a session status that names an outcome: ${leaks.join(", ")}`);
+  process.stdout.write(`${JSON.stringify({
+    ...view,
+    ledgerIssues: [...restored.issues, ...operationsRestored.issues],
+    journal: deriveSessionJournal(operationsRestored.ledger.events, restored.ledger).map((entry) => ({
+      sessionId: entry.sessionId, startedAt: entry.startedAt, endedAt: entry.endedAt, endState: entry.endState,
+      pauseReason: entry.pauseReason, pairsPlanned: entry.pairsPlanned, pairsCompleted: entry.pairsCompleted,
+      rowsSettled: entry.rowsSettled, pairSplitOccurred: entry.pairSplitOccurred,
+    })),
+    runsNothing: true,
+  }, null, 2)}\n`);
 }
 
 // ── Main ────────────────────────────────────────────────────────────
@@ -641,12 +897,44 @@ async function main(): Promise<void> {
   }
 
   const loaded = tryLoadAuthority(args.resultsDir);
+  const loadedSession = tryLoadSessionAuthority(args.resultsDir);
   if (args.plan) {
     process.stdout.write(`${JSON.stringify({
-      ...renderPlan(authorities, args, loaded.authority),
+      ...renderPlan(authorities, args, loaded.authority, loadedSession.authority),
       ...(loaded.error === null ? {} : { executableAuthorityError: loaded.error }),
+      ...(loadedSession.error === null ? {} : { sessionAuthorityError: loadedSession.error }),
     }, null, 2)}\n`);
     return;
+  }
+
+  // M220 §32 — status runs nothing and needs no authorisation, binding or bridge.
+  if (args.sessionStatus) {
+    printSessionStatus(args, authorities);
+    return;
+  }
+
+  // M220 §12 — pause requests and their clearance. Alone, they write the
+  // request for a running (or the next) session and run nothing. With a
+  // launch, the request is written first so the session honours it in-process.
+  const now = (): string => new Date().toISOString();
+  if (args.clearPauseRequest) {
+    const cleared = clearPauseRequest(args.cohortDir);
+    process.stdout.write(`${JSON.stringify({ pauseRequestCleared: cleared, path: pauseRequestPath(args.cohortDir) })}\n`);
+    if (args.authorizeSpend === null) return;
+  }
+  if (args.pauseAfterCurrentPair || args.pauseAfterCurrentArm) {
+    const kind: PauseRequestKind = args.pauseAfterCurrentArm ? "AFTER_CURRENT_ARM" : "AFTER_CURRENT_PAIR";
+    const path = writePauseRequest(args.cohortDir, kind, args.authorizeSpend ?? "operator", now);
+    if (args.authorizeSpend === null) {
+      process.stdout.write(`${JSON.stringify({
+        pauseRequested: kind, path,
+        effect: kind === "AFTER_CURRENT_ARM"
+          ? "a running session stops after the current arm (recording PAIR_SPLIT_BY_QUOTA_WINDOW if that splits a pair); an idle cohort will not begin another arm until the request is honoured or cleared"
+          : "a running session finishes the current pair and pauses; an idle cohort will not begin another pair until the request is honoured or cleared",
+        runsNothing: true,
+      }, null, 2)}\n`);
+      return;
+    }
   }
 
   // M218 §60 — the executable authority (M214 + A1) is required before the
@@ -666,7 +954,7 @@ async function main(): Promise<void> {
   // M219 §24 — the zero-spend launch preflight: every technical check the
   // launch would make, in launch order, then the spend refusal — and no row.
   if (args.preflight) {
-    await launchPreflight(args, authorities, authority);
+    await launchPreflight(args, authorities, authority, loadedSession.authority, loadedSession.error);
     return;
   }
 
@@ -677,6 +965,26 @@ async function main(): Promise<void> {
       "refusing to launch: no spend authorisation. A COHORT run makes paid model calls against the "
       + `active $${authority.hardCeilingUsd} hard ceiling (M214 + ${authority.amendmentId}) and requires `
       + "--authorize-spend \"<operator>\". Technical readiness is not financial authorisation.",
+    );
+  }
+  // M220 §4, §8 — A2 is the active session authority, and a cohort loop needs
+  // an explicit, operator-chosen pair cap. Neither is inferable.
+  if (loadedSession.authority === null) {
+    throw new Error(`refusing to launch: ${loadedSession.error ?? "no session authority"}`);
+  }
+  const sessionAuthority = loadedSession.authority;
+  const sessionLineage = auditSessionAuthorityBinding(sessionAuthority, {
+    preregistrationHash: authorities.preregistrationHash.actual,
+    manifestHash: authorities.manifestHash.actual,
+    externalReferenceHash: authorities.externalReferenceHash.actual,
+    a1AmendmentHash: authority.amendmentHash,
+  });
+  if (sessionLineage.length > 0) throw new Error(`refusing to launch: session authority does not bind: ${sessionLineage.join("; ")}`);
+  if (args.row === null && args.maxPairsThisSession === null) {
+    throw new Error(
+      `refusing to launch: no per-session pair cap. Under M214 + A1 + ${M214_A2_AMENDMENT_ID} a COHORT launch `
+      + "runs in outcome-blind quota-window sessions and requires --max-pairs-this-session N (N >= 1, chosen "
+      + "by the operator from their own usage view). There is no continuous-launch mode and no task selector.",
     );
   }
   const binding = assertBindingUsable(args.binding);
@@ -699,7 +1007,6 @@ async function main(): Promise<void> {
     );
   }
   const workRoot = workRootFor(args.cohortDir);
-  const now = (): string => new Date().toISOString();
 
   // M217 §12 — recovery is its own action. It needs the probe and nothing
   // else, runs no row, and leaves an event saying what it verified.
@@ -759,6 +1066,20 @@ async function main(): Promise<void> {
       operations,
       scratch,
       spendAuthority: authority,
+      sessionAuthority,
+    };
+    const persistAll = (): void => {
+      persistLedger(args.cohortDir, ledger);
+      persistOperations(args.cohortDir, operationsRestored.ledger);
+      let free: number | null = null;
+      try {
+        free = scratch.capacityGate().namespaceFilesystem.freeBytes;
+      } catch {
+        free = null;
+      }
+      persistSessionDocuments(args.cohortDir, authorities.manifest, ledger, operationsRestored.ledger, {
+        subscriptionAuthState: null, scratchFreeBytes: free, now,
+      });
     };
 
     // M218 §22, §25 — stale owned scratch, capacity and image availability
@@ -766,8 +1087,7 @@ async function main(): Promise<void> {
     // safely hold one more attempt is refused before a container exists.
     const scratchIssues = scratchPreflight(operations, scratch, authorities.manifest, args.resultsDir);
     if (scratchIssues.length > 0) {
-      persistOperations(args.cohortDir, operationsRestored.ledger);
-      persistLedger(args.cohortDir, ledger);
+      persistAll();
       throw new Error(
         `refusing to launch: ${scratchIssues.join("; ")}. Stale owned scratch is recovered through `
         + "--recover-isolation --resume; unknown paths and capacity are operator decisions.",
@@ -778,8 +1098,7 @@ async function main(): Promise<void> {
     // an operational event, so a refused launch leaves evidence of why.
     const preflight = await operations.recordLaunchPreflight();
     if (operations.state() === "CONTINUATION_BLOCKED") {
-      persistOperations(args.cohortDir, operationsRestored.ledger);
-      persistLedger(args.cohortDir, ledger);
+      persistAll();
       throw new Error(
         "refusing to launch: residual substrate state under the work root — "
         + residualStateIssues((preflight.detail as { residual: Parameters<typeof residualStateIssues>[0] }).residual)
@@ -788,24 +1107,105 @@ async function main(): Promise<void> {
       );
     }
 
+    // M220 §14, §35–§39 — every session re-proves the identities that can
+    // drift across hours or weeks, and the quota window, before its first row.
+    const identity = sessionIdentityPreflight(authorities.manifest);
+    const windowIssues = quotaWindowGate(lastHardQuotaLimit(operationsRestored.ledger.events), now());
+    const sessionIssues = [...identity.issues, ...windowIssues];
+    if (sessionIssues.length > 0) {
+      persistAll();
+      throw new Error(`refusing to start a session: ${sessionIssues.join("; ")}`);
+    }
+
+    // M220 §40, §41 — the session begins as an operational event; the journal
+    // is derived from it and its end event.
+    const sessionNumber = nextSessionNumber(operationsRestored.ledger.events);
+    const sessionId = sessionIdFor(sessionNumber);
+    const startedAt = now();
+    const deadlineAt = args.maxSessionWallClockSeconds === null
+      ? null
+      : new Date(Date.parse(startedAt) + args.maxSessionWallClockSeconds * 1000).toISOString();
+    const maxPairs = args.maxPairsThisSession ?? 1;
+    const imageIdentity = imageIdentityPreflight(authorities.manifest, args.resultsDir);
+    operations.recordSessionEvent("QUOTA_SESSION_STARTED", {
+      sessionId, sessionNumber, maxPairs, deadlineAt,
+      startingNextRowOrdinal: selectNextRow(authorities.manifest, ledger)?.executionOrder ?? null,
+      ledgerEntriesBefore: ledger.entries.length,
+      pauseRequestPending: readPauseRequest(args.cohortDir)?.kind ?? null,
+      agentIdentity: { pinnedBinary: identity.agent.pinnedBinary, version: identity.agent.version },
+      treatmentTree: identity.treatment.headSrc,
+      imagePreflight: imageIdentity?.verdict ?? "NO_IDENTITY_RECORD",
+      scratchCapacity: (() => {
+        try {
+          const gate = scratch.capacityGate();
+          return { freeBytes: gate.namespaceFilesystem.freeBytes, requiredFreeBytes: gate.requiredFreeBytes, pass: gate.pass };
+        } catch {
+          return null;
+        }
+      })(),
+      executableAuthority: sessionAuthority.executableAuthority.identity,
+      directRow: args.row,
+    });
+    const bounds: SessionBounds = {
+      sessionId, maxPairs, deadlineAt,
+      pauseRequest: () => readPauseRequest(args.cohortDir),
+      acknowledgePauseRequest: () => { clearPauseRequest(args.cohortDir); },
+    };
+
+    let report: CohortRunReport | null = null;
+    let failure: string | null = null;
     try {
       if (args.row !== null) {
         const row = resolveManifestRow(authorities.manifest, { runId: args.row });
         await executeManifestRow(deps, { runId: row.runId });
       } else {
-        await runCohort(deps, args.maxRows === null ? {} : { maxRows: args.maxRows });
+        report = await runCohort(deps, {
+          ...(args.maxRows === null ? {} : { maxRows: args.maxRows }),
+          session: bounds,
+        });
       }
+    } catch (error) {
+      failure = (error as Error).message;
+      throw error;
     } finally {
-      // Both ledgers are persisted whatever happened, so a crash mid-row
-      // cannot leave a result without its teardown event or vice versa.
-      persistLedger(args.cohortDir, ledger);
-      persistOperations(args.cohortDir, operationsRestored.ledger);
+      // M220 §34 — before the session may report itself paused the whole work
+      // root is enumerated again; residue blocks. Then the end event, then
+      // both ledgers and the derived documents, whatever happened.
+      const check = await operations.recordSessionEndCheck(sessionId);
+      const cleanupResult = String((check.detail as { verdict: string }).verdict);
+      const counters = report?.session?.counters ?? null;
+      const overage = counters !== null && operationsRestored.ledger.events.some((event) =>
+        event.kind === "QUOTA_LIMIT_OBSERVED" && event.at >= startedAt && (event.detail as { signal?: unknown }).signal === "PAID_OVERAGE_IN_USE");
+      const endState = failure !== null ? "HALTED"
+        : operations.state() === "CONTINUATION_BLOCKED" ? "HALTED"
+          : report?.session?.endState === "PAUSED" ? "PAUSED"
+            : report?.session?.endState === "COMPLETE" && selectNextRow(authorities.manifest, ledger) === undefined ? "COMPLETE"
+              : report?.session?.endState ?? "PAUSED";
+      operations.recordSessionEvent("QUOTA_SESSION_ENDED", {
+        sessionId, sessionNumber, endState,
+        pauseReason: endState === "PAUSED" ? (report?.session?.pauseReason ?? (args.row !== null ? "DIRECT_ROW_COMPLETE" : null)) : null,
+        stoppedBecause: failure ?? report?.stoppedBecause ?? "direct row complete",
+        counters,
+        endingNextRowOrdinal: selectNextRow(authorities.manifest, ledger)?.executionOrder ?? null,
+        ledgerEntriesAfter: ledger.entries.length,
+        cleanupResult,
+        continuationState: operations.state(),
+        incrementalBilledProviderSpend: overage ? "UNKNOWN_OVERAGE_OBSERVED" : "$0 (subscription mode; no paid overage observed)",
+        pauseState: endState === "PAUSED" && operations.state() === "CONTINUATION_SAFE" ? M220_PAUSED_STATUS : null,
+      });
+      persistAll();
     }
 
+    const operational = cohortOperationalStatus(authorities.manifest, ledger, operationsRestored.ledger, authority.hardCeilingUsd);
     process.stdout.write(`${JSON.stringify({
       resumed: restored,
+      sessionId,
+      session: report?.session ?? null,
+      stoppedBecause: report?.stoppedBecause ?? null,
+      operationalStatus: operational.status,
       ledger: cohortPath(args.cohortDir),
       operations: operationsPath(args.cohortDir),
+      journal: join(args.cohortDir, "cohort_session_journal.json"),
       progress: renderProgress(authorities.manifest, ledger, null, [], operations, scratch, authority),
     }, null, 2)}\n`);
   } finally {

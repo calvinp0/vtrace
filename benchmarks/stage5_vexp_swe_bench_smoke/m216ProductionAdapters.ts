@@ -55,6 +55,13 @@ import {
 } from "./m216SubstrateBridge";
 import type { TeardownReport } from "./m217ContinuationSafety";
 import type { ScratchClaim } from "./m218ScratchLifecycle";
+import {
+  type QuotaObservation,
+  type RateLimitObservation,
+  classifyQuota,
+  parseRateLimitEvents,
+  quotaObservationRequiresAbort,
+} from "./m220QuotaSession";
 
 export const M216_ADAPTER_VERSION = "stage5.m216.production-adapters.v1" as const;
 
@@ -815,6 +822,10 @@ export interface ParsedAgentStream {
   readonly costUsd: number | null;
   readonly resultSubtype: string | null;
   readonly sawResultEvent: boolean;
+  /** M220 §17 — the init event's `apiKeySource`: where the credential used for API requests came from. */
+  readonly apiKeySource: string | null;
+  /** M220 §23 — the CLI's structured rate-limit events, in stream order. */
+  readonly rateLimitEvents: readonly RateLimitObservation[];
 }
 
 const TREATMENT_TOOL_PREFIX = "mcp__vtrace__";
@@ -862,6 +873,7 @@ export function parseAgentStream(lines: readonly string[]): ParsedAgentStream {
   let costUsd: number | null = null;
   let resultSubtype: string | null = null;
   let sawResultEvent = false;
+  let apiKeySource: string | null = null;
 
   for (const line of lines) {
     if (line.trim().length === 0) continue;
@@ -877,6 +889,8 @@ export function parseAgentStream(lines: readonly string[]): ParsedAgentStream {
       providerModelIdentity = typeof model === "string" && model.trim().length > 0 ? model : null;
       const version = event.claude_code_version;
       agentVersionReported = typeof version === "string" ? version : null;
+      const source = event.apiKeySource;
+      apiKeySource = typeof source === "string" && source.length > 0 ? source : null;
       const servers = event.mcp_servers;
       mcpServersReported = Array.isArray(servers)
         ? servers.map((entry) => (typeof entry === "string"
@@ -958,6 +972,8 @@ export function parseAgentStream(lines: readonly string[]): ParsedAgentStream {
     telemetry: Object.freeze(telemetry),
     turnCount: turn, inputTokens, outputTokens, cachedInputTokens,
     costUsd, resultSubtype, sawResultEvent,
+    apiKeySource,
+    rateLimitEvents: parseRateLimitEvents(lines),
   };
 }
 
@@ -1076,17 +1092,34 @@ export class M216AgentAdapter implements AgentAdapter {
     const lines: string[] = [];
     let identityAsserted = false;
     let identityError: Error | null = null;
+    // M220 §20, §24 — a structured hard limit or paid overage stops the run
+    // through the same sentinel the identity hook uses; the reason is kept so
+    // the outcome can say which structured event it was.
+    let quotaAbort: string | null = null;
 
     const onEvent = (event: Record<string, unknown>): void => {
       const line = String(event.line ?? "");
       lines.push(line);
-      if (identityAsserted || identityError !== null) return;
       let parsedEvent: Record<string, unknown>;
       try {
         parsedEvent = JSON.parse(line) as Record<string, unknown>;
       } catch {
         return;
       }
+      if (parsedEvent.type === "rate_limit_event" && quotaAbort === null) {
+        const observed = parseRateLimitEvents([line])[0];
+        const reason = observed === undefined ? null : quotaObservationRequiresAbort(observed);
+        if (reason !== null) {
+          quotaAbort = reason;
+          try {
+            writeFileSync(abortPath, `${reason}\n`);
+          } catch {
+            // the run's own timeout remains the backstop
+          }
+        }
+        return;
+      }
+      if (identityAsserted || identityError !== null) return;
       if (parsedEvent.type !== "system" || parsedEvent.subtype !== "init") return;
       identityAsserted = true;
       const model = parsedEvent.model;
@@ -1166,6 +1199,29 @@ export class M216AgentAdapter implements AgentAdapter {
         wallClockSeconds: result.durationMs / 1000,
         terminationReason: "HARNESS_ABORT",
         failureCategory: "ENVIRONMENT_IRREPRODUCIBLE",
+        quota: classifyQuota(parsedAborted.rateLimitEvents),
+      };
+    }
+
+    if (quotaAbort !== null) {
+      // M220 §24, §25 (A2) — the CLI's own rate_limit_event said the
+      // subscription window is exhausted or paid overage is in use. The
+      // attempt is a provider availability interruption: M214's frozen
+      // MODEL_SERVICE_FAILURE, never a valid unresolved task. Charged at cap
+      // when no result event reported a cost, as every unreported attempt is.
+      const parsedQuota = parseAgentStream(lines);
+      return {
+        providerModelIdentity: parsedQuota.providerModelIdentity,
+        telemetry: parsedQuota.telemetry,
+        turnCount: parsedQuota.turnCount,
+        inputTokens: parsedQuota.inputTokens,
+        outputTokens: parsedQuota.outputTokens,
+        cachedInputTokens: parsedQuota.cachedInputTokens,
+        costUsd: parsedQuota.costUsd ?? spec.perRunCostCapUsd,
+        wallClockSeconds: result.durationMs / 1000,
+        terminationReason: "HARNESS_ABORT",
+        failureCategory: "MODEL_SERVICE_FAILURE",
+        quota: classifyQuota(parsedQuota.rateLimitEvents),
       };
     }
 
@@ -1208,9 +1264,12 @@ export class M216AgentAdapter implements AgentAdapter {
       wallClockSeconds: result.durationMs / 1000,
       terminationReason: termination.reason,
       failureCategory: termination.failureCategory,
+      quota: classifyQuota(parsed.rateLimitEvents),
     };
   }
 }
+
+export type { QuotaObservation };
 
 // ── Evaluator adapter ───────────────────────────────────────────────
 

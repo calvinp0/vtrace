@@ -113,6 +113,24 @@ import {
   auditRetryAdmission,
   retryReserveAccounting,
 } from "./m218SpendAuthority";
+import {
+  type ActiveSessionAuthority,
+  M214_A2_AMENDMENT_ID,
+  auditSessionAuthorityBinding,
+} from "./m220Amendment";
+import {
+  type FrozenPair,
+  type PauseReason,
+  type QuotaObservation,
+  type SessionBounds,
+  type SessionCounters,
+  freshCounters,
+  frozenPairs,
+  pairForRow,
+  pairStatus,
+  rowSettled,
+  sessionBoundaryDecision,
+} from "./m220QuotaSession";
 
 // ── Executor identity (§40) ─────────────────────────────────────────
 
@@ -775,6 +793,12 @@ export interface AgentRunOutcome {
   readonly wallClockSeconds: number;
   readonly terminationReason: TerminationReason;
   readonly failureCategory: string | null;
+  /**
+   * M220 §23, §24 — the structured quota signal read from the run's own
+   * `rate_limit_event`s. Absent from synthetic outcomes; an absent signal is
+   * NONE, never an interruption.
+   */
+  readonly quota?: QuotaObservation;
 }
 
 export interface AgentAdapter {
@@ -1119,7 +1143,7 @@ export const M215_REQUIRED_PRELAUNCH_GATE_IDS: readonly string[] = Object.freeze
   "P1_PREREGISTRATION_HASH", "P2_MANIFEST_HASH", "P3_EXTERNAL_REFERENCE_HASH", "P4_ROW_IS_FROZEN",
   "P5_NO_RUNTIME_OVERRIDES", "P6_EXECUTION_ORDER", "P7_SPEND_AUTHORIZATION", "P8_SPEND_CEILING",
   "P9_LEDGER_INTEGRITY", "P10_CONTINUATION_SAFETY", "P11_RETRY_SPEND_RESERVE",
-  "P12_EXECUTABLE_AUTHORITY", "P13_SCRATCH_CAPACITY",
+  "P12_EXECUTABLE_AUTHORITY", "P13_SCRATCH_CAPACITY", "P14_QUOTA_SESSION_AUTHORITY",
 ]);
 
 export const M215_REQUIRED_RUNTIME_GATE_IDS: readonly string[] = Object.freeze([
@@ -1264,6 +1288,13 @@ export interface ExecutorDependencies {
    * keep M214's numbers.
    */
   readonly spendAuthority?: ActiveSpendAuthority;
+  /**
+   * M220 §4, §14 — the executable authority M214 + A1 + A2. Required in COHORT
+   * mode (P14 fails closed without it: a cohort launched under M214 + A1 alone
+   * is not launched under the active authority); optional in SYNTHETIC mode so
+   * the predecessor suites are unchanged.
+   */
+  readonly sessionAuthority?: ActiveSessionAuthority;
 }
 
 export class LaunchRefusedError extends Error {
@@ -1450,6 +1481,27 @@ export function launchPreconditionGates(
     at,
   ));
 
+  // M220 §4, §14 — the executable authority is M214 + A1 + A2, bound and
+  // verified, or no COHORT row begins. A2's parent must be the A1 that P12
+  // bound, so the two amendments cannot be mixed from different lineages.
+  gates.push(gateRecord(
+    "P14_QUOTA_SESSION_AUTHORITY", "PREREGISTRATION", true,
+    deps.mode === "SYNTHETIC" && deps.sessionAuthority === undefined
+      ? []
+      : auditSessionAuthorityBinding(deps.sessionAuthority, {
+        preregistrationHash: deps.authorities.preregistrationHash.actual,
+        manifestHash: deps.authorities.manifestHash.actual,
+        externalReferenceHash: deps.authorities.externalReferenceHash.actual,
+        a1AmendmentHash: deps.spendAuthority?.amendmentHash,
+      }),
+    deps.sessionAuthority === undefined
+      ? "SYNTHETIC mode with no session authority bound; M214's continuous-launch model applies"
+      : `M214 + A1 + ${M214_A2_AMENDMENT_ID} (${deps.sessionAuthority.amendmentHash.slice(0, 16)}), executable `
+        + `authority ${deps.sessionAuthority.executableAuthority.identity.slice(0, 16)}; pause state `
+        + `${deps.sessionAuthority.pauseState}; quota interruption class ${deps.sessionAuthority.quotaInterruptionClass}`,
+    at,
+  ));
+
   return Object.freeze(gates);
 }
 
@@ -1483,6 +1535,8 @@ function scratchCapacityEvidence(deps: ExecutorDependencies): string {
 export interface ExecutionResult {
   readonly record: RunResultRecord;
   readonly entry: LedgerEntry;
+  /** M220 — the attempt's structured quota observation, when the adapter supplied one. */
+  readonly quota: QuotaObservation | null;
 }
 
 function invalid(category: string, reason: string): ValidityClassification {
@@ -1556,6 +1610,9 @@ export async function executeManifestRow(
   let capturedForEvidence: CapturedPatch | null = null;
   let evaluationForEvidence: EvaluationOutcome | null = null;
   let emergency: { readonly aborted: boolean; readonly highWaterBytes: number; readonly warned: boolean; readonly reason: string | null } | null = null;
+  // M220 — the quota observation is recorded as an operational event in the
+  // finally, whatever the attempt's validity turned out to be.
+  let quotaForEvidence: QuotaObservation | null = null;
 
   const handle = await deps.container.start(row, claim ?? undefined);
   phases.push("CONTAINER_START");
@@ -1700,9 +1757,26 @@ export async function executeManifestRow(
 
     const runtimeGates: RuntimeGateRecord[] = [...preconditions, ...preflight, identityGate];
 
+    quotaForEvidence = outcome.quota ?? null;
+
     if (identityGate.status !== "PASS") {
       return await finalize(deps, base, phases, runtimeGates, outcome, null, null,
         invalid("MODEL_IDENTITY_DRIFT", identityGate.failureReason ?? "identity not confirmed"));
+    }
+
+    // M220 §24, §25 (A2) — a subscription quota exhaustion, or paid overage in
+    // use, before an authoritative outcome is a provider availability
+    // interruption: the frozen MODEL_SERVICE_FAILURE class, never a valid
+    // unresolved task, whatever the CLI's result subtype said. The signal is
+    // the CLI's own structured rate_limit_event, read by the adapter.
+    const quota = outcome.quota ?? null;
+    if (quota !== null && (quota.signal === "HARD_LIMIT" || quota.signal === "PAID_OVERAGE_IN_USE")) {
+      return await finalize(deps, base, phases, runtimeGates, outcome, null, null,
+        invalid("MODEL_SERVICE_FAILURE",
+          `subscription quota interruption (${quota.signal}; ${quota.quotaClass ?? "UNKNOWN"} window; `
+          + `resets ${quota.resetsAtIso ?? "unreported"}; last rate_limit_event status ${quota.lastStatus ?? "none"}): `
+          + "provider availability interruption under M214's frozen MODEL_SERVICE_FAILURE class; A2 defers the "
+          + "permitted retry to the next quota session"));
     }
 
     if (outcome.failureCategory !== null) {
@@ -1873,6 +1947,22 @@ export async function executeManifestRow(
         resultStatus: entry?.status ?? null,
         scope,
       }, teardown);
+      // M220 §22, §46 — any structured quota signal is an operational fact
+      // about the window, recorded after teardown so the session loop and the
+      // next session's window gate can read it. It references the result by
+      // digest and changes nothing in it.
+      if (quotaForEvidence !== null && quotaForEvidence.signal !== "NONE") {
+        deps.operations.recordSessionEvent("QUOTA_LIMIT_OBSERVED", {
+          signal: quotaForEvidence.signal,
+          quotaClass: quotaForEvidence.quotaClass,
+          resetsAtIso: quotaForEvidence.resetsAtIso,
+          lastStatus: quotaForEvidence.lastStatus,
+          overageObserved: quotaForEvidence.overageObserved,
+          rateLimitEvents: quotaForEvidence.events.length,
+          attemptStatus: entry?.status ?? null,
+          attemptCategory: entry?.validity.infrastructureCategory ?? null,
+        }, { runId: row.runId, attemptId, resultDigest: entry?.resultDigest ?? null });
+      }
     }
   }
 }
@@ -2050,7 +2140,7 @@ async function finalize(
   }
 
   const entry = deps.ledger.append(record, endedAt);
-  return { record, entry };
+  return { record, entry, quota: outcome?.quota ?? null };
 }
 
 // ── Cohort launcher (§49, §50, §51) ─────────────────────────────────
@@ -2195,11 +2285,26 @@ export function renderProgress(
   };
 }
 
+/** M220 §9, §22 — what one quota session did, in operational terms only. */
+export interface SessionRunSummary {
+  readonly sessionId: string;
+  readonly maxPairs: number;
+  readonly counters: SessionCounters;
+  readonly pauseReason: PauseReason | null;
+  readonly endState: "PAUSED" | "HALTED" | "COMPLETE" | "ROW_LIMIT";
+  readonly startingNextRowOrdinal: number | null;
+  readonly endingNextRowOrdinal: number | null;
+}
+
 export interface CohortRunReport {
   readonly executed: readonly string[];
   readonly progress: CohortProgress;
   readonly stoppedBecause: string;
+  /** Present when the loop ran under M220 session bounds. */
+  readonly session: SessionRunSummary | null;
 }
+
+export const M220_PAUSED_STATUS = "COHORT_PAUSED_QUOTA_WINDOW" as const;
 
 /**
  * Run rows until the cohort is complete or a guard stops it.
@@ -2207,14 +2312,27 @@ export interface CohortRunReport {
  * The operator does not choose rows. `selectNextRow` does, from the frozen
  * order, which is what removes the possibility of outcome-driven scheduling
  * without requiring anyone to resist it.
+ *
+ * M220 — under `options.session` the same loop is additionally bounded by the
+ * frozen PAIR: before every row the session boundary decision asks whether
+ * the next frozen row may begin in THIS session (pair cap, explicit pause
+ * request, quota warning, wall-clock deadline, hard quota limit). A refusal is
+ * a PAUSE, not a halt: continuation stays whatever the last teardown proved,
+ * no row is skipped, and the next session resumes at the same frozen row.
  */
 export async function runCohort(
   deps: ExecutorDependencies,
-  options: { readonly maxRows?: number } = {},
+  options: { readonly maxRows?: number; readonly session?: SessionBounds } = {},
 ): Promise<CohortRunReport> {
   const executed: string[] = [];
   const errors: string[] = [];
   const limit = options.maxRows ?? Number.POSITIVE_INFINITY;
+  const session = options.session ?? null;
+  const pairs: readonly FrozenPair[] | null = session === null ? null : frozenPairs(deps.authorities.manifest);
+  const counters = freshCounters();
+  const startingNext = selectNextRow(deps.authorities.manifest, deps.ledger)?.executionOrder ?? null;
+  let pauseReason: PauseReason | null = null;
+  let endState: SessionRunSummary["endState"] = "COMPLETE";
   let stoppedBecause = "cohort complete: every planned run has reached a terminal state";
 
   while (executed.length < limit) {
@@ -2225,15 +2343,48 @@ export async function runCohort(
       const reasons = deps.operations.auditContinuation();
       stoppedBecause = reasons.join("; ");
       errors.push(...reasons);
+      endState = "HALTED";
       break;
     }
     const row = selectNextRow(deps.authorities.manifest, deps.ledger);
     if (row === undefined) break;
+
+    // M220 §8, §12, §29 — the session boundary. Evaluated before the spend
+    // and reserve checks because a pause costs nothing and consumes nothing;
+    // evaluated after the continuation check because a pause never hides a
+    // block.
+    if (session !== null && pairs !== null) {
+      const decision = sessionBoundaryDecision({
+        nextRow: row, pairs, ledger: deps.ledger, counters, bounds: session, now: deps.now(),
+      });
+      if (!decision.proceed) {
+        pauseReason = decision.reason;
+        endState = "PAUSED";
+        stoppedBecause = `${M220_PAUSED_STATUS}: ${decision.reason}: ${decision.detail}`;
+        if (decision.pairSplit) {
+          counters.pairSplitOccurred = true;
+          const pair = pairForRow(pairs, row);
+          deps.operations?.recordSessionEvent("PAIR_SPLIT_BY_QUOTA_WINDOW", {
+            sessionId: session.sessionId, instanceId: row.instanceId, pairOrdinal: pair.pairOrdinal,
+            firstArmSettled: true, nextArmRow: row.runId, reason: decision.reason, detail: decision.detail,
+            resumesAt: "the same frozen row (the pair's second arm) in the next session; arm 1 is never rerun",
+          }, { runId: row.runId });
+        }
+        const request = session.pauseRequest();
+        if (request !== null && (decision.reason === "EXPLICIT_PAUSE_REQUEST_AFTER_PAIR"
+          || decision.reason === "EXPLICIT_PAUSE_REQUEST_AFTER_ARM")) {
+          session.acknowledgePauseRequest();
+        }
+        break;
+      }
+    }
+
     if (deps.mode === "COHORT") {
       const ceiling = auditSpendCeiling(deps.ledger, activeCeilingUsd(deps));
       if (ceiling.length > 0) {
         stoppedBecause = `COHORT_HALTED_SPEND_CEILING: ${ceiling.join("; ")}`;
         errors.push(...ceiling);
+        endState = "HALTED";
         // §17 — the halt is an operational event; the rows that never ran
         // stay PLANNED and nothing is written to the result ledger for them.
         deps.operations?.recordSpendHalt({
@@ -2253,6 +2404,7 @@ export async function runCohort(
       if (admission !== null && !admission.permitted && admission.refusal === "RETRY_RESERVE_EXHAUSTED") {
         stoppedBecause = `COHORT_HALTED_RETRY_RESERVE_EXHAUSTED: ${admission.refusalDetail ?? ""}`;
         errors.push(stoppedBecause);
+        endState = "HALTED";
         deps.operations?.recordScratchEvent("COHORT_HALTED_RETRY_RESERVE_EXHAUSTED", false, {
           reasons: [admission.refusalDetail ?? "RETRY_RESERVE_EXHAUSTED"],
           admission,
@@ -2263,16 +2415,49 @@ export async function runCohort(
       }
     }
     try {
+      const pairBefore = pairs === null ? null : pairStatus(pairForRow(pairs, row), deps.ledger);
       const result = await executeManifestRow(deps, { runId: row.runId });
       executed.push(result.record.attemptId);
+      counters.attemptsStarted += 1;
+      if (pairs !== null && pairBefore !== null) {
+        const pairAfter = pairStatus(pairForRow(pairs, row), deps.ledger);
+        if (pairBefore.state === "NOT_STARTED") counters.pairsStarted += 1;
+        if (rowSettled(deps.ledger, row)) counters.rowsSettled += 1;
+        if (pairAfter.state === "COMPLETE" && pairBefore.state !== "COMPLETE") counters.pairsCompleted += 1;
+      }
+      // M220 §23, §24 — the structured quota signal steers only WHEN the next
+      // row may start. A warning requests a pause after the current pair; a
+      // hard limit or paid overage pauses at the next boundary, and the
+      // attempt itself has already been classified by the executor.
+      const quota = result.quota;
+      if (session !== null && quota !== null && quota.signal !== "NONE") {
+        counters.quotaClassObserved = quota.quotaClass ?? counters.quotaClassObserved;
+        counters.lastResetsAtIso = quota.resetsAtIso ?? counters.lastResetsAtIso;
+        if (quota.signal === "WARNING") {
+          if (!counters.quotaWarningObserved) {
+            deps.operations?.recordSessionEvent("PAUSE_REQUESTED_AFTER_CURRENT_PAIR", {
+              sessionId: session.sessionId, source: "rate_limit_event allowed_warning",
+              quotaClass: quota.quotaClass, resetsAtIso: quota.resetsAtIso,
+            }, { runId: row.runId, attemptId: result.record.attemptId, resultDigest: result.entry.resultDigest });
+          }
+          counters.quotaWarningObserved = true;
+          counters.pauseRequestedAfterPair = true;
+        } else {
+          counters.hardQuotaLimitObserved = true;
+        }
+      }
     } catch (error) {
       const message = `${row.runId}: ${(error as Error).message}`;
       errors.push(message);
       stoppedBecause = message;
+      endState = "HALTED";
       break;
     }
   }
-  if (executed.length >= limit) stoppedBecause = `row limit ${limit} reached`;
+  if (executed.length >= limit) {
+    stoppedBecause = `row limit ${limit} reached`;
+    endState = "ROW_LIMIT";
+  }
 
   return {
     executed: Object.freeze(executed),
@@ -2281,6 +2466,15 @@ export async function runCohort(
       deps.scratch ?? null, deps.spendAuthority ?? null,
     ),
     stoppedBecause,
+    session: session === null ? null : {
+      sessionId: session.sessionId,
+      maxPairs: session.maxPairs,
+      counters,
+      pauseReason,
+      endState,
+      startingNextRowOrdinal: startingNext,
+      endingNextRowOrdinal: selectNextRow(deps.authorities.manifest, deps.ledger)?.executionOrder ?? null,
+    },
   };
 }
 

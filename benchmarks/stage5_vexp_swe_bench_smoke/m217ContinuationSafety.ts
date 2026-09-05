@@ -274,7 +274,30 @@ export type OperationalEventKind =
   | "SCRATCH_STALE_SWEEP"
   | "SCRATCH_CAPACITY_GATE"
   | "SCRATCH_EMERGENCY_ABORT"
-  | "COHORT_HALTED_RETRY_RESERVE_EXHAUSTED";
+  | "COHORT_HALTED_RETRY_RESERVE_EXHAUSTED"
+  // M220 — quota-window session events. None of them changes continuation
+  // state: a pause is not a halt, a split is a measurement, a quota limit is
+  // classified into a frozen class by the executor. The session journal is
+  // DERIVED from these events, so its integrity is this chain's.
+  | "QUOTA_SESSION_STARTED"
+  | "QUOTA_SESSION_ENDED"
+  | "PAIR_SPLIT_BY_QUOTA_WINDOW"
+  | "PAUSE_REQUESTED_AFTER_CURRENT_PAIR"
+  | "QUOTA_LIMIT_OBSERVED"
+  // M220 — the agent's own init event reported a credential source other
+  // than the subscription login; the session stops before another row.
+  | "COHORT_HALTED_AUTH_MODE"
+  // M220 §34 — the enumeration run before a session may report itself paused;
+  // residue here BLOCKS exactly as a launch preflight would.
+  | "SESSION_END_ISOLATION_CHECK";
+
+export type SessionEventKind =
+  | "QUOTA_SESSION_STARTED"
+  | "QUOTA_SESSION_ENDED"
+  | "PAIR_SPLIT_BY_QUOTA_WINDOW"
+  | "PAUSE_REQUESTED_AFTER_CURRENT_PAIR"
+  | "QUOTA_LIMIT_OBSERVED"
+  | "COHORT_HALTED_AUTH_MODE";
 
 /**
  * One operational event.
@@ -339,7 +362,7 @@ export class CohortOperationsLedger {
       if (event.continuationAfter !== "CONTINUATION_BLOCKED") break;
       if (event.kind === "ROW_TEARDOWN" || event.kind === "LAUNCH_ISOLATION_PREFLIGHT"
         || event.kind === "ISOLATION_RECOVERY_FAILED" || event.kind === "SCRATCH_STALE_SWEEP"
-        || event.kind === "SCRATCH_CAPACITY_GATE") {
+        || event.kind === "SCRATCH_CAPACITY_GATE" || event.kind === "SESSION_END_ISOLATION_CHECK") {
         return event;
       }
     }
@@ -487,6 +510,35 @@ export class CohortOperations {
   }
 
   /**
+   * M220 §34 — before a session may report itself PAUSED, the whole work root
+   * is enumerated once more: no agent, no run-owned container, mount or
+   * process, no owned scratch. Residue blocks through the same chain a
+   * teardown would, so a pause can never be reported over a dirty substrate.
+   * A cohort already BLOCKED stays BLOCKED whatever this finds.
+   */
+  async recordSessionEndCheck(sessionId: string): Promise<OperationalEvent> {
+    let residual: ResidualStateReport;
+    try {
+      residual = await this.preflight();
+    } catch (error) {
+      residual = {
+        probeVersion: M217_CONTINUATION_VERSION, probedAt: this.now(), scope: this.scopeFor(),
+        harnessContainers: [], evaluatorContainers: [], liveProcesses: [],
+        armRootPresent: false, hostMountPresent: false, openBridgeHandles: [],
+        probeErrors: [`enumeration threw: ${(error as Error).message}`],
+      };
+    }
+    const issues = residualStateIssues(residual);
+    const clean = issues.length === 0;
+    const after: ContinuationState = clean ? this.state() : "CONTINUATION_BLOCKED";
+    return this.ledger.append("SESSION_END_ISOLATION_CHECK", this.now(), after, {
+      sessionId, residual, reasons: issues,
+      verdict: clean ? "SESSION_SUBSTRATE_CLEAN" : "RESIDUAL_STATE_AT_SESSION_END",
+      pauseSafe: clean && after === "CONTINUATION_SAFE",
+    });
+  }
+
+  /**
    * §5, §11 — after a row: classify, record, and halt if unproven.
    *
    * The result is not consulted, let alone modified. Its digest is carried on
@@ -596,6 +648,20 @@ export class CohortOperations {
   ): OperationalEvent {
     const after: ContinuationState = blocking ? "CONTINUATION_BLOCKED" : this.state();
     return this.ledger.append(kind, this.now(), after, detail, reference);
+  }
+
+  /**
+   * M220 — session events. They carry the current continuation state forward
+   * unchanged: a quota pause happens only AFTER the row's teardown has been
+   * classified, and a session never begins while continuation is BLOCKED, so
+   * these events can neither hide a block nor create one.
+   */
+  recordSessionEvent(
+    kind: SessionEventKind,
+    detail: Readonly<Record<string, unknown>>,
+    reference: { runId?: string | null; attemptId?: string | null; resultDigest?: string | null } = {},
+  ): OperationalEvent {
+    return this.ledger.append(kind, this.now(), this.state(), detail, reference);
   }
 }
 

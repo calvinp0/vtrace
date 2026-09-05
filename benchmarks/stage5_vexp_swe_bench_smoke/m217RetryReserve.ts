@@ -301,6 +301,10 @@ export type CohortOperationalStatus =
   | "COHORT_HALTED_SPEND_CEILING"
   // M218 §10 — the fixed retry reserve could not fund a permitted retry.
   | "COHORT_HALTED_RETRY_RESERVE_EXHAUSTED"
+  // M220 §13 — a first-class, non-failure state between quota-window sessions.
+  | "COHORT_PAUSED_QUOTA_WINDOW"
+  // M220 §17, §19 — the agent's credential source was not the subscription login.
+  | "COHORT_HALTED_AUTH_MODE"
   | "EXPERIMENT_COMPLETED_FIXED_N";
 
 export interface OperationalStatusView {
@@ -362,6 +366,17 @@ export function cohortOperationalStatus(
     haltReason = `the frozen $${ceilingUsd} ceiling binds: $${reserve.cumulativeUsd} spent and one more `
       + `attempt at its $${reserve.perRowCapUsd} cap cannot fit; ${remaining} planned rows remain unstarted `
       + "or unrecovered and are reported as such, never fabricated";
+  } else if (lastEvent?.kind === "COHORT_HALTED_AUTH_MODE") {
+    status = "COHORT_HALTED_AUTH_MODE";
+    haltReason = String((lastEvent.detail as { reasons?: unknown }).reasons ?? "the agent's credential source was not the subscription login")
+      + "; no further row starts until the subscription authentication preflight passes again";
+  } else if (lastEvent?.kind === "QUOTA_SESSION_ENDED"
+    && (lastEvent.detail as { endState?: unknown }).endState === "PAUSED") {
+    // M220 — a pause is where the cohort rests between quota windows. It is
+    // reported by its operational reason and is not a halt: the next session's
+    // start event moves the status back to IN_PROGRESS.
+    status = "COHORT_PAUSED_QUOTA_WINDOW";
+    haltReason = null;
   } else if (ledger.entries.length === 0) {
     status = "COHORT_NOT_STARTED";
   } else {
