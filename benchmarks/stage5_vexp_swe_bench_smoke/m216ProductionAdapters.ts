@@ -1092,6 +1092,8 @@ export class M216AgentAdapter implements AgentAdapter {
     const lines: string[] = [];
     let identityAsserted = false;
     let identityError: Error | null = null;
+    // M220 §17 — the credential-source assertion rides the same init event.
+    let authError: Error | null = null;
     // M220 §20, §24 — a structured hard limit or paid overage stops the run
     // through the same sentinel the identity hook uses; the reason is kept so
     // the outcome can say which structured event it was.
@@ -1131,6 +1133,16 @@ export class M216AgentAdapter implements AgentAdapter {
         // The assertion is a hook so that it can stop the run, not merely label
         // it afterwards. Writing the sentinel is what actually stops it.
         writeFileSync(abortPath, `${(error as Error).message}\n`);
+        return;
+      }
+      if (hooks.assertAuthSource !== undefined) {
+        const source = parsedEvent.apiKeySource;
+        try {
+          hooks.assertAuthSource(typeof source === "string" && source.length > 0 ? source : null);
+        } catch (error) {
+          authError = error as Error;
+          writeFileSync(abortPath, `${(error as Error).message}\n`);
+        }
       }
     };
 
@@ -1183,6 +1195,7 @@ export class M216AgentAdapter implements AgentAdapter {
     this.lastAgentTmp = result.agentTmp ?? null;
 
     if (identityError !== null) throw identityError;
+    if (authError !== null) throw authError;
 
     if (signal?.aborted === true) {
       // A run the executor itself stopped to protect the host is not a model
@@ -1200,6 +1213,7 @@ export class M216AgentAdapter implements AgentAdapter {
         terminationReason: "HARNESS_ABORT",
         failureCategory: "ENVIRONMENT_IRREPRODUCIBLE",
         quota: classifyQuota(parsedAborted.rateLimitEvents),
+        apiKeySource: parsedAborted.apiKeySource,
       };
     }
 
@@ -1222,6 +1236,7 @@ export class M216AgentAdapter implements AgentAdapter {
         terminationReason: "HARNESS_ABORT",
         failureCategory: "MODEL_SERVICE_FAILURE",
         quota: classifyQuota(parsedQuota.rateLimitEvents),
+        apiKeySource: parsedQuota.apiKeySource,
       };
     }
 
@@ -1265,6 +1280,7 @@ export class M216AgentAdapter implements AgentAdapter {
       terminationReason: termination.reason,
       failureCategory: termination.failureCategory,
       quota: classifyQuota(parsed.rateLimitEvents),
+      apiKeySource: parsed.apiKeySource,
     };
   }
 }

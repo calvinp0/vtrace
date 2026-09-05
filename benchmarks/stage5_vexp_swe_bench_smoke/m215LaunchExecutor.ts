@@ -131,6 +131,7 @@ import {
   rowSettled,
   sessionBoundaryDecision,
 } from "./m220QuotaSession";
+import { type SubscriptionAuthReport, auditAuthSource } from "./m220SubscriptionAuth";
 
 // ── Executor identity (§40) ─────────────────────────────────────────
 
@@ -779,6 +780,12 @@ export interface AgentRunHooks {
    * the frozen emergency category; an adapter that ignores it changes nothing.
    */
   readonly abortSignal?: AbortSignal;
+  /**
+   * M220 §17, §19 — the credential-source assertion, armed on the same init
+   * event as the model identity. The subscription login reports 'none' (no
+   * API key in use); anything else throws and the adapter stops the run.
+   */
+  readonly assertAuthSource?: (apiKeySource: string | null) => void;
 }
 
 export interface AgentRunOutcome {
@@ -799,6 +806,8 @@ export interface AgentRunOutcome {
    * NONE, never an interruption.
    */
   readonly quota?: QuotaObservation;
+  /** M220 §17 — the init event's `apiKeySource`. Absent from synthetic outcomes; null when the event carried none. */
+  readonly apiKeySource?: string | null;
 }
 
 export interface AgentAdapter {
@@ -828,6 +837,16 @@ export class ModelIdentityError extends Error {
       + `${M214_MODEL.model}; the run is aborted before it can become an authoritative outcome`,
     );
     this.name = "ModelIdentityError";
+    this.observed = observed;
+  }
+}
+
+/** M220 §17 — the agent's init event named a credential source other than the subscription login. */
+export class AuthSourceError extends Error {
+  readonly observed: string | null;
+  constructor(observed: string | null, issues: readonly string[]) {
+    super(`${issues.join("; ")}; the run is aborted before it can become an authoritative outcome`);
+    this.name = "AuthSourceError";
     this.observed = observed;
   }
 }
@@ -1144,6 +1163,7 @@ export const M215_REQUIRED_PRELAUNCH_GATE_IDS: readonly string[] = Object.freeze
   "P5_NO_RUNTIME_OVERRIDES", "P6_EXECUTION_ORDER", "P7_SPEND_AUTHORIZATION", "P8_SPEND_CEILING",
   "P9_LEDGER_INTEGRITY", "P10_CONTINUATION_SAFETY", "P11_RETRY_SPEND_RESERVE",
   "P12_EXECUTABLE_AUTHORITY", "P13_SCRATCH_CAPACITY", "P14_QUOTA_SESSION_AUTHORITY",
+  "P15_SUBSCRIPTION_AUTH_MODE",
 ]);
 
 export const M215_REQUIRED_RUNTIME_GATE_IDS: readonly string[] = Object.freeze([
@@ -1151,7 +1171,7 @@ export const M215_REQUIRED_RUNTIME_GATE_IDS: readonly string[] = Object.freeze([
   "R5_ARM_ISOLATION", "R6_SOURCE_STATE_EQUIVALENCE", "R7_RESET_WARMTH_POLICY", "R8_GOLD_LEAKAGE",
   "R9_BUDGET_SYMMETRY", "R10_TREATMENT_IDENTITY", "R11_SECRET_HYGIENE",
   "R12_PROVIDER_MODEL_IDENTITY", "R13_PATCH_CAPTURE", "R14_LIFECYCLE_ORDER",
-  "R15_EVALUATOR_AUTHORITY",
+  "R15_EVALUATOR_AUTHORITY", "R16_AUTH_SOURCE",
 ]);
 
 /** A valid outcome must carry every required gate, asserted and passing. */
@@ -1295,6 +1315,13 @@ export interface ExecutorDependencies {
    * the predecessor suites are unchanged.
    */
   readonly sessionAuthority?: ActiveSessionAuthority;
+  /**
+   * M220 §16–§20 — the subscription authentication audit, re-evaluated before
+   * every row (P15 fails closed without it in COHORT mode). It reads the
+   * launcher's environment by name, the CLI's zero-call auth status and the
+   * cached account profile; it never reads a secret value.
+   */
+  readonly subscriptionAuth?: () => SubscriptionAuthReport;
 }
 
 export class LaunchRefusedError extends Error {
@@ -1502,7 +1529,42 @@ export function launchPreconditionGates(
     at,
   ));
 
+  // M220 §16–§20 — before any row that could reach a provider, the launcher's
+  // authentication mode must be the subscription login with no API-key
+  // billing override present and no paid overflow enabled at the account.
+  gates.push(gateRecord(
+    "P15_SUBSCRIPTION_AUTH_MODE", "INFRASTRUCTURE", true,
+    subscriptionAuthIssues(deps),
+    subscriptionAuthEvidence(deps),
+    at,
+  ));
+
   return Object.freeze(gates);
+}
+
+function subscriptionAuthIssues(deps: ExecutorDependencies): readonly string[] {
+  if (deps.subscriptionAuth === undefined) {
+    return deps.mode === "SYNTHETIC"
+      ? []
+      : ["no subscription authentication audit is bound; the billing path of a COHORT row cannot be proven, so it may not begin"];
+  }
+  try {
+    const report = deps.subscriptionAuth();
+    return report.launchPermitted ? [] : [`${report.authModeVerdict}; ${report.overflowVerdict}: ${report.issues.join(" | ")}`];
+  } catch (error) {
+    return [`the subscription authentication audit could not run: ${(error as Error).message}`];
+  }
+}
+
+function subscriptionAuthEvidence(deps: ExecutorDependencies): string {
+  if (deps.subscriptionAuth === undefined) return "SYNTHETIC mode with no provider to authenticate to";
+  try {
+    const report = deps.subscriptionAuth();
+    return `${report.authModeVerdict} (${report.authModeStrength}); ${report.overflowVerdict}; ANTHROPIC_API_KEY_PRESENT=${report.environment.apiKeyPresent}; `
+      + `cli auth ${report.cliAuth.authMethod ?? "?"}/${report.cliAuth.apiProvider ?? "?"}/${report.cliAuth.subscriptionType ?? "?"}; provider confirmation ${report.providerConfirmation}`;
+  } catch (error) {
+    return `audit unavailable: ${(error as Error).message}`;
+  }
 }
 
 function scratchCapacityIssues(deps: ExecutorDependencies): readonly string[] {
@@ -1613,6 +1675,8 @@ export async function executeManifestRow(
   // M220 — the quota observation is recorded as an operational event in the
   // finally, whatever the attempt's validity turned out to be.
   let quotaForEvidence: QuotaObservation | null = null;
+  // M220 §17 — a refused credential source halts the session after teardown.
+  let authModeIssue: string | null = null;
 
   const handle = await deps.container.start(row, claim ?? undefined);
   phases.push("CONTAINER_START");
@@ -1697,6 +1761,13 @@ export async function executeManifestRow(
           throw new ModelIdentityError(observed);
         }
       },
+      assertAuthSource: (observed) => {
+        const issues = auditAuthSource(observed);
+        if (issues.length > 0) {
+          authModeIssue = issues.join("; ");
+          throw new AuthSourceError(observed, issues);
+        }
+      },
       abortSignal: abortController.signal,
     };
 
@@ -1729,16 +1800,24 @@ export async function executeManifestRow(
         const stopped = monitor.stop();
         emergency = { ...stopped, reason: abortController.signal.aborted ? String(abortController.signal.reason) : null };
       }
+      const authAbort = error instanceof AuthSourceError;
       const runtimeGates = [
         ...preconditions,
         ...preflight,
         gateRecord("R12_PROVIDER_MODEL_IDENTITY", "RUNTIME", true,
-          [identityIssue ?? (error as Error).message],
-          "provider-returned model identity read from the run's own init event", deps.now()),
+          authAbort ? [] : [identityIssue ?? (error as Error).message],
+          authAbort
+            ? "identity asserted on the init event before the credential-source refusal"
+            : "provider-returned model identity read from the run's own init event", deps.now()),
+        ...(authAbort ? [gateRecord("R16_AUTH_SOURCE", "RUNTIME", true,
+          [authModeIssue ?? (error as Error).message],
+          "credential source read from the run's own init event (apiKeySource)", deps.now())] : []),
       ];
       const category = error instanceof ModelIdentityError
         ? "MODEL_IDENTITY_DRIFT"
-        : "AGENT_INFRASTRUCTURE_FAILURE_BEFORE_TREATMENT_EXPOSURE";
+        : authAbort
+          ? "ARM_CONFIGURATION_WRONG"
+          : "AGENT_INFRASTRUCTURE_FAILURE_BEFORE_TREATMENT_EXPOSURE";
       return await finalize(deps, base, phases, runtimeGates, null, null, null,
         invalid(category, (error as Error).message));
     }
@@ -1755,13 +1834,31 @@ export async function executeManifestRow(
       deps.now(),
     );
 
-    const runtimeGates: RuntimeGateRecord[] = [...preconditions, ...preflight, identityGate];
+    // M220 §17, §19 — the credential source from the same init event. A
+    // synthetic outcome that never reported one passes vacuously; a COHORT
+    // outcome must report 'none' (no API key in use) or the attempt is a
+    // configuration failure and the session halts.
+    const authGate = gateRecord(
+      "R16_AUTH_SOURCE", "RUNTIME", true,
+      deps.mode === "SYNTHETIC" && outcome.apiKeySource === undefined ? [] : auditAuthSource(outcome.apiKeySource ?? null),
+      deps.mode === "SYNTHETIC" && outcome.apiKeySource === undefined
+        ? "SYNTHETIC outcome without a credential source; nothing was authenticated"
+        : `apiKeySource ${outcome.apiKeySource ?? "(absent)"} from the run's own init event; the subscription login reports 'none'`,
+      deps.now(),
+    );
+
+    const runtimeGates: RuntimeGateRecord[] = [...preconditions, ...preflight, identityGate, authGate];
 
     quotaForEvidence = outcome.quota ?? null;
 
     if (identityGate.status !== "PASS") {
       return await finalize(deps, base, phases, runtimeGates, outcome, null, null,
         invalid("MODEL_IDENTITY_DRIFT", identityGate.failureReason ?? "identity not confirmed"));
+    }
+    if (authGate.status !== "PASS") {
+      authModeIssue = authGate.failureReason ?? "credential source not confirmed";
+      return await finalize(deps, base, phases, runtimeGates, outcome, null, null,
+        invalid("ARM_CONFIGURATION_WRONG", authModeIssue));
     }
 
     // M220 §24, §25 (A2) — a subscription quota exhaustion, or paid overage in
@@ -1961,6 +2058,17 @@ export async function executeManifestRow(
           rateLimitEvents: quotaForEvidence.events.length,
           attemptStatus: entry?.status ?? null,
           attemptCategory: entry?.validity.infrastructureCategory ?? null,
+        }, { runId: row.runId, attemptId, resultDigest: entry?.resultDigest ?? null });
+      }
+      // M220 §17 — a refused credential source is recorded LAST so the
+      // operational status reads COHORT_HALTED_AUTH_MODE until the next
+      // session's P15 passes again; the loop stops on the same fact.
+      if (authModeIssue !== null) {
+        deps.operations.recordSessionEvent("COHORT_HALTED_AUTH_MODE", {
+          reasons: [authModeIssue],
+          attemptStatus: entry?.status ?? null,
+          attemptCategory: entry?.validity.infrastructureCategory ?? null,
+          consequence: "no further row starts in this session; the subscription authentication preflight must pass before the next",
         }, { runId: row.runId, attemptId, resultDigest: entry?.resultDigest ?? null });
       }
     }
@@ -2419,6 +2527,17 @@ export async function runCohort(
       const result = await executeManifestRow(deps, { runId: row.runId });
       executed.push(result.record.attemptId);
       counters.attemptsStarted += 1;
+      // M220 §17 — an attempt whose init event named a non-subscription
+      // credential source stops the session before another row can bill
+      // through the same path. The attempt is already recorded as
+      // ARM_CONFIGURATION_WRONG; nothing here touches it.
+      const authGateFailed = result.record.runtimeGates.some((gate) => gate.gateId === "R16_AUTH_SOURCE" && gate.status === "FAIL");
+      if (authGateFailed) {
+        stoppedBecause = `COHORT_HALTED_AUTH_MODE: ${result.record.validity.reason}`;
+        errors.push(stoppedBecause);
+        endState = "HALTED";
+        break;
+      }
       if (pairs !== null && pairBefore !== null) {
         const pairAfter = pairStatus(pairForRow(pairs, row), deps.ledger);
         if (pairBefore.state === "NOT_STARTED") counters.pairsStarted += 1;

@@ -1,0 +1,531 @@
+/**
+ * M220 §16–§21, §38 — the subscription authentication audit, the API-key
+ * billing-override guard, the usage-credit overflow guard, and the agent
+ * auto-update posture.
+ *
+ * The operator runs the cohort on a Claude MAX subscription. Anthropic's
+ * product rule is that an `ANTHROPIC_API_KEY` in the environment switches
+ * Claude Code to API billing; other documented variables route requests to
+ * another provider or inject another identity. So before a session starts,
+ * the environment the LAUNCHER itself runs in is inspected by NAME (values are
+ * never read past "present and non-empty"), the CLI's own zero-call
+ * `auth status --json` is read, the credential file's non-secret fields and
+ * the cached account profile are read, and one verdict is produced.
+ *
+ * Strength of the claim, stated exactly: everything here is LOCAL CLI AUTH
+ * STATE. It proves what the CLI on this host believes and which billing path
+ * it would take; it does not prove what the provider will do on the first
+ * request. That is the runtime gate's job: the agent's own init event carries
+ * `apiKeySource`, and a value other than 'none' aborts the attempt exactly as
+ * model identity does. Provider confirmation is PENDING_AT_FIRST_LIVE_RUN.
+ *
+ * Nothing here spends. `auth status` is verified to work with networking
+ * unshared by the falsification suite.
+ */
+
+import { execFileSync } from "node:child_process";
+import { existsSync, readFileSync } from "node:fs";
+import { homedir } from "node:os";
+import { join } from "node:path";
+
+import { M214_AGENT } from "./m214Preregistration";
+import { pinnedAgentBinary } from "./m216ProductionAdapters";
+
+export const M220_AUTH_VERSION = "stage5.m220.subscription-auth.v1" as const;
+
+// ── §17 — provider overrides, by name ───────────────────────────────
+
+export type OverrideClass = "API_KEY_BILLING" | "PROVIDER_ROUTE" | "ALTERNATE_IDENTITY" | "MODEL_OVERRIDE" | "UNCLASSIFIED_ANTHROPIC_PREFIX";
+
+/**
+ * Variables that would change how, or as whom, Claude Code bills or routes.
+ * Documented by Anthropic for the CLI; anything else with the `ANTHROPIC_`
+ * prefix is treated as an override until classified, never ignored.
+ */
+export const PROVIDER_OVERRIDE_VARIABLES: readonly { readonly name: string; readonly classification: OverrideClass; readonly why: string }[] = Object.freeze([
+  { name: "ANTHROPIC_API_KEY", classification: "API_KEY_BILLING", why: "switches Claude Code from subscription login to API (pay-as-you-go) billing" },
+  { name: "ANTHROPIC_AUTH_TOKEN", classification: "API_KEY_BILLING", why: "a bearer token replaces the subscription login" },
+  { name: "ANTHROPIC_CUSTOM_HEADERS", classification: "PROVIDER_ROUTE", why: "custom request headers can redirect or re-authenticate requests" },
+  { name: "ANTHROPIC_BASE_URL", classification: "PROVIDER_ROUTE", why: "requests leave the first-party endpoint" },
+  { name: "ANTHROPIC_BEDROCK_BASE_URL", classification: "PROVIDER_ROUTE", why: "Bedrock routing" },
+  { name: "ANTHROPIC_VERTEX_BASE_URL", classification: "PROVIDER_ROUTE", why: "Vertex routing" },
+  { name: "ANTHROPIC_VERTEX_PROJECT_ID", classification: "PROVIDER_ROUTE", why: "Vertex routing" },
+  { name: "ANTHROPIC_FOUNDRY_BASE_URL", classification: "PROVIDER_ROUTE", why: "Foundry routing" },
+  { name: "CLAUDE_CODE_USE_BEDROCK", classification: "PROVIDER_ROUTE", why: "cloud-provider billing instead of the subscription" },
+  { name: "CLAUDE_CODE_USE_VERTEX", classification: "PROVIDER_ROUTE", why: "cloud-provider billing instead of the subscription" },
+  { name: "CLAUDE_CODE_USE_FOXTROT", classification: "PROVIDER_ROUTE", why: "cloud-provider billing instead of the subscription" },
+  { name: "CLAUDE_CODE_USE_FOUNDRY", classification: "PROVIDER_ROUTE", why: "cloud-provider billing instead of the subscription" },
+  { name: "CLAUDE_CODE_OAUTH_TOKEN", classification: "ALTERNATE_IDENTITY", why: "a long-lived token can authenticate a different account than the audited login" },
+  { name: "CLAUDE_CODE_HOST_CREDS_FILE", classification: "ALTERNATE_IDENTITY", why: "an alternate credential file replaces the audited one" },
+  { name: "CLAUDE_CODE_HOST_AUTH_ENV_VAR", classification: "ALTERNATE_IDENTITY", why: "names another variable as the credential source" },
+  { name: "ANTHROPIC_MODEL", classification: "MODEL_OVERRIDE", why: "would override the frozen model target" },
+  { name: "ANTHROPIC_DEFAULT_OPUS_MODEL", classification: "MODEL_OVERRIDE", why: "would re-map the frozen model alias" },
+  { name: "ANTHROPIC_DEFAULT_SONNET_MODEL", classification: "MODEL_OVERRIDE", why: "would re-map a model alias" },
+  { name: "ANTHROPIC_DEFAULT_HAIKU_MODEL", classification: "MODEL_OVERRIDE", why: "would re-map a model alias" },
+]);
+
+export interface PresentOverride {
+  readonly name: string;
+  readonly classification: OverrideClass;
+  readonly why: string;
+  /** Presence only. The value is never read past "non-empty". */
+  readonly present: true;
+  readonly valueRecorded: false;
+}
+
+export interface AuthEnvironmentInspection {
+  readonly checkedNames: readonly string[];
+  readonly present: readonly PresentOverride[];
+  readonly apiKeyPresent: boolean;
+  readonly verdict: "NO_PROVIDER_OVERRIDE_PRESENT" | "PROVIDER_OVERRIDE_PRESENT";
+  readonly childEnvironmentPolicy: string;
+}
+
+/** §17, §18 — inspect the launcher's environment by name; record presence, never contents. */
+export function inspectAuthEnvironment(env: Readonly<Record<string, string | undefined>>): AuthEnvironmentInspection {
+  const present: PresentOverride[] = [];
+  const known = new Set(PROVIDER_OVERRIDE_VARIABLES.map((entry) => entry.name));
+  for (const entry of PROVIDER_OVERRIDE_VARIABLES) {
+    const value = env[entry.name];
+    if (typeof value === "string" && value.length > 0) {
+      present.push({ name: entry.name, classification: entry.classification, why: entry.why, present: true, valueRecorded: false });
+    }
+  }
+  for (const [name, value] of Object.entries(env)) {
+    if (known.has(name) || typeof value !== "string" || value.length === 0) continue;
+    if (name.startsWith("ANTHROPIC_")) {
+      present.push({ name, classification: "UNCLASSIFIED_ANTHROPIC_PREFIX", why: "an ANTHROPIC_-prefixed variable is treated as a provider override until classified", present: true, valueRecorded: false });
+    }
+  }
+  present.sort((left, right) => left.name.localeCompare(right.name));
+  return {
+    checkedNames: Object.freeze(PROVIDER_OVERRIDE_VARIABLES.map((entry) => entry.name)),
+    present: Object.freeze(present),
+    apiKeyPresent: present.some((entry) => entry.name === "ANTHROPIC_API_KEY"),
+    verdict: present.length === 0 ? "NO_PROVIDER_OVERRIDE_PRESENT" : "PROVIDER_OVERRIDE_PRESENT",
+    childEnvironmentPolicy:
+      "the agent never inherits these: each arm runs in the M193A allow-listed environment (PATH, HOME, USER, "
+      + "LOGNAME, SHELL, LANG, LC_ALL, TERM, TMPDIR, SSL_CERT_FILE, SSL_CERT_DIR + a private CLAUDE_CONFIG_DIR), "
+      + "which drops every ANTHROPIC_* and CLAUDE_* key. The launcher still refuses when one is present, so an "
+      + "override is recorded and refused by name rather than dropped silently",
+  };
+}
+
+// ── settings-file overrides ─────────────────────────────────────────
+
+export interface SettingsFileInspection {
+  readonly path: string;
+  readonly exists: boolean;
+  readonly parseable: boolean;
+  readonly apiKeyHelperConfigured: boolean;
+  /** Names only. */
+  readonly envOverrideNames: readonly string[];
+  readonly forceLoginMethod: string | null;
+  readonly reachesTheArm: boolean;
+  readonly why: string;
+}
+
+export function defaultSettingsPaths(home: string = homedir(), projectRoot?: string): readonly { path: string; reachesTheArm: boolean; why: string }[] {
+  const paths = [
+    { path: join(home, ".claude", "settings.json"), reachesTheArm: false, why: "the arm's CLAUDE_CONFIG_DIR is a private directory; the host user settings are not copied into it (M193A copies .credentials.json only)" },
+    { path: join(home, ".claude", "settings.local.json"), reachesTheArm: false, why: "same: not copied into the private configuration directory" },
+    { path: "/etc/claude-code/managed-settings.json", reachesTheArm: true, why: "managed (policy) settings are read from the system path regardless of CLAUDE_CONFIG_DIR" },
+  ];
+  if (projectRoot !== undefined) {
+    paths.push({ path: join(projectRoot, ".claude", "settings.json"), reachesTheArm: false, why: "the launcher's project settings; the arm's cwd is /testbed, not this repository" });
+  }
+  return paths;
+}
+
+export function inspectSettingsFile(entry: { path: string; reachesTheArm: boolean; why: string }, read: (path: string) => string | null = readIfExists): SettingsFileInspection {
+  const text = read(entry.path);
+  if (text === null) {
+    return { path: entry.path, exists: false, parseable: false, apiKeyHelperConfigured: false, envOverrideNames: [], forceLoginMethod: null, reachesTheArm: entry.reachesTheArm, why: entry.why };
+  }
+  let parsed: Record<string, unknown> | null = null;
+  try {
+    parsed = JSON.parse(text) as Record<string, unknown>;
+  } catch {
+    parsed = null;
+  }
+  const env = (parsed?.env ?? {}) as Record<string, unknown>;
+  const overrideNames = Object.keys(env).filter((name) => name.startsWith("ANTHROPIC_") || PROVIDER_OVERRIDE_VARIABLES.some((entry) => entry.name === name)).sort();
+  return {
+    path: entry.path,
+    exists: true,
+    parseable: parsed !== null,
+    apiKeyHelperConfigured: typeof parsed?.apiKeyHelper === "string" && parsed.apiKeyHelper.length > 0,
+    envOverrideNames: Object.freeze(overrideNames),
+    forceLoginMethod: typeof parsed?.forceLoginMethod === "string" ? parsed.forceLoginMethod : null,
+    reachesTheArm: entry.reachesTheArm,
+    why: entry.why,
+  };
+}
+
+function readIfExists(path: string): string | null {
+  try {
+    return existsSync(path) ? readFileSync(path, "utf8") : null;
+  } catch {
+    return null;
+  }
+}
+
+// ── §19 — the CLI's own auth status (zero provider call) ────────────
+
+export interface CliAuthStatus {
+  readonly command: string;
+  readonly available: boolean;
+  readonly loggedIn: boolean | null;
+  readonly authMethod: string | null;
+  readonly apiProvider: string | null;
+  readonly subscriptionType: string | null;
+  /** Field names the CLI returned; identity values (email, org ids) are never copied. */
+  readonly fieldNames: readonly string[];
+  readonly error: string | null;
+}
+
+export const CLI_AUTH_STATUS_ARGS: readonly string[] = Object.freeze(["auth", "status", "--json"]);
+
+/**
+ * `claude auth status --json` against the HOST configuration (where the
+ * credentials the arms copy live). Run with a minimal environment so an
+ * override in the launcher's own environment cannot colour the answer; the
+ * override guard reports that separately.
+ */
+export function readCliAuthStatus(binary: string = pinnedAgentBinary(M214_AGENT.version), env: Readonly<Record<string, string | undefined>> = process.env): CliAuthStatus {
+  const command = `${binary} ${CLI_AUTH_STATUS_ARGS.join(" ")}`;
+  try {
+    const out = execFileSync(binary, [...CLI_AUTH_STATUS_ARGS], {
+      encoding: "utf8", timeout: 60_000, stdio: ["ignore", "pipe", "pipe"],
+      env: { PATH: env.PATH ?? "/usr/bin:/bin", HOME: env.HOME ?? homedir(), USER: env.USER ?? "", LANG: env.LANG ?? "C.UTF-8", TERM: "dumb" },
+    });
+    return parseCliAuthStatus(command, out);
+  } catch (error) {
+    return { command, available: false, loggedIn: null, authMethod: null, apiProvider: null, subscriptionType: null, fieldNames: [], error: (error as Error).message.slice(0, 300) };
+  }
+}
+
+export function parseCliAuthStatus(command: string, out: string): CliAuthStatus {
+  let parsed: Record<string, unknown>;
+  try {
+    parsed = JSON.parse(out) as Record<string, unknown>;
+  } catch {
+    return { command, available: false, loggedIn: null, authMethod: null, apiProvider: null, subscriptionType: null, fieldNames: [], error: "auth status did not print JSON" };
+  }
+  return {
+    command,
+    available: true,
+    loggedIn: typeof parsed.loggedIn === "boolean" ? parsed.loggedIn : null,
+    authMethod: typeof parsed.authMethod === "string" ? parsed.authMethod : null,
+    apiProvider: typeof parsed.apiProvider === "string" ? parsed.apiProvider : null,
+    subscriptionType: typeof parsed.subscriptionType === "string" ? parsed.subscriptionType : null,
+    fieldNames: Object.freeze(Object.keys(parsed).sort()),
+    error: null,
+  };
+}
+
+// ── credential file and account profile: non-secret facts only ──────
+
+export interface CredentialFileFacts {
+  readonly path: string;
+  readonly exists: boolean;
+  readonly hasClaudeAiOauth: boolean;
+  readonly subscriptionType: string | null;
+  readonly rateLimitTier: string | null;
+  readonly accessTokenExpiresAtIso: string | null;
+  readonly refreshTokenExpiresAtIso: string | null;
+  readonly secretsRead: false;
+}
+
+export function readCredentialFacts(path: string = join(homedir(), ".claude", ".credentials.json"), read: (path: string) => string | null = readIfExists): CredentialFileFacts {
+  const text = read(path);
+  const none: CredentialFileFacts = { path, exists: false, hasClaudeAiOauth: false, subscriptionType: null, rateLimitTier: null, accessTokenExpiresAtIso: null, refreshTokenExpiresAtIso: null, secretsRead: false };
+  if (text === null) return none;
+  try {
+    const parsed = JSON.parse(text) as { claudeAiOauth?: Record<string, unknown> };
+    const oauth = parsed.claudeAiOauth;
+    if (oauth === undefined || typeof oauth !== "object") return { ...none, exists: true };
+    const iso = (value: unknown): string | null => (typeof value === "number" ? new Date(value < 1e12 ? value * 1000 : value).toISOString() : null);
+    return {
+      path, exists: true, hasClaudeAiOauth: true,
+      subscriptionType: typeof oauth.subscriptionType === "string" ? oauth.subscriptionType : null,
+      rateLimitTier: typeof oauth.rateLimitTier === "string" ? oauth.rateLimitTier : null,
+      accessTokenExpiresAtIso: iso(oauth.expiresAt),
+      refreshTokenExpiresAtIso: iso(oauth.refreshTokenExpiresAt),
+      secretsRead: false,
+    };
+  } catch {
+    return { ...none, exists: true };
+  }
+}
+
+export interface AccountProfileFacts {
+  readonly path: string;
+  readonly exists: boolean;
+  /** The cached profile field named hasExtraUsageEnabled, as written by the CLI; M220 reads the name, not Anthropic's implementation. */
+  readonly hasExtraUsageEnabled: boolean | null;
+  readonly organizationType: string | null;
+  readonly billingType: string | null;
+  readonly profileFetchedAtIso: string | null;
+  readonly autoUpdates: boolean | null;
+  readonly installMethod: string | null;
+}
+
+export function readAccountProfileFacts(path: string = join(homedir(), ".claude.json"), read: (path: string) => string | null = readIfExists): AccountProfileFacts {
+  const text = read(path);
+  const none: AccountProfileFacts = { path, exists: false, hasExtraUsageEnabled: null, organizationType: null, billingType: null, profileFetchedAtIso: null, autoUpdates: null, installMethod: null };
+  if (text === null) return none;
+  try {
+    const parsed = JSON.parse(text) as { oauthAccount?: Record<string, unknown>; autoUpdates?: unknown; installMethod?: unknown };
+    const account = parsed.oauthAccount ?? {};
+    return {
+      path, exists: true,
+      hasExtraUsageEnabled: typeof account.hasExtraUsageEnabled === "boolean" ? account.hasExtraUsageEnabled : null,
+      organizationType: typeof account.organizationType === "string" ? account.organizationType : null,
+      billingType: typeof account.billingType === "string" ? account.billingType : null,
+      profileFetchedAtIso: typeof account.profileFetchedAt === "number" ? new Date(account.profileFetchedAt).toISOString() : null,
+      autoUpdates: typeof parsed.autoUpdates === "boolean" ? parsed.autoUpdates : null,
+      installMethod: typeof parsed.installMethod === "string" ? parsed.installMethod : null,
+    };
+  } catch {
+    return { ...none, exists: true };
+  }
+}
+
+// ── §38 — auto-update posture ───────────────────────────────────────
+
+export interface AutoUpdatePosture {
+  readonly autoUpdatesSetting: boolean | null;
+  readonly disableAutoupdaterEnvPresent: boolean;
+  readonly installMethod: string | null;
+  readonly pinnedBinary: string;
+  readonly verdict: "AUTO_UPDATE_DISABLED" | "AUTO_UPDATE_NOT_PROVEN_DISABLED";
+  readonly consequence: string;
+}
+
+export function autoUpdatePosture(account: AccountProfileFacts, env: Readonly<Record<string, string | undefined>>): AutoUpdatePosture {
+  const envPresent = typeof env.DISABLE_AUTOUPDATER === "string" && env.DISABLE_AUTOUPDATER.length > 0;
+  const disabled = account.autoUpdates === false || envPresent;
+  return {
+    autoUpdatesSetting: account.autoUpdates,
+    disableAutoupdaterEnvPresent: envPresent,
+    installMethod: account.installMethod,
+    pinnedBinary: pinnedAgentBinary(M214_AGENT.version),
+    verdict: disabled ? "AUTO_UPDATE_DISABLED" : "AUTO_UPDATE_NOT_PROVEN_DISABLED",
+    consequence:
+      "the executor spawns the versioned binary and requires the declared symlink to report the same version; "
+      + "an auto-update that moved the symlink is refused by that gate at the next attempt and at the next session "
+      + "start, so drift halts the cohort rather than changing it. Disabling auto-update prevents the halt.",
+  };
+}
+
+// ── the verdicts ────────────────────────────────────────────────────
+
+export type AuthModeVerdict = "SUBSCRIPTION_AUTH_MODE_PROVEN" | "SUBSCRIPTION_AUTH_MODE_NOT_PROVEN" | "SUBSCRIPTION_AUTH_MODE_UNRESOLVED";
+export type OverflowVerdict = "USAGE_CREDIT_OVERFLOW_DISABLED_AT_ACCOUNT" | "USAGE_CREDIT_OVERFLOW_ENABLED_AT_ACCOUNT" | "USAGE_CREDIT_OVERFLOW_STATE_UNKNOWN";
+
+export const REQUIRED_SUBSCRIPTION_TYPE = "max" as const;
+export const REQUIRED_AUTH_METHOD = "claude.ai" as const;
+export const REQUIRED_API_PROVIDER = "firstParty" as const;
+/** The init-event value that means "no API key in use" (claude.ai OAuth login). */
+export const SUBSCRIPTION_API_KEY_SOURCE = "none" as const;
+
+export interface SubscriptionAuthReport {
+  readonly version: typeof M220_AUTH_VERSION;
+  readonly at: string;
+  readonly environment: AuthEnvironmentInspection;
+  readonly settings: readonly SettingsFileInspection[];
+  readonly cliAuth: CliAuthStatus;
+  readonly credentials: CredentialFileFacts;
+  readonly account: AccountProfileFacts;
+  readonly autoUpdate: AutoUpdatePosture;
+  readonly authModeVerdict: AuthModeVerdict;
+  readonly authModeStrength: "LOCAL_CLI_AUTH_STATE";
+  readonly providerConfirmation: "PENDING_AT_FIRST_LIVE_RUN";
+  readonly runtimeGate: string;
+  readonly overflowVerdict: OverflowVerdict;
+  readonly overflowAttestation: string | null;
+  readonly issues: readonly string[];
+  readonly warnings: readonly string[];
+  readonly launchPermitted: boolean;
+}
+
+export interface SubscriptionAuthInputs {
+  readonly environment: AuthEnvironmentInspection;
+  readonly settings: readonly SettingsFileInspection[];
+  readonly cliAuth: CliAuthStatus;
+  readonly credentials: CredentialFileFacts;
+  readonly account: AccountProfileFacts;
+  readonly autoUpdate: AutoUpdatePosture;
+  /** Only consulted when the account profile cannot say; never overrides ENABLED. */
+  readonly overflowAttestation?: string | null;
+  readonly at: string;
+}
+
+/** PURE — assemble the verdicts from the facts, so every branch can be falsified with injected facts. */
+export function assessSubscriptionAuth(input: SubscriptionAuthInputs): SubscriptionAuthReport {
+  const issues: string[] = [];
+  const warnings: string[] = [];
+
+  for (const present of input.environment.present) {
+    issues.push(`${present.name} is present in the launcher environment (${present.classification}: ${present.why}); presence recorded, value not read; SUBSCRIPTION_AUTH_MODE_NOT_PROVEN`);
+  }
+  for (const file of input.settings) {
+    if (!file.exists) continue;
+    if (file.apiKeyHelperConfigured && file.reachesTheArm) issues.push(`${file.path} configures apiKeyHelper and reaches the arm; API-key authentication would override the subscription login`);
+    else if (file.apiKeyHelperConfigured) warnings.push(`${file.path} configures apiKeyHelper; it does not reach the arm (${file.why})`);
+    if (file.envOverrideNames.length > 0 && file.reachesTheArm) issues.push(`${file.path} sets provider overrides [${file.envOverrideNames.join(", ")}] and reaches the arm`);
+    else if (file.envOverrideNames.length > 0) warnings.push(`${file.path} sets [${file.envOverrideNames.join(", ")}]; it does not reach the arm (${file.why})`);
+    if (file.forceLoginMethod !== null && file.forceLoginMethod !== "claudeai") issues.push(`${file.path} forces login method ${file.forceLoginMethod}`);
+  }
+
+  let authMode: AuthModeVerdict;
+  if (!input.cliAuth.available) {
+    authMode = "SUBSCRIPTION_AUTH_MODE_UNRESOLVED";
+    issues.push(`the CLI's auth status could not be read (${input.cliAuth.error ?? "unknown"}); subscription mode cannot be proven locally`);
+  } else {
+    const local: string[] = [];
+    if (input.cliAuth.loggedIn !== true) local.push("the CLI reports not logged in");
+    if (input.cliAuth.authMethod !== REQUIRED_AUTH_METHOD) local.push(`auth method is ${input.cliAuth.authMethod ?? "(absent)"}, not ${REQUIRED_AUTH_METHOD}`);
+    if (input.cliAuth.apiProvider !== REQUIRED_API_PROVIDER) local.push(`API provider is ${input.cliAuth.apiProvider ?? "(absent)"}, not ${REQUIRED_API_PROVIDER}`);
+    if (input.cliAuth.subscriptionType !== REQUIRED_SUBSCRIPTION_TYPE) local.push(`subscription type is ${input.cliAuth.subscriptionType ?? "(absent)"}, not ${REQUIRED_SUBSCRIPTION_TYPE}`);
+    if (!input.credentials.hasClaudeAiOauth) local.push(`${input.credentials.path} carries no claude.ai OAuth credential; the arms copy this file and would have nothing to authenticate with`);
+    else if (input.credentials.subscriptionType !== null && input.credentials.subscriptionType !== REQUIRED_SUBSCRIPTION_TYPE) local.push(`the credential file records subscription type ${input.credentials.subscriptionType}`);
+    if (local.length > 0 || input.environment.present.length > 0 || issues.length > 0) {
+      authMode = "SUBSCRIPTION_AUTH_MODE_NOT_PROVEN";
+      issues.push(...local);
+    } else {
+      authMode = "SUBSCRIPTION_AUTH_MODE_PROVEN";
+    }
+  }
+  if (input.credentials.refreshTokenExpiresAtIso !== null && Date.parse(input.credentials.refreshTokenExpiresAtIso) < Date.parse(input.at)) {
+    issues.push(`the credential file's refresh token expired at ${input.credentials.refreshTokenExpiresAtIso}; re-login before a session`);
+  }
+
+  let overflow: OverflowVerdict;
+  if (input.account.hasExtraUsageEnabled === true) {
+    overflow = "USAGE_CREDIT_OVERFLOW_ENABLED_AT_ACCOUNT";
+    issues.push(
+      `the cached account profile (${input.account.path}, fetched ${input.account.profileFetchedAtIso ?? "unknown"}) reports hasExtraUsageEnabled=true: `
+      + "when the subscription limit is reached the CLI can continue into paid extra usage without a prompt, which the "
+      + "executor must never intentionally allow. Operator requirement: disable extra usage in the claude.ai billing "
+      + "settings, let the CLI refresh its profile (run the pinned binary once interactively or `auth status`), and re-run "
+      + "the preflight until it reads false. No flag overrides this.",
+    );
+  } else if (input.account.hasExtraUsageEnabled === false) {
+    overflow = "USAGE_CREDIT_OVERFLOW_DISABLED_AT_ACCOUNT";
+  } else {
+    overflow = "USAGE_CREDIT_OVERFLOW_STATE_UNKNOWN";
+    if (input.overflowAttestation === null || input.overflowAttestation === undefined || input.overflowAttestation.trim().length === 0) {
+      issues.push(
+        `the account profile at ${input.account.path} does not say whether extra usage is enabled; the operator must confirm it is disabled `
+        + "in the claude.ai billing settings and attest with --attest-extra-usage-disabled \"<operator>\"",
+      );
+    } else {
+      warnings.push(`extra-usage state unknown to the CLI profile; the operator attested it is disabled: ${input.overflowAttestation}`);
+    }
+  }
+  if (input.autoUpdate.verdict !== "AUTO_UPDATE_DISABLED") {
+    warnings.push("auto-update is not proven disabled; the pinned-binary gate would halt the cohort on a moved symlink, so disable auto-update before a multi-day cohort");
+  }
+
+  return {
+    version: M220_AUTH_VERSION,
+    at: input.at,
+    environment: input.environment,
+    settings: input.settings,
+    cliAuth: input.cliAuth,
+    credentials: input.credentials,
+    account: input.account,
+    autoUpdate: input.autoUpdate,
+    authModeVerdict: authMode,
+    authModeStrength: "LOCAL_CLI_AUTH_STATE",
+    providerConfirmation: "PENDING_AT_FIRST_LIVE_RUN",
+    runtimeGate: `R16_AUTH_SOURCE: the agent's init event must report apiKeySource '${SUBSCRIPTION_API_KEY_SOURCE}'; any other value aborts the attempt before it can become an outcome`,
+    overflowVerdict: overflow,
+    overflowAttestation: input.overflowAttestation ?? null,
+    issues: Object.freeze(issues),
+    warnings: Object.freeze(warnings),
+    launchPermitted: issues.length === 0 && authMode === "SUBSCRIPTION_AUTH_MODE_PROVEN",
+  };
+}
+
+/** The launcher's path: gather the real facts and assess. */
+export function collectSubscriptionAuth(options: {
+  readonly env?: Readonly<Record<string, string | undefined>>;
+  readonly home?: string;
+  readonly projectRoot?: string;
+  readonly binary?: string;
+  readonly overflowAttestation?: string | null;
+  readonly now?: () => string;
+} = {}): SubscriptionAuthReport {
+  const env = options.env ?? process.env;
+  const home = options.home ?? homedir();
+  const account = readAccountProfileFacts(join(home, ".claude.json"));
+  return assessSubscriptionAuth({
+    environment: inspectAuthEnvironment(env),
+    settings: defaultSettingsPaths(home, options.projectRoot).map((entry) => inspectSettingsFile(entry)),
+    cliAuth: readCliAuthStatus(options.binary ?? pinnedAgentBinary(M214_AGENT.version), env),
+    credentials: readCredentialFacts(join(home, ".claude", ".credentials.json")),
+    account,
+    autoUpdate: autoUpdatePosture(account, env),
+    overflowAttestation: options.overflowAttestation ?? null,
+    at: (options.now ?? (() => new Date().toISOString()))(),
+  });
+}
+
+/** §17, §19 — the runtime gate over the init event's credential source. Silence is not confirmation. */
+export function auditAuthSource(apiKeySource: string | null | undefined): readonly string[] {
+  if (apiKeySource === null || apiKeySource === undefined || apiKeySource.trim().length === 0) {
+    return ["the agent's init event carried no apiKeySource; the credential path cannot be confirmed and silence is not confirmation"];
+  }
+  if (apiKeySource !== SUBSCRIPTION_API_KEY_SOURCE) {
+    return [`the agent's init event reports apiKeySource '${apiKeySource}'; the subscription login reports '${SUBSCRIPTION_API_KEY_SOURCE}' (no API key in use)`];
+  }
+  return [];
+}
+
+/** A redacted view for logs and journals: verdicts and names, never values or identities. */
+export function redactedAuthSummary(report: SubscriptionAuthReport): Record<string, unknown> {
+  return {
+    authModeVerdict: report.authModeVerdict,
+    authModeStrength: report.authModeStrength,
+    providerConfirmation: report.providerConfirmation,
+    overflowVerdict: report.overflowVerdict,
+    launchPermitted: report.launchPermitted,
+    ANTHROPIC_API_KEY_PRESENT: report.environment.apiKeyPresent,
+    overridesPresent: report.environment.present.map((entry) => entry.name),
+    cliAuth: { loggedIn: report.cliAuth.loggedIn, authMethod: report.cliAuth.authMethod, apiProvider: report.cliAuth.apiProvider, subscriptionType: report.cliAuth.subscriptionType },
+    credentialSubscriptionType: report.credentials.subscriptionType,
+    accountOrganizationType: report.account.organizationType,
+    hasExtraUsageEnabled: report.account.hasExtraUsageEnabled,
+    autoUpdate: report.autoUpdate.verdict,
+    issueCount: report.issues.length,
+    warningCount: report.warnings.length,
+  };
+}
+
+// ── §10 — machine-readable quota availability ───────────────────────
+
+export const M220_QUOTA_AVAILABILITY = Object.freeze({
+  preLaunchZeroCall: "MACHINE_READABLE_QUOTA_UNAVAILABLE",
+  preLaunchEvidence:
+    "`claude auth status --json` (the only zero-call auth surface the CLI exposes) returns login, method, provider "
+    + "and subscription fields and no utilisation or reset fields; the CLI has no `usage` subcommand for headless "
+    + "use; the interactive /usage view is UI state and is not scraped",
+  inRun: "IN_RUN_STRUCTURED_RATE_LIMIT_EVENTS_AVAILABLE",
+  inRunEvidence:
+    "the pinned CLI's stream-json schema emits {type: rate_limit_event, rate_limit_info: {status allowed | "
+    + "allowed_warning | rejected, rateLimitType five_hour | seven_day*, resetsAt, utilization, isUsingOverage, "
+    + "overageStatus}} when rate-limit info changes; absent for API-key, Bedrock and Vertex sessions",
+  policy:
+    "manual bounded pair sessions are authoritative: the operator checks Claude Settings > Usage, chooses a "
+    + "conservative --max-pairs-this-session, and the launcher enforces it. In-run events may only request a pause "
+    + "after the current pair (warning) or classify an interruption (rejected / overage); they never select rows",
+});
+
+/** §55 — the authorisation sentence the launch will eventually require, for the report; M220 neither asks for nor infers it. */
+export const M220_REQUIRED_AUTHORIZATION_TEXT =
+  "I authorize execution of the frozen M214+A1+A2 Baseline vs VTRACE cohort using my Claude MAX subscription, in "
+  + "outcome-blind quota-window sessions, with no intentional usage-credit/API fallback, and with a hard maximum of "
+  + "$735 additional billed spend if the frozen safeguards permit it.";

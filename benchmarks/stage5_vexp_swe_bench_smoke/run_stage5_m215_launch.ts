@@ -146,6 +146,11 @@ import {
   statusViewLeaksOutcome,
   validateMaxPairs,
 } from "./m220QuotaSession";
+import {
+  type SubscriptionAuthReport,
+  collectSubscriptionAuth,
+  redactedAuthSummary,
+} from "./m220SubscriptionAuth";
 
 const RESULTS_DIR = join(import.meta.dir, "results");
 const VTRACE_ROOT = join(import.meta.dir, "..", "..");
@@ -175,6 +180,11 @@ interface LaunchArgs {
   readonly clearPauseRequest: boolean;
   /** M220 §32 — the outcome-blind status; runs nothing. */
   readonly sessionStatus: boolean;
+  /**
+   * M220 §20 — consulted ONLY when the CLI's cached account profile cannot say
+   * whether extra usage is enabled; never overrides a profile that says it is.
+   */
+  readonly attestExtraUsageDisabled: string | null;
 }
 
 const OPERATIONAL_FLAGS: readonly string[] = Object.freeze([
@@ -182,6 +192,7 @@ const OPERATIONAL_FLAGS: readonly string[] = Object.freeze([
   "--max-rows", "--recover-isolation", "--preflight",
   "--max-pairs-this-session", "--max-session-wall-clock", "--pause-after-current-pair",
   "--pause-after-current-arm", "--clear-pause-request", "--session-status",
+  "--attest-extra-usage-disabled",
 ]);
 
 const BOOLEAN_FLAGS: readonly string[] = Object.freeze([
@@ -265,7 +276,15 @@ export function parseLaunchArgs(argv: readonly string[]): LaunchArgs {
     pauseAfterCurrentArm: args["--pause-after-current-arm"] === true,
     clearPauseRequest: args["--clear-pause-request"] === true,
     sessionStatus: args["--session-status"] === true,
+    attestExtraUsageDisabled: args["--attest-extra-usage-disabled"] === undefined
+      ? null
+      : String(args["--attest-extra-usage-disabled"]),
   };
+}
+
+/** M220 §16–§20 — the audit the launcher runs before a session and binds to P15 for every row. */
+function subscriptionAuditFor(args: LaunchArgs, now: () => string): () => SubscriptionAuthReport {
+  return () => collectSubscriptionAuth({ projectRoot: VTRACE_ROOT, overflowAttestation: args.attestExtraUsageDisabled, now });
 }
 
 // ── Frozen authorities and persistence ──────────────────────────────
@@ -788,6 +807,20 @@ async function launchPreflight(
   const pending = readPauseRequest(args.cohortDir);
   gate("PAUSE_REQUEST", true, pending === null ? "no pause request pending" : `pause request pending: ${pending.kind} at ${pending.requestedAt} (a launch would pause before its first new pair)`);
 
+  // M220 §16–§20 — the subscription authentication mode is a TECHNICAL gate
+  // (an API-key override or a non-subscription login fails the preflight);
+  // paid-overflow enabled at the account is an OPERATOR prerequisite: the
+  // launch refuses until it is disabled, and it is reported beside G36 rather
+  // than as a technical defect of the executor.
+  const auth = subscriptionAuditFor(args, now)();
+  const authTechnicalIssues = auth.issues.filter((issue) => !issue.includes("hasExtraUsageEnabled") && !issue.includes("extra usage"));
+  gate("SUBSCRIPTION_AUTH", auth.authModeVerdict === "SUBSCRIPTION_AUTH_MODE_PROVEN" && authTechnicalIssues.length === 0,
+    `${auth.authModeVerdict} (${auth.authModeStrength}); ANTHROPIC_API_KEY_PRESENT=${auth.environment.apiKeyPresent}; overrides [${auth.environment.present.map((entry) => entry.name).join(", ")}]; `
+    + `cli ${auth.cliAuth.authMethod ?? "?"}/${auth.cliAuth.apiProvider ?? "?"}/${auth.cliAuth.subscriptionType ?? "?"}; ${authTechnicalIssues.join("; ") || "no technical issue"}`);
+  const operatorPrerequisitesPending = auth.overflowVerdict === "USAGE_CREDIT_OVERFLOW_DISABLED_AT_ACCOUNT" || auth.launchPermitted
+    ? []
+    : [`${auth.overflowVerdict}: ${auth.issues.filter((issue) => issue.includes("extra usage") || issue.includes("hasExtraUsageEnabled")).join("; ")}`];
+
   let substrate: Record<string, unknown> | null = null;
   let scratchIssues: readonly string[] = [];
   let isolation = "NOT_RUN";
@@ -839,6 +872,12 @@ async function launchPreflight(
       pauseState: sessionAuthority.pauseState,
       maxPairsThisSessionSupplied: args.maxPairsThisSession,
     },
+    subscriptionAuth: redactedAuthSummary(auth),
+    subscriptionAuthWarnings: auth.warnings,
+    // Operator prerequisites are not technical blockers and are not the spend
+    // gate; a launch is refused while any is pending, exactly like G36.
+    operatorPrerequisitesPending,
+    launchWouldBeRefusedByAuthGuard: !auth.launchPermitted,
     finalBlocker: technicalBlockers.length > 0 ? `TECHNICAL: ${technicalBlockers.join(", ")}` : spendPending ? "SPEND_AUTHORIZATION_PENDING" : "NONE (preflight never launches)",
     verdict: technicalBlockers.length === 0 ? "FINAL_ZERO_SPEND_LAUNCH_PREFLIGHT_PASSED" : "FINAL_ZERO_SPEND_LAUNCH_PREFLIGHT_FAILED",
     rowsExecuted: 0,
@@ -865,16 +904,19 @@ function printSessionStatus(args: LaunchArgs, authorities: FrozenAuthorities): v
     free = null;
   }
   const operational = cohortOperationalStatus(authorities.manifest, restored.ledger, operationsRestored.ledger);
+  const auth = subscriptionAuditFor(args, now)();
   const view = sessionStatusView({
     manifest: authorities.manifest, ledger: restored.ledger, events: operationsRestored.ledger.events,
     operationalStatus: operational.status, continuationState: operationsRestored.ledger.state(),
-    pauseRequest: readPauseRequest(args.cohortDir), subscriptionAuthState: null,
+    pauseRequest: readPauseRequest(args.cohortDir), subscriptionAuthState: `${auth.authModeVerdict}; ${auth.overflowVerdict}`,
     scratchFreeBytes: free, now: now(), nextRow: selectNextRow(authorities.manifest, restored.ledger),
   });
   const leaks = statusViewLeaksOutcome(view);
   if (leaks.length > 0) throw new Error(`refusing to print a session status that names an outcome: ${leaks.join(", ")}`);
   process.stdout.write(`${JSON.stringify({
     ...view,
+    subscriptionAuth: redactedAuthSummary(auth),
+    launchWouldBeRefusedByAuthGuard: !auth.launchPermitted,
     ledgerIssues: [...restored.issues, ...operationsRestored.issues],
     journal: deriveSessionJournal(operationsRestored.ledger.events, restored.ledger).map((entry) => ({
       sessionId: entry.sessionId, startedAt: entry.startedAt, endedAt: entry.endedAt, endState: entry.endState,
@@ -987,6 +1029,19 @@ async function main(): Promise<void> {
       + "by the operator from their own usage view). There is no continuous-launch mode and no task selector.",
     );
   }
+  // M220 §16–§20 — the subscription authentication mode, before anything
+  // expensive. An API-key billing override, a non-subscription login, or paid
+  // overflow enabled at the account refuses the session by name; presence is
+  // recorded, values are never read.
+  const subscriptionAudit = subscriptionAuditFor(args, now);
+  const auth = subscriptionAudit();
+  if (!auth.launchPermitted) {
+    throw new Error(
+      `refusing to launch: ${auth.authModeVerdict}; ${auth.overflowVerdict}: ${auth.issues.join("; ")}. `
+      + "A cohort session runs only on the Claude MAX subscription login with no API-key override and no paid "
+      + "overflow enabled; no flag overrides a present override or an enabled overflow.",
+    );
+  }
   const binding = assertBindingUsable(args.binding);
   if (!binding.authoritative) {
     throw new Error(
@@ -1067,6 +1122,7 @@ async function main(): Promise<void> {
       scratch,
       spendAuthority: authority,
       sessionAuthority,
+      subscriptionAuth: subscriptionAudit,
     };
     const persistAll = (): void => {
       persistLedger(args.cohortDir, ledger);
@@ -1078,7 +1134,7 @@ async function main(): Promise<void> {
         free = null;
       }
       persistSessionDocuments(args.cohortDir, authorities.manifest, ledger, operationsRestored.ledger, {
-        subscriptionAuthState: null, scratchFreeBytes: free, now,
+        subscriptionAuthState: `${auth.authModeVerdict}; ${auth.overflowVerdict}`, scratchFreeBytes: free, now,
       });
     };
 
@@ -1132,6 +1188,7 @@ async function main(): Promise<void> {
       startingNextRowOrdinal: selectNextRow(authorities.manifest, ledger)?.executionOrder ?? null,
       ledgerEntriesBefore: ledger.entries.length,
       pauseRequestPending: readPauseRequest(args.cohortDir)?.kind ?? null,
+      subscriptionAuth: redactedAuthSummary(auth),
       agentIdentity: { pinnedBinary: identity.agent.pinnedBinary, version: identity.agent.version },
       treatmentTree: identity.treatment.headSrc,
       imagePreflight: imageIdentity?.verdict ?? "NO_IDENTITY_RECORD",
