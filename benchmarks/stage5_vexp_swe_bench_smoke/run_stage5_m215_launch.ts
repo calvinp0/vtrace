@@ -36,7 +36,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 import type { RunManifestRow } from "./m214Preregistration";
-import { M214_BUDGET, M214_STOPPING_RULE } from "./m214Preregistration";
+import { M214_BUDGET, M214_EXPERIMENT_NAME, M214_STOPPING_RULE } from "./m214Preregistration";
 import {
   type BindingId,
   M215_ADAPTER_BINDINGS,
@@ -81,6 +81,17 @@ import {
 } from "./m217ContinuationSafety";
 import { M217IsolationProbe } from "./m217IsolationProbe";
 import { startCohortBinding } from "./m217LaunchBinding";
+import { ScratchAwareIsolationProbe } from "./m218IsolationProbe";
+import {
+  HostLivenessProbe,
+  M218_EVIDENCE_DIRNAME,
+  M218_REGISTRY_DIRNAME,
+  M218_SCRATCH_POLICY,
+  ScratchAuthority,
+  ScratchRegistry,
+  establishNamespace,
+  imageAvailability,
+} from "./m218ScratchLifecycle";
 
 const RESULTS_DIR = join(import.meta.dir, "results");
 
@@ -251,6 +262,65 @@ export function workRootFor(cohortDir: string): string {
   return join(cohortDir, "_work");
 }
 
+// ── M218 — the scratch authority, and the launch-time scratch preflight ──
+
+/**
+ * One namespace (the cohort work root, marked), one registry and one evidence
+ * directory beside it, and the host liveness probe. The registry and the
+ * evidence live OUTSIDE the namespace by construction, so cleaning scratch can
+ * never delete its own ownership record or the run's evidence.
+ */
+export function buildScratchAuthority(cohortDir: string, now: () => string): ScratchAuthority {
+  const namespace = establishNamespace(workRootFor(cohortDir), {
+    experiment: M214_EXPERIMENT_NAME, cohortDir, now,
+  });
+  return new ScratchAuthority({
+    namespace,
+    registry: new ScratchRegistry(join(cohortDir, M218_REGISTRY_DIRNAME)),
+    evidenceDir: join(cohortDir, M218_EVIDENCE_DIRNAME),
+    liveness: new HostLivenessProbe(),
+    experiment: M214_EXPERIMENT_NAME,
+    executorVersion: M215_EXECUTOR_VERSION,
+    now,
+  });
+}
+
+/**
+ * §22, §25, §33 — before the first row and on resume: sweep stale owned
+ * scratch, gate capacity, and report image availability. Each is an
+ * operational event; a blocking one moves continuation to BLOCKED through the
+ * same ledger the isolation interlock uses.
+ */
+export function scratchPreflight(
+  operations: CohortOperations, scratch: ScratchAuthority, manifest: readonly RunManifestRow[],
+): readonly string[] {
+  const issues: string[] = [];
+  const sweep = scratch.sweep();
+  operations.recordScratchEvent("SCRATCH_STALE_SWEEP", !sweep.pass, {
+    sweep,
+    reasons: sweep.blocking.map((path) => {
+      const entry = sweep.entries.find((candidate) => candidate.path === path);
+      return `${path}: ${entry?.classification ?? "?"} — ${entry?.reason ?? ""}`;
+    }),
+    verdict: sweep.pass ? "SCRATCH_NAMESPACE_CLEAN" : "STALE_OR_UNKNOWN_SCRATCH_BEFORE_LAUNCH",
+  });
+  if (!sweep.pass) {
+    issues.push(`stale or unknown owned scratch under ${sweep.namespaceRoot}: ${sweep.blocking.join(", ")}`);
+  }
+  const gate = scratch.capacityGate();
+  const images = imageAvailability(manifest.map((row) => row.containerImage));
+  operations.recordScratchEvent("SCRATCH_CAPACITY_GATE", !gate.pass, {
+    gate, images, policy: M218_SCRATCH_POLICY,
+    reasons: gate.issues,
+    verdict: gate.pass ? "CAPACITY_SUFFICIENT" : "CAPACITY_INSUFFICIENT",
+  });
+  if (!gate.pass) issues.push(...gate.issues);
+  if (images.missing.length > 0) {
+    issues.push(`${images.missing.length} of ${images.required} manifest images are absent from the local Docker store; ${images.note}`);
+  }
+  return issues;
+}
+
 /**
  * Restore the operations ledger, or start one.
  *
@@ -356,6 +426,7 @@ function renderPlan(authorities: FrozenAuthorities, args: LaunchArgs): Record<st
       projection: projectSpend(ledger, authorities.manifest),
     },
     concurrency: M215_CONCURRENCY_POLICY,
+    scratchPolicy: M218_SCRATCH_POLICY,
     binding: {
       requested: binding.id,
       status: binding.status,
@@ -433,6 +504,10 @@ async function main(): Promise<void> {
 
   // M217 §12 — recovery is its own action. It needs the probe and nothing
   // else, runs no row, and leaves an event saying what it verified.
+  // M218 — the scratch authority exists before anything can create scratch,
+  // and the recovery path's probe is ownership-aware.
+  const scratch = buildScratchAuthority(args.cohortDir, now);
+
   if (args.recoverIsolation) {
     if (!args.resume) throw new Error("--recover-isolation requires --resume: recovery is for an existing cohort");
     const bridge = await SubstrateBridge.start({
@@ -440,7 +515,9 @@ async function main(): Promise<void> {
     });
     try {
       const operations = new CohortOperations(
-        operationsRestored.ledger, new M217IsolationProbe(bridge), workRoot, now,
+        operationsRestored.ledger,
+        new ScratchAwareIsolationProbe(new M217IsolationProbe(bridge), scratch, now),
+        workRoot, now,
       );
       const event = await operations.recover();
       const path = persistOperations(args.cohortDir, operationsRestored.ledger);
@@ -448,7 +525,7 @@ async function main(): Promise<void> {
         recovery: event.kind,
         continuation: operations.state(),
         operations: path,
-        progress: renderProgress(authorities.manifest, ledger, null, [], operations),
+        progress: renderProgress(authorities.manifest, ledger, null, [], operations, scratch),
       }, null, 2)}\n`);
     } finally {
       await bridge.shutdown();
@@ -467,6 +544,7 @@ async function main(): Promise<void> {
     manifestPath: join(args.resultsDir, M215_MANIFEST_FILE),
     manifest: authorities.manifest,
     workRoot,
+    scratch,
   });
   try {
     const operations = new CohortOperations(operationsRestored.ledger, live.probe, workRoot, now);
@@ -480,7 +558,21 @@ async function main(): Promise<void> {
       now,
       spendAuthorization: authorizationFor(args.authorizeSpend),
       operations,
+      scratch,
     };
+
+    // M218 §22, §25 — stale owned scratch, capacity and image availability
+    // are checked before the substrate enumeration, so a host that cannot
+    // safely hold one more attempt is refused before a container exists.
+    const scratchIssues = scratchPreflight(operations, scratch, authorities.manifest);
+    if (scratchIssues.length > 0) {
+      persistOperations(args.cohortDir, operationsRestored.ledger);
+      persistLedger(args.cohortDir, ledger);
+      throw new Error(
+        `refusing to launch: ${scratchIssues.join("; ")}. Stale owned scratch is recovered through `
+        + "--recover-isolation --resume; unknown paths and capacity are operator decisions.",
+      );
+    }
 
     // M217 §7 — a cohort does not START over residue either. The preflight is
     // an operational event, so a refused launch leaves evidence of why.
@@ -514,7 +606,7 @@ async function main(): Promise<void> {
       resumed: restored,
       ledger: cohortPath(args.cohortDir),
       operations: operationsPath(args.cohortDir),
-      progress: renderProgress(authorities.manifest, ledger, null, [], operations),
+      progress: renderProgress(authorities.manifest, ledger, null, [], operations, scratch),
     }, null, 2)}\n`);
   } finally {
     await live.bridge.shutdown();

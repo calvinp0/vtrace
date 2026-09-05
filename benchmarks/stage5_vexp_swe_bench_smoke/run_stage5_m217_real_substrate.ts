@@ -54,6 +54,7 @@ import {
 import { type M217Control, control, suitePasses } from "./m217Falsification";
 import { loadProblemStatements, productionBinding } from "./m217LaunchBinding";
 import { cohortOperationalStatus, outcomeShapedKeys } from "./m217RetryReserve";
+import { establishNamespace } from "./m218ScratchLifecycle";
 
 const RESULTS_DIR = join(import.meta.dir, "results");
 const OUTPUT = join(RESULTS_DIR, "stage5_m217_real_substrate.json");
@@ -116,6 +117,10 @@ async function main(): Promise<void> {
 
   rmSync(WORK_ROOT, { recursive: true, force: true });
   mkdirSync(WORK_ROOT, { recursive: true });
+  // M218 §14 — the substrate's remediation now refuses to remove a directory
+  // under a work root that carries no ownership marker. This research work
+  // root is owned by this runner, and says so.
+  establishNamespace(WORK_ROOT, { experiment: "M217_RESEARCH_NON_EVALUATION", cohortDir: RESULTS_DIR });
 
   const bridge = await SubstrateBridge.start({
     benchmarkDir: import.meta.dir, manifestPath: join(RESULTS_DIR, M215_MANIFEST_FILE), dataset: dataset.path,

@@ -54,6 +54,7 @@ import {
   SubstrateError,
 } from "./m216SubstrateBridge";
 import type { TeardownReport } from "./m217ContinuationSafety";
+import type { ScratchClaim } from "./m218ScratchLifecycle";
 
 export const M216_ADAPTER_VERSION = "stage5.m216.production-adapters.v1" as const;
 
@@ -127,6 +128,8 @@ export interface M216ContainerHandle extends ContainerHandle {
   readonly armRoot: string;
   readonly instanceId: string;
   readonly runId: string;
+  /** M218 — set when the executor claimed the arm root; arm-root removal then belongs to the scratch authority. */
+  readonly scratchClaimId: string | null;
 }
 
 interface ContainerFailure {
@@ -243,9 +246,11 @@ export class M216ContainerAdapter implements ContainerAdapter {
     return mount;
   }
 
-  async start(row: RunManifestRow): Promise<ContainerHandle> {
+  async start(row: RunManifestRow, scratch?: ScratchClaim): Promise<ContainerHandle> {
     const facts = this.options.instanceFacts(row.instanceId);
-    const armRoot = join(this.options.workRoot, `${row.instanceId}--${row.arm}`);
+    // M218 — the claimed path is the arm root when a claim exists; the legacy
+    // derivation is kept for the M216/M217 controls that run without one.
+    const armRoot = scratch?.path ?? join(this.options.workRoot, `${row.instanceId}--${row.arm}`);
     mkdirSync(armRoot, { recursive: true });
     const result = await this.bridge.call<Record<string, unknown> & ContainerFailure>(
       "container.start",
@@ -289,6 +294,7 @@ export class M216ContainerAdapter implements ContainerAdapter {
       armRoot,
       instanceId: row.instanceId,
       runId: row.runId,
+      scratchClaimId: scratch?.claimId ?? null,
     };
     this.hostMounts.set(row.runId, handle.hostMount);
     return handle;
@@ -557,14 +563,23 @@ export class M216ContainerAdapter implements ContainerAdapter {
     // §43 — the arm's own scratch root, including the treatment's generated
     // state and the agent's private configuration directory, does not survive
     // into the next arm of the same task.
-    try {
-      rmSync(own.armRoot, { recursive: true, force: true });
-    } catch (error) {
-      errors.push(`arm root removal: ${(error as Error).message}`);
-    }
-    const armRootRemoved = !existsSync(own.armRoot);
-    if (!armRootRemoved && !errors.some((entry) => entry.startsWith("arm root removal"))) {
-      errors.push(`arm root still present after removal: ${own.armRoot}`);
+    //
+    // M218 — when the executor CLAIMED this root, its removal is the scratch
+    // authority's: ownership-checked, symlink-safe, ordered after the
+    // container is gone, and verified by measurement. The adapter then reports
+    // the root as not-yet-removed and the executor merges the authority's
+    // verdict into the teardown report.
+    let armRootRemoved = false;
+    if (own.scratchClaimId === null) {
+      try {
+        rmSync(own.armRoot, { recursive: true, force: true });
+      } catch (error) {
+        errors.push(`arm root removal: ${(error as Error).message}`);
+      }
+      armRootRemoved = !existsSync(own.armRoot);
+      if (!armRootRemoved && !errors.some((entry) => entry.startsWith("arm root removal"))) {
+        errors.push(`arm root still present after removal: ${own.armRoot}`);
+      }
     }
     if (!mountRemoved && own.hostMount && !existsSync(own.hostMount)) mountRemoved = true;
     return {
@@ -1017,6 +1032,9 @@ export class M216AgentAdapter implements AgentAdapter {
   private readonly options: M216AgentOptions;
   readonly lastArgv: string[] = [];
   readonly lastLiveArgv: string[] = [];
+  /** M218 — the sandbox prefix the substrate actually spawned (bwrap argv), for the arm-equivalence audit. */
+  readonly lastSpawnedArgv: string[] = [];
+  lastAgentTmp: string | null = null;
   lastStderrTail = "";
   lastSandboxed = false;
 
@@ -1083,9 +1101,27 @@ export class M216AgentAdapter implements AgentAdapter {
       }
     };
 
+    // M218 §30 — the executor's emergency monitor aborts through the hook's
+    // signal; the sentinel the bridge's watchdog polls is how that reaches the
+    // process. Registered before the spawn so an abort during start-up is not
+    // lost.
+    const signal = hooks.abortSignal;
+    const onAbort = (): void => {
+      try {
+        writeFileSync(abortPath, `${String(signal?.reason ?? "aborted by the executor")}\n`);
+      } catch {
+        // the run's own timeout remains the backstop
+      }
+    };
+    if (signal !== undefined) {
+      if (signal.aborted) onAbort();
+      else signal.addEventListener("abort", onAbort, { once: true });
+    }
+
     const result = await this.options.bridge.call<{
       started: boolean; exitCode: number | null; timedOut: boolean; durationMs: number;
-      sandboxed: boolean; stderrTail: string; error?: string;
+      sandboxed: boolean; stderrTail: string; error?: string; aborted?: boolean;
+      spawnedArgv?: string[]; agentTmp?: string | null;
     }>("agent.run", {
       mode: this.options.mode,
       providerBoundary: this.options.providerBoundary,
@@ -1100,14 +1136,38 @@ export class M216AgentAdapter implements AgentAdapter {
       cwd: spec.workingDirectory,
       hostMount: this.options.hostMountFor(spec),
       armRoot,
+      // M218 §35 — the claimed per-attempt /tmp; null keeps M194's tmpfs.
+      agentTmp: spec.scratch?.agentTmp ?? null,
       streamPath,
       abortPath,
       timeoutSeconds: spec.wallClockTimeoutSeconds,
     }, onEvent);
+    if (signal !== undefined) signal.removeEventListener("abort", onAbort);
     this.lastStderrTail = result.stderrTail ?? "";
     this.lastSandboxed = result.sandboxed === true;
+    this.lastSpawnedArgv.length = 0;
+    this.lastSpawnedArgv.push(...(result.spawnedArgv ?? []));
+    this.lastAgentTmp = result.agentTmp ?? null;
 
     if (identityError !== null) throw identityError;
+
+    if (signal?.aborted === true) {
+      // A run the executor itself stopped to protect the host is not a model
+      // failure and not an unresolved task: it is the frozen emergency class.
+      const parsedAborted = parseAgentStream(lines);
+      return {
+        providerModelIdentity: parsedAborted.providerModelIdentity,
+        telemetry: parsedAborted.telemetry,
+        turnCount: parsedAborted.turnCount,
+        inputTokens: parsedAborted.inputTokens,
+        outputTokens: parsedAborted.outputTokens,
+        cachedInputTokens: parsedAborted.cachedInputTokens,
+        costUsd: parsedAborted.costUsd ?? spec.perRunCostCapUsd,
+        wallClockSeconds: result.durationMs / 1000,
+        terminationReason: "HARNESS_ABORT",
+        failureCategory: "ENVIRONMENT_IRREPRODUCIBLE",
+      };
+    }
 
     const parsed = parseAgentStream(lines);
     // The hook can only fire on an init event that arrived. A run that produced

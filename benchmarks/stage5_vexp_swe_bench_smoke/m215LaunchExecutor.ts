@@ -99,6 +99,12 @@ import {
   completionReserve,
   retryReserveDecisionFor,
 } from "./m217RetryReserve";
+import type {
+  ScratchAuthority,
+  ScratchCheckpoint,
+  ScratchClaim,
+  ScratchCleanupReport,
+} from "./m218ScratchLifecycle";
 
 // ── Executor identity (§40) ─────────────────────────────────────────
 
@@ -655,8 +661,13 @@ export interface CapturedPatch {
  * these are called in and the executor records the order it actually used.
  */
 export interface ContainerAdapter {
-  /** CONTAINER_START */
-  start(row: RunManifestRow): Promise<ContainerHandle>;
+  /**
+   * CONTAINER_START. M218: when the executor has claimed run-owned scratch
+   * for the attempt, the claim is handed in and the adapter must place the
+   * arm's tree under `scratch.path`; arm-root removal then belongs to the
+   * scratch authority, not to `stop`.
+   */
+  start(row: RunManifestRow, scratch?: ScratchClaim): Promise<ContainerHandle>;
   /** SOURCE_CHECKOUT_AT_BASE_COMMIT — authoritative reset to the frozen commit. */
   resetToBaseCommit(handle: ContainerHandle, row: RunManifestRow): Promise<void>;
   /** SOURCE_STATE_DIGEST_* — a digest over tracked source only. */
@@ -709,6 +720,8 @@ export interface AgentRunSpec {
   readonly perRunCostCapUsd: number;
   readonly wallClockTimeoutSeconds: number;
   readonly userPromptTemplate: string;
+  /** M218 §35 — the attempt's owned scratch; `agentTmp` is bound at /tmp for the agent. */
+  readonly scratch?: { readonly path: string; readonly agentTmp: string };
 }
 
 /**
@@ -721,6 +734,12 @@ export interface AgentRunSpec {
  */
 export interface AgentRunHooks {
   readonly assertProviderModelIdentity: (providerModelIdentity: string | null) => void;
+  /**
+   * M218 §30 — the scratch emergency monitor aborts through this signal. An
+   * adapter that honours it stops the process and reports HARNESS_ABORT with
+   * the frozen emergency category; an adapter that ignores it changes nothing.
+   */
+  readonly abortSignal?: AbortSignal;
 }
 
 export interface AgentRunOutcome {
@@ -1079,6 +1098,7 @@ export const M215_REQUIRED_PRELAUNCH_GATE_IDS: readonly string[] = Object.freeze
   "P1_PREREGISTRATION_HASH", "P2_MANIFEST_HASH", "P3_EXTERNAL_REFERENCE_HASH", "P4_ROW_IS_FROZEN",
   "P5_NO_RUNTIME_OVERRIDES", "P6_EXECUTION_ORDER", "P7_SPEND_AUTHORIZATION", "P8_SPEND_CEILING",
   "P9_LEDGER_INTEGRITY", "P10_CONTINUATION_SAFETY", "P11_RETRY_SPEND_RESERVE",
+  "P13_SCRATCH_CAPACITY",
 ]);
 
 export const M215_REQUIRED_RUNTIME_GATE_IDS: readonly string[] = Object.freeze([
@@ -1209,6 +1229,13 @@ export interface ExecutorDependencies {
    * substrate to isolate, are unchanged.
    */
   readonly operations?: CohortOperations;
+  /**
+   * M218 — the scratch authority. Required in COHORT mode (a cohort that
+   * cannot claim, gate and verify its scratch may not begin a row; P13 fails
+   * closed); optional in SYNTHETIC mode so the predecessor suites are
+   * unchanged.
+   */
+  readonly scratch?: ScratchAuthority;
 }
 
 export class LaunchRefusedError extends Error {
@@ -1352,7 +1379,45 @@ export function launchPreconditionGates(
     at,
   ));
 
+  // M218 §25–§28 — before every attempt the filesystem hosting the owned
+  // scratch is measured against the frozen policy. The gate prefers refusing
+  // one run to crashing the host mid-run; in COHORT mode a missing scratch
+  // authority is itself a refusal.
+  gates.push(gateRecord(
+    "P13_SCRATCH_CAPACITY", "INFRASTRUCTURE", true,
+    scratchCapacityIssues(deps),
+    scratchCapacityEvidence(deps),
+    at,
+  ));
+
   return Object.freeze(gates);
+}
+
+function scratchCapacityIssues(deps: ExecutorDependencies): readonly string[] {
+  if (deps.scratch === undefined) {
+    return deps.mode === "SYNTHETIC"
+      ? []
+      : ["no scratch authority is bound; owned scratch cannot be claimed, gated or verified, so a COHORT row may not begin"];
+  }
+  try {
+    const gate = deps.scratch.capacityGate();
+    return gate.issues;
+  } catch (error) {
+    return [`the capacity gate could not measure the host: ${(error as Error).message}`];
+  }
+}
+
+function scratchCapacityEvidence(deps: ExecutorDependencies): string {
+  if (deps.scratch === undefined) return "SYNTHETIC mode with no scratch authority; no host filesystem is consumed";
+  try {
+    const gate = deps.scratch.capacityGate();
+    return `namespace ${gate.namespaceRoot}: ${gate.namespaceFilesystem.freeBytes} bytes / `
+      + `${gate.namespaceFilesystem.freeInodes} inodes free; required ${gate.requiredFreeBytes} bytes `
+      + `(${gate.hostSafetyReserveBytes} host reserve + ${gate.projectedAttemptScratchBytes} projected attempt) / `
+      + `${gate.requiredFreeInodes} inodes; shared tmp free ${gate.sharedTmp?.freeBytes ?? "n/a"}`;
+  } catch (error) {
+    return `capacity gate unavailable: ${(error as Error).message}`;
+  }
 }
 
 export interface ExecutionResult {
@@ -1418,8 +1483,24 @@ export async function executeManifestRow(
     deps.operations.recordRetryReserve({ runId, attemptId }, { decision });
   }
 
-  const handle = await deps.container.start(row);
+  // M218 §14 — ownership is registered OUTSIDE the ephemeral directory before
+  // the directory is used. A claim that cannot be made is a refusal, not a
+  // row that runs unowned.
+  let claim: ScratchClaim | null = null;
+  if (deps.scratch !== undefined) {
+    claim = deps.scratch.claim(row, attemptId, attempt);
+  }
+  // Evidence the finally block must persist before cleanup; hoisted so an
+  // early return inside the try cannot strand it in RUN_OWNED scratch.
+  let capturedForEvidence: CapturedPatch | null = null;
+  let evaluationForEvidence: EvaluationOutcome | null = null;
+  let emergency: { readonly aborted: boolean; readonly highWaterBytes: number; readonly warned: boolean; readonly reason: string | null } | null = null;
+
+  const handle = await deps.container.start(row, claim ?? undefined);
   phases.push("CONTAINER_START");
+  const checkpoint = (label: string): ScratchCheckpoint | null =>
+    (deps.scratch !== undefined && claim !== null ? deps.scratch.checkpoint(claim, label) : null);
+  checkpoint("AFTER_CONTAINER_SETUP");
   try {
     await deps.container.resetToBaseCommit(handle, row);
     phases.push("SOURCE_CHECKOUT_AT_BASE_COMMIT");
@@ -1438,6 +1519,7 @@ export async function executeManifestRow(
       phases.push("TREATMENT_INITIALISATION");
     }
 
+    checkpoint("AFTER_TREATMENT_INITIALISATION");
     const digestAfter = await deps.container.trackedSourceDigest(handle);
     phases.push("SOURCE_STATE_DIGEST_AFTER_TREATMENT");
 
@@ -1487,6 +1569,8 @@ export async function executeManifestRow(
 
     // From here a model may be called, so the identity assertion is armed first.
     let identityIssue: string | null = null;
+    // M218 §30 — the emergency monitor's abort travels on the hooks.
+    const abortController = new AbortController();
     const hooks: AgentRunHooks = {
       assertProviderModelIdentity: (observed) => {
         const issues = auditProviderModelIdentity(observed);
@@ -1495,6 +1579,7 @@ export async function executeManifestRow(
           throw new ModelIdentityError(observed);
         }
       },
+      abortSignal: abortController.signal,
     };
 
     const spec: AgentRunSpec = {
@@ -1510,14 +1595,22 @@ export async function executeManifestRow(
       perRunCostCapUsd: row.perRunCostCapUsd,
       wallClockTimeoutSeconds: M214_BUDGET.wallClockTimeoutSecondsPerRun,
       userPromptTemplate: M214_AGENT.userPromptText,
+      ...(claim === null ? {} : { scratch: { path: claim.path, agentTmp: claim.agentTmp } }),
     };
 
     let outcome: AgentRunOutcome;
+    const monitor = deps.scratch !== undefined && claim !== null
+      ? deps.scratch.startEmergencyMonitor(claim, abortController)
+      : null;
     try {
       outcome = await deps.agent.run(spec, hooks);
       phases.push("AGENT_RUN");
     } catch (error) {
       phases.push("AGENT_RUN");
+      if (monitor !== null) {
+        const stopped = monitor.stop();
+        emergency = { ...stopped, reason: abortController.signal.aborted ? String(abortController.signal.reason) : null };
+      }
       const runtimeGates = [
         ...preconditions,
         ...preflight,
@@ -1531,6 +1624,11 @@ export async function executeManifestRow(
       return await finalize(deps, base, phases, runtimeGates, null, null, null,
         invalid(category, (error as Error).message));
     }
+    if (monitor !== null) {
+      const stopped = monitor.stop();
+      emergency = { ...stopped, reason: abortController.signal.aborted ? String(abortController.signal.reason) : null };
+    }
+    checkpoint("AFTER_AGENT_COMPLETION");
 
     const identityGate = gateRecord(
       "R12_PROVIDER_MODEL_IDENTITY", "RUNTIME", true,
@@ -1553,6 +1651,7 @@ export async function executeManifestRow(
 
     const exclusions = derivedPatchExclusions(preAgentUntracked);
     const captured = await deps.container.capturePatch(handle, exclusions);
+    capturedForEvidence = captured;
     phases.push("PATCH_CAPTURE");
 
     const patchGate = gateRecord(
@@ -1569,7 +1668,9 @@ export async function executeManifestRow(
     }
 
     const evaluation = await deps.evaluator.evaluate(row, captured.patch);
+    evaluationForEvidence = evaluation;
     phases.push("EVALUATION");
+    checkpoint("AFTER_EVALUATION");
 
     // Asserted only once the whole lifecycle has run: a gate that reads the
     // phase list halfway through would report the phases it had not reached yet
@@ -1615,21 +1716,95 @@ export async function executeManifestRow(
       valid(evaluation.resolved,
         `evaluator ${evaluation.evaluatorIdentity} reported resolved=${evaluation.resolved}`));
   } finally {
+    // M218 §18, §31 — the order is fixed: persist evidence out of RUN_OWNED
+    // scratch, stop the container, THEN clean the owned scratch and verify.
+    // Evidence persistence never deletes; a persistence failure is recorded
+    // and leaves the scratch in place for the enumeration to report.
+    const entryBeforeTeardown = deps.ledger.entries.find((candidate) => candidate.attemptId === attemptId);
+    let evidenceIssue: string | null = null;
+    if (deps.scratch !== undefined && claim !== null) {
+      checkpoint("BEFORE_CLEANUP");
+      try {
+        deps.scratch.persistEvidence(claim, {
+          patch: capturedForEvidence?.patch ?? null,
+          evaluation: evaluationForEvidence === null ? null : {
+            command: evaluationForEvidence.command,
+            evaluatorIdentity: evaluationForEvidence.evaluatorIdentity,
+            exitStatus: evaluationForEvidence.exitStatus,
+            rawResult: evaluationForEvidence.rawResult,
+            resolved: evaluationForEvidence.resolved,
+            evaluatorRan: evaluationForEvidence.evaluatorRan,
+          },
+          extra: {
+            "result_reference.json": JSON.stringify({
+              attemptId, runId, resultDigest: entryBeforeTeardown?.resultDigest ?? null,
+              resultStatus: entryBeforeTeardown?.status ?? null, phases,
+            }, null, 2),
+          },
+        });
+      } catch (error) {
+        evidenceIssue = `evidence persistence failed: ${(error as Error).message}`;
+      }
+    }
+
     // M217 §5, §11 — teardown is reported, never thrown, and never touches the
     // result. Whatever the row produced is already in the result ledger with
     // its digest; the continuation authority reads that digest and decides a
     // DIFFERENT question: whether the next row may begin.
-    const teardown = await teardownContainer(deps, handle);
+    const adapterTeardown = await teardownContainer(deps, handle);
+
+    // M218 §19, §20, §42 — owned scratch is cleaned only after the container
+    // is gone, only when evidence was persisted, and the result is measured.
+    let scratchReport: ScratchCleanupReport | null = null;
+    if (deps.scratch !== undefined && claim !== null) {
+      if (evidenceIssue === null) {
+        scratchReport = deps.scratch.cleanup(claim, { containerRemoved: adapterTeardown.containerRemoved });
+      }
+    }
+    const teardown: TeardownReport = {
+      ...adapterTeardown,
+      armRootRemoved: adapterTeardown.armRootRemoved || scratchReport?.verified === true,
+      errors: Object.freeze([
+        ...adapterTeardown.errors,
+        ...(evidenceIssue === null ? [] : [evidenceIssue]),
+        ...(scratchReport === null || scratchReport.verified ? [] : [`scratch cleanup ${scratchReport.status}: ${scratchReport.errors.join("; ") || scratchReport.liveReferences.map((r) => r.detail).join("; ")}`]),
+      ]),
+      ...(claim === null ? {} : {
+        scratch: {
+          claimId: claim.claimId,
+          scratchPath: claim.path,
+          agentTmp: claim.agentTmp,
+          freeBytesBefore: claim.freeBytesAtClaim,
+          scratchHighWaterBytes: scratchReport?.scratchHighWaterBytes ?? null,
+          freeBytesBeforeCleanup: scratchReport?.freeBytesBeforeCleanup ?? null,
+          scratchBytesAfterCleanup: scratchReport?.scratchBytesAfterCleanup ?? null,
+          freeBytesAfterCleanup: scratchReport?.freeBytesAfterCleanup ?? null,
+          cleanupStatus: evidenceIssue !== null ? "SKIPPED_EVIDENCE_NOT_PERSISTED" : (scratchReport?.status ?? "NOT_RUN"),
+          cleanupVerified: scratchReport?.verified ?? false,
+          liveReferences: scratchReport?.liveReferences ?? [],
+          checkpoints: scratchReport?.checkpoints ?? (deps.scratch?.checkpointsFor(claim) ?? []),
+          emergency,
+        },
+      }),
+    };
+
     if (deps.operations !== undefined) {
       const entry = deps.ledger.entries.find((candidate) => candidate.attemptId === attemptId);
       const own = handle as ContainerHandle & { armRoot?: string; hostMount?: string };
       const scope: IsolationScope = {
         workRoot: deps.operations.workRoot,
-        armRoot: own.armRoot ?? null,
-        hostMount: own.hostMount ?? null,
+        armRoot: claim?.path ?? own.armRoot ?? null,
+        hostMount: claim?.hostMount ?? own.hostMount ?? null,
         instanceId: row.instanceId,
         runId: row.runId,
       };
+      if (emergency?.aborted === true) {
+        deps.operations.recordScratchEvent("SCRATCH_EMERGENCY_ABORT", false, {
+          reason: emergency.reason, highWaterBytes: emergency.highWaterBytes,
+          category: "ENVIRONMENT_IRREPRODUCIBLE",
+          note: "a forced abort to protect the host; mapped to the closest frozen infrastructure class, not rerunnable, no new retry class",
+        }, { runId: row.runId, attemptId, resultDigest: entry?.resultDigest ?? null });
+      }
       await deps.operations.recordTeardown({
         row,
         attemptId,
@@ -1857,6 +2032,54 @@ export interface CohortProgress {
   readonly continuationState: string;
   readonly haltReason: string | null;
   readonly operationsChainHead: string | null;
+  // M218 §41 — scratch health: free space, owned bytes, stale paths, cleanup
+  // failures. Operational, outcome-blind.
+  readonly scratchHealth: ScratchHealth | null;
+}
+
+export interface ScratchHealth {
+  readonly namespaceRoot: string;
+  readonly freeBytes: number;
+  readonly freeInodes: number;
+  readonly capacityGatePass: boolean;
+  readonly ownedScratchBytes: number;
+  readonly claimedPaths: number;
+  readonly staleOwnedPathsAtLastSweep: number;
+  readonly unknownPathsAtLastSweep: number;
+  readonly cleanupFailures: number;
+  readonly emergencyAborts: number;
+}
+
+/** Derived from the operations ledger and the authority's live measurements; names no arm. */
+export function scratchHealth(
+  operations: CohortOperations | null, scratch: ScratchAuthority | null,
+): ScratchHealth | null {
+  if (scratch === null) return null;
+  const events = operations?.ledger.events ?? [];
+  const lastSweep = [...events].reverse().find((event) => event.kind === "SCRATCH_STALE_SWEEP");
+  const sweep = (lastSweep?.detail as { sweep?: { entries?: { classification: string }[] } } | undefined)?.sweep;
+  const entries = sweep?.entries ?? [];
+  let gate: ReturnType<ScratchAuthority["capacityGate"]> | null = null;
+  try {
+    gate = scratch.capacityGate();
+  } catch {
+    gate = null;
+  }
+  const claimed = scratch.registry.list().filter((claim) => claim.state === "CLAIMED");
+  const ownedBytes = claimed.reduce((total, claim) => total + scratch.residue(claim).bytes, 0);
+  return {
+    namespaceRoot: scratch.namespace.canonicalRoot,
+    freeBytes: gate?.namespaceFilesystem.freeBytes ?? -1,
+    freeInodes: gate?.namespaceFilesystem.freeInodes ?? -1,
+    capacityGatePass: gate?.pass ?? false,
+    ownedScratchBytes: ownedBytes,
+    claimedPaths: claimed.length,
+    staleOwnedPathsAtLastSweep: entries.filter((entry) => entry.classification.startsWith("STALE")).length,
+    unknownPathsAtLastSweep: entries.filter((entry) => entry.classification === "UNKNOWN").length,
+    cleanupFailures: events.filter((event) => event.kind === "ROW_TEARDOWN"
+      && (event.detail as { teardown?: { scratch?: { cleanupVerified?: boolean } } }).teardown?.scratch?.cleanupVerified === false).length,
+    emergencyAborts: events.filter((event) => event.kind === "SCRATCH_EMERGENCY_ABORT").length,
+  };
 }
 
 /**
@@ -1874,12 +2097,14 @@ export function renderProgress(
   currentRunId: string | null,
   runtimeErrors: readonly string[] = [],
   operations: CohortOperations | null = null,
+  scratch: ScratchAuthority | null = null,
 ): CohortProgress {
   const projection = projectSpend(ledger, manifest);
   const terminal = manifest.filter((row) => isTerminal(ledger.statusFor(row.instanceId, row.arm)));
   const validRuns = manifest.filter((row) => isTerminalValid(ledger.statusFor(row.instanceId, row.arm)));
   const operational = cohortOperationalStatus(manifest, ledger, operations?.ledger ?? null);
   return {
+    scratchHealth: scratchHealth(operations, scratch),
     operationalStatus: operational.status,
     rowsRemaining: operational.rowsRemaining,
     maximumRemainingExposureUsd: operational.maximumRemainingExposureUsd,
@@ -1967,6 +2192,7 @@ export async function runCohort(
     executed: Object.freeze(executed),
     progress: renderProgress(
       deps.authorities.manifest, deps.ledger, null, Object.freeze(errors), deps.operations ?? null,
+      deps.scratch ?? null,
     ),
     stoppedBecause,
   };

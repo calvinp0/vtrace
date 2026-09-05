@@ -35,6 +35,8 @@ import {
 } from "./m216SubstrateBridge";
 import type { IsolationProbe } from "./m217ContinuationSafety";
 import { M217IsolationProbe } from "./m217IsolationProbe";
+import { ScratchAwareIsolationProbe } from "./m218IsolationProbe";
+import type { ScratchAuthority } from "./m218ScratchLifecycle";
 
 export const M217_LAUNCH_BINDING_VERSION = "stage5.m217.launch-binding.v1" as const;
 
@@ -82,6 +84,8 @@ export interface ProductionBindingOptions {
   readonly spendAuthorized: boolean;
   /** Research controls only: the lowest provider boundary, replaced by a recorded source. */
   readonly providerSubstitution?: (argv: readonly string[], spec: AgentRunSpec) => readonly string[];
+  /** M218 — the scratch authority; when bound, the probe refuses to remediate unowned scratch. */
+  readonly scratch?: ScratchAuthority;
 }
 
 export interface ProductionBinding {
@@ -116,7 +120,9 @@ export function productionBinding(options: ProductionBindingOptions): Production
     providerBoundary: options.providerBoundary,
     workRoot: options.workRoot,
     problemStatement: (instanceId) => options.problemStatements.forInstance(instanceId),
-    armRootFor: (spec) => join(options.workRoot, `${spec.row.instanceId}--${spec.row.arm}`),
+    // M218 — the claimed path when the executor claimed one; the same
+    // derivation the container adapter uses otherwise.
+    armRootFor: (spec) => spec.scratch?.path ?? join(options.workRoot, `${spec.row.instanceId}--${spec.row.arm}`),
     hostMountFor: (spec) => container.hostMountFor(spec.row.runId),
     armEnvironments: container.armEnvironments,
     spendAuthorized: options.spendAuthorized,
@@ -125,9 +131,12 @@ export function productionBinding(options: ProductionBindingOptions): Production
   const evaluator = new M216EvaluatorAdapter({
     bridge: options.bridge, mode: options.mode, workRoot: options.workRoot, dataset: options.datasetPath,
   });
+  const substrateProbe = new M217IsolationProbe(options.bridge);
   return {
     container, agent, evaluator,
-    probe: new M217IsolationProbe(options.bridge),
+    probe: options.scratch === undefined
+      ? substrateProbe
+      : new ScratchAwareIsolationProbe(substrateProbe, options.scratch),
     workRoot: options.workRoot,
   };
 }
@@ -150,6 +159,8 @@ export async function startCohortBinding(options: {
   readonly manifest: readonly RunManifestRow[];
   readonly workRoot: string;
   readonly datasetPath?: string;
+  /** M218 — required by the launcher; a COHORT binding without it cannot claim scratch. */
+  readonly scratch?: ScratchAuthority;
 }): Promise<StartedProductionBinding> {
   const datasetPath = options.datasetPath ?? M217_FROZEN_DATASET_PATH;
   const bridge = await SubstrateBridge.start({
@@ -164,6 +175,7 @@ export async function startCohortBinding(options: {
     problemStatements: loadProblemStatements(datasetPath),
     datasetPath,
     spendAuthorized: true,
+    ...(options.scratch === undefined ? {} : { scratch: options.scratch }),
   });
   return { ...binding, bridge };
 }

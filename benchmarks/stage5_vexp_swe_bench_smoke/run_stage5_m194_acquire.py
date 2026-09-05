@@ -199,8 +199,14 @@ def construct_arm_environment(arm_id: str, instance_id: str, arm_root: str, sett
 BWRAP = shutil.which("bwrap") or "/usr/bin/bwrap"
 
 
-def sandbox_prefix(host_mount: str, arm_root: str | None = None) -> list[str]:
+def sandbox_prefix(host_mount: str, arm_root: str | None = None, agent_tmp: str | None = None) -> list[str]:
     """The mount namespace that makes the execution contract's claim literal.
+
+    M218: `agent_tmp`, when given, is bound at /tmp INSTEAD of the anonymous
+    tmpfs, so everything the agent (and the MCP server it spawns) writes to
+    /tmp lands in a run-owned, disk-backed, measurable directory that the
+    executor created before the run and deletes after it. Without it the
+    M194 behaviour — a private RAM-backed tmpfs — is unchanged.
 
     The contract says the arm works on "a single tree visible at the same path
     from both sides", and the container side of that tree is /testbed because
@@ -240,7 +246,7 @@ def sandbox_prefix(host_mount: str, arm_root: str | None = None) -> list[str]:
         "--bind", "/run", "/run",
         "--proc", "/proc",
         "--dev", "/dev",
-        "--tmpfs", "/tmp",
+        *(["--bind", agent_tmp, "/tmp"] if agent_tmp else ["--tmpfs", "/tmp"]),
         *(["--bind", arm_root, arm_root] if arm_root else []),
         "--dir", CHECKOUT_ROOT,
         "--bind", host_mount, CHECKOUT_ROOT,

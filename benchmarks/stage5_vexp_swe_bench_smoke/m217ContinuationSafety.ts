@@ -64,6 +64,13 @@ export interface TeardownReport {
   readonly mountRemoved: boolean;
   readonly armRootRemoved: boolean;
   readonly errors: readonly string[];
+  /**
+   * M218 §40 — the owned-scratch lifecycle record for this attempt (path,
+   * free space before, high-water, bytes after cleanup, cleanup status). Carried
+   * on the teardown event; never consulted by the classifier, which reads the
+   * enumeration.
+   */
+  readonly scratch?: Readonly<Record<string, unknown>>;
 }
 
 export function teardownReportedClean(report: TeardownReport): boolean {
@@ -128,6 +135,10 @@ export interface ResidualStateReport {
   readonly openBridgeHandles: readonly string[];
   /** A probe that could not look is a probe that proves nothing. */
   readonly probeErrors: readonly string[];
+  /** M218 §20 — bytes still under the row's owned scratch path; absence is proven by zero. */
+  readonly ownedScratchBytesRemaining?: number;
+  /** M218 §19 — containers of ANY name whose bind source lies under the work root. */
+  readonly containerMountReferences?: readonly { name: string; id: string; status: string; source: string }[];
 }
 
 /** One issue per piece of residue; empty means isolation is proven. */
@@ -149,6 +160,12 @@ export function residualStateIssues(report: ResidualStateReport): readonly strin
   }
   for (const handle of report.openBridgeHandles) {
     issues.push(`substrate bridge still holds container handle ${handle}`);
+  }
+  if ((report.ownedScratchBytesRemaining ?? 0) > 0) {
+    issues.push(`owned scratch still holds ${report.ownedScratchBytesRemaining} bytes under ${report.scope.armRoot ?? "(unknown)"}`);
+  }
+  for (const reference of report.containerMountReferences ?? []) {
+    issues.push(`container ${reference.name} (${reference.status}, ${reference.id}) still binds ${reference.source}`);
   }
   return Object.freeze(issues);
 }
@@ -247,7 +264,13 @@ export type OperationalEventKind =
   | "ISOLATION_RECOVERY_VERIFIED"
   | "ISOLATION_RECOVERY_FAILED"
   | "RETRY_RESERVE_DECISION"
-  | "COHORT_HALTED_SPEND_CEILING";
+  | "COHORT_HALTED_SPEND_CEILING"
+  // M218 — scratch lifecycle events. The sweep and the capacity gate may
+  // block; the emergency abort and the retry-reserve exhaustion record.
+  | "SCRATCH_STALE_SWEEP"
+  | "SCRATCH_CAPACITY_GATE"
+  | "SCRATCH_EMERGENCY_ABORT"
+  | "COHORT_HALTED_RETRY_RESERVE_EXHAUSTED";
 
 /**
  * One operational event.
@@ -311,7 +334,8 @@ export class CohortOperationsLedger {
       const event = this.eventsInternal[index]!;
       if (event.continuationAfter !== "CONTINUATION_BLOCKED") break;
       if (event.kind === "ROW_TEARDOWN" || event.kind === "LAUNCH_ISOLATION_PREFLIGHT"
-        || event.kind === "ISOLATION_RECOVERY_FAILED") {
+        || event.kind === "ISOLATION_RECOVERY_FAILED" || event.kind === "SCRATCH_STALE_SWEEP"
+        || event.kind === "SCRATCH_CAPACITY_GATE") {
         return event;
       }
     }
@@ -549,6 +573,25 @@ export class CohortOperations {
 
   recordSpendHalt(detail: Readonly<Record<string, unknown>>): OperationalEvent {
     return this.ledger.append("COHORT_HALTED_SPEND_CEILING", this.now(), this.state(), detail);
+  }
+
+  /**
+   * M218 — scratch-lifecycle events.
+   *
+   * A blocking sweep or capacity gate moves continuation to BLOCKED through
+   * the same ledger the isolation interlock uses, so the cohort loop's one
+   * check (`state()`) covers scratch state too. Recovery from a scratch block
+   * is the existing predeclared path: the probe wrapper enumerates the owned
+   * residue and remediates only what the registry owns.
+   */
+  recordScratchEvent(
+    kind: "SCRATCH_STALE_SWEEP" | "SCRATCH_CAPACITY_GATE" | "SCRATCH_EMERGENCY_ABORT" | "COHORT_HALTED_RETRY_RESERVE_EXHAUSTED",
+    blocking: boolean,
+    detail: Readonly<Record<string, unknown>>,
+    reference: { runId?: string | null; attemptId?: string | null; resultDigest?: string | null } = {},
+  ): OperationalEvent {
+    const after: ContinuationState = blocking ? "CONTINUATION_BLOCKED" : this.state();
+    return this.ledger.append(kind, this.now(), after, detail, reference);
   }
 }
 

@@ -470,8 +470,14 @@ class Bridge:
         env = dict(params["env"])
         host_mount = params.get("hostMount")
         arm_root = params.get("armRoot")
+        # M218 §34–§35: the agent's /tmp is the run-owned directory the
+        # executor claimed, when it supplied one; the bridge binds exactly
+        # what it was handed and chooses nothing.
+        agent_tmp = params.get("agentTmp")
+        if agent_tmp and not os.path.isdir(agent_tmp):
+            raise ValueError(f"agentTmp is not an existing directory: {agent_tmp}")
         if host_mount:
-            argv = [*sandbox_prefix(host_mount, arm_root), *argv]
+            argv = [*sandbox_prefix(host_mount, arm_root, agent_tmp), *argv]
         # Inside the namespace the checkout is at /testbed; outside it, the
         # working directory has to be a path that exists on the host.
         cwd = host_mount or params["cwd"]
@@ -553,6 +559,7 @@ class Bridge:
         return {
             "started": started,
             "sandboxed": bool(host_mount),
+            "agentTmp": agent_tmp,
             "spawnedArgv": argv[: len(argv) - len(params["argv"])],
             "exitCode": exit_code,
             "timedOut": timed_out,
@@ -796,6 +803,49 @@ class Bridge:
                 found.append({"pid": pid, "cmdline": raw.replace(b"\0", b" ").decode("utf-8", "replace").strip()[:400]})
         return found
 
+    def _container_mount_references(self, work_root: str, errors: list[str]) -> list[dict[str, Any]]:
+        """M218 §19, §22 — ANY container whose bind source lies under the work root.
+
+        The M217 field witness was a harness-named container; the general case
+        is a container of any name still holding a mount into the cohort's
+        scratch, which no name prefix would find.
+        """
+        found: list[dict[str, Any]] = []
+        try:
+            import docker as docker_sdk
+
+            client = docker_sdk.from_env()
+            for box in client.containers.list(all=True):
+                for mount in box.attrs.get("Mounts") or []:
+                    source = str(mount.get("Source") or "")
+                    if source == work_root or source.startswith(work_root + os.sep):
+                        found.append({
+                            "name": box.name or "", "id": box.id[:12], "status": box.status, "source": source,
+                        })
+        except Exception as exc:  # noqa: BLE001
+            errors.append(f"container mount enumeration failed: {exc}")
+        found.sort(key=lambda entry: (entry["name"], entry["source"]))
+        return found
+
+    @staticmethod
+    def _tree_bytes(path: str) -> int:
+        """Disk usage of a tree, never following symlinks."""
+        total = 0
+        try:
+            st = os.lstat(path)
+        except OSError:
+            return 0
+        total += st.st_blocks * 512
+        if not os.path.isdir(path) or os.path.islink(path):
+            return total
+        for dirpath, dirnames, filenames in os.walk(path, followlinks=False):
+            for name in dirnames + filenames:
+                try:
+                    total += os.lstat(os.path.join(dirpath, name)).st_blocks * 512
+                except OSError:
+                    continue
+        return total
+
     def op_substrate_residual_state(self, params: dict[str, Any]) -> dict[str, Any]:
         work_root = os.path.abspath(params["workRoot"])
         arm_root = params.get("armRoot")
@@ -803,6 +853,8 @@ class Bridge:
         errors: list[str] = []
         harness, evaluator = self._residual_containers(errors)
         processes = self._residual_processes(work_root, errors)
+        mount_references = self._container_mount_references(work_root, errors)
+        arm_root_present = bool(arm_root) and os.path.lexists(arm_root)
         return {
             "probeVersion": RESIDUAL_STATE_PROBE_VERSION,
             "probedAt": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
@@ -813,9 +865,12 @@ class Bridge:
             "harnessContainers": harness,
             "evaluatorContainers": evaluator,
             "liveProcesses": processes,
-            "armRootPresent": bool(arm_root) and os.path.isdir(arm_root),
+            "armRootPresent": arm_root_present,
             "hostMountPresent": bool(host_mount) and os.path.isdir(host_mount),
             "openBridgeHandles": sorted(self.containers),
+            # M218 — owned scratch is proven absent by bytes, not by isdir.
+            "ownedScratchBytesRemaining": self._tree_bytes(arm_root) if arm_root_present else 0,
+            "containerMountReferences": mount_references,
             "probeErrors": errors,
         }
 
@@ -832,11 +887,17 @@ class Bridge:
         actions: list[str] = []
         errors: list[str] = []
         harness, evaluator = self._residual_containers(errors)
+        # M218 — a container of ANY name bound into the work root is residue too.
+        bound = self._container_mount_references(work_root, errors)
         try:
             import docker as docker_sdk
 
             client = docker_sdk.from_env()
-            for record in harness + evaluator:
+            seen: set[str] = set()
+            for record in harness + evaluator + bound:
+                if record["name"] in seen:
+                    continue
+                seen.add(record["name"])
                 try:
                     client.containers.get(record["name"]).remove(force=True)
                     actions.append(f"removed container {record['name']} ({record['id']})")
@@ -856,12 +917,30 @@ class Bridge:
                 errors.append(f"could not kill pid {proc['pid']}: {exc}")
         import shutil
 
+        # M218 §46 — canonical paths, strict descendant of the CANONICAL work
+        # root, never through a symlink, and only under a marked namespace.
+        # `abspath` alone does not resolve symlinks, so a work-root component
+        # that had become a symlink could have carried the prefix check
+        # anywhere; realpath cannot.
+        canonical_root = os.path.realpath(work_root)
+        marker = os.path.join(canonical_root, ".m218-scratch-namespace.json")
         for label, path in (("arm root", arm_root), ("host mount", host_mount)):
             if not path:
                 continue
-            resolved = os.path.abspath(path)
-            if not resolved.startswith(work_root + os.sep):
+            if not os.path.lexists(path):
+                continue
+            if os.path.islink(path):
+                errors.append(f"refusing to remove {label} through a symlink: {path}")
+                continue
+            resolved = os.path.realpath(path)
+            if resolved == canonical_root or not resolved.startswith(canonical_root + os.sep):
                 errors.append(f"refusing to remove {label} outside the work root: {resolved}")
+                continue
+            if not os.path.exists(marker):
+                errors.append(
+                    f"refusing to remove {label} {resolved}: the work root carries no scratch-namespace "
+                    "marker, so ownership cannot be proven"
+                )
                 continue
             if os.path.isdir(resolved):
                 try:
