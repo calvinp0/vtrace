@@ -44,4 +44,5 @@ benchmarks/stage5_vexp_swe_bench_smoke/results/*
 !benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_m214_preregistration_hash.json
 !benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_m214_a1_retry_reserve_amendment.json
 !benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_m214_a1_amendment_hash.json
+!benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_m219_image_identity.json
 !benchmarks/stage5_vexp_swe_bench_smoke/results/stage5_milestone_ledger.md

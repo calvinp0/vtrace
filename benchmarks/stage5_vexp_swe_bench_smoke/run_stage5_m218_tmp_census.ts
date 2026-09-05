@@ -170,7 +170,7 @@ const PRODUCERS: readonly Producer[] = Object.freeze([
 ]);
 
 /** Name prefix → the source that produces it (grep over the repository, 2026-09-05). */
-const PREFIX_PRODUCERS: readonly { readonly prefix: RegExp; readonly label: string; readonly producer: string }[] = Object.freeze([
+export const PREFIX_PRODUCERS: readonly { readonly prefix: RegExp; readonly label: string; readonly producer: string }[] = Object.freeze([
   { prefix: /^vtrace-capsulev2-/, label: "vtrace-capsulev2-*", producer: "src/capsuleV2/__fixtures__/capsuleV2Fixture.ts mkdtemp (bun test fixtures, never removed)" },
   { prefix: /^vtrace-admindocs-/, label: "vtrace-admindocs-*", producer: "src/capsuleV2/__fixtures__/admindocsFixture.ts mkdtemp (bun test fixtures)" },
   { prefix: /^vtrace-real-repo-validation-/, label: "vtrace-real-repo-validation-*", producer: "src/validation/runRealRepoValidation.ts mkdtemp" },
@@ -190,7 +190,7 @@ const PREFIX_PRODUCERS: readonly { readonly prefix: RegExp; readonly label: stri
   { prefix: /^(\.com\.google\.Chrome|\.org\.chromium|com\.google\.Chrome|\.X11-unix|\.ICE-unix|\.font-unix|systemd-)/, label: "system / browser", producer: "EXTERNAL system and browser temp (never benchmark-owned)" },
 ]);
 
-interface PrefixRow {
+export interface PrefixRow {
   readonly label: string;
   readonly producer: string;
   readonly entries: number;
@@ -201,7 +201,7 @@ interface PrefixRow {
   readonly examples: readonly string[];
 }
 
-function hostTmpCensus(): { readonly capacity: ReturnType<typeof filesystemCapacity>; readonly totalEntries: number; readonly prefixes: readonly PrefixRow[]; readonly measuredEntries: number; readonly measurementNote: string } {
+export function hostTmpCensus(): { readonly capacity: ReturnType<typeof filesystemCapacity>; readonly totalEntries: number; readonly prefixes: readonly PrefixRow[]; readonly measuredEntries: number; readonly measurementNote: string } {
   const root = tmpdir();
   const capacity = filesystemCapacity(root);
   const names = readdirSync(root);
@@ -440,4 +440,5 @@ function main(): void {
   if (!policyInputsAgree) process.exitCode = 1;
 }
 
-main();
+// Guarded so M219 can import the census functions without re-running the M218 census.
+if (import.meta.main) main();

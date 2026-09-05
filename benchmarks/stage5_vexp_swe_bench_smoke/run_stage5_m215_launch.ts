@@ -32,7 +32,7 @@
  * no row. There is still no `--force`.
  */
 
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 import type { RunManifestRow } from "./m214Preregistration";
@@ -98,6 +98,13 @@ import {
   auditExecutableAuthorityBinding,
   loadActiveSpendAuthority,
 } from "./m218SpendAuthority";
+import {
+  type ImageIdentityRecord,
+  type ImagePreflight,
+  M219_IMAGE_IDENTITY_FILE,
+  dockerImageInspector,
+  imagePreflight,
+} from "./m219OperatorPreflight";
 
 const RESULTS_DIR = join(import.meta.dir, "results");
 
@@ -114,11 +121,13 @@ interface LaunchArgs {
   readonly maxRows: number | null;
   /** M217 §12 — run the predeclared isolation recovery path; runs no row. */
   readonly recoverIsolation: boolean;
+  /** M219 §24 — run every launch check up to the spend refusal; runs no row, never launches. */
+  readonly preflight: boolean;
 }
 
 const OPERATIONAL_FLAGS: readonly string[] = Object.freeze([
   "--binding", "--results", "--cohort-dir", "--authorize-spend", "--resume", "--plan", "--row",
-  "--max-rows", "--recover-isolation",
+  "--max-rows", "--recover-isolation", "--preflight",
 ]);
 
 /**
@@ -156,7 +165,7 @@ export function parseLaunchArgs(argv: readonly string[]): LaunchArgs {
       continue;
     }
     const next = argv[index + 1];
-    if (name === "--resume" || name === "--plan" || name === "--recover-isolation") {
+    if (name === "--resume" || name === "--plan" || name === "--recover-isolation" || name === "--preflight") {
       args[name] = true;
       continue;
     }
@@ -178,6 +187,7 @@ export function parseLaunchArgs(argv: readonly string[]): LaunchArgs {
     row: args["--row"] === undefined ? null : String(args["--row"]),
     maxRows: args["--max-rows"] === undefined ? null : Number(args["--max-rows"]),
     recoverIsolation: args["--recover-isolation"] === true,
+    preflight: args["--preflight"] === true,
   };
 }
 
@@ -299,6 +309,7 @@ export function buildScratchAuthority(cohortDir: string, now: () => string): Scr
  */
 export function scratchPreflight(
   operations: CohortOperations, scratch: ScratchAuthority, manifest: readonly RunManifestRow[],
+  resultsDir: string = RESULTS_DIR,
 ): readonly string[] {
   const issues: string[] = [];
   const sweep = scratch.sweep();
@@ -315,8 +326,12 @@ export function scratchPreflight(
   }
   const gate = scratch.capacityGate();
   const images = imageAvailability(manifest.map((row) => row.containerImage));
+  // M219 §7, §8 — once the materialization identity record exists, every row
+  // must also resolve (without a pull) to the recorded immutable image id.
+  const identity = imageIdentityPreflight(manifest, resultsDir);
   operations.recordScratchEvent("SCRATCH_CAPACITY_GATE", !gate.pass, {
     gate, images, policy: M218_SCRATCH_POLICY,
+    imageIdentity: identity === null ? null : { verdict: identity.verdict, rowsResolved: identity.rowsResolved, rowsIdentityVerified: identity.rowsIdentityVerified, issues: identity.issues.slice(0, 20) },
     reasons: gate.issues,
     verdict: gate.pass ? "CAPACITY_SUFFICIENT" : "CAPACITY_INSUFFICIENT",
   });
@@ -324,7 +339,18 @@ export function scratchPreflight(
   if (images.missing.length > 0) {
     issues.push(`${images.missing.length} of ${images.required} manifest images are absent from the local Docker store; ${images.note}`);
   }
+  if (identity !== null && identity.verdict !== "IMAGE_PREFLIGHT_PASS") {
+    issues.push(`image identity preflight failed for ${identity.issues.length} row check(s): ${identity.issues.slice(0, 5).join("; ")}`);
+  }
   return issues;
+}
+
+/** M219 — the identity record is optional until materialization has been recorded; absent, name presence governs alone. */
+export function imageIdentityPreflight(manifest: readonly RunManifestRow[], resultsDir: string): ImagePreflight | null {
+  const path = join(resultsDir, M219_IMAGE_IDENTITY_FILE);
+  if (!existsSync(path)) return null;
+  const record = JSON.parse(readFileSync(path, "utf8")) as ImageIdentityRecord;
+  return imagePreflight(manifest, record, dockerImageInspector);
 }
 
 /**
@@ -501,6 +527,108 @@ function tryLoadAuthority(resultsDir: string): { readonly authority: ActiveSpend
   }
 }
 
+// ── M219 §24, §25 — the production launch preflight, without a launch ──
+
+/**
+ * Run the launch checks as far as they can go with no spend authorisation and
+ * no row: binding, ledgers, scratch authority, the real bridge, the scratch /
+ * capacity / image preflight, the substrate residual-state preflight and the
+ * substrate identity. Then evaluate the spend refusal LAST and stop. Nothing
+ * here can start an agent: `runCohort` and `executeManifestRow` are not
+ * reached, and G36 is never set by this path.
+ *
+ * Exit 0 means: every technical gate passed and the only blocker is
+ * SPEND_AUTHORIZATION_PENDING. Any technical failure exits 1.
+ */
+async function launchPreflight(args: LaunchArgs, authorities: FrozenAuthorities, authority: ActiveSpendAuthority): Promise<void> {
+  const now = (): string => new Date().toISOString();
+  const gates: { id: string; pass: boolean; detail: string }[] = [];
+  const gate = (id: string, pass: boolean, detail: string): void => { gates.push({ id, pass, detail }); };
+  gate("FROZEN_AUTHORITIES", authorities.verified, `preregistration ${authorities.preregistrationHash.actual}; manifest ${authorities.manifestHash.actual}; external reference ${authorities.externalReferenceHash.actual}`);
+  const lineage = auditExecutableAuthorityBinding(authority, {
+    preregistrationHash: authorities.preregistrationHash.actual,
+    manifestHash: authorities.manifestHash.actual,
+    externalReferenceHash: authorities.externalReferenceHash.actual,
+  });
+  gate("EXECUTABLE_AUTHORITY", lineage.length === 0, `${authority.amendmentId} ${authority.amendmentHash}; executable ${authority.executableAuthority.identity}; ${lineage.join("; ") || "lineage binds"}`);
+  gate("SPEND_ENVELOPE", authority.hardCeilingUsd === 735 && authority.retryReserveUsd === 35 && authority.retryReserveAttempts === 10 && authority.ordinaryExposureUsd === 700,
+    `$${authority.ordinaryExposureUsd} ordinary + $${authority.retryReserveUsd} retry reserve (${authority.retryReserveAttempts} attempts) = $${authority.hardCeilingUsd} hard ceiling; manifest rows ${authorities.manifest.length}`);
+  let binding: ReturnType<typeof assertBindingUsable> | null = null;
+  try {
+    binding = assertBindingUsable(args.binding);
+    gate("BINDING", binding.authoritative, `${binding.id} ${binding.status} authoritative=${binding.authoritative}`);
+  } catch (error) {
+    gate("BINDING", false, (error as Error).message);
+  }
+  let ledgerState = "new cohort";
+  try {
+    const restored = restoreLedger(authorities, args);
+    ledgerState = restored.restored ? `resumed (${restored.issues.length} issues)` : "new cohort";
+    const operationsRestored = restoreOperations(args, restored.restored);
+    gate("LEDGERS", restored.issues.length === 0 && operationsRestored.issues.length === 0, `${ledgerState}; operations ${operationsRestored.ledger.events.length} events`);
+  } catch (error) {
+    gate("LEDGERS", false, (error as Error).message);
+  }
+  const scratch = buildScratchAuthority(args.cohortDir, now);
+  gate("SCRATCH_NAMESPACE", existsSync(scratch.namespace.markerPath), `${scratch.namespace.canonicalRoot} marked for ${scratch.namespace.experiment}`);
+
+  let substrate: Record<string, unknown> | null = null;
+  let scratchIssues: readonly string[] = [];
+  let isolation = "NOT_RUN";
+  let residualIssues: readonly string[] = [];
+  if (binding !== null && binding.id === "DOCKER_SWEBENCH") {
+    const live = await startCohortBinding({
+      benchmarkDir: import.meta.dir, manifestPath: join(args.resultsDir, M215_MANIFEST_FILE),
+      manifest: authorities.manifest, workRoot: workRootFor(args.cohortDir), scratch,
+    });
+    try {
+      substrate = (await live.bridge.identity()) as unknown as Record<string, unknown>;
+      const operations = new CohortOperations(new CohortOperationsLedger(), live.probe, workRootFor(args.cohortDir), now);
+      scratchIssues = scratchPreflight(operations, scratch, authorities.manifest, args.resultsDir);
+      const preflight = await operations.recordLaunchPreflight();
+      isolation = operations.state();
+      residualIssues = residualStateIssues((preflight.detail as { residual: Parameters<typeof residualStateIssues>[0] }).residual);
+    } finally {
+      await live.bridge.shutdown();
+    }
+    gate("SUBSTRATE_IDENTITY", substrate !== null && Number(substrate.frozenPopulationSize) === 100, JSON.stringify(substrate));
+    gate("SCRATCH_CAPACITY_IMAGES", scratchIssues.length === 0, scratchIssues.join("; ") || "sweep clean; P13 capacity pass; every manifest image present and identity-verified");
+    gate("ISOLATION_PREFLIGHT", isolation === "CONTINUATION_SAFE", `${isolation}; ${residualIssues.join("; ") || "no residual substrate state"}`);
+  }
+
+  // The spend refusal is evaluated LAST and is the only gate this path is
+  // allowed to fail while still exiting 0.
+  const spendIssues = auditSpendAuthorization(
+    args.authorizeSpend === null ? null : authorizationFor(args.authorizeSpend, authority), "COHORT", authority.hardCeilingUsd,
+  );
+  const technicalBlockers = gates.filter((entry) => !entry.pass).map((entry) => entry.id);
+  const spendPending = args.authorizeSpend === null || spendIssues.length > 0;
+  const document = {
+    schemaVersion: "stage5.m219.launch-preflight.v1",
+    generatedAt: now(),
+    executorVersion: M215_EXECUTOR_VERSION,
+    mode: "PREFLIGHT_NO_LAUNCH",
+    gates,
+    technicalBlockers,
+    spendAuthorization: {
+      present: args.authorizeSpend !== null,
+      issues: spendIssues,
+      status: spendPending ? "SPEND_AUTHORIZATION_PENDING" : "SPEND_AUTHORIZATION_PRESENT_BUT_PREFLIGHT_RUNS_NO_ROW",
+      activeCeilingUsd: authority.hardCeilingUsd,
+      retryReserveAttempts: authority.retryReserveAttempts,
+    },
+    finalBlocker: technicalBlockers.length > 0 ? `TECHNICAL: ${technicalBlockers.join(", ")}` : spendPending ? "SPEND_AUTHORIZATION_PENDING" : "NONE (preflight never launches)",
+    verdict: technicalBlockers.length === 0 ? "FINAL_ZERO_SPEND_LAUNCH_PREFLIGHT_PASSED" : "FINAL_ZERO_SPEND_LAUNCH_PREFLIGHT_FAILED",
+    rowsExecuted: 0,
+    agentInvoked: false,
+    providerCalls: 0,
+    liveModelSpendUsd: 0,
+    launchPerformed: false,
+  };
+  process.stdout.write(`${JSON.stringify(document, null, 2)}\n`);
+  if (technicalBlockers.length > 0) process.exitCode = 1;
+}
+
 // ── Main ────────────────────────────────────────────────────────────
 
 async function main(): Promise<void> {
@@ -534,6 +662,13 @@ async function main(): Promise<void> {
     externalReferenceHash: authorities.externalReferenceHash.actual,
   });
   if (lineage.length > 0) throw new Error(`refusing to launch: executable authority does not bind: ${lineage.join("; ")}`);
+
+  // M219 §24 — the zero-spend launch preflight: every technical check the
+  // launch would make, in launch order, then the spend refusal — and no row.
+  if (args.preflight) {
+    await launchPreflight(args, authorities, authority);
+    return;
+  }
 
   // Both refusals below are ordered before anything expensive, and neither is
   // recoverable by another flag.
@@ -629,7 +764,7 @@ async function main(): Promise<void> {
     // M218 §22, §25 — stale owned scratch, capacity and image availability
     // are checked before the substrate enumeration, so a host that cannot
     // safely hold one more attempt is refused before a container exists.
-    const scratchIssues = scratchPreflight(operations, scratch, authorities.manifest);
+    const scratchIssues = scratchPreflight(operations, scratch, authorities.manifest, args.resultsDir);
     if (scratchIssues.length > 0) {
       persistOperations(args.cohortDir, operationsRestored.ledger);
       persistLedger(args.cohortDir, ledger);
