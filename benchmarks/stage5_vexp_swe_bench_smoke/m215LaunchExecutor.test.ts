@@ -320,7 +320,8 @@ describe("gate coverage", () => {
     );
     const prelaunch = ["P1_PREREGISTRATION_HASH", "P2_MANIFEST_HASH", "P3_EXTERNAL_REFERENCE_HASH",
       "P4_ROW_IS_FROZEN", "P5_NO_RUNTIME_OVERRIDES", "P6_EXECUTION_ORDER", "P7_SPEND_AUTHORIZATION",
-      "P8_SPEND_CEILING", "P9_LEDGER_INTEGRITY", "P10_CONTINUATION_SAFETY"]
+      "P8_SPEND_CEILING", "P9_LEDGER_INTEGRITY", "P10_CONTINUATION_SAFETY",
+      "P11_RETRY_SPEND_RESERVE"]
       .map((id) => gateRecord(id, "PREREGISTRATION", true, [], "evidence"));
     expect(auditRuntimeGateCoverage([...prelaunch, ...full])).toEqual([]);
     expect(auditRuntimeGateCoverage([...prelaunch, ...full.slice(1)])).toHaveLength(1);

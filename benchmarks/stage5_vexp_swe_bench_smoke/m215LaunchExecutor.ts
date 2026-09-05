@@ -93,6 +93,12 @@ import {
   type TeardownReport,
   unreportedTeardown,
 } from "./m217ContinuationSafety";
+import {
+  auditRetrySpendReserve,
+  cohortOperationalStatus,
+  completionReserve,
+  retryReserveDecisionFor,
+} from "./m217RetryReserve";
 
 // ── Executor identity (§40) ─────────────────────────────────────────
 
@@ -1072,7 +1078,7 @@ export function preflightGates(input: PreflightInputs): readonly RuntimeGateReco
 export const M215_REQUIRED_PRELAUNCH_GATE_IDS: readonly string[] = Object.freeze([
   "P1_PREREGISTRATION_HASH", "P2_MANIFEST_HASH", "P3_EXTERNAL_REFERENCE_HASH", "P4_ROW_IS_FROZEN",
   "P5_NO_RUNTIME_OVERRIDES", "P6_EXECUTION_ORDER", "P7_SPEND_AUTHORIZATION", "P8_SPEND_CEILING",
-  "P9_LEDGER_INTEGRITY", "P10_CONTINUATION_SAFETY",
+  "P9_LEDGER_INTEGRITY", "P10_CONTINUATION_SAFETY", "P11_RETRY_SPEND_RESERVE",
 ]);
 
 export const M215_REQUIRED_RUNTIME_GATE_IDS: readonly string[] = Object.freeze([
@@ -1327,6 +1333,25 @@ export function launchPreconditionGates(
     at,
   ));
 
+  // M217 §16 — before an attempt that could consume paid budget, the three
+  // numbers the brief names are computed and the frozen policy applied. Under
+  // the frozen binding this gate refuses only what the ceiling refuses; its
+  // evidence carries the completion-reserve declaration either way.
+  const reserve = deps.mode === "SYNTHETIC" && deps.operations === undefined
+    ? null
+    : retryReserveDecisionFor(deps.ledger, deps.authorities.manifest, row);
+  gates.push(gateRecord(
+    "P11_RETRY_SPEND_RESERVE", "INFRASTRUCTURE", true,
+    reserve === null ? [] : auditRetrySpendReserve(reserve),
+    reserve === null
+      ? "SYNTHETIC mode without an operations authority makes no paid call"
+      : `attempt ${reserve.attempt}: $${reserve.cumulativeUsd} spent + $${reserve.retryExposureUsd} this `
+        + `attempt + $${reserve.remainingRequiredExposureUsd} for ${reserve.rowsRequiringAttemptExcludingThis} `
+        + `remaining required attempts = $${reserve.projectedUsd} against $${reserve.ceilingUsd}; `
+        + `${reserve.declaration}; policy ${reserve.policy}`,
+    at,
+  ));
+
   return Object.freeze(gates);
 }
 
@@ -1385,6 +1410,13 @@ export async function executeManifestRow(
   const definition = armDefinition(row.arm);
   const startedAt = deps.now();
   const phases: string[] = [];
+
+  // M217 §16 — a retry's spend decision is an operational event, recorded
+  // before the attempt can cost anything and outside the result ledger.
+  if (deps.operations !== undefined && attempt > 1) {
+    const decision = retryReserveDecisionFor(deps.ledger, deps.authorities.manifest, row);
+    deps.operations.recordRetryReserve({ runId, attemptId }, { decision });
+  }
 
   const handle = await deps.container.start(row);
   phases.push("CONTAINER_START");
@@ -1816,6 +1848,15 @@ export interface CohortProgress {
   readonly ceilingUsd: number;
   readonly ledgerChainHead: string;
   readonly runtimeErrors: readonly string[];
+  // M217 §17, §19 — operational status: completion, reserve, isolation, halt.
+  readonly operationalStatus: string;
+  readonly rowsRemaining: number;
+  readonly maximumRemainingExposureUsd: number;
+  readonly completionReserveUsd: number;
+  readonly fixedNCompletionGuaranteed: boolean;
+  readonly continuationState: string;
+  readonly haltReason: string | null;
+  readonly operationsChainHead: string | null;
 }
 
 /**
@@ -1837,8 +1878,16 @@ export function renderProgress(
   const projection = projectSpend(ledger, manifest);
   const terminal = manifest.filter((row) => isTerminal(ledger.statusFor(row.instanceId, row.arm)));
   const validRuns = manifest.filter((row) => isTerminalValid(ledger.statusFor(row.instanceId, row.arm)));
-  void operations;
+  const operational = cohortOperationalStatus(manifest, ledger, operations?.ledger ?? null);
   return {
+    operationalStatus: operational.status,
+    rowsRemaining: operational.rowsRemaining,
+    maximumRemainingExposureUsd: operational.maximumRemainingExposureUsd,
+    completionReserveUsd: operational.completionReserveUsd,
+    fixedNCompletionGuaranteed: operational.fixedNCompletionGuaranteed,
+    continuationState: operational.continuationState,
+    haltReason: operational.haltReason,
+    operationsChainHead: operations?.ledger.headChainDigest() ?? null,
     plannedRuns: manifest.length,
     terminalRuns: terminal.length,
     validRuns: validRuns.length,
@@ -1890,8 +1939,15 @@ export async function runCohort(
     if (deps.mode === "COHORT") {
       const ceiling = auditSpendCeiling(deps.ledger);
       if (ceiling.length > 0) {
-        stoppedBecause = ceiling.join("; ");
+        stoppedBecause = `COHORT_HALTED_SPEND_CEILING: ${ceiling.join("; ")}`;
         errors.push(...ceiling);
+        // §17 — the halt is an operational event; the rows that never ran
+        // stay PLANNED and nothing is written to the result ledger for them.
+        deps.operations?.recordSpendHalt({
+          reasons: ceiling,
+          reserve: completionReserve(deps.ledger, deps.authorities.manifest),
+          nextUnstartedRow: row.runId,
+        });
         break;
       }
     }

@@ -1,0 +1,56 @@
+{
+  "schemaVersion": "stage5.m217.launch-risk.v1",
+  "ceilingAwaitingAuthorizationUsd": 700,
+  "spendAuthorizationStatus": "SPEND_AUTHORIZATION_PENDING",
+  "plannedOrdinaryRows": 200,
+  "perRowCapUsd": 3.5,
+  "maximumPlannedExposureUsd": 700,
+  "paidRetryReserveUsd": 0,
+  "maxAttemptsPerRun": 2,
+  "rerunnableCategories": [
+    "MODEL_SERVICE_FAILURE",
+    "CONTAINER_CANNOT_START",
+    "EVALUATOR_INFRA_FAILURE",
+    "TELEMETRY_CORRUPT"
+  ],
+  "consequence": "Any infrastructure failure that consumes paid budget before a retry may make completion of all 200 intended runs impossible under the frozen $700 ceiling. The executor will permit such a retry when it fits under the ceiling, will record FIXED_N_COMPLETION_NOT_GUARANTEED before it begins, and will halt with COHORT_HALTED_SPEND_CEILING when the ceiling binds; the rows that never ran stay PLANNED and the cohort is reported as incomplete.",
+  "retryPolicyBinding": {
+    "policy": "PERMIT_RETRY_AND_DECLARE_COMPLETION_NOT_GUARANTEED",
+    "recoveredFrom": [
+      "M214_EXCLUSIONS.retryPolicy.maxAttemptsPerRun = 2",
+      "M214_EXCLUSIONS.retryPolicy.bothAttemptsRemainInLedger = true",
+      "M214_STOPPING_RULE.budgetInterlock = \"The $700 total cap is an infrastructure guard, not a stopping rule. If it binds, the cohort is incomplete and is reported as incomplete.\""
+    ],
+    "reading": "A rerunnable infrastructure failure is entitled to a second attempt; the failed attempt's cost stays in the cumulative total; and if the ceiling binds the cohort is INCOMPLETE and is reported as incomplete. M214 contains no rule that prefers completing first attempts over honouring a permitted retry, so refusing the retry to protect completion would be a new scheduling rule. The frozen binding therefore PERMITS a retry that fits under the ceiling and DECLARES, mechanically and before the retry begins, that fixed-N completion is no longer guaranteed. The ceiling itself remains the refusal that binds.",
+    "notInvented": "The refusing branch exists in code and is controlled, so a later preregistration amendment could select it; selecting it here would be a policy decision this milestone is not authorised to make."
+  },
+  "haltStatuses": [
+    "COHORT_HALTED_ISOLATION_RISK",
+    "COHORT_HALTED_SPEND_CEILING"
+  ],
+  "outcomeBlind": true,
+  "informationalOnly": true,
+  "milestone": "M217",
+  "generatedAt": "2026-09-05T10:40:27.094Z",
+  "arithmetic": {
+    "plannedOrdinaryRows": 200,
+    "perRowCapUsd": 3.5,
+    "maximumOrdinaryExposureUsd": 700,
+    "frozenCeilingUsd": 700,
+    "retryReserveUsd": 0,
+    "maxAttemptsPerRun": 2,
+    "mathematicalMaximumUsd": 1400,
+    "plannedRowsConsistent": true,
+    "inconsistencies": []
+  },
+  "recoveryPath": [
+    "the cohort loop stops; no next row is selected",
+    "an operator invokes the launcher's --recover-isolation action (no other flag reaches BLOCKED state)",
+    "the probe enumerates residual substrate state under the cohort work root",
+    "the probe remediates exactly what it enumerated: harness containers, evaluator containers, processes referencing the work root, the stale arm root",
+    "the probe enumerates again and the second enumeration must be empty",
+    "ISOLATION_RECOVERY_VERIFIED is appended and continuation returns to CONTINUATION_SAFE",
+    "the operator relaunches with --resume; selectNextRow resumes at the next unstarted row in frozen order, and a row with a valid outcome is refused rather than rerun"
+  ],
+  "doesNotRequest": "authorisation; this artifact is informational and the decision is human"
+}
