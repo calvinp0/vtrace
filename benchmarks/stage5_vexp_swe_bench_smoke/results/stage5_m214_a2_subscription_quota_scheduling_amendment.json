@@ -1,0 +1,200 @@
+{
+  "schemaVersion": "stage5.m214-a2.pre-outcome-amendment.v1",
+  "amendmentId": "M214_A2_SUBSCRIPTION_QUOTA_SCHEDULING",
+  "amendmentKind": "PRE_OUTCOME_AMENDMENT",
+  "scope": "OPERATIONAL_QUOTA_WINDOW_SCHEDULING_ONLY",
+  "parent": {
+    "experimentName": "VTRACE_EXTERNAL_VEXP_100",
+    "preregistrationFile": "stage5_m214_preregistration.json",
+    "preregistrationHash": "3cd3b3d2d665c559fdb66e7274e809245e82ea7373344cf32614833b8dcbfea4",
+    "manifestFile": "stage5_m214_run_manifest.json",
+    "manifestHash": "549df54b0f48b59a2bc13da2acf27cbf2469f416d90018c3d48dd87219f77ff1",
+    "externalReferenceFile": "stage5_m214_external_reference.json",
+    "externalReferenceHash": "822c4c5fb69dc21b8ada04189e73fcadb3e5ab1bf7c06a855dd4582a6ec7834b",
+    "a1AmendmentId": "M214_A1_RETRY_RESERVE",
+    "a1AmendmentFile": "stage5_m214_a1_retry_reserve_amendment.json",
+    "a1AmendmentHash": "0ed156bc924a4817122c46b5c9fc0334e5f046c2dce0547eef2573b2483b76c1"
+  },
+  "lineage": [
+    "M214 (frozen preregistration, manifest, external reference)",
+    "A1 — financial retry reserve only",
+    "A2 — subscription quota-window scheduling only",
+    "launchable experiment authority = M214 + A1 + A2"
+  ],
+  "outcomeBearingRunsBeforeAmendment": 0,
+  "decidedBefore": [
+    "any outcome-bearing run",
+    "any treatment result",
+    "any causal result"
+  ],
+  "notOutcomeInformed": true,
+  "whyPermissible": "No outcome-bearing benchmark run has occurred. A2 changes only WHEN execution pauses between already-frozen rows, never WHAT is executed, HOW outcomes are evaluated or WHICH arm receives which treatment. The decision to pause depends only on the operator-declared session cap, subscription/quota state, infrastructure state, scratch/disk state and explicit interruption.",
+  "executionModel": {
+    "executionUnit": "the next frozen task pair: both arms of one task, in the manifest's frozen arm order",
+    "preferredPauseBoundary": "after the complete pair",
+    "sessionCap": "an operator-declared maximum number of COMPLETE pairs per quota session (N >= 1), supplied per session and enforced by the launcher; N is operational, may differ between sessions, and is chosen outcome-blind because no interim causal outcome is visible to the operator",
+    "noPermanentSessionSize": "no fixed pairs-per-window capacity is asserted or hardcoded; usage depends on task complexity, context, model, tool use and reasoning effort, so the operator starts conservatively",
+    "orderingRule": "quota scheduling consumes the existing frozen order; the next pair is always the next frozen pair; there is no task selector, no skip and no outcome-dependent ordering",
+    "sessionNumbering": "deterministic sequential SESSION_001, SESSION_002, ...; every launcher invocation that reaches the row loop is a new session, including a resumed invocation inside the same quota window; session ids encode no treatment outcome",
+    "manualPacingAuthoritative": "no stable zero-call machine-readable remaining-quota API is assumed; the operator checks their usage, chooses a conservative pair count, and the launcher enforces it. In-run structured rate-limit events, when the CLI emits them, may only request a pause or classify an interruption; they never select rows"
+  },
+  "pauseState": {
+    "marker": "COHORT_PAUSED_QUOTA_WINDOW",
+    "isFailure": false,
+    "isRetry": false,
+    "isNewCohort": false,
+    "consumesRetryAttempt": false,
+    "consumesRetryReserveSlot": false,
+    "preserves": [
+      "completed authoritative results",
+      "manifest cursor",
+      "operations ledger",
+      "spend and subscription accounting",
+      "scratch cleanliness",
+      "continuation safety"
+    ],
+    "requiredBeforeReporting": [
+      "no active coding agent",
+      "no run-owned container",
+      "no run-owned mount",
+      "no run-owned process",
+      "run-owned scratch cleaned and verified",
+      "continuation safety proven",
+      "authoritative evidence persisted"
+    ],
+    "permittedReasons": [
+      "PAIR_CAP_REACHED",
+      "EXPLICIT_PAUSE_REQUEST_AFTER_PAIR",
+      "EXPLICIT_PAUSE_REQUEST_AFTER_ARM",
+      "SESSION_QUOTA_WARNING_OBSERVED",
+      "HARD_QUOTA_LIMIT_OBSERVED",
+      "WALL_CLOCK_DEADLINE",
+      "OPERATOR_AVAILABILITY",
+      "INFRASTRUCTURE_OR_SCRATCH_CONDITION"
+    ],
+    "forbiddenInputs": [
+      "Baseline success",
+      "VTRACE success",
+      "current pass rates",
+      "discordant wins",
+      "token savings",
+      "cost comparison",
+      "an interim effect size",
+      "an interim p-value"
+    ]
+  },
+  "resume": {
+    "verifies": [
+      "M214 + A1 + A2 identities",
+      "manifest",
+      "VTRACE treatment identity (HEAD:src)",
+      "model target and agent identity (pinned binary version)",
+      "image identity",
+      "scratch cleanliness (stale sweep)",
+      "continuation safety",
+      "next frozen row/pair",
+      "subscription authentication mode",
+      "quota window reset when a hard limit was observed"
+    ],
+    "resumesAt": "the next unfinished authorized row in frozen order; no valid completed row is ever rerun",
+    "noSessionLevelReuse": [
+      "Claude conversation",
+      "agent context",
+      "tool transcript",
+      "patch",
+      "process state"
+    ],
+    "eachArmRemainsAFreshAgentRun": true
+  },
+  "pairSplit": {
+    "marker": "PAIR_SPLIT_BY_QUOTA_WINDOW",
+    "permittedOnlyWhen": "quota safety requires it: a hard quota limit was observed, or the operator explicitly requested a pause after the current arm because the hard limit is known to be imminent",
+    "neverForConvenience": true,
+    "measured": "the time between the end of arm 1 and the start of arm 2 is recorded for every task; the median, p90, max and the number of pairs split across quota windows are reported descriptively, separately for BASELINE-first and VTRACE-first pairs, and never modify an outcome",
+    "armOrderNeverRebalanced": true
+  },
+  "quotaLimits": {
+    "SESSION_QUOTA": "the five-hour session allowance (CLI rateLimitType five_hour)",
+    "WEEKLY_QUOTA": "the weekly allowance (CLI rateLimitType seven_day and its model-specific variants)",
+    "distinct": true,
+    "note": "a five-hour reset does not guarantee weekly capacity; either may pause a session"
+  },
+  "quotaInterruption": {
+    "classificationVerdict": "QUOTA_INTERRUPTION_ALREADY_COVERED_BY_FROZEN_RETRY_AUTHORITY",
+    "frozenClass": "MODEL_SERVICE_FAILURE",
+    "principle": "subscription quota exhaustion before an authoritative outcome = provider availability interruption; the attempt is non-authoritative and is never a valid unresolved task",
+    "schedulingClarification": "the frozen policy already permits one retry of MODEL_SERVICE_FAILURE (maxAttemptsPerRun 2) and A1 funds it from the fixed reserve; A2 adds only that the executor does not START that retry inside the exhausted window: the cohort pauses, and the retry is the next authorized row of the next session",
+    "retryConsumption": "a quota-interrupted attempt consumes one of the two permitted attempts for its cell and, when retried, one of A1's ten retry slots; a second interruption of the same cell leaves it unrecoverable under the frozen maximum. There are no unlimited retries because subscription usage is not billed per token",
+    "detection": "structured evidence only: the CLI's rate_limit_event (status rejected) and its result event; no benchmark decision is built on matching free English text",
+    "newRetryClassesCreated": 0
+  },
+  "authenticationMode": {
+    "intended": "CLAUDE_MAX_SUBSCRIPTION",
+    "apiKeyBillingOverrideRefused": "a cohort session is refused when ANTHROPIC_API_KEY or any other documented provider override that would switch Claude Code to pay-as-you-go authentication is present in the launcher's environment; secrets are recorded by presence only, never by value",
+    "childEnvironmentConstructed": "each arm runs in the M193A allow-listed environment, which drops every ANTHROPIC_* and CLAUDE_* key and copies only the CLI's own credential file into a private configuration directory",
+    "runtimeGate": "the agent's own init event must report apiKeySource 'none' (no API key in use); any other value aborts the attempt before it can become an outcome, exactly as model identity works",
+    "usageCreditOverflow": "the executor never opts into usage credits / extra usage; a session is refused while the cached account profile reports extra usage enabled, and an in-run structured signal that paid overage is being used aborts the attempt as a provider availability interruption",
+    "usageLimitBehaviour": "pause or halt; never a prompt answered automatically with 'continue paid'"
+  },
+  "accounting": {
+    "subscriptionQuotaConsumption": "reported as included usage, never as $0 cost in an economic sense",
+    "incrementalBilledProviderSpend": "reported separately; expected $0 under subscription-only execution",
+    "hardCeilingUsd": 735,
+    "hardCeilingMeaning": "the maximum ADDITIONAL billed provider spend permitted if such spend ever becomes possible; kept as defence in depth",
+    "subscriptionHasAFixedCostOutsideTheExperiment": true
+  },
+  "financialEnvelopeUnchanged": {
+    "ordinaryExposureUsd": 700,
+    "retryReserveUsd": 35,
+    "retryReserveAttempts": 10,
+    "hardCeilingUsd": 735,
+    "manifestRows": 200,
+    "intendedValidOutcomes": 200
+  },
+  "retryEligibilityUnchanged": {
+    "rerunnable": [
+      "MODEL_SERVICE_FAILURE",
+      "CONTAINER_CANNOT_START",
+      "EVALUATOR_INFRA_FAILURE",
+      "TELEMETRY_CORRUPT"
+    ],
+    "notRerunnable": [
+      "a bad patch",
+      "turn exhaustion",
+      "hitting the cost cap",
+      "agent timeout",
+      "the evaluator judging the task unresolved",
+      "the agent choosing not to test",
+      "the agent choosing not to invoke VTRACE"
+    ],
+    "maxAttemptsPerRun": 2,
+    "bothAttemptsRemainInLedger": true,
+    "exceptWhereExplicitlyRequired": "no change; the only quota-related statement is the scheduling clarification above, which classifies a quota interruption into an existing frozen class and defers its retry"
+  },
+  "unchanged": [
+    "100 task identities",
+    "200-row manifest",
+    "arm assignments",
+    "within-task arm order",
+    "task order",
+    "agent",
+    "model target",
+    "VTRACE treatment identity",
+    "native tools",
+    "per-run reasoning/task budget",
+    "authoritative evaluator",
+    "primary outcome",
+    "statistical analysis",
+    "ITT semantics",
+    "fixed-N target",
+    "external VEXP reference",
+    "retry eligibility",
+    "financial envelope (A1)"
+  ],
+  "interimAnalysis": "a pause for a quota reset authorises no interim analysis; the finaliser continues to refuse before the preregistered completion or halt rules are satisfied",
+  "spendAuthorizationStatus": "SPEND_AUTHORIZATION_PENDING",
+  "authorizesSpend": false,
+  "amendmentHashRule": "sha256 over \"M214_A2_SUBSCRIPTION_QUOTA_SCHEDULING\\n\" followed by the canonical (recursively key-sorted) JSON of every field except amendmentHash, amendmentHashRule and generatedAt",
+  "amendmentHash": "e3264880b4ec1e7242192b22b141cfb75bd28cf5475a339fbb4f37d4101e1428",
+  "generatedAt": "2026-09-05T16:29:24.534Z"
+}

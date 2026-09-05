@@ -1,0 +1,61 @@
+{
+  "schemaVersion": "stage5.m214-a2.amendment-hash.v1",
+  "amendmentId": "M214_A2_SUBSCRIPTION_QUOTA_SCHEDULING",
+  "file": "stage5_m214_a2_subscription_quota_scheduling_amendment.json",
+  "hashRule": "sha256 over \"M214_A2_SUBSCRIPTION_QUOTA_SCHEDULING\\n\" followed by the canonical (recursively key-sorted) JSON of every field except amendmentHash, amendmentHashRule and generatedAt",
+  "recordedHash": "e3264880b4ec1e7242192b22b141cfb75bd28cf5475a339fbb4f37d4101e1428",
+  "recomputedFromWrittenFile": "e3264880b4ec1e7242192b22b141cfb75bd28cf5475a339fbb4f37d4101e1428",
+  "frozenHashPinnedInCode": "e3264880b4ec1e7242192b22b141cfb75bd28cf5475a339fbb4f37d4101e1428",
+  "matchesPinnedConstant": true,
+  "auditIssues": [],
+  "verified": true,
+  "parent": {
+    "experimentName": "VTRACE_EXTERNAL_VEXP_100",
+    "preregistrationFile": "stage5_m214_preregistration.json",
+    "preregistrationHash": "3cd3b3d2d665c559fdb66e7274e809245e82ea7373344cf32614833b8dcbfea4",
+    "manifestFile": "stage5_m214_run_manifest.json",
+    "manifestHash": "549df54b0f48b59a2bc13da2acf27cbf2469f416d90018c3d48dd87219f77ff1",
+    "externalReferenceFile": "stage5_m214_external_reference.json",
+    "externalReferenceHash": "822c4c5fb69dc21b8ada04189e73fcadb3e5ab1bf7c06a855dd4582a6ec7834b",
+    "a1AmendmentId": "M214_A1_RETRY_RESERVE",
+    "a1AmendmentFile": "stage5_m214_a1_retry_reserve_amendment.json",
+    "a1AmendmentHash": "0ed156bc924a4817122c46b5c9fc0334e5f046c2dce0547eef2573b2483b76c1",
+    "parentRecordsAgree": true,
+    "lineageIssues": [],
+    "parentFileBytesSha256": {
+      "preregistration": "e57ec71f7ca4a66806cc71a190e2755bf2eb88fc8c5cf949f58aa55e8e8cd705",
+      "manifest": "a81ab4a4861c5fc7c9e4e90f76c8c9f1ac5cab50073ee3c0b8d62541e61c79e5",
+      "externalReference": "f974b8d25bf663452a3d5fc86ac220de03fa44a03ec6570cdcf47a6a4691c079",
+      "a1Amendment": "8408d3f66b046cb1726800273cddeb26f4dd13a2d91d5f967a1731adaea1e97a",
+      "a1AmendmentHashRecord": "e709253cc1d1de4a02a964c948216a7c787ffb32ad7cb11eab824d3357d787ae"
+    },
+    "parentBytesUntouchedByThisScript": true
+  },
+  "executableAuthority": {
+    "preregistrationHash": "3cd3b3d2d665c559fdb66e7274e809245e82ea7373344cf32614833b8dcbfea4",
+    "manifestHash": "549df54b0f48b59a2bc13da2acf27cbf2469f416d90018c3d48dd87219f77ff1",
+    "externalReferenceHash": "822c4c5fb69dc21b8ada04189e73fcadb3e5ab1bf7c06a855dd4582a6ec7834b",
+    "a1AmendmentHash": "0ed156bc924a4817122c46b5c9fc0334e5f046c2dce0547eef2573b2483b76c1",
+    "a2AmendmentHash": "e3264880b4ec1e7242192b22b141cfb75bd28cf5475a339fbb4f37d4101e1428",
+    "identity": "602d0d101ba05cf0011c672e82e8cd1d232ec93700f69740d4de39fac456884f"
+  },
+  "scope": "OPERATIONAL_QUOTA_WINDOW_SCHEDULING_ONLY",
+  "pauseState": "COHORT_PAUSED_QUOTA_WINDOW",
+  "pairSplitMarker": "PAIR_SPLIT_BY_QUOTA_WINDOW",
+  "quotaInterruption": {
+    "classificationVerdict": "QUOTA_INTERRUPTION_ALREADY_COVERED_BY_FROZEN_RETRY_AUTHORITY",
+    "frozenClass": "MODEL_SERVICE_FAILURE",
+    "newRetryClassesCreated": 0
+  },
+  "financialEnvelopeUnchanged": {
+    "ordinaryExposureUsd": 700,
+    "retryReserveUsd": 35,
+    "retryReserveAttempts": 10,
+    "hardCeilingUsd": 735,
+    "manifestRows": 200,
+    "intendedValidOutcomes": 200
+  },
+  "spendAuthorizationStatus": "SPEND_AUTHORIZATION_PENDING",
+  "launchHarnessRequirement": "The launcher MUST verify M214's three frozen digests, A1's digest AND this amendment's digest against the constants pinned in code, and must bind the executable authority (M214 + A1 + A2) before any paid row. A quota-window session launched against M214 + A1 alone is refused once A2 is active; a COHORT launch without a declared per-session pair cap is refused by name.",
+  "generatedAt": "2026-09-05T16:29:24.534Z"
+}
