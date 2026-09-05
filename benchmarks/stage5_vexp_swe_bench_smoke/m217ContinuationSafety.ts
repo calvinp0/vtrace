@@ -135,8 +135,9 @@ export interface ResidualStateReport {
   readonly openBridgeHandles: readonly string[];
   /** A probe that could not look is a probe that proves nothing. */
   readonly probeErrors: readonly string[];
-  /** M218 §20 — bytes still under the row's owned scratch path; absence is proven by zero. */
+  /** M218 §20 — bytes and entries still under the row's owned scratch path; absence is proven by zero of both. */
   readonly ownedScratchBytesRemaining?: number;
+  readonly ownedScratchInodesRemaining?: number;
   /** M218 §19 — containers of ANY name whose bind source lies under the work root. */
   readonly containerMountReferences?: readonly { name: string; id: string; status: string; source: string }[];
 }
@@ -161,8 +162,11 @@ export function residualStateIssues(report: ResidualStateReport): readonly strin
   for (const handle of report.openBridgeHandles) {
     issues.push(`substrate bridge still holds container handle ${handle}`);
   }
-  if ((report.ownedScratchBytesRemaining ?? 0) > 0) {
-    issues.push(`owned scratch still holds ${report.ownedScratchBytesRemaining} bytes under ${report.scope.armRoot ?? "(unknown)"}`);
+  if ((report.ownedScratchBytesRemaining ?? 0) > 0 || (report.ownedScratchInodesRemaining ?? 0) > 0) {
+    issues.push(
+      `owned scratch still holds ${report.ownedScratchBytesRemaining ?? 0} bytes / `
+      + `${report.ownedScratchInodesRemaining ?? 0} entries under ${report.scope.armRoot ?? "(unknown)"}`,
+    );
   }
   for (const reference of report.containerMountReferences ?? []) {
     issues.push(`container ${reference.name} (${reference.status}, ${reference.id}) still binds ${reference.source}`);

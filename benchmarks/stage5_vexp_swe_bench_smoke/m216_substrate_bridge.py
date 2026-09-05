@@ -495,12 +495,29 @@ class Bridge:
 
         try:
             with open(stream_path, "w") as sink:
+                # M218 — the agent runs in its OWN session/process group so an
+                # abort or a timeout kills the whole subtree. Killing bwrap alone
+                # left its child alive (bwrap is not started with --unshare-pid,
+                # so the child is reparented, not terminated) holding the stdout
+                # pipe open, and the read loop below blocked forever; the M218
+                # emergency-abort control found exactly that.
                 proc = subprocess.Popen(
                     argv, cwd=cwd, env=env,
                     stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                    text=True, bufsize=1,
+                    text=True, bufsize=1, start_new_session=True,
                 )
                 started = True
+
+                def kill_tree() -> None:
+                    import signal as _signal
+
+                    try:
+                        os.killpg(os.getpgid(proc.pid), _signal.SIGKILL)
+                    except Exception:  # noqa: BLE001
+                        try:
+                            proc.kill()
+                        except Exception:  # noqa: BLE001
+                            pass
 
                 def drain_stderr() -> None:
                     for line in proc.stderr:  # type: ignore[union-attr]
@@ -513,22 +530,28 @@ class Bridge:
                 # STOPS a run rather than labelling it afterwards. It is a
                 # watchdog rather than a check inside the read loop because a
                 # process that has stopped emitting is exactly the process an
-                # abort most needs to reach.
+                # abort most needs to reach. M218: the same watchdog enforces
+                # the wall-clock deadline, for the same reason — a silent
+                # process never delivers the line the loop would check it on.
                 aborted = threading.Event()
+                deadline_hit = threading.Event()
+                deadline = t0 + timeout_s
 
-                def watch_abort() -> None:
+                def watch() -> None:
                     while proc.poll() is None:
                         if abort_path and os.path.exists(abort_path):
                             aborted.set()
-                            proc.kill()
+                            kill_tree()
+                            return
+                        if time.time() > deadline:
+                            deadline_hit.set()
+                            kill_tree()
                             return
                         time.sleep(0.25)
 
-                watchdog = threading.Thread(target=watch_abort, daemon=True)
-                if abort_path:
-                    watchdog.start()
+                watchdog = threading.Thread(target=watch, daemon=True)
+                watchdog.start()
 
-                deadline = t0 + timeout_s
                 for line in proc.stdout:  # type: ignore[union-attr]
                     sink.write(line)
                     sink.flush()
@@ -537,16 +560,15 @@ class Bridge:
                         emit({"stream": "agent.event", "ordinal": ordinal, "line": text})
                         ordinal += 1
                     if time.time() > deadline:
-                        proc.kill()
+                        kill_tree()
                         timed_out = True
                         break
                 exit_code = proc.wait(timeout=120)
                 thread.join(timeout=10)
-                if abort_path:
-                    watchdog.join(timeout=5)
-                    was_aborted = aborted.is_set()
-                else:
-                    was_aborted = False
+                watchdog.join(timeout=5)
+                was_aborted = aborted.is_set()
+                if deadline_hit.is_set():
+                    timed_out = True
         except Exception as exc:  # noqa: BLE001
             return {
                 "started": started, "error": repr(exc), "exitCode": exit_code,
@@ -828,23 +850,26 @@ class Bridge:
         return found
 
     @staticmethod
-    def _tree_bytes(path: str) -> int:
-        """Disk usage of a tree, never following symlinks."""
+    def _tree_usage(path: str) -> tuple[int, int]:
+        """(bytes, entries) of a tree, never following symlinks; (0, 0) when absent."""
         total = 0
+        entries = 0
         try:
             st = os.lstat(path)
         except OSError:
-            return 0
+            return 0, 0
         total += st.st_blocks * 512
+        entries += 1
         if not os.path.isdir(path) or os.path.islink(path):
-            return total
+            return total, entries
         for dirpath, dirnames, filenames in os.walk(path, followlinks=False):
             for name in dirnames + filenames:
                 try:
                     total += os.lstat(os.path.join(dirpath, name)).st_blocks * 512
+                    entries += 1
                 except OSError:
                     continue
-        return total
+        return total, entries
 
     def op_substrate_residual_state(self, params: dict[str, Any]) -> dict[str, Any]:
         work_root = os.path.abspath(params["workRoot"])
@@ -855,6 +880,7 @@ class Bridge:
         processes = self._residual_processes(work_root, errors)
         mount_references = self._container_mount_references(work_root, errors)
         arm_root_present = bool(arm_root) and os.path.lexists(arm_root)
+        owned_bytes, owned_entries = self._tree_usage(arm_root) if arm_root_present else (0, 0)
         return {
             "probeVersion": RESIDUAL_STATE_PROBE_VERSION,
             "probedAt": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
@@ -868,8 +894,9 @@ class Bridge:
             "armRootPresent": arm_root_present,
             "hostMountPresent": bool(host_mount) and os.path.isdir(host_mount),
             "openBridgeHandles": sorted(self.containers),
-            # M218 — owned scratch is proven absent by bytes, not by isdir.
-            "ownedScratchBytesRemaining": self._tree_bytes(arm_root) if arm_root_present else 0,
+            # M218 — owned scratch is proven absent by bytes AND entries, not by isdir.
+            "ownedScratchBytesRemaining": owned_bytes,
+            "ownedScratchInodesRemaining": owned_entries,
             "containerMountReferences": mount_references,
             "probeErrors": errors,
         }
