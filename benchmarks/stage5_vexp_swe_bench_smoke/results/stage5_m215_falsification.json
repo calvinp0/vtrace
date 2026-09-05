@@ -1,7 +1,7 @@
 {
   "schemaVersion": "stage5.m215.falsification.v1",
   "milestone": "M215",
-  "generatedAt": "2026-09-04T19:27:29.718Z",
+  "generatedAt": "2026-09-05T10:29:13.755Z",
   "executorVersion": "stage5.m215.launch-executor.v1",
   "liveModelSpendUsd": 0,
   "frozenBenchmarkTaskLiveAgentRuns": 0,
@@ -399,7 +399,7 @@
       "expectation": "GUARD_FIRES",
       "fired": true,
       "satisfied": true,
-      "detail": "launch refused for VTRACE_EXTERNAL_VEXP_100:astropy__astropy-14365:baseline: P7_SPEND_AUTHORIZATION no spend authorisation supplied; a COHORT run makes paid model calls and requires explicit operator authorisation of the frozen $700 ceiling. Technical readiness is not authorisation."
+      "detail": "launch refused for VTRACE_EXTERNAL_VEXP_100:astropy__astropy-14365:baseline: P7_SPEND_AUTHORIZATION no spend authorisation supplied; a COHORT run makes paid model calls and requires explicit operator authorisation of the frozen $700 ceiling. Technical readiness is not authorisation. | P10_CONTINUATION_SAFETY no continuation-safety authority is bound; isolation between rows cannot be proven, so a COHORT row may not begin"
     },
     {
       "id": "F29_SYNTHETIC_MODE_ISOLATION",

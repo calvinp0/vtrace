@@ -1,0 +1,144 @@
+{
+  "schemaVersion": "stage5.m217.guard-break.v1",
+  "milestone": "M217",
+  "generatedAt": "2026-09-05T10:49:13.084Z",
+  "breakages": [
+    {
+      "id": "B1_CONTINUATION_SAFETY_IGNORES_RESIDUE",
+      "guardClass": "continuation safety",
+      "file": "m217ContinuationSafety.ts",
+      "expectedPureFailures": [
+        "F84",
+        "F85",
+        "F86",
+        "F88",
+        "F94",
+        "F96",
+        "F97",
+        "F100"
+      ],
+      "expectedRealFailures": [
+        "F107",
+        "F109",
+        "F109B",
+        "F110",
+        "F111",
+        "F112",
+        "F113"
+      ]
+    },
+    {
+      "id": "B2_RETRY_RESERVE_ALWAYS_WITHIN",
+      "guardClass": "retry spend reserve",
+      "file": "m217RetryReserve.ts",
+      "expectedPureFailures": [
+        "F91",
+        "F91B"
+      ],
+      "expectedRealFailures": []
+    }
+  ],
+  "pure": {
+    "clean": {
+      "satisfied": 23,
+      "controlCount": 23
+    },
+    "broken": {
+      "satisfied": 13,
+      "controlCount": 23,
+      "failures": [
+        "F100",
+        "F84",
+        "F85",
+        "F86",
+        "F88",
+        "F91",
+        "F91B",
+        "F94",
+        "F96",
+        "F97"
+      ]
+    },
+    "restored": {
+      "satisfied": 23,
+      "controlCount": 23,
+      "failures": []
+    }
+  },
+  "real": {
+    "clean": {
+      "satisfied": 15,
+      "controlCount": 15
+    },
+    "broken": {
+      "satisfied": 8,
+      "controlCount": 15,
+      "failures": [
+        "F107",
+        "F109",
+        "F109B",
+        "F110",
+        "F111",
+        "F112",
+        "F113"
+      ]
+    },
+    "restored": {
+      "satisfied": 15,
+      "controlCount": 15,
+      "failures": []
+    }
+  },
+  "brokenRunError": null,
+  "expectedPureFailures": [
+    "F100",
+    "F84",
+    "F85",
+    "F86",
+    "F88",
+    "F91",
+    "F91B",
+    "F94",
+    "F96",
+    "F97"
+  ],
+  "expectedRealFailures": [
+    "F107",
+    "F109",
+    "F109B",
+    "F110",
+    "F111",
+    "F112",
+    "F113"
+  ],
+  "deliberatelyUnaffected": [
+    {
+      "id": "F107B",
+      "why": "it asserts the real PROBE's enumeration fires on the residue, which B1 does not touch; B1 makes the CLASSIFIER ignore that enumeration, which F107 catches"
+    },
+    {
+      "id": "F99",
+      "why": "a probe failure is checked before residue is consulted, so ignoring residue cannot reach it"
+    },
+    {
+      "id": "F103",
+      "why": "the launch preflight reads residualStateIssues directly rather than through classifyTeardown"
+    },
+    {
+      "id": "F104",
+      "why": "same as F103, on the real substrate"
+    },
+    {
+      "id": "F114",
+      "why": "a false cleanup failure is PROVEN whether or not residue is consulted, because there is none"
+    },
+    {
+      "id": "F89",
+      "why": "the frozen arithmetic does not go through retryReserveDecision"
+    }
+  ],
+  "unexpectedFailures": [],
+  "missedFailures": [],
+  "sourceFilesRestoredIntact": true,
+  "verdict": "M217_SUITE_IS_FALSIFYING"
+}

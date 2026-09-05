@@ -11831,3 +11831,172 @@ commits           substrate audit + protocol, then production bindings, then
   CODING-AGENT UTILITY` and `CONTEXT_COMPILER_PRODUCT_UTILITY_NOT_ESTABLISHED`
   both still govern: nothing in M216 measured the product, only whether the
   experiment that would can actually be run.
+
+## M217
+
+```text
+milestone         M217
+verdict           PASS (the teardown/isolation interlock and the retry-spend
+                  interlock are implemented, falsified on the real substrate,
+                  and the launcher can now actually construct its adapters;
+                  launch is blocked only on human authorisation of the frozen
+                  spend)
+markers           TEARDOWN_RESULT_VALIDITY_SEPARATED_FROM_CONTINUATION_SAFETY;
+                  TEARDOWN_ISOLATION_INTERLOCK_IMPLEMENTED;
+                  COHORT_HALT_ON_ISOLATION_RISK_VERIFIED;
+                  ISOLATION_RECOVERY_PATH_VERIFIED;
+                  FROZEN_SPEND_ARITHMETIC_VERIFIED;
+                  ZERO_RETRY_HEADROOM_RECORDED;
+                  RETRY_SPEND_INTERLOCK_VERIFIED;
+                  LAUNCHER_BINDING_RESOLUTION;
+                  M217_FALSIFICATION_SUITE_PASSED;
+                  M217_SUITE_IS_FALSIFYING;
+                  M217_SCOPED_TYPECHECK_VERIFIED;
+                  PREREGISTRATION_UNCHANGED;
+                  MANIFEST_UNCHANGED;
+                  EXTERNAL_REFERENCE_UNCHANGED;
+                  VTRACE_PRODUCT_UNCHANGED;
+                  TECHNICAL_EXECUTOR_READY;
+                  PAID_RUNS_NOT_STARTED;
+                  SPEND_AUTHORIZATION_PENDING
+parity            UNCHANGED and NOT re-run. Frozen matrix stays MATCH 7 EXCEED 7
+                  BELOW 1, match-or-exceed 14/15, A15 BELOW and
+                  A15_PARITY_GAP_INVALIDATED (M212). M217 does NOT license
+                  writing 15/15 anywhere, ever.
+spend             0 frozen benchmark tasks run with a live agent, $0 live model
+                  spend, 0 provider calls. Real Docker WAS used and is expected:
+                  4 research containers per real-substrate run (x3 runs: clean,
+                  broken, restored) plus one evaluator-named witness container,
+                  all on SWE-bench Verified complement instances; the M216 suite
+                  was re-run once (10 containers) to prove preservation. 0
+                  frozen task ids touched by the real substrate.
+scope             Launch machinery only. 0 src/ diff (HEAD:src still
+                  b3b3e439f10c6c526cafc6001d25dd0e7552ce6d). Nothing frozen was
+                  touched: all seven frozen artifacts byte-identical to the M216
+                  HEAD blobs and all three digests recompute.
+what was built    Commit 1 -- m217ContinuationSafety.ts (two-state continuation
+                  authority, teardown classification, append-only hash-chained
+                  operations ledger, predeclared recovery path),
+                  m217IsolationProbe.ts + bridge ops substrate.residualState /
+                  substrate.remediateResidualState (real Docker + /proc
+                  enumeration and bounded remediation), m217Fixtures.ts,
+                  m217LaunchBinding.ts (the adapter factory the launcher never
+                  had), executor P10_CONTINUATION_SAFETY gate + reported
+                  teardown + halt in runCohort, launcher operations-ledger
+                  persistence + --recover-isolation + launch preflight,
+                  M216 stop() now returns a report. Commit 2 --
+                  m217RetryReserve.ts (frozen arithmetic, completion reserve,
+                  retry decision under the M214-recovered policy, outcome-blind
+                  operational status, launch-risk statement), executor
+                  P11_RETRY_SPEND_RESERVE gate + RETRY_RESERVE_DECISION /
+                  COHORT_HALTED_SPEND_CEILING events, progress fields,
+                  stage5_m217_launch_risk.{json,md}. Commit 3 -- pure suite
+                  (23 controls, F82-F103, brief F74-F90 mapped as id+8),
+                  real-substrate suite (15 controls, F104-F117), guard-break,
+                  scoped typecheck, readiness (G56-G67), report, field-witness
+                  artifact, this row.
+field witness     Before M217 started any container its probe found
+                  m193-psf__requests-2317 still RUNNING, 13 hours old,
+                  bind-mounted to a work directory that no longer existed --
+                  M216's abandoned psf/requests attempt. M216 counted only the
+                  containers it started. The launch preflight classified it
+                  BLOCKING; the recovery path removed it. Kept in
+                  stage5_m217_field_witness.json because the guard-break's
+                  restored re-run superseded the evidence document that first
+                  recorded it.
+suites            pure 23/23 (4 GUARD_FIRES, 19 GUARD_SILENT); real 15/15 (2
+                  GUARD_FIRES, 13 GUARD_SILENT); guard-break B1 (classifier
+                  ignores residue) + B2 (reserve always within): pure 23 -> 13
+                  -> 23 failing exactly [F84 F85 F86 F88 F91 F91B F94 F96 F97
+                  F100], real 15 -> 8 -> 15 failing exactly [F107 F109 F109B
+                  F110 F111 F112 F113], 0 unexpected, 0 missed, sources
+                  restored byte-identical. M215 66/66 and M216 73/73 re-run
+                  and preserved. bun test 6617 pass / 49 skip / 0 fail.
+                  M217_NEW_TYPECHECK_ERRORS 0; the ~59 pre-existing
+                  benchmark-test errors remain unclaimed.
+spend arithmetic  200 x $3.50 = $700 = frozen ceiling; retry reserve $0;
+                  mathematical maximum $1400 refused by the ceiling. Frozen
+                  binding PERMIT_RETRY_AND_DECLARE_COMPLETION_NOT_GUARANTEED,
+                  read from M214 retryPolicy (maxAttemptsPerRun 2,
+                  bothAttemptsRemainInLedger) and budgetInterlock ("if it
+                  binds, the cohort is incomplete"); the refusing branch exists
+                  and is controlled (F91) but selecting it is a preregistration
+                  amendment.
+```
+
+## M217 standing findings
+
+- **A valid result is not permission to continue, and the code now says so.**
+  Two ledgers: the result ledger says what happened on a task; the operations
+  ledger says whether the substrate is proven clean for the next one. The
+  operations ledger can point at a result by digest and cannot touch it
+  (F87/F95 pure, F108 real). P10_CONTINUATION_SAFETY is on the frozen
+  required-gate list; a result whose evidence lacks it cannot become valid.
+
+- **Isolation is proven by absence, never by harmlessness.** After every
+  teardown the bridge enumerates harness containers (m193-*), evaluator
+  containers (sweb.eval.*), host processes whose cmdline names the cohort work
+  root, the row's arm root and host mount, and the bridge's open handles. Any
+  residue blocks; a teardown that reported an error and left nothing is
+  PROVEN; a teardown that reported success and left a container is not; a
+  probe that cannot look blocks. Fresh-container-per-row is real (M193
+  force-removes the same-named container and re-extracts the tree) and is
+  recorded (F115), but it is not what continuation relies on: a surviving
+  container also means a surviving process and, for a retry, a pre-existing
+  M193A configuration directory.
+
+- **The substrate really does leave things behind.** The 13-hour
+  m193-psf__requests-2317 container is the field witness. "N torn down" in an
+  evidence document counts what a runner started; it does not say the machine
+  is clean. The launch preflight now refuses to START a cohort over residue
+  (F103 pure, F104 real).
+
+- **The launcher could not have launched.** run_stage5_m215_launch.ts resolved
+  adapters through a property no binding declared, so M216's
+  TECHNICAL_EXECUTOR_READY was claimed over an entry point that would have
+  thrown "declares no adapters" after every refusal passed. One factory now
+  serves the launcher and the real-substrate controls, which ran full rows
+  through it (G65). M216's e2e rows bypassed the launcher; a readiness claim
+  should include the entry point an operator will actually type.
+
+- **Recovery is a path, not a flag.** --recover-isolation is the only way out
+  of BLOCKED: enumerate, remediate exactly what was listed, enumerate again,
+  require empty. A remediation that claimed success and removed nothing is
+  ISOLATION_RECOVERY_FAILED (F100). No --force; every unknown flag is refused
+  by name; --row goes through the same P10 (F85, F109).
+
+- **The $0 reserve is a live number, not a constant.** Before every attempt
+  P11 computes cumulative + this cap + remaining required attempts at cap.
+  Under-spent rows create real headroom under the frozen ceiling (F92: ten
+  rows at $0.66 leave $24.90 of reserve after a paid retry), so the brief's
+  "synthetic alternative ceiling" was not needed. A failed attempt charged at
+  cap consumes the reserve (F91/F91B), a $0 failed attempt does not (F90).
+
+- **Reported interpretation, for the launch decision.** M214 grants a second
+  attempt and explicitly allows an incomplete cohort; it contains no rule
+  preferring first-attempt completion over a permitted retry. M217 therefore
+  PERMITS a reserve-consuming retry and DECLARES
+  FIXED_N_COMPLETION_NOT_GUARANTEED before it begins; under that binding a
+  consumed reserve trades the LAST rows of the randomised order for the retried
+  cell. The refusing branch trades the retried cell for the tail. Both are
+  arm-blind. Choosing the refusing branch is a preregistration amendment.
+
+- **Guard-break prediction is mechanism, not fitting.** The first guard-break
+  run mispredicted two controls: F96 falls under B1 because F85's direct row
+  selection is no longer refused and actually runs a row, moving the resume
+  point; F107B does not fall because it asserts the real probe's enumeration,
+  which B1 leaves intact. Both corrections are recorded with their reasons.
+
+- **Control numbering.** M216 used F74-F81 already; M217's brief ids F74-F90
+  are realised as F82-F98 (+8) with briefId on each control. Do not
+  cross-reference the two evidence documents by bare id.
+
+- **Next-step recommendation.** Do NOT start the benchmark. There is no
+  further engineering milestone before the launch decision. The decision needs
+  two human answers: authorise the frozen $700 ceiling (G36), knowing the paid
+  retry reserve is $0 and any paid retry may make 200/200 impossible; and
+  either accept the PERMIT-and-DECLARE retry binding or amend the
+  preregistration to the refusing branch. Live provider model identity remains
+  PENDING_AT_FIRST_PAID_RUN. `ENGINE QUALITY != CODING-AGENT UTILITY` and
+  `CONTEXT_COMPILER_PRODUCT_UTILITY_NOT_ESTABLISHED` still govern: nothing in
+  M217 measured the product.

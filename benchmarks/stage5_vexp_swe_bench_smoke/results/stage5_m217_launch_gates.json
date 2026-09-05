@@ -1,8 +1,8 @@
 {
-  "schemaVersion": "stage5.m215.launch-gates.v1",
-  "milestone": "M215",
-  "generatedAt": "2026-09-05T10:53:44.299Z",
-  "executorVersion": "stage5.m215.launch-executor.v1",
+  "schemaVersion": "stage5.m217.launch-gates.v1",
+  "milestone": "M217",
+  "generatedAt": "2026-09-05T10:53:44.307Z",
+  "continuationVersion": "stage5.m217.continuation-safety.v1",
   "authorities": {
     "preregistration": {
       "artifact": "stage5_m214_preregistration.json",
@@ -36,15 +36,29 @@
     "documentedExclusionsAreIncomplete": true,
     "documentedExclusionNote": "M214's published hashRule names three excluded fields; its generator excludes nine, the six extra being outputs derived from the document and written into it after hashing. The executor reproduces the generator's rule exactly. The frozen artifact is NOT edited to correct its own prose, because that would change the digest it froze."
   },
-  "m214PreregistrationComplete": true,
   "m214TableUnchangedApartFromG32": true,
+  "m216TechnicalExecutorReady": true,
+  "adapterBindings": [
+    {
+      "id": "SYNTHETIC",
+      "status": "IMPLEMENTED",
+      "authoritative": false
+    },
+    {
+      "id": "DOCKER_SWEBENCH",
+      "status": "IMPLEMENTED",
+      "authoritative": true
+    }
+  ],
   "runtimeGuards": {
     "sourceStateEquivalence": "m215LaunchExecutor preflightGates R6_SOURCE_STATE_EQUIVALENCE, which calls M214's own auditSourceStateEquivalence on digests taken either side of treatment initialisation",
     "indexingObservational": "the same R6 gate: the pre- and post-treatment tracked-source digests must be equal",
     "treatmentStateExcludedFromPatch": "m215LaunchExecutor R13_PATCH_CAPTURE, over exclusions derived from the pre-agent untracked snapshot, with no vendor directory named anywhere in the rule",
     "resetWarmPolicySymmetric": "m215LaunchExecutor R7_RESET_WARMTH_POLICY, calling auditWarmthPolicy and auditResetPreservedPaths against the frozen COLD_UNIFORM regime",
     "modelAvailability": "m215LaunchExecutor R12_PROVIDER_MODEL_IDENTITY, reading the provider-returned identity from the run's own init event via AgentRunHooks.assertProviderModelIdentity, which aborts the run",
-    "treatmentLifecycleOrder": "m215LaunchExecutor R14_LIFECYCLE_ORDER, over the phases the executor actually reached"
+    "treatmentLifecycleOrder": "m215LaunchExecutor R14_LIFECYCLE_ORDER, over the phases the executor actually reached",
+    "P10_CONTINUATION_SAFETY": "the next row may begin only when the operations ledger's state is CONTINUATION_SAFE and its chain recomputes",
+    "P11_RETRY_SPEND_RESERVE": "before any attempt: cumulative + this attempt's cap + remaining required attempts at cap, against the ceiling, under the frozen policy"
   },
   "requiredPrelaunchGateIds": [
     "P1_PREREGISTRATION_HASH",
@@ -76,6 +90,41 @@
     "R14_LIFECYCLE_ORDER",
     "R15_EVALUATOR_AUTHORITY"
   ],
+  "technicalGateIds": [
+    "G32",
+    "G33",
+    "G34",
+    "G35",
+    "G37",
+    "G38",
+    "G39",
+    "G43",
+    "G44",
+    "G45",
+    "G46",
+    "G47",
+    "G48",
+    "G49",
+    "G50",
+    "G51",
+    "G52",
+    "G53",
+    "G54",
+    "G55",
+    "G56",
+    "G57",
+    "G58",
+    "G59",
+    "G60",
+    "G61",
+    "G62",
+    "G63",
+    "G64",
+    "G65",
+    "G66",
+    "G67"
+  ],
+  "missingTechnicalGates": [],
   "gates": [
     {
       "id": "G1",
@@ -370,6 +419,181 @@
       "gateClass": "INFRASTRUCTURE",
       "status": "PASS",
       "evidence": "every layer ran against synthetic adapters or real git; no provider was contacted"
+    },
+    {
+      "id": "G43",
+      "requirement": "M216_SUBSTRATE_REDUCTION_COMPLETE: every obligation M215's interfaces impose is matched to an existing authority or named as a missing primitive",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "M216_SUBSTRATE_REDUCTION_COMPLETE; 5 DIRECT_REUSE, 5 THIN_ADAPTER, 2 MISSING_PRIMITIVE"
+    },
+    {
+      "id": "G44",
+      "requirement": "REAL_CONTAINER_ADAPTER_BOUND: the production container adapter exists and started real containers",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "stage5.m216.production-adapters.v1; 10 containers started, 10 torn down"
+    },
+    {
+      "id": "G45",
+      "requirement": "REAL_AGENT_ADAPTER_BOUND: the production argv, environment and process reach a real child, and the two arms differ only in MCP configuration",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "controls F51A, F51, F21, F21B, F79, F59_BASELINE_FIRST, F59_VTRACE_FIRST, F26_BASELINE_FIRST, F26_VTRACE_FIRST all satisfied"
+    },
+    {
+      "id": "G46",
+      "requirement": "REAL_EVALUATOR_ADAPTER_BOUND: the official swebench evaluator is invoked and infrastructure failure stays distinct from an unresolved task",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "controls E1, F56, F56B, F57 all satisfied"
+    },
+    {
+      "id": "G47",
+      "requirement": "REAL_SOURCE_STATE_AUTHORITY_VERIFIED: source identity is measured, moves when source moves, and is equal across both arms of a pair",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "controls F45, F45B, F46, F46A, F70, F71, F74, F50_BASELINE_FIRST, F50_VTRACE_FIRST all satisfied"
+    },
+    {
+      "id": "G48",
+      "requirement": "REAL_PATCH_CAPTURE_VERIFIED: the derived rule is unambiguous on both treatment routes, captures real edits exactly, and excludes treatment state written during the run",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "controls F41P1, F41P2, F41P4, F41P5, F41P6, F47, F48, F47R, F47RB, F72, F75 all satisfied"
+    },
+    {
+      "id": "G49",
+      "requirement": "REAL_PAIR_ISOLATION_VERIFIED: both arm orders run on the real substrate with no treatment state surviving between them",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "controls F49_BASELINE_FIRST, F49_VTRACE_FIRST, F62, F76, F77, F73 all satisfied"
+    },
+    {
+      "id": "G50",
+      "requirement": "MODEL_IDENTITY_RUNTIME_GATE_BOUND: the production agent path aborts on a wrong or absent provider identity, and accepts a recorded correct one",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "controls F53, F54, F55, F53R, F54R, F69, F80, F81 all satisfied"
+    },
+    {
+      "id": "G51",
+      "requirement": "REAL_RESUME_PATH_VERIFIED: a ledger restores in another process, a decided row is refused rather than rerun, and no duplicate outcome is possible",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "controls F61A, F61, F58 all satisfied"
+    },
+    {
+      "id": "G52",
+      "requirement": "M216_FALSIFICATION_SUITE_PASSED: every real-substrate control is satisfied and the suite carries both expectations",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "73/73 controls satisfied (24 GUARD_FIRES, 49 GUARD_SILENT); failures [none]"
+    },
+    {
+      "id": "G53",
+      "requirement": "no frozen task was touched by the real substrate and live model spend is $0",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "frozen tasks touched 0; non-frozen [pylint-dev__pylint-6903, pylint-dev__pylint-7080]; provider calls 0; spend $0"
+    },
+    {
+      "id": "G54",
+      "requirement": "SPEND_PROJECTION_RECONCILED: the mathematically possible cohort is reconciled with the frozen ceiling, retry exposure included",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "200 x $3.5 = $700 against a $700 ceiling; retry headroom $0; a fully retried cohort would be $1400, which the guard refuses rather than funds"
+    },
+    {
+      "id": "G55",
+      "requirement": "M216-owned harness, adapters and tests are typechecked",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "tsconfig.m216.json: 0 errors; M216_SCOPED_TYPECHECK_VERIFIED"
+    },
+    {
+      "id": "G56",
+      "requirement": "TEARDOWN_RESULT_VALIDITY_SEPARATED_FROM_CONTINUATION_SAFETY: a completed result keeps its status, bytes and digest across a teardown failure, a halt and a recovery",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "controls pure [F87, F88, F95]; real [F108] all satisfied"
+    },
+    {
+      "id": "G57",
+      "requirement": "TEARDOWN_ISOLATION_INTERLOCK_IMPLEMENTED: every teardown is followed by an enumeration; residue of any class blocks, absence proves, a failed probe blocks",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "controls pure [F82, F83, F84, F97, F98, F99, F101, F102]; real [F106, F107, F107B, F112, F113, F114, F115, F117] all satisfied"
+    },
+    {
+      "id": "G58",
+      "requirement": "COHORT_HALT_ON_ISOLATION_RISK_VERIFIED: with isolation unproven no next row launches, no container starts, and no flag or direct selection can force one",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "controls pure [F84, F85, F103]; real [F104, F109, F109B] all satisfied"
+    },
+    {
+      "id": "G59",
+      "requirement": "ISOLATION_RECOVERY_PATH_VERIFIED: the predeclared path removes exactly the residue, re-proves by a second enumeration, resumes at the next unstarted row and reruns nothing",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "controls pure [F86, F96, F100]; real [F110, F111] all satisfied"
+    },
+    {
+      "id": "G60",
+      "requirement": "FROZEN_SPEND_ARITHMETIC_VERIFIED and ZERO_RETRY_HEADROOM_RECORDED: 200 x the frozen cap equals the frozen ceiling, and the launch-risk artifact records the $0 reserve",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "controls pure [F89] all satisfied"
+    },
+    {
+      "id": "G61",
+      "requirement": "RETRY_SPEND_INTERLOCK_VERIFIED: before a paid retry the three numbers are computed, the frozen policy is applied, the declaration is recorded, and a spend halt fabricates nothing",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "controls pure [F90, F91, F91B, F92, F93] all satisfied"
+    },
+    {
+      "id": "G62",
+      "requirement": "OUTCOME_BLIND_OPERATIONS: halt, spend and isolation status expose no arm's performance",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "controls pure [F94]; real [F116] all satisfied"
+    },
+    {
+      "id": "G63",
+      "requirement": "M217_FALSIFICATION_SUITE_PASSED and M217_SUITE_IS_FALSIFYING: both suites satisfied, both expectations present, and the two new guards demonstrably load-bearing",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "pure 23/23; real 15/15; guard-break M217_SUITE_IS_FALSIFYING (pure broken failing [F100, F84, F85, F86, F88, F91, F91B, F94, F96, F97], real broken failing [F107, F109, F109B, F110, F111, F112, F113], missed [], unexpected [])"
+    },
+    {
+      "id": "G64",
+      "requirement": "M217-owned harness and tests are typechecked",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "tsconfig.m217.json: 0 errors; M217_SCOPED_TYPECHECK_VERIFIED"
+    },
+    {
+      "id": "G65",
+      "requirement": "LAUNCHER_BINDING_RESOLUTION: the launcher resolves the DOCKER_SWEBENCH adapters through one factory that the real-substrate controls also ran a full row through",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "stage5.m217.launch-binding.v1; launcher calls startCohortBinding; real F106 satisfied"
+    },
+    {
+      "id": "G66",
+      "requirement": "no frozen task was touched and live model spend is $0 during M217",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "real: frozen touched 0, provider calls 0, spend $0, containers 4; pure: provider calls 0"
+    },
+    {
+      "id": "G67",
+      "requirement": "M215 and M216 controls preserved: the predecessor suites still pass in full",
+      "gateClass": "INFRASTRUCTURE",
+      "status": "PASS",
+      "evidence": "M215 66/66; M216 real 73/73"
     }
   ],
   "deferredRuntimeGates": [
@@ -378,10 +602,23 @@
   "blockers": [
     "G36"
   ],
+  "spendArithmetic": {
+    "plannedOrdinaryRows": 200,
+    "perRowCapUsd": 3.5,
+    "maximumOrdinaryExposureUsd": 700,
+    "frozenCeilingUsd": 700,
+    "retryReserveUsd": 0,
+    "maxAttemptsPerRun": 2,
+    "mathematicalMaximumUsd": 1400,
+    "plannedRowsConsistent": true,
+    "inconsistencies": []
+  },
+  "retryReservePolicy": "PERMIT_RETRY_AND_DECLARE_COMPLETION_NOT_GUARANTEED",
   "technicalExecutorReady": true,
   "spendAuthorized": false,
   "readinessVerdict": "TECHNICAL_EXECUTOR_READY",
   "spendAuthorizationStatus": "SPEND_AUTHORIZATION_PENDING",
   "paidRunsStarted": 0,
-  "liveModelSpendUsd": 0
+  "liveModelSpendUsd": 0,
+  "frozenBenchmarkTaskLiveAgentRuns": 0
 }

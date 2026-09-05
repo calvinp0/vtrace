@@ -1,0 +1,385 @@
+{
+  "schemaVersion": "stage5.m217.falsification.v1",
+  "milestone": "M217",
+  "generatedAt": "2026-09-05T10:48:36.821Z",
+  "authorities": {
+    "preregistration": {
+      "artifact": "stage5_m214_preregistration.json",
+      "expected": "3cd3b3d2d665c559fdb66e7274e809245e82ea7373344cf32614833b8dcbfea4",
+      "actual": "3cd3b3d2d665c559fdb66e7274e809245e82ea7373344cf32614833b8dcbfea4",
+      "verified": true
+    },
+    "manifest": {
+      "artifact": "stage5_m214_run_manifest.json",
+      "expected": "549df54b0f48b59a2bc13da2acf27cbf2469f416d90018c3d48dd87219f77ff1",
+      "actual": "549df54b0f48b59a2bc13da2acf27cbf2469f416d90018c3d48dd87219f77ff1",
+      "verified": true
+    },
+    "externalReference": {
+      "artifact": "stage5_m214_external_reference.json",
+      "expected": "822c4c5fb69dc21b8ada04189e73fcadb3e5ab1bf7c06a855dd4582a6ec7834b",
+      "actual": "822c4c5fb69dc21b8ada04189e73fcadb3e5ab1bf7c06a855dd4582a6ec7834b",
+      "verified": true
+    }
+  },
+  "controlCount": 23,
+  "satisfied": 23,
+  "failures": [],
+  "guardFiresControls": 4,
+  "guardSilentControls": 19,
+  "suitePasses": true,
+  "briefControlMap": [
+    {
+      "id": "F82",
+      "briefId": "F74"
+    },
+    {
+      "id": "F83",
+      "briefId": "F75"
+    },
+    {
+      "id": "F84",
+      "briefId": "F76"
+    },
+    {
+      "id": "F85",
+      "briefId": "F77"
+    },
+    {
+      "id": "F86",
+      "briefId": "F78"
+    },
+    {
+      "id": "F87",
+      "briefId": "F79"
+    },
+    {
+      "id": "F96",
+      "briefId": "F88"
+    },
+    {
+      "id": "F88",
+      "briefId": "F80"
+    },
+    {
+      "id": "F89",
+      "briefId": "F81"
+    },
+    {
+      "id": "F90",
+      "briefId": "F82"
+    },
+    {
+      "id": "F91",
+      "briefId": "F83"
+    },
+    {
+      "id": "F91B",
+      "briefId": "F83"
+    },
+    {
+      "id": "F92",
+      "briefId": "F84"
+    },
+    {
+      "id": "F93",
+      "briefId": "F85"
+    },
+    {
+      "id": "F94",
+      "briefId": "F86"
+    },
+    {
+      "id": "F95",
+      "briefId": "F87"
+    },
+    {
+      "id": "F97",
+      "briefId": "F89"
+    },
+    {
+      "id": "F98",
+      "briefId": "F90"
+    }
+  ],
+  "spendArithmetic": {
+    "plannedOrdinaryRows": 200,
+    "perRowCapUsd": 3.5,
+    "maximumOrdinaryExposureUsd": 700,
+    "frozenCeilingUsd": 700,
+    "retryReserveUsd": 0,
+    "maxAttemptsPerRun": 2,
+    "mathematicalMaximumUsd": 1400,
+    "plannedRowsConsistent": true,
+    "inconsistencies": []
+  },
+  "launchRisk": {
+    "schemaVersion": "stage5.m217.launch-risk.v1",
+    "ceilingAwaitingAuthorizationUsd": 700,
+    "spendAuthorizationStatus": "SPEND_AUTHORIZATION_PENDING",
+    "plannedOrdinaryRows": 200,
+    "perRowCapUsd": 3.5,
+    "maximumPlannedExposureUsd": 700,
+    "paidRetryReserveUsd": 0,
+    "maxAttemptsPerRun": 2,
+    "rerunnableCategories": [
+      "MODEL_SERVICE_FAILURE",
+      "CONTAINER_CANNOT_START",
+      "EVALUATOR_INFRA_FAILURE",
+      "TELEMETRY_CORRUPT"
+    ],
+    "consequence": "Any infrastructure failure that consumes paid budget before a retry may make completion of all 200 intended runs impossible under the frozen $700 ceiling. The executor will permit such a retry when it fits under the ceiling, will record FIXED_N_COMPLETION_NOT_GUARANTEED before it begins, and will halt with COHORT_HALTED_SPEND_CEILING when the ceiling binds; the rows that never ran stay PLANNED and the cohort is reported as incomplete.",
+    "retryPolicyBinding": {
+      "policy": "PERMIT_RETRY_AND_DECLARE_COMPLETION_NOT_GUARANTEED",
+      "recoveredFrom": [
+        "M214_EXCLUSIONS.retryPolicy.maxAttemptsPerRun = 2",
+        "M214_EXCLUSIONS.retryPolicy.bothAttemptsRemainInLedger = true",
+        "M214_STOPPING_RULE.budgetInterlock = \"The $700 total cap is an infrastructure guard, not a stopping rule. If it binds, the cohort is incomplete and is reported as incomplete.\""
+      ],
+      "reading": "A rerunnable infrastructure failure is entitled to a second attempt; the failed attempt's cost stays in the cumulative total; and if the ceiling binds the cohort is INCOMPLETE and is reported as incomplete. M214 contains no rule that prefers completing first attempts over honouring a permitted retry, so refusing the retry to protect completion would be a new scheduling rule. The frozen binding therefore PERMITS a retry that fits under the ceiling and DECLARES, mechanically and before the retry begins, that fixed-N completion is no longer guaranteed. The ceiling itself remains the refusal that binds.",
+      "notInvented": "The refusing branch exists in code and is controlled, so a later preregistration amendment could select it; selecting it here would be a policy decision this milestone is not authorised to make."
+    },
+    "haltStatuses": [
+      "COHORT_HALTED_ISOLATION_RISK",
+      "COHORT_HALTED_SPEND_CEILING"
+    ],
+    "outcomeBlind": true,
+    "informationalOnly": true
+  },
+  "liveModelSpendUsd": 0,
+  "providerCalls": 0,
+  "frozenBenchmarkTaskLiveAgentRuns": 0,
+  "dockerContainersStarted": 0,
+  "controls": [
+    {
+      "id": "F82",
+      "briefId": "F74",
+      "description": "a valid result followed by a clean teardown is retained, continuation is SAFE, and the next row is permitted",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F83",
+      "briefId": "F75",
+      "description": "a valid result whose teardown reported a failure is retained, and continuation is allowed only because the enumeration proved the substrate empty",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F84",
+      "briefId": "F76",
+      "description": "a valid result whose teardown left a harness container behind is retained, continuation is BLOCKED, and the next row is refused before any container starts",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F85",
+      "briefId": "F77",
+      "description": "a blocked continuation cannot be forced: every force-shaped flag is refused by name, a direct row selection is refused by P10, and the completed row cannot be re-selected",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "--force: unknown argument --force. The launcher accepts only operational arguments: --bin | --force-continue: unknown argument --force-continue. The launcher accepts only operational argumen | --skip-isolation: unknown argument --skip-isolation. The launcher accepts only operational argumen | --ignore-halt: unknown argument --ignore-halt. The launcher accepts only operational arguments: | --row-style direct selection refused by P10 | re-selecting the completed row is refused"
+    },
+    {
+      "id": "F86",
+      "briefId": "F78",
+      "description": "after remediation the preflight re-proves a clean substrate, the next unstarted row is permitted, and the previous valid row is not rerun",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F87",
+      "briefId": "F79",
+      "description": "a teardown failure, the halt and the recovery leave the prior valid row's status, record bytes and digest untouched",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F96",
+      "briefId": "F88",
+      "description": "both ledgers restore in another process after recovery, the correct next manifest row runs, and no completed row acquires a duplicate result",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F88",
+      "briefId": "F80",
+      "description": "a run that never reached an authoritative outcome keeps M214's invalid-run semantics when the substrate also fails; continuation safety does not redefine its validity",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F89",
+      "briefId": "F81",
+      "description": "200 x the frozen per-row cap equals the frozen global ceiling exactly, so the paid retry reserve is $0 and every frozen N agrees",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F90",
+      "briefId": "F82",
+      "description": "a retry after a failed attempt that provably cost $0 fits inside the completion reserve under the frozen ceiling and is permitted under both policies",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F91",
+      "briefId": "F83",
+      "description": "the generic guard refuses a paid retry whose worst case, plus every remaining required attempt, exceeds the frozen ceiling (policy REFUSE_RETRY_WHEN_COMPLETION_RESERVE_EXCEEDED)",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "paid retry (attempt 2) would consume the completion reserve: $3.5 spent + $3.5 retry + $696.5 for 199 remaining required attempts = $703.5 > $700; policy REFUSE_RETRY_WHEN_COMPLETION_RESERVE_EXCEEDED refuses"
+    },
+    {
+      "id": "F91B",
+      "briefId": "F83",
+      "description": "under the frozen binding the same retry is permitted, FIXED_N_COMPLETION_NOT_GUARANTEED is recorded as an operational event before it begins, and the status view says so",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F92",
+      "briefId": "F84",
+      "description": "with ten rows under-spent at $0.66, a paid retry fits inside the completion reserve under the FROZEN $700 ceiling (no synthetic ceiling needed) and the strict guard accepts it",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F93",
+      "briefId": "F85",
+      "description": "when the ceiling binds the cohort halts with COHORT_HALTED_SPEND_CEILING, the unstarted rows stay PLANNED, nothing is written to the result ledger and the finaliser refuses",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F94",
+      "briefId": "F86",
+      "description": "the halt and spend status views name rows completed, rows remaining, spend, exposure, isolation state and halt reason, and no arm's performance",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F95",
+      "briefId": "F87",
+      "description": "an operational teardown event references the result digest read-only; mutating the event is detected by the operations chain and cannot reach the result ledger",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F97",
+      "briefId": "F89",
+      "description": "residual state capable of contaminating the next row — an evaluator container, a harness container, a live treatment process, an open bridge handle — blocks continuation even when the teardown reported clean",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F98",
+      "briefId": "F90",
+      "description": "a cleanup failure whose enumeration proves the substrate empty (\"No such container\") does not deadlock the cohort: isolation is proven by absence and the next rows run",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F99",
+      "briefId": null,
+      "description": "an isolation probe that cannot enumerate the substrate blocks continuation rather than assuming it clean",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F100",
+      "briefId": null,
+      "description": "a recovery whose post-remediation enumeration is not empty is recorded as failed and the cohort stays halted",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F101",
+      "briefId": null,
+      "description": "a COHORT-mode row with no continuation-safety authority bound is refused by P10 before a container starts",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "launch refused for VTRACE_EXTERNAL_VEXP_100:astropy__astropy-14365:baseline: P10_CONTINUATION_SAFETY no continuation-safety authority is bound; isolation between rows cannot be proven, so a COHORT row"
+    },
+    {
+      "id": "F102",
+      "briefId": null,
+      "description": "an operations ledger whose chain no longer recomputes fails P10, so a forged SAFE state cannot admit a row",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "launch refused for VTRACE_EXTERNAL_VEXP_100:astropy__astropy-14365:vtrace: P10_CONTINUATION_SAFETY operational event 0 (ROW_TEARDOWN) does not recompute"
+    },
+    {
+      "id": "F103",
+      "briefId": null,
+      "description": "the launch preflight refuses to start a cohort over a stale harness container, and the same recovery path clears it",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "PURE",
+      "satisfied": true,
+      "detail": "no issue reported"
+    }
+  ]
+}

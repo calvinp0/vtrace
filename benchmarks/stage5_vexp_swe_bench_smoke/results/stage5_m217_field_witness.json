@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "stage5.m217.field-witness.v1",
+  "milestone": "M217",
+  "purpose": "Residual substrate state found on this machine BEFORE M217 started any container, by the M217 residual-state probe. Kept as its own artifact because a witness that only lives in one suite run's evidence document is lost the moment the suite is re-run over a clean machine, which is exactly what the guard-break's restored re-run did.",
+  "witnesses": [
+    {
+      "observedAt": "2026-09-05T10:40:39Z",
+      "observedBy": "run_stage5_m217_real_substrate.ts, first clean run (fieldWitness note), and docker inspect at session start",
+      "transcribed": true,
+      "transcriptionNote": "The first clean run's evidence document carried this in notes.fieldWitness and notes.fieldWitnessRecovery; the guard-break's restored re-run superseded that document over a now-clean machine. The runner has since been changed to persist witnesses here directly. The facts below are copied verbatim from that run's output and from `docker inspect` taken before any M217 code ran.",
+      "residual": {
+        "harnessContainers": [
+          {
+            "name": "m193-psf__requests-2317",
+            "id": "9c1edbb80030",
+            "status": "running",
+            "image": "swebench/sweb.eval.x86_64.psf_1776_requests-2317:latest",
+            "created": "2026-09-04T21:04:18.171249865Z",
+            "mount": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m216_work/baseline_first/psf__requests-2317--baseline/testbed -> /testbed (bind, rw)",
+            "mountExistedOnHost": false,
+            "origin": "M216's abandoned psf/requests research attempt (M216 report §8): the runner was stopped when the official evaluator blocked on live HTTP, and this container survived; M216's later suite runs re-created the work root and counted only the containers they started"
+          }
+        ],
+        "evaluatorContainers": [],
+        "liveProcesses": 0
+      },
+      "classification": "RESIDUAL_STATE_BEFORE_LAUNCH",
+      "continuation": "CONTINUATION_BLOCKED",
+      "recovery": {
+        "kind": "ISOLATION_RECOVERY_VERIFIED",
+        "actions": ["removed container m193-psf__requests-2317 (9c1edbb80030)"]
+      },
+      "instanceInFrozen100": false
+    }
+  ]
+}

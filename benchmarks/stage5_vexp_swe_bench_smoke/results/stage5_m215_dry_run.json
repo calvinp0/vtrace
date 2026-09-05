@@ -1,7 +1,7 @@
 {
   "schemaVersion": "stage5.m215.dry-run.v1",
   "milestone": "M215",
-  "generatedAt": "2026-09-04T19:29:19.156Z",
+  "generatedAt": "2026-09-05T10:29:18.414Z",
   "executorVersion": "stage5.m215.launch-executor.v1",
   "liveModelSpendUsd": 0,
   "frozenBenchmarkTaskLiveAgentRuns": 0,
@@ -65,7 +65,7 @@
             "PATCH_CAPTURE",
             "EVALUATION"
           ],
-          "gateCount": 24,
+          "gateCount": 26,
           "gatesAllPass": true,
           "gateCoverageIssues": [],
           "telemetryEvents": 5,
@@ -122,7 +122,7 @@
             "PATCH_CAPTURE",
             "EVALUATION"
           ],
-          "gateCount": 24,
+          "gateCount": 26,
           "gatesAllPass": true,
           "gateCoverageIssues": [],
           "telemetryEvents": 8,
@@ -167,8 +167,16 @@
         }
       ],
       "ledgerIntegrityIssues": [],
-      "ledgerChainHead": "406e2f2e175a1d2c55ab47f505fefe39a8f90164d46ad86d8a726b6b2fd51316",
+      "ledgerChainHead": "e4054ac57f72317a1c3c05bc95cced20c8a6a5ea7386f7e1634575b9222ee42f",
       "progress": {
+        "operationalStatus": "COHORT_IN_PROGRESS",
+        "rowsRemaining": 197,
+        "maximumRemainingExposureUsd": 689.5,
+        "completionReserveUsd": 9.24,
+        "fixedNCompletionGuaranteed": true,
+        "continuationState": "CONTINUATION_SAFE",
+        "haltReason": null,
+        "operationsChainHead": null,
         "plannedRuns": 200,
         "terminalRuns": 3,
         "validRuns": 3,
@@ -177,7 +185,7 @@
         "cumulativeSpendUsd": 1.26,
         "projectedMaximumSpendUsd": 690.76,
         "ceilingUsd": 700,
-        "ledgerChainHead": "406e2f2e175a1d2c55ab47f505fefe39a8f90164d46ad86d8a726b6b2fd51316",
+        "ledgerChainHead": "e4054ac57f72317a1c3c05bc95cced20c8a6a5ea7386f7e1634575b9222ee42f",
         "runtimeErrors": []
       },
       "finalizationRefusal": {
@@ -334,7 +342,7 @@
           "route": "INIT_WRITES_GIT_EXCLUDE",
           "snapshotGranularity": "DIRECTORY",
           "useLegacyVendorExclusions": false,
-          "baseCommit": "bc0dcb9a39305bcb1b061c714ccd9ed096d0a53e",
+          "baseCommit": "09ab1b97b34bbd5a39a585a73eb2c3c784735a86",
           "preAgentUntrackedSnapshot": [],
           "derivedExclusions": [],
           "capturedPaths": [],
@@ -346,7 +354,7 @@
           "route": "INDEX_ONLY_NO_GIT_EXCLUDE",
           "snapshotGranularity": "DIRECTORY",
           "useLegacyVendorExclusions": false,
-          "baseCommit": "bc0dcb9a39305bcb1b061c714ccd9ed096d0a53e",
+          "baseCommit": "09ab1b97b34bbd5a39a585a73eb2c3c784735a86",
           "preAgentUntrackedSnapshot": [
             ".vtrace/"
           ],
@@ -362,7 +370,7 @@
           "route": "INDEX_ONLY_NO_GIT_EXCLUDE",
           "snapshotGranularity": "DIRECTORY",
           "useLegacyVendorExclusions": false,
-          "baseCommit": "bc0dcb9a39305bcb1b061c714ccd9ed096d0a53e",
+          "baseCommit": "09ab1b97b34bbd5a39a585a73eb2c3c784735a86",
           "preAgentUntrackedSnapshot": [
             ".vtrace/"
           ],
@@ -380,7 +388,7 @@
           "route": "INDEX_ONLY_NO_GIT_EXCLUDE",
           "snapshotGranularity": "DIRECTORY",
           "useLegacyVendorExclusions": false,
-          "baseCommit": "bc0dcb9a39305bcb1b061c714ccd9ed096d0a53e",
+          "baseCommit": "09ab1b97b34bbd5a39a585a73eb2c3c784735a86",
           "preAgentUntrackedSnapshot": [
             ".vtrace/"
           ],
@@ -398,7 +406,7 @@
           "route": "INDEX_ONLY_NO_GIT_EXCLUDE",
           "snapshotGranularity": "FILE",
           "useLegacyVendorExclusions": false,
-          "baseCommit": "bc0dcb9a39305bcb1b061c714ccd9ed096d0a53e",
+          "baseCommit": "09ab1b97b34bbd5a39a585a73eb2c3c784735a86",
           "preAgentUntrackedSnapshot": [
             ".vtrace/config.json",
             ".vtrace/index.sqlite",
@@ -423,7 +431,7 @@
           "route": "INDEX_ONLY_NO_GIT_EXCLUDE",
           "snapshotGranularity": "DIRECTORY",
           "useLegacyVendorExclusions": true,
-          "baseCommit": "bc0dcb9a39305bcb1b061c714ccd9ed096d0a53e",
+          "baseCommit": "09ab1b97b34bbd5a39a585a73eb2c3c784735a86",
           "preAgentUntrackedSnapshot": [
             ".vtrace/"
           ],
@@ -472,6 +480,6 @@
     ],
     "restoreIssues": [],
     "integrityIssues": [],
-    "chainHead": "efed8967dded26b5cbb0bd1641019f4a692d6cc1cefe4589ceea97116aefc9ae"
+    "chainHead": "ebed376d395d32683560391b6383e988544cc572f49645231a53e3a0ffb30b12"
   }
 }

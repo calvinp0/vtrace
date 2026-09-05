@@ -1,0 +1,471 @@
+{
+  "schemaVersion": "stage5.m217.real-substrate.v1",
+  "milestone": "M217",
+  "generatedAt": "2026-09-05T10:49:12.925Z",
+  "controlCount": 15,
+  "satisfied": 15,
+  "failures": [],
+  "guardFiresControls": 2,
+  "guardSilentControls": 13,
+  "suitePasses": true,
+  "containersStarted": 4,
+  "containersTornDown": 3,
+  "frozenInstancesTouched": [],
+  "nonFrozenInstancesTouched": [
+    "pylint-dev__pylint-6903",
+    "pylint-dev__pylint-7080"
+  ],
+  "liveModelSpendUsd": 0,
+  "providerCalls": 0,
+  "frozenBenchmarkTaskLiveAgentRuns": 0,
+  "executedRows": [
+    {
+      "order": 0,
+      "arm": "baseline",
+      "instanceId": "pylint-dev__pylint-7080",
+      "status": "VALID_UNRESOLVED",
+      "category": null,
+      "phases": [
+        "CONTAINER_START",
+        "SOURCE_CHECKOUT_AT_BASE_COMMIT",
+        "SOURCE_STATE_DIGEST_BEFORE_TREATMENT",
+        "TREATMENT_INITIALISATION",
+        "SOURCE_STATE_DIGEST_AFTER_TREATMENT",
+        "PRE_AGENT_UNTRACKED_SNAPSHOT",
+        "AGENT_RUN",
+        "PATCH_CAPTURE",
+        "EVALUATION"
+      ],
+      "container": "swebench/sweb.eval.x86_64.pylint-dev_1776_pylint-7080:latest",
+      "gates": [
+        "P1_PREREGISTRATION_HASH=PASS",
+        "P10_CONTINUATION_SAFETY=PASS",
+        "P11_RETRY_SPEND_RESERVE=PASS"
+      ]
+    },
+    {
+      "order": 1,
+      "arm": "vtrace",
+      "instanceId": "pylint-dev__pylint-7080",
+      "status": "VALID_UNRESOLVED",
+      "category": null,
+      "phases": [
+        "CONTAINER_START",
+        "SOURCE_CHECKOUT_AT_BASE_COMMIT",
+        "SOURCE_STATE_DIGEST_BEFORE_TREATMENT",
+        "TREATMENT_INITIALISATION",
+        "SOURCE_STATE_DIGEST_AFTER_TREATMENT",
+        "PRE_AGENT_UNTRACKED_SNAPSHOT",
+        "AGENT_RUN",
+        "PATCH_CAPTURE",
+        "EVALUATION"
+      ],
+      "container": "swebench/sweb.eval.x86_64.pylint-dev_1776_pylint-7080:latest",
+      "gates": [
+        "P1_PREREGISTRATION_HASH=PASS",
+        "P10_CONTINUATION_SAFETY=PASS",
+        "P11_RETRY_SPEND_RESERVE=PASS"
+      ]
+    },
+    {
+      "order": 2,
+      "arm": "baseline",
+      "instanceId": "pylint-dev__pylint-6903",
+      "status": "VALID_UNRESOLVED",
+      "category": null,
+      "phases": [
+        "CONTAINER_START",
+        "SOURCE_CHECKOUT_AT_BASE_COMMIT",
+        "SOURCE_STATE_DIGEST_BEFORE_TREATMENT",
+        "TREATMENT_INITIALISATION",
+        "SOURCE_STATE_DIGEST_AFTER_TREATMENT",
+        "PRE_AGENT_UNTRACKED_SNAPSHOT",
+        "AGENT_RUN",
+        "PATCH_CAPTURE",
+        "EVALUATION"
+      ],
+      "container": "swebench/sweb.eval.x86_64.pylint-dev_1776_pylint-6903:latest",
+      "gates": [
+        "P1_PREREGISTRATION_HASH=PASS",
+        "P10_CONTINUATION_SAFETY=PASS",
+        "P11_RETRY_SPEND_RESERVE=PASS"
+      ]
+    }
+  ],
+  "controls": [
+    {
+      "id": "F104",
+      "briefId": null,
+      "description": "the launch preflight enumerates the real substrate before any row, blocks over residue left by a previous session if any, and the recovery path leaves it provably clean",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_CONTAINER",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F106",
+      "briefId": "F74",
+      "description": "on the real substrate, a row run through the launcher's own adapter factory reaches a valid outcome, its real teardown is classified TEARDOWN_CLEAN by a real Docker/proc enumeration, and continuation is SAFE",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_CONTAINER",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F107B",
+      "briefId": "F76",
+      "description": "the real enumeration FIRES on the residue the skipped teardown left behind",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "substrate": "REAL_CONTAINER",
+      "satisfied": true,
+      "detail": "harness container still present: m193-pylint-dev__pylint-7080 (running, d165a44c730d) | arm root still present: /home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m217_work/pylint-dev__pylint-7080--vtrace | host mount still present: /home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m217_work/pylint-dev__pylint-7080--vtrace/testbed | substrate bridge still holds container handle m216-pylint-dev__pylint-7080-d165a44c730d"
+    },
+    {
+      "id": "F107",
+      "briefId": "F76",
+      "description": "a valid result whose real teardown was skipped is retained, the real enumeration lists the surviving container, arm root and bridge handle, and continuation is BLOCKED",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_CONTAINER",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F109B",
+      "briefId": "F77",
+      "description": "P10 FIRES on the next row while the real substrate is unproven",
+      "expectation": "GUARD_FIRES",
+      "fired": true,
+      "substrate": "REAL_CONTAINER",
+      "satisfied": true,
+      "detail": "launch refused for M216_RESEARCH_NON_EVALUATION:pylint-dev__pylint-6903:baseline: P10_CONTINUATION_SAFETY COHORT_HALTED_ISOLATION_RISK: continuation is blocked by operational event 2 (ROW_TEARDOWN after VTRACE_EXTERNAL_VEXP_100:pylint-dev__pylint-7080:vtrace#a1#4a6e25a20e30): harness container still"
+    },
+    {
+      "id": "F109",
+      "briefId": "F77",
+      "description": "while blocked, the next research row is refused by P10 with no container created, and the cohort loop stops with COHORT_HALTED_ISOLATION_RISK",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_CONTAINER",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F110",
+      "briefId": "F78",
+      "description": "the predeclared recovery path removes exactly the real residue, the second real enumeration is empty, and continuation returns to SAFE",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_CONTAINER",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F111",
+      "briefId": "F88",
+      "description": "after recovery the cohort resumes at the next unstarted manifest row, which runs to a valid outcome, with no duplicate result for any completed row",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_CONTAINER",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F108",
+      "briefId": "F79",
+      "description": "the skipped teardown, the halt, the refusal and the recovery leave row 1's status, bytes and digest untouched on the real substrate",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_CONTAINER",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F115",
+      "briefId": null,
+      "description": "every row received its own arm root and host mount (M193 re-extracts the tree and creates a new container per start); freshness is recorded, and is NOT what continuation relies on",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_CONTAINER",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F112",
+      "briefId": "F89",
+      "description": "a live host process referencing the cohort work root blocks continuation even after a clean teardown report, and the real remediation terminates it",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_PROCESS",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F113",
+      "briefId": "F89",
+      "description": "a stale evaluator container (swebench's own naming) blocks continuation after a clean teardown report, and the real remediation removes it",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_CONTAINER",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F114",
+      "briefId": "F90",
+      "description": "a real teardown that reports a failure (\"unknown handle\") because the container was already gone is classified ISOLATION_PROVEN by the real enumeration, and does not deadlock the cohort",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_CONTAINER",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F116",
+      "briefId": "F86",
+      "description": "the operational status of a real cohort that halted and recovered names no arm's performance",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_CONTAINER",
+      "satisfied": true,
+      "detail": "no issue reported"
+    },
+    {
+      "id": "F117",
+      "briefId": null,
+      "description": "the real operations ledger chain recomputes",
+      "expectation": "GUARD_SILENT",
+      "fired": false,
+      "substrate": "REAL_CONTAINER",
+      "satisfied": true,
+      "detail": "no issue reported"
+    }
+  ],
+  "notes": {
+    "substrateIdentity": {
+      "bridgeVersion": "stage5.m216.substrate-bridge.v1",
+      "python": "3.12.12",
+      "pythonExecutable": "/home/calvin/code/vexp-swe-bench/.venv/bin/python",
+      "dockerSdk": "7.1.0",
+      "dockerServer": "29.6.2",
+      "swebench": "4.1.0",
+      "containerAuthority": "m193_container_adapter.M193Container",
+      "patchSnapshotAuthority": "stage5.m193c.patch-snapshot-authority.v1",
+      "untrackedSnapshotAuthority": "stage5.m216.untracked-snapshot.v1",
+      "trackedSourceDigestAuthority": "stage5.m216.tracked-source-digest.v1",
+      "dataset": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m216_research/research_instances.jsonl",
+      "frozenPopulationSize": 100
+    },
+    "fieldWitness": {
+      "foundBeforeAnyM217Container": [],
+      "harnessContainers": [],
+      "evaluatorContainers": [],
+      "liveProcesses": 0,
+      "note": "no residual substrate state was present before M217 started"
+    },
+    "inducedResidue": {
+      "probeVersion": "stage5.m217.residual-state-probe.v1",
+      "probedAt": "2026-09-05T10:48:58Z",
+      "scope": {
+        "workRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m217_work",
+        "armRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m217_work/pylint-dev__pylint-7080--vtrace",
+        "hostMount": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m217_work/pylint-dev__pylint-7080--vtrace/testbed",
+        "instanceId": "pylint-dev__pylint-7080",
+        "runId": "M216_RESEARCH_NON_EVALUATION:pylint-dev__pylint-7080:vtrace"
+      },
+      "harnessContainers": [
+        {
+          "name": "m193-pylint-dev__pylint-7080",
+          "id": "d165a44c730d",
+          "status": "running",
+          "image": "swebench/sweb.eval.x86_64.pylint-dev_1776_pylint-7080:latest"
+        }
+      ],
+      "evaluatorContainers": [],
+      "liveProcesses": [],
+      "armRootPresent": true,
+      "hostMountPresent": true,
+      "openBridgeHandles": [
+        "m216-pylint-dev__pylint-7080-d165a44c730d"
+      ],
+      "probeErrors": []
+    },
+    "recovery": {
+      "kind": "ISOLATION_RECOVERY_VERIFIED",
+      "actions": [
+        "removed container m193-pylint-dev__pylint-7080 (d165a44c730d)",
+        "removed arm root /home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m217_work/pylint-dev__pylint-7080--vtrace",
+        "dropped stale bridge handle m216-pylint-dev__pylint-7080-d165a44c730d"
+      ],
+      "errors": []
+    },
+    "rowIsolationScopes": [
+      {
+        "workRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m217_work",
+        "armRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m217_work/pylint-dev__pylint-7080--baseline",
+        "hostMount": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m217_work/pylint-dev__pylint-7080--baseline/testbed",
+        "instanceId": "pylint-dev__pylint-7080",
+        "runId": "M216_RESEARCH_NON_EVALUATION:pylint-dev__pylint-7080:baseline"
+      },
+      {
+        "workRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m217_work",
+        "armRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m217_work/pylint-dev__pylint-7080--vtrace",
+        "hostMount": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m217_work/pylint-dev__pylint-7080--vtrace/testbed",
+        "instanceId": "pylint-dev__pylint-7080",
+        "runId": "M216_RESEARCH_NON_EVALUATION:pylint-dev__pylint-7080:vtrace"
+      },
+      {
+        "workRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m217_work",
+        "armRoot": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m217_work/pylint-dev__pylint-6903--baseline",
+        "hostMount": "/home/calvin/code/vtrace/benchmarks/stage5_vexp_swe_bench_smoke/results/_m217_work/pylint-dev__pylint-6903--baseline/testbed",
+        "instanceId": "pylint-dev__pylint-6903",
+        "runId": "M216_RESEARCH_NON_EVALUATION:pylint-dev__pylint-6903:baseline"
+      }
+    ],
+    "rowImages": [
+      "swebench/sweb.eval.x86_64.pylint-dev_1776_pylint-7080:latest",
+      "swebench/sweb.eval.x86_64.pylint-dev_1776_pylint-7080:latest",
+      "swebench/sweb.eval.x86_64.pylint-dev_1776_pylint-6903:latest"
+    ],
+    "processWitness": {
+      "pid": 1678786,
+      "listed": [
+        1678786
+      ]
+    },
+    "falseFailureReport": {
+      "attempted": true,
+      "reported": true,
+      "containerRemoved": false,
+      "mountRemoved": true,
+      "armRootRemoved": true,
+      "errors": [
+        "container.stop reported stopped=false: unknown handle"
+      ]
+    },
+    "finalStatus": {
+      "status": "EXPERIMENT_COMPLETED_FIXED_N",
+      "rowsPlanned": 3,
+      "rowsTerminal": 3,
+      "rowsRemaining": 0,
+      "rowsRequiringAttempt": 0,
+      "rowsUnrecoverable": 0,
+      "cumulativeSpendUsd": 0.897126,
+      "maximumRemainingExposureUsd": 0,
+      "ceilingUsd": 700,
+      "completionReserveUsd": 699.102874,
+      "fixedNCompletionGuaranteed": true,
+      "continuationState": "CONTINUATION_SAFE",
+      "haltReason": null,
+      "operationalEvents": 13
+    },
+    "operationalEvents": [
+      {
+        "sequence": 0,
+        "kind": "LAUNCH_ISOLATION_PREFLIGHT",
+        "continuationAfter": "CONTINUATION_SAFE",
+        "classification": null,
+        "attemptId": null
+      },
+      {
+        "sequence": 1,
+        "kind": "ROW_TEARDOWN",
+        "continuationAfter": "CONTINUATION_SAFE",
+        "classification": "TEARDOWN_CLEAN",
+        "attemptId": "VTRACE_EXTERNAL_VEXP_100:pylint-dev__pylint-7080:baseline#a1#0937d9c71d56"
+      },
+      {
+        "sequence": 2,
+        "kind": "ROW_TEARDOWN",
+        "continuationAfter": "CONTINUATION_BLOCKED",
+        "classification": "TEARDOWN_FAILURE_ISOLATION_UNPROVEN",
+        "attemptId": "VTRACE_EXTERNAL_VEXP_100:pylint-dev__pylint-7080:vtrace#a1#4a6e25a20e30"
+      },
+      {
+        "sequence": 3,
+        "kind": "COHORT_HALTED_ISOLATION_RISK",
+        "continuationAfter": "CONTINUATION_BLOCKED",
+        "classification": "TEARDOWN_FAILURE_ISOLATION_UNPROVEN",
+        "attemptId": "VTRACE_EXTERNAL_VEXP_100:pylint-dev__pylint-7080:vtrace#a1#4a6e25a20e30"
+      },
+      {
+        "sequence": 4,
+        "kind": "ISOLATION_RECOVERY_VERIFIED",
+        "continuationAfter": "CONTINUATION_SAFE",
+        "classification": null,
+        "attemptId": "VTRACE_EXTERNAL_VEXP_100:pylint-dev__pylint-7080:vtrace#a1#4a6e25a20e30"
+      },
+      {
+        "sequence": 5,
+        "kind": "ROW_TEARDOWN",
+        "continuationAfter": "CONTINUATION_SAFE",
+        "classification": "TEARDOWN_CLEAN",
+        "attemptId": "VTRACE_EXTERNAL_VEXP_100:pylint-dev__pylint-6903:baseline#a1#4e610b456f14"
+      },
+      {
+        "sequence": 6,
+        "kind": "ROW_TEARDOWN",
+        "continuationAfter": "CONTINUATION_BLOCKED",
+        "classification": "RESIDUAL_STATE_AFTER_REPORTED_CLEAN_TEARDOWN",
+        "attemptId": "M216_RESEARCH_NON_EVALUATION:pylint-dev__pylint-6903:baseline#witness-process"
+      },
+      {
+        "sequence": 7,
+        "kind": "COHORT_HALTED_ISOLATION_RISK",
+        "continuationAfter": "CONTINUATION_BLOCKED",
+        "classification": "RESIDUAL_STATE_AFTER_REPORTED_CLEAN_TEARDOWN",
+        "attemptId": "M216_RESEARCH_NON_EVALUATION:pylint-dev__pylint-6903:baseline#witness-process"
+      },
+      {
+        "sequence": 8,
+        "kind": "ISOLATION_RECOVERY_VERIFIED",
+        "continuationAfter": "CONTINUATION_SAFE",
+        "classification": null,
+        "attemptId": "M216_RESEARCH_NON_EVALUATION:pylint-dev__pylint-6903:baseline#witness-process"
+      },
+      {
+        "sequence": 9,
+        "kind": "ROW_TEARDOWN",
+        "continuationAfter": "CONTINUATION_BLOCKED",
+        "classification": "RESIDUAL_STATE_AFTER_REPORTED_CLEAN_TEARDOWN",
+        "attemptId": "M216_RESEARCH_NON_EVALUATION:pylint-dev__pylint-6903:baseline#witness-evaluator"
+      },
+      {
+        "sequence": 10,
+        "kind": "COHORT_HALTED_ISOLATION_RISK",
+        "continuationAfter": "CONTINUATION_BLOCKED",
+        "classification": "RESIDUAL_STATE_AFTER_REPORTED_CLEAN_TEARDOWN",
+        "attemptId": "M216_RESEARCH_NON_EVALUATION:pylint-dev__pylint-6903:baseline#witness-evaluator"
+      },
+      {
+        "sequence": 11,
+        "kind": "ISOLATION_RECOVERY_VERIFIED",
+        "continuationAfter": "CONTINUATION_SAFE",
+        "classification": null,
+        "attemptId": "M216_RESEARCH_NON_EVALUATION:pylint-dev__pylint-6903:baseline#witness-evaluator"
+      },
+      {
+        "sequence": 12,
+        "kind": "ROW_TEARDOWN",
+        "continuationAfter": "CONTINUATION_SAFE",
+        "classification": "TEARDOWN_FAILURE_ISOLATION_PROVEN",
+        "attemptId": "M216_RESEARCH_NON_EVALUATION:pylint-dev__pylint-7080:vtrace#witness-false-failure"
+      }
+    ],
+    "substrateAccounting": {
+      "containersCreated": 4,
+      "containersStarted": 4,
+      "containersTornDown": 3,
+      "openContainers": [],
+      "frozenInstancesTouched": [],
+      "nonFrozenInstancesTouched": [
+        "pylint-dev__pylint-6903",
+        "pylint-dev__pylint-7080"
+      ],
+      "commandCount": 37
+    }
+  }
+}
