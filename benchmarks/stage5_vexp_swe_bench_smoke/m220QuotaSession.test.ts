@@ -170,7 +170,7 @@ describe("explicit pause requests (F9, F10)", () => {
 describe("wall clock and rerun refusal (F12, F42)", () => {
   test("a passed deadline stops new pairs but finishes the active pair", async () => {
     const book = ledger();
-    const report = await runCohort(deps(book), { session: bounds(5, { deadlineAt: "2026-09-04T00:00:00.500Z" }) });
+    const report = await runCohort(deps(book), { session: bounds(5, { deadlineAt: "2026-09-04T00:00:02.000Z" }) });
     // The synthetic clock starts at 2026-09-04T00:00:00Z; the first pair begins before the deadline.
     expect(report.executed).toHaveLength(2);
     expect(report.session?.pauseReason).toBe("WALL_CLOCK_DEADLINE");
@@ -220,7 +220,7 @@ describe("structured quota signal (F17, F46)", () => {
       const outcome = await original(spec, hooks);
       if (spec.row.executionOrder === 1) {
         hits += 1;
-        return { ...outcome, quota: classifyQuota(parseRateLimitEvents([event({ status: "rejected", rateLimitType: "five_hour", resetsAt: 4_000_000_000 })])) };
+        return { ...outcome, quota: classifyQuota(parseRateLimitEvents([event({ status: "rejected", rateLimitType: "five_hour", resetsAt: 1_700_000_000 })])) };
       }
       return outcome;
     };
@@ -234,9 +234,10 @@ describe("structured quota signal (F17, F46)", () => {
     expect(first.session?.pauseReason).toBe("HARD_QUOTA_LIMIT_OBSERVED");
     expect(first.session?.counters.hardQuotaLimitObserved).toBe(true);
     expect(ops.ledger.events.some((e) => e.kind === "QUOTA_LIMIT_OBSERVED")).toBe(true);
-    // The window has not reset: no session may start.
-    expect(quotaWindowGate(lastHardQuotaLimit(ops.ledger.events), "2026-09-05T00:00:00.000Z")).toHaveLength(1);
-    expect(quotaWindowGate(lastHardQuotaLimit(ops.ledger.events), new Date(4_000_000_001 * 1000).toISOString())).toHaveLength(0);
+    // The recorded limit is found from the operations ledger; a future reset gates a session, a past one does not.
+    expect(lastHardQuotaLimit(ops.ledger.events)?.resetsAtIso).toBe(new Date(1_700_000_000 * 1000).toISOString());
+    expect(quotaWindowGate(lastHardQuotaLimit(ops.ledger.events), "2026-09-05T00:00:00.000Z")).toHaveLength(0);
+    expect(quotaWindowGate({ resetsAtIso: "2026-09-05T01:00:00.000Z", quotaClass: "SESSION_QUOTA", observedAt: "2026-09-05T00:00:00.000Z" }, "2026-09-05T00:00:00.000Z")).toHaveLength(1);
     // Resume: the same row retries (attempt 2), and the frozen 2-attempt maximum binds after a second interruption.
     expect(selectNextRow(manifest, book)?.executionOrder).toBe(1);
     const second = await runCohort(d, { session: { ...bounds(5), sessionId: sessionIdFor(2) } });

@@ -287,6 +287,10 @@ export type OperationalEventKind =
   // M220 — the agent's own init event reported a credential source other
   // than the subscription login; the session stops before another row.
   | "COHORT_HALTED_AUTH_MODE"
+  // M220 §37 — the provider served a model other than the frozen target; the
+  // attempt is MODEL_IDENTITY_DRIFT and the session stops rather than walking
+  // the frozen order under another model.
+  | "COHORT_HALTED_MODEL_IDENTITY"
   // M220 §34 — the enumeration run before a session may report itself paused;
   // residue here BLOCKS exactly as a launch preflight would.
   | "SESSION_END_ISOLATION_CHECK";
@@ -297,7 +301,8 @@ export type SessionEventKind =
   | "PAIR_SPLIT_BY_QUOTA_WINDOW"
   | "PAUSE_REQUESTED_AFTER_CURRENT_PAIR"
   | "QUOTA_LIMIT_OBSERVED"
-  | "COHORT_HALTED_AUTH_MODE";
+  | "COHORT_HALTED_AUTH_MODE"
+  | "COHORT_HALTED_MODEL_IDENTITY";
 
 /**
  * One operational event.

@@ -12319,3 +12319,234 @@ spend arithmetic  200 rows x $3.50 = $700 ordinary; 10 retry slots x $3.50 =
   PENDING_AT_FIRST_PAID_RUN. `ENGINE QUALITY != CODING-AGENT UTILITY` and
   `CONTEXT_COMPILER_PRODUCT_UTILITY_NOT_ESTABLISHED` still govern: nothing in
   M219 measured the product.
+
+## M220
+
+```text
+milestone         M220
+verdict           PASS (a pre-outcome operational amendment lets the frozen cohort
+                  run in outcome-blind Claude MAX quota-window sessions of an
+                  operator-declared number of complete frozen pairs, with a
+                  first-class non-failure pause, a subscription-only
+                  authentication guard, no automatic paid overflow, and identity
+                  re-verification at every resume; launch is blocked on human
+                  spend authorisation AND on one operator prerequisite: extra
+                  usage is enabled at the account today and the launcher refuses
+                  until it is disabled)
+markers           PRE_OUTCOME_QUOTA_SCHEDULING_AMENDMENT_COMMITTED;
+                  CLAUDE_MAX_SUBSCRIPTION_MODE_AUDITED (strength
+                  LOCAL_CLI_AUTH_STATE; provider confirmation
+                  PENDING_AT_FIRST_LIVE_RUN); API_KEY_BILLING_OVERRIDE_GUARDED;
+                  PAID_USAGE_FALLBACK_NOT_AUTOMATICALLY_ENABLED;
+                  PAIR_BOUNDED_SESSION_EXECUTION_VERIFIED;
+                  GRACEFUL_QUOTA_PAUSE_VERIFIED; OUTCOME_BLIND_RESUME_VERIFIED;
+                  PAIR_SPLIT_RECOVERY_VERIFIED;
+                  LONG_DURATION_IDENTITY_GUARDS_VERIFIED;
+                  TMP_CLEANUP_ON_QUOTA_PAUSE_VERIFIED; SESSION_JOURNAL_VERIFIED;
+                  QUOTA_INTERRUPTION_ALREADY_COVERED_BY_FROZEN_RETRY_AUTHORITY;
+                  MACHINE_READABLE_QUOTA_UNAVAILABLE (pre-launch) /
+                  IN_RUN_STRUCTURED_RATE_LIMIT_EVENTS_AVAILABLE;
+                  M220_FALSIFICATION_SUITE_PASSED; M220_SUITE_IS_FALSIFYING;
+                  M220_SCOPED_TYPECHECK_VERIFIED; PREREGISTRATION_UNCHANGED;
+                  MANIFEST_UNCHANGED; EXTERNAL_REFERENCE_UNCHANGED;
+                  A1_UNCHANGED; IMAGE_IDENTITY_UNCHANGED; VTRACE_PRODUCT_UNCHANGED;
+                  TECHNICAL_EXECUTOR_READY;
+                  OPERATOR_PREREQUISITE_PENDING: USAGE_CREDIT_OVERFLOW_ENABLED_AT_ACCOUNT;
+                  SPEND_AUTHORIZATION_PENDING; PAID_RUNS_NOT_STARTED;
+                  PROVIDER_CALLS_0; LIVE_MODEL_SPEND_$0
+parity            UNCHANGED and NOT re-run. Frozen matrix stays MATCH 7 EXCEED 7
+                  BELOW 1, match-or-exceed 14/15, A15 BELOW and
+                  A15_PARITY_GAP_INVALIDATED (M212). Never write 15/15.
+spend             0 frozen benchmark tasks run with a live agent, $0 live model
+                  spend, 0 provider calls, 0 containers started. What ran: the
+                  real launcher as a subprocess (--plan, --session-status,
+                  --preflight, refused launches), the pinned CLI's `auth status
+                  --json` once with networking unshared, the substrate bridge
+                  process inside --preflight (no container), the production
+                  agent adapter over a fake bridge with recorded streams,
+                  synthetic cohorts, scratch fixtures under results/.
+scope             Launch machinery and governance only. 0 src/ diff (HEAD:src
+                  still b3b3e439f10c6c526cafc6001d25dd0e7552ce6d). All ten
+                  frozen artifacts (M213 x3, M214 x4, A1 x2, M219 identity
+                  record) byte-identical to the 704446a3 blobs. 0
+                  outcome-bearing runs before and after. Starting HEAD 704446a3.
+what was built    Commit 1 (c4650cc1) -- m220Amendment.ts + TRACKED
+                  stage5_m214_a2_subscription_quota_scheduling_amendment.json /
+                  _hash.json: M214_A2_SUBSCRIPTION_QUOTA_SCHEDULING, domain
+                  "M214_A2_SUBSCRIPTION_QUOTA_SCHEDULING\n", pinned
+                  e3264880b4ec1e7242192b22b141cfb75bd28cf5475a339fbb4f37d4101e1428,
+                  parent = M214's three digests + A1's pinned digest, executable
+                  authority (M214 + A1 + A2, domain M220_EXECUTABLE_AUTHORITY)
+                  602d0d101ba05cf0011c672e82e8cd1d232ec93700f69740d4de39fac456884f;
+                  scope OPERATIONAL_QUOTA_WINDOW_SCHEDULING_ONLY; audit refuses
+                  every frozen experimental AND financial key. Commit 2
+                  (03931ee4) -- m220QuotaSession.ts (frozen pairs, session
+                  boundary decision, structured rate_limit_event parser and
+                  classifier, quota-window gate, journal derivation by ledger
+                  sequence, pair temporal gaps, outcome-blind status view with a
+                  self-refusing key check), executor: P14_QUOTA_SESSION_AUTHORITY,
+                  runCohort session bounds (pair cap / pause request / warning /
+                  deadline / hard limit), quota interruption -> frozen
+                  MODEL_SERVICE_FAILURE, QUOTA_LIMIT_OBSERVED event; adapter:
+                  rate_limit_event parsing, abort on rejected or isUsingOverage;
+                  continuation ledger: session event kinds +
+                  SESSION_END_ISOLATION_CHECK (residue blocks before a pause is
+                  reported); status COHORT_PAUSED_QUOTA_WINDOW; launcher:
+                  --max-pairs-this-session (required for COHORT),
+                  --max-session-wall-clock, --pause-after-current-pair/-arm
+                  (PAUSE_REQUEST.json), --clear-pause-request, --session-status,
+                  session start/end events, cohort_session_journal.json,
+                  cohort_pair_timing.json, cohort_session_status.json, agent
+                  binary + HEAD:src + clean src worktree + quota window checks
+                  at every session start. Commit 3 (5c2409d7) --
+                  m220SubscriptionAuth.ts (provider overrides by NAME, settings
+                  files, `auth status --json`, credential/profile non-secret
+                  facts, auto-update posture, PROVEN/NOT_PROVEN/UNRESOLVED,
+                  overflow DISABLED/ENABLED/UNKNOWN, --attest-extra-usage-disabled
+                  only for UNKNOWN), executor P15_SUBSCRIPTION_AUTH_MODE +
+                  R16_AUTH_SOURCE (init-event apiKeySource must be 'none';
+                  else ARM_CONFIGURATION_WRONG + COHORT_HALTED_AUTH_MODE),
+                  adapter assertAuthSource hook, launcher refusal + preflight
+                  SUBSCRIPTION_AUTH gate + operatorPrerequisitesPending. Commit
+                  4 -- COHORT_HALTED_MODEL_IDENTITY (the loop now halts on
+                  MODEL_IDENTITY_DRIFT instead of walking on), m220Falsification
+                  (F199-F232), guard-break, scoped typecheck, evidence,
+                  readiness (G97-G112), report, CLAUDE.md, this row.
+subscription      Host: auth status (offline, unshare -r -n) loggedIn true /
+                  claude.ai / firstParty / max; credential file claudeAiOauth
+                  subscriptionType max, rateLimitTier default_claude_max_5x; no
+                  ANTHROPIC_* or CLAUDE_CODE_* override present; autoUpdates
+                  false, install native, symlink and versioned binary both
+                  2.1.260; account profile hasExtraUsageEnabled TRUE (fetched
+                  2026-09-03) -> USAGE_CREDIT_OVERFLOW_ENABLED_AT_ACCOUNT ->
+                  launch REFUSED until the operator disables extra usage; no
+                  flag overrides it. CLI stream schema: rate_limit_event
+                  {status allowed|allowed_warning|rejected, rateLimitType
+                  five_hour|seven_day*, resetsAt, isUsingOverage,
+                  overageStatus}, absent for API-key/Bedrock/Vertex; init event
+                  apiKeySource in {ANTHROPIC_API_KEY, apiKeyHelper, /login
+                  managed key, none}.
+suites            M220 34/34 (F1-F30 = F199-F228, +F229-F232; 17 GUARD_FIRES,
+                  17 GUARD_SILENT, 16 REAL_PROCESS). Guard-break B1 auth guard
+                  [F200 F202 F203], B2 pair cap [F204 F205 F210 F212 F213 F225
+                  F226 F227], B3 frozen order [F206]: 0 missed, 0 unexpected,
+                  restored 34/34, sources intact, M220_SUITE_IS_FALSIFYING
+                  (first pass mispredicted F209/F216/F217/F228 under B2;
+                  corrected by mechanism, recorded). Preservation: M215 66/66,
+                  M217 pure 23/23, M218 pure 38/38, M219 16/16 re-run after
+                  the changes; M216/M217/M218 REAL container suites NOT re-run
+                  (M220 starts no container). Readiness G97-G112 all PASS;
+                  G36 FAIL (human). bun test 6643 pass / 49 skip / 0 fail
+                  across 403 files; typecheck, typecheck:benchmarks, lint, git
+                  diff --check clean; secret scan clean;
+                  M220_NEW_TYPECHECK_ERRORS 0.
+accounting        subscription quota consumption = included usage, NOT $0 in an
+                  economic sense (the MAX subscription has a fixed cost outside
+                  the experiment); incremental billed provider spend = $0
+                  expected and reported separately; $735 hard ceiling (A1)
+                  unchanged as the maximum ADDITIONAL billed spend, defence in
+                  depth; the CLI's total_cost_usd is recorded as CLI-reported
+                  cost, never as billed spend.
+```
+
+## M220 standing findings
+
+- **The pair is the unit and the cap is the control.** The existing cohort loop
+  gained one condition, the session boundary decision: before every row it asks
+  whether the next FROZEN row may begin in THIS session. A refusal is a pause,
+  not a halt; continuation stays whatever the last teardown proved and no retry
+  is consumed (F228). The second arm of an open pair proceeds unless a hard
+  limit was observed or the operator asked to stop after the current arm; only
+  then is `PAIR_SPLIT_BY_QUOTA_WINDOW` recorded, and it is measured (F225–F227).
+  There is no task selector: `--task`, `--skip-to`, `--start-at`, `--pair` are
+  refused by name and a row ahead of the cursor is refused by P6 (F206).
+
+- **The outcome-leak check caught its own author.** The status writer refuses to
+  write any key matching the M217 outcome-shaped pattern; its first run refused
+  `quotaWindow` (the substring "win"). The key was renamed rather than the check
+  weakened. Session numbering, journal membership and pair timing are keyed by
+  ledger SEQUENCE ranges recorded on the session events, not by clocks, so the
+  executor's and the operations ledger's clocks never have to agree.
+
+- **A quota interruption is not a new class.** A2's verdict is
+  QUOTA_INTERRUPTION_ALREADY_COVERED_BY_FROZEN_RETRY_AUTHORITY: a subscription
+  usage limit before an authoritative outcome is a provider availability
+  interruption, M214's frozen MODEL_SERVICE_FAILURE (rerunnable, max 2
+  attempts, one A1 slot per retry). A2 clarifies only WHEN the permitted retry
+  runs: the session pauses and the retry is the next authorized row of the next
+  session (F215/F216); a second interruption of the same cell leaves it
+  unrecoverable (F217). The signal is the CLI's structured `rate_limit_event`
+  only; free English never classifies (F46 in F215). Under the frozen policy an
+  interrupted attempt that reported no cost is charged at cap against the $735
+  ceiling, exactly as any unreported attempt is.
+
+- **Subscription mode is proven only as far as local CLI state goes.** `claude
+  auth status --json` works with networking unshared and reports claude.ai /
+  firstParty / max; the credential file and the account profile agree; no
+  override is present. That is `LOCAL_CLI_AUTH_STATE`. Provider confirmation is
+  PENDING_AT_FIRST_LIVE_RUN, closed at zero marginal cost by R16: the agent's
+  own init event must report `apiKeySource: none` or the attempt is
+  ARM_CONFIGURATION_WRONG and the session halts (F202). The child environment
+  already dropped every ANTHROPIC_*/CLAUDE_* key (M193A); the launcher now
+  REFUSES when one is present in its own environment rather than dropping it
+  silently, recording presence and never the value (F200/F201).
+
+- **Extra usage is enabled at this account, and that blocks the launch.** The
+  cached profile field `hasExtraUsageEnabled` is true (fetched 2026-09-03). With
+  it, a usage limit would not produce a refusal: the CLI continues into paid
+  overage without a prompt, which is precisely the "silently continue into
+  extra paid usage" the operator asked to prevent. The launcher therefore
+  refuses a cohort session with an operator requirement (disable extra usage in
+  the claude.ai billing settings, let the CLI refresh its profile, re-run the
+  preflight until it reads false); no flag overrides an ENABLED profile, and
+  `--attest-extra-usage-disabled` is consulted only when the profile cannot
+  say. As defence in depth the production adapter aborts an attempt the moment
+  a `rate_limit_event` reports `isUsingOverage` (F203). This is an OPERATOR
+  prerequisite, reported beside G36, not a technical defect: the readiness
+  verdict is TECHNICAL_EXECUTOR_READY and the final state is
+  TECHNICAL_EXECUTOR_READY_OPERATOR_PREREQUISITES_PENDING.
+
+- **No zero-call quota API exists; manual pacing is authoritative.** `auth
+  status` carries no usage field and the CLI has no headless usage command;
+  in-run the CLI streams `rate_limit_event` (structured), which may only request
+  a pause after the current pair (allowed_warning) or classify an interruption
+  (rejected / overage). The operator checks Claude Settings > Usage, chooses a
+  conservative `--max-pairs-this-session`, and the launcher enforces it. M220
+  decides no permanent N; the experiment is identical under any sequence of N.
+
+- **Long pauses are where drift lives, so every session re-proves identity.**
+  Pinned agent binary and declared symlink both at 2.1.260 (auto-update
+  disabled; a moved symlink is refused, F219), HEAD:src equal to the manifest's
+  product tree AND a clean src/ worktree (a dirty worktree is a different
+  treatment even with HEAD:src unchanged, F221), image identity (M219, F223),
+  manifest digest (F222), A1 + A2 digests (F224), and the quota window reset
+  (F214). A provider model other than the frozen target now halts the session
+  (COHORT_HALTED_MODEL_IDENTITY, F220) instead of leaving the loop to walk the
+  frozen order under a model the preregistration never named.
+
+- **Before a pause may be reported, the substrate is enumerated again.**
+  `SESSION_END_ISOLATION_CHECK` runs the M217 enumeration over the work root;
+  residue moves continuation to BLOCKED through the same chain a teardown
+  would, so the status is an isolation halt, not a pause, and the next row and
+  the next session are refused until the recovery path runs (F209). After each
+  pause the M218 registry holds no CLAIMED claim and the namespace only its
+  marker, in both arm orders (F225/F226).
+
+- **Next-step recommendation.** Do NOT start the benchmark from this session.
+  Two things remain, neither of them engineering: (1) the operator disables
+  extra usage at the account and re-runs `run_stage5_m215_launch.ts --preflight`
+  until `operatorPrerequisitesPending` is empty; (2) G36, now the sentence "I
+  authorize execution of the frozen M214+A1+A2 Baseline vs VTRACE cohort using
+  my Claude MAX subscription, in outcome-blind quota-window sessions, with no
+  intentional usage-credit/API fallback, and with a hard maximum of $735
+  additional billed spend if the frozen safeguards permit it", given to the
+  launcher as `--authorize-spend "<operator>" --max-pairs-this-session N` with
+  a conservative N. Then P1–P15 and R1–R16 govern every row, the session pauses
+  after N complete pairs, and `--resume` continues at the next frozen row. The
+  M216–M218 real container suites were not re-run in M220; if the changed
+  adapter is to be exercised against real containers before the first paid
+  session, that is a separate, approved Docker run. Live provider model
+  identity and credential source remain PENDING_AT_FIRST_LIVE_RUN. `ENGINE
+  QUALITY != CODING-AGENT UTILITY` and
+  `CONTEXT_COMPILER_PRODUCT_UTILITY_NOT_ESTABLISHED` still govern: nothing in
+  M220 measured the product.

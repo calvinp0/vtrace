@@ -1,0 +1,34 @@
+{
+  "//": "M220 — the scoped typecheck target, extended from M219's.",
+  "//why": [
+    "Same reasoning as M214–M219: tsconfig.benchmarks.json excludes benchmarks/**/*.test.ts and the ~59 pre-existing errors in unrelated historical benchmark tests are outside this milestone.",
+    "M220's session controls live in M215's executor and launcher, M216's adapter and M217's continuation ledger, so M214–M219 stay in scope; M220's own files and tests are added."
+  ],
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true
+  },
+  "include": [
+    "benchmarks/stage5_vexp_swe_bench_smoke/m193aArmEnvironment.ts",
+    "benchmarks/stage5_vexp_swe_bench_smoke/m214*.ts",
+    "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m214_*.ts",
+    "benchmarks/stage5_vexp_swe_bench_smoke/m215*.ts",
+    "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m215_*.ts",
+    "benchmarks/stage5_vexp_swe_bench_smoke/m216*.ts",
+    "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m216_*.ts",
+    "benchmarks/stage5_vexp_swe_bench_smoke/m217*.ts",
+    "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m217_*.ts",
+    "benchmarks/stage5_vexp_swe_bench_smoke/m218*.ts",
+    "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m218_*.ts",
+    "benchmarks/stage5_vexp_swe_bench_smoke/m219*.ts",
+    "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m219_*.ts",
+    "benchmarks/stage5_vexp_swe_bench_smoke/m220*.ts",
+    "benchmarks/stage5_vexp_swe_bench_smoke/run_stage5_m220_*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    "coverage"
+  ]
+}

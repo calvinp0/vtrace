@@ -107,8 +107,8 @@ Each labelled run lives under `$OUT/runs/<label>/raw/`:
   `benchmarks/*/results/` is gitignored and stays on disk only. The sole tracked
   exceptions are the frozen experiment authorities the launcher and readiness
   checks depend on (`stage5_m213_*`/`stage5_m214_*` preregistration, manifest,
-  external reference, A1 amendment and their hash records) and
-  `stage5_milestone_ledger.md`. Reports, evidence JSON, baselines and raw runs
+  external reference, the A1 and A2 amendments and their hash records, the M219
+  image identity record) and `stage5_milestone_ledger.md`. Reports, evidence JSON, baselines and raw runs
   are our own assessment data, not what makes vtrace run; they are never staged.
   Longer term the whole `benchmarks/` harness leaves this repository when vtrace
   ships as a product.
@@ -120,6 +120,15 @@ Each labelled run lives under `$OUT/runs/<label>/raw/`:
   minutes per run. `--reuse-workspace` exists but can contaminate later repeats.
 - **Resolution needs ALL FAIL_TO_PASS to pass**: a partially-correct patch reports
   `resolved=0`. Gold patches + FAIL_TO_PASS are in `$DATASET`.
+- **The frozen cohort runs in quota-window sessions (M220, A2)**: the production
+  launcher `run_stage5_m215_launch.ts` refuses a COHORT launch without
+  `--max-pairs-this-session N`, pauses after N complete frozen pairs
+  (`COHORT_PAUSED_QUOTA_WINDOW`), and resumes at the next frozen row with
+  `--resume`. `--session-status` is outcome-blind; `--pause-after-current-pair`
+  writes a request a running session honours. It refuses to launch when
+  `ANTHROPIC_API_KEY` (or any provider override) is present or the account
+  profile reports extra usage enabled: the cohort runs on the MAX subscription
+  login only, never on API billing or paid overflow.
 
 ## Agent workflow conventions
 

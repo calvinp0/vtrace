@@ -305,6 +305,8 @@ export type CohortOperationalStatus =
   | "COHORT_PAUSED_QUOTA_WINDOW"
   // M220 §17, §19 — the agent's credential source was not the subscription login.
   | "COHORT_HALTED_AUTH_MODE"
+  // M220 §37 — the provider served a model other than the frozen target.
+  | "COHORT_HALTED_MODEL_IDENTITY"
   | "EXPERIMENT_COMPLETED_FIXED_N";
 
 export interface OperationalStatusView {
@@ -370,6 +372,10 @@ export function cohortOperationalStatus(
     status = "COHORT_HALTED_AUTH_MODE";
     haltReason = String((lastEvent.detail as { reasons?: unknown }).reasons ?? "the agent's credential source was not the subscription login")
       + "; no further row starts until the subscription authentication preflight passes again";
+  } else if (lastEvent?.kind === "COHORT_HALTED_MODEL_IDENTITY") {
+    status = "COHORT_HALTED_MODEL_IDENTITY";
+    haltReason = String((lastEvent.detail as { reasons?: unknown }).reasons ?? "the provider served a model other than the frozen target")
+      + "; M214's drift policy: the cohort stops, runs before and after are never mixed, nothing is upgraded silently";
   } else if (lastEvent?.kind === "QUOTA_SESSION_ENDED"
     && (lastEvent.detail as { endState?: unknown }).endState === "PAUSED") {
     // M220 — a pause is where the cohort rests between quota windows. It is

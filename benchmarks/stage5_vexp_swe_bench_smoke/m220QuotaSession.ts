@@ -446,6 +446,8 @@ export interface SessionJournalEntry {
   readonly scratchCapacity: Readonly<Record<string, unknown>> | null;
   readonly imagePreflight: string | null;
   readonly operationsEventRange: readonly [number, number | null];
+  /** Result-ledger sequences appended during the session: [first, one past last]; null when the events did not record them. */
+  readonly ledgerEntryRange: readonly [number | null, number | null];
 }
 
 /**
@@ -504,6 +506,7 @@ export function deriveSessionJournal(
       scratchCapacity: (detail.scratchCapacity as Record<string, unknown> | undefined) ?? null,
       imagePreflight: (detail.imagePreflight as string | undefined) ?? null,
       operationsEventRange: [start.sequence, end?.sequence ?? null],
+      ledgerEntryRange: [before, after],
     });
   }
   return Object.freeze(entries);
@@ -555,7 +558,15 @@ function percentile(sorted: readonly number[], fraction: number): number | null 
 export function pairTemporalGaps(
   pairs: readonly FrozenPair[], ledger: CohortLedger, journal: readonly SessionJournalEntry[],
 ): PairTimingSummary {
-  const sessionAt = (iso: string | null): string | null => {
+  // Attribute an attempt to a session by its ledger SEQUENCE when the session
+  // events recorded their ranges (the production launcher always does), and by
+  // timestamp only as a fallback, so no clock has to agree with another.
+  const sessionOf = (sequence: number | null, iso: string | null): string | null => {
+    if (sequence !== null) {
+      const byRange = journal.find((session) => session.ledgerEntryRange[0] !== null && sequence >= session.ledgerEntryRange[0]
+        && (session.ledgerEntryRange[1] === null || sequence < session.ledgerEntryRange[1]));
+      if (byRange !== undefined) return byRange.sessionId;
+    }
     if (iso === null) return null;
     const entry = journal.find((session) => session.startedAt <= iso && (session.endedAt === null || iso <= session.endedAt));
     return entry?.sessionId ?? null;
@@ -564,11 +575,13 @@ export function pairTemporalGaps(
   for (const pair of pairs) {
     const firstAttempts = ledger.attemptsFor(pair.rows[0].instanceId, pair.rows[0].arm);
     const secondAttempts = ledger.attemptsFor(pair.rows[1].instanceId, pair.rows[1].arm);
-    const firstEnd = firstAttempts.length === 0 ? null : (ledger.record(firstAttempts[firstAttempts.length - 1]!.attemptId)?.endedAt ?? null);
-    const secondStart = secondAttempts.length === 0 ? null : (ledger.record(secondAttempts[0]!.attemptId)?.startedAt ?? null);
+    const firstLast = firstAttempts[firstAttempts.length - 1];
+    const secondFirst = secondAttempts[0];
+    const firstEnd = firstLast === undefined ? null : (ledger.record(firstLast.attemptId)?.endedAt ?? null);
+    const secondStart = secondFirst === undefined ? null : (ledger.record(secondFirst.attemptId)?.startedAt ?? null);
     const gap = firstEnd !== null && secondStart !== null ? (Date.parse(secondStart) - Date.parse(firstEnd)) / 1000 : null;
-    const firstSession = sessionAt(firstEnd);
-    const secondSession = sessionAt(secondStart);
+    const firstSession = sessionOf(firstLast?.sequence ?? null, firstEnd);
+    const secondSession = sessionOf(secondFirst?.sequence ?? null, secondStart);
     perPair.push({
       instanceId: pair.instanceId, pairOrdinal: pair.pairOrdinal,
       firstArmEndedAt: firstEnd, secondArmStartedAt: secondStart, gapSeconds: gap,

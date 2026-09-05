@@ -126,8 +126,10 @@ import {
   type SessionCounters,
   freshCounters,
   frozenPairs,
+  lastHardQuotaLimit,
   pairForRow,
   pairStatus,
+  quotaWindowGate,
   rowSettled,
   sessionBoundaryDecision,
 } from "./m220QuotaSession";
@@ -2443,7 +2445,22 @@ export async function runCohort(
   let endState: SessionRunSummary["endState"] = "COMPLETE";
   let stoppedBecause = "cohort complete: every planned run has reached a terminal state";
 
-  while (executed.length < limit) {
+  // M220 §16 / F16 — a hard quota limit already on record whose reset time
+  // lies ahead starts nothing: the session pauses before its first row. The
+  // launcher refuses earlier for the same reason; this is the executor's own
+  // copy of the rule so a direct call cannot start an attempt into a closed
+  // window.
+  if (session !== null && deps.operations !== undefined) {
+    const windowIssues = quotaWindowGate(lastHardQuotaLimit(deps.operations.ledger.events), deps.now());
+    if (windowIssues.length > 0) {
+      counters.hardQuotaLimitObserved = true;
+      pauseReason = "HARD_QUOTA_LIMIT_OBSERVED";
+      endState = "PAUSED";
+      stoppedBecause = `${M220_PAUSED_STATUS}: HARD_QUOTA_LIMIT_OBSERVED: ${windowIssues.join("; ")}`;
+    }
+  }
+
+  while (executed.length < limit && pauseReason === null) {
     // M217 §10 — a blocked continuation stops the loop BEFORE a row is
     // selected. There is no branch that continues, retries the next row, or
     // consults the previous result: the previous result is not the question.
@@ -2536,6 +2553,22 @@ export async function runCohort(
         stoppedBecause = `COHORT_HALTED_AUTH_MODE: ${result.record.validity.reason}`;
         errors.push(stoppedBecause);
         endState = "HALTED";
+        break;
+      }
+      // M220 §37 — M214's drift policy made executable at the loop: an attempt
+      // the provider served with another model is already MODEL_IDENTITY_DRIFT
+      // (aborted at init, not rerunnable); the session stops here rather than
+      // walking the frozen order under a model the preregistration never named.
+      if (result.record.validity.infrastructureCategory === "MODEL_IDENTITY_DRIFT") {
+        stoppedBecause = `COHORT_HALTED_MODEL_IDENTITY: ${result.record.validity.reason}`;
+        errors.push(stoppedBecause);
+        endState = "HALTED";
+        deps.operations?.recordSessionEvent("COHORT_HALTED_MODEL_IDENTITY", {
+          reasons: [result.record.validity.reason],
+          observedProviderModelIdentity: result.record.providerModelIdentity,
+          frozenTarget: result.record.modelTarget,
+          policy: "STOP the cohort; runs before and after a change are never mixed; no silent upgrade",
+        }, { runId: row.runId, attemptId: result.record.attemptId, resultDigest: result.entry.resultDigest });
         break;
       }
       if (pairs !== null && pairBefore !== null) {
