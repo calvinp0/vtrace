@@ -1,0 +1,61 @@
+{
+  "schemaVersion": "stage5.m214-a3.amendment-hash.v1",
+  "amendmentId": "M214_A3_AGENT_HARNESS_COMPATIBILITY",
+  "file": "stage5_m214_a3_agent_harness_compatibility_amendment.json",
+  "hashRule": "sha256 over \"M214_A3_AGENT_HARNESS_COMPATIBILITY\\n\" followed by the canonical (recursively key-sorted) JSON of every field except amendmentHash, amendmentHashRule and generatedAt",
+  "recordedHash": "e27a09cee58e7c78433cb5aa837e4bd7890cc016b6cfa5c71106482990d2e12a",
+  "recomputedFromWrittenFile": "e27a09cee58e7c78433cb5aa837e4bd7890cc016b6cfa5c71106482990d2e12a",
+  "frozenHashPinnedInCode": "e27a09cee58e7c78433cb5aa837e4bd7890cc016b6cfa5c71106482990d2e12a",
+  "matchesPinnedConstant": true,
+  "auditIssues": [],
+  "verified": true,
+  "parent": {
+    "experimentName": "VTRACE_EXTERNAL_VEXP_100",
+    "preregistrationFile": "stage5_m214_preregistration.json",
+    "preregistrationHash": "3cd3b3d2d665c559fdb66e7274e809245e82ea7373344cf32614833b8dcbfea4",
+    "manifestFile": "stage5_m214_run_manifest.json",
+    "manifestHash": "549df54b0f48b59a2bc13da2acf27cbf2469f416d90018c3d48dd87219f77ff1",
+    "externalReferenceFile": "stage5_m214_external_reference.json",
+    "externalReferenceHash": "822c4c5fb69dc21b8ada04189e73fcadb3e5ab1bf7c06a855dd4582a6ec7834b",
+    "a1AmendmentId": "M214_A1_RETRY_RESERVE",
+    "a1AmendmentFile": "stage5_m214_a1_retry_reserve_amendment.json",
+    "a1AmendmentHash": "0ed156bc924a4817122c46b5c9fc0334e5f046c2dce0547eef2573b2483b76c1",
+    "a2AmendmentId": "M214_A2_SUBSCRIPTION_QUOTA_SCHEDULING",
+    "a2AmendmentFile": "stage5_m214_a2_subscription_quota_scheduling_amendment.json",
+    "a2AmendmentHash": "e3264880b4ec1e7242192b22b141cfb75bd28cf5475a339fbb4f37d4101e1428",
+    "parentRecordsAgree": true,
+    "lineageIssues": [],
+    "parentFileBytesSha256": {
+      "preregistration": "e57ec71f7ca4a66806cc71a190e2755bf2eb88fc8c5cf949f58aa55e8e8cd705",
+      "manifest": "a81ab4a4861c5fc7c9e4e90f76c8c9f1ac5cab50073ee3c0b8d62541e61c79e5",
+      "externalReference": "f974b8d25bf663452a3d5fc86ac220de03fa44a03ec6570cdcf47a6a4691c079",
+      "a1Amendment": "8408d3f66b046cb1726800273cddeb26f4dd13a2d91d5f967a1731adaea1e97a",
+      "a2Amendment": "864bfd862056abf3fca0754895d64a439718f5e4328e4114da59c9a7a940ef79",
+      "a2AmendmentHashRecord": "0d14df719c96606a09afd4079463a1d1d366260bbaa22026a370d2bacf1071f5"
+    },
+    "parentBytesUntouchedByThisScript": true
+  },
+  "executableAuthority": {
+    "preregistrationHash": "3cd3b3d2d665c559fdb66e7274e809245e82ea7373344cf32614833b8dcbfea4",
+    "manifestHash": "549df54b0f48b59a2bc13da2acf27cbf2469f416d90018c3d48dd87219f77ff1",
+    "externalReferenceHash": "822c4c5fb69dc21b8ada04189e73fcadb3e5ab1bf7c06a855dd4582a6ec7834b",
+    "a1AmendmentHash": "0ed156bc924a4817122c46b5c9fc0334e5f046c2dce0547eef2573b2483b76c1",
+    "a2AmendmentHash": "e3264880b4ec1e7242192b22b141cfb75bd28cf5475a339fbb4f37d4101e1428",
+    "a3AmendmentHash": "e27a09cee58e7c78433cb5aa837e4bd7890cc016b6cfa5c71106482990d2e12a",
+    "identity": "82f463de0cc15636d507798c3dca8965f0f59239b36df530de01dfc284e0c3a4"
+  },
+  "scope": "OPERATIONAL_AGENT_HARNESS_IDENTITY_ONLY",
+  "outcomeBearingRunsBeforeAmendment": 0,
+  "contractVersion": "stage5.m220-a3.agent-harness-contract.v1",
+  "agentVersionPinned": false,
+  "financialEnvelopeUnchanged": {
+    "ordinaryExposureUsd": 700,
+    "retryReserveUsd": 35,
+    "retryReserveAttempts": 10,
+    "hardCeilingUsd": 735,
+    "manifestRows": 200
+  },
+  "spendAuthorizationStatus": "SPEND_AUTHORIZATION_PENDING",
+  "launchHarnessRequirement": "The launcher MUST verify M214's three digests, A1's, A2's AND this amendment's against the constants pinned in code and bind the executable authority (M214 + A1 + A2 + A3) before any paid row. It must prove the resolved Claude Code executable against the capability contract before every session, record its path, version and digest per session and attempt, and refuse the second arm of a pair on a different executable. No Claude Code release is pinned.",
+  "generatedAt": "2026-09-29T07:50:44.511Z"
+}
