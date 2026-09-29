@@ -665,6 +665,63 @@ export function auditAuthSource(apiKeySource: string | null | undefined): readon
   return [];
 }
 
+// ── M221 — provider confirmation, projected from the live runs ──────
+
+export type ProviderConfirmationState = "PENDING_AT_FIRST_LIVE_RUN" | "VERIFIED_AT_LIVE_RUN" | "NOT_VERIFIED_AT_LIVE_RUN";
+
+/** The operational fields of a persisted result record this projection reads; nothing outcome-bearing. */
+export interface LiveRunAuthEvidence {
+  readonly attemptId: string;
+  readonly mode: string;
+  readonly modelTarget: string;
+  readonly providerModelIdentity: string | null;
+  readonly modelIdentityVerified: boolean;
+  readonly lifecyclePhasesObserved: readonly string[];
+  readonly runtimeGates: readonly { readonly gateId: string; readonly status: string }[];
+}
+
+export interface ProviderConfirmation {
+  readonly state: ProviderConfirmationState;
+  readonly liveAttempts: number;
+  readonly confirmedAttempts: number;
+  readonly unconfirmedAttemptIds: readonly string[];
+  readonly issues: readonly string[];
+}
+
+/**
+ * PURE — the pre-launch audit can only say PENDING_AT_FIRST_LIVE_RUN; after a
+ * COHORT attempt reaches the agent, the answer is in its persisted runtime
+ * gates. An attempt confirms only when R12 and R16 both PASSED on its own init
+ * event and the provider identity equals the frozen target. Fail closed: one
+ * attempt that reached the agent without that evidence makes the projection
+ * NOT_VERIFIED; synthetic records never count (their R16 passes vacuously).
+ */
+export function deriveProviderConfirmation(records: readonly LiveRunAuthEvidence[], frozenModel: string): ProviderConfirmation {
+  const live = records.filter((record) => record.mode === "COHORT" && record.lifecyclePhasesObserved.includes("AGENT_RUN"));
+  const issues: string[] = [];
+  const unconfirmed: string[] = [];
+  for (const record of live) {
+    const gate = (gateId: string): string => record.runtimeGates.find((entry) => entry.gateId === gateId)?.status ?? "ABSENT";
+    const problems: string[] = [];
+    if (gate("R12_PROVIDER_MODEL_IDENTITY") !== "PASS") problems.push(`R12_PROVIDER_MODEL_IDENTITY ${gate("R12_PROVIDER_MODEL_IDENTITY")}`);
+    if (gate("R16_AUTH_SOURCE") !== "PASS") problems.push(`R16_AUTH_SOURCE ${gate("R16_AUTH_SOURCE")}`);
+    if (record.modelTarget !== frozenModel) problems.push(`model target ${record.modelTarget} is not the frozen ${frozenModel}`);
+    if (record.providerModelIdentity !== frozenModel) problems.push(`provider served ${record.providerModelIdentity ?? "(no identity)"}, not the frozen ${frozenModel}`);
+    if (!record.modelIdentityVerified) problems.push("modelIdentityVerified is false");
+    if (problems.length > 0) {
+      unconfirmed.push(record.attemptId);
+      issues.push(`${record.attemptId}: ${problems.join("; ")}`);
+    }
+  }
+  const state: ProviderConfirmationState = live.length === 0
+    ? "PENDING_AT_FIRST_LIVE_RUN"
+    : unconfirmed.length === 0 ? "VERIFIED_AT_LIVE_RUN" : "NOT_VERIFIED_AT_LIVE_RUN";
+  return {
+    state, liveAttempts: live.length, confirmedAttempts: live.length - unconfirmed.length,
+    unconfirmedAttemptIds: Object.freeze(unconfirmed), issues: Object.freeze(issues),
+  };
+}
+
 /** A redacted view for logs and journals: verdicts and names, never values or identities. */
 export function redactedAuthSummary(report: SubscriptionAuthReport): Record<string, unknown> {
   return {

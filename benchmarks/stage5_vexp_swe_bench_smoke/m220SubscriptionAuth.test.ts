@@ -9,12 +9,14 @@ import {
   auditAuthSource,
   autoUpdatePosture,
   collectSubscriptionAuth,
+  deriveProviderConfirmation,
   inspectAuthEnvironment,
   inspectSettingsFile,
   parseCliAuthStatus,
   readAccountProfileFacts,
   readCredentialFacts,
   redactedAuthSummary,
+  type LiveRunAuthEvidence,
 } from "./m220SubscriptionAuth";
 
 const cliOk: CliAuthStatus = { command: "claude auth status --json", available: true, loggedIn: true, authMethod: "claude.ai", apiProvider: "firstParty", subscriptionType: "max", fieldNames: ["authMethod", "loggedIn"], error: null };
@@ -173,5 +175,57 @@ describe("real host facts (names only)", () => {
     expect(["SUBSCRIPTION_AUTH_MODE_PROVEN", "SUBSCRIPTION_AUTH_MODE_NOT_PROVEN", "SUBSCRIPTION_AUTH_MODE_UNRESOLVED"]).toContain(report.authModeVerdict);
     expect(JSON.stringify(report)).not.toMatch(/sk-ant-|"accessToken"|"refreshToken"/);
     expect(M220_QUOTA_AVAILABILITY.preLaunchZeroCall).toBe("MACHINE_READABLE_QUOTA_UNAVAILABLE");
+  });
+});
+
+describe("M221 — provider confirmation is projected from live runtime gates, never assumed", () => {
+  const FROZEN = "claude-opus-4-5-20251101";
+  const live = (overrides: Partial<LiveRunAuthEvidence> & { readonly r12?: string; readonly r16?: string | null } = {}): LiveRunAuthEvidence => {
+    const { r12 = "PASS", r16 = "PASS", ...rest } = overrides;
+    return {
+      attemptId: "ROW#a1#x", mode: "COHORT", modelTarget: FROZEN, providerModelIdentity: FROZEN, modelIdentityVerified: true,
+      lifecyclePhasesObserved: ["CONTAINER_START", "AGENT_RUN", "PATCH_CAPTURE"],
+      runtimeGates: [
+        { gateId: "R12_PROVIDER_MODEL_IDENTITY", status: r12 },
+        ...(r16 === null ? [] : [{ gateId: "R16_AUTH_SOURCE", status: r16 }]),
+      ],
+      ...rest,
+    };
+  };
+
+  test("0 live runs -> PENDING_AT_FIRST_LIVE_RUN (synthetic and pre-agent records do not count)", () => {
+    expect(deriveProviderConfirmation([], FROZEN).state).toBe("PENDING_AT_FIRST_LIVE_RUN");
+    const synthetic = live({ mode: "SYNTHETIC" });
+    const preflightOnly = live({ lifecyclePhasesObserved: ["CONTAINER_START"], runtimeGates: [] });
+    const result = deriveProviderConfirmation([synthetic, preflightOnly], FROZEN);
+    expect(result.state).toBe("PENDING_AT_FIRST_LIVE_RUN");
+    expect(result.liveAttempts).toBe(0);
+  });
+
+  test("valid live runtime evidence -> VERIFIED_AT_LIVE_RUN", () => {
+    const result = deriveProviderConfirmation([live({ attemptId: "a" }), live({ attemptId: "b" })], FROZEN);
+    expect(result.state).toBe("VERIFIED_AT_LIVE_RUN");
+    expect(result.confirmedAttempts).toBe(2);
+    expect(result.issues).toEqual([]);
+  });
+
+  test("wrong or missing auth evidence -> not VERIFIED", () => {
+    for (const bad of [live({ r16: "FAIL" }), live({ r16: null })]) {
+      const result = deriveProviderConfirmation([live({ attemptId: "ok" }), { ...bad, attemptId: "bad" }], FROZEN);
+      expect(result.state).toBe("NOT_VERIFIED_AT_LIVE_RUN");
+      expect(result.unconfirmedAttemptIds).toEqual(["bad"]);
+    }
+  });
+
+  test("wrong model -> not VERIFIED", () => {
+    const cases = [
+      live({ providerModelIdentity: "claude-sonnet-4-5-20250929", modelIdentityVerified: false, r12: "FAIL" }),
+      live({ providerModelIdentity: "claude-sonnet-4-5-20250929" }), // gates claim PASS but the identity disagrees
+      live({ providerModelIdentity: null, modelIdentityVerified: false, r12: "FAIL" }),
+      live({ modelTarget: "claude-sonnet-4-5-20250929" }),
+    ];
+    for (const bad of cases) {
+      expect(deriveProviderConfirmation([bad], FROZEN).state).toBe("NOT_VERIFIED_AT_LIVE_RUN");
+    }
   });
 });

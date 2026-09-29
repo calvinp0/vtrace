@@ -46,7 +46,7 @@ import { appendFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileS
 import { join } from "node:path";
 
 import type { RunManifestRow } from "./m214Preregistration";
-import { M214_BUDGET, M214_EXPERIMENT_NAME, M214_STOPPING_RULE } from "./m214Preregistration";
+import { M214_BUDGET, M214_EXPERIMENT_NAME, M214_MODEL, M214_STOPPING_RULE } from "./m214Preregistration";
 import {
   type BindingId,
   M215_ADAPTER_BINDINGS,
@@ -149,6 +149,7 @@ import {
   type ExtraUsageAttestation,
   type SubscriptionAuthReport,
   collectSubscriptionAuth,
+  deriveProviderConfirmation,
   redactedAuthSummary,
 } from "./m220SubscriptionAuth";
 import {
@@ -1078,9 +1079,19 @@ function printSessionStatus(args: LaunchArgs, authorities: FrozenAuthorities): v
   });
   const leaks = statusViewLeaksOutcome(view);
   if (leaks.length > 0) throw new Error(`refusing to print a session status that names an outcome: ${leaks.join(", ")}`);
+  // M221 — the pre-launch audit can only say PENDING; once attempts have run,
+  // the confirmation is whatever their persisted R12/R16 runtime gates say.
+  const confirmation = deriveProviderConfirmation(restored.ledger.records, M214_MODEL.model);
   process.stdout.write(`${JSON.stringify({
     ...view,
-    subscriptionAuth: redactedAuthSummary(auth),
+    subscriptionAuth: { ...redactedAuthSummary(auth), providerConfirmation: confirmation.state },
+    providerConfirmationEvidence: {
+      source: "persisted R12_PROVIDER_MODEL_IDENTITY / R16_AUTH_SOURCE runtime gates of COHORT attempts that reached AGENT_RUN",
+      liveAttempts: confirmation.liveAttempts,
+      confirmedAttempts: confirmation.confirmedAttempts,
+      unconfirmedAttemptIds: confirmation.unconfirmedAttemptIds,
+      issues: confirmation.issues,
+    },
     launchWouldBeRefusedByAuthGuard: !auth.launchPermitted,
     ledgerIssues: [...restored.issues, ...operationsRestored.issues],
     // M220-A3 §7 — descriptive: which harness each pair ran on. Never an outcome.
