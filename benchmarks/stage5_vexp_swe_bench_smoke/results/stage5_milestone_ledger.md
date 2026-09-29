@@ -12701,3 +12701,73 @@ suites            M220-A3 22/22 (F1-F14 = F233-F246, +F247-F254; 13 GUARD_FIRES,
   remain PENDING_AT_FIRST_LIVE_RUN (R12, R16). The real M216-M218 container suites
   were not re-run. `ENGINE QUALITY != CODING-AGENT UTILITY` and
   `CONTEXT_COMPILER_PRODUCT_UTILITY_NOT_ESTABLISHED` still govern.
+
+## M221-A
+
+```text
+milestone         M221-A
+verdict           PASS (operational audit of the first live session's provider /
+                  credential confirmation; outcome-blind: no arm outcome,
+                  pass/fail, patch, per-arm token or cost figure, or arm
+                  comparison was read or reported)
+markers           M221_FIRST_LIVE_PROVIDER_AUTH_VERIFIED;
+                  SESSION_STATUS_PROVIDER_CONFIRMATION_PROJECTION_STALE;
+                  LIVE_MODEL_IDENTITY_VERIFIED; ROWS_SETTLED_4;
+                  PAIRS_COMPLETE_2; COHORT_CONTINUATION_SAFE;
+                  PROVIDER_CALLS_ADDED_0; ADDITIONAL_BILLED_SPEND_$0;
+                  ROWS_EXECUTED_BY_AUDIT_0; SAFE_TO_RESUME_COHORT
+cohort            SESSION_001 (2026-09-29 08:43-09:04Z): 4 rows settled, 2 pairs
+                  complete, COHORT_PAUSED_QUOTA_WINDOW / PAIR_CAP_REACHED,
+                  CONTINUATION_SAFE, ledger issues [], containers clean,
+                  incremental billed provider spend $0. The four records are
+                  closed: not re-read for outcomes, not rewritten, not re-run.
+evidence          Per attempt (4/4): exactly one system/init event in the raw
+                  agent stream; model claude-opus-4-5-20251101 (= M214_MODEL);
+                  apiKeySource none; claude_code_version 2.1.284. All 8
+                  rate_limit_events: status allowed, isUsingOverage false,
+                  overageStatus rejected (org_level_disabled). Persisted
+                  records: mode COHORT, R12_PROVIDER_MODEL_IDENTITY PASS,
+                  R16_AUTH_SOURCE PASS (evidence cites the run's own init
+                  event), 32/32 runtime gates PASS, modelIdentityVerified true.
+                  Gates are enforced live (adapter init hook -> abort sentinel)
+                  and post-run (executor finalizes MODEL_IDENTITY_DRIFT /
+                  ARM_CONFIGURATION_WRONG).
+defect            --session-status projection only. providerConfirmation was a
+                  literal type on the pre-launch LOCAL_CLI_AUTH_STATE audit,
+                  recomputed per call without reading the ledger.
+what was built    Commit 1 (333aaeef) -- deriveProviderConfirmation
+                  (m220SubscriptionAuth.ts): COHORT attempts that reached
+                  AGENT_RUN confirm only with R12 PASS, R16 PASS and provider
+                  identity / model target = frozen model; 0 live -> PENDING,
+                  all confirm -> VERIFIED_AT_LIVE_RUN, any unconfirmed ->
+                  NOT_VERIFIED_AT_LIVE_RUN, synthetic never counts. Status
+                  prints it plus providerConfirmationEvidence (counts, ids).
+                  Falsification control in m220SubscriptionAuth.test.ts;
+                  guard-break (R16 check off, identity check off) each caught,
+                  restored byte-identical. Commit 2 -- this row. Report
+                  stage5_m221a_provider_auth_audit.md stays untracked.
+status after      providerConfirmation VERIFIED_AT_LIVE_RUN, liveAttempts 4,
+                  confirmedAttempts 4, issues [].
+suites            bun test 6666 pass / 49 skip / 0 fail across 406 files;
+                  typecheck, typecheck:benchmarks, lint, git diff --check
+                  clean. No real-container suite, no model call.
+scope             0 src/ diff; no frozen authority touched; cohort_ledger.json
+                  and cohort_operations.json unmodified since session end. The
+                  only CLI executions: zero-call `claude auth status --json`
+                  inside --session-status and one pre-existing unit test.
+```
+
+## M221-A standing findings
+
+- **R12/R16 confirmation was persisted per attempt from the start; only the status
+  view lagged.** The pre-launch audit's `providerConfirmation` is a LOCAL_CLI_AUTH_STATE
+  claim and stays PENDING by design; the live confirmation is now derived from the
+  ledger's runtime gates, never assumed or backfilled.
+- **The first four frozen rows are closed.** Do not re-read them for outcomes, rewrite,
+  or re-run them. The M220-A3 recommendation's "Live provider model identity and
+  credential source remain PENDING_AT_FIRST_LIVE_RUN (R12, R16)" is superseded:
+  both verified at live run, 4/4.
+- **Next-step recommendation.** SAFE_TO_RESUME_COHORT: the next session resumes at the
+  next frozen row with `--resume` and a conservative `--max-pairs-this-session N`,
+  under M214 + A1 + A2 + A3 unchanged. `ENGINE QUALITY != CODING-AGENT UTILITY` and
+  `CONTEXT_COMPILER_PRODUCT_UTILITY_NOT_ESTABLISHED` still govern.
