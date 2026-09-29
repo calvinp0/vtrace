@@ -104,11 +104,28 @@ describe("CLI auth status and files (F4)", () => {
 });
 
 describe("usage-credit overflow (F5)", () => {
-  test("extra usage enabled at the account refuses launch with an operator requirement; no attestation overrides it", () => {
-    const enabled = assess({ account: { ...accountOff, hasExtraUsageEnabled: true }, overflowAttestation: "operator" });
+  // M220-A3 superseded "no attestation overrides an ENABLED profile": the
+  // profile flag is organisation-scoped and can lag, so a newer user-level
+  // OFF supersedes it (with a warning) while a user-level ON never can be.
+  test("a cached true with no newer authority refuses launch with an operator requirement", () => {
+    const enabled = assess({ account: { ...accountOff, hasExtraUsageEnabled: true } });
     expect(enabled.overflowVerdict).toBe("USAGE_CREDIT_OVERFLOW_ENABLED_AT_ACCOUNT");
     expect(enabled.launchPermitted).toBe(false);
-    expect(enabled.issues.some((issue) => issue.includes("No flag overrides this"))).toBe(true);
+    expect(enabled.overflowIssues).toHaveLength(1);
+    expect(enabled.technicalIssues).toEqual([]);
+  });
+
+  test("a newer OFF attestation supersedes a cached true with STALE_CACHED_EXTRA_USAGE_STATE (A3)", () => {
+    const attested = assess({ account: { ...accountOff, hasExtraUsageEnabled: true }, overflowAttestation: "operator" });
+    expect(attested.launchPermitted).toBe(true);
+    expect(attested.extraUsage.decidedBy).toBe("OPERATOR_ATTESTATION");
+    expect(attested.warnings.some((warning) => warning.startsWith("STALE_CACHED_EXTRA_USAGE_STATE"))).toBe(true);
+  });
+
+  test("usage credits ON in user-level evidence are never attested past", () => {
+    const on = assess({ overflowAttestation: { state: "ENABLED", statement: "credits on", attestedAt: "2026-09-05T12:00:00.000Z" } });
+    expect(on.launchPermitted).toBe(false);
+    expect(on.issues.some((issue) => issue.includes("No flag overrides this"))).toBe(true);
   });
 
   test("unknown overflow state needs an operator attestation; disabled passes", () => {
@@ -117,7 +134,7 @@ describe("usage-credit overflow (F5)", () => {
     expect(unknown.launchPermitted).toBe(false);
     const attested = assess({ account: { ...accountOff, hasExtraUsageEnabled: null }, overflowAttestation: "operator" });
     expect(attested.launchPermitted).toBe(true);
-    expect(attested.warnings.some((warning) => warning.includes("attested"))).toBe(true);
+    expect(attested.extraUsage.decidedBy).toBe("OPERATOR_ATTESTATION");
     expect(assess().overflowVerdict).toBe("USAGE_CREDIT_OVERFLOW_DISABLED_AT_ACCOUNT");
   });
 });

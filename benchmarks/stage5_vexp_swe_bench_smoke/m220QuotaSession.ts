@@ -273,7 +273,12 @@ export type PauseReason =
   | "EXPLICIT_PAUSE_REQUEST_AFTER_ARM"
   | "SESSION_QUOTA_WARNING_OBSERVED"
   | "HARD_QUOTA_LIMIT_OBSERVED"
-  | "WALL_CLOCK_DEADLINE";
+  | "WALL_CLOCK_DEADLINE"
+  // M220-A3 — the harness about to be spawned is not the one the pair's other
+  // arm ran on, or no longer satisfies the capability contract. Nothing starts;
+  // the next session re-proves the harness before its first row.
+  | "PAIR_HARNESS_DRIFT"
+  | "AGENT_HARNESS_CAPABILITY_MISMATCH";
 
 export interface SessionBounds {
   readonly sessionId: string;

@@ -202,13 +202,17 @@ describe("model identity", () => {
 });
 
 describe("agent and tool identity", () => {
-  test("an exact agent version is required", () => {
+  // M220-A3 retired the exact-version pin: the release is metadata, but it
+  // must be observed, and must be the release the executor verified.
+  test("the agent release is observed metadata, not a pin", () => {
     expect(auditAgentIdentity(
       M214_AGENT.version, M214_AGENT.userPromptText, M214_NATIVE_TOOLS,
     )).toEqual([]);
     expect(auditAgentIdentity(
       "2.1.261", M214_AGENT.userPromptText, M214_NATIVE_TOOLS,
-    )).toHaveLength(1);
+    )).toEqual([]);
+    expect(auditAgentIdentity("", M214_AGENT.userPromptText, M214_NATIVE_TOOLS)).toHaveLength(1);
+    expect(auditAgentIdentity("2.1.261", M214_AGENT.userPromptText, M214_NATIVE_TOOLS, "2.1.262")).toHaveLength(1);
   });
 
   test("both arms hash to one native-tool authority", () => {
@@ -322,7 +326,7 @@ describe("gate coverage", () => {
       "P4_ROW_IS_FROZEN", "P5_NO_RUNTIME_OVERRIDES", "P6_EXECUTION_ORDER", "P7_SPEND_AUTHORIZATION",
       "P8_SPEND_CEILING", "P9_LEDGER_INTEGRITY", "P10_CONTINUATION_SAFETY",
       "P11_RETRY_SPEND_RESERVE", "P12_EXECUTABLE_AUTHORITY", "P13_SCRATCH_CAPACITY",
-      "P14_QUOTA_SESSION_AUTHORITY", "P15_SUBSCRIPTION_AUTH_MODE"]
+      "P14_QUOTA_SESSION_AUTHORITY", "P15_SUBSCRIPTION_AUTH_MODE", "P16_AGENT_HARNESS"]
       .map((id) => gateRecord(id, "PREREGISTRATION", true, [], "evidence"));
     expect(auditRuntimeGateCoverage([...prelaunch, ...full])).toEqual([]);
     expect(auditRuntimeGateCoverage([...prelaunch, ...full.slice(1)])).toHaveLength(1);

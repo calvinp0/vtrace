@@ -281,8 +281,16 @@ export async function runM220FalsificationSuite(input: M220SuiteInput): Promise<
   // ── F5 (F203): usage-credit continuation is never automatically enabled ──
   {
     const fired: string[] = [];
-    const enabled = assess({ account: { ...accountOff, hasExtraUsageEnabled: true }, overflowAttestation: "operator" });
-    if (!enabled.launchPermitted && enabled.overflowVerdict === "USAGE_CREDIT_OVERFLOW_ENABLED_AT_ACCOUNT") fired.push("extra usage enabled at the account refuses launch; the attestation does not override it");
+    // M220-A3 restates this control: the organisation-level profile flag no
+    // longer blocks on its own once a newer user-level authority says OFF, but
+    // usage credits reported ON by user-level evidence still cannot be attested past.
+    const enabledOrgOnly = assess({ account: { ...accountOff, hasExtraUsageEnabled: true } });
+    if (!enabledOrgOnly.launchPermitted && enabledOrgOnly.overflowVerdict === "USAGE_CREDIT_OVERFLOW_ENABLED_AT_ACCOUNT") fired.push("a cached true with no newer user-level authority refuses launch");
+    const enabledUser = assess({
+      account: { ...accountOff, hasExtraUsageEnabled: true, usageSnapshot: { present: true, extraUsageEnabled: true, userDisabled: false, fetchedAtIso: "2026-09-05T12:30:00.000Z", accountMatches: true } },
+      overflowAttestation: "operator",
+    });
+    if (!enabledUser.launchPermitted && enabledUser.extraUsage.decidedBy === "CACHED_CLI_USAGE_SNAPSHOT") fired.push("usage credits ON in a user-level snapshot newer than the attestation cannot be attested past");
     for (const flag of ["--allow-extra-usage", "--use-usage-credits", "--continue-paid", "--enable-overage", "--api-fallback"]) {
       try {
         parseLaunchArgs([flag]);
@@ -302,7 +310,7 @@ export async function runM220FalsificationSuite(input: M220SuiteInput): Promise<
     } finally {
       rmSync(armRoot, { recursive: true, force: true });
     }
-    controls.push(control("F203", "F5", "no path enables usage credits: an account with extra usage enabled is refused and cannot be attested past, every overflow-shaped flag is refused by name, and the production adapter aborts an attempt as a provider availability interruption the moment a rate_limit_event reports paid overage in use", "GUARD_FIRES", fired.length >= 9 ? fired : [], "REAL_PROCESS"));
+    controls.push(control("F203", "F5", "no path enables usage credits: a cached true with no newer authority is refused, credits ON in newer user-level evidence cannot be attested past (A3), every overflow-shaped flag is refused by name, and the production adapter aborts an attempt as a provider availability interruption the moment a rate_limit_event reports paid overage in use", "GUARD_FIRES", fired.length >= 9 ? fired : [], "REAL_PROCESS"));
   }
 
   // ── F6 (F204), F7 (F205), F14 (F212), F30 (F228): caps, resume, different caps, no retry consumed ──
@@ -579,19 +587,19 @@ export async function runM220FalsificationSuite(input: M220SuiteInput): Promise<
     controls.push(control("F218", "F20", "a seven_day rejection is classified WEEKLY_QUOTA, pauses the session, gates the next session until the weekly reset, and neither resets nor restarts the cohort", "GUARD_SILENT", issues));
   }
 
-  // ── F21 (F219): the agent binary version changes during a pause ──
+  // ── F21 (F219): the agent harness changes during a pause (restated under M214_A3) ──
   {
     const fired: string[] = [];
     const drifted = join(input.scratchDir, "drifted-claude");
     writeFileSync(drifted, "#!/bin/sh\necho '9.9.9 (Claude Code)'\n");
     chmodSync(drifted, 0o755);
-    const resolution = resolveAgentBinary(drifted, "2.1.260");
-    if (resolution.issues.some((issue) => issue.includes("9.9.9"))) fired.push("a declared binary reporting 9.9.9 against the frozen 2.1.260 is refused");
-    if (resolveAgentBinary().issues.length === 0) fired.push("the real pinned binary and symlink still agree on 2.1.260 (the gate is not always-on)");
+    const resolution = resolveAgentBinary(drifted);
+    if (resolution.issues.length === 0 && resolution.version === "9.9.9") fired.push("a launcher reporting another release resolves and records 9.9.9 as metadata; no version pin refuses it (A3)");
+    if (resolveAgentBinary(join(input.scratchDir, "no-such-claude")).issues.length > 0) fired.push("a launcher that resolves to nothing is refused");
     const { sessionIdentityPreflight } = await import("./run_stage5_m215_launch");
     const real = sessionIdentityPreflight(manifest);
-    if (real.agent.ok) fired.push("the real session identity preflight passes on the unchanged host");
-    // The production adapter refuses to spawn at all under a drifted declared binary.
+    if (real.agent.ok) fired.push("the real installed harness passes the A3 capability contract on the unchanged host");
+    // The production adapter refuses a spawn whose executable changed after verification.
     const armRoot = mkdtempSync(join(input.scratchDir, "f219-"));
     try {
       const registry = new ArmEnvironmentRegistry();
@@ -601,19 +609,20 @@ export async function runM220FalsificationSuite(input: M220SuiteInput): Promise<
       });
       try {
         await adapter.run({
-          row: manifest[0]!, attemptId: "f219", workingDirectory: "/testbed", modelTarget: M214_MODEL.model, agentBinary: drifted, agentVersion: "2.1.260",
+          row: manifest[0]!, attemptId: "f219", workingDirectory: "/testbed", modelTarget: M214_MODEL.model, agentBinary: drifted, agentVersion: "9.9.9",
+          harness: { resolvedBinary: drifted, sha256: "0".repeat(64), version: "9.9.9" },
           nativeTools: ["Read"], mcpServers: [], maxTurns: 1, perRunCostCapUsd: 3.5, wallClockTimeoutSeconds: 60, userPromptTemplate: "x",
         }, { assertProviderModelIdentity: () => undefined });
       } catch (error) {
-        if (/refusing to launch/.test((error as Error).message) && /9\.9\.9/.test((error as Error).message)) fired.push("the production adapter refuses to launch under the drifted declared binary");
+        if (/refusing to launch/.test((error as Error).message) && /changed between verification and spawn/.test((error as Error).message)) fired.push("the production adapter refuses to spawn an executable whose digest differs from the verified one");
       }
     } finally {
       rmSync(armRoot, { recursive: true, force: true });
       rmSync(drifted, { force: true });
     }
-    const argv = buildAgentArgv({ row: manifest[0]!, attemptId: "x", workingDirectory: "/testbed", modelTarget: M214_MODEL.model, agentBinary: "/home/calvin/.local/bin/claude", agentVersion: "2.1.260", nativeTools: [], mcpServers: [], maxTurns: 1, perRunCostCapUsd: 1, wallClockTimeoutSeconds: 1, userPromptTemplate: "x" }, [], "p");
-    if (argv[0] === "/home/calvin/.local/share/claude/versions/2.1.260") fired.push("the spawned executable is the versioned binary, never the symlink");
-    controls.push(control("F219", "F21", "an agent binary that reports another version is refused by the pinned-version resolution, by the session identity preflight and by the production adapter before any spawn; the spawned executable is the versioned file", "GUARD_FIRES", fired.length >= 5 ? fired : [], "REAL_PROCESS"));
+    const argv = buildAgentArgv({ row: manifest[0]!, attemptId: "x", workingDirectory: "/testbed", modelTarget: M214_MODEL.model, agentBinary: "/home/calvin/.local/bin/claude", agentVersion: "x", harness: { resolvedBinary: "/resolved/claude-binary", sha256: null, version: "x" }, nativeTools: [], mcpServers: [], maxTurns: 1, perRunCostCapUsd: 1, wallClockTimeoutSeconds: 1, userPromptTemplate: "x" }, [], "p");
+    if (argv[0] === "/resolved/claude-binary") fired.push("the spawned executable is the verified resolved file, never the symlink");
+    controls.push(control("F219", "F21", "under M214_A3 a harness reporting another release is metadata, not a refusal; an unresolvable launcher is refused; the real harness passes the capability contract; the adapter refuses an executable changed after verification and spawns the resolved file", "GUARD_FIRES", fired.length >= 5 ? fired : [], "REAL_PROCESS"));
   }
 
   // ── F22 (F220): provider model identity changes → live initialization refuses and the session halts ──
@@ -823,7 +832,7 @@ export async function runM220FalsificationSuite(input: M220SuiteInput): Promise<
     }
     if (document !== null) {
       const gates = document.gates as { id: string; pass: boolean; detail: string }[];
-      for (const id of ["SESSION_AUTHORITY", "AGENT_IDENTITY", "TREATMENT_TREE", "QUOTA_WINDOW", "SUBSCRIPTION_AUTH", "FROZEN_AUTHORITIES", "EXECUTABLE_AUTHORITY", "ISOLATION_PREFLIGHT", "SCRATCH_CAPACITY_IMAGES"]) {
+      for (const id of ["SESSION_AUTHORITY", "HARNESS_AUTHORITY", "AGENT_HARNESS_CAPABILITIES", "PAIR_HARNESS_EQUALITY", "API_OVERRIDE_GUARD", "TREATMENT_TREE", "QUOTA_WINDOW", "SUBSCRIPTION_AUTH", "FROZEN_AUTHORITIES", "EXECUTABLE_AUTHORITY", "ISOLATION_PREFLIGHT", "SCRATCH_CAPACITY_IMAGES"]) {
         const gate = gates.find((entry) => entry.id === id);
         if (gate?.pass !== true) issues.push(`${id}: ${gate?.detail ?? "absent"}`);
       }

@@ -102,8 +102,8 @@ async function main(): Promise<void> {
       `${a2Record.quotaInterruption.classificationVerdict} (${a2Record.quotaInterruption.frozenClass}, new classes ${a2Record.quotaInterruption.newRetryClassesCreated}); ${c(["F215", "F216", "F217"]).evidence}`),
 
     gate("G106", "LONG_DURATION_IDENTITY_GUARDS_VERIFIED: an agent binary of another version, a provider model other than the frozen target, a changed HEAD:src or dirty src worktree, a changed manifest, a changed image identity and a mutated A2 each refuse resume or halt the session; the real host passes every one today",
-      c(["F219", "F220", "F221", "F222", "F223", "F224"]).ok && preflightGate("AGENT_IDENTITY") && preflightGate("TREATMENT_TREE") && artifacts.srcUnchanged,
-      `${c(["F219", "F220", "F221", "F222", "F223", "F224"]).evidence}; preflight AGENT_IDENTITY ${preflightGate("AGENT_IDENTITY")} TREATMENT_TREE ${preflightGate("TREATMENT_TREE")}; HEAD:src ${artifacts.headSrc.slice(0, 12)} unchanged ${artifacts.srcUnchanged}`),
+      c(["F219", "F220", "F221", "F222", "F223", "F224"]).ok && preflightGate("AGENT_HARNESS_CAPABILITIES") && preflightGate("TREATMENT_TREE") && artifacts.srcUnchanged,
+      `${c(["F219", "F220", "F221", "F222", "F223", "F224"]).evidence}; preflight AGENT_HARNESS_CAPABILITIES ${preflightGate("AGENT_HARNESS_CAPABILITIES")} TREATMENT_TREE ${preflightGate("TREATMENT_TREE")}; HEAD:src ${artifacts.headSrc.slice(0, 12)} unchanged ${artifacts.srcUnchanged}`),
 
     gate("G107", "TMP_CLEANUP_ON_QUOTA_PAUSE_VERIFIED: after a pause no claim is CLAIMED and the namespace holds only its marker (both arm orders), residue before a pause blocks, and the M218 pure scratch suite is preserved",
       c(["F209", "F225", "F226"]).ok && m218.suitePasses && m218.satisfied === m218.controlCount,

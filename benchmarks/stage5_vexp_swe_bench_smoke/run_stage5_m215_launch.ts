@@ -42,7 +42,7 @@
  */
 
 import { execFileSync } from "node:child_process";
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { appendFileSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 import type { RunManifestRow } from "./m214Preregistration";
@@ -84,7 +84,6 @@ import {
   CohortLedger,
   M215_LEDGER_SCHEMA,
 } from "./m215CohortLedger";
-import { resolveAgentBinary } from "./m216ProductionAdapters";
 import { SubstrateBridge } from "./m216SubstrateBridge";
 import {
   type OperationalEvent,
@@ -147,10 +146,19 @@ import {
   validateMaxPairs,
 } from "./m220QuotaSession";
 import {
+  type ExtraUsageAttestation,
   type SubscriptionAuthReport,
   collectSubscriptionAuth,
   redactedAuthSummary,
 } from "./m220SubscriptionAuth";
+import {
+  type ActiveHarnessAmendment,
+  M214_A3_AMENDMENT_ID,
+  auditHarnessAmendmentBinding,
+  loadActiveHarnessAmendment,
+} from "./m220A3Amendment";
+import { AgentHarnessAuthority, type HarnessProbeReport, harnessProbeSummary, observationFrom } from "./m220A3AgentHarness";
+import { auditPairHarnessEquality, harnessVersionSummary, pairHarnessBinding } from "./m220A3PairHarness";
 
 const RESULTS_DIR = join(import.meta.dir, "results");
 const VTRACE_ROOT = join(import.meta.dir, "..", "..");
@@ -181,10 +189,13 @@ interface LaunchArgs {
   /** M220 §32 — the outcome-blind status; runs nothing. */
   readonly sessionStatus: boolean;
   /**
-   * M220 §20 — consulted ONLY when the CLI's cached account profile cannot say
-   * whether extra usage is enabled; never overrides a profile that says it is.
+   * M220-A3 §10 — the operator's statement that they checked the Claude account
+   * and usage credits are OFF (or ON). Recorded append-only; it competes with
+   * the CLI's user-level usage snapshot by recency and supersedes the
+   * organisation-level profile flag. It authorises no spend and no fallback.
    */
   readonly attestExtraUsageDisabled: string | null;
+  readonly attestExtraUsageEnabled: string | null;
 }
 
 const OPERATIONAL_FLAGS: readonly string[] = Object.freeze([
@@ -192,7 +203,7 @@ const OPERATIONAL_FLAGS: readonly string[] = Object.freeze([
   "--max-rows", "--recover-isolation", "--preflight",
   "--max-pairs-this-session", "--max-session-wall-clock", "--pause-after-current-pair",
   "--pause-after-current-arm", "--clear-pause-request", "--session-status",
-  "--attest-extra-usage-disabled",
+  "--attest-extra-usage-disabled", "--attest-extra-usage-enabled",
 ]);
 
 const BOOLEAN_FLAGS: readonly string[] = Object.freeze([
@@ -254,6 +265,9 @@ export function parseLaunchArgs(argv: readonly string[]): LaunchArgs {
   if (wallClock !== null && (!Number.isFinite(wallClock) || wallClock <= 0)) {
     throw new Error(`--max-session-wall-clock must be a positive number of seconds (got ${String(args["--max-session-wall-clock"])})`);
   }
+  if (args["--attest-extra-usage-disabled"] !== undefined && args["--attest-extra-usage-enabled"] !== undefined) {
+    throw new Error("--attest-extra-usage-disabled and --attest-extra-usage-enabled are exclusive; attest the state you observed");
+  }
   if (args["--pause-after-current-pair"] === true && args["--pause-after-current-arm"] === true) {
     throw new Error("--pause-after-current-pair and --pause-after-current-arm are exclusive; choose the boundary");
   }
@@ -279,12 +293,55 @@ export function parseLaunchArgs(argv: readonly string[]): LaunchArgs {
     attestExtraUsageDisabled: args["--attest-extra-usage-disabled"] === undefined
       ? null
       : String(args["--attest-extra-usage-disabled"]),
+    attestExtraUsageEnabled: args["--attest-extra-usage-enabled"] === undefined
+      ? null
+      : String(args["--attest-extra-usage-enabled"]),
   };
 }
 
+/** M220-A3 §10 — the attestation this invocation carries, stamped once. */
+export function attestationFor(args: LaunchArgs, at: string): ExtraUsageAttestation | null {
+  if (args.attestExtraUsageEnabled !== null) return { state: "ENABLED", statement: args.attestExtraUsageEnabled, attestedAt: at };
+  if (args.attestExtraUsageDisabled !== null) return { state: "DISABLED", statement: args.attestExtraUsageDisabled, attestedAt: at };
+  return null;
+}
+
+export const M220A3_ATTESTATION_LOG = "operator_attestations.jsonl" as const;
+
+/**
+ * Append-only: one JSON line per attestation, never rewritten. The statement is
+ * the operator's own words; no credential, account id or e-mail is recorded.
+ */
+export function recordOperatorAttestation(
+  cohortDir: string, attestation: ExtraUsageAttestation, experimentIdentity: Record<string, unknown>,
+): string {
+  mkdirSync(cohortDir, { recursive: true });
+  const path = join(cohortDir, M220A3_ATTESTATION_LOG);
+  appendFileSync(path, `${JSON.stringify({
+    schemaVersion: "stage5.m220-a3.operator-attestation.v1",
+    kind: attestation.state === "DISABLED" ? "EXTRA_USAGE_DISABLED" : "EXTRA_USAGE_ENABLED",
+    attestedAt: attestation.attestedAt,
+    statement: attestation.statement,
+    experimentIdentity,
+    means: "the operator checked the current Claude account UI/CLI usage-credit state; nothing else",
+    authorizesSpend: false,
+    authorizesApiFallback: false,
+    grantsG36: false,
+  })}\n`);
+  return path;
+}
+
 /** M220 §16–§20 — the audit the launcher runs before a session and binds to P15 for every row. */
-function subscriptionAuditFor(args: LaunchArgs, now: () => string): () => SubscriptionAuthReport {
-  return () => collectSubscriptionAuth({ projectRoot: VTRACE_ROOT, overflowAttestation: args.attestExtraUsageDisabled, now });
+function subscriptionAuditFor(args: LaunchArgs, now: () => string, attestation: ExtraUsageAttestation | null = attestationFor(args, now())): () => SubscriptionAuthReport {
+  return () => collectSubscriptionAuth({ projectRoot: VTRACE_ROOT, overflowAttestation: attestation, now });
+}
+
+function tryLoadHarnessAmendment(resultsDir: string): { readonly amendment: ActiveHarnessAmendment | null; readonly error: string | null } {
+  try {
+    return { amendment: loadActiveHarnessAmendment(resultsDir), error: null };
+  } catch (error) {
+    return { amendment: null, error: (error as Error).message };
+  }
 }
 
 // ── Frozen authorities and persistence ──────────────────────────────
@@ -573,15 +630,39 @@ export function persistSessionDocuments(
   return { journal: journalPath, timing: timingPath, status: statusPath };
 }
 
-/** M220 §37–§39 — the identities a session must re-prove before its first row. */
+/**
+ * M220 §37–§39, as amended by M214_A3 — what a session must re-prove before
+ * its first row. The Claude Code release is no longer compared to a pin: the
+ * harness the declared launcher resolves to must satisfy the capability
+ * contract, and when the next frozen row is the second arm of an open pair it
+ * must be the executable the first arm ran on.
+ */
 export interface SessionIdentityPreflight {
-  readonly agent: { readonly ok: boolean; readonly detail: string; readonly pinnedBinary: string; readonly version: string };
+  readonly agent: {
+    readonly ok: boolean;
+    readonly detail: string;
+    readonly resolvedBinary: string;
+    readonly version: string;
+    readonly sha256: string | null;
+    readonly report: HarnessProbeReport;
+  };
+  readonly pairHarness: { readonly ok: boolean; readonly detail: string };
   readonly treatment: { readonly ok: boolean; readonly detail: string; readonly headSrc: string; readonly srcWorktreeClean: boolean };
   readonly issues: readonly string[];
 }
 
-export function sessionIdentityPreflight(manifest: readonly RunManifestRow[], vtraceRoot: string = VTRACE_ROOT): SessionIdentityPreflight {
-  const agent = resolveAgentBinary();
+export function sessionIdentityPreflight(
+  manifest: readonly RunManifestRow[], vtraceRoot: string = VTRACE_ROOT,
+  context: { readonly harness?: AgentHarnessAuthority; readonly events?: readonly OperationalEvent[]; readonly nextRow?: RunManifestRow } = {},
+): SessionIdentityPreflight {
+  const harness = context.harness ?? new AgentHarnessAuthority();
+  const report = harness.probe();
+  const observation = observationFrom(report);
+  const agentOk = observation.capabilityVerdict === "AGENT_HARNESS_CAPABILITIES_PASS";
+  const binding = context.nextRow === undefined || context.events === undefined
+    ? null
+    : pairHarnessBinding(manifest, context.events, context.nextRow);
+  const pairIssues = context.nextRow === undefined ? [] : auditPairHarnessEquality(binding, observation, context.nextRow);
   let headSrc = "";
   let dirty = "";
   let treatmentIssues: readonly string[] = [];
@@ -594,12 +675,32 @@ export function sessionIdentityPreflight(manifest: readonly RunManifestRow[], vt
   }
   const srcClean = dirty.length === 0;
   const issues: string[] = [
-    ...agent.issues,
+    ...observation.issues,
+    ...pairIssues,
     ...treatmentIssues,
     ...(srcClean ? [] : [`the VTRACE src/ working tree has uncommitted changes; the treatment the agent would run is not HEAD:src: ${dirty.split("\n").slice(0, 5).join(" | ")}`]),
   ];
+  const passed = report.capabilities.filter((entry) => entry.satisfied).length;
   return {
-    agent: { ok: agent.issues.length === 0, detail: agent.issues.join("; ") || `pinned ${agent.binary} reports ${agent.pinnedBinaryVersion}; declared symlink reports ${agent.declaredBinaryVersion}`, pinnedBinary: agent.binary, version: agent.pinnedBinaryVersion },
+    agent: {
+      ok: agentOk,
+      detail: agentOk
+        ? `${report.verdict}: ${passed}/${report.capabilities.length} capabilities under ${report.contractVersion}; Claude Code `
+          + `${report.identity.version} at ${report.identity.resolvedBinary} (sha256 ${report.identity.sha256?.slice(0, 16) ?? "none"}; `
+          + `fingerprint ${report.capabilityFingerprint?.slice(0, 16) ?? "none"}); release recorded as metadata, no version pin; `
+          + `probe ${report.isolation}, providerCalls ${report.providerCalls}`
+        : `AGENT_HARNESS_CAPABILITY_MISMATCH: ${observation.issues.join("; ")}`,
+      resolvedBinary: report.identity.resolvedBinary,
+      version: report.identity.version,
+      sha256: report.identity.sha256,
+      report,
+    },
+    pairHarness: {
+      ok: pairIssues.length === 0,
+      detail: pairIssues.join("; ") || (binding === null
+        ? "no open pair binds the next row's harness"
+        : `the next row's partner arm ran on sha256 ${binding.sha256?.slice(0, 16) ?? "none"}; the resolved harness is the same executable`),
+    },
     treatment: { ok: treatmentIssues.length === 0 && srcClean, detail: treatmentIssues.join("; ") || `HEAD:src ${headSrc}${srcClean ? "" : " (src worktree dirty)"}`, headSrc, srcWorktreeClean: srcClean },
     issues: Object.freeze(issues),
   };
@@ -662,6 +763,16 @@ function renderPlan(
         requiredLaunchArgument: "--max-pairs-this-session N (N >= 1, operator-chosen, outcome-blind)",
         pairsInFrozenOrder: frozenPairs(authorities.manifest).length,
       },
+    harnessAuthority: (() => {
+      const loaded = tryLoadHarnessAmendment(args.resultsDir);
+      return loaded.amendment === null
+        ? { bound: false, reason: loaded.error }
+        : {
+          bound: true, amendmentId: loaded.amendment.amendmentId, amendmentHash: loaded.amendment.amendmentHash,
+          identity: loaded.amendment.executableAuthority.identity, contractVersion: loaded.amendment.contractVersion,
+          agentVersionPinned: false,
+        };
+    })(),
     cohort: {
       design: M214_STOPPING_RULE.design,
       tasks: M214_STOPPING_RULE.tasks,
@@ -775,6 +886,20 @@ async function launchPreflight(
   });
   gate("SESSION_AUTHORITY", sessionAuthority !== null && sessionLineage.length === 0,
     sessionAuthority === null ? (sessionAuthorityError ?? "A2 not loaded") : `${sessionAuthority.amendmentId} ${sessionAuthority.amendmentHash}; executable (M214 + A1 + A2) ${sessionAuthority.executableAuthority.identity}; ${sessionLineage.join("; ") || "lineage binds"}`);
+  // M220-A3 — the harness authority binds on top of A2.
+  const harnessAmendment = tryLoadHarnessAmendment(args.resultsDir);
+  const harnessLineage = auditHarnessAmendmentBinding(harnessAmendment.amendment ?? undefined, {
+    preregistrationHash: authorities.preregistrationHash.actual,
+    manifestHash: authorities.manifestHash.actual,
+    externalReferenceHash: authorities.externalReferenceHash.actual,
+    a1AmendmentHash: authority.amendmentHash,
+    a2AmendmentHash: sessionAuthority?.amendmentHash,
+  });
+  gate("HARNESS_AUTHORITY", harnessAmendment.amendment !== null && harnessLineage.length === 0,
+    harnessAmendment.amendment === null
+      ? (harnessAmendment.error ?? "A3 not loaded")
+      : `${harnessAmendment.amendment.amendmentId} ${harnessAmendment.amendment.amendmentHash}; executable (M214 + A1 + A2 + A3) `
+        + `${harnessAmendment.amendment.executableAuthority.identity}; ${harnessLineage.join("; ") || "lineage binds"}`);
   gate("SPEND_ENVELOPE", authority.hardCeilingUsd === 735 && authority.retryReserveUsd === 35 && authority.retryReserveAttempts === 10 && authority.ordinaryExposureUsd === 700,
     `$${authority.ordinaryExposureUsd} ordinary + $${authority.retryReserveUsd} retry reserve (${authority.retryReserveAttempts} attempts) = $${authority.hardCeilingUsd} hard ceiling; manifest rows ${authorities.manifest.length}`);
   let binding: ReturnType<typeof assertBindingUsable> | null = null;
@@ -798,9 +923,22 @@ async function launchPreflight(
   const scratch = buildScratchAuthority(args.cohortDir, now);
   gate("SCRATCH_NAMESPACE", existsSync(scratch.namespace.markerPath), `${scratch.namespace.canonicalRoot} marked for ${scratch.namespace.experiment}`);
 
-  // M220 §37–§39 — agent binary, treatment tree and the quota window.
-  const identity = sessionIdentityPreflight(authorities.manifest);
-  gate("AGENT_IDENTITY", identity.agent.ok, identity.agent.detail);
+  // M220 §37–§39 as amended by A3 — the harness contract (no version pin),
+  // pair-local harness equality for the next row, the treatment tree and the
+  // quota window.
+  let nextRowForHarness: RunManifestRow | undefined;
+  try {
+    nextRowForHarness = selectNextRow(authorities.manifest, restoreLedger(authorities, args, true).ledger);
+  } catch {
+    nextRowForHarness = undefined;
+  }
+  const identity = sessionIdentityPreflight(authorities.manifest, VTRACE_ROOT, {
+    harness: new AgentHarnessAuthority({ amendmentHash: harnessAmendment.amendment?.amendmentHash }),
+    events: operationsEvents,
+    ...(nextRowForHarness === undefined ? {} : { nextRow: nextRowForHarness }),
+  });
+  gate("AGENT_HARNESS_CAPABILITIES", identity.agent.ok, identity.agent.detail);
+  gate("PAIR_HARNESS_EQUALITY", identity.pairHarness.ok, identity.pairHarness.detail);
   gate("TREATMENT_TREE", identity.treatment.ok, identity.treatment.detail);
   const windowIssues = quotaWindowGate(lastHardQuotaLimit(operationsEvents), now());
   gate("QUOTA_WINDOW", windowIssues.length === 0, windowIssues.join("; ") || "no unexpired hard quota limit on record");
@@ -812,14 +950,28 @@ async function launchPreflight(
   // paid-overflow enabled at the account is an OPERATOR prerequisite: the
   // launch refuses until it is disabled, and it is reported beside G36 rather
   // than as a technical defect of the executor.
-  const auth = subscriptionAuditFor(args, now)();
-  const authTechnicalIssues = auth.issues.filter((issue) => !issue.includes("hasExtraUsageEnabled") && !issue.includes("extra usage"));
-  gate("SUBSCRIPTION_AUTH", auth.authModeVerdict === "SUBSCRIPTION_AUTH_MODE_PROVEN" && authTechnicalIssues.length === 0,
-    `${auth.authModeVerdict} (${auth.authModeStrength}); ANTHROPIC_API_KEY_PRESENT=${auth.environment.apiKeyPresent}; overrides [${auth.environment.present.map((entry) => entry.name).join(", ")}]; `
-    + `cli ${auth.cliAuth.authMethod ?? "?"}/${auth.cliAuth.apiProvider ?? "?"}/${auth.cliAuth.subscriptionType ?? "?"}; ${authTechnicalIssues.join("; ") || "no technical issue"}`);
-  const operatorPrerequisitesPending = auth.overflowVerdict === "USAGE_CREDIT_OVERFLOW_DISABLED_AT_ACCOUNT" || auth.launchPermitted
+  // M220-A3 §10 — an attestation on this invocation is recorded append-only
+  // before it is consulted.
+  const attestation = attestationFor(args, now());
+  const attestationLog = attestation === null ? null : recordOperatorAttestation(args.cohortDir, attestation, {
+    experiment: M214_EXPERIMENT_NAME,
+    executableAuthority: harnessAmendment.amendment?.executableAuthority.identity ?? null,
+    a3AmendmentHash: harnessAmendment.amendment?.amendmentHash ?? null,
+    invocation: "--preflight",
+  });
+  const auth = subscriptionAuditFor(args, now, attestation)();
+  gate("API_OVERRIDE_GUARD", auth.environment.present.length === 0,
+    `ANTHROPIC_API_KEY_PRESENT=${auth.environment.apiKeyPresent}; overrides present [${auth.environment.present.map((entry) => entry.name).join(", ")}] `
+    + `of ${auth.environment.checkedNames.length} checked names plus any ANTHROPIC_* (presence only, values never read)`);
+  gate("SUBSCRIPTION_AUTH", auth.authModeVerdict === "SUBSCRIPTION_AUTH_MODE_PROVEN" && auth.technicalIssues.length === 0,
+    `${auth.authModeVerdict} (${auth.authModeStrength}); cli ${auth.cliAuth.authMethod ?? "?"}/${auth.cliAuth.apiProvider ?? "?"}/${auth.cliAuth.subscriptionType ?? "?"}; `
+    + `usage credits ${auth.overflowVerdict} decided by ${auth.extraUsage.decidedBy ?? "nothing"}`
+    + `${auth.extraUsage.staleCachedState ? " (STALE_CACHED_EXTRA_USAGE_STATE)" : ""}; ${auth.technicalIssues.join("; ") || "no technical issue"}`);
+  // M220-A3 §11 — the usage-credit state is an OPERATOR prerequisite, decided
+  // by the evidence hierarchy rather than by substring-filtering issues.
+  const operatorPrerequisitesPending = auth.overflowIssues.length === 0
     ? []
-    : [`${auth.overflowVerdict}: ${auth.issues.filter((issue) => issue.includes("extra usage") || issue.includes("hasExtraUsageEnabled")).join("; ")}`];
+    : [`${auth.overflowVerdict}: ${auth.overflowIssues.join("; ")}`];
 
   let substrate: Record<string, unknown> | null = null;
   let scratchIssues: readonly string[] = [];
@@ -874,6 +1026,19 @@ async function launchPreflight(
     },
     subscriptionAuth: redactedAuthSummary(auth),
     subscriptionAuthWarnings: auth.warnings,
+    extraUsageEvidence: {
+      decidedBy: auth.extraUsage.decidedBy,
+      liveStateAvailable: auth.extraUsage.liveStateAvailable,
+      observations: auth.extraUsage.observations,
+      staleCachedExtraUsageState: auth.extraUsage.staleCachedState,
+      attestationRecordedAt: attestationLog,
+    },
+    agentHarness: {
+      ...harnessProbeSummary(identity.agent.report),
+      capabilityEvidence: identity.agent.report.capabilities,
+      versionPinned: false,
+      harnessAmendment: harnessAmendment.amendment?.amendmentHash ?? null,
+    },
     // Operator prerequisites are not technical blockers and are not the spend
     // gate; a launch is refused while any is pending, exactly like G36.
     operatorPrerequisitesPending,
@@ -918,6 +1083,8 @@ function printSessionStatus(args: LaunchArgs, authorities: FrozenAuthorities): v
     subscriptionAuth: redactedAuthSummary(auth),
     launchWouldBeRefusedByAuthGuard: !auth.launchPermitted,
     ledgerIssues: [...restored.issues, ...operationsRestored.issues],
+    // M220-A3 §7 — descriptive: which harness each pair ran on. Never an outcome.
+    agentHarnessVersions: harnessVersionSummary(authorities.manifest, operationsRestored.ledger.events),
     journal: deriveSessionJournal(operationsRestored.ledger.events, restored.ledger).map((entry) => ({
       sessionId: entry.sessionId, startedAt: entry.startedAt, endedAt: entry.endedAt, endState: entry.endState,
       pauseReason: entry.pauseReason, pairsPlanned: entry.pairsPlanned, pairsCompleted: entry.pairsCompleted,
@@ -1029,17 +1196,41 @@ async function main(): Promise<void> {
       + "by the operator from their own usage view). There is no continuous-launch mode and no task selector.",
     );
   }
+  // M220-A3 — the harness authority (M214 + A1 + A2 + A3). Without it the
+  // executor would have neither the version pin nor the contract that replaced it.
+  const harnessLoaded = tryLoadHarnessAmendment(args.resultsDir);
+  if (harnessLoaded.amendment === null) throw new Error(`refusing to launch: ${harnessLoaded.error ?? `no ${M214_A3_AMENDMENT_ID}`}`);
+  const harnessLineage = auditHarnessAmendmentBinding(harnessLoaded.amendment, {
+    preregistrationHash: authorities.preregistrationHash.actual,
+    manifestHash: authorities.manifestHash.actual,
+    externalReferenceHash: authorities.externalReferenceHash.actual,
+    a1AmendmentHash: authority.amendmentHash,
+    a2AmendmentHash: sessionAuthority.amendmentHash,
+  });
+  if (harnessLineage.length > 0) throw new Error(`refusing to launch: harness authority does not bind: ${harnessLineage.join("; ")}`);
+  const agentHarness = new AgentHarnessAuthority({ amendmentHash: harnessLoaded.amendment.amendmentHash });
+
   // M220 §16–§20 — the subscription authentication mode, before anything
-  // expensive. An API-key billing override, a non-subscription login, or paid
-  // overflow enabled at the account refuses the session by name; presence is
-  // recorded, values are never read.
-  const subscriptionAudit = subscriptionAuditFor(args, now);
+  // expensive. An API-key billing override or a non-subscription login
+  // refuses by name (presence recorded, values never read). M220-A3: the
+  // usage-credit state is decided by the evidence hierarchy, and an
+  // attestation on this invocation is recorded append-only first.
+  const attestation = attestationFor(args, now());
+  if (attestation !== null) {
+    recordOperatorAttestation(args.cohortDir, attestation, {
+      experiment: M214_EXPERIMENT_NAME,
+      executableAuthority: harnessLoaded.amendment.executableAuthority.identity,
+      a3AmendmentHash: harnessLoaded.amendment.amendmentHash,
+      invocation: "launch",
+    });
+  }
+  const subscriptionAudit = subscriptionAuditFor(args, now, attestation);
   const auth = subscriptionAudit();
   if (!auth.launchPermitted) {
     throw new Error(
       `refusing to launch: ${auth.authModeVerdict}; ${auth.overflowVerdict}: ${auth.issues.join("; ")}. `
-      + "A cohort session runs only on the Claude MAX subscription login with no API-key override and no paid "
-      + "overflow enabled; no flag overrides a present override or an enabled overflow.",
+      + "A cohort session runs only on the Claude MAX subscription login with no API-key override and usage "
+      + "credits OFF; no flag overrides a present override or enables usage credits.",
     );
   }
   const binding = assertBindingUsable(args.binding);
@@ -1123,6 +1314,7 @@ async function main(): Promise<void> {
       spendAuthority: authority,
       sessionAuthority,
       subscriptionAuth: subscriptionAudit,
+      agentHarness,
     };
     const persistAll = (): void => {
       persistLedger(args.cohortDir, ledger);
@@ -1165,7 +1357,10 @@ async function main(): Promise<void> {
 
     // M220 §14, §35–§39 — every session re-proves the identities that can
     // drift across hours or weeks, and the quota window, before its first row.
-    const identity = sessionIdentityPreflight(authorities.manifest);
+    const firstRow = selectNextRow(authorities.manifest, ledger);
+    const identity = sessionIdentityPreflight(authorities.manifest, VTRACE_ROOT, {
+      harness: agentHarness, events: operationsRestored.ledger.events, ...(firstRow === undefined ? {} : { nextRow: firstRow }),
+    });
     const windowIssues = quotaWindowGate(lastHardQuotaLimit(operationsRestored.ledger.events), now());
     const sessionIssues = [...identity.issues, ...windowIssues];
     if (sessionIssues.length > 0) {
@@ -1189,7 +1384,8 @@ async function main(): Promise<void> {
       ledgerEntriesBefore: ledger.entries.length,
       pauseRequestPending: readPauseRequest(args.cohortDir)?.kind ?? null,
       subscriptionAuth: redactedAuthSummary(auth),
-      agentIdentity: { pinnedBinary: identity.agent.pinnedBinary, version: identity.agent.version },
+      agentIdentity: harnessProbeSummary(identity.agent.report),
+      harnessAmendment: harnessLoaded.amendment.amendmentHash,
       treatmentTree: identity.treatment.headSrc,
       imagePreflight: imageIdentity?.verdict ?? "NO_IDENTITY_RECORD",
       scratchCapacity: (() => {

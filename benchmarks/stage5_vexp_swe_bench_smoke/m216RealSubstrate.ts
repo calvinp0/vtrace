@@ -69,7 +69,6 @@ import {
   classifyTermination,
   observedAgentVersion,
   parseAgentStream,
-  pinnedAgentBinary,
   resolveAgentBinary,
   probeTreatmentCatalogue,
 } from "./m216ProductionAdapters";
@@ -697,13 +696,16 @@ export function configurationControls(
 ): readonly M216Control[] {
   const controls: M216Control[] = [];
   const environment = buildArmEnvironment(row, armRoot, undefined, process.env, "m216fixed");
+  // M220-A3 — the harness is whatever M214's declared launcher resolves to;
+  // its release is recorded, never pinned.
+  const resolution = resolveAgentBinary();
   const spec: AgentRunSpec = {
     row,
     attemptId: "m216-configuration-control",
     workingDirectory: "/testbed",
     modelTarget: M214_MODEL.model,
-    agentBinary: pinnedAgentBinary(),
-    agentVersion: M214_AGENT.version,
+    agentBinary: M214_AGENT.binary,
+    agentVersion: resolution.version,
     nativeTools: M214_NATIVE_TOOLS,
     mcpServers: environment.mcpServers,
     maxTurns: row.maxTurns,
@@ -711,10 +713,9 @@ export function configurationControls(
     wallClockTimeoutSeconds: M214_BUDGET.wallClockTimeoutSecondsPerRun,
     userPromptTemplate: M214_AGENT.userPromptText,
   };
-  const resolution = resolveAgentBinary();
   const argv = buildAgentArgv(spec, environment.isolationArgv, "PROMPT", resolution.binary);
   const expected = [
-    pinnedAgentBinary(), "-p", "PROMPT", "--output-format", "stream-json",
+    resolution.binary, "-p", "PROMPT", "--output-format", "stream-json",
     "--model", M214_MODEL.model, "--max-turns", String(M214_BUDGET.maxTurns), "--verbose",
     "--allowedTools", M214_NATIVE_TOOLS.join(","),
     "--max-budget-usd", String(M214_BUDGET.perRunCostCapUsd),
@@ -768,25 +769,25 @@ export function configurationControls(
     auditTreatmentCatalogue("baseline", [mcpToolName("vtrace", "get_code_context")]),
   ));
 
-  // §21 — the installed agent identity is the frozen one, on BOTH the pinned
-  // path and the symlink M214 named.
+  // §21 as amended by M214_A3 — the release is metadata: the declared
+  // launcher must resolve to an executable that can say what it is, and a
+  // launcher that resolves to nothing is refused. No version is compared.
   controls.push(control(
-    "F21", `the pinned binary and M214's declared symlink both report the frozen version `
-    + M214_AGENT.version,
+    "F21", `M214's declared launcher ${M214_AGENT.binary} resolves to an executable that reports its release `
+    + `(${resolution.version || "none"}; recorded as metadata under M214_A3, not pinned)`,
     "GUARD_SILENT", "REAL_AGENT_PATH", resolution.issues,
   ));
   controls.push(control(
-    "F21B", "a version pin the installed binary does not satisfy is refused before launch",
+    "F21B", "a declared launcher that resolves to no executable is refused before launch",
     "GUARD_FIRES", "REAL_AGENT_PATH",
-    resolveAgentBinary(M214_AGENT.binary, "0.0.0-not-installed").issues,
+    resolveAgentBinary("/nonexistent/m216-control/claude").issues,
   ));
   controls.push(control(
-    "F79", "the launched executable is the VERSIONED binary, not the symlink that follows whatever "
-    + "was installed last",
+    "F79", "the launched executable is the RESOLVED file, not the symlink that an update can move",
     "GUARD_SILENT", "REAL_AGENT_PATH",
-    argv[0] === pinnedAgentBinary()
+    argv[0] === resolution.binary && argv[0] !== M214_AGENT.binary
       ? []
-      : [`argv[0] is ${argv[0]}, not the pinned ${pinnedAgentBinary()}`],
+      : [`argv[0] is ${argv[0]}, not the resolved ${resolution.binary}`],
   ));
 
   return Object.freeze(controls);

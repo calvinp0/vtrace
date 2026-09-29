@@ -18,7 +18,7 @@
 
 import { createHash } from "node:crypto";
 import { execFileSync, spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, readFileSync, readdirSync, realpathSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 import {
@@ -65,60 +65,63 @@ import {
 
 export const M216_ADAPTER_VERSION = "stage5.m216.production-adapters.v1" as const;
 
-/** The pinned versioned binary, never the `claude` symlink, which follows whatever installed last. */
-export function pinnedAgentBinary(version: string = M214_AGENT.version): string {
-  return `/home/calvin/.local/share/claude/versions/${version}`;
-}
-
 export interface AgentBinaryResolution {
-  /** The executable actually spawned. */
+  /** The executable actually spawned: the declared launcher path, resolved. */
   readonly binary: string;
   readonly declaredBinary: string;
-  readonly declaredBinaryVersion: string;
-  readonly pinnedBinaryVersion: string;
+  /** `--version` output, verbatim. Operational metadata under M214_A3. */
+  readonly versionOutput: string;
+  readonly version: string;
   readonly issues: readonly string[];
 }
 
 /**
- * §19, §21 — which executable the frozen invocation actually names.
+ * M220-A3 §3, §5 — which executable M214's declared launcher path resolves
+ * to NOW.
  *
- * M214 froze two things that can disagree: `binary`, which is the `claude`
- * SYMLINK, and `version`, which is 2.1.260. M194 recorded why that matters — the
- * symlink follows whatever was installed last — and M214's own note says the
- * harness must assert the version before every run. Asserting it and then
- * launching the symlink leaves a window between the two.
+ * M214 froze `binary` (the `claude` symlink) and `version` (2.1.260), and
+ * M216–M220 enforced the version by spawning a versioned file and requiring
+ * the symlink to agree. M214_A3 retires the exact-version rule: Claude Code is
+ * the agent HARNESS, not the treatment, so its release is recorded as
+ * metadata and the harness is proven by the capability contract
+ * (`m220A3AgentHarness`) instead of by a version string. No version, allowed
+ * list or minimum/maximum is compared here.
  *
- * So the adapter spawns the VERSIONED binary and requires the frozen symlink to
- * report the same version. That satisfies both frozen fields, is strictly
- * stronger than either alone, and changes nothing about the agent: on a
- * compliant host the two paths are the same program.
+ * The RESOLVED path is what is spawned, never the symlink: an update that moves
+ * the symlink between verification and spawn cannot change what runs, and the
+ * agent adapter re-checks the verified digest immediately before the spawn.
+ * The only issues are the ones that make the harness unobservable: a declared
+ * path that resolves to nothing, or an executable that cannot say what it is.
  */
-export function resolveAgentBinary(
-  declaredBinary: string = M214_AGENT.binary, version: string = M214_AGENT.version,
-): AgentBinaryResolution {
-  const pinned = pinnedAgentBinary(version);
-  const pinnedVersion = observedAgentVersion(pinned);
-  const declaredVersion = observedAgentVersion(declaredBinary);
+export function resolveAgentBinary(declaredBinary: string = M214_AGENT.binary): AgentBinaryResolution {
   const issues: string[] = [];
-  if (pinnedVersion !== version) {
-    issues.push(
-      `the pinned binary ${pinned} reports ${pinnedVersion || "(nothing)"}, frozen authority is `
-      + version,
-    );
+  let resolved = declaredBinary;
+  try {
+    resolved = realpathSync(declaredBinary);
+  } catch (error) {
+    issues.push(`M214's declared launcher path ${declaredBinary} resolves to no executable: ${(error as Error).message}`);
   }
-  if (declaredVersion !== version) {
-    issues.push(
-      `M214's declared binary ${declaredBinary} reports ${declaredVersion || "(nothing)"}, frozen `
-      + `authority is ${version}; the symlink no longer points at the pinned version`,
-    );
+  const versionOutput = issues.length > 0 ? "" : agentVersionOutput(resolved);
+  const version = (versionOutput.split(/\s+/)[0] ?? "").trim();
+  if (issues.length === 0 && version.length === 0) {
+    issues.push(`${resolved} printed no version; the harness it would spawn cannot be recorded`);
   }
   return {
-    binary: pinned,
+    binary: resolved,
     declaredBinary,
-    declaredBinaryVersion: declaredVersion,
-    pinnedBinaryVersion: pinnedVersion,
+    versionOutput,
+    version,
     issues: Object.freeze(issues),
   };
+}
+
+/** sha256 of an executable's bytes; null when it cannot be read. The pair-local harness identity key. */
+export function agentBinaryDigest(path: string): string | null {
+  try {
+    return createHash("sha256").update(readFileSync(path)).digest("hex");
+  } catch {
+    return null;
+  }
 }
 
 export const VTRACE_BINARY = "/home/calvin/code/vtrace/bin/vtrace" as const;
@@ -497,7 +500,7 @@ export class M216ContainerAdapter implements ContainerAdapter {
       treatmentBinariesOnPath: treatmentBinariesOnPath(armEnvironment.env.PATH ?? ""),
       systemPromptAppendix: null,
       userPromptTemplate: M214_AGENT.userPromptText,
-      agentVersion: observedAgentVersion(pinnedAgentBinary()),
+      agentVersion: resolveAgentBinary().version,
       canonicalTrackedSourceDigest:
         this.canonicalDigests.get(own.instanceId) ?? await this.trackedSourceDigest(handle),
       goldArtifactsInAgentContext,
@@ -653,9 +656,13 @@ function treatmentBinariesOnPath(path: string): string[] {
 }
 
 export function observedAgentVersion(binary: string): string {
+  return (agentVersionOutput(binary).split(/\s+/)[0] ?? "").trim();
+}
+
+/** `<binary> --version`, trimmed; empty when the binary cannot run. */
+export function agentVersionOutput(binary: string): string {
   try {
-    const output = execFileSync(binary, ["--version"], { encoding: "utf8", timeout: 120_000 });
-    return (output.trim().split(/\s+/)[0] ?? "").trim();
+    return execFileSync(binary, ["--version"], { encoding: "utf8", timeout: 120_000 }).trim();
   } catch {
     return "";
   }
@@ -785,7 +792,7 @@ export function buildArmEnvironment(
  */
 export function buildAgentArgv(
   spec: AgentRunSpec, isolationArgv: readonly string[], prompt: string,
-  binary: string = resolveAgentBinary(spec.agentBinary, spec.agentVersion).binary,
+  binary: string = spec.harness?.resolvedBinary ?? resolveAgentBinary(spec.agentBinary).binary,
 ): readonly string[] {
   return Object.freeze([
     binary,
@@ -977,6 +984,24 @@ export function parseAgentStream(lines: readonly string[]): ParsedAgentStream {
   };
 }
 
+/** The CLI result subtypes the classifier maps to M214's frozen TURN_LIMIT_REACHED. */
+export const TURN_LIMIT_RESULT_SUBTYPES: readonly string[] = Object.freeze(["error_max_turns"]);
+
+/**
+ * The CLI result subtypes the classifier maps to M214's frozen COST_CAP_REACHED.
+ *
+ * `error_max_budget_usd` is the spelling every installed Claude Code release
+ * from 2.1.240 to 2.1.283 actually emits for a `--max-budget-usd` stop (read
+ * from the binaries, M220-A3); the two earlier spellings never matched it, so
+ * a budget stop whose reported cost fell short of the cap would have been
+ * misfiled as a rerunnable MODEL_SERVICE_FAILURE. The frozen category is
+ * unchanged; the harness's spelling is recognised. The capability contract
+ * requires the harness to emit one of these.
+ */
+export const BUDGET_STOP_RESULT_SUBTYPES: readonly string[] = Object.freeze([
+  "error_max_budget_usd", "error_max_budget", "error_budget_exceeded",
+]);
+
 /**
  * M194's frozen termination categories, restated against M215's enum.
  *
@@ -998,10 +1023,10 @@ export function classifyTermination(
   if (!parsed.sawResultEvent) {
     return { reason: "AGENT_ERROR", failureCategory: "MODEL_SERVICE_FAILURE" };
   }
-  if (parsed.resultSubtype === "error_max_turns") {
+  if (parsed.resultSubtype !== null && TURN_LIMIT_RESULT_SUBTYPES.includes(parsed.resultSubtype)) {
     return { reason: "TURN_LIMIT_REACHED", failureCategory: null };
   }
-  if (parsed.resultSubtype === "error_max_budget" || parsed.resultSubtype === "error_budget_exceeded") {
+  if (parsed.resultSubtype !== null && BUDGET_STOP_RESULT_SUBTYPES.includes(parsed.resultSubtype)) {
     return { reason: "COST_CAP_REACHED", failureCategory: null };
   }
   if (parsed.costUsd !== null && parsed.costUsd >= perRunCostCapUsd) {
@@ -1070,15 +1095,31 @@ export class M216AgentAdapter implements AgentAdapter {
         `arm environment could not be constructed: ${environment.issues.join("; ")}`,
       );
     }
-    const resolution = resolveAgentBinary(spec.agentBinary, spec.agentVersion);
-    if (resolution.issues.length > 0) {
-      throw new SubstrateError(
-        `refusing to launch: ${resolution.issues.join("; ")}. M214 pins the agent version and the `
-        + "cohort aborts on any difference.",
-      );
+    // M220-A3 — the executor hands over the harness it verified (resolved
+    // path + digest). The digest is re-read here, immediately before the
+    // spawn, so an executable replaced after verification is refused rather
+    // than run under the verified identity. Without a verified harness (the
+    // predecessor controls) the declared path is resolved as before.
+    let binary: string;
+    if (spec.harness !== undefined) {
+      const digest = agentBinaryDigest(spec.harness.resolvedBinary);
+      if (spec.harness.sha256 === null || digest !== spec.harness.sha256) {
+        throw new SubstrateError(
+          `refusing to launch: the harness at ${spec.harness.resolvedBinary} hashes to ${digest ?? "(unreadable)"}, `
+          + `the executor verified ${spec.harness.sha256 ?? "(no digest)"}; the executable changed between `
+          + "verification and spawn (M214_A3 pair-local harness equality)",
+        );
+      }
+      binary = spec.harness.resolvedBinary;
+    } else {
+      const resolution = resolveAgentBinary(spec.agentBinary);
+      if (resolution.issues.length > 0) {
+        throw new SubstrateError(`refusing to launch: ${resolution.issues.join("; ")}`);
+      }
+      binary = resolution.binary;
     }
     const prompt = buildUserPrompt(spec.row, this.options.problemStatement(spec.row.instanceId));
-    const liveArgv = buildAgentArgv(spec, environment.isolationArgv, prompt, resolution.binary);
+    const liveArgv = buildAgentArgv(spec, environment.isolationArgv, prompt, binary);
     this.lastLiveArgv.length = 0;
     this.lastLiveArgv.push(...liveArgv);
     const argv = this.options.providerSubstitution?.(liveArgv, spec) ?? liveArgv;

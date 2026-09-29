@@ -28,8 +28,7 @@ import { existsSync, readFileSync } from "node:fs";
 import { homedir } from "node:os";
 import { join } from "node:path";
 
-import { M214_AGENT } from "./m214Preregistration";
-import { pinnedAgentBinary } from "./m216ProductionAdapters";
+import { resolveAgentBinary } from "./m216ProductionAdapters";
 
 export const M220_AUTH_VERSION = "stage5.m220.subscription-auth.v1" as const;
 
@@ -192,7 +191,7 @@ export const CLI_AUTH_STATUS_ARGS: readonly string[] = Object.freeze(["auth", "s
  * override in the launcher's own environment cannot colour the answer; the
  * override guard reports that separately.
  */
-export function readCliAuthStatus(binary: string = pinnedAgentBinary(M214_AGENT.version), env: Readonly<Record<string, string | undefined>> = process.env): CliAuthStatus {
+export function readCliAuthStatus(binary: string = resolveAgentBinary().binary, env: Readonly<Record<string, string | undefined>> = process.env): CliAuthStatus {
   const command = `${binary} ${CLI_AUTH_STATUS_ARGS.join(" ")}`;
   try {
     const out = execFileSync(binary, [...CLI_AUTH_STATUS_ARGS], {
@@ -259,25 +258,64 @@ export function readCredentialFacts(path: string = join(homedir(), ".claude", ".
   }
 }
 
+/**
+ * M220-A3 §9 — the CLI's cached usage snapshot, the USER-level credit state.
+ *
+ * `cachedUsageUtilization.utilization.extra_usage.is_enabled` is the field the
+ * CLI's own usage view renders as "Usage credits are off"; the CLI writes it,
+ * with `fetchedAtMs` and the account it belongs to, when it fetches usage.
+ * Only the facts below are copied; the account id is compared, never kept.
+ */
+export interface UsageSnapshotFacts {
+  readonly present: boolean;
+  readonly extraUsageEnabled: boolean | null;
+  readonly userDisabled: boolean | null;
+  readonly fetchedAtIso: string | null;
+  /** Whether the snapshot belongs to the logged-in account; null when either side is absent. */
+  readonly accountMatches: boolean | null;
+}
+
 export interface AccountProfileFacts {
   readonly path: string;
   readonly exists: boolean;
-  /** The cached profile field named hasExtraUsageEnabled, as written by the CLI; M220 reads the name, not Anthropic's implementation. */
+  /**
+   * The cached profile field named hasExtraUsageEnabled. M220-A3 read the CLI:
+   * it is copied from the profile endpoint's `organization.has_extra_usage_enabled`
+   * (organisation-scoped) and can lag the user-level usage snapshot, which
+   * is why it decides only when no user-level observation exists.
+   */
   readonly hasExtraUsageEnabled: boolean | null;
   readonly organizationType: string | null;
   readonly billingType: string | null;
   readonly profileFetchedAtIso: string | null;
   readonly autoUpdates: boolean | null;
   readonly installMethod: string | null;
+  /** M220-A3 — the user-level usage snapshot; absent from M220-era fixtures. */
+  readonly usageSnapshot?: UsageSnapshotFacts;
 }
+
+const NO_USAGE_SNAPSHOT: UsageSnapshotFacts = { present: false, extraUsageEnabled: null, userDisabled: null, fetchedAtIso: null, accountMatches: null };
 
 export function readAccountProfileFacts(path: string = join(homedir(), ".claude.json"), read: (path: string) => string | null = readIfExists): AccountProfileFacts {
   const text = read(path);
   const none: AccountProfileFacts = { path, exists: false, hasExtraUsageEnabled: null, organizationType: null, billingType: null, profileFetchedAtIso: null, autoUpdates: null, installMethod: null };
   if (text === null) return none;
   try {
-    const parsed = JSON.parse(text) as { oauthAccount?: Record<string, unknown>; autoUpdates?: unknown; installMethod?: unknown };
+    const parsed = JSON.parse(text) as { oauthAccount?: Record<string, unknown>; autoUpdates?: unknown; installMethod?: unknown; cachedUsageUtilization?: unknown };
     const account = parsed.oauthAccount ?? {};
+    const cached = parsed.cachedUsageUtilization as { fetchedAtMs?: unknown; accountUuid?: unknown; utilization?: { extra_usage?: Record<string, unknown> | null } } | undefined;
+    const extra = cached?.utilization?.extra_usage;
+    const usageSnapshot: UsageSnapshotFacts = cached === undefined || cached === null || typeof cached !== "object"
+      ? NO_USAGE_SNAPSHOT
+      : {
+        present: true,
+        extraUsageEnabled: typeof extra?.is_enabled === "boolean" ? extra.is_enabled : null,
+        userDisabled: typeof extra?.user_disabled === "boolean" ? extra.user_disabled : null,
+        fetchedAtIso: typeof cached.fetchedAtMs === "number" ? new Date(cached.fetchedAtMs).toISOString() : null,
+        accountMatches: typeof cached.accountUuid === "string" && typeof account.accountUuid === "string"
+          ? cached.accountUuid === account.accountUuid
+          : null,
+      };
     return {
       path, exists: true,
       hasExtraUsageEnabled: typeof account.hasExtraUsageEnabled === "boolean" ? account.hasExtraUsageEnabled : null,
@@ -286,6 +324,7 @@ export function readAccountProfileFacts(path: string = join(homedir(), ".claude.
       profileFetchedAtIso: typeof account.profileFetchedAt === "number" ? new Date(account.profileFetchedAt).toISOString() : null,
       autoUpdates: typeof parsed.autoUpdates === "boolean" ? parsed.autoUpdates : null,
       installMethod: typeof parsed.installMethod === "string" ? parsed.installMethod : null,
+      usageSnapshot,
     };
   } catch {
     return { ...none, exists: true };
@@ -298,7 +337,8 @@ export interface AutoUpdatePosture {
   readonly autoUpdatesSetting: boolean | null;
   readonly disableAutoupdaterEnvPresent: boolean;
   readonly installMethod: string | null;
-  readonly pinnedBinary: string;
+  /** The executable M214's declared launcher resolves to now (M220-A3: no pinned path). */
+  readonly harnessBinary: string;
   readonly verdict: "AUTO_UPDATE_DISABLED" | "AUTO_UPDATE_NOT_PROVEN_DISABLED";
   readonly consequence: string;
 }
@@ -310,12 +350,156 @@ export function autoUpdatePosture(account: AccountProfileFacts, env: Readonly<Re
     autoUpdatesSetting: account.autoUpdates,
     disableAutoupdaterEnvPresent: envPresent,
     installMethod: account.installMethod,
-    pinnedBinary: pinnedAgentBinary(M214_AGENT.version),
+    harnessBinary: resolveAgentBinary().binary,
     verdict: disabled ? "AUTO_UPDATE_DISABLED" : "AUTO_UPDATE_NOT_PROVEN_DISABLED",
     consequence:
-      "the executor spawns the versioned binary and requires the declared symlink to report the same version; "
-      + "an auto-update that moved the symlink is refused by that gate at the next attempt and at the next session "
-      + "start, so drift halts the cohort rather than changing it. Disabling auto-update prevents the halt.",
+      "under M214_A3 a Claude Code update is metadata: between complete pairs it is a recorded transition once the "
+      + "capability contract passes on the new executable; inside a pair it refuses the second arm "
+      + "(PAIR_HARNESS_DRIFT) and pauses the cohort. Disabling auto-update only makes the in-pair case rarer.",
+  };
+}
+
+// ── M220-A3 §9–§12 — the usage-credit evidence hierarchy ─────────────
+
+/** An operator statement recorded on this invocation. It authorises nothing but the state it names. */
+export interface ExtraUsageAttestation {
+  readonly state: "DISABLED" | "ENABLED";
+  readonly statement: string;
+  readonly attestedAt: string;
+}
+
+export type ExtraUsageSource = "LIVE_CLI_ACCOUNT_STATE" | "OPERATOR_ATTESTATION" | "CACHED_CLI_USAGE_SNAPSHOT" | "CACHED_ACCOUNT_PROFILE";
+
+export interface ExtraUsageObservation {
+  readonly source: ExtraUsageSource;
+  readonly scope: "USER" | "ORGANIZATION";
+  readonly state: "ENABLED" | "DISABLED";
+  readonly observedAt: string | null;
+  readonly detail: string;
+}
+
+export const STALE_CACHED_EXTRA_USAGE_STATE = "STALE_CACHED_EXTRA_USAGE_STATE" as const;
+/** A decisive usage snapshot older than this is reported (never refused on age alone). */
+export const USAGE_SNAPSHOT_AGE_WARNING_HOURS = 24 as const;
+
+export interface ExtraUsageResolution {
+  readonly verdict: OverflowVerdict;
+  readonly decidedBy: ExtraUsageSource | null;
+  readonly observations: readonly ExtraUsageObservation[];
+  readonly staleCachedState: boolean;
+  readonly liveStateAvailable: false;
+  readonly issues: readonly string[];
+  readonly warnings: readonly string[];
+}
+
+const SOURCE_RANK: Readonly<Record<ExtraUsageSource, number>> = { LIVE_CLI_ACCOUNT_STATE: 0, OPERATOR_ATTESTATION: 1, CACHED_CLI_USAGE_SNAPSHOT: 2, CACHED_ACCOUNT_PROFILE: 3 };
+
+function normaliseAttestation(value: string | ExtraUsageAttestation | null | undefined, at: string): ExtraUsageAttestation | null {
+  if (value === null || value === undefined) return null;
+  if (typeof value === "string") return value.trim().length === 0 ? null : { state: "DISABLED", statement: value, attestedAt: at };
+  return value.statement.trim().length === 0 ? null : value;
+}
+
+/**
+ * PURE. Which evidence answers "are the operator's usage credits on?".
+ *
+ * There is no zero-call LIVE source (auth status carries no usage field). The
+ * user-level sources are the operator's attestation on this invocation and
+ * the CLI's usage snapshot for the logged-in account; the newest decides and
+ * a tie goes to the attestation. The profile flag is organisation-level: it
+ * decides only when no user-level source exists, and a user-level DISABLED
+ * beside it is STALE_CACHED_EXTRA_USAGE_STATE, a warning, never a block.
+ */
+export function resolveExtraUsageState(input: {
+  readonly account: AccountProfileFacts;
+  readonly attestation: ExtraUsageAttestation | null;
+  readonly at: string;
+}): ExtraUsageResolution {
+  const observations: ExtraUsageObservation[] = [];
+  const warnings: string[] = [];
+  const issues: string[] = [];
+  if (input.attestation !== null) {
+    observations.push({
+      source: "OPERATOR_ATTESTATION", scope: "USER", state: input.attestation.state, observedAt: input.attestation.attestedAt,
+      detail: `operator attested extra usage ${input.attestation.state}: ${input.attestation.statement}`,
+    });
+  }
+  const snapshot = input.account.usageSnapshot ?? NO_USAGE_SNAPSHOT;
+  if (snapshot.present && snapshot.accountMatches === false) {
+    warnings.push("the CLI usage snapshot belongs to a different account than the logged-in one; it is ignored");
+  } else if (snapshot.present && snapshot.extraUsageEnabled !== null) {
+    observations.push({
+      source: "CACHED_CLI_USAGE_SNAPSHOT", scope: "USER", state: snapshot.extraUsageEnabled ? "ENABLED" : "DISABLED",
+      observedAt: snapshot.fetchedAtIso,
+      detail: `cachedUsageUtilization extra_usage.is_enabled=${snapshot.extraUsageEnabled}, user_disabled=${String(snapshot.userDisabled)} (fetched ${snapshot.fetchedAtIso ?? "unknown"})`,
+    });
+  }
+  if (input.account.hasExtraUsageEnabled !== null) {
+    observations.push({
+      source: "CACHED_ACCOUNT_PROFILE", scope: "ORGANIZATION", state: input.account.hasExtraUsageEnabled ? "ENABLED" : "DISABLED",
+      observedAt: input.account.profileFetchedAtIso,
+      detail: `oauthAccount.hasExtraUsageEnabled=${input.account.hasExtraUsageEnabled} (organisation-level, fetched ${input.account.profileFetchedAtIso ?? "unknown"})`,
+    });
+  }
+  const time = (entry: ExtraUsageObservation): number => (entry.observedAt === null ? Number.NEGATIVE_INFINITY : Date.parse(entry.observedAt));
+  const user = observations
+    .filter((entry) => entry.scope === "USER")
+    .sort((left, right) => (time(right) - time(left)) || (SOURCE_RANK[left.source] - SOURCE_RANK[right.source]));
+  const profile = observations.find((entry) => entry.source === "CACHED_ACCOUNT_PROFILE") ?? null;
+
+  let verdict: OverflowVerdict;
+  let decidedBy: ExtraUsageSource | null = null;
+  let stale = false;
+  if (user.length > 0) {
+    const decider = user[0]!;
+    decidedBy = decider.source;
+    for (const older of user.slice(1)) {
+      if (older.state !== decider.state) warnings.push(`${older.source} (${older.state}, ${older.observedAt ?? "undated"}) is superseded by the newer ${decider.source} (${decider.state})`);
+    }
+    if (decider.state === "DISABLED") {
+      verdict = "USAGE_CREDIT_OVERFLOW_DISABLED_AT_ACCOUNT";
+      if (profile?.state === "ENABLED") {
+        stale = true;
+        warnings.push(
+          `${STALE_CACHED_EXTRA_USAGE_STATE}: the cached profile reports hasExtraUsageEnabled=true, an organisation-scoped flag that can lag the user-level state; `
+          + `the user-level ${decider.source} (${decider.observedAt ?? "undated"}) reports usage credits OFF and supersedes it`,
+        );
+      }
+      if (decider.source === "CACHED_CLI_USAGE_SNAPSHOT" && decider.observedAt !== null
+        && Date.parse(input.at) - Date.parse(decider.observedAt) > USAGE_SNAPSHOT_AGE_WARNING_HOURS * 3_600_000) {
+        warnings.push(`the deciding usage snapshot is older than ${USAGE_SNAPSHOT_AGE_WARNING_HOURS}h (${decider.observedAt}); open the CLI's usage view or attest to refresh it`);
+      }
+    } else {
+      verdict = "USAGE_CREDIT_OVERFLOW_ENABLED_AT_ACCOUNT";
+      issues.push(
+        `${decider.source} reports usage credits / extra usage ENABLED (${decider.detail}): when the subscription limit is `
+        + "reached the CLI can continue into paid usage, which the executor must never allow. Operator requirement: turn "
+        + "usage credits off in the Claude account settings, then re-run the preflight. No flag overrides this.",
+      );
+    }
+  } else if (profile !== null) {
+    decidedBy = "CACHED_ACCOUNT_PROFILE";
+    if (profile.state === "ENABLED") {
+      verdict = "USAGE_CREDIT_OVERFLOW_ENABLED_AT_ACCOUNT";
+      issues.push(
+        `the cached account profile (${input.account.path}, fetched ${input.account.profileFetchedAtIso ?? "unknown"}) reports `
+        + "hasExtraUsageEnabled=true and no newer user-level observation supersedes it (no CLI usage snapshot for this "
+        + "account, no attestation). Operator requirement: confirm usage credits are OFF in the Claude account and attest "
+        + "with --attest-extra-usage-disabled \"<statement>\", or let the CLI refresh its usage view, then re-run the preflight.",
+      );
+    } else {
+      verdict = "USAGE_CREDIT_OVERFLOW_DISABLED_AT_ACCOUNT";
+    }
+  } else {
+    verdict = "USAGE_CREDIT_OVERFLOW_STATE_UNKNOWN";
+    issues.push(
+      `nothing on this host says whether usage credits are enabled (${input.account.path}); the operator must confirm they are `
+      + "OFF in the Claude account and attest with --attest-extra-usage-disabled \"<statement>\"",
+    );
+  }
+  return {
+    verdict, decidedBy, observations: Object.freeze(observations), staleCachedState: stale, liveStateAvailable: false,
+    issues: Object.freeze(issues), warnings: Object.freeze(warnings),
   };
 }
 
@@ -345,6 +529,12 @@ export interface SubscriptionAuthReport {
   readonly runtimeGate: string;
   readonly overflowVerdict: OverflowVerdict;
   readonly overflowAttestation: string | null;
+  /** M220-A3 — which evidence decided the usage-credit state, and what it overrode. */
+  readonly extraUsage: ExtraUsageResolution;
+  /** Issues that are defects of the authentication MODE (technical gate). */
+  readonly technicalIssues: readonly string[];
+  /** Issues about the usage-credit state (an operator prerequisite). */
+  readonly overflowIssues: readonly string[];
   readonly issues: readonly string[];
   readonly warnings: readonly string[];
   readonly launchPermitted: boolean;
@@ -357,8 +547,12 @@ export interface SubscriptionAuthInputs {
   readonly credentials: CredentialFileFacts;
   readonly account: AccountProfileFacts;
   readonly autoUpdate: AutoUpdatePosture;
-  /** Only consulted when the account profile cannot say; never overrides ENABLED. */
-  readonly overflowAttestation?: string | null;
+  /**
+   * M220-A3 — the operator's statement on this invocation. A string is a
+   * DISABLED attestation made at `at`. It competes with the CLI's user-level
+   * usage snapshot by recency and supersedes the organisation-level profile.
+   */
+  readonly overflowAttestation?: string | ExtraUsageAttestation | null;
   readonly at: string;
 }
 
@@ -402,31 +596,14 @@ export function assessSubscriptionAuth(input: SubscriptionAuthInputs): Subscript
     issues.push(`the credential file's refresh token expired at ${input.credentials.refreshTokenExpiresAtIso}; re-login before a session`);
   }
 
-  let overflow: OverflowVerdict;
-  if (input.account.hasExtraUsageEnabled === true) {
-    overflow = "USAGE_CREDIT_OVERFLOW_ENABLED_AT_ACCOUNT";
-    issues.push(
-      `the cached account profile (${input.account.path}, fetched ${input.account.profileFetchedAtIso ?? "unknown"}) reports hasExtraUsageEnabled=true: `
-      + "when the subscription limit is reached the CLI can continue into paid extra usage without a prompt, which the "
-      + "executor must never intentionally allow. Operator requirement: disable extra usage in the claude.ai billing "
-      + "settings, let the CLI refresh its profile (run the pinned binary once interactively or `auth status`), and re-run "
-      + "the preflight until it reads false. No flag overrides this.",
-    );
-  } else if (input.account.hasExtraUsageEnabled === false) {
-    overflow = "USAGE_CREDIT_OVERFLOW_DISABLED_AT_ACCOUNT";
-  } else {
-    overflow = "USAGE_CREDIT_OVERFLOW_STATE_UNKNOWN";
-    if (input.overflowAttestation === null || input.overflowAttestation === undefined || input.overflowAttestation.trim().length === 0) {
-      issues.push(
-        `the account profile at ${input.account.path} does not say whether extra usage is enabled; the operator must confirm it is disabled `
-        + "in the claude.ai billing settings and attest with --attest-extra-usage-disabled \"<operator>\"",
-      );
-    } else {
-      warnings.push(`extra-usage state unknown to the CLI profile; the operator attested it is disabled: ${input.overflowAttestation}`);
-    }
-  }
+  const technicalIssues = [...issues];
+  const attestation = normaliseAttestation(input.overflowAttestation, input.at);
+  const extraUsage = resolveExtraUsageState({ account: input.account, attestation, at: input.at });
+  const overflow = extraUsage.verdict;
+  issues.push(...extraUsage.issues);
+  warnings.push(...extraUsage.warnings);
   if (input.autoUpdate.verdict !== "AUTO_UPDATE_DISABLED") {
-    warnings.push("auto-update is not proven disabled; the pinned-binary gate would halt the cohort on a moved symlink, so disable auto-update before a multi-day cohort");
+    warnings.push("auto-update is not proven disabled; an update between complete pairs is a recorded transition, but one inside a pair pauses the cohort (PAIR_HARNESS_DRIFT)");
   }
 
   return {
@@ -443,7 +620,10 @@ export function assessSubscriptionAuth(input: SubscriptionAuthInputs): Subscript
     providerConfirmation: "PENDING_AT_FIRST_LIVE_RUN",
     runtimeGate: `R16_AUTH_SOURCE: the agent's init event must report apiKeySource '${SUBSCRIPTION_API_KEY_SOURCE}'; any other value aborts the attempt before it can become an outcome`,
     overflowVerdict: overflow,
-    overflowAttestation: input.overflowAttestation ?? null,
+    overflowAttestation: attestation === null ? null : `${attestation.state}: ${attestation.statement}`,
+    extraUsage,
+    technicalIssues: Object.freeze(technicalIssues),
+    overflowIssues: extraUsage.issues,
     issues: Object.freeze(issues),
     warnings: Object.freeze(warnings),
     launchPermitted: issues.length === 0 && authMode === "SUBSCRIPTION_AUTH_MODE_PROVEN",
@@ -456,7 +636,7 @@ export function collectSubscriptionAuth(options: {
   readonly home?: string;
   readonly projectRoot?: string;
   readonly binary?: string;
-  readonly overflowAttestation?: string | null;
+  readonly overflowAttestation?: string | ExtraUsageAttestation | null;
   readonly now?: () => string;
 } = {}): SubscriptionAuthReport {
   const env = options.env ?? process.env;
@@ -465,7 +645,7 @@ export function collectSubscriptionAuth(options: {
   return assessSubscriptionAuth({
     environment: inspectAuthEnvironment(env),
     settings: defaultSettingsPaths(home, options.projectRoot).map((entry) => inspectSettingsFile(entry)),
-    cliAuth: readCliAuthStatus(options.binary ?? pinnedAgentBinary(M214_AGENT.version), env),
+    cliAuth: readCliAuthStatus(options.binary ?? resolveAgentBinary().binary, env),
     credentials: readCredentialFacts(join(home, ".claude", ".credentials.json")),
     account,
     autoUpdate: autoUpdatePosture(account, env),
@@ -499,6 +679,12 @@ export function redactedAuthSummary(report: SubscriptionAuthReport): Record<stri
     credentialSubscriptionType: report.credentials.subscriptionType,
     accountOrganizationType: report.account.organizationType,
     hasExtraUsageEnabled: report.account.hasExtraUsageEnabled,
+    hasExtraUsageEnabledScope: "ORGANIZATION",
+    usageSnapshotExtraUsageEnabled: report.account.usageSnapshot?.extraUsageEnabled ?? null,
+    usageSnapshotFetchedAt: report.account.usageSnapshot?.fetchedAtIso ?? null,
+    overflowDecidedBy: report.extraUsage.decidedBy,
+    staleCachedExtraUsageState: report.extraUsage.staleCachedState,
+    operatorAttestation: report.overflowAttestation !== null,
     autoUpdate: report.autoUpdate.verdict,
     issueCount: report.issues.length,
     warningCount: report.warnings.length,

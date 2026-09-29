@@ -12550,3 +12550,154 @@ accounting        subscription quota consumption = included usage, NOT $0 in an
   QUALITY != CODING-AGENT UTILITY` and
   `CONTEXT_COMPILER_PRODUCT_UTILITY_NOT_ESTABLISHED` still govern: nothing in
   M220 measured the product.
+
+## M220-A3
+
+```text
+milestone         M220-A3
+verdict           PASS (pre-outcome operational amendment: the exact Claude Code
+                  release pin is removed and replaced by a capability contract
+                  proven before every session, pair-local harness equality is
+                  enforced, cross-session release drift is permitted and
+                  recorded, and the usage-credit state is read from user-level
+                  evidence before the organisation-scoped cached profile flag;
+                  the final zero-spend preflight passes every technical gate
+                  with operatorPrerequisitesPending = [] and stops at
+                  SPEND_AUTHORIZATION_PENDING)
+markers           PRE_OUTCOME_AGENT_HARNESS_AMENDMENT_COMMITTED;
+                  EXACT_CLAUDE_CODE_VERSION_PIN_REMOVED;
+                  AGENT_HARNESS_CAPABILITY_CONTRACT_ENFORCED;
+                  PAIR_LOCAL_HARNESS_EQUALITY_ENFORCED;
+                  CROSS_SESSION_MINOR_VERSION_DRIFT_PERMITTED_AND_RECORDED;
+                  STALE_USAGE_CREDIT_CACHE_DEMOTED;
+                  CURRENT_EXTRA_USAGE_OFF_AUTHORITY_ACCEPTED (decided by the
+                  CLI's user-level usage snapshot; no attestation was made on
+                  the operator's behalf);
+                  API_KEY_BILLING_OVERRIDE_GUARD_PRESERVED;
+                  FIRST_LIVE_AUTH_CONFIRMATION_PRESERVED (R16);
+                  MODEL_IDENTITY_GATE_PRESERVED (R12);
+                  M220_A3_FALSIFICATION_SUITE_PASSED; M220_A3_SUITE_IS_FALSIFYING;
+                  PREREGISTRATION_UNCHANGED; MANIFEST_UNCHANGED;
+                  EXTERNAL_REFERENCE_UNCHANGED; A1_UNCHANGED; A2_UNCHANGED;
+                  VTRACE_PRODUCT_UNCHANGED; TECHNICAL_EXECUTOR_READY;
+                  operatorPrerequisitesPending = []; SPEND_AUTHORIZATION_PENDING;
+                  PAID_RUNS_NOT_STARTED; PROVIDER_CALLS_0; LIVE_MODEL_SPEND_$0
+parity            UNCHANGED and NOT re-run (14/15, A15 BELOW; never 15/15).
+spend             0 frozen tasks run, 0 outcome-bearing runs, 0 provider calls,
+                  $0 live model spend, 0 containers started. What ran: the
+                  installed CLI offline (unshare -r -n -m, empty private config,
+                  private /tmp) for the capability probe, fake harness shell
+                  scripts through the same probe, the real launcher as a
+                  subprocess (--preflight, refused launches), the substrate
+                  bridge inside --preflight (Docker inspection, no container),
+                  the production adapter over a fake bridge, synthetic cohorts.
+scope             Launch machinery and governance only. 0 src/ diff (HEAD:src
+                  b3b3e439f10c6c526cafc6001d25dd0e7552ce6d). M214 x4, A1 x2,
+                  A2 x2 artifacts byte-identical (git status empty on all).
+                  Starting HEAD 56585401.
+what was built    Commit 1 (62a71267) -- m220A3Amendment.ts + TRACKED
+                  stage5_m214_a3_agent_harness_compatibility_amendment.json /
+                  _hash.json: M214_A3_AGENT_HARNESS_COMPATIBILITY, domain
+                  "M214_A3_AGENT_HARNESS_COMPATIBILITY\n", pinned
+                  e27a09cee58e7c78433cb5aa837e4bd7890cc016b6cfa5c71106482990d2e12a,
+                  parent = A2's lineage + A2's pinned digest, executable
+                  authority (M214 + A1 + A2 + A3, domain
+                  M220_A3_EXECUTABLE_AUTHORITY)
+                  82f463de0cc15636d507798c3dca8965f0f59239b36df530de01dfc284e0c3a4;
+                  scope OPERATIONAL_AGENT_HARNESS_IDENTITY_ONLY; the audit
+                  refuses any capability naming a release number and every
+                  A2-forbidden key. Commit 2 -- m220A3AgentHarness.ts (identity
+                  = resolved path + --version + sha256; isolated probe; C1-C12;
+                  AgentHarnessAuthority probing each digest once),
+                  m220A3PairHarness.ts (binding = partner arm's latest
+                  AGENT_HARNESS_OBSERVED; PAIR_HARNESS_DRIFT; version summary);
+                  executor: P16_AGENT_HARNESS (capabilities + pair equality +
+                  frozen-A3 gate in COHORT), AGENT_HARNESS_OBSERVED /
+                  AGENT_HARNESS_TRANSITION before every spawn, runCohort pauses
+                  PAIR_HARNESS_DRIFT / AGENT_HARNESS_CAPABILITY_MISMATCH before
+                  the row, R2 without the pin (release observed, surface =
+                  verified); adapter: spawns the RESOLVED executable and
+                  re-reads its digest immediately before spawn,
+                  pinnedAgentBinary removed, error_max_budget_usd recognised;
+                  subscription: user-level usage snapshot + attestation vs
+                  organisation-scoped profile (resolveExtraUsageState),
+                  technicalIssues / overflowIssues split; launcher: A3 binding,
+                  gates HARNESS_AUTHORITY / AGENT_HARNESS_CAPABILITIES /
+                  PAIR_HARNESS_EQUALITY / API_OVERRIDE_GUARD (AGENT_IDENTITY
+                  retired), --attest-extra-usage-disabled|enabled appended to
+                  operator_attestations.jsonl, harness summary on session start
+                  and in --session-status; predecessor controls restated under
+                  A3 (M215 F7, M216 F21/F21B/F79, M220 F203/F219/F229);
+                  m220A3Falsification (F233-F254); CLAUDE.md; this row.
+harness           Contract C1 production argv accepted offline, C2 NDJSON with
+                  init+result, C3 init model = --model, C4 apiKeySource, C5
+                  tools/mcp_servers under --strict-mcp-config, C6 result
+                  accounting, C7 tool_use/tool_result, C8 rate_limit_event
+                  schema, C9 termination subtypes the classifier maps, C10 auth
+                  status JSON, C11 CLAUDE_CONFIG_DIR honoured, C12 --version =
+                  init claude_code_version. Substrate-owned, NOT CLI
+                  requirements: process-group kill, wall-clock timeout, abort
+                  sentinel, sandbox. Host: 2.1.284 at
+                  ~/.local/share/claude/versions/2.1.284 (sha256 5cd90aab...),
+                  12/12, probe 0.9 s, cost 0. The host auto-updated
+                  2.1.283 -> 2.1.284 during the milestone.
+subscription      Evidence: LIVE none (auth status has no usage field);
+                  OPERATOR_ATTESTATION (per invocation, append-only); CLI usage
+                  snapshot cachedUsageUtilization.utilization.extra_usage
+                  (user-level; the field the CLI's "Usage credits are off" line
+                  renders): is_enabled=false, user_disabled=true, fetched
+                  2026-09-27T20:51:58Z; profile oauthAccount.hasExtraUsageEnabled
+                  = organization.has_extra_usage_enabled (read from the CLI
+                  source): true at 2026-09-27T20:45Z, false at 2026-09-29T07:24Z.
+                  Final preflight: DISABLED decided by CACHED_CLI_USAGE_SNAPSHOT;
+                  one warning (snapshot older than 24h; not blocking).
+suites            M220-A3 22/22 (F1-F14 = F233-F246, +F247-F254; 13 GUARD_FIRES,
+                  9 GUARD_SILENT, 12 REAL_PROCESS). Guard-break: capability
+                  verdict forced PASS -> [F235 F236 F237]; pair equality off ->
+                  [F238]; user-level ON accepted -> [F244]; 0 missed, 0
+                  unexpected, restored byte-identical 22/22,
+                  M220_A3_SUITE_IS_FALSIFYING. M220 34/34 re-run (F203, F219,
+                  F229 restated). bun test 6662 pass / 49 skip / 0 fail across
+                  406 files; typecheck, typecheck:benchmarks, lint, git diff
+                  --check clean; secret scan clean (the only token-shaped hit is
+                  M220's own negative-assertion regex).
+```
+
+## M220-A3 standing findings
+
+- **The version pin froze trivia, and it was already broken.** M214's 2.1.260 was
+  not on the host any more; the harness auto-updated again (2.1.283 -> 2.1.284) while
+  this milestone ran. A3 moves the release to metadata and makes the launcher prove
+  BEHAVIOUR: a 12-point contract, each point naming the production code that breaks
+  without it, checked with an offline run of the real argv (network namespace
+  unshared, no credential, private /tmp so the CLI's /tmp/claude-<uid> and
+  /tmp/cc-socks-<uid> never reach the host) and a whole-token scan of the executable.
+  What stays mandatory is the same executable within a pair (by digest, not version:
+  two builds can share a version string).
+
+- **Deriving the contract found a real adapter defect.** Every release from 2.1.240
+  to 2.1.284 emits `error_max_budget_usd` for a budget stop; the classifier knew only
+  `error_max_budget` / `error_budget_exceeded`, so a budget stop reported below the
+  cap would have been a rerunnable MODEL_SERVICE_FAILURE consuming A1 retry slots
+  instead of the frozen COST_CAP_REACHED. The spelling is now recognised; the
+  category mapping is unchanged. The token-boundary scan is what distinguishes the
+  two spellings; a substring match would have hidden it.
+
+- **M220's overflow guard read the wrong field.** `hasExtraUsageEnabled` is copied
+  from the profile endpoint's organisation-scoped flag and lagged the operator's
+  toggle; the CLI's own "Usage credits are off" line renders the user-level
+  `cachedUsageUtilization.extra_usage.is_enabled`. A3's order: user-level evidence
+  (newest of snapshot / attestation) decides; the profile decides only when neither
+  exists; a user-level OFF beside a cached true is STALE_CACHED_EXTRA_USAGE_STATE, a
+  warning. No attestation was made on the operator's behalf: the final preflight
+  passes on the CLI's own snapshot.
+
+- **Next-step recommendation.** Do NOT start the benchmark from this session. The
+  only remaining prerequisite is G36, now to be phrased against M214 + A1 + A2 + A3:
+  `--authorize-spend "<operator>" --max-pairs-this-session N` with a conservative N.
+  Before the first session, refresh the usage snapshot (open the CLI's usage view)
+  or pass `--attest-extra-usage-disabled "<statement>"`, since the deciding snapshot
+  is already older than 24h. Live provider model identity and credential source
+  remain PENDING_AT_FIRST_LIVE_RUN (R12, R16). The real M216-M218 container suites
+  were not re-run. `ENGINE QUALITY != CODING-AGENT UTILITY` and
+  `CONTEXT_COMPILER_PRODUCT_UTILITY_NOT_ESTABLISHED` still govern.

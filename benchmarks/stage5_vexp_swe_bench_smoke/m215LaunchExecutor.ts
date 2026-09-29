@@ -134,6 +134,15 @@ import {
   sessionBoundaryDecision,
 } from "./m220QuotaSession";
 import { type SubscriptionAuthReport, auditAuthSource } from "./m220SubscriptionAuth";
+import {
+  type AgentHarnessGate,
+  type AgentHarnessObservation,
+  auditPairHarnessEquality,
+  harnessEventDetail,
+  pairHarnessBinding,
+  recordedHarnesses,
+} from "./m220A3PairHarness";
+import { M214_A3_AMENDMENT_ID, M220A3_FROZEN_HASH } from "./m220A3Amendment";
 
 // ── Executor identity (§40) ─────────────────────────────────────────
 
@@ -764,6 +773,12 @@ export interface AgentRunSpec {
   readonly userPromptTemplate: string;
   /** M218 §35 — the attempt's owned scratch; `agentTmp` is bound at /tmp for the agent. */
   readonly scratch?: { readonly path: string; readonly agentTmp: string };
+  /**
+   * M220-A3 — the harness the executor verified for this attempt: the
+   * resolved executable and its digest. The adapter spawns exactly this file
+   * and re-checks the digest first. Absent in the predecessor controls.
+   */
+  readonly harness?: { readonly resolvedBinary: string; readonly sha256: string | null; readonly version: string };
 }
 
 /**
@@ -950,15 +965,29 @@ export function auditTreatmentCatalogue(
   return issues;
 }
 
-/** §14 — exact agent pinning; "close enough" is not a version match. */
+/**
+ * §14 as amended by M214_A3 — the agent identity that is still frozen.
+ *
+ * M214 pinned the Claude Code release (2.1.260) here. A3 retired that pin:
+ * the release is harness metadata, proven by the capability contract (P16)
+ * and held equal within each pair, and a version that differs from an
+ * earlier session is not an issue. What remains frozen is what defines the
+ * comparison: the prompt template and the native-tool catalogue. The version
+ * must still be OBSERVED, because an attempt whose harness cannot say what it
+ * is cannot be recorded; and when the executor verified a harness, the arm
+ * surface must have seen that same release.
+ */
 export function auditAgentIdentity(
   observedVersion: string,
   observedPromptTemplate: string,
   observedNativeTools: readonly string[],
+  verifiedHarnessVersion?: string | null,
 ): readonly string[] {
   const issues: string[] = [];
-  if (observedVersion !== M214_AGENT.version) {
-    issues.push(`agent version ${observedVersion} is not the frozen pin ${M214_AGENT.version}`);
+  if (observedVersion.trim().length === 0) {
+    issues.push("the arm surface observed no agent harness version; the attempt's harness cannot be recorded");
+  } else if (verifiedHarnessVersion !== undefined && verifiedHarnessVersion !== null && observedVersion !== verifiedHarnessVersion) {
+    issues.push(`the arm surface observed agent harness ${observedVersion}, the executor verified ${verifiedHarnessVersion}`);
   }
   if (observedPromptTemplate !== M214_AGENT.userPromptText) {
     issues.push("user prompt template differs from the frozen text");
@@ -1021,6 +1050,8 @@ export interface PreflightInputs {
   readonly untrackedSourceAffectingPaths: readonly string[];
   readonly preAgentUntrackedPaths: readonly string[];
   readonly assertedAt: string;
+  /** M220-A3 — the harness P16 verified; R2 requires the arm surface to have seen the same release. */
+  readonly harness?: AgentHarnessObservation | null;
 }
 
 /**
@@ -1046,8 +1077,9 @@ export function preflightGates(input: PreflightInputs): readonly RuntimeGateReco
 
   gates.push(gateRecord(
     "R2_AGENT_IDENTITY", "RUNTIME", true,
-    auditAgentIdentity(surface.agentVersion, surface.userPromptTemplate, surface.nativeToolNames),
-    `agent ${M214_AGENT.version}, frozen prompt template, frozen native-tool catalogue`,
+    auditAgentIdentity(surface.agentVersion, surface.userPromptTemplate, surface.nativeToolNames, input.harness?.version ?? null),
+    `agent harness ${surface.agentVersion || "(unobserved)"} recorded as metadata (M214_A3; no version pin), `
+    + "frozen prompt template, frozen native-tool catalogue",
     assertedAt,
   ));
 
@@ -1165,7 +1197,7 @@ export const M215_REQUIRED_PRELAUNCH_GATE_IDS: readonly string[] = Object.freeze
   "P5_NO_RUNTIME_OVERRIDES", "P6_EXECUTION_ORDER", "P7_SPEND_AUTHORIZATION", "P8_SPEND_CEILING",
   "P9_LEDGER_INTEGRITY", "P10_CONTINUATION_SAFETY", "P11_RETRY_SPEND_RESERVE",
   "P12_EXECUTABLE_AUTHORITY", "P13_SCRATCH_CAPACITY", "P14_QUOTA_SESSION_AUTHORITY",
-  "P15_SUBSCRIPTION_AUTH_MODE",
+  "P15_SUBSCRIPTION_AUTH_MODE", "P16_AGENT_HARNESS",
 ]);
 
 export const M215_REQUIRED_RUNTIME_GATE_IDS: readonly string[] = Object.freeze([
@@ -1324,6 +1356,13 @@ export interface ExecutorDependencies {
    * cached account profile; it never reads a secret value.
    */
   readonly subscriptionAuth?: () => SubscriptionAuthReport;
+  /**
+   * M220-A3 — the agent-harness authority: resolves the executable, records
+   * path, version and digest, and proves the capability contract (cached per
+   * digest). Required in COHORT mode (P16 fails closed without it); optional
+   * in SYNTHETIC mode so the predecessor suites are unchanged.
+   */
+  readonly agentHarness?: AgentHarnessGate;
 }
 
 export class LaunchRefusedError extends Error {
@@ -1345,6 +1384,7 @@ export class LaunchRefusedError extends Error {
 export function launchPreconditionGates(
   deps: ExecutorDependencies,
   row: RunManifestRow,
+  harness: AgentHarnessObservation | null = observeHarness(deps),
 ): readonly RuntimeGateRecord[] {
   const at = deps.now();
   const gates: RuntimeGateRecord[] = [];
@@ -1541,7 +1581,61 @@ export function launchPreconditionGates(
     at,
   ));
 
+  // M220-A3 §4, §6 — the harness this row would spawn satisfies the capability
+  // contract, and it is the harness the pair's other arm ran on. The release
+  // number is recorded, never compared to a pin.
+  gates.push(gateRecord(
+    "P16_AGENT_HARNESS", "INFRASTRUCTURE", true,
+    agentHarnessIssues(deps, row, harness),
+    harness === null
+      ? (deps.mode === "SYNTHETIC" ? "SYNTHETIC mode with no harness authority; no executable is spawned" : "no harness observed")
+      : `Claude Code ${harness.version || "(unversioned)"} at ${harness.resolvedBinary} (sha256 `
+        + `${harness.sha256?.slice(0, 16) ?? "none"}); ${harness.capabilityVerdict} under ${harness.contractVersion}; `
+        + "release is metadata (M214_A3), the pair's arms share one harness",
+    at,
+  ));
+
   return Object.freeze(gates);
+}
+
+/** Observe once per call site; a throwing authority is reported by P16, not thrown past the gates. */
+function observeHarness(deps: ExecutorDependencies): AgentHarnessObservation | null {
+  if (deps.agentHarness === undefined) return null;
+  try {
+    return deps.agentHarness.observe();
+  } catch (error) {
+    return {
+      contractVersion: "unavailable", declaredBinary: M214_AGENT.binary, resolvedBinary: "", versionOutput: "",
+      version: "", sha256: null, capabilityVerdict: "AGENT_HARNESS_CAPABILITY_MISMATCH", capabilityFingerprint: null,
+      issues: [`the agent-harness authority could not observe the harness: ${(error as Error).message}`],
+    };
+  }
+}
+
+function agentHarnessIssues(
+  deps: ExecutorDependencies, row: RunManifestRow, harness: AgentHarnessObservation | null,
+): readonly string[] {
+  if (harness === null) {
+    return deps.mode === "SYNTHETIC"
+      ? []
+      : ["no agent-harness authority is bound; the executable a COHORT row would spawn is unproven, so it may not begin"];
+  }
+  const issues: string[] = [];
+  if (deps.mode === "COHORT" && deps.agentHarness?.amendmentHash !== M220A3_FROZEN_HASH) {
+    issues.push(
+      `the harness authority enforces ${deps.agentHarness?.amendmentHash ?? "no amendment"}, not the frozen `
+      + `${M214_A3_AMENDMENT_ID} ${M220A3_FROZEN_HASH.slice(0, 16)}...; the contract that replaced the version pin is not bound`,
+    );
+  }
+  if (harness.capabilityVerdict !== "AGENT_HARNESS_CAPABILITIES_PASS") {
+    issues.push(`AGENT_HARNESS_CAPABILITY_MISMATCH: ${harness.issues.join("; ") || "capability contract not satisfied"}`);
+  }
+  if (deps.operations !== undefined) {
+    issues.push(...auditPairHarnessEquality(
+      pairHarnessBinding(deps.authorities.manifest, deps.operations.ledger.events, row), harness, row,
+    ));
+  }
+  return issues;
 }
 
 function subscriptionAuthIssues(deps: ExecutorDependencies): readonly string[] {
@@ -1633,11 +1727,16 @@ function valid(resolved: boolean, reason: string): ValidityClassification {
 export async function executeManifestRow(
   deps: ExecutorDependencies,
   selector: RowSelector,
+  options: { readonly harness?: AgentHarnessObservation | null } = {},
 ): Promise<ExecutionResult> {
   const row = resolveManifestRow(deps.authorities.manifest, selector);
   assertExecutableArm(row.arm);
 
-  const preconditions = launchPreconditionGates(deps, row);
+  // M220-A3 — the harness is observed ONCE for the attempt: P16 proves it,
+  // the operations ledger records it, R2 cross-checks it and the adapter
+  // spawns exactly it after re-reading its digest.
+  const harness = options.harness !== undefined ? options.harness : observeHarness(deps);
+  const preconditions = launchPreconditionGates(deps, row, harness);
   if (!requiredGatesPass(preconditions)) {
     const failed = preconditions.filter((gate) => gate.status === "FAIL");
     throw new LaunchRefusedError(
@@ -1660,6 +1759,24 @@ export async function executeManifestRow(
     const decision = retryReserveDecisionFor(deps.ledger, deps.authorities.manifest, row, undefined, activeCeilingUsd(deps));
     const admission = deps.spendAuthority === undefined ? null : admitRetry(deps.spendAuthority, deps.ledger, row);
     deps.operations.recordRetryReserve({ runId, attemptId }, { decision, admission });
+  }
+
+  // M220-A3 §5, §7 — every attempt records the harness it is about to spawn,
+  // before the spawn. A different executable from the previous attempt is a
+  // TRANSITION (permitted between complete pairs; P16 already refused it
+  // inside a pair). Operational metadata only: no result reads it.
+  if (deps.operations !== undefined && harness !== null) {
+    const previous = recordedHarnesses(deps.operations.ledger.events).at(-1);
+    if (previous !== undefined && previous.sha256 !== harness.sha256) {
+      deps.operations.recordSessionEvent("AGENT_HARNESS_TRANSITION", {
+        fromVersion: previous.version, fromResolvedBinary: previous.resolvedBinary, fromSha256: previous.sha256,
+        toVersion: harness.version, toResolvedBinary: harness.resolvedBinary, toSha256: harness.sha256,
+        capabilityVerdict: harness.capabilityVerdict,
+        atPairBoundary: true,
+        note: "cross-pair harness change under M214_A3: permitted because the capability contract passed; recorded, never hidden",
+      }, { runId, attemptId });
+    }
+    deps.operations.recordSessionEvent("AGENT_HARNESS_OBSERVED", harnessEventDetail(harness, row), { runId, attemptId });
   }
 
   // M218 §14 — ownership is registered OUTSIDE the ephemeral directory before
@@ -1728,6 +1845,7 @@ export async function executeManifestRow(
       untrackedSourceAffectingPaths: untrackedSourceAffecting,
       preAgentUntrackedPaths: preAgentUntracked,
       assertedAt,
+      harness,
     });
 
     const environment = redactEnvironmentSnapshot(surface.environment, {
@@ -1778,8 +1896,11 @@ export async function executeManifestRow(
       attemptId,
       workingDirectory: handle.workingDirectory,
       modelTarget: M214_MODEL.model,
-      agentBinary: M214_AGENT.binary,
-      agentVersion: M214_AGENT.version,
+      // M220-A3 — the verified harness when one is bound; M214's declared
+      // values only on the synthetic path, which spawns nothing.
+      agentBinary: harness?.resolvedBinary || M214_AGENT.binary,
+      agentVersion: harness?.version || M214_AGENT.version,
+      ...(harness === null ? {} : { harness: { resolvedBinary: harness.resolvedBinary, sha256: harness.sha256, version: harness.version } }),
       nativeTools: M214_NATIVE_TOOLS,
       mcpServers: definition.mcpServers,
       maxTurns: row.maxTurns,
@@ -2539,9 +2660,48 @@ export async function runCohort(
         break;
       }
     }
+    // M220-A3 §4, §6 — the harness this arm would spawn is observed once,
+    // here. One that no longer satisfies the capability contract, or that is
+    // not the executable the pair's other arm ran on, starts nothing: the
+    // session PAUSES (nothing ran, nothing is skipped, arm 1 is never rerun)
+    // and the next session re-proves the harness before its first row.
+    let harness: AgentHarnessObservation | null = null;
+    if (deps.agentHarness !== undefined) {
+      harness = observeHarness(deps);
+      if (harness !== null && harness.capabilityVerdict !== "AGENT_HARNESS_CAPABILITIES_PASS") {
+        pauseReason = "AGENT_HARNESS_CAPABILITY_MISMATCH";
+        endState = "PAUSED";
+        stoppedBecause = `${M220_PAUSED_STATUS}: AGENT_HARNESS_CAPABILITY_MISMATCH: ${harness.issues.join("; ")}`;
+        break;
+      }
+      const binding = deps.operations === undefined
+        ? null
+        : pairHarnessBinding(deps.authorities.manifest, deps.operations.ledger.events, row);
+      const drift = harness === null ? [] : auditPairHarnessEquality(binding, harness, row);
+      if (drift.length > 0 && harness !== null) {
+        pauseReason = "PAIR_HARNESS_DRIFT";
+        endState = "PAUSED";
+        stoppedBecause = `${M220_PAUSED_STATUS}: ${drift.join("; ")}`;
+        deps.operations?.recordSessionEvent("PAIR_HARNESS_DRIFT", {
+          sessionId: session?.sessionId ?? null,
+          instanceId: row.instanceId,
+          refusedRow: row.runId,
+          partnerRunId: binding?.runId ?? null,
+          partnerVersion: binding?.version ?? null,
+          partnerSha256: binding?.sha256 ?? null,
+          currentVersion: harness.version,
+          currentResolvedBinary: harness.resolvedBinary,
+          currentSha256: harness.sha256,
+          consequence:
+            "this arm is not started; the cohort pauses. It resumes at this same frozen row once the resolved "
+            + "harness is the partner arm's executable again (same digest); the partner arm is never rerun",
+        }, { runId: row.runId });
+        break;
+      }
+    }
     try {
       const pairBefore = pairs === null ? null : pairStatus(pairForRow(pairs, row), deps.ledger);
-      const result = await executeManifestRow(deps, { runId: row.runId });
+      const result = await executeManifestRow(deps, { runId: row.runId }, deps.agentHarness === undefined ? {} : { harness });
       executed.push(result.record.attemptId);
       counters.attemptsStarted += 1;
       // M220 §17 — an attempt whose init event named a non-subscription

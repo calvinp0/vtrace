@@ -293,7 +293,14 @@ export type OperationalEventKind =
   | "COHORT_HALTED_MODEL_IDENTITY"
   // M220 §34 — the enumeration run before a session may report itself paused;
   // residue here BLOCKS exactly as a launch preflight would.
-  | "SESSION_END_ISOLATION_CHECK";
+  | "SESSION_END_ISOLATION_CHECK"
+  // M220-A3 — the Claude Code harness is operational metadata: the executable
+  // each attempt spawns is recorded before the spawn, a change between complete
+  // pairs is recorded as a transition, and a change INSIDE a pair refuses the
+  // second arm. None of them changes continuation state.
+  | "AGENT_HARNESS_OBSERVED"
+  | "AGENT_HARNESS_TRANSITION"
+  | "PAIR_HARNESS_DRIFT";
 
 export type SessionEventKind =
   | "QUOTA_SESSION_STARTED"
@@ -302,7 +309,10 @@ export type SessionEventKind =
   | "PAUSE_REQUESTED_AFTER_CURRENT_PAIR"
   | "QUOTA_LIMIT_OBSERVED"
   | "COHORT_HALTED_AUTH_MODE"
-  | "COHORT_HALTED_MODEL_IDENTITY";
+  | "COHORT_HALTED_MODEL_IDENTITY"
+  | "AGENT_HARNESS_OBSERVED"
+  | "AGENT_HARNESS_TRANSITION"
+  | "PAIR_HARNESS_DRIFT";
 
 /**
  * One operational event.

@@ -408,11 +408,13 @@ export async function runM215FalsificationSuite(
   {
     const ledger = freshLedger(authorities);
     const attempt = await runRow(
-      authorities, ledger, syntheticWorld({ agentVersion: "2.1.261" }), { executionOrder: 0 },
+      authorities, ledger, syntheticWorld({ agentVersion: "" }), { executionOrder: 0 },
     );
+    // M220-A3 restates this control: another release is metadata, not a
+    // failure; an arm surface that cannot report ANY release still fails R2.
     controls.push(control(
       "F7_AGENT_VERSION_MISMATCH",
-      "a different agent version fails; 'close enough' is not a version match",
+      "an arm surface that reports no agent release fails R2 (M214_A3: another release is metadata, an unobservable one is not)",
       "GUARD_FIRES",
       attemptIssues(attempt),
     ));

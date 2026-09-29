@@ -107,7 +107,7 @@ Each labelled run lives under `$OUT/runs/<label>/raw/`:
   `benchmarks/*/results/` is gitignored and stays on disk only. The sole tracked
   exceptions are the frozen experiment authorities the launcher and readiness
   checks depend on (`stage5_m213_*`/`stage5_m214_*` preregistration, manifest,
-  external reference, the A1 and A2 amendments and their hash records, the M219
+  external reference, the A1, A2 and A3 amendments and their hash records, the M219
   image identity record) and `stage5_milestone_ledger.md`. Reports, evidence JSON, baselines and raw runs
   are our own assessment data, not what makes vtrace run; they are never staged.
   Longer term the whole `benchmarks/` harness leaves this repository when vtrace
@@ -126,9 +126,20 @@ Each labelled run lives under `$OUT/runs/<label>/raw/`:
   (`COHORT_PAUSED_QUOTA_WINDOW`), and resumes at the next frozen row with
   `--resume`. `--session-status` is outcome-blind; `--pause-after-current-pair`
   writes a request a running session honours. It refuses to launch when
-  `ANTHROPIC_API_KEY` (or any provider override) is present or the account
-  profile reports extra usage enabled: the cohort runs on the MAX subscription
-  login only, never on API billing or paid overflow.
+  `ANTHROPIC_API_KEY` (or any provider override) is present or usage credits
+  are ON: the cohort runs on the MAX subscription login only, never on API
+  billing or paid overflow. Under A3 the usage-credit state comes from the
+  CLI's user-level usage snapshot (`cachedUsageUtilization.extra_usage`) or an
+  append-only `--attest-extra-usage-disabled "<statement>"`; the profile's
+  `hasExtraUsageEnabled` is organisation-scoped, can lag, and decides only when
+  neither exists.
+- **Claude Code is NOT version-pinned (M220-A3)**: the harness is whatever
+  `~/.local/bin/claude` resolves to. Every session proves it against a 12-point
+  capability contract (`m220A3AgentHarness.ts`: an offline `-p` run with
+  networking unshared, no credential and a private /tmp, plus a schema-token
+  scan of the executable), records path/version/sha256 per attempt, and refuses
+  the second arm of a pair on a different executable (`PAIR_HARNESS_DRIFT`
+  pauses the cohort). Never reinstall an old release or pin the current one.
 
 ## Agent workflow conventions
 

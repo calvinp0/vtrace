@@ -38,8 +38,8 @@ import {
   buildAgentArgv,
   buildArmEnvironment,
   classifyTermination,
+  BUDGET_STOP_RESULT_SUBTYPES,
   parseAgentStream,
-  pinnedAgentBinary,
   resolveAgentBinary,
   telemetryKindFor,
 } from "./m216ProductionAdapters";
@@ -188,20 +188,31 @@ describe("telemetry categories", () => {
 });
 
 describe("the production invocation", () => {
-  test("launches the versioned binary rather than the symlink", () => {
+  // M220-A3: the executable is the declared launcher RESOLVED, its release is
+  // recorded, and no version is pinned.
+  test("launches the resolved executable rather than the symlink", () => {
     const resolution = resolveAgentBinary();
-    expect(resolution.binary).toBe(pinnedAgentBinary());
+    expect(resolution.issues).toEqual([]);
+    expect(resolution.binary).not.toBe(M214_AGENT.binary);
+    expect(resolution.version.length).toBeGreaterThan(0);
     const spec = specFor("baseline");
     const environment = buildArmEnvironment(
       spec.row, `/tmp/m216-test-${process.pid}-baseline`, undefined, process.env, "testnonce",
     );
     expect(buildAgentArgv(spec, environment.isolationArgv, "P", resolution.binary)[0])
-      .toBe(pinnedAgentBinary());
+      .toBe(resolution.binary);
+    expect(buildAgentArgv({ ...spec, harness: { resolvedBinary: "/verified/claude", sha256: null, version: "x" } }, environment.isolationArgv, "P")[0])
+      .toBe("/verified/claude");
   });
 
-  test("refuses a version the installed binary does not satisfy", () => {
-    expect(resolveAgentBinary(M214_AGENT.binary, "0.0.0-not-installed").issues.length)
-      .toBeGreaterThan(0);
+  test("refuses a declared launcher that resolves to nothing", () => {
+    expect(resolveAgentBinary("/nonexistent/m216-test/claude").issues.length).toBeGreaterThan(0);
+  });
+
+  test("recognises the budget-stop spelling the CLI emits as COST_CAP_REACHED", () => {
+    expect(BUDGET_STOP_RESULT_SUBTYPES).toContain("error_max_budget_usd");
+    const parsed = parseAgentStream([JSON.stringify({ type: "result", subtype: "error_max_budget_usd", total_cost_usd: 1, num_turns: 3, usage: {} })]);
+    expect(classifyTermination(parsed, false, true, M214_BUDGET.perRunCostCapUsd).reason).toBe("COST_CAP_REACHED");
   });
 
   test("carries the frozen model, native tools and budgets", () => {
@@ -209,7 +220,7 @@ describe("the production invocation", () => {
     const environment = buildArmEnvironment(
       spec.row, `/tmp/m216-test-${process.pid}-argv`, undefined, process.env, "testnonce2",
     );
-    const argv = buildAgentArgv(spec, environment.isolationArgv, "P", pinnedAgentBinary());
+    const argv = buildAgentArgv(spec, environment.isolationArgv, "P", resolveAgentBinary().binary);
     expect(argv[argv.indexOf("--model") + 1]).toBe(M214_MODEL.model);
     expect(argv[argv.indexOf("--allowedTools") + 1]).toBe(M214_NATIVE_TOOLS.join(","));
     expect(argv[argv.indexOf("--max-turns") + 1]).toBe(String(M214_BUDGET.maxTurns));
